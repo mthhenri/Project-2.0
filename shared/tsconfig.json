@@ -4,6 +4,7 @@
     "module": "commonjs",
     "strict": true,
     "strictPropertyInitialization": false,
+    "experimentalDecorators": true,
     "esModuleInterop": true,
     "declaration": true,
     "outDir": "./dist"

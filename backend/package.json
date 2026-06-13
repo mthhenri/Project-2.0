@@ -2,7 +2,7 @@
   "name": "backend",
   "version": "1.0.0",
   "scripts": {
-    "start:dev": "tsx watch src/main.ts",
+    "start:dev": "node --watch --require ts-node/register src/main.ts",
     "build": "nest build",
     "db:migrate": "knex --knexfile src/database/knexfile.ts migrate:latest",
     "db:rollback": "knex --knexfile src/database/knexfile.ts migrate:rollback"
@@ -26,6 +26,9 @@
     "pg": "^8.11.0",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.0"
+  },
+  "ts-node": {
+    "esm": false
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",
