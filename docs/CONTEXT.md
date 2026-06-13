@@ -9,8 +9,8 @@
 ## Última Atualização
 
 **Data:** 2026-06-13
-**Task concluída:** 03-migrations
-**Sessão:** Migrations — todas as 11 tabelas e trigger updated_date
+**Task concluída:** 04-core-module
+**Sessão:** Core module — BaseEntity, BaseRepository, exceptions, filter e interceptor
 
 ---
 
@@ -34,6 +34,7 @@
 - **01-shared-package** — pacote `@project20/shared` com 7 enums de negócio, interfaces `StandardResponse` e `PaginatedResult`, e estrutura de pastas de DTOs (9 módulos, prontos para ser populados)
 - **02-backend-scaffold** — projeto NestJS estruturado com `package.json`, `tsconfig.json`, `nest-cli.json`, `knexfile.ts`; módulo `DatabaseModule` com Knex configurado; `main.ts` com `ValidationPipe` e `GlobalPrefix`; 10 módulos de negócio esqueleto; placeholders de `core/` (BaseEntity, BaseRepository, exceções, filtro, interceptor) e `config/`
 - **03-migrations** — 12 arquivos de migration Knex criados e executados com sucesso; função `fn_atualizar_updated_date()` + 11 tabelas com campos BaseEntity, CHECKs, índices filtrados por `is_deleted = false` e triggers `updated_date`; fix no `knexfile.ts` para usar `path.resolve(__dirname)` e carregar o `.env` corretamente
+- **04-core-module** — `BaseEntity`, `BaseRepository` (com `@Inject(DATABASE_CONNECTION)`, JSDoc e todos os métodos protegidos), 3 exceptions (`BusinessException`, `ResourceNotFoundException`, `UnauthorizedAccessException`), `GlobalExceptionFilter` (com tratamento específico para erros de ValidationPipe), `ResponseFormatInterceptor` (com verificação de resposta já encapsulada), re-exports de `StandardResponse` e `PaginatedResult` em `core/interfaces/`, e `CoreModule` registrando filter e interceptor globalmente via `APP_FILTER`/`APP_INTERCEPTOR`; `CoreModule` importado no `AppModule`
 
 ---
 
@@ -45,7 +46,7 @@
 
 ## Próxima Task
 
-**`docs/specs/backlog/04-core-module.spec.md`**
+**`docs/specs/backlog/05-config-module.spec.md`**
 
 ---
 
@@ -70,7 +71,7 @@ project-2.0/
 
 | Módulo | Status |
 |---|---|
-| core (base, exceptions, filters, interceptors) | ✅ scaffold criado (task 02) |
+| core (base, exceptions, filters, interceptors) | ✅ implementado (task 04) |
 | config | ✅ scaffold criado (task 02) |
 | database (DatabaseModule + Knex) | ✅ implementado (task 02) |
 | autenticacao | ⬜ pendente |
@@ -123,6 +124,7 @@ project-2.0/
 - Convenções de código em `docs/CONVENTIONS.md`
 - `knexfile.ts` usa `path.resolve(__dirname, '../../../.env')` para carregar o `.env` da raiz corretamente; o path relativo `'../.env'` não funcionava porque o Knex muda o cwd para o diretório do knexfile
 - Os arquivos em `core/` (base, exceptions, filters, interceptors) foram criados já com implementação conforme `SYSTEM.SPEC.md`, antecipando a task 04
+- Os 9 DTO index files em `shared/src/dtos/*/index.ts` estavam vazios (placeholders da task 01), causando erro de build assim que o primeiro import de `@project20/shared` foi adicionado; corrigidos com `export {};` mínimo — serão substituídos com os DTOs reais nas tasks futuras
 
 ---
 

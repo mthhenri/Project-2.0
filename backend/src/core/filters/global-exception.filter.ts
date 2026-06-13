@@ -10,23 +10,27 @@ import { Response } from 'express';
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
   catch(excecao: unknown, host: ArgumentsHost): void {
-    const contextoHttp = host.switchToHttp();
-    const resposta     = contextoHttp.getResponse<Response>();
+    const contexto = host.switchToHttp();
+    const resposta = contexto.getResponse<Response>();
 
     if (excecao instanceof HttpException) {
-      const statusHttp  = excecao.getStatus();
-      const corpoErro   = excecao.getResponse();
+      const status = excecao.getStatus();
+      const corpo  = excecao.getResponse();
 
-      if (typeof corpoErro === 'object' && corpoErro !== null && 'sucesso' in corpoErro) {
-        resposta.status(statusHttp).json(corpoErro);
+      if (typeof corpo === 'object' && 'sucesso' in (corpo as object)) {
+        resposta.status(status).json(corpo);
         return;
       }
 
-      resposta.status(statusHttp).json({
+      const erros = Array.isArray((corpo as any).message)
+        ? (corpo as any).message
+        : [(corpo as any).message];
+
+      resposta.status(status).json({
         sucesso:  false,
         dados:    null,
-        mensagem: typeof corpoErro === 'string' ? corpoErro : 'Erro na requisição',
-        erros:    [],
+        mensagem: 'Dados inválidos',
+        erros,
       });
       return;
     }

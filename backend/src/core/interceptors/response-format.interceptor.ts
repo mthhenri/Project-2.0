@@ -9,13 +9,22 @@ import { map } from 'rxjs/operators';
 
 @Injectable()
 export class ResponseFormatInterceptor implements NestInterceptor {
-  intercept(_contexto: ExecutionContext, proximoHandler: CallHandler): Observable<unknown> {
-    return proximoHandler.handle().pipe(
-      map((dados) => ({
-        sucesso:  true,
-        dados:    dados ?? null,
-        mensagem: 'Operação realizada com sucesso',
-      })),
+  intercept(contexto: ExecutionContext, next: CallHandler): Observable<unknown> {
+    return next.handle().pipe(
+      map((dados) => {
+        if (
+          dados !== null &&
+          typeof dados === 'object' &&
+          'sucesso' in dados
+        ) {
+          return dados;
+        }
+        return {
+          sucesso:  true,
+          dados,
+          mensagem: 'Operação realizada com sucesso',
+        };
+      }),
     );
   }
 }

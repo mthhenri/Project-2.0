@@ -1,6 +1,6 @@
-export interface StandardResponse<TDados = void> {
+export interface StandardResponse<TData = void> {
   sucesso: boolean;
-  dados: TDados | null;
+  dados: TData | null;
   mensagem: string;
   erros?: string[];
 }
