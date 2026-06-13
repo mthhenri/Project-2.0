@@ -9,8 +9,8 @@
 ## Última Atualização
 
 **Data:** 2026-06-13
-**Task concluída:** 02-backend-scaffold
-**Sessão:** Backend scaffold — NestJS, Knex e estrutura de módulos
+**Task concluída:** 03-migrations
+**Sessão:** Migrations — todas as 11 tabelas e trigger updated_date
 
 ---
 
@@ -33,6 +33,7 @@
 - **00-monorepo-docker** — `package.json` raiz com npm workspaces, `docker-compose.yml` com PostgreSQL 16, `.env`, `.env.example` e `.gitignore`
 - **01-shared-package** — pacote `@project20/shared` com 7 enums de negócio, interfaces `StandardResponse` e `PaginatedResult`, e estrutura de pastas de DTOs (9 módulos, prontos para ser populados)
 - **02-backend-scaffold** — projeto NestJS estruturado com `package.json`, `tsconfig.json`, `nest-cli.json`, `knexfile.ts`; módulo `DatabaseModule` com Knex configurado; `main.ts` com `ValidationPipe` e `GlobalPrefix`; 10 módulos de negócio esqueleto; placeholders de `core/` (BaseEntity, BaseRepository, exceções, filtro, interceptor) e `config/`
+- **03-migrations** — 12 arquivos de migration Knex criados e executados com sucesso; função `fn_atualizar_updated_date()` + 11 tabelas com campos BaseEntity, CHECKs, índices filtrados por `is_deleted = false` e triggers `updated_date`; fix no `knexfile.ts` para usar `path.resolve(__dirname)` e carregar o `.env` corretamente
 
 ---
 
@@ -44,9 +45,7 @@
 
 ## Próxima Task
 
-**`docs/specs/backlog/03-migrations.spec.md`** (ou próxima disponível no backlog)
-
-Criação das migrations do banco de dados com Knex.
+**`docs/specs/backlog/04-core-module.spec.md`**
 
 ---
 
@@ -109,8 +108,8 @@ project-2.0/
 
 | Item | Status |
 |---|---|
-| Migrations criadas | ⬜ pendente |
-| Tabelas no banco | ⬜ pendente |
+| Migrations criadas | ✅ 12 arquivos (task 03) |
+| Tabelas no banco | ✅ 11 tabelas + trigger fn (task 03) |
 | Conexão configurada | ✅ DatabaseModule com Knex (task 02) |
 
 ---
@@ -122,7 +121,7 @@ project-2.0/
 - Todas as decisões de arquitetura estão documentadas em `docs/SYSTEM.SPEC.md`
 - Schema completo em `docs/SCHEMA.md`
 - Convenções de código em `docs/CONVENTIONS.md`
-- `knexfile.ts` lê `.env` com path relativo `'../.env'` para funcionar corretamente desde `backend/`
+- `knexfile.ts` usa `path.resolve(__dirname, '../../../.env')` para carregar o `.env` da raiz corretamente; o path relativo `'../.env'` não funcionava porque o Knex muda o cwd para o diretório do knexfile
 - Os arquivos em `core/` (base, exceptions, filters, interceptors) foram criados já com implementação conforme `SYSTEM.SPEC.md`, antecipando a task 04
 
 ---
