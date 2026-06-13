@@ -9,8 +9,8 @@
 ## Última Atualização
 
 **Data:** 2026-06-13
-**Task concluída:** 06-usuario-module
-**Sessão:** Módulo usuario — DTOs no shared, model, repository com SQL bruto, service com regras de negócio e controller
+**Task concluída:** 07-autenticacao-module
+**Sessão:** Módulo autenticacao — JWT, guards globais e decorators de autorização
 
 ---
 
@@ -37,6 +37,7 @@
 - **04-core-module** — `BaseEntity`, `BaseRepository` (com `@Inject(DATABASE_CONNECTION)`, JSDoc e todos os métodos protegidos), 3 exceptions (`BusinessException`, `ResourceNotFoundException`, `UnauthorizedAccessException`), `GlobalExceptionFilter` (com tratamento específico para erros de ValidationPipe), `ResponseFormatInterceptor` (com verificação de resposta já encapsulada), re-exports de `StandardResponse` e `PaginatedResult` em `core/interfaces/`, e `CoreModule` registrando filter e interceptor globalmente via `APP_FILTER`/`APP_INTERCEPTOR`; `CoreModule` importado no `AppModule`
 - **05-config-service** — `config.interface.ts` com interfaces em português (`ConfiguracaoBancoDados`, `ConfiguracaoJwt`, `ConfiguracaoAnthropic`, `ConfiguracaoAplicacao`, `ConfiguracaoNegocio`, `Configuracao`); `ConfigService` com todas as vars carregadas no constructor e expostas via `obter()`; `ConfigModule` global; `database.provider.ts` e `main.ts` atualizados para usar `configService.obter()`
 - **06-usuario-module** — 9 DTOs em `shared/src/dtos/usuario/` (`UsuarioCriarDto`, `UsuarioCriadoDto`, `UsuarioResumoDto`, `UsuarioRecuperadoDto`, `UsuarioListarDto`, `UsuarioAtualizarDto`, `UsuarioAtualizadoDto`, `UsuarioSenhaAlterarDto`, `UsuarioSenhaAlteradaDto`); `Usuario` model em `backend/`; `UsuarioRepository` com SQL bruto (existeLogin, buscarLogin, buscarComSenha, buscarIdentificador, listar, inserir, atualizar, atualizarSenha, excluir, listarGestoresAtivos); `UsuarioService` com regras de negócio (login único, bcrypt rounds=10, validação de senha atual); `UsuarioController` com 6 endpoints (POST, GET, GET/:id, PUT/:id, DELETE/:id, PATCH/:id/senha); `UsuarioModule` registrado no `AppModule`
+- **07-autenticacao-module** — 2 DTOs em `shared/src/dtos/autenticacao/` (`AutenticacaoLoginDto`, `AutenticacaoTokenDto`); `JwtPayload` interface; `JwtStrategy` (passport-jwt); `JwtAuthGuard` (global, verifica @Public()); `GestorGuard` (global, verifica @GestorOnly()); decorators `@Public()`, `@GestorOnly()`, `@ActiveUser()`; `AutenticacaoService` (validarCredenciais, gerarToken, login); `AutenticacaoController` com `POST /autenticacao/login` público; `AutenticacaoModule` com `PassportModule`, `JwtModule.registerAsync`, guards globais via `APP_GUARD`; `UsuarioController` e `UsuarioService` atualizados com guards e validação de permissão por tipo de usuário
 
 ---
 
@@ -48,7 +49,7 @@
 
 ## Próxima Task
 
-**`docs/specs/backlog/07-autenticacao-module.spec.md`**
+**`docs/specs/backlog/08-projeto-module.spec.md`** (verificar se existe; caso contrário consultar backlog)
 
 ---
 
@@ -76,7 +77,7 @@ project-2.0/
 | core (base, exceptions, filters, interceptors) | ✅ implementado (task 04) |
 | config | ✅ implementado (task 05) |
 | database (DatabaseModule + Knex) | ✅ implementado (task 02) |
-| autenticacao | ⬜ pendente |
+| autenticacao | ✅ implementado (task 07) |
 | usuario | ✅ implementado (task 06) |
 | projeto | ⬜ pendente |
 | demanda | ⬜ pendente |
@@ -129,6 +130,8 @@ project-2.0/
 - Os 9 DTO index files em `shared/src/dtos/*/index.ts` estavam vazios (placeholders da task 01), causando erro de build assim que o primeiro import de `@project20/shared` foi adicionado; corrigidos com `export {};` mínimo — serão substituídos com os DTOs reais nas tasks futuras
 - Subpath imports (`@project20/shared/dtos/usuario`) não funcionam com o setup atual (sem `exports` field no package.json nem `paths` no tsconfig); todos os imports do shared usam `@project20/shared` diretamente, que resolve para `src/index.ts` via campo `"main"`
 - `UsuarioRepository` tem método `buscarComSenha(id)` além do especificado: necessário para o fluxo `alterarSenha` que precisa comparar a senha atual via bcrypt
+- Guards globais (`JwtAuthGuard` e `GestorGuard`) registrados via `APP_GUARD` no próprio `AutenticacaoModule` — padrão NestJS que mantém a lógica de auth coesa no módulo correto; `AutenticacaoModule` importado no `AppModule`
+- `UsuarioModule` permanece importado diretamente no `AppModule` além de ser importado transitivamente via `AutenticacaoModule`; NestJS deduplica o módulo no grafo, sem duplicação de providers/controllers
 
 ---
 

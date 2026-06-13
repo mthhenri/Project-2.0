@@ -12,10 +12,13 @@ import {
   UsuarioAtualizadoDto,
   UsuarioSenhaAlterarDto,
   UsuarioSenhaAlteradaDto,
+  UsuarioTipoEnum,
 } from '@project20/shared';
 import { StandardResponse, PaginatedResult } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
+import { UnauthorizedAccessException } from '../../../core/exceptions/unauthorized-access.exception';
+import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 
 @Injectable()
 export class UsuarioService {
@@ -68,8 +71,12 @@ export class UsuarioService {
     };
   }
 
-  /** Recupera usuário por ID. Lança exceção se não encontrado. */
-  async recuperar(id: number): Promise<StandardResponse<UsuarioRecuperadoDto>> {
+  /** Recupera usuário por ID. Desenvolvedor só pode ver o próprio perfil. */
+  async recuperar(id: number, usuarioAtivo: JwtPayload): Promise<StandardResponse<UsuarioRecuperadoDto>> {
+    if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR && usuarioAtivo.sub !== id) {
+      throw new UnauthorizedAccessException('Desenvolvedor pode acessar apenas o próprio perfil');
+    }
+
     const usuarioEncontrado = await this.usuarioRepositorio.recuperar({ id });
 
     if (!usuarioEncontrado) {
@@ -83,8 +90,12 @@ export class UsuarioService {
     };
   }
 
-  /** Atualiza campos do usuário. Lança exceção se não encontrado. */
-  async atualizar(id: number, dto: UsuarioAtualizarDto): Promise<StandardResponse<UsuarioAtualizadoDto>> {
+  /** Atualiza campos do usuário. Desenvolvedor só pode atualizar o próprio perfil. */
+  async atualizar(id: number, dto: UsuarioAtualizarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<UsuarioAtualizadoDto>> {
+    if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR && usuarioAtivo.sub !== id) {
+      throw new UnauthorizedAccessException('Desenvolvedor pode atualizar apenas o próprio perfil');
+    }
+
     const usuarioEncontrado = await this.usuarioRepositorio.recuperar({ id });
 
     if (!usuarioEncontrado) {

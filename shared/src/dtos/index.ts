@@ -1,3 +1,4 @@
+export * from './autenticacao/index';
 export * from './usuario/index';
 export * from './projeto/index';
 export * from './demanda/index';
