@@ -1,0 +1,113 @@
+import { Injectable, Inject } from '@nestjs/common';
+import { Knex } from 'knex';
+import { BaseRepository } from '../../../core/base/base.repository';
+import { DATABASE_CONNECTION } from '../../../core/database/database.provider';
+import { Tag } from '../domain/models/tag.model';
+import {
+  TagCriadaDto,
+  TagRecuperadaDto,
+  TagResumoDto,
+  TagAtualizadaDto,
+} from '@project20/shared';
+
+@Injectable()
+export class TagRepository extends BaseRepository<Tag> {
+  constructor(
+    @Inject(DATABASE_CONNECTION)
+    conexaoBancoDados: Knex,
+  ) {
+    super(conexaoBancoDados, 'tag');
+  }
+
+  /** Verifica se já existe tag ativa com o mesmo nome. */
+  async existeNome(nome: string): Promise<boolean> {
+    const resultado = await this.executarConsulta<{ existe: boolean }>(
+      `SELECT EXISTS(
+         SELECT 1 FROM tag
+         WHERE tag.nome = :nome
+           AND tag.is_deleted = false
+       ) AS existe`,
+      { nome },
+    );
+    return resultado[0].existe;
+  }
+
+  /** Insere nova tag e retorna os dados da tag criada. */
+  async inserir(dados: { nome: string; cor: string }): Promise<TagCriadaDto> {
+    const resultado = await this.executarConsulta<TagCriadaDto>(
+      `INSERT INTO tag (nome, cor, created_date, updated_date, is_deleted)
+       SELECT :nome, :cor, NOW(), NOW(), false
+       RETURNING
+         id,
+         nome,
+         cor,
+         created_date AS "createdDate"`,
+      { nome: dados.nome, cor: dados.cor },
+    );
+    return resultado[0];
+  }
+
+  /** Recupera tag por ID. Retorna null se não encontrada ou deletada. */
+  async buscarIdentificador(id: number): Promise<TagRecuperadaDto | null> {
+    const resultado = await this.executarConsulta<TagRecuperadaDto>(
+      `SELECT
+         tag.id,
+         tag.nome,
+         tag.cor,
+         tag.created_date AS "createdDate"
+       FROM tag
+       WHERE tag.id = :id
+         AND tag.is_deleted = false
+       LIMIT 1`,
+      { id },
+    );
+    return resultado[0] ?? null;
+  }
+
+  /** Lista todas as tags ativas ordenadas por nome. */
+  async listar(): Promise<TagResumoDto[]> {
+    return this.executarConsulta<TagResumoDto>(
+      `SELECT
+         tag.id,
+         tag.nome,
+         tag.cor
+       FROM tag
+       WHERE tag.is_deleted = false
+       ORDER BY tag.nome ASC`,
+    );
+  }
+
+  /** Atualiza campos da tag e retorna os dados atualizados. */
+  async atualizar(id: number, dados: Partial<Tag>): Promise<TagAtualizadaDto> {
+    const setClauses: string[] = ['updated_date = NOW()'];
+    const parametros: Record<string, unknown> = { id };
+
+    if (dados.nome !== undefined) {
+      setClauses.push('nome = :nome');
+      parametros.nome = dados.nome;
+    }
+    if (dados.cor !== undefined) {
+      setClauses.push('cor = :cor');
+      parametros.cor = dados.cor;
+    }
+
+    const resultado = await this.executarConsulta<TagAtualizadaDto>(
+      `UPDATE tag
+       SET ${setClauses.join(', ')}
+       WHERE tag.id = :id
+         AND tag.is_deleted = false
+       RETURNING
+         id,
+         nome,
+         cor,
+         created_date AS "createdDate"`,
+      parametros,
+    );
+    return resultado[0];
+  }
+
+  /** Soft delete da tag. */
+  async excluir(id: number): Promise<void> {
+    await this.executarSoftDelete(id);
+  }
+}

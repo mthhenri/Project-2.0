@@ -9,8 +9,8 @@
 ## Última Atualização
 
 **Data:** 2026-06-13
-**Task concluída:** 07-autenticacao-module
-**Sessão:** Módulo autenticacao — JWT, guards globais e decorators de autorização
+**Task concluída:** 08-tag-module
+**Sessão:** Módulo tag — CRUD com restrição a gestores
 
 ---
 
@@ -38,6 +38,7 @@
 - **05-config-service** — `config.interface.ts` com interfaces em português (`ConfiguracaoBancoDados`, `ConfiguracaoJwt`, `ConfiguracaoAnthropic`, `ConfiguracaoAplicacao`, `ConfiguracaoNegocio`, `Configuracao`); `ConfigService` com todas as vars carregadas no constructor e expostas via `obter()`; `ConfigModule` global; `database.provider.ts` e `main.ts` atualizados para usar `configService.obter()`
 - **06-usuario-module** — 9 DTOs em `shared/src/dtos/usuario/` (`UsuarioCriarDto`, `UsuarioCriadoDto`, `UsuarioResumoDto`, `UsuarioRecuperadoDto`, `UsuarioListarDto`, `UsuarioAtualizarDto`, `UsuarioAtualizadoDto`, `UsuarioSenhaAlterarDto`, `UsuarioSenhaAlteradaDto`); `Usuario` model em `backend/`; `UsuarioRepository` com SQL bruto (existeLogin, buscarLogin, buscarComSenha, buscarIdentificador, listar, inserir, atualizar, atualizarSenha, excluir, listarGestoresAtivos); `UsuarioService` com regras de negócio (login único, bcrypt rounds=10, validação de senha atual); `UsuarioController` com 6 endpoints (POST, GET, GET/:id, PUT/:id, DELETE/:id, PATCH/:id/senha); `UsuarioModule` registrado no `AppModule`
 - **07-autenticacao-module** — 2 DTOs em `shared/src/dtos/autenticacao/` (`AutenticacaoLoginDto`, `AutenticacaoTokenDto`); `JwtPayload` interface; `JwtStrategy` (passport-jwt); `JwtAuthGuard` (global, verifica @Public()); `GestorGuard` (global, verifica @GestorOnly()); decorators `@Public()`, `@GestorOnly()`, `@ActiveUser()`; `AutenticacaoService` (validarCredenciais, gerarToken, login); `AutenticacaoController` com `POST /autenticacao/login` público; `AutenticacaoModule` com `PassportModule`, `JwtModule.registerAsync`, guards globais via `APP_GUARD`; `UsuarioController` e `UsuarioService` atualizados com guards e validação de permissão por tipo de usuário
+- **08-tag-module** — 6 DTOs em `shared/src/dtos/tag/` (`TagCriarDto`, `TagCriadaDto`, `TagAtualizarDto`, `TagAtualizadaDto`, `TagResumoDto`, `TagRecuperadaDto`); `Tag` model no backend; `TagRepository` com SQL bruto (existeNome, inserir, buscarIdentificador, listar, atualizar, excluir); `TagService` com regras de negócio (nome duplicado → BusinessException, tag não encontrada → ResourceNotFoundException); `TagController` com 5 endpoints (POST restrito a gestor, GET, GET/:id, PUT/:id restrito a gestor, DELETE/:id restrito a gestor); `TagModule` registrado no `AppModule`
 
 ---
 
@@ -49,7 +50,7 @@
 
 ## Próxima Task
 
-**`docs/specs/backlog/08-projeto-module.spec.md`** (verificar se existe; caso contrário consultar backlog)
+**`docs/specs/backlog/09-projeto-module.spec.md`** (verificar se existe; caso contrário consultar backlog)
 
 ---
 
@@ -85,7 +86,7 @@ project-2.0/
 | execucao | ⬜ pendente |
 | ponto | ⬜ pendente |
 | calendario | ⬜ pendente |
-| tag | ⬜ pendente |
+| tag | ✅ implementado (task 08) |
 | assistente | ⬜ pendente |
 
 ---
