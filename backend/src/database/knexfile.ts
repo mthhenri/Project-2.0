@@ -2,6 +2,8 @@ import type { Knex } from 'knex';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 
+// process.env é intencional aqui: knexfile.ts é exclusivo da CLI do Knex (db:migrate/db:rollback)
+// e roda fora do contexto NestJS, onde injeção de ConfigService não é possível.
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
 const configuracao: Knex.Config = {
