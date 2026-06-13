@@ -10,7 +10,7 @@ export abstract class BaseRepository<TEntity> {
     consultaSQL: string,
     parametros: Record<string, unknown> | unknown[] = {},
   ): Promise<TResult[]> {
-    const resultado = await this.conexaoBancoDados.raw(consultaSQL, parametros);
+    const resultado = await this.conexaoBancoDados.raw(consultaSQL, parametros as any);
     return resultado.rows as TResult[];
   }
 
@@ -18,7 +18,7 @@ export abstract class BaseRepository<TEntity> {
     consultaSQL: string,
     parametros: Record<string, unknown> | unknown[] = {},
   ): Promise<void> {
-    await this.conexaoBancoDados.raw(consultaSQL, parametros);
+    await this.conexaoBancoDados.raw(consultaSQL, parametros as any);
   }
 
   protected construirPaginacao(pagina: number, itensPorPagina: number): string {
