@@ -9,8 +9,8 @@
 ## Última Atualização
 
 **Data:** 2026-06-13
-**Task concluída:** 00-monorepo-docker
-**Sessão:** Setup inicial do monorepo
+**Task concluída:** 01-shared-package
+**Sessão:** Shared package — enums, interfaces e estrutura de DTOs
 
 ---
 
@@ -31,6 +31,7 @@
 ## Implementado
 
 - **00-monorepo-docker** — `package.json` raiz com npm workspaces, `docker-compose.yml` com PostgreSQL 16, `.env`, `.env.example` e `.gitignore`
+- **01-shared-package** — pacote `@project20/shared` com 7 enums de negócio, interfaces `StandardResponse` e `PaginatedResult`, e estrutura de pastas de DTOs (9 módulos, prontos para ser populados)
 
 ---
 
@@ -42,9 +43,9 @@
 
 ## Próxima Task
 
-**`docs/specs/backlog/01-shared-setup.spec.md`** (ou próxima disponível no backlog)
+**`docs/specs/backlog/02-backend-core.spec.md`** (ou próxima disponível no backlog)
 
-Setup do pacote `shared/` com DTOs, enums e interfaces compartilhadas.
+Setup do `backend/` — estrutura base, módulos core, `BaseRepository`, exceções, filtros e interceptores.
 
 ---
 
@@ -53,9 +54,9 @@ Setup do pacote `shared/` com DTOs, enums e interfaces compartilhadas.
 ```
 project-2.0/
   docs/               ✅ criado
-  backend/            ⬜ aguardando task 01
+  backend/            ⬜ aguardando task 02
   frontend/           ⬜ aguardando task 18
-  shared/             ⬜ aguardando task 01
+  shared/             ✅ criado (task 01)
   docker-compose.yml  ✅ criado
   package.json        ✅ criado
   .env                ✅ criado

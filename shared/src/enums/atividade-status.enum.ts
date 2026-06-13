@@ -1,0 +1,6 @@
+export enum AtividadeStatusEnum {
+  PLANEJADA     = 'PLANEJADA',
+  PENDENTE      = 'PENDENTE',
+  DESENVOLVENDO = 'DESENVOLVENDO',
+  DESENVOLVIDA  = 'DESENVOLVIDA',
+}
