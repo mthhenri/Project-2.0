@@ -33,7 +33,10 @@ async function inicializar(): Promise<void> {
   SwaggerModule.setup('api/docs', aplicacao, documento);
 
   const configService = aplicacao.get(ConfigService);
+
   await aplicacao.listen(configService.obter().aplicacao.porta);
+
+  console.log(`Backend rodando na porta ${configService.obter().aplicacao.porta}`);
 }
 
 inicializar();
