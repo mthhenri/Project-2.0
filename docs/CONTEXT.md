@@ -8,9 +8,9 @@
 
 ## Última Atualização
 
-**Data:** —
-**Task concluída:** nenhuma — projeto não iniciado
-**Sessão:** —
+**Data:** 2026-06-13
+**Task concluída:** 00-monorepo-docker
+**Sessão:** Setup inicial do monorepo
 
 ---
 
@@ -30,7 +30,7 @@
 
 ## Implementado
 
-*Nenhuma task implementada ainda.*
+- **00-monorepo-docker** — `package.json` raiz com npm workspaces, `docker-compose.yml` com PostgreSQL 16, `.env`, `.env.example` e `.gitignore`
 
 ---
 
@@ -42,9 +42,9 @@
 
 ## Próxima Task
 
-**`docs/specs/backlog/00-monorepo-docker.spec.md`**
+**`docs/specs/backlog/01-shared-setup.spec.md`** (ou próxima disponível no backlog)
 
-Setup inicial do monorepo com npm workspaces, estrutura de pastas e Docker Compose.
+Setup do pacote `shared/` com DTOs, enums e interfaces compartilhadas.
 
 ---
 
@@ -56,8 +56,11 @@ project-2.0/
   backend/            ⬜ aguardando task 01
   frontend/           ⬜ aguardando task 18
   shared/             ⬜ aguardando task 01
-  docker-compose.yml  ⬜ aguardando task 00
-  package.json        ⬜ aguardando task 00
+  docker-compose.yml  ✅ criado
+  package.json        ✅ criado
+  .env                ✅ criado
+  .env.example        ✅ criado
+  .gitignore          ✅ criado
 ```
 
 ---
