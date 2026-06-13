@@ -1,5 +1,5 @@
 import Knex from 'knex';
-import configuracao from '../../../knexfile';
+import configuracao from '../../database/knexfile';
 
 export const DATABASE_CONNECTION = 'DATABASE_CONNECTION';
 

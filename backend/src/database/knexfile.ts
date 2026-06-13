@@ -13,7 +13,7 @@ const configuracao: Knex.Config = {
     password: process.env.DB_SENHA,
   },
   migrations: {
-    directory: './src/database/migrations',
+    directory: './migrations',
     extension: 'ts',
   },
 };

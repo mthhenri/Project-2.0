@@ -1,1 +1,7 @@
-export type { PaginatedResult } from '@project20/shared/interfaces';
+export interface PaginatedResult<TItem> {
+  itens: TItem[];
+  totalItens: number;
+  paginaAtual: number;
+  itensPorPagina: number;
+  totalPaginas: number;
+}

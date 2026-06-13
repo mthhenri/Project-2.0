@@ -4,8 +4,8 @@
   "scripts": {
     "start:dev": "nest start --watch",
     "build": "nest build",
-    "db:migrate": "knex --knexfile knexfile.ts migrate:latest",
-    "db:rollback": "knex --knexfile knexfile.ts migrate:rollback"
+    "db:migrate": "knex --knexfile src/database/knexfile.ts migrate:latest",
+    "db:rollback": "knex --knexfile src/database/knexfile.ts migrate:rollback"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.30.0",
