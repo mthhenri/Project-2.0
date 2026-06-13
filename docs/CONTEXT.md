@@ -9,8 +9,8 @@
 ## Última Atualização
 
 **Data:** 2026-06-13
-**Task concluída:** 01-shared-package
-**Sessão:** Shared package — enums, interfaces e estrutura de DTOs
+**Task concluída:** 02-backend-scaffold
+**Sessão:** Backend scaffold — NestJS, Knex e estrutura de módulos
 
 ---
 
@@ -32,6 +32,7 @@
 
 - **00-monorepo-docker** — `package.json` raiz com npm workspaces, `docker-compose.yml` com PostgreSQL 16, `.env`, `.env.example` e `.gitignore`
 - **01-shared-package** — pacote `@project20/shared` com 7 enums de negócio, interfaces `StandardResponse` e `PaginatedResult`, e estrutura de pastas de DTOs (9 módulos, prontos para ser populados)
+- **02-backend-scaffold** — projeto NestJS estruturado com `package.json`, `tsconfig.json`, `nest-cli.json`, `knexfile.ts`; módulo `DatabaseModule` com Knex configurado; `main.ts` com `ValidationPipe` e `GlobalPrefix`; 10 módulos de negócio esqueleto; placeholders de `core/` (BaseEntity, BaseRepository, exceções, filtro, interceptor) e `config/`
 
 ---
 
@@ -43,9 +44,9 @@
 
 ## Próxima Task
 
-**`docs/specs/backlog/02-backend-core.spec.md`** (ou próxima disponível no backlog)
+**`docs/specs/backlog/03-migrations.spec.md`** (ou próxima disponível no backlog)
 
-Setup do `backend/` — estrutura base, módulos core, `BaseRepository`, exceções, filtros e interceptores.
+Criação das migrations do banco de dados com Knex.
 
 ---
 
@@ -54,7 +55,7 @@ Setup do `backend/` — estrutura base, módulos core, `BaseRepository`, exceç�
 ```
 project-2.0/
   docs/               ✅ criado
-  backend/            ⬜ aguardando task 02
+  backend/            ✅ criado (task 02)
   frontend/           ⬜ aguardando task 18
   shared/             ✅ criado (task 01)
   docker-compose.yml  ✅ criado
@@ -70,8 +71,9 @@ project-2.0/
 
 | Módulo | Status |
 |---|---|
-| core (base, exceptions, filters, interceptors) | ⬜ pendente |
-| config | ⬜ pendente |
+| core (base, exceptions, filters, interceptors) | ✅ scaffold criado (task 02) |
+| config | ✅ scaffold criado (task 02) |
+| database (DatabaseModule + Knex) | ✅ implementado (task 02) |
 | autenticacao | ⬜ pendente |
 | usuario | ⬜ pendente |
 | projeto | ⬜ pendente |
@@ -109,7 +111,7 @@ project-2.0/
 |---|---|
 | Migrations criadas | ⬜ pendente |
 | Tabelas no banco | ⬜ pendente |
-| Conexão configurada | ⬜ pendente |
+| Conexão configurada | ✅ DatabaseModule com Knex (task 02) |
 
 ---
 
@@ -120,6 +122,8 @@ project-2.0/
 - Todas as decisões de arquitetura estão documentadas em `docs/SYSTEM.SPEC.md`
 - Schema completo em `docs/SCHEMA.md`
 - Convenções de código em `docs/CONVENTIONS.md`
+- `knexfile.ts` lê `.env` com path relativo `'../.env'` para funcionar corretamente desde `backend/`
+- Os arquivos em `core/` (base, exceptions, filters, interceptors) foram criados já com implementação conforme `SYSTEM.SPEC.md`, antecipando a task 04
 
 ---
 
