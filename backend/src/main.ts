@@ -22,7 +22,7 @@ async function inicializar(): Promise<void> {
   aplicacao.setGlobalPrefix('api/v1');
 
   const configService = aplicacao.get(ConfigService);
-  await aplicacao.listen(configService.app.porta);
+  await aplicacao.listen(configService.obter().aplicacao.porta);
 }
 
 inicializar();

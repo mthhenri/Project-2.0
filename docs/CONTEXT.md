@@ -9,8 +9,8 @@
 ## Última Atualização
 
 **Data:** 2026-06-13
-**Task concluída:** 04-core-module
-**Sessão:** Core module — BaseEntity, BaseRepository, exceptions, filter e interceptor
+**Task concluída:** 05-config-service
+**Sessão:** ConfigService tipado — interfaces em português, método obter(), integração com DatabaseProvider e main.ts
 
 ---
 
@@ -35,6 +35,7 @@
 - **02-backend-scaffold** — projeto NestJS estruturado com `package.json`, `tsconfig.json`, `nest-cli.json`, `knexfile.ts`; módulo `DatabaseModule` com Knex configurado; `main.ts` com `ValidationPipe` e `GlobalPrefix`; 10 módulos de negócio esqueleto; placeholders de `core/` (BaseEntity, BaseRepository, exceções, filtro, interceptor) e `config/`
 - **03-migrations** — 12 arquivos de migration Knex criados e executados com sucesso; função `fn_atualizar_updated_date()` + 11 tabelas com campos BaseEntity, CHECKs, índices filtrados por `is_deleted = false` e triggers `updated_date`; fix no `knexfile.ts` para usar `path.resolve(__dirname)` e carregar o `.env` corretamente
 - **04-core-module** — `BaseEntity`, `BaseRepository` (com `@Inject(DATABASE_CONNECTION)`, JSDoc e todos os métodos protegidos), 3 exceptions (`BusinessException`, `ResourceNotFoundException`, `UnauthorizedAccessException`), `GlobalExceptionFilter` (com tratamento específico para erros de ValidationPipe), `ResponseFormatInterceptor` (com verificação de resposta já encapsulada), re-exports de `StandardResponse` e `PaginatedResult` em `core/interfaces/`, e `CoreModule` registrando filter e interceptor globalmente via `APP_FILTER`/`APP_INTERCEPTOR`; `CoreModule` importado no `AppModule`
+- **05-config-service** — `config.interface.ts` com interfaces em português (`ConfiguracaoBancoDados`, `ConfiguracaoJwt`, `ConfiguracaoAnthropic`, `ConfiguracaoAplicacao`, `ConfiguracaoNegocio`, `Configuracao`); `ConfigService` com todas as vars carregadas no constructor e expostas via `obter()`; `ConfigModule` global; `database.provider.ts` e `main.ts` atualizados para usar `configService.obter()`
 
 ---
 
@@ -46,7 +47,7 @@
 
 ## Próxima Task
 
-**`docs/specs/backlog/05-config-module.spec.md`**
+**`docs/specs/backlog/06-autenticacao-module.spec.md`**
 
 ---
 
@@ -72,7 +73,7 @@ project-2.0/
 | Módulo | Status |
 |---|---|
 | core (base, exceptions, filters, interceptors) | ✅ implementado (task 04) |
-| config | ✅ scaffold criado (task 02) |
+| config | ✅ implementado (task 05) |
 | database (DatabaseModule + Knex) | ✅ implementado (task 02) |
 | autenticacao | ⬜ pendente |
 | usuario | ⬜ pendente |

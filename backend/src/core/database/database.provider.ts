@@ -6,16 +6,17 @@ export const DATABASE_CONNECTION = 'DATABASE_CONNECTION';
 
 export const databaseProvider = {
   provide:    DATABASE_CONNECTION,
+  inject:     [ConfigService],
   useFactory: (configService: ConfigService) => {
-    const dbConfig = configService.database;
+    const { host, porta, nome, usuario, senha } = configService.obter().bancoDados;
     return Knex({
       client: 'pg',
       connection: {
-        host:     dbConfig.host,
-        port:     dbConfig.port,
-        database: dbConfig.nome,
-        user:     dbConfig.usuario,
-        password: dbConfig.senha,
+        host,
+        port:     porta,
+        database: nome,
+        user:     usuario,
+        password: senha,
       },
       migrations: {
         directory: path.resolve(__dirname, '../../database/migrations'),
@@ -23,5 +24,4 @@ export const databaseProvider = {
       },
     });
   },
-  inject: [ConfigService],
 };

@@ -1,27 +1,35 @@
-export interface DatabaseConfig {
+export interface ConfiguracaoBancoDados {
   host: string;
-  port: number;
+  porta: number;
   nome: string;
   usuario: string;
   senha: string;
 }
 
-export interface JwtConfig {
+export interface ConfiguracaoJwt {
   secreto: string;
   expiracao: string;
 }
 
-export interface AppConfig {
-  porta: number;
-  ambiente: string;
-}
-
-export interface AnthropicConfig {
+export interface ConfiguracaoAnthropic {
   apiKey: string;
   modelo: string;
   maximoTokens: number;
 }
 
-export interface RegraConfig {
+export interface ConfiguracaoAplicacao {
+  porta: number;
+  ambiente: string;
+}
+
+export interface ConfiguracaoNegocio {
   intervaloMinimoMinutos: number;
+}
+
+export interface Configuracao {
+  bancoDados:  ConfiguracaoBancoDados;
+  jwt:         ConfiguracaoJwt;
+  anthropic:   ConfiguracaoAnthropic;
+  aplicacao:   ConfiguracaoAplicacao;
+  negocio:     ConfiguracaoNegocio;
 }
