@@ -9,8 +9,8 @@
 ## Última Atualização
 
 **Data:** 2026-06-13
-**Task concluída:** 16-calendario-module
-**Sessão:** Módulo calendario — dias não úteis com suporte a recorrência anual
+**Task concluída:** 17-ponto-module
+**Sessão:** Módulo ponto — resumo diário com cálculo de horas e intervalos
 
 ---
 
@@ -47,6 +47,7 @@
 - **14-atividade-module** — 9 DTOs em `shared/src/dtos/atividade/` (`AtividadeCriarDto`, `AtividadeCriadaDto`, `AtividadeResumoDto`, `AtividadeRecuperadaDto`, `AtividadeListarDto`, `AtividadeAtualizarDto`, `AtividadeAtualizadaDto` como re-export de Recuperada, `AtividadeTagsAtribuirDto`, `AtividadeTagsAtribuidasDto`); `Atividade` model no backend; `AtividadeRepository` com SQL bruto (inserir, buscarIdentificador com JOIN a usuario, listar com paginação e filtro de status, atualizar, excluir, usuarioTemAcessoDemanda via demanda_usuario, listarTags, atualizarTags com sync); `AtividadeService` com 7 métodos (criar com verificação de acesso via demanda_usuario, listar com restrição de desenvolvedor, recuperar, atualizar com regra autor-ou-membro para desenvolvedor, excluir, atualizarTags, listarTags); `AtividadeController` com 7 endpoints (POST, GET, GET/:id, PUT/:id, DELETE/:id gestor, PUT/:id/tag gestor, GET/:id/tag); `AtividadeModule` importa `DemandaModule` e `TagModule`; registrado no `AppModule`
 - **15-execucao-module** — 8 DTOs em `shared/src/dtos/execucao/` (`ExecucaoIniciarDto`, `ExecucaoIniciadaDto`, `ExecucaoEncerrarDto`, `ExecucaoEncerradaDto`, `ExecucaoAtualizarDto`, `ExecucaoAtualizadaDto` como re-export de Encerrada, `ExecucaoListarDto`, `ExecucaoResumoDto`); `Execucao` model no backend; `ExecucaoRepository` com 8 métodos (inserir, encerrar, buscarIdentificador com `duracaoMinutos` calculado via EXTRACT EPOCH, listar com JOIN em atividade e usuario e filtros opcionais de atividadeId/usuarioId/data, buscarExecucaoAtiva via JOIN com atividade para checar usuario_id, atualizar, excluir, buscarUsuarioExecucao para autorização); `ExecucaoService` com 6 métodos (iniciar com validação de atividade + acesso demanda + concorrência, encerrar com validação fimData e dono, listar com restrição de desenvolvedor às próprias, recuperar, atualizar com regra de dono para desenvolvedor, excluir); `ExecucaoController` com 6 endpoints (POST, GET, GET/:id, PATCH/:id/encerrar, PUT/:id, DELETE/:id gestor); `ExecucaoModule` importa `AtividadeModule`; registrado no `AppModule`
 - **16-calendario-module** — 6 DTOs em `shared/src/dtos/calendario/` (`DiaNaoUtilCriarDto`, `DiaNaoUtilCriadoDto`, `DiaNaoUtilResumoDto`, `DiaNaoUtilAtualizarDto`, `DiaNaoUtilAtualizadoDto` como re-export de Criado, `CalendarioConsultarDto`); `DiaNaoUtil` model no backend; `CalendarioRepository` com 7 métodos (inserir, buscarIdentificador, listar, atualizar com SET dinâmico, excluir, `ehDiaNaoUtil` com CTE de recorrência anual via EXTRACT MONTH/DAY, `buscarTipoPorData` para retornar tipo do dia ao serviço); `CalendarioService` com 6 métodos (criar, listar, recuperar, atualizar, excluir, `verificarDiaUtil` que detecta fim de semana via `getUTCDay()` e consulta repositório para obter motivo); `CalendarioController` com 6 endpoints (POST gestor, `GET /verificar` com query param `data` declarado antes de `GET /:id`, GET, GET/:id, PUT/:id gestor, DELETE/:id gestor); `CalendarioModule` registrado no `AppModule`
+- **17-ponto-module** — 3 DTOs em `shared/src/dtos/ponto/` (`PontoConsultarDto`, `IntervaloDto`, `PontoDiarioDto`); sem repository próprio — injeta `ExecucaoRepository`, `CalendarioRepository` e `UsuarioRepository` diretamente; `PontoService` com `consultarDiario` (autorização, detecção de fim de semana via `getUTCDay()`, verificação de dia não útil via `CalendarioRepository.ehDiaNaoUtil`, obtenção de `motivoNaoUtil` via `buscarTipoPorData` mapeado para português, busca e reordenação ASC das execuções, cálculo de `totalMinutosTrabalhados`, cálculo de intervalos via `calcularIntervalos`, distribuição entre `minutosTrabalhadosDiaUtil` e `minutosTrabalhadosExtra`, cálculo de `saldoMinutos`); `PontoController` com `GET /ponto/diario`; `PontoModule` importa `ExecucaoModule`, `CalendarioModule` e `UsuarioModule`; registrado no `AppModule`
 
 ---
 
@@ -58,7 +59,7 @@
 
 ## Próxima Task
 
-**`docs/specs/backlog/17-ponto-module.spec.md`** (módulo de ponto — resumo diário de horas)
+**`docs/specs/backlog/`** — verificar próxima task disponível no backlog
 
 ---
 
@@ -92,7 +93,7 @@ project-2.0/
 | demanda | ✅ implementado (task 10) |
 | atividade | ✅ implementado (task 14) |
 | execucao | ✅ implementado (task 15) |
-| ponto | ⬜ pendente |
+| ponto | ✅ implementado (task 17) |
 | calendario | ✅ implementado (task 16) |
 | tag | ✅ implementado (task 08) |
 | assistente | ⬜ pendente |
@@ -165,6 +166,9 @@ project-2.0/
 - `ExecucaoService.listar` passa `usuarioAtivo.sub` como `usuarioIdRestricao` quando o tipo é DESENVOLVEDOR, sobrescrevendo qualquer `usuarioId` que o desenvolvedor tente passar nos filtros
 - `ExecucaoModule` importa apenas `AtividadeModule` — usa `AtividadeRepository.buscarIdentificador` e `usuarioTemAcessoDemanda` para validar existência e acesso na operação de iniciar
 - `CalendarioRepository` expõe tanto `ehDiaNaoUtil(data)` (bool, para uso futuro pelo módulo ponto) quanto `buscarTipoPorData(data)` (retorna o tipo, para `verificarDiaUtil` da service que precisa do motivo); rota `GET /calendario/verificar` declarada antes de `GET /calendario/:id` para evitar que "verificar" seja interpretado como ID pelo ParseIntPipe; `verificarDiaUtil` usa `getUTCDay()` (não `getDay()`) para evitar variações de fuso horário ao detectar fim de semana
+- `PontoService` cria `filtrosListagem: ExecucaoListarDto` como objeto literal com `itensPorPagina: 500` para buscar todas as execuções do dia (o repositório usa o valor passado, não aplica validação do class-validator); execuções chegam em DESC do repositório e são reordenadas ASC in-memory para o cálculo de intervalos — volume diário não justifica query adicional
+- `motivoNaoUtil` usa `buscarTipoPorData` (que já existia desde task 16) mapeado via `mapearTipoParaMotivo` para strings legíveis em português ('Feriado', 'Recesso', 'Ponto facultativo') — sem query nova; fim de semana retorna fixo 'Fim de semana'
+- `PontoDiarioDto` importa `ExecucaoResumoDto` por import relativo direto (`../execucao/ExecucaoResumoDto`) em vez do barrel `@project20/shared` para evitar dependência circular dentro do pacote shared
 
 ---
 

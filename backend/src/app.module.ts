@@ -10,8 +10,9 @@ import { DemandaModule } from './modules/demanda/demanda.module';
 import { AtividadeModule } from './modules/atividade/atividade.module';
 import { ExecucaoModule } from './modules/execucao/execucao.module';
 import { CalendarioModule } from './modules/calendario/calendario.module';
+import { PontoModule } from './modules/ponto/ponto.module';
 
 @Module({
-  imports: [ConfigModule, DatabaseModule, CoreModule, AutenticacaoModule, UsuarioModule, TagModule, ProjetoModule, DemandaModule, AtividadeModule, ExecucaoModule, CalendarioModule],
+  imports: [ConfigModule, DatabaseModule, CoreModule, AutenticacaoModule, UsuarioModule, TagModule, ProjetoModule, DemandaModule, AtividadeModule, ExecucaoModule, CalendarioModule, PontoModule],
 })
 export class AppModule {}
