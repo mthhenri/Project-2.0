@@ -7,8 +7,9 @@ import { UsuarioModule } from './modules/usuario/usuario.module';
 import { TagModule } from './modules/tag/tag.module';
 import { ProjetoModule } from './modules/projeto/projeto.module';
 import { DemandaModule } from './modules/demanda/demanda.module';
+import { AtividadeModule } from './modules/atividade/atividade.module';
 
 @Module({
-  imports: [ConfigModule, DatabaseModule, CoreModule, AutenticacaoModule, UsuarioModule, TagModule, ProjetoModule, DemandaModule],
+  imports: [ConfigModule, DatabaseModule, CoreModule, AutenticacaoModule, UsuarioModule, TagModule, ProjetoModule, DemandaModule, AtividadeModule],
 })
 export class AppModule {}

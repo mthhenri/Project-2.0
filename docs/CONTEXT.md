@@ -9,8 +9,8 @@
 ## Última Atualização
 
 **Data:** 2026-06-13
-**Task concluída:** 13-demanda-tags-atribuicoes
-**Sessão:** Módulo demanda — sync de tags e gerenciamento de membros
+**Task concluída:** 14-atividade-module
+**Sessão:** Módulo atividade — CRUD, tags e controle de acesso por demanda
 
 ---
 
@@ -44,6 +44,7 @@
 - **11-demanda-hierarquia** — 2 DTOs em `shared/src/dtos/demanda/` (`DemandaArvoreItemDto` com campo recursivo `filhos`, `DemandaAncestralDto`); `DemandaRepository` com `buscarDescendentes` (CTE recursivo descendente — inclui raiz com nível 0) e `buscarAncestral` (CTE recursivo invertido — apenas ancestrais com nível > 0, ordem raiz-para-pai invertida); `DemandaService` com `recuperarArvore` (converte lista plana em árvore aninhada via Map) e `recuperarAncestral` (repassa lista ordenada); `DemandaController` com 2 endpoints (`GET /:id/arvore`, `GET /:id/ancestral`), declarados antes de `GET /:id` para garantir rota correta no NestJS
 - **12-demanda-grafo** — 3 DTOs em `shared/src/dtos/demanda/` (`DemandaConexaoCriarDto`, `DemandaConexaoCriadaDto`, `DemandaConexaoResumoDto`); `DemandaRepository` com `verificarCriariaCiclo` (CTE recursivo conforme SCHEMA.md), `existeConexao` (helper para prevenir duplicatas), `inserirConexao`, `listarConexoes` (CASE para identificar direção saída/entrada/bidirecional), `excluirConexao` (soft delete direto em `demanda_conexao`), `conexaoPertenceADemanda` (autorização no delete); `recuperarGrafo` atualizado para retornar arestas reais via JOIN com `demanda_conexao`; `DemandaService` com `criarConexao` (6 validações: acesso, existência origem/destino, auto-referência, duplicata, ciclo), `listarConexoes`, `excluirConexao`; `DemandaController` com 3 endpoints (`POST /:id/conexao`, `GET /:id/conexao`, `DELETE /:id/conexao/:conexaoId` restrito a gestor)
 - **13-demanda-tags-atribuicoes** — 5 DTOs em `shared/src/dtos/demanda/` (`DemandaTagsAtribuirDto`, `DemandaTagsAtribuidasDto`, `DemandaUsuarioAtribuirDto`, `DemandaUsuarioAtribuidoDto`, `DemandaMembroDto`); `DemandaRepository` com 8 métodos novos (`listarTagsDemanda`, `atribuirTagsDemanda` com sync, `removerTagDemanda`, `listarMembrosDemanda`, `atribuirMembroDemanda`, `removerMembroDemanda`, `membroJaAtribuido`, `contarMembrosDemanda`); `DemandaModule` importa `TagModule` e `UsuarioModule`; `DemandaService` com 5 métodos (`atualizarTagsDemanda`, `listarTagsDemanda`, `listarMembros`, `atribuirMembro`, `removerMembro`) com injeção de `TagRepository` e `UsuarioRepository`; `DemandaController` com 5 endpoints (`PUT /:id/tag` gestor, `GET /:id/tag`, `GET /:id/membro`, `POST /:id/membro` gestor, `DELETE /:id/membro/:usuarioId` gestor)
+- **14-atividade-module** — 9 DTOs em `shared/src/dtos/atividade/` (`AtividadeCriarDto`, `AtividadeCriadaDto`, `AtividadeResumoDto`, `AtividadeRecuperadaDto`, `AtividadeListarDto`, `AtividadeAtualizarDto`, `AtividadeAtualizadaDto` como re-export de Recuperada, `AtividadeTagsAtribuirDto`, `AtividadeTagsAtribuidasDto`); `Atividade` model no backend; `AtividadeRepository` com SQL bruto (inserir, buscarIdentificador com JOIN a usuario, listar com paginação e filtro de status, atualizar, excluir, usuarioTemAcessoDemanda via demanda_usuario, listarTags, atualizarTags com sync); `AtividadeService` com 7 métodos (criar com verificação de acesso via demanda_usuario, listar com restrição de desenvolvedor, recuperar, atualizar com regra autor-ou-membro para desenvolvedor, excluir, atualizarTags, listarTags); `AtividadeController` com 7 endpoints (POST, GET, GET/:id, PUT/:id, DELETE/:id gestor, PUT/:id/tag gestor, GET/:id/tag); `AtividadeModule` importa `DemandaModule` e `TagModule`; registrado no `AppModule`
 
 ---
 
@@ -55,7 +56,7 @@
 
 ## Próxima Task
 
-**`docs/specs/backlog/14-atividade-crud.spec.md`** (CRUD de atividades vinculadas a demandas)
+**`docs/specs/backlog/15-execucao-module.spec.md`** (módulo de execuções vinculadas a atividades)
 
 ---
 
@@ -87,7 +88,7 @@ project-2.0/
 | usuario | ✅ implementado (task 06) |
 | projeto | ✅ implementado (task 09) |
 | demanda | ✅ implementado (task 10) |
-| atividade | ⬜ pendente |
+| atividade | ✅ implementado (task 14) |
 | execucao | ⬜ pendente |
 | ponto | ⬜ pendente |
 | calendario | ⬜ pendente |
@@ -152,6 +153,9 @@ project-2.0/
 - `DemandaService` passa a injetar `TagRepository` e `UsuarioRepository` via `DemandaModule` que importa `TagModule` e `UsuarioModule`; essa dependência entre módulos é necessária para validar existência de tags e usuários antes das operações de atribuição, sem duplicar SQL no repositório de demanda
 - `atribuirTagsDemanda` do repositório implementa sync: lista tags atuais, faz soft delete das que saíram, insere apenas as novas — tags que permanecem na lista não são tocadas e não violam a UNIQUE INDEX filtrada por `is_deleted = false`
 - `contarMembrosDemanda` não estava na spec mas é necessário para implementar a regra "não remover o último membro" sem trazer toda a lista de membros para a service
+- `AtividadeRepository.atualizar` executa dois SELECTs: o UPDATE ... RETURNING não inclui `nome_completo` do usuário (que está em outra tabela), então uma segunda query busca o nome após o UPDATE; alternativa seria um UPDATE com JOIN mas PostgreSQL não suporta JOIN diretamente em UPDATE ... RETURNING sem CTE
+- `AtividadeAtualizadaDto` é re-exportado como alias de `AtividadeRecuperadaDto` — mesma estrutura, sem duplicação
+- `AtividadeModule` importa `DemandaModule` (para `DemandaRepository` verificar existência da demanda) e `TagModule` (para `TagRepository` validar tags antes do sync)
 
 ---
 

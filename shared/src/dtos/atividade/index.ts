@@ -1,1 +1,9 @@
-export {};
+export * from './AtividadeCriarDto';
+export * from './AtividadeCriadaDto';
+export * from './AtividadeResumoDto';
+export * from './AtividadeRecuperadaDto';
+export * from './AtividadeAtualizadaDto';
+export * from './AtividadeListarDto';
+export * from './AtividadeAtualizarDto';
+export * from './AtividadeTagsAtribuirDto';
+export * from './AtividadeTagsAtribuidasDto';
