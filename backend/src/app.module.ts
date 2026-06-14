@@ -11,8 +11,9 @@ import { AtividadeModule } from './modules/atividade/atividade.module';
 import { ExecucaoModule } from './modules/execucao/execucao.module';
 import { CalendarioModule } from './modules/calendario/calendario.module';
 import { PontoModule } from './modules/ponto/ponto.module';
+import { AssistenteModule } from './modules/assistente/assistente.module';
 
 @Module({
-  imports: [ConfigModule, DatabaseModule, CoreModule, AutenticacaoModule, UsuarioModule, TagModule, ProjetoModule, DemandaModule, AtividadeModule, ExecucaoModule, CalendarioModule, PontoModule],
+  imports: [ConfigModule, DatabaseModule, CoreModule, AutenticacaoModule, UsuarioModule, TagModule, ProjetoModule, DemandaModule, AtividadeModule, ExecucaoModule, CalendarioModule, PontoModule, AssistenteModule],
 })
 export class AppModule {}

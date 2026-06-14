@@ -9,8 +9,8 @@
 ## Última Atualização
 
 **Data:** 2026-06-13
-**Task concluída:** 17-ponto-module
-**Sessão:** Módulo ponto — resumo diário com cálculo de horas e intervalos
+**Task concluída:** 18-assistente-module
+**Sessão:** Módulo assistente — auxílio de IA para refinamento de descrições
 
 ---
 
@@ -48,6 +48,7 @@
 - **15-execucao-module** — 8 DTOs em `shared/src/dtos/execucao/` (`ExecucaoIniciarDto`, `ExecucaoIniciadaDto`, `ExecucaoEncerrarDto`, `ExecucaoEncerradaDto`, `ExecucaoAtualizarDto`, `ExecucaoAtualizadaDto` como re-export de Encerrada, `ExecucaoListarDto`, `ExecucaoResumoDto`); `Execucao` model no backend; `ExecucaoRepository` com 8 métodos (inserir, encerrar, buscarIdentificador com `duracaoMinutos` calculado via EXTRACT EPOCH, listar com JOIN em atividade e usuario e filtros opcionais de atividadeId/usuarioId/data, buscarExecucaoAtiva via JOIN com atividade para checar usuario_id, atualizar, excluir, buscarUsuarioExecucao para autorização); `ExecucaoService` com 6 métodos (iniciar com validação de atividade + acesso demanda + concorrência, encerrar com validação fimData e dono, listar com restrição de desenvolvedor às próprias, recuperar, atualizar com regra de dono para desenvolvedor, excluir); `ExecucaoController` com 6 endpoints (POST, GET, GET/:id, PATCH/:id/encerrar, PUT/:id, DELETE/:id gestor); `ExecucaoModule` importa `AtividadeModule`; registrado no `AppModule`
 - **16-calendario-module** — 6 DTOs em `shared/src/dtos/calendario/` (`DiaNaoUtilCriarDto`, `DiaNaoUtilCriadoDto`, `DiaNaoUtilResumoDto`, `DiaNaoUtilAtualizarDto`, `DiaNaoUtilAtualizadoDto` como re-export de Criado, `CalendarioConsultarDto`); `DiaNaoUtil` model no backend; `CalendarioRepository` com 7 métodos (inserir, buscarIdentificador, listar, atualizar com SET dinâmico, excluir, `ehDiaNaoUtil` com CTE de recorrência anual via EXTRACT MONTH/DAY, `buscarTipoPorData` para retornar tipo do dia ao serviço); `CalendarioService` com 6 métodos (criar, listar, recuperar, atualizar, excluir, `verificarDiaUtil` que detecta fim de semana via `getUTCDay()` e consulta repositório para obter motivo); `CalendarioController` com 6 endpoints (POST gestor, `GET /verificar` com query param `data` declarado antes de `GET /:id`, GET, GET/:id, PUT/:id gestor, DELETE/:id gestor); `CalendarioModule` registrado no `AppModule`
 - **17-ponto-module** — 3 DTOs em `shared/src/dtos/ponto/` (`PontoConsultarDto`, `IntervaloDto`, `PontoDiarioDto`); sem repository próprio — injeta `ExecucaoRepository`, `CalendarioRepository` e `UsuarioRepository` diretamente; `PontoService` com `consultarDiario` (autorização, detecção de fim de semana via `getUTCDay()`, verificação de dia não útil via `CalendarioRepository.ehDiaNaoUtil`, obtenção de `motivoNaoUtil` via `buscarTipoPorData` mapeado para português, busca e reordenação ASC das execuções, cálculo de `totalMinutosTrabalhados`, cálculo de intervalos via `calcularIntervalos`, distribuição entre `minutosTrabalhadosDiaUtil` e `minutosTrabalhadosExtra`, cálculo de `saldoMinutos`); `PontoController` com `GET /ponto/diario`; `PontoModule` importa `ExecucaoModule`, `CalendarioModule` e `UsuarioModule`; registrado no `AppModule`
+- **18-assistente-module** — 2 DTOs em `shared/src/dtos/assistente/` (`AssistenteDescricaoAuxiliarDto` com validação de `textoOriginal` ≥10 chars, `tipoEntidade` via `@IsIn` e `contextoEntidade`; `AssistenteDescricaoAuxiliadaDto` com `textoOriginal` e `textoAuxiliado`); `AssistenteService` instancia `Anthropic` no construtor via `ConfigService`, monta prompt contextualizado pelo tipo de entidade e chama `messages.create` com modelo e `max_tokens` lidos da configuração; erros da API Anthropic capturados e relançados como `BusinessException`; `AssistenteController` com `POST /assistente/auxiliar-descricao` protegido por `JwtAuthGuard`; `AssistenteModule` importa `ConfigModule`; registrado no `AppModule`
 
 ---
 
@@ -59,7 +60,7 @@
 
 ## Próxima Task
 
-**`docs/specs/backlog/`** — verificar próxima task disponível no backlog
+**`docs/specs/backlog/`** — verificar próxima task disponível no backlog (backend concluído; próximas tasks serão do frontend)
 
 ---
 
@@ -96,7 +97,7 @@ project-2.0/
 | ponto | ✅ implementado (task 17) |
 | calendario | ✅ implementado (task 16) |
 | tag | ✅ implementado (task 08) |
-| assistente | ⬜ pendente |
+| assistente | ✅ implementado (task 18) |
 
 ---
 
