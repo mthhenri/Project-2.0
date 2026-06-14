@@ -10,6 +10,9 @@ import {
   DemandaListarDto,
   DemandaGrafoDto,
   DemandaGrafoNoDto,
+  DemandaAncestralDto,
+  DemandaStatusEnum,
+  DemandaPrioridadeEnum,
 } from '@project20/shared';
 import { UsuarioTipoEnum, UsuarioStatusEnum } from '@project20/shared';
 
@@ -305,6 +308,91 @@ export class DemandaRepository extends BaseRepository<Demanda> {
       parametros,
     );
     return resultado[0];
+  }
+
+  /**
+   * Retorna todos os descendentes de uma demanda em formato plano com nível.
+   * Inclui a própria demanda (nível 0). Usa CTE recursivo conforme SCHEMA.md.
+   */
+  async buscarDescendentes(demandaId: number): Promise<{
+    id: number;
+    demandaPaiId: number | null;
+    nome: string;
+    status: DemandaStatusEnum;
+    prioridade: DemandaPrioridadeEnum;
+    isEstrutural: boolean;
+    horasEstimadas: number;
+    nivel: number;
+  }[]> {
+    return this.executarConsulta<{
+      id: number;
+      demandaPaiId: number | null;
+      nome: string;
+      status: DemandaStatusEnum;
+      prioridade: DemandaPrioridadeEnum;
+      isEstrutural: boolean;
+      horasEstimadas: number;
+      nivel: number;
+    }>(
+      `WITH RECURSIVE arvore_demanda AS (
+         SELECT id, demanda_pai_id, nome, status, prioridade, is_estrutural,
+                horas_estimadas, 0 AS nivel
+         FROM demanda
+         WHERE id = :demandaId
+           AND is_deleted = false
+
+         UNION ALL
+
+         SELECT demanda_filho.id, demanda_filho.demanda_pai_id, demanda_filho.nome,
+                demanda_filho.status, demanda_filho.prioridade, demanda_filho.is_estrutural,
+                demanda_filho.horas_estimadas, arvore_demanda.nivel + 1
+         FROM demanda AS demanda_filho
+         INNER JOIN arvore_demanda
+           ON demanda_filho.demanda_pai_id = arvore_demanda.id
+         WHERE demanda_filho.is_deleted = false
+       )
+       SELECT
+         id,
+         demanda_pai_id  AS "demandaPaiId",
+         nome,
+         status,
+         prioridade,
+         is_estrutural   AS "isEstrutural",
+         horas_estimadas AS "horasEstimadas",
+         nivel
+       FROM arvore_demanda
+       ORDER BY nivel, nome`,
+      { demandaId },
+    );
+  }
+
+  /**
+   * Retorna todos os ancestrais de uma demanda (do pai até a raiz).
+   * Usa CTE recursivo invertido. Nível 1 = pai direto.
+   */
+  async buscarAncestral(demandaId: number): Promise<DemandaAncestralDto[]> {
+    return this.executarConsulta<DemandaAncestralDto>(
+      `WITH RECURSIVE ancestrais AS (
+         SELECT id, demanda_pai_id, nome, 0 AS nivel
+         FROM demanda
+         WHERE id = :demandaId
+           AND is_deleted = false
+
+         UNION ALL
+
+         SELECT demanda_pai.id, demanda_pai.demanda_pai_id, demanda_pai.nome,
+                ancestrais.nivel + 1
+         FROM demanda AS demanda_pai
+         INNER JOIN ancestrais
+           ON demanda_pai.id = ancestrais.demanda_pai_id
+         WHERE demanda_pai.is_deleted = false
+       )
+       SELECT id, nome, nivel
+       FROM ancestrais
+       WHERE nivel > 0
+       ORDER BY nivel DESC`,
+      { demandaId },
+    );
   }
 
   /** Soft delete da demanda. */

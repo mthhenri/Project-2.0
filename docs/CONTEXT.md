@@ -9,8 +9,8 @@
 ## Última Atualização
 
 **Data:** 2026-06-13
-**Task concluída:** 10-demanda-crud
-**Sessão:** Módulo demanda — CRUD com auto-atribuição transacional e controle de acesso
+**Task concluída:** 11-demanda-hierarquia
+**Sessão:** Módulo demanda — CTEs recursivos para árvore e ancestrais
 
 ---
 
@@ -41,6 +41,7 @@
 - **08-tag-module** — 6 DTOs em `shared/src/dtos/tag/` (`TagCriarDto`, `TagCriadaDto`, `TagAtualizarDto`, `TagAtualizadaDto`, `TagResumoDto`, `TagRecuperadaDto`); `Tag` model no backend; `TagRepository` com SQL bruto (existeNome, inserir, buscarIdentificador, listar, atualizar, excluir); `TagService` com regras de negócio (nome duplicado → BusinessException, tag não encontrada → ResourceNotFoundException); `TagController` com 5 endpoints (POST restrito a gestor, GET, GET/:id, PUT/:id restrito a gestor, DELETE/:id restrito a gestor); `TagModule` registrado no `AppModule`
 - **09-projeto-module** — 7 DTOs em `shared/src/dtos/projeto/` (`ProjetoCriarDto`, `ProjetoCriadoDto`, `ProjetoResumoDto`, `ProjetoRecuperadoDto`, `ProjetoListarDto`, `ProjetoAtualizarDto`, `ProjetoAtualizadoDto`); `Projeto` model no backend; `ProjetoRepository` com SQL bruto (existeCodigo, inserir, buscarIdentificador, listarTodos, listarPorUsuario, atualizar, excluir); `ProjetoService` com regras de negócio (código duplicado → BusinessException, acesso por tipo de usuário via listarTodos/listarPorUsuario, desenvolvedor sem acesso → ResourceNotFoundException, validação de datas); `ProjetoController` com 5 endpoints (POST/PUT/DELETE restritos a gestor, GET e GET/:id com @ActiveUser para controle de escopo); `ProjetoModule` registrado no `AppModule`
 - **10-demanda-crud** — `BaseRepository` atualizado para aceitar `Knex.Transaction` opcional em `executarConsulta` e `executarComando`; 10 DTOs em `shared/src/dtos/demanda/` (`DemandaCriarDto`, `DemandaCriadaDto`, `DemandaResumoDto`, `DemandaRecuperadaDto`, `DemandaListarDto`, `DemandaAtualizarDto`, `DemandaAtualizadaDto`, `DemandaGrafoNoDto`, `DemandaGrafoArestaDto`, `DemandaGrafoDto`); `Demanda` model no backend; `DemandaRepository` com SQL bruto (inserir, inserirDemandaUsuario, inserirComAtribuicao transacional, buscarIdentificador com filtro opcional de usuário, listar com JOIN condicional em demanda_usuario, atualizar, excluir, buscarIdGestoresAtivos, usuarioTemAcessoProjeto, recuperarGrafo); `DemandaService` com regras de negócio (verificação de acesso de desenvolvedor via demanda_usuario, validação de demanda pai no mesmo projeto, auto-atribuição atômica do criador + gestores ativos, controle de acesso no listar/recuperar/atualizar por tipo); `DemandaController` com 6 endpoints (POST, GET, GET/grafo, GET/:id, PUT/:id, DELETE/:id restrito a gestor); `DemandaModule` registrado no `AppModule`
+- **11-demanda-hierarquia** — 2 DTOs em `shared/src/dtos/demanda/` (`DemandaArvoreItemDto` com campo recursivo `filhos`, `DemandaAncestralDto`); `DemandaRepository` com `buscarDescendentes` (CTE recursivo descendente — inclui raiz com nível 0) e `buscarAncestral` (CTE recursivo invertido — apenas ancestrais com nível > 0, ordem raiz-para-pai invertida); `DemandaService` com `recuperarArvore` (converte lista plana em árvore aninhada via Map) e `recuperarAncestral` (repassa lista ordenada); `DemandaController` com 2 endpoints (`GET /:id/arvore`, `GET /:id/ancestral`), declarados antes de `GET /:id` para garantir rota correta no NestJS
 
 ---
 
@@ -52,7 +53,7 @@
 
 ## Próxima Task
 
-**`docs/specs/backlog/11-demanda-hierarquia.spec.md`** (hierarquia e árvore de demandas)
+**`docs/specs/backlog/12-demanda-conexao.spec.md`** (grafo de conexões entre demandas — DemandaConexao)
 
 ---
 
@@ -141,6 +142,8 @@ project-2.0/
 - `DemandaRepository.buscarIdentificador` e `listar` aceitam `usuarioId` opcional: quando fornecido, fazem JOIN com `demanda_usuario` para filtrar acesso de desenvolvedor — evita método duplicado e mantém o controle de acesso no SQL
 - Rota `GET /demanda/grafo` declarada antes de `GET /demanda/:id` no controller para evitar conflito de rotas no NestJS (ParseIntPipe rejeitaria "grafo" mas a ordem garante a rota correta)
 - `DemandaGrafoDto` retorna `arestas: []` nesta task; as conexões explícitas (DemandaConexao) serão adicionadas na task 12
+- `DemandaArvoreItemDto.filhos` usa `@ApiProperty({ type: () => DemandaArvoreItemDto, isArray: true })` com lazy getter para suporte a tipos recursivos no Swagger
+- A construção da árvore na service usa um `Map<number, DemandaArvoreItemDto>` para O(n) em vez de busca recursiva; o nó raiz é identificado quando `demandaPaiId` é null ou não está no mapa (CTE inicia em demandaId, então seu pai nunca estará no resultado)
 
 ---
 

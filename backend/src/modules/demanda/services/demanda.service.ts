@@ -8,6 +8,8 @@ import {
   DemandaRecuperadaDto,
   DemandaAtualizarDto,
   DemandaGrafoDto,
+  DemandaArvoreItemDto,
+  DemandaAncestralDto,
   UsuarioTipoEnum,
 } from '@project20/shared';
 import { StandardResponse } from '@project20/shared';
@@ -194,6 +196,81 @@ export class DemandaService {
       sucesso:  true,
       dados:    demandaAtualizada,
       mensagem: 'Demanda atualizada com sucesso',
+    };
+  }
+
+  /**
+   * Retorna a árvore de descendentes como estrutura aninhada.
+   * Converte a lista plana do repositório em árvore recursiva.
+   * Desenvolvedor só pode consultar demandas às quais está atribuído.
+   */
+  async recuperarArvore(
+    demandaId: number,
+    usuarioAtivo: JwtPayload,
+  ): Promise<StandardResponse<DemandaArvoreItemDto>> {
+    const usuarioId =
+      usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
+
+    const demandaEncontrada = await this.demandaRepositorio.buscarIdentificador(demandaId, usuarioId);
+    if (!demandaEncontrada) {
+      throw new ResourceNotFoundException('Demanda');
+    }
+
+    const descendentes = await this.demandaRepositorio.buscarDescendentes(demandaId);
+
+    const mapa = new Map<number, DemandaArvoreItemDto>();
+    for (const item of descendentes) {
+      mapa.set(item.id, {
+        id:             item.id,
+        nome:           item.nome,
+        status:         item.status,
+        prioridade:     item.prioridade,
+        isEstrutural:   item.isEstrutural,
+        horasEstimadas: item.horasEstimadas,
+        nivel:          item.nivel,
+        filhos:         [],
+      });
+    }
+
+    let raiz: DemandaArvoreItemDto | null = null;
+    for (const item of descendentes) {
+      const no = mapa.get(item.id)!;
+      if (item.demandaPaiId === null || !mapa.has(item.demandaPaiId)) {
+        raiz = no;
+      } else {
+        mapa.get(item.demandaPaiId)!.filhos.push(no);
+      }
+    }
+
+    return {
+      sucesso:  true,
+      dados:    raiz!,
+      mensagem: 'Árvore de demanda recuperada com sucesso',
+    };
+  }
+
+  /**
+   * Retorna a lista de ancestrais em ordem do pai até a raiz (breadcrumb).
+   * Desenvolvedor só pode consultar demandas às quais está atribuído.
+   */
+  async recuperarAncestral(
+    demandaId: number,
+    usuarioAtivo: JwtPayload,
+  ): Promise<StandardResponse<DemandaAncestralDto[]>> {
+    const usuarioId =
+      usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
+
+    const demandaEncontrada = await this.demandaRepositorio.buscarIdentificador(demandaId, usuarioId);
+    if (!demandaEncontrada) {
+      throw new ResourceNotFoundException('Demanda');
+    }
+
+    const ancestrais = await this.demandaRepositorio.buscarAncestral(demandaId);
+
+    return {
+      sucesso:  true,
+      dados:    ancestrais,
+      mensagem: 'Ancestrais da demanda recuperados com sucesso',
     };
   }
 

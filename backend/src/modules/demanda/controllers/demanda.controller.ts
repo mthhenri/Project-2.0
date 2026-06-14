@@ -65,6 +65,30 @@ export class DemandaController {
     return this.demandaService.recuperarGrafo(projetoId, usuarioAtivo);
   }
 
+  @ApiOperation({ summary: 'Recuperar árvore de descendentes de uma demanda' })
+  @ApiResponse({ status: 200, description: 'Árvore de demanda recuperada com sucesso' })
+  @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+  @ApiResponse({ status: 404, description: 'Demanda não encontrada', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
+  @Get(':id/arvore')
+  recuperarArvore(
+    @Param('id', ParseIntPipe) id: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ) {
+    return this.demandaService.recuperarArvore(id, usuarioAtivo);
+  }
+
+  @ApiOperation({ summary: 'Recuperar ancestrais de uma demanda (breadcrumb)' })
+  @ApiResponse({ status: 200, description: 'Ancestrais recuperados com sucesso' })
+  @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+  @ApiResponse({ status: 404, description: 'Demanda não encontrada', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
+  @Get(':id/ancestral')
+  recuperarAncestral(
+    @Param('id', ParseIntPipe) id: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ) {
+    return this.demandaService.recuperarAncestral(id, usuarioAtivo);
+  }
+
   @ApiOperation({ summary: 'Recuperar demanda por ID' })
   @ApiResponse({ status: 200, description: 'Demanda recuperada com sucesso' })
   @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })

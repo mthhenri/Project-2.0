@@ -8,3 +8,5 @@ export * from './DemandaAtualizadaDto';
 export * from './DemandaGrafoNoDto';
 export * from './DemandaGrafoArestaDto';
 export * from './DemandaGrafoDto';
+export * from './DemandaArvoreItemDto';
+export * from './DemandaAncestralDto';
