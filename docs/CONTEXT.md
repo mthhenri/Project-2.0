@@ -60,7 +60,7 @@
 
 ## Próxima Task
 
-**`docs/specs/backlog/`** — verificar próxima task disponível no backlog (backend concluído; próximas tasks serão do frontend)
+**`docs/specs/backlog/19-backend-nomenclatura.spec.md`** — renomear atualizar→alterar, existe→validar, expandir DTOs alias, mover buscarIdGestoresAtivos
 
 ---
 
@@ -133,6 +133,12 @@ project-2.0/
 
 > Decisões registradas ao longo das sessões de implementação.
 
+- **[revisão pós-18]** Junction tables (`demanda_tag`, `atividade_tag`, `demanda_usuario`) ficam no módulo pai — sem módulo NestJS próprio
+- **[revisão pós-18]** `atualizar`/`atualizado` renomeado para `alterar`/`alterado` em toda nomenclatura de DTOs e métodos de negócio
+- **[revisão pós-18]** Métodos de existência (`existe*`) renomeados para `validar*` — método é sempre verbo de ação
+- **[revisão pós-18]** Zero primitivos em qualquer assinatura de método de service ou repository — sempre DTO mesmo para um único campo
+- **[revisão pós-18]** Nenhum DTO pode ser alias/re-export de outro — campos próprios obrigatórios em cada DTO
+- **[revisão pós-18]** Recuperação individual de entidade sempre via `EntidadeRecuperarDto { id: number }` e método `recuperar()`
 - Todas as decisões de arquitetura estão documentadas em `docs/SYSTEM.SPEC.md`
 - Schema completo em `docs/SCHEMA.md`
 - Convenções de código em `docs/CONVENTIONS.md`
@@ -175,7 +181,36 @@ project-2.0/
 
 ## Problemas Conhecidos
 
-*Nenhum problema conhecido.*
+Violações de padrão identificadas na revisão pós-task 18. Corrigidas pelas tasks 19 e 20:
+
+**[task 19] Nomenclatura atualizar → alterar:**
+- `shared/src/dtos/usuario/UsuarioAtualizarDto.ts` e `UsuarioAtualizadoDto.ts`
+- `shared/src/dtos/projeto/ProjetoAtualizarDto.ts` e `ProjetoAtualizadoDto.ts`
+- `shared/src/dtos/demanda/DemandaAtualizarDto.ts` e `DemandaAtualizadaDto.ts`
+- `shared/src/dtos/atividade/AtividadeAtualizarDto.ts`
+- `shared/src/dtos/execucao/ExecucaoAtualizarDto.ts`
+- `shared/src/dtos/calendario/DiaNaoUtilAtualizarDto.ts`
+- `shared/src/dtos/tag/TagAtualizarDto.ts` e `TagAtualizadaDto.ts`
+- Método `atualizar()` em todos os services e repositories
+
+**[task 19] DTOs alias (re-export proibido):**
+- `AtividadeAtualizadaDto` = re-export de `AtividadeRecuperadaDto` → virar `AtividadeAlteradaDto` com campos próprios
+- `ExecucaoAtualizadaDto` = re-export de `ExecucaoEncerradaDto` → virar `ExecucaoAlteradaDto` com campos próprios
+- `DiaNaoUtilAtualizadoDto` = re-export de `DiaNaoUtilCriadoDto` → virar `DiaNaoUtilAlteradoDto` com campos próprios
+
+**[task 19] Métodos existe* → validar*:**
+- `UsuarioRepository.existeLogin` → `validarLogin`
+- `TagRepository.existeNome` → `validarNome`
+- `ProjetoRepository.existeCodigo` → `validarCodigo`
+- `DemandaRepository.existeConexao` → `validarConexao`
+
+**[task 19] Responsabilidade cross-módulo:**
+- `DemandaRepository.buscarIdGestoresAtivos()` faz query na tabela `usuario` — remover e usar `UsuarioRepository.listarGestoresAtivos()` em `DemandaService`
+
+**[task 20] RecuperarDto e zero primitivos:**
+- `buscarIdentificador(id: number)` em todos os repositórios (projeto, demanda, atividade, execucao, calendario, tag) → `recuperar(dto: EntidadeRecuperarDto)`
+- Criar `*RecuperarDto` no shared para os módulos que ainda não têm
+- Helpers internos com primitivos (`inserirDemandaUsuario`, `verificarCriariaCiclo`, `buscarExecucaoAtiva`, etc.) precisam de DTOs
 
 ---
 

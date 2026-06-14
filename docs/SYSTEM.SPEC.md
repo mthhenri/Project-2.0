@@ -97,7 +97,7 @@ project-2.0/
 |---|---|
 | Nomes de pastas: `controllers/`, `services/`, `repositories/`, `domain/`, `dtos/`, `core/`, `shared/`, `base/`, `modules/`, `config/` | Nomes de arquivo com entidade: `usuario.service.ts`, `demanda.repository.ts`, `execucao.controller.ts` |
 | Classes genéricas: `BaseEntity`, `BaseRepository`, `StandardResponse`, `PaginatedResult` | Nomes de método: `criarUsuario()`, `listarDemandas()`, `encerrarExecucao()` |
-| Campos de BaseEntity em TypeScript: `id`, `isDeleted`, `createdDate`, `updatedDate`, `deletedDate` | DTOs de negócio: `UsuarioCriarDto`, `DemandaAtualizarDto`, `ExecucaoIniciarDto` |
+| Campos de BaseEntity em TypeScript: `id`, `isDeleted`, `createdDate`, `updatedDate`, `deletedDate` | DTOs de negócio: `UsuarioCriarDto`, `DemandaAlterarDto`, `ExecucaoIniciarDto` |
 | Colunas BaseEntity em SQL: `id`, `is_deleted`, `created_date`, `updated_date`, `deleted_date` | Tabelas e colunas de negócio em SQL: `usuario`, `nome_completo`, `horas_estimadas`, `is_estrutural` |
 | Padrões técnicos: `global-exception.filter.ts`, `auth-token.interceptor.ts`, `base.repository.ts` | Propriedades de modelo: `nomeCompleto`, `descricaoTecnica`, `horasDiariasNecessarias` |
 | Exceptions genéricas: `BusinessException`, `ResourceNotFoundException` | Valores de enum: `DESENVOLVEDOR`, `GESTOR`, `PLANEJADA`, `EM_DESENVOLVIMENTO` |
@@ -130,10 +130,10 @@ Se a operação afeta dois ou mais campos relacionados, o complemento deve ser a
 
 ```
 senha + email       → Credenciais   → UsuarioCredenciaisAlterarDto
-nome + cargoTitulo  → Perfil        → UsuarioPerfilAtualizarDto
+nome + cargoTitulo  → Perfil        → UsuarioPerfilAlterarDto
 ```
 
-Se não existe um substantivo natural que agrupe os campos, é sinal de que a operação provavelmente é uma atualização completa do modelo (`UsuarioAtualizarDto`) e o complemento deve ser omitido.
+Se não existe um substantivo natural que agrupe os campos, é sinal de que a operação provavelmente é uma alteração completa do modelo (`UsuarioAlterarDto`) e o complemento deve ser omitido.
 
 **Quando o complemento é uma coleção:**
 
@@ -147,7 +147,8 @@ AtribuirVáriasTags → DemandaTagsAtribuirDto
 **Entrada (verbo no infinitivo):**
 ```
 UsuarioCriarDto                   ← operação pura no modelo inteiro
-UsuarioAtualizarDto
+UsuarioAlterarDto                 ← alteração do modelo inteiro (nunca "Atualizar")
+UsuarioRecuperarDto               ← recuperação individual — sempre { id: number }
 UsuarioListarDto                  ← filtros e parâmetros de listagem
 DemandaCriarDto
 ExecucaoIniciarDto
@@ -161,11 +162,16 @@ AssistenteDescricaoAuxiliarDto    ← com complemento: auxilia descrição
 UsuarioCriadoDto                  ← resposta de criação
 UsuarioRecuperadoDto              ← resposta de busca individual
 UsuarioResumoDto                  ← item de listagem (resumido)
-UsuarioAtualizadoDto
+UsuarioAlteradoDto                ← resposta de alteração (nunca "Atualizado")
 DemandaRecuperadaDto
 ExecucaoIniciadaDto
 AssistenteDescricaoAuxiliadaDto
 ```
+
+**Regras adicionais de DTO:**
+- Toda recuperação individual de entidade usa `EntidadeRecuperarDto { id: number }` — nunca parâmetro primitivo
+- Toda operação que recebe parâmetros, mesmo que seja um único campo, usa DTO — zero primitivos em assinaturas de service e repository
+- Nenhum DTO pode ser alias ou re-export de outro — mesmo que os campos sejam idênticos, cada DTO define os seus próprios campos explicitamente
 
 ### 5.2 Métodos
 
@@ -176,10 +182,12 @@ Sempre `verbo + entidade`, em português, sem abreviações:
 criarUsuario()
 listarUsuarios()
 recuperarUsuario()
-atualizarUsuario()
+alterarUsuario()              // nunca "atualizar"
 excluirUsuario()
 buscarLogin()
-existeLogin()
+validarLogin()                // nunca "existeLogin" — sempre verbo de ação
+validarNome()                 // nunca "existeNome"
+validarCodigo()               // nunca "existeCodigo"
 verificarLoginDisponivel()
 iniciarExecucao()
 encerrarExecucao()
@@ -252,11 +260,12 @@ shared/src/
     usuario/
       UsuarioCriarDto.ts
       UsuarioCriadoDto.ts
-      UsuarioAtualizarDto.ts
-      UsuarioAtualizadoDto.ts
+      UsuarioRecuperarDto.ts        ← { id: number } — padrão para recuperação individual
+      UsuarioRecuperadoDto.ts
+      UsuarioAlterarDto.ts          ← nunca "Atualizar"
+      UsuarioAlteradoDto.ts         ← nunca "Atualizado"
       UsuarioListarDto.ts
       UsuarioResumoDto.ts
-      UsuarioRecuperadoDto.ts
       UsuarioSenhaAlterarDto.ts
       UsuarioSenhaAlteradaDto.ts
       UsuarioCredenciaisAlterarDto.ts
@@ -427,8 +436,8 @@ export class UsuarioController {
 
   @Put(':id')
   @GestorOnly()
-  atualizar(@Param('id', ParseIntPipe) id: number, @Body() dto: UsuarioAtualizarDto) {
-    return this.usuarioService.atualizar(id, dto);
+  alterar(@Param('id', ParseIntPipe) id: number, @Body() dto: UsuarioAlterarDto) {
+    return this.usuarioService.alterar(id, dto);
   }
 }
 
@@ -454,7 +463,7 @@ Toda inteligência de negócio vive na service. Ela valida regras, orquestra rep
 ```typescript
 // ✅ Correto
 async criar(dto: UsuarioCriarDto): Promise<StandardResponse<UsuarioCriadoDto>> {
-  const loginJaExiste = await this.usuarioRepositorio.existeLogin(dto.login);
+  const loginJaExiste = await this.usuarioRepositorio.validarLogin({ login: dto.login });
 
   if (loginJaExiste) {
     throw new BusinessException('Login já está em uso');
@@ -485,16 +494,20 @@ O repositório **apenas executa SQL**. Sem lógica de negócio, sem if de valida
 
 ```typescript
 // ✅ Correto
-async existeLogin(login: string): Promise<boolean> {
+async validarLogin(dto: UsuarioValidarLoginDto): Promise<boolean> {
   const resultado = await this.executarConsulta<{ existe: boolean }>(
     `SELECT EXISTS(
        SELECT 1 FROM usuario
        WHERE login = :login
          AND is_deleted = false
      ) AS existe`,
-    { login },
+    { login: dto.login },
   );
   return resultado[0].existe;
+}
+
+async recuperar(dto: UsuarioRecuperarDto): Promise<UsuarioRecuperadoDto | null> {
+  // busca por id — único ponto de entrada para recuperação individual
 }
 
 async inserir(dados: Omit<Usuario, keyof BaseEntity>): Promise<UsuarioCriadoDto> {
@@ -1094,3 +1107,8 @@ Estas regras **jamais** devem ser violadas. São inegociáveis independente do c
 | 18 | **Nunca criar** componente Angular com NgModule — sempre standalone |
 | 19 | **Nunca usar** .css — todo arquivo de estilo é .scss |
 | 20 | **Nunca usar** style="" inline no HTML — sempre SCSS ou Tailwind |
+| 21 | **Nunca passar primitivos** como parâmetros em métodos de service ou repository — sempre DTO, mesmo que seja um único campo |
+| 22 | **Nunca nomear métodos com `existe*`** — usar `validar*` (ex: `validarLogin`, `validarNome`, `validarCodigo`) |
+| 23 | **Nunca criar DTO como alias ou re-export** de outro DTO — cada DTO define explicitamente todos os seus campos |
+| 24 | **Nunca usar `atualizar`** em nomes de DTO ou método de negócio — usar `alterar` (`UsuarioAlterarDto`, `alterar()`) |
+| 25 | **Nunca colocar em repositório A** uma query cuja responsabilidade é do módulo B — usar o repositório do módulo correto |

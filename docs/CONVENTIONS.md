@@ -46,8 +46,9 @@ usuario-listagem.page.ts
 | Entrada | Saída | Quando usar |
 |---|---|---|
 | `UsuarioCriarDto` | `UsuarioCriadoDto` | operação no modelo inteiro |
+| `UsuarioRecuperarDto` | `UsuarioRecuperadoDto` | recuperação individual — entrada sempre `{ id: number }` |
 | `UsuarioListarDto` | `UsuarioResumoDto` | listagem — saída sempre resumida |
-| `UsuarioAtualizarDto` | `UsuarioAtualizadoDto` | atualização completa |
+| `UsuarioAlterarDto` | `UsuarioAlteradoDto` | alteração completa — nunca "Atualizar/Atualizado" |
 | `UsuarioSenhaAlterarDto` | `UsuarioSenhaAlteradaDto` | sub-aspecto específico (complemento) |
 | `DemandaTagAtribuirDto` | `DemandaTagAtribuidaDto` | um item do sub-aspecto |
 | `DemandaTagsAtribuirDto` | `DemandaTagsAtribuidasDto` | coleção do sub-aspecto (plural) |
@@ -58,6 +59,11 @@ usuario-listagem.page.ts
 - Usar quando a operação atinge apenas um sub-aspecto (`Senha`, `Avatar`, `Descricao`)
 - Quando múltiplos campos → agrupar num substantivo semântico: `senha + email` → `Credenciais`
 - Quando coleção → plural do complemento: `Tag` → `Tags`
+
+**Regras adicionais:**
+- Toda recuperação individual usa `EntidadeRecuperarDto { id: number }` — nunca primitivo
+- Toda operação usa DTO mesmo que tenha um único campo — zero primitivos em assinaturas
+- Nenhum DTO pode ser alias ou re-export de outro — cada um define os próprios campos
 
 **Localização:** sempre em `shared/src/dtos/[modulo]/` — nunca dentro de `backend/` ou `frontend/`
 
@@ -70,13 +76,14 @@ Padrão: `verbo + entidade`, sem preposições, sem abreviações:
 ```typescript
 // ✅
 criarUsuario()          listarUsuarios()        recuperarUsuario()
-atualizarUsuario()      excluirUsuario()        existeLogin()
+alterarUsuario()        excluirUsuario()        validarLogin()
 buscarLogin()           iniciarExecucao()       encerrarExecucao()
 calcularHorasTrabalhadas()  identificarIntervalos()  verificarCriariaCiclo()
 
 // ❌
 createUser()            getUser()               findByLogin()
 calcHrs()               checkCycle()
+atualizarUsuario()      existeLogin()           existeNome()
 ```
 
 ---
@@ -156,7 +163,7 @@ criar(@Body() dto: UsuarioCriarDto) {
 Toda lógica de negócio, validações de regra, orquestração de repositórios:
 ```typescript
 async criar(dto: UsuarioCriarDto) {
-  if (await this.usuarioRepositorio.existeLogin(dto.login))
+  if (await this.usuarioRepositorio.validarLogin({ login: dto.login }))
     throw new BusinessException('Login já está em uso');
   // ... lógica
 }
@@ -165,10 +172,10 @@ async criar(dto: UsuarioCriarDto) {
 ### Repository → só SQL
 Sem lógica de negócio. Apenas executa queries via `executarConsulta()` / `executarComando()`:
 ```typescript
-async existeLogin(login: string): Promise<boolean> {
+async validarLogin(dto: UsuarioValidarLoginDto): Promise<boolean> {
   const resultado = await this.executarConsulta<{ existe: boolean }>(
     `SELECT EXISTS(SELECT 1 FROM usuario WHERE login = :login AND is_deleted = false) AS existe`,
-    { login },
+    { login: dto.login },
   );
   return resultado[0].existe;
 }
@@ -237,3 +244,8 @@ Sempre: string enum, valor igual ao nome, em SCREAMING_SNAKE_CASE.
 | Arquivo `.css` | Sempre `.scss` |
 | `style=""` inline no HTML | SCSS ou classe Tailwind |
 | Seletor de ID em SCSS (`#elemento`) | Classe BEM ou Tailwind |
+| Primitivo como parâmetro de método (`id: number`, `login: string`) | DTO, mesmo que tenha um único campo |
+| `existe*` em nome de método | `validar*` (ex: `validarLogin`, `validarNome`, `validarCodigo`) |
+| DTO como alias ou re-export de outro DTO | Cada DTO define seus próprios campos explicitamente |
+| `Atualizar`/`Atualizado` em DTO ou método | `Alterar`/`Alterado` |
+| Query de módulo A no repositório de módulo B | Usar o repositório do módulo correto |
