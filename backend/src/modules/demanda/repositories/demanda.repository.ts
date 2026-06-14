@@ -16,6 +16,9 @@ import {
   DemandaPrioridadeEnum,
   DemandaConexaoCriadaDto,
   DemandaConexaoResumoDto,
+  DemandaMembroDto,
+  DemandaUsuarioAtribuidoDto,
+  TagResumoDto,
 } from '@project20/shared';
 import { UsuarioTipoEnum, UsuarioStatusEnum } from '@project20/shared';
 
@@ -620,5 +623,144 @@ export class DemandaRepository extends BaseRepository<Demanda> {
       { conexaoId, demandaId },
     );
     return resultado[0].existe;
+  }
+
+  /**
+   * Lista as tags ativas atribuídas a uma demanda.
+   */
+  async listarTagsDemanda(demandaId: number): Promise<TagResumoDto[]> {
+    return this.executarConsulta<TagResumoDto>(
+      `SELECT
+         tag.id,
+         tag.nome,
+         tag.cor
+       FROM demanda_tag
+       INNER JOIN tag
+         ON tag.id = demanda_tag.tag_id
+         AND tag.is_deleted = false
+       WHERE demanda_tag.demanda_id = :demandaId
+         AND demanda_tag.is_deleted = false`,
+      { demandaId },
+    );
+  }
+
+  /**
+   * Sincroniza as tags de uma demanda com a nova lista de IDs.
+   * Faz soft delete das tags removidas e insere as novas.
+   * Tags que já existem e permanecem na lista não são tocadas.
+   */
+  async atribuirTagsDemanda(demandaId: number, tagIds: number[]): Promise<void> {
+    const tagsAtuais = await this.listarTagsDemanda(demandaId);
+    const idsAtuais  = tagsAtuais.map((tag) => tag.id);
+
+    const idsParaRemover = idsAtuais.filter((id) => !tagIds.includes(id));
+    const idsParaInserir = tagIds.filter((id) => !idsAtuais.includes(id));
+
+    for (const tagId of idsParaRemover) {
+      await this.removerTagDemanda(demandaId, tagId);
+    }
+
+    for (const tagId of idsParaInserir) {
+      await this.executarComando(
+        `INSERT INTO demanda_tag (demanda_id, tag_id, created_date, updated_date, is_deleted)
+         SELECT :demandaId, :tagId, NOW(), NOW(), false`,
+        { demandaId, tagId },
+      );
+    }
+  }
+
+  /**
+   * Remove (soft delete) a associação de uma tag à demanda.
+   */
+  async removerTagDemanda(demandaId: number, tagId: number): Promise<void> {
+    await this.executarComando(
+      `UPDATE demanda_tag
+       SET is_deleted   = true,
+           deleted_date = NOW(),
+           updated_date = NOW()
+       WHERE demanda_id = :demandaId
+         AND tag_id     = :tagId
+         AND is_deleted = false`,
+      { demandaId, tagId },
+    );
+  }
+
+  /**
+   * Lista os membros ativos de uma demanda com dados do usuário.
+   */
+  async listarMembrosDemanda(demandaId: number): Promise<DemandaMembroDto[]> {
+    return this.executarConsulta<DemandaMembroDto>(
+      `SELECT
+         usuario.id         AS "usuarioId",
+         usuario.nome_completo AS "nomeCompleto",
+         usuario.login,
+         usuario.tipo,
+         usuario.cargo_titulo  AS "cargoTitulo"
+       FROM demanda_usuario
+       INNER JOIN usuario
+         ON usuario.id = demanda_usuario.usuario_id
+         AND usuario.is_deleted = false
+       WHERE demanda_usuario.demanda_id = :demandaId
+         AND demanda_usuario.is_deleted = false`,
+      { demandaId },
+    );
+  }
+
+  /**
+   * Atribui um usuário à demanda.
+   */
+  async atribuirMembroDemanda(demandaId: number, usuarioId: number): Promise<void> {
+    await this.executarComando(
+      `INSERT INTO demanda_usuario (demanda_id, usuario_id, created_date, updated_date, is_deleted)
+       SELECT :demandaId, :usuarioId, NOW(), NOW(), false`,
+      { demandaId, usuarioId },
+    );
+  }
+
+  /**
+   * Remove (soft delete) a atribuição de um usuário à demanda.
+   */
+  async removerMembroDemanda(demandaId: number, usuarioId: number): Promise<void> {
+    await this.executarComando(
+      `UPDATE demanda_usuario
+       SET is_deleted   = true,
+           deleted_date = NOW(),
+           updated_date = NOW()
+       WHERE demanda_id = :demandaId
+         AND usuario_id = :usuarioId
+         AND is_deleted = false`,
+      { demandaId, usuarioId },
+    );
+  }
+
+  /**
+   * Verifica se um usuário já está atribuído à demanda.
+   */
+  async membroJaAtribuido(demandaId: number, usuarioId: number): Promise<boolean> {
+    const resultado = await this.executarConsulta<{ existe: boolean }>(
+      `SELECT EXISTS(
+         SELECT 1 FROM demanda_usuario
+         WHERE demanda_id = :demandaId
+           AND usuario_id = :usuarioId
+           AND is_deleted = false
+       ) AS existe`,
+      { demandaId, usuarioId },
+    );
+    return resultado[0].existe;
+  }
+
+  /**
+   * Conta o total de membros ativos em uma demanda.
+   * Usado para impedir remoção do último membro.
+   */
+  async contarMembrosDemanda(demandaId: number): Promise<number> {
+    const resultado = await this.executarConsulta<{ total: number }>(
+      `SELECT COUNT(*)::int AS total
+       FROM demanda_usuario
+       WHERE demanda_id = :demandaId
+         AND is_deleted = false`,
+      { demandaId },
+    );
+    return resultado[0].total;
   }
 }

@@ -9,8 +9,8 @@
 ## Última Atualização
 
 **Data:** 2026-06-13
-**Task concluída:** 12-demanda-grafo
-**Sessão:** Módulo demanda — conexões entre demandas e prevenção de ciclos
+**Task concluída:** 13-demanda-tags-atribuicoes
+**Sessão:** Módulo demanda — sync de tags e gerenciamento de membros
 
 ---
 
@@ -43,6 +43,7 @@
 - **10-demanda-crud** — `BaseRepository` atualizado para aceitar `Knex.Transaction` opcional em `executarConsulta` e `executarComando`; 10 DTOs em `shared/src/dtos/demanda/` (`DemandaCriarDto`, `DemandaCriadaDto`, `DemandaResumoDto`, `DemandaRecuperadaDto`, `DemandaListarDto`, `DemandaAtualizarDto`, `DemandaAtualizadaDto`, `DemandaGrafoNoDto`, `DemandaGrafoArestaDto`, `DemandaGrafoDto`); `Demanda` model no backend; `DemandaRepository` com SQL bruto (inserir, inserirDemandaUsuario, inserirComAtribuicao transacional, buscarIdentificador com filtro opcional de usuário, listar com JOIN condicional em demanda_usuario, atualizar, excluir, buscarIdGestoresAtivos, usuarioTemAcessoProjeto, recuperarGrafo); `DemandaService` com regras de negócio (verificação de acesso de desenvolvedor via demanda_usuario, validação de demanda pai no mesmo projeto, auto-atribuição atômica do criador + gestores ativos, controle de acesso no listar/recuperar/atualizar por tipo); `DemandaController` com 6 endpoints (POST, GET, GET/grafo, GET/:id, PUT/:id, DELETE/:id restrito a gestor); `DemandaModule` registrado no `AppModule`
 - **11-demanda-hierarquia** — 2 DTOs em `shared/src/dtos/demanda/` (`DemandaArvoreItemDto` com campo recursivo `filhos`, `DemandaAncestralDto`); `DemandaRepository` com `buscarDescendentes` (CTE recursivo descendente — inclui raiz com nível 0) e `buscarAncestral` (CTE recursivo invertido — apenas ancestrais com nível > 0, ordem raiz-para-pai invertida); `DemandaService` com `recuperarArvore` (converte lista plana em árvore aninhada via Map) e `recuperarAncestral` (repassa lista ordenada); `DemandaController` com 2 endpoints (`GET /:id/arvore`, `GET /:id/ancestral`), declarados antes de `GET /:id` para garantir rota correta no NestJS
 - **12-demanda-grafo** — 3 DTOs em `shared/src/dtos/demanda/` (`DemandaConexaoCriarDto`, `DemandaConexaoCriadaDto`, `DemandaConexaoResumoDto`); `DemandaRepository` com `verificarCriariaCiclo` (CTE recursivo conforme SCHEMA.md), `existeConexao` (helper para prevenir duplicatas), `inserirConexao`, `listarConexoes` (CASE para identificar direção saída/entrada/bidirecional), `excluirConexao` (soft delete direto em `demanda_conexao`), `conexaoPertenceADemanda` (autorização no delete); `recuperarGrafo` atualizado para retornar arestas reais via JOIN com `demanda_conexao`; `DemandaService` com `criarConexao` (6 validações: acesso, existência origem/destino, auto-referência, duplicata, ciclo), `listarConexoes`, `excluirConexao`; `DemandaController` com 3 endpoints (`POST /:id/conexao`, `GET /:id/conexao`, `DELETE /:id/conexao/:conexaoId` restrito a gestor)
+- **13-demanda-tags-atribuicoes** — 5 DTOs em `shared/src/dtos/demanda/` (`DemandaTagsAtribuirDto`, `DemandaTagsAtribuidasDto`, `DemandaUsuarioAtribuirDto`, `DemandaUsuarioAtribuidoDto`, `DemandaMembroDto`); `DemandaRepository` com 8 métodos novos (`listarTagsDemanda`, `atribuirTagsDemanda` com sync, `removerTagDemanda`, `listarMembrosDemanda`, `atribuirMembroDemanda`, `removerMembroDemanda`, `membroJaAtribuido`, `contarMembrosDemanda`); `DemandaModule` importa `TagModule` e `UsuarioModule`; `DemandaService` com 5 métodos (`atualizarTagsDemanda`, `listarTagsDemanda`, `listarMembros`, `atribuirMembro`, `removerMembro`) com injeção de `TagRepository` e `UsuarioRepository`; `DemandaController` com 5 endpoints (`PUT /:id/tag` gestor, `GET /:id/tag`, `GET /:id/membro`, `POST /:id/membro` gestor, `DELETE /:id/membro/:usuarioId` gestor)
 
 ---
 
@@ -54,7 +55,7 @@
 
 ## Próxima Task
 
-**`docs/specs/backlog/13-demanda-tags-atribuicoes.spec.md`** (tags e atribuições de usuários em demandas)
+**`docs/specs/backlog/14-atividade-crud.spec.md`** (CRUD de atividades vinculadas a demandas)
 
 ---
 
@@ -148,6 +149,9 @@ project-2.0/
 - `DemandaRepository.existeConexao` não está listada na spec mas é necessária para implementar a validação de duplicata (#4 de `criarConexao`) com mensagem amigável antes de atingir a constraint do banco
 - `listarConexoes` usa `:demandaId` 4 vezes no SQL; Knex com named bindings substitui cada ocorrência pelo valor do objeto — comportamento correto com pg driver
 - Arestas do grafo são filtradas com INNER JOIN nas duas pontas (origem e destino no mesmo projeto) — conexões cross-projeto não aparecem no grafo do projeto
+- `DemandaService` passa a injetar `TagRepository` e `UsuarioRepository` via `DemandaModule` que importa `TagModule` e `UsuarioModule`; essa dependência entre módulos é necessária para validar existência de tags e usuários antes das operações de atribuição, sem duplicar SQL no repositório de demanda
+- `atribuirTagsDemanda` do repositório implementa sync: lista tags atuais, faz soft delete das que saíram, insere apenas as novas — tags que permanecem na lista não são tocadas e não violam a UNIQUE INDEX filtrada por `is_deleted = false`
+- `contarMembrosDemanda` não estava na spec mas é necessário para implementar a regra "não remover o último membro" sem trazer toda a lista de membros para a service
 
 ---
 

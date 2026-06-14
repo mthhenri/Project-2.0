@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DemandaRepository } from '../repositories/demanda.repository';
+import { TagRepository } from '../../tag/repositories/tag.repository';
+import { UsuarioRepository } from '../../usuario/repositories/usuario.repository';
 import {
   DemandaCriarDto,
   DemandaCriadaDto,
@@ -13,6 +15,12 @@ import {
   DemandaConexaoCriarDto,
   DemandaConexaoCriadaDto,
   DemandaConexaoResumoDto,
+  DemandaTagsAtribuirDto,
+  DemandaTagsAtribuidasDto,
+  DemandaUsuarioAtribuirDto,
+  DemandaUsuarioAtribuidoDto,
+  DemandaMembroDto,
+  TagResumoDto,
   UsuarioTipoEnum,
 } from '@project20/shared';
 import { StandardResponse } from '@project20/shared';
@@ -24,7 +32,11 @@ import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.int
 
 @Injectable()
 export class DemandaService {
-  constructor(private readonly demandaRepositorio: DemandaRepository) {}
+  constructor(
+    private readonly demandaRepositorio: DemandaRepository,
+    private readonly tagRepositorio: TagRepository,
+    private readonly usuarioRepositorio: UsuarioRepository,
+  ) {}
 
   /**
    * Cria nova demanda com auto-atribuição transacional do criador e de todos os gestores ativos.
@@ -437,6 +449,158 @@ export class DemandaService {
       sucesso:  true,
       dados:    grafo,
       mensagem: 'Grafo de demandas recuperado com sucesso',
+    };
+  }
+
+  /**
+   * Sincroniza as tags de uma demanda com a lista enviada.
+   * Remove as que saíram, insere as novas, mantém as que continuam.
+   * Restrito a gestores.
+   */
+  async atualizarTagsDemanda(
+    demandaId: number,
+    dto: DemandaTagsAtribuirDto,
+  ): Promise<StandardResponse<DemandaTagsAtribuidasDto>> {
+    const demandaEncontrada = await this.demandaRepositorio.buscarIdentificador(demandaId);
+    if (!demandaEncontrada) {
+      throw new ResourceNotFoundException('Demanda');
+    }
+
+    for (const tagId of dto.tagIds) {
+      const tagEncontrada = await this.tagRepositorio.buscarIdentificador(tagId);
+      if (!tagEncontrada) {
+        throw new ResourceNotFoundException(`Tag com id ${tagId}`);
+      }
+    }
+
+    await this.demandaRepositorio.atribuirTagsDemanda(demandaId, dto.tagIds);
+
+    const tagsAtualizadas = await this.demandaRepositorio.listarTagsDemanda(demandaId);
+
+    return {
+      sucesso:  true,
+      dados:    { demandaId, tags: tagsAtualizadas },
+      mensagem: 'Tags da demanda atualizadas com sucesso',
+    };
+  }
+
+  /**
+   * Lista as tags ativas de uma demanda.
+   * Desenvolvedor só pode consultar demandas às quais está atribuído.
+   */
+  async listarTagsDemanda(
+    demandaId: number,
+    usuarioAtivo: JwtPayload,
+  ): Promise<StandardResponse<TagResumoDto[]>> {
+    const usuarioId =
+      usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
+
+    const demandaEncontrada = await this.demandaRepositorio.buscarIdentificador(demandaId, usuarioId);
+    if (!demandaEncontrada) {
+      throw new ResourceNotFoundException('Demanda');
+    }
+
+    const tags = await this.demandaRepositorio.listarTagsDemanda(demandaId);
+
+    return {
+      sucesso:  true,
+      dados:    tags,
+      mensagem: 'Tags da demanda listadas com sucesso',
+    };
+  }
+
+  /**
+   * Lista os membros ativos de uma demanda.
+   * Desenvolvedor só pode consultar demandas às quais está atribuído.
+   */
+  async listarMembros(
+    demandaId: number,
+    usuarioAtivo: JwtPayload,
+  ): Promise<StandardResponse<DemandaMembroDto[]>> {
+    const usuarioId =
+      usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
+
+    const demandaEncontrada = await this.demandaRepositorio.buscarIdentificador(demandaId, usuarioId);
+    if (!demandaEncontrada) {
+      throw new ResourceNotFoundException('Demanda');
+    }
+
+    const membros = await this.demandaRepositorio.listarMembrosDemanda(demandaId);
+
+    return {
+      sucesso:  true,
+      dados:    membros,
+      mensagem: 'Membros da demanda listados com sucesso',
+    };
+  }
+
+  /**
+   * Atribui manualmente um usuário à demanda.
+   * Restrito a gestores. Impede duplicidade.
+   */
+  async atribuirMembro(
+    demandaId: number,
+    dto: DemandaUsuarioAtribuirDto,
+  ): Promise<StandardResponse<DemandaUsuarioAtribuidoDto>> {
+    const demandaEncontrada = await this.demandaRepositorio.buscarIdentificador(demandaId);
+    if (!demandaEncontrada) {
+      throw new ResourceNotFoundException('Demanda');
+    }
+
+    const usuarioEncontrado = await this.usuarioRepositorio.recuperar({ id: dto.usuarioId });
+    if (!usuarioEncontrado) {
+      throw new ResourceNotFoundException('Usuário');
+    }
+
+    const jaAtribuido = await this.demandaRepositorio.membroJaAtribuido(demandaId, dto.usuarioId);
+    if (jaAtribuido) {
+      throw new BusinessException('Usuário já está atribuído a esta demanda');
+    }
+
+    await this.demandaRepositorio.atribuirMembroDemanda(demandaId, dto.usuarioId);
+
+    return {
+      sucesso: true,
+      dados: {
+        demandaId,
+        usuarioId:   usuarioEncontrado.id,
+        nomeUsuario: usuarioEncontrado.nomeCompleto,
+        login:       usuarioEncontrado.login,
+        tipo:        usuarioEncontrado.tipo,
+      },
+      mensagem: 'Membro atribuído à demanda com sucesso',
+    };
+  }
+
+  /**
+   * Remove um membro da demanda via soft delete.
+   * Restrito a gestores. Impede remoção do último membro.
+   */
+  async removerMembro(
+    demandaId: number,
+    usuarioId: number,
+  ): Promise<StandardResponse<void>> {
+    const demandaEncontrada = await this.demandaRepositorio.buscarIdentificador(demandaId);
+    if (!demandaEncontrada) {
+      throw new ResourceNotFoundException('Demanda');
+    }
+
+    const estaAtribuido = await this.demandaRepositorio.membroJaAtribuido(demandaId, usuarioId);
+    if (!estaAtribuido) {
+      throw new ResourceNotFoundException('Membro');
+    }
+
+    const totalMembros = await this.demandaRepositorio.contarMembrosDemanda(demandaId);
+    if (totalMembros <= 1) {
+      throw new BusinessException('Não é possível remover o último membro da demanda');
+    }
+
+    await this.demandaRepositorio.removerMembroDemanda(demandaId, usuarioId);
+
+    return {
+      sucesso:  true,
+      dados:    null,
+      mensagem: 'Membro removido da demanda com sucesso',
     };
   }
 }

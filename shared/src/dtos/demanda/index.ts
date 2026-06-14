@@ -13,3 +13,8 @@ export * from './DemandaAncestralDto';
 export * from './DemandaConexaoCriarDto';
 export * from './DemandaConexaoCriadaDto';
 export * from './DemandaConexaoResumoDto';
+export * from './DemandaTagsAtribuirDto';
+export * from './DemandaTagsAtribuidasDto';
+export * from './DemandaUsuarioAtribuirDto';
+export * from './DemandaUsuarioAtribuidoDto';
+export * from './DemandaMembroDto';
