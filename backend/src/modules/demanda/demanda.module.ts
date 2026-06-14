@@ -1,4 +1,11 @@
 import { Module } from '@nestjs/common';
+import { DemandaController } from './controllers/demanda.controller';
+import { DemandaService } from './services/demanda.service';
+import { DemandaRepository } from './repositories/demanda.repository';
 
-@Module({})
+@Module({
+  controllers: [DemandaController],
+  providers:   [DemandaService, DemandaRepository],
+  exports:     [DemandaService, DemandaRepository],
+})
 export class DemandaModule {}

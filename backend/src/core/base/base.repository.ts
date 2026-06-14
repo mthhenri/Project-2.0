@@ -11,23 +11,29 @@ export abstract class BaseRepository<TEntidade> {
 
   /**
    * Executa uma query SQL e retorna os resultados tipados.
+   * Aceita uma transação Knex opcional para operações atômicas.
    */
   protected async executarConsulta<TResultado = TEntidade>(
     consultaSQL: string,
     parametros: Record<string, unknown> | unknown[] = {},
+    transacao?: Knex.Transaction,
   ): Promise<TResultado[]> {
-    const resultado = await this.conexaoBancoDados.raw(consultaSQL, parametros as any);
+    const executor = transacao ?? this.conexaoBancoDados;
+    const resultado = await executor.raw(consultaSQL, parametros as any);
     return resultado.rows as TResultado[];
   }
 
   /**
    * Executa um comando SQL sem retorno de dados (INSERT sem RETURNING, UPDATE, etc).
+   * Aceita uma transação Knex opcional para operações atômicas.
    */
   protected async executarComando(
     consultaSQL: string,
     parametros: Record<string, unknown> | unknown[] = {},
+    transacao?: Knex.Transaction,
   ): Promise<void> {
-    await this.conexaoBancoDados.raw(consultaSQL, parametros as any);
+    const executor = transacao ?? this.conexaoBancoDados;
+    await executor.raw(consultaSQL, parametros as any);
   }
 
   /**

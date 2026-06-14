@@ -9,8 +9,8 @@
 ## Última Atualização
 
 **Data:** 2026-06-13
-**Task concluída:** 09-projeto-module
-**Sessão:** Módulo projeto — CRUD com acesso derivado de demanda_usuario
+**Task concluída:** 10-demanda-crud
+**Sessão:** Módulo demanda — CRUD com auto-atribuição transacional e controle de acesso
 
 ---
 
@@ -40,6 +40,7 @@
 - **07-autenticacao-module** — 2 DTOs em `shared/src/dtos/autenticacao/` (`AutenticacaoLoginDto`, `AutenticacaoTokenDto`); `JwtPayload` interface; `JwtStrategy` (passport-jwt); `JwtAuthGuard` (global, verifica @Public()); `GestorGuard` (global, verifica @GestorOnly()); decorators `@Public()`, `@GestorOnly()`, `@ActiveUser()`; `AutenticacaoService` (validarCredenciais, gerarToken, login); `AutenticacaoController` com `POST /autenticacao/login` público; `AutenticacaoModule` com `PassportModule`, `JwtModule.registerAsync`, guards globais via `APP_GUARD`; `UsuarioController` e `UsuarioService` atualizados com guards e validação de permissão por tipo de usuário
 - **08-tag-module** — 6 DTOs em `shared/src/dtos/tag/` (`TagCriarDto`, `TagCriadaDto`, `TagAtualizarDto`, `TagAtualizadaDto`, `TagResumoDto`, `TagRecuperadaDto`); `Tag` model no backend; `TagRepository` com SQL bruto (existeNome, inserir, buscarIdentificador, listar, atualizar, excluir); `TagService` com regras de negócio (nome duplicado → BusinessException, tag não encontrada → ResourceNotFoundException); `TagController` com 5 endpoints (POST restrito a gestor, GET, GET/:id, PUT/:id restrito a gestor, DELETE/:id restrito a gestor); `TagModule` registrado no `AppModule`
 - **09-projeto-module** — 7 DTOs em `shared/src/dtos/projeto/` (`ProjetoCriarDto`, `ProjetoCriadoDto`, `ProjetoResumoDto`, `ProjetoRecuperadoDto`, `ProjetoListarDto`, `ProjetoAtualizarDto`, `ProjetoAtualizadoDto`); `Projeto` model no backend; `ProjetoRepository` com SQL bruto (existeCodigo, inserir, buscarIdentificador, listarTodos, listarPorUsuario, atualizar, excluir); `ProjetoService` com regras de negócio (código duplicado → BusinessException, acesso por tipo de usuário via listarTodos/listarPorUsuario, desenvolvedor sem acesso → ResourceNotFoundException, validação de datas); `ProjetoController` com 5 endpoints (POST/PUT/DELETE restritos a gestor, GET e GET/:id com @ActiveUser para controle de escopo); `ProjetoModule` registrado no `AppModule`
+- **10-demanda-crud** — `BaseRepository` atualizado para aceitar `Knex.Transaction` opcional em `executarConsulta` e `executarComando`; 10 DTOs em `shared/src/dtos/demanda/` (`DemandaCriarDto`, `DemandaCriadaDto`, `DemandaResumoDto`, `DemandaRecuperadaDto`, `DemandaListarDto`, `DemandaAtualizarDto`, `DemandaAtualizadaDto`, `DemandaGrafoNoDto`, `DemandaGrafoArestaDto`, `DemandaGrafoDto`); `Demanda` model no backend; `DemandaRepository` com SQL bruto (inserir, inserirDemandaUsuario, inserirComAtribuicao transacional, buscarIdentificador com filtro opcional de usuário, listar com JOIN condicional em demanda_usuario, atualizar, excluir, buscarIdGestoresAtivos, usuarioTemAcessoProjeto, recuperarGrafo); `DemandaService` com regras de negócio (verificação de acesso de desenvolvedor via demanda_usuario, validação de demanda pai no mesmo projeto, auto-atribuição atômica do criador + gestores ativos, controle de acesso no listar/recuperar/atualizar por tipo); `DemandaController` com 6 endpoints (POST, GET, GET/grafo, GET/:id, PUT/:id, DELETE/:id restrito a gestor); `DemandaModule` registrado no `AppModule`
 
 ---
 
@@ -51,7 +52,7 @@
 
 ## Próxima Task
 
-**`docs/specs/backlog/10-demanda-module.spec.md`** (verificar se existe; caso contrário consultar backlog)
+**`docs/specs/backlog/11-demanda-hierarquia.spec.md`** (hierarquia e árvore de demandas)
 
 ---
 
@@ -82,7 +83,7 @@ project-2.0/
 | autenticacao | ✅ implementado (task 07) |
 | usuario | ✅ implementado (task 06) |
 | projeto | ✅ implementado (task 09) |
-| demanda | ⬜ pendente |
+| demanda | ✅ implementado (task 10) |
 | atividade | ⬜ pendente |
 | execucao | ⬜ pendente |
 | ponto | ⬜ pendente |
@@ -135,6 +136,11 @@ project-2.0/
 - Guards globais (`JwtAuthGuard` e `GestorGuard`) registrados via `APP_GUARD` no próprio `AutenticacaoModule` — padrão NestJS que mantém a lógica de auth coesa no módulo correto; `AutenticacaoModule` importado no `AppModule`
 - `UsuarioModule` permanece importado diretamente no `AppModule` além de ser importado transitivamente via `AutenticacaoModule`; NestJS deduplica o módulo no grafo, sem duplicação de providers/controllers
 - No `ProjetoService.recuperar`, quando o usuário é DESENVOLVEDOR, a verificação de acesso reutiliza `listarPorUsuario` para checar se o projeto aparece na lista do usuário; isso é semanticamente correto mas realiza uma query extra — aceito pois é consistente com a regra de negócio e evita query SQL inline duplicada
+- `BaseRepository.executarConsulta` e `executarComando` passaram a aceitar `Knex.Transaction` como terceiro parâmetro opcional; quando fornecido, usa o executor da transação em vez de `conexaoBancoDados` diretamente
+- `DemandaRepository.inserirComAtribuicao` centraliza a transação no repositório, mantendo o serviço limpo e sem injeção de Knex; a service busca os gestores ativos e passa os IDs para o repositório executar atomicamente
+- `DemandaRepository.buscarIdentificador` e `listar` aceitam `usuarioId` opcional: quando fornecido, fazem JOIN com `demanda_usuario` para filtrar acesso de desenvolvedor — evita método duplicado e mantém o controle de acesso no SQL
+- Rota `GET /demanda/grafo` declarada antes de `GET /demanda/:id` no controller para evitar conflito de rotas no NestJS (ParseIntPipe rejeitaria "grafo" mas a ordem garante a rota correta)
+- `DemandaGrafoDto` retorna `arestas: []` nesta task; as conexões explícitas (DemandaConexao) serão adicionadas na task 12
 
 ---
 

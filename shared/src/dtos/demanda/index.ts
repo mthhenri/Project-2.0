@@ -1,1 +1,10 @@
-export {};
+export * from './DemandaCriarDto';
+export * from './DemandaCriadaDto';
+export * from './DemandaResumoDto';
+export * from './DemandaRecuperadaDto';
+export * from './DemandaListarDto';
+export * from './DemandaAtualizarDto';
+export * from './DemandaAtualizadaDto';
+export * from './DemandaGrafoNoDto';
+export * from './DemandaGrafoArestaDto';
+export * from './DemandaGrafoDto';
