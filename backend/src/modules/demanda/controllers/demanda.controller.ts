@@ -15,6 +15,7 @@ import {
   DemandaCriarDto,
   DemandaListarDto,
   DemandaAtualizarDto,
+  DemandaConexaoCriarDto,
 } from '@project20/shared';
 import { GestorOnly } from '../../autenticacao/decorators/gestor-only.decorator';
 import { ActiveUser } from '../../autenticacao/decorators/active-user.decorator';
@@ -125,5 +126,45 @@ export class DemandaController {
   @Delete(':id')
   excluir(@Param('id', ParseIntPipe) id: number) {
     return this.demandaService.excluir(id);
+  }
+
+  @ApiOperation({ summary: 'Criar conexão entre demandas com prevenção de ciclos' })
+  @ApiResponse({ status: 201, description: 'Conexão criada com sucesso' })
+  @ApiResponse({ status: 400, description: 'Ciclo detectado ou conexão duplicada', schema: { example: { sucesso: false, dados: null, mensagem: 'Essa conexão criaria um ciclo no grafo de demandas', erros: [] } } })
+  @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+  @ApiResponse({ status: 404, description: 'Demanda não encontrada', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
+  @Post(':id/conexao')
+  criarConexao(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: DemandaConexaoCriarDto,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ) {
+    return this.demandaService.criarConexao(id, dto, usuarioAtivo);
+  }
+
+  @ApiOperation({ summary: 'Listar conexões de uma demanda (saída, entrada bidirecional)' })
+  @ApiResponse({ status: 200, description: 'Conexões listadas com sucesso' })
+  @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+  @ApiResponse({ status: 404, description: 'Demanda não encontrada', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
+  @Get(':id/conexao')
+  listarConexoes(
+    @Param('id', ParseIntPipe) id: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ) {
+    return this.demandaService.listarConexoes(id, usuarioAtivo);
+  }
+
+  @ApiOperation({ summary: 'Remover conexão entre demandas (somente gestor)' })
+  @ApiResponse({ status: 200, description: 'Conexão removida com sucesso' })
+  @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+  @ApiResponse({ status: 403, description: 'Acesso restrito a gestores', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+  @ApiResponse({ status: 404, description: 'Conexão não encontrada', schema: { example: { sucesso: false, dados: null, mensagem: 'Conexão não encontrada', erros: [] } } })
+  @GestorOnly()
+  @Delete(':id/conexao/:conexaoId')
+  excluirConexao(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('conexaoId', ParseIntPipe) conexaoId: number,
+  ) {
+    return this.demandaService.excluirConexao(id, conexaoId);
   }
 }

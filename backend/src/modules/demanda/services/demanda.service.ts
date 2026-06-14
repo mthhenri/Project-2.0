@@ -10,6 +10,9 @@ import {
   DemandaGrafoDto,
   DemandaArvoreItemDto,
   DemandaAncestralDto,
+  DemandaConexaoCriarDto,
+  DemandaConexaoCriadaDto,
+  DemandaConexaoResumoDto,
   UsuarioTipoEnum,
 } from '@project20/shared';
 import { StandardResponse } from '@project20/shared';
@@ -271,6 +274,121 @@ export class DemandaService {
       sucesso:  true,
       dados:    ancestrais,
       mensagem: 'Ancestrais da demanda recuperados com sucesso',
+    };
+  }
+
+  /**
+   * Cria uma conexão entre demandas com prevenção de ciclos via CTE recursivo.
+   * Verifica existência de origem e destino, auto-referência e duplicidade antes de inserir.
+   */
+  async criarConexao(
+    demandaOrigemId: number,
+    dto: DemandaConexaoCriarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<StandardResponse<DemandaConexaoCriadaDto>> {
+    const usuarioId =
+      usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
+
+    const demandaOrigemEncontrada = await this.demandaRepositorio.buscarIdentificador(
+      demandaOrigemId,
+      usuarioId,
+    );
+    if (!demandaOrigemEncontrada) {
+      throw new ResourceNotFoundException('Demanda origem');
+    }
+
+    const demandaDestinoEncontrada = await this.demandaRepositorio.buscarIdentificador(
+      dto.demandaDestinoId,
+    );
+    if (!demandaDestinoEncontrada) {
+      throw new ResourceNotFoundException('Demanda destino');
+    }
+
+    if (demandaOrigemId === dto.demandaDestinoId) {
+      throw new BusinessException('A demanda origem e destino não podem ser a mesma');
+    }
+
+    const conexaoJaExiste = await this.demandaRepositorio.existeConexao(
+      demandaOrigemId,
+      dto.demandaDestinoId,
+    );
+    if (conexaoJaExiste) {
+      throw new BusinessException('Já existe uma conexão ativa entre essas demandas neste sentido');
+    }
+
+    const criariaCiclo = await this.demandaRepositorio.verificarCriariaCiclo(
+      demandaOrigemId,
+      dto.demandaDestinoId,
+    );
+    if (criariaCiclo) {
+      throw new BusinessException('Essa conexão criaria um ciclo no grafo de demandas');
+    }
+
+    const conexaoCriada = await this.demandaRepositorio.inserirConexao({
+      demandaOrigemId,
+      demandaDestinoId: dto.demandaDestinoId,
+      ehBidirecional:   dto.ehBidirecional,
+    });
+
+    return {
+      sucesso:  true,
+      dados:    conexaoCriada,
+      mensagem: 'Conexão criada com sucesso',
+    };
+  }
+
+  /**
+   * Lista todas as conexões de uma demanda (saída, entrada bidirecional).
+   * Desenvolvedor só pode listar conexões de demandas às quais está atribuído.
+   */
+  async listarConexoes(
+    demandaId: number,
+    usuarioAtivo: JwtPayload,
+  ): Promise<StandardResponse<DemandaConexaoResumoDto[]>> {
+    const usuarioId =
+      usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
+
+    const demandaEncontrada = await this.demandaRepositorio.buscarIdentificador(demandaId, usuarioId);
+    if (!demandaEncontrada) {
+      throw new ResourceNotFoundException('Demanda');
+    }
+
+    const conexoes = await this.demandaRepositorio.listarConexoes(demandaId);
+
+    return {
+      sucesso:  true,
+      dados:    conexoes,
+      mensagem: 'Conexões listadas com sucesso',
+    };
+  }
+
+  /**
+   * Remove uma conexão via soft delete. Verifica que a conexão pertence à demanda.
+   * Restrito a gestores.
+   */
+  async excluirConexao(
+    demandaId: number,
+    conexaoId: number,
+  ): Promise<StandardResponse<void>> {
+    const demandaEncontrada = await this.demandaRepositorio.buscarIdentificador(demandaId);
+    if (!demandaEncontrada) {
+      throw new ResourceNotFoundException('Demanda');
+    }
+
+    const conexaoPertence = await this.demandaRepositorio.conexaoPertenceADemanda(
+      conexaoId,
+      demandaId,
+    );
+    if (!conexaoPertence) {
+      throw new ResourceNotFoundException('Conexão');
+    }
+
+    await this.demandaRepositorio.excluirConexao(conexaoId);
+
+    return {
+      sucesso:  true,
+      dados:    null,
+      mensagem: 'Conexão removida com sucesso',
     };
   }
 

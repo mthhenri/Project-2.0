@@ -10,9 +10,12 @@ import {
   DemandaListarDto,
   DemandaGrafoDto,
   DemandaGrafoNoDto,
+  DemandaGrafoArestaDto,
   DemandaAncestralDto,
   DemandaStatusEnum,
   DemandaPrioridadeEnum,
+  DemandaConexaoCriadaDto,
+  DemandaConexaoResumoDto,
 } from '@project20/shared';
 import { UsuarioTipoEnum, UsuarioStatusEnum } from '@project20/shared';
 
@@ -438,8 +441,8 @@ export class DemandaRepository extends BaseRepository<Demanda> {
   }
 
   /**
-   * Retorna todos os nós do grafo de demandas de um projeto.
-   * Arestas de conexão serão adicionadas na task 12 (DemandaConexao).
+   * Retorna todos os nós e arestas do grafo de demandas de um projeto.
+   * Arestas incluem conexões explícitas via demanda_conexao onde origem e destino pertencem ao projeto.
    */
   async recuperarGrafo(projetoId: number): Promise<DemandaGrafoDto> {
     const nos = await this.executarConsulta<DemandaGrafoNoDto>(
@@ -456,6 +459,166 @@ export class DemandaRepository extends BaseRepository<Demanda> {
       { projetoId },
     );
 
-    return { nos, arestas: [] };
+    const arestas = await this.executarConsulta<DemandaGrafoArestaDto>(
+      `SELECT
+         demanda_conexao.demanda_origem_id  AS "origemId",
+         demanda_conexao.demanda_destino_id AS "destinoId",
+         demanda_conexao.eh_bidirecional    AS "ehBidirecional"
+       FROM demanda_conexao
+       INNER JOIN demanda AS demanda_origem
+         ON demanda_origem.id = demanda_conexao.demanda_origem_id
+         AND demanda_origem.projeto_id = :projetoId
+         AND demanda_origem.is_deleted = false
+       INNER JOIN demanda AS demanda_destino
+         ON demanda_destino.id = demanda_conexao.demanda_destino_id
+         AND demanda_destino.projeto_id = :projetoId
+         AND demanda_destino.is_deleted = false
+       WHERE demanda_conexao.is_deleted = false`,
+      { projetoId },
+    );
+
+    return { nos, arestas };
+  }
+
+  /**
+   * Verifica se conectar origem → destino criaria um ciclo no grafo.
+   * Usa CTE recursivo conforme SCHEMA.md.
+   * Retorna true se criaria ciclo.
+   */
+  async verificarCriariaCiclo(origemId: number, destinoId: number): Promise<boolean> {
+    const resultado = await this.executarConsulta<{ criariaCiclo: boolean }>(
+      `WITH RECURSIVE verificacao_ciclo AS (
+         SELECT demanda_destino_id AS id
+         FROM demanda_conexao
+         WHERE demanda_origem_id = :destinoId
+           AND is_deleted = false
+
+         UNION ALL
+
+         SELECT demanda_conexao_proxima.demanda_destino_id
+         FROM demanda_conexao AS demanda_conexao_proxima
+         INNER JOIN verificacao_ciclo
+           ON demanda_conexao_proxima.demanda_origem_id = verificacao_ciclo.id
+         WHERE demanda_conexao_proxima.is_deleted = false
+       )
+       SELECT EXISTS (
+         SELECT 1 FROM verificacao_ciclo WHERE id = :origemId
+       ) AS "criariaCiclo"`,
+      { destinoId, origemId },
+    );
+    return resultado[0].criariaCiclo;
+  }
+
+  /**
+   * Verifica se já existe conexão ativa de origem para destino.
+   */
+  async existeConexao(origemId: number, destinoId: number): Promise<boolean> {
+    const resultado = await this.executarConsulta<{ existe: boolean }>(
+      `SELECT EXISTS(
+         SELECT 1 FROM demanda_conexao
+         WHERE demanda_origem_id = :origemId
+           AND demanda_destino_id = :destinoId
+           AND is_deleted = false
+       ) AS existe`,
+      { origemId, destinoId },
+    );
+    return resultado[0].existe;
+  }
+
+  /**
+   * Insere nova conexão entre demandas.
+   */
+  async inserirConexao(dados: {
+    demandaOrigemId: number;
+    demandaDestinoId: number;
+    ehBidirecional: boolean;
+  }): Promise<DemandaConexaoCriadaDto> {
+    const resultado = await this.executarConsulta<DemandaConexaoCriadaDto>(
+      `INSERT INTO demanda_conexao (
+         demanda_origem_id, demanda_destino_id, eh_bidirecional,
+         created_date, updated_date, is_deleted
+       )
+       SELECT
+         :demandaOrigemId, :demandaDestinoId, :ehBidirecional,
+         NOW(), NOW(), false
+       RETURNING
+         id,
+         demanda_origem_id  AS "demandaOrigemId",
+         demanda_destino_id AS "demandaDestinoId",
+         eh_bidirecional    AS "ehBidirecional",
+         created_date       AS "createdDate"`,
+      {
+        demandaOrigemId:  dados.demandaOrigemId,
+        demandaDestinoId: dados.demandaDestinoId,
+        ehBidirecional:   dados.ehBidirecional,
+      },
+    );
+    return resultado[0];
+  }
+
+  /**
+   * Lista todas as conexões de uma demanda (saída, entrada bidirecional).
+   */
+  async listarConexoes(demandaId: number): Promise<DemandaConexaoResumoDto[]> {
+    return this.executarConsulta<DemandaConexaoResumoDto>(
+      `SELECT
+         demanda_conexao.id,
+         CASE
+           WHEN demanda_conexao.demanda_origem_id = :demandaId THEN demanda_conexao.demanda_destino_id
+           ELSE demanda_conexao.demanda_origem_id
+         END AS "demandaConectadaId",
+         demanda_conectada.nome AS "nomeDemandaConectada",
+         CASE
+           WHEN demanda_conexao.eh_bidirecional = true THEN 'bidirecional'
+           WHEN demanda_conexao.demanda_origem_id = :demandaId THEN 'saida'
+           ELSE 'entrada'
+         END AS direcao
+       FROM demanda_conexao
+       INNER JOIN demanda AS demanda_conectada
+         ON demanda_conectada.id = CASE
+           WHEN demanda_conexao.demanda_origem_id = :demandaId THEN demanda_conexao.demanda_destino_id
+           ELSE demanda_conexao.demanda_origem_id
+         END
+         AND demanda_conectada.is_deleted = false
+       WHERE demanda_conexao.is_deleted = false
+         AND (
+           demanda_conexao.demanda_origem_id = :demandaId
+           OR (demanda_conexao.demanda_destino_id = :demandaId AND demanda_conexao.eh_bidirecional = true)
+         )`,
+      { demandaId },
+    );
+  }
+
+  /**
+   * Remove uma conexão pelo ID via soft delete.
+   */
+  async excluirConexao(conexaoId: number): Promise<void> {
+    await this.executarComando(
+      `UPDATE demanda_conexao
+       SET is_deleted = true,
+           deleted_date = NOW(),
+           updated_date = NOW()
+       WHERE id = :conexaoId`,
+      { conexaoId },
+    );
+  }
+
+  /**
+   * Verifica se a conexão pertence à demanda informada (como origem ou destino bidirecional).
+   */
+  async conexaoPertenceADemanda(conexaoId: number, demandaId: number): Promise<boolean> {
+    const resultado = await this.executarConsulta<{ existe: boolean }>(
+      `SELECT EXISTS(
+         SELECT 1 FROM demanda_conexao
+         WHERE id = :conexaoId
+           AND is_deleted = false
+           AND (
+             demanda_origem_id = :demandaId
+             OR (demanda_destino_id = :demandaId AND eh_bidirecional = true)
+           )
+       ) AS existe`,
+      { conexaoId, demandaId },
+    );
+    return resultado[0].existe;
   }
 }

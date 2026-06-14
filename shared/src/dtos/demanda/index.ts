@@ -10,3 +10,6 @@ export * from './DemandaGrafoArestaDto';
 export * from './DemandaGrafoDto';
 export * from './DemandaArvoreItemDto';
 export * from './DemandaAncestralDto';
+export * from './DemandaConexaoCriarDto';
+export * from './DemandaConexaoCriadaDto';
+export * from './DemandaConexaoResumoDto';
