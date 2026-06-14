@@ -9,8 +9,8 @@
 ## Última Atualização
 
 **Data:** 2026-06-13
-**Task concluída:** 14-atividade-module
-**Sessão:** Módulo atividade — CRUD, tags e controle de acesso por demanda
+**Task concluída:** 15-execucao-module
+**Sessão:** Módulo execucao — timer de trabalho com validação de concorrência
 
 ---
 
@@ -45,6 +45,7 @@
 - **12-demanda-grafo** — 3 DTOs em `shared/src/dtos/demanda/` (`DemandaConexaoCriarDto`, `DemandaConexaoCriadaDto`, `DemandaConexaoResumoDto`); `DemandaRepository` com `verificarCriariaCiclo` (CTE recursivo conforme SCHEMA.md), `existeConexao` (helper para prevenir duplicatas), `inserirConexao`, `listarConexoes` (CASE para identificar direção saída/entrada/bidirecional), `excluirConexao` (soft delete direto em `demanda_conexao`), `conexaoPertenceADemanda` (autorização no delete); `recuperarGrafo` atualizado para retornar arestas reais via JOIN com `demanda_conexao`; `DemandaService` com `criarConexao` (6 validações: acesso, existência origem/destino, auto-referência, duplicata, ciclo), `listarConexoes`, `excluirConexao`; `DemandaController` com 3 endpoints (`POST /:id/conexao`, `GET /:id/conexao`, `DELETE /:id/conexao/:conexaoId` restrito a gestor)
 - **13-demanda-tags-atribuicoes** — 5 DTOs em `shared/src/dtos/demanda/` (`DemandaTagsAtribuirDto`, `DemandaTagsAtribuidasDto`, `DemandaUsuarioAtribuirDto`, `DemandaUsuarioAtribuidoDto`, `DemandaMembroDto`); `DemandaRepository` com 8 métodos novos (`listarTagsDemanda`, `atribuirTagsDemanda` com sync, `removerTagDemanda`, `listarMembrosDemanda`, `atribuirMembroDemanda`, `removerMembroDemanda`, `membroJaAtribuido`, `contarMembrosDemanda`); `DemandaModule` importa `TagModule` e `UsuarioModule`; `DemandaService` com 5 métodos (`atualizarTagsDemanda`, `listarTagsDemanda`, `listarMembros`, `atribuirMembro`, `removerMembro`) com injeção de `TagRepository` e `UsuarioRepository`; `DemandaController` com 5 endpoints (`PUT /:id/tag` gestor, `GET /:id/tag`, `GET /:id/membro`, `POST /:id/membro` gestor, `DELETE /:id/membro/:usuarioId` gestor)
 - **14-atividade-module** — 9 DTOs em `shared/src/dtos/atividade/` (`AtividadeCriarDto`, `AtividadeCriadaDto`, `AtividadeResumoDto`, `AtividadeRecuperadaDto`, `AtividadeListarDto`, `AtividadeAtualizarDto`, `AtividadeAtualizadaDto` como re-export de Recuperada, `AtividadeTagsAtribuirDto`, `AtividadeTagsAtribuidasDto`); `Atividade` model no backend; `AtividadeRepository` com SQL bruto (inserir, buscarIdentificador com JOIN a usuario, listar com paginação e filtro de status, atualizar, excluir, usuarioTemAcessoDemanda via demanda_usuario, listarTags, atualizarTags com sync); `AtividadeService` com 7 métodos (criar com verificação de acesso via demanda_usuario, listar com restrição de desenvolvedor, recuperar, atualizar com regra autor-ou-membro para desenvolvedor, excluir, atualizarTags, listarTags); `AtividadeController` com 7 endpoints (POST, GET, GET/:id, PUT/:id, DELETE/:id gestor, PUT/:id/tag gestor, GET/:id/tag); `AtividadeModule` importa `DemandaModule` e `TagModule`; registrado no `AppModule`
+- **15-execucao-module** — 8 DTOs em `shared/src/dtos/execucao/` (`ExecucaoIniciarDto`, `ExecucaoIniciadaDto`, `ExecucaoEncerrarDto`, `ExecucaoEncerradaDto`, `ExecucaoAtualizarDto`, `ExecucaoAtualizadaDto` como re-export de Encerrada, `ExecucaoListarDto`, `ExecucaoResumoDto`); `Execucao` model no backend; `ExecucaoRepository` com 8 métodos (inserir, encerrar, buscarIdentificador com `duracaoMinutos` calculado via EXTRACT EPOCH, listar com JOIN em atividade e usuario e filtros opcionais de atividadeId/usuarioId/data, buscarExecucaoAtiva via JOIN com atividade para checar usuario_id, atualizar, excluir, buscarUsuarioExecucao para autorização); `ExecucaoService` com 6 métodos (iniciar com validação de atividade + acesso demanda + concorrência, encerrar com validação fimData e dono, listar com restrição de desenvolvedor às próprias, recuperar, atualizar com regra de dono para desenvolvedor, excluir); `ExecucaoController` com 6 endpoints (POST, GET, GET/:id, PATCH/:id/encerrar, PUT/:id, DELETE/:id gestor); `ExecucaoModule` importa `AtividadeModule`; registrado no `AppModule`
 
 ---
 
@@ -56,7 +57,7 @@
 
 ## Próxima Task
 
-**`docs/specs/backlog/15-execucao-module.spec.md`** (módulo de execuções vinculadas a atividades)
+**`docs/specs/backlog/16-ponto-module.spec.md`** (módulo de ponto — resumo diário de horas)
 
 ---
 
@@ -89,7 +90,7 @@ project-2.0/
 | projeto | ✅ implementado (task 09) |
 | demanda | ✅ implementado (task 10) |
 | atividade | ✅ implementado (task 14) |
-| execucao | ⬜ pendente |
+| execucao | ✅ implementado (task 15) |
 | ponto | ⬜ pendente |
 | calendario | ⬜ pendente |
 | tag | ✅ implementado (task 08) |
@@ -156,6 +157,12 @@ project-2.0/
 - `AtividadeRepository.atualizar` executa dois SELECTs: o UPDATE ... RETURNING não inclui `nome_completo` do usuário (que está em outra tabela), então uma segunda query busca o nome após o UPDATE; alternativa seria um UPDATE com JOIN mas PostgreSQL não suporta JOIN diretamente em UPDATE ... RETURNING sem CTE
 - `AtividadeAtualizadaDto` é re-exportado como alias de `AtividadeRecuperadaDto` — mesma estrutura, sem duplicação
 - `AtividadeModule` importa `DemandaModule` (para `DemandaRepository` verificar existência da demanda) e `TagModule` (para `TagRepository` validar tags antes do sync)
+- `ExecucaoAtualizadaDto` é re-exportado como alias de `ExecucaoEncerradaDto` — mesma estrutura conforme spec
+- `ExecucaoRepository.buscarExecucaoAtiva` faz JOIN com atividade para checar `atividade.usuario_id = :usuarioId`, garantindo que apenas execuções do próprio usuário sejam consideradas ativas — sem coluna `usuario_id` na tabela `execucao`
+- `ExecucaoRepository.buscarUsuarioExecucao` centraliza a busca do dono da execução via JOIN com atividade, usada nas três operações que exigem verificação de propriedade (encerrar, recuperar, atualizar)
+- `duracaoMinutos` é calculado em SQL via `EXTRACT(EPOCH FROM (fim_data - inicio_data))::int / 60` no RETURNING do UPDATE e no SELECT do buscarIdentificador; quando `fim_data IS NULL` retorna NULL
+- `ExecucaoService.listar` passa `usuarioAtivo.sub` como `usuarioIdRestricao` quando o tipo é DESENVOLVEDOR, sobrescrevendo qualquer `usuarioId` que o desenvolvedor tente passar nos filtros
+- `ExecucaoModule` importa apenas `AtividadeModule` — usa `AtividadeRepository.buscarIdentificador` e `usuarioTemAcessoDemanda` para validar existência e acesso na operação de iniciar
 
 ---
 

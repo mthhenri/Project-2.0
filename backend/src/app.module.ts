@@ -8,8 +8,9 @@ import { TagModule } from './modules/tag/tag.module';
 import { ProjetoModule } from './modules/projeto/projeto.module';
 import { DemandaModule } from './modules/demanda/demanda.module';
 import { AtividadeModule } from './modules/atividade/atividade.module';
+import { ExecucaoModule } from './modules/execucao/execucao.module';
 
 @Module({
-  imports: [ConfigModule, DatabaseModule, CoreModule, AutenticacaoModule, UsuarioModule, TagModule, ProjetoModule, DemandaModule, AtividadeModule],
+  imports: [ConfigModule, DatabaseModule, CoreModule, AutenticacaoModule, UsuarioModule, TagModule, ProjetoModule, DemandaModule, AtividadeModule, ExecucaoModule],
 })
 export class AppModule {}
