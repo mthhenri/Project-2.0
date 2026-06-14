@@ -2,7 +2,7 @@ import { IsOptional, IsString, IsEnum, IsNumber, Min, Max, MinLength } from 'cla
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { UsuarioStatusEnum } from '../../enums/usuario-status.enum';
 
-export class UsuarioAtualizarDto {
+export class UsuarioAlterarDto {
   @ApiPropertyOptional({ example: 'João Silva' })
   @IsOptional()
   @IsString()

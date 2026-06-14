@@ -14,7 +14,7 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { DemandaStatusEnum } from '../../enums/demanda-status.enum';
 import { DemandaPrioridadeEnum } from '../../enums/demanda-prioridade.enum';
 
-export class DemandaAtualizarDto {
+export class DemandaAlterarDto {
   @ApiPropertyOptional({ example: null })
   @IsOptional()
   @IsNumber()

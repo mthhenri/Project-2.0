@@ -8,9 +8,9 @@
 
 ## Última Atualização
 
-**Data:** 2026-06-13
-**Task concluída:** 18-assistente-module
-**Sessão:** Módulo assistente — auxílio de IA para refinamento de descrições
+**Data:** 2026-06-14
+**Task concluída:** 19-backend-correcao-nomenclatura
+**Sessão:** Correção de nomenclatura — atualizar→alterar, existe→validar, DTOs alias expandidos, responsabilidade cross-módulo
 
 ---
 
@@ -49,6 +49,7 @@
 - **16-calendario-module** — 6 DTOs em `shared/src/dtos/calendario/` (`DiaNaoUtilCriarDto`, `DiaNaoUtilCriadoDto`, `DiaNaoUtilResumoDto`, `DiaNaoUtilAtualizarDto`, `DiaNaoUtilAtualizadoDto` como re-export de Criado, `CalendarioConsultarDto`); `DiaNaoUtil` model no backend; `CalendarioRepository` com 7 métodos (inserir, buscarIdentificador, listar, atualizar com SET dinâmico, excluir, `ehDiaNaoUtil` com CTE de recorrência anual via EXTRACT MONTH/DAY, `buscarTipoPorData` para retornar tipo do dia ao serviço); `CalendarioService` com 6 métodos (criar, listar, recuperar, atualizar, excluir, `verificarDiaUtil` que detecta fim de semana via `getUTCDay()` e consulta repositório para obter motivo); `CalendarioController` com 6 endpoints (POST gestor, `GET /verificar` com query param `data` declarado antes de `GET /:id`, GET, GET/:id, PUT/:id gestor, DELETE/:id gestor); `CalendarioModule` registrado no `AppModule`
 - **17-ponto-module** — 3 DTOs em `shared/src/dtos/ponto/` (`PontoConsultarDto`, `IntervaloDto`, `PontoDiarioDto`); sem repository próprio — injeta `ExecucaoRepository`, `CalendarioRepository` e `UsuarioRepository` diretamente; `PontoService` com `consultarDiario` (autorização, detecção de fim de semana via `getUTCDay()`, verificação de dia não útil via `CalendarioRepository.ehDiaNaoUtil`, obtenção de `motivoNaoUtil` via `buscarTipoPorData` mapeado para português, busca e reordenação ASC das execuções, cálculo de `totalMinutosTrabalhados`, cálculo de intervalos via `calcularIntervalos`, distribuição entre `minutosTrabalhadosDiaUtil` e `minutosTrabalhadosExtra`, cálculo de `saldoMinutos`); `PontoController` com `GET /ponto/diario`; `PontoModule` importa `ExecucaoModule`, `CalendarioModule` e `UsuarioModule`; registrado no `AppModule`
 - **18-assistente-module** — 2 DTOs em `shared/src/dtos/assistente/` (`AssistenteDescricaoAuxiliarDto` com validação de `textoOriginal` ≥10 chars, `tipoEntidade` via `@IsIn` e `contextoEntidade`; `AssistenteDescricaoAuxiliadaDto` com `textoOriginal` e `textoAuxiliado`); `AssistenteService` instancia `Anthropic` no construtor via `ConfigService`, monta prompt contextualizado pelo tipo de entidade e chama `messages.create` com modelo e `max_tokens` lidos da configuração; erros da API Anthropic capturados e relançados como `BusinessException`; `AssistenteController` com `POST /assistente/auxiliar-descricao` protegido por `JwtAuthGuard`; `AssistenteModule` importa `ConfigModule`; registrado no `AppModule`
+- **19-backend-correcao-nomenclatura** — correção pura de nomenclatura sem nova lógica de negócio: (1) 14 DTOs Atualizar/Atualizado renomeados para Alterar/Alterado em `shared/src/dtos/` (usuario, projeto, demanda, atividade, execucao, calendario, tag); (2) `AtividadeAlteradaDto`, `ExecucaoAlteradaDto`, `DiaNaoUtilAlteradoDto` deixaram de ser alias/re-export e passaram a ter campos próprios; (3) 4 DTOs de validação criados: `UsuarioValidarLoginDto`, `ProjetoValidarCodigoDto`, `DemandaValidarConexaoDto`, `TagValidarNomeDto`; (4) métodos `atualizar()` → `alterar()` em todos os repositórios, services e controllers (7 módulos); (5) métodos `existe*()` → `validar*(dto)` nos repositórios com parâmetro sempre DTO; (6) `DemandaRepository.buscarIdGestoresAtivos()` removido — `DemandaService` usa `UsuarioRepository.listarGestoresAtivos()` diretamente
 
 ---
 
@@ -60,7 +61,7 @@
 
 ## Próxima Task
 
-**`docs/specs/backlog/19-backend-nomenclatura.spec.md`** — renomear atualizar→alterar, existe→validar, expandir DTOs alias, mover buscarIdGestoresAtivos
+**`docs/specs/backlog/20-backend-recuperar-dto.spec.md`** — zero primitivos em assinaturas: `buscarIdentificador(id)` → `recuperar(dto: EntidadeRecuperarDto)` em todos os repositórios; criar `*RecuperarDto` no shared; DTOs internos para helpers com primitivos
 
 ---
 
@@ -182,30 +183,6 @@ project-2.0/
 ## Problemas Conhecidos
 
 Violações de padrão identificadas na revisão pós-task 18. Corrigidas pelas tasks 19 e 20:
-
-**[task 19] Nomenclatura atualizar → alterar:**
-- `shared/src/dtos/usuario/UsuarioAtualizarDto.ts` e `UsuarioAtualizadoDto.ts`
-- `shared/src/dtos/projeto/ProjetoAtualizarDto.ts` e `ProjetoAtualizadoDto.ts`
-- `shared/src/dtos/demanda/DemandaAtualizarDto.ts` e `DemandaAtualizadaDto.ts`
-- `shared/src/dtos/atividade/AtividadeAtualizarDto.ts`
-- `shared/src/dtos/execucao/ExecucaoAtualizarDto.ts`
-- `shared/src/dtos/calendario/DiaNaoUtilAtualizarDto.ts`
-- `shared/src/dtos/tag/TagAtualizarDto.ts` e `TagAtualizadaDto.ts`
-- Método `atualizar()` em todos os services e repositories
-
-**[task 19] DTOs alias (re-export proibido):**
-- `AtividadeAtualizadaDto` = re-export de `AtividadeRecuperadaDto` → virar `AtividadeAlteradaDto` com campos próprios
-- `ExecucaoAtualizadaDto` = re-export de `ExecucaoEncerradaDto` → virar `ExecucaoAlteradaDto` com campos próprios
-- `DiaNaoUtilAtualizadoDto` = re-export de `DiaNaoUtilCriadoDto` → virar `DiaNaoUtilAlteradoDto` com campos próprios
-
-**[task 19] Métodos existe* → validar*:**
-- `UsuarioRepository.existeLogin` → `validarLogin`
-- `TagRepository.existeNome` → `validarNome`
-- `ProjetoRepository.existeCodigo` → `validarCodigo`
-- `DemandaRepository.existeConexao` → `validarConexao`
-
-**[task 19] Responsabilidade cross-módulo:**
-- `DemandaRepository.buscarIdGestoresAtivos()` faz query na tabela `usuario` — remover e usar `UsuarioRepository.listarGestoresAtivos()` em `DemandaService`
 
 **[task 20] RecuperarDto e zero primitivos:**
 - `buscarIdentificador(id: number)` em todos os repositórios (projeto, demanda, atividade, execucao, calendario, tag) → `recuperar(dto: EntidadeRecuperarDto)`

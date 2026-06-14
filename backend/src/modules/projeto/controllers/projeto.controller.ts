@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { ProjetoService } from '../services/projeto.service';
-import { ProjetoCriarDto, ProjetoListarDto, ProjetoAtualizarDto } from '@project20/shared';
+import { ProjetoCriarDto, ProjetoListarDto, ProjetoAlterarDto } from '@project20/shared';
 import { GestorOnly } from '../../autenticacao/decorators/gestor-only.decorator';
 import { ActiveUser } from '../../autenticacao/decorators/active-user.decorator';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
@@ -71,19 +71,19 @@ export class ProjetoController {
     return this.projetoService.recuperar(id, usuarioAtivo);
   }
 
-  @ApiOperation({ summary: 'Atualizar projeto (somente gestor)' })
-  @ApiResponse({ status: 200, description: 'Projeto atualizado com sucesso', schema: { example: { sucesso: true, dados: PROJETO_EXEMPLO, mensagem: 'Projeto atualizado com sucesso' } } })
+  @ApiOperation({ summary: 'Alterar projeto (somente gestor)' })
+  @ApiResponse({ status: 200, description: 'Projeto alterado com sucesso', schema: { example: { sucesso: true, dados: PROJETO_EXEMPLO, mensagem: 'Projeto alterado com sucesso' } } })
   @ApiResponse({ status: 400, description: 'Dados inválidos', schema: { example: { sucesso: false, dados: null, mensagem: 'A previsão de fim deve ser posterior à data de início', erros: [] } } })
   @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
   @ApiResponse({ status: 403, description: 'Acesso restrito a gestores', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
   @ApiResponse({ status: 404, description: 'Projeto não encontrado', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
   @GestorOnly()
   @Put(':id')
-  atualizar(
+  alterar(
     @Param('id', ParseIntPipe) id: number,
-    @Body() dto: ProjetoAtualizarDto,
+    @Body() dto: ProjetoAlterarDto,
   ) {
-    return this.projetoService.atualizar(id, dto);
+    return this.projetoService.alterar(id, dto);
   }
 
   @ApiOperation({ summary: 'Excluir projeto via soft delete (somente gestor)' })

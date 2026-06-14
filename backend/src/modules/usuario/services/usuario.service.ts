@@ -8,8 +8,8 @@ import {
   UsuarioListarDto,
   UsuarioResumoDto,
   UsuarioRecuperadoDto,
-  UsuarioAtualizarDto,
-  UsuarioAtualizadoDto,
+  UsuarioAlterarDto,
+  UsuarioAlteradoDto,
   UsuarioSenhaAlterarDto,
   UsuarioSenhaAlteradaDto,
   UsuarioTipoEnum,
@@ -26,7 +26,7 @@ export class UsuarioService {
 
   /** Cria novo usuário validando unicidade do login e encriptando a senha. */
   async criar(dto: UsuarioCriarDto): Promise<StandardResponse<UsuarioCriadoDto>> {
-    const loginJaExiste = await this.usuarioRepositorio.existeLogin(dto.login);
+    const loginJaExiste = await this.usuarioRepositorio.validarLogin({ login: dto.login });
 
     if (loginJaExiste) {
       throw new BusinessException('Login já está em uso');
@@ -90,10 +90,10 @@ export class UsuarioService {
     };
   }
 
-  /** Atualiza campos do usuário. Desenvolvedor só pode atualizar o próprio perfil. */
-  async atualizar(id: number, dto: UsuarioAtualizarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<UsuarioAtualizadoDto>> {
+  /** Altera campos do usuário. Desenvolvedor só pode alterar o próprio perfil. */
+  async alterar(id: number, dto: UsuarioAlterarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<UsuarioAlteradoDto>> {
     if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR && usuarioAtivo.sub !== id) {
-      throw new UnauthorizedAccessException('Desenvolvedor pode atualizar apenas o próprio perfil');
+      throw new UnauthorizedAccessException('Desenvolvedor pode alterar apenas o próprio perfil');
     }
 
     const usuarioEncontrado = await this.usuarioRepositorio.recuperar({ id });
@@ -102,12 +102,12 @@ export class UsuarioService {
       throw new ResourceNotFoundException('Usuário');
     }
 
-    const usuarioAtualizado = await this.usuarioRepositorio.atualizar(id, dto);
+    const usuarioAlterado = await this.usuarioRepositorio.alterar(id, dto);
 
     return {
       sucesso:  true,
-      dados:    usuarioAtualizado,
-      mensagem: 'Usuário atualizado com sucesso',
+      dados:    usuarioAlterado,
+      mensagem: 'Usuário alterado com sucesso',
     };
   }
 
@@ -143,7 +143,7 @@ export class UsuarioService {
     }
 
     const novaSenhaEncriptada = await bcrypt.hash(dto.senhaNova, 10);
-    await this.usuarioRepositorio.atualizarSenha(id, novaSenhaEncriptada);
+    await this.usuarioRepositorio.alterarSenha(id, novaSenhaEncriptada);
 
     return {
       sucesso:  true,

@@ -14,7 +14,7 @@ import { AtividadeService } from '../services/atividade.service';
 import {
   AtividadeCriarDto,
   AtividadeListarDto,
-  AtividadeAtualizarDto,
+  AtividadeAlterarDto,
   AtividadeTagsAtribuirDto,
 } from '@project20/shared';
 import { GestorOnly } from '../../autenticacao/decorators/gestor-only.decorator';
@@ -69,19 +69,19 @@ export class AtividadeController {
     return this.atividadeService.recuperar(id, usuarioAtivo);
   }
 
-  @ApiOperation({ summary: 'Atualizar atividade' })
-  @ApiResponse({ status: 200, description: 'Atividade atualizada com sucesso' })
+  @ApiOperation({ summary: 'Alterar atividade' })
+  @ApiResponse({ status: 200, description: 'Atividade alterada com sucesso' })
   @ApiResponse({ status: 400, description: 'Dados inválidos' })
   @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
-  @ApiResponse({ status: 403, description: 'Desenvolvedor sem permissão para atualizar', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+  @ApiResponse({ status: 403, description: 'Desenvolvedor sem permissão para alterar', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
   @ApiResponse({ status: 404, description: 'Atividade não encontrada', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
   @Put(':id')
-  atualizar(
+  alterar(
     @Param('id', ParseIntPipe) id: number,
-    @Body() dto: AtividadeAtualizarDto,
+    @Body() dto: AtividadeAlterarDto,
     @ActiveUser() usuarioAtivo: JwtPayload,
   ) {
-    return this.atividadeService.atualizar(id, dto, usuarioAtivo);
+    return this.atividadeService.alterar(id, dto, usuarioAtivo);
   }
 
   @ApiOperation({ summary: 'Excluir atividade via soft delete (somente gestor)' })
@@ -96,18 +96,18 @@ export class AtividadeController {
   }
 
   @ApiOperation({ summary: 'Sincronizar tags da atividade (somente gestor)' })
-  @ApiResponse({ status: 200, description: 'Tags atualizadas com sucesso' })
+  @ApiResponse({ status: 200, description: 'Tags alteradas com sucesso' })
   @ApiResponse({ status: 400, description: 'Tag inexistente', schema: { example: { sucesso: false, dados: null, mensagem: 'Tag com id 99 não encontrada', erros: [] } } })
   @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
   @ApiResponse({ status: 403, description: 'Acesso restrito a gestores', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
   @ApiResponse({ status: 404, description: 'Atividade não encontrada', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
   @GestorOnly()
   @Put(':id/tag')
-  atualizarTags(
+  alterarTags(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: AtividadeTagsAtribuirDto,
   ) {
-    return this.atividadeService.atualizarTags(id, dto);
+    return this.atividadeService.alterarTags(id, dto);
   }
 
   @ApiOperation({ summary: 'Listar tags da atividade' })

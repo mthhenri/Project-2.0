@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { TagService } from '../services/tag.service';
-import { TagCriarDto, TagAtualizarDto } from '@project20/shared';
+import { TagCriarDto, TagAlterarDto } from '@project20/shared';
 import { GestorOnly } from '../../autenticacao/decorators/gestor-only.decorator';
 
 const TAG_EXEMPLO = { id: 1, nome: 'Backend', cor: '#6366f1', createdDate: '2026-06-13T12:00:00.000Z' };
@@ -53,19 +53,19 @@ export class TagController {
     return this.tagService.recuperar(id);
   }
 
-  @ApiOperation({ summary: 'Atualizar tag (somente gestor)' })
-  @ApiResponse({ status: 200, description: 'Tag atualizada com sucesso', schema: { example: { sucesso: true, dados: { ...TAG_EXEMPLO, nome: 'Frontend' }, mensagem: 'Tag atualizada com sucesso' } } })
+  @ApiOperation({ summary: 'Alterar tag (somente gestor)' })
+  @ApiResponse({ status: 200, description: 'Tag alterada com sucesso', schema: { example: { sucesso: true, dados: { ...TAG_EXEMPLO, nome: 'Frontend' }, mensagem: 'Tag alterada com sucesso' } } })
   @ApiResponse({ status: 400, description: 'Dados inválidos ou nome já em uso', schema: { example: { sucesso: false, dados: null, mensagem: 'Já existe uma tag com esse nome', erros: ['Já existe uma tag com esse nome'] } } })
   @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
   @ApiResponse({ status: 403, description: 'Acesso restrito a gestores', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
   @ApiResponse({ status: 404, description: 'Tag não encontrada', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
   @GestorOnly()
   @Put(':id')
-  atualizar(
+  alterar(
     @Param('id', ParseIntPipe) id: number,
-    @Body() dto: TagAtualizarDto,
+    @Body() dto: TagAlterarDto,
   ) {
-    return this.tagService.atualizar(id, dto);
+    return this.tagService.alterar(id, dto);
   }
 
   @ApiOperation({ summary: 'Excluir tag via soft delete (somente gestor)' })

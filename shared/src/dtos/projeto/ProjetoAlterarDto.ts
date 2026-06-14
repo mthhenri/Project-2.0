@@ -2,7 +2,7 @@ import { IsOptional, IsString, MinLength, Matches, IsEnum, IsDateString } from '
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { ProjetoStatusEnum } from '../../enums/projeto-status.enum';
 
-export class ProjetoAtualizarDto {
+export class ProjetoAlterarDto {
   @ApiPropertyOptional({ example: 'Sistema de Gestão v2' })
   @IsOptional()
   @IsString()

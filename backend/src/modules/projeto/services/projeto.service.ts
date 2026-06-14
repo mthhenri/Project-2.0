@@ -6,8 +6,8 @@ import {
   ProjetoListarDto,
   ProjetoResumoDto,
   ProjetoRecuperadoDto,
-  ProjetoAtualizarDto,
-  ProjetoAtualizadoDto,
+  ProjetoAlterarDto,
+  ProjetoAlteradoDto,
   UsuarioTipoEnum,
 } from '@project20/shared';
 import { StandardResponse } from '@project20/shared';
@@ -22,7 +22,7 @@ export class ProjetoService {
 
   /** Cria novo projeto. Código duplicado lança BusinessException. Restrito a gestores. */
   async criar(dto: ProjetoCriarDto): Promise<StandardResponse<ProjetoCriadoDto>> {
-    const codigoJaExiste = await this.projetoRepositorio.existeCodigo(dto.codigo);
+    const codigoJaExiste = await this.projetoRepositorio.validarCodigo({ codigo: dto.codigo });
 
     if (codigoJaExiste) {
       throw new BusinessException('Código de projeto já está em uso');
@@ -111,11 +111,11 @@ export class ProjetoService {
     };
   }
 
-  /** Atualiza dados do projeto. Código não pode ser alterado. Restrito a gestores. */
-  async atualizar(
+  /** Altera dados do projeto. Código não pode ser alterado. Restrito a gestores. */
+  async alterar(
     id: number,
-    dto: ProjetoAtualizarDto,
-  ): Promise<StandardResponse<ProjetoAtualizadoDto>> {
+    dto: ProjetoAlterarDto,
+  ): Promise<StandardResponse<ProjetoAlteradoDto>> {
     const projetoEncontrado = await this.projetoRepositorio.buscarIdentificador(id);
 
     if (!projetoEncontrado) {
@@ -129,7 +129,7 @@ export class ProjetoService {
       throw new BusinessException('A previsão de fim deve ser posterior à data de início');
     }
 
-    const projetoAtualizado = await this.projetoRepositorio.atualizar(id, {
+    const projetoAlterado = await this.projetoRepositorio.alterar(id, {
       nome:            dto.nome,
       cor:             dto.cor,
       status:          dto.status,
@@ -139,8 +139,8 @@ export class ProjetoService {
 
     return {
       sucesso:  true,
-      dados:    projetoAtualizado,
-      mensagem: 'Projeto atualizado com sucesso',
+      dados:    projetoAlterado,
+      mensagem: 'Projeto alterado com sucesso',
     };
   }
 

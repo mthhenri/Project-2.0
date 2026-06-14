@@ -8,7 +8,8 @@ import {
   AtividadeListarDto,
   AtividadeResumoDto,
   AtividadeRecuperadaDto,
-  AtividadeAtualizarDto,
+  AtividadeAlterarDto,
+  AtividadeAlteradaDto,
   AtividadeTagsAtribuirDto,
   AtividadeTagsAtribuidasDto,
   TagResumoDto,
@@ -134,15 +135,15 @@ export class AtividadeService {
   }
 
   /**
-   * Atualiza campos da atividade.
-   * Desenvolvedor só pode atualizar atividades cuja autoria é sua (usuarioId) ou
+   * Altera campos da atividade.
+   * Desenvolvedor só pode alterar atividades cuja autoria é sua (usuarioId) ou
    * onde está atribuído à demanda.
    */
-  async atualizar(
+  async alterar(
     id: number,
-    dto: AtividadeAtualizarDto,
+    dto: AtividadeAlterarDto,
     usuarioAtivo: JwtPayload,
-  ): Promise<StandardResponse<AtividadeRecuperadaDto>> {
+  ): Promise<StandardResponse<AtividadeAlteradaDto>> {
     const atividadeEncontrada = await this.atividadeRepositorio.buscarIdentificador(id);
     if (!atividadeEncontrada) {
       throw new ResourceNotFoundException('Atividade');
@@ -157,12 +158,12 @@ export class AtividadeService {
 
       if (!eAutor && !temAcesso) {
         throw new UnauthorizedAccessException(
-          'Desenvolvedor não tem permissão para atualizar esta atividade',
+          'Desenvolvedor não tem permissão para alterar esta atividade',
         );
       }
     }
 
-    const atividadeAtualizada = await this.atividadeRepositorio.atualizar(id, {
+    const atividadeAlterada = await this.atividadeRepositorio.alterar(id, {
       nome:          dto.nome,
       descricao:     dto.descricao,
       status:        dto.status,
@@ -171,8 +172,8 @@ export class AtividadeService {
 
     return {
       sucesso:  true,
-      dados:    atividadeAtualizada,
-      mensagem: 'Atividade atualizada com sucesso',
+      dados:    atividadeAlterada,
+      mensagem: 'Atividade alterada com sucesso',
     };
   }
 
@@ -196,7 +197,7 @@ export class AtividadeService {
    * Sincroniza as tags de uma atividade com a lista enviada.
    * Restrito a gestores.
    */
-  async atualizarTags(
+  async alterarTags(
     id: number,
     dto: AtividadeTagsAtribuirDto,
   ): Promise<StandardResponse<AtividadeTagsAtribuidasDto>> {
@@ -212,14 +213,14 @@ export class AtividadeService {
       }
     }
 
-    await this.atividadeRepositorio.atualizarTags(id, dto.tagIds);
+    await this.atividadeRepositorio.alterarTags(id, dto.tagIds);
 
-    const tagsAtualizadas = await this.atividadeRepositorio.listarTags(id);
+    const tagsAlteradas = await this.atividadeRepositorio.listarTags(id);
 
     return {
       sucesso:  true,
-      dados:    { atividadeId: id, tags: tagsAtualizadas },
-      mensagem: 'Tags da atividade atualizadas com sucesso',
+      dados:    { atividadeId: id, tags: tagsAlteradas },
+      mensagem: 'Tags da atividade alteradas com sucesso',
     };
   }
 

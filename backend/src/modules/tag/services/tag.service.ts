@@ -5,8 +5,8 @@ import {
   TagCriadaDto,
   TagResumoDto,
   TagRecuperadaDto,
-  TagAtualizarDto,
-  TagAtualizadaDto,
+  TagAlterarDto,
+  TagAlteradaDto,
 } from '@project20/shared';
 import { StandardResponse } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
@@ -18,7 +18,7 @@ export class TagService {
 
   /** Cria nova tag validando unicidade do nome. Restrito a gestores. */
   async criar(dto: TagCriarDto): Promise<StandardResponse<TagCriadaDto>> {
-    const nomeJaExiste = await this.tagRepositorio.existeNome(dto.nome);
+    const nomeJaExiste = await this.tagRepositorio.validarNome({ nome: dto.nome });
 
     if (nomeJaExiste) {
       throw new BusinessException('Já existe uma tag com esse nome');
@@ -59,8 +59,8 @@ export class TagService {
     };
   }
 
-  /** Atualiza nome e/ou cor da tag. Restrito a gestores. */
-  async atualizar(id: number, dto: TagAtualizarDto): Promise<StandardResponse<TagAtualizadaDto>> {
+  /** Altera nome e/ou cor da tag. Restrito a gestores. */
+  async alterar(id: number, dto: TagAlterarDto): Promise<StandardResponse<TagAlteradaDto>> {
     const tagEncontrada = await this.tagRepositorio.buscarIdentificador(id);
 
     if (!tagEncontrada) {
@@ -68,18 +68,18 @@ export class TagService {
     }
 
     if (dto.nome !== undefined) {
-      const nomeJaExiste = await this.tagRepositorio.existeNome(dto.nome);
+      const nomeJaExiste = await this.tagRepositorio.validarNome({ nome: dto.nome });
       if (nomeJaExiste) {
         throw new BusinessException('Já existe uma tag com esse nome');
       }
     }
 
-    const tagAtualizada = await this.tagRepositorio.atualizar(id, { nome: dto.nome, cor: dto.cor });
+    const tagAlterada = await this.tagRepositorio.alterar(id, { nome: dto.nome, cor: dto.cor });
 
     return {
       sucesso:  true,
-      dados:    tagAtualizada,
-      mensagem: 'Tag atualizada com sucesso',
+      dados:    tagAlterada,
+      mensagem: 'Tag alterada com sucesso',
     };
   }
 

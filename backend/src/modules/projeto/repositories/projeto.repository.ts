@@ -7,7 +7,8 @@ import {
   ProjetoCriadoDto,
   ProjetoRecuperadoDto,
   ProjetoResumoDto,
-  ProjetoAtualizadoDto,
+  ProjetoAlteradoDto,
+  ProjetoValidarCodigoDto,
   ProjetoListarDto,
 } from '@project20/shared';
 
@@ -23,14 +24,14 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
   }
 
   /** Verifica se já existe projeto ativo com o mesmo código. */
-  async existeCodigo(codigo: string): Promise<boolean> {
+  async validarCodigo(dto: ProjetoValidarCodigoDto): Promise<boolean> {
     const resultado = await this.executarConsulta<{ existe: boolean }>(
       `SELECT EXISTS(
          SELECT 1 FROM projeto
          WHERE projeto.codigo = :codigo
            AND projeto.is_deleted = false
        ) AS existe`,
-      { codigo },
+      { codigo: dto.codigo },
     );
     return resultado[0].existe;
   }
@@ -182,8 +183,8 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
     return { itens, total };
   }
 
-  /** Atualiza campos do projeto. O código não pode ser alterado. */
-  async atualizar(id: number, dados: Partial<Projeto>): Promise<ProjetoAtualizadoDto> {
+  /** Altera campos do projeto. O código não pode ser alterado. */
+  async alterar(id: number, dados: Partial<Projeto>): Promise<ProjetoAlteradoDto> {
     const setClauses: string[] = ['updated_date = NOW()'];
     const parametros: Record<string, unknown> = { id };
 
@@ -208,7 +209,7 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
       parametros.previsaoFimData = dados.previsaoFimData;
     }
 
-    const resultado = await this.executarConsulta<ProjetoAtualizadoDto>(
+    const resultado = await this.executarConsulta<ProjetoAlteradoDto>(
       `UPDATE projeto
        SET ${setClauses.join(', ')}
        WHERE projeto.id = :id

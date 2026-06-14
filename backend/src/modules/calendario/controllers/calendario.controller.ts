@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { CalendarioService } from '../services/calendario.service';
-import { DiaNaoUtilCriarDto, DiaNaoUtilAtualizarDto, CalendarioConsultarDto } from '@project20/shared';
+import { DiaNaoUtilCriarDto, DiaNaoUtilAlterarDto, CalendarioConsultarDto } from '@project20/shared';
 import { GestorOnly } from '../../autenticacao/decorators/gestor-only.decorator';
 
 const DIA_EXEMPLO = {
@@ -70,18 +70,18 @@ export class CalendarioController {
     return this.calendarioService.recuperar(id);
   }
 
-  @ApiOperation({ summary: 'Atualizar dia não útil (somente gestor)' })
-  @ApiResponse({ status: 200, description: 'Dia não útil atualizado com sucesso', schema: { example: { sucesso: true, dados: { ...DIA_EXEMPLO, descricao: 'Natal — Feriado Nacional' }, mensagem: 'Dia não útil atualizado com sucesso' } } })
+  @ApiOperation({ summary: 'Alterar dia não útil (somente gestor)' })
+  @ApiResponse({ status: 200, description: 'Dia não útil alterado com sucesso', schema: { example: { sucesso: true, dados: { ...DIA_EXEMPLO, descricao: 'Natal — Feriado Nacional' }, mensagem: 'Dia não útil alterado com sucesso' } } })
   @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
   @ApiResponse({ status: 403, description: 'Acesso restrito a gestores', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
   @ApiResponse({ status: 404, description: 'Dia não útil não encontrado', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
   @GestorOnly()
   @Put(':id')
-  atualizar(
+  alterar(
     @Param('id', ParseIntPipe) id: number,
-    @Body() dto: DiaNaoUtilAtualizarDto,
+    @Body() dto: DiaNaoUtilAlterarDto,
   ) {
-    return this.calendarioService.atualizar(id, dto);
+    return this.calendarioService.alterar(id, dto);
   }
 
   @ApiOperation({ summary: 'Excluir dia não útil via soft delete (somente gestor)' })

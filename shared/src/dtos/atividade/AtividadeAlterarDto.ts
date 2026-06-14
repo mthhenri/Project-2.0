@@ -1,7 +1,7 @@
 import { IsEnum, IsNumber, IsOptional, IsString, MaxLength, Min, MinLength } from 'class-validator';
 import { AtividadeStatusEnum } from '../../enums/atividade-status.enum';
 
-export class AtividadeAtualizarDto {
+export class AtividadeAlterarDto {
   @IsOptional()
   @IsString()
   @MinLength(3)

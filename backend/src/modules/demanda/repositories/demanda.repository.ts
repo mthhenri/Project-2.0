@@ -18,9 +18,9 @@ import {
   DemandaConexaoResumoDto,
   DemandaMembroDto,
   DemandaUsuarioAtribuidoDto,
+  DemandaValidarConexaoDto,
   TagResumoDto,
 } from '@project20/shared';
-import { UsuarioTipoEnum, UsuarioStatusEnum } from '@project20/shared';
 
 type DemandaCriarDados = Omit<Demanda, 'id' | 'isDeleted' | 'createdDate' | 'updatedDate' | 'deletedDate'>;
 
@@ -240,9 +240,9 @@ export class DemandaRepository extends BaseRepository<Demanda> {
   }
 
   /**
-   * Atualiza campos da demanda e retorna o estado atualizado.
+   * Altera campos da demanda e retorna o estado atualizado.
    */
-  async atualizar(id: number, dados: Partial<Demanda>): Promise<DemandaRecuperadaDto> {
+  async alterar(id: number, dados: Partial<Demanda>): Promise<DemandaRecuperadaDto> {
     const setClauses: string[] = ['updated_date = NOW()'];
     const parametros: Record<string, unknown> = { id };
 
@@ -407,22 +407,6 @@ export class DemandaRepository extends BaseRepository<Demanda> {
   }
 
   /**
-   * Retorna os IDs de todos os gestores ativos no sistema.
-   * Usado na auto-atribuição ao criar demanda.
-   */
-  async buscarIdGestoresAtivos(): Promise<number[]> {
-    const resultado = await this.executarConsulta<{ id: number }>(
-      `SELECT usuario.id
-       FROM usuario
-       WHERE usuario.tipo   = :tipo
-         AND usuario.status = :status
-         AND usuario.is_deleted = false`,
-      { tipo: UsuarioTipoEnum.GESTOR, status: UsuarioStatusEnum.ATIVO },
-    );
-    return resultado.map((registro) => registro.id);
-  }
-
-  /**
    * Verifica se o usuário tem acesso ao projeto via demanda_usuario.
    * Acesso derivado: desenvolvedor vê projeto se tiver ao menos uma demanda atribuída.
    */
@@ -515,15 +499,15 @@ export class DemandaRepository extends BaseRepository<Demanda> {
   /**
    * Verifica se já existe conexão ativa de origem para destino.
    */
-  async existeConexao(origemId: number, destinoId: number): Promise<boolean> {
+  async validarConexao(dto: DemandaValidarConexaoDto): Promise<boolean> {
     const resultado = await this.executarConsulta<{ existe: boolean }>(
       `SELECT EXISTS(
          SELECT 1 FROM demanda_conexao
-         WHERE demanda_origem_id = :origemId
-           AND demanda_destino_id = :destinoId
+         WHERE demanda_origem_id = :demandaOrigemId
+           AND demanda_destino_id = :demandaDestinoId
            AND is_deleted = false
        ) AS existe`,
-      { origemId, destinoId },
+      { demandaOrigemId: dto.demandaOrigemId, demandaDestinoId: dto.demandaDestinoId },
     );
     return resultado[0].existe;
   }

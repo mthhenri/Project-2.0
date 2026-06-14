@@ -8,7 +8,7 @@ import {
   DemandaListarDto,
   DemandaResumoDto,
   DemandaRecuperadaDto,
-  DemandaAtualizarDto,
+  DemandaAlterarDto,
   DemandaGrafoDto,
   DemandaArvoreItemDto,
   DemandaAncestralDto,
@@ -77,7 +77,8 @@ export class DemandaService {
       }
     }
 
-    const gestorIds = await this.demandaRepositorio.buscarIdGestoresAtivos();
+    const gestoresAtivos = await this.usuarioRepositorio.listarGestoresAtivos();
+    const gestorIds = gestoresAtivos.map((gestor) => gestor.id);
 
     const demandaCriada = await this.demandaRepositorio.inserirComAtribuicao(
       {
@@ -160,12 +161,12 @@ export class DemandaService {
   }
 
   /**
-   * Atualiza dados da demanda.
-   * Desenvolvedor só pode atualizar demandas às quais está atribuído.
+   * Altera dados da demanda.
+   * Desenvolvedor só pode alterar demandas às quais está atribuído.
    */
-  async atualizar(
+  async alterar(
     id: number,
-    dto: DemandaAtualizarDto,
+    dto: DemandaAlterarDto,
     usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<DemandaRecuperadaDto>> {
     const usuarioId =
@@ -193,7 +194,7 @@ export class DemandaService {
       }
     }
 
-    const demandaAtualizada = await this.demandaRepositorio.atualizar(id, {
+    const demandaAlterada = await this.demandaRepositorio.alterar(id, {
       demandaPaiId:     dto.demandaPaiId,
       nome:             dto.nome,
       descricaoTecnica: dto.descricaoTecnica,
@@ -209,8 +210,8 @@ export class DemandaService {
 
     return {
       sucesso:  true,
-      dados:    demandaAtualizada,
-      mensagem: 'Demanda atualizada com sucesso',
+      dados:    demandaAlterada,
+      mensagem: 'Demanda alterada com sucesso',
     };
   }
 
@@ -320,10 +321,10 @@ export class DemandaService {
       throw new BusinessException('A demanda origem e destino não podem ser a mesma');
     }
 
-    const conexaoJaExiste = await this.demandaRepositorio.existeConexao(
+    const conexaoJaExiste = await this.demandaRepositorio.validarConexao({
       demandaOrigemId,
-      dto.demandaDestinoId,
-    );
+      demandaDestinoId: dto.demandaDestinoId,
+    });
     if (conexaoJaExiste) {
       throw new BusinessException('Já existe uma conexão ativa entre essas demandas neste sentido');
     }
@@ -457,7 +458,7 @@ export class DemandaService {
    * Remove as que saíram, insere as novas, mantém as que continuam.
    * Restrito a gestores.
    */
-  async atualizarTagsDemanda(
+  async alterarTagsDemanda(
     demandaId: number,
     dto: DemandaTagsAtribuirDto,
   ): Promise<StandardResponse<DemandaTagsAtribuidasDto>> {
@@ -475,12 +476,12 @@ export class DemandaService {
 
     await this.demandaRepositorio.atribuirTagsDemanda(demandaId, dto.tagIds);
 
-    const tagsAtualizadas = await this.demandaRepositorio.listarTagsDemanda(demandaId);
+    const tagsAlteradas = await this.demandaRepositorio.listarTagsDemanda(demandaId);
 
     return {
       sucesso:  true,
-      dados:    { demandaId, tags: tagsAtualizadas },
-      mensagem: 'Tags da demanda atualizadas com sucesso',
+      dados:    { demandaId, tags: tagsAlteradas },
+      mensagem: 'Tags da demanda alteradas com sucesso',
     };
   }
 

@@ -16,7 +16,7 @@ import {
   ExecucaoIniciarDto,
   ExecucaoEncerrarDto,
   ExecucaoListarDto,
-  ExecucaoAtualizarDto,
+  ExecucaoAlterarDto,
 } from '@project20/shared';
 import { GestorOnly } from '../../autenticacao/decorators/gestor-only.decorator';
 import { ActiveUser } from '../../autenticacao/decorators/active-user.decorator';
@@ -84,19 +84,19 @@ export class ExecucaoController {
     return this.execucaoService.encerrar(id, dto, usuarioAtivo);
   }
 
-  @ApiOperation({ summary: 'Atualizar descrição de uma execução' })
-  @ApiResponse({ status: 200, description: 'Execução atualizada com sucesso' })
+  @ApiOperation({ summary: 'Alterar descrição de uma execução' })
+  @ApiResponse({ status: 200, description: 'Execução alterada com sucesso' })
   @ApiResponse({ status: 400, description: 'Dados inválidos' })
   @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
   @ApiResponse({ status: 403, description: 'Desenvolvedor sem permissão para editar execução de outro usuário', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
   @ApiResponse({ status: 404, description: 'Execução não encontrada', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
   @Put(':id')
-  atualizar(
+  alterar(
     @Param('id', ParseIntPipe) id: number,
-    @Body() dto: ExecucaoAtualizarDto,
+    @Body() dto: ExecucaoAlterarDto,
     @ActiveUser() usuarioAtivo: JwtPayload,
   ) {
-    return this.execucaoService.atualizar(id, dto, usuarioAtivo);
+    return this.execucaoService.alterar(id, dto, usuarioAtivo);
   }
 
   @ApiOperation({ summary: 'Excluir execução via soft delete (somente gestor)' })

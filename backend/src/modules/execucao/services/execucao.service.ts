@@ -6,9 +6,10 @@ import {
   ExecucaoIniciadaDto,
   ExecucaoEncerrarDto,
   ExecucaoEncerradaDto,
+  ExecucaoAlteradaDto,
   ExecucaoListarDto,
   ExecucaoResumoDto,
-  ExecucaoAtualizarDto,
+  ExecucaoAlterarDto,
   UsuarioTipoEnum,
 } from '@project20/shared';
 import { StandardResponse } from '@project20/shared';
@@ -156,14 +157,14 @@ export class ExecucaoService {
   }
 
   /**
-   * Atualiza a descrição de uma execução.
+   * Altera a descrição de uma execução.
    * Desenvolvedor só pode editar as próprias; gestor pode editar qualquer uma.
    */
-  async atualizar(
+  async alterar(
     id: number,
-    dto: ExecucaoAtualizarDto,
+    dto: ExecucaoAlterarDto,
     usuarioAtivo: JwtPayload,
-  ): Promise<StandardResponse<ExecucaoEncerradaDto>> {
+  ): Promise<StandardResponse<ExecucaoAlteradaDto>> {
     const execucaoEncontrada = await this.execucaoRepositorio.buscarIdentificador(id);
     if (!execucaoEncontrada) {
       throw new ResourceNotFoundException('Execução');
@@ -176,12 +177,12 @@ export class ExecucaoService {
       }
     }
 
-    const execucaoAtualizada = await this.execucaoRepositorio.atualizar(id, dto.descricao);
+    const execucaoAlterada = await this.execucaoRepositorio.alterar(id, dto.descricao);
 
     return {
       sucesso:  true,
-      dados:    execucaoAtualizada,
-      mensagem: 'Execução atualizada com sucesso',
+      dados:    execucaoAlterada,
+      mensagem: 'Execução alterada com sucesso',
     };
   }
 

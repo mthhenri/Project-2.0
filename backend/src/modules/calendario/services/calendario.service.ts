@@ -4,8 +4,8 @@ import {
   DiaNaoUtilCriarDto,
   DiaNaoUtilCriadoDto,
   DiaNaoUtilResumoDto,
-  DiaNaoUtilAtualizarDto,
-  DiaNaoUtilAtualizadoDto,
+  DiaNaoUtilAlterarDto,
+  DiaNaoUtilAlteradoDto,
 } from '@project20/shared';
 import { StandardResponse } from '@project20/shared';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
@@ -56,15 +56,15 @@ export class CalendarioService {
     };
   }
 
-  /** Atualiza campos do dia não útil. Restrito a gestores. */
-  async atualizar(id: number, dto: DiaNaoUtilAtualizarDto): Promise<StandardResponse<DiaNaoUtilAtualizadoDto>> {
+  /** Altera campos do dia não útil. Restrito a gestores. */
+  async alterar(id: number, dto: DiaNaoUtilAlterarDto): Promise<StandardResponse<DiaNaoUtilAlteradoDto>> {
     const diaNaoUtilEncontrado = await this.calendarioRepositorio.buscarIdentificador(id);
 
     if (!diaNaoUtilEncontrado) {
       throw new ResourceNotFoundException('Dia não útil');
     }
 
-    const diaNaoUtilAtualizado = await this.calendarioRepositorio.atualizar(id, {
+    const diaNaoUtilAlterado = await this.calendarioRepositorio.alterar(id, {
       descricao:  dto.descricao,
       tipo:       dto.tipo,
       recorrente: dto.recorrente,
@@ -72,8 +72,8 @@ export class CalendarioService {
 
     return {
       sucesso:  true,
-      dados:    diaNaoUtilAtualizado,
-      mensagem: 'Dia não útil atualizado com sucesso',
+      dados:    diaNaoUtilAlterado,
+      mensagem: 'Dia não útil alterado com sucesso',
     };
   }
 

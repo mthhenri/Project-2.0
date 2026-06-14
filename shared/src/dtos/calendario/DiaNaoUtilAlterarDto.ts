@@ -2,7 +2,7 @@ import { IsOptional, IsString, IsNotEmpty, MaxLength, IsEnum, IsBoolean } from '
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { DiaNaoUtilTipoEnum } from '../../enums';
 
-export class DiaNaoUtilAtualizarDto {
+export class DiaNaoUtilAlterarDto {
   @ApiPropertyOptional({ example: 'Natal' })
   @IsOptional()
   @IsString()

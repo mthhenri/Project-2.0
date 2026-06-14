@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsString } from 'class-validator';
 
-export class ExecucaoAtualizarDto {
+export class ExecucaoAlterarDto {
   @IsString()
   @IsNotEmpty()
   descricao: string;

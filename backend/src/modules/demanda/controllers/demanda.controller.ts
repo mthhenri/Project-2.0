@@ -14,7 +14,7 @@ import { DemandaService } from '../services/demanda.service';
 import {
   DemandaCriarDto,
   DemandaListarDto,
-  DemandaAtualizarDto,
+  DemandaAlterarDto,
   DemandaConexaoCriarDto,
   DemandaTagsAtribuirDto,
   DemandaUsuarioAtribuirDto,
@@ -104,19 +104,19 @@ export class DemandaController {
     return this.demandaService.recuperar(id, usuarioAtivo);
   }
 
-  @ApiOperation({ summary: 'Atualizar demanda' })
-  @ApiResponse({ status: 200, description: 'Demanda atualizada com sucesso' })
+  @ApiOperation({ summary: 'Alterar demanda' })
+  @ApiResponse({ status: 200, description: 'Demanda alterada com sucesso' })
   @ApiResponse({ status: 400, description: 'Dados inválidos' })
   @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
   @ApiResponse({ status: 403, description: 'Desenvolvedor sem acesso à demanda', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
   @ApiResponse({ status: 404, description: 'Demanda não encontrada', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
   @Put(':id')
-  atualizar(
+  alterar(
     @Param('id', ParseIntPipe) id: number,
-    @Body() dto: DemandaAtualizarDto,
+    @Body() dto: DemandaAlterarDto,
     @ActiveUser() usuarioAtivo: JwtPayload,
   ) {
-    return this.demandaService.atualizar(id, dto, usuarioAtivo);
+    return this.demandaService.alterar(id, dto, usuarioAtivo);
   }
 
   @ApiOperation({ summary: 'Excluir demanda via soft delete (somente gestor)' })
@@ -171,18 +171,18 @@ export class DemandaController {
   }
 
   @ApiOperation({ summary: 'Sincronizar tags da demanda (somente gestor)' })
-  @ApiResponse({ status: 200, description: 'Tags atualizadas com sucesso' })
+  @ApiResponse({ status: 200, description: 'Tags alteradas com sucesso' })
   @ApiResponse({ status: 400, description: 'Tag inexistente', schema: { example: { sucesso: false, dados: null, mensagem: 'Tag com id 99 não encontrada', erros: [] } } })
   @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
   @ApiResponse({ status: 403, description: 'Acesso restrito a gestores', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
   @ApiResponse({ status: 404, description: 'Demanda não encontrada', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
   @GestorOnly()
   @Put(':id/tag')
-  atualizarTagsDemanda(
+  alterarTagsDemanda(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: DemandaTagsAtribuirDto,
   ) {
-    return this.demandaService.atualizarTagsDemanda(id, dto);
+    return this.demandaService.alterarTagsDemanda(id, dto);
   }
 
   @ApiOperation({ summary: 'Listar tags da demanda' })

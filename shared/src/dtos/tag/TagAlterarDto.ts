@@ -1,7 +1,7 @@
 import { IsOptional, IsString, IsNotEmpty, MaxLength, Matches } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
-export class TagAtualizarDto {
+export class TagAlterarDto {
   @ApiPropertyOptional({ example: 'Frontend' })
   @IsOptional()
   @IsString()

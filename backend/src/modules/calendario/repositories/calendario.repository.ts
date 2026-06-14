@@ -6,7 +6,7 @@ import { DiaNaoUtil } from '../domain/models/dia-nao-util.model';
 import {
   DiaNaoUtilCriadoDto,
   DiaNaoUtilResumoDto,
-  DiaNaoUtilAtualizadoDto,
+  DiaNaoUtilAlteradoDto,
   DiaNaoUtilTipoEnum,
 } from '@project20/shared';
 
@@ -82,8 +82,8 @@ export class CalendarioRepository extends BaseRepository<DiaNaoUtil> {
     );
   }
 
-  /** Atualiza campos do dia não útil e retorna os dados atualizados. */
-  async atualizar(id: number, dados: Partial<DiaNaoUtil>): Promise<DiaNaoUtilAtualizadoDto> {
+  /** Altera campos do dia não útil e retorna os dados alterados. */
+  async alterar(id: number, dados: Partial<DiaNaoUtil>): Promise<DiaNaoUtilAlteradoDto> {
     const setClauses: string[] = ['updated_date = NOW()'];
     const parametros: Record<string, unknown> = { id };
 
@@ -100,7 +100,7 @@ export class CalendarioRepository extends BaseRepository<DiaNaoUtil> {
       parametros.recorrente = dados.recorrente;
     }
 
-    const resultado = await this.executarConsulta<DiaNaoUtilAtualizadoDto>(
+    const resultado = await this.executarConsulta<DiaNaoUtilAlteradoDto>(
       `UPDATE dia_nao_util
        SET ${setClauses.join(', ')}
        WHERE dia_nao_util.id = :id

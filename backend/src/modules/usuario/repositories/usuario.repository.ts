@@ -9,7 +9,8 @@ import {
   UsuarioRecuperarDto,
   UsuarioResumoDto,
   UsuarioListarDto,
-  UsuarioAtualizadoDto,
+  UsuarioAlteradoDto,
+  UsuarioValidarLoginDto,
 } from '@project20/shared';
 import { UsuarioTipoEnum, UsuarioStatusEnum } from '@project20/shared';
 
@@ -23,14 +24,14 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
   }
 
   /** Verifica se login já existe entre registros ativos. */
-  async existeLogin(login: string): Promise<boolean> {
+  async validarLogin(dto: UsuarioValidarLoginDto): Promise<boolean> {
     const resultado = await this.executarConsulta<{ existe: boolean }>(
       `SELECT EXISTS(
          SELECT 1 FROM usuario
          WHERE usuario.login = :login
            AND usuario.is_deleted = false
        ) AS existe`,
-      { login },
+      { login: dto.login },
     );
     return resultado[0].existe;
   }
@@ -164,14 +165,14 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
     return resultado[0];
   }
 
-  /** Atualiza campos do usuário. */
-  async atualizar(id: number, dados: {
+  /** Altera campos do usuário. */
+  async alterar(id: number, dados: {
     nomeCompleto?: string;
     cargoTitulo?: string;
     anotacoes?: string;
     horasDiariasNecessarias?: number;
     status?: UsuarioStatusEnum;
-  }): Promise<UsuarioAtualizadoDto> {
+  }): Promise<UsuarioAlteradoDto> {
     const setClauses: string[] = ['updated_date = NOW()'];
     const parametros: Record<string, unknown> = { id };
 
@@ -196,7 +197,7 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
       parametros.status = dados.status;
     }
 
-    const resultado = await this.executarConsulta<UsuarioAtualizadoDto>(
+    const resultado = await this.executarConsulta<UsuarioAlteradoDto>(
       `UPDATE usuario
        SET ${setClauses.join(', ')}
        WHERE usuario.id = :id
@@ -216,8 +217,8 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
     return resultado[0];
   }
 
-  /** Atualiza apenas a senha encriptada. */
-  async atualizarSenha(id: number, senhaEncriptada: string): Promise<void> {
+  /** Altera apenas a senha encriptada. */
+  async alterarSenha(id: number, senhaEncriptada: string): Promise<void> {
     await this.executarComando(
       `UPDATE usuario
        SET senha_encriptada = :senhaEncriptada,

@@ -15,7 +15,7 @@ import { UsuarioService } from '../services/usuario.service';
 import {
   UsuarioCriarDto,
   UsuarioListarDto,
-  UsuarioAtualizarDto,
+  UsuarioAlterarDto,
   UsuarioSenhaAlterarDto,
 } from '@project20/shared';
 import { GestorOnly } from '../../autenticacao/decorators/gestor-only.decorator';
@@ -127,29 +127,29 @@ export class UsuarioController {
     return this.usuarioService.recuperar(id, usuarioAtivo);
   }
 
-  @ApiOperation({ summary: 'Atualizar dados do usuário (desenvolvedor atualiza apenas o próprio perfil)' })
+  @ApiOperation({ summary: 'Alterar dados do usuário (desenvolvedor altera apenas o próprio perfil)' })
   @ApiResponse({
     status: 200,
-    description: 'Usuário atualizado com sucesso',
+    description: 'Usuário alterado com sucesso',
     schema: {
       example: {
         sucesso: true,
         dados: { ...USUARIO_EXEMPLO, cargoTitulo: 'Tech Lead' },
-        mensagem: 'Usuário atualizado com sucesso',
+        mensagem: 'Usuário alterado com sucesso',
       },
     },
   })
   @ApiResponse({ status: 400, description: 'Dados inválidos', schema: { example: { sucesso: false, dados: null, mensagem: 'Validation failed', erros: ['nomeCompleto must be longer than or equal to 3 characters'] } } })
   @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
-  @ApiResponse({ status: 403, description: 'Desenvolvedor tentando atualizar perfil de outro usuário', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+  @ApiResponse({ status: 403, description: 'Desenvolvedor tentando alterar perfil de outro usuário', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
   @ApiResponse({ status: 404, description: 'Usuário não encontrado', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
   @Put(':id')
-  atualizar(
+  alterar(
     @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UsuarioAtualizarDto,
+    @Body() dto: UsuarioAlterarDto,
     @ActiveUser() usuarioAtivo: JwtPayload,
   ) {
-    return this.usuarioService.atualizar(id, dto, usuarioAtivo);
+    return this.usuarioService.alterar(id, dto, usuarioAtivo);
   }
 
   @ApiOperation({ summary: 'Excluir usuário via soft delete (somente gestor)' })

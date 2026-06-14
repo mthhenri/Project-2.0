@@ -7,7 +7,8 @@ import {
   TagCriadaDto,
   TagRecuperadaDto,
   TagResumoDto,
-  TagAtualizadaDto,
+  TagAlteradaDto,
+  TagValidarNomeDto,
 } from '@project20/shared';
 
 @Injectable()
@@ -20,14 +21,14 @@ export class TagRepository extends BaseRepository<Tag> {
   }
 
   /** Verifica se já existe tag ativa com o mesmo nome. */
-  async existeNome(nome: string): Promise<boolean> {
+  async validarNome(dto: TagValidarNomeDto): Promise<boolean> {
     const resultado = await this.executarConsulta<{ existe: boolean }>(
       `SELECT EXISTS(
          SELECT 1 FROM tag
          WHERE tag.nome = :nome
            AND tag.is_deleted = false
        ) AS existe`,
-      { nome },
+      { nome: dto.nome },
     );
     return resultado[0].existe;
   }
@@ -77,8 +78,8 @@ export class TagRepository extends BaseRepository<Tag> {
     );
   }
 
-  /** Atualiza campos da tag e retorna os dados atualizados. */
-  async atualizar(id: number, dados: Partial<Tag>): Promise<TagAtualizadaDto> {
+  /** Altera campos da tag e retorna os dados alterados. */
+  async alterar(id: number, dados: Partial<Tag>): Promise<TagAlteradaDto> {
     const setClauses: string[] = ['updated_date = NOW()'];
     const parametros: Record<string, unknown> = { id };
 
@@ -91,7 +92,7 @@ export class TagRepository extends BaseRepository<Tag> {
       parametros.cor = dados.cor;
     }
 
-    const resultado = await this.executarConsulta<TagAtualizadaDto>(
+    const resultado = await this.executarConsulta<TagAlteradaDto>(
       `UPDATE tag
        SET ${setClauses.join(', ')}
        WHERE tag.id = :id

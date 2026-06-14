@@ -6,6 +6,7 @@ import { Atividade } from '../domain/models/atividade.model';
 import {
   AtividadeCriadaDto,
   AtividadeRecuperadaDto,
+  AtividadeAlteradaDto,
   AtividadeResumoDto,
   AtividadeListarDto,
   TagResumoDto,
@@ -129,9 +130,9 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
   }
 
   /**
-   * Atualiza campos da atividade e retorna o estado atualizado.
+   * Altera campos da atividade e retorna o estado alterado.
    */
-  async atualizar(id: number, dados: Partial<Atividade>): Promise<AtividadeRecuperadaDto> {
+  async alterar(id: number, dados: Partial<Atividade>): Promise<AtividadeAlteradaDto> {
     const setClauses: string[] = ['atividade.updated_date = NOW()'];
     const parametros: Record<string, unknown> = { id };
 
@@ -152,7 +153,7 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
       parametros.ordemExibicao = dados.ordemExibicao;
     }
 
-    const resultado = await this.executarConsulta<AtividadeRecuperadaDto>(
+    const resultado = await this.executarConsulta<AtividadeAlteradaDto>(
       `UPDATE atividade
        SET ${setClauses.join(', ')}
        WHERE atividade.id = :id
@@ -169,7 +170,7 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
       parametros,
     );
 
-    const atividadeAtualizada = resultado[0];
+    const atividadeAlterada = resultado[0];
 
     const usuarioResultado = await this.executarConsulta<{ nomeCompleto: string }>(
       `SELECT nome_completo AS "nomeCompleto"
@@ -177,11 +178,11 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
        WHERE id = :usuarioId
          AND is_deleted = false
        LIMIT 1`,
-      { usuarioId: atividadeAtualizada.usuarioId },
+      { usuarioId: atividadeAlterada.usuarioId },
     );
 
     return {
-      ...atividadeAtualizada,
+      ...atividadeAlterada,
       nomeUsuario: usuarioResultado[0]?.nomeCompleto ?? '',
     };
   }
@@ -233,7 +234,7 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
    * Faz soft delete das tags removidas e insere as novas.
    * Tags que já existem e permanecem na lista não são tocadas.
    */
-  async atualizarTags(atividadeId: number, tagIds: number[]): Promise<void> {
+  async alterarTags(atividadeId: number, tagIds: number[]): Promise<void> {
     const tagsAtuais = await this.listarTags(atividadeId);
     const idsAtuais  = tagsAtuais.map((tag) => tag.id);
 

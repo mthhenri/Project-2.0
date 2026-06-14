@@ -6,6 +6,7 @@ import { Execucao } from '../domain/models/execucao.model';
 import {
   ExecucaoIniciadaDto,
   ExecucaoEncerradaDto,
+  ExecucaoAlteradaDto,
   ExecucaoListarDto,
   ExecucaoResumoDto,
 } from '@project20/shared';
@@ -204,11 +205,11 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
   }
 
   /**
-   * Atualiza apenas a descrição de uma execução.
-   * Retorna a execução atualizada com duração calculada.
+   * Altera apenas a descrição de uma execução.
+   * Retorna a execução alterada com duração calculada.
    */
-  async atualizar(id: number, descricao: string): Promise<ExecucaoEncerradaDto> {
-    const resultado = await this.executarConsulta<ExecucaoEncerradaDto>(
+  async alterar(id: number, descricao: string): Promise<ExecucaoAlteradaDto> {
+    const resultado = await this.executarConsulta<ExecucaoAlteradaDto>(
       `UPDATE execucao
        SET descricao    = :descricao,
            updated_date = NOW()
