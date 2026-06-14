@@ -9,8 +9,9 @@ import { ProjetoModule } from './modules/projeto/projeto.module';
 import { DemandaModule } from './modules/demanda/demanda.module';
 import { AtividadeModule } from './modules/atividade/atividade.module';
 import { ExecucaoModule } from './modules/execucao/execucao.module';
+import { CalendarioModule } from './modules/calendario/calendario.module';
 
 @Module({
-  imports: [ConfigModule, DatabaseModule, CoreModule, AutenticacaoModule, UsuarioModule, TagModule, ProjetoModule, DemandaModule, AtividadeModule, ExecucaoModule],
+  imports: [ConfigModule, DatabaseModule, CoreModule, AutenticacaoModule, UsuarioModule, TagModule, ProjetoModule, DemandaModule, AtividadeModule, ExecucaoModule, CalendarioModule],
 })
 export class AppModule {}

@@ -9,8 +9,8 @@
 ## Última Atualização
 
 **Data:** 2026-06-13
-**Task concluída:** 15-execucao-module
-**Sessão:** Módulo execucao — timer de trabalho com validação de concorrência
+**Task concluída:** 16-calendario-module
+**Sessão:** Módulo calendario — dias não úteis com suporte a recorrência anual
 
 ---
 
@@ -46,6 +46,7 @@
 - **13-demanda-tags-atribuicoes** — 5 DTOs em `shared/src/dtos/demanda/` (`DemandaTagsAtribuirDto`, `DemandaTagsAtribuidasDto`, `DemandaUsuarioAtribuirDto`, `DemandaUsuarioAtribuidoDto`, `DemandaMembroDto`); `DemandaRepository` com 8 métodos novos (`listarTagsDemanda`, `atribuirTagsDemanda` com sync, `removerTagDemanda`, `listarMembrosDemanda`, `atribuirMembroDemanda`, `removerMembroDemanda`, `membroJaAtribuido`, `contarMembrosDemanda`); `DemandaModule` importa `TagModule` e `UsuarioModule`; `DemandaService` com 5 métodos (`atualizarTagsDemanda`, `listarTagsDemanda`, `listarMembros`, `atribuirMembro`, `removerMembro`) com injeção de `TagRepository` e `UsuarioRepository`; `DemandaController` com 5 endpoints (`PUT /:id/tag` gestor, `GET /:id/tag`, `GET /:id/membro`, `POST /:id/membro` gestor, `DELETE /:id/membro/:usuarioId` gestor)
 - **14-atividade-module** — 9 DTOs em `shared/src/dtos/atividade/` (`AtividadeCriarDto`, `AtividadeCriadaDto`, `AtividadeResumoDto`, `AtividadeRecuperadaDto`, `AtividadeListarDto`, `AtividadeAtualizarDto`, `AtividadeAtualizadaDto` como re-export de Recuperada, `AtividadeTagsAtribuirDto`, `AtividadeTagsAtribuidasDto`); `Atividade` model no backend; `AtividadeRepository` com SQL bruto (inserir, buscarIdentificador com JOIN a usuario, listar com paginação e filtro de status, atualizar, excluir, usuarioTemAcessoDemanda via demanda_usuario, listarTags, atualizarTags com sync); `AtividadeService` com 7 métodos (criar com verificação de acesso via demanda_usuario, listar com restrição de desenvolvedor, recuperar, atualizar com regra autor-ou-membro para desenvolvedor, excluir, atualizarTags, listarTags); `AtividadeController` com 7 endpoints (POST, GET, GET/:id, PUT/:id, DELETE/:id gestor, PUT/:id/tag gestor, GET/:id/tag); `AtividadeModule` importa `DemandaModule` e `TagModule`; registrado no `AppModule`
 - **15-execucao-module** — 8 DTOs em `shared/src/dtos/execucao/` (`ExecucaoIniciarDto`, `ExecucaoIniciadaDto`, `ExecucaoEncerrarDto`, `ExecucaoEncerradaDto`, `ExecucaoAtualizarDto`, `ExecucaoAtualizadaDto` como re-export de Encerrada, `ExecucaoListarDto`, `ExecucaoResumoDto`); `Execucao` model no backend; `ExecucaoRepository` com 8 métodos (inserir, encerrar, buscarIdentificador com `duracaoMinutos` calculado via EXTRACT EPOCH, listar com JOIN em atividade e usuario e filtros opcionais de atividadeId/usuarioId/data, buscarExecucaoAtiva via JOIN com atividade para checar usuario_id, atualizar, excluir, buscarUsuarioExecucao para autorização); `ExecucaoService` com 6 métodos (iniciar com validação de atividade + acesso demanda + concorrência, encerrar com validação fimData e dono, listar com restrição de desenvolvedor às próprias, recuperar, atualizar com regra de dono para desenvolvedor, excluir); `ExecucaoController` com 6 endpoints (POST, GET, GET/:id, PATCH/:id/encerrar, PUT/:id, DELETE/:id gestor); `ExecucaoModule` importa `AtividadeModule`; registrado no `AppModule`
+- **16-calendario-module** — 6 DTOs em `shared/src/dtos/calendario/` (`DiaNaoUtilCriarDto`, `DiaNaoUtilCriadoDto`, `DiaNaoUtilResumoDto`, `DiaNaoUtilAtualizarDto`, `DiaNaoUtilAtualizadoDto` como re-export de Criado, `CalendarioConsultarDto`); `DiaNaoUtil` model no backend; `CalendarioRepository` com 7 métodos (inserir, buscarIdentificador, listar, atualizar com SET dinâmico, excluir, `ehDiaNaoUtil` com CTE de recorrência anual via EXTRACT MONTH/DAY, `buscarTipoPorData` para retornar tipo do dia ao serviço); `CalendarioService` com 6 métodos (criar, listar, recuperar, atualizar, excluir, `verificarDiaUtil` que detecta fim de semana via `getUTCDay()` e consulta repositório para obter motivo); `CalendarioController` com 6 endpoints (POST gestor, `GET /verificar` com query param `data` declarado antes de `GET /:id`, GET, GET/:id, PUT/:id gestor, DELETE/:id gestor); `CalendarioModule` registrado no `AppModule`
 
 ---
 
@@ -57,7 +58,7 @@
 
 ## Próxima Task
 
-**`docs/specs/backlog/16-ponto-module.spec.md`** (módulo de ponto — resumo diário de horas)
+**`docs/specs/backlog/17-ponto-module.spec.md`** (módulo de ponto — resumo diário de horas)
 
 ---
 
@@ -92,7 +93,7 @@ project-2.0/
 | atividade | ✅ implementado (task 14) |
 | execucao | ✅ implementado (task 15) |
 | ponto | ⬜ pendente |
-| calendario | ⬜ pendente |
+| calendario | ✅ implementado (task 16) |
 | tag | ✅ implementado (task 08) |
 | assistente | ⬜ pendente |
 
@@ -163,6 +164,7 @@ project-2.0/
 - `duracaoMinutos` é calculado em SQL via `EXTRACT(EPOCH FROM (fim_data - inicio_data))::int / 60` no RETURNING do UPDATE e no SELECT do buscarIdentificador; quando `fim_data IS NULL` retorna NULL
 - `ExecucaoService.listar` passa `usuarioAtivo.sub` como `usuarioIdRestricao` quando o tipo é DESENVOLVEDOR, sobrescrevendo qualquer `usuarioId` que o desenvolvedor tente passar nos filtros
 - `ExecucaoModule` importa apenas `AtividadeModule` — usa `AtividadeRepository.buscarIdentificador` e `usuarioTemAcessoDemanda` para validar existência e acesso na operação de iniciar
+- `CalendarioRepository` expõe tanto `ehDiaNaoUtil(data)` (bool, para uso futuro pelo módulo ponto) quanto `buscarTipoPorData(data)` (retorna o tipo, para `verificarDiaUtil` da service que precisa do motivo); rota `GET /calendario/verificar` declarada antes de `GET /calendario/:id` para evitar que "verificar" seja interpretado como ID pelo ParseIntPipe; `verificarDiaUtil` usa `getUTCDay()` (não `getDay()`) para evitar variações de fuso horário ao detectar fim de semana
 
 ---
 
