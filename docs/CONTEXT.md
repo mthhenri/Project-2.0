@@ -9,8 +9,8 @@
 ## Última Atualização
 
 **Data:** 2026-06-13
-**Task concluída:** 08-tag-module
-**Sessão:** Módulo tag — CRUD com restrição a gestores
+**Task concluída:** 09-projeto-module
+**Sessão:** Módulo projeto — CRUD com acesso derivado de demanda_usuario
 
 ---
 
@@ -39,6 +39,7 @@
 - **06-usuario-module** — 9 DTOs em `shared/src/dtos/usuario/` (`UsuarioCriarDto`, `UsuarioCriadoDto`, `UsuarioResumoDto`, `UsuarioRecuperadoDto`, `UsuarioListarDto`, `UsuarioAtualizarDto`, `UsuarioAtualizadoDto`, `UsuarioSenhaAlterarDto`, `UsuarioSenhaAlteradaDto`); `Usuario` model em `backend/`; `UsuarioRepository` com SQL bruto (existeLogin, buscarLogin, buscarComSenha, buscarIdentificador, listar, inserir, atualizar, atualizarSenha, excluir, listarGestoresAtivos); `UsuarioService` com regras de negócio (login único, bcrypt rounds=10, validação de senha atual); `UsuarioController` com 6 endpoints (POST, GET, GET/:id, PUT/:id, DELETE/:id, PATCH/:id/senha); `UsuarioModule` registrado no `AppModule`
 - **07-autenticacao-module** — 2 DTOs em `shared/src/dtos/autenticacao/` (`AutenticacaoLoginDto`, `AutenticacaoTokenDto`); `JwtPayload` interface; `JwtStrategy` (passport-jwt); `JwtAuthGuard` (global, verifica @Public()); `GestorGuard` (global, verifica @GestorOnly()); decorators `@Public()`, `@GestorOnly()`, `@ActiveUser()`; `AutenticacaoService` (validarCredenciais, gerarToken, login); `AutenticacaoController` com `POST /autenticacao/login` público; `AutenticacaoModule` com `PassportModule`, `JwtModule.registerAsync`, guards globais via `APP_GUARD`; `UsuarioController` e `UsuarioService` atualizados com guards e validação de permissão por tipo de usuário
 - **08-tag-module** — 6 DTOs em `shared/src/dtos/tag/` (`TagCriarDto`, `TagCriadaDto`, `TagAtualizarDto`, `TagAtualizadaDto`, `TagResumoDto`, `TagRecuperadaDto`); `Tag` model no backend; `TagRepository` com SQL bruto (existeNome, inserir, buscarIdentificador, listar, atualizar, excluir); `TagService` com regras de negócio (nome duplicado → BusinessException, tag não encontrada → ResourceNotFoundException); `TagController` com 5 endpoints (POST restrito a gestor, GET, GET/:id, PUT/:id restrito a gestor, DELETE/:id restrito a gestor); `TagModule` registrado no `AppModule`
+- **09-projeto-module** — 7 DTOs em `shared/src/dtos/projeto/` (`ProjetoCriarDto`, `ProjetoCriadoDto`, `ProjetoResumoDto`, `ProjetoRecuperadoDto`, `ProjetoListarDto`, `ProjetoAtualizarDto`, `ProjetoAtualizadoDto`); `Projeto` model no backend; `ProjetoRepository` com SQL bruto (existeCodigo, inserir, buscarIdentificador, listarTodos, listarPorUsuario, atualizar, excluir); `ProjetoService` com regras de negócio (código duplicado → BusinessException, acesso por tipo de usuário via listarTodos/listarPorUsuario, desenvolvedor sem acesso → ResourceNotFoundException, validação de datas); `ProjetoController` com 5 endpoints (POST/PUT/DELETE restritos a gestor, GET e GET/:id com @ActiveUser para controle de escopo); `ProjetoModule` registrado no `AppModule`
 
 ---
 
@@ -50,7 +51,7 @@
 
 ## Próxima Task
 
-**`docs/specs/backlog/09-projeto-module.spec.md`** (verificar se existe; caso contrário consultar backlog)
+**`docs/specs/backlog/10-demanda-module.spec.md`** (verificar se existe; caso contrário consultar backlog)
 
 ---
 
@@ -80,7 +81,7 @@ project-2.0/
 | database (DatabaseModule + Knex) | ✅ implementado (task 02) |
 | autenticacao | ✅ implementado (task 07) |
 | usuario | ✅ implementado (task 06) |
-| projeto | ⬜ pendente |
+| projeto | ✅ implementado (task 09) |
 | demanda | ⬜ pendente |
 | atividade | ⬜ pendente |
 | execucao | ⬜ pendente |
@@ -133,6 +134,7 @@ project-2.0/
 - `UsuarioRepository` tem método `buscarComSenha(id)` além do especificado: necessário para o fluxo `alterarSenha` que precisa comparar a senha atual via bcrypt
 - Guards globais (`JwtAuthGuard` e `GestorGuard`) registrados via `APP_GUARD` no próprio `AutenticacaoModule` — padrão NestJS que mantém a lógica de auth coesa no módulo correto; `AutenticacaoModule` importado no `AppModule`
 - `UsuarioModule` permanece importado diretamente no `AppModule` além de ser importado transitivamente via `AutenticacaoModule`; NestJS deduplica o módulo no grafo, sem duplicação de providers/controllers
+- No `ProjetoService.recuperar`, quando o usuário é DESENVOLVEDOR, a verificação de acesso reutiliza `listarPorUsuario` para checar se o projeto aparece na lista do usuário; isso é semanticamente correto mas realiza uma query extra — aceito pois é consistente com a regra de negócio e evita query SQL inline duplicada
 
 ---
 

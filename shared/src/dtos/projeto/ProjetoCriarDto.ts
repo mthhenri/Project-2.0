@@ -1,0 +1,46 @@
+import {
+  IsString,
+  IsNotEmpty,
+  MaxLength,
+  Matches,
+  IsEnum,
+  IsOptional,
+  IsDateString,
+} from 'class-validator';
+import { Transform } from 'class-transformer';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ProjetoStatusEnum } from '../../enums/projeto-status.enum';
+
+export class ProjetoCriarDto {
+  @ApiProperty({ example: 'Sistema de Gestão' })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(255)
+  nome: string;
+
+  @ApiProperty({ example: 'PROJ-001' })
+  @Transform(({ value }) => value?.toUpperCase().trim())
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(50)
+  codigo: string;
+
+  @ApiProperty({ example: '#6366f1' })
+  @IsString()
+  @Matches(/^#[0-9A-Fa-f]{6}$/)
+  cor: string;
+
+  @ApiProperty({ enum: ProjetoStatusEnum, example: ProjetoStatusEnum.ATIVO })
+  @IsEnum(ProjetoStatusEnum)
+  status: ProjetoStatusEnum;
+
+  @ApiPropertyOptional({ example: '2026-01-01' })
+  @IsOptional()
+  @IsDateString()
+  inicioData?: string;
+
+  @ApiPropertyOptional({ example: '2026-12-31' })
+  @IsOptional()
+  @IsDateString()
+  previsaoFimData?: string;
+}

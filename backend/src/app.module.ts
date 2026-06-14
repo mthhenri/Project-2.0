@@ -5,8 +5,9 @@ import { CoreModule } from './core/core.module';
 import { AutenticacaoModule } from './modules/autenticacao/autenticacao.module';
 import { UsuarioModule } from './modules/usuario/usuario.module';
 import { TagModule } from './modules/tag/tag.module';
+import { ProjetoModule } from './modules/projeto/projeto.module';
 
 @Module({
-  imports: [ConfigModule, DatabaseModule, CoreModule, AutenticacaoModule, UsuarioModule, TagModule],
+  imports: [ConfigModule, DatabaseModule, CoreModule, AutenticacaoModule, UsuarioModule, TagModule, ProjetoModule],
 })
 export class AppModule {}
