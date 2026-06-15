@@ -51,6 +51,20 @@
           </div>
         }
 
+        @if (temLoginSalvo()) {
+          <div class="login-pagina__esquecer">
+            <p-button
+              label="Esquecer identificação"
+              icon="pi pi-trash"
+              severity="secondary"
+              [text]="true"
+              size="small"
+              type="button"
+              (onClick)="esquecerLogin()"
+            />
+          </div>
+        }
+
         <p-button
           type="submit"
           label="Entrar"
