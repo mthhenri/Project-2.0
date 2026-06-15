@@ -1,10 +1,10 @@
 import { Component, Input } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { MessageModule } from 'primeng/message';
 
 @Component({
   selector: 'app-error-message',
   standalone: true,
-  imports: [CommonModule],
+  imports: [MessageModule],
   templateUrl: './error-message.component.html',
 })
 export class ErrorMessageComponent {

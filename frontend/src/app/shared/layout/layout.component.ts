@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { ToastModule } from 'primeng/toast';
 import { TopbarComponent } from './topbar/topbar.component';
 import { SidebarComponent } from './sidebar/sidebar.component';
 import { LoadingSpinnerComponent } from '../components/loading-spinner/loading-spinner.component';
@@ -7,7 +8,7 @@ import { LoadingSpinnerComponent } from '../components/loading-spinner/loading-s
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [RouterOutlet, TopbarComponent, SidebarComponent, LoadingSpinnerComponent],
+  imports: [RouterOutlet, TopbarComponent, SidebarComponent, LoadingSpinnerComponent, ToastModule],
   templateUrl: './layout.component.html',
 })
 export class LayoutComponent {}

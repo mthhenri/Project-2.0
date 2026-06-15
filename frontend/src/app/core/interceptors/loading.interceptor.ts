@@ -1,11 +1,11 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { finalize } from 'rxjs';
-import { carregamentoAtivo } from '../signals/carregamento.signal';
+import { carregamento } from '../signals/carregamento.signal';
 
 export const loadingInterceptor: HttpInterceptorFn = (requisicao, proximo) => {
-  carregamentoAtivo.set(true);
+  carregamento.set(true);
 
   return proximo(requisicao).pipe(
-    finalize(() => carregamentoAtivo.set(false)),
+    finalize(() => carregamento.set(false)),
   );
 };

@@ -1,14 +1,13 @@
-import { CanActivateFn, Router } from '@angular/router';
+import { CanActivateFn } from '@angular/router';
 import { inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { UsuarioTipoEnum } from '@project20/shared';
 import { usuarioAutenticado } from '../signals/usuario-autenticado.signal';
 
 export const gestorGuard: CanActivateFn = () => {
-  const roteador = inject(Router);
   const usuario = usuarioAutenticado();
 
-  if (usuario?.tipo === 'GESTOR') {
-    return true;
-  }
+  if (usuario?.tipo === UsuarioTipoEnum.GESTOR) return true;
 
-  return roteador.createUrlTree(['/']);
+  return inject(Router).createUrlTree(['/']);
 };

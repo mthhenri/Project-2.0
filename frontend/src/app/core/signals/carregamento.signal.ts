@@ -1,3 +1,3 @@
 import { signal } from '@angular/core';
 
-export const carregamentoAtivo = signal<boolean>(false);
+export const carregamento = signal<boolean>(false);

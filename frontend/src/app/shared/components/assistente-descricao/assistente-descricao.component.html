@@ -1,0 +1,36 @@
+<div class="assistente-descricao">
+  <p-button
+    label="Auxiliar com IA"
+    icon="pi pi-sparkles"
+    [loading]="carregandoAuxilio()"
+    [disabled]="!textoAtual || carregandoAuxilio()"
+    (onClick)="auxiliar()"
+    styleClass="p-button-outlined p-button-sm"
+  />
+
+  @if (mostrarComparacao()) {
+    <div class="assistente-descricao__comparacao grid grid-cols-2 gap-4 mt-4">
+      <p-panel header="Texto original">
+        <p class="assistente-descricao__texto whitespace-pre-wrap">{{ textoAtual }}</p>
+      </p-panel>
+      <p-panel header="Texto auxiliado">
+        <p class="assistente-descricao__texto whitespace-pre-wrap">{{ textoAuxiliado() }}</p>
+      </p-panel>
+    </div>
+
+    <div class="assistente-descricao__acoes flex gap-2 mt-3">
+      <p-button
+        label="Aceitar"
+        icon="pi pi-check"
+        severity="success"
+        (onClick)="aceitar()"
+      />
+      <p-button
+        label="Descartar"
+        icon="pi pi-times"
+        severity="secondary"
+        (onClick)="descartar()"
+      />
+    </div>
+  }
+</div>

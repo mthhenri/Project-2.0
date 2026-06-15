@@ -1,13 +1,13 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { carregamentoAtivo } from '../../../core/signals/carregamento.signal';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { carregamento } from '../../../core/signals/carregamento.signal';
 
 @Component({
   selector: 'app-loading-spinner',
   standalone: true,
-  imports: [CommonModule],
+  imports: [ProgressSpinnerModule],
   templateUrl: './loading-spinner.component.html',
 })
 export class LoadingSpinnerComponent {
-  readonly carregando = carregamentoAtivo;
+  readonly carregando = carregamento;
 }

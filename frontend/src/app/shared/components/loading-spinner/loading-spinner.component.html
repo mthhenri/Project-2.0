@@ -1,8 +1,11 @@
 @if (carregando()) {
   <div class="loading-spinner">
     <div class="loading-spinner__overlay"></div>
-    <div class="loading-spinner__icone">
-      <i class="pi pi-spin pi-spinner text-4xl text-primary"></i>
+    <div class="loading-spinner__conteudo">
+      <p-progressSpinner
+        strokeWidth="4"
+        animationDuration=".8s"
+      />
     </div>
   </div>
 }

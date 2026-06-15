@@ -1,10 +1,4 @@
 import { signal } from '@angular/core';
+import { UsuarioRecuperadoDto } from '@project20/shared';
 
-export interface UsuarioAutenticado {
-  sub: number;
-  login: string;
-  nomeCompleto: string;
-  tipo: string;
-}
-
-export const usuarioAutenticado = signal<UsuarioAutenticado | null>(null);
+export const usuarioAutenticado = signal<UsuarioRecuperadoDto | null>(null);

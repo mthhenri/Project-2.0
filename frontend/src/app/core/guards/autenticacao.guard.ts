@@ -1,13 +1,11 @@
-import { CanActivateFn, Router } from '@angular/router';
+import { CanActivateFn } from '@angular/router';
 import { inject } from '@angular/core';
+import { Router } from '@angular/router';
 
 export const autenticacaoGuard: CanActivateFn = () => {
-  const roteador = inject(Router);
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('access_token');
 
-  if (token) {
-    return true;
-  }
+  if (token) return true;
 
-  return roteador.createUrlTree(['/autenticacao']);
+  return inject(Router).createUrlTree(['/autenticacao']);
 };
