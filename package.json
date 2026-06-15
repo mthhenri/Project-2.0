@@ -2,11 +2,19 @@
   "name": "project-2.0",
   "version": "1.0.0",
   "private": true,
-  "workspaces": ["shared", "backend", "frontend"],
+  "workspaces": [
+    "shared",
+    "backend",
+    "frontend"
+  ],
   "scripts": {
     "backend:dev": "npm run start:dev --workspace=backend",
     "frontend:dev": "npm run start --workspace=frontend",
+    "dev": "concurrently --kill-others-on-fail --names \"backend,frontend\" --prefix-colors \"cyan,magenta\" \"npm run backend:dev\" \"npm run frontend:dev\"",
     "db:up": "docker-compose up -d",
     "db:down": "docker-compose down"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.3"
   }
 }
