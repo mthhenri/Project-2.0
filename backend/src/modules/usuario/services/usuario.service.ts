@@ -119,7 +119,7 @@ export class UsuarioService {
       throw new ResourceNotFoundException('Usuário');
     }
 
-    await this.usuarioRepositorio.excluir(id);
+    await this.usuarioRepositorio.excluir({ id });
 
     return {
       sucesso:  true,
@@ -143,7 +143,7 @@ export class UsuarioService {
     }
 
     const novaSenhaEncriptada = await bcrypt.hash(dto.senhaNova, 10);
-    await this.usuarioRepositorio.alterarSenha(id, novaSenhaEncriptada);
+    await this.usuarioRepositorio.alterarSenha({ id, senhaEncriptada: novaSenhaEncriptada });
 
     return {
       sucesso:  true,

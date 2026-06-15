@@ -9,8 +9,8 @@
 ## Última Atualização
 
 **Data:** 2026-06-14
-**Task concluída:** 19-backend-correcao-nomenclatura
-**Sessão:** Correção de nomenclatura — atualizar→alterar, existe→validar, DTOs alias expandidos, responsabilidade cross-módulo
+**Task concluída:** 20-backend-correcao-recuperar-dto (pós-revisão nomenclatura DTOs)
+**Sessão:** Correção de nomenclatura de DTOs — complemento multi-palavra inteiro antes do verbo
 
 ---
 
@@ -50,6 +50,7 @@
 - **17-ponto-module** — 3 DTOs em `shared/src/dtos/ponto/` (`PontoConsultarDto`, `IntervaloDto`, `PontoDiarioDto`); sem repository próprio — injeta `ExecucaoRepository`, `CalendarioRepository` e `UsuarioRepository` diretamente; `PontoService` com `consultarDiario` (autorização, detecção de fim de semana via `getUTCDay()`, verificação de dia não útil via `CalendarioRepository.ehDiaNaoUtil`, obtenção de `motivoNaoUtil` via `buscarTipoPorData` mapeado para português, busca e reordenação ASC das execuções, cálculo de `totalMinutosTrabalhados`, cálculo de intervalos via `calcularIntervalos`, distribuição entre `minutosTrabalhadosDiaUtil` e `minutosTrabalhadosExtra`, cálculo de `saldoMinutos`); `PontoController` com `GET /ponto/diario`; `PontoModule` importa `ExecucaoModule`, `CalendarioModule` e `UsuarioModule`; registrado no `AppModule`
 - **18-assistente-module** — 2 DTOs em `shared/src/dtos/assistente/` (`AssistenteDescricaoAuxiliarDto` com validação de `textoOriginal` ≥10 chars, `tipoEntidade` via `@IsIn` e `contextoEntidade`; `AssistenteDescricaoAuxiliadaDto` com `textoOriginal` e `textoAuxiliado`); `AssistenteService` instancia `Anthropic` no construtor via `ConfigService`, monta prompt contextualizado pelo tipo de entidade e chama `messages.create` com modelo e `max_tokens` lidos da configuração; erros da API Anthropic capturados e relançados como `BusinessException`; `AssistenteController` com `POST /assistente/auxiliar-descricao` protegido por `JwtAuthGuard`; `AssistenteModule` importa `ConfigModule`; registrado no `AppModule`
 - **19-backend-correcao-nomenclatura** — correção pura de nomenclatura sem nova lógica de negócio: (1) 14 DTOs Atualizar/Atualizado renomeados para Alterar/Alterado em `shared/src/dtos/` (usuario, projeto, demanda, atividade, execucao, calendario, tag); (2) `AtividadeAlteradaDto`, `ExecucaoAlteradaDto`, `DiaNaoUtilAlteradoDto` deixaram de ser alias/re-export e passaram a ter campos próprios; (3) 4 DTOs de validação criados: `UsuarioValidarLoginDto`, `ProjetoValidarCodigoDto`, `DemandaValidarConexaoDto`, `TagValidarNomeDto`; (4) métodos `atualizar()` → `alterar()` em todos os repositórios, services e controllers (7 módulos); (5) métodos `existe*()` → `validar*(dto)` nos repositórios com parâmetro sempre DTO; (6) `DemandaRepository.buscarIdGestoresAtivos()` removido — `DemandaService` usa `UsuarioRepository.listarGestoresAtivos()` diretamente
+- **20-backend-correcao-recuperar-dto** — zero primitivos em assinaturas de serviços e repositórios: (1) 34 novos DTOs internos criados em `shared/src/dtos/` para os módulos projeto, demanda, atividade, execucao, calendario, tag e usuario; (2) `buscarIdentificador(id: number)` renomeado para `recuperar(dto: EntidadeRecuperarDto)` em todos os repositórios (tag, calendario, projeto, usuario, atividade, execucao, demanda); (3) todos os helpers com parâmetros primitivos convertidos para DTO (`encerrar`, `buscarExecucaoAtiva`, `buscarUsuarioExecucao`, `alterarSenha`, `excluir`, `inserirDemandaUsuario`, `verificarCriariaCiclo`, `conexaoPertenceADemanda`, `excluirConexao`, `listarTagsDemanda`, `atribuirTagsDemanda`, `removerTagDemanda`, `listarMembrosDemanda`, `atribuirMembroDemanda`, `removerMembroDemanda`, `membroJaAtribuido`, `contarMembrosDemanda`, `listarPorUsuario`); (4) todos os serviços atualizados para usar as novas assinaturas DTO-based (usuario, projeto, tag, calendario, atividade, execucao, demanda, ponto)
 
 ---
 
@@ -61,7 +62,7 @@
 
 ## Próxima Task
 
-**`docs/specs/backlog/20-backend-recuperar-dto.spec.md`** — zero primitivos em assinaturas: `buscarIdentificador(id)` → `recuperar(dto: EntidadeRecuperarDto)` em todos os repositórios; criar `*RecuperarDto` no shared; DTOs internos para helpers com primitivos
+**Próxima task a definir** — verificar `docs/specs/backlog/` para a próxima spec disponível
 
 ---
 
@@ -177,6 +178,10 @@ project-2.0/
 - `PontoService` cria `filtrosListagem: ExecucaoListarDto` como objeto literal com `itensPorPagina: 500` para buscar todas as execuções do dia (o repositório usa o valor passado, não aplica validação do class-validator); execuções chegam em DESC do repositório e são reordenadas ASC in-memory para o cálculo de intervalos — volume diário não justifica query adicional
 - `motivoNaoUtil` usa `buscarTipoPorData` (que já existia desde task 16) mapeado via `mapearTipoParaMotivo` para strings legíveis em português ('Feriado', 'Recesso', 'Ponto facultativo') — sem query nova; fim de semana retorna fixo 'Fim de semana'
 - `PontoDiarioDto` importa `ExecucaoResumoDto` por import relativo direto (`../execucao/ExecucaoResumoDto`) em vez do barrel `@project20/shared` para evitar dependência circular dentro do pacote shared
+- **[task 20]** `DemandaRecuperarDto` aceita apenas `{ id: number }` — o filtro de acesso por usuário é separado em `DemandaFiltroAcessoDto`, passado como segundo parâmetro opcional em `recuperar(dto, filtro?)`; isso mantém o padrão `recuperar({ id })` uniforme sem carregar o dto com semântica de autorização
+- **[task 20]** `DemandaInserirAtribuicaoDto` contém apenas `{ criadorId, gestorIds }` — o `dados` da demanda é mantido como parâmetro separado pois é um tipo backend-only (`DemandaCriarDados`) que não pode ser colocado no shared
+- **[task 20]** `DemandaExcluirDto` criado após revisão — `excluir(id: number)` no repositório de demanda era o único método sem DTO; criado para manter consistência com todos os outros módulos
+- **[pós-task 20]** Regra de complemento multi-palavra: o complemento inteiro — mesmo com duas palavras — vem antes do verbo sem exceção. Ex: `membro interno` = complemento composto → `DemandaMembroInternoAtribuirDto` ✅, não `DemandaMembroAtribuirInternoDto` ❌. Documentado em `SYSTEM.SPEC.md` e `CONVENTIONS.md`
 
 ---
 
@@ -184,10 +189,7 @@ project-2.0/
 
 Violações de padrão identificadas na revisão pós-task 18. Corrigidas pelas tasks 19 e 20:
 
-**[task 20] RecuperarDto e zero primitivos:**
-- `buscarIdentificador(id: number)` em todos os repositórios (projeto, demanda, atividade, execucao, calendario, tag) → `recuperar(dto: EntidadeRecuperarDto)`
-- Criar `*RecuperarDto` no shared para os módulos que ainda não têm
-- Helpers internos com primitivos (`inserirDemandaUsuario`, `verificarCriariaCiclo`, `buscarExecucaoAtiva`, etc.) precisam de DTOs
+*Nenhum problema conhecido no momento.*
 
 ---
 

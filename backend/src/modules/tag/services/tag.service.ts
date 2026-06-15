@@ -46,7 +46,7 @@ export class TagService {
 
   /** Recupera tag por ID. Lança exceção se não encontrada. */
   async recuperar(id: number): Promise<StandardResponse<TagRecuperadaDto>> {
-    const tagEncontrada = await this.tagRepositorio.buscarIdentificador(id);
+    const tagEncontrada = await this.tagRepositorio.recuperar({ id });
 
     if (!tagEncontrada) {
       throw new ResourceNotFoundException('Tag');
@@ -61,7 +61,7 @@ export class TagService {
 
   /** Altera nome e/ou cor da tag. Restrito a gestores. */
   async alterar(id: number, dto: TagAlterarDto): Promise<StandardResponse<TagAlteradaDto>> {
-    const tagEncontrada = await this.tagRepositorio.buscarIdentificador(id);
+    const tagEncontrada = await this.tagRepositorio.recuperar({ id });
 
     if (!tagEncontrada) {
       throw new ResourceNotFoundException('Tag');
@@ -85,13 +85,13 @@ export class TagService {
 
   /** Realiza soft delete da tag. Restrito a gestores. */
   async excluir(id: number): Promise<StandardResponse<void>> {
-    const tagEncontrada = await this.tagRepositorio.buscarIdentificador(id);
+    const tagEncontrada = await this.tagRepositorio.recuperar({ id });
 
     if (!tagEncontrada) {
       throw new ResourceNotFoundException('Tag');
     }
 
-    await this.tagRepositorio.excluir(id);
+    await this.tagRepositorio.excluir({ id });
 
     return {
       sucesso:  true,

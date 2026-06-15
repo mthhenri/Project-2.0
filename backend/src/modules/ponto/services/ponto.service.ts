@@ -49,7 +49,7 @@ export class PontoService {
 
     const registradoComoNaoUtil = ehFimDeSemana
       ? false
-      : await this.calendarioRepositorio.ehDiaNaoUtil(dataObjeto);
+      : await this.calendarioRepositorio.validarDia({ data: dataObjeto });
 
     const ehDiaUtil = !ehFimDeSemana && !registradoComoNaoUtil;
 
@@ -57,7 +57,7 @@ export class PontoService {
     if (ehFimDeSemana) {
       motivoNaoUtil = 'Fim de semana';
     } else if (registradoComoNaoUtil) {
-      const tipoNaoUtil = await this.calendarioRepositorio.buscarTipoPorData(dataObjeto);
+      const tipoNaoUtil = await this.calendarioRepositorio.recuperarTipo({ data: dataObjeto });
       motivoNaoUtil = this.mapearTipoParaMotivo(tipoNaoUtil);
     }
 

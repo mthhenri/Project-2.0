@@ -10,6 +10,11 @@ import {
   AtividadeResumoDto,
   AtividadeListarDto,
   TagResumoDto,
+  AtividadeRecuperarDto,
+  AtividadeExcluirDto,
+  AtividadeTagsListarDto,
+  AtividadeTagsAlterarDto,
+  DemandaAcessoVerificarDto,
 } from '@project20/shared';
 
 type AtividadeInserirDados = Omit<Atividade, 'id' | 'isDeleted' | 'createdDate' | 'updatedDate' | 'deletedDate'>;
@@ -55,7 +60,7 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
    * Recupera atividade por ID com JOIN ao usuário executor.
    * Retorna null se não encontrada ou deletada.
    */
-  async buscarIdentificador(id: number): Promise<AtividadeRecuperadaDto | null> {
+  async recuperar(dto: AtividadeRecuperarDto): Promise<AtividadeRecuperadaDto | null> {
     const resultado = await this.executarConsulta<AtividadeRecuperadaDto>(
       `SELECT
          atividade.id,
@@ -74,7 +79,7 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
        WHERE atividade.id = :id
          AND atividade.is_deleted = false
        LIMIT 1`,
-      { id },
+      { id: dto.id },
     );
     return resultado[0] ?? null;
   }
@@ -188,15 +193,15 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
   }
 
   /** Soft delete da atividade. */
-  async excluir(id: number): Promise<void> {
-    await this.executarSoftDelete(id);
+  async excluir(dto: AtividadeExcluirDto): Promise<void> {
+    await this.executarSoftDelete(dto.id);
   }
 
   /**
    * Verifica se o usuário está atribuído à demanda via demanda_usuario.
    * Usado para controle de acesso na criação e atualização de atividades.
    */
-  async usuarioTemAcessoDemanda(demandaId: number, usuarioId: number): Promise<boolean> {
+  async validarAcessoDemanda(dto: DemandaAcessoVerificarDto): Promise<boolean> {
     const resultado = await this.executarConsulta<{ existe: boolean }>(
       `SELECT EXISTS(
          SELECT 1
@@ -205,7 +210,7 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
            AND demanda_usuario.usuario_id = :usuarioId
            AND demanda_usuario.is_deleted = false
        ) AS existe`,
-      { demandaId, usuarioId },
+      { demandaId: dto.demandaId, usuarioId: dto.usuarioId },
     );
     return resultado[0].existe;
   }
@@ -213,7 +218,7 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
   /**
    * Lista as tags ativas atribuídas a uma atividade.
    */
-  async listarTags(atividadeId: number): Promise<TagResumoDto[]> {
+  async listarTags(dto: AtividadeTagsListarDto): Promise<TagResumoDto[]> {
     return this.executarConsulta<TagResumoDto>(
       `SELECT
          tag.id,
@@ -225,7 +230,7 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
          AND tag.is_deleted = false
        WHERE atividade_tag.atividade_id = :atividadeId
          AND atividade_tag.is_deleted = false`,
-      { atividadeId },
+      { atividadeId: dto.atividadeId },
     );
   }
 
@@ -234,12 +239,12 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
    * Faz soft delete das tags removidas e insere as novas.
    * Tags que já existem e permanecem na lista não são tocadas.
    */
-  async alterarTags(atividadeId: number, tagIds: number[]): Promise<void> {
-    const tagsAtuais = await this.listarTags(atividadeId);
+  async alterarTags(dto: AtividadeTagsAlterarDto): Promise<void> {
+    const tagsAtuais = await this.listarTags({ atividadeId: dto.atividadeId });
     const idsAtuais  = tagsAtuais.map((tag) => tag.id);
 
-    const idsParaRemover = idsAtuais.filter((id) => !tagIds.includes(id));
-    const idsParaInserir = tagIds.filter((id) => !idsAtuais.includes(id));
+    const idsParaRemover = idsAtuais.filter((id) => !dto.tagIds.includes(id));
+    const idsParaInserir = dto.tagIds.filter((id) => !idsAtuais.includes(id));
 
     for (const tagId of idsParaRemover) {
       await this.executarComando(
@@ -250,7 +255,7 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
          WHERE atividade_id = :atividadeId
            AND tag_id       = :tagId
            AND is_deleted   = false`,
-        { atividadeId, tagId },
+        { atividadeId: dto.atividadeId, tagId },
       );
     }
 
@@ -258,7 +263,7 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
       await this.executarComando(
         `INSERT INTO atividade_tag (atividade_id, tag_id, created_date, updated_date, is_deleted)
          SELECT :atividadeId, :tagId, NOW(), NOW(), false`,
-        { atividadeId, tagId },
+        { atividadeId: dto.atividadeId, tagId },
       );
     }
   }

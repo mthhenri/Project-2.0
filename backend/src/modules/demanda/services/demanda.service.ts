@@ -46,13 +46,11 @@ export class DemandaService {
     dto: DemandaCriarDto,
     usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<DemandaCriadaDto>> {
-    if (
-      usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR
-    ) {
-      const temAcesso = await this.demandaRepositorio.usuarioTemAcessoProjeto(
-        dto.projetoId,
-        usuarioAtivo.sub,
-      );
+    if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR) {
+      const temAcesso = await this.demandaRepositorio.validarAcessoProjeto({
+        projetoId: dto.projetoId,
+        usuarioId: usuarioAtivo.sub,
+      });
 
       if (!temAcesso) {
         throw new UnauthorizedAccessException(
@@ -62,8 +60,8 @@ export class DemandaService {
     }
 
     if (dto.demandaPaiId !== undefined) {
-      const demandaPaiEncontrada = await this.demandaRepositorio.buscarIdentificador(
-        dto.demandaPaiId,
+      const demandaPaiEncontrada = await this.demandaRepositorio.recuperar(
+        { id: dto.demandaPaiId },
       );
 
       if (!demandaPaiEncontrada) {
@@ -95,8 +93,7 @@ export class DemandaService {
         previsaoFimData:  dto.previsaoFimData ? new Date(dto.previsaoFimData) : null,
         ordemExibicao:    dto.ordemExibicao,
       },
-      usuarioAtivo.sub,
-      gestorIds,
+      { criadorId: usuarioAtivo.sub, gestorIds },
     );
 
     return {
@@ -147,7 +144,10 @@ export class DemandaService {
     const usuarioId =
       usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
 
-    const demandaEncontrada = await this.demandaRepositorio.buscarIdentificador(id, usuarioId);
+    const demandaEncontrada = await this.demandaRepositorio.recuperar(
+      { id },
+      usuarioId !== undefined ? { usuarioId } : undefined,
+    );
 
     if (!demandaEncontrada) {
       throw new ResourceNotFoundException('Demanda');
@@ -172,15 +172,18 @@ export class DemandaService {
     const usuarioId =
       usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
 
-    const demandaEncontrada = await this.demandaRepositorio.buscarIdentificador(id, usuarioId);
+    const demandaEncontrada = await this.demandaRepositorio.recuperar(
+      { id },
+      usuarioId !== undefined ? { usuarioId } : undefined,
+    );
 
     if (!demandaEncontrada) {
       throw new ResourceNotFoundException('Demanda');
     }
 
     if (dto.demandaPaiId !== undefined) {
-      const demandaPaiEncontrada = await this.demandaRepositorio.buscarIdentificador(
-        dto.demandaPaiId,
+      const demandaPaiEncontrada = await this.demandaRepositorio.recuperar(
+        { id: dto.demandaPaiId },
       );
 
       if (!demandaPaiEncontrada) {
@@ -227,12 +230,15 @@ export class DemandaService {
     const usuarioId =
       usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
 
-    const demandaEncontrada = await this.demandaRepositorio.buscarIdentificador(demandaId, usuarioId);
+    const demandaEncontrada = await this.demandaRepositorio.recuperar(
+      { id: demandaId },
+      usuarioId !== undefined ? { usuarioId } : undefined,
+    );
     if (!demandaEncontrada) {
       throw new ResourceNotFoundException('Demanda');
     }
 
-    const descendentes = await this.demandaRepositorio.buscarDescendentes(demandaId);
+    const descendentes = await this.demandaRepositorio.listarDescendentes({ demandaId });
 
     const mapa = new Map<number, DemandaArvoreItemDto>();
     for (const item of descendentes) {
@@ -276,12 +282,15 @@ export class DemandaService {
     const usuarioId =
       usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
 
-    const demandaEncontrada = await this.demandaRepositorio.buscarIdentificador(demandaId, usuarioId);
+    const demandaEncontrada = await this.demandaRepositorio.recuperar(
+      { id: demandaId },
+      usuarioId !== undefined ? { usuarioId } : undefined,
+    );
     if (!demandaEncontrada) {
       throw new ResourceNotFoundException('Demanda');
     }
 
-    const ancestrais = await this.demandaRepositorio.buscarAncestral(demandaId);
+    const ancestrais = await this.demandaRepositorio.listarAncestral({ demandaId });
 
     return {
       sucesso:  true,
@@ -302,16 +311,16 @@ export class DemandaService {
     const usuarioId =
       usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
 
-    const demandaOrigemEncontrada = await this.demandaRepositorio.buscarIdentificador(
-      demandaOrigemId,
-      usuarioId,
+    const demandaOrigemEncontrada = await this.demandaRepositorio.recuperar(
+      { id: demandaOrigemId },
+      usuarioId !== undefined ? { usuarioId } : undefined,
     );
     if (!demandaOrigemEncontrada) {
       throw new ResourceNotFoundException('Demanda origem');
     }
 
-    const demandaDestinoEncontrada = await this.demandaRepositorio.buscarIdentificador(
-      dto.demandaDestinoId,
+    const demandaDestinoEncontrada = await this.demandaRepositorio.recuperar(
+      { id: dto.demandaDestinoId },
     );
     if (!demandaDestinoEncontrada) {
       throw new ResourceNotFoundException('Demanda destino');
@@ -329,10 +338,10 @@ export class DemandaService {
       throw new BusinessException('Já existe uma conexão ativa entre essas demandas neste sentido');
     }
 
-    const criariaCiclo = await this.demandaRepositorio.verificarCriariaCiclo(
+    const criariaCiclo = await this.demandaRepositorio.verificarCriariaCiclo({
       demandaOrigemId,
-      dto.demandaDestinoId,
-    );
+      demandaDestinoId: dto.demandaDestinoId,
+    });
     if (criariaCiclo) {
       throw new BusinessException('Essa conexão criaria um ciclo no grafo de demandas');
     }
@@ -361,12 +370,15 @@ export class DemandaService {
     const usuarioId =
       usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
 
-    const demandaEncontrada = await this.demandaRepositorio.buscarIdentificador(demandaId, usuarioId);
+    const demandaEncontrada = await this.demandaRepositorio.recuperar(
+      { id: demandaId },
+      usuarioId !== undefined ? { usuarioId } : undefined,
+    );
     if (!demandaEncontrada) {
       throw new ResourceNotFoundException('Demanda');
     }
 
-    const conexoes = await this.demandaRepositorio.listarConexoes(demandaId);
+    const conexoes = await this.demandaRepositorio.listarConexoes({ demandaId });
 
     return {
       sucesso:  true,
@@ -383,20 +395,20 @@ export class DemandaService {
     demandaId: number,
     conexaoId: number,
   ): Promise<StandardResponse<void>> {
-    const demandaEncontrada = await this.demandaRepositorio.buscarIdentificador(demandaId);
+    const demandaEncontrada = await this.demandaRepositorio.recuperar({ id: demandaId });
     if (!demandaEncontrada) {
       throw new ResourceNotFoundException('Demanda');
     }
 
-    const conexaoPertence = await this.demandaRepositorio.conexaoPertenceADemanda(
+    const conexaoPertence = await this.demandaRepositorio.validarConexaoDemanda({
       conexaoId,
       demandaId,
-    );
+    });
     if (!conexaoPertence) {
       throw new ResourceNotFoundException('Conexão');
     }
 
-    await this.demandaRepositorio.excluirConexao(conexaoId);
+    await this.demandaRepositorio.excluirConexao({ conexaoId });
 
     return {
       sucesso:  true,
@@ -407,13 +419,13 @@ export class DemandaService {
 
   /** Realiza soft delete da demanda. Restrito a gestores. */
   async excluir(id: number): Promise<StandardResponse<void>> {
-    const demandaEncontrada = await this.demandaRepositorio.buscarIdentificador(id);
+    const demandaEncontrada = await this.demandaRepositorio.recuperar({ id });
 
     if (!demandaEncontrada) {
       throw new ResourceNotFoundException('Demanda');
     }
 
-    await this.demandaRepositorio.excluir(id);
+    await this.demandaRepositorio.excluir({ id });
 
     return {
       sucesso:  true,
@@ -425,17 +437,16 @@ export class DemandaService {
   /**
    * Retorna o grafo de demandas de um projeto (nós e arestas para D3).
    * Desenvolvedor só vê o grafo se tiver acesso ao projeto.
-   * Arestas de conexão explícita serão adicionadas na task 12.
    */
   async recuperarGrafo(
     projetoId: number,
     usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<DemandaGrafoDto>> {
     if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR) {
-      const temAcesso = await this.demandaRepositorio.usuarioTemAcessoProjeto(
+      const temAcesso = await this.demandaRepositorio.validarAcessoProjeto({
         projetoId,
-        usuarioAtivo.sub,
-      );
+        usuarioId: usuarioAtivo.sub,
+      });
 
       if (!temAcesso) {
         throw new UnauthorizedAccessException(
@@ -444,7 +455,7 @@ export class DemandaService {
       }
     }
 
-    const grafo = await this.demandaRepositorio.recuperarGrafo(projetoId);
+    const grafo = await this.demandaRepositorio.recuperarGrafo({ projetoId });
 
     return {
       sucesso:  true,
@@ -462,21 +473,21 @@ export class DemandaService {
     demandaId: number,
     dto: DemandaTagsAtribuirDto,
   ): Promise<StandardResponse<DemandaTagsAtribuidasDto>> {
-    const demandaEncontrada = await this.demandaRepositorio.buscarIdentificador(demandaId);
+    const demandaEncontrada = await this.demandaRepositorio.recuperar({ id: demandaId });
     if (!demandaEncontrada) {
       throw new ResourceNotFoundException('Demanda');
     }
 
     for (const tagId of dto.tagIds) {
-      const tagEncontrada = await this.tagRepositorio.buscarIdentificador(tagId);
+      const tagEncontrada = await this.tagRepositorio.recuperar({ id: tagId });
       if (!tagEncontrada) {
         throw new ResourceNotFoundException(`Tag com id ${tagId}`);
       }
     }
 
-    await this.demandaRepositorio.atribuirTagsDemanda(demandaId, dto.tagIds);
+    await this.demandaRepositorio.atribuirTagsDemanda({ demandaId, tagIds: dto.tagIds });
 
-    const tagsAlteradas = await this.demandaRepositorio.listarTagsDemanda(demandaId);
+    const tagsAlteradas = await this.demandaRepositorio.listarTagsDemanda({ demandaId });
 
     return {
       sucesso:  true,
@@ -496,12 +507,15 @@ export class DemandaService {
     const usuarioId =
       usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
 
-    const demandaEncontrada = await this.demandaRepositorio.buscarIdentificador(demandaId, usuarioId);
+    const demandaEncontrada = await this.demandaRepositorio.recuperar(
+      { id: demandaId },
+      usuarioId !== undefined ? { usuarioId } : undefined,
+    );
     if (!demandaEncontrada) {
       throw new ResourceNotFoundException('Demanda');
     }
 
-    const tags = await this.demandaRepositorio.listarTagsDemanda(demandaId);
+    const tags = await this.demandaRepositorio.listarTagsDemanda({ demandaId });
 
     return {
       sucesso:  true,
@@ -521,12 +535,15 @@ export class DemandaService {
     const usuarioId =
       usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
 
-    const demandaEncontrada = await this.demandaRepositorio.buscarIdentificador(demandaId, usuarioId);
+    const demandaEncontrada = await this.demandaRepositorio.recuperar(
+      { id: demandaId },
+      usuarioId !== undefined ? { usuarioId } : undefined,
+    );
     if (!demandaEncontrada) {
       throw new ResourceNotFoundException('Demanda');
     }
 
-    const membros = await this.demandaRepositorio.listarMembrosDemanda(demandaId);
+    const membros = await this.demandaRepositorio.listarMembrosDemanda({ demandaId });
 
     return {
       sucesso:  true,
@@ -543,7 +560,7 @@ export class DemandaService {
     demandaId: number,
     dto: DemandaUsuarioAtribuirDto,
   ): Promise<StandardResponse<DemandaUsuarioAtribuidoDto>> {
-    const demandaEncontrada = await this.demandaRepositorio.buscarIdentificador(demandaId);
+    const demandaEncontrada = await this.demandaRepositorio.recuperar({ id: demandaId });
     if (!demandaEncontrada) {
       throw new ResourceNotFoundException('Demanda');
     }
@@ -553,12 +570,18 @@ export class DemandaService {
       throw new ResourceNotFoundException('Usuário');
     }
 
-    const jaAtribuido = await this.demandaRepositorio.membroJaAtribuido(demandaId, dto.usuarioId);
+    const jaAtribuido = await this.demandaRepositorio.validarMembro({
+      demandaId,
+      usuarioId: dto.usuarioId,
+    });
     if (jaAtribuido) {
       throw new BusinessException('Usuário já está atribuído a esta demanda');
     }
 
-    await this.demandaRepositorio.atribuirMembroDemanda(demandaId, dto.usuarioId);
+    await this.demandaRepositorio.atribuirMembroDemanda({
+      demandaId,
+      usuarioId: dto.usuarioId,
+    });
 
     return {
       sucesso: true,
@@ -581,22 +604,22 @@ export class DemandaService {
     demandaId: number,
     usuarioId: number,
   ): Promise<StandardResponse<void>> {
-    const demandaEncontrada = await this.demandaRepositorio.buscarIdentificador(demandaId);
+    const demandaEncontrada = await this.demandaRepositorio.recuperar({ id: demandaId });
     if (!demandaEncontrada) {
       throw new ResourceNotFoundException('Demanda');
     }
 
-    const estaAtribuido = await this.demandaRepositorio.membroJaAtribuido(demandaId, usuarioId);
+    const estaAtribuido = await this.demandaRepositorio.validarMembro({ demandaId, usuarioId });
     if (!estaAtribuido) {
       throw new ResourceNotFoundException('Membro');
     }
 
-    const totalMembros = await this.demandaRepositorio.contarMembrosDemanda(demandaId);
+    const totalMembros = await this.demandaRepositorio.contarMembrosDemanda({ demandaId });
     if (totalMembros <= 1) {
       throw new BusinessException('Não é possível remover o último membro da demanda');
     }
 
-    await this.demandaRepositorio.removerMembroDemanda(demandaId, usuarioId);
+    await this.demandaRepositorio.removerMembroDemanda({ demandaId, usuarioId });
 
     return {
       sucesso:  true,

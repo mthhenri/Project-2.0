@@ -20,6 +20,24 @@ import {
   DemandaUsuarioAtribuidoDto,
   DemandaValidarConexaoDto,
   TagResumoDto,
+  DemandaRecuperarDto,
+  DemandaAcessoFiltrarDto,
+  DemandaMembroInternoAtribuirDto,
+  DemandaConexaoVerificarDto,
+  DemandaTagsListarDto,
+  DemandaTagsInternoAtribuirDto,
+  DemandaTagInternoRemoverDto,
+  DemandaMembroListarDto,
+  DemandaMembroInternoRemoverDto,
+  DemandaMembroVerificarDto,
+  DemandaConexaoExcluirDto,
+  DemandaAtribuicaoInserirDto,
+  DemandaExcluirDto,
+  DemandaAcessoProjetoVerificarDto,
+  DemandaDescendenteListarDto,
+  DemandaAncestralListarDto,
+  DemandaGrafoRecuperarDto,
+  DemandaConexaoListarDto,
 } from '@project20/shared';
 
 type DemandaCriarDados = Omit<Demanda, 'id' | 'isDeleted' | 'createdDate' | 'updatedDate' | 'deletedDate'>;
@@ -84,14 +102,13 @@ export class DemandaRepository extends BaseRepository<Demanda> {
    * Aceita transação Knex para operações atômicas.
    */
   async inserirDemandaUsuario(
-    demandaId: number,
-    usuarioId: number,
+    dto: DemandaMembroInternoAtribuirDto,
     transacao?: Knex.Transaction,
   ): Promise<void> {
     await this.executarComando(
       `INSERT INTO demanda_usuario (demanda_id, usuario_id, created_date, updated_date, is_deleted)
        SELECT :demandaId, :usuarioId, NOW(), NOW(), false`,
-      { demandaId, usuarioId },
+      { demandaId: dto.demandaId, usuarioId: dto.usuarioId },
       transacao,
     );
   }
@@ -103,15 +120,14 @@ export class DemandaRepository extends BaseRepository<Demanda> {
    */
   async inserirComAtribuicao(
     dados: DemandaCriarDados,
-    criadorId: number,
-    gestorIds: number[],
+    dto: DemandaAtribuicaoInserirDto,
   ): Promise<DemandaCriadaDto> {
     return this.conexaoBancoDados.transaction(async (transacao) => {
       const demandaCriada = await this.inserir(dados, transacao);
-      await this.inserirDemandaUsuario(demandaCriada.id, criadorId, transacao);
-      for (const gestorId of gestorIds) {
-        if (gestorId !== criadorId) {
-          await this.inserirDemandaUsuario(demandaCriada.id, gestorId, transacao);
+      await this.inserirDemandaUsuario({ demandaId: demandaCriada.id, usuarioId: dto.criadorId }, transacao);
+      for (const gestorId of dto.gestorIds) {
+        if (gestorId !== dto.criadorId) {
+          await this.inserirDemandaUsuario({ demandaId: demandaCriada.id, usuarioId: gestorId }, transacao);
         }
       }
       return demandaCriada;
@@ -120,21 +136,21 @@ export class DemandaRepository extends BaseRepository<Demanda> {
 
   /**
    * Recupera demanda por ID.
-   * Se usuarioId for fornecido, verifica se o usuário está atribuído à demanda.
+   * Se filtro for fornecido, verifica se o usuário está atribuído à demanda.
    * Retorna null se não encontrada, deletada ou sem acesso.
    */
-  async buscarIdentificador(id: number, usuarioId?: number): Promise<DemandaRecuperadaDto | null> {
+  async recuperar(dto: DemandaRecuperarDto, filtro?: DemandaAcessoFiltrarDto): Promise<DemandaRecuperadaDto | null> {
     const condicoes: string[] = ['demanda.id = :id', 'demanda.is_deleted = false'];
-    const parametros: Record<string, unknown> = { id };
+    const parametros: Record<string, unknown> = { id: dto.id };
 
     let joinDemandaUsuario = '';
-    if (usuarioId !== undefined) {
+    if (filtro !== undefined) {
       joinDemandaUsuario = `
         INNER JOIN demanda_usuario
           ON demanda_usuario.demanda_id = demanda.id
           AND demanda_usuario.usuario_id = :usuarioId
           AND demanda_usuario.is_deleted = false`;
-      parametros.usuarioId = usuarioId;
+      parametros.usuarioId = filtro.usuarioId;
     }
 
     const resultado = await this.executarConsulta<DemandaRecuperadaDto>(
@@ -320,7 +336,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
    * Retorna todos os descendentes de uma demanda em formato plano com nível.
    * Inclui a própria demanda (nível 0). Usa CTE recursivo conforme SCHEMA.md.
    */
-  async buscarDescendentes(demandaId: number): Promise<{
+  async listarDescendentes(dto: DemandaDescendenteListarDto): Promise<{
     id: number;
     demandaPaiId: number | null;
     nome: string;
@@ -368,7 +384,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
          nivel
        FROM arvore_demanda
        ORDER BY nivel, nome`,
-      { demandaId },
+      { demandaId: dto.demandaId },
     );
   }
 
@@ -376,7 +392,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
    * Retorna todos os ancestrais de uma demanda (do pai até a raiz).
    * Usa CTE recursivo invertido. Nível 1 = pai direto.
    */
-  async buscarAncestral(demandaId: number): Promise<DemandaAncestralDto[]> {
+  async listarAncestral(dto: DemandaAncestralListarDto): Promise<DemandaAncestralDto[]> {
     return this.executarConsulta<DemandaAncestralDto>(
       `WITH RECURSIVE ancestrais AS (
          SELECT id, demanda_pai_id, nome, 0 AS nivel
@@ -397,20 +413,20 @@ export class DemandaRepository extends BaseRepository<Demanda> {
        FROM ancestrais
        WHERE nivel > 0
        ORDER BY nivel DESC`,
-      { demandaId },
+      { demandaId: dto.demandaId },
     );
   }
 
   /** Soft delete da demanda. */
-  async excluir(id: number): Promise<void> {
-    await this.executarSoftDelete(id);
+  async excluir(dto: DemandaExcluirDto): Promise<void> {
+    await this.executarSoftDelete(dto.id);
   }
 
   /**
    * Verifica se o usuário tem acesso ao projeto via demanda_usuario.
    * Acesso derivado: desenvolvedor vê projeto se tiver ao menos uma demanda atribuída.
    */
-  async usuarioTemAcessoProjeto(projetoId: number, usuarioId: number): Promise<boolean> {
+  async validarAcessoProjeto(dto: DemandaAcessoProjetoVerificarDto): Promise<boolean> {
     const resultado = await this.executarConsulta<{ existe: boolean }>(
       `SELECT EXISTS(
          SELECT 1
@@ -422,7 +438,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
            AND demanda.is_deleted = false
            AND demanda_usuario.usuario_id = :usuarioId
        ) AS existe`,
-      { projetoId, usuarioId },
+      { projetoId: dto.projetoId, usuarioId: dto.usuarioId },
     );
     return resultado[0].existe;
   }
@@ -431,7 +447,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
    * Retorna todos os nós e arestas do grafo de demandas de um projeto.
    * Arestas incluem conexões explícitas via demanda_conexao onde origem e destino pertencem ao projeto.
    */
-  async recuperarGrafo(projetoId: number): Promise<DemandaGrafoDto> {
+  async recuperarGrafo(dto: DemandaGrafoRecuperarDto): Promise<DemandaGrafoDto> {
     const nos = await this.executarConsulta<DemandaGrafoNoDto>(
       `SELECT
          demanda.id,
@@ -443,7 +459,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
        WHERE demanda.projeto_id = :projetoId
          AND demanda.is_deleted = false
        ORDER BY demanda.ordem_exibicao ASC`,
-      { projetoId },
+      { projetoId: dto.projetoId },
     );
 
     const arestas = await this.executarConsulta<DemandaGrafoArestaDto>(
@@ -461,7 +477,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
          AND demanda_destino.projeto_id = :projetoId
          AND demanda_destino.is_deleted = false
        WHERE demanda_conexao.is_deleted = false`,
-      { projetoId },
+      { projetoId: dto.projetoId },
     );
 
     return { nos, arestas };
@@ -472,7 +488,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
    * Usa CTE recursivo conforme SCHEMA.md.
    * Retorna true se criaria ciclo.
    */
-  async verificarCriariaCiclo(origemId: number, destinoId: number): Promise<boolean> {
+  async verificarCriariaCiclo(dto: DemandaValidarConexaoDto): Promise<boolean> {
     const resultado = await this.executarConsulta<{ criariaCiclo: boolean }>(
       `WITH RECURSIVE verificacao_ciclo AS (
          SELECT demanda_destino_id AS id
@@ -491,7 +507,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
        SELECT EXISTS (
          SELECT 1 FROM verificacao_ciclo WHERE id = :origemId
        ) AS "criariaCiclo"`,
-      { destinoId, origemId },
+      { destinoId: dto.demandaDestinoId, origemId: dto.demandaOrigemId },
     );
     return resultado[0].criariaCiclo;
   }
@@ -546,7 +562,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
   /**
    * Lista todas as conexões de uma demanda (saída, entrada bidirecional).
    */
-  async listarConexoes(demandaId: number): Promise<DemandaConexaoResumoDto[]> {
+  async listarConexoes(dto: DemandaConexaoListarDto): Promise<DemandaConexaoResumoDto[]> {
     return this.executarConsulta<DemandaConexaoResumoDto>(
       `SELECT
          demanda_conexao.id,
@@ -572,28 +588,28 @@ export class DemandaRepository extends BaseRepository<Demanda> {
            demanda_conexao.demanda_origem_id = :demandaId
            OR (demanda_conexao.demanda_destino_id = :demandaId AND demanda_conexao.eh_bidirecional = true)
          )`,
-      { demandaId },
+      { demandaId: dto.demandaId },
     );
   }
 
   /**
    * Remove uma conexão pelo ID via soft delete.
    */
-  async excluirConexao(conexaoId: number): Promise<void> {
+  async excluirConexao(dto: DemandaConexaoExcluirDto): Promise<void> {
     await this.executarComando(
       `UPDATE demanda_conexao
        SET is_deleted = true,
            deleted_date = NOW(),
            updated_date = NOW()
        WHERE id = :conexaoId`,
-      { conexaoId },
+      { conexaoId: dto.conexaoId },
     );
   }
 
   /**
    * Verifica se a conexão pertence à demanda informada (como origem ou destino bidirecional).
    */
-  async conexaoPertenceADemanda(conexaoId: number, demandaId: number): Promise<boolean> {
+  async validarConexaoDemanda(dto: DemandaConexaoVerificarDto): Promise<boolean> {
     const resultado = await this.executarConsulta<{ existe: boolean }>(
       `SELECT EXISTS(
          SELECT 1 FROM demanda_conexao
@@ -604,7 +620,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
              OR (demanda_destino_id = :demandaId AND eh_bidirecional = true)
            )
        ) AS existe`,
-      { conexaoId, demandaId },
+      { conexaoId: dto.conexaoId, demandaId: dto.demandaId },
     );
     return resultado[0].existe;
   }
@@ -612,7 +628,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
   /**
    * Lista as tags ativas atribuídas a uma demanda.
    */
-  async listarTagsDemanda(demandaId: number): Promise<TagResumoDto[]> {
+  async listarTagsDemanda(dto: DemandaTagsListarDto): Promise<TagResumoDto[]> {
     return this.executarConsulta<TagResumoDto>(
       `SELECT
          tag.id,
@@ -624,7 +640,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
          AND tag.is_deleted = false
        WHERE demanda_tag.demanda_id = :demandaId
          AND demanda_tag.is_deleted = false`,
-      { demandaId },
+      { demandaId: dto.demandaId },
     );
   }
 
@@ -633,22 +649,22 @@ export class DemandaRepository extends BaseRepository<Demanda> {
    * Faz soft delete das tags removidas e insere as novas.
    * Tags que já existem e permanecem na lista não são tocadas.
    */
-  async atribuirTagsDemanda(demandaId: number, tagIds: number[]): Promise<void> {
-    const tagsAtuais = await this.listarTagsDemanda(demandaId);
+  async atribuirTagsDemanda(dto: DemandaTagsInternoAtribuirDto): Promise<void> {
+    const tagsAtuais = await this.listarTagsDemanda({ demandaId: dto.demandaId });
     const idsAtuais  = tagsAtuais.map((tag) => tag.id);
 
-    const idsParaRemover = idsAtuais.filter((id) => !tagIds.includes(id));
-    const idsParaInserir = tagIds.filter((id) => !idsAtuais.includes(id));
+    const idsParaRemover = idsAtuais.filter((id) => !dto.tagIds.includes(id));
+    const idsParaInserir = dto.tagIds.filter((id) => !idsAtuais.includes(id));
 
     for (const tagId of idsParaRemover) {
-      await this.removerTagDemanda(demandaId, tagId);
+      await this.removerTagDemanda({ demandaId: dto.demandaId, tagId });
     }
 
     for (const tagId of idsParaInserir) {
       await this.executarComando(
         `INSERT INTO demanda_tag (demanda_id, tag_id, created_date, updated_date, is_deleted)
          SELECT :demandaId, :tagId, NOW(), NOW(), false`,
-        { demandaId, tagId },
+        { demandaId: dto.demandaId, tagId },
       );
     }
   }
@@ -656,7 +672,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
   /**
    * Remove (soft delete) a associação de uma tag à demanda.
    */
-  async removerTagDemanda(demandaId: number, tagId: number): Promise<void> {
+  async removerTagDemanda(dto: DemandaTagInternoRemoverDto): Promise<void> {
     await this.executarComando(
       `UPDATE demanda_tag
        SET is_deleted   = true,
@@ -665,14 +681,14 @@ export class DemandaRepository extends BaseRepository<Demanda> {
        WHERE demanda_id = :demandaId
          AND tag_id     = :tagId
          AND is_deleted = false`,
-      { demandaId, tagId },
+      { demandaId: dto.demandaId, tagId: dto.tagId },
     );
   }
 
   /**
    * Lista os membros ativos de uma demanda com dados do usuário.
    */
-  async listarMembrosDemanda(demandaId: number): Promise<DemandaMembroDto[]> {
+  async listarMembrosDemanda(dto: DemandaMembroListarDto): Promise<DemandaMembroDto[]> {
     return this.executarConsulta<DemandaMembroDto>(
       `SELECT
          usuario.id         AS "usuarioId",
@@ -686,25 +702,25 @@ export class DemandaRepository extends BaseRepository<Demanda> {
          AND usuario.is_deleted = false
        WHERE demanda_usuario.demanda_id = :demandaId
          AND demanda_usuario.is_deleted = false`,
-      { demandaId },
+      { demandaId: dto.demandaId },
     );
   }
 
   /**
    * Atribui um usuário à demanda.
    */
-  async atribuirMembroDemanda(demandaId: number, usuarioId: number): Promise<void> {
+  async atribuirMembroDemanda(dto: DemandaMembroInternoAtribuirDto): Promise<void> {
     await this.executarComando(
       `INSERT INTO demanda_usuario (demanda_id, usuario_id, created_date, updated_date, is_deleted)
        SELECT :demandaId, :usuarioId, NOW(), NOW(), false`,
-      { demandaId, usuarioId },
+      { demandaId: dto.demandaId, usuarioId: dto.usuarioId },
     );
   }
 
   /**
    * Remove (soft delete) a atribuição de um usuário à demanda.
    */
-  async removerMembroDemanda(demandaId: number, usuarioId: number): Promise<void> {
+  async removerMembroDemanda(dto: DemandaMembroInternoRemoverDto): Promise<void> {
     await this.executarComando(
       `UPDATE demanda_usuario
        SET is_deleted   = true,
@@ -713,14 +729,14 @@ export class DemandaRepository extends BaseRepository<Demanda> {
        WHERE demanda_id = :demandaId
          AND usuario_id = :usuarioId
          AND is_deleted = false`,
-      { demandaId, usuarioId },
+      { demandaId: dto.demandaId, usuarioId: dto.usuarioId },
     );
   }
 
   /**
    * Verifica se um usuário já está atribuído à demanda.
    */
-  async membroJaAtribuido(demandaId: number, usuarioId: number): Promise<boolean> {
+  async validarMembro(dto: DemandaMembroVerificarDto): Promise<boolean> {
     const resultado = await this.executarConsulta<{ existe: boolean }>(
       `SELECT EXISTS(
          SELECT 1 FROM demanda_usuario
@@ -728,7 +744,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
            AND usuario_id = :usuarioId
            AND is_deleted = false
        ) AS existe`,
-      { demandaId, usuarioId },
+      { demandaId: dto.demandaId, usuarioId: dto.usuarioId },
     );
     return resultado[0].existe;
   }
@@ -737,13 +753,13 @@ export class DemandaRepository extends BaseRepository<Demanda> {
    * Conta o total de membros ativos em uma demanda.
    * Usado para impedir remoção do último membro.
    */
-  async contarMembrosDemanda(demandaId: number): Promise<number> {
+  async contarMembrosDemanda(dto: DemandaMembroListarDto): Promise<number> {
     const resultado = await this.executarConsulta<{ total: number }>(
       `SELECT COUNT(*)::int AS total
        FROM demanda_usuario
        WHERE demanda_id = :demandaId
          AND is_deleted = false`,
-      { demandaId },
+      { demandaId: dto.demandaId },
     );
     return resultado[0].total;
   }

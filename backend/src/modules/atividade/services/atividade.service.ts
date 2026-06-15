@@ -39,15 +39,15 @@ export class AtividadeService {
     dto: AtividadeCriarDto,
     usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<AtividadeCriadaDto>> {
-    const demandaEncontrada = await this.demandaRepositorio.buscarIdentificador(dto.demandaId);
+    const demandaEncontrada = await this.demandaRepositorio.recuperar({ id: dto.demandaId });
     if (!demandaEncontrada) {
       throw new ResourceNotFoundException('Demanda');
     }
 
-    const temAcesso = await this.atividadeRepositorio.usuarioTemAcessoDemanda(
-      dto.demandaId,
-      usuarioAtivo.sub,
-    );
+    const temAcesso = await this.atividadeRepositorio.validarAcessoDemanda({
+      demandaId: dto.demandaId,
+      usuarioId: usuarioAtivo.sub,
+    });
     if (!temAcesso) {
       throw new UnauthorizedAccessException('Usuário não tem acesso à demanda informada');
     }
@@ -79,10 +79,10 @@ export class AtividadeService {
     const itensPorPagina = filtros.itensPorPagina ?? 20;
 
     if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR) {
-      const temAcesso = await this.atividadeRepositorio.usuarioTemAcessoDemanda(
-        filtros.demandaId,
-        usuarioAtivo.sub,
-      );
+      const temAcesso = await this.atividadeRepositorio.validarAcessoDemanda({
+        demandaId: filtros.demandaId,
+        usuarioId: usuarioAtivo.sub,
+      });
       if (!temAcesso) {
         throw new UnauthorizedAccessException('Usuário não tem acesso à demanda informada');
       }
@@ -112,16 +112,16 @@ export class AtividadeService {
     id: number,
     usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<AtividadeRecuperadaDto>> {
-    const atividadeEncontrada = await this.atividadeRepositorio.buscarIdentificador(id);
+    const atividadeEncontrada = await this.atividadeRepositorio.recuperar({ id });
     if (!atividadeEncontrada) {
       throw new ResourceNotFoundException('Atividade');
     }
 
     if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR) {
-      const temAcesso = await this.atividadeRepositorio.usuarioTemAcessoDemanda(
-        atividadeEncontrada.demandaId,
-        usuarioAtivo.sub,
-      );
+      const temAcesso = await this.atividadeRepositorio.validarAcessoDemanda({
+        demandaId: atividadeEncontrada.demandaId,
+        usuarioId: usuarioAtivo.sub,
+      });
       if (!temAcesso) {
         throw new UnauthorizedAccessException('Usuário não tem acesso à demanda desta atividade');
       }
@@ -144,17 +144,17 @@ export class AtividadeService {
     dto: AtividadeAlterarDto,
     usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<AtividadeAlteradaDto>> {
-    const atividadeEncontrada = await this.atividadeRepositorio.buscarIdentificador(id);
+    const atividadeEncontrada = await this.atividadeRepositorio.recuperar({ id });
     if (!atividadeEncontrada) {
       throw new ResourceNotFoundException('Atividade');
     }
 
     if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR) {
       const eAutor = atividadeEncontrada.usuarioId === usuarioAtivo.sub;
-      const temAcesso = await this.atividadeRepositorio.usuarioTemAcessoDemanda(
-        atividadeEncontrada.demandaId,
-        usuarioAtivo.sub,
-      );
+      const temAcesso = await this.atividadeRepositorio.validarAcessoDemanda({
+        demandaId: atividadeEncontrada.demandaId,
+        usuarioId: usuarioAtivo.sub,
+      });
 
       if (!eAutor && !temAcesso) {
         throw new UnauthorizedAccessException(
@@ -179,12 +179,12 @@ export class AtividadeService {
 
   /** Realiza soft delete da atividade. Restrito a gestores. */
   async excluir(id: number): Promise<StandardResponse<void>> {
-    const atividadeEncontrada = await this.atividadeRepositorio.buscarIdentificador(id);
+    const atividadeEncontrada = await this.atividadeRepositorio.recuperar({ id });
     if (!atividadeEncontrada) {
       throw new ResourceNotFoundException('Atividade');
     }
 
-    await this.atividadeRepositorio.excluir(id);
+    await this.atividadeRepositorio.excluir({ id });
 
     return {
       sucesso:  true,
@@ -201,21 +201,21 @@ export class AtividadeService {
     id: number,
     dto: AtividadeTagsAtribuirDto,
   ): Promise<StandardResponse<AtividadeTagsAtribuidasDto>> {
-    const atividadeEncontrada = await this.atividadeRepositorio.buscarIdentificador(id);
+    const atividadeEncontrada = await this.atividadeRepositorio.recuperar({ id });
     if (!atividadeEncontrada) {
       throw new ResourceNotFoundException('Atividade');
     }
 
     for (const tagId of dto.tagIds) {
-      const tagEncontrada = await this.tagRepositorio.buscarIdentificador(tagId);
+      const tagEncontrada = await this.tagRepositorio.recuperar({ id: tagId });
       if (!tagEncontrada) {
         throw new ResourceNotFoundException(`Tag com id ${tagId}`);
       }
     }
 
-    await this.atividadeRepositorio.alterarTags(id, dto.tagIds);
+    await this.atividadeRepositorio.alterarTags({ atividadeId: id, tagIds: dto.tagIds });
 
-    const tagsAlteradas = await this.atividadeRepositorio.listarTags(id);
+    const tagsAlteradas = await this.atividadeRepositorio.listarTags({ atividadeId: id });
 
     return {
       sucesso:  true,
@@ -231,22 +231,22 @@ export class AtividadeService {
     id: number,
     usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<TagResumoDto[]>> {
-    const atividadeEncontrada = await this.atividadeRepositorio.buscarIdentificador(id);
+    const atividadeEncontrada = await this.atividadeRepositorio.recuperar({ id });
     if (!atividadeEncontrada) {
       throw new ResourceNotFoundException('Atividade');
     }
 
     if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR) {
-      const temAcesso = await this.atividadeRepositorio.usuarioTemAcessoDemanda(
-        atividadeEncontrada.demandaId,
-        usuarioAtivo.sub,
-      );
+      const temAcesso = await this.atividadeRepositorio.validarAcessoDemanda({
+        demandaId: atividadeEncontrada.demandaId,
+        usuarioId: usuarioAtivo.sub,
+      });
       if (!temAcesso) {
         throw new UnauthorizedAccessException('Usuário não tem acesso à demanda desta atividade');
       }
     }
 
-    const tags = await this.atividadeRepositorio.listarTags(id);
+    const tags = await this.atividadeRepositorio.listarTags({ atividadeId: id });
 
     return {
       sucesso:  true,

@@ -10,6 +10,9 @@ import {
   ProjetoAlteradoDto,
   ProjetoValidarCodigoDto,
   ProjetoListarDto,
+  ProjetoRecuperarDto,
+  ProjetoExcluirDto,
+  ProjetoUsuarioListarDto,
 } from '@project20/shared';
 
 type ProjetoCriarDados = Omit<Projeto, 'id' | 'isDeleted' | 'createdDate' | 'updatedDate' | 'deletedDate'>;
@@ -63,7 +66,7 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
   }
 
   /** Recupera projeto por ID. Retorna null se não encontrado ou deletado. */
-  async buscarIdentificador(id: number): Promise<ProjetoRecuperadoDto | null> {
+  async recuperar(dto: ProjetoRecuperarDto): Promise<ProjetoRecuperadoDto | null> {
     const resultado = await this.executarConsulta<ProjetoRecuperadoDto>(
       `SELECT
          projeto.id,
@@ -78,7 +81,7 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
        WHERE projeto.id = :id
          AND projeto.is_deleted = false
        LIMIT 1`,
-      { id },
+      { id: dto.id },
     );
     return resultado[0] ?? null;
   }
@@ -127,17 +130,16 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
    * Acesso derivado de demanda_usuario — não existe tabela projeto_usuario.
    */
   async listarPorUsuario(
-    usuarioId: number,
-    filtros: ProjetoListarDto,
+    dto: ProjetoUsuarioListarDto,
   ): Promise<{ itens: ProjetoResumoDto[]; total: number }> {
-    const pagina         = filtros.pagina ?? 1;
-    const itensPorPagina = filtros.itensPorPagina ?? 20;
-    const parametros: Record<string, unknown> = { usuarioId };
+    const pagina         = dto.filtros.pagina ?? 1;
+    const itensPorPagina = dto.filtros.itensPorPagina ?? 20;
+    const parametros: Record<string, unknown> = { usuarioId: dto.usuarioId };
     const condicoesExtras: string[] = [];
 
-    if (filtros.status !== undefined) {
+    if (dto.filtros.status !== undefined) {
       condicoesExtras.push('AND projeto.status = :status');
-      parametros.status = filtros.status;
+      parametros.status = dto.filtros.status;
     }
 
     const filtroStatus = condicoesExtras.join(' ');
@@ -229,7 +231,7 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
   }
 
   /** Soft delete do projeto. */
-  async excluir(id: number): Promise<void> {
-    await this.executarSoftDelete(id);
+  async excluir(dto: ProjetoExcluirDto): Promise<void> {
+    await this.executarSoftDelete(dto.id);
   }
 }

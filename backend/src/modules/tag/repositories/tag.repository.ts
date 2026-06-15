@@ -9,6 +9,8 @@ import {
   TagResumoDto,
   TagAlteradaDto,
   TagValidarNomeDto,
+  TagRecuperarDto,
+  TagExcluirDto,
 } from '@project20/shared';
 
 @Injectable()
@@ -49,7 +51,7 @@ export class TagRepository extends BaseRepository<Tag> {
   }
 
   /** Recupera tag por ID. Retorna null se não encontrada ou deletada. */
-  async buscarIdentificador(id: number): Promise<TagRecuperadaDto | null> {
+  async recuperar(dto: TagRecuperarDto): Promise<TagRecuperadaDto | null> {
     const resultado = await this.executarConsulta<TagRecuperadaDto>(
       `SELECT
          tag.id,
@@ -60,7 +62,7 @@ export class TagRepository extends BaseRepository<Tag> {
        WHERE tag.id = :id
          AND tag.is_deleted = false
        LIMIT 1`,
-      { id },
+      { id: dto.id },
     );
     return resultado[0] ?? null;
   }
@@ -108,7 +110,7 @@ export class TagRepository extends BaseRepository<Tag> {
   }
 
   /** Soft delete da tag. */
-  async excluir(id: number): Promise<void> {
-    await this.executarSoftDelete(id);
+  async excluir(dto: TagExcluirDto): Promise<void> {
+    await this.executarSoftDelete(dto.id);
   }
 }

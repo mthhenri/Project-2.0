@@ -5,3 +5,5 @@ export * from './TagAlteradaDto';
 export * from './TagValidarNomeDto';
 export * from './TagResumoDto';
 export * from './TagRecuperadaDto';
+export * from './TagRecuperarDto';
+export * from './TagExcluirDto';

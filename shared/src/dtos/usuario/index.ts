@@ -9,3 +9,5 @@ export * from './UsuarioAlteradoDto';
 export * from './UsuarioValidarLoginDto';
 export * from './UsuarioSenhaAlterarDto';
 export * from './UsuarioSenhaAlteradaDto';
+export * from './UsuarioAlterarSenhaInternoDto';
+export * from './UsuarioExcluirDto';

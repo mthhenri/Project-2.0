@@ -4,3 +4,6 @@ export * from './DiaNaoUtilResumoDto';
 export * from './DiaNaoUtilAlterarDto';
 export * from './DiaNaoUtilAlteradoDto';
 export * from './CalendarioConsultarDto';
+export * from './CalendarioRecuperarDto';
+export * from './CalendarioExcluirDto';
+export * from './CalendarioVerificarDiaDto';

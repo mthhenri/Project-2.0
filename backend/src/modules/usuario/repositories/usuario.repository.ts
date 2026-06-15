@@ -11,6 +11,8 @@ import {
   UsuarioListarDto,
   UsuarioAlteradoDto,
   UsuarioValidarLoginDto,
+  UsuarioAlterarSenhaInternoDto,
+  UsuarioExcluirDto,
 } from '@project20/shared';
 import { UsuarioTipoEnum, UsuarioStatusEnum } from '@project20/shared';
 
@@ -218,20 +220,20 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
   }
 
   /** Altera apenas a senha encriptada. */
-  async alterarSenha(id: number, senhaEncriptada: string): Promise<void> {
+  async alterarSenha(dto: UsuarioAlterarSenhaInternoDto): Promise<void> {
     await this.executarComando(
       `UPDATE usuario
        SET senha_encriptada = :senhaEncriptada,
            updated_date = NOW()
        WHERE usuario.id = :id
          AND usuario.is_deleted = false`,
-      { id, senhaEncriptada },
+      { id: dto.id, senhaEncriptada: dto.senhaEncriptada },
     );
   }
 
   /** Soft delete do usuário. */
-  async excluir(id: number): Promise<void> {
-    await this.executarSoftDelete(id);
+  async excluir(dto: UsuarioExcluirDto): Promise<void> {
+    await this.executarSoftDelete(dto.id);
   }
 
   /** Lista todos os gestores ativos (usado na auto-atribuição de demandas). */

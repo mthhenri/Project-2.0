@@ -9,6 +9,12 @@ import {
   ExecucaoAlteradaDto,
   ExecucaoListarDto,
   ExecucaoResumoDto,
+  ExecucaoRecuperarDto,
+  ExecucaoEncerrarInternoDto,
+  ExecucaoAtivaRecuperarDto,
+  ExecucaoAlterarInternoDto,
+  ExecucaoExcluirDto,
+  ExecucaoUsuarioRecuperarDto,
 } from '@project20/shared';
 
 @Injectable()
@@ -51,7 +57,7 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
    * Encerra uma execução definindo fim_data e atualizando a descrição.
    * Retorna a execução encerrada com duração calculada em minutos.
    */
-  async encerrar(id: number, fimData: Date, descricao: string): Promise<ExecucaoEncerradaDto> {
+  async encerrar(dto: ExecucaoEncerrarInternoDto): Promise<ExecucaoEncerradaDto> {
     const resultado = await this.executarConsulta<ExecucaoEncerradaDto>(
       `UPDATE execucao
        SET fim_data     = :fimData,
@@ -66,7 +72,7 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
          inicio_data  AS "inicioData",
          fim_data     AS "fimData",
          EXTRACT(EPOCH FROM (fim_data - inicio_data))::int / 60 AS "duracaoMinutos"`,
-      { id, fimData, descricao },
+      { id: dto.id, fimData: dto.fimData, descricao: dto.descricao },
     );
     return resultado[0];
   }
@@ -75,7 +81,7 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
    * Recupera execução por ID com duração calculada.
    * Retorna null se não encontrada ou deletada.
    */
-  async buscarIdentificador(id: number): Promise<ExecucaoEncerradaDto | null> {
+  async recuperar(dto: ExecucaoRecuperarDto): Promise<ExecucaoEncerradaDto | null> {
     const resultado = await this.executarConsulta<ExecucaoEncerradaDto>(
       `SELECT
          execucao.id,
@@ -92,7 +98,7 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
        WHERE execucao.id = :id
          AND execucao.is_deleted = false
        LIMIT 1`,
-      { id },
+      { id: dto.id },
     );
     return resultado[0] ?? null;
   }
@@ -177,7 +183,7 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
    * Verifica se o usuário possui execução ativa (sem fim_data) em qualquer atividade sua.
    * Retorna os dados básicos da execução ativa, ou null se não houver.
    */
-  async buscarExecucaoAtiva(usuarioId: number): Promise<{
+  async recuperarAtiva(dto: ExecucaoAtivaRecuperarDto): Promise<{
     id: number;
     atividadeId: number;
     inicioData: Date;
@@ -199,7 +205,7 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
          AND execucao.is_deleted = false
          AND atividade.usuario_id = :usuarioId
        LIMIT 1`,
-      { usuarioId },
+      { usuarioId: dto.usuarioId },
     );
     return resultado[0] ?? null;
   }
@@ -208,7 +214,7 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
    * Altera apenas a descrição de uma execução.
    * Retorna a execução alterada com duração calculada.
    */
-  async alterar(id: number, descricao: string): Promise<ExecucaoAlteradaDto> {
+  async alterar(dto: ExecucaoAlterarInternoDto): Promise<ExecucaoAlteradaDto> {
     const resultado = await this.executarConsulta<ExecucaoAlteradaDto>(
       `UPDATE execucao
        SET descricao    = :descricao,
@@ -226,21 +232,21 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
            THEN EXTRACT(EPOCH FROM (fim_data - inicio_data))::int / 60
            ELSE NULL
          END AS "duracaoMinutos"`,
-      { id, descricao },
+      { id: dto.id, descricao: dto.descricao },
     );
     return resultado[0];
   }
 
   /** Soft delete da execução. */
-  async excluir(id: number): Promise<void> {
-    await this.executarSoftDelete(id);
+  async excluir(dto: ExecucaoExcluirDto): Promise<void> {
+    await this.executarSoftDelete(dto.id);
   }
 
   /**
    * Busca o usuarioId associado a uma execução via atividade.usuario_id.
    * Usado para autorização nas operações de encerrar, atualizar e excluir.
    */
-  async buscarUsuarioExecucao(execucaoId: number): Promise<number | null> {
+  async recuperarUsuario(dto: ExecucaoUsuarioRecuperarDto): Promise<number | null> {
     const resultado = await this.executarConsulta<{ usuarioId: number }>(
       `SELECT atividade.usuario_id AS "usuarioId"
        FROM execucao
@@ -250,7 +256,7 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
        WHERE execucao.id = :execucaoId
          AND execucao.is_deleted = false
        LIMIT 1`,
-      { execucaoId },
+      { execucaoId: dto.execucaoId },
     );
     return resultado[0]?.usuarioId ?? null;
   }

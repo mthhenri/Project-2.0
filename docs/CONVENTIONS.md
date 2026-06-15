@@ -59,6 +59,10 @@ usuario-listagem.page.ts
 - Usar quando a operação atinge apenas um sub-aspecto (`Senha`, `Avatar`, `Descricao`)
 - Quando múltiplos campos → agrupar num substantivo semântico: `senha + email` → `Credenciais`
 - Quando coleção → plural do complemento: `Tag` → `Tags`
+- **Quando o complemento tem mais de uma palavra → todas as palavras vêm antes do verbo, sem exceção:**
+  - `membro interno` (complemento 2 palavras) + `atribuir` → `DemandaMembroInternoAtribuirDto` ✅
+  - `DemandaMembroAtribuirInternoDto` ❌ — verbo no meio do complemento
+  - `tag interno` + `remover` → `DemandaTagInternoRemoverDto` ✅
 
 **Regras adicionais:**
 - Toda recuperação individual usa `EntidadeRecuperarDto { id: number }` — nunca primitivo

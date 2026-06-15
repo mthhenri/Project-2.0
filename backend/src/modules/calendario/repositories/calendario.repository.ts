@@ -8,6 +8,9 @@ import {
   DiaNaoUtilResumoDto,
   DiaNaoUtilAlteradoDto,
   DiaNaoUtilTipoEnum,
+  CalendarioRecuperarDto,
+  CalendarioExcluirDto,
+  CalendarioVerificarDiaDto,
 } from '@project20/shared';
 
 interface DiaNaoUtilInserirDados {
@@ -49,7 +52,7 @@ export class CalendarioRepository extends BaseRepository<DiaNaoUtil> {
   }
 
   /** Recupera dia não útil por ID. Retorna null se não encontrado ou deletado. */
-  async buscarIdentificador(id: number): Promise<DiaNaoUtilCriadoDto | null> {
+  async recuperar(dto: CalendarioRecuperarDto): Promise<DiaNaoUtilCriadoDto | null> {
     const resultado = await this.executarConsulta<DiaNaoUtilCriadoDto>(
       `SELECT
          dia_nao_util.id,
@@ -62,7 +65,7 @@ export class CalendarioRepository extends BaseRepository<DiaNaoUtil> {
        WHERE dia_nao_util.id = :id
          AND dia_nao_util.is_deleted = false
        LIMIT 1`,
-      { id },
+      { id: dto.id },
     );
     return resultado[0] ?? null;
   }
@@ -118,15 +121,15 @@ export class CalendarioRepository extends BaseRepository<DiaNaoUtil> {
   }
 
   /** Soft delete do dia não útil. */
-  async excluir(id: number): Promise<void> {
-    await this.executarSoftDelete(id);
+  async excluir(dto: CalendarioExcluirDto): Promise<void> {
+    await this.executarSoftDelete(dto.id);
   }
 
   /**
    * Verifica se uma data específica está cadastrada como não útil.
    * Considera tanto dias exatos quanto recorrentes (mesmo mês/dia, qualquer ano).
    */
-  async ehDiaNaoUtil(data: Date): Promise<boolean> {
+  async validarDia(dto: CalendarioVerificarDiaDto): Promise<boolean> {
     const resultado = await this.executarConsulta<{ ehDiaNaoUtil: boolean }>(
       `SELECT EXISTS (
          SELECT 1
@@ -142,7 +145,7 @@ export class CalendarioRepository extends BaseRepository<DiaNaoUtil> {
              )
            )
        ) AS "ehDiaNaoUtil"`,
-      { data },
+      { data: dto.data },
     );
     return resultado[0].ehDiaNaoUtil;
   }
@@ -151,7 +154,7 @@ export class CalendarioRepository extends BaseRepository<DiaNaoUtil> {
    * Retorna o tipo do dia não útil cadastrado para a data informada.
    * Considera dias exatos e recorrentes. Retorna null se a data for dia útil.
    */
-  async buscarTipoPorData(data: Date): Promise<DiaNaoUtilTipoEnum | null> {
+  async recuperarTipo(dto: CalendarioVerificarDiaDto): Promise<DiaNaoUtilTipoEnum | null> {
     const resultado = await this.executarConsulta<{ tipo: DiaNaoUtilTipoEnum }>(
       `SELECT dia_nao_util.tipo
        FROM dia_nao_util
@@ -166,7 +169,7 @@ export class CalendarioRepository extends BaseRepository<DiaNaoUtil> {
            )
          )
        LIMIT 1`,
-      { data },
+      { data: dto.data },
     );
     return resultado[0]?.tipo ?? null;
   }

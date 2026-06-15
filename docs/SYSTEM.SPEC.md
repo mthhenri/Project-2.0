@@ -144,6 +144,17 @@ AtribuirUmaTag     → DemandaTagAtribuirDto
 AtribuirVáriasTags → DemandaTagsAtribuirDto
 ```
 
+**Quando o complemento tem mais de uma palavra:**
+
+O complemento inteiro — todas as palavras — vem antes do verbo, sem exceção. Qualificadores como "Interno" fazem parte do complemento quando modificam o substantivo do complemento:
+
+```
+membro + interno → complemento "MembroInterno" → DemandaMembroInternoAtribuirDto  ✅
+                                               → DemandaMembroAtribuirInternoDto  ❌
+tag    + interno → complemento "TagInterno"    → DemandaTagInternoRemoverDto      ✅
+tags   + interno → complemento "TagsInterno"   → DemandaTagsInternoAtribuirDto    ✅
+```
+
 **Entrada (verbo no infinitivo):**
 ```
 UsuarioCriarDto                   ← operação pura no modelo inteiro

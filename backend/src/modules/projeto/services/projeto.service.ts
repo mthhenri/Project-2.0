@@ -63,7 +63,7 @@ export class ProjetoService {
     const { itens, total } =
       usuarioAtivo.tipo === UsuarioTipoEnum.GESTOR
         ? await this.projetoRepositorio.listarTodos(filtros)
-        : await this.projetoRepositorio.listarPorUsuario(usuarioAtivo.sub, filtros);
+        : await this.projetoRepositorio.listarPorUsuario({ usuarioId: usuarioAtivo.sub, filtros });
 
     const totalPaginas = Math.ceil(total / itensPorPagina);
 
@@ -89,14 +89,14 @@ export class ProjetoService {
     id: number,
     usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<ProjetoRecuperadoDto>> {
-    const projetoEncontrado = await this.projetoRepositorio.buscarIdentificador(id);
+    const projetoEncontrado = await this.projetoRepositorio.recuperar({ id });
 
     if (!projetoEncontrado) {
       throw new ResourceNotFoundException('Projeto');
     }
 
     if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR) {
-      const { itens } = await this.projetoRepositorio.listarPorUsuario(usuarioAtivo.sub, {});
+      const { itens } = await this.projetoRepositorio.listarPorUsuario({ usuarioId: usuarioAtivo.sub, filtros: {} });
       const temAcesso = itens.some((projeto) => projeto.id === id);
 
       if (!temAcesso) {
@@ -116,7 +116,7 @@ export class ProjetoService {
     id: number,
     dto: ProjetoAlterarDto,
   ): Promise<StandardResponse<ProjetoAlteradoDto>> {
-    const projetoEncontrado = await this.projetoRepositorio.buscarIdentificador(id);
+    const projetoEncontrado = await this.projetoRepositorio.recuperar({ id });
 
     if (!projetoEncontrado) {
       throw new ResourceNotFoundException('Projeto');
@@ -146,13 +146,13 @@ export class ProjetoService {
 
   /** Realiza soft delete do projeto. Restrito a gestores. */
   async excluir(id: number): Promise<StandardResponse<void>> {
-    const projetoEncontrado = await this.projetoRepositorio.buscarIdentificador(id);
+    const projetoEncontrado = await this.projetoRepositorio.recuperar({ id });
 
     if (!projetoEncontrado) {
       throw new ResourceNotFoundException('Projeto');
     }
 
-    await this.projetoRepositorio.excluir(id);
+    await this.projetoRepositorio.excluir({ id });
 
     return {
       sucesso:  true,
