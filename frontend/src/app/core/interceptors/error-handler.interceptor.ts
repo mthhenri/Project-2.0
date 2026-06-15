@@ -13,6 +13,7 @@ export const errorHandlerInterceptor: HttpInterceptorFn = (requisicao, proximo) 
       switch (erro.status) {
         case 401:
           localStorage.removeItem('access_token');
+          localStorage.removeItem('usuario_sessao');
           roteador.navigate(['/autenticacao']);
           break;
         case 403:
