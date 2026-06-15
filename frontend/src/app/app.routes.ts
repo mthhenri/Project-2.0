@@ -1,10 +1,11 @@
 import { Routes } from '@angular/router';
-import { autenticacaoGuard } from './core/guards/autenticacao.guard';
+import { autenticacaoGuard, somentePublicoGuard } from './core/guards/autenticacao.guard';
 import { LayoutComponent } from './shared/layout/layout.component';
 
 export const rotas: Routes = [
   {
     path: 'autenticacao',
+    canActivate: [somentePublicoGuard],
     loadComponent: () =>
       import('./modules/autenticacao/pages/login/login.page').then(
         (modulo) => modulo.LoginPage,

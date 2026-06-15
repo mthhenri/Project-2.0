@@ -9,3 +9,11 @@ export const autenticacaoGuard: CanActivateFn = () => {
 
   return inject(Router).createUrlTree(['/autenticacao']);
 };
+
+export const somentePublicoGuard: CanActivateFn = () => {
+  const token = localStorage.getItem('access_token');
+
+  if (!token) return true;
+
+  return inject(Router).createUrlTree(['/']);
+};

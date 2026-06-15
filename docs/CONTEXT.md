@@ -9,8 +9,8 @@
 ## Última Atualização
 
 **Data:** 2026-06-15
-**Task concluída:** 22-frontend-core
-**Sessão:** Frontend core — interceptores HTTP, guards de rota, auth service e componente assistente de IA
+**Task concluída:** 23-frontend-auth
+**Sessão:** Frontend auth — tela de login com validação, integração com AutenticacaoService e redirecionamento
 
 ---
 
@@ -53,6 +53,7 @@
 - **20-backend-correcao-recuperar-dto** — zero primitivos em assinaturas de serviços e repositórios: (1) 34 novos DTOs internos criados em `shared/src/dtos/` para os módulos projeto, demanda, atividade, execucao, calendario, tag e usuario; (2) `buscarIdentificador(id: number)` renomeado para `recuperar(dto: EntidadeRecuperarDto)` em todos os repositórios (tag, calendario, projeto, usuario, atividade, execucao, demanda); (3) todos os helpers com parâmetros primitivos convertidos para DTO (`encerrar`, `buscarExecucaoAtiva`, `buscarUsuarioExecucao`, `alterarSenha`, `excluir`, `inserirDemandaUsuario`, `verificarCriariaCiclo`, `conexaoPertenceADemanda`, `excluirConexao`, `listarTagsDemanda`, `atribuirTagsDemanda`, `removerTagDemanda`, `listarMembrosDemanda`, `atribuirMembroDemanda`, `removerMembroDemanda`, `membroJaAtribuido`, `contarMembrosDemanda`, `listarPorUsuario`); (4) todos os serviços atualizados para usar as novas assinaturas DTO-based (usuario, projeto, tag, calendario, atividade, execucao, demanda, ponto)
 - **21-frontend-scaffold** — projeto Angular 21 criado em `frontend/` com: `package.json` com dependências (PrimeNG 21, @primeng/themes, primeicons, d3, tailwindcss, postcss, autoprefixer); `angular.json` com builder `@angular-devkit/build-angular:application`, SCSS como estilo padrão; `tsconfig.json` e `tsconfig.app.json`; `tailwind.config.js`; `proxy.conf.json` para `/api → localhost:3000`; `src/styles.scss` com diretivas Tailwind e variáveis SCSS; `environments/environment.ts` e `environment.production.ts` com `ambiente.apiUrl`; `app.config.ts` com `provideRouter`, `provideHttpClient(withInterceptors)`, `provideAnimationsAsync` e `providePrimeNG` com tema Aura; `app.routes.ts` com rota `/autenticacao` (lazy), layout guard e lazy children para 8 módulos; `app.component.ts` standalone com `<router-outlet>`; `core/` e `shared/` com esqueletos de signals, interceptors, guards, componentes e serviços; `modules/` com rotas esqueleto para 8 módulos de negócio
 - **22-frontend-core** — implementação completa da infraestrutura cross-cutting do frontend: (1) signal `carregamento` (renomeado de `carregamentoAtivo`) e `usuarioAutenticado` tipado como `UsuarioRecuperadoDto | null` via `@project20/shared`; (2) `authTokenInterceptor` com chave `access_token` e skip de `/autenticacao/login`; (3) `errorHandlerInterceptor` com `MessageService` do PrimeNG, tratando 401 (limpa token + redireciona), 403 (toast erro), 400 (toast com `erros[0]` ou `mensagem`), 404 (toast aviso), demais (toast erro genérico); (4) `loadingInterceptor` atualizado para usar signal `carregamento`; (5) `autenticacaoGuard` com chave `access_token`; (6) `gestorGuard` com `UsuarioTipoEnum.GESTOR`; (7) `AutenticacaoService` com `login()`, `logout()` e `estaAutenticado()`; (8) `LoadingSpinnerComponent` com `p-progressSpinner` do PrimeNG; (9) `ErrorMessageComponent` com `p-message` do PrimeNG; (10) `AssistenteDescricaoComponent` completo com signals `textoAuxiliado`, `carregandoAuxilio`, `mostrarComparacao`, métodos `auxiliar()`, `aceitar()`, `descartar()` e template de comparação lado a lado com `p-panel`; (11) `app.config.ts` com `MessageService` provider; (12) `LayoutComponent` com `<p-toast>` para exibição de mensagens; (13) `TopbarComponent` atualizado para usar `AutenticacaoService.logout()`
+- **23-frontend-auth** — tela de login completa: (1) `LoginPage` standalone com `ReactiveFormsModule`, `CardModule`, `InputTextModule`, `PasswordModule`, `ButtonModule`, `MessageModule` do PrimeNG; (2) formulário reativo com signals `carregando` e `erroLogin`; (3) validação inline por campo (`required`, `minLength`) exibida apenas após `touched`; (4) `p-password` com `[feedback]="false"` e `[toggleMask]="true"`; (5) `p-button` com `[loading]="carregando()"`; (6) `p-message` exibindo erro de credenciais via signal; (7) redirecionamento para `/ponto` após login bem-sucedido; (8) `somentePublicoGuard` adicionado ao `autenticacao.guard.ts` — redireciona para `/` se já autenticado; (9) `app.routes.ts` atualizado para aplicar `somentePublicoGuard` na rota `/autenticacao`
 
 ---
 
@@ -64,7 +65,7 @@
 
 ## Próxima Task
 
-**Próxima task a definir** — verificar `docs/specs/backlog/` para a próxima spec disponível (tela de login e módulos frontend)
+**Próxima task a definir** — verificar `docs/specs/backlog/` para a próxima spec disponível (módulos frontend)
 
 ---
 
@@ -111,7 +112,7 @@ project-2.0/
 |---|---|
 | core (interceptors, guards, signals) | ✅ implementado (task 22) |
 | shared (components, pipes) | ✅ implementado (task 22) |
-| autenticacao | 🔧 esqueleto (task 21) |
+| autenticacao | ✅ implementado (task 23) |
 | usuario | 🔧 esqueleto (task 21) |
 | projeto | 🔧 esqueleto (task 21) |
 | demanda | 🔧 esqueleto (task 21) |
@@ -189,6 +190,8 @@ project-2.0/
 - **[task 22]** `MessageService` do PrimeNG adicionado como provider no `app.config.ts`; `<p-toast>` adicionado ao `LayoutComponent` — necessário para o `errorHandlerInterceptor` exibir mensagens via `MessageService.add()`
 - **[task 22]** `TopbarComponent` atualizado para usar `AutenticacaoService.logout()` em vez de `localStorage.removeItem('token')` direto — necessário para consistência com chave `access_token`
 - **[task 22]** `AssistenteDescricaoComponent` usa `templateUrl` com arquivo HTML separado criado nesta task; scaffold da task 21 tinha `template: ''` inline
+- **[task 23]** `somentePublicoGuard` exportado do mesmo arquivo `autenticacao.guard.ts` — mantém a lógica de guarda pública/privada coesa no mesmo arquivo; aplicado na rota `/autenticacao` em `app.routes.ts`
+- **[task 23]** Redirecionamento pós-login vai para `/ponto` (não `/`) — a rota raiz `''` já redireciona para `ponto`, mas ir direto evita uma navegação dupla
 
 ---
 

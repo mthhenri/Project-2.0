@@ -1,0 +1,64 @@
+<div class="login-pagina">
+  <div class="login-pagina__container">
+    <p-card>
+      <div class="login-pagina__titulo">
+        <h1 class="login-pagina__titulo-nome">Project 2.0</h1>
+        <p class="login-pagina__titulo-descricao">Faça login para continuar</p>
+      </div>
+
+      <form [formGroup]="formulario" (ngSubmit)="entrar()">
+        <div class="login-pagina__campo">
+          <label for="login-input" class="login-pagina__label">Login</label>
+          <input
+            id="login-input"
+            pInputText
+            formControlName="login"
+            placeholder="seu.login"
+            autocomplete="username"
+            class="w-full"
+          />
+          @if (formulario.controls['login'].touched && formulario.controls['login'].hasError('required')) {
+            <small class="login-pagina__erro-campo">Login é obrigatório</small>
+          }
+          @if (formulario.controls['login'].touched && formulario.controls['login'].hasError('minlength')) {
+            <small class="login-pagina__erro-campo">Mínimo de 4 caracteres</small>
+          }
+        </div>
+
+        <div class="login-pagina__campo">
+          <label for="senha-input" class="login-pagina__label">Senha</label>
+          <p-password
+            inputId="senha-input"
+            formControlName="senha"
+            [feedback]="false"
+            [toggleMask]="true"
+            placeholder="••••••••"
+            autocomplete="current-password"
+            styleClass="w-full"
+            inputStyleClass="w-full"
+          />
+          @if (formulario.controls['senha'].touched && formulario.controls['senha'].hasError('required')) {
+            <small class="login-pagina__erro-campo">Senha é obrigatória</small>
+          }
+          @if (formulario.controls['senha'].touched && formulario.controls['senha'].hasError('minlength')) {
+            <small class="login-pagina__erro-campo">Mínimo de 8 caracteres</small>
+          }
+        </div>
+
+        @if (erroLogin()) {
+          <div class="login-pagina__erro-login">
+            <p-message severity="error" [text]="erroLogin()" styleClass="w-full" />
+          </div>
+        }
+
+        <p-button
+          type="submit"
+          label="Entrar"
+          icon="pi pi-sign-in"
+          [loading]="carregando()"
+          styleClass="w-full"
+        />
+      </form>
+    </p-card>
+  </div>
+</div>

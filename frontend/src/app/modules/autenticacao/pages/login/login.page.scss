@@ -1,0 +1,52 @@
+.login-pagina {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background-color: var(--p-surface-ground, #f8f9fa);
+
+  &__container {
+    width: 420px;
+    max-width: 90vw;
+  }
+
+  &__titulo {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  &__titulo-nome {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--p-primary-color, #6366f1);
+    margin: 0 0 0.375rem;
+  }
+
+  &__titulo-descricao {
+    color: var(--p-text-muted-color, #6c757d);
+    margin: 0;
+    font-size: 0.9rem;
+  }
+
+  &__campo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    margin-bottom: 1.25rem;
+  }
+
+  &__label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--p-text-color, #495057);
+  }
+
+  &__erro-campo {
+    font-size: 0.75rem;
+    color: var(--p-red-500, #ef4444);
+  }
+
+  &__erro-login {
+    margin-bottom: 1.25rem;
+  }
+}
