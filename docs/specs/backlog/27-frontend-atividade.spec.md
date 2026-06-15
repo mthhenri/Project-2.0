@@ -1,6 +1,6 @@
-# 25 — Frontend Atividade
+# 27 — Frontend Atividade
 
-**Depende de:** 24
+**Depende de:** 26
 **Entrega:** telas de atividades com tags e assistente de descrição
 
 ---
@@ -28,9 +28,9 @@ frontend/src/app/modules/atividade/
 listar(filtros: AtividadeListarDto): Observable<...>
 criar(dto: AtividadeCriarDto): Observable<...>
 recuperar(id: number): Observable<...>
-atualizar(id: number, dto: AtividadeAtualizarDto): Observable<...>
+alterar(id: number, dto: AtividadeAlterarDto): Observable<...>
 excluir(id: number): Observable<...>
-atualizarTags(id: number, dto: AtividadeTagsAtribuirDto): Observable<...>
+alterarTags(id: number, dto: AtividadeTagsAtribuirDto): Observable<...>
 ```
 
 ---

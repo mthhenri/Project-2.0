@@ -1,6 +1,6 @@
-# 24 — Frontend Demanda
+# 26 — Frontend Demanda
 
-**Depende de:** 23
+**Depende de:** 25
 **Entrega:** telas de demandas com grafo estilo Obsidian, hierarquia, tags e membros
 
 ---
@@ -95,14 +95,14 @@ listar(filtros: DemandaListarDto): Observable<...>
 recuperarGrafo(projetoId: number): Observable<StandardResponse<DemandaGrafoDto>>
 criar(dto: DemandaCriarDto): Observable<...>
 recuperar(id: number): Observable<...>
-atualizar(id: number, dto: DemandaAtualizarDto): Observable<...>
+alterar(id: number, dto: DemandaAlterarDto): Observable<...>
 excluir(id: number): Observable<...>
 recuperarArvore(id: number): Observable<...>
 recuperarAncestral(id: number): Observable<...>
 criarConexao(demandaId: number, dto: DemandaConexaoCriarDto): Observable<...>
 listarConexoes(demandaId: number): Observable<...>
 excluirConexao(demandaId: number, conexaoId: number): Observable<...>
-atualizarTags(demandaId: number, dto: DemandaTagsAtribuirDto): Observable<...>
+alterarTags(demandaId: number, dto: DemandaTagsAtribuirDto): Observable<...>
 listarMembros(demandaId: number): Observable<...>
 atribuirMembro(demandaId: number, dto: DemandaUsuarioAtribuirDto): Observable<...>
 removerMembro(demandaId: number, usuarioId: number): Observable<...>

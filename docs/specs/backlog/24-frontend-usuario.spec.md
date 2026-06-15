@@ -1,6 +1,6 @@
-# 22 — Frontend Usuario
+# 24 — Frontend Usuario
 
-**Depende de:** 21
+**Depende de:** 23
 **Entrega:** telas de gerenciamento de usuários e perfil pessoal
 
 ---
@@ -69,7 +69,7 @@ export class UsuarioService {
   listar(filtros: UsuarioListarDto): Observable<...>
   criar(dto: UsuarioCriarDto): Observable<...>
   recuperar(id: number): Observable<...>
-  atualizar(id: number, dto: UsuarioAtualizarDto): Observable<...>
+  alterar(id: number, dto: UsuarioAlterarDto): Observable<...>
   excluir(id: number): Observable<...>
   alterarSenha(id: number, dto: UsuarioSenhaAlterarDto): Observable<...>
 }

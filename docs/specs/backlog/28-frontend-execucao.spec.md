@@ -1,6 +1,6 @@
-# 26 — Frontend Execucao
+# 28 — Frontend Execucao
 
-**Depende de:** 25
+**Depende de:** 27
 **Entrega:** timer de execução e histórico
 
 ---
@@ -36,7 +36,7 @@ iniciar(dto: ExecucaoIniciarDto): Observable<...>
 encerrar(id: number, dto: ExecucaoEncerrarDto): Observable<...>
 listar(filtros: ExecucaoListarDto): Observable<...>
 recuperar(id: number): Observable<...>
-atualizar(id: number, dto: ExecucaoAtualizarDto): Observable<...>
+alterar(id: number, dto: ExecucaoAlterarDto): Observable<...>
 buscarAtiva(): Observable<StandardResponse<ExecucaoIniciadaDto | null>>
 ```
 

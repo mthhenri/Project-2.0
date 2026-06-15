@@ -1,6 +1,6 @@
-# 20 — Frontend Core
+# 22 — Frontend Core
 
-**Depende de:** 19
+**Depende de:** 21
 **Entrega:** interceptores, guards, auth service, signals e componente assistente
 
 ---

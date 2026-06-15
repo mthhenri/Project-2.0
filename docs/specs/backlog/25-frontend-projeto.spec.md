@@ -1,6 +1,6 @@
-# 23 — Frontend Projeto + Tag
+# 25 — Frontend Projeto + Tag
 
-**Depende de:** 22
+**Depende de:** 24
 **Entrega:** telas de projetos e gerenciamento de tags
 
 ---
@@ -43,7 +43,7 @@ frontend/src/app/modules/tag/
 listar(filtros: ProjetoListarDto): Observable<...>
 criar(dto: ProjetoCriarDto): Observable<...>
 recuperar(id: number): Observable<...>
-atualizar(id: number, dto: ProjetoAtualizarDto): Observable<...>
+alterar(id: number, dto: ProjetoAlterarDto): Observable<...>
 excluir(id: number): Observable<...>
 ```
 

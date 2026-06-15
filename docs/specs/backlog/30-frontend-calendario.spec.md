@@ -1,6 +1,6 @@
-# 28 — Frontend Calendario
+# 30 — Frontend Calendario
 
-**Depende de:** 21
+**Depende de:** 23
 **Entrega:** tela de gerenciamento de dias não úteis
 
 ---
@@ -28,7 +28,7 @@ frontend/src/app/modules/calendario/
 listar(): Observable<StandardResponse<DiaNaoUtilResumoDto[]>>
 criar(dto: DiaNaoUtilCriarDto): Observable<...>
 recuperar(id: number): Observable<...>
-atualizar(id: number, dto: DiaNaoUtilAtualizarDto): Observable<...>
+alterar(id: number, dto: DiaNaoUtilAlterarDto): Observable<...>
 excluir(id: number): Observable<...>
 verificarDiaUtil(data: string): Observable<...>
 ```
