@@ -1,0 +1,15 @@
+<div class="topbar flex items-center justify-between px-6 py-3 bg-surface-0 border-b border-surface-200 shadow-sm">
+  <span class="topbar__titulo text-xl font-semibold text-primary">Project 2.0</span>
+  <div class="topbar__usuario flex items-center gap-3">
+    @if (usuario()) {
+      <span class="topbar__nome text-sm text-surface-600">{{ usuario()!.nomeCompleto }}</span>
+    }
+    <p-button
+      label="Sair"
+      icon="pi pi-sign-out"
+      severity="secondary"
+      size="small"
+      (onClick)="sair()"
+    />
+  </div>
+</div>

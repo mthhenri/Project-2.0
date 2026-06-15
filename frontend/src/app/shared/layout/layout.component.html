@@ -1,0 +1,10 @@
+<div class="layout flex flex-col h-screen">
+  <app-topbar />
+  <div class="layout__corpo flex flex-1 overflow-hidden">
+    <app-sidebar />
+    <main class="layout__conteudo flex-1 overflow-auto p-6 bg-surface-50">
+      <router-outlet />
+    </main>
+  </div>
+  <app-loading-spinner />
+</div>

@@ -1,0 +1,12 @@
+@if (mensagem) {
+  <div class="error-message">
+    <p class="error-message__texto">{{ mensagem }}</p>
+    @if (erros.length > 0) {
+      <ul class="error-message__lista">
+        @for (erro of erros; track erro) {
+          <li class="error-message__item">{{ erro }}</li>
+        }
+      </ul>
+    }
+  </div>
+}

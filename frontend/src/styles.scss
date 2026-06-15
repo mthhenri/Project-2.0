@@ -1,0 +1,8 @@
+// Diretivas Tailwind — ordem obrigatória
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+// Variáveis SCSS globais do projeto
+$espacamento-base: 1rem;
+$raio-borda-padrao: 0.5rem;

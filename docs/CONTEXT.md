@@ -8,9 +8,9 @@
 
 ## Última Atualização
 
-**Data:** 2026-06-14
-**Task concluída:** 20-backend-correcao-recuperar-dto (pós-revisão nomenclatura DTOs)
-**Sessão:** Correção de nomenclatura de DTOs — complemento multi-palavra inteiro antes do verbo
+**Data:** 2026-06-15
+**Task concluída:** 21-frontend-scaffold
+**Sessão:** Frontend scaffold — Angular 21 com PrimeNG 21, Tailwind CSS, SCSS e estrutura base
 
 ---
 
@@ -51,6 +51,7 @@
 - **18-assistente-module** — 2 DTOs em `shared/src/dtos/assistente/` (`AssistenteDescricaoAuxiliarDto` com validação de `textoOriginal` ≥10 chars, `tipoEntidade` via `@IsIn` e `contextoEntidade`; `AssistenteDescricaoAuxiliadaDto` com `textoOriginal` e `textoAuxiliado`); `AssistenteService` instancia `Anthropic` no construtor via `ConfigService`, monta prompt contextualizado pelo tipo de entidade e chama `messages.create` com modelo e `max_tokens` lidos da configuração; erros da API Anthropic capturados e relançados como `BusinessException`; `AssistenteController` com `POST /assistente/auxiliar-descricao` protegido por `JwtAuthGuard`; `AssistenteModule` importa `ConfigModule`; registrado no `AppModule`
 - **19-backend-correcao-nomenclatura** — correção pura de nomenclatura sem nova lógica de negócio: (1) 14 DTOs Atualizar/Atualizado renomeados para Alterar/Alterado em `shared/src/dtos/` (usuario, projeto, demanda, atividade, execucao, calendario, tag); (2) `AtividadeAlteradaDto`, `ExecucaoAlteradaDto`, `DiaNaoUtilAlteradoDto` deixaram de ser alias/re-export e passaram a ter campos próprios; (3) 4 DTOs de validação criados: `UsuarioValidarLoginDto`, `ProjetoValidarCodigoDto`, `DemandaValidarConexaoDto`, `TagValidarNomeDto`; (4) métodos `atualizar()` → `alterar()` em todos os repositórios, services e controllers (7 módulos); (5) métodos `existe*()` → `validar*(dto)` nos repositórios com parâmetro sempre DTO; (6) `DemandaRepository.buscarIdGestoresAtivos()` removido — `DemandaService` usa `UsuarioRepository.listarGestoresAtivos()` diretamente
 - **20-backend-correcao-recuperar-dto** — zero primitivos em assinaturas de serviços e repositórios: (1) 34 novos DTOs internos criados em `shared/src/dtos/` para os módulos projeto, demanda, atividade, execucao, calendario, tag e usuario; (2) `buscarIdentificador(id: number)` renomeado para `recuperar(dto: EntidadeRecuperarDto)` em todos os repositórios (tag, calendario, projeto, usuario, atividade, execucao, demanda); (3) todos os helpers com parâmetros primitivos convertidos para DTO (`encerrar`, `buscarExecucaoAtiva`, `buscarUsuarioExecucao`, `alterarSenha`, `excluir`, `inserirDemandaUsuario`, `verificarCriariaCiclo`, `conexaoPertenceADemanda`, `excluirConexao`, `listarTagsDemanda`, `atribuirTagsDemanda`, `removerTagDemanda`, `listarMembrosDemanda`, `atribuirMembroDemanda`, `removerMembroDemanda`, `membroJaAtribuido`, `contarMembrosDemanda`, `listarPorUsuario`); (4) todos os serviços atualizados para usar as novas assinaturas DTO-based (usuario, projeto, tag, calendario, atividade, execucao, demanda, ponto)
+- **21-frontend-scaffold** — projeto Angular 21 criado em `frontend/` com: `package.json` com dependências (PrimeNG 21, @primeng/themes, primeicons, d3, tailwindcss, postcss, autoprefixer); `angular.json` com builder `@angular-devkit/build-angular:application`, SCSS como estilo padrão; `tsconfig.json` e `tsconfig.app.json`; `tailwind.config.js`; `proxy.conf.json` para `/api → localhost:3000`; `src/styles.scss` com diretivas Tailwind e variáveis SCSS; `environments/environment.ts` e `environment.production.ts` com `ambiente.apiUrl`; `app.config.ts` com `provideRouter`, `provideHttpClient(withInterceptors)`, `provideAnimationsAsync` e `providePrimeNG` com tema Aura; `app.routes.ts` com rota `/autenticacao` (lazy), layout guard e lazy children para 8 módulos; `app.component.ts` standalone com `<router-outlet>`; `core/` com `autenticacao.service.ts`, 3 interceptors funcionais (`auth-token`, `error-handler`, `loading`), 2 guards funcionais (`autenticacao`, `gestor`), 2 signals (`carregamentoAtivo`, `usuarioAutenticado`); `shared/` com pipes `DataBrasileiraPipe` e `MinutosParaHorasPipe`, componentes `LoadingSpinnerComponent`, `ErrorMessageComponent`, `AssistenteDescricaoComponent` (esqueleto), `LayoutComponent` com topbar e sidebar usando PrimeNG; `modules/` com rotas esqueleto para 8 módulos de negócio + `UsuarioService`, `UsuarioModelo` e skeleton `LoginPage`
 
 ---
 
@@ -62,7 +63,7 @@
 
 ## Próxima Task
 
-**Próxima task a definir** — verificar `docs/specs/backlog/` para a próxima spec disponível
+**Próxima task a definir** — verificar `docs/specs/backlog/` para a próxima spec disponível (módulos frontend)
 
 ---
 
@@ -72,7 +73,7 @@
 project-2.0/
   docs/               ✅ criado
   backend/            ✅ criado (task 02)
-  frontend/           ⬜ aguardando task 18
+  frontend/           ✅ criado (task 21)
   shared/             ✅ criado (task 01)
   docker-compose.yml  ✅ criado
   package.json        ✅ criado
@@ -107,17 +108,17 @@ project-2.0/
 
 | Módulo | Status |
 |---|---|
-| core (interceptors, guards, signals) | ⬜ pendente |
-| shared (components, pipes) | ⬜ pendente |
-| autenticacao | ⬜ pendente |
-| usuario | ⬜ pendente |
-| projeto | ⬜ pendente |
-| demanda | ⬜ pendente |
-| atividade | ⬜ pendente |
-| execucao | ⬜ pendente |
-| ponto | ⬜ pendente |
-| calendario | ⬜ pendente |
-| tag | ⬜ pendente |
+| core (interceptors, guards, signals) | 🔧 esqueleto (task 21) |
+| shared (components, pipes) | 🔧 esqueleto (task 21) |
+| autenticacao | 🔧 esqueleto (task 21) |
+| usuario | 🔧 esqueleto (task 21) |
+| projeto | 🔧 esqueleto (task 21) |
+| demanda | 🔧 esqueleto (task 21) |
+| atividade | 🔧 esqueleto (task 21) |
+| execucao | 🔧 esqueleto (task 21) |
+| ponto | 🔧 esqueleto (task 21) |
+| calendario | 🔧 esqueleto (task 21) |
+| tag | 🔧 esqueleto (task 21) |
 
 ---
 
