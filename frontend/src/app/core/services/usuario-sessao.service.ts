@@ -1,6 +1,5 @@
 import { Injectable, computed, signal } from '@angular/core';
-import { UsuarioRecuperadoDto } from '@project20/shared';
-import { UsuarioTipoEnum } from '@project20/shared/enums';
+import { UsuarioRecuperadoDto, UsuarioTipoEnum } from '@project20/shared';
 
 @Injectable({ providedIn: 'root' })
 export class UsuarioSessaoService {
