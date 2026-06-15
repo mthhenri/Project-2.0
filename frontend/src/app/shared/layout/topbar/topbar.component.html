@@ -1,15 +1,59 @@
-<div class="topbar flex items-center justify-between px-6 py-3 bg-surface-0 border-b border-surface-200 shadow-sm">
-  <span class="topbar__titulo text-xl font-semibold text-primary">Project 2.0</span>
-  <div class="topbar__usuario flex items-center gap-3">
-    @if (usuario()) {
-      <span class="topbar__nome text-sm text-surface-600">{{ usuario()!.nomeCompleto }}</span>
+<header class="topbar flex items-center px-4 py-2 bg-surface-0 border-b border-surface-200 shadow-sm gap-6">
+  <!-- Logo -->
+  <a routerLink="/ponto" class="topbar__logo flex-shrink-0">
+    <img src="favicon.ico" alt="Logo" class="topbar__logo-imagem" />
+  </a>
+
+  <!-- Navigation -->
+  <nav class="topbar__nav flex items-center gap-1 flex-1">
+    @for (item of itensNavegacao; track item.rotaLink) {
+      <a
+        [routerLink]="item.rotaLink"
+        routerLinkActive="topbar__nav-item--ativo"
+        class="topbar__nav-item flex items-center gap-2 px-3 py-2 rounded-lg text-surface-700 hover:bg-surface-100 transition-colors text-sm font-medium whitespace-nowrap"
+      >
+        <i [class]="item.icone"></i>
+        <span>{{ item.label }}</span>
+      </a>
     }
+  </nav>
+
+  <!-- Actions -->
+  <div class="topbar__acoes flex items-center gap-2 flex-shrink-0">
+    <span class="topbar__hora text-sm text-surface-600 font-mono tabular-nums">{{ horaAtual() }}</span>
+
     <p-button
-      label="Sair"
+      icon="pi pi-user"
+      severity="secondary"
+      [text]="true"
+      size="small"
+      [pTooltip]="sessao.nomeCompleto() ?? ''"
+      tooltipPosition="bottom"
+      (onClick)="perfilPopover.toggle($event)"
+    />
+
+    <p-popover #perfilPopover>
+      @if (sessao.usuarioAtual()) {
+        <div class="flex flex-col gap-3 p-1" style="min-width: 180px">
+          <div>
+            <div class="font-semibold text-surface-800">{{ sessao.nomeCompleto() }}</div>
+            <div class="text-sm text-surface-500">&#64;{{ sessao.login() }}</div>
+          </div>
+          <p-divider class="my-0" />
+          <div class="flex items-center gap-2 text-sm text-surface-600">
+            <i class="pi pi-id-card text-xs"></i>
+            <span>{{ sessao.eGestor() ? 'Gestor' : 'Desenvolvedor' }}</span>
+          </div>
+        </div>
+      }
+    </p-popover>
+
+    <p-button
       icon="pi pi-sign-out"
       severity="secondary"
+      [text]="true"
       size="small"
       (onClick)="sair()"
     />
   </div>
-</div>
+</header>

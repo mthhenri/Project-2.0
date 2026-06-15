@@ -1,0 +1,15 @@
+.topbar {
+  &__logo-imagem {
+    height: 32px;
+    width: auto;
+  }
+
+  &__nav-item--ativo {
+    background-color: var(--p-primary-50);
+    color: var(--p-primary-600);
+
+    i {
+      color: var(--p-primary-600);
+    }
+  }
+}
