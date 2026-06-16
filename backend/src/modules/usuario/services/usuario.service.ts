@@ -128,18 +128,11 @@ export class UsuarioService {
     };
   }
 
-  /** Altera senha validando a senha atual com bcrypt. */
   async alterarSenha(id: number, dto: UsuarioSenhaAlterarDto): Promise<StandardResponse<UsuarioSenhaAlteradaDto>> {
     const usuarioEncontrado = await this.usuarioRepositorio.recuperar({ id });
 
     if (!usuarioEncontrado) {
       throw new ResourceNotFoundException('Usuário');
-    }
-
-    const senhaEstaCorreta = await bcrypt.compare(dto.senhaAtual, usuarioEncontrado.senhaEncriptada);
-
-    if (!senhaEstaCorreta) {
-      throw new BusinessException('Senha atual incorreta');
     }
 
     const novaSenhaEncriptada = await bcrypt.hash(dto.senhaNova, 10);

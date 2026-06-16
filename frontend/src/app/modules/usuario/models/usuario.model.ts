@@ -1,3 +1,4 @@
-import { UsuarioResumoDto } from '@project20/shared';
+import { UsuarioResumoDto, UsuarioRecuperadoDto } from '@project20/shared';
 
-export type UsuarioModelo = UsuarioResumoDto;
+export type UsuarioModelo = UsuarioRecuperadoDto;
+export type UsuarioListagemModelo = UsuarioResumoDto;

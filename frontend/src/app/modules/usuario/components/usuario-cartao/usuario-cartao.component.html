@@ -1,0 +1,12 @@
+<div class="usuario-cartao">
+  <div class="usuario-cartao__avatar">
+    {{ iniciais }}
+  </div>
+  <div class="usuario-cartao__info">
+    <span class="usuario-cartao__nome">{{ usuario.nomeCompleto }}</span>
+    <span class="usuario-cartao__cargo">{{ usuario.cargoTitulo }}</span>
+  </div>
+  @if (ehGestor) {
+    <p-tag value="Gestor" severity="warn" />
+  }
+</div>

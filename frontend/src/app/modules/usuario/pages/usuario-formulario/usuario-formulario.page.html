@@ -1,0 +1,135 @@
+<div class="usuario-formulario">
+  <div class="usuario-formulario__cabecalho">
+    <h1 class="usuario-formulario__titulo">Novo Usuário</h1>
+  </div>
+
+  <div class="usuario-formulario__card">
+    <form [formGroup]="formulario" (ngSubmit)="salvar()" class="usuario-formulario__form">
+
+      <div class="usuario-formulario__linha">
+        <div class="usuario-formulario__campo">
+          <label for="login" class="usuario-formulario__label">Login <span class="usuario-formulario__obrigatorio">*</span></label>
+          <input
+            id="login"
+            pInputText
+            formControlName="login"
+            placeholder="ex: joao.silva"
+            class="w-full"
+          />
+          @if (campoInvalido('login')) {
+            @if (formulario.controls['login'].hasError('required')) {
+              <small class="usuario-formulario__erro">Login é obrigatório</small>
+            }
+            @if (formulario.controls['login'].hasError('minlength')) {
+              <small class="usuario-formulario__erro">Mínimo de 4 caracteres</small>
+            }
+          }
+        </div>
+
+        <div class="usuario-formulario__campo">
+          <label for="senhaNaoEncriptada" class="usuario-formulario__label">Senha <span class="usuario-formulario__obrigatorio">*</span></label>
+          <p-password
+            inputId="senhaNaoEncriptada"
+            formControlName="senhaNaoEncriptada"
+            [feedback]="false"
+            [toggleMask]="true"
+            placeholder="Mínimo 8 caracteres"
+            styleClass="w-full"
+            inputStyleClass="w-full"
+          />
+          @if (campoInvalido('senhaNaoEncriptada')) {
+            @if (formulario.controls['senhaNaoEncriptada'].hasError('required')) {
+              <small class="usuario-formulario__erro">Senha é obrigatória</small>
+            }
+            @if (formulario.controls['senhaNaoEncriptada'].hasError('minlength')) {
+              <small class="usuario-formulario__erro">Mínimo de 8 caracteres</small>
+            }
+          }
+        </div>
+      </div>
+
+      <div class="usuario-formulario__linha">
+        <div class="usuario-formulario__campo">
+          <label for="nomeCompleto" class="usuario-formulario__label">Nome Completo <span class="usuario-formulario__obrigatorio">*</span></label>
+          <input
+            id="nomeCompleto"
+            pInputText
+            formControlName="nomeCompleto"
+            placeholder="ex: João Silva"
+            class="w-full"
+          />
+          @if (campoInvalido('nomeCompleto')) {
+            @if (formulario.controls['nomeCompleto'].hasError('required')) {
+              <small class="usuario-formulario__erro">Nome é obrigatório</small>
+            }
+            @if (formulario.controls['nomeCompleto'].hasError('minlength')) {
+              <small class="usuario-formulario__erro">Mínimo de 3 caracteres</small>
+            }
+          }
+        </div>
+
+        <div class="usuario-formulario__campo">
+          <label for="cargoTitulo" class="usuario-formulario__label">Cargo <span class="usuario-formulario__obrigatorio">*</span></label>
+          <input
+            id="cargoTitulo"
+            pInputText
+            formControlName="cargoTitulo"
+            placeholder="ex: Desenvolvedor Sênior"
+            class="w-full"
+          />
+          @if (campoInvalido('cargoTitulo')) {
+            <small class="usuario-formulario__erro">Cargo é obrigatório</small>
+          }
+        </div>
+      </div>
+
+      <div class="usuario-formulario__linha">
+        <div class="usuario-formulario__campo">
+          <label for="tipo" class="usuario-formulario__label">Tipo <span class="usuario-formulario__obrigatorio">*</span></label>
+          <p-select
+            inputId="tipo"
+            formControlName="tipo"
+            [options]="tiposOpcoes"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Selecione o tipo"
+            class="w-full"
+          />
+          @if (campoInvalido('tipo')) {
+            <small class="usuario-formulario__erro">Tipo é obrigatório</small>
+          }
+        </div>
+
+        <div class="usuario-formulario__campo">
+          <label for="horasDiariasNecessarias" class="usuario-formulario__label">Horas Diárias</label>
+          <p-select
+            inputId="horasDiariasNecessarias"
+            formControlName="horasDiariasNecessarias"
+            [options]="horasOpcoes"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Selecione as horas"
+            class="w-full"
+          />
+        </div>
+      </div>
+
+      <div class="usuario-formulario__acoes">
+        <p-button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="cancelar()"
+        />
+        <p-button
+          type="submit"
+          label="Salvar"
+          icon="pi pi-check"
+          [loading]="carregando()"
+        />
+      </div>
+
+    </form>
+  </div>
+</div>

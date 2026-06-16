@@ -1,0 +1,38 @@
+<div class="usuario-anotacoes">
+  <div class="usuario-anotacoes__cabecalho">
+    <h1 class="usuario-anotacoes__titulo">Minhas Anotações</h1>
+    <p class="usuario-anotacoes__descricao">
+      Use este espaço para registrar notas pessoais, lembretes ou qualquer informação relevante.
+    </p>
+  </div>
+
+  @if (carregando()) {
+    <div class="usuario-anotacoes__carregando">
+      <i class="pi pi-spin pi-spinner text-4xl text-surface-400"></i>
+    </div>
+  } @else {
+    <div class="usuario-anotacoes__editor-container">
+      <form [formGroup]="formulario">
+        <p-editor
+          formControlName="anotacoes"
+          [style]="{ height: '420px' }"
+        />
+      </form>
+    </div>
+
+    <div class="usuario-anotacoes__acoes">
+      <p-button
+        label="Cancelar"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="cancelar()"
+      />
+      <p-button
+        label="Salvar Anotações"
+        icon="pi pi-save"
+        [loading]="carregandoSalvar()"
+        (onClick)="salvar()"
+      />
+    </div>
+  }
+</div>

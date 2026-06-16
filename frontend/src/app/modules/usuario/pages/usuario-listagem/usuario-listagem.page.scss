@@ -1,0 +1,47 @@
+.usuario-listagem {
+  padding: 1.5rem;
+
+  &__cabecalho {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+  }
+
+  &__titulo {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--p-primary-600);
+    margin: 0;
+  }
+
+  &__filtros {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  &__filtro-campo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    min-width: 200px;
+  }
+
+  &__filtro-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--p-text-color);
+  }
+
+  &__coluna-acoes {
+    width: 100px;
+    text-align: center;
+  }
+
+  &__acoes {
+    display: flex;
+    gap: 0.25rem;
+    justify-content: center;
+  }
+}

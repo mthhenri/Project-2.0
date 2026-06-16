@@ -8,9 +8,9 @@
 
 ## Última Atualização
 
-**Data:** 2026-06-15
-**Task concluída:** 23-frontend-auth
-**Sessão:** Frontend auth — tela de login com validação, integração com AutenticacaoService e redirecionamento
+**Data:** 2026-06-16
+**Task concluída:** 24-frontend-usuario
+**Sessão:** Frontend usuario — listagem, formulário, perfil e anotações com p-editor
 
 ---
 
@@ -54,6 +54,7 @@
 - **21-frontend-scaffold** — projeto Angular 21 criado em `frontend/` com: `package.json` com dependências (PrimeNG 21, @primeng/themes, primeicons, d3, tailwindcss, postcss, autoprefixer); `angular.json` com builder `@angular-devkit/build-angular:application`, SCSS como estilo padrão; `tsconfig.json` e `tsconfig.app.json`; `tailwind.config.js`; `proxy.conf.json` para `/api → localhost:3000`; `src/styles.scss` com diretivas Tailwind e variáveis SCSS; `environments/environment.ts` e `environment.production.ts` com `ambiente.apiUrl`; `app.config.ts` com `provideRouter`, `provideHttpClient(withInterceptors)`, `provideAnimationsAsync` e `providePrimeNG` com tema Aura; `app.routes.ts` com rota `/autenticacao` (lazy), layout guard e lazy children para 8 módulos; `app.component.ts` standalone com `<router-outlet>`; `core/` e `shared/` com esqueletos de signals, interceptors, guards, componentes e serviços; `modules/` com rotas esqueleto para 8 módulos de negócio
 - **22-frontend-core** — implementação completa da infraestrutura cross-cutting do frontend: (1) signal `carregamento` (renomeado de `carregamentoAtivo`) e `usuarioAutenticado` tipado como `UsuarioRecuperadoDto | null` via `@project20/shared`; (2) `authTokenInterceptor` com chave `access_token` e skip de `/autenticacao/login`; (3) `errorHandlerInterceptor` com `MessageService` do PrimeNG, tratando 401 (limpa token + redireciona), 403 (toast erro), 400 (toast com `erros[0]` ou `mensagem`), 404 (toast aviso), demais (toast erro genérico); (4) `loadingInterceptor` atualizado para usar signal `carregamento`; (5) `autenticacaoGuard` com chave `access_token`; (6) `gestorGuard` com `UsuarioTipoEnum.GESTOR`; (7) `AutenticacaoService` com `login()`, `logout()` e `estaAutenticado()`; (8) `LoadingSpinnerComponent` com `p-progressSpinner` do PrimeNG; (9) `ErrorMessageComponent` com `p-message` do PrimeNG; (10) `AssistenteDescricaoComponent` completo com signals `textoAuxiliado`, `carregandoAuxilio`, `mostrarComparacao`, métodos `auxiliar()`, `aceitar()`, `descartar()` e template de comparação lado a lado com `p-panel`; (11) `app.config.ts` com `MessageService` provider; (12) `LayoutComponent` com `<p-toast>` para exibição de mensagens; (13) `TopbarComponent` atualizado para usar `AutenticacaoService.logout()`
 - **23-frontend-auth** — tela de login completa: (1) `LoginPage` standalone com `ReactiveFormsModule`, `CardModule`, `InputTextModule`, `PasswordModule`, `ButtonModule`, `MessageModule` do PrimeNG; (2) formulário reativo com signals `carregando` e `erroLogin`; (3) validação inline por campo (`required`, `minLength`) exibida apenas após `touched`; (4) `p-password` com `[feedback]="false"` e `[toggleMask]="true"`; (5) `p-button` com `[loading]="carregando()"`; (6) `p-message` exibindo erro de credenciais via signal; (7) redirecionamento para `/ponto` após login bem-sucedido; (8) `somentePublicoGuard` adicionado ao `autenticacao.guard.ts` — redireciona para `/` se já autenticado; (9) `app.routes.ts` atualizado para aplicar `somentePublicoGuard` na rota `/autenticacao`
+- **24-frontend-usuario** — módulo de usuário completo: (1) `UsuarioService` com 6 métodos HTTP (`listar`, `criar`, `recuperar`, `alterar`, `excluir`, `alterarSenha`); (2) `usuario.routes.ts` com lazy loading para 4 rotas (`''`, `'novo'`, `':id'`, `':id/anotacoes'`); (3) `UsuarioListagemPage` com `p-table` lazy+paginada, filtros por tipo/status via `p-select` com Reactive Forms, badges `p-tag`, confirmação de exclusão via `p-confirmDialog`; (4) `UsuarioFormularioPage` para criação com todos os campos, `p-select` para tipo e horas diárias; (5) `UsuarioPerfilPage` com exibição de dados, `p-dialog` de edição e `p-dialog` de troca de senha com validador customizado `senhasNaoConferem`, permissão via `UsuarioSessaoService.eGestor()`; (6) `UsuarioAnotacoesPage` com `p-editor` (EditorModule) em Reactive Form, redirecionamento automático se não for o próprio usuário; (7) `UsuarioCartaoComponent` com avatar por iniciais, nome e cargo — para uso em listagens de membros
 
 ---
 
@@ -65,7 +66,7 @@
 
 ## Próxima Task
 
-**Próxima task a definir** — verificar `docs/specs/backlog/` para a próxima spec disponível (módulos frontend)
+**Próxima task a definir** — verificar `docs/specs/backlog/` para a próxima spec disponível (módulos frontend: projeto, tag, calendário, demanda, atividade, execução, ponto)
 
 ---
 
@@ -113,7 +114,7 @@ project-2.0/
 | core (interceptors, guards, signals) | ✅ implementado (task 22) |
 | shared (components, pipes) | ✅ implementado (task 22) |
 | autenticacao | ✅ implementado (task 23) |
-| usuario | 🔧 esqueleto (task 21) |
+| usuario | ✅ implementado (task 24) |
 | projeto | 🔧 esqueleto (task 21) |
 | demanda | 🔧 esqueleto (task 21) |
 | atividade | 🔧 esqueleto (task 21) |
@@ -192,6 +193,11 @@ project-2.0/
 - **[task 22]** `AssistenteDescricaoComponent` usa `templateUrl` com arquivo HTML separado criado nesta task; scaffold da task 21 tinha `template: ''` inline
 - **[task 23]** `somentePublicoGuard` exportado do mesmo arquivo `autenticacao.guard.ts` — mantém a lógica de guarda pública/privada coesa no mesmo arquivo; aplicado na rota `/autenticacao` em `app.routes.ts`
 - **[task 23]** Redirecionamento pós-login vai para `/ponto` (não `/`) — a rota raiz `''` já redireciona para `ponto`, mas ir direto evita uma navegação dupla
+- **[task 24]** `UsuarioFormularioPage` é usada apenas para criação (`/usuario/novo`); edição é feita via `p-dialog` dentro da `UsuarioPerfilPage` — as rotas da spec não definem rota de edição separada
+- **[task 24]** `ConfirmationService` fornecido localmente via `providers: [ConfirmationService]` na `UsuarioListagemPage` — não está no `app.config.ts` global
+- **[task 24]** `UsuarioAnotacoesPage` redireciona para `/usuario/:id` se o usuário da sessão não for o dono — proteção client-side; o backend também bloqueia via autorização
+- **[task 24]** `p-select` (PrimeNG 21) em vez de `p-dropdown` (deprecated) para todos os dropdowns; `styleClass` deprecated substituído por `class` nos elementos de seleção
+- **[task 24]** Validador customizado `validarSenhasIguais` declarado como método privado e passado ao segundo argumento de `FormBuilder.group()` para validação cross-field sem classe separada
 
 ---
 

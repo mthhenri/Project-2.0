@@ -1,0 +1,40 @@
+.usuario-anotacoes {
+  padding: 1.5rem;
+  max-width: 900px;
+
+  &__cabecalho {
+    margin-bottom: 1.5rem;
+  }
+
+  &__titulo {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--p-primary-600);
+    margin: 0 0 0.5rem;
+  }
+
+  &__descricao {
+    color: var(--p-text-muted-color);
+    margin: 0;
+    font-size: 0.9rem;
+  }
+
+  &__carregando {
+    display: flex;
+    justify-content: center;
+    padding: 4rem;
+  }
+
+  &__editor-container {
+    background: var(--p-surface-0);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  &__acoes {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    margin-top: 1.25rem;
+  }
+}

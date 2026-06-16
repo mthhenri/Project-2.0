@@ -1,0 +1,125 @@
+<div class="usuario-listagem">
+  <div class="usuario-listagem__cabecalho">
+    <h1 class="usuario-listagem__titulo">Usuários</h1>
+    <p-button
+      label="Novo Usuário"
+      icon="pi pi-plus"
+      (onClick)="navegarParaNovo()"
+    />
+  </div>
+
+  <form [formGroup]="formularioFiltros" class="usuario-listagem__filtros">
+    <div class="usuario-listagem__filtro-campo">
+      <label class="usuario-listagem__filtro-label">Tipo</label>
+      <p-select
+        formControlName="tipo"
+        [options]="tiposOpcoes"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Filtrar por tipo"
+        (onChange)="aoMudarFiltro()"
+        class="w-full"
+      />
+    </div>
+    <div class="usuario-listagem__filtro-campo">
+      <label class="usuario-listagem__filtro-label">Status</label>
+      <p-select
+        formControlName="status"
+        [options]="statusOpcoes"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Filtrar por status"
+        (onChange)="aoMudarFiltro()"
+        class="w-full"
+      />
+    </div>
+  </form>
+
+  <p-table
+    [value]="usuarios()"
+    [lazy]="true"
+    [paginator]="true"
+    [rows]="itensPorPagina()"
+    [totalRecords]="totalRegistros()"
+    [loading]="carregando()"
+    (onLazyLoad)="aoCarregarTabela($event)"
+    [rowsPerPageOptions]="[10, 25, 50]"
+    [showCurrentPageReport]="true"
+    currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} usuários"
+    class="p-datatable-sm"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Nome</th>
+        <th>Login</th>
+        <th>Cargo</th>
+        <th>Tipo</th>
+        <th>Status</th>
+        <th class="usuario-listagem__coluna-acoes">Ações</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-usuario>
+      <tr>
+        <td>{{ usuario.nomeCompleto }}</td>
+        <td class="text-surface-600">{{ usuario.login }}</td>
+        <td class="text-surface-600">{{ usuario.cargoTitulo }}</td>
+        <td>
+          <p-tag
+            [value]="usuario.tipo === 'GESTOR' ? 'Gestor' : 'Desenvolvedor'"
+            [severity]="severidadeTipo(usuario.tipo)"
+          />
+        </td>
+        <td>
+          <p-tag
+            [value]="usuario.status === 'ATIVO' ? 'Ativo' : 'Inativo'"
+            [severity]="severidadeStatus(usuario.status)"
+          />
+        </td>
+        <td>
+          <div class="usuario-listagem__acoes">
+            <p-button
+              icon="pi pi-pencil"
+              [text]="true"
+              size="small"
+              pTooltip="Visualizar perfil"
+              tooltipPosition="left"
+              (onClick)="editarUsuario(usuario)"
+            />
+            @if (sessao.eGestor()) {
+              <p-button
+                icon="pi pi-file-edit"
+                [text]="true"
+                severity="secondary"
+                size="small"
+                pTooltip="Anotações"
+                tooltipPosition="left"
+                (onClick)="anotacoesDialog.abrir(usuario.id, usuario.nomeCompleto)"
+              />
+            }
+            <p-button
+              icon="pi pi-trash"
+              [text]="true"
+              severity="danger"
+              size="small"
+              pTooltip="Excluir"
+              tooltipPosition="left"
+              (onClick)="confirmarExclusao(usuario)"
+            />
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="empty">
+      <tr>
+        <td colspan="6" class="text-center text-surface-600 py-6">
+          Nenhum usuário encontrado
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-confirmDialog />
+<app-usuario-anotacoes-dialog #anotacoesDialog />
