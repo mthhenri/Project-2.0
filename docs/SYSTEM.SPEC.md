@@ -689,6 +689,12 @@ frontend/src/app/
       carregamento.signal.ts
       usuario-autenticado.signal.ts
   shared/
+    layout/
+      layout.component.ts           ← shell: topbar + router-outlet + toast
+      topbar/
+        topbar.component.ts         ← navegação horizontal, relógio, perfil, logout
+        topbar.component.html
+        topbar.component.scss
     components/
       loading-spinner/
         loading-spinner.component.ts
@@ -728,7 +734,45 @@ O componente `assistente-descricao` é reutilizável nos formulários de execuç
 O usuário compara o texto original com o auxiliado lado a lado antes de aceitar.
 
 ### 8.4 SCSS + Tailwind + BEM
+
 Todo arquivo de estilo usa `.scss`. Tailwind para utilitários de layout e espaçamento. Classes customizadas seguem BEM (`bloco__elemento--modificador`) em português. Nunca `style=""` inline, nunca seletores de ID.
+
+Estilos globais ficam em `src/styles.scss`. Estilos de componente ficam no arquivo `.scss` do próprio componente — nunca em `styles.scss`.
+
+### 8.5 Tema e Paleta de Cores
+
+**Tema base:** PrimeNG Aura, sobrescrito com preset `TemaAzul` via `definePreset` em `app.config.ts`.
+**Dark mode:** permanentemente desabilitado (`darkModeSelector: false`) — o sistema é sempre claro.
+
+**Paleta primária — azul:**
+O Aura usa índigo por padrão. O projeto sobrescreve para azul puro via `{blue.*}`:
+
+```typescript
+const TemaAzul = definePreset(Aura, {
+  semantic: {
+    primary: {
+      50: '{blue.50}', 100: '{blue.100}', 200: '{blue.200}',
+      300: '{blue.300}', 400: '{blue.400}', 500: '{blue.500}',
+      600: '{blue.600}', 700: '{blue.700}', 800: '{blue.800}',
+      900: '{blue.900}', 950: '{blue.950}',
+    },
+  },
+});
+```
+
+**Regra de uso de cores — surface como base, primary como acento:**
+
+| Token | Uso |
+|---|---|
+| `bg-surface-0` | Fundo de painéis e topbar (branco) |
+| `bg-surface-50` | Fundo de página / área de conteúdo (cinza claríssimo) |
+| `border-surface-200` | Bordas e divisores |
+| `text-surface-700` | Texto de interface (labels, itens de nav) |
+| `text-surface-600` | Texto secundário (horário, subtítulos) |
+| `var(--p-primary-50)` | Fundo de item ativo na navegação |
+| `var(--p-primary-600)` | Cor do ícone/texto de item ativo, títulos em destaque |
+
+A cor `primary` aparece **apenas em pontos de destaque**: estado ativo na navegação, botões de ação principal, títulos que representam a identidade do produto. Fundos estruturais usam sempre tokens `surface`.
 
 ---
 

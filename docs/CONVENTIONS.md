@@ -217,9 +217,26 @@ Sempre: string enum, valor igual ao nome, em SCREAMING_SNAKE_CASE.
 ## Estilos
 
 **Extensão:** sempre `.scss`, nunca `.css`
-**Utilitários:** Tailwind CSS para layout, espaçamento, cores e tipografia
+**Utilitários:** Tailwind CSS para layout, espaçamento e tipografia
 **Classes customizadas:** arquitetura BEM em SCSS — `bloco__elemento--modificador`
 **Idioma:** classes BEM em português (negócio): `.usuario-cartao`, `.demanda-arvore-item`
+**Escopo:** estilos de componente ficam no `.scss` do próprio componente; `styles.scss` só recebe o que é verdadeiramente global
+
+**Cores — dois sistemas de tokens, usos distintos:**
+- `surface-*` (via Tailwind): base estrutural — fundos, bordas, texto de interface
+- `primary` (via CSS var): acento pontual — estados ativos, botões, títulos de identidade
+
+```scss
+// ✅ Estrutura de página — surface
+bg-surface-0        // branco (painéis, topbar)
+bg-surface-50       // cinza claríssimo (fundo de conteúdo)
+border-surface-200  // bordas e divisores
+text-surface-700    // texto de interface
+
+// ✅ Destaque e identidade — primary (azul)
+var(--p-primary-50)   // fundo de item ativo
+var(--p-primary-600)  // ícone/texto ativo, títulos em destaque
+```
 
 ---
 

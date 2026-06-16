@@ -9,15 +9,3 @@
 // Variáveis SCSS globais do projeto
 $espacamento-base: 1rem;
 $raio-borda-padrao: 0.5rem;
-
-// Item ativo na sidebar — destaque em azul
-.sidebar__item--ativo {
-  background-color: var(--p-primary-50) !important;
-  color: var(--p-primary-700) !important;
-  font-weight: 600;
-
-  i,
-  span {
-    color: var(--p-primary-700);
-  }
-}
