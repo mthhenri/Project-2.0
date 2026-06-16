@@ -2,6 +2,14 @@
   "compileOnSave": false,
   "compilerOptions": {
     "outDir": "./dist/out-tsc",
+    "baseUrl": ".",
+    "paths": {
+      "@project20/shared": ["../shared/src/index.ts"],
+      "@project20/shared/*": ["../shared/src/*"],
+      "@nestjs/swagger": ["./src/stubs/nestjs-swagger.stub.ts"],
+      "class-validator": ["./src/stubs/class-validator.stub.ts"],
+      "class-transformer": ["./src/stubs/class-transformer.stub.ts"]
+    },
     "strict": true,
     "strictPropertyInitialization": false,
     "noImplicitOverride": true,

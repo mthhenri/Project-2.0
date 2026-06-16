@@ -51,6 +51,14 @@
           </div>
         }
 
+        <p-button
+          type="submit"
+          label="Entrar"
+          icon="pi pi-sign-in"
+          [loading]="carregando()"
+          styleClass="w-full"
+        />
+
         @if (temLoginSalvo()) {
           <div class="login-pagina__esquecer">
             <p-button
@@ -64,14 +72,6 @@
             />
           </div>
         }
-
-        <p-button
-          type="submit"
-          label="Entrar"
-          icon="pi pi-sign-in"
-          [loading]="carregando()"
-          styleClass="w-full"
-        />
       </form>
     </p-card>
   </div>
