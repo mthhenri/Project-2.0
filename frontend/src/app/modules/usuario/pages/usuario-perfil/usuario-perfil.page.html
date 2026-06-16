@@ -130,12 +130,13 @@
     <div class="usuario-perfil__dialog-linha">
       <div class="usuario-perfil__dialog-campo">
         <label class="usuario-perfil__label">Horas Diárias</label>
-        <p-select
+        <p-inputnumber
           formControlName="horasDiariasNecessarias"
-          [options]="horasOpcoes"
-          optionLabel="label"
-          optionValue="value"
+          [min]="1"
+          [max]="24"
+          [showButtons]="true"
           class="w-full"
+          inputStyleClass="w-full"
         />
       </div>
       <div class="usuario-perfil__dialog-campo">
@@ -145,6 +146,7 @@
           [options]="statusOpcoes"
           optionLabel="label"
           optionValue="value"
+          appendTo="body"
           class="w-full"
         />
       </div>

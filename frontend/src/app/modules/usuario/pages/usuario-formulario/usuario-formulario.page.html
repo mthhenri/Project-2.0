@@ -102,14 +102,14 @@
 
         <div class="usuario-formulario__campo">
           <label for="horasDiariasNecessarias" class="usuario-formulario__label">Horas Diárias</label>
-          <p-select
+          <p-inputnumber
             inputId="horasDiariasNecessarias"
             formControlName="horasDiariasNecessarias"
-            [options]="horasOpcoes"
-            optionLabel="label"
-            optionValue="value"
-            placeholder="Selecione as horas"
+            [min]="1"
+            [max]="24"
+            [showButtons]="true"
             class="w-full"
+            inputStyleClass="w-full"
           />
         </div>
       </div>

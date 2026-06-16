@@ -6,6 +6,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { Select } from 'primeng/select';
+import { InputNumberModule } from 'primeng/inputnumber';
 import { Tag } from 'primeng/tag';
 import { DialogModule } from 'primeng/dialog';
 import { MessageService } from 'primeng/api';
@@ -23,7 +24,7 @@ import { UsuarioAnotacoesDialogComponent } from '../../components/usuario-anotac
 @Component({
   selector: 'app-usuario-perfil',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonModule, InputTextModule, PasswordModule, Select, Tag, DialogModule, UsuarioAnotacoesDialogComponent],
+  imports: [ReactiveFormsModule, ButtonModule, InputTextModule, PasswordModule, Select, InputNumberModule, Tag, DialogModule, UsuarioAnotacoesDialogComponent],
   templateUrl: './usuario-perfil.page.html',
   styleUrl: './usuario-perfil.page.scss',
 })
@@ -55,11 +56,6 @@ export class UsuarioPerfilPage implements OnInit {
     },
     { validators: this.validarSenhasIguais },
   );
-
-  readonly horasOpcoes = Array.from({ length: 12 }, (_, indice) => ({
-    label: `${indice + 1} hora${indice > 0 ? 's' : ''}`,
-    value: indice + 1,
-  }));
 
   readonly statusOpcoes = [
     { label: 'Ativo', value: UsuarioStatusEnum.ATIVO },

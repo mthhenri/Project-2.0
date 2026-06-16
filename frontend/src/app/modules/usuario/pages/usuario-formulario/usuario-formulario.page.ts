@@ -6,6 +6,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { Select } from 'primeng/select';
+import { InputNumberModule } from 'primeng/inputnumber';
 import { MessageService } from 'primeng/api';
 import { UsuarioCriarDto, UsuarioTipoEnum } from '@project20/shared';
 import { UsuarioService } from '../../services/usuario.service';
@@ -13,7 +14,7 @@ import { UsuarioService } from '../../services/usuario.service';
 @Component({
   selector: 'app-usuario-formulario',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonModule, InputTextModule, PasswordModule, Select],
+  imports: [ReactiveFormsModule, ButtonModule, InputTextModule, PasswordModule, Select, InputNumberModule],
   templateUrl: './usuario-formulario.page.html',
   styleUrl: './usuario-formulario.page.scss',
 })
@@ -38,11 +39,6 @@ export class UsuarioFormularioPage {
     { label: 'Desenvolvedor', value: UsuarioTipoEnum.DESENVOLVEDOR },
     { label: 'Gestor', value: UsuarioTipoEnum.GESTOR },
   ];
-
-  readonly horasOpcoes = Array.from({ length: 12 }, (_, indice) => ({
-    label: `${indice + 1} hora${indice > 0 ? 's' : ''}`,
-    value: indice + 1,
-  }));
 
   salvar(): void {
     if (this.formulario.invalid) {
