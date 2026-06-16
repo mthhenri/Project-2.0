@@ -1,0 +1,49 @@
+<p-dialog
+  [header]="tituloDialog()"
+  [(visible)]="visivel"
+  [modal]="true"
+  [style]="{ width: '95vw', height: '95vh' }"
+  [contentStyle]="{ padding: '1rem', overflow: 'hidden', display: 'flex', flexDirection: 'column' }"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="false"
+  [closeOnEscape]="false"
+>
+  @if (carregando()) {
+    <div class="anotacoes-dialog__carregando">
+      <i class="pi pi-spin pi-spinner"></i>
+      <span>Carregando anotações...</span>
+    </div>
+  } @else {
+    <form [formGroup]="formulario" class="anotacoes-dialog__form">
+      <p-editor
+        formControlName="anotacoes"
+        [style]="{ height: 'calc(95vh - 10rem)' }"
+      />
+    </form>
+  }
+
+  <ng-template pTemplate="footer">
+    <div class="anotacoes-dialog__rodape">
+      <p-button
+        label="Limpar Anotações"
+        icon="pi pi-trash"
+        severity="danger"
+        [outlined]="true"
+        (onClick)="limpar()"
+      />
+      <span class="anotacoes-dialog__rodape-dica">
+        <i class="pi pi-clock"></i>
+        Salvo automaticamente a cada 30 segundos
+      </span>
+      <p-button
+        label="Salvar Anotações"
+        icon="pi pi-save"
+        [loading]="carregandoSalvar()"
+        (onClick)="salvar()"
+      />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<p-confirmDialog key="anotacoes-limpar" />

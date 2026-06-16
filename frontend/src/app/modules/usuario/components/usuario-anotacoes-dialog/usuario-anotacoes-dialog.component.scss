@@ -1,0 +1,40 @@
+.anotacoes-dialog {
+  &__carregando {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    height: calc(95vh - 10rem);
+    color: var(--p-text-muted-color);
+
+    i {
+      font-size: 2rem;
+    }
+  }
+
+  &__form {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__rodape {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  &__rodape-dica {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.8rem;
+    color: var(--p-text-muted-color);
+
+    i {
+      font-size: 0.75rem;
+    }
+  }
+}

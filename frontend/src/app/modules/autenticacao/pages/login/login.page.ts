@@ -63,7 +63,7 @@ export class LoginPage implements OnInit {
       .subscribe({
         next: () => {
           this.salvarUltimoLogin(loginValor, senhaValor);
-          this.router.navigate(['/ponto']);
+          this.router.navigate(['/atividade']);
         },
         error: (erro) => this.erroLogin.set(erro.error?.mensagem ?? 'Credenciais inválidas'),
       });

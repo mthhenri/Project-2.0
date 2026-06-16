@@ -4,6 +4,17 @@
     width: auto;
   }
 
+  &__link-anotacoes {
+    color: var(--p-primary-600);
+    text-decoration: none;
+    transition: color 0.15s;
+
+    &:hover {
+      color: var(--p-primary-700);
+      text-decoration: underline;
+    }
+  }
+
   &__nav-item--ativo {
     background-color: var(--p-primary-50);
     color: var(--p-primary-600);

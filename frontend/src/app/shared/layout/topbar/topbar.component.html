@@ -1,12 +1,12 @@
 <header class="topbar flex items-center px-4 py-2 bg-surface-0 border-b border-surface-200 shadow-sm gap-6">
   <!-- Logo -->
-  <a routerLink="/ponto" class="topbar__logo flex-shrink-0">
+  <a routerLink="/atividade" class="topbar__logo flex-shrink-0">
     <img src="favicon.ico" alt="Logo" class="topbar__logo-imagem" />
   </a>
 
   <!-- Navigation -->
   <nav class="topbar__nav flex items-center gap-1 flex-1">
-    @for (item of itensNavegacao; track item.rotaLink) {
+    @for (item of itensNavegacao(); track item.rotaLink) {
       <a
         [routerLink]="item.rotaLink"
         routerLinkActive="topbar__nav-item--ativo"
@@ -28,7 +28,7 @@
       [text]="true"
       size="small"
       [pTooltip]="sessao.nomeCompleto() ?? ''"
-      tooltipPosition="bottom"
+      tooltipPosition="left"
       (onClick)="perfilPopover.toggle($event)"
     />
 
@@ -44,6 +44,14 @@
             <i class="pi pi-id-card text-xs"></i>
             <span>{{ sessao.eGestor() ? 'Gestor' : 'Desenvolvedor' }}</span>
           </div>
+          <button
+            type="button"
+            class="topbar__link-anotacoes flex items-center gap-2 text-sm"
+            (click)="perfilPopover.hide(); anotacoesDialog.abrir(sessao.id()!, sessao.nomeCompleto()!)"
+          >
+            <i class="pi pi-file-edit text-xs"></i>
+            <span>Minhas Anotações</span>
+          </button>
         </div>
       }
     </p-popover>
@@ -53,7 +61,11 @@
       severity="secondary"
       [text]="true"
       size="small"
+      pTooltip="Sair"
+      tooltipPosition="left"
       (onClick)="sair()"
     />
   </div>
 </header>
+
+<app-usuario-anotacoes-dialog #anotacoesDialog />
