@@ -1,7 +1,20 @@
 .topbar {
+  background: var(--p-surface-100);
+  border-color: var(--p-surface-300);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
   &__logo-imagem {
     height: 32px;
     width: auto;
+  }
+
+  &__nav-item--ativo {
+    background-color: var(--p-primary-50);
+    color: var(--p-primary-600);
+
+    i {
+      color: var(--p-primary-600);
+    }
   }
 
   &__link-anotacoes {
@@ -12,15 +25,6 @@
     &:hover {
       color: var(--p-primary-700);
       text-decoration: underline;
-    }
-  }
-
-  &__nav-item--ativo {
-    background-color: var(--p-primary-50);
-    color: var(--p-primary-600);
-
-    i {
-      color: var(--p-primary-600);
     }
   }
 }
