@@ -1,7 +1,6 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
 import { finalize } from 'rxjs/operators';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -17,14 +16,20 @@ import {
   ProjetoRecuperadoDto,
   ProjetoAlterarDto,
   ProjetoStatusEnum,
-  DemandaResumoDto,
-  DemandaStatusEnum,
-  StandardResponse,
-  PaginatedResult,
+  DemandaArvoreItemDto,
+  DemandaGrafoNoDto,
+  TagResumoDto,
+  DemandaTagsAtribuirDto,
 } from '@project20/shared';
 import { ProjetoService } from '../../services/projeto.service';
+import { DemandaService } from '../../../demanda/services/demanda.service';
+import { TagService } from '../../../tag/services/tag.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { DataBrasileiraPipe } from '../../../../shared/pipes/data-brasileira.pipe';
+import { DemandaArvoreItemComponent } from '../../../demanda/components/demanda-arvore-item/demanda-arvore-item.component';
+import { DemandaFormularioDialogComponent } from '../../../demanda/components/demanda-formulario-dialog/demanda-formulario-dialog.component';
+import { DemandaDetalheDialogComponent } from '../../../demanda/components/demanda-detalhe-dialog/demanda-detalhe-dialog.component';
+import { DemandaEdicaoDialogComponent } from '../../../demanda/components/demanda-edicao-dialog/demanda-edicao-dialog.component';
 import { ambiente } from '../../../../../environments/environment';
 
 @Component({
@@ -42,13 +47,18 @@ import { ambiente } from '../../../../../environments/environment';
     Tag,
     TooltipModule,
     DataBrasileiraPipe,
+    DemandaArvoreItemComponent,
+    DemandaFormularioDialogComponent,
+    DemandaDetalheDialogComponent,
+    DemandaEdicaoDialogComponent,
   ],
   templateUrl: './projeto-detalhe.page.html',
   styleUrl: './projeto-detalhe.page.scss',
 })
 export class ProjetoDetalhePage implements OnInit {
   private readonly projetoService = inject(ProjetoService);
-  private readonly httpClient = inject(HttpClient);
+  private readonly demandaService = inject(DemandaService);
+  private readonly tagService = inject(TagService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly messageService = inject(MessageService);
@@ -56,11 +66,27 @@ export class ProjetoDetalhePage implements OnInit {
   readonly sessao = inject(UsuarioSessaoService);
 
   readonly projeto = signal<ProjetoRecuperadoDto | null>(null);
-  readonly demandas = signal<DemandaResumoDto[]>([]);
+  readonly arvoreRaizes = signal<DemandaArvoreItemDto[]>([]);
   readonly carregando = signal<boolean>(false);
   readonly carregandoDemandas = signal<boolean>(false);
   readonly mostrarDialogEditar = signal<boolean>(false);
+  readonly mostrarDialogNovaDemanda = signal<boolean>(false);
+  readonly mostrarDialogDetalhe = signal<boolean>(false);
+  readonly demandaIdSelecionada = signal<number>(0);
+  readonly mostrarDialogEdicao = signal<boolean>(false);
+  readonly demandaIdParaEditar = signal<number>(0);
+  readonly mostrarDialogNovaFilha = signal<boolean>(false);
+  readonly demandaPaiIdNovaFilha = signal<number>(0);
   readonly carregandoSalvar = signal<boolean>(false);
+
+  readonly tagsDisponiveis = signal<TagResumoDto[]>([]);
+  readonly demandaIdTagsEditando = signal<number>(0);
+  readonly mostrarDialogTags = signal<boolean>(false);
+  readonly carregandoSalvarTags = signal<boolean>(false);
+
+  readonly formularioTags = this.formBuilder.group({
+    tagIds: [[] as number[]],
+  });
 
   readonly formularioEditar = this.formBuilder.group(
     {
@@ -83,7 +109,7 @@ export class ProjetoDetalhePage implements OnInit {
   ngOnInit(): void {
     const identificador = Number(this.route.snapshot.paramMap.get('id'));
     this.carregarProjeto(identificador);
-    this.carregarDemandas(identificador);
+    this.carregarArvore(identificador);
   }
 
   abrirDialogEditar(): void {
@@ -135,14 +161,89 @@ export class ProjetoDetalhePage implements OnInit {
       });
   }
 
-  navegarParaNovaDemanda(): void {
-    const projetoDados = this.projeto();
-    if (!projetoDados) return;
-    this.router.navigate(['/demanda/nova'], { queryParams: { projetoId: projetoDados.id } });
+  abrirDetalhe(demandaId: number): void {
+    this.demandaIdSelecionada.set(demandaId);
+    this.mostrarDialogDetalhe.set(true);
   }
 
-  navegarParaDemanda(demanda: DemandaResumoDto): void {
-    this.router.navigate(['/demanda', demanda.id]);
+  abrirEdicao(demandaId: number): void {
+    this.demandaIdParaEditar.set(demandaId);
+    this.mostrarDialogEdicao.set(true);
+  }
+
+  abrirNovaFilha(demandaPaiId: number): void {
+    this.demandaPaiIdNovaFilha.set(demandaPaiId);
+    this.mostrarDialogNovaFilha.set(true);
+  }
+
+  aoDemandaAlterada(): void {
+    const projetoDados = this.projeto();
+    if (projetoDados) this.recarregarArvore(projetoDados.id);
+  }
+
+  aoDemandaCriada(): void {
+    const projetoDados = this.projeto();
+    if (projetoDados) this.recarregarArvore(projetoDados.id);
+  }
+
+  abrirDialogTagsPorId(demandaId: number): void {
+    this.demandaIdTagsEditando.set(demandaId);
+
+    const carregarTagsDemanda = () => {
+      this.demandaService.listarTags(demandaId).subscribe({
+        next: (resposta) => {
+          const tagIds = resposta.sucesso && resposta.dados ? resposta.dados.map((tag) => tag.id) : [];
+          this.formularioTags.patchValue({ tagIds });
+          this.mostrarDialogTags.set(true);
+        },
+      });
+    };
+
+    if (this.tagsDisponiveis().length > 0) {
+      carregarTagsDemanda();
+    } else {
+      this.tagService.listar().subscribe({
+        next: (resposta) => {
+          if (resposta.sucesso && resposta.dados) {
+            this.tagsDisponiveis.set(resposta.dados);
+          }
+          carregarTagsDemanda();
+        },
+      });
+    }
+  }
+
+  salvarTags(): void {
+    const idEditando = this.demandaIdTagsEditando();
+    if (!idEditando) return;
+
+    const dto: DemandaTagsAtribuirDto = {
+      tagIds: this.formularioTags.value.tagIds ?? [],
+    };
+
+    this.carregandoSalvarTags.set(true);
+    this.demandaService
+      .alterarTags(idEditando, dto)
+      .pipe(finalize(() => this.carregandoSalvarTags.set(false)))
+      .subscribe({
+        next: () => {
+          this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Tags atualizadas' });
+          this.mostrarDialogTags.set(false);
+          this.carregarArvore(this.projeto()!.id);
+        },
+      });
+  }
+
+  toggleTag(tagId: number, evento: Event): void {
+    const marcado = (evento.target as HTMLInputElement).checked;
+    const tagIdsAtuais = [...(this.formularioTags.value.tagIds ?? [])];
+    if (marcado) {
+      if (!tagIdsAtuais.includes(tagId)) tagIdsAtuais.push(tagId);
+    } else {
+      const indice = tagIdsAtuais.indexOf(tagId);
+      if (indice > -1) tagIdsAtuais.splice(indice, 1);
+    }
+    this.formularioTags.patchValue({ tagIds: tagIdsAtuais });
   }
 
   voltarParaListagem(): void {
@@ -165,24 +266,6 @@ export class ProjetoDetalhePage implements OnInit {
       [ProjetoStatusEnum.PAUSADO]:   'Pausado',
       [ProjetoStatusEnum.CONCLUIDO]: 'Concluído',
       [ProjetoStatusEnum.CANCELADO]: 'Cancelado',
-    };
-    return mapa[status];
-  }
-
-  severidadeDemanda(status: DemandaStatusEnum): 'secondary' | 'warn' | 'success' {
-    const mapa: Record<DemandaStatusEnum, 'secondary' | 'warn' | 'success'> = {
-      [DemandaStatusEnum.PLANEJADA]:          'secondary',
-      [DemandaStatusEnum.EM_DESENVOLVIMENTO]: 'warn',
-      [DemandaStatusEnum.CONCLUIDA]:          'success',
-    };
-    return mapa[status];
-  }
-
-  rotuloStatusDemanda(status: DemandaStatusEnum): string {
-    const mapa: Record<DemandaStatusEnum, string> = {
-      [DemandaStatusEnum.PLANEJADA]:          'Planejada',
-      [DemandaStatusEnum.EM_DESENVOLVIMENTO]: 'Em desenvolvimento',
-      [DemandaStatusEnum.CONCLUIDA]:          'Concluída',
     };
     return mapa[status];
   }
@@ -213,21 +296,61 @@ export class ProjetoDetalhePage implements OnInit {
       });
   }
 
-  private carregarDemandas(projetoId: number): void {
+  private carregarArvore(projetoId: number): void {
     this.carregandoDemandas.set(true);
-    this.httpClient
-      .get<StandardResponse<PaginatedResult<DemandaResumoDto>>>(
-        `${ambiente.apiUrl}/demanda`,
-        { params: { projetoId: String(projetoId), itensPorPagina: '100' } },
-      )
+    this.demandaService
+      .recuperarGrafo(projetoId)
       .pipe(finalize(() => this.carregandoDemandas.set(false)))
       .subscribe({
         next: (resposta) => {
           if (resposta.sucesso && resposta.dados) {
-            this.demandas.set(resposta.dados.itens);
+            this.arvoreRaizes.set(this.construirArvore(resposta.dados.nos));
           }
         },
       });
+  }
+
+  private recarregarArvore(projetoId: number): void {
+    this.demandaService.recuperarGrafo(projetoId).subscribe({
+      next: (resposta) => {
+        if (resposta.sucesso && resposta.dados) {
+          this.arvoreRaizes.set(this.construirArvore(resposta.dados.nos));
+        }
+      },
+    });
+  }
+
+  private construirArvore(nos: DemandaGrafoNoDto[]): DemandaArvoreItemDto[] {
+    const mapa = new Map<number, DemandaArvoreItemDto>();
+
+    for (const no of nos) {
+      mapa.set(no.id, {
+        id:                  no.id,
+        nome:                no.nome,
+        status:              no.status,
+        prioridade:          no.prioridade,
+        isEstrutural:        no.isEstrutural,
+        horasEstimadas:      no.horasEstimadas,
+        temDescricaoTecnica: no.temDescricaoTecnica,
+        temDescricaoCliente: no.temDescricaoCliente,
+        temDocumentacao:     no.temDocumentacao,
+        tags:                no.tags ?? [],
+        nivel:               0,
+        filhos:              [],
+      });
+    }
+
+    const raizes: DemandaArvoreItemDto[] = [];
+    for (const no of nos) {
+      const item = mapa.get(no.id)!;
+      if (no.demandaPaiId && mapa.has(no.demandaPaiId)) {
+        mapa.get(no.demandaPaiId)!.filhos.push(item);
+      } else {
+        raizes.push(item);
+      }
+    }
+
+    return raizes;
   }
 
   digitarCor(evento: Event, controle: AbstractControl | null): void {

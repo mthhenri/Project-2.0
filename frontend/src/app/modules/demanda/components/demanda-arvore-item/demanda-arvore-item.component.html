@@ -1,0 +1,65 @@
+<div class="demanda-arvore-item" [style.padding-left.rem]="nivel * 1.5">
+  <p-contextmenu #menuContexto [model]="itensMenu" appendTo="body" />
+
+  <div
+    class="demanda-arvore-item__linha"
+    (click)="alternarExpansao($event)"
+    (dblclick)="demandaSelecionada.emit(arvoreItem.id)"
+    (contextmenu)="menuContexto.show($event)"
+  >
+    <div class="demanda-arvore-item__info">
+      @if (arvoreItem.isEstrutural) {
+        <i class="pi pi-folder demanda-arvore-item__icone-estrutural"></i>
+      }
+      @if (arvoreItem.filhos.length) {
+        <i
+          class="pi pi-chevron-right demanda-arvore-item__icone-filhos"
+          [class.demanda-arvore-item__icone-filhos--expandido]="expandido()"
+          (click)="alternarExpansao($event)"
+        ></i>
+      }
+      <span class="demanda-arvore-item__nome">{{ arvoreItem.nome }}</span>
+    </div>
+
+    <div class="demanda-arvore-item__badges">
+      @if (arvoreItem.tags.length) {
+        <div class="demanda-arvore-item__tags">
+          @for (tag of arvoreItem.tags; track tag.id) {
+            <span
+              class="demanda-arvore-item__tag"
+              [style.background-color]="tag.cor + '22'"
+              [style.border-color]="tag.cor + '55'"
+              [style.color]="tag.cor"
+            >
+              <span class="demanda-arvore-item__tag-bolinha" [style.background-color]="tag.cor"></span>
+              {{ tag.nome }}
+            </span>
+          }
+        </div>
+      }
+      <p-tag
+        [value]="rotuloStatus(arvoreItem.status)"
+        [severity]="severidadeStatus(arvoreItem.status)"
+      />
+      @if (arvoreItem.horasEstimadas > 0) {
+        <span class="demanda-arvore-item__horas">{{ arvoreItem.horasEstimadas }}h</span>
+      }
+    </div>
+  </div>
+
+  @if (arvoreItem.filhos.length && expandido()) {
+    <div class="demanda-arvore-item__filhos">
+      @for (filho of arvoreItem.filhos; track filho.id) {
+        <app-demanda-arvore-item
+          [arvoreItem]="filho"
+          [nivel]="nivel + 1"
+          (demandaSelecionada)="demandaSelecionada.emit($event)"
+          (demandaEditarSolicitada)="demandaEditarSolicitada.emit($event)"
+          (demandaEditarDescricaoSolicitada)="demandaEditarDescricaoSolicitada.emit($event)"
+          (demandaNovaFilhaSolicitada)="demandaNovaFilhaSolicitada.emit($event)"
+          (demandaTagsSolicitadas)="demandaTagsSolicitadas.emit($event)"
+        />
+      }
+    </div>
+  }
+</div>

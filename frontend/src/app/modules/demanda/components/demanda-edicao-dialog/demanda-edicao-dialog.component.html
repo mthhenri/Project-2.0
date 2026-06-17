@@ -1,0 +1,124 @@
+<p-dialog
+  header="Editar Demanda"
+  [visible]="visivel"
+  (visibleChange)="fechar()"
+  [modal]="true"
+  [style]="{ width: '600px' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  @if (carregandoDados()) {
+    <div class="demanda-edicao-dialog__carregando">
+      <i class="pi pi-spin pi-spinner text-2xl text-surface-400"></i>
+    </div>
+  }
+
+  @if (!carregandoDados()) {
+    <form [formGroup]="formulario" class="demanda-edicao-dialog__form">
+      <div class="demanda-edicao-dialog__campo demanda-edicao-dialog__campo--full">
+        <label class="demanda-edicao-dialog__label">
+          Nome <span class="demanda-edicao-dialog__obrigatorio">*</span>
+        </label>
+        <input pInputText formControlName="nome" class="w-full" />
+        @if (campoInvalido('nome')) {
+          <small class="demanda-edicao-dialog__erro">Nome é obrigatório</small>
+        }
+      </div>
+
+      <div class="demanda-edicao-dialog__campo demanda-edicao-dialog__campo--full">
+        <label class="demanda-edicao-dialog__label">Demanda Pai</label>
+        <p-select
+          formControlName="demandaPaiId"
+          [options]="demandasPaiOpcoes()"
+          optionLabel="nome"
+          optionValue="id"
+          placeholder="Nenhuma (demanda raiz)"
+          [showClear]="true"
+          appendTo="body"
+          class="w-full"
+        />
+      </div>
+
+      <div class="demanda-edicao-dialog__linha">
+        <div class="demanda-edicao-dialog__campo">
+          <label class="demanda-edicao-dialog__label">Prioridade</label>
+          <p-select
+            formControlName="prioridade"
+            [options]="prioridadeOpcoes"
+            optionLabel="label"
+            optionValue="value"
+            appendTo="body"
+            class="w-full"
+          />
+        </div>
+        <div class="demanda-edicao-dialog__campo">
+          <label class="demanda-edicao-dialog__label">Status</label>
+          <p-select
+            formControlName="status"
+            [options]="statusOpcoes"
+            optionLabel="label"
+            optionValue="value"
+            appendTo="body"
+            class="w-full"
+          />
+        </div>
+      </div>
+
+      <div class="demanda-edicao-dialog__linha">
+        <div class="demanda-edicao-dialog__campo">
+          <label class="demanda-edicao-dialog__label">Horas Estimadas</label>
+          <p-inputnumber
+            formControlName="horasEstimadas"
+            [min]="0"
+            [showButtons]="true"
+            class="w-full"
+          />
+        </div>
+        <div class="demanda-edicao-dialog__campo">
+          <label class="demanda-edicao-dialog__label">Previsão de Término</label>
+          <p-datepicker
+            formControlName="previsaoFimData"
+            dateFormat="dd/mm/yy"
+            [showIcon]="true"
+            appendTo="body"
+            class="w-full"
+          />
+        </div>
+      </div>
+
+      <div class="demanda-edicao-dialog__linha">
+        <div class="demanda-edicao-dialog__campo">
+          <label class="demanda-edicao-dialog__label">Ordem de Exibição</label>
+          <p-inputnumber
+            formControlName="ordemExibicao"
+            [min]="0"
+            [showButtons]="true"
+            class="w-full"
+          />
+        </div>
+        <div class="demanda-edicao-dialog__campo demanda-edicao-dialog__campo--checkbox">
+          <p-checkbox formControlName="isEstrutural" [binary]="true" inputId="isEstrutural" />
+          <label for="isEstrutural" class="demanda-edicao-dialog__label--checkbox">
+            Demanda Estrutural
+          </label>
+        </div>
+      </div>
+    </form>
+  }
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cancelar"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="fechar()"
+    />
+    <p-button
+      label="Salvar"
+      icon="pi pi-check"
+      [loading]="carregando()"
+      [disabled]="carregandoDados()"
+      (onClick)="salvar()"
+    />
+  </ng-template>
+</p-dialog>

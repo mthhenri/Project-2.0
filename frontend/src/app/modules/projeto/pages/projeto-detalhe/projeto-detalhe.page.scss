@@ -63,8 +63,28 @@
     flex-shrink: 0;
   }
 
-  &__abas {
-    margin-top: 0.5rem;
+  &__meta {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    margin-bottom: 1.25rem;
+  }
+
+  &__meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.875rem;
+    color: var(--p-text-muted-color);
+
+    strong {
+      color: var(--p-text-color);
+      font-weight: 500;
+    }
+
+    i {
+      font-size: 0.8rem;
+    }
   }
 
   &__carregando-demandas {
@@ -126,44 +146,6 @@
     white-space: nowrap;
   }
 
-  &__info-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.25rem;
-    padding-top: 0.5rem;
-  }
-
-  &__info-campo {
-    display: flex;
-    flex-direction: column;
-    gap: 0.375rem;
-  }
-
-  &__info-label {
-    font-size: 0.8rem;
-    font-weight: 500;
-    color: var(--p-text-muted-color);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-
-  &__info-valor {
-    font-size: 0.9375rem;
-    color: var(--p-text-color);
-
-    &--codigo {
-      font-family: monospace;
-      font-size: 0.875rem;
-      color: var(--p-text-muted-color);
-    }
-  }
-
-  &__info-cor {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
   &__dialog-form  { @include form-dialog-form; }
   &__dialog-campo { @include form-campo; }
   &__dialog-linha { @include form-dialog-linha; }
@@ -174,4 +156,46 @@
   &__cor-preview  { @include form-cor-preview; }
   &__cor-valor    { @include form-cor-valor; }
   &__cor-input    { @include form-cor-input; }
+
+  &__dialog-tags-form {
+    padding: 0.25rem 0;
+  }
+
+  &__tags-selecao {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 320px;
+    overflow-y: auto;
+  }
+
+  &__tag-opcao {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+
+    input[type='checkbox'] {
+      flex-shrink: 0;
+    }
+  }
+
+  &__tag-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.625rem;
+    border-radius: 9999px;
+    border: 1px solid;
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+
+  &__tag-bolinha {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
 }

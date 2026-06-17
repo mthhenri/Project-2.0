@@ -32,12 +32,12 @@
       </div>
 
       <div class="projeto-detalhe__cabecalho-acoes">
-        <p-button
-          label="Nova Demanda"
-          icon="pi pi-plus"
-          (onClick)="navegarParaNovaDemanda()"
-        />
         @if (sessao.eGestor()) {
+          <p-button
+            label="Nova Demanda"
+            icon="pi pi-plus"
+            (onClick)="mostrarDialogNovaDemanda.set(true)"
+          />
           <p-button
             label="Editar"
             icon="pi pi-pencil"
@@ -49,119 +49,69 @@
       </div>
     </div>
 
-    <p-tabs value="0" class="projeto-detalhe__abas">
-      <p-tablist>
-        <p-tab value="0">
-          <i class="pi pi-list mr-2"></i>
-          Demandas
-        </p-tab>
-        <p-tab value="1">
-          <i class="pi pi-info-circle mr-2"></i>
-          Informações
-        </p-tab>
-      </p-tablist>
+    @if (projeto()!.inicioData || projeto()!.previsaoFimData) {
+      <div class="projeto-detalhe__meta">
+        @if (projeto()!.inicioData) {
+          <span class="projeto-detalhe__meta-item">
+            <i class="pi pi-calendar"></i>
+            Início: <strong>{{ projeto()!.inicioData | dataBrasileira }}</strong>
+          </span>
+        }
+        @if (projeto()!.previsaoFimData) {
+          <span class="projeto-detalhe__meta-item">
+            <i class="pi pi-flag"></i>
+            Término: <strong>{{ projeto()!.previsaoFimData | dataBrasileira }}</strong>
+          </span>
+        }
+      </div>
+    }
 
-      <p-tabpanels>
-        <p-tabpanel value="0">
-          @if (carregandoDemandas()) {
-            <div class="projeto-detalhe__carregando-demandas">
-              <i class="pi pi-spin pi-spinner text-2xl text-surface-400"></i>
-            </div>
+    @if (carregandoDemandas()) {
+      <div class="projeto-detalhe__carregando-demandas">
+        <i class="pi pi-spin pi-spinner text-2xl text-surface-400"></i>
+      </div>
+    }
+
+    @if (!carregandoDemandas()) {
+      @if (arvoreRaizes().length === 0) {
+        <div class="projeto-detalhe__demandas-vazio">
+          <i class="pi pi-inbox text-4xl text-surface-300"></i>
+          <p class="text-surface-500 mt-2">Nenhuma demanda encontrada</p>
+          @if (sessao.eGestor()) {
+            <p-button
+              label="Criar primeira demanda"
+              icon="pi pi-plus"
+              severity="secondary"
+              [outlined]="true"
+              size="small"
+              class="mt-3"
+              (onClick)="mostrarDialogNovaDemanda.set(true)"
+            />
           }
+        </div>
+      }
 
-          @if (!carregandoDemandas()) {
-            @if (demandas().length === 0) {
-              <div class="projeto-detalhe__demandas-vazio">
-                <i class="pi pi-inbox text-4xl text-surface-300"></i>
-                <p class="text-surface-500 mt-2">Nenhuma demanda encontrada</p>
-                <p-button
-                  label="Criar primeira demanda"
-                  icon="pi pi-plus"
-                  severity="secondary"
-                  [outlined]="true"
-                  size="small"
-                  class="mt-3"
-                  (onClick)="navegarParaNovaDemanda()"
-                />
-              </div>
-            }
-
-            @if (demandas().length > 0) {
-              <div class="projeto-detalhe__demandas-lista">
-                @for (demanda of demandas(); track demanda.id) {
-                  <div
-                    class="projeto-detalhe__demanda-item"
-                    (click)="navegarParaDemanda(demanda)"
-                  >
-                    <div class="projeto-detalhe__demanda-info">
-                      @if (demanda.isEstrutural) {
-                        <i class="pi pi-folder text-surface-400 mr-2"></i>
-                      }
-                      <span class="projeto-detalhe__demanda-nome">{{ demanda.nome }}</span>
-                    </div>
-                    <div class="projeto-detalhe__demanda-badges">
-                      <p-tag
-                        [value]="rotuloStatusDemanda(demanda.status)"
-                        [severity]="severidadeDemanda(demanda.status)"
-                        class="projeto-detalhe__demanda-badge"
-                      />
-                      <span class="projeto-detalhe__demanda-horas">{{ demanda.horasEstimadas }}h</span>
-                    </div>
-                  </div>
-                }
-              </div>
-            }
+      @if (arvoreRaizes().length > 0) {
+        <div class="projeto-detalhe__demandas-lista">
+          @for (item of arvoreRaizes(); track item.id) {
+            <app-demanda-arvore-item
+              [arvoreItem]="item"
+              [nivel]="0"
+              (demandaSelecionada)="abrirDetalhe($event)"
+              (demandaEditarSolicitada)="abrirEdicao($event)"
+              (demandaEditarDescricaoSolicitada)="abrirDetalhe($event.id)"
+              (demandaNovaFilhaSolicitada)="abrirNovaFilha($event)"
+              (demandaTagsSolicitadas)="abrirDialogTagsPorId($event)"
+            />
           }
-        </p-tabpanel>
-
-        <p-tabpanel value="1">
-          <div class="projeto-detalhe__info-grid">
-            <div class="projeto-detalhe__info-campo">
-              <span class="projeto-detalhe__info-label">Nome</span>
-              <span class="projeto-detalhe__info-valor">{{ projeto()!.nome }}</span>
-            </div>
-            <div class="projeto-detalhe__info-campo">
-              <span class="projeto-detalhe__info-label">Código</span>
-              <span class="projeto-detalhe__info-valor projeto-detalhe__info-valor--codigo">{{ projeto()!.codigo }}</span>
-            </div>
-            <div class="projeto-detalhe__info-campo">
-              <span class="projeto-detalhe__info-label">Status</span>
-              <p-tag
-                [value]="rotuloStatus(projeto()!.status)"
-                [severity]="severidadeStatus(projeto()!.status)"
-              />
-            </div>
-            <div class="projeto-detalhe__info-campo">
-              <span class="projeto-detalhe__info-label">Cor</span>
-              <div class="projeto-detalhe__info-cor">
-                <span
-                  class="projeto-detalhe__cor-bolinha"
-                  [style.background-color]="projeto()!.cor"
-                ></span>
-                <span class="projeto-detalhe__info-valor--codigo">{{ projeto()!.cor }}</span>
-              </div>
-            </div>
-            @if (projeto()!.inicioData) {
-              <div class="projeto-detalhe__info-campo">
-                <span class="projeto-detalhe__info-label">Data de Início</span>
-                <span class="projeto-detalhe__info-valor">{{ projeto()!.inicioData | dataBrasileira }}</span>
-              </div>
-            }
-            @if (projeto()!.previsaoFimData) {
-              <div class="projeto-detalhe__info-campo">
-                <span class="projeto-detalhe__info-label">Previsão de Término</span>
-                <span class="projeto-detalhe__info-valor">{{ projeto()!.previsaoFimData | dataBrasileira }}</span>
-              </div>
-            }
-          </div>
-        </p-tabpanel>
-      </p-tabpanels>
-    </p-tabs>
+        </div>
+      }
+    }
   }
 
 </div>
 
-<!-- Dialog de edição -->
+<!-- Dialog de edição do projeto -->
 <p-dialog
   header="Editar Projeto"
   [(visible)]="mostrarDialogEditar"
@@ -247,6 +197,97 @@
       icon="pi pi-check"
       [loading]="carregandoSalvar()"
       (onClick)="salvarEdicao()"
+    />
+  </ng-template>
+</p-dialog>
+
+<!-- Dialog de detalhe -->
+@if (demandaIdSelecionada()) {
+  <app-demanda-detalhe-dialog
+    [demandaId]="demandaIdSelecionada()"
+    [visivel]="mostrarDialogDetalhe()"
+    (visivelChange)="mostrarDialogDetalhe.set($event)"
+    (demandaExcluida)="aoDemandaCriada()"
+    (demandaAlterada)="aoDemandaAlterada()"
+  />
+}
+
+<!-- Dialog de edição -->
+@if (demandaIdParaEditar()) {
+  <app-demanda-edicao-dialog
+    [demandaId]="demandaIdParaEditar()"
+    [visivel]="mostrarDialogEdicao()"
+    (visivelChange)="mostrarDialogEdicao.set($event)"
+    (demandaAlterada)="aoDemandaAlterada()"
+  />
+}
+
+<!-- Dialog de nova demanda -->
+@if (projeto()) {
+  <app-demanda-formulario-dialog
+    [projetoId]="projeto()!.id"
+    [visivel]="mostrarDialogNovaDemanda()"
+    (visivelChange)="mostrarDialogNovaDemanda.set($event)"
+    (demandaCriada)="aoDemandaCriada()"
+  />
+}
+
+<!-- Dialog de nova sub-demanda (via context menu) -->
+@if (projeto() && demandaPaiIdNovaFilha()) {
+  <app-demanda-formulario-dialog
+    [projetoId]="projeto()!.id"
+    [demandaPaiIdInicial]="demandaPaiIdNovaFilha()"
+    [visivel]="mostrarDialogNovaFilha()"
+    (visivelChange)="mostrarDialogNovaFilha.set($event)"
+    (demandaCriada)="aoDemandaCriada()"
+  />
+}
+
+<!-- Dialog de tags -->
+<p-dialog
+  header="Editar Tags"
+  [visible]="mostrarDialogTags()"
+  (visibleChange)="mostrarDialogTags.set($event)"
+  [modal]="true"
+  [style]="{ width: '420px' }"
+  [draggable]="false"
+>
+  <form [formGroup]="formularioTags" class="projeto-detalhe__dialog-tags-form">
+    <div class="projeto-detalhe__tags-selecao">
+      @for (tag of tagsDisponiveis(); track tag.id) {
+        <label class="projeto-detalhe__tag-opcao">
+          <input
+            type="checkbox"
+            [value]="tag.id"
+            [checked]="(formularioTags.value.tagIds || []).includes(tag.id)"
+            (change)="toggleTag(tag.id, $event)"
+          />
+          <span
+            class="projeto-detalhe__tag-chip"
+            [style.background-color]="tag.cor + '22'"
+            [style.border-color]="tag.cor + '55'"
+            [style.color]="tag.cor"
+          >
+            <span class="projeto-detalhe__tag-bolinha" [style.background-color]="tag.cor"></span>
+            {{ tag.nome }}
+          </span>
+        </label>
+      }
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cancelar"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="mostrarDialogTags.set(false)"
+    />
+    <p-button
+      label="Salvar"
+      icon="pi pi-check"
+      [loading]="carregandoSalvarTags()"
+      (onClick)="salvarTags()"
     />
   </ng-template>
 </p-dialog>

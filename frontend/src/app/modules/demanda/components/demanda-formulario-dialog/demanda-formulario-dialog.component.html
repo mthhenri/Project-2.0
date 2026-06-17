@@ -1,0 +1,120 @@
+<p-dialog
+  header="Nova Demanda"
+  [visible]="visivel"
+  (visibleChange)="fechar()"
+  [modal]="true"
+  [style]="{ width: '560px' }"
+  [draggable]="false"
+>
+  <form [formGroup]="formulario" class="demanda-dialog__form">
+
+    <div class="demanda-dialog__campo demanda-dialog__campo--full">
+      <label class="demanda-dialog__label">Nome <span class="demanda-dialog__obrigatorio">*</span></label>
+      <input pInputText formControlName="nome" class="w-full" placeholder="Nome da demanda" />
+      @if (campoInvalido('nome')) {
+        <small class="demanda-dialog__erro">Nome é obrigatório</small>
+      }
+    </div>
+
+    <div class="demanda-dialog__linha">
+      <div class="demanda-dialog__campo">
+        <label class="demanda-dialog__label">Demanda Pai</label>
+        <p-select
+          formControlName="demandaPaiId"
+          [options]="demandasPaiOpcoes()"
+          optionLabel="nome"
+          optionValue="id"
+          placeholder="Nenhuma (raiz)"
+          [showClear]="true"
+          appendTo="body"
+          class="w-full"
+        />
+      </div>
+
+      <div class="demanda-dialog__campo">
+        <label class="demanda-dialog__label">Prioridade <span class="demanda-dialog__obrigatorio">*</span></label>
+        <p-select
+          formControlName="prioridade"
+          [options]="prioridadeOpcoes"
+          optionLabel="label"
+          optionValue="value"
+          appendTo="body"
+          class="w-full"
+        />
+      </div>
+    </div>
+
+    <div class="demanda-dialog__linha">
+      <div class="demanda-dialog__campo">
+        <label class="demanda-dialog__label">Status <span class="demanda-dialog__obrigatorio">*</span></label>
+        <p-select
+          formControlName="status"
+          [options]="statusOpcoes"
+          optionLabel="label"
+          optionValue="value"
+          appendTo="body"
+          class="w-full"
+        />
+      </div>
+
+      <div class="demanda-dialog__campo">
+        <label class="demanda-dialog__label">Horas Estimadas <span class="demanda-dialog__obrigatorio">*</span></label>
+        <p-inputnumber
+          formControlName="horasEstimadas"
+          [min]="0"
+          suffix="h"
+          class="w-full"
+        />
+      </div>
+    </div>
+
+    <div class="demanda-dialog__linha">
+      <div class="demanda-dialog__campo">
+        <label class="demanda-dialog__label">Previsão de Término</label>
+        <p-datepicker
+          formControlName="previsaoFimData"
+          dateFormat="dd/mm/yy"
+          [showIcon]="true"
+          appendTo="body"
+          class="w-full"
+        />
+      </div>
+
+      <div class="demanda-dialog__campo">
+        <label class="demanda-dialog__label">Ordem de Exibição</label>
+        <p-inputnumber
+          formControlName="ordemExibicao"
+          [min]="0"
+          class="w-full"
+        />
+      </div>
+    </div>
+
+    <div class="demanda-dialog__campo demanda-dialog__campo--checkbox">
+      <p-checkbox
+        formControlName="isEstrutural"
+        [binary]="true"
+        inputId="isEstruturalDialog"
+      />
+      <label for="isEstruturalDialog" class="demanda-dialog__label--checkbox">
+        Demanda estrutural (agrupa sub-demandas)
+      </label>
+    </div>
+
+  </form>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cancelar"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="fechar()"
+    />
+    <p-button
+      label="Criar Demanda"
+      icon="pi pi-check"
+      [loading]="carregando()"
+      (onClick)="salvar()"
+    />
+  </ng-template>
+</p-dialog>

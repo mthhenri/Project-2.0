@@ -9,8 +9,8 @@
 ## Última Atualização
 
 **Data:** 2026-06-16
-**Task concluída:** 25-frontend-projeto
-**Sessão:** Frontend projeto e tag — cards com cor, badges de status e gestão de tags
+**Task concluída:** 26-frontend-demanda
+**Sessão:** Frontend demanda — grafo D3 com force simulation, árvore recursiva, formulário, detalhe com 6 abas
 
 ---
 
@@ -56,6 +56,7 @@
 - **23-frontend-auth** — tela de login completa: (1) `LoginPage` standalone com `ReactiveFormsModule`, `CardModule`, `InputTextModule`, `PasswordModule`, `ButtonModule`, `MessageModule` do PrimeNG; (2) formulário reativo com signals `carregando` e `erroLogin`; (3) validação inline por campo (`required`, `minLength`) exibida apenas após `touched`; (4) `p-password` com `[feedback]="false"` e `[toggleMask]="true"`; (5) `p-button` com `[loading]="carregando()"`; (6) `p-message` exibindo erro de credenciais via signal; (7) redirecionamento para `/ponto` após login bem-sucedido; (8) `somentePublicoGuard` adicionado ao `autenticacao.guard.ts` — redireciona para `/` se já autenticado; (9) `app.routes.ts` atualizado para aplicar `somentePublicoGuard` na rota `/autenticacao`
 - **24-frontend-usuario** — módulo de usuário completo: (1) `UsuarioService` com 6 métodos HTTP (`listar`, `criar`, `recuperar`, `alterar`, `excluir`, `alterarSenha`); (2) `usuario.routes.ts` com lazy loading para 4 rotas (`''`, `'novo'`, `':id'`, `':id/anotacoes'`); (3) `UsuarioListagemPage` com `p-table` lazy+paginada, filtros por tipo/status via `p-select` com Reactive Forms, badges `p-tag`, confirmação de exclusão via `p-confirmDialog`; (4) `UsuarioFormularioPage` para criação com todos os campos, `p-select` para tipo e horas diárias; (5) `UsuarioPerfilPage` com exibição de dados, `p-dialog` de edição e `p-dialog` de troca de senha com validador customizado `senhasNaoConferem`, permissão via `UsuarioSessaoService.eGestor()`; (6) `UsuarioAnotacoesPage` com `p-editor` (EditorModule) em Reactive Form, redirecionamento automático se não for o próprio usuário; (7) `UsuarioCartaoComponent` com avatar por iniciais, nome e cargo — para uso em listagens de membros
 - **25-frontend-projeto** — módulos de projeto e tag completos: (1) `ProjetoService` com 5 métodos HTTP (`listar`, `criar`, `recuperar`, `alterar`, `excluir`); (2) `projeto.routes.ts` com rotas lazy para listagem (livre), formulário (`gestorGuard`) e detalhe; (3) `ProjetoListagemPage` com grid de cards — barra colorida no topo do card (`cor`), badge de status com severidade (verde/amarelo/azul/vermelho), filtro por status via `p-select`, botão "Novo Projeto" condicional para gestor, paginação com `p-paginator`, confirmação de exclusão; (4) `ProjetoFormularioPage` para criação com `p-colorpicker` (formato hex), `p-datepicker` para datas, validação cross-field `previsaoFimData > inicioData`, código uppercase via SCSS; (5) `ProjetoDetalhePage` com header contendo bolinha de cor + nome + código + badge de status, abas `p-tabs` com "Demandas" (lista das demandas via chamada HTTP direta a `/demanda?projetoId=X`) e "Informações" (dados completos), `p-dialog` de edição para gestores, botão "Nova Demanda" com queryParam `projetoId`; (6) `TagService` com 5 métodos HTTP; (7) `tag.routes.ts` com rota única protegida por `gestorGuard`; (8) `TagListagemPage` com `p-table`, preview de tag com cor (bolinha + badge estilizado com opacidade), dialogs para criação e edição com `p-colorpicker`, prévia em tempo real da tag, confirmação de exclusão
+- **26-frontend-demanda** — módulo de demanda completo: (1) `DemandaGrafoNoDto` e `DemandaGrafoArestaDto` no shared atualizados com `horasEstimadas`, `demandaPaiId`, `id` e `tipo`; (2) backend `DemandaRepository.recuperarGrafo` atualizado com UNION ALL combinando arestas de `demanda_conexao` (tipo `conexao`) e relações pai→filho via `demanda_pai_id` (tipo `hierarquia`); (3) `DemandaService` com 13 métodos HTTP incluindo `listarTags`, `criarConexao`, `excluirConexao`, `listarMembros`, `atribuirMembro`, `removerMembro`; (4) `DemandaGrafoComponent` com D3 v7 force simulation, zoom/pan, drag, nós circulares coloridos por status com raio proporcional a `horasEstimadas`, arestas hierarquia (azul) vs conexão (cinza tracejado), estética Obsidian dark; (5) `DemandaArvoreItemComponent` recursivo via `forwardRef`, exibe badge de status/prioridade, horas e filhos aninhados; (6) `DemandaConexaoListaComponent` para CRUD de conexões; (7) `DemandaMembroListaComponent` para CRUD de membros; (8) `DemandaProjetoPage` com toggle grafo/lista, painel lateral de filtros e legenda, `construirArvore()` O(n) via Map a partir do grafo; (9) `DemandaFormularioPage` para criação e edição com 3 abas de descrição + `AssistenteDescricaoComponent`; (10) `DemandaDetalhePage` com 6 abas (Visão Geral, Sub-demandas, Atividades, Conexões, Tags, Membros), `forkJoin` para carga paralela
 
 ---
 
@@ -67,7 +68,7 @@
 
 ## Próxima Task
 
-**Próxima task a definir** — verificar `docs/specs/backlog/` para a próxima spec disponível (módulos frontend: calendário, demanda, atividade, execução, ponto)
+**27-frontend-atividade** — módulo de atividade no frontend: listagem, formulário e detalhe de atividades com tags e execuções
 
 ---
 
@@ -117,7 +118,7 @@ project-2.0/
 | autenticacao | ✅ implementado (task 23) |
 | usuario | ✅ implementado (task 24) |
 | projeto | ✅ implementado (task 25) |
-| demanda | 🔧 esqueleto (task 21) |
+| demanda | ✅ implementado (task 26) |
 | atividade | 🔧 esqueleto (task 21) |
 | execucao | 🔧 esqueleto (task 21) |
 | ponto | 🔧 esqueleto (task 21) |
@@ -205,6 +206,13 @@ project-2.0/
 - **[task 25]** Validação cross-field `previsaoFimData > inicioData` implementada como validador privado no grupo do form, padrão idêntico ao `validarSenhasIguais` da task 24
 - **[task 25]** `TagListagemPage` usa dialogs para criação e edição (não edição inline em linha de tabela) — mais simples e evita complexidade de estado de edição por linha; spec dizia "Edição inline ou via dialog"
 - **[task 25]** Preview de tag no dialog usa `cor + '22'` e `cor + '55'` (opacidade em hex) para simular aspecto de badge colorido sem variáveis CSS adicionais
+- **[task 26]** `DemandaGrafoComponent` usa D3 v7 force simulation; nós importados do backend já incluem `demandaPaiId` e `horasEstimadas` no `DemandaGrafoNoDto`, evitando segunda chamada HTTP para construção do grafo e da árvore
+- **[task 26]** `DemandaRepository.recuperarGrafo` usa UNION ALL para combinar dois tipos de aresta: `demanda_conexao` (tipo `conexao`) e relações hierárquicas pai→filho via `demanda_pai_id` (tipo `hierarquia`); o campo `tipo` é literal SQL string na mesma query
+- **[task 26]** `DemandaProjetoPage.construirArvore()` constrói a árvore client-side a partir do grafo já carregado via `DemandaGrafoNoDto.demandaPaiId` — elimina chamada extra a `recuperarArvore()` na listagem do projeto
+- **[task 26]** `DemandaArvoreItemComponent` usa `forwardRef(() => DemandaArvoreItemComponent)` no array `imports` para permitir recursão sem erro de referência circular no Angular
+- **[task 26]** `UsuarioListarDto.itensPorPagina` tem `@Max(100)` — a carga de usuários na `DemandaDetalhePage` usa `{ itensPorPagina: 100 }`, não 200
+- **[task 26]** `DemandaDetalhePage` usa `forkJoin` para carregar demanda, ancestrais, arvore, tags disponíveis e usuários em paralelo; tags da demanda (`listarTags`) são carregadas separadamente após o forkJoin pois dependem do `demandaId` confirmado
+- **[task 26]** `subDemandas` na `DemandaDetalhePage` é extraído de `arvore.dados[0]?.filhos` — `recuperarArvore` retorna árvore com a própria demanda como raiz (nivel=0) e seus filhos diretos dentro do nó raiz
 
 ---
 

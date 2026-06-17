@@ -1,0 +1,103 @@
+<div class="demanda-membro-lista">
+  <div class="demanda-membro-lista__cabecalho">
+    <span class="demanda-membro-lista__titulo">
+      Membros
+      @if (membros().length > 0) {
+        <span class="demanda-membro-lista__contador">{{ membros().length }}</span>
+      }
+    </span>
+    @if (sessao.eGestor()) {
+      <p-button
+        icon="pi pi-user-plus"
+        label="Adicionar"
+        size="small"
+        [outlined]="true"
+        (onClick)="abrirDialog()"
+      />
+    }
+  </div>
+
+  @if (carregando()) {
+    <div class="demanda-membro-lista__carregando">
+      <i class="pi pi-spin pi-spinner"></i>
+    </div>
+  }
+
+  @if (!carregando()) {
+    @if (membros().length === 0) {
+      <div class="demanda-membro-lista__vazio">
+        <i class="pi pi-users"></i>
+        <p>Nenhum membro atribuído</p>
+      </div>
+    }
+
+    <div class="demanda-membro-lista__lista">
+      @for (membro of membros(); track membro.usuarioId) {
+        <div class="demanda-membro-lista__item">
+          <div class="demanda-membro-lista__avatar">{{ iniciais(membro.nomeCompleto) }}</div>
+          <div class="demanda-membro-lista__info">
+            <span class="demanda-membro-lista__nome">{{ membro.nomeCompleto }}</span>
+            <span class="demanda-membro-lista__cargo">{{ membro.cargoTitulo }}</span>
+          </div>
+          <p-tag
+            [value]="rotuloTipo(membro.tipo)"
+            [severity]="membro.tipo === tipoEnum.GESTOR ? 'warn' : 'info'"
+          />
+          @if (sessao.eGestor()) {
+            <p-button
+              icon="pi pi-times"
+              severity="danger"
+              [text]="true"
+              size="small"
+              (onClick)="confirmarRemocao(membro)"
+            />
+          }
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- Dialog adicionar membros -->
+<p-dialog
+  header="Adicionar Membros"
+  [(visible)]="mostrarDialog"
+  [modal]="true"
+  [style]="{ width: '420px' }"
+  [draggable]="false"
+>
+  <form [formGroup]="formularioMembro" class="demanda-membro-lista__form">
+    <div class="demanda-membro-lista__form-campo">
+      <label>Usuários <span class="demanda-membro-lista__obrigatorio">*</span></label>
+      <p-multiselect
+        formControlName="usuarioIds"
+        [options]="usuariosDisponiveis()"
+        optionLabel="nomeCompleto"
+        optionValue="id"
+        placeholder="Selecione os usuários..."
+        appendTo="body"
+        [filter]="true"
+        filterPlaceholder="Buscar..."
+        class="w-full"
+      />
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cancelar"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="mostrarDialog.set(false)"
+    />
+    <p-button
+      label="Adicionar"
+      icon="pi pi-check"
+      [loading]="carregandoSalvar()"
+      [disabled]="(formularioMembro.value.usuarioIds?.length ?? 0) === 0"
+      (onClick)="atribuirMembros()"
+    />
+  </ng-template>
+</p-dialog>
+
+<p-confirmDialog />

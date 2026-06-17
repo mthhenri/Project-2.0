@@ -1,0 +1,114 @@
+<div class="demanda-conexao-lista">
+  <div class="demanda-conexao-lista__cabecalho">
+    <span class="demanda-conexao-lista__titulo">
+      Conexões
+      @if (conexoes().length > 0) {
+        <span class="demanda-conexao-lista__contador">{{ conexoes().length }}</span>
+      }
+    </span>
+    @if (sessao.eGestor()) {
+      <p-button
+        icon="pi pi-plus"
+        label="Adicionar"
+        size="small"
+        [outlined]="true"
+        (onClick)="abrirDialog()"
+      />
+    }
+  </div>
+
+  @if (carregando()) {
+    <div class="demanda-conexao-lista__carregando">
+      <i class="pi pi-spin pi-spinner"></i>
+    </div>
+  }
+
+  @if (!carregando()) {
+    @if (conexoes().length === 0) {
+      <div class="demanda-conexao-lista__vazio">
+        <i class="pi pi-share-alt"></i>
+        <p>Nenhuma conexão</p>
+      </div>
+    }
+
+    <div class="demanda-conexao-lista__lista">
+      @for (conexao of conexoes(); track conexao.id) {
+        <div class="demanda-conexao-lista__item">
+          <span
+            class="demanda-conexao-lista__direcao"
+            [class.demanda-conexao-lista__direcao--saida]="conexao.direcao === 'saida'"
+            [class.demanda-conexao-lista__direcao--entrada]="conexao.direcao === 'entrada'"
+            [class.demanda-conexao-lista__direcao--bidirecional]="conexao.direcao === 'bidirecional'"
+          >
+            @if (conexao.direcao === 'saida') {
+              <i class="pi pi-arrow-right"></i>
+            }
+            @if (conexao.direcao === 'entrada') {
+              <i class="pi pi-arrow-left"></i>
+            }
+            @if (conexao.direcao === 'bidirecional') {
+              <i class="pi pi-arrows-h"></i>
+            }
+          </span>
+          <a [routerLink]="['/demanda', conexao.demandaConectadaId]" class="demanda-conexao-lista__nome">
+            {{ conexao.nomeDemandaConectada }}
+          </a>
+          @if (sessao.eGestor()) {
+            <p-button
+              icon="pi pi-trash"
+              severity="danger"
+              [text]="true"
+              size="small"
+              (onClick)="confirmarExclusao(conexao)"
+            />
+          }
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- Dialog adicionar conexão -->
+<p-dialog
+  header="Adicionar Conexão"
+  [(visible)]="mostrarDialog"
+  [modal]="true"
+  [style]="{ width: '400px' }"
+  [draggable]="false"
+>
+  <form [formGroup]="formularioConexao" class="demanda-conexao-lista__form">
+    <div class="demanda-conexao-lista__form-campo">
+      <label>Demanda Destino <span class="demanda-conexao-lista__obrigatorio">*</span></label>
+      <p-select
+        formControlName="demandaDestinoId"
+        [options]="todasDemandas()"
+        optionLabel="nomeDemandaConectada"
+        optionValue="demandaConectadaId"
+        placeholder="Selecione..."
+        appendTo="body"
+        class="w-full"
+      />
+    </div>
+    <div class="demanda-conexao-lista__form-campo demanda-conexao-lista__form-campo--checkbox">
+      <p-checkbox formControlName="ehBidirecional" [binary]="true" inputId="ehBidirecional" />
+      <label for="ehBidirecional">Bidirecional</label>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cancelar"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="mostrarDialog.set(false)"
+    />
+    <p-button
+      label="Adicionar"
+      icon="pi pi-check"
+      [loading]="carregandoSalvar()"
+      (onClick)="criarConexao()"
+    />
+  </ng-template>
+</p-dialog>
+
+<p-confirmDialog />

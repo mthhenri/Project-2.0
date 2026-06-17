@@ -1,0 +1,417 @@
+<p-dialog
+  [header]="demanda()?.nome || 'Demanda'"
+  [visible]="visivel"
+  (visibleChange)="fechar()"
+  [modal]="true"
+  [style]="{ width: 'min(96vw, 1100px)' }"
+  [maximizable]="true"
+  [draggable]="false"
+  [resizable]="false"
+>
+
+  @if (carregando()) {
+    <div class="demanda-detalhe-dialog__carregando">
+      <i class="pi pi-spin pi-spinner text-4xl text-surface-400"></i>
+    </div>
+  }
+
+  @if (!carregando() && demanda()) {
+
+    <!-- Breadcrumb + ações -->
+    <div class="demanda-detalhe-dialog__cabecalho">
+      <div class="demanda-detalhe-dialog__cabecalho-esquerda">
+        @if (ancestrais().length > 0) {
+          <div class="demanda-detalhe-dialog__breadcrumb">
+            @for (ancestral of ancestrais(); track ancestral.id) {
+              <span
+                class="demanda-detalhe-dialog__breadcrumb-item"
+                (click)="navegarParaAncestral(ancestral)"
+              >{{ ancestral.nome }}</span>
+              <i class="pi pi-chevron-right demanda-detalhe-dialog__breadcrumb-sep"></i>
+            }
+          </div>
+        }
+
+        <div class="demanda-detalhe-dialog__identidade">
+          @if (demanda()!.isEstrutural) {
+            <i class="pi pi-folder demanda-detalhe-dialog__icone-estrutural"></i>
+          }
+          <p-tag
+            [value]="rotuloStatus(demanda()!.status)"
+            [severity]="severidadeStatus(demanda()!.status)"
+          />
+        </div>
+      </div>
+
+      @if (sessao.eGestor()) {
+        <div class="demanda-detalhe-dialog__cabecalho-acoes">
+          <p-button
+            label="Desc. Técnica"
+            icon="pi pi-file-edit"
+            severity="secondary"
+            [class.btn-desc--preenchido]="!!demanda()!.descricaoTecnica"
+            [text]="true"
+            size="small"
+            (onClick)="abrirDialogDescricao('descricaoTecnica')"
+          />
+          <p-button
+            label="Desc. Cliente"
+            icon="pi pi-file-edit"
+            severity="secondary"
+            [class.btn-desc--preenchido]="!!demanda()!.descricaoCliente"
+            [text]="true"
+            size="small"
+            (onClick)="abrirDialogDescricao('descricaoCliente')"
+          />
+          <p-button
+            label="Documentação"
+            icon="pi pi-file-edit"
+            severity="secondary"
+            [class.btn-desc--preenchido]="!!demanda()!.documentacao"
+            [text]="true"
+            size="small"
+            (onClick)="abrirDialogDescricao('documentacao')"
+          />
+          <p-button
+            label="Editar"
+            icon="pi pi-pencil"
+            severity="secondary"
+            [outlined]="true"
+            size="small"
+            (onClick)="mostrarDialogEditar.set(true)"
+          />
+          <p-button
+            icon="pi pi-trash"
+            severity="danger"
+            [outlined]="true"
+            size="small"
+            (onClick)="confirmarExclusao()"
+          />
+        </div>
+      }
+    </div>
+
+    <!-- Metadados e descrições sempre visíveis -->
+    <div class="demanda-detalhe-dialog__info-grid">
+      <div class="demanda-detalhe-dialog__info-campo">
+        <span class="demanda-detalhe-dialog__info-label">Status</span>
+        <p-tag
+          [value]="rotuloStatus(demanda()!.status)"
+          [severity]="severidadeStatus(demanda()!.status)"
+        />
+      </div>
+      <div class="demanda-detalhe-dialog__info-campo">
+        <span class="demanda-detalhe-dialog__info-label">Prioridade</span>
+        <span class="demanda-detalhe-dialog__info-valor">{{ demanda()!.prioridade }}</span>
+      </div>
+      <div class="demanda-detalhe-dialog__info-campo">
+        <span class="demanda-detalhe-dialog__info-label">Horas Estimadas</span>
+        <span class="demanda-detalhe-dialog__info-valor">{{ demanda()!.horasEstimadas }}h</span>
+      </div>
+      @if (demanda()!.previsaoFimData) {
+        <div class="demanda-detalhe-dialog__info-campo">
+          <span class="demanda-detalhe-dialog__info-label">Previsão de Término</span>
+          <span class="demanda-detalhe-dialog__info-valor">{{ demanda()!.previsaoFimData | dataBrasileira }}</span>
+        </div>
+      }
+      <div class="demanda-detalhe-dialog__info-campo">
+        <span class="demanda-detalhe-dialog__info-label">Estrutural</span>
+        <span class="demanda-detalhe-dialog__info-valor">{{ demanda()!.isEstrutural ? 'Sim' : 'Não' }}</span>
+      </div>
+    </div>
+
+    <!-- Abas -->
+    <p-tabs value="1" class="demanda-detalhe-dialog__abas">
+      <p-tablist>
+        @if (demanda()!.isEstrutural) {
+          <p-tab value="0"><i class="pi pi-sitemap mr-2"></i>Sub-demandas</p-tab>
+        }
+        <p-tab value="1"><i class="pi pi-check-square mr-2"></i>Atividades</p-tab>
+        <p-tab value="2"><i class="pi pi-share-alt mr-2"></i>Conexões</p-tab>
+        <p-tab value="3"><i class="pi pi-tag mr-2"></i>Tags</p-tab>
+        <p-tab value="4"><i class="pi pi-users mr-2"></i>Membros</p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+
+        <!-- Sub-demandas (apenas demandas estruturais) -->
+        @if (demanda()!.isEstrutural) {
+        <p-tabpanel value="0">
+          <div class="demanda-detalhe-dialog__subdemandas">
+            @if (subDemandas().length === 0) {
+              <div class="demanda-detalhe-dialog__vazio">
+                <i class="pi pi-inbox text-3xl text-surface-300"></i>
+                <p class="text-surface-500 mt-2">Nenhuma sub-demanda</p>
+                @if (sessao.eGestor()) {
+                  <p-button
+                    label="Nova Sub-demanda"
+                    icon="pi pi-plus"
+                    severity="secondary"
+                    [outlined]="true"
+                    size="small"
+                    class="mt-2"
+                    (onClick)="mostrarDialogNovaSubDemanda.set(true)"
+                  />
+                }
+              </div>
+            }
+
+            @for (subDemanda of subDemandas(); track subDemanda.id) {
+              <app-demanda-arvore-item
+                [arvoreItem]="subDemanda"
+                [nivel]="0"
+                (demandaSelecionada)="navegarParaSubDemanda($event)"
+                (demandaEditarSolicitada)="abrirSubEdicao($event)"
+                (demandaEditarDescricaoSolicitada)="abrirDialogDescricaoPorId($event.id, $event.campo)"
+                (demandaNovaFilhaSolicitada)="abrirNovaFilha($event)"
+              />
+            }
+          </div>
+
+          @if (subDemandas().length > 0 && sessao.eGestor()) {
+            <div class="demanda-detalhe-dialog__subdemandas-acao">
+              <p-button
+                label="Nova Sub-demanda"
+                icon="pi pi-plus"
+                severity="secondary"
+                [outlined]="true"
+                size="small"
+                (onClick)="mostrarDialogNovaSubDemanda.set(true)"
+              />
+            </div>
+          }
+        </p-tabpanel>
+        }
+
+        <!-- Atividades -->
+        <p-tabpanel value="1">
+          <div class="demanda-detalhe-dialog__atividades">
+            <div class="demanda-detalhe-dialog__atividades-header">
+              <p-button
+                label="Ver Atividades"
+                icon="pi pi-external-link"
+                severity="secondary"
+                [outlined]="true"
+                size="small"
+                (onClick)="navegarParaAtividades()"
+              />
+            </div>
+            <p class="text-surface-500 text-sm">
+              Gerencie as atividades desta demanda no módulo de atividades.
+            </p>
+          </div>
+        </p-tabpanel>
+
+        <!-- Conexões -->
+        <p-tabpanel value="2">
+          <app-demanda-conexao-lista
+            [demandaId]="demanda()!.id"
+            [todasDemandas]="todasDemandas"
+          />
+        </p-tabpanel>
+
+        <!-- Tags -->
+        <p-tabpanel value="3">
+          <div class="demanda-detalhe-dialog__tags">
+            <div class="demanda-detalhe-dialog__tags-header">
+              <span class="demanda-detalhe-dialog__tags-titulo">
+                Tags
+                @if (tagsDaDemanda().length > 0) {
+                  <span class="demanda-detalhe-dialog__tags-contador">{{ tagsDaDemanda().length }}</span>
+                }
+              </span>
+              @if (sessao.eGestor()) {
+                <p-button
+                  label="Editar"
+                  icon="pi pi-pencil"
+                  severity="secondary"
+                  [outlined]="true"
+                  size="small"
+                  (onClick)="abrirDialogTags()"
+                />
+              }
+            </div>
+
+            @if (tagsDaDemanda().length === 0) {
+              <div class="demanda-detalhe-dialog__tags-vazio">
+                <i class="pi pi-tag"></i>
+                <p>Nenhuma tag atribuída</p>
+              </div>
+            }
+
+            @if (tagsDaDemanda().length > 0) {
+              <div class="demanda-detalhe-dialog__tags-chips">
+                @for (tag of tagsDaDemanda(); track tag.id) {
+                  <span
+                    class="demanda-detalhe-dialog__tag-chip"
+                    [style.background-color]="tag.cor + '22'"
+                    [style.border-color]="tag.cor + '55'"
+                    [style.color]="tag.cor"
+                  >
+                    <span class="demanda-detalhe-dialog__tag-bolinha" [style.background-color]="tag.cor"></span>
+                    {{ tag.nome }}
+                  </span>
+                }
+              </div>
+            }
+          </div>
+        </p-tabpanel>
+
+        <!-- Membros -->
+        <p-tabpanel value="4">
+          <app-demanda-membro-lista
+            [demandaId]="demanda()!.id"
+            [usuariosDisponiveis]="todosUsuarios"
+          />
+        </p-tabpanel>
+
+      </p-tabpanels>
+    </p-tabs>
+  }
+
+  <!-- Footer -->
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Fechar"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="fechar()"
+    />
+  </ng-template>
+
+</p-dialog>
+
+<!-- Dialog de edição de descrição -->
+@if (demanda() && campoDescricaoEditando()) {
+  <p-dialog
+    [header]="tituloDialogDescricao()"
+    [(visible)]="mostrarDialogDescricao"
+    [modal]="true"
+    [style]="{ width: '95vw', height: '95vh' }"
+    [contentStyle]="{ display: 'flex', flexDirection: 'column' }"
+    [draggable]="false"
+    [resizable]="false"
+  >
+    <form [formGroup]="formularioDescricao" class="demanda-detalhe-dialog__descricao-dialog-form">
+      <textarea
+        pTextarea
+        formControlName="valor"
+        rows="8"
+        class="w-full"
+      ></textarea>
+      <app-assistente-descricao
+        [textoAtual]="formularioDescricao.value.valor || ''"
+        tipoEntidade="demanda"
+        [contextoEntidade]="nomeDemandaDescricaoEditando()"
+        (textoAuxiliadoAceito)="aceitarDescricaoAssistente($event)"
+      />
+    </form>
+
+    <ng-template pTemplate="footer">
+      <p-button
+        label="Cancelar"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="mostrarDialogDescricao.set(false)"
+      />
+      <p-button
+        label="Salvar"
+        icon="pi pi-check"
+        [loading]="carregandoSalvarDescricao()"
+        (onClick)="salvarDescricao()"
+      />
+    </ng-template>
+  </p-dialog>
+}
+
+<!-- Dialog de edição -->
+@if (demanda()) {
+  <app-demanda-edicao-dialog
+    [demandaId]="demanda()!.id"
+    [visivel]="mostrarDialogEditar()"
+    (visivelChange)="mostrarDialogEditar.set($event)"
+    (demandaAlterada)="aoDemandaAlterada()"
+  />
+}
+
+<!-- Dialog de tags -->
+<p-dialog
+  header="Editar Tags"
+  [(visible)]="mostrarDialogTags"
+  [modal]="true"
+  [style]="{ width: '420px' }"
+  [draggable]="false"
+>
+  <form [formGroup]="formularioTags" class="demanda-detalhe-dialog__dialog-form">
+    <div class="demanda-detalhe-dialog__tags-selecao">
+      @for (tag of tagsDisponiveis(); track tag.id) {
+        <label class="demanda-detalhe-dialog__tag-opcao">
+          <input
+            type="checkbox"
+            [value]="tag.id"
+            [checked]="(formularioTags.value.tagIds || []).includes(tag.id)"
+            (change)="toggleTag(tag.id, $event)"
+          />
+          <span
+            class="demanda-detalhe-dialog__tag-chip"
+            [style.background-color]="tag.cor + '22'"
+            [style.border-color]="tag.cor + '55'"
+            [style.color]="tag.cor"
+          >
+            <span class="demanda-detalhe-dialog__tag-bolinha" [style.background-color]="tag.cor"></span>
+            {{ tag.nome }}
+          </span>
+        </label>
+      }
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cancelar"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="mostrarDialogTags.set(false)"
+    />
+    <p-button
+      label="Salvar"
+      icon="pi pi-check"
+      [loading]="carregandoSalvar()"
+      (onClick)="salvarTags()"
+    />
+  </ng-template>
+</p-dialog>
+
+<p-confirmDialog />
+
+<!-- Dialog de nova sub-demanda -->
+@if (demanda()) {
+  <app-demanda-formulario-dialog
+    [projetoId]="demanda()!.projetoId"
+    [demandaPaiIdInicial]="demanda()!.id"
+    [visivel]="mostrarDialogNovaSubDemanda()"
+    (visivelChange)="mostrarDialogNovaSubDemanda.set($event)"
+    (demandaCriada)="aoDemandaCriada()"
+  />
+}
+
+<!-- Dialog de nova sub-demanda de filho (via context menu) -->
+@if (demanda() && demandaPaiIdNovaFilha()) {
+  <app-demanda-formulario-dialog
+    [projetoId]="demanda()!.projetoId"
+    [demandaPaiIdInicial]="demandaPaiIdNovaFilha()"
+    [visivel]="mostrarDialogNovaFilha()"
+    (visivelChange)="mostrarDialogNovaFilha.set($event)"
+    (demandaCriada)="aoDemandaCriada()"
+  />
+}
+
+<!-- Dialog de edição de sub-demanda -->
+@if (demandaIdSubEdicao()) {
+  <app-demanda-edicao-dialog
+    [demandaId]="demandaIdSubEdicao()"
+    [visivel]="mostrarDialogSubEdicao()"
+    (visivelChange)="mostrarDialogSubEdicao.set($event)"
+    (demandaAlterada)="aoDemandaCriada()"
+  />
+}

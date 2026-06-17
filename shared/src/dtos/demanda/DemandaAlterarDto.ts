@@ -56,7 +56,7 @@ export class DemandaAlterarDto {
   @IsEnum(DemandaPrioridadeEnum)
   prioridade?: DemandaPrioridadeEnum;
 
-  @ApiPropertyOptional({ enum: DemandaStatusEnum, example: DemandaStatusEnum.EM_DESENVOLVIMENTO })
+  @ApiPropertyOptional({ enum: DemandaStatusEnum, example: DemandaStatusEnum.PLANEJADA })
   @IsOptional()
   @IsEnum(DemandaStatusEnum)
   status?: DemandaStatusEnum;

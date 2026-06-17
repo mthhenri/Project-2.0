@@ -345,6 +345,10 @@ export class DemandaRepository extends BaseRepository<Demanda> {
     isEstrutural: boolean;
     horasEstimadas: number;
     nivel: number;
+    temDescricaoTecnica: boolean;
+    temDescricaoCliente: boolean;
+    temDocumentacao: boolean;
+    tags: TagResumoDto[];
   }[]> {
     return this.executarConsulta<{
       id: number;
@@ -355,6 +359,10 @@ export class DemandaRepository extends BaseRepository<Demanda> {
       isEstrutural: boolean;
       horasEstimadas: number;
       nivel: number;
+      temDescricaoTecnica: boolean;
+      temDescricaoCliente: boolean;
+      temDocumentacao: boolean;
+      tags: TagResumoDto[];
     }>(
       `WITH RECURSIVE arvore_demanda AS (
          SELECT id, demanda_pai_id, nome, status, prioridade, is_estrutural,
@@ -374,16 +382,29 @@ export class DemandaRepository extends BaseRepository<Demanda> {
          WHERE demanda_filho.is_deleted = false
        )
        SELECT
-         id,
-         demanda_pai_id  AS "demandaPaiId",
-         nome,
-         status,
-         prioridade,
-         is_estrutural   AS "isEstrutural",
-         horas_estimadas AS "horasEstimadas",
-         nivel
+         arvore_demanda.id,
+         arvore_demanda.demanda_pai_id  AS "demandaPaiId",
+         arvore_demanda.nome,
+         arvore_demanda.status,
+         arvore_demanda.prioridade,
+         arvore_demanda.is_estrutural   AS "isEstrutural",
+         arvore_demanda.horas_estimadas AS "horasEstimadas",
+         arvore_demanda.nivel,
+         NULLIF(demanda.descricao_tecnica, '') IS NOT NULL AS "temDescricaoTecnica",
+         NULLIF(demanda.descricao_cliente,  '') IS NOT NULL AS "temDescricaoCliente",
+         NULLIF(demanda.documentacao,        '') IS NOT NULL AS "temDocumentacao",
+         COALESCE(
+           (
+             SELECT JSON_AGG(JSON_BUILD_OBJECT('id', tag.id, 'nome', tag.nome, 'cor', tag.cor))
+             FROM demanda_tag
+             INNER JOIN tag ON tag.id = demanda_tag.tag_id AND tag.is_deleted = false
+             WHERE demanda_tag.demanda_id = arvore_demanda.id AND demanda_tag.is_deleted = false
+           ),
+           '[]'::json
+         ) AS tags
        FROM arvore_demanda
-       ORDER BY nivel, nome`,
+       INNER JOIN demanda ON demanda.id = arvore_demanda.id
+       ORDER BY arvore_demanda.nivel, arvore_demanda.nome`,
       { demandaId: dto.demandaId },
     );
   }
@@ -445,7 +466,8 @@ export class DemandaRepository extends BaseRepository<Demanda> {
 
   /**
    * Retorna todos os nós e arestas do grafo de demandas de um projeto.
-   * Arestas incluem conexões explícitas via demanda_conexao onde origem e destino pertencem ao projeto.
+   * Nós incluem horasEstimadas e demandaPaiId para renderização no grafo.
+   * Arestas incluem relações pai-filho (hierarquia) e conexões explícitas (demanda_conexao).
    */
   async recuperarGrafo(dto: DemandaGrafoRecuperarDto): Promise<DemandaGrafoDto> {
     const nos = await this.executarConsulta<DemandaGrafoNoDto>(
@@ -454,7 +476,21 @@ export class DemandaRepository extends BaseRepository<Demanda> {
          demanda.nome,
          demanda.status,
          demanda.prioridade,
-         demanda.is_estrutural AS "isEstrutural"
+         demanda.is_estrutural    AS "isEstrutural",
+         demanda.horas_estimadas  AS "horasEstimadas",
+         demanda.demanda_pai_id   AS "demandaPaiId",
+         NULLIF(demanda.descricao_tecnica, '') IS NOT NULL AS "temDescricaoTecnica",
+         NULLIF(demanda.descricao_cliente,  '') IS NOT NULL AS "temDescricaoCliente",
+         NULLIF(demanda.documentacao,        '') IS NOT NULL AS "temDocumentacao",
+         COALESCE(
+           (
+             SELECT JSON_AGG(JSON_BUILD_OBJECT('id', tag.id, 'nome', tag.nome, 'cor', tag.cor))
+             FROM demanda_tag
+             INNER JOIN tag ON tag.id = demanda_tag.tag_id AND tag.is_deleted = false
+             WHERE demanda_tag.demanda_id = demanda.id AND demanda_tag.is_deleted = false
+           ),
+           '[]'::json
+         ) AS tags
        FROM demanda
        WHERE demanda.projeto_id = :projetoId
          AND demanda.is_deleted = false
@@ -464,9 +500,11 @@ export class DemandaRepository extends BaseRepository<Demanda> {
 
     const arestas = await this.executarConsulta<DemandaGrafoArestaDto>(
       `SELECT
-         demanda_conexao.demanda_origem_id  AS "origemId",
-         demanda_conexao.demanda_destino_id AS "destinoId",
-         demanda_conexao.eh_bidirecional    AS "ehBidirecional"
+         demanda_conexao.id                   AS "id",
+         demanda_conexao.demanda_origem_id    AS "origemId",
+         demanda_conexao.demanda_destino_id   AS "destinoId",
+         'conexao'                            AS "tipo",
+         demanda_conexao.eh_bidirecional      AS "ehBidirecional"
        FROM demanda_conexao
        INNER JOIN demanda AS demanda_origem
          ON demanda_origem.id = demanda_conexao.demanda_origem_id
@@ -476,7 +514,20 @@ export class DemandaRepository extends BaseRepository<Demanda> {
          ON demanda_destino.id = demanda_conexao.demanda_destino_id
          AND demanda_destino.projeto_id = :projetoId
          AND demanda_destino.is_deleted = false
-       WHERE demanda_conexao.is_deleted = false`,
+       WHERE demanda_conexao.is_deleted = false
+
+       UNION ALL
+
+       SELECT
+         demanda_filho.id                AS "id",
+         demanda_filho.demanda_pai_id    AS "origemId",
+         demanda_filho.id                AS "destinoId",
+         'hierarquia'                    AS "tipo",
+         false                           AS "ehBidirecional"
+       FROM demanda AS demanda_filho
+       WHERE demanda_filho.projeto_id = :projetoId
+         AND demanda_filho.demanda_pai_id IS NOT NULL
+         AND demanda_filho.is_deleted = false`,
       { projetoId: dto.projetoId },
     );
 

@@ -73,6 +73,12 @@ export class DemandaService {
           'A demanda pai deve pertencer ao mesmo projeto',
         );
       }
+
+      if (!demandaPaiEncontrada.isEstrutural) {
+        throw new BusinessException(
+          'Apenas demandas estruturais podem ter sub-demandas',
+        );
+      }
     }
 
     const gestoresAtivos = await this.usuarioRepositorio.listarGestoresAtivos();
@@ -243,14 +249,18 @@ export class DemandaService {
     const mapa = new Map<number, DemandaArvoreItemDto>();
     for (const item of descendentes) {
       mapa.set(item.id, {
-        id:             item.id,
-        nome:           item.nome,
-        status:         item.status,
-        prioridade:     item.prioridade,
-        isEstrutural:   item.isEstrutural,
-        horasEstimadas: item.horasEstimadas,
-        nivel:          item.nivel,
-        filhos:         [],
+        id:                  item.id,
+        nome:                item.nome,
+        status:              item.status,
+        prioridade:          item.prioridade,
+        isEstrutural:        item.isEstrutural,
+        horasEstimadas:      item.horasEstimadas,
+        temDescricaoTecnica: item.temDescricaoTecnica,
+        temDescricaoCliente: item.temDescricaoCliente,
+        temDocumentacao:     item.temDocumentacao,
+        tags:                item.tags,
+        nivel:               item.nivel,
+        filhos:              [],
       });
     }
 
