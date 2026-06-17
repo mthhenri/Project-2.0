@@ -22,15 +22,20 @@ export class TagRepository extends BaseRepository<Tag> {
     super(conexaoBancoDados, 'tag');
   }
 
-  /** Verifica se já existe tag ativa com o mesmo nome. */
+  /** Verifica se já existe tag ativa com o mesmo nome, opcionalmente excluindo um ID. */
   async validarNome(dto: TagValidarNomeDto): Promise<boolean> {
+    const clausulaExcluirId = dto.idExcluir !== undefined
+      ? 'AND tag.id <> :idExcluir'
+      : '';
+
     const resultado = await this.executarConsulta<{ existe: boolean }>(
       `SELECT EXISTS(
          SELECT 1 FROM tag
          WHERE tag.nome = :nome
            AND tag.is_deleted = false
+           ${clausulaExcluirId}
        ) AS existe`,
-      { nome: dto.nome },
+      { nome: dto.nome, idExcluir: dto.idExcluir },
     );
     return resultado[0].existe;
   }

@@ -35,8 +35,6 @@
             [outlined]="true"
             (onClick)="abrirDialogSenha()"
           />
-        }
-        @if (podeEditar()) {
           <p-button
             label="Anotações"
             icon="pi pi-file-edit"
@@ -82,18 +80,6 @@
           </div>
         </div>
 
-        @if (podeEditar()) {
-          <div class="usuario-perfil__card-rodape">
-            <button
-              type="button"
-              class="usuario-perfil__link-anotacoes"
-              (click)="anotacoesDialog.abrir(usuario()!.id, usuario()!.nomeCompleto)"
-            >
-              <i class="pi pi-file-edit"></i>
-              {{ ehProprioUsuario() ? 'Minhas Anotações' : 'Anotações' }}
-            </button>
-          </div>
-        }
       </div>
     </div>
   }

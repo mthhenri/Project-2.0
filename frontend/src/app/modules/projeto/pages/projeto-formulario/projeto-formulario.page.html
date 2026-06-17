@@ -1,0 +1,141 @@
+<div class="projeto-formulario">
+  <div class="projeto-formulario__cabecalho">
+    <p-button
+      icon="pi pi-arrow-left"
+      [text]="true"
+      severity="secondary"
+      size="small"
+      label="Projetos"
+      (onClick)="cancelar()"
+    />
+    <h1 class="projeto-formulario__titulo">Novo Projeto</h1>
+  </div>
+
+  <div class="projeto-formulario__card">
+    <form [formGroup]="formulario" (ngSubmit)="salvar()" class="projeto-formulario__form">
+
+      <div class="projeto-formulario__linha">
+        <div class="projeto-formulario__campo projeto-formulario__campo--largo">
+          <label for="nome" class="projeto-formulario__label">
+            Nome <span class="projeto-formulario__obrigatorio">*</span>
+          </label>
+          <input
+            id="nome"
+            pInputText
+            formControlName="nome"
+            placeholder="ex: Sistema de Gestão"
+            class="w-full"
+          />
+          @if (campoInvalido('nome')) {
+            <small class="projeto-formulario__erro">Nome é obrigatório</small>
+          }
+        </div>
+
+        <div class="projeto-formulario__campo">
+          <label for="codigo" class="projeto-formulario__label">
+            Código <span class="projeto-formulario__obrigatorio">*</span>
+          </label>
+          <input
+            id="codigo"
+            pInputText
+            formControlName="codigo"
+            placeholder="ex: PROJ-001"
+            class="w-full projeto-formulario__input-codigo"
+          />
+          @if (campoInvalido('codigo')) {
+            <small class="projeto-formulario__erro">Código é obrigatório</small>
+          }
+        </div>
+      </div>
+
+      <div class="projeto-formulario__linha">
+        <div class="projeto-formulario__campo">
+          <label for="status" class="projeto-formulario__label">
+            Status <span class="projeto-formulario__obrigatorio">*</span>
+          </label>
+          <p-select
+            inputId="status"
+            formControlName="status"
+            [options]="statusOpcoes"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Selecione o status"
+            class="w-full"
+          />
+          @if (campoInvalido('status')) {
+            <small class="projeto-formulario__erro">Status é obrigatório</small>
+          }
+        </div>
+
+        <div class="projeto-formulario__campo">
+          <label class="projeto-formulario__label">
+            Cor de identificação <span class="projeto-formulario__obrigatorio">*</span>
+          </label>
+          <div class="projeto-formulario__cor-wrapper">
+            <p-colorpicker formControlName="cor" format="hex" />
+            <span class="projeto-formulario__cor-preview" [style.background-color]="formulario.value.cor"></span>
+            <input
+              type="text"
+              class="projeto-formulario__cor-input"
+              [value]="formulario.value.cor || ''"
+              (input)="digitarCor($event, formulario.get('cor'))"
+              placeholder="#3b82f6"
+              maxlength="7"
+              spellcheck="false"
+              autocomplete="off"
+            />
+          </div>
+          @if (campoInvalido('cor')) {
+            <small class="projeto-formulario__erro">Cor é obrigatória (formato hex)</small>
+          }
+        </div>
+      </div>
+
+      <div class="projeto-formulario__linha">
+        <div class="projeto-formulario__campo">
+          <label for="inicioData" class="projeto-formulario__label">Data de Início</label>
+          <p-datepicker
+            inputId="inicioData"
+            formControlName="inicioData"
+            dateFormat="dd/mm/yy"
+            placeholder="dd/mm/aaaa"
+            [showIcon]="true"
+            class="w-full"
+          />
+        </div>
+
+        <div class="projeto-formulario__campo">
+          <label for="previsaoFimData" class="projeto-formulario__label">Previsão de Término</label>
+          <p-datepicker
+            inputId="previsaoFimData"
+            formControlName="previsaoFimData"
+            dateFormat="dd/mm/yy"
+            placeholder="dd/mm/aaaa"
+            [showIcon]="true"
+            class="w-full"
+          />
+          @if (previsaoAnteriorAoInicio) {
+            <small class="projeto-formulario__erro">Previsão deve ser posterior à data de início</small>
+          }
+        </div>
+      </div>
+
+      <div class="projeto-formulario__acoes">
+        <p-button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="cancelar()"
+        />
+        <p-button
+          type="submit"
+          label="Salvar"
+          icon="pi pi-check"
+          [loading]="carregando()"
+        />
+      </div>
+
+    </form>
+  </div>
+</div>

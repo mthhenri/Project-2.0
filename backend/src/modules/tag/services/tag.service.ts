@@ -68,7 +68,7 @@ export class TagService {
     }
 
     if (dto.nome !== undefined) {
-      const nomeJaExiste = await this.tagRepositorio.validarNome({ nome: dto.nome });
+      const nomeJaExiste = await this.tagRepositorio.validarNome({ nome: dto.nome, idExcluir: id });
       if (nomeJaExiste) {
         throw new BusinessException('Já existe uma tag com esse nome');
       }

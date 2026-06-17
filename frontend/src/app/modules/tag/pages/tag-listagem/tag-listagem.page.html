@@ -1,0 +1,199 @@
+<div class="tag-listagem">
+  <div class="tag-listagem__cabecalho">
+    <h1 class="tag-listagem__titulo">Gerenciar Tags</h1>
+    <p-button
+      label="Nova Tag"
+      icon="pi pi-plus"
+      (onClick)="abrirDialogNova()"
+    />
+  </div>
+
+  @if (carregando()) {
+    <div class="tag-listagem__carregando">
+      <i class="pi pi-spin pi-spinner text-4xl text-surface-400"></i>
+    </div>
+  }
+
+  @if (!carregando()) {
+    @if (tags().length === 0) {
+      <div class="tag-listagem__vazio">
+        <i class="pi pi-tags text-4xl text-surface-300"></i>
+        <p class="text-surface-500 mt-3">Nenhuma tag cadastrada</p>
+      </div>
+    } @else {
+      <div class="tag-listagem__grid">
+        @for (tag of tags(); track tag.id) {
+          <div class="tag-listagem__item">
+            <span
+              class="tag-listagem__tag-preview"
+              [style.background-color]="tag.cor + '22'"
+              [style.color]="tag.cor"
+              [style.border-color]="tag.cor + '55'"
+            >
+              {{ tag.nome }}
+            </span>
+            <div class="tag-listagem__acoes">
+              <p-button
+                icon="pi pi-pencil"
+                [text]="true"
+                size="small"
+                pTooltip="Editar"
+                tooltipPosition="left"
+                (onClick)="abrirDialogEditar(tag)"
+              />
+              <p-button
+                icon="pi pi-trash"
+                [text]="true"
+                severity="danger"
+                size="small"
+                pTooltip="Excluir"
+                tooltipPosition="left"
+                (onClick)="confirmarExclusao(tag)"
+              />
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
+</div>
+
+<p-confirmDialog />
+
+<!-- Dialog: nova tag -->
+<p-dialog
+  header="Nova Tag"
+  [(visible)]="mostrarDialogNova"
+  [modal]="true"
+  [style]="{ width: '420px' }"
+  [draggable]="false"
+>
+  <form [formGroup]="formularioNova" class="tag-listagem__dialog-form">
+    <div class="tag-listagem__dialog-campo">
+      <label class="tag-listagem__label">Nome <span class="tag-listagem__obrigatorio">*</span></label>
+      <input pInputText formControlName="nome" placeholder="ex: Backend" class="w-full" />
+      @if (campoNovaInvalido('nome')) {
+        <small class="tag-listagem__erro">Nome é obrigatório</small>
+      }
+    </div>
+
+    <div class="tag-listagem__dialog-campo">
+      <label class="tag-listagem__label">Cor <span class="tag-listagem__obrigatorio">*</span></label>
+      <div class="tag-listagem__cor-wrapper">
+        <p-colorpicker formControlName="cor" format="hex" appendTo="body" />
+        <span
+          class="tag-listagem__cor-preview"
+          [style.background-color]="formularioNova.value.cor"
+        ></span>
+        <input
+          type="text"
+          class="tag-listagem__cor-input"
+          [value]="formularioNova.value.cor || ''"
+          (input)="digitarCor($event, formularioNova.get('cor'))"
+          placeholder="#3b82f6"
+          maxlength="7"
+          spellcheck="false"
+          autocomplete="off"
+        />
+      </div>
+    </div>
+
+    @if (formularioNova.value.nome && formularioNova.value.cor) {
+      <div class="tag-listagem__preview-bloco">
+        <span class="tag-listagem__label">Prévia:</span>
+        <span
+          class="tag-listagem__tag-preview"
+          [style.background-color]="formularioNova.value.cor + '22'"
+          [style.color]="formularioNova.value.cor"
+          [style.border-color]="formularioNova.value.cor + '55'"
+        >
+          {{ formularioNova.value.nome }}
+        </span>
+      </div>
+    }
+  </form>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cancelar"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="mostrarDialogNova.set(false)"
+    />
+    <p-button
+      label="Criar"
+      icon="pi pi-check"
+      [loading]="carregandoSalvar()"
+      (onClick)="salvarNova()"
+    />
+  </ng-template>
+</p-dialog>
+
+<!-- Dialog: editar tag -->
+<p-dialog
+  header="Editar Tag"
+  [(visible)]="mostrarDialogEditar"
+  [modal]="true"
+  [style]="{ width: '420px' }"
+  [draggable]="false"
+>
+  <form [formGroup]="formularioEditar" class="tag-listagem__dialog-form">
+    <div class="tag-listagem__dialog-campo">
+      <label class="tag-listagem__label">Nome <span class="tag-listagem__obrigatorio">*</span></label>
+      <input pInputText formControlName="nome" class="w-full" />
+      @if (campoEditarInvalido('nome')) {
+        <small class="tag-listagem__erro">Nome é obrigatório</small>
+      }
+    </div>
+
+    <div class="tag-listagem__dialog-campo">
+      <label class="tag-listagem__label">Cor <span class="tag-listagem__obrigatorio">*</span></label>
+      <div class="tag-listagem__cor-wrapper">
+        <p-colorpicker formControlName="cor" format="hex" appendTo="body" />
+        <span
+          class="tag-listagem__cor-preview"
+          [style.background-color]="formularioEditar.value.cor"
+        ></span>
+        <input
+          type="text"
+          class="tag-listagem__cor-input"
+          [value]="formularioEditar.value.cor || ''"
+          (input)="digitarCor($event, formularioEditar.get('cor'))"
+          placeholder="#3b82f6"
+          maxlength="7"
+          spellcheck="false"
+          autocomplete="off"
+        />
+      </div>
+    </div>
+
+    @if (formularioEditar.value.nome && formularioEditar.value.cor) {
+      <div class="tag-listagem__preview-bloco">
+        <span class="tag-listagem__label">Prévia:</span>
+        <span
+          class="tag-listagem__tag-preview"
+          [style.background-color]="formularioEditar.value.cor + '22'"
+          [style.color]="formularioEditar.value.cor"
+          [style.border-color]="formularioEditar.value.cor + '55'"
+        >
+          {{ formularioEditar.value.nome }}
+        </span>
+      </div>
+    }
+  </form>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cancelar"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="mostrarDialogEditar.set(false)"
+    />
+    <p-button
+      label="Salvar"
+      icon="pi pi-check"
+      [loading]="carregandoSalvar()"
+      (onClick)="salvarEdicao()"
+    />
+  </ng-template>
+</p-dialog>

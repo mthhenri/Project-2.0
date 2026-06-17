@@ -50,9 +50,9 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
          codigo,
          cor,
          status,
-         inicio_data        AS "inicioData",
-         previsao_fim_data  AS "previsaoFimData",
-         created_date       AS "createdDate"`,
+         inicio_data::text       AS "inicioData",
+         previsao_fim_data::text AS "previsaoFimData",
+         created_date            AS "createdDate"`,
       {
         nome:            dados.nome,
         codigo:          dados.codigo,
@@ -74,9 +74,9 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
          projeto.codigo,
          projeto.cor,
          projeto.status,
-         projeto.inicio_data       AS "inicioData",
-         projeto.previsao_fim_data AS "previsaoFimData",
-         projeto.created_date      AS "createdDate"
+         projeto.inicio_data::text       AS "inicioData",
+         projeto.previsao_fim_data::text AS "previsaoFimData",
+         projeto.created_date            AS "createdDate"
        FROM projeto
        WHERE projeto.id = :id
          AND projeto.is_deleted = false
@@ -222,9 +222,9 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
          codigo,
          cor,
          status,
-         inicio_data       AS "inicioData",
-         previsao_fim_data AS "previsaoFimData",
-         created_date      AS "createdDate"`,
+         inicio_data::text       AS "inicioData",
+         previsao_fim_data::text AS "previsaoFimData",
+         created_date            AS "createdDate"`,
       parametros,
     );
     return resultado[0];

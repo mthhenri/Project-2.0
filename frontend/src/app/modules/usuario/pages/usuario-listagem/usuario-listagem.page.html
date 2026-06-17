@@ -10,8 +10,9 @@
 
   <form [formGroup]="formularioFiltros" class="usuario-listagem__filtros">
     <div class="usuario-listagem__filtro-campo">
-      <label class="usuario-listagem__filtro-label">Tipo</label>
+      <label for="filtro-tipo" class="usuario-listagem__filtro-label">Tipo</label>
       <p-select
+        inputId="filtro-tipo"
         formControlName="tipo"
         [options]="tiposOpcoes"
         optionLabel="label"
@@ -22,8 +23,9 @@
       />
     </div>
     <div class="usuario-listagem__filtro-campo">
-      <label class="usuario-listagem__filtro-label">Status</label>
+      <label for="filtro-status" class="usuario-listagem__filtro-label">Status</label>
       <p-select
+        inputId="filtro-status"
         formControlName="status"
         [options]="statusOpcoes"
         optionLabel="label"
@@ -79,7 +81,7 @@
         <td>
           <div class="usuario-listagem__acoes">
             <p-button
-              icon="pi pi-pencil"
+              icon="pi pi-eye"
               [text]="true"
               size="small"
               pTooltip="Visualizar perfil"
@@ -113,8 +115,11 @@
 
     <ng-template pTemplate="empty">
       <tr>
-        <td colspan="6" class="text-center text-surface-600 py-6">
-          Nenhum usuário encontrado
+        <td colspan="6">
+          <div class="usuario-listagem__vazio">
+            <i class="pi pi-users text-4xl text-surface-300"></i>
+            <p class="text-surface-500 mt-3">Nenhum usuário encontrado</p>
+          </div>
         </td>
       </tr>
     </ng-template>

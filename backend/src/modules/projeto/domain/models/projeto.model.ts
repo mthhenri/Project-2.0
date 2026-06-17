@@ -6,6 +6,6 @@ export class Projeto extends BaseEntity {
   codigo: string;
   cor: string;
   status: ProjetoStatusEnum;
-  inicioData: Date | null;
-  previsaoFimData: Date | null;
+  inicioData: string | null;
+  previsaoFimData: string | null;
 }

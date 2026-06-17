@@ -37,8 +37,8 @@ export class ProjetoService {
       codigo:          dto.codigo,
       cor:             dto.cor,
       status:          dto.status,
-      inicioData:      dto.inicioData ? new Date(dto.inicioData) : null,
-      previsaoFimData: dto.previsaoFimData ? new Date(dto.previsaoFimData) : null,
+      inicioData:      dto.inicioData      ?? null,
+      previsaoFimData: dto.previsaoFimData ?? null,
     });
 
     return {
@@ -133,8 +133,8 @@ export class ProjetoService {
       nome:            dto.nome,
       cor:             dto.cor,
       status:          dto.status,
-      inicioData:      dto.inicioData      ? new Date(dto.inicioData)      : undefined,
-      previsaoFimData: dto.previsaoFimData ? new Date(dto.previsaoFimData) : undefined,
+      inicioData:      dto.inicioData,
+      previsaoFimData: dto.previsaoFimData,
     });
 
     return {

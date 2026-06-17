@@ -34,15 +34,6 @@
     flex-direction: column;
     gap: 0.375rem;
     margin-bottom: 1.25rem;
-
-    input {
-      text-align: center;
-    }
-
-    ::ng-deep .p-password input {
-      text-align: center;
-      padding-left: 2.5rem;
-    }
   }
 
   &__label {

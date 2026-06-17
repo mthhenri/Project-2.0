@@ -1,0 +1,92 @@
+<div class="projeto-listagem">
+  <div class="projeto-listagem__cabecalho">
+    <h1 class="projeto-listagem__titulo">Projetos</h1>
+    @if (sessao.eGestor()) {
+      <p-button
+        label="Novo Projeto"
+        icon="pi pi-plus"
+        (onClick)="navegarParaNovo()"
+      />
+    }
+  </div>
+
+  <form [formGroup]="formularioFiltros" class="projeto-listagem__filtros">
+    <div class="projeto-listagem__filtro-campo">
+      <label for="filtro-status" class="projeto-listagem__filtro-label">Status</label>
+      <p-select
+        inputId="filtro-status"
+        formControlName="status"
+        [options]="statusOpcoes"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Filtrar por status"
+        (onChange)="aoMudarFiltro()"
+        class="w-full"
+      />
+    </div>
+  </form>
+
+  @if (carregando()) {
+    <div class="projeto-listagem__carregando">
+      <i class="pi pi-spin pi-spinner text-4xl text-surface-400"></i>
+    </div>
+  }
+
+  @if (!carregando()) {
+    @if (projetos().length === 0) {
+      <div class="projeto-listagem__vazio">
+        <i class="pi pi-folder-open text-5xl text-surface-300"></i>
+        <p class="text-surface-500 mt-3">Nenhum projeto encontrado</p>
+      </div>
+    }
+
+    <div class="projeto-listagem__grid">
+      @for (projeto of projetos(); track projeto.id) {
+        <div
+          class="projeto-listagem__card"
+          (click)="navegarParaDetalhe(projeto)"
+        >
+          <div class="projeto-listagem__card-cor" [style.background-color]="projeto.cor"></div>
+
+          <div class="projeto-listagem__card-conteudo">
+            <div class="projeto-listagem__card-topo">
+              <span class="projeto-listagem__card-codigo">{{ projeto.codigo }}</span>
+              <p-tag
+                [value]="rotuloStatus(projeto.status)"
+                [severity]="severidadeStatus(projeto.status)"
+              />
+            </div>
+
+            <h3 class="projeto-listagem__card-nome">{{ projeto.nome }}</h3>
+
+            @if (sessao.eGestor()) {
+              <div class="projeto-listagem__card-rodape">
+                <p-button
+                  icon="pi pi-trash"
+                  [text]="true"
+                  severity="danger"
+                  size="small"
+                  pTooltip="Excluir projeto"
+                  tooltipPosition="left"
+                  (onClick)="confirmarExclusao(projeto, $event)"
+                />
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    @if (totalRegistros() > itensPorPagina()) {
+      <p-paginator
+        [rows]="itensPorPagina()"
+        [totalRecords]="totalRegistros()"
+        [first]="(paginaAtual() - 1) * itensPorPagina()"
+        (onPageChange)="aoMudarPagina($event)"
+        class="projeto-listagem__paginador"
+      />
+    }
+  }
+</div>
+
+<p-confirmDialog />

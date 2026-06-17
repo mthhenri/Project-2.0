@@ -34,7 +34,7 @@
 
     <p-popover #perfilPopover>
       @if (sessao.usuarioAtual()) {
-        <div class="flex flex-col gap-3 p-1" style="min-width: 180px">
+        <div class="flex flex-col gap-3 p-1 min-w-[180px]">
           <div>
             <div class="font-semibold text-surface-800">{{ sessao.nomeCompleto() }}</div>
             <div class="text-sm text-surface-500">&#64;{{ sessao.login() }}</div>

@@ -1,0 +1,74 @@
+// Mixins reutilizáveis para padrões de formulário e diálogo
+
+@mixin form-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--p-text-color);
+}
+
+@mixin form-obrigatorio {
+  color: var(--p-red-500);
+}
+
+@mixin form-erro {
+  font-size: 0.75rem;
+  color: var(--p-red-500);
+}
+
+@mixin form-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+@mixin form-dialog-form($gap: 1rem, $padding-top: 0.25rem) {
+  display: flex;
+  flex-direction: column;
+  gap: $gap;
+  padding-top: $padding-top;
+}
+
+@mixin form-dialog-linha {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@mixin form-cor-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+@mixin form-cor-preview {
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--p-surface-300);
+  flex-shrink: 0;
+}
+
+@mixin form-cor-valor {
+  font-size: 0.875rem;
+  color: var(--p-text-muted-color);
+  font-family: monospace;
+}
+
+@mixin form-cor-input {
+  font-size: 0.875rem;
+  font-family: monospace;
+  color: var(--p-text-color);
+  width: 9ch;
+  padding: 0.2rem 0.4rem;
+  border: 1px solid var(--p-surface-300);
+  border-radius: 4px;
+  background: transparent;
+  outline: none;
+  transition: border-color 0.15s;
+
+  &:focus {
+    border-color: var(--p-primary-color);
+    box-shadow: 0 0 0 1px var(--p-primary-color);
+  }
+}

@@ -9,8 +9,8 @@
 ## Última Atualização
 
 **Data:** 2026-06-16
-**Task concluída:** 24-frontend-usuario
-**Sessão:** Frontend usuario — listagem, formulário, perfil e anotações com p-editor
+**Task concluída:** 25-frontend-projeto
+**Sessão:** Frontend projeto e tag — cards com cor, badges de status e gestão de tags
 
 ---
 
@@ -55,6 +55,7 @@
 - **22-frontend-core** — implementação completa da infraestrutura cross-cutting do frontend: (1) signal `carregamento` (renomeado de `carregamentoAtivo`) e `usuarioAutenticado` tipado como `UsuarioRecuperadoDto | null` via `@project20/shared`; (2) `authTokenInterceptor` com chave `access_token` e skip de `/autenticacao/login`; (3) `errorHandlerInterceptor` com `MessageService` do PrimeNG, tratando 401 (limpa token + redireciona), 403 (toast erro), 400 (toast com `erros[0]` ou `mensagem`), 404 (toast aviso), demais (toast erro genérico); (4) `loadingInterceptor` atualizado para usar signal `carregamento`; (5) `autenticacaoGuard` com chave `access_token`; (6) `gestorGuard` com `UsuarioTipoEnum.GESTOR`; (7) `AutenticacaoService` com `login()`, `logout()` e `estaAutenticado()`; (8) `LoadingSpinnerComponent` com `p-progressSpinner` do PrimeNG; (9) `ErrorMessageComponent` com `p-message` do PrimeNG; (10) `AssistenteDescricaoComponent` completo com signals `textoAuxiliado`, `carregandoAuxilio`, `mostrarComparacao`, métodos `auxiliar()`, `aceitar()`, `descartar()` e template de comparação lado a lado com `p-panel`; (11) `app.config.ts` com `MessageService` provider; (12) `LayoutComponent` com `<p-toast>` para exibição de mensagens; (13) `TopbarComponent` atualizado para usar `AutenticacaoService.logout()`
 - **23-frontend-auth** — tela de login completa: (1) `LoginPage` standalone com `ReactiveFormsModule`, `CardModule`, `InputTextModule`, `PasswordModule`, `ButtonModule`, `MessageModule` do PrimeNG; (2) formulário reativo com signals `carregando` e `erroLogin`; (3) validação inline por campo (`required`, `minLength`) exibida apenas após `touched`; (4) `p-password` com `[feedback]="false"` e `[toggleMask]="true"`; (5) `p-button` com `[loading]="carregando()"`; (6) `p-message` exibindo erro de credenciais via signal; (7) redirecionamento para `/ponto` após login bem-sucedido; (8) `somentePublicoGuard` adicionado ao `autenticacao.guard.ts` — redireciona para `/` se já autenticado; (9) `app.routes.ts` atualizado para aplicar `somentePublicoGuard` na rota `/autenticacao`
 - **24-frontend-usuario** — módulo de usuário completo: (1) `UsuarioService` com 6 métodos HTTP (`listar`, `criar`, `recuperar`, `alterar`, `excluir`, `alterarSenha`); (2) `usuario.routes.ts` com lazy loading para 4 rotas (`''`, `'novo'`, `':id'`, `':id/anotacoes'`); (3) `UsuarioListagemPage` com `p-table` lazy+paginada, filtros por tipo/status via `p-select` com Reactive Forms, badges `p-tag`, confirmação de exclusão via `p-confirmDialog`; (4) `UsuarioFormularioPage` para criação com todos os campos, `p-select` para tipo e horas diárias; (5) `UsuarioPerfilPage` com exibição de dados, `p-dialog` de edição e `p-dialog` de troca de senha com validador customizado `senhasNaoConferem`, permissão via `UsuarioSessaoService.eGestor()`; (6) `UsuarioAnotacoesPage` com `p-editor` (EditorModule) em Reactive Form, redirecionamento automático se não for o próprio usuário; (7) `UsuarioCartaoComponent` com avatar por iniciais, nome e cargo — para uso em listagens de membros
+- **25-frontend-projeto** — módulos de projeto e tag completos: (1) `ProjetoService` com 5 métodos HTTP (`listar`, `criar`, `recuperar`, `alterar`, `excluir`); (2) `projeto.routes.ts` com rotas lazy para listagem (livre), formulário (`gestorGuard`) e detalhe; (3) `ProjetoListagemPage` com grid de cards — barra colorida no topo do card (`cor`), badge de status com severidade (verde/amarelo/azul/vermelho), filtro por status via `p-select`, botão "Novo Projeto" condicional para gestor, paginação com `p-paginator`, confirmação de exclusão; (4) `ProjetoFormularioPage` para criação com `p-colorpicker` (formato hex), `p-datepicker` para datas, validação cross-field `previsaoFimData > inicioData`, código uppercase via SCSS; (5) `ProjetoDetalhePage` com header contendo bolinha de cor + nome + código + badge de status, abas `p-tabs` com "Demandas" (lista das demandas via chamada HTTP direta a `/demanda?projetoId=X`) e "Informações" (dados completos), `p-dialog` de edição para gestores, botão "Nova Demanda" com queryParam `projetoId`; (6) `TagService` com 5 métodos HTTP; (7) `tag.routes.ts` com rota única protegida por `gestorGuard`; (8) `TagListagemPage` com `p-table`, preview de tag com cor (bolinha + badge estilizado com opacidade), dialogs para criação e edição com `p-colorpicker`, prévia em tempo real da tag, confirmação de exclusão
 
 ---
 
@@ -66,7 +67,7 @@
 
 ## Próxima Task
 
-**Próxima task a definir** — verificar `docs/specs/backlog/` para a próxima spec disponível (módulos frontend: projeto, tag, calendário, demanda, atividade, execução, ponto)
+**Próxima task a definir** — verificar `docs/specs/backlog/` para a próxima spec disponível (módulos frontend: calendário, demanda, atividade, execução, ponto)
 
 ---
 
@@ -115,13 +116,13 @@ project-2.0/
 | shared (components, pipes) | ✅ implementado (task 22) |
 | autenticacao | ✅ implementado (task 23) |
 | usuario | ✅ implementado (task 24) |
-| projeto | 🔧 esqueleto (task 21) |
+| projeto | ✅ implementado (task 25) |
 | demanda | 🔧 esqueleto (task 21) |
 | atividade | 🔧 esqueleto (task 21) |
 | execucao | 🔧 esqueleto (task 21) |
 | ponto | 🔧 esqueleto (task 21) |
 | calendario | 🔧 esqueleto (task 21) |
-| tag | 🔧 esqueleto (task 21) |
+| tag | ✅ implementado (task 25) |
 
 ---
 
@@ -198,6 +199,12 @@ project-2.0/
 - **[task 24]** `UsuarioAnotacoesPage` redireciona para `/usuario/:id` se o usuário da sessão não for o dono — proteção client-side; o backend também bloqueia via autorização
 - **[task 24]** `p-select` (PrimeNG 21) em vez de `p-dropdown` (deprecated) para todos os dropdowns; `styleClass` deprecated substituído por `class` nos elementos de seleção
 - **[task 24]** Validador customizado `validarSenhasIguais` declarado como método privado e passado ao segundo argumento de `FormBuilder.group()` para validação cross-field sem classe separada
+- **[task 25]** `ProjetoListagemPage` usa grid de cards com `p-paginator` (em vez de `p-table` com paginação integrada) — cards são mais adequados para projetos com cor e código visual; `p-table` reservado para dados tabulares como usuários e tags
+- **[task 25]** `ProjetoDetalhePage` faz chamada HTTP direta a `/demanda?projetoId=X` via `HttpClient` injetado — o módulo demanda do frontend ainda não existe; evita criar dependência prematura em serviço de outro módulo
+- **[task 25]** `p-colorpicker` usa `format="hex"` para garantir retorno no formato `#RRGGBB` compatível com a validação do backend (`Matches(/^#[0-9A-Fa-f]{6}$/)`)
+- **[task 25]** Validação cross-field `previsaoFimData > inicioData` implementada como validador privado no grupo do form, padrão idêntico ao `validarSenhasIguais` da task 24
+- **[task 25]** `TagListagemPage` usa dialogs para criação e edição (não edição inline em linha de tabela) — mais simples e evita complexidade de estado de edição por linha; spec dizia "Edição inline ou via dialog"
+- **[task 25]** Preview de tag no dialog usa `cor + '22'` e `cor + '55'` (opacidade em hex) para simular aspecto de badge colorido sem variáveis CSS adicionais
 
 ---
 
