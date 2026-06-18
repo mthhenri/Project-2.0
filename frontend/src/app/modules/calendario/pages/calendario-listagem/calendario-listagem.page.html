@@ -1,0 +1,234 @@
+<div class="calendario-listagem">
+  <div class="calendario-listagem__cabecalho">
+    <h1 class="calendario-listagem__titulo">Dias Não Úteis</h1>
+
+    @if (eGestor()) {
+      <p-button
+        label="Novo Dia Não Útil"
+        icon="pi pi-plus"
+        (onClick)="abrirDialogNovo()"
+      />
+    }
+  </div>
+
+  <!-- Verificador de dia útil -->
+  <div class="calendario-listagem__verificador">
+    <form [formGroup]="formularioVerificar" class="calendario-listagem__verificador-form">
+      <span class="calendario-listagem__verificador-titulo">
+        <i class="pi pi-search"></i> Verificar dia útil
+      </span>
+      <p-datepicker
+        formControlName="data"
+        dateFormat="dd/mm/yy"
+        appendTo="body"
+        [showIcon]="true"
+        placeholder="Selecione uma data"
+      />
+      <p-button
+        label="Verificar"
+        size="small"
+        [loading]="carregandoVerificacao()"
+        (onClick)="verificar()"
+      />
+      @if (resultadoVerificacao(); as resultado) {
+        @if (resultado.ehDiaUtil) {
+          <span class="calendario-listagem__resultado calendario-listagem__resultado--util">
+            <i class="pi pi-check-circle"></i> Dia útil
+          </span>
+        } @else {
+          <span class="calendario-listagem__resultado calendario-listagem__resultado--nao-util">
+            <i class="pi pi-times-circle"></i> Não útil — {{ resultado.motivo }}
+          </span>
+        }
+      }
+    </form>
+  </div>
+
+  <!-- Calendário (esquerda) + tabela do mês (direita) -->
+  <div class="calendario-listagem__principal">
+    <div class="calendario-listagem__calendario">
+      <p-datepicker
+        [inline]="true"
+        (onSelect)="onSelecionarDiaCalendario($event)"
+        (onMonthChange)="onMudancaMes($event)"
+      >
+        <ng-template pTemplate="date" let-date>
+          @let marcado = diaMarcado(date.year, date.month + 1, date.day);
+          @if (marcado) {
+            <span
+              class="calendario-listagem__dia-marcado"
+              [pTooltip]="marcado.descricao + ' — ' + rotuloTipo(marcado.tipo)"
+            >
+              {{ date.day }}
+            </span>
+          } @else {
+            {{ date.day }}
+          }
+        </ng-template>
+      </p-datepicker>
+    </div>
+
+    <div class="calendario-listagem__tabela-mes">
+      <h2 class="calendario-listagem__tabela-titulo">{{ rotuloMes() }}</h2>
+
+      @if (carregando()) {
+        <div class="calendario-listagem__carregando">
+          <i class="pi pi-spin pi-spinner text-4xl text-surface-400"></i>
+        </div>
+      } @else {
+        <p-table [value]="diasDoMes()" class="p-datatable-sm">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Data</th>
+              <th>Descrição</th>
+              <th>Tipo</th>
+              <th class="calendario-listagem__col-centro">Recorrente</th>
+              @if (eGestor()) {
+                <th class="calendario-listagem__col-acoes">Ações</th>
+              }
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="body" let-dia>
+            <tr
+              [attr.data-dia-id]="dia.id"
+              [class.calendario-listagem__linha--destacada]="dia.id === diaDestacadoId()"
+            >
+              <td>{{ dia.diaData | dataBrasileira }}</td>
+              <td>{{ dia.descricao }}</td>
+              <td>
+                <p-tag [value]="rotuloTipo(dia.tipo)" [severity]="severidadeTipo(dia.tipo)" />
+              </td>
+              <td class="calendario-listagem__col-centro">
+                @if (dia.recorrente) {
+                  <i class="pi pi-check text-green-600" pTooltip="Considerado todos os anos"></i>
+                } @else {
+                  <span class="text-surface-400">—</span>
+                }
+              </td>
+              @if (eGestor()) {
+                <td class="calendario-listagem__col-acoes">
+                  <p-button
+                    icon="pi pi-pencil"
+                    [text]="true"
+                    size="small"
+                    pTooltip="Editar"
+                    tooltipPosition="left"
+                    (onClick)="abrirDialogEditar(dia)"
+                  />
+                  <p-button
+                    icon="pi pi-trash"
+                    [text]="true"
+                    severity="danger"
+                    size="small"
+                    pTooltip="Excluir"
+                    tooltipPosition="left"
+                    (onClick)="confirmarExclusao(dia)"
+                  />
+                </td>
+              }
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td [attr.colspan]="eGestor() ? 5 : 4" class="calendario-listagem__vazio">
+                <i class="pi pi-calendar-times text-3xl text-surface-300"></i>
+                <p class="text-surface-500 mt-2">Nenhum dia não útil neste mês</p>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      }
+    </div>
+  </div>
+</div>
+
+<p-confirmDialog />
+
+<!-- Dialog: criação / edição -->
+<p-dialog
+  [header]="tituloDialog()"
+  [(visible)]="mostrarDialog"
+  [modal]="true"
+  [style]="{ width: '460px' }"
+  [draggable]="false"
+>
+  <form [formGroup]="formulario" class="calendario-listagem__dialog-form">
+    <div class="calendario-listagem__dialog-campo">
+      <label class="calendario-listagem__label">
+        Data <span class="calendario-listagem__obrigatorio">*</span>
+      </label>
+      <p-datepicker
+        formControlName="diaData"
+        dateFormat="dd/mm/yy"
+        appendTo="body"
+        [showIcon]="true"
+        placeholder="Selecione a data"
+      />
+      @if (diaEmEdicao()) {
+        <small class="text-surface-500">A data não pode ser alterada após o cadastro.</small>
+      }
+      @if (campoInvalido('diaData')) {
+        <small class="calendario-listagem__erro">Data é obrigatória</small>
+      }
+    </div>
+
+    <div class="calendario-listagem__dialog-campo">
+      <label class="calendario-listagem__label">
+        Descrição <span class="calendario-listagem__obrigatorio">*</span>
+      </label>
+      <input
+        pInputText
+        spellcheck="true"
+        formControlName="descricao"
+        placeholder="ex: Natal"
+        class="w-full"
+      />
+      @if (campoInvalido('descricao')) {
+        <small class="calendario-listagem__erro">Descrição é obrigatória</small>
+      }
+    </div>
+
+    <div class="calendario-listagem__dialog-campo">
+      <label class="calendario-listagem__label">
+        Tipo <span class="calendario-listagem__obrigatorio">*</span>
+      </label>
+      <p-select
+        formControlName="tipo"
+        [options]="tipoOpcoes"
+        optionLabel="label"
+        optionValue="value"
+        appendTo="body"
+        class="w-full"
+      />
+    </div>
+
+    <div class="calendario-listagem__dialog-campo">
+      <div class="calendario-listagem__checkbox-linha">
+        <p-checkbox formControlName="recorrente" [binary]="true" inputId="recorrente" />
+        <label for="recorrente" class="calendario-listagem__label">Recorrente</label>
+      </div>
+      @if (formulario.value.recorrente) {
+        <p-message severity="info">
+          Este feriado será considerado em todos os anos no mesmo dia/mês
+        </p-message>
+      }
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cancelar"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="mostrarDialog.set(false)"
+    />
+    <p-button
+      label="Salvar"
+      icon="pi pi-check"
+      [loading]="carregandoSalvar()"
+      (onClick)="salvar()"
+    />
+  </ng-template>
+</p-dialog>
