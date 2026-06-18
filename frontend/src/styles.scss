@@ -1,6 +1,9 @@
 // Ícones PrimeNG
 @import 'primeicons/primeicons.css';
 
+// Tema do editor rico (Quill) usado pelo p-editor do PrimeNG
+@import 'quill/dist/quill.snow.css';
+
 // Diretivas Tailwind — ordem obrigatória
 @tailwind base;
 @tailwind components;

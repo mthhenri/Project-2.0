@@ -43,35 +43,35 @@
         </div>
       </div>
 
-      @if (sessao.eGestor()) {
-        <div class="demanda-detalhe-dialog__cabecalho-acoes">
-          <p-button
-            label="Desc. Técnica"
-            icon="pi pi-file-edit"
-            severity="secondary"
-            [class.btn-desc--preenchido]="!!demanda()!.descricaoTecnica"
-            [text]="true"
-            size="small"
-            (onClick)="abrirDialogDescricao('descricaoTecnica')"
-          />
-          <p-button
-            label="Desc. Cliente"
-            icon="pi pi-file-edit"
-            severity="secondary"
-            [class.btn-desc--preenchido]="!!demanda()!.descricaoCliente"
-            [text]="true"
-            size="small"
-            (onClick)="abrirDialogDescricao('descricaoCliente')"
-          />
-          <p-button
-            label="Documentação"
-            icon="pi pi-file-edit"
-            severity="secondary"
-            [class.btn-desc--preenchido]="!!demanda()!.documentacao"
-            [text]="true"
-            size="small"
-            (onClick)="abrirDialogDescricao('documentacao')"
-          />
+      <div class="demanda-detalhe-dialog__cabecalho-acoes">
+        <p-button
+          label="Desc. Técnica"
+          icon="pi pi-file-edit"
+          severity="secondary"
+          [class.btn-desc--preenchido]="!!demanda()!.descricaoTecnica"
+          [text]="true"
+          size="small"
+          (onClick)="abrirDialogDescricao('descricaoTecnica')"
+        />
+        <p-button
+          label="Desc. Cliente"
+          icon="pi pi-file-edit"
+          severity="secondary"
+          [class.btn-desc--preenchido]="!!demanda()!.descricaoCliente"
+          [text]="true"
+          size="small"
+          (onClick)="abrirDialogDescricao('descricaoCliente')"
+        />
+        <p-button
+          label="Documentação"
+          icon="pi pi-file-edit"
+          severity="secondary"
+          [class.btn-desc--preenchido]="!!demanda()!.documentacao"
+          [text]="true"
+          size="small"
+          (onClick)="abrirDialogDescricao('documentacao')"
+        />
+        @if (sessao.eGestor()) {
           <p-button
             label="Editar"
             icon="pi pi-pencil"
@@ -87,8 +87,8 @@
             size="small"
             (onClick)="confirmarExclusao()"
           />
-        </div>
-      }
+        }
+      </div>
     </div>
 
     <!-- Metadados e descrições sempre visíveis -->
@@ -292,35 +292,51 @@
     [draggable]="false"
     [resizable]="false"
   >
-    <form [formGroup]="formularioDescricao" class="demanda-detalhe-dialog__descricao-dialog-form">
-      <textarea
-        pTextarea
-        spellcheck="true"
-        formControlName="valor"
-        rows="8"
-        class="w-full"
-      ></textarea>
-      <app-assistente-descricao
-        [textoAtual]="formularioDescricao.value.valor || ''"
-        tipoEntidade="demanda"
-        [contextoEntidade]="nomeDemandaDescricaoEditando()"
-        (textoAuxiliadoAceito)="aceitarDescricaoAssistente($event)"
-      />
-    </form>
+    @if (podeEditarDescricaoAtual()) {
+      <form [formGroup]="formularioDescricao" class="demanda-detalhe-dialog__descricao-dialog-form">
+        <p-editor
+          formControlName="valor"
+          class="demanda-detalhe-dialog__editor"
+        />
+        <app-assistente-descricao
+          [textoAtual]="formularioDescricao.value.valor || ''"
+          tipoEntidade="demanda"
+          [contextoEntidade]="nomeDemandaDescricaoEditando()"
+          (textoAuxiliadoAceito)="aceitarDescricaoAssistente($event)"
+        />
+      </form>
+    } @else {
+      @if (formularioDescricao.value.valor) {
+        <div class="demanda-detalhe-dialog__descricao-leitura ql-snow">
+          <div class="ql-editor" [innerHTML]="formularioDescricao.value.valor"></div>
+        </div>
+      } @else {
+        <div class="demanda-detalhe-dialog__descricao-vazia">Sem conteúdo</div>
+      }
+    }
 
     <ng-template pTemplate="footer">
-      <p-button
-        label="Cancelar"
-        severity="secondary"
-        [outlined]="true"
-        (onClick)="mostrarDialogDescricao.set(false)"
-      />
-      <p-button
-        label="Salvar"
-        icon="pi pi-check"
-        [loading]="carregandoSalvarDescricao()"
-        (onClick)="salvarDescricao()"
-      />
+      @if (podeEditarDescricaoAtual()) {
+        <p-button
+          label="Cancelar"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="mostrarDialogDescricao.set(false)"
+        />
+        <p-button
+          label="Salvar"
+          icon="pi pi-check"
+          [loading]="carregandoSalvarDescricao()"
+          (onClick)="salvarDescricao()"
+        />
+      } @else {
+        <p-button
+          label="Fechar"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="mostrarDialogDescricao.set(false)"
+        />
+      }
     </ng-template>
   </p-dialog>
 }

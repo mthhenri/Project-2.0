@@ -179,13 +179,10 @@
     [resizable]="false"
   >
     <form [formGroup]="formularioDescricao" class="demanda-projeto__descricao-dialog-form">
-      <textarea
-        pTextarea
-        spellcheck="true"
+      <p-editor
         formControlName="valor"
-        rows="8"
-        class="w-full"
-      ></textarea>
+        class="demanda-projeto__editor"
+      />
       <app-assistente-descricao
         [textoAtual]="formularioDescricao.value.valor || ''"
         tipoEntidade="demanda"

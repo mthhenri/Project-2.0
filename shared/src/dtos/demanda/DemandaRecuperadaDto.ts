@@ -44,4 +44,12 @@ export class DemandaRecuperadaDto {
 
   @ApiProperty({ example: '2026-06-13T12:00:00.000Z' })
   createdDate: string;
+
+  @ApiProperty({
+    example: true,
+    description:
+      'Indica se o usuário autenticado pode editar esta demanda. ' +
+      'Gestor sempre pode; desenvolvedor só quando é membro (demanda_usuario).',
+  })
+  podeEditar: boolean;
 }

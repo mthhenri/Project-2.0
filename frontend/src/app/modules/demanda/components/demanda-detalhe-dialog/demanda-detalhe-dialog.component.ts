@@ -6,7 +6,7 @@ import { forkJoin } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { TabsModule } from 'primeng/tabs';
-import { TextareaModule } from 'primeng/textarea';
+import { EditorModule } from 'primeng/editor';
 import { Tag } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { MessageService, ConfirmationService } from 'primeng/api';
@@ -43,7 +43,7 @@ type CampoDescricao = 'descricaoTecnica' | 'descricaoCliente' | 'documentacao';
     ButtonModule,
     DialogModule,
     TabsModule,
-    TextareaModule,
+    EditorModule,
     Tag,
     TooltipModule,
     ConfirmDialogModule,
@@ -118,6 +118,21 @@ export class DemandaDetalheDialogComponent implements OnChanges {
     return titulos[campo];
   });
 
+  /**
+   * Editabilidade da demanda cuja descrição está aberta (gestor sempre; desenvolvedor
+   * apenas quando é membro). Reflete a flag `podeEditar` retornada pelo backend.
+   */
+  readonly descricaoEditavel = signal<boolean>(false);
+
+  readonly podeEditarDescricaoAtual = computed(() => {
+    const campo = this.campoDescricaoEditando();
+    if (!campo) return false;
+    // Descrição do cliente é exclusiva do gestor.
+    if (campo === 'descricaoCliente') return this.sessao.eGestor();
+    // Técnica e documentação: só edita quem pode editar a demanda.
+    return this.descricaoEditavel();
+  });
+
   ngOnChanges(mudancas: SimpleChanges): void {
     if (mudancas['visivel']?.currentValue === true) {
       this.demandaIdAtual.set(this.demandaId);
@@ -187,6 +202,7 @@ export class DemandaDetalheDialogComponent implements OnChanges {
     this.demandaIdDescricaoEditando.set(demandaDados.id);
     this.nomeDemandaDescricaoEditando.set(demandaDados.nome);
     this.campoDescricaoEditando.set(campo);
+    this.descricaoEditavel.set(demandaDados.podeEditar);
     this.formularioDescricao.patchValue({ valor: valores[campo] ?? '' });
     this.mostrarDialogDescricao.set(true);
   }
@@ -204,6 +220,7 @@ export class DemandaDetalheDialogComponent implements OnChanges {
         this.demandaIdDescricaoEditando.set(demandaId);
         this.nomeDemandaDescricaoEditando.set(demandaDados.nome);
         this.campoDescricaoEditando.set(campo);
+        this.descricaoEditavel.set(demandaDados.podeEditar);
         this.formularioDescricao.patchValue({ valor: valores[campo] ?? '' });
         this.mostrarDialogDescricao.set(true);
       },
@@ -213,7 +230,7 @@ export class DemandaDetalheDialogComponent implements OnChanges {
   salvarDescricao(): void {
     const campo = this.campoDescricaoEditando();
     const idEditando = this.demandaIdDescricaoEditando();
-    if (!campo || !idEditando) return;
+    if (!campo || !idEditando || !this.podeEditarDescricaoAtual()) return;
 
     this.carregandoSalvarDescricao.set(true);
     const dto = { [campo]: this.formularioDescricao.value.valor ?? undefined } as DemandaAlterarDto;

@@ -497,10 +497,14 @@ export class AtividadeListagemPage implements OnInit {
     return temConteudo ? severidade : 'secondary';
   }
 
-  /** Gestor pode editar descrição técnica e documentação direto pela listagem. */
+  /**
+   * Descrição técnica e documentação são editáveis pela listagem desde que o usuário
+   * possa editar a demanda (gestor, ou desenvolvedor membro — flag `podeEditar`).
+   */
   podeEditarCampoDescricao(): boolean {
     const campo = this.campoDescricao();
-    return !!campo && this.camposEditaveis.includes(campo) && this.sessao.eGestor();
+    const demanda = this.demandaDescricao();
+    return !!campo && this.camposEditaveis.includes(campo) && !!demanda?.podeEditar;
   }
 
   abrirEdicaoDescricao(): void {

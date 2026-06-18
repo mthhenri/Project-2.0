@@ -543,7 +543,9 @@
       />
     </form>
   } @else if (conteudoDescricao(); as conteudo) {
-    <div class="atividade-listagem__descricao-rica" [innerHTML]="conteudo"></div>
+    <div class="atividade-listagem__descricao-rica ql-snow">
+      <div class="ql-editor" [innerHTML]="conteudo"></div>
+    </div>
   } @else {
     <p class="text-surface-400">Sem conteúdo</p>
   }

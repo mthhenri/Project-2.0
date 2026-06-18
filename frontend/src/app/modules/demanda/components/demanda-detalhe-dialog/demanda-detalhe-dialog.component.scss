@@ -270,11 +270,47 @@
     gap: 1rem;
     flex: 1;
     min-height: 0;
+  }
 
-    textarea {
-      flex: 1;
-      resize: none;
+  &__editor {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+
+    ::ng-deep .p-editor-container {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    ::ng-deep .p-editor-content {
+      flex: 1 1 auto;
       min-height: 0;
     }
+  }
+
+  &__descricao-leitura {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    background-color: var(--p-surface-50);
+    border: 1px solid var(--p-surface-200);
+    border-radius: 6px;
+
+    // O conteúdo é HTML do Quill; a classe .ql-editor cuida da tipografia/espaçamento.
+    .ql-editor {
+      word-break: break-word;
+    }
+  }
+
+  &__descricao-vazia {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--p-surface-400);
+    font-style: italic;
   }
 }

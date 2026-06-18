@@ -5,7 +5,7 @@ import { finalize } from 'rxjs/operators';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { Select } from 'primeng/select';
-import { TextareaModule } from 'primeng/textarea';
+import { EditorModule } from 'primeng/editor';
 import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
 import {
@@ -42,7 +42,7 @@ type CampoDescricao = 'descricaoTecnica' | 'descricaoCliente' | 'documentacao';
     ButtonModule,
     DialogModule,
     Select,
-    TextareaModule,
+    EditorModule,
     TooltipModule,
     AssistenteDescricaoComponent,
     DemandaGrafoComponent,

@@ -158,7 +158,8 @@ export class DemandaService {
 
   /**
    * Recupera demanda por ID.
-   * Desenvolvedor só pode recuperar demandas às quais está atribuído.
+   * Desenvolvedor pode visualizar qualquer demanda de um projeto ao qual tem acesso;
+   * a flag `podeEditar` indica se ele pode editá-la (só quando é membro da demanda).
    */
   async recuperar(
     id: number,
@@ -176,6 +177,10 @@ export class DemandaService {
       throw new ResourceNotFoundException('Demanda');
     }
 
+    demandaEncontrada.podeEditar =
+      usuarioAtivo.tipo !== UsuarioTipoEnum.DESENVOLVEDOR ||
+      (await this.demandaRepositorio.validarMembro({ demandaId: id, usuarioId: usuarioAtivo.sub }));
+
     return {
       sucesso:  true,
       dados:    demandaEncontrada,
@@ -185,7 +190,8 @@ export class DemandaService {
 
   /**
    * Altera dados da demanda.
-   * Desenvolvedor só pode alterar demandas às quais está atribuído.
+   * Desenvolvedor só pode alterar demandas das quais é membro (demanda_usuario);
+   * a descrição do cliente permanece exclusiva do gestor.
    */
   async alterar(
     id: number,
@@ -202,6 +208,27 @@ export class DemandaService {
 
     if (!demandaEncontrada) {
       throw new ResourceNotFoundException('Demanda');
+    }
+
+    if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR) {
+      const eMembro = await this.demandaRepositorio.validarMembro({
+        demandaId: id,
+        usuarioId: usuarioAtivo.sub,
+      });
+      if (!eMembro) {
+        throw new UnauthorizedAccessException(
+          'Você só pode editar demandas das quais é membro',
+        );
+      }
+    }
+
+    if (
+      usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR &&
+      dto.descricaoCliente !== undefined
+    ) {
+      throw new UnauthorizedAccessException(
+        'Apenas gestores podem alterar a descrição do cliente',
+      );
     }
 
     if (dto.demandaPaiId !== undefined) {
@@ -344,6 +371,18 @@ export class DemandaService {
     );
     if (!demandaOrigemEncontrada) {
       throw new ResourceNotFoundException('Demanda origem');
+    }
+
+    if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR) {
+      const eMembro = await this.demandaRepositorio.validarMembro({
+        demandaId: demandaOrigemId,
+        usuarioId: usuarioAtivo.sub,
+      });
+      if (!eMembro) {
+        throw new UnauthorizedAccessException(
+          'Você só pode criar conexões em demandas das quais é membro',
+        );
+      }
     }
 
     const demandaDestinoEncontrada = await this.demandaRepositorio.recuperar(

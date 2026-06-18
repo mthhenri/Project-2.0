@@ -137,20 +137,26 @@ export class DemandaRepository extends BaseRepository<Demanda> {
 
   /**
    * Recupera demanda por ID.
-   * Se filtro for fornecido, verifica se o usuário está atribuído à demanda.
-   * Retorna null se não encontrada, deletada ou sem acesso.
+   * Se filtro for fornecido, restringe à visualização: o usuário precisa ter
+   * acesso ao projeto da demanda (ser membro de ao menos uma demanda do projeto
+   * via demanda_usuario). A permissão de edição é verificada à parte na service.
+   * Retorna null se não encontrada, deletada ou sem acesso ao projeto.
    */
   async recuperar(dto: DemandaRecuperarDto, filtro?: DemandaAcessoFiltrarDto): Promise<DemandaRecuperadaDto | null> {
     const condicoes: string[] = ['demanda.id = :id', 'demanda.is_deleted = false'];
     const parametros: Record<string, unknown> = { id: dto.id };
 
-    let joinDemandaUsuario = '';
     if (filtro !== undefined) {
-      joinDemandaUsuario = `
+      condicoes.push(`EXISTS (
+        SELECT 1
+        FROM demanda demanda_do_projeto
         INNER JOIN demanda_usuario
-          ON demanda_usuario.demanda_id = demanda.id
+          ON demanda_usuario.demanda_id = demanda_do_projeto.id
           AND demanda_usuario.usuario_id = :usuarioId
-          AND demanda_usuario.is_deleted = false`;
+          AND demanda_usuario.is_deleted = false
+        WHERE demanda_do_projeto.projeto_id = demanda.projeto_id
+          AND demanda_do_projeto.is_deleted = false
+      )`);
       parametros.usuarioId = filtro.usuarioId;
     }
 
@@ -171,7 +177,6 @@ export class DemandaRepository extends BaseRepository<Demanda> {
          demanda.ordem_exibicao     AS "ordemExibicao",
          demanda.created_date       AS "createdDate"
        FROM demanda
-       ${joinDemandaUsuario}
        WHERE ${condicoes.join(' AND ')}
        LIMIT 1`,
       parametros,

@@ -87,16 +87,10 @@
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
-    line-height: 1.6;
-    color: var(--p-text-color);
-    word-break: break-word;
 
-    :first-child {
-      margin-top: 0;
-    }
-
-    :last-child {
-      margin-bottom: 0;
+    // Conteúdo é HTML do Quill; .ql-editor cuida da tipografia/espaçamento.
+    .ql-editor {
+      word-break: break-word;
     }
   }
 
