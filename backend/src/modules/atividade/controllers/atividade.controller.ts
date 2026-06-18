@@ -94,19 +94,19 @@ export class AtividadeController {
     return this.atividadeService.excluir(id);
   }
 
-  @ApiOperation({ summary: 'Sincronizar tags da atividade (somente gestor)' })
+  @ApiOperation({ summary: 'Sincronizar tags da atividade (gestor ou desenvolvedor dono da atividade)' })
   @ApiResponse({ status: 200, description: 'Tags alteradas com sucesso' })
   @ApiResponse({ status: 400, description: 'Tag inexistente', schema: { example: { sucesso: false, dados: null, mensagem: 'Tag com id 99 não encontrada', erros: [] } } })
   @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
-  @ApiResponse({ status: 403, description: 'Acesso restrito a gestores', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+  @ApiResponse({ status: 403, description: 'Desenvolvedor sem permissão para alterar', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
   @ApiResponse({ status: 404, description: 'Atividade não encontrada', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
-  @GestorOnly()
   @Put(':id/tag')
   alterarTags(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: AtividadeTagsAtribuirDto,
+    @ActiveUser() usuarioAtivo: JwtPayload,
   ) {
-    return this.atividadeService.alterarTags(id, dto);
+    return this.atividadeService.alterarTags(id, dto, usuarioAtivo);
   }
 
   @ApiOperation({ summary: 'Listar tags da atividade' })

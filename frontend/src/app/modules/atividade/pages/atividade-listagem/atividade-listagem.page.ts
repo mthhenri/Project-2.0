@@ -35,6 +35,7 @@ import {
   ExecucaoEncerrarDto,
 } from '@project20/shared';
 import { AtividadeService } from '../../services/atividade.service';
+import { TagService } from '../../../tag/services/tag.service';
 import { UsuarioService } from '../../../usuario/services/usuario.service';
 import { DemandaService } from '../../../demanda/services/demanda.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
@@ -80,6 +81,7 @@ type DemandaAtribuidaOpcao = DemandaAtribuidaDto & { rotulo: string };
 })
 export class AtividadeListagemPage implements OnInit {
   private readonly atividadeService = inject(AtividadeService);
+  private readonly tagService = inject(TagService);
   private readonly usuarioService = inject(UsuarioService);
   private readonly demandaService = inject(DemandaService);
   private readonly rotaAtiva = inject(ActivatedRoute);
@@ -126,6 +128,17 @@ export class AtividadeListagemPage implements OnInit {
     usuarioId: [null as number | null],
     status:    [AtividadeStatusEnum.DESENVOLVENDO as AtividadeStatusEnum, [Validators.required]],
     descricao: [''],
+  });
+
+  // --- Dialog: atribuir tags ---
+  readonly mostrarDialogTags = signal<boolean>(false);
+  readonly salvandoTags = signal<boolean>(false);
+  readonly carregandoTags = signal<boolean>(false);
+  readonly todasAsTags = signal<TagResumoDto[]>([]);
+  readonly atividadeTags = signal<AtividadeResumoDto | null>(null);
+
+  readonly formularioTags = this.formBuilder.group({
+    tagIds: [[] as number[]],
   });
 
   // --- Dialog: visualizar atividade ---
@@ -369,6 +382,39 @@ export class AtividadeListagemPage implements OnInit {
   }
 
   // ---------------------------------------------------------------------------
+  // Atribuir tags
+  // ---------------------------------------------------------------------------
+
+  abrirDialogTags(atividade: AtividadeResumoDto): void {
+    this.atividadeTags.set(atividade);
+    this.formularioTags.reset({ tagIds: this.tagsDe(atividade.id).map((tag) => tag.id) });
+    this.mostrarDialogTags.set(true);
+
+    if (this.todasAsTags().length === 0) this.carregarTodasAsTags();
+  }
+
+  salvarTags(): void {
+    const atividade = this.atividadeTags();
+    if (!atividade) return;
+
+    this.salvandoTags.set(true);
+    const tagIds = this.formularioTags.value.tagIds ?? [];
+
+    this.atividadeService
+      .alterarTags(atividade.id, { tagIds })
+      .pipe(finalize(() => this.salvandoTags.set(false)))
+      .subscribe({
+        next: (resposta) => {
+          if (resposta.sucesso) {
+            this.recarregarTagsDaAtividade(atividade.id);
+            this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Tags atualizadas' });
+            this.mostrarDialogTags.set(false);
+          }
+        },
+      });
+  }
+
+  // ---------------------------------------------------------------------------
   // Execução (play/pause)
   // ---------------------------------------------------------------------------
 
@@ -519,6 +565,28 @@ export class AtividadeListagemPage implements OnInit {
     this.usuarioService.listar({ status: UsuarioStatusEnum.ATIVO, itensPorPagina: 100 }).subscribe({
       next: (resposta) => {
         if (resposta.sucesso && resposta.dados) this.usuarios.set(resposta.dados.itens);
+      },
+    });
+  }
+
+  private carregarTodasAsTags(): void {
+    this.carregandoTags.set(true);
+    this.tagService
+      .listar()
+      .pipe(finalize(() => this.carregandoTags.set(false)))
+      .subscribe({
+        next: (resposta) => {
+          if (resposta.sucesso && resposta.dados) this.todasAsTags.set(resposta.dados);
+        },
+      });
+  }
+
+  private recarregarTagsDaAtividade(atividadeId: number): void {
+    this.atividadeService.listarTags(atividadeId).subscribe({
+      next: (resposta) => {
+        if (resposta.sucesso && resposta.dados) {
+          this.tagsPorAtividade.update((mapa) => ({ ...mapa, [atividadeId]: resposta.dados ?? [] }));
+        }
       },
     });
   }

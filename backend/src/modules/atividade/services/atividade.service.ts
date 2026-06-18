@@ -202,15 +202,31 @@ export class AtividadeService {
 
   /**
    * Sincroniza as tags de uma atividade com a lista enviada.
-   * Restrito a gestores.
+   * Desenvolvedor só pode alterar as tags de atividades cuja autoria é sua
+   * (usuarioId) ou onde está atribuído à demanda. Gestor é sempre liberado.
    */
   async alterarTags(
     id: number,
     dto: AtividadeTagsAtribuirDto,
+    usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<AtividadeTagsAtribuidasDto>> {
     const atividadeEncontrada = await this.atividadeRepositorio.recuperar({ id });
     if (!atividadeEncontrada) {
       throw new ResourceNotFoundException('Atividade');
+    }
+
+    if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR) {
+      const eAutor = atividadeEncontrada.usuarioId === usuarioAtivo.sub;
+      const temAcesso = await this.atividadeRepositorio.validarAcessoDemanda({
+        demandaId: atividadeEncontrada.demandaId,
+        usuarioId: usuarioAtivo.sub,
+      });
+
+      if (!eAutor && !temAcesso) {
+        throw new UnauthorizedAccessException(
+          'Desenvolvedor não tem permissão para alterar esta atividade',
+        );
+      }
     }
 
     for (const tagId of dto.tagIds) {

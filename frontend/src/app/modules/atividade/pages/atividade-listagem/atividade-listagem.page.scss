@@ -86,6 +86,20 @@
     font-weight: 500;
   }
 
+  &__tag-opcao {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__tag-bolinha {
+    display: inline-block;
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
   &__status-gatilho {
     display: inline-flex;
     align-items: center;

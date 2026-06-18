@@ -181,6 +181,16 @@
               tooltipPosition="left"
               (onClick)="abrirAtividade(atividade)"
             />
+            @if (podeEditar(atividade)) {
+              <p-button
+                icon="pi pi-plus-circle"
+                [text]="true"
+                size="small"
+                pTooltip="Atribuir tags"
+                tooltipPosition="left"
+                (onClick)="abrirDialogTags(atividade)"
+              />
+            }
             @if (sessao.eGestor()) {
               <p-button
                 icon="pi pi-trash"
@@ -409,6 +419,57 @@
       </p-tabpanels>
     </p-tabs>
   }
+</p-dialog>
+
+<!-- Dialog: atribuir tags -->
+<p-dialog
+  [visible]="mostrarDialogTags()"
+  (visibleChange)="mostrarDialogTags.set($event)"
+  header="Atribuir tags"
+  [modal]="true"
+  [style]="{ width: '32rem' }"
+  [draggable]="false"
+  [dismissableMask]="true"
+>
+  @if (atividadeTags(); as atividade) {
+    <p class="atividade-listagem__execucao-atividade">{{ atividade.nomeProjeto }} · {{ atividade.nome }}</p>
+  }
+
+  <form [formGroup]="formularioTags" class="atividade-listagem__dialog-form">
+    <div class="atividade-listagem__dialog-campo">
+      <label for="tags-multiselect" class="atividade-listagem__filtro-label">Tags</label>
+      <p-multiSelect
+        inputId="tags-multiselect"
+        formControlName="tagIds"
+        [options]="todasAsTags()"
+        optionLabel="nome"
+        optionValue="id"
+        placeholder="Selecione as tags"
+        [filter]="true"
+        filterBy="nome"
+        [loading]="carregandoTags()"
+        appendTo="body"
+        class="w-full"
+      >
+        <ng-template let-tag pTemplate="item">
+          <span class="atividade-listagem__tag-opcao">
+            <span class="atividade-listagem__tag-bolinha" [style.background-color]="tag.cor"></span>
+            {{ tag.nome }}
+          </span>
+        </ng-template>
+      </p-multiSelect>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" [text]="true" (onClick)="mostrarDialogTags.set(false)" />
+    <p-button
+      label="Salvar"
+      icon="pi pi-check"
+      [loading]="salvandoTags()"
+      (onClick)="salvarTags()"
+    />
+  </ng-template>
 </p-dialog>
 
 <!-- Dialog: iniciar/encerrar execução -->
