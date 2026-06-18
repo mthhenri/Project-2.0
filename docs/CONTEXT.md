@@ -88,7 +88,9 @@
 
 ## Próxima Task
 
-**Refinamento dos módulos** — próximas specs no backlog (38-calendario-dia-meio-periodo)
+**Refinamento dos módulos** — specs no backlog: `38-calendario-dia-meio-periodo`, `40-atividade-registrar-execucao-manual`, `44-auditoria-conformidade-padroes`
+
+> **44-auditoria-conformidade-padroes** — task de auditoria + geração de specs: varre todo o projeto (`shared/`/`backend/`/`frontend/`/migrations) contra os padrões do `SYSTEM.SPEC.md`/`CONVENTIONS.md`, produz `docs/AUDITORIA.md` e gera uma spec de correção por módulo afetado (`<n>-<modulo>-correcao-padroes.spec.md`), cada uma fechando o ciclo com reforço documental. Não altera código de produção.
 
 ---
 
