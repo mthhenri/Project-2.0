@@ -1,0 +1,120 @@
+.ponto-usuario-card {
+  display: flex;
+  flex-direction: row;
+  gap: 0.875rem;
+  padding: 0.875rem;
+  border: 1px solid var(--p-surface-200);
+  border-radius: 0.625rem;
+  background: var(--p-surface-0);
+
+  &__resumo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex: 0 0 9rem;
+    width: 9rem;
+    padding-right: 0.875rem;
+    border-right: 1px solid var(--p-surface-200);
+  }
+
+  &__nome {
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: var(--p-text-color);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__total {
+    font-weight: 600;
+    font-size: 1.25rem;
+    color: var(--p-primary-600);
+  }
+
+  &__sub {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    margin-top: 0.125rem;
+  }
+
+  &__saldo {
+    font-weight: 600;
+
+    &--positivo {
+      color: var(--p-green-600);
+    }
+
+    &--negativo {
+      color: var(--p-red-600);
+    }
+  }
+
+  &__badge {
+    padding: 0.0625rem 0.5rem;
+    border-radius: 0.75rem;
+    background: var(--p-surface-100);
+    color: var(--p-text-muted-color);
+    font-weight: 500;
+  }
+
+  &__intervalos {
+    color: var(--p-text-muted-color);
+  }
+
+  &__execucoes-area {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  &__execucoes {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    width: 100%;
+    max-height: 7.5rem;
+    overflow-y: auto;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__execucao {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+  }
+
+  &__horario {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--p-text-muted-color);
+    white-space: nowrap;
+    min-width: 6.5rem;
+  }
+
+  &__atividade {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-decoration: none;
+    color: var(--p-text-color);
+
+    &:hover {
+      color: var(--p-primary-600);
+    }
+  }
+
+  &__vazio {
+    font-size: 0.8125rem;
+    color: var(--p-text-muted-color);
+    margin: 0;
+  }
+}

@@ -236,6 +236,30 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
     await this.executarSoftDelete(dto.id);
   }
 
+  /**
+   * Lista todos os usuários ativos com a meta diária — usado pelo módulo de ponto
+   * para montar o resumo diário de cada usuário na visão "todos hoje".
+   */
+  async listarAtivosComMeta(): Promise<
+    { id: number; nomeCompleto: string; horasDiariasNecessarias: number }[]
+  > {
+    return this.executarConsulta<{
+      id: number;
+      nomeCompleto: string;
+      horasDiariasNecessarias: number;
+    }>(
+      `SELECT
+         usuario.id,
+         usuario.nome_completo             AS "nomeCompleto",
+         usuario.horas_diarias_necessarias AS "horasDiariasNecessarias"
+       FROM usuario
+       WHERE usuario.status = :status
+         AND usuario.is_deleted = false
+       ORDER BY usuario.nome_completo ASC`,
+      { status: UsuarioStatusEnum.ATIVO },
+    );
+  }
+
   /** Lista todos os gestores ativos (usado na auto-atribuição de demandas). */
   async listarGestoresAtivos(): Promise<{ id: number }[]> {
     return this.executarConsulta<{ id: number }>(

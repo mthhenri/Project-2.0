@@ -7,3 +7,5 @@ export * from './CalendarioConsultarDto';
 export * from './CalendarioRecuperarDto';
 export * from './CalendarioExcluirDto';
 export * from './CalendarioVerificarDiaDto';
+export * from './CalendarioMesConsultarDto';
+export * from './CalendarioDiaNaoUtilMesDto';

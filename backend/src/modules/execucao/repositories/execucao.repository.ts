@@ -16,6 +16,8 @@ import {
   ExecucaoExcluirDto,
   ExecucaoUsuarioRecuperarDto,
   ExecucaoAtivaDto,
+  ExecucaoDiaAgruparDto,
+  ExecucaoDiaResumoDto,
 } from '@project20/shared';
 
 @Injectable()
@@ -174,6 +176,37 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
     );
 
     return { itens, total };
+  }
+
+  /**
+   * Agrega as execuções de um usuário por dia dentro de um intervalo de datas.
+   * Retorna, por dia com execução, o primeiro início, o último fim e o total de
+   * minutos trabalhados (somando apenas execuções encerradas).
+   */
+  async agruparPorDia(dto: ExecucaoDiaAgruparDto): Promise<ExecucaoDiaResumoDto[]> {
+    return this.executarConsulta<ExecucaoDiaResumoDto>(
+      `SELECT
+         DATE(execucao.inicio_data)::text AS "dia",
+         MIN(execucao.inicio_data)        AS "primeiroInicioData",
+         MAX(execucao.fim_data)           AS "ultimoFimData",
+         COALESCE(SUM(
+           CASE
+             WHEN execucao.fim_data IS NOT NULL
+             THEN EXTRACT(EPOCH FROM (execucao.fim_data - execucao.inicio_data))::int / 60
+             ELSE 0
+           END
+         ), 0)::int                       AS "totalMinutosTrabalhados"
+       FROM execucao
+       INNER JOIN atividade
+         ON atividade.id = execucao.atividade_id
+         AND atividade.is_deleted = false
+       WHERE execucao.is_deleted = false
+         AND atividade.usuario_id = :usuarioId
+         AND DATE(execucao.inicio_data) BETWEEN :dataInicio::DATE AND :dataFim::DATE
+       GROUP BY DATE(execucao.inicio_data)
+       ORDER BY DATE(execucao.inicio_data) ASC`,
+      { usuarioId: dto.usuarioId, dataInicio: dto.dataInicio, dataFim: dto.dataFim },
+    );
   }
 
   /**

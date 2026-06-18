@@ -11,6 +11,8 @@ import {
   CalendarioRecuperarDto,
   CalendarioExcluirDto,
   CalendarioVerificarDiaDto,
+  CalendarioMesConsultarDto,
+  CalendarioDiaNaoUtilMesDto,
 } from '@project20/shared';
 
 interface DiaNaoUtilInserirDados {
@@ -148,6 +150,35 @@ export class CalendarioRepository extends BaseRepository<DiaNaoUtil> {
       { data: dto.data },
     );
     return resultado[0].ehDiaNaoUtil;
+  }
+
+  /**
+   * Lista os dias do mês marcados como não úteis (feriado/recesso/ponto facultativo),
+   * considerando registros exatos do ano/mês e recorrentes do mês. Retorna o número do
+   * dia (1–31) e o tipo, para o cálculo de dias úteis e exibição do motivo no mensal.
+   */
+  async listarDiasNaoUteisDoMes(dto: CalendarioMesConsultarDto): Promise<CalendarioDiaNaoUtilMesDto[]> {
+    return this.executarConsulta<CalendarioDiaNaoUtilMesDto>(
+      `SELECT DISTINCT
+         EXTRACT(DAY FROM dia_nao_util.dia_data)::int AS "dia",
+         dia_nao_util.tipo
+       FROM dia_nao_util
+       WHERE dia_nao_util.is_deleted = false
+         AND (
+           (
+             dia_nao_util.recorrente = false
+             AND EXTRACT(YEAR FROM dia_nao_util.dia_data)  = :ano
+             AND EXTRACT(MONTH FROM dia_nao_util.dia_data) = :mes
+           )
+           OR
+           (
+             dia_nao_util.recorrente = true
+             AND EXTRACT(MONTH FROM dia_nao_util.dia_data) = :mes
+           )
+         )
+       ORDER BY "dia" ASC`,
+      { ano: dto.ano, mes: dto.mes },
+    );
   }
 
   /**

@@ -1,0 +1,98 @@
+.ponto {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  max-width: 1100px;
+  margin: 0 auto;
+
+  &__cabecalho {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  &__titulo {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--p-primary-600);
+    margin: 0;
+  }
+
+  &__filtros {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  &__carregando {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: 1rem;
+
+    @media (min-width: 768px) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  &__mes-titulo {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--p-text-color);
+  }
+
+  &__mes-info {
+    font-size: 0.875rem;
+    font-weight: 400;
+    color: var(--p-text-muted-color);
+  }
+
+  &__cards {
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: 1rem;
+
+    @media (min-width: 640px) {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  &__lista-dias {
+    border: 1px solid var(--p-surface-200);
+    border-radius: 0.625rem;
+    overflow: hidden;
+    background: var(--p-surface-0);
+  }
+
+  &__vazio {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 3rem 1.5rem;
+    text-align: center;
+    border: 1px dashed var(--p-surface-300);
+    border-radius: 0.75rem;
+  }
+
+  &__vazio-icone {
+    font-size: 2.5rem;
+    color: var(--p-surface-400);
+  }
+
+  &__vazio-texto {
+    font-size: 0.9375rem;
+    color: var(--p-text-muted-color);
+    margin: 0;
+  }
+}

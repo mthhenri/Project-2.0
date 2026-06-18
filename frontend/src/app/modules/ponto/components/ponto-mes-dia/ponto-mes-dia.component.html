@@ -1,0 +1,78 @@
+<div
+  class="ponto-mes-dia"
+  [class.ponto-mes-dia--nao-util]="!dia.ehDiaUtil"
+  [class.ponto-mes-dia--clicavel]="temRegistro"
+>
+  <div class="ponto-mes-dia__linha" (click)="alternar()">
+    <span class="ponto-mes-dia__data">
+      <span class="ponto-mes-dia__semana">{{ abreviacao() }}</span>
+      <span class="ponto-mes-dia__numero">{{ numero() }}</span>
+    </span>
+
+    <span class="ponto-mes-dia__periodo">
+      @if (dia.primeiroInicioData) {
+        {{ dia.primeiroInicioData | date: 'HH:mm' }}
+        <i class="pi pi-arrow-right ponto-mes-dia__seta"></i>
+        {{ dia.ultimoFimData ? (dia.ultimoFimData | date: 'HH:mm') : 'em andamento' }}
+      } @else if (!dia.ehDiaUtil) {
+        <span class="ponto-mes-dia__badge">{{ dia.motivoNaoUtil }}</span>
+      } @else {
+        <span class="ponto-mes-dia__vazio">—</span>
+      }
+    </span>
+
+    <span class="ponto-mes-dia__total">{{ dia.totalMinutosTrabalhados | minutosParagHoras }}</span>
+
+    <span
+      class="ponto-mes-dia__saldo"
+      [class.ponto-mes-dia__saldo--positivo]="dia.saldoMinutos >= 0"
+      [class.ponto-mes-dia__saldo--negativo]="dia.saldoMinutos < 0"
+    >
+      {{ formatarSaldo(dia.saldoMinutos) }}
+    </span>
+
+    <span class="ponto-mes-dia__chevron">
+      @if (temRegistro) {
+        <i class="pi" [class.pi-chevron-down]="!expandido()" [class.pi-chevron-up]="expandido()"></i>
+      }
+    </span>
+  </div>
+
+  @if (expandido()) {
+    <div class="ponto-mes-dia__detalhe">
+      @if (carregando()) {
+        <div class="ponto-mes-dia__carregando">
+          <p-progressSpinner strokeWidth="4" />
+        </div>
+      } @else if (detalhe(); as detalheDia) {
+        <p-timeline [value]="detalheDia.execucoes" align="left">
+          <ng-template pTemplate="opposite" let-execucao>
+            <span class="ponto-mes-dia__execucao-horario">
+              {{ execucao.inicioData | date: 'HH:mm' }}
+              <i class="pi pi-arrow-right ponto-mes-dia__seta"></i>
+              @if (execucao.fimData) {
+                {{ execucao.fimData | date: 'HH:mm' }}
+              } @else {
+                <app-execucao-timer [inicioData]="execucao.inicioData" />
+              }
+            </span>
+          </ng-template>
+          <ng-template pTemplate="content" let-execucao>
+            <a
+              [routerLink]="['/atividade', execucao.atividadeId]"
+              class="ponto-mes-dia__execucao-atividade"
+            >
+              <i class="pi pi-check-square"></i>
+              <span>{{ execucao.nomeAtividade }}</span>
+            </a>
+          </ng-template>
+        </p-timeline>
+
+        <app-ponto-intervalo-lista
+          [intervalos]="detalheDia.intervalos"
+          [minutoMinimo]="intervaloMinimoMinutos"
+        />
+      }
+    </div>
+  }
+</div>

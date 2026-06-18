@@ -1,0 +1,86 @@
+<div class="ponto">
+  <div class="ponto__cabecalho">
+    <h1 class="ponto__titulo">Ponto</h1>
+
+    <form [formGroup]="formularioFiltros" class="ponto__filtros">
+      @if (sessao.eGestor()) {
+        <p-select
+          formControlName="usuarioId"
+          [options]="usuarios()"
+          optionLabel="nomeCompleto"
+          optionValue="id"
+          placeholder="Todos (hoje)"
+          [showClear]="true"
+          appendTo="body"
+          (onChange)="aoMudarUsuario()"
+        />
+      }
+      @if (modo() === 'mensal') {
+        <p-datepicker
+          formControlName="mesAno"
+          view="month"
+          dateFormat="mm/yy"
+          [maxDate]="hoje"
+          [showIcon]="true"
+          appendTo="body"
+          (onSelect)="aoMudarMes()"
+        />
+      }
+    </form>
+  </div>
+
+  @if (carregando()) {
+    <div class="ponto__carregando">
+      <p-progressSpinner strokeWidth="4" />
+    </div>
+  } @else if (modo() === 'todos') {
+    <!-- Visão "todos hoje" (gestor) -->
+    @if (pontosTodos().length) {
+      <div class="ponto__grid">
+        @for (ponto of pontosTodos(); track ponto.usuarioId) {
+          <app-ponto-usuario-card [ponto]="ponto" />
+        }
+      </div>
+    } @else {
+      <div class="ponto__vazio">
+        <i class="pi pi-users ponto__vazio-icone"></i>
+        <p class="ponto__vazio-texto">Nenhum usuário ativo encontrado.</p>
+      </div>
+    }
+  } @else if (pontoMensal(); as mensal) {
+    <!-- Visão mensal (gestor com filtro ou desenvolvedor) -->
+    <div class="ponto__mes-titulo">
+      {{ nomeMes(mensal.mes) }} de {{ mensal.ano }}
+      <span class="ponto__mes-info">· {{ mensal.diasUteisMes }} dias úteis</span>
+      @if (sessao.eGestor()) {
+        <span class="ponto__mes-info">· {{ mensal.nomeUsuario }}</span>
+      }
+    </div>
+
+    <div class="ponto__cards">
+      <app-ponto-resumo-card
+        rotulo="Meta do mês"
+        icone="pi pi-flag"
+        [valor]="mensal.metaMinutosMes | minutosParagHoras"
+      />
+      <app-ponto-resumo-card
+        rotulo="Trabalhado"
+        icone="pi pi-clock"
+        cor="primario"
+        [valor]="mensal.totalMinutosTrabalhadosMes | minutosParagHoras"
+      />
+      <app-ponto-resumo-card
+        rotulo="Saldo do mês"
+        icone="pi pi-chart-line"
+        [cor]="mensal.saldoMinutosMes >= 0 ? 'positivo' : 'negativo'"
+        [valor]="formatarSaldo(mensal.saldoMinutosMes)"
+      />
+    </div>
+
+    <div class="ponto__lista-dias">
+      @for (dia of mensal.dias; track dia.data) {
+        <app-ponto-mes-dia [dia]="dia" [usuarioId]="mensal.usuarioId" />
+      }
+    </div>
+  }
+</div>

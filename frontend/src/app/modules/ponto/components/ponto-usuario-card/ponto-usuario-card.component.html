@@ -1,0 +1,53 @@
+<div class="ponto-usuario-card">
+  <div class="ponto-usuario-card__resumo">
+    <span class="ponto-usuario-card__nome" [title]="ponto.nomeUsuario">{{ ponto.nomeUsuario }}</span>
+    <span class="ponto-usuario-card__total">{{ ponto.totalMinutosTrabalhados | minutosParagHoras }}</span>
+
+    <div class="ponto-usuario-card__sub">
+      @if (ponto.ehDiaUtil) {
+        <span
+          class="ponto-usuario-card__saldo"
+          [class.ponto-usuario-card__saldo--positivo]="ponto.saldoMinutos >= 0"
+          [class.ponto-usuario-card__saldo--negativo]="ponto.saldoMinutos < 0"
+        >
+          {{ formatarSaldo(ponto.saldoMinutos) }}
+        </span>
+      } @else {
+        <span class="ponto-usuario-card__badge">{{ ponto.motivoNaoUtil }}</span>
+      }
+      @if (ponto.intervalos.length) {
+        <span class="ponto-usuario-card__intervalos">
+          <i class="pi pi-pause-circle"></i> {{ ponto.intervalos.length }}
+        </span>
+      }
+    </div>
+  </div>
+
+  <div class="ponto-usuario-card__execucoes-area">
+    @if (ponto.execucoes.length) {
+      <ul class="ponto-usuario-card__execucoes">
+        @for (execucao of ponto.execucoes; track execucao.id) {
+          <li class="ponto-usuario-card__execucao">
+            <span class="ponto-usuario-card__horario">
+              {{ execucao.inicioData | date: 'HH:mm' }}
+              @if (execucao.fimData) {
+                –{{ execucao.fimData | date: 'HH:mm' }}
+              } @else {
+                <app-execucao-timer [inicioData]="execucao.inicioData" />
+              }
+            </span>
+            <a
+              [routerLink]="['/atividade', execucao.atividadeId]"
+              class="ponto-usuario-card__atividade"
+              [title]="execucao.nomeAtividade"
+            >
+              {{ execucao.nomeAtividade }}
+            </a>
+          </li>
+        }
+      </ul>
+    } @else {
+      <p class="ponto-usuario-card__vazio">Sem registros hoje</p>
+    }
+  </div>
+</div>

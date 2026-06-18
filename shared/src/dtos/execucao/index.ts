@@ -13,3 +13,5 @@ export * from './ExecucaoAlterarInternoDto';
 export * from './ExecucaoExcluirDto';
 export * from './ExecucaoUsuarioRecuperarDto';
 export * from './ExecucaoAtivaDto';
+export * from './ExecucaoDiaAgruparDto';
+export * from './ExecucaoDiaResumoDto';
