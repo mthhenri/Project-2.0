@@ -15,6 +15,7 @@ import {
   ExecucaoAlterarInternoDto,
   ExecucaoExcluirDto,
   ExecucaoUsuarioRecuperarDto,
+  ExecucaoAtivaDto,
 } from '@project20/shared';
 
 @Injectable()
@@ -183,19 +184,12 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
    * Verifica se o usuário possui execução ativa (sem fim_data) em qualquer atividade sua.
    * Retorna os dados básicos da execução ativa, ou null se não houver.
    */
-  async recuperarAtiva(dto: ExecucaoAtivaRecuperarDto): Promise<{
-    id: number;
-    atividadeId: number;
-    inicioData: Date;
-  } | null> {
-    const resultado = await this.executarConsulta<{
-      id: number;
-      atividadeId: number;
-      inicioData: Date;
-    }>(
+  async recuperarAtiva(dto: ExecucaoAtivaRecuperarDto): Promise<ExecucaoAtivaDto | null> {
+    const resultado = await this.executarConsulta<ExecucaoAtivaDto>(
       `SELECT
          execucao.id,
          execucao.atividade_id AS "atividadeId",
+         execucao.descricao,
          execucao.inicio_data  AS "inicioData"
        FROM execucao
        INNER JOIN atividade

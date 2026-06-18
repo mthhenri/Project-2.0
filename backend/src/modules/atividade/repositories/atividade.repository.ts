@@ -71,6 +71,10 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
          atividade.descricao,
          atividade.status,
          atividade.ordem_exibicao  AS "ordemExibicao",
+         (SELECT COUNT(*)::int
+            FROM atividade atividade_do_usuario
+           WHERE atividade_do_usuario.usuario_id = atividade.usuario_id
+             AND atividade_do_usuario.is_deleted = false) AS "totalAtividadesUsuario",
          atividade.created_date    AS "createdDate"
        FROM atividade
        INNER JOIN usuario
@@ -85,29 +89,71 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
   }
 
   /**
-   * Lista atividades de uma demanda com paginação e filtro opcional de status.
+   * Lista atividades com paginação e filtros opcionais.
+   * A listagem não é mais escopada a uma única demanda: cruza atividade →
+   * demanda → projeto para permitir busca textual por nome de projeto, demanda
+   * ou atividade, além de filtros por executor, status, demanda e intervalo de
+   * data de criação. O controle de acesso (gestor x desenvolvedor) é resolvido
+   * na service via o filtro usuarioId.
    */
   async listar(
     filtros: AtividadeListarDto,
   ): Promise<{ itens: AtividadeResumoDto[]; total: number }> {
     const pagina         = filtros.pagina ?? 1;
     const itensPorPagina = filtros.itensPorPagina ?? 20;
-    const parametros: Record<string, unknown> = { demandaId: filtros.demandaId };
+    const parametros: Record<string, unknown> = {};
     const condicoes: string[] = [
       'atividade.is_deleted = false',
-      'atividade.demanda_id = :demandaId',
+      'demanda.is_deleted = false',
+      'projeto.is_deleted = false',
     ];
 
-    if (filtros.status !== undefined) {
-      condicoes.push('atividade.status = :status');
+    if (filtros.demandaId !== undefined) {
+      condicoes.push('atividade.demanda_id = :demandaId');
+      parametros.demandaId = filtros.demandaId;
+    }
+
+    if (filtros.usuarioId !== undefined) {
+      condicoes.push('atividade.usuario_id = :usuarioId');
+      parametros.usuarioId = filtros.usuarioId;
+    }
+
+    if (filtros.status !== undefined && filtros.status.length > 0) {
+      condicoes.push('atividade.status = ANY(:status)');
       parametros.status = filtros.status;
     }
 
-    const clausulaWhere = condicoes.join(' AND ');
+    if (filtros.busca !== undefined && filtros.busca.trim() !== '') {
+      condicoes.push(
+        '(atividade.nome ILIKE :busca OR demanda.nome ILIKE :busca OR projeto.nome ILIKE :busca)',
+      );
+      parametros.busca = `%${filtros.busca.trim()}%`;
+    }
+
+    if (filtros.dataInicio !== undefined) {
+      condicoes.push('atividade.created_date::date >= :dataInicio');
+      parametros.dataInicio = filtros.dataInicio;
+    }
+
+    if (filtros.dataFim !== undefined) {
+      condicoes.push('atividade.created_date::date <= :dataFim');
+      parametros.dataFim = filtros.dataFim;
+    }
+
+    const clausulaWhere = condicoes.join('\n         AND ');
+    const clausulasJoin = `
+       INNER JOIN usuario
+         ON usuario.id = atividade.usuario_id
+         AND usuario.is_deleted = false
+       INNER JOIN demanda
+         ON demanda.id = atividade.demanda_id
+       INNER JOIN projeto
+         ON projeto.id = demanda.projeto_id`;
 
     const [{ total }] = await this.executarConsulta<{ total: number }>(
       `SELECT COUNT(atividade.id)::int AS total
        FROM atividade
+       ${clausulasJoin}
        WHERE ${clausulaWhere}`,
       parametros,
     );
@@ -120,13 +166,16 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
          atividade.status,
          atividade.ordem_exibicao  AS "ordemExibicao",
          atividade.usuario_id      AS "usuarioId",
-         usuario.nome_completo     AS "nomeUsuario"
+         usuario.nome_completo     AS "nomeUsuario",
+         atividade.demanda_id      AS "demandaId",
+         demanda.nome              AS "nomeDemanda",
+         projeto.id                AS "projetoId",
+         projeto.nome              AS "nomeProjeto",
+         atividade.created_date    AS "createdDate"
        FROM atividade
-       INNER JOIN usuario
-         ON usuario.id = atividade.usuario_id
-         AND usuario.is_deleted = false
+       ${clausulasJoin}
        WHERE ${clausulaWhere}
-       ORDER BY atividade.ordem_exibicao ASC, atividade.nome ASC
+       ORDER BY atividade.created_date DESC, atividade.nome ASC
        LIMIT ${itensPorPagina} OFFSET ${deslocamento}`,
       parametros,
     );

@@ -10,6 +10,7 @@ import {
   ExecucaoListarDto,
   ExecucaoResumoDto,
   ExecucaoAlterarDto,
+  ExecucaoAtivaDto,
   UsuarioTipoEnum,
 } from '@project20/shared';
 import { StandardResponse } from '@project20/shared';
@@ -96,6 +97,22 @@ export class ExecucaoService {
       sucesso:  true,
       dados:    execucaoEncerrada,
       mensagem: 'Execução encerrada com sucesso',
+    };
+  }
+
+  /**
+   * Recupera a execução ativa (sem fim_data) do usuário autenticado, ou null.
+   * Usada para alternar o estado play/pause na listagem de atividades.
+   */
+  async recuperarAtiva(
+    usuarioAtivo: JwtPayload,
+  ): Promise<StandardResponse<ExecucaoAtivaDto | null>> {
+    const execucaoAtiva = await this.execucaoRepositorio.recuperarAtiva({ usuarioId: usuarioAtivo.sub });
+
+    return {
+      sucesso:  true,
+      dados:    execucaoAtiva,
+      mensagem: execucaoAtiva ? 'Execução ativa recuperada com sucesso' : 'Nenhuma execução ativa',
     };
   }
 

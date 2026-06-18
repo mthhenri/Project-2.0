@@ -6,6 +6,7 @@ import {
   DemandaCriarDto,
   DemandaCriadaDto,
   DemandaListarDto,
+  DemandaAtribuidaDto,
   DemandaResumoDto,
   DemandaRecuperadaDto,
   DemandaAlterarDto,
@@ -136,6 +137,22 @@ export class DemandaService {
         totalPaginas,
       },
       mensagem: 'Demandas listadas com sucesso',
+    };
+  }
+
+  /**
+   * Lista todas as demandas às quais o usuário logado está atribuído,
+   * em qualquer projeto, para seleção na criação de atividades.
+   */
+  async listarAtribuidas(
+    usuarioAtivo: JwtPayload,
+  ): Promise<StandardResponse<DemandaAtribuidaDto[]>> {
+    const demandas = await this.demandaRepositorio.listarAtribuidas(usuarioAtivo.sub);
+
+    return {
+      sucesso: true,
+      dados: demandas,
+      mensagem: 'Demandas atribuídas listadas com sucesso',
     };
   }
 

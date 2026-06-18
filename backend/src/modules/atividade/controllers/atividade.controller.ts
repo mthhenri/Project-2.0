@@ -44,10 +44,9 @@ export class AtividadeController {
     return this.atividadeService.criar(dto, usuarioAtivo);
   }
 
-  @ApiOperation({ summary: 'Listar atividades de uma demanda (query param demandaId obrigatório)' })
+  @ApiOperation({ summary: 'Listar atividades com filtros (executor, status, demanda, busca textual e intervalo de data). Gestor vê todas; desenvolvedor vê apenas as próprias.' })
   @ApiResponse({ status: 200, description: 'Atividades listadas com sucesso' })
   @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
-  @ApiResponse({ status: 403, description: 'Sem acesso à demanda', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
   @Get()
   listar(
     @Query() filtros: AtividadeListarDto,

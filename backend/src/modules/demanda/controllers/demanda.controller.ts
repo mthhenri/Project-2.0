@@ -92,6 +92,14 @@ export class DemandaController {
     return this.demandaService.recuperarAncestral(id, usuarioAtivo);
   }
 
+  @ApiOperation({ summary: 'Listar demandas às quais o usuário logado está atribuído (todos os projetos)' })
+  @ApiResponse({ status: 200, description: 'Demandas atribuídas listadas com sucesso' })
+  @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+  @Get('atribuidas')
+  listarAtribuidas(@ActiveUser() usuarioAtivo: JwtPayload) {
+    return this.demandaService.listarAtribuidas(usuarioAtivo);
+  }
+
   @ApiOperation({ summary: 'Recuperar demanda por ID' })
   @ApiResponse({ status: 200, description: 'Demanda recuperada com sucesso' })
   @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })

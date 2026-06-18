@@ -56,6 +56,14 @@ export class ExecucaoController {
     return this.execucaoService.listar(filtros, usuarioAtivo);
   }
 
+  @ApiOperation({ summary: 'Recuperar a execução ativa do usuário autenticado (ou null)' })
+  @ApiResponse({ status: 200, description: 'Execução ativa recuperada com sucesso' })
+  @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+  @Get('ativa')
+  recuperarAtiva(@ActiveUser() usuarioAtivo: JwtPayload) {
+    return this.execucaoService.recuperarAtiva(usuarioAtivo);
+  }
+
   @ApiOperation({ summary: 'Recuperar execução por ID' })
   @ApiResponse({ status: 200, description: 'Execução recuperada com sucesso' })
   @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })

@@ -44,6 +44,11 @@ export class AtividadeService {
       throw new ResourceNotFoundException('Demanda');
     }
 
+    const executorId =
+      usuarioAtivo.tipo === UsuarioTipoEnum.GESTOR
+        ? (dto.usuarioId ?? usuarioAtivo.sub)
+        : usuarioAtivo.sub;
+
     const temAcesso = await this.atividadeRepositorio.validarAcessoDemanda({
       demandaId: dto.demandaId,
       usuarioId: usuarioAtivo.sub,
@@ -54,7 +59,7 @@ export class AtividadeService {
 
     const atividadeCriada = await this.atividadeRepositorio.inserir({
       demandaId:     dto.demandaId,
-      usuarioId:     usuarioAtivo.sub,
+      usuarioId:     executorId,
       nome:          dto.nome,
       descricao:     dto.descricao ?? null,
       status:        dto.status,
@@ -69,7 +74,14 @@ export class AtividadeService {
   }
 
   /**
-   * Lista atividades de uma demanda com paginação e filtro opcional de status.
+   * Lista atividades com paginação e filtros opcionais (executor, status,
+   * demanda, busca textual e intervalo de data de criação).
+   *
+   * Controle de acesso por tipo de usuário:
+   * - Gestor: vê as atividades de todos; pode opcionalmente filtrar por um
+   *   executor específico via filtros.usuarioId.
+   * - Desenvolvedor: vê somente as próprias atividades. Qualquer usuarioId
+   *   recebido é sobrescrito pelo id do usuário autenticado.
    */
   async listar(
     filtros: AtividadeListarDto,
@@ -78,17 +90,12 @@ export class AtividadeService {
     const pagina         = filtros.pagina ?? 1;
     const itensPorPagina = filtros.itensPorPagina ?? 20;
 
-    if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR) {
-      const temAcesso = await this.atividadeRepositorio.validarAcessoDemanda({
-        demandaId: filtros.demandaId,
-        usuarioId: usuarioAtivo.sub,
-      });
-      if (!temAcesso) {
-        throw new UnauthorizedAccessException('Usuário não tem acesso à demanda informada');
-      }
-    }
+    const filtrosEfetivos: AtividadeListarDto =
+      usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR
+        ? { ...filtros, usuarioId: usuarioAtivo.sub }
+        : filtros;
 
-    const { itens, total } = await this.atividadeRepositorio.listar(filtros);
+    const { itens, total } = await this.atividadeRepositorio.listar(filtrosEfetivos);
     const totalPaginas     = Math.ceil(total / itensPorPagina);
 
     return {

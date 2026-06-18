@@ -1,0 +1,514 @@
+import { Component, inject, signal, DestroyRef, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
+import { finalize, debounceTime, distinctUntilChanged, forkJoin } from 'rxjs';
+import { TableModule, TableLazyLoadEvent } from 'primeng/table';
+import { ButtonModule } from 'primeng/button';
+import { Select } from 'primeng/select';
+import { MultiSelectModule } from 'primeng/multiselect';
+import { InputTextModule } from 'primeng/inputtext';
+import { TextareaModule } from 'primeng/textarea';
+import { DialogModule } from 'primeng/dialog';
+import { DatePickerModule } from 'primeng/datepicker';
+import { EditorModule } from 'primeng/editor';
+import { TabsModule } from 'primeng/tabs';
+import { Tag } from 'primeng/tag';
+import { TooltipModule } from 'primeng/tooltip';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ConfirmationService, MessageService } from 'primeng/api';
+import {
+  AtividadeResumoDto,
+  AtividadeStatusEnum,
+  AtividadeListarDto,
+  AtividadeCriarDto,
+  AtividadeAlterarDto,
+  AtividadeRecuperadaDto,
+  TagResumoDto,
+  UsuarioResumoDto,
+  UsuarioStatusEnum,
+  DemandaAtribuidaDto,
+  ExecucaoResumoDto,
+  ExecucaoAtivaDto,
+  ExecucaoIniciarDto,
+  ExecucaoEncerrarDto,
+} from '@project20/shared';
+import { AtividadeService } from '../../services/atividade.service';
+import { UsuarioService } from '../../../usuario/services/usuario.service';
+import { DemandaService } from '../../../demanda/services/demanda.service';
+import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
+import { AssistenteDescricaoComponent } from '../../../../shared/components/assistente-descricao/assistente-descricao.component';
+import { DataBrasileiraPipe } from '../../../../shared/pipes/data-brasileira.pipe';
+import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-horas.pipe';
+import {
+  ATIVIDADE_STATUS_OPCOES,
+  ATIVIDADE_STATUS_NAO_DESENVOLVIDA,
+  severidadeStatusAtividade,
+  rotuloStatusAtividade,
+} from '../../models/atividade.model';
+
+type DemandaAtribuidaOpcao = DemandaAtribuidaDto & { rotulo: string };
+
+@Component({
+  selector: 'app-atividade-listagem',
+  standalone: true,
+  imports: [
+    ReactiveFormsModule,
+    TableModule,
+    ButtonModule,
+    Select,
+    MultiSelectModule,
+    InputTextModule,
+    TextareaModule,
+    DialogModule,
+    DatePickerModule,
+    EditorModule,
+    TabsModule,
+    Tag,
+    TooltipModule,
+    ConfirmDialogModule,
+    AssistenteDescricaoComponent,
+    DataBrasileiraPipe,
+    MinutosParaHorasPipe,
+  ],
+  templateUrl: './atividade-listagem.page.html',
+  styleUrl: './atividade-listagem.page.scss',
+  providers: [ConfirmationService],
+})
+export class AtividadeListagemPage implements OnInit {
+  private readonly atividadeService = inject(AtividadeService);
+  private readonly usuarioService = inject(UsuarioService);
+  private readonly demandaService = inject(DemandaService);
+  private readonly rotaAtiva = inject(ActivatedRoute);
+  private readonly confirmationService = inject(ConfirmationService);
+  private readonly messageService = inject(MessageService);
+  private readonly formBuilder = inject(FormBuilder);
+  private readonly destroyRef = inject(DestroyRef);
+  readonly sessao = inject(UsuarioSessaoService);
+
+  readonly formularioFiltros = this.formBuilder.group({
+    status:    [ATIVIDADE_STATUS_NAO_DESENVOLVIDA as AtividadeStatusEnum[]],
+    usuarioId: [null as number | null],
+    busca:     [''],
+    intervalo: [null as (Date | null)[] | null],
+  });
+
+  readonly demandaId = signal<number | null>(null);
+  readonly atividades = signal<AtividadeResumoDto[]>([]);
+  readonly tagsPorAtividade = signal<Record<number, TagResumoDto[]>>({});
+  readonly usuarios = signal<UsuarioResumoDto[]>([]);
+  readonly totalRegistros = signal<number>(0);
+  readonly carregando = signal<boolean>(false);
+  readonly paginaAtual = signal<number>(1);
+  readonly itensPorPagina = signal<number>(10);
+
+  readonly statusOpcoes = ATIVIDADE_STATUS_OPCOES;
+  readonly severidadeStatus = severidadeStatusAtividade;
+  readonly rotuloStatus = rotuloStatusAtividade;
+
+  readonly execucaoAtiva = signal<ExecucaoAtivaDto | null>(null);
+
+  // --- Dialog: nova atividade ---
+  readonly mostrarDialogNova = signal<boolean>(false);
+  readonly salvandoNova = signal<boolean>(false);
+  readonly demandasAtribuidas = signal<DemandaAtribuidaOpcao[]>([]);
+  readonly carregandoDemandasAtribuidas = signal<boolean>(false);
+
+  readonly formularioNova = this.formBuilder.group({
+    nome:      ['', [Validators.required, Validators.minLength(3), Validators.maxLength(255)]],
+    demandaId: [null as number | null, [Validators.required]],
+    usuarioId: [null as number | null],
+    status:    [AtividadeStatusEnum.DESENVOLVENDO as AtividadeStatusEnum, [Validators.required]],
+    descricao: [''],
+  });
+
+  // --- Dialog: visualizar atividade ---
+  readonly mostrarDialogVisualizar = signal<boolean>(false);
+  readonly carregandoVisualizar = signal<boolean>(false);
+  readonly atividadeVisualizada = signal<AtividadeRecuperadaDto | null>(null);
+  readonly tagsVisualizar = signal<TagResumoDto[]>([]);
+  readonly execucoesVisualizar = signal<ExecucaoResumoDto[]>([]);
+  readonly salvandoDescricao = signal<boolean>(false);
+
+  readonly formularioDescricao = this.formBuilder.group({
+    descricao: [''],
+  });
+
+  // --- Dialog: iniciar/encerrar execução ---
+  readonly mostrarDialogExecucao = signal<boolean>(false);
+  readonly salvandoExecucao = signal<boolean>(false);
+  readonly modoExecucao = signal<'iniciar' | 'encerrar'>('iniciar');
+  readonly atividadeExecucao = signal<AtividadeResumoDto | null>(null);
+  readonly execucoesDialogExecucao = signal<ExecucaoResumoDto[]>([]);
+  readonly carregandoExecucoesDialog = signal<boolean>(false);
+
+  readonly formularioExecucao = this.formBuilder.group({
+    descricao: ['', [Validators.required]],
+  });
+
+  ngOnInit(): void {
+    const demandaIdParam = Number(this.rotaAtiva.snapshot.queryParamMap.get('demandaId'));
+    this.demandaId.set(Number.isFinite(demandaIdParam) && demandaIdParam > 0 ? demandaIdParam : null);
+
+    if (this.sessao.eGestor()) this.carregarUsuarios();
+
+    this.formularioFiltros.controls.busca.valueChanges
+      .pipe(debounceTime(400), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.aoMudarFiltro());
+
+    this.buscarAtividades();
+    this.carregarExecucaoAtiva();
+  }
+
+  buscarAtividades(): void {
+    this.carregando.set(true);
+
+    const filtros: AtividadeListarDto = {
+      pagina:         this.paginaAtual(),
+      itensPorPagina: this.itensPorPagina(),
+    };
+
+    const demandaId = this.demandaId();
+    if (demandaId) filtros.demandaId = demandaId;
+
+    const { status, usuarioId, busca } = this.formularioFiltros.value;
+    if (status?.length) filtros.status = status;
+    if (usuarioId)      filtros.usuarioId = usuarioId;
+    if (busca?.trim())  filtros.busca = busca.trim();
+
+    const intervalo = this.formularioFiltros.controls.intervalo.value ?? [];
+    const [dataInicio, dataFim] = intervalo;
+    if (dataInicio instanceof Date) filtros.dataInicio = this.formatarData(dataInicio);
+    if (dataFim instanceof Date)    filtros.dataFim = this.formatarData(dataFim);
+
+    this.atividadeService
+      .listar(filtros)
+      .pipe(finalize(() => this.carregando.set(false)))
+      .subscribe({
+        next: (resposta) => {
+          if (resposta.sucesso && resposta.dados) {
+            this.atividades.set(resposta.dados.itens);
+            this.totalRegistros.set(resposta.dados.totalItens);
+            this.carregarTagsDasAtividades(resposta.dados.itens);
+          }
+        },
+      });
+  }
+
+  aoCarregarTabela(evento: TableLazyLoadEvent): void {
+    const primeira = evento.first ?? 0;
+    const linhas = evento.rows ?? 10;
+    this.paginaAtual.set(Math.floor(primeira / linhas) + 1);
+    this.itensPorPagina.set(linhas);
+    this.buscarAtividades();
+  }
+
+  aoMudarFiltro(): void {
+    this.paginaAtual.set(1);
+    this.buscarAtividades();
+  }
+
+  limparFiltros(): void {
+    this.formularioFiltros.reset({
+      status:    ATIVIDADE_STATUS_NAO_DESENVOLVIDA,
+      usuarioId: null,
+      busca:     '',
+      intervalo: null,
+    });
+    this.aoMudarFiltro();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Nova atividade
+  // ---------------------------------------------------------------------------
+
+  abrirDialogNova(): void {
+    this.formularioNova.reset({
+      nome:      '',
+      demandaId: this.demandaId(),
+      usuarioId: null,
+      status:    AtividadeStatusEnum.DESENVOLVENDO,
+      descricao: '',
+    });
+    if (this.demandasAtribuidas().length === 0) this.carregarDemandasAtribuidas();
+    this.mostrarDialogNova.set(true);
+  }
+
+  salvarNova(): void {
+    if (this.formularioNova.invalid) {
+      this.formularioNova.markAllAsTouched();
+      return;
+    }
+
+    this.salvandoNova.set(true);
+    const valor = this.formularioNova.value;
+    const dto: AtividadeCriarDto = {
+      demandaId:     valor.demandaId!,
+      nome:          valor.nome!,
+      status:        valor.status!,
+      ordemExibicao: 0,
+    };
+    const descricao = valor.descricao?.trim();
+    if (descricao) dto.descricao = descricao;
+    if (this.sessao.eGestor() && valor.usuarioId) dto.usuarioId = valor.usuarioId;
+
+    this.atividadeService
+      .criar(dto)
+      .pipe(finalize(() => this.salvandoNova.set(false)))
+      .subscribe({
+        next: (resposta) => {
+          if (resposta.sucesso) {
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Sucesso',
+              detail: 'Atividade criada com sucesso',
+            });
+            this.mostrarDialogNova.set(false);
+            this.aoMudarFiltro();
+          }
+        },
+      });
+  }
+
+  aceitarDescricaoAssistenteNova(texto: string): void {
+    this.formularioNova.patchValue({ descricao: texto });
+  }
+
+  campoInvalidoNova(nomeCampo: string): boolean {
+    const controle = this.formularioNova.get(nomeCampo);
+    return !!(controle?.invalid && controle?.touched);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Visualizar atividade
+  // ---------------------------------------------------------------------------
+
+  abrirAtividade(atividade: AtividadeResumoDto): void {
+    this.carregandoVisualizar.set(true);
+    this.atividadeVisualizada.set(null);
+    this.tagsVisualizar.set([]);
+    this.execucoesVisualizar.set([]);
+    this.formularioDescricao.reset({ descricao: '' });
+    this.mostrarDialogVisualizar.set(true);
+
+    forkJoin({
+      atividade:  this.atividadeService.recuperar(atividade.id),
+      tags:       this.atividadeService.listarTags(atividade.id),
+      execucoes:  this.atividadeService.listarExecucoesPorAtividade(atividade.id),
+    })
+      .pipe(finalize(() => this.carregandoVisualizar.set(false)))
+      .subscribe({
+        next: ({ atividade, tags, execucoes }) => {
+          if (atividade.sucesso && atividade.dados) {
+            this.atividadeVisualizada.set(atividade.dados);
+            this.formularioDescricao.patchValue({ descricao: atividade.dados.descricao ?? '' });
+          }
+          if (tags.sucesso && tags.dados)           this.tagsVisualizar.set(tags.dados);
+          if (execucoes.sucesso && execucoes.dados) this.execucoesVisualizar.set(execucoes.dados.itens);
+        },
+      });
+  }
+
+  salvarDescricao(): void {
+    const atividade = this.atividadeVisualizada();
+    if (!atividade) return;
+
+    this.salvandoDescricao.set(true);
+    const dto: AtividadeAlterarDto = { descricao: this.formularioDescricao.value.descricao ?? '' };
+    this.atividadeService
+      .alterar(atividade.id, dto)
+      .pipe(finalize(() => this.salvandoDescricao.set(false)))
+      .subscribe({
+        next: (resposta) => {
+          if (resposta.sucesso && resposta.dados) {
+            const alterada = resposta.dados;
+            this.atividadeVisualizada.update((atual) => (atual ? { ...atual, descricao: alterada.descricao } : atual));
+            this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Descrição salva' });
+          }
+        },
+      });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Execução (play/pause)
+  // ---------------------------------------------------------------------------
+
+  carregarExecucaoAtiva(): void {
+    this.atividadeService.recuperarExecucaoAtiva().subscribe({
+      next: (resposta) => {
+        if (resposta.sucesso) this.execucaoAtiva.set(resposta.dados ?? null);
+      },
+    });
+  }
+
+  podeExecutar(atividade: AtividadeResumoDto): boolean {
+    return atividade.usuarioId === this.sessao.id();
+  }
+
+  atividadeEmExecucao(atividadeId: number): boolean {
+    return this.execucaoAtiva()?.atividadeId === atividadeId;
+  }
+
+  alternarExecucao(atividade: AtividadeResumoDto): void {
+    const modo = this.atividadeEmExecucao(atividade.id) ? 'encerrar' : 'iniciar';
+    this.modoExecucao.set(modo);
+    this.atividadeExecucao.set(atividade);
+
+    const descricaoInicial = modo === 'encerrar' ? this.execucaoAtiva()?.descricao ?? '' : '';
+    this.formularioExecucao.reset({ descricao: descricaoInicial });
+
+    this.carregarExecucoesDialog(atividade.id);
+    this.mostrarDialogExecucao.set(true);
+  }
+
+  confirmarExecucao(): void {
+    if (this.formularioExecucao.invalid) {
+      this.formularioExecucao.markAllAsTouched();
+      return;
+    }
+
+    const atividade = this.atividadeExecucao();
+    if (!atividade) return;
+
+    const descricao = this.formularioExecucao.value.descricao!.trim();
+    this.salvandoExecucao.set(true);
+
+    if (this.modoExecucao() === 'iniciar') {
+      const dto: ExecucaoIniciarDto = { atividadeId: atividade.id, descricao };
+      this.atividadeService
+        .iniciarExecucao(dto)
+        .pipe(finalize(() => this.salvandoExecucao.set(false)))
+        .subscribe({ next: (resposta) => this.aposExecucao(resposta.sucesso, 'Execução iniciada com sucesso') });
+    } else {
+      const execucao = this.execucaoAtiva();
+      if (!execucao) {
+        this.salvandoExecucao.set(false);
+        return;
+      }
+      const dto: ExecucaoEncerrarDto = { descricao };
+      this.atividadeService
+        .encerrarExecucao(execucao.id, dto)
+        .pipe(finalize(() => this.salvandoExecucao.set(false)))
+        .subscribe({ next: (resposta) => this.aposExecucao(resposta.sucesso, 'Execução encerrada com sucesso') });
+    }
+  }
+
+  aceitarDescricaoAssistenteExecucao(texto: string): void {
+    this.formularioExecucao.patchValue({ descricao: texto });
+  }
+
+  campoInvalidoExecucao(nomeCampo: string): boolean {
+    const controle = this.formularioExecucao.get(nomeCampo);
+    return !!(controle?.invalid && controle?.touched);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Auxiliares de tabela
+  // ---------------------------------------------------------------------------
+
+  iniciais(nome: string): string {
+    return (nome ?? '')
+      .split(' ')
+      .slice(0, 2)
+      .map((parte) => parte[0])
+      .join('')
+      .toUpperCase();
+  }
+
+  tagsDe(atividadeId: number): TagResumoDto[] {
+    return this.tagsPorAtividade()[atividadeId] ?? [];
+  }
+
+  confirmarExclusao(atividade: AtividadeResumoDto): void {
+    this.confirmationService.confirm({
+      message: `Deseja excluir a atividade "${atividade.nome}"? Esta ação não pode ser desfeita.`,
+      header: 'Confirmar exclusão',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Excluir',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => this.excluirAtividade(atividade),
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Privados
+  // ---------------------------------------------------------------------------
+
+  private aposExecucao(sucesso: boolean, mensagem: string): void {
+    if (!sucesso) return;
+    this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: mensagem });
+    this.mostrarDialogExecucao.set(false);
+    this.carregarExecucaoAtiva();
+  }
+
+  private carregarExecucoesDialog(atividadeId: number): void {
+    this.carregandoExecucoesDialog.set(true);
+    this.execucoesDialogExecucao.set([]);
+    this.atividadeService
+      .listarExecucoesPorAtividade(atividadeId)
+      .pipe(finalize(() => this.carregandoExecucoesDialog.set(false)))
+      .subscribe({
+        next: (resposta) => {
+          if (resposta.sucesso && resposta.dados) this.execucoesDialogExecucao.set(resposta.dados.itens);
+        },
+      });
+  }
+
+  private carregarDemandasAtribuidas(): void {
+    this.carregandoDemandasAtribuidas.set(true);
+    this.demandaService
+      .listarAtribuidas()
+      .pipe(finalize(() => this.carregandoDemandasAtribuidas.set(false)))
+      .subscribe({
+        next: (resposta) => {
+          if (resposta.sucesso && resposta.dados) {
+            this.demandasAtribuidas.set(
+              resposta.dados.map((demanda) => ({ ...demanda, rotulo: `${demanda.nomeProjeto} - ${demanda.nome}` })),
+            );
+          }
+        },
+      });
+  }
+
+  private carregarUsuarios(): void {
+    this.usuarioService.listar({ status: UsuarioStatusEnum.ATIVO, itensPorPagina: 100 }).subscribe({
+      next: (resposta) => {
+        if (resposta.sucesso && resposta.dados) this.usuarios.set(resposta.dados.itens);
+      },
+    });
+  }
+
+  private carregarTagsDasAtividades(atividades: AtividadeResumoDto[]): void {
+    this.tagsPorAtividade.set({});
+    for (const atividade of atividades) {
+      this.atividadeService.listarTags(atividade.id).subscribe({
+        next: (resposta) => {
+          if (resposta.sucesso && resposta.dados) {
+            this.tagsPorAtividade.update((mapa) => ({ ...mapa, [atividade.id]: resposta.dados ?? [] }));
+          }
+        },
+      });
+    }
+  }
+
+  private excluirAtividade(atividade: AtividadeResumoDto): void {
+    this.atividadeService.excluir(atividade.id).subscribe({
+      next: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Sucesso',
+          detail: `Atividade "${atividade.nome}" excluída com sucesso`,
+        });
+        this.buscarAtividades();
+      },
+    });
+  }
+
+  private formatarData(data: Date): string {
+    const ano = data.getFullYear();
+    const mes = String(data.getMonth() + 1).padStart(2, '0');
+    const dia = String(data.getDate()).padStart(2, '0');
+    return `${ano}-${mes}-${dia}`;
+  }
+}

@@ -1,0 +1,226 @@
+<div class="atividade-detalhe">
+  <div class="atividade-detalhe__topo">
+    <p-button
+      icon="pi pi-arrow-left"
+      [text]="true"
+      severity="secondary"
+      size="small"
+      label="Atividades"
+      (onClick)="voltar()"
+    />
+  </div>
+
+  @if (atividade(); as atividade) {
+    <div class="atividade-detalhe__cabecalho">
+      <div class="atividade-detalhe__identificacao">
+        <h1 class="atividade-detalhe__titulo">{{ atividade.nome }}</h1>
+        <div class="atividade-detalhe__meta">
+          <button type="button" class="atividade-detalhe__demanda-link" (click)="voltar()">
+            <i class="pi pi-sitemap"></i> Demanda #{{ atividade.demandaId }}
+          </button>
+          <span class="atividade-detalhe__executor">
+            <span class="atividade-detalhe__avatar">{{ iniciais() }}</span>
+            {{ atividade.nomeUsuario }}
+          </span>
+        </div>
+      </div>
+
+      <div class="atividade-detalhe__status-inline">
+        <label class="atividade-detalhe__status-label">Status</label>
+        <p-select
+          [formControl]="formularioStatus.controls.status"
+          [options]="statusOpcoes"
+          optionLabel="label"
+          optionValue="value"
+          (onChange)="alterarStatus()"
+          class="atividade-detalhe__status-select"
+        />
+      </div>
+    </div>
+
+    <div class="atividade-detalhe__conteudo">
+      <section class="atividade-detalhe__bloco">
+        <div class="atividade-detalhe__bloco-cabecalho">
+          <h2 class="atividade-detalhe__bloco-titulo">Descrição</h2>
+          <p-button
+            icon="pi pi-pencil"
+            [text]="true"
+            size="small"
+            label="Editar"
+            (onClick)="abrirDialogDescricao()"
+          />
+        </div>
+        @if (atividade.descricao) {
+          <p class="atividade-detalhe__descricao whitespace-pre-wrap">{{ atividade.descricao }}</p>
+        } @else {
+          <p class="text-surface-400">Sem descrição.</p>
+        }
+      </section>
+
+      <section class="atividade-detalhe__bloco">
+        <div class="atividade-detalhe__bloco-cabecalho">
+          <h2 class="atividade-detalhe__bloco-titulo">Tags</h2>
+          @if (sessao.eGestor()) {
+            <p-button
+              icon="pi pi-tags"
+              [text]="true"
+              size="small"
+              label="Editar"
+              (onClick)="abrirDialogTags()"
+            />
+          }
+        </div>
+        <div class="atividade-detalhe__tags">
+          @for (tag of tagsDaAtividade(); track tag.id) {
+            <span
+              class="atividade-detalhe__chip"
+              [style.background-color]="tag.cor + '22'"
+              [style.color]="tag.cor"
+              [style.border-color]="tag.cor + '55'"
+            >{{ tag.nome }}</span>
+          } @empty {
+            <span class="text-surface-400">Nenhuma tag atribuída.</span>
+          }
+        </div>
+      </section>
+
+      <section class="atividade-detalhe__bloco">
+        <div class="atividade-detalhe__bloco-cabecalho">
+          <h2 class="atividade-detalhe__bloco-titulo">Execuções recentes</h2>
+          <p-button
+            icon="pi pi-play"
+            size="small"
+            label="Iniciar Execução"
+            (onClick)="abrirDialogExecucao()"
+          />
+        </div>
+
+        @if (execucoesRecentes().length) {
+          <ul class="atividade-detalhe__execucoes">
+            @for (execucao of execucoesRecentes(); track execucao.id) {
+              <li class="atividade-detalhe__execucao">
+                <div class="atividade-detalhe__execucao-info">
+                  <span class="atividade-detalhe__execucao-descricao">{{ execucao.descricao }}</span>
+                  <span class="atividade-detalhe__execucao-data text-surface-500">
+                    {{ execucao.inicioData | dataBrasileira }}
+                    @if (execucao.duracaoMinutos !== null) {
+                      · {{ execucao.duracaoMinutos }} min
+                    } @else {
+                      · em andamento
+                    }
+                  </span>
+                </div>
+                @if (execucao.fimData === null) {
+                  <p-tag value="Em andamento" severity="info" />
+                }
+              </li>
+            }
+          </ul>
+          <div class="atividade-detalhe__execucoes-rodape">
+            <p-button
+              label="Ver histórico completo"
+              icon="pi pi-history"
+              [text]="true"
+              size="small"
+              (onClick)="irParaHistorico()"
+            />
+          </div>
+        } @else {
+          <p class="text-surface-400">Nenhuma execução registrada ainda.</p>
+        }
+      </section>
+    </div>
+  } @else if (!carregando()) {
+    <div class="atividade-detalhe__vazio">
+      <i class="pi pi-exclamation-circle text-4xl text-surface-300"></i>
+      <p class="text-surface-500 mt-3">Atividade não encontrada.</p>
+    </div>
+  }
+</div>
+
+<!-- Dialog: editar descrição -->
+<p-dialog
+  [visible]="mostrarDialogDescricao()"
+  (visibleChange)="mostrarDialogDescricao.set($event)"
+  header="Editar descrição"
+  [modal]="true"
+  [style]="{ width: '40rem' }"
+  [draggable]="false"
+>
+  <form [formGroup]="formularioDescricao" class="atividade-detalhe__dialog-form">
+    <textarea
+      pTextarea
+      formControlName="descricao"
+      rows="6"
+      placeholder="Descreva a atividade..."
+      class="w-full"
+    ></textarea>
+    <app-assistente-descricao
+      [textoAtual]="formularioDescricao.value.descricao || ''"
+      tipoEntidade="atividade"
+      [contextoEntidade]="atividade()?.nome || ''"
+      (textoAuxiliadoAceito)="aceitarDescricaoAssistente($event)"
+    />
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" severity="secondary" [outlined]="true" (onClick)="mostrarDialogDescricao.set(false)" />
+    <p-button label="Salvar" icon="pi pi-check" [loading]="carregandoDescricao()" (onClick)="salvarDescricao()" />
+  </ng-template>
+</p-dialog>
+
+<!-- Dialog: editar tags -->
+<p-dialog
+  [visible]="mostrarDialogTags()"
+  (visibleChange)="mostrarDialogTags.set($event)"
+  header="Editar tags"
+  [modal]="true"
+  [style]="{ width: '32rem' }"
+  [draggable]="false"
+>
+  <form [formGroup]="formularioTags" class="atividade-detalhe__dialog-form">
+    <p-multiSelect
+      [options]="tagsDisponiveis()"
+      formControlName="tagIds"
+      optionLabel="nome"
+      optionValue="id"
+      placeholder="Selecione as tags"
+      display="chip"
+      class="w-full"
+    />
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" severity="secondary" [outlined]="true" (onClick)="mostrarDialogTags.set(false)" />
+    <p-button label="Salvar" icon="pi pi-check" [loading]="carregandoTags()" (onClick)="salvarTags()" />
+  </ng-template>
+</p-dialog>
+
+<!-- Dialog: iniciar execução -->
+<p-dialog
+  [visible]="mostrarDialogExecucao()"
+  (visibleChange)="mostrarDialogExecucao.set($event)"
+  header="Iniciar execução"
+  [modal]="true"
+  [style]="{ width: '36rem' }"
+  [draggable]="false"
+>
+  <form [formGroup]="formularioExecucao" class="atividade-detalhe__dialog-form">
+    <label for="execucao-descricao" class="atividade-detalhe__status-label">
+      O que será executado?
+    </label>
+    <textarea
+      id="execucao-descricao"
+      pTextarea
+      formControlName="descricao"
+      rows="4"
+      placeholder="Descreva o que será feito nesta execução..."
+      class="w-full"
+    ></textarea>
+    @if (formularioExecucao.controls.descricao.invalid && formularioExecucao.controls.descricao.touched) {
+      <small class="atividade-detalhe__erro">A descrição da execução é obrigatória</small>
+    }
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" severity="secondary" [outlined]="true" (onClick)="mostrarDialogExecucao.set(false)" />
+    <p-button label="Iniciar" icon="pi pi-play" [loading]="carregandoExecucao()" (onClick)="iniciarExecucao()" />
+  </ng-template>
+</p-dialog>

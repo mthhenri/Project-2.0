@@ -18,6 +18,7 @@ import {
   DemandaTagsAtribuirDto,
   DemandaMembroDto,
   DemandaUsuarioAtribuirDto,
+  DemandaAtribuidaDto,
   TagResumoDto,
   StandardResponse,
   PaginatedResult,
@@ -36,6 +37,10 @@ export class DemandaService {
     if (filtros.itensPorPagina) params = params.set('itensPorPagina', String(filtros.itensPorPagina));
     if (filtros.status)    params = params.set('status', filtros.status);
     return this.httpClient.get<StandardResponse<PaginatedResult<DemandaResumoDto>>>(this.urlBase, { params });
+  }
+
+  listarAtribuidas(): Observable<StandardResponse<DemandaAtribuidaDto[]>> {
+    return this.httpClient.get<StandardResponse<DemandaAtribuidaDto[]>>(`${this.urlBase}/atribuidas`);
   }
 
   recuperarGrafo(projetoId: number): Observable<StandardResponse<DemandaGrafoDto>> {

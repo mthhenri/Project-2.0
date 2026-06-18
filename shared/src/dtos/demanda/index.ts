@@ -38,3 +38,4 @@ export * from './DemandaDescendenteListarDto';
 export * from './DemandaAncestralListarDto';
 export * from './DemandaGrafoRecuperarDto';
 export * from './DemandaConexaoListarDto';
+export * from './DemandaAtribuidaDto';

@@ -7,4 +7,9 @@ export class AtividadeResumoDto {
   ordemExibicao: number;
   usuarioId: number;
   nomeUsuario: string;
+  demandaId: number;
+  nomeDemanda: string;
+  projetoId: number;
+  nomeProjeto: string;
+  createdDate: Date;
 }

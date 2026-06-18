@@ -1,0 +1,472 @@
+<div class="atividade-listagem">
+  <div class="atividade-listagem__cabecalho">
+    <h1 class="atividade-listagem__titulo">Atividades</h1>
+    <p-button
+      label="Nova Atividade"
+      icon="pi pi-plus"
+      (onClick)="abrirDialogNova()"
+    />
+  </div>
+
+  <form [formGroup]="formularioFiltros" class="atividade-listagem__filtros">
+    <div class="atividade-listagem__filtro-campo atividade-listagem__filtro-campo--busca">
+      <label for="filtro-busca" class="atividade-listagem__filtro-label">Busca</label>
+      <input
+        id="filtro-busca"
+        type="text"
+        pInputText
+        formControlName="busca"
+        placeholder="Projeto, demanda ou atividade"
+        class="w-full"
+      />
+    </div>
+
+    <div class="atividade-listagem__filtro-campo">
+      <label for="filtro-status" class="atividade-listagem__filtro-label">Status</label>
+      <p-multiSelect
+        inputId="filtro-status"
+        formControlName="status"
+        [options]="statusOpcoes"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Todos os status"
+        selectedItemsLabel="{0} status"
+        [maxSelectedLabels]="2"
+        (onChange)="aoMudarFiltro()"
+        class="w-full"
+      />
+    </div>
+
+    @if (sessao.eGestor()) {
+      <div class="atividade-listagem__filtro-campo">
+        <label for="filtro-usuario" class="atividade-listagem__filtro-label">Usuário</label>
+        <p-select
+          inputId="filtro-usuario"
+          formControlName="usuarioId"
+          [options]="usuarios()"
+          optionLabel="nomeCompleto"
+          optionValue="id"
+          placeholder="Todos os usuários"
+          [showClear]="true"
+          [filter]="true"
+          filterBy="nomeCompleto"
+          (onChange)="aoMudarFiltro()"
+          (onClear)="aoMudarFiltro()"
+          class="w-full"
+        />
+      </div>
+    }
+
+    <div class="atividade-listagem__filtro-campo">
+      <label for="filtro-intervalo" class="atividade-listagem__filtro-label">Período de criação</label>
+      <p-datepicker
+        inputId="filtro-intervalo"
+        formControlName="intervalo"
+        selectionMode="range"
+        dateFormat="dd/mm/yy"
+        placeholder="dd/mm/aaaa – dd/mm/aaaa"
+        [readonlyInput]="true"
+        [showIcon]="true"
+        [showButtonBar]="true"
+        (onSelect)="aoMudarFiltro()"
+        (onClear)="aoMudarFiltro()"
+        class="w-full"
+      />
+    </div>
+
+    <div class="atividade-listagem__filtro-acoes">
+      <p-button
+        label="Limpar"
+        icon="pi pi-filter-slash"
+        [text]="true"
+        (onClick)="limparFiltros()"
+      />
+    </div>
+  </form>
+
+  <p-table
+    [value]="atividades()"
+    [lazy]="true"
+    [paginator]="true"
+    [rows]="itensPorPagina()"
+    [totalRecords]="totalRegistros()"
+    [loading]="carregando()"
+    (onLazyLoad)="aoCarregarTabela($event)"
+    [rowsPerPageOptions]="[10, 25, 50]"
+    [showCurrentPageReport]="true"
+    currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} atividades"
+    class="p-datatable-sm"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Projeto</th>
+        <th>Demanda</th>
+        <th>Atividade</th>
+        @if (sessao.eGestor()) {
+          <th>Usuário</th>
+        }
+        <th>Status</th>
+        <th>Tags</th>
+        <th class="atividade-listagem__coluna-acoes">Ações</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-atividade>
+      <tr class="atividade-listagem__linha" (click)="abrirAtividade(atividade)">
+        <td>{{ atividade.nomeProjeto }}</td>
+        <td>{{ atividade.nomeDemanda }}</td>
+        <td>{{ atividade.nome }}</td>
+        @if (sessao.eGestor()) {
+          <td>
+            <div class="atividade-listagem__executor">
+              <span class="atividade-listagem__avatar">{{ iniciais(atividade.nomeUsuario) }}</span>
+              <span class="text-surface-700">{{ atividade.nomeUsuario }}</span>
+            </div>
+          </td>
+        }
+        <td>
+          <p-tag
+            [value]="rotuloStatus(atividade.status)"
+            [severity]="severidadeStatus(atividade.status)"
+          />
+        </td>
+        <td>
+          <div class="atividade-listagem__tags">
+            @for (tag of tagsDe(atividade.id); track tag.id) {
+              <span
+                class="atividade-listagem__chip"
+                [style.background-color]="tag.cor + '22'"
+                [style.color]="tag.cor"
+                [style.border-color]="tag.cor + '55'"
+              >{{ tag.nome }}</span>
+            } @empty {
+              <span class="text-surface-400">—</span>
+            }
+          </div>
+        </td>
+        <td (click)="$event.stopPropagation()">
+          <div class="atividade-listagem__acoes">
+            @if (podeExecutar(atividade)) {
+              <p-button
+                [icon]="atividadeEmExecucao(atividade.id) ? 'pi pi-pause' : 'pi pi-play'"
+                [text]="true"
+                size="small"
+                [severity]="atividadeEmExecucao(atividade.id) ? 'warn' : 'success'"
+                [pTooltip]="atividadeEmExecucao(atividade.id) ? 'Encerrar execução' : 'Iniciar execução'"
+                tooltipPosition="left"
+                (onClick)="alternarExecucao(atividade)"
+              />
+            }
+            <p-button
+              icon="pi pi-eye"
+              [text]="true"
+              size="small"
+              pTooltip="Visualizar"
+              tooltipPosition="left"
+              (onClick)="abrirAtividade(atividade)"
+            />
+            @if (sessao.eGestor()) {
+              <p-button
+                icon="pi pi-trash"
+                [text]="true"
+                severity="danger"
+                size="small"
+                pTooltip="Excluir"
+                tooltipPosition="left"
+                (onClick)="confirmarExclusao(atividade)"
+              />
+            }
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="empty">
+      <tr>
+        <td [attr.colspan]="sessao.eGestor() ? 7 : 6">
+          <div class="atividade-listagem__vazio">
+            <i class="pi pi-list text-4xl text-surface-300"></i>
+            <p class="text-surface-500 mt-3">Nenhuma atividade encontrada</p>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<!-- Dialog: nova atividade -->
+<p-dialog
+  [visible]="mostrarDialogNova()"
+  (visibleChange)="mostrarDialogNova.set($event)"
+  header="Nova Atividade"
+  [modal]="true"
+  [style]="{ width: '40rem' }"
+  [draggable]="false"
+  [dismissableMask]="true"
+>
+  <form [formGroup]="formularioNova" class="atividade-listagem__dialog-form">
+    <div class="atividade-listagem__dialog-campo">
+      <label for="nova-nome" class="atividade-listagem__filtro-label">Nome *</label>
+      <input
+        id="nova-nome"
+        type="text"
+        pInputText
+        formControlName="nome"
+        placeholder="Nome da atividade"
+        class="w-full"
+      />
+      @if (campoInvalidoNova('nome')) {
+        <small class="atividade-listagem__erro">Informe um nome com ao menos 3 caracteres</small>
+      }
+    </div>
+
+    <div class="atividade-listagem__dialog-campo">
+      <label for="nova-demanda" class="atividade-listagem__filtro-label">Demanda *</label>
+      <p-select
+        inputId="nova-demanda"
+        formControlName="demandaId"
+        [options]="demandasAtribuidas()"
+        optionLabel="rotulo"
+        optionValue="id"
+        placeholder="Selecione a demanda"
+        [filter]="true"
+        filterBy="rotulo"
+        [loading]="carregandoDemandasAtribuidas()"
+        appendTo="body"
+        class="w-full"
+      />
+      @if (campoInvalidoNova('demandaId')) {
+        <small class="atividade-listagem__erro">Selecione a demanda</small>
+      }
+    </div>
+
+    @if (sessao.eGestor()) {
+      <div class="atividade-listagem__dialog-campo">
+        <label for="nova-usuario" class="atividade-listagem__filtro-label">Usuário</label>
+        <p-select
+          inputId="nova-usuario"
+          formControlName="usuarioId"
+          [options]="usuarios()"
+          optionLabel="nomeCompleto"
+          optionValue="id"
+          placeholder="Meu próprio usuário"
+          [showClear]="true"
+          [filter]="true"
+          filterBy="nomeCompleto"
+          appendTo="body"
+          class="w-full"
+        />
+      </div>
+    }
+
+    <div class="atividade-listagem__dialog-campo">
+      <label for="nova-status" class="atividade-listagem__filtro-label">Status *</label>
+      <p-select
+        inputId="nova-status"
+        formControlName="status"
+        [options]="statusOpcoes"
+        optionLabel="label"
+        optionValue="value"
+        appendTo="body"
+        class="w-full"
+      />
+    </div>
+
+    <div class="atividade-listagem__dialog-campo">
+      <label for="nova-descricao" class="atividade-listagem__filtro-label">Descrição</label>
+      <textarea
+        id="nova-descricao"
+        pTextarea
+        formControlName="descricao"
+        rows="5"
+        placeholder="Descreva a atividade..."
+        class="w-full"
+      ></textarea>
+      <app-assistente-descricao
+        [textoAtual]="formularioNova.value.descricao || ''"
+        tipoEntidade="atividade"
+        (textoAuxiliadoAceito)="aceitarDescricaoAssistenteNova($event)"
+      />
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" [text]="true" (onClick)="mostrarDialogNova.set(false)" />
+    <p-button
+      label="Criar"
+      icon="pi pi-check"
+      [loading]="salvandoNova()"
+      (onClick)="salvarNova()"
+    />
+  </ng-template>
+</p-dialog>
+
+<!-- Dialog: visualizar atividade -->
+<p-dialog
+  [visible]="mostrarDialogVisualizar()"
+  (visibleChange)="mostrarDialogVisualizar.set($event)"
+  [header]="atividadeVisualizada()?.nome || 'Atividade'"
+  [modal]="true"
+  [style]="{ width: '46rem' }"
+  [draggable]="false"
+  [dismissableMask]="true"
+>
+  @if (carregandoVisualizar()) {
+    <div class="atividade-listagem__carregando">
+      <i class="pi pi-spin pi-spinner text-2xl text-surface-400"></i>
+    </div>
+  } @else if (atividadeVisualizada(); as atividade) {
+    <div class="atividade-listagem__visualizar-infos">
+      <div class="atividade-listagem__executor">
+        <span class="atividade-listagem__avatar">{{ iniciais(atividade.nomeUsuario) }}</span>
+        <span class="text-surface-700">{{ atividade.nomeUsuario }}</span>
+      </div>
+      <span class="atividade-listagem__info-secundaria">
+        {{ atividade.totalAtividadesUsuario }} atividade(s) no total
+      </span>
+      <p-tag
+        [value]="rotuloStatus(atividade.status)"
+        [severity]="severidadeStatus(atividade.status)"
+      />
+    </div>
+
+    @if (tagsVisualizar().length) {
+      <div class="atividade-listagem__tags atividade-listagem__tags--visualizar">
+        @for (tag of tagsVisualizar(); track tag.id) {
+          <span
+            class="atividade-listagem__chip"
+            [style.background-color]="tag.cor + '22'"
+            [style.color]="tag.cor"
+            [style.border-color]="tag.cor + '55'"
+          >{{ tag.nome }}</span>
+        }
+      </div>
+    }
+
+    <p-tabs value="0" class="atividade-listagem__abas">
+      <p-tablist>
+        <p-tab value="0"><i class="pi pi-align-left mr-2"></i>Descrição</p-tab>
+        <p-tab value="1"><i class="pi pi-history mr-2"></i>Últimas execuções</p-tab>
+      </p-tablist>
+      <p-tabpanels>
+        <p-tabpanel value="0">
+          <form [formGroup]="formularioDescricao" class="atividade-listagem__descricao-form">
+            <p-editor
+              formControlName="descricao"
+              [style]="{ height: '240px' }"
+            />
+            <div class="atividade-listagem__descricao-acoes">
+              <p-button
+                label="Salvar descrição"
+                icon="pi pi-check"
+                [loading]="salvandoDescricao()"
+                (onClick)="salvarDescricao()"
+              />
+            </div>
+          </form>
+        </p-tabpanel>
+        <p-tabpanel value="1">
+          @if (execucoesVisualizar().length) {
+            <div class="atividade-listagem__execucoes-lista">
+              @for (execucao of execucoesVisualizar(); track execucao.id) {
+                <div class="atividade-listagem__execucao-item">
+                  <div class="atividade-listagem__execucao-cabecalho">
+                    <span class="atividade-listagem__execucao-data">
+                      {{ execucao.inicioData | dataBrasileira }}
+                      @if (execucao.fimData) {
+                        · {{ execucao.duracaoMinutos | minutosParagHoras }}
+                      } @else {
+                        · <span class="text-primary-500">em andamento</span>
+                      }
+                    </span>
+                  </div>
+                  <p class="atividade-listagem__execucao-descricao">{{ execucao.descricao }}</p>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="text-surface-400">Nenhuma execução registrada.</p>
+          }
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  }
+</p-dialog>
+
+<!-- Dialog: iniciar/encerrar execução -->
+<p-dialog
+  [visible]="mostrarDialogExecucao()"
+  (visibleChange)="mostrarDialogExecucao.set($event)"
+  [header]="modoExecucao() === 'iniciar' ? 'Iniciar execução' : 'Encerrar execução'"
+  [modal]="true"
+  [style]="{ width: '42rem' }"
+  [draggable]="false"
+  [dismissableMask]="true"
+>
+  @if (atividadeExecucao(); as atividade) {
+    <p class="atividade-listagem__execucao-atividade">{{ atividade.nomeProjeto }} · {{ atividade.nome }}</p>
+  }
+
+  <form [formGroup]="formularioExecucao" class="atividade-listagem__dialog-form">
+    <div class="atividade-listagem__dialog-campo">
+      <label for="execucao-descricao" class="atividade-listagem__filtro-label">
+        {{ modoExecucao() === 'iniciar' ? 'O que você vai desenvolver? *' : 'Revise a descrição da execução *' }}
+      </label>
+      <textarea
+        id="execucao-descricao"
+        pTextarea
+        formControlName="descricao"
+        rows="4"
+        placeholder="Descreva a execução..."
+        class="w-full"
+      ></textarea>
+      @if (campoInvalidoExecucao('descricao')) {
+        <small class="atividade-listagem__erro">Informe a descrição da execução</small>
+      }
+      <app-assistente-descricao
+        [textoAtual]="formularioExecucao.value.descricao || ''"
+        tipoEntidade="execucao"
+        (textoAuxiliadoAceito)="aceitarDescricaoAssistenteExecucao($event)"
+      />
+    </div>
+
+    <div class="atividade-listagem__dialog-campo">
+      <span class="atividade-listagem__filtro-label">Últimas execuções desta atividade</span>
+      @if (carregandoExecucoesDialog()) {
+        <i class="pi pi-spin pi-spinner text-surface-400"></i>
+      } @else if (execucoesDialogExecucao().length) {
+        <div class="atividade-listagem__execucoes-lista">
+          @for (execucao of execucoesDialogExecucao(); track execucao.id) {
+            <div class="atividade-listagem__execucao-item">
+              <div class="atividade-listagem__execucao-cabecalho">
+                <span class="atividade-listagem__execucao-data">
+                  {{ execucao.inicioData | dataBrasileira }}
+                  @if (execucao.fimData) {
+                    · {{ execucao.duracaoMinutos | minutosParagHoras }}
+                  } @else {
+                    · <span class="text-primary-500">em andamento</span>
+                  }
+                </span>
+              </div>
+              <p class="atividade-listagem__execucao-descricao">{{ execucao.descricao }}</p>
+            </div>
+          }
+        </div>
+      } @else {
+        <p class="text-surface-400">Nenhuma execução anterior.</p>
+      }
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" [text]="true" (onClick)="mostrarDialogExecucao.set(false)" />
+    <p-button
+      [label]="modoExecucao() === 'iniciar' ? 'Iniciar' : 'Encerrar'"
+      [icon]="modoExecucao() === 'iniciar' ? 'pi pi-play' : 'pi pi-stop'"
+      [loading]="salvandoExecucao()"
+      (onClick)="confirmarExecucao()"
+    />
+  </ng-template>
+</p-dialog>
+
+<p-confirmDialog />

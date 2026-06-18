@@ -38,6 +38,7 @@ import {
   DemandaAncestralListarDto,
   DemandaGrafoRecuperarDto,
   DemandaConexaoListarDto,
+  DemandaAtribuidaDto,
 } from '@project20/shared';
 
 type DemandaCriarDados = Omit<Demanda, 'id' | 'isDeleted' | 'createdDate' | 'updatedDate' | 'deletedDate'>;
@@ -253,6 +254,30 @@ export class DemandaRepository extends BaseRepository<Demanda> {
     );
 
     return { itens, total };
+  }
+
+  /**
+   * Lista todas as demandas às quais o usuário está atribuído, em qualquer projeto,
+   * já com o nome do projeto para exibição "Projeto - Demanda".
+   */
+  async listarAtribuidas(usuarioId: number): Promise<DemandaAtribuidaDto[]> {
+    return this.executarConsulta<DemandaAtribuidaDto>(
+      `SELECT demanda.id,
+              demanda.nome,
+              projeto.id   AS "projetoId",
+              projeto.nome AS "nomeProjeto"
+       FROM demanda
+       INNER JOIN demanda_usuario
+         ON demanda_usuario.demanda_id = demanda.id
+         AND demanda_usuario.usuario_id = :usuarioId
+         AND demanda_usuario.is_deleted = false
+       INNER JOIN projeto
+         ON projeto.id = demanda.projeto_id
+         AND projeto.is_deleted = false
+       WHERE demanda.is_deleted = false
+       ORDER BY projeto.nome ASC, demanda.nome ASC`,
+      { usuarioId },
+    );
   }
 
   /**

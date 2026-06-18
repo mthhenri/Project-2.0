@@ -1,0 +1,109 @@
+<div class="atividade-formulario">
+  <div class="atividade-formulario__cabecalho">
+    <p-button
+      icon="pi pi-arrow-left"
+      [text]="true"
+      severity="secondary"
+      size="small"
+      label="Atividades"
+      (onClick)="cancelar()"
+    />
+    <h1 class="atividade-formulario__titulo">Nova Atividade</h1>
+  </div>
+
+  <div class="atividade-formulario__card">
+    <form [formGroup]="formulario" (ngSubmit)="salvar()" class="atividade-formulario__form">
+
+      <div class="atividade-formulario__campo">
+        <label class="atividade-formulario__label">Demanda</label>
+        <div class="atividade-formulario__demanda">
+          <i class="pi pi-sitemap text-surface-500"></i>
+          <span>{{ nomeDemanda() || 'Demanda não informada' }}</span>
+        </div>
+      </div>
+
+      <div class="atividade-formulario__linha">
+        <div class="atividade-formulario__campo atividade-formulario__campo--largo">
+          <label for="nome" class="atividade-formulario__label">
+            Nome <span class="atividade-formulario__obrigatorio">*</span>
+          </label>
+          <input
+            id="nome"
+            pInputText
+            formControlName="nome"
+            placeholder="ex: Implementar autenticação"
+            class="w-full"
+          />
+          @if (campoInvalido('nome')) {
+            <small class="atividade-formulario__erro">Nome é obrigatório (mín. 3 caracteres)</small>
+          }
+        </div>
+      </div>
+
+      <div class="atividade-formulario__linha">
+        <div class="atividade-formulario__campo">
+          <label for="status" class="atividade-formulario__label">
+            Status <span class="atividade-formulario__obrigatorio">*</span>
+          </label>
+          <p-select
+            inputId="status"
+            formControlName="status"
+            [options]="statusOpcoes"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Selecione o status"
+            class="w-full"
+          />
+        </div>
+
+        <div class="atividade-formulario__campo">
+          <label for="ordemExibicao" class="atividade-formulario__label">
+            Ordem de exibição <span class="atividade-formulario__obrigatorio">*</span>
+          </label>
+          <p-inputNumber
+            inputId="ordemExibicao"
+            formControlName="ordemExibicao"
+            [min]="0"
+            [showButtons]="true"
+            class="w-full"
+          />
+        </div>
+      </div>
+
+      <div class="atividade-formulario__campo">
+        <label for="descricao" class="atividade-formulario__label">Descrição</label>
+        <textarea
+          id="descricao"
+          pTextarea
+          formControlName="descricao"
+          rows="5"
+          placeholder="Descreva a atividade..."
+          class="w-full"
+        ></textarea>
+        <app-assistente-descricao
+          [textoAtual]="formulario.value.descricao || ''"
+          tipoEntidade="atividade"
+          [contextoEntidade]="nomeDemanda()"
+          (textoAuxiliadoAceito)="aceitarDescricaoAssistente($event)"
+        />
+      </div>
+
+      <div class="atividade-formulario__acoes">
+        <p-button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="cancelar()"
+        />
+        <p-button
+          type="submit"
+          label="Salvar"
+          icon="pi pi-check"
+          [loading]="carregando()"
+        />
+      </div>
+
+    </form>
+  </div>
+</div>

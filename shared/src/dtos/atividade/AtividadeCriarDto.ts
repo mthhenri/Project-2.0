@@ -8,6 +8,12 @@ export class AtividadeCriarDto {
   @Type(() => Number)
   demandaId: number;
 
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  @Type(() => Number)
+  usuarioId?: number;
+
   @IsString()
   @MinLength(3)
   @MaxLength(255)

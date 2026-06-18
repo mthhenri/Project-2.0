@@ -1,0 +1,72 @@
+@use '../../../../shared/styles/form' as *;
+
+.atividade-formulario {
+  padding: 1.5rem;
+
+  &__cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  &__titulo {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--p-primary-600);
+    margin: 0;
+  }
+
+  &__card {
+    background: var(--p-surface-0);
+    border: 1px solid var(--p-surface-200);
+    border-radius: 8px;
+    padding: 1.75rem;
+    max-width: 800px;
+  }
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  &__linha {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+  }
+
+  &__campo {
+    @include form-campo;
+
+    &--largo {
+      grid-column: 1 / -1;
+    }
+  }
+
+  &__label       { @include form-label; }
+  &__obrigatorio { @include form-obrigatorio; }
+  &__erro        { @include form-erro; }
+
+  &__demanda {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 0.75rem;
+    background: var(--p-surface-50);
+    border: 1px solid var(--p-surface-200);
+    border-radius: 6px;
+    color: var(--p-text-color);
+    font-weight: 500;
+  }
+
+  &__acoes {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--p-surface-200);
+    margin-top: 0.5rem;
+  }
+}
