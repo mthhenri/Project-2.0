@@ -112,7 +112,7 @@
     </ng-template>
 
     <ng-template pTemplate="body" let-atividade>
-      <tr class="atividade-listagem__linha" (click)="abrirAtividade(atividade)">
+      <tr>
         <td>{{ atividade.nomeProjeto }}</td>
         <td>{{ atividade.nomeDemanda }}</td>
         <td>{{ atividade.nome }}</td>
@@ -144,7 +144,7 @@
             }
           </div>
         </td>
-        <td (click)="$event.stopPropagation()">
+        <td>
           <div class="atividade-listagem__acoes">
             @if (podeExecutar(atividade)) {
               <p-button

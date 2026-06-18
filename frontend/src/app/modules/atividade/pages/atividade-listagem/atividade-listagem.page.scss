@@ -47,15 +47,6 @@
     flex-shrink: 0;
   }
 
-  &__linha {
-    cursor: pointer;
-    transition: background-color 0.15s;
-
-    &:hover {
-      background-color: var(--p-surface-50);
-    }
-  }
-
   &__executor {
     display: flex;
     align-items: center;
