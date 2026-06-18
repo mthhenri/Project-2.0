@@ -174,6 +174,11 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
          (COALESCE(TRIM(demanda.documentacao), '')      <> '') AS "demandaTemDocumentacao",
          projeto.id                AS "projetoId",
          projeto.nome              AS "nomeProjeto",
+         (SELECT COALESCE(SUM(EXTRACT(EPOCH FROM (execucao.fim_data - execucao.inicio_data)) / 60), 0)::int
+            FROM execucao
+           WHERE execucao.atividade_id = atividade.id
+             AND execucao.is_deleted = false
+             AND execucao.fim_data IS NOT NULL) AS "totalMinutosExecutados",
          atividade.created_date    AS "createdDate"
        FROM atividade
        ${clausulasJoin}

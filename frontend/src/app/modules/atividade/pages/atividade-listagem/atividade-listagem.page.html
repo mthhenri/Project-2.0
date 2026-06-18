@@ -106,6 +106,7 @@
           <th>Usuário</th>
         }
         <th>Status</th>
+        <th>Tempo executado</th>
         <th>Tags</th>
         <th class="atividade-listagem__coluna-acoes">Ações</th>
       </tr>
@@ -183,6 +184,9 @@
           }
         </td>
         <td>
+          <span class="text-surface-700">{{ atividade.totalMinutosExecutados | minutosParagHoras }}</span>
+        </td>
+        <td>
           <div class="atividade-listagem__tags">
             @for (tag of tagsDe(atividade.id); track tag.id) {
               <span
@@ -245,7 +249,7 @@
 
     <ng-template pTemplate="empty">
       <tr>
-        <td [attr.colspan]="sessao.eGestor() ? 7 : 6">
+        <td [attr.colspan]="sessao.eGestor() ? 8 : 7">
           <div class="atividade-listagem__vazio">
             <i class="pi pi-list text-4xl text-surface-300"></i>
             <p class="text-surface-500 mt-3">Nenhuma atividade encontrada</p>

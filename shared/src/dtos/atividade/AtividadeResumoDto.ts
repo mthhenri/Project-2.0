@@ -14,5 +14,6 @@ export class AtividadeResumoDto {
   demandaTemDocumentacao: boolean;
   projetoId: number;
   nomeProjeto: string;
+  totalMinutosExecutados: number;
   createdDate: Date;
 }
