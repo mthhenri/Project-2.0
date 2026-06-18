@@ -1,7 +1,7 @@
 # 45 — Frontend: Tema Escuro do Sistema
 
-**Depende de:** 21 (frontend-scaffold), 22 (frontend-core), 24 (frontend-usuario)
-**Entrega:** o sistema passa a oferecer um **tema escuro** que o usuário liga/desliga a partir do **perfil**; a escolha é **persistida no `localStorage`** e reaplicada automaticamente em toda recarga/abertura do app, sem "piscar" o tema claro antes de trocar.
+**Depende de:** 21 (frontend-scaffold), 22 (frontend-core)
+**Entrega:** o sistema passa a oferecer um **tema escuro** que o usuário liga/desliga a partir do **popover de perfil da topbar** (o aberto pelo botão de usuário); a escolha é **persistida no `localStorage`** e reaplicada automaticamente em toda recarga/abertura do app, sem "piscar" o tema claro antes de trocar.
 
 > Frontend apenas. Sem backend, sem mudança de DTO/endpoint, sem migration. A preferência é **por dispositivo/navegador** (`localStorage`), não um campo do usuário no banco.
 
@@ -24,8 +24,11 @@ classe** e alternar essa classe no elemento raiz (`<html>`) para o app inteiro t
 componentes do projeto usam tokens `surface-*` e `var(--p-*)` (ver [CONVENTIONS.md](../../CONVENTIONS.md)
 seção *Estilos*), portanto a maior parte da UI acompanha o tema automaticamente quando a classe é alternada.
 
-O perfil do usuário fica em [usuario-perfil.page.html](../../../frontend/src/app/modules/usuario/pages/usuario-perfil/usuario-perfil.page.html)
-(`UsuarioPerfilPage`) — é o lugar onde a opção de tema deve aparecer.
+A opção de tema deve aparecer no **popover de perfil da topbar** —
+[topbar.component.html](../../../frontend/src/app/shared/layout/topbar/topbar.component.html),
+o `p-popover #perfilPopover` aberto pelo botão `pi pi-user`, que hoje exibe nome, login, cargo e o
+link "Minhas Anotações". É um menu por sessão (sempre o usuário logado), então é o lugar natural para
+uma preferência de aparência do dispositivo.
 
 Convenção de persistência local já praticada no projeto: o token de autenticação usa
 `localStorage` com a chave `access_token` (ver `AutenticacaoService` em
@@ -36,11 +39,12 @@ Convenção de persistência local já praticada no projeto: o token de autentic
 ## Comportamento esperado
 
 1. **Dois temas:** claro (atual, padrão) e escuro.
-2. **Alternância no perfil:** em `UsuarioPerfilPage` há um controle de **Tema** (ex.: `p-toggleswitch`/
-   `p-selectbutton` "Claro / Escuro" ou botão com ícone `pi pi-moon`/`pi pi-sun`) que alterna o tema
-   imediatamente, sem reload.
-   - Por ser uma preferência **do dispositivo** (não um dado do usuário no banco), o controle reflete o
-     tema corrente da sessão. Exibir o controle no perfil do **próprio usuário logado**.
+2. **Alternância no popover da topbar:** no `#perfilPopover` há um controle de **Tema** (ex.:
+   `p-toggleswitch` "Claro / Escuro" ou um item clicável com ícone `pi pi-moon`/`pi pi-sun`, no mesmo
+   estilo do link "Minhas Anotações") que alterna o tema imediatamente, sem reload.
+   - Por ser uma preferência **do dispositivo** (não um dado do usuário no banco) e o popover ser sempre
+     o do usuário logado, não há gating por tipo/identidade — o controle simplesmente reflete o tema
+     corrente da sessão.
 3. **Persistência:** ao alternar, gravar a escolha em `localStorage`; ao abrir/recarregar o app, ler o
    `localStorage` e reaplicar o tema **antes da primeira renderização** (sem flash do tema claro).
 4. **Default:** sem valor salvo no `localStorage` → tema **claro** (comportamento atual preservado).
@@ -88,15 +92,18 @@ Garantir que a classe seja aplicada **antes da primeira renderização**. Opçõ
 
 Escolher uma das abordagens e mantê-la única (o `TemaService` continua sendo a fonte de verdade em runtime).
 
-### 4. Controle no perfil — `UsuarioPerfilPage`
+### 4. Controle no popover da topbar — `TopbarComponent`
 
-- Injetar `TemaService` na página.
-- Adicionar uma seção/controle "Tema" (ou "Aparência") no `usuario-perfil__card` (ou no
-  `usuario-perfil__cabecalho-acoes`) com o toggle claro/escuro, ligado a `temaService.eEscuro()` e
-  chamando `alternarTema()`/`definirTema()` na mudança.
-- Exibir o controle apenas para o **próprio usuário logado** (mesmo critério de "é o próprio perfil"
-  já usado na página; reaproveitar a lógica existente de identificação do usuário da sessão).
-- Estilos no `.scss` do componente seguindo BEM em português (`usuario-perfil__tema`, etc.) — nada de
+- Injetar `TemaService` no `TopbarComponent`.
+- No `#perfilPopover` ([topbar.component.html](../../../frontend/src/app/shared/layout/topbar/topbar.component.html)),
+  adicionar — abaixo do bloco de cargo / do link "Minhas Anotações" — um controle de **Tema** ligado a
+  `temaService.eEscuro()` e chamando `alternarTema()` (ou `definirTema(...)`) na mudança. Pode ser um
+  `p-toggleswitch` rotulado "Tema escuro" ou um item clicável no mesmo padrão visual do
+  `topbar__link-anotacoes` (ícone `pi pi-moon`/`pi pi-sun` + label). Trocar o tema **não** deve fechar
+  o app nem exigir reload.
+- Importar o módulo PrimeNG necessário (ex.: `ToggleSwitchModule`) no `TopbarComponent` caso opte pelo
+  switch.
+- Estilos no `.scss` do próprio componente seguindo BEM em português (`topbar__tema`, etc.) — nada de
   `style=""` inline nem `.css`.
 
 ---
@@ -107,9 +114,9 @@ Escolher uma das abordagens e mantê-la única (o `TemaService` continua sendo a
 frontend/src/app/app.config.ts                                                         (darkModeSelector + inicialização)
 frontend/src/app/core/services/tema.service.ts                                         (novo)
 frontend/src/app/core/models/tema.model.ts                                             (novo — type Tema + chave localStorage)
-frontend/src/app/modules/usuario/pages/usuario-perfil/usuario-perfil.page.ts           (injeção + handlers)
-frontend/src/app/modules/usuario/pages/usuario-perfil/usuario-perfil.page.html         (controle de tema)
-frontend/src/app/modules/usuario/pages/usuario-perfil/usuario-perfil.page.scss         (estilos do controle)
+frontend/src/app/shared/layout/topbar/topbar.component.ts                              (injeção + handlers + import do módulo)
+frontend/src/app/shared/layout/topbar/topbar.component.html                            (controle de tema no #perfilPopover)
+frontend/src/app/shared/layout/topbar/topbar.component.scss                            (estilos do controle)
 frontend/src/index.html                                                                (apenas se a opção de script inline for escolhida)
 ```
 
@@ -120,7 +127,8 @@ frontend/src/index.html                                                         
 - Persistir o tema no backend (coluna em `usuario`, DTO ou endpoint) — a preferência é só `localStorage`.
 - Mais de dois temas, temas customizados por cor, ou troca da paleta `primary` (continua azul/`TemaAzul`).
 - Detecção automática via `prefers-color-scheme` do sistema operacional (pode ser uma task futura).
-- Seletor de tema em outras telas (topbar, login, etc.) — nesta task a opção vive no perfil do usuário.
+- Seletor de tema em outras telas (login, `UsuarioPerfilPage`, etc.) — nesta task a opção vive apenas no
+  popover de perfil da topbar.
 - Reescrever cores hardcoded de componentes que não usem tokens `surface-*`/`var(--p-*)`; ajustes
   pontuais de contraste, se surgirem, ficam fora do escopo desta task.
 ```
