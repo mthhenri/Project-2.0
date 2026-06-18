@@ -187,7 +187,7 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
    * Altera campos da atividade e retorna o estado alterado.
    */
   async alterar(id: number, dados: Partial<Atividade>): Promise<AtividadeAlteradaDto> {
-    const setClauses: string[] = ['atividade.updated_date = NOW()'];
+    const setClauses: string[] = ['updated_date = NOW()'];
     const parametros: Record<string, unknown> = { id };
 
     if (dados.nome !== undefined) {
