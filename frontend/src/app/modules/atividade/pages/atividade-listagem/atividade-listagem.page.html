@@ -405,6 +405,12 @@
 >
   @if (atividadeExecucao(); as atividade) {
     <p class="atividade-listagem__execucao-atividade">{{ atividade.nomeProjeto }} · {{ atividade.nome }}</p>
+    @if (sessao.eGestor()) {
+      <div class="atividade-listagem__executor atividade-listagem__executor--dialog">
+        <span class="atividade-listagem__avatar">{{ iniciais(atividade.nomeUsuario) }}</span>
+        <span class="text-surface-700">{{ atividade.nomeUsuario }}</span>
+      </div>
+    }
   }
 
   <form [formGroup]="formularioExecucao" class="atividade-listagem__dialog-form">

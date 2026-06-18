@@ -176,9 +176,13 @@
   }
 
   &__execucao-atividade {
-    margin: 0 0 1rem;
+    margin: 0 0 0.5rem;
     font-weight: 600;
     color: var(--p-primary-600);
+  }
+
+  &__executor--dialog {
+    margin-bottom: 1rem;
   }
 
   &__execucoes-lista {

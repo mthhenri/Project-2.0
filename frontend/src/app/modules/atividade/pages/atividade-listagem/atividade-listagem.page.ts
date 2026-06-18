@@ -342,7 +342,7 @@ export class AtividadeListagemPage implements OnInit {
   }
 
   podeExecutar(atividade: AtividadeResumoDto): boolean {
-    return atividade.usuarioId === this.sessao.id();
+    return this.sessao.eGestor() || atividade.usuarioId === this.sessao.id();
   }
 
   atividadeEmExecucao(atividadeId: number): boolean {
