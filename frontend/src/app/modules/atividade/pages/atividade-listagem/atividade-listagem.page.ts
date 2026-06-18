@@ -1,4 +1,4 @@
-import { Component, inject, signal, DestroyRef, OnInit } from '@angular/core';
+import { Component, inject, signal, DestroyRef, OnInit, HostListener } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -201,6 +201,20 @@ export class AtividadeListagemPage implements OnInit {
       .pipe(debounceTime(400), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.aoMudarFiltro());
 
+    this.buscarAtividades();
+    this.carregarExecucaoAtiva();
+  }
+
+  /**
+   * Recarrega a listagem e a execução ativa ao retornar à tela: `visibilitychange`
+   * cobre a troca de aba/minimização; `window:focus` cobre o retorno de outro
+   * aplicativo (Alt-Tab), cenário em que `visibilitychange` não dispara. A guarda
+   * `carregando` evita a dupla requisição quando os dois eventos disparam juntos.
+   */
+  @HostListener('document:visibilitychange')
+  @HostListener('window:focus')
+  aoVoltarParaAba(): void {
+    if (document.visibilityState !== 'visible' || this.carregando()) return;
     this.buscarAtividades();
     this.carregarExecucaoAtiva();
   }

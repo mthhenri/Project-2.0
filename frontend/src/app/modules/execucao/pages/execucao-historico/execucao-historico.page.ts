@@ -92,10 +92,17 @@ export class ExecucaoHistoricoPage implements OnInit {
     if (this.sessao.eGestor()) this.carregarUsuarios();
   }
 
-  /** Recarrega a listagem sempre que a aba/janela volta a ficar visível. */
+  /**
+   * Recarrega a listagem ao retornar à tela: `visibilitychange` cobre a troca de
+   * aba/minimização; `window:focus` cobre o retorno de outro aplicativo (Alt-Tab),
+   * cenário em que `visibilitychange` não dispara. A guarda `carregando` evita a
+   * dupla requisição quando os dois eventos disparam juntos (minimizar/restaurar).
+   */
   @HostListener('document:visibilitychange')
+  @HostListener('window:focus')
   aoVoltarParaAba(): void {
-    if (document.visibilityState === 'visible') this.buscarExecucoes();
+    if (document.visibilityState !== 'visible' || this.carregando()) return;
+    this.buscarExecucoes();
   }
 
   buscarExecucoes(): void {
