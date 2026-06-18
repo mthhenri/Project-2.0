@@ -9,6 +9,9 @@ export class AtividadeResumoDto {
   nomeUsuario: string;
   demandaId: number;
   nomeDemanda: string;
+  demandaTemDescricaoCliente: boolean;
+  demandaTemDescricaoTecnica: boolean;
+  demandaTemDocumentacao: boolean;
   projetoId: number;
   nomeProjeto: string;
   createdDate: Date;

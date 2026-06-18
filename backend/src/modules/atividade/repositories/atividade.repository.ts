@@ -169,6 +169,9 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
          usuario.nome_completo     AS "nomeUsuario",
          atividade.demanda_id      AS "demandaId",
          demanda.nome              AS "nomeDemanda",
+         (COALESCE(TRIM(demanda.descricao_cliente), '') <> '') AS "demandaTemDescricaoCliente",
+         (COALESCE(TRIM(demanda.descricao_tecnica), '') <> '') AS "demandaTemDescricaoTecnica",
+         (COALESCE(TRIM(demanda.documentacao), '')      <> '') AS "demandaTemDocumentacao",
          projeto.id                AS "projetoId",
          projeto.nome              AS "nomeProjeto",
          atividade.created_date    AS "createdDate"

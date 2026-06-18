@@ -29,6 +29,7 @@ import {
   UsuarioResumoDto,
   UsuarioStatusEnum,
   DemandaAtribuidaDto,
+  DemandaRecuperadaDto,
   ExecucaoResumoDto,
   ExecucaoAtivaDto,
   ExecucaoIniciarDto,
@@ -51,6 +52,8 @@ import {
 } from '../../models/atividade.model';
 
 type DemandaAtribuidaOpcao = DemandaAtribuidaDto & { rotulo: string };
+
+type CampoDescricaoDemanda = 'descricaoCliente' | 'descricaoTecnica' | 'documentacao';
 
 @Component({
   selector: 'app-atividade-listagem',
@@ -140,6 +143,29 @@ export class AtividadeListagemPage implements OnInit {
   readonly formularioTags = this.formBuilder.group({
     tagIds: [[] as number[]],
   });
+
+  // --- Dialog: descrições da demanda ---
+  readonly mostrarDialogDescricao = signal<boolean>(false);
+  readonly carregandoDescricao = signal<boolean>(false);
+  readonly demandaDescricao = signal<DemandaRecuperadaDto | null>(null);
+  readonly nomeDemandaDescricao = signal<string>('');
+  readonly campoDescricao = signal<CampoDescricaoDemanda | null>(null);
+  readonly editandoDescricao = signal<boolean>(false);
+  readonly salvandoDescricaoDemanda = signal<boolean>(false);
+  private readonly cacheDemandas = new Map<number, DemandaRecuperadaDto>();
+
+  readonly formularioDescricaoDemanda = this.formBuilder.group({
+    valor: [''],
+  });
+
+  private readonly rotulosDescricao: Record<CampoDescricaoDemanda, string> = {
+    descricaoCliente: 'Descrição do cliente',
+    descricaoTecnica: 'Descrição técnica',
+    documentacao:     'Documentação',
+  };
+
+  /** Apenas descrição técnica e documentação são editáveis — e somente por gestor. */
+  private readonly camposEditaveis: CampoDescricaoDemanda[] = ['descricaoTecnica', 'documentacao'];
 
   // --- Dialog: visualizar atividade ---
   readonly mostrarDialogVisualizar = signal<boolean>(false);
@@ -412,6 +438,112 @@ export class AtividadeListagemPage implements OnInit {
           }
         },
       });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Descrições da demanda (somente leitura)
+  // ---------------------------------------------------------------------------
+
+  abrirDescricaoDemanda(atividade: AtividadeResumoDto, campo: CampoDescricaoDemanda): void {
+    this.campoDescricao.set(campo);
+    this.nomeDemandaDescricao.set(atividade.nomeDemanda);
+    this.editandoDescricao.set(false);
+    this.mostrarDialogDescricao.set(true);
+
+    const demandaEmCache = this.cacheDemandas.get(atividade.demandaId);
+    if (demandaEmCache) {
+      this.demandaDescricao.set(demandaEmCache);
+      return;
+    }
+
+    this.carregandoDescricao.set(true);
+    this.demandaDescricao.set(null);
+    this.demandaService
+      .recuperar(atividade.demandaId)
+      .pipe(finalize(() => this.carregandoDescricao.set(false)))
+      .subscribe({
+        next: (resposta) => {
+          if (resposta.sucesso && resposta.dados) {
+            this.cacheDemandas.set(atividade.demandaId, resposta.dados);
+            this.demandaDescricao.set(resposta.dados);
+          }
+        },
+      });
+  }
+
+  cabecalhoDescricao(): string {
+    const campo = this.campoDescricao();
+    const rotulo = campo ? this.rotulosDescricao[campo] : '';
+    return `${this.nomeDemandaDescricao()} — ${rotulo}`;
+  }
+
+  conteudoDescricao(): string | null {
+    const demanda = this.demandaDescricao();
+    const campo = this.campoDescricao();
+    if (!demanda || !campo) return null;
+    return demanda[campo];
+  }
+
+  /** Cor de destaque do ícone apenas quando a descrição correspondente tem conteúdo. */
+  severidadeIconeDescricao(
+    atividade: AtividadeResumoDto,
+    campo: CampoDescricaoDemanda,
+    severidade: 'info' | 'help' | 'warn',
+  ): 'info' | 'help' | 'warn' | 'secondary' {
+    const temConteudo =
+      campo === 'descricaoCliente' ? atividade.demandaTemDescricaoCliente
+      : campo === 'descricaoTecnica' ? atividade.demandaTemDescricaoTecnica
+      : atividade.demandaTemDocumentacao;
+    return temConteudo ? severidade : 'secondary';
+  }
+
+  /** Gestor pode editar descrição técnica e documentação direto pela listagem. */
+  podeEditarCampoDescricao(): boolean {
+    const campo = this.campoDescricao();
+    return !!campo && this.camposEditaveis.includes(campo) && this.sessao.eGestor();
+  }
+
+  abrirEdicaoDescricao(): void {
+    this.formularioDescricaoDemanda.reset({ valor: this.conteudoDescricao() ?? '' });
+    this.editandoDescricao.set(true);
+  }
+
+  salvarDescricaoDemanda(): void {
+    const demanda = this.demandaDescricao();
+    const campo = this.campoDescricao();
+    if (!demanda || !campo || !this.podeEditarCampoDescricao()) return;
+
+    const valor = this.formularioDescricaoDemanda.value.valor ?? '';
+    this.salvandoDescricaoDemanda.set(true);
+
+    this.demandaService
+      .alterar(demanda.id, { [campo]: valor })
+      .pipe(finalize(() => this.salvandoDescricaoDemanda.set(false)))
+      .subscribe({
+        next: (resposta) => {
+          if (resposta.sucesso && resposta.dados) {
+            const demandaAtualizada = { ...demanda, [campo]: valor };
+            this.cacheDemandas.set(demanda.id, demandaAtualizada);
+            this.demandaDescricao.set(demandaAtualizada);
+            this.atualizarFlagDescricao(demanda.id, campo, valor);
+            this.editandoDescricao.set(false);
+            this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Descrição salva' });
+          }
+        },
+      });
+  }
+
+  aceitarDescricaoAssistenteDemanda(texto: string): void {
+    this.formularioDescricaoDemanda.patchValue({ valor: texto });
+  }
+
+  private atualizarFlagDescricao(demandaId: number, campo: CampoDescricaoDemanda, valor: string): void {
+    const temConteudo = valor.trim() !== '';
+    const chave =
+      campo === 'descricaoTecnica' ? 'demandaTemDescricaoTecnica' : 'demandaTemDocumentacao';
+    this.atividades.update((lista) =>
+      lista.map((item) => (item.demandaId === demandaId ? { ...item, [chave]: temConteudo } : item)),
+    );
   }
 
   // ---------------------------------------------------------------------------

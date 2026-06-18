@@ -114,7 +114,43 @@
     <ng-template pTemplate="body" let-atividade>
       <tr>
         <td>{{ atividade.nomeProjeto }}</td>
-        <td>{{ atividade.nomeDemanda }}</td>
+        <td>
+          <div class="atividade-listagem__demanda">
+            <div class="atividade-listagem__demanda-acoes">
+              <p-button
+                icon="pi pi-user"
+                [text]="true"
+                [rounded]="true"
+                size="small"
+                [severity]="severidadeIconeDescricao(atividade, 'descricaoCliente', 'info')"
+                pTooltip="Descrição do cliente"
+                tooltipPosition="top"
+                (onClick)="abrirDescricaoDemanda(atividade, 'descricaoCliente')"
+              />
+              <p-button
+                icon="pi pi-code"
+                [text]="true"
+                [rounded]="true"
+                size="small"
+                [severity]="severidadeIconeDescricao(atividade, 'descricaoTecnica', 'help')"
+                pTooltip="Descrição técnica"
+                tooltipPosition="top"
+                (onClick)="abrirDescricaoDemanda(atividade, 'descricaoTecnica')"
+              />
+              <p-button
+                icon="pi pi-book"
+                [text]="true"
+                [rounded]="true"
+                size="small"
+                [severity]="severidadeIconeDescricao(atividade, 'documentacao', 'warn')"
+                pTooltip="Documentação"
+                tooltipPosition="top"
+                (onClick)="abrirDescricaoDemanda(atividade, 'documentacao')"
+              />
+            </div>
+            <span class="atividade-listagem__demanda-nome">{{ atividade.nomeDemanda }}</span>
+          </div>
+        </td>
         <td>{{ atividade.nome }}</td>
         @if (sessao.eGestor()) {
           <td>
@@ -469,6 +505,57 @@
       [loading]="salvandoTags()"
       (onClick)="salvarTags()"
     />
+  </ng-template>
+</p-dialog>
+
+<!-- Dialog: descrição da demanda -->
+<p-dialog
+  [visible]="mostrarDialogDescricao()"
+  (visibleChange)="mostrarDialogDescricao.set($event)"
+  [header]="cabecalhoDescricao()"
+  [modal]="true"
+  [style]="{ width: '95vw', height: '95vh' }"
+  [contentStyle]="{ display: 'flex', flexDirection: 'column' }"
+  [draggable]="false"
+  [dismissableMask]="true"
+>
+  @if (carregandoDescricao()) {
+    <div class="atividade-listagem__carregando">
+      <i class="pi pi-spin pi-spinner text-2xl text-surface-400"></i>
+    </div>
+  } @else if (editandoDescricao()) {
+    <form [formGroup]="formularioDescricaoDemanda" class="atividade-listagem__descricao-form atividade-listagem__descricao-form--cheio">
+      <p-editor
+        formControlName="valor"
+        class="atividade-listagem__editor"
+      />
+      <app-assistente-descricao
+        [textoAtual]="formularioDescricaoDemanda.value.valor || ''"
+        tipoEntidade="demanda"
+        [contextoEntidade]="nomeDemandaDescricao()"
+        (textoAuxiliadoAceito)="aceitarDescricaoAssistenteDemanda($event)"
+      />
+    </form>
+  } @else if (conteudoDescricao(); as conteudo) {
+    <div class="atividade-listagem__descricao-rica" [innerHTML]="conteudo"></div>
+  } @else {
+    <p class="text-surface-400">Sem conteúdo</p>
+  }
+
+  <ng-template pTemplate="footer">
+    @if (!carregandoDescricao() && podeEditarCampoDescricao()) {
+      @if (editandoDescricao()) {
+        <p-button label="Cancelar" [text]="true" (onClick)="editandoDescricao.set(false)" />
+        <p-button
+          label="Salvar"
+          icon="pi pi-check"
+          [loading]="salvandoDescricaoDemanda()"
+          (onClick)="salvarDescricaoDemanda()"
+        />
+      } @else {
+        <p-button label="Editar" icon="pi pi-pencil" [outlined]="true" (onClick)="abrirEdicaoDescricao()" />
+      }
+    }
   </ng-template>
 </p-dialog>
 

@@ -67,6 +67,63 @@
     flex-shrink: 0;
   }
 
+  &__demanda {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__demanda-nome {
+    color: var(--p-text-color);
+  }
+
+  &__demanda-acoes {
+    display: flex;
+    gap: 0.125rem;
+    flex-shrink: 0;
+  }
+
+  &__descricao-rica {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    line-height: 1.6;
+    color: var(--p-text-color);
+    word-break: break-word;
+
+    :first-child {
+      margin-top: 0;
+    }
+
+    :last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  &__descricao-form--cheio {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  &__editor {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+
+    ::ng-deep .p-editor-container {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    ::ng-deep .p-editor-content {
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+  }
+
   &__tags {
     display: flex;
     flex-wrap: wrap;
