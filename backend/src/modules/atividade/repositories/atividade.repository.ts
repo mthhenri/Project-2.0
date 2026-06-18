@@ -175,7 +175,7 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
        FROM atividade
        ${clausulasJoin}
        WHERE ${clausulaWhere}
-       ORDER BY atividade.created_date DESC, atividade.nome ASC
+       ORDER BY usuario.nome_completo ASC, atividade.created_date DESC, atividade.nome ASC
        LIMIT ${itensPorPagina} OFFSET ${deslocamento}`,
       parametros,
     );

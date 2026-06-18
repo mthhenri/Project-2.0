@@ -99,7 +99,7 @@
   <form [formGroup]="formularioEditar" class="usuario-perfil__dialog-form">
     <div class="usuario-perfil__dialog-campo">
       <label class="usuario-perfil__label">Nome Completo <span class="usuario-perfil__obrigatorio">*</span></label>
-      <input pInputText formControlName="nomeCompleto" class="w-full" />
+      <input pInputText spellcheck="true" formControlName="nomeCompleto" class="w-full" />
       @if (campoEditarInvalido('nomeCompleto')) {
         <small class="usuario-perfil__erro">Nome é obrigatório (mínimo 3 caracteres)</small>
       }
@@ -107,7 +107,7 @@
 
     <div class="usuario-perfil__dialog-campo">
       <label class="usuario-perfil__label">Cargo <span class="usuario-perfil__obrigatorio">*</span></label>
-      <input pInputText formControlName="cargoTitulo" class="w-full" />
+      <input pInputText spellcheck="true" formControlName="cargoTitulo" class="w-full" />
       @if (campoEditarInvalido('cargoTitulo')) {
         <small class="usuario-perfil__erro">Cargo é obrigatório</small>
       }

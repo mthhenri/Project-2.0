@@ -194,7 +194,34 @@ export class ExecucaoService {
       }
     }
 
-    const execucaoAlterada = await this.execucaoRepositorio.alterar({ id, descricao: dto.descricao });
+    const inicioData =
+      dto.inicioData !== undefined ? new Date(dto.inicioData) : execucaoEncontrada.inicioData;
+    const fimData =
+      dto.fimData === undefined
+        ? execucaoEncontrada.fimData
+        : dto.fimData === null
+          ? null
+          : new Date(dto.fimData);
+
+    const agora = new Date();
+    if (inicioData > agora) {
+      throw new BusinessException('A data de início não pode estar no futuro');
+    }
+    if (fimData !== null) {
+      if (fimData > agora) {
+        throw new BusinessException('A data de fim não pode estar no futuro');
+      }
+      if (fimData <= inicioData) {
+        throw new BusinessException('A data de fim deve ser posterior à data de início');
+      }
+    }
+
+    const execucaoAlterada = await this.execucaoRepositorio.alterar({
+      id,
+      descricao: dto.descricao,
+      inicioData,
+      fimData,
+    });
 
     return {
       sucesso:  true,

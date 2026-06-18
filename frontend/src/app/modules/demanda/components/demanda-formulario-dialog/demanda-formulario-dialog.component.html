@@ -10,7 +10,7 @@
 
     <div class="demanda-dialog__campo demanda-dialog__campo--full">
       <label class="demanda-dialog__label">Nome <span class="demanda-dialog__obrigatorio">*</span></label>
-      <input pInputText formControlName="nome" class="w-full" placeholder="Nome da demanda" />
+      <input pInputText spellcheck="true" formControlName="nome" class="w-full" placeholder="Nome da demanda" />
       @if (campoInvalido('nome')) {
         <small class="demanda-dialog__erro">Nome é obrigatório</small>
       }

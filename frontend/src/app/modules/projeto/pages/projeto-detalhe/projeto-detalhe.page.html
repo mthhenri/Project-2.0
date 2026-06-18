@@ -122,7 +122,7 @@
   <form [formGroup]="formularioEditar" class="projeto-detalhe__dialog-form">
     <div class="projeto-detalhe__dialog-campo">
       <label class="projeto-detalhe__label">Nome <span class="projeto-detalhe__obrigatorio">*</span></label>
-      <input pInputText formControlName="nome" class="w-full" />
+      <input pInputText spellcheck="true" formControlName="nome" class="w-full" />
       @if (campoEditarInvalido('nome')) {
         <small class="projeto-detalhe__erro">Nome é obrigatório</small>
       }

@@ -159,11 +159,7 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
          execucao.descricao,
          execucao.inicio_data                                                            AS "inicioData",
          execucao.fim_data                                                               AS "fimData",
-         CASE
-           WHEN execucao.fim_data IS NOT NULL
-           THEN EXTRACT(EPOCH FROM (execucao.fim_data - execucao.inicio_data))::int / 60
-           ELSE NULL
-         END                                                                             AS "duracaoMinutos",
+         EXTRACT(EPOCH FROM (COALESCE(execucao.fim_data, NOW()) - execucao.inicio_data))::int / 60 AS "duracaoMinutos",
          atividade.usuario_id                                                            AS "usuarioId",
          usuario.nome_completo                                                           AS "nomeUsuario"
        FROM execucao
@@ -172,7 +168,7 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
        INNER JOIN usuario
          ON usuario.id = atividade.usuario_id
        WHERE ${clausulaWhere}
-       ORDER BY execucao.inicio_data DESC
+       ORDER BY usuario.nome_completo ASC, execucao.inicio_data DESC
        LIMIT ${itensPorPagina} OFFSET ${deslocamento}`,
       parametros,
     );
@@ -205,13 +201,15 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
   }
 
   /**
-   * Altera apenas a descrição de uma execução.
-   * Retorna a execução alterada com duração calculada.
+   * Altera a descrição, o início e o fim de uma execução.
+   * Retorna a execução alterada com duração recalculada.
    */
   async alterar(dto: ExecucaoAlterarInternoDto): Promise<ExecucaoAlteradaDto> {
     const resultado = await this.executarConsulta<ExecucaoAlteradaDto>(
       `UPDATE execucao
        SET descricao    = :descricao,
+           inicio_data  = :inicioData,
+           fim_data     = :fimData,
            updated_date = NOW()
        WHERE execucao.id = :id
          AND execucao.is_deleted = false
@@ -221,12 +219,8 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
          descricao,
          inicio_data  AS "inicioData",
          fim_data     AS "fimData",
-         CASE
-           WHEN fim_data IS NOT NULL
-           THEN EXTRACT(EPOCH FROM (fim_data - inicio_data))::int / 60
-           ELSE NULL
-         END AS "duracaoMinutos"`,
-      { id: dto.id, descricao: dto.descricao },
+         EXTRACT(EPOCH FROM (COALESCE(fim_data, NOW()) - inicio_data))::int / 60 AS "duracaoMinutos"`,
+      { id: dto.id, descricao: dto.descricao, inicioData: dto.inicioData, fimData: dto.fimData },
     );
     return resultado[0];
   }

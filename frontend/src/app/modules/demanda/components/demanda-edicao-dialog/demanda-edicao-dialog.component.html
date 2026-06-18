@@ -19,7 +19,7 @@
         <label class="demanda-edicao-dialog__label">
           Nome <span class="demanda-edicao-dialog__obrigatorio">*</span>
         </label>
-        <input pInputText formControlName="nome" class="w-full" />
+        <input pInputText spellcheck="true" formControlName="nome" class="w-full" />
         @if (campoInvalido('nome')) {
           <small class="demanda-edicao-dialog__erro">Nome é obrigatório</small>
         }

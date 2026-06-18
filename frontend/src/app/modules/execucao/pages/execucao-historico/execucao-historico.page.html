@@ -1,0 +1,212 @@
+<div class="execucao-historico">
+  <div class="execucao-historico__cabecalho">
+    <h1 class="execucao-historico__titulo">Execuções</h1>
+  </div>
+
+  <form [formGroup]="formularioFiltros" class="execucao-historico__filtros">
+    @if (sessao.eGestor()) {
+      <div class="execucao-historico__filtro-campo execucao-historico__filtro-campo--usuario">
+        <label class="execucao-historico__filtro-label" for="filtro-usuario">Usuário</label>
+        <p-select
+          inputId="filtro-usuario"
+          formControlName="usuarioId"
+          [options]="usuarios()"
+          optionLabel="nomeCompleto"
+          optionValue="id"
+          placeholder="Todos"
+          [showClear]="true"
+          appendTo="body"
+          (onChange)="aoMudarFiltro()"
+          (onClear)="aoMudarFiltro()"
+        />
+      </div>
+    }
+
+    <div class="execucao-historico__navegacao">
+      <p-button
+        label="Hoje"
+        icon="pi pi-calendar"
+        severity="secondary"
+        [outlined]="true"
+        [disabled]="visualizandoHoje()"
+        pTooltip="Voltar para hoje"
+        tooltipPosition="top"
+        (onClick)="voltarParaHoje()"
+      />
+      <p-button
+        icon="pi pi-refresh"
+        severity="secondary"
+        [outlined]="true"
+        [loading]="carregando()"
+        pTooltip="Atualizar"
+        tooltipPosition="top"
+        (onClick)="buscarExecucoes()"
+      />
+      <p-button
+        icon="pi pi-chevron-left"
+        severity="secondary"
+        [outlined]="true"
+        pTooltip="Dia anterior"
+        tooltipPosition="top"
+        (onClick)="retornarDia()"
+      />
+      <p-datepicker
+        inputId="filtro-data"
+        formControlName="data"
+        dateFormat="dd/mm/yy"
+        [maxDate]="hoje"
+        [readonlyInput]="true"
+        appendTo="body"
+        (onSelect)="aoMudarFiltro()"
+      />
+      <p-button
+        icon="pi pi-chevron-right"
+        severity="secondary"
+        [outlined]="true"
+        [disabled]="visualizandoHoje()"
+        pTooltip="Próximo dia"
+        tooltipPosition="top"
+        (onClick)="avancarDia()"
+      />
+    </div>
+  </form>
+
+  <p-table
+    [value]="execucoes()"
+    [lazy]="true"
+    (onLazyLoad)="aoCarregarTabela($event)"
+    [paginator]="true"
+    [rows]="itensPorPagina()"
+    [totalRecords]="totalRegistros()"
+    [loading]="carregando()"
+    [rowsPerPageOptions]="[50, 100, 200]"
+    dataKey="id"
+  >
+    <ng-template #header>
+      <tr>
+        @if (sessao.eGestor()) { <th>Usuário</th> }
+        <th>Atividade</th>
+        <th>Início</th>
+        <th>Fim</th>
+        <th>Duração</th>
+        <th>Descrição</th>
+        @if (sessao.eGestor()) { <th class="execucao-historico__coluna-acoes">Ações</th> }
+      </tr>
+    </ng-template>
+
+    <ng-template #body let-execucao>
+      <tr class="execucao-historico__linha">
+        @if (sessao.eGestor()) { <td>{{ execucao.nomeUsuario }}</td> }
+        <td>
+          <a [routerLink]="['/atividade', execucao.atividadeId]" class="execucao-historico__atividade-link">
+            {{ execucao.nomeAtividade }}
+          </a>
+        </td>
+        <td>{{ execucao.inicioData | date: 'HH:mm' }}</td>
+        <td>
+          @if (execucao.fimData) {
+            {{ execucao.fimData | date: 'HH:mm' }}
+          } @else {
+            <span class="execucao-historico__em-andamento">Em andamento</span>
+          }
+        </td>
+        <td>{{ execucao.duracaoMinutos | minutosParagHoras }}</td>
+        <td class="execucao-historico__descricao">{{ execucao.descricao }}</td>
+        @if (sessao.eGestor()) {
+          <td class="execucao-historico__coluna-acoes">
+            <p-button
+              icon="pi pi-pencil"
+              severity="secondary"
+              [text]="true"
+              [rounded]="true"
+              pTooltip="Editar execução"
+              tooltipPosition="top"
+              (onClick)="abrirEdicao(execucao)"
+            />
+          </td>
+        }
+      </tr>
+    </ng-template>
+
+    <ng-template #emptymessage>
+      <tr>
+        <td [attr.colspan]="sessao.eGestor() ? 7 : 5" class="execucao-historico__vazio">
+          Nenhuma execução encontrada para este dia.
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog
+  header="Editar execução"
+  [visible]="mostrarDialogEditar()"
+  (visibleChange)="mostrarDialogEditar.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '34rem' }"
+  [dismissableMask]="true"
+>
+  <form [formGroup]="formularioEdicao" class="execucao-historico__dialog-form" (ngSubmit)="salvarEdicao()">
+    <div class="execucao-historico__dialog-periodo">
+      <div class="execucao-historico__filtro-campo">
+        <label class="execucao-historico__filtro-label" for="editar-inicio">Início</label>
+        <p-datepicker
+          inputId="editar-inicio"
+          formControlName="inicioData"
+          dateFormat="dd/mm/yy"
+          [showTime]="true"
+          [showSeconds]="true"
+          hourFormat="24"
+          [stepMinute]="1"
+          [stepSecond]="1"
+          [maxDate]="dataMaximaEdicao()"
+          appendTo="body"
+          [class.ng-invalid]="campoInvalidoInicio()"
+        />
+        @if (campoInvalidoInicio()) {
+          <small class="execucao-historico__erro">O início é obrigatório.</small>
+        }
+      </div>
+
+      <div class="execucao-historico__filtro-campo">
+        <label class="execucao-historico__filtro-label" for="editar-fim">Fim</label>
+        <p-datepicker
+          inputId="editar-fim"
+          formControlName="fimData"
+          dateFormat="dd/mm/yy"
+          [showTime]="true"
+          [showSeconds]="true"
+          hourFormat="24"
+          [stepMinute]="1"
+          [stepSecond]="1"
+          [maxDate]="dataMaximaEdicao()"
+          [showClear]="true"
+          appendTo="body"
+        />
+      </div>
+    </div>
+
+    <div class="execucao-historico__filtro-campo">
+      <label class="execucao-historico__filtro-label" for="editar-descricao">Descrição</label>
+      <textarea
+        id="editar-descricao"
+        pTextarea
+        formControlName="descricao"
+        rows="5"
+        spellcheck="true"
+        lang="pt-BR"
+        [class.ng-invalid]="campoInvalidoDescricao()"
+      ></textarea>
+      @if (campoInvalidoDescricao()) {
+        <small class="execucao-historico__erro">A descrição é obrigatória.</small>
+      }
+    </div>
+
+    <div class="execucao-historico__dialog-acoes">
+      <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="mostrarDialogEditar.set(false)" />
+      <p-button type="submit" label="Salvar" icon="pi pi-check" [loading]="salvandoDescricao()" />
+    </div>
+  </form>
+</p-dialog>
