@@ -15,6 +15,7 @@ import { EditorModule } from 'primeng/editor';
 import { TabsModule } from 'primeng/tabs';
 import { Tag } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
+import { PopoverModule, Popover } from 'primeng/popover';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import {
@@ -45,6 +46,7 @@ import {
   ATIVIDADE_STATUS_NAO_DESENVOLVIDA,
   severidadeStatusAtividade,
   rotuloStatusAtividade,
+  SeveridadeTag,
 } from '../../models/atividade.model';
 
 type DemandaAtribuidaOpcao = DemandaAtribuidaDto & { rotulo: string };
@@ -66,6 +68,7 @@ type DemandaAtribuidaOpcao = DemandaAtribuidaDto & { rotulo: string };
     TabsModule,
     Tag,
     TooltipModule,
+    PopoverModule,
     ConfirmDialogModule,
     AssistenteDescricaoComponent,
     DataBrasileiraPipe,
@@ -107,6 +110,9 @@ export class AtividadeListagemPage implements OnInit {
   readonly rotuloStatus = rotuloStatusAtividade;
 
   readonly execucaoAtiva = signal<ExecucaoAtivaDto | null>(null);
+
+  // --- Troca de status inline ---
+  readonly atividadeStatusEdicao = signal<AtividadeResumoDto | null>(null);
 
   // --- Dialog: nova atividade ---
   readonly mostrarDialogNova = signal<boolean>(false);
@@ -330,6 +336,39 @@ export class AtividadeListagemPage implements OnInit {
   }
 
   // ---------------------------------------------------------------------------
+  // Troca de status inline
+  // ---------------------------------------------------------------------------
+
+  abrirSeletorStatus(evento: Event, atividade: AtividadeResumoDto, popover: Popover): void {
+    this.atividadeStatusEdicao.set(atividade);
+    popover.toggle(evento);
+  }
+
+  severidadeOpcao(status: AtividadeStatusEnum | null): SeveridadeTag | undefined {
+    return status ? this.severidadeStatus(status) : undefined;
+  }
+
+  alterarStatus(novoStatus: AtividadeStatusEnum | null, popover: Popover): void {
+    const atividade = this.atividadeStatusEdicao();
+    popover.hide();
+
+    if (!atividade || !novoStatus || novoStatus === atividade.status) return;
+
+    const dto: AtividadeAlterarDto = { status: novoStatus };
+    this.atividadeService.alterar(atividade.id, dto).subscribe({
+      next: (resposta) => {
+        if (resposta.sucesso && resposta.dados) {
+          const statusAlterado = resposta.dados.status;
+          this.atividades.update((lista) =>
+            lista.map((item) => (item.id === atividade.id ? { ...item, status: statusAlterado } : item)),
+          );
+          this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Status alterado' });
+        }
+      },
+    });
+  }
+
+  // ---------------------------------------------------------------------------
   // Execução (play/pause)
   // ---------------------------------------------------------------------------
 
@@ -343,6 +382,11 @@ export class AtividadeListagemPage implements OnInit {
 
   podeExecutar(atividade: AtividadeResumoDto): boolean {
     return this.sessao.eGestor() || atividade.usuarioId === this.sessao.id();
+  }
+
+  /** Gestor, ou desenvolvedor dono da atividade. Mesma regra de `podeExecutar`. */
+  podeEditar(atividade: AtividadeResumoDto): boolean {
+    return this.podeExecutar(atividade);
   }
 
   atividadeEmExecucao(atividadeId: number): boolean {

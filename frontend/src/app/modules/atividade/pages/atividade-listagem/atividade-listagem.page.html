@@ -125,10 +125,26 @@
           </td>
         }
         <td>
-          <p-tag
-            [value]="rotuloStatus(atividade.status)"
-            [severity]="severidadeStatus(atividade.status)"
-          />
+          @if (podeEditar(atividade)) {
+            <button
+              type="button"
+              class="atividade-listagem__status-gatilho"
+              pTooltip="Trocar status"
+              tooltipPosition="top"
+              (click)="abrirSeletorStatus($event, atividade, statusPopover)"
+            >
+              <p-tag
+                [value]="rotuloStatus(atividade.status)"
+                [severity]="severidadeStatus(atividade.status)"
+              />
+              <i class="pi pi-chevron-down atividade-listagem__status-seta"></i>
+            </button>
+          } @else {
+            <p-tag
+              [value]="rotuloStatus(atividade.status)"
+              [severity]="severidadeStatus(atividade.status)"
+            />
+          }
         </td>
         <td>
           <div class="atividade-listagem__tags">
@@ -477,5 +493,24 @@
     />
   </ng-template>
 </p-dialog>
+
+<!-- Popover: troca de status inline -->
+<p-popover #statusPopover>
+  <div class="atividade-listagem__status-opcoes">
+    @for (opcao of statusOpcoes; track opcao.value) {
+      <button
+        type="button"
+        class="atividade-listagem__status-opcao"
+        [class.atividade-listagem__status-opcao--ativo]="opcao.value === atividadeStatusEdicao()?.status"
+        (click)="alterarStatus(opcao.value, statusPopover)"
+      >
+        <p-tag [value]="opcao.label" [severity]="severidadeOpcao(opcao.value)" />
+        @if (opcao.value === atividadeStatusEdicao()?.status) {
+          <i class="pi pi-check atividade-listagem__status-opcao-check"></i>
+        }
+      </button>
+    }
+  </div>
+</p-popover>
 
 <p-confirmDialog />
