@@ -434,17 +434,19 @@
             <div class="atividade-listagem__execucoes-lista">
               @for (execucao of execucoesVisualizar(); track execucao.id) {
                 <div class="atividade-listagem__execucao-item">
-                  <div class="atividade-listagem__execucao-cabecalho">
-                    <span class="atividade-listagem__execucao-data">
-                      {{ execucao.inicioData | dataBrasileira }}
-                      @if (execucao.fimData) {
-                        · {{ execucao.duracaoMinutos | minutosParagHoras }}
-                      } @else {
-                        · <span class="text-primary-500">em andamento</span>
-                      }
-                    </span>
-                  </div>
-                  <p class="atividade-listagem__execucao-descricao">{{ execucao.descricao }}</p>
+                  <span class="atividade-listagem__execucao-data">
+                    {{ execucao.inicioData | dataBrasileira }}
+                    @if (execucao.fimData) {
+                      · {{ execucao.duracaoMinutos | minutosParagHoras }}
+                    } @else {
+                      · <span class="text-primary-500">em andamento</span>
+                    }
+                  </span>
+                  <span
+                    class="atividade-listagem__execucao-descricao"
+                    [pTooltip]="execucao.descricao"
+                    tooltipPosition="top"
+                  >{{ execucao.descricao }}</span>
                 </div>
               }
             </div>
@@ -611,17 +613,19 @@
         <div class="atividade-listagem__execucoes-lista">
           @for (execucao of execucoesDialogExecucao(); track execucao.id) {
             <div class="atividade-listagem__execucao-item">
-              <div class="atividade-listagem__execucao-cabecalho">
-                <span class="atividade-listagem__execucao-data">
-                  {{ execucao.inicioData | dataBrasileira }}
-                  @if (execucao.fimData) {
-                    · {{ execucao.duracaoMinutos | minutosParagHoras }}
-                  } @else {
-                    · <span class="text-primary-500">em andamento</span>
-                  }
-                </span>
-              </div>
-              <p class="atividade-listagem__execucao-descricao">{{ execucao.descricao }}</p>
+              <span class="atividade-listagem__execucao-data">
+                {{ execucao.inicioData | dataBrasileira }}
+                @if (execucao.fimData) {
+                  · {{ execucao.duracaoMinutos | minutosParagHoras }}
+                } @else {
+                  · <span class="text-primary-500">em andamento</span>
+                }
+              </span>
+              <span
+                class="atividade-listagem__execucao-descricao"
+                [pTooltip]="execucao.descricao"
+                tooltipPosition="top"
+              >{{ execucao.descricao }}</span>
             </div>
           }
         </div>
