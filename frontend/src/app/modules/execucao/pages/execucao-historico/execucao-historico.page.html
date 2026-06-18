@@ -102,10 +102,18 @@
             {{ execucao.nomeAtividade }}
           </a>
         </td>
-        <td>{{ execucao.inicioData | date: 'HH:mm' }}</td>
+        <td>
+          <div class="execucao-historico__momento">
+            <span class="execucao-historico__momento-data">{{ execucao.inicioData | date: 'dd/MM/yy' }}</span>
+            <span class="execucao-historico__momento-hora">{{ execucao.inicioData | date: 'HH:mm' }}</span>
+          </div>
+        </td>
         <td>
           @if (execucao.fimData) {
-            {{ execucao.fimData | date: 'HH:mm' }}
+            <div class="execucao-historico__momento">
+              <span class="execucao-historico__momento-data">{{ execucao.fimData | date: 'dd/MM/yy' }}</span>
+              <span class="execucao-historico__momento-hora">{{ execucao.fimData | date: 'HH:mm' }}</span>
+            </div>
           } @else {
             <span class="execucao-historico__em-andamento">Em andamento</span>
           }

@@ -79,6 +79,23 @@
     }
   }
 
+  &__momento {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+  }
+
+  &__momento-data {
+    font-size: 0.75rem;
+    color: var(--p-text-muted-color);
+  }
+
+  &__momento-hora {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--p-text-color);
+  }
+
   &__em-andamento {
     font-size: 0.75rem;
     font-weight: 600;
