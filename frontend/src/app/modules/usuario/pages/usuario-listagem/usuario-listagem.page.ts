@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, HostListener } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
@@ -55,6 +55,12 @@ export class UsuarioListagemPage implements OnInit {
 
   ngOnInit(): void {
     this.buscarUsuarios();
+  }
+
+  /** Recarrega a listagem sempre que a aba/janela volta a ficar visível. */
+  @HostListener('document:visibilitychange')
+  aoVoltarParaAba(): void {
+    if (document.visibilityState === 'visible') this.buscarUsuarios();
   }
 
   buscarUsuarios(): void {
