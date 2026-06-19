@@ -11,39 +11,6 @@
     }
   </div>
 
-  <!-- Verificador de dia útil -->
-  <div class="calendario-listagem__verificador">
-    <form [formGroup]="formularioVerificar" class="calendario-listagem__verificador-form">
-      <span class="calendario-listagem__verificador-titulo">
-        <i class="pi pi-search"></i> Verificar dia útil
-      </span>
-      <p-datepicker
-        formControlName="data"
-        dateFormat="dd/mm/yy"
-        appendTo="body"
-        [showIcon]="true"
-        placeholder="Selecione uma data"
-      />
-      <p-button
-        label="Verificar"
-        size="small"
-        [loading]="carregandoVerificacao()"
-        (onClick)="verificar()"
-      />
-      @if (resultadoVerificacao(); as resultado) {
-        @if (resultado.ehDiaUtil) {
-          <span class="calendario-listagem__resultado calendario-listagem__resultado--util">
-            <i class="pi pi-check-circle"></i> Dia útil
-          </span>
-        } @else {
-          <span class="calendario-listagem__resultado calendario-listagem__resultado--nao-util">
-            <i class="pi pi-times-circle"></i> Não útil — {{ resultado.motivo }}
-          </span>
-        }
-      }
-    </form>
-  </div>
-
   <!-- Calendário (esquerda) + tabela do mês (direita) -->
   <div class="calendario-listagem__principal">
     <div class="calendario-listagem__calendario">
@@ -54,16 +21,19 @@
       >
         <ng-template pTemplate="date" let-date>
           @let marcado = diaMarcado(date.year, date.month + 1, date.day);
-          @if (marcado) {
-            <span
-              class="calendario-listagem__dia-marcado"
-              [pTooltip]="marcado.descricao + ' — ' + rotuloTipo(marcado.tipo)"
-            >
+          <span class="calendario-listagem__dia-celula" (dblclick)="onDuploCliqueDia(date)">
+            @if (marcado) {
+              <span
+                class="calendario-listagem__dia-marcado"
+                [pTooltip]="marcado.descricao + ' — ' + rotuloTipo(marcado.tipo)
+                  + (marcado.duracao === DiaNaoUtilDuracaoEnum.MEIO_PERIODO ? ' (meio período)' : '')"
+              >
+                {{ date.day }}
+              </span>
+            } @else {
               {{ date.day }}
-            </span>
-          } @else {
-            {{ date.day }}
-          }
+            }
+          </span>
         </ng-template>
       </p-datepicker>
     </div>
@@ -82,6 +52,7 @@
               <th>Data</th>
               <th>Descrição</th>
               <th>Tipo</th>
+              <th>Duração</th>
               <th class="calendario-listagem__col-centro">Recorrente</th>
               @if (eGestor()) {
                 <th class="calendario-listagem__col-acoes">Ações</th>
@@ -98,6 +69,13 @@
               <td>{{ dia.descricao }}</td>
               <td>
                 <p-tag [value]="rotuloTipo(dia.tipo)" [severity]="severidadeTipo(dia.tipo)" />
+              </td>
+              <td>
+                @if (dia.duracao === DiaNaoUtilDuracaoEnum.MEIO_PERIODO) {
+                  <p-tag value="½ dia" severity="warn" />
+                } @else {
+                  <span class="text-surface-500">Integral</span>
+                }
               </td>
               <td class="calendario-listagem__col-centro">
                 @if (dia.recorrente) {
@@ -132,7 +110,7 @@
 
           <ng-template pTemplate="emptymessage">
             <tr>
-              <td [attr.colspan]="eGestor() ? 5 : 4" class="calendario-listagem__vazio">
+              <td [attr.colspan]="eGestor() ? 6 : 5" class="calendario-listagem__vazio">
                 <i class="pi pi-calendar-times text-3xl text-surface-300"></i>
                 <p class="text-surface-500 mt-2">Nenhum dia não útil neste mês</p>
               </td>
@@ -202,6 +180,23 @@
         appendTo="body"
         class="w-full"
       />
+    </div>
+
+    <div class="calendario-listagem__dialog-campo">
+      <label class="calendario-listagem__label">
+        Duração <span class="calendario-listagem__obrigatorio">*</span>
+      </label>
+      <p-select
+        formControlName="duracao"
+        [options]="duracaoOpcoes"
+        optionLabel="label"
+        optionValue="value"
+        appendTo="body"
+        class="w-full"
+      />
+      @if (formulario.value.duracao === DiaNaoUtilDuracaoEnum.MEIO_PERIODO) {
+        <small class="text-surface-500">A meta diária do ponto é reduzida à metade neste dia.</small>
+      }
     </div>
 
     <div class="calendario-listagem__dialog-campo">

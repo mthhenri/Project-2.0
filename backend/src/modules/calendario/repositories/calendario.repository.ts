@@ -8,6 +8,7 @@ import {
   DiaNaoUtilResumoDto,
   DiaNaoUtilAlteradoDto,
   DiaNaoUtilTipoEnum,
+  DiaNaoUtilDuracaoEnum,
   CalendarioRecuperarDto,
   CalendarioExcluirDto,
   CalendarioVerificarDiaDto,
@@ -19,7 +20,14 @@ interface DiaNaoUtilInserirDados {
   diaData: string;
   descricao: string;
   tipo: DiaNaoUtilTipoEnum;
+  duracao: DiaNaoUtilDuracaoEnum;
   recorrente: boolean;
+}
+
+/** Tipo e duração do dia não útil cadastrado para uma data. */
+interface DiaNaoUtilInfo {
+  tipo: DiaNaoUtilTipoEnum;
+  duracao: DiaNaoUtilDuracaoEnum;
 }
 
 @Injectable()
@@ -34,19 +42,21 @@ export class CalendarioRepository extends BaseRepository<DiaNaoUtil> {
   /** Insere novo dia não útil e retorna os dados criados. */
   async inserir(dados: DiaNaoUtilInserirDados): Promise<DiaNaoUtilCriadoDto> {
     const resultado = await this.executarConsulta<DiaNaoUtilCriadoDto>(
-      `INSERT INTO dia_nao_util (dia_data, descricao, tipo, recorrente, created_date, updated_date, is_deleted)
-       SELECT :diaData::DATE, :descricao, :tipo, :recorrente, NOW(), NOW(), false
+      `INSERT INTO dia_nao_util (dia_data, descricao, tipo, duracao, recorrente, created_date, updated_date, is_deleted)
+       SELECT :diaData::DATE, :descricao, :tipo, :duracao, :recorrente, NOW(), NOW(), false
        RETURNING
          id,
          dia_data    AS "diaData",
          descricao,
          tipo,
+         duracao,
          recorrente,
          created_date AS "createdDate"`,
       {
         diaData:    dados.diaData,
         descricao:  dados.descricao,
         tipo:       dados.tipo,
+        duracao:    dados.duracao,
         recorrente: dados.recorrente,
       },
     );
@@ -61,6 +71,7 @@ export class CalendarioRepository extends BaseRepository<DiaNaoUtil> {
          dia_nao_util.dia_data    AS "diaData",
          dia_nao_util.descricao,
          dia_nao_util.tipo,
+         dia_nao_util.duracao,
          dia_nao_util.recorrente,
          dia_nao_util.created_date AS "createdDate"
        FROM dia_nao_util
@@ -80,6 +91,7 @@ export class CalendarioRepository extends BaseRepository<DiaNaoUtil> {
          dia_nao_util.dia_data    AS "diaData",
          dia_nao_util.descricao,
          dia_nao_util.tipo,
+         dia_nao_util.duracao,
          dia_nao_util.recorrente
        FROM dia_nao_util
        WHERE dia_nao_util.is_deleted = false
@@ -100,6 +112,10 @@ export class CalendarioRepository extends BaseRepository<DiaNaoUtil> {
       setClauses.push('tipo = :tipo');
       parametros.tipo = dados.tipo;
     }
+    if (dados.duracao !== undefined) {
+      setClauses.push('duracao = :duracao');
+      parametros.duracao = dados.duracao;
+    }
     if (dados.recorrente !== undefined) {
       setClauses.push('recorrente = :recorrente');
       parametros.recorrente = dados.recorrente;
@@ -115,6 +131,7 @@ export class CalendarioRepository extends BaseRepository<DiaNaoUtil> {
          dia_data    AS "diaData",
          descricao,
          tipo,
+         duracao,
          recorrente,
          created_date AS "createdDate"`,
       parametros,
@@ -161,7 +178,8 @@ export class CalendarioRepository extends BaseRepository<DiaNaoUtil> {
     return this.executarConsulta<CalendarioDiaNaoUtilMesDto>(
       `SELECT DISTINCT
          EXTRACT(DAY FROM dia_nao_util.dia_data)::int AS "dia",
-         dia_nao_util.tipo
+         dia_nao_util.tipo,
+         dia_nao_util.duracao
        FROM dia_nao_util
        WHERE dia_nao_util.is_deleted = false
          AND (
@@ -182,12 +200,12 @@ export class CalendarioRepository extends BaseRepository<DiaNaoUtil> {
   }
 
   /**
-   * Retorna o tipo do dia não útil cadastrado para a data informada.
+   * Retorna o tipo e a duração do dia não útil cadastrado para a data informada.
    * Considera dias exatos e recorrentes. Retorna null se a data for dia útil.
    */
-  async recuperarTipo(dto: CalendarioVerificarDiaDto): Promise<DiaNaoUtilTipoEnum | null> {
-    const resultado = await this.executarConsulta<{ tipo: DiaNaoUtilTipoEnum }>(
-      `SELECT dia_nao_util.tipo
+  async recuperarTipo(dto: CalendarioVerificarDiaDto): Promise<DiaNaoUtilInfo | null> {
+    const resultado = await this.executarConsulta<DiaNaoUtilInfo>(
+      `SELECT dia_nao_util.tipo, dia_nao_util.duracao
        FROM dia_nao_util
        WHERE dia_nao_util.is_deleted = false
          AND (
@@ -202,6 +220,6 @@ export class CalendarioRepository extends BaseRepository<DiaNaoUtil> {
        LIMIT 1`,
       { data: dto.data },
     );
-    return resultado[0]?.tipo ?? null;
+    return resultado[0] ?? null;
   }
 }
