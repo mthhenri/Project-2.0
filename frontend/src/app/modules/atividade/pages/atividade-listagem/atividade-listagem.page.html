@@ -219,7 +219,7 @@
               size="small"
               pTooltip="Visualizar"
               tooltipPosition="left"
-              (onClick)="abrirAtividade(atividade)"
+              (onClick)="visualizarDialog.abrir(atividade.id)"
             />
             @if (podeEditar(atividade)) {
               <p-button
@@ -379,99 +379,7 @@
   </ng-template>
 </p-dialog>
 
-<!-- Dialog: visualizar atividade -->
-<p-dialog
-  [visible]="mostrarDialogVisualizar()"
-  (visibleChange)="mostrarDialogVisualizar.set($event)"
-  [header]="atividadeVisualizada()?.nome || 'Atividade'"
-  [modal]="true"
-  [style]="{ width: '46rem' }"
-  [draggable]="false"
-  [dismissableMask]="true"
->
-  @if (carregandoVisualizar()) {
-    <div class="atividade-listagem__carregando">
-      <i class="pi pi-spin pi-spinner text-2xl text-surface-400"></i>
-    </div>
-  } @else if (atividadeVisualizada(); as atividade) {
-    <div class="atividade-listagem__visualizar-infos">
-      <div class="atividade-listagem__executor">
-        <span class="atividade-listagem__avatar">{{ iniciais(atividade.nomeUsuario) }}</span>
-        <span class="text-surface-700">{{ atividade.nomeUsuario }}</span>
-      </div>
-      <span class="atividade-listagem__info-secundaria">
-        {{ atividade.totalAtividadesUsuario }} atividade(s) no total
-      </span>
-      <p-tag
-        [value]="rotuloStatus(atividade.status)"
-        [severity]="severidadeStatus(atividade.status)"
-      />
-    </div>
-
-    @if (tagsVisualizar().length) {
-      <div class="atividade-listagem__tags atividade-listagem__tags--visualizar">
-        @for (tag of tagsVisualizar(); track tag.id) {
-          <span
-            class="atividade-listagem__chip"
-            [style.background-color]="tag.cor + '22'"
-            [style.color]="tag.cor"
-            [style.border-color]="tag.cor + '55'"
-          >{{ tag.nome }}</span>
-        }
-      </div>
-    }
-
-    <p-tabs value="0" class="atividade-listagem__abas">
-      <p-tablist>
-        <p-tab value="0"><i class="pi pi-align-left mr-2"></i>Descrição</p-tab>
-        <p-tab value="1"><i class="pi pi-history mr-2"></i>Últimas execuções</p-tab>
-      </p-tablist>
-      <p-tabpanels>
-        <p-tabpanel value="0">
-          <form [formGroup]="formularioDescricao" class="atividade-listagem__descricao-form">
-            <p-editor
-              formControlName="descricao"
-              [style]="{ height: '240px' }"
-            />
-            <div class="atividade-listagem__descricao-acoes">
-              <p-button
-                label="Salvar descrição"
-                icon="pi pi-check"
-                [loading]="salvandoDescricao()"
-                (onClick)="salvarDescricao()"
-              />
-            </div>
-          </form>
-        </p-tabpanel>
-        <p-tabpanel value="1">
-          @if (execucoesVisualizar().length) {
-            <div class="atividade-listagem__execucoes-lista">
-              @for (execucao of execucoesVisualizar(); track execucao.id) {
-                <div class="atividade-listagem__execucao-item">
-                  <span class="atividade-listagem__execucao-data">
-                    {{ execucao.inicioData | dataBrasileira }}
-                    @if (execucao.fimData) {
-                      · {{ execucao.duracaoMinutos | minutosParagHoras }}
-                    } @else {
-                      · <span class="text-primary-500">em andamento</span>
-                    }
-                  </span>
-                  <span
-                    class="atividade-listagem__execucao-descricao"
-                    [pTooltip]="execucao.descricao"
-                    tooltipPosition="top"
-                  >{{ execucao.descricao }}</span>
-                </div>
-              }
-            </div>
-          } @else {
-            <p class="text-surface-400">Nenhuma execução registrada.</p>
-          }
-        </p-tabpanel>
-      </p-tabpanels>
-    </p-tabs>
-  }
-</p-dialog>
+<app-atividade-visualizar-dialog #visualizarDialog />
 
 <!-- Dialog: atribuir tags -->
 <p-dialog

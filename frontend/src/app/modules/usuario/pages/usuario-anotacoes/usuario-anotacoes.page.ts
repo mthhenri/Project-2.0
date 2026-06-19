@@ -1,5 +1,5 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-usuario-anotacoes',
@@ -8,11 +8,9 @@ import { ActivatedRoute, Router } from '@angular/router';
   template: '',
 })
 export class UsuarioAnotacoesPage implements OnInit {
-  private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
   ngOnInit(): void {
-    const id = this.route.snapshot.paramMap.get('id');
-    this.router.navigate(['/usuario', id], { replaceUrl: true });
+    this.router.navigate(['/usuario'], { replaceUrl: true });
   }
 }

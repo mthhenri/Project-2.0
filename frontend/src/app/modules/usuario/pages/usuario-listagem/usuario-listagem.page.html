@@ -86,7 +86,7 @@
               size="small"
               pTooltip="Visualizar perfil"
               tooltipPosition="left"
-              (onClick)="editarUsuario(usuario)"
+              (onClick)="perfilDialog.abrir(usuario.id)"
             />
             @if (sessao.eGestor()) {
               <p-button
@@ -128,3 +128,4 @@
 
 <p-confirmDialog />
 <app-usuario-anotacoes-dialog #anotacoesDialog />
+<app-usuario-perfil-dialog #perfilDialog (aoAlterar)="buscarUsuarios()" />

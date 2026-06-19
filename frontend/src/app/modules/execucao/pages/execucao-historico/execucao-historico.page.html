@@ -102,9 +102,13 @@
         <td>{{ execucao.nomeProjeto }}</td>
         <td>{{ execucao.nomeDemanda }}</td>
         <td>
-          <a [routerLink]="['/atividade', execucao.atividadeId]" class="execucao-historico__atividade-link">
+          <button
+            type="button"
+            class="execucao-historico__atividade-link"
+            (click)="visualizarDialog.abrir(execucao.atividadeId)"
+          >
             {{ execucao.nomeAtividade }}
-          </a>
+          </button>
         </td>
         <td>
           <div class="execucao-historico__momento">
@@ -232,3 +236,5 @@
     </div>
   </form>
 </p-dialog>
+
+<app-atividade-visualizar-dialog #visualizarDialog />

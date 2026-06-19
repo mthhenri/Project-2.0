@@ -7,7 +7,6 @@ import {
   HostListener,
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { RouterModule } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { TableModule, TableLazyLoadEvent } from 'primeng/table';
@@ -29,13 +28,13 @@ import { ExecucaoService } from '../../services/execucao.service';
 import { UsuarioService } from '../../../usuario/services/usuario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-horas.pipe';
+import { AtividadeVisualizarDialogComponent } from '../../../atividade/components/atividade-visualizar-dialog/atividade-visualizar-dialog.component';
 
 @Component({
   selector: 'app-execucao-historico',
   standalone: true,
   imports: [
     DatePipe,
-    RouterModule,
     ReactiveFormsModule,
     TableModule,
     ButtonModule,
@@ -45,6 +44,7 @@ import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-hora
     TextareaModule,
     TooltipModule,
     MinutosParaHorasPipe,
+    AtividadeVisualizarDialogComponent,
   ],
   templateUrl: './execucao-historico.page.html',
   styleUrl: './execucao-historico.page.scss',

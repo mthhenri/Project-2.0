@@ -19,13 +19,6 @@ export const usuarioRotas: Routes = [
       ),
   },
   {
-    path: ':id',
-    loadComponent: () =>
-      import('./pages/usuario-perfil/usuario-perfil.page').then(
-        (m) => m.UsuarioPerfilPage,
-      ),
-  },
-  {
     path: ':id/anotacoes',
     loadComponent: () =>
       import('./pages/usuario-anotacoes/usuario-anotacoes.page').then(

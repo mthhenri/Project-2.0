@@ -2,7 +2,7 @@ import { Component, inject, signal, DestroyRef, OnInit, HostListener } from '@an
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { finalize, debounceTime, distinctUntilChanged, forkJoin } from 'rxjs';
+import { finalize, debounceTime, distinctUntilChanged } from 'rxjs';
 import { TableModule, TableLazyLoadEvent } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { Select } from 'primeng/select';
@@ -12,7 +12,6 @@ import { TextareaModule } from 'primeng/textarea';
 import { DialogModule } from 'primeng/dialog';
 import { DatePickerModule } from 'primeng/datepicker';
 import { EditorModule } from 'primeng/editor';
-import { TabsModule } from 'primeng/tabs';
 import { Tag } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { PopoverModule, Popover } from 'primeng/popover';
@@ -24,7 +23,6 @@ import {
   AtividadeListarDto,
   AtividadeCriarDto,
   AtividadeAlterarDto,
-  AtividadeRecuperadaDto,
   TagResumoDto,
   UsuarioResumoDto,
   UsuarioStatusEnum,
@@ -43,6 +41,7 @@ import { UsuarioService } from '../../../usuario/services/usuario.service';
 import { DemandaService } from '../../../demanda/services/demanda.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { AssistenteDescricaoComponent } from '../../../../shared/components/assistente-descricao/assistente-descricao.component';
+import { AtividadeVisualizarDialogComponent } from '../../components/atividade-visualizar-dialog/atividade-visualizar-dialog.component';
 import { DataBrasileiraPipe } from '../../../../shared/pipes/data-brasileira.pipe';
 import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-horas.pipe';
 import {
@@ -71,12 +70,12 @@ type CampoDescricaoDemanda = 'descricaoCliente' | 'descricaoTecnica' | 'document
     DialogModule,
     DatePickerModule,
     EditorModule,
-    TabsModule,
     Tag,
     TooltipModule,
     PopoverModule,
     ConfirmDialogModule,
     AssistenteDescricaoComponent,
+    AtividadeVisualizarDialogComponent,
     DataBrasileiraPipe,
     MinutosParaHorasPipe,
   ],
@@ -169,18 +168,6 @@ export class AtividadeListagemPage implements OnInit {
 
   /** Apenas descrição técnica e documentação são editáveis — e somente por gestor. */
   private readonly camposEditaveis: CampoDescricaoDemanda[] = ['descricaoTecnica', 'documentacao'];
-
-  // --- Dialog: visualizar atividade ---
-  readonly mostrarDialogVisualizar = signal<boolean>(false);
-  readonly carregandoVisualizar = signal<boolean>(false);
-  readonly atividadeVisualizada = signal<AtividadeRecuperadaDto | null>(null);
-  readonly tagsVisualizar = signal<TagResumoDto[]>([]);
-  readonly execucoesVisualizar = signal<ExecucaoResumoDto[]>([]);
-  readonly salvandoDescricao = signal<boolean>(false);
-
-  readonly formularioDescricao = this.formBuilder.group({
-    descricao: [''],
-  });
 
   // --- Dialog: iniciar/encerrar execução ---
   readonly mostrarDialogExecucao = signal<boolean>(false);
@@ -353,56 +340,6 @@ export class AtividadeListagemPage implements OnInit {
   campoInvalidoNova(nomeCampo: string): boolean {
     const controle = this.formularioNova.get(nomeCampo);
     return !!(controle?.invalid && controle?.touched);
-  }
-
-  // ---------------------------------------------------------------------------
-  // Visualizar atividade
-  // ---------------------------------------------------------------------------
-
-  abrirAtividade(atividade: AtividadeResumoDto): void {
-    this.carregandoVisualizar.set(true);
-    this.atividadeVisualizada.set(null);
-    this.tagsVisualizar.set([]);
-    this.execucoesVisualizar.set([]);
-    this.formularioDescricao.reset({ descricao: '' });
-    this.mostrarDialogVisualizar.set(true);
-
-    forkJoin({
-      atividade:  this.atividadeService.recuperar(atividade.id),
-      tags:       this.atividadeService.listarTags(atividade.id),
-      execucoes:  this.atividadeService.listarExecucoesPorAtividade(atividade.id),
-    })
-      .pipe(finalize(() => this.carregandoVisualizar.set(false)))
-      .subscribe({
-        next: ({ atividade, tags, execucoes }) => {
-          if (atividade.sucesso && atividade.dados) {
-            this.atividadeVisualizada.set(atividade.dados);
-            this.formularioDescricao.patchValue({ descricao: atividade.dados.descricao ?? '' });
-          }
-          if (tags.sucesso && tags.dados)           this.tagsVisualizar.set(tags.dados);
-          if (execucoes.sucesso && execucoes.dados) this.execucoesVisualizar.set(execucoes.dados.itens);
-        },
-      });
-  }
-
-  salvarDescricao(): void {
-    const atividade = this.atividadeVisualizada();
-    if (!atividade) return;
-
-    this.salvandoDescricao.set(true);
-    const dto: AtividadeAlterarDto = { descricao: this.formularioDescricao.value.descricao ?? '' };
-    this.atividadeService
-      .alterar(atividade.id, dto)
-      .pipe(finalize(() => this.salvandoDescricao.set(false)))
-      .subscribe({
-        next: (resposta) => {
-          if (resposta.sucesso && resposta.dados) {
-            const alterada = resposta.dados;
-            this.atividadeVisualizada.update((atual) => (atual ? { ...atual, descricao: alterada.descricao } : atual));
-            this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Descrição salva' });
-          }
-        },
-      });
   }
 
   // ---------------------------------------------------------------------------

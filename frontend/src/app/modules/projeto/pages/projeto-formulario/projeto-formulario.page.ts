@@ -1,4 +1,5 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, DestroyRef, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
@@ -10,6 +11,7 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { MessageService } from 'primeng/api';
 import { ProjetoCriarDto, ProjetoStatusEnum } from '@project20/shared';
 import { ProjetoService } from '../../services/projeto.service';
+import { gerarCodigoDoNome } from '../../models/projeto.model';
 
 @Component({
   selector: 'app-projeto-formulario',
@@ -18,11 +20,12 @@ import { ProjetoService } from '../../services/projeto.service';
   templateUrl: './projeto-formulario.page.html',
   styleUrl: './projeto-formulario.page.scss',
 })
-export class ProjetoFormularioPage {
+export class ProjetoFormularioPage implements OnInit {
   private readonly projetoService = inject(ProjetoService);
   private readonly router = inject(Router);
   private readonly messageService = inject(MessageService);
   private readonly formBuilder = inject(FormBuilder);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly formulario = this.formBuilder.group(
     {
@@ -38,12 +41,40 @@ export class ProjetoFormularioPage {
 
   readonly carregando = signal<boolean>(false);
 
+  /**
+   * Enquanto `false`, o código acompanha o nome (slug derivado). Vira `true` no
+   * instante em que o gestor digita um código próprio; volta a `false` se ele
+   * apagar todo o código (pedindo o padrão automático de volta).
+   */
+  readonly codigoEditadoManualmente = signal<boolean>(false);
+
   readonly statusOpcoes = [
     { label: 'Ativo',     value: ProjetoStatusEnum.ATIVO },
     { label: 'Pausado',   value: ProjetoStatusEnum.PAUSADO },
     { label: 'Concluído', value: ProjetoStatusEnum.CONCLUIDO },
     { label: 'Cancelado', value: ProjetoStatusEnum.CANCELADO },
   ];
+
+  ngOnInit(): void {
+    // Nome -> Código: enquanto o gestor não assumir o código, ele segue derivado
+    // do nome. `emitEvent: false` evita disparar o valueChanges do próprio código
+    // (que marcaria edição manual e criaria laço).
+    this.formulario.controls.nome.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((nome) => {
+        if (this.codigoEditadoManualmente()) return;
+        this.formulario.controls.codigo.setValue(gerarCodigoDoNome(nome ?? ''), { emitEvent: false });
+      });
+
+    // Edição manual do código: como o sync acima usa `emitEvent: false`, este
+    // valueChanges só dispara na digitação do usuário. Código vazio devolve o
+    // controle à derivação automática; qualquer outro valor a desliga.
+    this.formulario.controls.codigo.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((codigo) => {
+        this.codigoEditadoManualmente.set(!!codigo?.trim());
+      });
+  }
 
   salvar(): void {
     if (this.formulario.invalid) {

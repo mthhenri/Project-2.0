@@ -13,11 +13,12 @@ import { UsuarioResumoDto, UsuarioTipoEnum, UsuarioStatusEnum, UsuarioListarDto 
 import { UsuarioService } from '../../services/usuario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { UsuarioAnotacoesDialogComponent } from '../../components/usuario-anotacoes-dialog/usuario-anotacoes-dialog.component';
+import { UsuarioPerfilDialogComponent } from '../../components/usuario-perfil-dialog/usuario-perfil-dialog.component';
 
 @Component({
   selector: 'app-usuario-listagem',
   standalone: true,
-  imports: [ReactiveFormsModule, TableModule, ButtonModule, Select, Tag, TooltipModule, ConfirmDialogModule, UsuarioAnotacoesDialogComponent],
+  imports: [ReactiveFormsModule, TableModule, ButtonModule, Select, Tag, TooltipModule, ConfirmDialogModule, UsuarioAnotacoesDialogComponent, UsuarioPerfilDialogComponent],
   templateUrl: './usuario-listagem.page.html',
   styleUrl: './usuario-listagem.page.scss',
   providers: [ConfirmationService],
@@ -102,10 +103,6 @@ export class UsuarioListagemPage implements OnInit {
 
   navegarParaNovo(): void {
     this.router.navigate(['/usuario/novo']);
-  }
-
-  editarUsuario(usuario: UsuarioResumoDto): void {
-    this.router.navigate(['/usuario', usuario.id]);
   }
 
   confirmarExclusao(usuario: UsuarioResumoDto): void {

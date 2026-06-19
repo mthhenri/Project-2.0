@@ -1,8 +1,6 @@
 @use '../../../../shared/styles/form' as *;
 
-.usuario-perfil {
-  padding: 1.5rem;
-
+.usuario-perfil-dialog {
   &__carregando {
     display: flex;
     justify-content: center;
@@ -10,44 +8,14 @@
     padding: 4rem;
   }
 
-  &__cabecalho {
+  &__acoes {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 1.5rem;
-    gap: 1rem;
-  }
-
-  &__cabecalho-esquerda {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  &__titulo {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--p-primary-600);
-    margin: 0;
-  }
-
-  &__cabecalho-acoes {
-    display: flex;
+    flex-wrap: wrap;
     gap: 0.75rem;
-  }
-
-  &__conteudo {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
+    margin-bottom: 1.5rem;
   }
 
   &__card {
-    background: var(--p-surface-0);
-    border: 1px solid var(--p-surface-200);
-    border-radius: 8px;
-    padding: 1.75rem;
-    max-width: 600px;
     display: flex;
     flex-wrap: wrap;
     gap: 2rem;

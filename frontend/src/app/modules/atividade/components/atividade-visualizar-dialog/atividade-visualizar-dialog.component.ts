@@ -1,0 +1,113 @@
+import { Component, inject, signal } from '@angular/core';
+import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
+import { finalize, forkJoin } from 'rxjs';
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
+import { EditorModule } from 'primeng/editor';
+import { TabsModule } from 'primeng/tabs';
+import { Tag } from 'primeng/tag';
+import { TooltipModule } from 'primeng/tooltip';
+import { MessageService } from 'primeng/api';
+import {
+  AtividadeRecuperadaDto,
+  AtividadeAlterarDto,
+  TagResumoDto,
+  ExecucaoResumoDto,
+} from '@project20/shared';
+import { AtividadeService } from '../../services/atividade.service';
+import { DataBrasileiraPipe } from '../../../../shared/pipes/data-brasileira.pipe';
+import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-horas.pipe';
+import { severidadeStatusAtividade, rotuloStatusAtividade } from '../../models/atividade.model';
+
+@Component({
+  selector: 'app-atividade-visualizar-dialog',
+  standalone: true,
+  imports: [
+    ReactiveFormsModule,
+    ButtonModule,
+    DialogModule,
+    EditorModule,
+    TabsModule,
+    Tag,
+    TooltipModule,
+    DataBrasileiraPipe,
+    MinutosParaHorasPipe,
+  ],
+  templateUrl: './atividade-visualizar-dialog.component.html',
+  styleUrl: './atividade-visualizar-dialog.component.scss',
+})
+export class AtividadeVisualizarDialogComponent {
+  private readonly atividadeService = inject(AtividadeService);
+  private readonly messageService = inject(MessageService);
+  private readonly formBuilder = inject(FormBuilder);
+
+  readonly mostrarDialog = signal<boolean>(false);
+  readonly carregandoVisualizar = signal<boolean>(false);
+  readonly atividadeVisualizada = signal<AtividadeRecuperadaDto | null>(null);
+  readonly tagsVisualizar = signal<TagResumoDto[]>([]);
+  readonly execucoesVisualizar = signal<ExecucaoResumoDto[]>([]);
+  readonly salvandoDescricao = signal<boolean>(false);
+
+  readonly severidadeStatus = severidadeStatusAtividade;
+  readonly rotuloStatus = rotuloStatusAtividade;
+
+  readonly formularioDescricao = this.formBuilder.group({
+    descricao: [''],
+  });
+
+  /** Abre o dialog e carrega atividade, tags e execuções. */
+  abrir(atividadeId: number): void {
+    this.carregandoVisualizar.set(true);
+    this.atividadeVisualizada.set(null);
+    this.tagsVisualizar.set([]);
+    this.execucoesVisualizar.set([]);
+    this.formularioDescricao.reset({ descricao: '' });
+    this.mostrarDialog.set(true);
+
+    forkJoin({
+      atividade:  this.atividadeService.recuperar(atividadeId),
+      tags:       this.atividadeService.listarTags(atividadeId),
+      execucoes:  this.atividadeService.listarExecucoesPorAtividade(atividadeId),
+    })
+      .pipe(finalize(() => this.carregandoVisualizar.set(false)))
+      .subscribe({
+        next: ({ atividade, tags, execucoes }) => {
+          if (atividade.sucesso && atividade.dados) {
+            this.atividadeVisualizada.set(atividade.dados);
+            this.formularioDescricao.patchValue({ descricao: atividade.dados.descricao ?? '' });
+          }
+          if (tags.sucesso && tags.dados)           this.tagsVisualizar.set(tags.dados);
+          if (execucoes.sucesso && execucoes.dados) this.execucoesVisualizar.set(execucoes.dados.itens);
+        },
+      });
+  }
+
+  salvarDescricao(): void {
+    const atividade = this.atividadeVisualizada();
+    if (!atividade) return;
+
+    this.salvandoDescricao.set(true);
+    const dto: AtividadeAlterarDto = { descricao: this.formularioDescricao.value.descricao ?? '' };
+    this.atividadeService
+      .alterar(atividade.id, dto)
+      .pipe(finalize(() => this.salvandoDescricao.set(false)))
+      .subscribe({
+        next: (resposta) => {
+          if (resposta.sucesso && resposta.dados) {
+            const alterada = resposta.dados;
+            this.atividadeVisualizada.update((atual) => (atual ? { ...atual, descricao: alterada.descricao } : atual));
+            this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Descrição salva' });
+          }
+        },
+      });
+  }
+
+  iniciais(nome: string): string {
+    return (nome ?? '')
+      .split(' ')
+      .slice(0, 2)
+      .map((parte) => parte[0])
+      .join('')
+      .toUpperCase();
+  }
+}

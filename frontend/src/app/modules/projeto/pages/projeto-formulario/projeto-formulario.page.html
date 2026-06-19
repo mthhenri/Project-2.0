@@ -40,11 +40,15 @@
             id="codigo"
             pInputText
             formControlName="codigo"
-            placeholder="ex: PROJ-001"
+            placeholder="Gerado a partir do nome"
             class="w-full projeto-formulario__input-codigo"
           />
           @if (campoInvalido('codigo')) {
             <small class="projeto-formulario__erro">Código é obrigatório</small>
+          } @else if (!codigoEditadoManualmente()) {
+            <small class="projeto-formulario__dica">
+              Preenchido automaticamente pelo nome — edite se quiser um código próprio
+            </small>
           }
         </div>
       </div>

@@ -1,6 +1,5 @@
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, output } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -19,25 +18,27 @@ import {
 } from '@project20/shared';
 import { UsuarioService } from '../../services/usuario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
-import { UsuarioAnotacoesDialogComponent } from '../../components/usuario-anotacoes-dialog/usuario-anotacoes-dialog.component';
+import { UsuarioAnotacoesDialogComponent } from '../usuario-anotacoes-dialog/usuario-anotacoes-dialog.component';
 
 @Component({
-  selector: 'app-usuario-perfil',
+  selector: 'app-usuario-perfil-dialog',
   standalone: true,
   imports: [ReactiveFormsModule, ButtonModule, InputTextModule, PasswordModule, Select, InputNumberModule, Tag, DialogModule, UsuarioAnotacoesDialogComponent],
-  templateUrl: './usuario-perfil.page.html',
-  styleUrl: './usuario-perfil.page.scss',
+  templateUrl: './usuario-perfil-dialog.component.html',
+  styleUrl: './usuario-perfil-dialog.component.scss',
 })
-export class UsuarioPerfilPage implements OnInit {
+export class UsuarioPerfilDialogComponent {
   private readonly usuarioService = inject(UsuarioService);
   private readonly sessao = inject(UsuarioSessaoService);
-  private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
   private readonly messageService = inject(MessageService);
   private readonly formBuilder = inject(FormBuilder);
 
+  /** Emitido quando o perfil é alterado com sucesso, para a listagem recarregar. */
+  readonly aoAlterar = output<void>();
+
   readonly usuario = signal<UsuarioRecuperadoDto | null>(null);
   readonly carregando = signal<boolean>(false);
+  readonly mostrarDialog = signal<boolean>(false);
   readonly mostrarDialogEditar = signal<boolean>(false);
   readonly mostrarDialogSenha = signal<boolean>(false);
   readonly carregandoSalvar = signal<boolean>(false);
@@ -69,16 +70,11 @@ export class UsuarioPerfilPage implements OnInit {
     return usuarioAtual.id === usuarioPerfil.id || this.sessao.eGestor();
   });
 
-  readonly ehProprioUsuario = computed(() => {
-    const usuarioAtual = this.sessao.usuarioAtual();
-    const usuarioPerfil = this.usuario();
-    if (!usuarioAtual || !usuarioPerfil) return false;
-    return usuarioAtual.id === usuarioPerfil.id;
-  });
-
-  ngOnInit(): void {
-    const identificador = Number(this.route.snapshot.paramMap.get('id'));
-    this.carregarUsuario(identificador);
+  /** Abre o dialog e carrega o usuário informado. */
+  abrir(usuarioId: number): void {
+    this.usuario.set(null);
+    this.mostrarDialog.set(true);
+    this.carregarUsuario(usuarioId);
   }
 
   abrirDialogEditar(): void {
@@ -122,6 +118,7 @@ export class UsuarioPerfilPage implements OnInit {
           });
           this.mostrarDialogEditar.set(false);
           this.carregarUsuario(usuarioDados.id);
+          this.aoAlterar.emit();
         },
       });
   }
@@ -159,10 +156,6 @@ export class UsuarioPerfilPage implements OnInit {
           this.formularioSenha.reset();
         },
       });
-  }
-
-  voltarParaListagem(): void {
-    this.router.navigate(['/usuario']);
   }
 
   rotulaTipo(tipo: UsuarioTipoEnum): string {
