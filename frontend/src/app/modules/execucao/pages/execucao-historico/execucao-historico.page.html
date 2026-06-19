@@ -85,6 +85,8 @@
     <ng-template #header>
       <tr>
         @if (sessao.eGestor()) { <th>Usuário</th> }
+        <th>Projeto</th>
+        <th>Demanda</th>
         <th>Atividade</th>
         <th>Início</th>
         <th>Fim</th>
@@ -97,6 +99,8 @@
     <ng-template #body let-execucao>
       <tr class="execucao-historico__linha">
         @if (sessao.eGestor()) { <td>{{ execucao.nomeUsuario }}</td> }
+        <td>{{ execucao.nomeProjeto }}</td>
+        <td>{{ execucao.nomeDemanda }}</td>
         <td>
           <a [routerLink]="['/atividade', execucao.atividadeId]" class="execucao-historico__atividade-link">
             {{ execucao.nomeAtividade }}
@@ -136,9 +140,19 @@
       </tr>
     </ng-template>
 
+    <ng-template #footer>
+      <tr class="execucao-historico__rodape">
+        <td [attr.colspan]="sessao.eGestor() ? 6 : 5" class="execucao-historico__rodape-rotulo">
+          Total do dia
+        </td>
+        <td class="execucao-historico__rodape-valor">{{ totalMinutosDia() | minutosParagHoras }}</td>
+        <td [attr.colspan]="sessao.eGestor() ? 2 : 1"></td>
+      </tr>
+    </ng-template>
+
     <ng-template #emptymessage>
       <tr>
-        <td [attr.colspan]="sessao.eGestor() ? 7 : 5" class="execucao-historico__vazio">
+        <td [attr.colspan]="sessao.eGestor() ? 9 : 7" class="execucao-historico__vazio">
           Nenhuma execução encontrada para este dia.
         </td>
       </tr>

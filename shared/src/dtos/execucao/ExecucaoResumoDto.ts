@@ -2,6 +2,10 @@ export class ExecucaoResumoDto {
   id: number;
   atividadeId: number;
   nomeAtividade: string;
+  demandaId: number;
+  nomeDemanda: string;
+  projetoId: number;
+  nomeProjeto: string;
   descricao: string;
   inicioData: Date;
   fimData: Date | null;

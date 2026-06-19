@@ -9,12 +9,11 @@ import {
   ExecucaoAlterarDto,
   ExecucaoAlteradaDto,
   ExecucaoListarDto,
-  ExecucaoResumoDto,
+  ExecucaoListaDto,
   ExecucaoAtivaDto,
   ExecucaoRegistrarDto,
   ExecucaoRegistradaDto,
   StandardResponse,
-  PaginatedResult,
 } from '@project20/shared';
 import { ambiente } from '../../../../environments/environment';
 
@@ -35,14 +34,14 @@ export class ExecucaoService {
     return this.httpClient.patch<StandardResponse<ExecucaoEncerradaDto>>(`${this.urlBase}/${id}/encerrar`, dto);
   }
 
-  listar(filtros: ExecucaoListarDto): Observable<StandardResponse<PaginatedResult<ExecucaoResumoDto>>> {
+  listar(filtros: ExecucaoListarDto): Observable<StandardResponse<ExecucaoListaDto>> {
     let params = new HttpParams();
     if (filtros.atividadeId)    params = params.set('atividadeId', String(filtros.atividadeId));
     if (filtros.usuarioId)      params = params.set('usuarioId', String(filtros.usuarioId));
     if (filtros.data)           params = params.set('data', filtros.data);
     if (filtros.pagina)         params = params.set('pagina', String(filtros.pagina));
     if (filtros.itensPorPagina) params = params.set('itensPorPagina', String(filtros.itensPorPagina));
-    return this.httpClient.get<StandardResponse<PaginatedResult<ExecucaoResumoDto>>>(this.urlBase, { params });
+    return this.httpClient.get<StandardResponse<ExecucaoListaDto>>(this.urlBase, { params });
   }
 
   recuperar(id: number): Observable<StandardResponse<ExecucaoEncerradaDto>> {

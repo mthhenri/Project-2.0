@@ -8,7 +8,7 @@ import {
   ExecucaoEncerradaDto,
   ExecucaoAlteradaDto,
   ExecucaoListarDto,
-  ExecucaoResumoDto,
+  ExecucaoListaDto,
   ExecucaoAlterarDto,
   ExecucaoAtivaDto,
   ExecucaoRegistrarDto,
@@ -16,7 +16,6 @@ import {
   UsuarioTipoEnum,
 } from '@project20/shared';
 import { StandardResponse } from '@project20/shared';
-import { PaginatedResult } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
 import { UnauthorizedAccessException } from '../../../core/exceptions/unauthorized-access.exception';
@@ -177,15 +176,15 @@ export class ExecucaoService {
   async listar(
     filtros: ExecucaoListarDto,
     usuarioAtivo: JwtPayload,
-  ): Promise<StandardResponse<PaginatedResult<ExecucaoResumoDto>>> {
+  ): Promise<StandardResponse<ExecucaoListaDto>> {
     const pagina         = filtros.pagina ?? 1;
     const itensPorPagina = filtros.itensPorPagina ?? 20;
 
     const usuarioIdRestricao =
       usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
 
-    const { itens, total } = await this.execucaoRepositorio.listar(filtros, usuarioIdRestricao);
-    const totalPaginas     = Math.ceil(total / itensPorPagina);
+    const { itens, total, totalMinutosDia } = await this.execucaoRepositorio.listar(filtros, usuarioIdRestricao);
+    const totalPaginas = Math.ceil(total / itensPorPagina);
 
     return {
       sucesso: true,
@@ -195,6 +194,7 @@ export class ExecucaoService {
         paginaAtual:   pagina,
         itensPorPagina,
         totalPaginas,
+        totalMinutosDia,
       },
       mensagem: 'Execuções listadas com sucesso',
     };

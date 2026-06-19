@@ -170,7 +170,7 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
   async listar(
     filtros: ExecucaoListarDto,
     usuarioIdRestricao?: number,
-  ): Promise<{ itens: ExecucaoResumoDto[]; total: number }> {
+  ): Promise<{ itens: ExecucaoResumoDto[]; total: number; totalMinutosDia: number }> {
     const pagina         = filtros.pagina ?? 1;
     const itensPorPagina = filtros.itensPorPagina ?? 20;
     const parametros: Record<string, unknown> = {};
@@ -178,6 +178,8 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
       'execucao.is_deleted = false',
       'atividade.is_deleted = false',
       'usuario.is_deleted = false',
+      'demanda.is_deleted = false',
+      'projeto.is_deleted = false',
     ];
 
     const usuarioFiltrado = usuarioIdRestricao ?? filtros.usuarioId;
@@ -205,6 +207,27 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
          ON atividade.id = execucao.atividade_id
        INNER JOIN usuario
          ON usuario.id = atividade.usuario_id
+       INNER JOIN demanda
+         ON demanda.id = atividade.demanda_id
+       INNER JOIN projeto
+         ON projeto.id = demanda.projeto_id
+       WHERE ${clausulaWhere}`,
+      parametros,
+    );
+
+    const [{ totalMinutosDia }] = await this.executarConsulta<{ totalMinutosDia: number }>(
+      `SELECT COALESCE(SUM(
+         EXTRACT(EPOCH FROM (COALESCE(execucao.fim_data, NOW()) - execucao.inicio_data))::int / 60
+       ), 0)::int AS "totalMinutosDia"
+       FROM execucao
+       INNER JOIN atividade
+         ON atividade.id = execucao.atividade_id
+       INNER JOIN usuario
+         ON usuario.id = atividade.usuario_id
+       INNER JOIN demanda
+         ON demanda.id = atividade.demanda_id
+       INNER JOIN projeto
+         ON projeto.id = demanda.projeto_id
        WHERE ${clausulaWhere}`,
       parametros,
     );
@@ -215,6 +238,10 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
          execucao.id,
          execucao.atividade_id                                                          AS "atividadeId",
          atividade.nome                                                                  AS "nomeAtividade",
+         demanda.id                                                                      AS "demandaId",
+         demanda.nome                                                                    AS "nomeDemanda",
+         projeto.id                                                                      AS "projetoId",
+         projeto.nome                                                                    AS "nomeProjeto",
          execucao.descricao,
          execucao.inicio_data                                                            AS "inicioData",
          execucao.fim_data                                                               AS "fimData",
@@ -226,13 +253,17 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
          ON atividade.id = execucao.atividade_id
        INNER JOIN usuario
          ON usuario.id = atividade.usuario_id
+       INNER JOIN demanda
+         ON demanda.id = atividade.demanda_id
+       INNER JOIN projeto
+         ON projeto.id = demanda.projeto_id
        WHERE ${clausulaWhere}
        ORDER BY usuario.nome_completo ASC, execucao.inicio_data DESC
        LIMIT ${itensPorPagina} OFFSET ${deslocamento}`,
       parametros,
     );
 
-    return { itens, total };
+    return { itens, total, totalMinutosDia };
   }
 
   /**

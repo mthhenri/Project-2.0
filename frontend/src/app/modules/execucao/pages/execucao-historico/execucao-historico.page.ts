@@ -68,6 +68,7 @@ export class ExecucaoHistoricoPage implements OnInit {
   readonly execucoes = signal<ExecucaoResumoDto[]>([]);
   readonly usuarios = signal<UsuarioResumoDto[]>([]);
   readonly totalRegistros = signal<number>(0);
+  readonly totalMinutosDia = signal<number>(0);
   readonly carregando = signal<boolean>(false);
   readonly paginaAtual = signal<number>(1);
   readonly itensPorPagina = signal<number>(50);
@@ -125,6 +126,7 @@ export class ExecucaoHistoricoPage implements OnInit {
           if (resposta.sucesso && resposta.dados) {
             this.execucoes.set(resposta.dados.itens);
             this.totalRegistros.set(resposta.dados.totalItens);
+            this.totalMinutosDia.set(resposta.dados.totalMinutosDia);
           }
         },
       });

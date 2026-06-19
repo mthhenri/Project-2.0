@@ -115,6 +115,18 @@
     color: var(--p-text-muted-color);
   }
 
+  &__rodape-rotulo {
+    text-align: right;
+    font-weight: 600;
+    color: var(--p-text-color);
+  }
+
+  &__rodape-valor {
+    font-weight: 700;
+    color: var(--p-primary-600);
+    white-space: nowrap;
+  }
+
   &__dialog-form {
     display: flex;
     flex-direction: column;

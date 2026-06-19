@@ -6,6 +6,7 @@ export * from './ExecucaoAlterarDto';
 export * from './ExecucaoAlteradaDto';
 export * from './ExecucaoListarDto';
 export * from './ExecucaoResumoDto';
+export * from './ExecucaoListaDto';
 export * from './ExecucaoRecuperarDto';
 export * from './ExecucaoEncerrarInternoDto';
 export * from './ExecucaoAtivaRecuperarDto';
