@@ -14,6 +14,23 @@
         [outlined]="true"
         (onClick)="abrirDialog()"
       />
+    } @else if (souMembro()) {
+      <p-button
+        icon="pi pi-sign-out"
+        label="Sair"
+        severity="danger"
+        size="small"
+        [outlined]="true"
+        (onClick)="confirmarSaida()"
+      />
+    } @else {
+      <p-button
+        icon="pi pi-user-plus"
+        label="Participar"
+        size="small"
+        [outlined]="true"
+        (onClick)="participar()"
+      />
     }
   </div>
 

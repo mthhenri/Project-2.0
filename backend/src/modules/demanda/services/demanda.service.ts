@@ -47,6 +47,15 @@ export class DemandaService {
     dto: DemandaCriarDto,
     usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<DemandaCriadaDto>> {
+    if (
+      usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR &&
+      dto.demandaPaiId === undefined
+    ) {
+      throw new UnauthorizedAccessException(
+        'Desenvolvedor só pode criar sub-demandas (é obrigatório informar a demanda pai)',
+      );
+    }
+
     if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR) {
       const temAcesso = await this.demandaRepositorio.validarAcessoProjeto({
         projetoId: dto.projetoId,
@@ -356,33 +365,17 @@ export class DemandaService {
   /**
    * Cria uma conexão entre demandas com prevenção de ciclos via CTE recursivo.
    * Verifica existência de origem e destino, auto-referência e duplicidade antes de inserir.
+   * Restrito a gestores.
    */
   async criarConexao(
     demandaOrigemId: number,
     dto: DemandaConexaoCriarDto,
-    usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<DemandaConexaoCriadaDto>> {
-    const usuarioId =
-      usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
-
     const demandaOrigemEncontrada = await this.demandaRepositorio.recuperar(
       { id: demandaOrigemId },
-      usuarioId !== undefined ? { usuarioId } : undefined,
     );
     if (!demandaOrigemEncontrada) {
       throw new ResourceNotFoundException('Demanda origem');
-    }
-
-    if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR) {
-      const eMembro = await this.demandaRepositorio.validarMembro({
-        demandaId: demandaOrigemId,
-        usuarioId: usuarioAtivo.sub,
-      });
-      if (!eMembro) {
-        throw new UnauthorizedAccessException(
-          'Você só pode criar conexões em demandas das quais é membro',
-        );
-      }
     }
 
     const demandaDestinoEncontrada = await this.demandaRepositorio.recuperar(
@@ -533,15 +526,28 @@ export class DemandaService {
   /**
    * Sincroniza as tags de uma demanda com a lista enviada.
    * Remove as que saíram, insere as novas, mantém as que continuam.
-   * Restrito a gestores.
+   * Gestor sempre pode; desenvolvedor só nas demandas das quais é membro.
    */
   async alterarTagsDemanda(
     demandaId: number,
     dto: DemandaTagsAtribuirDto,
+    usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<DemandaTagsAtribuidasDto>> {
     const demandaEncontrada = await this.demandaRepositorio.recuperar({ id: demandaId });
     if (!demandaEncontrada) {
       throw new ResourceNotFoundException('Demanda');
+    }
+
+    if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR) {
+      const eMembro = await this.demandaRepositorio.validarMembro({
+        demandaId,
+        usuarioId: usuarioAtivo.sub,
+      });
+      if (!eMembro) {
+        throw new UnauthorizedAccessException(
+          'Você só pode atribuir tags em demandas das quais é membro',
+        );
+      }
     }
 
     for (const tagId of dto.tagIds) {
@@ -619,16 +625,36 @@ export class DemandaService {
   }
 
   /**
-   * Atribui manualmente um usuário à demanda.
-   * Restrito a gestores. Impede duplicidade.
+   * Atribui um usuário à demanda. Impede duplicidade.
+   * Gestor atribui qualquer usuário; desenvolvedor só pode incluir a si mesmo,
+   * desde que tenha acesso ao projeto da demanda.
    */
   async atribuirMembro(
     demandaId: number,
     dto: DemandaUsuarioAtribuirDto,
+    usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<DemandaUsuarioAtribuidoDto>> {
     const demandaEncontrada = await this.demandaRepositorio.recuperar({ id: demandaId });
     if (!demandaEncontrada) {
       throw new ResourceNotFoundException('Demanda');
+    }
+
+    if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR) {
+      if (dto.usuarioId !== usuarioAtivo.sub) {
+        throw new UnauthorizedAccessException(
+          'Desenvolvedor só pode incluir a si mesmo como membro',
+        );
+      }
+
+      const temAcesso = await this.demandaRepositorio.validarAcessoProjeto({
+        projetoId: demandaEncontrada.projetoId,
+        usuarioId: usuarioAtivo.sub,
+      });
+      if (!temAcesso) {
+        throw new UnauthorizedAccessException(
+          'Desenvolvedor não tem acesso ao projeto desta demanda',
+        );
+      }
     }
 
     const usuarioEncontrado = await this.usuarioRepositorio.recuperar({ id: dto.usuarioId });
@@ -663,16 +689,26 @@ export class DemandaService {
   }
 
   /**
-   * Remove um membro da demanda via soft delete.
-   * Restrito a gestores. Impede remoção do último membro.
+   * Remove um membro da demanda via soft delete. Impede remoção do último membro.
+   * Gestor remove qualquer membro; desenvolvedor só pode remover a si mesmo.
    */
   async removerMembro(
     demandaId: number,
     usuarioId: number,
+    usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<void>> {
     const demandaEncontrada = await this.demandaRepositorio.recuperar({ id: demandaId });
     if (!demandaEncontrada) {
       throw new ResourceNotFoundException('Demanda');
+    }
+
+    if (
+      usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR &&
+      usuarioId !== usuarioAtivo.sub
+    ) {
+      throw new UnauthorizedAccessException(
+        'Desenvolvedor só pode remover a si mesmo como membro',
+      );
     }
 
     const estaAtribuido = await this.demandaRepositorio.validarMembro({ demandaId, usuarioId });

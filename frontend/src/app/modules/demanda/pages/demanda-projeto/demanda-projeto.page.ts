@@ -95,6 +95,9 @@ export class DemandaProjetoPage implements OnInit {
   readonly demandaIdDescricaoEditando = signal<number>(0);
   readonly nomeDemandaDescricaoEditando = signal<string>('');
 
+  /** Editabilidade da demanda cuja descrição está aberta (espelha `podeEditar` do backend). */
+  readonly descricaoEditavel = signal<boolean>(false);
+
   readonly formularioDescricao = this.formBuilder.group({
     valor: ['' as string | null],
   });
@@ -114,6 +117,17 @@ export class DemandaProjetoPage implements OnInit {
       documentacao:     'Documentação',
     };
     return titulos[campo];
+  });
+
+  /**
+   * Quem pode editar a descrição aberta: descrição do cliente é exclusiva do gestor;
+   * técnica e documentação seguem a editabilidade da demanda (`podeEditar` — membro).
+   */
+  readonly podeEditarDescricaoAtual = computed(() => {
+    const campo = this.campoDescricaoEditando();
+    if (!campo) return false;
+    if (campo === 'descricaoCliente') return this.sessao.eGestor();
+    return this.descricaoEditavel();
   });
 
   readonly arvoreRaizes = computed<DemandaArvoreItemDto[]>(() => {
@@ -235,6 +249,7 @@ export class DemandaProjetoPage implements OnInit {
         this.demandaIdDescricaoEditando.set(demandaId);
         this.nomeDemandaDescricaoEditando.set(demandaDados.nome);
         this.campoDescricaoEditando.set(campo);
+        this.descricaoEditavel.set(demandaDados.podeEditar);
         this.formularioDescricao.patchValue({ valor: valores[campo] ?? '' });
         this.mostrarDialogDescricao.set(true);
       },
@@ -244,7 +259,7 @@ export class DemandaProjetoPage implements OnInit {
   salvarDescricao(): void {
     const campo = this.campoDescricaoEditando();
     const idEditando = this.demandaIdDescricaoEditando();
-    if (!campo || !idEditando) return;
+    if (!campo || !idEditando || !this.podeEditarDescricaoAtual()) return;
 
     this.carregandoSalvarDescricao.set(true);
     const dto = { [campo]: this.formularioDescricao.value.valor ?? undefined } as DemandaAlterarDto;

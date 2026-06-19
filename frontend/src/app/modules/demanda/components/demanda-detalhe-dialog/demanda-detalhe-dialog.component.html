@@ -121,12 +121,14 @@
     </div>
 
     <!-- Abas -->
-    <p-tabs value="1" class="demanda-detalhe-dialog__abas">
+    <p-tabs [value]="abaInicial()" class="demanda-detalhe-dialog__abas">
       <p-tablist>
         @if (demanda()!.isEstrutural) {
           <p-tab value="0"><i class="pi pi-sitemap mr-2"></i>Sub-demandas</p-tab>
         }
-        <p-tab value="1"><i class="pi pi-check-square mr-2"></i>Atividades</p-tab>
+        @if (eMembro()) {
+          <p-tab value="1"><i class="pi pi-check-square mr-2"></i>Atividades</p-tab>
+        }
         <p-tab value="2"><i class="pi pi-share-alt mr-2"></i>Conexões</p-tab>
         <p-tab value="3"><i class="pi pi-tag mr-2"></i>Tags</p-tab>
         <p-tab value="4"><i class="pi pi-users mr-2"></i>Membros</p-tab>
@@ -142,17 +144,15 @@
               <div class="demanda-detalhe-dialog__vazio">
                 <i class="pi pi-inbox text-3xl text-surface-300"></i>
                 <p class="text-surface-500 mt-2">Nenhuma sub-demanda</p>
-                @if (sessao.eGestor()) {
-                  <p-button
-                    label="Nova Sub-demanda"
-                    icon="pi pi-plus"
-                    severity="secondary"
-                    [outlined]="true"
-                    size="small"
-                    class="mt-2"
-                    (onClick)="mostrarDialogNovaSubDemanda.set(true)"
-                  />
-                }
+                <p-button
+                  label="Nova Sub-demanda"
+                  icon="pi pi-plus"
+                  severity="secondary"
+                  [outlined]="true"
+                  size="small"
+                  class="mt-2"
+                  (onClick)="mostrarDialogNovaSubDemanda.set(true)"
+                />
               </div>
             }
 
@@ -168,7 +168,7 @@
             }
           </div>
 
-          @if (subDemandas().length > 0 && sessao.eGestor()) {
+          @if (subDemandas().length > 0) {
             <div class="demanda-detalhe-dialog__subdemandas-acao">
               <p-button
                 label="Nova Sub-demanda"
@@ -183,7 +183,8 @@
         </p-tabpanel>
         }
 
-        <!-- Atividades -->
+        <!-- Atividades (apenas membros da demanda) -->
+        @if (eMembro()) {
         <p-tabpanel value="1">
           <div class="demanda-detalhe-dialog__atividades">
             <div class="demanda-detalhe-dialog__atividades-header">
@@ -201,6 +202,7 @@
             </p>
           </div>
         </p-tabpanel>
+        }
 
         <!-- Conexões -->
         <p-tabpanel value="2">
@@ -220,7 +222,7 @@
                   <span class="demanda-detalhe-dialog__tags-contador">{{ tagsDaDemanda().length }}</span>
                 }
               </span>
-              @if (sessao.eGestor()) {
+              @if (eMembro()) {
                 <p-button
                   label="Editar"
                   icon="pi pi-pencil"

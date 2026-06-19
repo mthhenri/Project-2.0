@@ -1,8 +1,9 @@
-import { Component, Input, Output, EventEmitter, forwardRef, signal, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, forwardRef, inject, signal, OnChanges, SimpleChanges } from '@angular/core';
 import { Tag } from 'primeng/tag';
 import { ContextMenu } from 'primeng/contextmenu';
 import { MenuItem } from 'primeng/api';
 import { DemandaArvoreItemDto, DemandaStatusEnum, DemandaPrioridadeEnum } from '@project20/shared';
+import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 
 type CampoDescricao = 'descricaoTecnica' | 'descricaoCliente' | 'documentacao';
 
@@ -22,6 +23,8 @@ export class DemandaArvoreItemComponent implements OnChanges {
   @Output() demandaNovaFilhaSolicitada = new EventEmitter<number>();
   @Output() demandaTagsSolicitadas = new EventEmitter<number>();
 
+  private readonly sessao = inject(UsuarioSessaoService);
+
   itensMenu: MenuItem[] = [];
 
   ngOnChanges(mudancas: SimpleChanges): void {
@@ -37,12 +40,17 @@ export class DemandaArvoreItemComponent implements OnChanges {
         icon: 'pi pi-eye',
         command: () => this.demandaSelecionada.emit(this.arvoreItem.id),
       },
-      {
+    ];
+
+    // Editar é gestor-only na árvore; o desenvolvedor edita pela dialog de detalhe,
+    // onde a membresia da demanda (podeEditar) é conhecida.
+    if (this.sessao.eGestor()) {
+      itensBase.push({
         label: 'Editar',
         icon: 'pi pi-pencil',
         command: () => this.demandaEditarSolicitada.emit(this.arvoreItem.id),
-      },
-    ];
+      });
+    }
 
     if (this.arvoreItem.isEstrutural) {
       itensBase.push({
@@ -52,13 +60,19 @@ export class DemandaArvoreItemComponent implements OnChanges {
       });
     }
 
+    // Tags depende de membresia (gestor-only na árvore, pelo mesmo motivo de Editar).
+    if (this.sessao.eGestor()) {
+      itensBase.push(
+        { separator: true },
+        {
+          label: 'Tags',
+          icon: 'pi pi-tag',
+          command: () => this.demandaTagsSolicitadas.emit(this.arvoreItem.id),
+        },
+      );
+    }
+
     itensBase.push(
-      { separator: true },
-      {
-        label: 'Tags',
-        icon: 'pi pi-tag',
-        command: () => this.demandaTagsSolicitadas.emit(this.arvoreItem.id),
-      },
       { separator: true },
       {
         label: 'Desc. Técnica',

@@ -178,32 +178,51 @@
     [draggable]="false"
     [resizable]="false"
   >
-    <form [formGroup]="formularioDescricao" class="demanda-projeto__descricao-dialog-form">
-      <p-editor
-        formControlName="valor"
-        class="demanda-projeto__editor"
-      />
-      <app-assistente-descricao
-        [textoAtual]="formularioDescricao.value.valor || ''"
-        tipoEntidade="demanda"
-        [contextoEntidade]="nomeDemandaDescricaoEditando()"
-        (textoAuxiliadoAceito)="aceitarDescricaoAssistente($event)"
-      />
-    </form>
+    @if (podeEditarDescricaoAtual()) {
+      <form [formGroup]="formularioDescricao" class="demanda-projeto__descricao-dialog-form">
+        <p-editor
+          formControlName="valor"
+          class="demanda-projeto__editor"
+        />
+        <app-assistente-descricao
+          [textoAtual]="formularioDescricao.value.valor || ''"
+          tipoEntidade="demanda"
+          [contextoEntidade]="nomeDemandaDescricaoEditando()"
+          (textoAuxiliadoAceito)="aceitarDescricaoAssistente($event)"
+        />
+      </form>
+    } @else {
+      @if (formularioDescricao.value.valor) {
+        <div class="demanda-projeto__descricao-leitura ql-snow">
+          <div class="ql-editor" [innerHTML]="formularioDescricao.value.valor"></div>
+        </div>
+      } @else {
+        <div class="demanda-projeto__descricao-vazia">Sem conteúdo</div>
+      }
+    }
 
     <ng-template pTemplate="footer">
-      <p-button
-        label="Cancelar"
-        severity="secondary"
-        [outlined]="true"
-        (onClick)="mostrarDialogDescricao.set(false)"
-      />
-      <p-button
-        label="Salvar"
-        icon="pi pi-check"
-        [loading]="carregandoSalvarDescricao()"
-        (onClick)="salvarDescricao()"
-      />
+      @if (podeEditarDescricaoAtual()) {
+        <p-button
+          label="Cancelar"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="mostrarDialogDescricao.set(false)"
+        />
+        <p-button
+          label="Salvar"
+          icon="pi pi-check"
+          [loading]="carregandoSalvarDescricao()"
+          (onClick)="salvarDescricao()"
+        />
+      } @else {
+        <p-button
+          label="Fechar"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="mostrarDialogDescricao.set(false)"
+        />
+      }
     </ng-template>
   </p-dialog>
 }

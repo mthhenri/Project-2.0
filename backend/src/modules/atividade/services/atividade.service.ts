@@ -80,8 +80,10 @@ export class AtividadeService {
    * Controle de acesso por tipo de usuário:
    * - Gestor: vê as atividades de todos; pode opcionalmente filtrar por um
    *   executor específico via filtros.usuarioId.
-   * - Desenvolvedor: vê somente as próprias atividades. Qualquer usuarioId
-   *   recebido é sobrescrito pelo id do usuário autenticado.
+   * - Desenvolvedor membro da demanda filtrada: vê todas as atividades dessa
+   *   demanda.
+   * - Desenvolvedor sem demandaId no filtro ou não-membro da demanda: vê
+   *   somente as próprias atividades (usuarioId sobrescrito pelo id autenticado).
    */
   async listar(
     filtros: AtividadeListarDto,
@@ -90,10 +92,19 @@ export class AtividadeService {
     const pagina         = filtros.pagina ?? 1;
     const itensPorPagina = filtros.itensPorPagina ?? 20;
 
-    const filtrosEfetivos: AtividadeListarDto =
-      usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR
-        ? { ...filtros, usuarioId: usuarioAtivo.sub }
-        : filtros;
+    let filtrosEfetivos: AtividadeListarDto = filtros;
+    if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR) {
+      const eMembroDaDemanda =
+        filtros.demandaId !== undefined &&
+        (await this.atividadeRepositorio.validarAcessoDemanda({
+          demandaId: filtros.demandaId,
+          usuarioId: usuarioAtivo.sub,
+        }));
+
+      filtrosEfetivos = eMembroDaDemanda
+        ? filtros
+        : { ...filtros, usuarioId: usuarioAtivo.sub };
+    }
 
     const { itens, total } = await this.atividadeRepositorio.listar(filtrosEfetivos);
     const totalPaginas     = Math.ceil(total / itensPorPagina);

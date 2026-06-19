@@ -2,7 +2,7 @@ import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, injec
 import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { TabsModule } from 'primeng/tabs';
@@ -98,6 +98,19 @@ export class DemandaDetalheDialogComponent implements OnChanges {
   readonly carregandoSalvarDescricao = signal<boolean>(false);
   readonly demandaIdDescricaoEditando = signal<number>(0);
   readonly nomeDemandaDescricaoEditando = signal<string>('');
+
+  /**
+   * Membresia da demanda (gestor sempre; desenvolvedor quando é membro, via flag
+   * `podeEditar` do backend). Gate das ações que exigem ser membro: aba Atividades,
+   * edição de tags e criação de sub-demanda.
+   */
+  readonly eMembro = computed(() => this.sessao.eGestor() || !!this.demanda()?.podeEditar);
+
+  /**
+   * Aba inicial das abas de detalhe. Atividades (1) quando membro; para o
+   * desenvolvedor não-membro (sem a aba Atividades) cai em Conexões (2).
+   */
+  readonly abaInicial = computed(() => (this.eMembro() ? '1' : '2'));
 
   readonly formularioTags = this.formBuilder.group({
     tagIds: [[] as number[]],
@@ -334,12 +347,17 @@ export class DemandaDetalheDialogComponent implements OnChanges {
     this.mostrarDialogEditar.set(false);
     this.mostrarDialogNovaSubDemanda.set(false);
 
+    // A lista completa de usuários (GET /usuario) é gestor-only e só alimenta o
+    // multiselect "Adicionar" do gestor; o desenvolvedor usa "Participar"/"Sair".
+    // Sem este guard, o forkJoin falharia inteiro com 403 para o desenvolvedor.
     forkJoin({
       demanda:    this.demandaService.recuperar(identificador),
       ancestrais: this.demandaService.recuperarAncestral(identificador),
       arvore:     this.demandaService.recuperarArvore(identificador),
       tags:       this.tagService.listar(),
-      usuarios:   this.usuarioService.listar({ itensPorPagina: 100 }),
+      usuarios:   this.sessao.eGestor()
+        ? this.usuarioService.listar({ itensPorPagina: 100 })
+        : of(null),
     })
       .pipe(finalize(() => this.carregando.set(false)))
       .subscribe({
@@ -358,7 +376,7 @@ export class DemandaDetalheDialogComponent implements OnChanges {
           if (tags.sucesso && tags.dados) {
             this.tagsDisponiveis.set(tags.dados);
           }
-          if (usuarios.sucesso && usuarios.dados) {
+          if (usuarios && usuarios.sucesso && usuarios.dados) {
             this.todosUsuarios.set(usuarios.dados.itens);
           }
         },

@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, inject, signal } from '@angular/core';
+import { Component, Input, OnInit, inject, signal, computed } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
 import { forkJoin } from 'rxjs';
@@ -43,6 +43,11 @@ export class DemandaMembroListaComponent implements OnInit {
   readonly carregandoSalvar = signal<boolean>(false);
   readonly tipoEnum = UsuarioTipoEnum;
 
+  /** Indica se o usuário logado já é membro desta demanda (auto-inclusão/saída do dev). */
+  readonly souMembro = computed(() =>
+    this.membros().some((membro) => membro.usuarioId === this.sessao.id()),
+  );
+
   readonly formularioMembro = this.formBuilder.group({
     usuarioIds: [[] as number[], [Validators.required]],
   });
@@ -83,6 +88,31 @@ export class DemandaMembroListaComponent implements OnInit {
     this.confirmationService.confirm({
       message: `Remover ${membro.nomeCompleto} da demanda?`,
       accept: () => this.removerMembro(membro.usuarioId),
+    });
+  }
+
+  /** Desenvolvedor inclui a si mesmo como membro da demanda. */
+  participar(): void {
+    const usuarioId = this.sessao.id();
+    if (usuarioId === undefined) return;
+
+    const dto: DemandaUsuarioAtribuirDto = { usuarioId };
+    this.demandaService.atribuirMembro(this.demandaId, dto).subscribe({
+      next: () => {
+        this.carregarMembros();
+        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Você agora é membro desta demanda' });
+      },
+    });
+  }
+
+  /** Desenvolvedor remove a si mesmo da demanda, com confirmação. */
+  confirmarSaida(): void {
+    this.confirmationService.confirm({
+      message: 'Sair desta demanda?',
+      accept: () => {
+        const usuarioId = this.sessao.id();
+        if (usuarioId !== undefined) this.removerMembro(usuarioId);
+      },
     });
   }
 

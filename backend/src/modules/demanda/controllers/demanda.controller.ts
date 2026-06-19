@@ -142,14 +142,15 @@ export class DemandaController {
   @ApiResponse({ status: 201, description: 'Conexão criada com sucesso' })
   @ApiResponse({ status: 400, description: 'Ciclo detectado ou conexão duplicada', schema: { example: { sucesso: false, dados: null, mensagem: 'Essa conexão criaria um ciclo no grafo de demandas', erros: [] } } })
   @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+  @ApiResponse({ status: 403, description: 'Acesso restrito a gestores', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
   @ApiResponse({ status: 404, description: 'Demanda não encontrada', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
+  @GestorOnly()
   @Post(':id/conexao')
   criarConexao(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: DemandaConexaoCriarDto,
-    @ActiveUser() usuarioAtivo: JwtPayload,
   ) {
-    return this.demandaService.criarConexao(id, dto, usuarioAtivo);
+    return this.demandaService.criarConexao(id, dto);
   }
 
   @ApiOperation({ summary: 'Listar conexões de uma demanda (saída, entrada bidirecional)' })
@@ -178,19 +179,19 @@ export class DemandaController {
     return this.demandaService.excluirConexao(id, conexaoId);
   }
 
-  @ApiOperation({ summary: 'Sincronizar tags da demanda (somente gestor)' })
+  @ApiOperation({ summary: 'Sincronizar tags da demanda (gestor ou desenvolvedor membro)' })
   @ApiResponse({ status: 200, description: 'Tags alteradas com sucesso' })
   @ApiResponse({ status: 400, description: 'Tag inexistente', schema: { example: { sucesso: false, dados: null, mensagem: 'Tag com id 99 não encontrada', erros: [] } } })
   @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
-  @ApiResponse({ status: 403, description: 'Acesso restrito a gestores', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+  @ApiResponse({ status: 403, description: 'Desenvolvedor não é membro da demanda', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
   @ApiResponse({ status: 404, description: 'Demanda não encontrada', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
-  @GestorOnly()
   @Put(':id/tag')
   alterarTagsDemanda(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: DemandaTagsAtribuirDto,
+    @ActiveUser() usuarioAtivo: JwtPayload,
   ) {
-    return this.demandaService.alterarTagsDemanda(id, dto);
+    return this.demandaService.alterarTagsDemanda(id, dto, usuarioAtivo);
   }
 
   @ApiOperation({ summary: 'Listar tags da demanda' })
@@ -217,33 +218,33 @@ export class DemandaController {
     return this.demandaService.listarMembros(id, usuarioAtivo);
   }
 
-  @ApiOperation({ summary: 'Atribuir membro à demanda (somente gestor)' })
+  @ApiOperation({ summary: 'Atribuir membro à demanda (gestor atribui qualquer; desenvolvedor só a si mesmo)' })
   @ApiResponse({ status: 201, description: 'Membro atribuído com sucesso' })
   @ApiResponse({ status: 400, description: 'Usuário já atribuído', schema: { example: { sucesso: false, dados: null, mensagem: 'Usuário já está atribuído a esta demanda', erros: [] } } })
   @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
-  @ApiResponse({ status: 403, description: 'Acesso restrito a gestores', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+  @ApiResponse({ status: 403, description: 'Desenvolvedor só pode incluir a si mesmo', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
   @ApiResponse({ status: 404, description: 'Demanda ou usuário não encontrado', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
-  @GestorOnly()
   @Post(':id/membro')
   atribuirMembro(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: DemandaUsuarioAtribuirDto,
+    @ActiveUser() usuarioAtivo: JwtPayload,
   ) {
-    return this.demandaService.atribuirMembro(id, dto);
+    return this.demandaService.atribuirMembro(id, dto, usuarioAtivo);
   }
 
-  @ApiOperation({ summary: 'Remover membro da demanda (somente gestor)' })
+  @ApiOperation({ summary: 'Remover membro da demanda (gestor remove qualquer; desenvolvedor só a si mesmo)' })
   @ApiResponse({ status: 200, description: 'Membro removido com sucesso' })
   @ApiResponse({ status: 400, description: 'Não é possível remover o último membro', schema: { example: { sucesso: false, dados: null, mensagem: 'Não é possível remover o último membro da demanda', erros: [] } } })
   @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
-  @ApiResponse({ status: 403, description: 'Acesso restrito a gestores', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+  @ApiResponse({ status: 403, description: 'Desenvolvedor só pode remover a si mesmo', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
   @ApiResponse({ status: 404, description: 'Demanda ou membro não encontrado', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
-  @GestorOnly()
   @Delete(':id/membro/:usuarioId')
   removerMembro(
     @Param('id', ParseIntPipe) id: number,
     @Param('usuarioId', ParseIntPipe) usuarioId: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
   ) {
-    return this.demandaService.removerMembro(id, usuarioId);
+    return this.demandaService.removerMembro(id, usuarioId, usuarioAtivo);
   }
 }
