@@ -1,0 +1,67 @@
+# Task 52 — calendario: Correção de Padrões
+
+## Objetivo
+
+Corrigir o desvio de conformidade do módulo **calendario** identificado pela auditoria
+da **task 44** (`docs/AUDITORIA.md` §4.5): primitivo `id` + `Partial<DiaNaoUtil>` na
+assinatura de `CalendarioRepository.alterar`. Sem mudança de comportamento.
+
+> **Referência cruzada:** task 44 · `docs/AUDITORIA.md` §4.5.
+> **Padrão de referência conforme:** `ExecucaoRepository.alterar(dto: ExecucaoAlterarInternoDto)`.
+> **Reconciliação documental §7.2 × §16 #21:** decidida na spec `48-usuario-correcao-padroes` (não reabrir).
+
+---
+
+## Contexto
+
+A task 20 removeu primitivos de `recuperar`, `excluir`, `validarDia` e `recuperarTipo`,
+mas o `alterar` de calendario permaneceu com **primitivo `id`** e `Partial<DiaNaoUtil>`
+(partial do model). O `DiaNaoUtilAlterarDto` já existe no shared.
+
+---
+
+## Escopo
+
+### `CalendarioRepository.alterar` — eliminar primitivo e `Partial<Model>`
+
+**Arquivo:** `backend/src/modules/calendario/repositories/calendario.repository.ts:103`
+
+**Situação atual:**
+```typescript
+async alterar(id: number, dados: Partial<DiaNaoUtil>): Promise<DiaNaoUtilAlteradoDto> { ... }
+```
+
+**Correção esperada:**
+- Criar `shared/src/dtos/calendario/CalendarioAlterarInternoDto.ts` (`id` + campos hoje
+  lidos do `Partial<DiaNaoUtil>` no SET dinâmico: `descricao?`, `tipo?`, `duracao?`,
+  `recorrente?`). Exportar no barrel `shared/src/dtos/calendario/index.ts`.
+- `async alterar(dto: CalendarioAlterarInternoDto): Promise<DiaNaoUtilAlteradoDto>` —
+  `dto.id` no `WHERE`, demais campos no SET (SQL inalterado).
+- Atualizar a chamada em `CalendarioService.alterar` (`backend/src/modules/calendario/services/calendario.service.ts:62`).
+- Manter o JSDoc.
+
+---
+
+## Atualização de Documentação (obrigatória)
+
+- **`CONVENTIONS.md` / `SYSTEM.SPEC.md` §7.4** — reforçar (sem duplicar o que specs
+  anteriores já tenham inserido) o exemplo ❌ `alterar(id, Partial<DiaNaoUtil>)` /
+  ✅ `alterar(dto: CalendarioAlterarInternoDto)`.
+
+---
+
+## Verificação
+
+1. `npm run build --workspace=shared` e `npm run build --workspace=backend` — sem erros.
+2. Checagem negativa: `CalendarioRepository.alterar` **não** recebe `id: number` nem `Partial<DiaNaoUtil>`.
+3. Checagem negativa: nenhum método de `calendario.repository.ts` recebe primitivo em assinatura pública.
+
+---
+
+## NÃO implementar nesta task
+
+- Qualquer outro módulo (cada um tem sua própria spec). A renomeação do trigger
+  `fn_atualizar_updated_date` é da spec `55-core-correcao-padroes`.
+- Reabrir a reconciliação §7.2 × §16 #21 (spec 48).
+- Alterar comportamento/validações/SQL do `alterar` — apenas a assinatura/DTO.
+- Tocar no frontend.
