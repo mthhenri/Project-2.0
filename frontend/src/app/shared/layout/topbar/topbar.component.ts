@@ -8,6 +8,7 @@ import { timer } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AutenticacaoService } from '../../../core/services/autenticacao.service';
 import { UsuarioSessaoService } from '../../../core/services/usuario-sessao.service';
+import { TemaService } from '../../../core/services/tema.service';
 import { UsuarioAnotacoesDialogComponent } from '../../../modules/usuario/components/usuario-anotacoes-dialog/usuario-anotacoes-dialog.component';
 
 @Component({
@@ -20,6 +21,7 @@ import { UsuarioAnotacoesDialogComponent } from '../../../modules/usuario/compon
 export class TopbarComponent {
   private readonly autenticacaoService = inject(AutenticacaoService);
   readonly sessao = inject(UsuarioSessaoService);
+  readonly tema = inject(TemaService);
   readonly horaAtual = signal<string>('');
 
   private readonly todosItensNavegacao = [

@@ -42,7 +42,7 @@ export const appConfig: ApplicationConfig = {
     ),
     provideAnimationsAsync(),
     providePrimeNG({
-      theme: { preset: TemaAzul, options: { darkModeSelector: false } },
+      theme: { preset: TemaAzul, options: { darkModeSelector: '.app-escuro' } },
       translation: TRADUCAO_PT_BR,
     }),
     MessageService,

@@ -27,4 +27,19 @@
       text-decoration: underline;
     }
   }
+
+  &__tema {
+    color: var(--p-text-color);
+    text-decoration: none;
+    transition: color 0.15s;
+
+    &:hover:not(:disabled) {
+      color: var(--p-primary-600);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
 }

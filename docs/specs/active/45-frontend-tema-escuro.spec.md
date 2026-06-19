@@ -106,6 +106,54 @@ Escolher uma das abordagens e mantê-la única (o `TemaService` continua sendo a
 - Estilos no `.scss` do próprio componente seguindo BEM em português (`topbar__tema`, etc.) — nada de
   `style=""` inline nem `.css`.
 
+> **Estado atual:** o controle de tema já está implementado no popover, porém **temporariamente
+> desativado** (`[disabled]="true"` + tooltip "Em breve"). A alternância só deve ser reabilitada
+> (remover o `[disabled]`) **após** a verificação de layout da etapa 5 confirmar que o tema escuro
+> renderiza corretamente em todas as telas. A infraestrutura (`TemaService`, `darkModeSelector`,
+> script no-flash) permanece ativa e pronta.
+
+### 5. Verificação de layout (QA visual) — etapa exclusiva de conferência
+
+Etapa **sem código de feature** — serve apenas para **percorrer o app inteiro com o tema escuro ligado
+e confirmar que a troca de classe `app-escuro` propagou corretamente**, sem regressões de contraste ou
+áreas que "ficaram claras". Como o controle da topbar está desativado, ative o tema escuro por uma das
+vias abaixo durante a verificação:
+
+- No DevTools, adicionar a classe `app-escuro` em `<html>`; **ou**
+- `localStorage.setItem('tema', 'escuro')` no console e recarregar (valida também o caminho no-flash do
+  `index.html`); **ou**
+- Remover provisoriamente o `[disabled]` apenas durante o teste local.
+
+**Checklist — abrir cada tela no tema escuro e confirmar legibilidade e ausência de "buracos" claros:**
+
+- [ ] **Topbar e popover de perfil** — fundo, navegação, item ativo, hora, popover (nome/login/cargo,
+      "Minhas Anotações", o próprio controle de tema).
+- [ ] **Login / autenticação** — formulário, card, botões, mensagens de erro.
+- [ ] **Ponto** — resumo diário, filtro mensal (linhas compactas), timeline/intervalos, badges de dia
+      não útil, cores de saldo positivo/negativo.
+- [ ] **Calendário** — tabela de dias não úteis, `p-datepicker` (i18n pt-BR), dialog de criação/edição,
+      badges de duração.
+- [ ] **Projetos** — listagem, formulário de criação (campo código derivado), detalhe.
+- [ ] **Demandas** — árvore de sub-demandas, menu de contexto, **grafo D3 (force-directed)** — conferir
+      cores de nós/arestas/labels desenhadas pelo D3, que **não** herdam tokens automaticamente,
+      detalhe-dialog (abas), membros, conexões, tags.
+- [ ] **Dialogs de descrição + editor `p-editor`/Quill** — toolbar e área de edição (`.ql-toolbar`,
+      `.ql-snow`, `.ql-editor`), modo somente-leitura via `[innerHTML]`, e o componente
+      `assistente-descricao` (comparação original × auxiliado).
+- [ ] **Atividades** — listagem, coluna tempo executado, dialogs de visualizar/registrar execução, tags.
+- [ ] **Execuções** — histórico (colunas projeto/demanda, rodapé total do dia), execução ativa, dialog
+      de edição (gestor).
+- [ ] **Tags** — listagem e dialog (incluindo o seletor de cor `cor`).
+- [ ] **Usuários** — listagem, perfil-dialog, alterar senha, anotações (`p-editor`).
+- [ ] **Componentes globais** — toasts (`MessageService`), `loading-spinner`, `error-message`,
+      tooltips, `p-divider`, scrollbars.
+
+**Resultado esperado da etapa:** registrar quais telas/componentes ficaram corretos e listar eventuais
+pontos que **não** acompanharam o tema (cores hardcoded fora de `surface-*`/`var(--p-*)`, ou o grafo
+D3). Correções pontuais de contraste **não** fazem parte desta task (ver *NÃO implementar*) — esta etapa
+apenas **verifica e documenta** o que aplicou e o que ficou pendente, servindo de base para decidir
+quando reabilitar o controle da topbar.
+
 ---
 
 ## Arquivos afetados

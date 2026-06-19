@@ -52,6 +52,17 @@
             <i class="pi pi-file-edit text-xs"></i>
             <span>Minhas Anotações</span>
           </button>
+          <button
+            type="button"
+            class="topbar__tema flex items-center gap-2 text-sm"
+            [disabled]="true"
+            pTooltip="Em breve"
+            tooltipPosition="left"
+            (click)="tema.alternarTema()"
+          >
+            <i class="text-xs" [class]="tema.eEscuro() ? 'pi pi-sun' : 'pi pi-moon'"></i>
+            <span>{{ tema.eEscuro() ? 'Tema claro' : 'Tema escuro' }}</span>
+          </button>
         </div>
       }
     </p-popover>
