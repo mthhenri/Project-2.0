@@ -6,6 +6,7 @@ import {
   DiaNaoUtilResumoDto,
   DiaNaoUtilAlterarDto,
   DiaNaoUtilAlteradoDto,
+  DiaNaoUtilDuracaoEnum,
 } from '@project20/shared';
 import { StandardResponse } from '@project20/shared';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
@@ -20,6 +21,7 @@ export class CalendarioService {
       diaData:    dto.diaData,
       descricao:  dto.descricao,
       tipo:       dto.tipo,
+      duracao:    dto.duracao,
       recorrente: dto.recorrente,
     });
 
@@ -67,6 +69,7 @@ export class CalendarioService {
     const diaNaoUtilAlterado = await this.calendarioRepositorio.alterar(id, {
       descricao:  dto.descricao,
       tipo:       dto.tipo,
+      duracao:    dto.duracao,
       recorrente: dto.recorrente,
     });
 
@@ -115,12 +118,16 @@ export class CalendarioService {
       };
     }
 
-    const tipoDiaNaoUtil = await this.calendarioRepositorio.recuperarTipo({ data: dataObjeto });
+    const diaNaoUtil = await this.calendarioRepositorio.recuperarTipo({ data: dataObjeto });
 
-    if (tipoDiaNaoUtil !== null) {
+    if (diaNaoUtil !== null) {
+      const motivo = diaNaoUtil.duracao === DiaNaoUtilDuracaoEnum.MEIO_PERIODO
+        ? `${diaNaoUtil.tipo} (meio período)`
+        : diaNaoUtil.tipo;
+
       return {
         sucesso: true,
-        dados:   { data: dataString, ehDiaUtil: false, motivo: tipoDiaNaoUtil },
+        dados:   { data: dataString, ehDiaUtil: false, motivo },
         mensagem: 'Verificação de dia útil realizada com sucesso',
       };
     }

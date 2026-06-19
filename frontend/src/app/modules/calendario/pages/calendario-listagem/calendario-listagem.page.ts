@@ -18,16 +18,18 @@ import {
   DiaNaoUtilCriarDto,
   DiaNaoUtilAlterarDto,
   DiaNaoUtilTipoEnum,
+  DiaNaoUtilDuracaoEnum,
 } from '@project20/shared';
 import { CalendarioService } from '../../services/calendario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { DataBrasileiraPipe } from '../../../../shared/pipes/data-brasileira.pipe';
 import {
   DIA_NAO_UTIL_TIPO_OPCOES,
-  VerificacaoDiaUtil,
+  DIA_NAO_UTIL_DURACAO_OPCOES,
   SeveridadeTag,
   severidadeTipoDiaNaoUtil,
   rotuloTipoDiaNaoUtil,
+  rotuloDuracaoDiaNaoUtil,
   formatarDataIso,
   partesDaData,
 } from '../../models/dia-nao-util.model';
@@ -62,6 +64,8 @@ export class CalendarioListagemPage implements OnInit {
   private readonly formBuilder = inject(FormBuilder);
 
   readonly tipoOpcoes = DIA_NAO_UTIL_TIPO_OPCOES;
+  readonly duracaoOpcoes = DIA_NAO_UTIL_DURACAO_OPCOES;
+  readonly DiaNaoUtilDuracaoEnum = DiaNaoUtilDuracaoEnum;
 
   readonly diasNaoUteis = signal<DiaNaoUtilResumoDto[]>([]);
   readonly carregando = signal<boolean>(false);
@@ -78,9 +82,6 @@ export class CalendarioListagemPage implements OnInit {
   readonly carregandoSalvar = signal<boolean>(false);
   readonly diaEmEdicao = signal<DiaNaoUtilResumoDto | null>(null);
 
-  readonly resultadoVerificacao = signal<VerificacaoDiaUtil | null>(null);
-  readonly carregandoVerificacao = signal<boolean>(false);
-
   readonly eGestor = this.sessao.eGestor;
   readonly tituloDialog = computed(() =>
     this.diaEmEdicao() ? 'Editar Dia Não Útil' : 'Novo Dia Não Útil',
@@ -90,11 +91,8 @@ export class CalendarioListagemPage implements OnInit {
     diaData:    this.formBuilder.control<Date | null>(null, Validators.required),
     descricao:  this.formBuilder.control<string>('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(255)] }),
     tipo:       this.formBuilder.control<DiaNaoUtilTipoEnum>(DiaNaoUtilTipoEnum.FERIADO, { nonNullable: true, validators: [Validators.required] }),
+    duracao:    this.formBuilder.control<DiaNaoUtilDuracaoEnum>(DiaNaoUtilDuracaoEnum.INTEGRAL, { nonNullable: true, validators: [Validators.required] }),
     recorrente: this.formBuilder.control<boolean>(false, { nonNullable: true }),
-  });
-
-  readonly formularioVerificar = this.formBuilder.group({
-    data: this.formBuilder.control<Date | null>(null, Validators.required),
   });
 
   /** Dias não recorrentes indexados por `ano-mes-dia` (mês de 1 a 12). */
@@ -171,6 +169,10 @@ export class CalendarioListagemPage implements OnInit {
     return rotuloTipoDiaNaoUtil(tipo);
   }
 
+  rotuloDuracao(duracao: DiaNaoUtilDuracaoEnum): string {
+    return rotuloDuracaoDiaNaoUtil(duracao);
+  }
+
   /** Retorna o dia não útil que marca a célula do calendário, ou null. */
   diaMarcado(ano: number, mes: number, numeroDia: number): DiaNaoUtilResumoDto | null {
     return (
@@ -202,12 +204,28 @@ export class CalendarioListagemPage implements OnInit {
     }
   }
 
-  abrirDialogNovo(): void {
+  /**
+   * Duplo clique num dia do calendário: abre a edição se já houver um dia não útil
+   * naquela data, ou a criação (com a data preenchida) caso contrário. Restrito a gestor.
+   */
+  onDuploCliqueDia(date: { day: number; month: number; year: number }): void {
+    if (!this.eGestor()) return;
+
+    const correspondente = this.diaMarcado(date.year, date.month + 1, date.day);
+    if (correspondente) {
+      this.abrirDialogEditar(correspondente);
+    } else {
+      this.abrirDialogNovo(new Date(date.year, date.month, date.day));
+    }
+  }
+
+  abrirDialogNovo(dataInicial: Date | null = null): void {
     this.diaEmEdicao.set(null);
     this.formulario.reset({
-      diaData:    null,
+      diaData:    dataInicial,
       descricao:  '',
       tipo:       DiaNaoUtilTipoEnum.FERIADO,
+      duracao:    DiaNaoUtilDuracaoEnum.INTEGRAL,
       recorrente: false,
     });
     this.formulario.get('diaData')!.enable();
@@ -221,6 +239,7 @@ export class CalendarioListagemPage implements OnInit {
       diaData:    new Date(ano, mes - 1, numeroDia),
       descricao:  dia.descricao,
       tipo:       dia.tipo,
+      duracao:    dia.duracao,
       recorrente: dia.recorrente,
     });
     // A data não é alterável: o backend não expõe diaData no DiaNaoUtilAlterarDto.
@@ -254,27 +273,6 @@ export class CalendarioListagemPage implements OnInit {
     });
   }
 
-  verificar(): void {
-    if (this.formularioVerificar.invalid) {
-      this.formularioVerificar.markAllAsTouched();
-      return;
-    }
-
-    const dataIso = formatarDataIso(this.formularioVerificar.value.data!);
-    this.carregandoVerificacao.set(true);
-    this.resultadoVerificacao.set(null);
-    this.calendarioService
-      .verificarDiaUtil(dataIso)
-      .pipe(finalize(() => this.carregandoVerificacao.set(false)))
-      .subscribe({
-        next: (resposta) => {
-          if (resposta.sucesso && resposta.dados) {
-            this.resultadoVerificacao.set(resposta.dados);
-          }
-        },
-      });
-  }
-
   campoInvalido(nomeCampo: string): boolean {
     const controle = this.formulario.get(nomeCampo);
     return !!(controle?.invalid && controle?.touched);
@@ -292,6 +290,7 @@ export class CalendarioListagemPage implements OnInit {
       diaData:    formatarDataIso(this.formulario.value.diaData!),
       descricao:  this.formulario.value.descricao!,
       tipo:       this.formulario.value.tipo!,
+      duracao:    this.formulario.value.duracao!,
       recorrente: this.formulario.value.recorrente!,
     };
 
@@ -316,6 +315,7 @@ export class CalendarioListagemPage implements OnInit {
     const dto: DiaNaoUtilAlterarDto = {
       descricao:  this.formulario.value.descricao!,
       tipo:       this.formulario.value.tipo!,
+      duracao:    this.formulario.value.duracao!,
       recorrente: this.formulario.value.recorrente!,
     };
 

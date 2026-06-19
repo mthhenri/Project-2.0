@@ -8,6 +8,7 @@ import { UnauthorizedAccessException } from '../../../core/exceptions/unauthoriz
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
 import {
   DiaNaoUtilTipoEnum,
+  DiaNaoUtilDuracaoEnum,
   ExecucaoListarDto,
   ExecucaoResumoDto,
   IntervaloDto,
@@ -21,9 +22,13 @@ import {
   UsuarioTipoEnum,
 } from '@project20/shared';
 
-/** Status de utilidade de uma data específica, compartilhado entre os usuários do mesmo dia. */
+/**
+ * Status de utilidade de uma data específica, compartilhado entre os usuários do mesmo dia.
+ * `fracaoMeta` é a fração da jornada exigida no dia: 1 (dia útil integral), 0.5 (meio período)
+ * ou 0 (fim de semana ou dia não útil integral).
+ */
 interface InfoDia {
-  ehDiaUtil: boolean;
+  fracaoMeta: number;
   motivoNaoUtil: string | null;
 }
 
@@ -104,7 +109,7 @@ export class PontoService {
     const mapaAgregadoPorData = new Map(agregadosPorDia.map((agregado) => [agregado.dia, agregado]));
 
     const diasNaoUteis = await this.calendarioRepositorio.listarDiasNaoUteisDoMes({ ano, mes });
-    const mapaTipoPorDia = new Map(diasNaoUteis.map((diaNaoUtil) => [diaNaoUtil.dia, diaNaoUtil.tipo]));
+    const mapaDiaNaoUtilPorDia = new Map(diasNaoUteis.map((diaNaoUtil) => [diaNaoUtil.dia, diaNaoUtil]));
 
     const metaDiariaMinutos = usuarioEncontrado.horasDiariasNecessarias * 60;
 
@@ -117,19 +122,29 @@ export class PontoService {
       const diaDaSemana = dataObjeto.getUTCDay();
       const ehFimDeSemana = diaDaSemana === 0 || diaDaSemana === 6;
 
-      const tipoNaoUtil = mapaTipoPorDia.get(numeroDoDia) ?? null;
-      const registradoComoNaoUtil = !ehFimDeSemana && tipoNaoUtil !== null;
-      const ehDiaUtil = !ehFimDeSemana && !registradoComoNaoUtil;
+      const diaNaoUtil = mapaDiaNaoUtilPorDia.get(numeroDoDia) ?? null;
+      const registradoComoNaoUtil = !ehFimDeSemana && diaNaoUtil !== null;
+
+      // Fração da jornada exigida no dia: 1 (útil integral), 0.5 (meio período), 0 (fim de
+      // semana ou dia não útil integral). Soma das frações compõe a meta do mês.
+      let fracaoMeta: number;
+      if (ehFimDeSemana || (registradoComoNaoUtil && diaNaoUtil!.duracao === DiaNaoUtilDuracaoEnum.INTEGRAL)) {
+        fracaoMeta = 0;
+      } else if (registradoComoNaoUtil && diaNaoUtil!.duracao === DiaNaoUtilDuracaoEnum.MEIO_PERIODO) {
+        fracaoMeta = 0.5;
+      } else {
+        fracaoMeta = 1;
+      }
+
+      const ehDiaUtil = fracaoMeta === 1;
+      diasUteisMes += fracaoMeta;
 
       let motivoNaoUtil: string | null = null;
       if (ehFimDeSemana) {
         motivoNaoUtil = 'Fim de semana';
       } else if (registradoComoNaoUtil) {
-        motivoNaoUtil = this.mapearTipoParaMotivo(tipoNaoUtil);
-      }
-
-      if (ehDiaUtil) {
-        diasUteisMes++;
+        const motivoBase = this.mapearTipoParaMotivo(diaNaoUtil!.tipo);
+        motivoNaoUtil = fracaoMeta === 0.5 ? `${motivoBase} (meio período)` : motivoBase;
       }
 
       const dataIso = this.formatarDataIso(ano, mes, numeroDoDia);
@@ -137,7 +152,13 @@ export class PontoService {
       const totalMinutosTrabalhados = agregado?.totalMinutosTrabalhados ?? 0;
       totalMinutosTrabalhadosMes += totalMinutosTrabalhados;
 
-      const saldoMinutos = totalMinutosTrabalhados - (ehDiaUtil ? metaDiariaMinutos : 0);
+      let saldoMinutos: number;
+      if (fracaoMeta === 0.5) {
+        const metaDiaMinutos = Math.round(metaDiariaMinutos * 0.5);
+        saldoMinutos = Math.min(totalMinutosTrabalhados, metaDiaMinutos) - metaDiaMinutos;
+      } else {
+        saldoMinutos = totalMinutosTrabalhados - (ehDiaUtil ? metaDiariaMinutos : 0);
+      }
 
       dias.push({
         data: dataIso,
@@ -150,7 +171,7 @@ export class PontoService {
       });
     }
 
-    const metaMinutosMes = metaDiariaMinutos * diasUteisMes;
+    const metaMinutosMes = Math.round(metaDiariaMinutos * diasUteisMes);
     const saldoMinutosMes = totalMinutosTrabalhadosMes - metaMinutosMes;
 
     return {
@@ -167,29 +188,32 @@ export class PontoService {
   }
 
   /**
-   * Resolve se uma data é dia útil e, se não for, o motivo (fim de semana ou tipo
-   * cadastrado no calendário). Calculado uma vez por data e reutilizado entre usuários.
+   * Resolve a fração de meta de uma data (1 dia útil integral, 0.5 meio período, 0 fim de
+   * semana ou dia não útil integral) e o motivo quando não é dia útil integral. Calculado
+   * uma vez por data e reutilizado entre usuários.
    */
   private async resolverInfoDia(data: string): Promise<InfoDia> {
     const dataObjeto = new Date(data);
     const diaDaSemana = dataObjeto.getUTCDay();
     const ehFimDeSemana = diaDaSemana === 0 || diaDaSemana === 6;
 
-    const registradoComoNaoUtil = ehFimDeSemana
-      ? false
-      : await this.calendarioRepositorio.validarDia({ data: dataObjeto });
-
-    const ehDiaUtil = !ehFimDeSemana && !registradoComoNaoUtil;
-
-    let motivoNaoUtil: string | null = null;
     if (ehFimDeSemana) {
-      motivoNaoUtil = 'Fim de semana';
-    } else if (registradoComoNaoUtil) {
-      const tipoNaoUtil = await this.calendarioRepositorio.recuperarTipo({ data: dataObjeto });
-      motivoNaoUtil = this.mapearTipoParaMotivo(tipoNaoUtil);
+      return { fracaoMeta: 0, motivoNaoUtil: 'Fim de semana' };
     }
 
-    return { ehDiaUtil, motivoNaoUtil };
+    const diaNaoUtil = await this.calendarioRepositorio.recuperarTipo({ data: dataObjeto });
+
+    if (diaNaoUtil === null) {
+      return { fracaoMeta: 1, motivoNaoUtil: null };
+    }
+
+    const motivoBase = this.mapearTipoParaMotivo(diaNaoUtil.tipo);
+
+    if (diaNaoUtil.duracao === DiaNaoUtilDuracaoEnum.MEIO_PERIODO) {
+      return { fracaoMeta: 0.5, motivoNaoUtil: `${motivoBase} (meio período)` };
+    }
+
+    return { fracaoMeta: 0, motivoNaoUtil: motivoBase };
   }
 
   /**
@@ -219,16 +243,34 @@ export class PontoService {
     const { intervaloMinimoMinutos } = this.configService.obter().negocio;
     const intervalos = this.calcularIntervalos(execucoes, intervaloMinimoMinutos);
 
-    const metaMinutos = usuario.horasDiariasNecessarias * 60;
-    const minutosTrabalhadosDiaUtil = infoDia.ehDiaUtil ? totalMinutosTrabalhados : 0;
-    const minutosTrabalhadosExtra = infoDia.ehDiaUtil ? 0 : totalMinutosTrabalhados;
-    const saldoMinutos = totalMinutosTrabalhados - metaMinutos;
+    const metaMinutosCompleta = usuario.horasDiariasNecessarias * 60;
+    const ehDiaUtil = infoDia.fracaoMeta === 1;
+
+    let metaMinutos: number;
+    let minutosTrabalhadosDiaUtil: number;
+    let minutosTrabalhadosExtra: number;
+    let saldoMinutos: number;
+
+    if (infoDia.fracaoMeta === 0.5) {
+      // Meio período: meta pela metade e capacidade útil limitada a essa meta — o trabalho
+      // que excede vira extra, de modo que o saldo do dia nunca é positivo.
+      metaMinutos = Math.round(metaMinutosCompleta * 0.5);
+      minutosTrabalhadosDiaUtil = Math.min(totalMinutosTrabalhados, metaMinutos);
+      minutosTrabalhadosExtra = totalMinutosTrabalhados - minutosTrabalhadosDiaUtil;
+      saldoMinutos = minutosTrabalhadosDiaUtil - metaMinutos;
+    } else {
+      // Dias integrais (úteis ou não úteis): comportamento preservado.
+      metaMinutos = metaMinutosCompleta;
+      minutosTrabalhadosDiaUtil = ehDiaUtil ? totalMinutosTrabalhados : 0;
+      minutosTrabalhadosExtra = ehDiaUtil ? 0 : totalMinutosTrabalhados;
+      saldoMinutos = totalMinutosTrabalhados - metaMinutos;
+    }
 
     return {
       data,
       usuarioId: usuario.id,
       nomeUsuario: usuario.nomeCompleto,
-      ehDiaUtil: infoDia.ehDiaUtil,
+      ehDiaUtil,
       motivoNaoUtil: infoDia.motivoNaoUtil,
       metaMinutos,
       minutosTrabalhadosDiaUtil,

@@ -113,6 +113,16 @@ Meta e saldo do dia/mês são calculados no backend — a maior parte é exibiç
 
 ---
 
+## Acréscimos implementados nesta task (além do escopo original)
+
+Itens solicitados durante a implementação e entregues nesta mesma task:
+
+- **Internacionalização pt-BR dos calendários (todo o projeto):** todos os `p-datepicker` exibiam meses/dias em inglês (ex.: "May", "June"). Adicionada a tradução global do PrimeNG em `frontend/src/app/core/config/primeng-traducao-pt-br.ts` (`TRADUCAO_PT_BR: Translation` com `monthNames`/`monthNamesShort`/`dayNames*` e rótulos genéricos), aplicada via `translation` no `providePrimeNG` de `app.config.ts`. Afeta todos os datepickers (calendário, verificador, ponto, execução, demanda, projeto).
+- **Duplo clique no dia do calendário (`CalendarioListagemPage`, somente gestor):** dois cliques numa data abrem a **dialog de edição** quando já existe um dia não útil naquela data (`diaMarcado` → `abrirDialogEditar`) ou a **dialog de criação** com a data pré-preenchida quando não existe (`abrirDialogNovo(data)`). Implementado via `(dblclick)` num wrapper `&__dia-celula` no `pTemplate="date"` e novo método `onDuploCliqueDia(date)`; `abrirDialogNovo` passou a aceitar `dataInicial?: Date`.
+- **Remoção do "Verificador de dia útil" da UI (`CalendarioListagemPage`):** o bloco no topo da tela (datepicker + botão "Verificar" + resultado) foi removido por confundir mais do que ajudar — o calendário e a tabela já cobrem a visualização. Removidos do componente o HTML do verificador, o `formularioVerificar`, os signals `resultadoVerificacao`/`carregandoVerificacao`, o método `verificar()`, o import de `VerificacaoDiaUtil` e o SCSS `&__verificador*`/`&__resultado*`. **O endpoint `GET /calendario/verificar` permanece intacto na API** (controller/service/repositório), assim como o método cliente `CalendarioService.verificarDiaUtil` e a interface `VerificacaoDiaUtil` no model — apenas a exibição foi cortada.
+
+---
+
 ## NÃO implementar nesta task
 
 - Distinção entre manhã e tarde (meio período é sempre "metade da jornada").

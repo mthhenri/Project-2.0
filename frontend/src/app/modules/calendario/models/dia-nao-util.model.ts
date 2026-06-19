@@ -1,10 +1,15 @@
-import { DiaNaoUtilTipoEnum } from '@project20/shared';
+import { DiaNaoUtilTipoEnum, DiaNaoUtilDuracaoEnum } from '@project20/shared';
 
 export type SeveridadeTag = 'secondary' | 'warn' | 'info' | 'success' | 'danger';
 
 export interface DiaNaoUtilTipoOpcao {
   label: string;
   value: DiaNaoUtilTipoEnum;
+}
+
+export interface DiaNaoUtilDuracaoOpcao {
+  label: string;
+  value: DiaNaoUtilDuracaoEnum;
 }
 
 /** Resultado da verificação de dia útil retornado por `GET /calendario/verificar`. */
@@ -19,6 +24,20 @@ export const DIA_NAO_UTIL_TIPO_OPCOES: DiaNaoUtilTipoOpcao[] = [
   { label: 'Recesso',           value: DiaNaoUtilTipoEnum.RECESSO },
   { label: 'Ponto Facultativo', value: DiaNaoUtilTipoEnum.PONTO_FACULTATIVO },
 ];
+
+export const DIA_NAO_UTIL_DURACAO_OPCOES: DiaNaoUtilDuracaoOpcao[] = [
+  { label: 'Integral',     value: DiaNaoUtilDuracaoEnum.INTEGRAL },
+  { label: 'Meio período', value: DiaNaoUtilDuracaoEnum.MEIO_PERIODO },
+];
+
+const ROTULO_POR_DURACAO: Record<DiaNaoUtilDuracaoEnum, string> = {
+  [DiaNaoUtilDuracaoEnum.INTEGRAL]:     'Integral',
+  [DiaNaoUtilDuracaoEnum.MEIO_PERIODO]: 'Meio período',
+};
+
+export function rotuloDuracaoDiaNaoUtil(duracao: DiaNaoUtilDuracaoEnum): string {
+  return ROTULO_POR_DURACAO[duracao];
+}
 
 const SEVERIDADE_POR_TIPO: Record<DiaNaoUtilTipoEnum, SeveridadeTag> = {
   [DiaNaoUtilTipoEnum.FERIADO]:           'danger',
