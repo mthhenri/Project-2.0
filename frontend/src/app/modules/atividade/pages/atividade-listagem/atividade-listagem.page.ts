@@ -1,6 +1,6 @@
 import { Component, inject, signal, DestroyRef, OnInit, HostListener } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { finalize, debounceTime, distinctUntilChanged, forkJoin } from 'rxjs';
 import { TableModule, TableLazyLoadEvent } from 'primeng/table';
@@ -34,8 +34,10 @@ import {
   ExecucaoAtivaDto,
   ExecucaoIniciarDto,
   ExecucaoEncerrarDto,
+  ExecucaoRegistrarDto,
 } from '@project20/shared';
 import { AtividadeService } from '../../services/atividade.service';
+import { ExecucaoService } from '../../../execucao/services/execucao.service';
 import { TagService } from '../../../tag/services/tag.service';
 import { UsuarioService } from '../../../usuario/services/usuario.service';
 import { DemandaService } from '../../../demanda/services/demanda.service';
@@ -84,6 +86,7 @@ type CampoDescricaoDemanda = 'descricaoCliente' | 'descricaoTecnica' | 'document
 })
 export class AtividadeListagemPage implements OnInit {
   private readonly atividadeService = inject(AtividadeService);
+  private readonly execucaoService = inject(ExecucaoService);
   private readonly tagService = inject(TagService);
   private readonly usuarioService = inject(UsuarioService);
   private readonly demandaService = inject(DemandaService);
@@ -190,6 +193,20 @@ export class AtividadeListagemPage implements OnInit {
   readonly formularioExecucao = this.formBuilder.group({
     descricao: ['', [Validators.required]],
   });
+
+  // --- Dialog: registrar execução manual (somente gestor) ---
+  readonly mostrarDialogRegistro = signal<boolean>(false);
+  readonly salvandoRegistro = signal<boolean>(false);
+  readonly atividadeRegistro = signal<AtividadeResumoDto | null>(null);
+
+  readonly formularioRegistro = this.formBuilder.group(
+    {
+      inicioData: [null as Date | null, [Validators.required]],
+      fimData:    [null as Date | null, [Validators.required]],
+      descricao:  ['', [Validators.required]],
+    },
+    { validators: [this.fimPosteriorAoInicio] },
+  );
 
   ngOnInit(): void {
     const demandaIdParam = Number(this.rotaAtiva.snapshot.queryParamMap.get('demandaId'));
@@ -639,6 +656,65 @@ export class AtividadeListagemPage implements OnInit {
 
   campoInvalidoExecucao(nomeCampo: string): boolean {
     const controle = this.formularioExecucao.get(nomeCampo);
+    return !!(controle?.invalid && controle?.touched);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Registrar execução manual (somente gestor)
+  // ---------------------------------------------------------------------------
+
+  /** Validador cross-field: a data de fim deve ser posterior à data de início. */
+  private fimPosteriorAoInicio(controle: AbstractControl): ValidationErrors | null {
+    const inicio = controle.get('inicioData')?.value as Date | null;
+    const fim = controle.get('fimData')?.value as Date | null;
+    if (!inicio || !fim) return null;
+    return fim > inicio ? null : { fimAntesDoInicio: true };
+  }
+
+  abrirDialogRegistro(atividade: AtividadeResumoDto): void {
+    this.atividadeRegistro.set(atividade);
+    this.formularioRegistro.reset({ inicioData: null, fimData: null, descricao: '' });
+    this.mostrarDialogRegistro.set(true);
+  }
+
+  salvarRegistro(): void {
+    if (this.formularioRegistro.invalid) {
+      this.formularioRegistro.markAllAsTouched();
+      return;
+    }
+
+    const atividade = this.atividadeRegistro();
+    if (!atividade) return;
+
+    const { inicioData, fimData, descricao } = this.formularioRegistro.value;
+    const dto: ExecucaoRegistrarDto = {
+      atividadeId: atividade.id,
+      inicioData:  (inicioData as Date).toISOString(),
+      fimData:     (fimData as Date).toISOString(),
+      descricao:   (descricao ?? '').trim(),
+    };
+
+    this.salvandoRegistro.set(true);
+    this.execucaoService
+      .registrar(dto)
+      .pipe(finalize(() => this.salvandoRegistro.set(false)))
+      .subscribe({
+        next: (resposta) => {
+          if (resposta.sucesso) {
+            this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Execução registrada com sucesso' });
+            this.mostrarDialogRegistro.set(false);
+            this.buscarAtividades();
+          }
+        },
+      });
+  }
+
+  aceitarDescricaoAssistenteRegistro(texto: string): void {
+    this.formularioRegistro.patchValue({ descricao: texto });
+  }
+
+  campoInvalidoRegistro(nomeCampo: string): boolean {
+    const controle = this.formularioRegistro.get(nomeCampo);
     return !!(controle?.invalid && controle?.touched);
   }
 

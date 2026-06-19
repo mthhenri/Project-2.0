@@ -11,6 +11,8 @@ import {
   ExecucaoResumoDto,
   ExecucaoAlterarDto,
   ExecucaoAtivaDto,
+  ExecucaoRegistrarDto,
+  ExecucaoRegistradaDto,
   UsuarioTipoEnum,
 } from '@project20/shared';
 import { StandardResponse } from '@project20/shared';
@@ -63,6 +65,58 @@ export class ExecucaoService {
       sucesso:  true,
       dados:    execucaoIniciada,
       mensagem: 'Execução iniciada com sucesso',
+    };
+  }
+
+  /**
+   * Registra uma execução já encerrada (início e fim definidos) na atividade informada.
+   * Restrito a gestor (via @GestorOnly no controller). O usuário da execução é sempre
+   * o dono da atividade. Valida existência da atividade, coerência das datas e ausência
+   * de sobreposição com outras execuções do mesmo usuário.
+   */
+  async registrar(
+    dto: ExecucaoRegistrarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<StandardResponse<ExecucaoRegistradaDto>> {
+    const atividadeEncontrada = await this.atividadeRepositorio.recuperar({ id: dto.atividadeId });
+    if (!atividadeEncontrada) {
+      throw new ResourceNotFoundException('Atividade');
+    }
+
+    const inicioData = new Date(dto.inicioData);
+    const fimData    = new Date(dto.fimData);
+    const agora      = new Date();
+
+    if (inicioData > agora) {
+      throw new BusinessException('A data de início não pode estar no futuro');
+    }
+    if (fimData > agora) {
+      throw new BusinessException('A data de fim não pode estar no futuro');
+    }
+    if (fimData <= inicioData) {
+      throw new BusinessException('A data de fim deve ser posterior à data de início');
+    }
+
+    const haSobreposicao = await this.execucaoRepositorio.validarSobreposicao({
+      usuarioId: atividadeEncontrada.usuarioId,
+      inicioData,
+      fimData,
+    });
+    if (haSobreposicao) {
+      throw new BusinessException('Já existe uma execução deste usuário que se sobrepõe a este período');
+    }
+
+    const execucaoRegistrada = await this.execucaoRepositorio.registrar({
+      atividadeId: dto.atividadeId,
+      descricao:   dto.descricao,
+      inicioData,
+      fimData,
+    });
+
+    return {
+      sucesso:  true,
+      dados:    execucaoRegistrada,
+      mensagem: 'Execução registrada com sucesso',
     };
   }
 

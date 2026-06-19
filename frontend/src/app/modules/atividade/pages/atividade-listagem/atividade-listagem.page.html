@@ -225,6 +225,7 @@
               <p-button
                 icon="pi pi-plus-circle"
                 [text]="true"
+                severity="secondary"
                 size="small"
                 pTooltip="Atribuir tags"
                 tooltipPosition="left"
@@ -232,6 +233,15 @@
               />
             }
             @if (sessao.eGestor()) {
+              <p-button
+                icon="pi pi-calendar-plus"
+                [text]="true"
+                severity="help"
+                size="small"
+                pTooltip="Registrar execução"
+                tooltipPosition="left"
+                (onClick)="abrirDialogRegistro(atividade)"
+              />
               <p-button
                 icon="pi pi-trash"
                 [text]="true"
@@ -648,6 +658,95 @@
       [icon]="modoExecucao() === 'iniciar' ? 'pi pi-play' : 'pi pi-stop'"
       [loading]="salvandoExecucao()"
       (onClick)="confirmarExecucao()"
+    />
+  </ng-template>
+</p-dialog>
+
+<!-- Dialog: registrar execução manual (somente gestor) -->
+<p-dialog
+  [visible]="mostrarDialogRegistro()"
+  (visibleChange)="mostrarDialogRegistro.set($event)"
+  header="Registrar execução"
+  [modal]="true"
+  [style]="{ width: '42rem' }"
+  [draggable]="false"
+  [dismissableMask]="true"
+>
+  @if (atividadeRegistro(); as atividade) {
+    <p class="atividade-listagem__execucao-atividade">{{ atividade.nomeProjeto }} · {{ atividade.nome }}</p>
+    <div class="atividade-listagem__executor atividade-listagem__executor--dialog">
+      <span class="atividade-listagem__avatar">{{ iniciais(atividade.nomeUsuario) }}</span>
+      <span class="text-surface-700">{{ atividade.nomeUsuario }}</span>
+    </div>
+  }
+
+  <form [formGroup]="formularioRegistro" class="atividade-listagem__dialog-form">
+    <div class="atividade-listagem__dialog-linha">
+      <div class="atividade-listagem__dialog-campo">
+        <label for="registro-inicio" class="atividade-listagem__filtro-label">Início *</label>
+        <p-datepicker
+          inputId="registro-inicio"
+          formControlName="inicioData"
+          [showTime]="true"
+          dateFormat="dd/mm/yy"
+          placeholder="dd/mm/aaaa hh:mm"
+          appendTo="body"
+          class="w-full"
+        />
+        @if (campoInvalidoRegistro('inicioData')) {
+          <small class="atividade-listagem__erro">Informe a data e hora de início</small>
+        }
+      </div>
+
+      <div class="atividade-listagem__dialog-campo">
+        <label for="registro-fim" class="atividade-listagem__filtro-label">Fim *</label>
+        <p-datepicker
+          inputId="registro-fim"
+          formControlName="fimData"
+          [showTime]="true"
+          dateFormat="dd/mm/yy"
+          placeholder="dd/mm/aaaa hh:mm"
+          appendTo="body"
+          class="w-full"
+        />
+        @if (campoInvalidoRegistro('fimData')) {
+          <small class="atividade-listagem__erro">Informe a data e hora de fim</small>
+        }
+        @if (formularioRegistro.errors?.['fimAntesDoInicio'] && formularioRegistro.controls.fimData.touched) {
+          <small class="atividade-listagem__erro">O fim deve ser posterior ao início</small>
+        }
+      </div>
+    </div>
+
+    <div class="atividade-listagem__dialog-campo">
+      <label for="registro-descricao" class="atividade-listagem__filtro-label">Descrição *</label>
+      <textarea
+        id="registro-descricao"
+        pTextarea
+        spellcheck="true"
+        formControlName="descricao"
+        rows="4"
+        placeholder="Descreva a execução..."
+        class="w-full"
+      ></textarea>
+      @if (campoInvalidoRegistro('descricao')) {
+        <small class="atividade-listagem__erro">Informe a descrição da execução</small>
+      }
+      <app-assistente-descricao
+        [textoAtual]="formularioRegistro.value.descricao || ''"
+        tipoEntidade="execucao"
+        (textoAuxiliadoAceito)="aceitarDescricaoAssistenteRegistro($event)"
+      />
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" [text]="true" (onClick)="mostrarDialogRegistro.set(false)" />
+    <p-button
+      label="Registrar"
+      icon="pi pi-calendar-plus"
+      [loading]="salvandoRegistro()"
+      (onClick)="salvarRegistro()"
     />
   </ng-template>
 </p-dialog>

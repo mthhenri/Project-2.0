@@ -18,6 +18,8 @@ import {
   ExecucaoAtivaDto,
   ExecucaoDiaAgruparDto,
   ExecucaoDiaResumoDto,
+  ExecucaoRegistradaDto,
+  ExecucaoSobreposicaoValidarDto,
 } from '@project20/shared';
 
 @Injectable()
@@ -54,6 +56,61 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
       },
     );
     return resultado[0];
+  }
+
+  /**
+   * Registra uma execução já encerrada (inicio_data e fim_data preenchidos).
+   * Diferente de `inserir`, que grava fim_data = NULL (execução em andamento).
+   * Retorna a execução registrada com duração calculada em minutos.
+   */
+  async registrar(dados: {
+    atividadeId: number;
+    descricao: string;
+    inicioData: Date;
+    fimData: Date;
+  }): Promise<ExecucaoRegistradaDto> {
+    const resultado = await this.executarConsulta<ExecucaoRegistradaDto>(
+      `INSERT INTO execucao (atividade_id, descricao, inicio_data, fim_data, created_date, updated_date, is_deleted)
+       SELECT :atividadeId, :descricao, :inicioData, :fimData, NOW(), NOW(), false
+       RETURNING
+         id,
+         atividade_id AS "atividadeId",
+         descricao,
+         inicio_data  AS "inicioData",
+         fim_data     AS "fimData",
+         EXTRACT(EPOCH FROM (fim_data - inicio_data))::int / 60 AS "duracaoMinutos"`,
+      {
+        atividadeId: dados.atividadeId,
+        descricao:   dados.descricao,
+        inicioData:  dados.inicioData,
+        fimData:     dados.fimData,
+      },
+    );
+    return resultado[0];
+  }
+
+  /**
+   * Verifica se existe alguma execução do mesmo usuário cujo intervalo se sobrepõe
+   * ao período informado. Execuções em andamento (fim_data IS NULL) são tratadas
+   * como se estendendo ao "infinito". Dois intervalos [a,b] e [c,d] se sobrepõem
+   * quando a < d AND c < b.
+   */
+  async validarSobreposicao(dto: ExecucaoSobreposicaoValidarDto): Promise<boolean> {
+    const resultado = await this.executarConsulta<{ existe: boolean }>(
+      `SELECT EXISTS (
+         SELECT 1
+         FROM execucao
+         INNER JOIN atividade
+           ON atividade.id = execucao.atividade_id
+           AND atividade.is_deleted = false
+         WHERE execucao.is_deleted = false
+           AND atividade.usuario_id = :usuarioId
+           AND execucao.inicio_data < :fimData
+           AND :inicioData < COALESCE(execucao.fim_data, 'infinity'::timestamptz)
+       ) AS "existe"`,
+      { usuarioId: dto.usuarioId, inicioData: dto.inicioData, fimData: dto.fimData },
+    );
+    return resultado[0].existe;
   }
 
   /**

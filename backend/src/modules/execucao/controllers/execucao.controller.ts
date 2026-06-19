@@ -17,6 +17,7 @@ import {
   ExecucaoEncerrarDto,
   ExecucaoListarDto,
   ExecucaoAlterarDto,
+  ExecucaoRegistrarDto,
 } from '@project20/shared';
 import { GestorOnly } from '../../autenticacao/decorators/gestor-only.decorator';
 import { ActiveUser } from '../../autenticacao/decorators/active-user.decorator';
@@ -43,6 +44,21 @@ export class ExecucaoController {
     @ActiveUser() usuarioAtivo: JwtPayload,
   ) {
     return this.execucaoService.iniciar(dto, usuarioAtivo);
+  }
+
+  @ApiOperation({ summary: 'Registrar execução manual já encerrada para o dono da atividade (somente gestor)' })
+  @ApiResponse({ status: 201, description: 'Execução registrada com sucesso' })
+  @ApiResponse({ status: 400, description: 'Datas inválidas ou sobreposição com outra execução' })
+  @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+  @ApiResponse({ status: 403, description: 'Acesso restrito a gestores', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+  @ApiResponse({ status: 404, description: 'Atividade não encontrada', schema: { example: { sucesso: false, dados: null, mensagem: 'Atividade não encontrada', erros: [] } } })
+  @GestorOnly()
+  @Post('registro')
+  registrar(
+    @Body() dto: ExecucaoRegistrarDto,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ) {
+    return this.execucaoService.registrar(dto, usuarioAtivo);
   }
 
   @ApiOperation({ summary: 'Listar execuções com filtros opcionais' })

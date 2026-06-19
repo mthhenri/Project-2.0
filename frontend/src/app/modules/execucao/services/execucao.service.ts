@@ -11,6 +11,8 @@ import {
   ExecucaoListarDto,
   ExecucaoResumoDto,
   ExecucaoAtivaDto,
+  ExecucaoRegistrarDto,
+  ExecucaoRegistradaDto,
   StandardResponse,
   PaginatedResult,
 } from '@project20/shared';
@@ -23,6 +25,10 @@ export class ExecucaoService {
 
   iniciar(dto: ExecucaoIniciarDto): Observable<StandardResponse<ExecucaoIniciadaDto>> {
     return this.httpClient.post<StandardResponse<ExecucaoIniciadaDto>>(this.urlBase, dto);
+  }
+
+  registrar(dto: ExecucaoRegistrarDto): Observable<StandardResponse<ExecucaoRegistradaDto>> {
+    return this.httpClient.post<StandardResponse<ExecucaoRegistradaDto>>(`${this.urlBase}/registro`, dto);
   }
 
   encerrar(id: number, dto: ExecucaoEncerrarDto): Observable<StandardResponse<ExecucaoEncerradaDto>> {
