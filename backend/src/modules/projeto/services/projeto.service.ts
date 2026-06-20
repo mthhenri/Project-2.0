@@ -6,7 +6,8 @@ import {
   ProjetoListarDto,
   ProjetoResumoDto,
   ProjetoRecuperadoDto,
-  ProjetoAlterarDto,
+  ProjetoRecuperarDto,
+  ProjetoInternoAlterarDto,
   ProjetoAlteradoDto,
   UsuarioTipoEnum,
 } from '@project20/shared';
@@ -86,10 +87,10 @@ export class ProjetoService {
    * para não revelar a existência do projeto.
    */
   async recuperar(
-    id: number,
+    dto: ProjetoRecuperarDto,
     usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<ProjetoRecuperadoDto>> {
-    const projetoEncontrado = await this.projetoRepositorio.recuperar({ id });
+    const projetoEncontrado = await this.projetoRepositorio.recuperar({ id: dto.id });
 
     if (!projetoEncontrado) {
       throw new ResourceNotFoundException('Projeto');
@@ -97,7 +98,7 @@ export class ProjetoService {
 
     if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR) {
       const { itens } = await this.projetoRepositorio.listarPorUsuario({ usuarioId: usuarioAtivo.sub, filtros: {} });
-      const temAcesso = itens.some((projeto) => projeto.id === id);
+      const temAcesso = itens.some((projeto) => projeto.id === dto.id);
 
       if (!temAcesso) {
         throw new ResourceNotFoundException('Projeto');
@@ -113,10 +114,9 @@ export class ProjetoService {
 
   /** Altera dados do projeto. Código não pode ser alterado. Restrito a gestores. */
   async alterar(
-    id: number,
-    dto: ProjetoAlterarDto,
+    dto: ProjetoInternoAlterarDto,
   ): Promise<StandardResponse<ProjetoAlteradoDto>> {
-    const projetoEncontrado = await this.projetoRepositorio.recuperar({ id });
+    const projetoEncontrado = await this.projetoRepositorio.recuperar({ id: dto.id });
 
     if (!projetoEncontrado) {
       throw new ResourceNotFoundException('Projeto');
@@ -129,7 +129,8 @@ export class ProjetoService {
       throw new BusinessException('A previsão de fim deve ser posterior à data de início');
     }
 
-    const projetoAlterado = await this.projetoRepositorio.alterar(id, {
+    const projetoAlterado = await this.projetoRepositorio.alterar({
+      id:              dto.id,
       nome:            dto.nome,
       cor:             dto.cor,
       status:          dto.status,
@@ -145,14 +146,14 @@ export class ProjetoService {
   }
 
   /** Realiza soft delete do projeto. Restrito a gestores. */
-  async excluir(id: number): Promise<StandardResponse<void>> {
-    const projetoEncontrado = await this.projetoRepositorio.recuperar({ id });
+  async excluir(dto: ProjetoRecuperarDto): Promise<StandardResponse<void>> {
+    const projetoEncontrado = await this.projetoRepositorio.recuperar({ id: dto.id });
 
     if (!projetoEncontrado) {
       throw new ResourceNotFoundException('Projeto');
     }
 
-    await this.projetoRepositorio.excluir({ id });
+    await this.projetoRepositorio.excluir({ id: dto.id });
 
     return {
       sucesso:  true,

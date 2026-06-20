@@ -203,6 +203,15 @@ async validarLogin(dto: UsuarioValidarLoginDto): Promise<boolean> {
 }
 ```
 
+O repositório **nunca** recebe primitivo nem `Partial<Model>` — o `alterar` segue a mesma regra de `recuperar`, com o `id` dentro do DTO interno:
+```typescript
+// ❌ Nunca — primitivo id + Partial do model de banco
+async alterar(id: number, dados: Partial<Projeto>): Promise<ProjetoAlteradoDto> { ... }
+
+// ✅ DTO interno único — id no WHERE, demais campos no SET dinâmico
+async alterar(dto: ProjetoInternoAlterarDto): Promise<ProjetoAlteradoDto> { ... }
+```
+
 ---
 
 ## Imports do Shared

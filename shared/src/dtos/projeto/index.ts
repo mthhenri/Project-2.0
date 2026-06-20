@@ -6,6 +6,7 @@ export * from './ProjetoRecuperarDto';
 export * from './ProjetoListarDto';
 export * from './ProjetoUsuarioListarDto';
 export * from './ProjetoAlterarDto';
+export * from './ProjetoInternoAlterarDto';
 export * from './ProjetoAlteradoDto';
 export * from './ProjetoValidarCodigoDto';
 export * from './ProjetoExcluirDto';

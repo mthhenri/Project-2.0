@@ -68,7 +68,7 @@ export class ProjetoController {
     @Param('id', ParseIntPipe) id: number,
     @ActiveUser() usuarioAtivo: JwtPayload,
   ) {
-    return this.projetoService.recuperar(id, usuarioAtivo);
+    return this.projetoService.recuperar({ id }, usuarioAtivo);
   }
 
   @ApiOperation({ summary: 'Alterar projeto (somente gestor)' })
@@ -83,7 +83,7 @@ export class ProjetoController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: ProjetoAlterarDto,
   ) {
-    return this.projetoService.alterar(id, dto);
+    return this.projetoService.alterar({ ...dto, id });
   }
 
   @ApiOperation({ summary: 'Excluir projeto via soft delete (somente gestor)' })
@@ -94,6 +94,6 @@ export class ProjetoController {
   @GestorOnly()
   @Delete(':id')
   excluir(@Param('id', ParseIntPipe) id: number) {
-    return this.projetoService.excluir(id);
+    return this.projetoService.excluir({ id });
   }
 }

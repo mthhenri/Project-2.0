@@ -11,6 +11,7 @@ import {
   ProjetoValidarCodigoDto,
   ProjetoListarDto,
   ProjetoRecuperarDto,
+  ProjetoInternoAlterarDto,
   ProjetoExcluirDto,
   ProjetoUsuarioListarDto,
 } from '@project20/shared';
@@ -186,29 +187,29 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
   }
 
   /** Altera campos do projeto. O código não pode ser alterado. */
-  async alterar(id: number, dados: Partial<Projeto>): Promise<ProjetoAlteradoDto> {
+  async alterar(dto: ProjetoInternoAlterarDto): Promise<ProjetoAlteradoDto> {
     const setClauses: string[] = ['updated_date = NOW()'];
-    const parametros: Record<string, unknown> = { id };
+    const parametros: Record<string, unknown> = { id: dto.id };
 
-    if (dados.nome !== undefined) {
+    if (dto.nome !== undefined) {
       setClauses.push('nome = :nome');
-      parametros.nome = dados.nome;
+      parametros.nome = dto.nome;
     }
-    if (dados.cor !== undefined) {
+    if (dto.cor !== undefined) {
       setClauses.push('cor = :cor');
-      parametros.cor = dados.cor;
+      parametros.cor = dto.cor;
     }
-    if (dados.status !== undefined) {
+    if (dto.status !== undefined) {
       setClauses.push('status = :status');
-      parametros.status = dados.status;
+      parametros.status = dto.status;
     }
-    if (dados.inicioData !== undefined) {
+    if (dto.inicioData !== undefined) {
       setClauses.push('inicio_data = :inicioData');
-      parametros.inicioData = dados.inicioData;
+      parametros.inicioData = dto.inicioData;
     }
-    if (dados.previsaoFimData !== undefined) {
+    if (dto.previsaoFimData !== undefined) {
       setClauses.push('previsao_fim_data = :previsaoFimData');
-      parametros.previsaoFimData = dados.previsaoFimData;
+      parametros.previsaoFimData = dto.previsaoFimData;
     }
 
     const resultado = await this.executarConsulta<ProjetoAlteradoDto>(
