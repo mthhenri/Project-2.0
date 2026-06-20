@@ -18,13 +18,13 @@ export class PontoResumoCardComponent {
   classeValor(): string {
     switch (this.cor) {
       case 'positivo':
-        return 'text-green-600';
+        return 'text-green-600 dark:text-green-400';
       case 'negativo':
-        return 'text-red-600';
+        return 'text-red-600 dark:text-red-400';
       case 'primario':
-        return 'text-[var(--p-primary-600)]';
+        return 'text-[var(--p-primary-color)]';
       default:
-        return 'text-surface-800';
+        return 'text-color';
     }
   }
 }

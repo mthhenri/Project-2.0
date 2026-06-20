@@ -11,7 +11,7 @@
 
   @if (carregando()) {
     <div class="demanda-detalhe-dialog__carregando">
-      <i class="pi pi-spin pi-spinner text-4xl text-surface-400"></i>
+      <i class="pi pi-spin pi-spinner text-4xl text-muted-color"></i>
     </div>
   }
 
@@ -142,8 +142,8 @@
           <div class="demanda-detalhe-dialog__subdemandas">
             @if (subDemandas().length === 0) {
               <div class="demanda-detalhe-dialog__vazio">
-                <i class="pi pi-inbox text-3xl text-surface-300"></i>
-                <p class="text-surface-500 mt-2">Nenhuma sub-demanda</p>
+                <i class="pi pi-inbox text-3xl text-muted-color"></i>
+                <p class="text-muted-color mt-2">Nenhuma sub-demanda</p>
                 <p-button
                   label="Nova Sub-demanda"
                   icon="pi pi-plus"
@@ -197,7 +197,7 @@
                 (onClick)="navegarParaAtividades()"
               />
             </div>
-            <p class="text-surface-500 text-sm">
+            <p class="text-muted-color text-sm">
               Gerencie as atividades desta demanda no módulo de atividades.
             </p>
           </div>

@@ -10,8 +10,8 @@
     align-items: flex-start;
     justify-content: space-between;
     gap: 1.5rem;
-    background: var(--p-surface-0);
-    border: 1px solid var(--p-surface-200);
+    background: var(--app-surface-0);
+    border: 1px solid var(--app-surface-200);
     border-radius: 8px;
     padding: 1.5rem;
     margin-bottom: 1.25rem;
@@ -63,8 +63,8 @@
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    background: var(--p-primary-50);
-    color: var(--p-primary-600);
+    background: var(--app-avatar-fundo);
+    color: var(--app-avatar-cor);
     font-size: 0.75rem;
     font-weight: 600;
     flex-shrink: 0;
@@ -94,8 +94,8 @@
   }
 
   &__bloco {
-    background: var(--p-surface-0);
-    border: 1px solid var(--p-surface-200);
+    background: var(--app-surface-0);
+    border: 1px solid var(--app-surface-200);
     border-radius: 8px;
     padding: 1.5rem;
   }
@@ -150,7 +150,7 @@
     justify-content: space-between;
     gap: 1rem;
     padding: 0.75rem;
-    border: 1px solid var(--p-surface-200);
+    border: 1px solid var(--app-surface-200);
     border-radius: 6px;
   }
 

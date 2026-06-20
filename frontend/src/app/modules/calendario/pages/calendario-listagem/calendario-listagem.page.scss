@@ -31,8 +31,8 @@
   }
 
   &__calendario {
-    background: var(--p-surface-0);
-    border: 1px solid var(--p-surface-200);
+    background: var(--app-surface-0);
+    border: 1px solid var(--app-surface-200);
     border-radius: 8px;
     padding: 0.5rem;
 
@@ -50,8 +50,8 @@
   }
 
   &__tabela-mes {
-    background: var(--p-surface-0);
-    border: 1px solid var(--p-surface-200);
+    background: var(--app-surface-0);
+    border: 1px solid var(--app-surface-200);
     border-radius: 8px;
     padding: 1rem 1.25rem 1.25rem;
     min-width: 0;
@@ -86,7 +86,7 @@
   }
 
   &__linha--destacada {
-    background: var(--p-primary-50);
+    background: var(--app-realce-sutil);
 
     td {
       box-shadow: inset 0 0 0 9999px color-mix(in srgb, var(--p-primary-500) 8%, transparent);

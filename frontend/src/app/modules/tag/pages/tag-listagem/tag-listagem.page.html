@@ -10,15 +10,15 @@
 
   @if (carregando()) {
     <div class="tag-listagem__carregando">
-      <i class="pi pi-spin pi-spinner text-4xl text-surface-400"></i>
+      <i class="pi pi-spin pi-spinner text-4xl text-muted-color"></i>
     </div>
   }
 
   @if (!carregando()) {
     @if (tags().length === 0) {
       <div class="tag-listagem__vazio">
-        <i class="pi pi-tags text-4xl text-surface-300"></i>
-        <p class="text-surface-500 mt-3">Nenhuma tag cadastrada</p>
+        <i class="pi pi-tags text-4xl text-muted-color"></i>
+        <p class="text-muted-color mt-3">Nenhuma tag cadastrada</p>
       </div>
     } @else {
       <div class="tag-listagem__grid">

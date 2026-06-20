@@ -10,8 +10,8 @@
     align-items: center;
     justify-content: space-between;
     padding: 0.5rem 1rem;
-    background-color: var(--p-surface-0);
-    border-bottom: 1px solid var(--p-surface-200);
+    background-color: var(--app-surface-0);
+    border-bottom: 1px solid var(--app-surface-200);
     z-index: 10;
     flex-shrink: 0;
   }
@@ -36,7 +36,7 @@
     display: flex;
     align-items: center;
     gap: 0.25rem;
-    background-color: var(--p-surface-100);
+    background-color: var(--app-surface-100);
     border-radius: 0.5rem;
     padding: 0.25rem;
   }
@@ -74,7 +74,7 @@
     height: 100%;
 
     &--lista {
-      background-color: var(--p-surface-50);
+      background-color: var(--app-surface-50);
     }
   }
 
@@ -92,15 +92,15 @@
   &__lista {
     height: 100%;
     overflow-y: auto;
-    background-color: var(--p-surface-50);
+    background-color: var(--app-surface-50);
     padding: 1rem;
   }
 
   &__painel {
     width: 240px;
     flex-shrink: 0;
-    background-color: var(--p-surface-0);
-    border-left: 1px solid var(--p-surface-200);
+    background-color: var(--app-surface-0);
+    border-left: 1px solid var(--app-surface-200);
     padding: 1rem;
     overflow-y: auto;
   }
@@ -110,7 +110,7 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--p-surface-500);
+    color: var(--app-surface-500);
     margin: 0 0 0.75rem;
   }
 
@@ -121,12 +121,12 @@
   &__painel-label {
     display: block;
     font-size: 0.75rem;
-    color: var(--p-surface-600);
+    color: var(--app-surface-600);
     margin-bottom: 0.25rem;
   }
 
   &__separador {
-    border-top: 1px solid var(--p-surface-100);
+    border-top: 1px solid var(--app-surface-100);
     margin: 1rem 0;
   }
 
@@ -150,18 +150,18 @@
 
     &--comum {
       background-color: transparent;
-      border: 2px solid var(--p-surface-400);
+      border: 2px solid var(--app-surface-400);
     }
 
     &--estrutura {
       background-color: transparent;
-      border: 2px dashed var(--p-surface-400);
+      border: 2px dashed var(--app-surface-400);
     }
   }
 
   &__legenda-texto {
     font-size: 0.8rem;
-    color: var(--p-surface-600);
+    color: var(--app-surface-600);
   }
 
   &__legenda-linha {
@@ -204,8 +204,8 @@
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    background-color: var(--p-surface-50);
-    border: 1px solid var(--p-surface-200);
+    background-color: var(--app-surface-50);
+    border: 1px solid var(--app-surface-200);
     border-radius: 6px;
 
     // O conteúdo é HTML do Quill; a classe .ql-editor cuida da tipografia/espaçamento.
@@ -219,7 +219,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--p-surface-400);
+    color: var(--app-surface-400);
     font-style: italic;
   }
 

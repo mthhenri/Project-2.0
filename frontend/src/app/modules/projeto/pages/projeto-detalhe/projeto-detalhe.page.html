@@ -2,7 +2,7 @@
 
   @if (carregando()) {
     <div class="projeto-detalhe__carregando">
-      <i class="pi pi-spin pi-spinner text-4xl text-surface-400"></i>
+      <i class="pi pi-spin pi-spinner text-4xl text-muted-color"></i>
     </div>
   }
 
@@ -68,15 +68,15 @@
 
     @if (carregandoDemandas()) {
       <div class="projeto-detalhe__carregando-demandas">
-        <i class="pi pi-spin pi-spinner text-2xl text-surface-400"></i>
+        <i class="pi pi-spin pi-spinner text-2xl text-muted-color"></i>
       </div>
     }
 
     @if (!carregandoDemandas()) {
       @if (arvoreRaizes().length === 0) {
         <div class="projeto-detalhe__demandas-vazio">
-          <i class="pi pi-inbox text-4xl text-surface-300"></i>
-          <p class="text-surface-500 mt-2">Nenhuma demanda encontrada</p>
+          <i class="pi pi-inbox text-4xl text-muted-color"></i>
+          <p class="text-muted-color mt-2">Nenhuma demanda encontrada</p>
           @if (sessao.eGestor()) {
             <p-button
               label="Criar primeira demanda"

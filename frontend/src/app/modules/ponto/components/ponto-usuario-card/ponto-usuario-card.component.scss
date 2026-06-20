@@ -3,9 +3,9 @@
   flex-direction: row;
   gap: 0.875rem;
   padding: 0.875rem;
-  border: 1px solid var(--p-surface-200);
+  border: 1px solid var(--app-surface-200);
   border-radius: 0.625rem;
-  background: var(--p-surface-0);
+  background: var(--app-surface-0);
 
   &__resumo {
     display: flex;
@@ -14,7 +14,7 @@
     flex: 0 0 9rem;
     width: 9rem;
     padding-right: 0.875rem;
-    border-right: 1px solid var(--p-surface-200);
+    border-right: 1px solid var(--app-surface-200);
   }
 
   &__nome {
@@ -56,7 +56,7 @@
   &__badge {
     padding: 0.0625rem 0.5rem;
     border-radius: 0.75rem;
-    background: var(--p-surface-100);
+    background: var(--app-surface-100);
     color: var(--p-text-muted-color);
     font-weight: 500;
   }

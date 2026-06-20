@@ -157,7 +157,7 @@
           <td>
             <div class="atividade-listagem__executor">
               <span class="atividade-listagem__avatar">{{ iniciais(atividade.nomeUsuario) }}</span>
-              <span class="text-surface-700">{{ atividade.nomeUsuario }}</span>
+              <span class="text-color">{{ atividade.nomeUsuario }}</span>
             </div>
           </td>
         }
@@ -184,7 +184,7 @@
           }
         </td>
         <td>
-          <span class="text-surface-700">{{ atividade.totalMinutosExecutados | minutosParagHoras }}</span>
+          <span class="text-color">{{ atividade.totalMinutosExecutados | minutosParagHoras }}</span>
         </td>
         <td>
           <div class="atividade-listagem__tags">
@@ -196,7 +196,7 @@
                 [style.border-color]="tag.cor + '55'"
               >{{ tag.nome }}</span>
             } @empty {
-              <span class="text-surface-400">—</span>
+              <span class="text-muted-color">—</span>
             }
           </div>
         </td>
@@ -261,8 +261,8 @@
       <tr>
         <td [attr.colspan]="sessao.eGestor() ? 8 : 7">
           <div class="atividade-listagem__vazio">
-            <i class="pi pi-list text-4xl text-surface-300"></i>
-            <p class="text-surface-500 mt-3">Nenhuma atividade encontrada</p>
+            <i class="pi pi-list text-4xl text-muted-color"></i>
+            <p class="text-muted-color mt-3">Nenhuma atividade encontrada</p>
           </div>
         </td>
       </tr>
@@ -445,7 +445,7 @@
 >
   @if (carregandoDescricao()) {
     <div class="atividade-listagem__carregando">
-      <i class="pi pi-spin pi-spinner text-2xl text-surface-400"></i>
+      <i class="pi pi-spin pi-spinner text-2xl text-muted-color"></i>
     </div>
   } @else if (editandoDescricao()) {
     <form [formGroup]="formularioDescricaoDemanda" class="atividade-listagem__descricao-form atividade-listagem__descricao-form--cheio">
@@ -465,7 +465,7 @@
       <div class="ql-editor" [innerHTML]="conteudo"></div>
     </div>
   } @else {
-    <p class="text-surface-400">Sem conteúdo</p>
+    <p class="text-muted-color">Sem conteúdo</p>
   }
 
   <ng-template pTemplate="footer">
@@ -500,7 +500,7 @@
     @if (sessao.eGestor()) {
       <div class="atividade-listagem__executor atividade-listagem__executor--dialog">
         <span class="atividade-listagem__avatar">{{ iniciais(atividade.nomeUsuario) }}</span>
-        <span class="text-surface-700">{{ atividade.nomeUsuario }}</span>
+        <span class="text-color">{{ atividade.nomeUsuario }}</span>
       </div>
     }
   }
@@ -532,7 +532,7 @@
     <div class="atividade-listagem__dialog-campo">
       <span class="atividade-listagem__filtro-label">Últimas execuções desta atividade</span>
       @if (carregandoExecucoesDialog()) {
-        <i class="pi pi-spin pi-spinner text-surface-400"></i>
+        <i class="pi pi-spin pi-spinner text-muted-color"></i>
       } @else if (execucoesDialogExecucao().length) {
         <div class="atividade-listagem__execucoes-lista">
           @for (execucao of execucoesDialogExecucao(); track execucao.id) {
@@ -554,7 +554,7 @@
           }
         </div>
       } @else {
-        <p class="text-surface-400">Nenhuma execução anterior.</p>
+        <p class="text-muted-color">Nenhuma execução anterior.</p>
       }
     </div>
   </form>
@@ -584,7 +584,7 @@
     <p class="atividade-listagem__execucao-atividade">{{ atividade.nomeProjeto }} · {{ atividade.nome }}</p>
     <div class="atividade-listagem__executor atividade-listagem__executor--dialog">
       <span class="atividade-listagem__avatar">{{ iniciais(atividade.nomeUsuario) }}</span>
-      <span class="text-surface-700">{{ atividade.nomeUsuario }}</span>
+      <span class="text-color">{{ atividade.nomeUsuario }}</span>
     </div>
   }
 

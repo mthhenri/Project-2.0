@@ -43,7 +43,7 @@
     color: var(--p-text-muted-color);
     letter-spacing: 0.05em;
     text-transform: uppercase;
-    background: var(--p-surface-100);
+    background: var(--app-surface-100);
     padding: 0.25rem 0.5rem;
     border-radius: 4px;
   }
@@ -53,7 +53,7 @@
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    border: 2px solid var(--p-surface-200);
+    border: 2px solid var(--app-surface-200);
     flex-shrink: 0;
   }
 
@@ -112,14 +112,14 @@
     align-items: center;
     justify-content: space-between;
     padding: 0.875rem 1rem;
-    background: var(--p-surface-0);
-    border: 1px solid var(--p-surface-200);
+    background: var(--app-surface-0);
+    border: 1px solid var(--app-surface-200);
     border-radius: 6px;
     cursor: pointer;
     transition: background-color 0.15s;
 
     &:hover {
-      background: var(--p-surface-50);
+      background: var(--app-surface-50);
     }
   }
 

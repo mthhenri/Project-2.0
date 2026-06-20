@@ -64,8 +64,8 @@
     <ng-template pTemplate="body" let-usuario>
       <tr>
         <td>{{ usuario.nomeCompleto }}</td>
-        <td class="text-surface-600">{{ usuario.login }}</td>
-        <td class="text-surface-600">{{ usuario.cargoTitulo }}</td>
+        <td class="text-muted-color">{{ usuario.login }}</td>
+        <td class="text-muted-color">{{ usuario.cargoTitulo }}</td>
         <td>
           <p-tag
             [value]="usuario.tipo === 'GESTOR' ? 'Gestor' : 'Desenvolvedor'"
@@ -117,8 +117,8 @@
       <tr>
         <td colspan="6">
           <div class="usuario-listagem__vazio">
-            <i class="pi pi-users text-4xl text-surface-300"></i>
-            <p class="text-surface-500 mt-3">Nenhum usuário encontrado</p>
+            <i class="pi pi-users text-4xl text-muted-color"></i>
+            <p class="text-muted-color mt-3">Nenhum usuário encontrado</p>
           </div>
         </td>
       </tr>

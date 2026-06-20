@@ -68,10 +68,10 @@
   }
 
   &__lista-dias {
-    border: 1px solid var(--p-surface-200);
+    border: 1px solid var(--app-surface-200);
     border-radius: 0.625rem;
     overflow: hidden;
-    background: var(--p-surface-0);
+    background: var(--app-surface-0);
   }
 
   &__vazio {
@@ -81,13 +81,13 @@
     gap: 1rem;
     padding: 3rem 1.5rem;
     text-align: center;
-    border: 1px dashed var(--p-surface-300);
+    border: 1px dashed var(--app-surface-300);
     border-radius: 0.75rem;
   }
 
   &__vazio-icone {
     font-size: 2.5rem;
-    color: var(--p-surface-400);
+    color: var(--app-surface-400);
   }
 
   &__vazio-texto {

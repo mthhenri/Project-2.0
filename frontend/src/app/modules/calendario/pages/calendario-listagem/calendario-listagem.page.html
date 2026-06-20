@@ -43,7 +43,7 @@
 
       @if (carregando()) {
         <div class="calendario-listagem__carregando">
-          <i class="pi pi-spin pi-spinner text-4xl text-surface-400"></i>
+          <i class="pi pi-spin pi-spinner text-4xl text-muted-color"></i>
         </div>
       } @else {
         <p-table [value]="diasDoMes()" class="p-datatable-sm">
@@ -74,14 +74,14 @@
                 @if (dia.duracao === DiaNaoUtilDuracaoEnum.MEIO_PERIODO) {
                   <p-tag value="½ dia" severity="warn" />
                 } @else {
-                  <span class="text-surface-500">Integral</span>
+                  <span class="text-muted-color">Integral</span>
                 }
               </td>
               <td class="calendario-listagem__col-centro">
                 @if (dia.recorrente) {
-                  <i class="pi pi-check text-green-600" pTooltip="Considerado todos os anos"></i>
+                  <i class="pi pi-check text-green-600 dark:text-green-400" pTooltip="Considerado todos os anos"></i>
                 } @else {
-                  <span class="text-surface-400">—</span>
+                  <span class="text-muted-color">—</span>
                 }
               </td>
               @if (eGestor()) {
@@ -111,8 +111,8 @@
           <ng-template pTemplate="emptymessage">
             <tr>
               <td [attr.colspan]="eGestor() ? 6 : 5" class="calendario-listagem__vazio">
-                <i class="pi pi-calendar-times text-3xl text-surface-300"></i>
-                <p class="text-surface-500 mt-2">Nenhum dia não útil neste mês</p>
+                <i class="pi pi-calendar-times text-3xl text-muted-color"></i>
+                <p class="text-muted-color mt-2">Nenhum dia não útil neste mês</p>
               </td>
             </tr>
           </ng-template>
@@ -145,7 +145,7 @@
         placeholder="Selecione a data"
       />
       @if (diaEmEdicao()) {
-        <small class="text-surface-500">A data não pode ser alterada após o cadastro.</small>
+        <small class="text-muted-color">A data não pode ser alterada após o cadastro.</small>
       }
       @if (campoInvalido('diaData')) {
         <small class="calendario-listagem__erro">Data é obrigatória</small>
@@ -195,7 +195,7 @@
         class="w-full"
       />
       @if (formulario.value.duracao === DiaNaoUtilDuracaoEnum.MEIO_PERIODO) {
-        <small class="text-surface-500">A meta diária do ponto é reduzida à metade neste dia.</small>
+        <small class="text-muted-color">A meta diária do ponto é reduzida à metade neste dia.</small>
       }
     </div>
 

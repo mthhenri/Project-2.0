@@ -12,3 +12,66 @@
 // Variáveis SCSS globais do projeto
 $espacamento-base: 1rem;
 $raio-borda-padrao: 0.5rem;
+
+// ---------------------------------------------------------------------------
+// Escala de superfície do app (alias sobre a do PrimeNG).
+//
+// A escala bruta `--p-surface-0..950` do Aura é FIXA: 0 = branco … 950 = quase
+// preto nos DOIS temas — ela não inverte. Só os tokens semânticos (`--p-text-*`,
+// `--p-content-*`) trocam entre claro/escuro. Por isso, usar `--p-surface-N`
+// diretamente como fundo/texto deixa o componente claro também no modo escuro.
+//
+// Estes aliases resolvem isso num único lugar: no claro são idênticos à escala
+// do PrimeNG (zero mudança visual no tema claro); no escuro, invertem para tons
+// coerentes. Componentes usam sempre `--app-surface-N`.
+// ---------------------------------------------------------------------------
+:root {
+  --app-surface-0:   var(--p-surface-0);
+  --app-surface-50:  var(--p-surface-50);
+  --app-surface-100: var(--p-surface-100);
+  --app-surface-200: var(--p-surface-200);
+  --app-surface-300: var(--p-surface-300);
+  --app-surface-400: var(--p-surface-400);
+  --app-surface-500: var(--p-surface-500);
+  --app-surface-600: var(--p-surface-600);
+  --app-surface-700: var(--p-surface-700);
+  --app-surface-800: var(--p-surface-800);
+
+  // Fundo da página (um degrau "atrás" do cartão).
+  --app-fundo: var(--p-surface-50);
+
+  // Avatares/badges circulares com iniciais (fundo tom primário + texto primário).
+  --app-avatar-fundo: var(--p-primary-100);
+  --app-avatar-cor:   var(--p-primary-700);
+
+  // Realce de linha/opção selecionada (fundo tom primário, texto normal por cima).
+  --app-realce-sutil: var(--p-primary-50);
+}
+
+.app-escuro {
+  --app-surface-0:   var(--p-surface-900); // cartão / painel
+  --app-surface-50:  var(--p-surface-800); // fundo levemente elevado
+  --app-surface-100: var(--p-surface-700); // hover / badge / aninhado
+  --app-surface-200: var(--p-surface-700); // borda / divisória / avatar
+  --app-surface-300: var(--p-surface-600); // borda de input / tracejada
+  --app-surface-400: var(--p-surface-500); // texto/borda mais fraco
+  --app-surface-500: var(--p-surface-400); // texto secundário
+  --app-surface-600: var(--p-surface-400); // texto secundário forte
+  --app-surface-700: var(--p-surface-200); // texto forte
+  --app-surface-800: var(--p-surface-100); // texto mais forte
+
+  --app-fundo: var(--p-surface-950);
+
+  // No escuro, tons fixos primary-50/100 viram manchas claras: troca por tinta
+  // translúcida do primário (que já inverte) + texto claro legível.
+  --app-avatar-fundo: color-mix(in srgb, var(--p-primary-400) 26%, transparent);
+  --app-avatar-cor:   var(--p-primary-200);
+  --app-realce-sutil: color-mix(in srgb, var(--p-primary-400) 16%, transparent);
+}
+
+// Fundo e cor de texto base. `--p-text-color` já troca sozinho no tema escuro.
+body {
+  background-color: var(--app-fundo);
+  color: var(--p-text-color);
+}
+

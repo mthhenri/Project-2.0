@@ -1,8 +1,8 @@
 .ponto-mes-dia {
-  border-bottom: 1px solid var(--p-surface-200);
+  border-bottom: 1px solid var(--app-surface-200);
 
   &--nao-util {
-    background: var(--p-surface-50);
+    background: var(--app-surface-50);
   }
 
   &__linha {
@@ -18,7 +18,7 @@
     cursor: pointer;
 
     &:hover {
-      background: var(--p-surface-100);
+      background: var(--app-surface-100);
     }
   }
 
@@ -50,19 +50,19 @@
 
   &__seta {
     font-size: 0.625rem;
-    color: var(--p-surface-400);
+    color: var(--app-surface-400);
   }
 
   &__badge {
     padding: 0.0625rem 0.5rem;
     border-radius: 0.75rem;
-    background: var(--p-surface-100);
+    background: var(--app-surface-100);
     color: var(--p-text-muted-color);
     font-weight: 500;
   }
 
   &__vazio {
-    color: var(--p-surface-400);
+    color: var(--app-surface-400);
   }
 
   &__total {

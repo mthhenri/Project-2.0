@@ -91,8 +91,8 @@
           <div class="demanda-projeto__lista">
             @if (arvoreRaizes().length === 0) {
               <div class="demanda-projeto__vazio demanda-projeto__vazio--lista">
-                <i class="pi pi-inbox text-4xl text-surface-300"></i>
-                <p class="text-surface-500 mt-2">Nenhuma demanda encontrada</p>
+                <i class="pi pi-inbox text-4xl text-muted-color"></i>
+                <p class="text-muted-color mt-2">Nenhuma demanda encontrada</p>
               </div>
             }
             @for (item of arvoreRaizes(); track item.id) {

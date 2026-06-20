@@ -1,6 +1,6 @@
 .topbar {
-  background: var(--p-surface-100);
-  border-color: var(--p-surface-300);
+  background: var(--app-surface-0);
+  border-color: var(--app-surface-200);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 
   &__logo-imagem {
@@ -9,11 +9,12 @@
   }
 
   &__nav-item--ativo {
-    background-color: var(--p-primary-50);
-    color: var(--p-primary-600);
+    // Tokens de realce (selecionado) do PrimeNG — acompanham claro/escuro.
+    background-color: var(--p-highlight-background);
+    color: var(--p-highlight-color);
 
     i {
-      color: var(--p-primary-600);
+      color: var(--p-highlight-color);
     }
   }
 

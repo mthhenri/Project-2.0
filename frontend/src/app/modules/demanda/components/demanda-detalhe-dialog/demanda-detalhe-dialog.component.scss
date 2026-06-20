@@ -47,7 +47,7 @@
 
   &__breadcrumb-sep {
     font-size: 0.65rem;
-    color: var(--p-surface-400);
+    color: var(--app-surface-400);
   }
 
   &__identidade {
@@ -58,7 +58,7 @@
   }
 
   &__icone-estrutural {
-    color: var(--p-surface-400);
+    color: var(--app-surface-400);
     font-size: 1rem;
   }
 
@@ -80,27 +80,27 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: var(--p-surface-500);
+    color: var(--app-surface-500);
   }
 
   &__info-valor {
     font-size: 0.9rem;
-    color: var(--p-surface-700);
+    color: var(--app-surface-700);
     font-weight: 500;
   }
 
   &__descricao {
     margin-bottom: 1.25rem;
     padding: 1rem;
-    background-color: var(--p-surface-50);
+    background-color: var(--app-surface-50);
     border-radius: 0.5rem;
-    border: 1px solid var(--p-surface-200);
+    border: 1px solid var(--app-surface-200);
   }
 
   &__descricao-titulo {
     font-size: 0.875rem;
     font-weight: 600;
-    color: var(--p-surface-600);
+    color: var(--app-surface-600);
     margin: 0 0 0.5rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -108,7 +108,7 @@
 
   &__descricao-texto {
     font-size: 0.9rem;
-    color: var(--p-surface-700);
+    color: var(--app-surface-700);
     line-height: 1.6;
     margin: 0;
     white-space: pre-wrap;
@@ -117,7 +117,7 @@
   &__documentacao {
     font-family: 'Courier New', monospace;
     font-size: 0.85rem;
-    color: var(--p-surface-700);
+    color: var(--app-surface-700);
     white-space: pre-wrap;
     word-break: break-word;
     margin: 0;
@@ -174,7 +174,7 @@
   &__tags-titulo {
     font-size: 0.875rem;
     font-weight: 600;
-    color: var(--p-surface-600);
+    color: var(--app-surface-600);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     display: flex;
@@ -190,8 +190,8 @@
     height: 20px;
     padding: 0 0.375rem;
     border-radius: 9999px;
-    background-color: var(--p-surface-200);
-    color: var(--p-surface-600);
+    background-color: var(--app-surface-200);
+    color: var(--app-surface-600);
     font-size: 0.7rem;
     font-weight: 700;
   }
@@ -202,7 +202,7 @@
     align-items: center;
     padding: 2rem 1rem;
     text-align: center;
-    color: var(--p-surface-400);
+    color: var(--app-surface-400);
 
     i {
       font-size: 2.25rem;
@@ -295,8 +295,8 @@
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    background-color: var(--p-surface-50);
-    border: 1px solid var(--p-surface-200);
+    background-color: var(--app-surface-50);
+    border: 1px solid var(--app-surface-200);
     border-radius: 6px;
 
     // O conteúdo é HTML do Quill; a classe .ql-editor cuida da tipografia/espaçamento.
@@ -310,7 +310,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--p-surface-400);
+    color: var(--app-surface-400);
     font-style: italic;
   }
 }

@@ -4,15 +4,15 @@
   gap: 0.75rem;
   padding: 0.625rem 0.75rem;
   border-radius: 6px;
-  border: 1px solid var(--p-surface-200);
-  background: var(--p-surface-0);
+  border: 1px solid var(--app-surface-200);
+  background: var(--app-surface-0);
 
   &__avatar {
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background-color: var(--p-primary-100);
-    color: var(--p-primary-700);
+    background-color: var(--app-avatar-fundo);
+    color: var(--app-avatar-cor);
     display: flex;
     align-items: center;
     justify-content: center;

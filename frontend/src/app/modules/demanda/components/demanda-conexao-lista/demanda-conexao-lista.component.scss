@@ -9,7 +9,7 @@
   &__titulo {
     font-size: 0.875rem;
     font-weight: 600;
-    color: var(--p-surface-600);
+    color: var(--app-surface-600);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     display: flex;
@@ -25,8 +25,8 @@
     height: 20px;
     padding: 0 0.375rem;
     border-radius: 9999px;
-    background-color: var(--p-surface-200);
-    color: var(--p-surface-600);
+    background-color: var(--app-surface-200);
+    color: var(--app-surface-600);
     font-size: 0.7rem;
     font-weight: 700;
   }
@@ -35,7 +35,7 @@
     display: flex;
     justify-content: center;
     padding: 2rem;
-    color: var(--p-surface-400);
+    color: var(--app-surface-400);
     font-size: 1.5rem;
   }
 
@@ -45,7 +45,7 @@
     align-items: center;
     padding: 2.5rem 1rem;
     text-align: center;
-    color: var(--p-surface-400);
+    color: var(--app-surface-400);
 
     i {
       font-size: 2.25rem;
@@ -70,12 +70,12 @@
     gap: 0.75rem;
     padding: 0.625rem 0.875rem;
     border-radius: 0.5rem;
-    border: 1px solid var(--p-surface-200);
-    background-color: var(--p-surface-0);
+    border: 1px solid var(--app-surface-200);
+    background-color: var(--app-surface-0);
     transition: background-color 0.15s;
 
     &:hover {
-      background-color: var(--p-surface-50);
+      background-color: var(--app-surface-50);
     }
   }
 
@@ -88,22 +88,41 @@
     border-radius: 50%;
     flex-shrink: 0;
     font-size: 0.7rem;
-    background-color: var(--p-surface-100);
-    color: var(--p-surface-500);
+    background-color: var(--app-surface-100);
+    color: var(--app-surface-500);
 
     &--saida {
-      background-color: #dbeafe;
-      color: #2563eb;
+      background-color: var(--p-blue-100);
+      color: var(--p-blue-700);
     }
 
     &--entrada {
-      background-color: #dcfce7;
-      color: #16a34a;
+      background-color: var(--p-green-100);
+      color: var(--p-green-700);
     }
 
     &--bidirecional {
-      background-color: #ede9fe;
-      color: #7c3aed;
+      background-color: var(--p-purple-100);
+      color: var(--p-purple-700);
+    }
+  }
+
+  // No tema escuro, os tons -100 ficam claros demais e o texto -700 some.
+  // Inverte para fundo escuro translúcido com texto claro.
+  :host-context(.app-escuro) &__direcao {
+    &--saida {
+      background-color: color-mix(in srgb, var(--p-blue-500) 22%, transparent);
+      color: var(--p-blue-300);
+    }
+
+    &--entrada {
+      background-color: color-mix(in srgb, var(--p-green-500) 22%, transparent);
+      color: var(--p-green-300);
+    }
+
+    &--bidirecional {
+      background-color: color-mix(in srgb, var(--p-purple-500) 22%, transparent);
+      color: var(--p-purple-300);
     }
   }
 
@@ -137,7 +156,7 @@
     label {
       font-size: 0.875rem;
       font-weight: 500;
-      color: var(--p-surface-700);
+      color: var(--app-surface-700);
     }
 
     &--checkbox {

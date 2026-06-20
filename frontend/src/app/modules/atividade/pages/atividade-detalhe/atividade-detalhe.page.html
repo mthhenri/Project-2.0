@@ -53,7 +53,7 @@
         @if (atividade.descricao) {
           <p class="atividade-detalhe__descricao whitespace-pre-wrap">{{ atividade.descricao }}</p>
         } @else {
-          <p class="text-surface-400">Sem descrição.</p>
+          <p class="text-muted-color">Sem descrição.</p>
         }
       </section>
 
@@ -79,7 +79,7 @@
               [style.border-color]="tag.cor + '55'"
             >{{ tag.nome }}</span>
           } @empty {
-            <span class="text-surface-400">Nenhuma tag atribuída.</span>
+            <span class="text-muted-color">Nenhuma tag atribuída.</span>
           }
         </div>
       </section>
@@ -101,7 +101,7 @@
               <li class="atividade-detalhe__execucao">
                 <div class="atividade-detalhe__execucao-info">
                   <span class="atividade-detalhe__execucao-descricao">{{ execucao.descricao }}</span>
-                  <span class="atividade-detalhe__execucao-data text-surface-500">
+                  <span class="atividade-detalhe__execucao-data text-muted-color">
                     {{ execucao.inicioData | dataBrasileira }}
                     @if (execucao.duracaoMinutos !== null) {
                       · {{ execucao.duracaoMinutos }} min
@@ -126,14 +126,14 @@
             />
           </div>
         } @else {
-          <p class="text-surface-400">Nenhuma execução registrada ainda.</p>
+          <p class="text-muted-color">Nenhuma execução registrada ainda.</p>
         }
       </section>
     </div>
   } @else if (!carregando()) {
     <div class="atividade-detalhe__vazio">
-      <i class="pi pi-exclamation-circle text-4xl text-surface-300"></i>
-      <p class="text-surface-500 mt-3">Atividade não encontrada.</p>
+      <i class="pi pi-exclamation-circle text-4xl text-muted-color"></i>
+      <p class="text-muted-color mt-3">Atividade não encontrada.</p>
     </div>
   }
 </div>

@@ -9,13 +9,13 @@
 >
   @if (carregandoVisualizar()) {
     <div class="atividade-visualizar-dialog__carregando">
-      <i class="pi pi-spin pi-spinner text-2xl text-surface-400"></i>
+      <i class="pi pi-spin pi-spinner text-2xl text-muted-color"></i>
     </div>
   } @else if (atividadeVisualizada(); as atividade) {
     <div class="atividade-visualizar-dialog__visualizar-infos">
       <div class="atividade-visualizar-dialog__executor">
         <span class="atividade-visualizar-dialog__avatar">{{ iniciais(atividade.nomeUsuario) }}</span>
-        <span class="text-surface-700">{{ atividade.nomeUsuario }}</span>
+        <span class="text-color">{{ atividade.nomeUsuario }}</span>
       </div>
       <span class="atividade-visualizar-dialog__info-secundaria">
         {{ atividade.totalAtividadesUsuario }} atividade(s) no total
@@ -83,7 +83,7 @@
               }
             </div>
           } @else {
-            <p class="text-surface-400">Nenhuma execução registrada.</p>
+            <p class="text-muted-color">Nenhuma execução registrada.</p>
           }
         </p-tabpanel>
       </p-tabpanels>

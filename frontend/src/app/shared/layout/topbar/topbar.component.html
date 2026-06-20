@@ -10,7 +10,7 @@
       <a
         [routerLink]="item.rotaLink"
         routerLinkActive="topbar__nav-item--ativo"
-        class="topbar__nav-item flex items-center gap-2 px-3 py-2 rounded-lg text-surface-700 hover:bg-surface-100 transition-colors text-sm font-medium whitespace-nowrap"
+        class="topbar__nav-item flex items-center gap-2 px-3 py-2 rounded-lg text-color hover:bg-emphasis transition-colors text-sm font-medium whitespace-nowrap"
       >
         <i [class]="item.icone"></i>
         <span>{{ item.label }}</span>
@@ -20,7 +20,7 @@
 
   <!-- Actions -->
   <div class="topbar__acoes flex items-center gap-2 flex-shrink-0">
-    <span class="topbar__hora text-sm text-surface-500 font-mono tabular-nums">{{ horaAtual() }}</span>
+    <span class="topbar__hora text-sm text-muted-color font-mono tabular-nums">{{ horaAtual() }}</span>
 
     <p-button
       icon="pi pi-user"
@@ -36,11 +36,11 @@
       @if (sessao.usuarioAtual()) {
         <div class="flex flex-col gap-3 p-1 min-w-[180px]">
           <div>
-            <div class="font-semibold text-surface-800">{{ sessao.nomeCompleto() }}</div>
-            <div class="text-sm text-surface-500">&#64;{{ sessao.login() }}</div>
+            <div class="font-semibold text-color">{{ sessao.nomeCompleto() }}</div>
+            <div class="text-sm text-muted-color">&#64;{{ sessao.login() }}</div>
           </div>
           <p-divider class="my-0" />
-          <div class="flex items-center gap-2 text-sm text-surface-600">
+          <div class="flex items-center gap-2 text-sm text-muted-color">
             <i class="pi pi-id-card text-xs"></i>
             <span>{{ sessao.eGestor() ? 'Gestor' : 'Desenvolvedor' }}</span>
           </div>
@@ -55,9 +55,6 @@
           <button
             type="button"
             class="topbar__tema flex items-center gap-2 text-sm"
-            [disabled]="true"
-            pTooltip="Em breve"
-            tooltipPosition="left"
             (click)="tema.alternarTema()"
           >
             <i class="text-xs" [class]="tema.eEscuro() ? 'pi pi-sun' : 'pi pi-moon'"></i>

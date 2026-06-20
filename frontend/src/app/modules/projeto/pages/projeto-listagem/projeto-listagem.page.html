@@ -28,15 +28,15 @@
 
   @if (carregando()) {
     <div class="projeto-listagem__carregando">
-      <i class="pi pi-spin pi-spinner text-4xl text-surface-400"></i>
+      <i class="pi pi-spin pi-spinner text-4xl text-muted-color"></i>
     </div>
   }
 
   @if (!carregando()) {
     @if (projetos().length === 0) {
       <div class="projeto-listagem__vazio">
-        <i class="pi pi-folder-open text-5xl text-surface-300"></i>
-        <p class="text-surface-500 mt-3">Nenhum projeto encontrado</p>
+        <i class="pi pi-folder-open text-5xl text-muted-color"></i>
+        <p class="text-muted-color mt-3">Nenhum projeto encontrado</p>
       </div>
     }
 

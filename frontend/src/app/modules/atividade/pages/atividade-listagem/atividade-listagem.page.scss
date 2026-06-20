@@ -60,8 +60,8 @@
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    background: var(--p-primary-50);
-    color: var(--p-primary-600);
+    background: var(--app-avatar-fundo);
+    color: var(--app-avatar-cor);
     font-size: 0.75rem;
     font-weight: 600;
     flex-shrink: 0;
@@ -159,7 +159,7 @@
     transition: background-color 0.15s ease;
 
     &:hover {
-      background: var(--p-surface-100);
+      background: var(--app-surface-100);
     }
   }
 
@@ -189,11 +189,11 @@
     transition: background-color 0.15s ease;
 
     &:hover {
-      background: var(--p-surface-100);
+      background: var(--app-surface-100);
     }
 
     &--ativo {
-      background: var(--p-primary-50);
+      background: var(--app-realce-sutil);
     }
   }
 
@@ -287,7 +287,7 @@
     border-radius: 0.375rem;
 
     &:hover {
-      background: var(--p-surface-50);
+      background: var(--app-surface-50);
     }
   }
 
