@@ -179,6 +179,27 @@ ExecucaoIniciadaDto
 AssistenteDescricaoAuxiliadaDto
 ```
 
+**DTOs de relatório / consulta computada (sem verbo de operação):**
+
+Relatórios e consultas agregadas não representam uma operação CRUD sobre a entidade — eles **descrevem um recorte calculado**. Não recebem verbo no particípio; o nome é `Entidade + Recorte + Dto`, onde o recorte é o substantivo que qualifica o relatório:
+
+```
+PontoDiarioDto      ← resumo de ponto de um dia (horas, intervalos, meta)
+PontoMensalDto      ← resumo de ponto de um mês
+```
+
+O lado de entrada desses relatórios, quando existe, continua sendo um DTO de parâmetros no padrão normal (`PontoDiarioConsultarDto`, `PontoMensalListarDto`).
+
+**Value-objects / sub-estruturas (sem entidade nem verbo):**
+
+Estruturas reutilizáveis que não são entidade de domínio — apenas agrupam campos calculados — recebem nome do **conceito que representam**, sem prefixo de entidade nem verbo:
+
+```
+IntervaloDto        ← { inicioData, fimData, duracaoMinutos } — gap entre execuções
+```
+
+Use esta forma apenas para value-objects genuínos (sem ciclo de vida próprio, sem operação CRUD). Se a estrutura ganhar operações, ela vira entidade e volta ao padrão `Entidade + Verbo + Dto`.
+
 **Regras adicionais de DTO:**
 - Toda recuperação individual de entidade usa `EntidadeRecuperarDto { id: number }` — nunca parâmetro primitivo
 - Toda operação que recebe parâmetros, mesmo que seja um único campo, usa DTO — zero primitivos em assinaturas de service e repository
@@ -420,7 +441,9 @@ backend/src/
 
 ### 7.2 Regra da Controller — Obrigatória
 
-A controller é **burra**. Apenas expõe o endpoint, aplica guards/decorators e repassa para a service. Sem lógica, sem if, sem try/catch, sem transformação de dados:
+A controller é **burra**. Apenas expõe o endpoint, aplica guards/decorators e repassa para a service. Sem lógica de negócio, sem if, sem try/catch, sem validação, sem acesso a repositório.
+
+**Única "microinteligência" sancionada:** montar o DTO. A service e o repositório **nunca** recebem primitivo (§16 #21); portanto, quando o identificador chega pela rota (`@Param('id')`) ou pela query (`@Query('projetoId')`), é a controller que o injeta dentro do DTO antes de repassar. Isso **não** é exceção ao §16 #21 — é exatamente o ponto onde o DTO nasce. O service sempre recebe **um único DTO** (objetos de contexto como o payload do JWT via `@ActiveUser()` são permitidos por não serem primitivos).
 
 ```typescript
 // ✅ Correto
@@ -441,18 +464,36 @@ export class UsuarioController {
   }
 
   @Get(':id')
-  recuperarPorIdentificador(@Param('id', ParseIntPipe) id: number) {
-    return this.usuarioService.recuperarPorIdentificador(id);
+  recuperarPorIdentificador(@Param('id', ParseIntPipe) id: number, @ActiveUser() usuarioAtivo: JwtPayload) {
+    // microinteligência permitida: o id da rota entra no DTO { id }
+    return this.usuarioService.recuperar({ id }, usuarioAtivo);
   }
 
   @Put(':id')
   @GestorOnly()
-  alterar(@Param('id', ParseIntPipe) id: number, @Body() dto: UsuarioAlterarDto) {
-    return this.usuarioService.alterar(id, dto);
+  alterar(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UsuarioAlterarDto,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ) {
+    // o id da rota é mesclado ao corpo, formando o DTO interno repassado à service
+    return this.usuarioService.alterar({ ...dto, id }, usuarioAtivo);
+  }
+
+  @Delete(':id')
+  @GestorOnly()
+  excluir(@Param('id', ParseIntPipe) id: number) {
+    return this.usuarioService.excluir({ id });
   }
 }
 
-// ❌ Proibido
+// ❌ Proibido — passar o primitivo adiante (viola §16 #21)
+@Put(':id')
+alterar(@Param('id', ParseIntPipe) id: number, @Body() dto: UsuarioAlterarDto) {
+  return this.usuarioService.alterar(id, dto);   // id solto na assinatura da service
+}
+
+// ❌ Proibido — lógica de negócio na controller
 @Post()
 async criar(@Body() dto: UsuarioCriarDto) {
   try {
@@ -466,6 +507,9 @@ async criar(@Body() dto: UsuarioCriarDto) {
   }
 }
 ```
+
+> **DTO de recuperação/exclusão individual:** o controller monta `{ id }` reutilizando `EntidadeRecuperarDto` — não se cria primitivo na assinatura de `recuperar`/`excluir`.
+> **DTO de alteração:** o controller mescla `{ ...dto, id }` num DTO interno que carrega o `id` + os campos alteráveis (ver `EntidadeInternoAlterarDto` em §7.4).
 
 ### 7.3 Regra da Service — Obrigatória
 
@@ -539,6 +583,20 @@ async inserir(dados: Omit<Usuario, keyof BaseEntity>): Promise<UsuarioCriadoDto>
   return resultado[0];
 }
 ```
+
+**`alterar` segue a mesma regra DTO de `recuperar` — zero primitivos, id dentro do DTO:**
+
+```typescript
+// ✅ Correto — DTO único carregando id + campos alteráveis
+async alterar(dto: UsuarioInternoAlterarDto): Promise<UsuarioAlteradoDto> {
+  // dto.id no WHERE; demais campos no SET dinâmico
+}
+
+// ❌ Proibido — primitivo id + objeto anônimo inline
+async alterar(id: number, dados: { nomeCompleto?: string; status?: UsuarioStatusEnum }) { ... }
+```
+
+O DTO interno usa o padrão de nomenclatura **verbo no fim** (§5.1): o qualificador `Interno` faz parte do complemento, então `UsuarioInternoAlterarDto` ✅ (nunca `UsuarioAlterarInternoDto` ❌). O controller monta `{ ...dto, id }`; service e repositório consomem o mesmo DTO.
 
 ### 7.5 BaseRepository
 
@@ -940,7 +998,7 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 
 ## 13. Entidades e Campos
 
-> Todos os modelos incluem os campos de BaseEntity: `id`, `createdAt`, `updatedAt`, `isDeleted`, `deletedAt`
+> Todos os modelos incluem os campos de BaseEntity: `id`, `createdDate`, `updatedDate`, `isDeleted`, `deletedDate`
 
 ### Usuario
 
@@ -1079,8 +1137,8 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 - Gestor pode atribuir e remover usuários manualmente após a criação
 - Desenvolvedor não pode gerenciar atribuições — apenas visualiza os membros da demanda
 
-- Um usuário **não pode ter duas execuções ativas** (sem `finalizado_em`) simultaneamente
-- O campo `finalizado_em` é obrigatório para fechar uma execução
+- Um usuário **não pode ter duas execuções ativas** (sem `fim_data`) simultaneamente
+- O campo `fim_data` é obrigatório para fechar uma execução
 - Execuções em finais de semana são permitidas mas marcadas como horas extras (não contam na meta diária)
 
 ### Intervalos
@@ -1162,7 +1220,7 @@ Estas regras **jamais** devem ser violadas. São inegociáveis independente do c
 | 18 | **Nunca criar** componente Angular com NgModule — sempre standalone |
 | 19 | **Nunca usar** .css — todo arquivo de estilo é .scss |
 | 20 | **Nunca usar** style="" inline no HTML — sempre SCSS ou Tailwind |
-| 21 | **Nunca passar primitivos** como parâmetros em métodos de service ou repository — sempre DTO, mesmo que seja um único campo |
+| 21 | **Nunca passar primitivos** como parâmetros em métodos de service ou repository — sempre DTO, mesmo que seja um único campo. O `id` que chega por `@Param`/`@Query` é injetado no DTO **pela controller** antes do repasse (ver §7.2); a service nunca recebe `id`/`*Id` solto. Objetos de contexto (payload do JWT via `@ActiveUser()`) não são primitivos e podem ser parâmetro próprio |
 | 22 | **Nunca nomear métodos com `existe*`** — usar `validar*` (ex: `validarLogin`, `validarNome`, `validarCodigo`) |
 | 23 | **Nunca criar DTO como alias ou re-export** de outro DTO — cada DTO define explicitamente todos os seus campos |
 | 24 | **Nunca usar `atualizar`** em nomes de DTO ou método de negócio — usar `alterar` (`UsuarioAlterarDto`, `alterar()`) |

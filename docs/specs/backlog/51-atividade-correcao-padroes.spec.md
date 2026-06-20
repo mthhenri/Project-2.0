@@ -41,6 +41,21 @@ async alterar(id: number, dados: Partial<Atividade>): Promise<AtividadeAlteradaD
 - Atualizar a chamada em `AtividadeService.alterar` (`backend/src/modules/atividade/services/atividade.service.ts:160`).
 - Manter o JSDoc.
 
+### Boundary controller→service DTO-only (decisão da spec 48)
+
+A `AtividadeService` recebe o `id` como primitivo em `recuperar(id, usuarioAtivo)`,
+`alterar(id, dto, usuarioAtivo)`, `excluir(id)`, `alterarTags(id, dto, usuarioAtivo)` e
+`listarTags(id, usuarioAtivo)` (`atividade.service.ts:129,160,199,219,264`). Pela decisão
+**DTO em tudo** (spec 48 §3):
+
+- `AtividadeService`:
+  - `recuperar(dto: AtividadeRecuperarDto, usuarioAtivo)`, `listarTags(dto: AtividadeRecuperarDto, usuarioAtivo)`, `excluir(dto: AtividadeRecuperarDto)` — reutilizam `{ id }`.
+  - `alterar(dto: AtividadeInternoAlterarDto, usuarioAtivo)` — DTO interno acima.
+  - `alterarTags(dto, usuarioAtivo)` — controller mescla `{ ...dto, id }` (id = atividade).
+- `AtividadeController` (`atividade.controller.ts:65,79,93,105,118`): monta o DTO de
+  `@Param('id')`; nenhuma outra lógica. `usuarioAtivo` permanece parâmetro próprio.
+- Sem mudança de autorização/regra/SQL.
+
 ---
 
 ## Atualização de Documentação (obrigatória)
@@ -57,6 +72,8 @@ async alterar(id: number, dados: Partial<Atividade>): Promise<AtividadeAlteradaD
 1. `npm run build --workspace=shared` e `npm run build --workspace=backend` — sem erros.
 2. Checagem negativa: `AtividadeRepository.alterar` **não** recebe `id: number` nem `Partial<Atividade>`; o DTO chama-se `AtividadeInternoAlterarDto` (verbo no fim).
 3. Checagem negativa: nenhum método de `atividade.repository.ts` recebe primitivo em assinatura pública.
+4. Checagem negativa (boundary): nenhum método de `AtividadeService` recebe `id: number`
+   solto; o `AtividadeController` monta o DTO a partir de `@Param('id')`.
 
 ---
 

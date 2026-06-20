@@ -70,7 +70,7 @@ sem depender do código TypeScript para isso.
 A função é criada uma única vez e reutilizada por todas as tabelas via trigger:
 
 ```sql
-CREATE OR REPLACE FUNCTION fn_atualizar_updated_date()
+CREATE OR REPLACE FUNCTION fn_set_updated_date()
 RETURNS TRIGGER AS $$
 BEGIN
   NEW.updated_date = NOW();
@@ -86,7 +86,7 @@ O trigger em cada tabela:
 CREATE TRIGGER trg_usuario_updated_date
   BEFORE UPDATE ON usuario        -- executa antes de gravar o UPDATE
   FOR EACH ROW                    -- uma vez por linha afetada
-  EXECUTE FUNCTION fn_atualizar_updated_date();
+  EXECUTE FUNCTION fn_set_updated_date();
 ```
 
 ---
@@ -129,7 +129,7 @@ CREATE INDEX ix_usuario_tipo
 
 CREATE TRIGGER trg_usuario_updated_date
   BEFORE UPDATE ON usuario
-  FOR EACH ROW EXECUTE FUNCTION fn_atualizar_updated_date();
+  FOR EACH ROW EXECUTE FUNCTION fn_set_updated_date();
 ```
 
 ---
@@ -166,7 +166,7 @@ CREATE INDEX ix_projeto_status
 
 CREATE TRIGGER trg_projeto_updated_date
   BEFORE UPDATE ON projeto
-  FOR EACH ROW EXECUTE FUNCTION fn_atualizar_updated_date();
+  FOR EACH ROW EXECUTE FUNCTION fn_set_updated_date();
 ```
 
 ---
@@ -190,7 +190,7 @@ CREATE TABLE tag (
 
 CREATE TRIGGER trg_tag_updated_date
   BEFORE UPDATE ON tag
-  FOR EACH ROW EXECUTE FUNCTION fn_atualizar_updated_date();
+  FOR EACH ROW EXECUTE FUNCTION fn_set_updated_date();
 ```
 
 ---
@@ -246,7 +246,7 @@ CREATE INDEX ix_demanda_prioridade
 
 CREATE TRIGGER trg_demanda_updated_date
   BEFORE UPDATE ON demanda
-  FOR EACH ROW EXECUTE FUNCTION fn_atualizar_updated_date();
+  FOR EACH ROW EXECUTE FUNCTION fn_set_updated_date();
 ```
 
 ---
@@ -281,7 +281,7 @@ CREATE INDEX ix_demanda_usuario_usuario
 
 CREATE TRIGGER trg_demanda_usuario_updated_date
   BEFORE UPDATE ON demanda_usuario
-  FOR EACH ROW EXECUTE FUNCTION fn_atualizar_updated_date();
+  FOR EACH ROW EXECUTE FUNCTION fn_set_updated_date();
 ```
 
 ---
@@ -325,7 +325,7 @@ CREATE INDEX ix_demanda_conexao_destino
 
 CREATE TRIGGER trg_demanda_conexao_updated_date
   BEFORE UPDATE ON demanda_conexao
-  FOR EACH ROW EXECUTE FUNCTION fn_atualizar_updated_date();
+  FOR EACH ROW EXECUTE FUNCTION fn_set_updated_date();
 ```
 
 ---
@@ -352,7 +352,7 @@ CREATE UNIQUE INDEX uix_demanda_tag_ativa
 
 CREATE TRIGGER trg_demanda_tag_updated_date
   BEFORE UPDATE ON demanda_tag
-  FOR EACH ROW EXECUTE FUNCTION fn_atualizar_updated_date();
+  FOR EACH ROW EXECUTE FUNCTION fn_set_updated_date();
 ```
 
 ---
@@ -394,7 +394,7 @@ CREATE INDEX ix_atividade_status
 
 CREATE TRIGGER trg_atividade_updated_date
   BEFORE UPDATE ON atividade
-  FOR EACH ROW EXECUTE FUNCTION fn_atualizar_updated_date();
+  FOR EACH ROW EXECUTE FUNCTION fn_set_updated_date();
 ```
 
 ---
@@ -421,7 +421,7 @@ CREATE UNIQUE INDEX uix_atividade_tag_ativa
 
 CREATE TRIGGER trg_atividade_tag_updated_date
   BEFORE UPDATE ON atividade_tag
-  FOR EACH ROW EXECUTE FUNCTION fn_atualizar_updated_date();
+  FOR EACH ROW EXECUTE FUNCTION fn_set_updated_date();
 ```
 
 ---
@@ -472,7 +472,7 @@ CREATE INDEX ix_execucao_ativa
 
 CREATE TRIGGER trg_execucao_updated_date
   BEFORE UPDATE ON execucao
-  FOR EACH ROW EXECUTE FUNCTION fn_atualizar_updated_date();
+  FOR EACH ROW EXECUTE FUNCTION fn_set_updated_date();
 ```
 
 ---
@@ -506,7 +506,7 @@ CREATE INDEX ix_dia_nao_util_dia_data
 
 CREATE TRIGGER trg_dia_nao_util_updated_date
   BEFORE UPDATE ON dia_nao_util
-  FOR EACH ROW EXECUTE FUNCTION fn_atualizar_updated_date();
+  FOR EACH ROW EXECUTE FUNCTION fn_set_updated_date();
 ```
 
 ---

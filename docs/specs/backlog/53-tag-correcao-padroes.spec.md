@@ -40,6 +40,17 @@ async alterar(id: number, dados: Partial<Tag>): Promise<TagAlteradaDto> { ... }
 - Atualizar a chamada em `TagService.alterar` (`backend/src/modules/tag/services/tag.service.ts:63`).
 - Manter o JSDoc.
 
+### Boundary controller→service DTO-only (decisão da spec 48)
+
+A `TagService` recebe o `id` como primitivo em `recuperar(id)`, `alterar(id, dto)` e
+`excluir(id)` (`tag.service.ts:48,63,87`). Pela decisão **DTO em tudo** (spec 48 §3):
+
+- `TagService`: `recuperar(dto: TagRecuperarDto)`, `alterar(dto: TagInternoAlterarDto)`,
+  `excluir(dto: TagRecuperarDto)`.
+- `TagController` (`tag.controller.ts:52,65,78`): monta o DTO de `@Param('id')` —
+  `recuperar({ id })`, `alterar({ ...dto, id })`, `excluir({ id })`.
+- Reutilizar `TagRecuperarDto { id }` para recuperar e excluir. Sem mudança de regra/SQL.
+
 ---
 
 ## Atualização de Documentação (obrigatória)
@@ -55,6 +66,8 @@ async alterar(id: number, dados: Partial<Tag>): Promise<TagAlteradaDto> { ... }
 1. `npm run build --workspace=shared` e `npm run build --workspace=backend` — sem erros.
 2. Checagem negativa: `TagRepository.alterar` **não** recebe `id: number` nem `Partial<Tag>`; o DTO chama-se `TagInternoAlterarDto` (verbo no fim).
 3. Checagem negativa: nenhum método de `tag.repository.ts` recebe primitivo em assinatura pública.
+4. Checagem negativa (boundary): nenhum método de `TagService` recebe `id: number` solto;
+   o `TagController` monta o DTO a partir de `@Param('id')`.
 
 ---
 

@@ -36,13 +36,13 @@ triggers `trg_atualizar_updated_date` (ou equivalente) de todas as 11 tabelas.
 
 **Correção esperada:**
 1. Criar nova migration `…_renomear_funcao_updated_date` que:
-   - Cria `fn_set_updated_date()` (ou `fn_touch_updated_date()`) com o mesmo corpo
-     (`NEW.updated_date = NOW(); RETURN NEW;`).
+   - Cria `fn_set_updated_date()` com o mesmo corpo (`NEW.updated_date = NOW(); RETURN NEW;`).
+     > Nome fixado em `fn_set_updated_date` — já refletido no `SCHEMA.md` (não usar outra variante).
    - Recria, em cada tabela, o trigger apontando para a nova função (`DROP TRIGGER ... ; CREATE TRIGGER ...`).
    - Faz `DROP FUNCTION IF EXISTS fn_atualizar_updated_date() CASCADE;` ao final.
    - `down` reverte para a função/triggers antigos.
-2. Verificar que `SCHEMA.md` (se documentar o nome da função/triggers) seja atualizado para
-   o novo nome.
+2. **`SCHEMA.md` já foi atualizado** para `fn_set_updated_date` (definição + todos os
+   triggers) — confirmar que o nome na migration bate exatamente com o documentado.
 
 > O nome em inglês escolhido deve constar na documentação (abaixo) como o padrão para
 > objetos genéricos de banco (funções/triggers de infraestrutura).

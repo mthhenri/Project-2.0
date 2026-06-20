@@ -1,11 +1,12 @@
-# Task 56 — execucao: Correção de Padrões (nomenclatura de DTOs internos)
+# Task 56 — execucao: Correção de Padrões (nomenclatura + boundary DTO-only)
 
 ## Objetivo
 
-Corrigir as **duas violações da regra de nomenclatura do §5** (verbo sempre no fim do
-nome, depois do complemento) nos DTOs internos do módulo **execucao**, detectadas na
-**errata da auditoria 44** (`docs/AUDITORIA.md` §8). Sem mudança de campos nem de
-comportamento — apenas renomeação.
+Corrigir, no módulo **execucao**: (1) as **duas violações da regra de nomenclatura do §5**
+(verbo sempre no fim) nos DTOs internos, detectadas na **errata da auditoria 44**
+(`docs/AUDITORIA.md` §8); (2) o **boundary controller→service** com `id` primitivo e (3) o
+**primitivo de restrição de escopo** em `ExecucaoRepository.listar`, ambos decorrentes da
+decisão **DTO em tudo** (spec 48 §3). Sem mudança de campos nem de comportamento.
 
 > **Referência cruzada:** task 44 · `docs/AUDITORIA.md` §8 (errata).
 > **Regra:** `SYSTEM.SPEC.md` §5, linhas 149-155 — "o complemento inteiro vem antes do
@@ -53,8 +54,32 @@ nome.
   (`async encerrar(dto: ExecucaoInternoEncerrarDto)`).
 
 > O `ExecucaoService` **não** referencia esses tipos pelo nome (passa objeto literal
-> estruturalmente compatível), então não há mais nada a alterar no backend. Confirmar
-> com a checagem negativa abaixo.
+> estruturalmente compatível) — a renomeação não exige mudança lá. O boundary do service,
+> porém, é tratado no §3 abaixo.
+
+### 3. Boundary controller→service DTO-only (decisão da spec 48)
+
+A `ExecucaoService` recebe o `id` como primitivo em `encerrar(id, dto, usuarioAtivo)`,
+`recuperar(id, usuarioAtivo)`, `alterar(id, dto, usuarioAtivo)` e
+`excluir(id, usuarioAtivo)` (`execucao.service.ts:126,207,234,288`). Pela decisão
+**DTO em tudo** (spec 48 §3):
+
+- `ExecucaoService`:
+  - `recuperar(dto: ExecucaoRecuperarDto, usuarioAtivo)`, `excluir(dto: ExecucaoRecuperarDto, usuarioAtivo)` — reutilizam `{ id }`.
+  - `encerrar(dto, usuarioAtivo)` e `alterar(dto, usuarioAtivo)` — controller mescla `{ ...dto, id }` (DTO público de encerrar/alterar + `id`).
+- `ExecucaoController` (`execucao.controller.ts:90,104,119,134`): monta o DTO de `@Param('id')`.
+- `recuperarAtiva` e `listar` já recebem objeto — sem mudança de assinatura no service.
+- `usuarioAtivo: JwtPayload` permanece parâmetro próprio.
+
+### 4. `ExecucaoRepository.listar` — primitivo de restrição de escopo
+
+**Arquivo:** `backend/src/modules/execucao/repositories/execucao.repository.ts` —
+`listar(filtros, usuarioIdRestricao?: number)` (chamado em `execucao.service.ts:186`).
+
+Mesmo padrão descartado em demanda (spec 50 §3). Embutir o escopo num DTO:
+`listar(filtros: ExecucaoListarDto, restricao?: ExecucaoAcessoFiltrarDto { usuarioId })`
+— criar `ExecucaoAcessoFiltrarDto` no shared (espelhando `DemandaAcessoFiltrarDto`) se não
+existir, e atualizar a chamada em `ExecucaoService.listar`. SQL inalterado.
 
 ---
 
@@ -77,7 +102,11 @@ nome.
    não retorna nada (nenhum DTO com verbo antes de `Interno`).
 3. Checagem negativa: nenhum arquivo `*AlterarInternoDto.ts`/`*EncerrarInternoDto.ts` em
    `shared/src/dtos/execucao/`.
-4. Os campos dos dois DTOs permanecem idênticos (apenas o nome muda).
+4. Os campos dos dois DTOs internos permanecem idênticos (apenas o nome muda).
+5. Checagem negativa (boundary): nenhum método de `ExecucaoService` recebe `id: number`
+   solto; o `ExecucaoController` monta o DTO a partir de `@Param('id')`.
+6. `ExecucaoRepository.listar` **não** recebe `usuarioIdRestricao?: number` — usa
+   `ExecucaoAcessoFiltrarDto`.
 
 ---
 

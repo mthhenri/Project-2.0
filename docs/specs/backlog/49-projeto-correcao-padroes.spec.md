@@ -59,6 +59,22 @@ async alterar(id: number, dados: Partial<Projeto>): Promise<ProjetoAlteradoDto> 
 - Atualizar a chamada em `ProjetoService.alterar` (`backend/src/modules/projeto/services/projeto.service.ts:132`).
 - Manter o JSDoc.
 
+### Boundary controller→service DTO-only (decisão da spec 48)
+
+A `ProjetoService` recebe o `id` como primitivo em `recuperar(id, usuarioAtivo)`,
+`alterar(id, dto)` e `excluir(id)` (`projeto.service.ts:88,115,148`). Pela decisão
+**DTO em tudo** (spec 48 §3 / `SYSTEM.SPEC.md` §7.2, §16 #21), o controller passa a
+montar o DTO e a service deixa de receber primitivo:
+
+- `ProjetoService`:
+  - `recuperar(dto: ProjetoRecuperarDto, usuarioAtivo)` — `dto.id`.
+  - `alterar(dto: ProjetoInternoAlterarDto)` — mesmo DTO interno acima; `dto.id` é o alvo.
+  - `excluir(dto: ProjetoRecuperarDto)`.
+- `ProjetoController` (`projeto.controller.ts:68,83,96`): monta o DTO de `@Param('id')` —
+  `recuperar({ id }, usuarioAtivo)`, `alterar({ ...dto, id })`, `excluir({ id })`.
+- Reutilizar `ProjetoRecuperarDto { id }` (já existe) para recuperar e excluir; não criar
+  DTO novo só para exclusão. Sem mudança de validação/regra/SQL.
+
 ---
 
 ## Atualização de Documentação (obrigatória)
@@ -78,6 +94,8 @@ async alterar(id: number, dados: Partial<Projeto>): Promise<ProjetoAlteradoDto> 
 3. Checagem negativa: nenhum método de `projeto.repository.ts` recebe primitivo em assinatura pública.
 4. `ProjetoInternoAlterarDto` **não** declara `codigo` (capacidade inexistente) e o nome
    tem o verbo `Alterar` no fim (não `ProjetoAlterarInternoDto`).
+5. Checagem negativa (boundary): nenhum método de `ProjetoService` recebe `id: number`
+   solto; o `ProjetoController` monta o DTO a partir de `@Param('id')`.
 
 ---
 

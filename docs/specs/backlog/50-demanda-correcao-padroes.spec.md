@@ -65,14 +65,45 @@ parâmetro primitivo de restrição de escopo em `listar`.
 
 > Mesmo padrão em `ExecucaoRepository.listar(filtros, usuarioIdRestricao?: number)`.
 
-**Correção esperada (escolher uma e aplicar consistentemente):**
-- **(a)** Embutir o escopo num DTO de filtro: `listar(filtros: DemandaListarDto, restricao?: DemandaAcessoFiltrarDto)`
-  (`DemandaAcessoFiltrarDto` já existe no shared — reutilizar), **ou**
-- **(b)** Documentar o **carve-out** explícito para "parâmetro opcional de restrição de
-  escopo derivado do usuário autenticado", caso a equipe decida mantê-lo como primitivo.
+**Correção esperada:** pela decisão **DTO em tudo** (spec 48 §3), o carve-out para
+primitivo de restrição de escopo **não é aceito**. Embutir o escopo num DTO:
+`listar(filtros: DemandaListarDto, restricao?: DemandaAcessoFiltrarDto)`
+(`DemandaAcessoFiltrarDto` já existe no shared — reutilizar). O `DemandaService.listar`
+monta `{ usuarioId }` quando o usuário é desenvolvedor.
 
-A decisão tomada aqui deve valer também para `ExecucaoRepository.listar` (citar na
-documentação que o padrão é único), mas a **alteração de código de execucao não é desta task**.
+O mesmo vale para `ExecucaoRepository.listar` (padrão único), corrigido na spec 56 —
+a alteração do código de execucao **não é desta task**.
+
+### 4. Boundary controller→service DTO-only (decisão da spec 48)
+
+A `DemandaService` é a que mais recebe `id`/`*Id` primitivo. Pela decisão **DTO em tudo**
+(spec 48 §3 / `SYSTEM.SPEC.md` §7.2, §16 #21), o `DemandaController`
+(`demanda.controller.ts`) passa a montar o DTO de `@Param`/`@Query`, e a service deixa de
+receber primitivo. Métodos afetados (`demanda.service.ts`):
+
+| Método (atual) | Assinatura-alvo (service) | DTO |
+|---|---|---|
+| `recuperar(id, usuarioAtivo)` | `recuperar(dto, usuarioAtivo)` | `DemandaRecuperarDto { id }` (existe) |
+| `alterar(id, dto, usuarioAtivo)` | `alterar(dto, usuarioAtivo)` | `DemandaInternoAlterarDto` (item §1) |
+| `recuperarArvore(demandaId, usuarioAtivo)` | `recuperarArvore(dto, usuarioAtivo)` | `DemandaRecuperarDto { id }` |
+| `recuperarAncestral(demandaId, usuarioAtivo)` | idem | `DemandaRecuperarDto { id }` |
+| `listarConexoes(demandaId, usuarioAtivo)` | `listarConexoes(dto, usuarioAtivo)` | `DemandaRecuperarDto { id }` |
+| `listarTagsDemanda(demandaId, usuarioAtivo)` | idem | `DemandaRecuperarDto { id }` |
+| `listarMembros(demandaId, usuarioAtivo)` | idem | `DemandaRecuperarDto { id }` |
+| `excluir(id)` | `excluir(dto)` | `DemandaRecuperarDto { id }` |
+| `criarConexao(demandaOrigemId, dto)` | `criarConexao(dto)` | controller mescla `{ ...dto, demandaOrigemId }` em `DemandaConexaoCriarDto` |
+| `excluirConexao(demandaId, conexaoId)` | `excluirConexao(dto)` | novo `DemandaConexaoExcluirDto { demandaId, conexaoId }` |
+| `recuperarGrafo(projetoId, usuarioAtivo)` | `recuperarGrafo(dto, usuarioAtivo)` | `DemandaGrafoRecuperarDto { projetoId }` (existe, de `@Query`) |
+| `alterarTagsDemanda(demandaId, dto, usuarioAtivo)` | `alterarTagsDemanda(dto, usuarioAtivo)` | controller mescla `{ ...dto, demandaId }` |
+| `atribuirMembro(demandaId, dto, usuarioAtivo)` | `atribuirMembro(dto, usuarioAtivo)` | controller mescla `{ ...dto, demandaId }` |
+| `removerMembro(demandaId, usuarioId, usuarioAtivo)` | `removerMembro(dto, usuarioAtivo)` | novo `DemandaMembroRemoverDto { demandaId, usuarioId }` |
+
+- Reutilizar `DemandaRecuperarDto { id }` para todas as leituras/exclusão por id único —
+  **não** criar um DTO por método. Criar apenas os DTOs de múltiplos identificadores
+  listados acima (`DemandaConexaoExcluirDto`, `DemandaMembroRemoverDto` — nome com verbo no
+fim). `DemandaRecuperarDto` e `DemandaGrafoRecuperarDto` já existem no shared.
+- `usuarioAtivo: JwtPayload` permanece como parâmetro próprio (não é primitivo).
+- Sem mudança de autorização, CTE ou SQL — apenas o formato das assinaturas.
 
 ---
 
@@ -80,9 +111,10 @@ documentação que o padrão é único), mas a **alteração de código de execu
 
 - **`CONVENTIONS.md` / `SYSTEM.SPEC.md` §7.4** — reforçar (sem duplicar o que a spec 48/49
   já tiver inserido) o exemplo ❌ `alterar(id, Partial<Demanda>)` / ✅ `alterar(dto: DemandaInternoAlterarDto)`.
-- **Carve-out de restrição de escopo** — documentar de forma inequívoca, no `SYSTEM.SPEC.md`
-  §9.2/§7.4, a regra para o parâmetro opcional de restrição (decisão do Escopo §3),
-  para que `listar(filtros, usuarioId?)` deixe de ser ambíguo.
+- **Restrição de escopo via DTO** — confirmar (sem duplicar a spec 48) que `SYSTEM.SPEC.md`
+  §7.2/§16 #21 já deixam inequívoco que o parâmetro de restrição de escopo também é DTO
+  (`DemandaAcessoFiltrarDto`), não primitivo — o carve-out foi descartado pela decisão
+  "DTO em tudo".
 
 ---
 
@@ -92,8 +124,10 @@ documentação que o padrão é único), mas a **alteração de código de execu
 2. Checagem negativa: `alterar` e `listarAtribuidas` **não** recebem primitivos.
 3. `DemandaInternoAlterarDto` expõe os **onze** campos (incl. `demandaPaiId`) + `id`; o
    nome tem o verbo `Alterar` no fim (não `DemandaAlterarInternoDto`).
-4. Para a opção (a): `listar` não recebe `usuarioId?: number` primitivo. Para a (b): o
-   carve-out está escrito no SPEC.
+4. `listar` recebe `restricao?: DemandaAcessoFiltrarDto` — **não** `usuarioId?: number`.
+5. Checagem negativa (boundary): nenhum método de `DemandaService` recebe `id`/`*Id`
+   primitivo; o `DemandaController` monta o DTO a partir de `@Param`/`@Query`. Os DTOs
+   novos (`DemandaConexaoExcluirDto`, `DemandaMembroRemoverDto`) têm o verbo no fim.
 
 ---
 

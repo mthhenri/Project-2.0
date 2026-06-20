@@ -30,36 +30,27 @@ diz como nomear DTOs de relatório/consulta-computada e value-objects. (Note que
 
 ## Escopo
 
-### 1. Definir a convenção (decisão obrigatória)
+### 1. Convenção definida (decisão tomada)
 
-Decidir e registrar **uma** regra para DTOs que **não** representam operação de CRUD sobre
-entidade. Opções:
-
-- **(a) Exceção documentada:** DTOs de **relatório/consulta computada** (módulos como
-  ponto) e **value-objects** (sub-estruturas reaproveitadas, como `Intervalo`) são
-  **isentos** do verbo no particípio; nomeiam-se pelo substantivo do conceito + `Dto`
-  (`PontoDiarioDto`, `PontoMensalDto`, `IntervaloDto`). → mantém os nomes atuais.
-- **(b) Aderência ao particípio:** renomear para a forma de saída consultada, ex.:
-  `PontoDiarioConsultadoDto`, `PontoMensalConsultadoDto` — e tratar `IntervaloDto` como
-  value-object isento (não há verbo natural).
-
-> **Recomendação:** opção (a) — é a que reflete a intenção e evita renomeações em cascata
-> (frontend `PontoService`, componentes de ponto). O essencial é **escrever a regra**.
+**Decisão:** opção (a) — DTOs de **relatório/consulta computada** (`Entidade + Recorte + Dto`,
+sem verbo) e **value-objects** (nome do conceito, sem entidade nem verbo) são isentos do
+verbo no particípio. **Os nomes atuais permanecem** (`PontoDiarioDto`, `PontoMensalDto`,
+`IntervaloDto`). A regra **já foi escrita** no `SYSTEM.SPEC.md` §5.1 e no `CONVENTIONS.md`
+(seção DTOs) — esta spec apenas confirma que não há rename a fazer.
 
 ### 2. Aplicar a decisão
 
-- Se **(a)**: nenhum rename — apenas a documentação (abaixo).
-- Se **(b)**: renomear os arquivos/classes, atualizar barrels (`shared/src/dtos/ponto/index.ts`),
-  `PontoService` (backend e frontend) e componentes consumidores; `IntervaloDto` permanece.
+- Nenhum rename — apenas garantir que a documentação (item abaixo) está consistente.
+  `PontoService` (backend/frontend) e componentes de ponto ficam intocados.
 
 ---
 
 ## Atualização de Documentação (obrigatória)
 
-- **`SYSTEM.SPEC.md` §5.1** e **`CONVENTIONS.md` (seção DTOs)** — acrescentar uma
-  subseção inequívoca **"DTOs de relatório e value-objects"** com a regra decidida no
-  Escopo §1 e exemplos ✅ (`PontoDiarioDto`, `IntervaloDto`) — fechando a lacuna para que
-  futuros DTOs de relatório não fiquem ambíguos.
+- **`SYSTEM.SPEC.md` §5.1** e **`CONVENTIONS.md` (seção DTOs)** — **já contêm** a subseção
+  "DTOs de relatório / consulta computada" e "value-objects" com a regra decidida e os
+  exemplos ✅ (`PontoDiarioDto`, `PontoMensalDto`, `IntervaloDto`). Esta spec apenas confirma
+  a consistência — a lacuna está fechada.
 
 ---
 

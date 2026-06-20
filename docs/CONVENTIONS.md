@@ -64,9 +64,17 @@ usuario-listagem.page.ts
   - `DemandaMembroAtribuirInternoDto` ❌ — verbo no meio do complemento
   - `tag interno` + `remover` → `DemandaTagInternoRemoverDto` ✅
 
+**DTOs de relatório / consulta computada** (não são CRUD, descrevem um recorte calculado) → `Entidade + Recorte + Dto`, **sem verbo**:
+- `PontoDiarioDto`, `PontoMensalDto` — o DTO de parâmetros de entrada, se houver, segue o padrão normal (`PontoDiarioConsultarDto`)
+
+**Value-objects / sub-estruturas** (sem entidade nem ciclo de vida, só agrupam campos) → nome do conceito, **sem entidade nem verbo**:
+- `IntervaloDto` — `{ inicioData, fimData, duracaoMinutos }`
+
 **Regras adicionais:**
 - Toda recuperação individual usa `EntidadeRecuperarDto { id: number }` — nunca primitivo
 - Toda operação usa DTO mesmo que tenha um único campo — zero primitivos em assinaturas
+- O `id` de `@Param`/`@Query` é injetado no DTO **pela controller** — service e repository nunca recebem `id`/`*Id` solto
+- `alterar` segue a mesma regra de `recuperar`: id dentro do DTO (`EntidadeInternoAlterarDto`), nunca `alterar(id, dados)`
 - Nenhum DTO pode ser alias ou re-export de outro — cada um define os próprios campos
 
 **Localização:** sempre em `shared/src/dtos/[modulo]/` — nunca dentro de `backend/` ou `frontend/`
@@ -147,7 +155,7 @@ cor VARCHAR(7) NOT NULL DEFAULT '#6366f1'       -- DEFAULT proibido
 **Nomes:**
 - Tabelas: singular português — `usuario`, `demanda`, `dia_nao_util`
 - Colunas de negócio: snake_case português — `nome_completo`, `horas_estimadas`
-- Colunas BaseEntity: snake_case inglês — `is_deleted`, `created_at`, `updated_at`
+- Colunas BaseEntity: snake_case inglês — `is_deleted`, `created_date`, `updated_date`, `deleted_date`
 - Hierarquias e grafos: CTEs recursivos do PostgreSQL
 
 ---
@@ -155,11 +163,21 @@ cor VARCHAR(7) NOT NULL DEFAULT '#6366f1'       -- DEFAULT proibido
 ## Camadas — Regras Rápidas
 
 ### Controller → burra
-Só expõe endpoint e repassa. Sem if, sem try/catch, sem lógica:
+Só expõe endpoint e repassa. Sem if, sem try/catch, sem lógica de negócio. A **única microinteligência** permitida é montar o DTO — injetar o `id` de `@Param`/`@Query` no DTO para a service nunca receber primitivo:
 ```typescript
 @Post()
 criar(@Body() dto: UsuarioCriarDto) {
-  return this.usuarioService.criar(dto);   // apenas isso
+  return this.usuarioService.criar(dto);              // apenas isso
+}
+
+@Get(':id')
+recuperar(@Param('id', ParseIntPipe) id: number, @ActiveUser() usuarioAtivo: JwtPayload) {
+  return this.usuarioService.recuperar({ id }, usuarioAtivo);   // id entra no DTO
+}
+
+@Put(':id')
+alterar(@Param('id', ParseIntPipe) id: number, @Body() dto: UsuarioAlterarDto) {
+  return this.usuarioService.alterar({ ...dto, id });          // id mesclado ao corpo
 }
 ```
 
@@ -266,6 +284,8 @@ var(--p-primary-600)  // ícone/texto ativo, títulos em destaque
 | `style=""` inline no HTML | SCSS ou classe Tailwind |
 | Seletor de ID em SCSS (`#elemento`) | Classe BEM ou Tailwind |
 | Primitivo como parâmetro de método (`id: number`, `login: string`) | DTO, mesmo que tenha um único campo |
+| `id` de `@Param` repassado solto à service (`service.alterar(id, dto)`) | Controller injeta no DTO: `service.alterar({ ...dto, id })` |
+| `repository.alterar(id: number, dados)` — primitivo no `alterar` | `alterar(dto: EntidadeInternoAlterarDto)` — id dentro do DTO, como `recuperar(dto)` |
 | `existe*` em nome de método | `validar*` (ex: `validarLogin`, `validarNome`, `validarCodigo`) |
 | DTO como alias ou re-export de outro DTO | Cada DTO define seus próprios campos explicitamente |
 | `Atualizar`/`Atualizado` em DTO ou método | `Alterar`/`Alterado` |

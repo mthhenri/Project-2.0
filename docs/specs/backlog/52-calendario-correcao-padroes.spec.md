@@ -41,6 +41,17 @@ async alterar(id: number, dados: Partial<DiaNaoUtil>): Promise<DiaNaoUtilAlterad
 - Atualizar a chamada em `CalendarioService.alterar` (`backend/src/modules/calendario/services/calendario.service.ts:62`).
 - Manter o JSDoc.
 
+### Boundary controller→service DTO-only (decisão da spec 48)
+
+A `CalendarioService` recebe o `id` como primitivo em `recuperar(id)`, `alterar(id, dto)`
+e `excluir(id)` (`calendario.service.ts:47,62,84`). Pela decisão **DTO em tudo** (spec 48 §3):
+
+- `CalendarioService`: `recuperar(dto: CalendarioRecuperarDto)`,
+  `alterar(dto: CalendarioInternoAlterarDto)`, `excluir(dto: CalendarioRecuperarDto)`.
+- `CalendarioController` (`calendario.controller.ts:69,81,94`): monta o DTO de `@Param('id')`
+  — `recuperar({ id })`, `alterar({ ...dto, id })`, `excluir({ id })`.
+- Reutilizar o DTO `{ id }` de recuperação para recuperar e excluir. Sem mudança de regra/SQL.
+
 ---
 
 ## Atualização de Documentação (obrigatória)

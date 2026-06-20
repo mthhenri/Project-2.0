@@ -87,20 +87,32 @@ async alterar(id: number, dados: {
   (`alterarSenha(dto: UsuarioSenhaInternoAlterarDto)`).
 - Sem mudança de campos nem de comportamento — apenas o nome.
 
-### 3. Reconciliação documental §7.2 × §16 #21 (cross-cutting — ver `docs/AUDITORIA.md` §5)
+### 3. Boundary controller→service DTO-only (decisão da reconciliação §7.2 × §16 #21)
 
-As services de CRUD recebem o `id` como primitivo (`recuperar(id)`, `alterar(id, dto)`,
-`excluir(id)`, `alterarSenha(id, dto)`), seguindo o **exemplo de controller do §7.2**,
-que contradiz o **§16 #21**. Esta spec **decide e documenta** a regra de forma
-inequívoca (item obrigatório abaixo). A aplicação do que for decidido às assinaturas
-de service de todos os módulos pode ser feita aqui (para usuario) e referenciada pelas
-specs 49–53; **não reabrir** a discussão em cada uma.
+**Decisão tomada (cross-cutting — `docs/AUDITORIA.md` §5):** padronizar **DTO em tudo**.
+Service e repository **nunca** recebem `id`/`*Id` primitivo; o controller é o único ponto
+autorizado a montar o DTO — ao extrair `@Param('id')` (ou `@Query`), injeta o id no DTO
+antes de repassar. Objetos de contexto (`usuarioAtivo: JwtPayload` de `@ActiveUser()`)
+**não** são primitivos e permanecem como parâmetro próprio. O §7.2, §7.4 e §16 #21 do
+`SYSTEM.SPEC.md` já foram reescritos para refletir isto (esta spec apenas aplica ao código
+de usuario). As specs 49–53 e 56 aplicam o mesmo padrão aos seus módulos referenciando
+esta decisão — **não reabrir** a discussão em cada uma.
 
-> Decisão recomendada (a confirmar na implementação): o boundary **service** e
-> **repository** não recebe `id` primitivo; o controller, ao extrair `@Param('id')`,
-> monta o `EntidadeRecuperarDto`/`EntidadeInternoAlterarDto`. O §7.2 deve ser reescrito
-> para refletir isso. Caso se decida o contrário (carve-out para o `id` de `@Param`),
-> documentar explicitamente o carve-out no §16 #21.
+As services de CRUD de usuario recebem o `id` como primitivo:
+`recuperar(id, usuarioAtivo)`, `alterar(id, dto, usuarioAtivo)`, `excluir(id)`,
+`alterarSenha(id, dto)` (`backend/src/modules/usuario/services/usuario.service.ts:75,94,115,131`).
+
+**Correção esperada (usuario):**
+- `UsuarioService`:
+  - `recuperar(dto: UsuarioRecuperarDto, usuarioAtivo)` — lê `dto.id`.
+  - `alterar(dto: UsuarioInternoAlterarDto, usuarioAtivo)` — o mesmo DTO interno do item §1; `dto.id` é o alvo.
+  - `excluir(dto: UsuarioRecuperarDto)` — reutiliza `{ id }`.
+  - `alterarSenha(dto: UsuarioSenhaInternoAlterarDto)` — id dentro do DTO (item §2).
+- `UsuarioController` (`backend/src/modules/usuario/controllers/usuario.controller.ts:124,148,172,192`):
+  monta o DTO a partir de `@Param('id')` — `recuperar({ id }, usuarioAtivo)`,
+  `alterar({ ...dto, id }, usuarioAtivo)`, `excluir({ id })`,
+  `alterarSenha({ ...dto, id })`. Nenhuma outra lógica.
+- Sem mudança de validação, regra ou SQL — apenas o formato da assinatura.
 
 ---
 
@@ -115,9 +127,12 @@ specs 49–53; **não reabrir** a discussão em cada uma.
    `EntidadeInternoAlterarDto` ✅ / `EntidadeAlterarInternoDto` ❌ está coberto pelos
    exemplos do §5 (linhas 149-155); se necessário, acrescentar o caso do qualificador
    `Interno` **sem** outro complemento (`UsuarioInternoAlterarDto`).
-4. **Reconciliação §7.2 × §16 #21** — reescrever o exemplo de controller do **§7.2**
-   e/ou o texto do **§16 #21** de modo que deixem de se contradizer, conforme a decisão
-   tomada no Escopo §3. Registrar a decisão em `docs/CONTEXT.md` (seção "Decisões Tomadas").
+4. **Reconciliação §7.2 × §16 #21** — **já aplicada** no `SYSTEM.SPEC.md` (§7.2 reescrito
+   com a microinteligência do controller, §7.4 com o par `alterar(dto)` ✅/❌, §16 #21
+   esclarecido) e no `CONVENTIONS.md` (exemplos de controller/service + linhas na tabela
+   de proibições). Resta **registrar a decisão em `docs/CONTEXT.md`** (seção "Decisões
+   Tomadas"): "DTO em tudo — controller injeta o `id` de `@Param`/`@Query` no DTO; service
+   e repository nunca recebem primitivo".
 
 ---
 
@@ -132,6 +147,9 @@ specs 49–53; **não reabrir** a discussão em cada uma.
    `id` — o `alterar` continua podendo gravar `status` (sem regressão).
 6. Nenhum DTO de usuario tem o verbo no meio do complemento: `grep -r "AlterarInternoDto\|AlterarSenhaInternoDto" shared/src/dtos/usuario` não retorna nada.
 7. `SYSTEM.SPEC.md §7.2` e `§16 #21` **não se contradizem** após a edição.
+8. Checagem negativa (boundary controller→service): nenhum método de `UsuarioService`
+   recebe `id: number` solto — `recuperar`/`alterar`/`excluir`/`alterarSenha` recebem DTO.
+   O `UsuarioController` monta o DTO a partir de `@Param('id')`; nenhuma outra lógica.
 
 ---
 
