@@ -7,7 +7,11 @@ da **task 44** (`docs/AUDITORIA.md` §4.2): primitivo `id` + `Partial<Projeto>` 
 assinatura de `ProjetoRepository.alterar`. Sem mudança de comportamento.
 
 > **Referência cruzada:** task 44 · `docs/AUDITORIA.md` §4.2.
-> **Padrão de referência conforme:** `ExecucaoRepository.alterar(dto: ExecucaoAlterarInternoDto)`.
+> **Padrão estrutural (param único DTO):** `ExecucaoRepository.alterar(dto)`.
+> **Padrão de nomenclatura (verbo no fim — SPEC §5, linhas 149-155):** complemento
+> `Interno` **antes** do verbo `Alterar` → `ProjetoInternoAlterarDto`. ⚠️ **Não** usar
+> `ProjetoAlterarInternoDto` (verbo no meio do complemento — proibido pelo §5; é o erro
+> que `ExecucaoAlterarInternoDto` comete, corrigido na spec 56).
 > **Reconciliação documental §7.2 × §16 #21:** decidida na spec `48-usuario-correcao-padroes` (não reabrir).
 
 ---
@@ -33,23 +37,26 @@ async alterar(id: number, dados: Partial<Projeto>): Promise<ProjetoAlteradoDto> 
 ```
 
 **Correção esperada:**
-- Criar `shared/src/dtos/projeto/ProjetoAlterarInternoDto.ts`:
+- Criar `shared/src/dtos/projeto/ProjetoInternoAlterarDto.ts`:
   ```typescript
-  export class ProjetoAlterarInternoDto {
+  export class ProjetoInternoAlterarDto {
     id: number;
     nome?: string;
-    codigo?: string;
     cor?: string;
     status?: ProjetoStatusEnum;
     inicioData?: string | null;
     previsaoFimData?: string | null;
   }
   ```
-  (espelhar exatamente os campos hoje lidos do `Partial<Projeto>` no SET dinâmico).
+  > ⚠️ Espelhar **exatamente** os campos hoje lidos no SET dinâmico
+  > (`projeto.repository.ts:193-211`): `nome, cor, status, inicioData, previsaoFimData`.
+  > **`codigo` NÃO entra** — o sistema proíbe alterá-lo ("Código não pode ser alterado",
+  > `projeto.service.ts:114`; o SET do `alterar` não toca `codigo`). Incluí-lo no DTO
+  > anunciaria uma capacidade inexistente.
 - Exportar no barrel `shared/src/dtos/projeto/index.ts`.
-- Mudar a assinatura para `async alterar(dto: ProjetoAlterarInternoDto): Promise<ProjetoAlteradoDto>`,
+- Mudar a assinatura para `async alterar(dto: ProjetoInternoAlterarDto): Promise<ProjetoAlteradoDto>`,
   lendo `dto.id` no `WHERE` e os demais campos no SET (SQL inalterado).
-- Atualizar a chamada em `ProjetoService.alterar` (`backend/src/modules/projeto/services/projeto.service.ts:115`).
+- Atualizar a chamada em `ProjetoService.alterar` (`backend/src/modules/projeto/services/projeto.service.ts:132`).
 - Manter o JSDoc.
 
 ---
@@ -59,7 +66,7 @@ async alterar(id: number, dados: Partial<Projeto>): Promise<ProjetoAlteradoDto> 
 - **`CONVENTIONS.md`** — confirmar que a linha "primitivo no `alterar`" foi adicionada à
   tabela de proibições (caso a spec 48 já a tenha incluído, **não duplicar**; caso esta
   spec seja implementada antes, adicioná-la). Acrescentar, na seção SQL/Camadas, o
-  exemplo concreto ❌ `alterar(id, Partial<Projeto>)` / ✅ `alterar(dto: ProjetoAlterarInternoDto)`
+  exemplo concreto ❌ `alterar(id, Partial<Projeto>)` / ✅ `alterar(dto: ProjetoInternoAlterarDto)`
   reforçando que o repositório nunca recebe `Partial<Model>` nem primitivo.
 
 ---
@@ -69,6 +76,8 @@ async alterar(id: number, dados: Partial<Projeto>): Promise<ProjetoAlteradoDto> 
 1. `npm run build --workspace=shared` e `npm run build --workspace=backend` — sem erros.
 2. Checagem negativa: `ProjetoRepository.alterar` **não** recebe `id: number` nem `Partial<Projeto>`.
 3. Checagem negativa: nenhum método de `projeto.repository.ts` recebe primitivo em assinatura pública.
+4. `ProjetoInternoAlterarDto` **não** declara `codigo` (capacidade inexistente) e o nome
+   tem o verbo `Alterar` no fim (não `ProjetoAlterarInternoDto`).
 
 ---
 

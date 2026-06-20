@@ -7,7 +7,8 @@ da **task 44** (`docs/AUDITORIA.md` §4.5): primitivo `id` + `Partial<DiaNaoUtil
 assinatura de `CalendarioRepository.alterar`. Sem mudança de comportamento.
 
 > **Referência cruzada:** task 44 · `docs/AUDITORIA.md` §4.5.
-> **Padrão de referência conforme:** `ExecucaoRepository.alterar(dto: ExecucaoAlterarInternoDto)`.
+> **Padrão estrutural (param único DTO):** `ExecucaoRepository.alterar(dto)`.
+> **Padrão de nomenclatura (verbo no fim — SPEC §5, L149-155):** complemento `Interno` antes do verbo `Alterar` → `CalendarioInternoAlterarDto`. ⚠️ Não usar `CalendarioAlterarInternoDto` (é o erro que `ExecucaoAlterarInternoDto` comete — corrigido na spec 56).
 > **Reconciliação documental §7.2 × §16 #21:** decidida na spec `48-usuario-correcao-padroes` (não reabrir).
 
 ---
@@ -32,10 +33,10 @@ async alterar(id: number, dados: Partial<DiaNaoUtil>): Promise<DiaNaoUtilAlterad
 ```
 
 **Correção esperada:**
-- Criar `shared/src/dtos/calendario/CalendarioAlterarInternoDto.ts` (`id` + campos hoje
+- Criar `shared/src/dtos/calendario/CalendarioInternoAlterarDto.ts` (`id` + campos hoje
   lidos do `Partial<DiaNaoUtil>` no SET dinâmico: `descricao?`, `tipo?`, `duracao?`,
   `recorrente?`). Exportar no barrel `shared/src/dtos/calendario/index.ts`.
-- `async alterar(dto: CalendarioAlterarInternoDto): Promise<DiaNaoUtilAlteradoDto>` —
+- `async alterar(dto: CalendarioInternoAlterarDto): Promise<DiaNaoUtilAlteradoDto>` —
   `dto.id` no `WHERE`, demais campos no SET (SQL inalterado).
 - Atualizar a chamada em `CalendarioService.alterar` (`backend/src/modules/calendario/services/calendario.service.ts:62`).
 - Manter o JSDoc.
@@ -46,14 +47,14 @@ async alterar(id: number, dados: Partial<DiaNaoUtil>): Promise<DiaNaoUtilAlterad
 
 - **`CONVENTIONS.md` / `SYSTEM.SPEC.md` §7.4** — reforçar (sem duplicar o que specs
   anteriores já tenham inserido) o exemplo ❌ `alterar(id, Partial<DiaNaoUtil>)` /
-  ✅ `alterar(dto: CalendarioAlterarInternoDto)`.
+  ✅ `alterar(dto: CalendarioInternoAlterarDto)`.
 
 ---
 
 ## Verificação
 
 1. `npm run build --workspace=shared` e `npm run build --workspace=backend` — sem erros.
-2. Checagem negativa: `CalendarioRepository.alterar` **não** recebe `id: number` nem `Partial<DiaNaoUtil>`.
+2. Checagem negativa: `CalendarioRepository.alterar` **não** recebe `id: number` nem `Partial<DiaNaoUtil>`; o DTO chama-se `CalendarioInternoAlterarDto` (verbo no fim).
 3. Checagem negativa: nenhum método de `calendario.repository.ts` recebe primitivo em assinatura pública.
 
 ---

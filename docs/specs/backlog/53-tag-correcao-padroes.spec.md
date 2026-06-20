@@ -7,7 +7,8 @@ Corrigir o desvio de conformidade do módulo **tag** identificado pela auditoria
 de `TagRepository.alterar`. Sem mudança de comportamento.
 
 > **Referência cruzada:** task 44 · `docs/AUDITORIA.md` §4.6.
-> **Padrão de referência conforme:** `ExecucaoRepository.alterar(dto: ExecucaoAlterarInternoDto)`.
+> **Padrão estrutural (param único DTO):** `ExecucaoRepository.alterar(dto)`.
+> **Padrão de nomenclatura (verbo no fim — SPEC §5, L149-155):** complemento `Interno` antes do verbo `Alterar` → `TagInternoAlterarDto`. ⚠️ Não usar `TagAlterarInternoDto` (é o erro que `ExecucaoAlterarInternoDto` comete — corrigido na spec 56).
 > **Reconciliação documental §7.2 × §16 #21:** decidida na spec `48-usuario-correcao-padroes` (não reabrir).
 
 ---
@@ -32,9 +33,9 @@ async alterar(id: number, dados: Partial<Tag>): Promise<TagAlteradaDto> { ... }
 ```
 
 **Correção esperada:**
-- Criar `shared/src/dtos/tag/TagAlterarInternoDto.ts` (`id` + campos hoje lidos do
+- Criar `shared/src/dtos/tag/TagInternoAlterarDto.ts` (`id` + campos hoje lidos do
   `Partial<Tag>` no SET dinâmico: `nome?`, `cor?`). Exportar no barrel `shared/src/dtos/tag/index.ts`.
-- `async alterar(dto: TagAlterarInternoDto): Promise<TagAlteradaDto>` — `dto.id` no
+- `async alterar(dto: TagInternoAlterarDto): Promise<TagAlteradaDto>` — `dto.id` no
   `WHERE`, demais campos no SET (SQL inalterado).
 - Atualizar a chamada em `TagService.alterar` (`backend/src/modules/tag/services/tag.service.ts:63`).
 - Manter o JSDoc.
@@ -45,14 +46,14 @@ async alterar(id: number, dados: Partial<Tag>): Promise<TagAlteradaDto> { ... }
 
 - **`CONVENTIONS.md` / `SYSTEM.SPEC.md` §7.4** — reforçar (sem duplicar o que specs
   anteriores já tenham inserido) o exemplo ❌ `alterar(id, Partial<Tag>)` /
-  ✅ `alterar(dto: TagAlterarInternoDto)`.
+  ✅ `alterar(dto: TagInternoAlterarDto)`.
 
 ---
 
 ## Verificação
 
 1. `npm run build --workspace=shared` e `npm run build --workspace=backend` — sem erros.
-2. Checagem negativa: `TagRepository.alterar` **não** recebe `id: number` nem `Partial<Tag>`.
+2. Checagem negativa: `TagRepository.alterar` **não** recebe `id: number` nem `Partial<Tag>`; o DTO chama-se `TagInternoAlterarDto` (verbo no fim).
 3. Checagem negativa: nenhum método de `tag.repository.ts` recebe primitivo em assinatura pública.
 
 ---

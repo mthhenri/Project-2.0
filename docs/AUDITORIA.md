@@ -41,17 +41,17 @@ e uma contradição interna do SPEC).
 | ponto        | 3 | B | ✅ `54-ponto-correcao-padroes` |
 | core/database | 1 | A | ✅ `55-core-correcao-padroes` |
 | **Cross-cutting** (doc) | 1 | C/D | tratado dentro de `48` (ver §5) |
-| execucao     | 0 | — | ❌ (repositório é a **referência conforme**) |
+| execucao     | 2 | A | ✅ `56-execucao-correcao-padroes` — **errata, ver §8** |
 | autenticacao | 0 | — | ❌ |
 | assistente   | 0 | — | ❌ |
 | **frontend** (todos os módulos) | 0 | — | ❌ |
-| **Total** | **12 + 1 cross-cutting** | | **8 specs (48–55)** |
+| **Total** | **15 + 1 cross-cutting** (revisado — ver §8) | | **9 specs (48–56)** |
 
 ## 3. Sumário por Categoria
 
 | Categoria | Descrição | Achados |
 |---|---|---:|
-| A — Nomenclatura e Linguagem | conceito genérico/arquitetural em português | 1 |
+| A — Nomenclatura e Linguagem | conceito genérico/arquitetural em português; **+ verbo no meio do complemento em DTO interno (errata §8)** | 4 |
 | B — DTOs | padrão de nome de DTO de saída / value-object | 3 |
 | C/D — Controllers/Services | contradição documental §7.2 × §16 #21 (cross-cutting) | 1 |
 | E — Repositories e SQL | primitivo em assinatura de método de repositório | 7 |
@@ -152,9 +152,11 @@ referenciada pelas demais specs de backend.
 
 Transparência sobre o que **passou** na varredura — para não gerar ruído no backlog:
 
-- **execucao** — `ExecucaoRepository.alterar(dto: ExecucaoAlterarInternoDto)` é a
-  **referência conforme** do padrão DTO-only no boundary de repositório. O `id`
-  primitivo na service é o item cross-cutting do §5, não um desvio do módulo.
+- **execucao** — `ExecucaoRepository.alterar(dto)` é a **referência estrutural** do
+  padrão DTO-only no boundary de repositório. ⚠️ **Correção (errata §8):** os *nomes*
+  `ExecucaoAlterarInternoDto`/`ExecucaoEncerrarInternoDto` **violam** o §5 (verbo antes de
+  `Interno`); execucao **não** é "0 achados" — ver spec `56`. O `id` primitivo na service
+  é o item cross-cutting do §5, não um desvio do módulo.
 - **autenticacao / assistente** — sem CRUD de entidade; assinaturas já em DTO; sem SQL fora de padrão.
 - **frontend (todos os módulos)** — varredura **negativa** confirmada em:
   `NgModule` (0), `Subject`/`BehaviorSubject` (0), `ngModel`/template-driven (0),
@@ -201,3 +203,59 @@ livre do backlog (48). Cada uma fecha o ciclo com **reforço documental** obriga
 | `docs/specs/backlog/53-tag-correcao-padroes.spec.md`        | tag        | `repository.alterar` → DTO |
 | `docs/specs/backlog/54-ponto-correcao-padroes.spec.md`      | ponto      | convenção de nome para DTOs de relatório/value-object |
 | `docs/specs/backlog/55-core-correcao-padroes.spec.md`       | core/db    | renomear `fn_atualizar_updated_date` |
+| `docs/specs/backlog/56-execucao-correcao-padroes.spec.md`   | execucao   | renomear DTOs internos p/ verbo-no-fim (errata §8) |
+
+---
+
+## 8. Errata (revisão pós-auditoria — 2026-06-20)
+
+Revisão dirigida das specs geradas (48–55) contra o código real expôs **erros da própria
+auditoria** na categoria A (Nomenclatura), corrigidos aqui.
+
+### 8.1 Regra de nomenclatura §5 não aplicada a DTOs internos
+
+`SYSTEM.SPEC.md` §5 (linhas 149-155) é explícito: **"o complemento inteiro vem antes do
+verbo, sem exceção; qualificadores como `Interno` fazem parte do complemento"** — com o
+par ❌ `DemandaMembroAtribuirInternoDto` / ✅ `DemandaMembroInternoAtribuirDto`.
+
+A auditoria **não aplicou** essa regra aos DTOs internos e ainda **propôs a ordem errada**
+(`EntidadeAlterarInternoDto`) nas specs 48-53, copiando-a de um exemplar que **ele próprio
+viola a regra**.
+
+**Achados de nomenclatura omitidos (categoria A):**
+
+| Arquivo | Atual (❌) | Correto (✅) | Spec |
+|---|---|---|---|
+| `shared/src/dtos/execucao/ExecucaoAlterarInternoDto.ts`    | `ExecucaoAlterarInternoDto`    | `ExecucaoInternoAlterarDto`    | 56 |
+| `shared/src/dtos/execucao/ExecucaoEncerrarInternoDto.ts`   | `ExecucaoEncerrarInternoDto`   | `ExecucaoInternoEncerrarDto`   | 56 |
+| `shared/src/dtos/usuario/UsuarioAlterarSenhaInternoDto.ts` | `UsuarioAlterarSenhaInternoDto`| `UsuarioSenhaInternoAlterarDto`| 48 |
+
+Os DTOs internos de demanda (`DemandaMembroInternoAtribuirDto`, `DemandaTagInternoRemoverDto`,
+etc.) já estavam **corretos** — são os exemplares de referência de nomenclatura.
+
+### 8.2 execucao não é "0 achados"
+
+O §2 e o §6 classificaram `execucao` como conforme ("0 achados / referência conforme").
+**Correção:** execucao tem **2 achados de nomenclatura** (§8.1) e gera a spec **56**.
+Permanece a referência **estrutural** (boundary DTO-only), não a de **nomenclatura**.
+
+### 8.3 Specs 48-53 corrigidas
+
+O nome proposto nas specs 48-53 foi corrigido de `EntidadeAlterarInternoDto` (❌) para
+`EntidadeInternoAlterarDto` (✅). Na mesma passada, corrigiram-se listas de campo que
+divergiam do SET real (defeito independente da nomenclatura):
+
+- **48 usuario** — `UsuarioInternoAlterarDto` passou a incluir `status?` (estava omitido).
+- **49 projeto** — `ProjetoInternoAlterarDto` deixou de incluir `codigo?` (campo **não**
+  alterável — "Código não pode ser alterado", `projeto.service.ts:114`).
+- **50 demanda** — `DemandaInternoAlterarDto` passou a incluir `demandaPaiId?` (reparenting,
+  estava omitido).
+
+### 8.4 Tallies revisados
+
+| | Original | Revisado |
+|---|---:|---:|
+| Achados totais | 12 (+1 cross-cutting) | **15 (+1 cross-cutting)** |
+| Categoria A (nomenclatura) | 1 | **4** |
+| Specs geradas | 8 (48–55) | **9 (48–56)** |
+| Módulos "0 achados" | inclui execucao | **execucao sai da lista** |

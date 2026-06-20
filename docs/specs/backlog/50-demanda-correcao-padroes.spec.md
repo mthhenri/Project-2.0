@@ -7,7 +7,11 @@ da **task 44** (`docs/AUDITORIA.md` §4.3): primitivos em assinaturas de
 `DemandaRepository`. Sem mudança de comportamento.
 
 > **Referência cruzada:** task 44 · `docs/AUDITORIA.md` §4.3.
-> **Padrão de referência conforme:** `ExecucaoRepository.alterar(dto: ExecucaoAlterarInternoDto)`.
+> **Padrão estrutural (param único DTO):** `ExecucaoRepository.alterar(dto)`.
+> **Padrão de nomenclatura (verbo no fim — SPEC §5, linhas 149-155):** complemento
+> `Interno` **antes** do verbo `Alterar` → `DemandaInternoAlterarDto` (como os já
+> conformes `DemandaMembroInternoAtribuirDto` / `DemandaTagInternoRemoverDto`).
+> ⚠️ **Não** usar `DemandaAlterarInternoDto`.
 > **Reconciliação documental §7.2 × §16 #21:** decidida na spec `48-usuario-correcao-padroes` (não reabrir).
 
 ---
@@ -30,13 +34,16 @@ parâmetro primitivo de restrição de escopo em `listar`.
 **Situação atual:** `async alterar(id: number, dados: Partial<Demanda>): Promise<DemandaRecuperadaDto>`
 
 **Correção esperada:**
-- Criar `shared/src/dtos/demanda/DemandaAlterarInternoDto.ts` (`id` + campos hoje lidos
-  do `Partial<Demanda>` no SET dinâmico: `nome?`, `descricaoTecnica?`, `descricaoCliente?`,
-  `documentacao?`, `horasEstimadas?`, `prioridade?`, `status?`, `isEstrutural?`,
-  `previsaoFimData?`, `ordemExibicao?`). Exportar no barrel.
-- `async alterar(dto: DemandaAlterarInternoDto): Promise<DemandaRecuperadaDto>` — `dto.id`
+- Criar `shared/src/dtos/demanda/DemandaInternoAlterarDto.ts` (`id` + os **onze** campos
+  hoje lidos do `Partial<Demanda>` no SET dinâmico, `demanda.repository.ts:295-338`:
+  `demandaPaiId?`, `nome?`, `descricaoTecnica?`, `descricaoCliente?`, `documentacao?`,
+  `horasEstimadas?`, `prioridade?`, `status?`, `isEstrutural?`, `previsaoFimData?`,
+  `ordemExibicao?`). Exportar no barrel.
+  > ⚠️ **Não omitir `demandaPaiId`** — é o reparenting da demanda, validado em
+  > `demanda.service.ts:243-257` e gravado no SET (`:295-298`). Omiti-lo é regressão.
+- `async alterar(dto: DemandaInternoAlterarDto): Promise<DemandaRecuperadaDto>` — `dto.id`
   no `WHERE`, demais campos no SET (SQL inalterado).
-- Atualizar a chamada em `DemandaService.alterar` (`demanda.service.ts:205`).
+- Atualizar a chamada em `DemandaService.alterar` (`demanda.service.ts:259`).
 
 ### 2. `DemandaRepository.listarAtribuidas` — eliminar primitivo `usuarioId`
 
@@ -46,9 +53,9 @@ parâmetro primitivo de restrição de escopo em `listar`.
 
 **Correção esperada:**
 - Criar `shared/src/dtos/demanda/DemandaAtribuidasListarDto.ts` (`{ usuarioId: number }`),
-  exportar no barrel.
+  exportar no barrel. (Nome já conforme: complemento `Atribuidas` + verbo `Listar` no fim.)
 - `async listarAtribuidas(dto: DemandaAtribuidasListarDto): Promise<DemandaAtribuidaDto[]>`.
-- Atualizar a chamada em `DemandaService.listarAtribuidas` (`demanda.service.ts:156`).
+- Atualizar a chamada em `DemandaService.listarAtribuidas` (`demanda.service.ts:159`).
 
 ### 3. `DemandaRepository.listar` — parâmetro de restrição de escopo primitivo
 
@@ -72,7 +79,7 @@ documentação que o padrão é único), mas a **alteração de código de execu
 ## Atualização de Documentação (obrigatória)
 
 - **`CONVENTIONS.md` / `SYSTEM.SPEC.md` §7.4** — reforçar (sem duplicar o que a spec 48/49
-  já tiver inserido) o exemplo ❌ `alterar(id, Partial<Demanda>)` / ✅ `alterar(dto: DemandaAlterarInternoDto)`.
+  já tiver inserido) o exemplo ❌ `alterar(id, Partial<Demanda>)` / ✅ `alterar(dto: DemandaInternoAlterarDto)`.
 - **Carve-out de restrição de escopo** — documentar de forma inequívoca, no `SYSTEM.SPEC.md`
   §9.2/§7.4, a regra para o parâmetro opcional de restrição (decisão do Escopo §3),
   para que `listar(filtros, usuarioId?)` deixe de ser ambíguo.
@@ -83,7 +90,9 @@ documentação que o padrão é único), mas a **alteração de código de execu
 
 1. `npm run build --workspace=shared` e `npm run build --workspace=backend` — sem erros.
 2. Checagem negativa: `alterar` e `listarAtribuidas` **não** recebem primitivos.
-3. Para a opção (a): `listar` não recebe `usuarioId?: number` primitivo. Para a (b): o
+3. `DemandaInternoAlterarDto` expõe os **onze** campos (incl. `demandaPaiId`) + `id`; o
+   nome tem o verbo `Alterar` no fim (não `DemandaAlterarInternoDto`).
+4. Para a opção (a): `listar` não recebe `usuarioId?: number` primitivo. Para a (b): o
    carve-out está escrito no SPEC.
 
 ---

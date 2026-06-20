@@ -120,7 +120,7 @@
 
 **Correção de conformidade (lote gerado pela auditoria 44)** — specs no backlog, frutos de `docs/AUDITORIA.md`:
 
-- **48-usuario-correcao-padroes** — `UsuarioRepository.alterar` → DTO interno; **reconciliação documental §7.2 × §16 #21** (módulo canônico).
+- **48-usuario-correcao-padroes** — `UsuarioRepository.alterar` → `UsuarioInternoAlterarDto` (incl. `status?`); renomear `UsuarioAlterarSenhaInternoDto` → `UsuarioSenhaInternoAlterarDto`; **reconciliação documental §7.2 × §16 #21** (módulo canônico).
 - **49-projeto-correcao-padroes** — `ProjetoRepository.alterar(id, Partial<Projeto>)` → DTO interno.
 - **50-demanda-correcao-padroes** — `alterar` + `listarAtribuidas(usuarioId)` + `listar(filtros, usuarioId?)` → DTO/carve-out.
 - **51-atividade-correcao-padroes** — `AtividadeRepository.alterar(id, Partial<Atividade>)` → DTO interno.
@@ -128,8 +128,9 @@
 - **53-tag-correcao-padroes** — `TagRepository.alterar(id, Partial<Tag>)` → DTO interno.
 - **54-ponto-correcao-padroes** — convenção de nome para DTOs de relatório/value-object (`PontoDiarioDto`/`PontoMensalDto`/`IntervaloDto`) + documentação.
 - **55-core-correcao-padroes** — renomear `fn_atualizar_updated_date` → inglês (nova migration) + documentar naming de objetos genéricos de banco.
+- **56-execucao-correcao-padroes** — renomear DTOs internos `ExecucaoAlterarInternoDto`/`ExecucaoEncerrarInternoDto` → verbo-no-fim (errata `AUDITORIA.md` §8).
 
-> Cada spec referencia `docs/AUDITORIA.md` e a linha do achado, e inclui o passo obrigatório de **Atualização de Documentação** (fonte da verdade) para impedir recorrência. Padrão de referência das correções de assinatura: `ExecucaoRepository.alterar(dto: ExecucaoAlterarInternoDto)`.
+> Cada spec referencia `docs/AUDITORIA.md` e a linha do achado, e inclui o passo obrigatório de **Atualização de Documentação** (fonte da verdade) para impedir recorrência. Padrão **estrutural** das correções de assinatura: `ExecucaoRepository.alterar(dto)`; padrão de **nomenclatura** (verbo no fim, §5): `EntidadeInternoAlterarDto` — ver errata `docs/AUDITORIA.md` §8 (o nome `ExecucaoAlterarInternoDto` é, ele próprio, corrigido na spec 56).
 
 ---
 
