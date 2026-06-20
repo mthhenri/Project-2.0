@@ -39,6 +39,8 @@ import {
   DemandaGrafoRecuperarDto,
   DemandaConexaoListarDto,
   DemandaAtribuidaDto,
+  DemandaAtribuidasListarDto,
+  DemandaInternoAlterarDto,
 } from '@project20/shared';
 
 type DemandaCriarDados = Omit<Demanda, 'id' | 'isDeleted' | 'createdDate' | 'updatedDate' | 'deletedDate'>;
@@ -186,11 +188,11 @@ export class DemandaRepository extends BaseRepository<Demanda> {
 
   /**
    * Lista demandas de um projeto com paginação e filtros.
-   * Se usuarioId for fornecido, restringe às demandas às quais o usuário está atribuído.
+   * Se restricao for fornecida, restringe às demandas às quais o usuário está atribuído.
    */
   async listar(
     filtros: DemandaListarDto,
-    usuarioId?: number,
+    restricao?: DemandaAcessoFiltrarDto,
   ): Promise<{ itens: DemandaResumoDto[]; total: number }> {
     const pagina         = filtros.pagina ?? 1;
     const itensPorPagina = filtros.itensPorPagina ?? 20;
@@ -201,13 +203,13 @@ export class DemandaRepository extends BaseRepository<Demanda> {
     ];
 
     let joinDemandaUsuario = '';
-    if (usuarioId !== undefined) {
+    if (restricao !== undefined) {
       joinDemandaUsuario = `
         INNER JOIN demanda_usuario
           ON demanda_usuario.demanda_id = demanda.id
           AND demanda_usuario.usuario_id = :usuarioId
           AND demanda_usuario.is_deleted = false`;
-      parametros.usuarioId = usuarioId;
+      parametros.usuarioId = restricao.usuarioId;
     }
 
     if (filtros.status !== undefined) {
@@ -265,7 +267,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
    * Lista todas as demandas às quais o usuário está atribuído, em qualquer projeto,
    * já com o nome do projeto para exibição "Projeto - Demanda".
    */
-  async listarAtribuidas(usuarioId: number): Promise<DemandaAtribuidaDto[]> {
+  async listarAtribuidas(dto: DemandaAtribuidasListarDto): Promise<DemandaAtribuidaDto[]> {
     return this.executarConsulta<DemandaAtribuidaDto>(
       `SELECT demanda.id,
               demanda.nome,
@@ -281,60 +283,60 @@ export class DemandaRepository extends BaseRepository<Demanda> {
          AND projeto.is_deleted = false
        WHERE demanda.is_deleted = false
        ORDER BY projeto.nome ASC, demanda.nome ASC`,
-      { usuarioId },
+      { usuarioId: dto.usuarioId },
     );
   }
 
   /**
    * Altera campos da demanda e retorna o estado atualizado.
    */
-  async alterar(id: number, dados: Partial<Demanda>): Promise<DemandaRecuperadaDto> {
+  async alterar(dto: DemandaInternoAlterarDto): Promise<DemandaRecuperadaDto> {
     const setClauses: string[] = ['updated_date = NOW()'];
-    const parametros: Record<string, unknown> = { id };
+    const parametros: Record<string, unknown> = { id: dto.id };
 
-    if (dados.demandaPaiId !== undefined) {
+    if (dto.demandaPaiId !== undefined) {
       setClauses.push('demanda_pai_id = :demandaPaiId');
-      parametros.demandaPaiId = dados.demandaPaiId;
+      parametros.demandaPaiId = dto.demandaPaiId;
     }
-    if (dados.nome !== undefined) {
+    if (dto.nome !== undefined) {
       setClauses.push('nome = :nome');
-      parametros.nome = dados.nome;
+      parametros.nome = dto.nome;
     }
-    if (dados.descricaoTecnica !== undefined) {
+    if (dto.descricaoTecnica !== undefined) {
       setClauses.push('descricao_tecnica = :descricaoTecnica');
-      parametros.descricaoTecnica = dados.descricaoTecnica;
+      parametros.descricaoTecnica = dto.descricaoTecnica;
     }
-    if (dados.descricaoCliente !== undefined) {
+    if (dto.descricaoCliente !== undefined) {
       setClauses.push('descricao_cliente = :descricaoCliente');
-      parametros.descricaoCliente = dados.descricaoCliente;
+      parametros.descricaoCliente = dto.descricaoCliente;
     }
-    if (dados.documentacao !== undefined) {
+    if (dto.documentacao !== undefined) {
       setClauses.push('documentacao = :documentacao');
-      parametros.documentacao = dados.documentacao;
+      parametros.documentacao = dto.documentacao;
     }
-    if (dados.horasEstimadas !== undefined) {
+    if (dto.horasEstimadas !== undefined) {
       setClauses.push('horas_estimadas = :horasEstimadas');
-      parametros.horasEstimadas = dados.horasEstimadas;
+      parametros.horasEstimadas = dto.horasEstimadas;
     }
-    if (dados.prioridade !== undefined) {
+    if (dto.prioridade !== undefined) {
       setClauses.push('prioridade = :prioridade');
-      parametros.prioridade = dados.prioridade;
+      parametros.prioridade = dto.prioridade;
     }
-    if (dados.status !== undefined) {
+    if (dto.status !== undefined) {
       setClauses.push('status = :status');
-      parametros.status = dados.status;
+      parametros.status = dto.status;
     }
-    if (dados.isEstrutural !== undefined) {
+    if (dto.isEstrutural !== undefined) {
       setClauses.push('is_estrutural = :isEstrutural');
-      parametros.isEstrutural = dados.isEstrutural;
+      parametros.isEstrutural = dto.isEstrutural;
     }
-    if (dados.previsaoFimData !== undefined) {
+    if (dto.previsaoFimData !== undefined) {
       setClauses.push('previsao_fim_data = :previsaoFimData');
-      parametros.previsaoFimData = dados.previsaoFimData;
+      parametros.previsaoFimData = dto.previsaoFimData;
     }
-    if (dados.ordemExibicao !== undefined) {
+    if (dto.ordemExibicao !== undefined) {
       setClauses.push('ordem_exibicao = :ordemExibicao');
-      parametros.ordemExibicao = dados.ordemExibicao;
+      parametros.ordemExibicao = dto.ordemExibicao;
     }
 
     const resultado = await this.executarConsulta<DemandaRecuperadaDto>(

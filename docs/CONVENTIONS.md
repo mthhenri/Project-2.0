@@ -212,6 +212,8 @@ async alterar(id: number, dados: Partial<Projeto>): Promise<ProjetoAlteradoDto> 
 async alterar(dto: ProjetoInternoAlterarDto): Promise<ProjetoAlteradoDto> { ... }
 ```
 
+A regra vale para **todo** módulo: `alterar(id, Partial<Demanda>)` ❌ → `alterar(dto: DemandaInternoAlterarDto)` ✅, e assim por diante. O **parâmetro de restrição de escopo** de uma listagem também é DTO — não há carve-out para primitivo (decisão "DTO em tudo"): use `listar(filtros, restricao?: DemandaAcessoFiltrarDto)`, nunca `listar(filtros, usuarioId?: number)`.
+
 ---
 
 ## Imports do Shared

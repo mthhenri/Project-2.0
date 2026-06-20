@@ -65,7 +65,7 @@ export class DemandaController {
     @Query('projetoId', ParseIntPipe) projetoId: number,
     @ActiveUser() usuarioAtivo: JwtPayload,
   ) {
-    return this.demandaService.recuperarGrafo(projetoId, usuarioAtivo);
+    return this.demandaService.recuperarGrafo({ projetoId }, usuarioAtivo);
   }
 
   @ApiOperation({ summary: 'Recuperar árvore de descendentes de uma demanda' })
@@ -77,7 +77,7 @@ export class DemandaController {
     @Param('id', ParseIntPipe) id: number,
     @ActiveUser() usuarioAtivo: JwtPayload,
   ) {
-    return this.demandaService.recuperarArvore(id, usuarioAtivo);
+    return this.demandaService.recuperarArvore({ id }, usuarioAtivo);
   }
 
   @ApiOperation({ summary: 'Recuperar ancestrais de uma demanda (breadcrumb)' })
@@ -89,7 +89,7 @@ export class DemandaController {
     @Param('id', ParseIntPipe) id: number,
     @ActiveUser() usuarioAtivo: JwtPayload,
   ) {
-    return this.demandaService.recuperarAncestral(id, usuarioAtivo);
+    return this.demandaService.recuperarAncestral({ id }, usuarioAtivo);
   }
 
   @ApiOperation({ summary: 'Listar demandas às quais o usuário logado está atribuído (todos os projetos)' })
@@ -109,7 +109,7 @@ export class DemandaController {
     @Param('id', ParseIntPipe) id: number,
     @ActiveUser() usuarioAtivo: JwtPayload,
   ) {
-    return this.demandaService.recuperar(id, usuarioAtivo);
+    return this.demandaService.recuperar({ id }, usuarioAtivo);
   }
 
   @ApiOperation({ summary: 'Alterar demanda' })
@@ -124,7 +124,7 @@ export class DemandaController {
     @Body() dto: DemandaAlterarDto,
     @ActiveUser() usuarioAtivo: JwtPayload,
   ) {
-    return this.demandaService.alterar(id, dto, usuarioAtivo);
+    return this.demandaService.alterar({ ...dto, id }, usuarioAtivo);
   }
 
   @ApiOperation({ summary: 'Excluir demanda via soft delete (somente gestor)' })
@@ -135,7 +135,7 @@ export class DemandaController {
   @GestorOnly()
   @Delete(':id')
   excluir(@Param('id', ParseIntPipe) id: number) {
-    return this.demandaService.excluir(id);
+    return this.demandaService.excluir({ id });
   }
 
   @ApiOperation({ summary: 'Criar conexão entre demandas com prevenção de ciclos' })
@@ -150,7 +150,7 @@ export class DemandaController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: DemandaConexaoCriarDto,
   ) {
-    return this.demandaService.criarConexao(id, dto);
+    return this.demandaService.criarConexao({ ...dto, demandaOrigemId: id });
   }
 
   @ApiOperation({ summary: 'Listar conexões de uma demanda (saída, entrada bidirecional)' })
@@ -162,7 +162,7 @@ export class DemandaController {
     @Param('id', ParseIntPipe) id: number,
     @ActiveUser() usuarioAtivo: JwtPayload,
   ) {
-    return this.demandaService.listarConexoes(id, usuarioAtivo);
+    return this.demandaService.listarConexoes({ id }, usuarioAtivo);
   }
 
   @ApiOperation({ summary: 'Remover conexão entre demandas (somente gestor)' })
@@ -176,7 +176,7 @@ export class DemandaController {
     @Param('id', ParseIntPipe) id: number,
     @Param('conexaoId', ParseIntPipe) conexaoId: number,
   ) {
-    return this.demandaService.excluirConexao(id, conexaoId);
+    return this.demandaService.excluirConexao({ demandaId: id, conexaoId });
   }
 
   @ApiOperation({ summary: 'Sincronizar tags da demanda (gestor ou desenvolvedor membro)' })
@@ -191,7 +191,7 @@ export class DemandaController {
     @Body() dto: DemandaTagsAtribuirDto,
     @ActiveUser() usuarioAtivo: JwtPayload,
   ) {
-    return this.demandaService.alterarTagsDemanda(id, dto, usuarioAtivo);
+    return this.demandaService.alterarTagsDemanda({ ...dto, demandaId: id }, usuarioAtivo);
   }
 
   @ApiOperation({ summary: 'Listar tags da demanda' })
@@ -203,7 +203,7 @@ export class DemandaController {
     @Param('id', ParseIntPipe) id: number,
     @ActiveUser() usuarioAtivo: JwtPayload,
   ) {
-    return this.demandaService.listarTagsDemanda(id, usuarioAtivo);
+    return this.demandaService.listarTagsDemanda({ id }, usuarioAtivo);
   }
 
   @ApiOperation({ summary: 'Listar membros da demanda' })
@@ -215,7 +215,7 @@ export class DemandaController {
     @Param('id', ParseIntPipe) id: number,
     @ActiveUser() usuarioAtivo: JwtPayload,
   ) {
-    return this.demandaService.listarMembros(id, usuarioAtivo);
+    return this.demandaService.listarMembros({ id }, usuarioAtivo);
   }
 
   @ApiOperation({ summary: 'Atribuir membro à demanda (gestor atribui qualquer; desenvolvedor só a si mesmo)' })
@@ -230,7 +230,7 @@ export class DemandaController {
     @Body() dto: DemandaUsuarioAtribuirDto,
     @ActiveUser() usuarioAtivo: JwtPayload,
   ) {
-    return this.demandaService.atribuirMembro(id, dto, usuarioAtivo);
+    return this.demandaService.atribuirMembro({ ...dto, demandaId: id }, usuarioAtivo);
   }
 
   @ApiOperation({ summary: 'Remover membro da demanda (gestor remove qualquer; desenvolvedor só a si mesmo)' })
@@ -245,6 +245,6 @@ export class DemandaController {
     @Param('usuarioId', ParseIntPipe) usuarioId: number,
     @ActiveUser() usuarioAtivo: JwtPayload,
   ) {
-    return this.demandaService.removerMembro(id, usuarioId, usuarioAtivo);
+    return this.demandaService.removerMembro({ demandaId: id, usuarioId }, usuarioAtivo);
   }
 }
