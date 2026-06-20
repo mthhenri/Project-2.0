@@ -10,8 +10,9 @@ import {
   UsuarioResumoDto,
   UsuarioListarDto,
   UsuarioAlteradoDto,
+  UsuarioInternoAlterarDto,
   UsuarioValidarLoginDto,
-  UsuarioAlterarSenhaInternoDto,
+  UsuarioSenhaInternoAlterarDto,
   UsuarioExcluirDto,
 } from '@project20/shared';
 import { UsuarioTipoEnum, UsuarioStatusEnum } from '@project20/shared';
@@ -168,35 +169,29 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
   }
 
   /** Altera campos do usuário. */
-  async alterar(id: number, dados: {
-    nomeCompleto?: string;
-    cargoTitulo?: string;
-    anotacoes?: string;
-    horasDiariasNecessarias?: number;
-    status?: UsuarioStatusEnum;
-  }): Promise<UsuarioAlteradoDto> {
+  async alterar(dto: UsuarioInternoAlterarDto): Promise<UsuarioAlteradoDto> {
     const setClauses: string[] = ['updated_date = NOW()'];
-    const parametros: Record<string, unknown> = { id };
+    const parametros: Record<string, unknown> = { id: dto.id };
 
-    if (dados.nomeCompleto !== undefined) {
+    if (dto.nomeCompleto !== undefined) {
       setClauses.push('nome_completo = :nomeCompleto');
-      parametros.nomeCompleto = dados.nomeCompleto;
+      parametros.nomeCompleto = dto.nomeCompleto;
     }
-    if (dados.cargoTitulo !== undefined) {
+    if (dto.cargoTitulo !== undefined) {
       setClauses.push('cargo_titulo = :cargoTitulo');
-      parametros.cargoTitulo = dados.cargoTitulo;
+      parametros.cargoTitulo = dto.cargoTitulo;
     }
-    if (dados.anotacoes !== undefined) {
+    if (dto.anotacoes !== undefined) {
       setClauses.push('anotacoes = :anotacoes');
-      parametros.anotacoes = dados.anotacoes;
+      parametros.anotacoes = dto.anotacoes;
     }
-    if (dados.horasDiariasNecessarias !== undefined) {
+    if (dto.horasDiariasNecessarias !== undefined) {
       setClauses.push('horas_diarias_necessarias = :horasDiariasNecessarias');
-      parametros.horasDiariasNecessarias = dados.horasDiariasNecessarias;
+      parametros.horasDiariasNecessarias = dto.horasDiariasNecessarias;
     }
-    if (dados.status !== undefined) {
+    if (dto.status !== undefined) {
       setClauses.push('status = :status');
-      parametros.status = dados.status;
+      parametros.status = dto.status;
     }
 
     const resultado = await this.executarConsulta<UsuarioAlteradoDto>(
@@ -220,7 +215,7 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
   }
 
   /** Altera apenas a senha encriptada. */
-  async alterarSenha(dto: UsuarioAlterarSenhaInternoDto): Promise<void> {
+  async alterarSenha(dto: UsuarioSenhaInternoAlterarDto): Promise<void> {
     await this.executarComando(
       `UPDATE usuario
        SET senha_encriptada = :senhaEncriptada,

@@ -8,8 +8,10 @@ import {
   UsuarioListarDto,
   UsuarioResumoDto,
   UsuarioRecuperadoDto,
-  UsuarioAlterarDto,
+  UsuarioRecuperarDto,
+  UsuarioInternoAlterarDto,
   UsuarioAlteradoDto,
+  UsuarioExcluirDto,
   UsuarioSenhaAlterarDto,
   UsuarioSenhaAlteradaDto,
   UsuarioTipoEnum,
@@ -72,12 +74,12 @@ export class UsuarioService {
   }
 
   /** Recupera usuário por ID. Desenvolvedor só pode ver o próprio perfil. */
-  async recuperar(id: number, usuarioAtivo: JwtPayload): Promise<StandardResponse<UsuarioRecuperadoDto>> {
-    if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR && usuarioAtivo.sub !== id) {
+  async recuperar(dto: UsuarioRecuperarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<UsuarioRecuperadoDto>> {
+    if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR && usuarioAtivo.sub !== dto.id) {
       throw new UnauthorizedAccessException('Desenvolvedor pode acessar apenas o próprio perfil');
     }
 
-    const usuarioEncontrado = await this.usuarioRepositorio.recuperar({ id });
+    const usuarioEncontrado = await this.usuarioRepositorio.recuperar({ id: dto.id });
 
     if (!usuarioEncontrado) {
       throw new ResourceNotFoundException('Usuário');
@@ -91,18 +93,18 @@ export class UsuarioService {
   }
 
   /** Altera campos do usuário. Desenvolvedor só pode alterar o próprio perfil. */
-  async alterar(id: number, dto: UsuarioAlterarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<UsuarioAlteradoDto>> {
-    if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR && usuarioAtivo.sub !== id) {
+  async alterar(dto: UsuarioInternoAlterarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<UsuarioAlteradoDto>> {
+    if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR && usuarioAtivo.sub !== dto.id) {
       throw new UnauthorizedAccessException('Desenvolvedor pode alterar apenas o próprio perfil');
     }
 
-    const usuarioEncontrado = await this.usuarioRepositorio.recuperar({ id });
+    const usuarioEncontrado = await this.usuarioRepositorio.recuperar({ id: dto.id });
 
     if (!usuarioEncontrado) {
       throw new ResourceNotFoundException('Usuário');
     }
 
-    const usuarioAlterado = await this.usuarioRepositorio.alterar(id, dto);
+    const usuarioAlterado = await this.usuarioRepositorio.alterar(dto);
 
     return {
       sucesso:  true,
@@ -112,14 +114,14 @@ export class UsuarioService {
   }
 
   /** Realiza soft delete do usuário. Lança exceção se não encontrado. */
-  async excluir(id: number): Promise<StandardResponse<void>> {
-    const usuarioEncontrado = await this.usuarioRepositorio.recuperar({ id });
+  async excluir(dto: UsuarioExcluirDto): Promise<StandardResponse<void>> {
+    const usuarioEncontrado = await this.usuarioRepositorio.recuperar({ id: dto.id });
 
     if (!usuarioEncontrado) {
       throw new ResourceNotFoundException('Usuário');
     }
 
-    await this.usuarioRepositorio.excluir({ id });
+    await this.usuarioRepositorio.excluir({ id: dto.id });
 
     return {
       sucesso:  true,
@@ -128,15 +130,15 @@ export class UsuarioService {
     };
   }
 
-  async alterarSenha(id: number, dto: UsuarioSenhaAlterarDto): Promise<StandardResponse<UsuarioSenhaAlteradaDto>> {
-    const usuarioEncontrado = await this.usuarioRepositorio.recuperar({ id });
+  async alterarSenha(dto: UsuarioSenhaAlterarDto & { id: number }): Promise<StandardResponse<UsuarioSenhaAlteradaDto>> {
+    const usuarioEncontrado = await this.usuarioRepositorio.recuperar({ id: dto.id });
 
     if (!usuarioEncontrado) {
       throw new ResourceNotFoundException('Usuário');
     }
 
     const novaSenhaEncriptada = await bcrypt.hash(dto.senhaNova, 10);
-    await this.usuarioRepositorio.alterarSenha({ id, senhaEncriptada: novaSenhaEncriptada });
+    await this.usuarioRepositorio.alterarSenha({ id: dto.id, senhaEncriptada: novaSenhaEncriptada });
 
     return {
       sucesso:  true,

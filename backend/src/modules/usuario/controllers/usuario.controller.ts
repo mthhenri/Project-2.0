@@ -124,7 +124,7 @@ export class UsuarioController {
     @Param('id', ParseIntPipe) id: number,
     @ActiveUser() usuarioAtivo: JwtPayload,
   ) {
-    return this.usuarioService.recuperar(id, usuarioAtivo);
+    return this.usuarioService.recuperar({ id }, usuarioAtivo);
   }
 
   @ApiOperation({ summary: 'Alterar dados do usuário (desenvolvedor altera apenas o próprio perfil)' })
@@ -149,7 +149,7 @@ export class UsuarioController {
     @Body() dto: UsuarioAlterarDto,
     @ActiveUser() usuarioAtivo: JwtPayload,
   ) {
-    return this.usuarioService.alterar(id, dto, usuarioAtivo);
+    return this.usuarioService.alterar({ ...dto, id }, usuarioAtivo);
   }
 
   @ApiOperation({ summary: 'Excluir usuário via soft delete (somente gestor)' })
@@ -170,7 +170,7 @@ export class UsuarioController {
   @GestorOnly()
   @Delete(':id')
   excluir(@Param('id', ParseIntPipe) id: number) {
-    return this.usuarioService.excluir(id);
+    return this.usuarioService.excluir({ id });
   }
 
   @ApiOperation({ summary: 'Alterar senha do usuário' })
@@ -190,6 +190,6 @@ export class UsuarioController {
   @ApiResponse({ status: 404, description: 'Usuário não encontrado', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
   @Patch(':id/senha')
   alterarSenha(@Param('id', ParseIntPipe) id: number, @Body() dto: UsuarioSenhaAlterarDto) {
-    return this.usuarioService.alterarSenha(id, dto);
+    return this.usuarioService.alterarSenha({ ...dto, id });
   }
 }
