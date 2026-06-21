@@ -1,5 +1,14 @@
-:host ::ng-deep .btn-desc--preenchido .p-button-icon {
-  color: var(--p-primary-600);
+// Ícones de descrição (cliente / técnica / documentação) padronizados na família
+// azul, com bold + glow quando preenchido — mesmo tratamento da listagem de atividades.
+:host ::ng-deep {
+  .btn-desc--ativo .p-button-icon {
+    font-weight: 700;
+    text-shadow: 0 0 4px color-mix(in srgb, currentColor 45%, transparent);
+  }
+
+  .btn-desc--cliente.btn-desc--ativo .p-button-icon { color: var(--app-icone-cliente); }
+  .btn-desc--tecnica.btn-desc--ativo .p-button-icon { color: var(--app-icone-tecnica); }
+  .btn-desc--doc.btn-desc--ativo     .p-button-icon { color: var(--app-icone-doc); }
 }
 
 .demanda-detalhe-dialog {

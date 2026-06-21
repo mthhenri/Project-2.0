@@ -25,6 +25,9 @@ export class DemandaArvoreItemComponent implements OnChanges {
 
   private readonly sessao = inject(UsuarioSessaoService);
 
+  /** Único menu de contexto aberto na árvore, compartilhado entre todas as instâncias. */
+  private static menuAberto: ContextMenu | null = null;
+
   itensMenu: MenuItem[] = [];
 
   ngOnChanges(mudancas: SimpleChanges): void {
@@ -76,25 +79,55 @@ export class DemandaArvoreItemComponent implements OnChanges {
       { separator: true },
       {
         label: 'Desc. Técnica',
-        icon: 'pi pi-file-edit',
-        iconStyle: this.arvoreItem.temDescricaoTecnica ? { color: 'var(--p-primary-600)' } : {},
+        icon: 'pi pi-code',
+        iconStyle: this.estiloIconeDescricao('--app-icone-tecnica', this.arvoreItem.temDescricaoTecnica),
         command: () => this.demandaEditarDescricaoSolicitada.emit({ id: this.arvoreItem.id, campo: 'descricaoTecnica' }),
       },
       {
         label: 'Desc. Cliente',
-        icon: 'pi pi-file-edit',
-        iconStyle: this.arvoreItem.temDescricaoCliente ? { color: 'var(--p-primary-600)' } : {},
+        icon: 'pi pi-user',
+        iconStyle: this.estiloIconeDescricao('--app-icone-cliente', this.arvoreItem.temDescricaoCliente),
         command: () => this.demandaEditarDescricaoSolicitada.emit({ id: this.arvoreItem.id, campo: 'descricaoCliente' }),
       },
       {
         label: 'Documentação',
-        icon: 'pi pi-file-edit',
-        iconStyle: this.arvoreItem.temDocumentacao ? { color: 'var(--p-primary-600)' } : {},
+        icon: 'pi pi-book',
+        iconStyle: this.estiloIconeDescricao('--app-icone-doc', this.arvoreItem.temDocumentacao),
         command: () => this.demandaEditarDescricaoSolicitada.emit({ id: this.arvoreItem.id, campo: 'documentacao' }),
       },
     );
 
     this.itensMenu = itensBase;
+  }
+
+  /**
+   * Estilo do ícone de descrição: azul da família + bold + glow quando preenchido,
+   * neutro quando vazio. Padroniza com a listagem de atividades e o dialog de detalhe.
+   */
+  private estiloIconeDescricao(tokenCor: string, preenchido: boolean): { [klass: string]: string } {
+    if (!preenchido) return {};
+    return {
+      color: `var(${tokenCor})`,
+      fontWeight: '700',
+      textShadow: '0 0 4px color-mix(in srgb, currentColor 45%, transparent)',
+    };
+  }
+
+  /** Abre o menu desta demanda, fechando antes qualquer outro já aberto na árvore. */
+  abrirMenuContexto(evento: MouseEvent, menu: ContextMenu): void {
+    const menuAnterior = DemandaArvoreItemComponent.menuAberto;
+    if (menuAnterior && menuAnterior !== menu) {
+      menuAnterior.hide();
+    }
+    DemandaArvoreItemComponent.menuAberto = menu;
+    menu.show(evento);
+  }
+
+  /** Limpa a referência compartilhada quando este menu fecha (clique fora, comando, etc.). */
+  aoFecharMenu(menu: ContextMenu): void {
+    if (DemandaArvoreItemComponent.menuAberto === menu) {
+      DemandaArvoreItemComponent.menuAberto = null;
+    }
   }
 
   readonly expandido = signal(false);

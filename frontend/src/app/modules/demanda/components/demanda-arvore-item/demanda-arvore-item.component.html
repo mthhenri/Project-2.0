@@ -1,11 +1,11 @@
 <div class="demanda-arvore-item" [style.padding-left.rem]="nivel * 1.5">
-  <p-contextmenu #menuContexto [model]="itensMenu" appendTo="body" />
+  <p-contextmenu #menuContexto [model]="itensMenu" appendTo="body" (onHide)="aoFecharMenu(menuContexto)" />
 
   <div
     class="demanda-arvore-item__linha"
     (click)="alternarExpansao($event)"
     (dblclick)="demandaSelecionada.emit(arvoreItem.id)"
-    (contextmenu)="menuContexto.show($event)"
+    (contextmenu)="abrirMenuContexto($event, menuContexto)"
   >
     <div class="demanda-arvore-item__info">
       @if (arvoreItem.isEstrutural) {

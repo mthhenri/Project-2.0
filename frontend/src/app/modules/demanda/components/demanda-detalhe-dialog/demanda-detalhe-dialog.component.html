@@ -46,27 +46,30 @@
       <div class="demanda-detalhe-dialog__cabecalho-acoes">
         <p-button
           label="Desc. Técnica"
-          icon="pi pi-file-edit"
+          icon="pi pi-code"
           severity="secondary"
-          [class.btn-desc--preenchido]="!!demanda()!.descricaoTecnica"
+          class="btn-desc--tecnica"
+          [class.btn-desc--ativo]="!!demanda()!.descricaoTecnica"
           [text]="true"
           size="small"
           (onClick)="abrirDialogDescricao('descricaoTecnica')"
         />
         <p-button
           label="Desc. Cliente"
-          icon="pi pi-file-edit"
+          icon="pi pi-user"
           severity="secondary"
-          [class.btn-desc--preenchido]="!!demanda()!.descricaoCliente"
+          class="btn-desc--cliente"
+          [class.btn-desc--ativo]="!!demanda()!.descricaoCliente"
           [text]="true"
           size="small"
           (onClick)="abrirDialogDescricao('descricaoCliente')"
         />
         <p-button
           label="Documentação"
-          icon="pi pi-file-edit"
+          icon="pi pi-book"
           severity="secondary"
-          [class.btn-desc--preenchido]="!!demanda()!.documentacao"
+          class="btn-desc--doc"
+          [class.btn-desc--ativo]="!!demanda()!.documentacao"
           [text]="true"
           size="small"
           (onClick)="abrirDialogDescricao('documentacao')"
