@@ -158,6 +158,21 @@ cor VARCHAR(7) NOT NULL DEFAULT '#6366f1'       -- DEFAULT proibido
 - Colunas BaseEntity: snake_case inglês — `is_deleted`, `created_date`, `updated_date`, `deleted_date`
 - Hierarquias e grafos: CTEs recursivos do PostgreSQL
 
+**Objetos genéricos de banco (funções, triggers de infraestrutura): inglês.**
+Mecanismos que existiriam em qualquer projeto (manutenção de BaseEntity, etc.) seguem a regra de linguagem genérica → inglês. Objetos de **negócio** (tabelas/colunas) permanecem em português.
+
+```sql
+-- ✅ Função/trigger genérico de infraestrutura → inglês
+CREATE FUNCTION fn_set_updated_date() ...      -- mantém updated_date da BaseEntity
+CREATE TRIGGER trg_usuario_updated_date ...
+
+-- ❌ Verbo português em objeto genérico
+CREATE FUNCTION fn_atualizar_updated_date() ... -- idioma misto: proibido
+
+-- ✅ Negócio permanece em português
+CREATE TABLE dia_nao_util ( nome_completo VARCHAR ... )
+```
+
 ---
 
 ## Camadas — Regras Rápidas

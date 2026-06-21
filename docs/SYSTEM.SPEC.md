@@ -112,7 +112,12 @@ project-2.0/
 ✅ autenticacao.guard.ts       — comportamento de negócio, arquivo em português
 ✅ auth-token.interceptor.ts   — padrão técnico genérico, arquivo em inglês
 ✅ data-brasileira.pipe.ts     — específico do projeto, arquivo em português
+✅ fn_set_updated_date()       — objeto genérico de banco (infra de BaseEntity), em inglês
+❌ fn_atualizar_updated_date() — idioma misto em objeto genérico, proibido (§16 #12)
+✅ dia_nao_util / nome_completo — tabela/coluna de negócio, em português
 ```
+
+A regra alcança também **objetos de banco**: funções e triggers de **infraestrutura** (mecanismos genéricos como a manutenção de `updated_date` da BaseEntity) são nomeados em **inglês**; **tabelas e colunas de negócio** permanecem em português.
 
 ---
 
@@ -873,6 +878,7 @@ export abstract class BaseEntity {
 9. **INSERT sempre com SELECT** — nunca `VALUES`: `INSERT INTO tabela (...) SELECT :campo1, :campo2 RETURNING ...`
 10. **Hierarquias e grafos** via CTEs recursivos do PostgreSQL
 11. **Soft delete** via `executarSoftDelete()` do BaseRepository — nunca DELETE físico
+12. **Objetos genéricos de banco** (funções/triggers de infraestrutura) em **inglês** — `fn_set_updated_date()`, `trg_usuario_updated_date` ✅; `fn_atualizar_updated_date()` ❌ (idioma misto em mecanismo genérico, §16 #12). Apenas tabelas e colunas de negócio são em português
 
 ### 9.3 Paginação Padrão
 
