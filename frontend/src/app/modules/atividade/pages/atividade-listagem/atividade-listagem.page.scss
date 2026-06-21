@@ -318,4 +318,25 @@
     padding: 2.5rem 1rem;
     text-align: center;
   }
+
+  // Ícones de descrição da demanda (cliente / técnica / documentação).
+  // Apagados: cinza do severity="secondary". Ativos (demanda tem conteúdo):
+  // azul da família (azul / índigo / ciano) + bold + glow (text-shadow herda
+  // currentColor, então o brilho acompanha a cor).
+  ::ng-deep .atividade-listagem__icone-descricao--ativo .p-button-icon {
+    font-weight: 700;
+    text-shadow: 0 0 4px color-mix(in srgb, currentColor 45%, transparent);
+  }
+
+  ::ng-deep .atividade-listagem__icone-descricao--cliente.atividade-listagem__icone-descricao--ativo .p-button-icon {
+    color: var(--app-icone-cliente);
+  }
+
+  ::ng-deep .atividade-listagem__icone-descricao--tecnica.atividade-listagem__icone-descricao--ativo .p-button-icon {
+    color: var(--app-icone-tecnica);
+  }
+
+  ::ng-deep .atividade-listagem__icone-descricao--doc.atividade-listagem__icone-descricao--ativo .p-button-icon {
+    color: var(--app-icone-doc);
+  }
 }

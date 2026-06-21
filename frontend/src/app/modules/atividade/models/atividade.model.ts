@@ -8,8 +8,8 @@ export interface AtividadeStatusOpcao {
 }
 
 export const ATIVIDADE_STATUS_OPCOES: AtividadeStatusOpcao[] = [
-  { label: 'Planejada',     value: AtividadeStatusEnum.PLANEJADA },
   { label: 'Pendente',      value: AtividadeStatusEnum.PENDENTE },
+  { label: 'Planejada',     value: AtividadeStatusEnum.PLANEJADA },
   { label: 'Desenvolvendo', value: AtividadeStatusEnum.DESENVOLVENDO },
   { label: 'Desenvolvida',  value: AtividadeStatusEnum.DESENVOLVIDA },
 ];

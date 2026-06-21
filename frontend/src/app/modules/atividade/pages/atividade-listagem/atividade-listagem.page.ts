@@ -365,10 +365,7 @@ export class AtividadeListagemPage implements OnInit {
     this.atividadeService.alterar(atividade.id, dto).subscribe({
       next: (resposta) => {
         if (resposta.sucesso && resposta.dados) {
-          const statusAlterado = resposta.dados.status;
-          this.atividades.update((lista) =>
-            lista.map((item) => (item.id === atividade.id ? { ...item, status: statusAlterado } : item)),
-          );
+          this.buscarAtividades();
           this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Status alterado' });
         }
       },
@@ -452,17 +449,18 @@ export class AtividadeListagemPage implements OnInit {
     return demanda[campo];
   }
 
-  /** Cor de destaque do ícone apenas quando a descrição correspondente tem conteúdo. */
-  severidadeIconeDescricao(
+  /** Classe do ícone de descrição: base + tipo + `--ativo` quando há conteúdo (azul, bold, glow). */
+  classeIconeDescricao(
     atividade: AtividadeResumoDto,
     campo: CampoDescricaoDemanda,
-    severidade: 'info' | 'help' | 'warn',
-  ): 'info' | 'help' | 'warn' | 'secondary' {
+    tipo: 'cliente' | 'tecnica' | 'doc',
+  ): string {
     const temConteudo =
       campo === 'descricaoCliente' ? atividade.demandaTemDescricaoCliente
       : campo === 'descricaoTecnica' ? atividade.demandaTemDescricaoTecnica
       : atividade.demandaTemDocumentacao;
-    return temConteudo ? severidade : 'secondary';
+    const base = `atividade-listagem__icone-descricao atividade-listagem__icone-descricao--${tipo}`;
+    return temConteudo ? `${base} atividade-listagem__icone-descricao--ativo` : base;
   }
 
   /**
