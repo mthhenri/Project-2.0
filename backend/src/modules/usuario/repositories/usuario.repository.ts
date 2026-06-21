@@ -193,6 +193,10 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
       setClauses.push('status = :status');
       parametros.status = dto.status;
     }
+    if (dto.tipo !== undefined) {
+      setClauses.push('tipo = :tipo');
+      parametros.tipo = dto.tipo;
+    }
 
     const resultado = await this.executarConsulta<UsuarioAlteradoDto>(
       `UPDATE usuario

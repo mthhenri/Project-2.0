@@ -98,10 +98,30 @@ export class UsuarioService {
       throw new UnauthorizedAccessException('Desenvolvedor pode alterar apenas o próprio perfil');
     }
 
+    if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR && dto.tipo !== undefined) {
+      throw new UnauthorizedAccessException('Apenas gestores podem alterar o tipo de usuário');
+    }
+
     const usuarioEncontrado = await this.usuarioRepositorio.recuperar({ id: dto.id });
 
     if (!usuarioEncontrado) {
       throw new ResourceNotFoundException('Usuário');
+    }
+
+    const estaRebaixandoGestor =
+      usuarioEncontrado.tipo === UsuarioTipoEnum.GESTOR &&
+      dto.tipo === UsuarioTipoEnum.DESENVOLVEDOR;
+
+    if (estaRebaixandoGestor) {
+      if (usuarioAtivo.sub === dto.id) {
+        throw new BusinessException('Um gestor não pode rebaixar a si mesmo');
+      }
+
+      const gestoresAtivos = await this.usuarioRepositorio.listarGestoresAtivos();
+      const outrosGestoresAtivos = gestoresAtivos.filter((gestor) => gestor.id !== dto.id);
+      if (outrosGestoresAtivos.length === 0) {
+        throw new BusinessException('O sistema deve ter ao menos um gestor ativo');
+      }
     }
 
     const usuarioAlterado = await this.usuarioRepositorio.alterar(dto);

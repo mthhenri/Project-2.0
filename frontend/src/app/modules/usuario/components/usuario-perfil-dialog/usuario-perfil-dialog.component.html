@@ -125,6 +125,20 @@
         />
       </div>
     </div>
+
+    @if (podeEditarTipo()) {
+      <div class="usuario-perfil-dialog__dialog-campo">
+        <label class="usuario-perfil-dialog__label">Tipo <span class="usuario-perfil-dialog__obrigatorio">*</span></label>
+        <p-select
+          formControlName="tipo"
+          [options]="tiposOpcoes"
+          optionLabel="label"
+          optionValue="value"
+          appendTo="body"
+          class="w-full"
+        />
+      </div>
+    }
   </form>
 
   <ng-template pTemplate="footer">

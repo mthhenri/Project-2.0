@@ -48,6 +48,7 @@ export class UsuarioPerfilDialogComponent {
     cargoTitulo: ['', [Validators.required]],
     horasDiariasNecessarias: [8, [Validators.required]],
     status: [UsuarioStatusEnum.ATIVO as UsuarioStatusEnum, [Validators.required]],
+    tipo: [UsuarioTipoEnum.DESENVOLVEDOR as UsuarioTipoEnum, [Validators.required]],
   });
 
   readonly formularioSenha = this.formBuilder.group(
@@ -63,11 +64,27 @@ export class UsuarioPerfilDialogComponent {
     { label: 'Inativo', value: UsuarioStatusEnum.INATIVO },
   ];
 
+  readonly tiposOpcoes = [
+    { label: 'Desenvolvedor', value: UsuarioTipoEnum.DESENVOLVEDOR },
+    { label: 'Gestor', value: UsuarioTipoEnum.GESTOR },
+  ];
+
   readonly podeEditar = computed(() => {
     const usuarioAtual = this.sessao.usuarioAtual();
     const usuarioPerfil = this.usuario();
     if (!usuarioAtual || !usuarioPerfil) return false;
     return usuarioAtual.id === usuarioPerfil.id || this.sessao.eGestor();
+  });
+
+  /**
+   * Só gestores podem alterar o tipo de um usuário (evita auto-promoção de desenvolvedor),
+   * e nunca o do próprio perfil (um gestor não pode rebaixar a si mesmo).
+   */
+  readonly podeEditarTipo = computed(() => {
+    const usuarioAtual = this.sessao.usuarioAtual();
+    const usuarioPerfil = this.usuario();
+    if (!usuarioAtual || !usuarioPerfil) return false;
+    return this.sessao.eGestor() && usuarioAtual.id !== usuarioPerfil.id;
   });
 
   /** Abre o dialog e carrega o usuário informado. */
@@ -85,6 +102,7 @@ export class UsuarioPerfilDialogComponent {
       cargoTitulo: usuarioDados.cargoTitulo,
       horasDiariasNecessarias: usuarioDados.horasDiariasNecessarias,
       status: usuarioDados.status,
+      tipo: usuarioDados.tipo,
     });
     this.mostrarDialogEditar.set(true);
   }
@@ -104,6 +122,11 @@ export class UsuarioPerfilDialogComponent {
       horasDiariasNecessarias: this.formularioEditar.value.horasDiariasNecessarias ?? undefined,
       status: this.formularioEditar.value.status ?? undefined,
     };
+
+    // Só gestores podem reclassificar o tipo; o campo nem aparece para desenvolvedor.
+    if (this.podeEditarTipo()) {
+      dto.tipo = this.formularioEditar.value.tipo ?? undefined;
+    }
 
     this.carregandoSalvar.set(true);
     this.usuarioService
