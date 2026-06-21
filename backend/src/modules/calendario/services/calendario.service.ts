@@ -4,9 +4,10 @@ import {
   DiaNaoUtilCriarDto,
   DiaNaoUtilCriadoDto,
   DiaNaoUtilResumoDto,
-  DiaNaoUtilAlterarDto,
   DiaNaoUtilAlteradoDto,
   DiaNaoUtilDuracaoEnum,
+  CalendarioRecuperarDto,
+  CalendarioInternoAlterarDto,
 } from '@project20/shared';
 import { StandardResponse } from '@project20/shared';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
@@ -44,8 +45,8 @@ export class CalendarioService {
   }
 
   /** Recupera dia não útil por ID. Lança exceção se não encontrado. */
-  async recuperar(id: number): Promise<StandardResponse<DiaNaoUtilCriadoDto>> {
-    const diaNaoUtilEncontrado = await this.calendarioRepositorio.recuperar({ id });
+  async recuperar(dto: CalendarioRecuperarDto): Promise<StandardResponse<DiaNaoUtilCriadoDto>> {
+    const diaNaoUtilEncontrado = await this.calendarioRepositorio.recuperar({ id: dto.id });
 
     if (!diaNaoUtilEncontrado) {
       throw new ResourceNotFoundException('Dia não útil');
@@ -59,14 +60,15 @@ export class CalendarioService {
   }
 
   /** Altera campos do dia não útil. Restrito a gestores. */
-  async alterar(id: number, dto: DiaNaoUtilAlterarDto): Promise<StandardResponse<DiaNaoUtilAlteradoDto>> {
-    const diaNaoUtilEncontrado = await this.calendarioRepositorio.recuperar({ id });
+  async alterar(dto: CalendarioInternoAlterarDto): Promise<StandardResponse<DiaNaoUtilAlteradoDto>> {
+    const diaNaoUtilEncontrado = await this.calendarioRepositorio.recuperar({ id: dto.id });
 
     if (!diaNaoUtilEncontrado) {
       throw new ResourceNotFoundException('Dia não útil');
     }
 
-    const diaNaoUtilAlterado = await this.calendarioRepositorio.alterar(id, {
+    const diaNaoUtilAlterado = await this.calendarioRepositorio.alterar({
+      id:         dto.id,
       descricao:  dto.descricao,
       tipo:       dto.tipo,
       duracao:    dto.duracao,
@@ -81,14 +83,14 @@ export class CalendarioService {
   }
 
   /** Realiza soft delete do dia não útil. Restrito a gestores. */
-  async excluir(id: number): Promise<StandardResponse<void>> {
-    const diaNaoUtilEncontrado = await this.calendarioRepositorio.recuperar({ id });
+  async excluir(dto: CalendarioRecuperarDto): Promise<StandardResponse<void>> {
+    const diaNaoUtilEncontrado = await this.calendarioRepositorio.recuperar({ id: dto.id });
 
     if (!diaNaoUtilEncontrado) {
       throw new ResourceNotFoundException('Dia não útil');
     }
 
-    await this.calendarioRepositorio.excluir({ id });
+    await this.calendarioRepositorio.excluir({ id: dto.id });
 
     return {
       sucesso:  true,

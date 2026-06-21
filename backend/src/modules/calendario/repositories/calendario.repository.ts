@@ -10,6 +10,7 @@ import {
   DiaNaoUtilTipoEnum,
   DiaNaoUtilDuracaoEnum,
   CalendarioRecuperarDto,
+  CalendarioInternoAlterarDto,
   CalendarioExcluirDto,
   CalendarioVerificarDiaDto,
   CalendarioMesConsultarDto,
@@ -100,25 +101,25 @@ export class CalendarioRepository extends BaseRepository<DiaNaoUtil> {
   }
 
   /** Altera campos do dia não útil e retorna os dados alterados. */
-  async alterar(id: number, dados: Partial<DiaNaoUtil>): Promise<DiaNaoUtilAlteradoDto> {
+  async alterar(dto: CalendarioInternoAlterarDto): Promise<DiaNaoUtilAlteradoDto> {
     const setClauses: string[] = ['updated_date = NOW()'];
-    const parametros: Record<string, unknown> = { id };
+    const parametros: Record<string, unknown> = { id: dto.id };
 
-    if (dados.descricao !== undefined) {
+    if (dto.descricao !== undefined) {
       setClauses.push('descricao = :descricao');
-      parametros.descricao = dados.descricao;
+      parametros.descricao = dto.descricao;
     }
-    if (dados.tipo !== undefined) {
+    if (dto.tipo !== undefined) {
       setClauses.push('tipo = :tipo');
-      parametros.tipo = dados.tipo;
+      parametros.tipo = dto.tipo;
     }
-    if (dados.duracao !== undefined) {
+    if (dto.duracao !== undefined) {
       setClauses.push('duracao = :duracao');
-      parametros.duracao = dados.duracao;
+      parametros.duracao = dto.duracao;
     }
-    if (dados.recorrente !== undefined) {
+    if (dto.recorrente !== undefined) {
       setClauses.push('recorrente = :recorrente');
-      parametros.recorrente = dados.recorrente;
+      parametros.recorrente = dto.recorrente;
     }
 
     const resultado = await this.executarConsulta<DiaNaoUtilAlteradoDto>(

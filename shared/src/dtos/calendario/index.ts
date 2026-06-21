@@ -3,6 +3,7 @@ export * from './DiaNaoUtilCriadoDto';
 export * from './DiaNaoUtilResumoDto';
 export * from './DiaNaoUtilAlterarDto';
 export * from './DiaNaoUtilAlteradoDto';
+export * from './CalendarioInternoAlterarDto';
 export * from './CalendarioConsultarDto';
 export * from './CalendarioRecuperarDto';
 export * from './CalendarioExcluirDto';

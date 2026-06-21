@@ -67,7 +67,7 @@ export class CalendarioController {
   @ApiResponse({ status: 404, description: 'Dia não útil não encontrado', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
   @Get(':id')
   recuperar(@Param('id', ParseIntPipe) id: number) {
-    return this.calendarioService.recuperar(id);
+    return this.calendarioService.recuperar({ id });
   }
 
   @ApiOperation({ summary: 'Alterar dia não útil (somente gestor)' })
@@ -81,7 +81,7 @@ export class CalendarioController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: DiaNaoUtilAlterarDto,
   ) {
-    return this.calendarioService.alterar(id, dto);
+    return this.calendarioService.alterar({ ...dto, id });
   }
 
   @ApiOperation({ summary: 'Excluir dia não útil via soft delete (somente gestor)' })
@@ -92,6 +92,6 @@ export class CalendarioController {
   @GestorOnly()
   @Delete(':id')
   excluir(@Param('id', ParseIntPipe) id: number) {
-    return this.calendarioService.excluir(id);
+    return this.calendarioService.excluir({ id });
   }
 }
