@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsEnum, IsNumber, IsOptional, IsString, MaxLength, Min, MinLength } from 'class-validator';
+import { IsArray, IsEnum, IsNumber, IsOptional, IsString, MaxLength, Min, MinLength } from 'class-validator';
 import { AtividadeStatusEnum } from '../../enums/atividade-status.enum';
 
 export class AtividadeCriarDto {
@@ -29,4 +29,9 @@ export class AtividadeCriarDto {
   @IsNumber()
   @Min(0)
   ordemExibicao: number;
+
+  @IsOptional()
+  @IsArray()
+  @IsNumber({}, { each: true })
+  tagIds?: number[];
 }

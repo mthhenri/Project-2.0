@@ -1,5 +1,6 @@
 import { AtividadeStatusEnum } from '../../enums/atividade-status.enum';
 import { UsuarioTipoEnum } from '../../enums/usuario-tipo.enum';
+import { TagResumoDto } from '../tag/TagResumoDto';
 
 export class AtividadeResumoDto {
   id: number;
@@ -22,5 +23,7 @@ export class AtividadeResumoDto {
   execucaoAtivaId: number | null;
   /** Descrição da execução em andamento, para revisão ao encerrar. */
   execucaoAtivaDescricao: string | null;
+  /** Tags ativas atribuídas à atividade, agregadas na própria listagem. */
+  tags: TagResumoDto[];
   createdDate: Date;
 }

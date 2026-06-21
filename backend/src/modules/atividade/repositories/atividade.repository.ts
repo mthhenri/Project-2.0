@@ -186,6 +186,18 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
              AND execucao.fim_data IS NOT NULL) AS "totalMinutosExecutados",
          execucao_ativa.id         AS "execucaoAtivaId",
          execucao_ativa.descricao  AS "execucaoAtivaDescricao",
+         (SELECT COALESCE(
+                   JSON_AGG(
+                     JSON_BUILD_OBJECT('id', tag.id, 'nome', tag.nome, 'cor', tag.cor)
+                     ORDER BY tag.nome
+                   ),
+                   '[]'::json)
+            FROM atividade_tag
+            INNER JOIN tag
+              ON tag.id = atividade_tag.tag_id
+              AND tag.is_deleted = false
+           WHERE atividade_tag.atividade_id = atividade.id
+             AND atividade_tag.is_deleted = false) AS "tags",
          atividade.created_date    AS "createdDate"
        FROM atividade
        ${clausulasJoin}

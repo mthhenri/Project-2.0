@@ -191,7 +191,7 @@
         </td>
         <td>
           <div class="atividade-listagem__tags">
-            @for (tag of tagsDe(atividade.id); track tag.id) {
+            @for (tag of atividade.tags; track tag.id) {
               <span
                 class="atividade-listagem__chip"
                 [style.background-color]="tag.cor + '22'"
@@ -320,36 +320,66 @@
       }
     </div>
 
-    @if (sessao.eGestor()) {
+    <div class="atividade-listagem__dialog-linha">
+      @if (sessao.eGestor()) {
+        <div class="atividade-listagem__dialog-campo">
+          <label for="nova-usuario" class="atividade-listagem__filtro-label">Usuário</label>
+          <p-select
+            inputId="nova-usuario"
+            formControlName="usuarioId"
+            [options]="usuarios()"
+            optionLabel="nomeCompleto"
+            optionValue="id"
+            placeholder="Meu próprio usuário"
+            [showClear]="true"
+            [filter]="true"
+            filterBy="nomeCompleto"
+            appendTo="body"
+            class="w-full"
+          />
+        </div>
+      }
+
       <div class="atividade-listagem__dialog-campo">
-        <label for="nova-usuario" class="atividade-listagem__filtro-label">Usuário</label>
+        <label for="nova-status" class="atividade-listagem__filtro-label">Status *</label>
         <p-select
-          inputId="nova-usuario"
-          formControlName="usuarioId"
-          [options]="usuarios()"
-          optionLabel="nomeCompleto"
-          optionValue="id"
-          placeholder="Meu próprio usuário"
-          [showClear]="true"
-          [filter]="true"
-          filterBy="nomeCompleto"
+          inputId="nova-status"
+          formControlName="status"
+          [options]="statusOpcoes"
+          optionLabel="label"
+          optionValue="value"
           appendTo="body"
           class="w-full"
         />
       </div>
-    }
+    </div>
 
     <div class="atividade-listagem__dialog-campo">
-      <label for="nova-status" class="atividade-listagem__filtro-label">Status *</label>
-      <p-select
-        inputId="nova-status"
-        formControlName="status"
-        [options]="statusOpcoes"
-        optionLabel="label"
-        optionValue="value"
-        appendTo="body"
-        class="w-full"
-      />
+      <label class="atividade-listagem__filtro-label">Tags</label>
+      @if (carregandoTags()) {
+        <i class="pi pi-spin pi-spinner text-muted-color"></i>
+      } @else {
+        <div class="atividade-listagem__tags-seletor">
+          @for (tag of todasAsTags(); track tag.id) {
+            <button
+              type="button"
+              class="atividade-listagem__tag-chip"
+              [class.atividade-listagem__tag-chip--ativo]="tagEstaSelecionada(formularioNova.controls.tagIds, tag.id)"
+              [style.--cor-tag]="tag.cor"
+              (click)="alternarTagSelecao(formularioNova.controls.tagIds, tag.id)"
+            >
+              @if (tagEstaSelecionada(formularioNova.controls.tagIds, tag.id)) {
+                <i class="pi pi-check atividade-listagem__tag-chip-check"></i>
+              } @else {
+                <span class="atividade-listagem__tag-bolinha" [style.background-color]="tag.cor"></span>
+              }
+              {{ tag.nome }}
+            </button>
+          } @empty {
+            <span class="text-muted-color">Nenhuma tag cadastrada</span>
+          }
+        </div>
+      }
     </div>
 
     <div class="atividade-listagem__dialog-campo">
@@ -400,27 +430,31 @@
 
   <form [formGroup]="formularioTags" class="atividade-listagem__dialog-form">
     <div class="atividade-listagem__dialog-campo">
-      <label for="tags-multiselect" class="atividade-listagem__filtro-label">Tags</label>
-      <p-multiSelect
-        inputId="tags-multiselect"
-        formControlName="tagIds"
-        [options]="todasAsTags()"
-        optionLabel="nome"
-        optionValue="id"
-        placeholder="Selecione as tags"
-        [filter]="true"
-        filterBy="nome"
-        [loading]="carregandoTags()"
-        appendTo="body"
-        class="w-full"
-      >
-        <ng-template let-tag pTemplate="item">
-          <span class="atividade-listagem__tag-opcao">
-            <span class="atividade-listagem__tag-bolinha" [style.background-color]="tag.cor"></span>
-            {{ tag.nome }}
-          </span>
-        </ng-template>
-      </p-multiSelect>
+      <label class="atividade-listagem__filtro-label">Tags</label>
+      @if (carregandoTags()) {
+        <i class="pi pi-spin pi-spinner text-muted-color"></i>
+      } @else {
+        <div class="atividade-listagem__tags-seletor atividade-listagem__tags-seletor--amplo">
+          @for (tag of todasAsTags(); track tag.id) {
+            <button
+              type="button"
+              class="atividade-listagem__tag-chip"
+              [class.atividade-listagem__tag-chip--ativo]="tagEstaSelecionada(formularioTags.controls.tagIds, tag.id)"
+              [style.--cor-tag]="tag.cor"
+              (click)="alternarTagSelecao(formularioTags.controls.tagIds, tag.id)"
+            >
+              @if (tagEstaSelecionada(formularioTags.controls.tagIds, tag.id)) {
+                <i class="pi pi-check atividade-listagem__tag-chip-check"></i>
+              } @else {
+                <span class="atividade-listagem__tag-bolinha" [style.background-color]="tag.cor"></span>
+              }
+              {{ tag.nome }}
+            </button>
+          } @empty {
+            <span class="text-muted-color">Nenhuma tag cadastrada</span>
+          }
+        </div>
+      }
     </div>
   </form>
 

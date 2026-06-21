@@ -10,6 +10,7 @@ import {
   AtividadeAlterarDto,
   AtividadeAlteradaDto,
   AtividadeTagsAtribuirDto,
+  AtividadeTagsAtribuidasDto,
   TagResumoDto,
   ExecucaoIniciarDto,
   ExecucaoIniciadaDto,
@@ -59,8 +60,8 @@ export class AtividadeService {
     return this.httpClient.delete<StandardResponse<void>>(`${this.urlBase}/${id}`);
   }
 
-  alterarTags(id: number, dto: AtividadeTagsAtribuirDto): Observable<StandardResponse<void>> {
-    return this.httpClient.put<StandardResponse<void>>(`${this.urlBase}/${id}/tag`, dto);
+  alterarTags(id: number, dto: AtividadeTagsAtribuirDto): Observable<StandardResponse<AtividadeTagsAtribuidasDto>> {
+    return this.httpClient.put<StandardResponse<AtividadeTagsAtribuidasDto>>(`${this.urlBase}/${id}/tag`, dto);
   }
 
   listarTags(id: number): Observable<StandardResponse<TagResumoDto[]>> {

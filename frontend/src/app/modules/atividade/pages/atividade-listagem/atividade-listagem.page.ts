@@ -105,7 +105,6 @@ export class AtividadeListagemPage implements OnInit {
 
   readonly demandaId = signal<number | null>(null);
   readonly atividades = signal<AtividadeResumoDto[]>([]);
-  readonly tagsPorAtividade = signal<Record<number, TagResumoDto[]>>({});
   readonly usuarios = signal<UsuarioResumoDto[]>([]);
   readonly totalRegistros = signal<number>(0);
   readonly carregando = signal<boolean>(false);
@@ -131,6 +130,7 @@ export class AtividadeListagemPage implements OnInit {
     usuarioId: [null as number | null],
     status:    [AtividadeStatusEnum.DESENVOLVENDO as AtividadeStatusEnum, [Validators.required]],
     descricao: [''],
+    tagIds:    [[] as number[]],
   });
 
   // --- Dialog: atribuir tags ---
@@ -250,7 +250,6 @@ export class AtividadeListagemPage implements OnInit {
           if (resposta.sucesso && resposta.dados) {
             this.atividades.set(resposta.dados.itens);
             this.totalRegistros.set(resposta.dados.totalItens);
-            this.carregarTagsDasAtividades(resposta.dados.itens);
           }
         },
       });
@@ -290,8 +289,10 @@ export class AtividadeListagemPage implements OnInit {
       usuarioId: null,
       status:    AtividadeStatusEnum.DESENVOLVENDO,
       descricao: '',
+      tagIds:    [],
     });
     if (this.demandasAtribuidas().length === 0) this.carregarDemandasAtribuidas();
+    if (this.todasAsTags().length === 0) this.carregarTodasAsTags();
     this.mostrarDialogNova.set(true);
   }
 
@@ -312,6 +313,7 @@ export class AtividadeListagemPage implements OnInit {
     const descricao = valor.descricao?.trim();
     if (descricao) dto.descricao = descricao;
     if (this.sessao.eGestor() && valor.usuarioId) dto.usuarioId = valor.usuarioId;
+    if (valor.tagIds?.length) dto.tagIds = valor.tagIds;
 
     this.atividadeService
       .criar(dto)
@@ -376,10 +378,24 @@ export class AtividadeListagemPage implements OnInit {
 
   abrirDialogTags(atividade: AtividadeResumoDto): void {
     this.atividadeTags.set(atividade);
-    this.formularioTags.reset({ tagIds: this.tagsDe(atividade.id).map((tag) => tag.id) });
+    this.formularioTags.reset({ tagIds: atividade.tags.map((tag) => tag.id) });
     this.mostrarDialogTags.set(true);
 
     if (this.todasAsTags().length === 0) this.carregarTodasAsTags();
+  }
+
+  /** Alterna a seleção de uma tag no controle informado (seletor de chips). */
+  alternarTagSelecao(controle: AbstractControl, tagId: number): void {
+    const selecionadas = (controle.value as number[] | null) ?? [];
+    const novas = selecionadas.includes(tagId)
+      ? selecionadas.filter((id) => id !== tagId)
+      : [...selecionadas, tagId];
+    controle.setValue(novas);
+    controle.markAsDirty();
+  }
+
+  tagEstaSelecionada(controle: AbstractControl, tagId: number): boolean {
+    return ((controle.value as number[] | null) ?? []).includes(tagId);
   }
 
   salvarTags(): void {
@@ -394,8 +410,8 @@ export class AtividadeListagemPage implements OnInit {
       .pipe(finalize(() => this.salvandoTags.set(false)))
       .subscribe({
         next: (resposta) => {
-          if (resposta.sucesso) {
-            this.recarregarTagsDaAtividade(atividade.id);
+          if (resposta.sucesso && resposta.dados) {
+            this.atualizarTagsDaAtividade(atividade.id, resposta.dados.tags);
             this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Tags atualizadas' });
             this.mostrarDialogTags.set(false);
           }
@@ -664,10 +680,6 @@ export class AtividadeListagemPage implements OnInit {
       .toUpperCase();
   }
 
-  tagsDe(atividadeId: number): TagResumoDto[] {
-    return this.tagsPorAtividade()[atividadeId] ?? [];
-  }
-
   confirmarExclusao(atividade: AtividadeResumoDto): void {
     this.confirmationService.confirm({
       message: `Deseja excluir a atividade "${atividade.nome}"? Esta ação não pode ser desfeita.`,
@@ -740,27 +752,11 @@ export class AtividadeListagemPage implements OnInit {
       });
   }
 
-  private recarregarTagsDaAtividade(atividadeId: number): void {
-    this.atividadeService.listarTags(atividadeId).subscribe({
-      next: (resposta) => {
-        if (resposta.sucesso && resposta.dados) {
-          this.tagsPorAtividade.update((mapa) => ({ ...mapa, [atividadeId]: resposta.dados ?? [] }));
-        }
-      },
-    });
-  }
-
-  private carregarTagsDasAtividades(atividades: AtividadeResumoDto[]): void {
-    this.tagsPorAtividade.set({});
-    for (const atividade of atividades) {
-      this.atividadeService.listarTags(atividade.id).subscribe({
-        next: (resposta) => {
-          if (resposta.sucesso && resposta.dados) {
-            this.tagsPorAtividade.update((mapa) => ({ ...mapa, [atividade.id]: resposta.dados ?? [] }));
-          }
-        },
-      });
-    }
+  /** Atualiza in-place as tags de uma atividade já carregada, sem refazer a listagem. */
+  private atualizarTagsDaAtividade(atividadeId: number, tags: TagResumoDto[]): void {
+    this.atividades.update((lista) =>
+      lista.map((item) => (item.id === atividadeId ? { ...item, tags } : item)),
+    );
   }
 
   private excluirAtividade(atividade: AtividadeResumoDto): void {

@@ -67,6 +67,16 @@ export class AtividadeService {
       ordemExibicao: dto.ordemExibicao,
     });
 
+    if (dto.tagIds && dto.tagIds.length > 0) {
+      for (const tagId of dto.tagIds) {
+        const tagEncontrada = await this.tagRepositorio.recuperar({ id: tagId });
+        if (!tagEncontrada) {
+          throw new ResourceNotFoundException(`Tag com id ${tagId}`);
+        }
+      }
+      await this.atividadeRepositorio.alterarTags({ atividadeId: atividadeCriada.id, tagIds: dto.tagIds });
+    }
+
     return {
       sucesso:  true,
       dados:    atividadeCriada,
