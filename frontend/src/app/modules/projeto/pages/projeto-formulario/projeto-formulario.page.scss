@@ -53,11 +53,6 @@
     font-size: 0.75rem;
     color: var(--p-text-muted-color);
   }
-  &__cor-wrapper { @include form-cor-wrapper; }
-  &__cor-preview { @include form-cor-preview; }
-  &__cor-valor  { @include form-cor-valor; }
-  &__cor-input  { @include form-cor-input; }
-
   &__input-codigo {
     text-transform: uppercase;
   }

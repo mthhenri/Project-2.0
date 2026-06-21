@@ -5,7 +5,6 @@ import { finalize } from 'rxjs/operators';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
-import { ColorPickerModule } from 'primeng/colorpicker';
 import { DatePickerModule } from 'primeng/datepicker';
 import { DialogModule } from 'primeng/dialog';
 import { TabsModule } from 'primeng/tabs';
@@ -30,6 +29,7 @@ import { DemandaArvoreItemComponent } from '../../../demanda/components/demanda-
 import { DemandaFormularioDialogComponent } from '../../../demanda/components/demanda-formulario-dialog/demanda-formulario-dialog.component';
 import { DemandaDetalheDialogComponent } from '../../../demanda/components/demanda-detalhe-dialog/demanda-detalhe-dialog.component';
 import { DemandaEdicaoDialogComponent } from '../../../demanda/components/demanda-edicao-dialog/demanda-edicao-dialog.component';
+import { SeletorCorComponent } from '../../../../shared/components/seletor-cor/seletor-cor.component';
 import { ambiente } from '../../../../../environments/environment';
 
 @Component({
@@ -40,7 +40,6 @@ import { ambiente } from '../../../../../environments/environment';
     ButtonModule,
     InputTextModule,
     Select,
-    ColorPickerModule,
     DatePickerModule,
     DialogModule,
     TabsModule,
@@ -51,6 +50,7 @@ import { ambiente } from '../../../../../environments/environment';
     DemandaFormularioDialogComponent,
     DemandaDetalheDialogComponent,
     DemandaEdicaoDialogComponent,
+    SeletorCorComponent,
   ],
   templateUrl: './projeto-detalhe.page.html',
   styleUrl: './projeto-detalhe.page.scss',
@@ -351,15 +351,6 @@ export class ProjetoDetalhePage implements OnInit {
     }
 
     return raizes;
-  }
-
-  digitarCor(evento: Event, controle: AbstractControl | null): void {
-    if (!controle) return;
-    const valor = (evento.target as HTMLInputElement).value.trim();
-    const hexNormalizado = valor.startsWith('#') ? valor : '#' + valor;
-    if (/^#[0-9A-Fa-f]{6}$/.test(hexNormalizado)) {
-      controle.setValue(hexNormalizado);
-    }
   }
 
   private formatarData(data: Date): string {

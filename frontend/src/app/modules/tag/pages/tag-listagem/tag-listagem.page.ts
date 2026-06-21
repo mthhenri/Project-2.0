@@ -1,16 +1,16 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
-import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
-import { ColorPickerModule } from 'primeng/colorpicker';
 import { DialogModule } from 'primeng/dialog';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TooltipModule } from 'primeng/tooltip';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { TagResumoDto, TagCriarDto, TagAlterarDto } from '@project20/shared';
 import { TagService } from '../../services/tag.service';
+import { SeletorCorComponent } from '../../../../shared/components/seletor-cor/seletor-cor.component';
 
 @Component({
   selector: 'app-tag-listagem',
@@ -20,10 +20,10 @@ import { TagService } from '../../services/tag.service';
     ButtonModule,
     InputTextModule,
     TableModule,
-    ColorPickerModule,
     DialogModule,
     ConfirmDialogModule,
     TooltipModule,
+    SeletorCorComponent,
   ],
   templateUrl: './tag-listagem.page.html',
   styleUrl: './tag-listagem.page.scss',
@@ -150,15 +150,6 @@ export class TagListagemPage implements OnInit {
       acceptButtonStyleClass: 'p-button-danger',
       accept: () => this.excluirTag(tag),
     });
-  }
-
-  digitarCor(evento: Event, controle: AbstractControl | null): void {
-    if (!controle) return;
-    const valor = (evento.target as HTMLInputElement).value.trim();
-    const hexNormalizado = valor.startsWith('#') ? valor : '#' + valor;
-    if (/^#[0-9A-Fa-f]{6}$/.test(hexNormalizado)) {
-      controle.setValue(hexNormalizado);
-    }
   }
 
   campoNovaInvalido(nomeCampo: string): boolean {

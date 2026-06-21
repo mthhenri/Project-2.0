@@ -79,23 +79,7 @@
 
     <div class="tag-listagem__dialog-campo">
       <label class="tag-listagem__label">Cor <span class="tag-listagem__obrigatorio">*</span></label>
-      <div class="tag-listagem__cor-wrapper">
-        <p-colorpicker formControlName="cor" format="hex" appendTo="body" />
-        <span
-          class="tag-listagem__cor-preview"
-          [style.background-color]="formularioNova.value.cor"
-        ></span>
-        <input
-          type="text"
-          class="tag-listagem__cor-input"
-          [value]="formularioNova.value.cor || ''"
-          (input)="digitarCor($event, formularioNova.get('cor'))"
-          placeholder="#3b82f6"
-          maxlength="7"
-          spellcheck="false"
-          autocomplete="off"
-        />
-      </div>
+      <app-seletor-cor formControlName="cor" />
     </div>
 
     @if (formularioNova.value.nome && formularioNova.value.cor) {
@@ -148,23 +132,7 @@
 
     <div class="tag-listagem__dialog-campo">
       <label class="tag-listagem__label">Cor <span class="tag-listagem__obrigatorio">*</span></label>
-      <div class="tag-listagem__cor-wrapper">
-        <p-colorpicker formControlName="cor" format="hex" appendTo="body" />
-        <span
-          class="tag-listagem__cor-preview"
-          [style.background-color]="formularioEditar.value.cor"
-        ></span>
-        <input
-          type="text"
-          class="tag-listagem__cor-input"
-          [value]="formularioEditar.value.cor || ''"
-          (input)="digitarCor($event, formularioEditar.get('cor'))"
-          placeholder="#3b82f6"
-          maxlength="7"
-          spellcheck="false"
-          autocomplete="off"
-        />
-      </div>
+      <app-seletor-cor formControlName="cor" />
     </div>
 
     @if (formularioEditar.value.nome && formularioEditar.value.cor) {

@@ -152,10 +152,6 @@
   &__label        { @include form-label; }
   &__obrigatorio  { @include form-obrigatorio; }
   &__erro         { @include form-erro; }
-  &__cor-wrapper  { @include form-cor-wrapper; }
-  &__cor-preview  { @include form-cor-preview; }
-  &__cor-valor    { @include form-cor-valor; }
-  &__cor-input    { @include form-cor-input; }
 
   &__dialog-tags-form {
     padding: 0.25rem 0;

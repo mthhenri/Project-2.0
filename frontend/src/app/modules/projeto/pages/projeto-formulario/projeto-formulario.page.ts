@@ -6,17 +6,17 @@ import { finalize } from 'rxjs/operators';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
-import { ColorPickerModule } from 'primeng/colorpicker';
 import { DatePickerModule } from 'primeng/datepicker';
 import { MessageService } from 'primeng/api';
 import { ProjetoCriarDto, ProjetoStatusEnum } from '@project20/shared';
 import { ProjetoService } from '../../services/projeto.service';
 import { gerarCodigoDoNome } from '../../models/projeto.model';
+import { SeletorCorComponent } from '../../../../shared/components/seletor-cor/seletor-cor.component';
 
 @Component({
   selector: 'app-projeto-formulario',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonModule, InputTextModule, Select, ColorPickerModule, DatePickerModule],
+  imports: [ReactiveFormsModule, ButtonModule, InputTextModule, Select, SeletorCorComponent, DatePickerModule],
   templateUrl: './projeto-formulario.page.html',
   styleUrl: './projeto-formulario.page.scss',
 })
@@ -123,15 +123,6 @@ export class ProjetoFormularioPage implements OnInit {
       this.formulario.hasError('previsaoAnteriorAoInicio') &&
       this.formulario.get('previsaoFimData')?.touched
     );
-  }
-
-  digitarCor(evento: Event, controle: AbstractControl | null): void {
-    if (!controle) return;
-    const valor = (evento.target as HTMLInputElement).value.trim();
-    const hexNormalizado = valor.startsWith('#') ? valor : '#' + valor;
-    if (/^#[0-9A-Fa-f]{6}$/.test(hexNormalizado)) {
-      controle.setValue(hexNormalizado);
-    }
   }
 
   private formatarData(data: Date): string {

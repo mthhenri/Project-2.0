@@ -70,10 +70,6 @@
   &__label        { @include form-label; }
   &__obrigatorio  { @include form-obrigatorio; }
   &__erro         { @include form-erro; }
-  &__cor-wrapper  { @include form-cor-wrapper; }
-  &__cor-preview  { @include form-cor-preview; }
-  &__cor-valor    { @include form-cor-valor; }
-  &__cor-input    { @include form-cor-input; }
 
   &__preview-bloco {
     display: flex;

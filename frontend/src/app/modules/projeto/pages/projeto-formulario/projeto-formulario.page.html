@@ -76,20 +76,7 @@
           <label class="projeto-formulario__label">
             Cor de identificação <span class="projeto-formulario__obrigatorio">*</span>
           </label>
-          <div class="projeto-formulario__cor-wrapper">
-            <p-colorpicker formControlName="cor" format="hex" />
-            <span class="projeto-formulario__cor-preview" [style.background-color]="formulario.value.cor"></span>
-            <input
-              type="text"
-              class="projeto-formulario__cor-input"
-              [value]="formulario.value.cor || ''"
-              (input)="digitarCor($event, formulario.get('cor'))"
-              placeholder="#3b82f6"
-              maxlength="7"
-              spellcheck="false"
-              autocomplete="off"
-            />
-          </div>
+          <app-seletor-cor formControlName="cor" />
           @if (campoInvalido('cor')) {
             <small class="projeto-formulario__erro">Cor é obrigatória (formato hex)</small>
           }

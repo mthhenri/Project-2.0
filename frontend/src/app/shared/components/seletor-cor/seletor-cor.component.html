@@ -1,0 +1,42 @@
+<div class="seletor-cor">
+  <div class="seletor-cor__principal">
+    <p-colorpicker
+      [inline]="true"
+      format="hex"
+      [ngModel]="cor()"
+      (ngModelChange)="atualizarDoPicker($event)"
+      [disabled]="desabilitado()"
+    />
+
+    <div class="seletor-cor__lado">
+      <div class="seletor-cor__paleta">
+        @for (corPredefinida of coresPredefinidas; track corPredefinida) {
+          <button
+            type="button"
+            class="seletor-cor__amostra"
+            [class.seletor-cor__amostra--ativa]="corSelecionada(corPredefinida)"
+            [style.background-color]="corPredefinida"
+            [disabled]="desabilitado()"
+            (click)="selecionarPredefinida(corPredefinida)"
+            [attr.aria-label]="'Selecionar cor ' + corPredefinida"
+          ></button>
+        }
+      </div>
+
+      <div class="seletor-cor__hex">
+        <span class="seletor-cor__amostra-atual" [style.background-color]="cor()"></span>
+        <input
+          type="text"
+          class="seletor-cor__hex-input"
+          [value]="cor()"
+          (input)="digitarHex($event)"
+          [disabled]="desabilitado()"
+          placeholder="#3b82f6"
+          maxlength="7"
+          spellcheck="false"
+          autocomplete="off"
+        />
+      </div>
+    </div>
+  </div>
+</div>
