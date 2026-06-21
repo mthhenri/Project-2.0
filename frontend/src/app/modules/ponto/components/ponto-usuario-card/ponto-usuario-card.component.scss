@@ -101,11 +101,18 @@
   }
 
   &__atividade {
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    text-align: left;
     text-decoration: none;
     color: var(--p-text-color);
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font: inherit;
 
     &:hover {
       color: var(--p-primary-600);

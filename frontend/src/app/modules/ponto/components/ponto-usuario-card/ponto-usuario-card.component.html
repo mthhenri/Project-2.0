@@ -33,16 +33,17 @@
               @if (execucao.fimData) {
                 –{{ execucao.fimData | date: 'HH:mm' }}
               } @else {
-                <app-execucao-timer [inicioData]="execucao.inicioData" />
+                <app-execucao-timer [inicioData]="execucao.inicioData" tamanho="compacto" />
               }
             </span>
-            <a
-              [routerLink]="['/atividade', execucao.atividadeId]"
+            <button
+              type="button"
               class="ponto-usuario-card__atividade"
               [title]="execucao.nomeAtividade"
+              (click)="atividadeSelecionada.emit(execucao.atividadeId)"
             >
               {{ execucao.nomeAtividade }}
-            </a>
+            </button>
           </li>
         }
       </ul>

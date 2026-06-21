@@ -16,15 +16,34 @@
         />
       }
       @if (modo() === 'mensal') {
-        <p-datepicker
-          formControlName="mesAno"
-          view="month"
-          dateFormat="mm/yy"
-          [maxDate]="hoje"
-          [showIcon]="true"
-          appendTo="body"
-          (onSelect)="aoMudarMes()"
-        />
+        <div class="ponto__navegacao-mes">
+          <p-button
+            icon="pi pi-chevron-left"
+            severity="secondary"
+            [outlined]="true"
+            pTooltip="Mês anterior"
+            tooltipPosition="top"
+            (onClick)="retornarMes()"
+          />
+          <p-datepicker
+            formControlName="mesAno"
+            view="month"
+            dateFormat="mm/yy"
+            [maxDate]="hoje"
+            [showIcon]="true"
+            appendTo="body"
+            (onSelect)="aoMudarMes()"
+          />
+          <p-button
+            icon="pi pi-chevron-right"
+            severity="secondary"
+            [outlined]="true"
+            [disabled]="visualizandoMesAtual()"
+            pTooltip="Próximo mês"
+            tooltipPosition="top"
+            (onClick)="avancarMes()"
+          />
+        </div>
       }
     </form>
   </div>
@@ -38,7 +57,10 @@
     @if (pontosTodos().length) {
       <div class="ponto__grid">
         @for (ponto of pontosTodos(); track ponto.usuarioId) {
-          <app-ponto-usuario-card [ponto]="ponto" />
+          <app-ponto-usuario-card
+            [ponto]="ponto"
+            (atividadeSelecionada)="visualizarDialog.abrir($event)"
+          />
         }
       </div>
     } @else {
@@ -79,8 +101,14 @@
 
     <div class="ponto__lista-dias">
       @for (dia of mensal.dias; track dia.data) {
-        <app-ponto-mes-dia [dia]="dia" [usuarioId]="mensal.usuarioId" />
+        <app-ponto-mes-dia
+          [dia]="dia"
+          [usuarioId]="mensal.usuarioId"
+          (atividadeSelecionada)="visualizarDialog.abrir($event)"
+        />
       }
     </div>
   }
+
+  <app-atividade-visualizar-dialog #visualizarDialog />
 </div>

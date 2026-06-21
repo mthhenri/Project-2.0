@@ -28,6 +28,12 @@
     gap: 0.75rem;
   }
 
+  &__navegacao-mes {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
   &__carregando {
     display: flex;
     align-items: center;

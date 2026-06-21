@@ -1,6 +1,5 @@
-import { Component, Input, inject, signal } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { RouterModule } from '@angular/router';
 import { TimelineModule } from 'primeng/timeline';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { finalize } from 'rxjs';
@@ -21,7 +20,6 @@ import { ambiente } from '../../../../../environments/environment';
   standalone: true,
   imports: [
     DatePipe,
-    RouterModule,
     TimelineModule,
     ProgressSpinnerModule,
     MinutosParaHorasPipe,
@@ -34,6 +32,7 @@ import { ambiente } from '../../../../../environments/environment';
 export class PontoMesDiaComponent {
   @Input({ required: true }) dia!: PontoDiaResumoDto;
   @Input({ required: true }) usuarioId!: number;
+  @Output() atividadeSelecionada = new EventEmitter<number>();
 
   private readonly pontoService = inject(PontoService);
   readonly intervaloMinimoMinutos = ambiente.intervaloMinimoMinutos;
@@ -45,6 +44,15 @@ export class PontoMesDiaComponent {
   /** Há registro de trabalho no dia (logo, é expansível para ver a timeline). */
   get temRegistro(): boolean {
     return this.dia.totalMinutosTrabalhados > 0 || this.dia.primeiroInicioData !== null;
+  }
+
+  /** O dia exibido é o dia de hoje (compara o calendário local com a data ISO do dia). */
+  get ehHoje(): boolean {
+    const agora = new Date();
+    const ano = agora.getFullYear();
+    const mes = String(agora.getMonth() + 1).padStart(2, '0');
+    const dia = String(agora.getDate()).padStart(2, '0');
+    return this.dia.data.slice(0, 10) === `${ano}-${mes}-${dia}`;
   }
 
   abreviacao(): string {

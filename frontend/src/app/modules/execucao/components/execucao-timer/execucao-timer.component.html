@@ -1,6 +1,18 @@
-<div class="flex items-center gap-3">
-  <i class="pi pi-stopwatch text-2xl text-[var(--p-primary-600)]"></i>
-  <span class="font-mono text-4xl font-semibold tabular-nums text-[var(--p-primary-600)]">
+<div
+  class="inline-flex items-center"
+  [class.gap-3]="tamanho === 'grande'"
+  [class.gap-1]="tamanho === 'compacto'"
+>
+  <i
+    class="pi pi-stopwatch text-[var(--p-primary-600)]"
+    [class.text-2xl]="tamanho === 'grande'"
+    [class.text-sm]="tamanho === 'compacto'"
+  ></i>
+  <span
+    class="font-mono font-semibold tabular-nums text-[var(--p-primary-600)]"
+    [class.text-4xl]="tamanho === 'grande'"
+    [class.text-sm]="tamanho === 'compacto'"
+  >
     {{ tempoDecorrido() }}
   </span>
 </div>

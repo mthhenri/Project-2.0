@@ -2,6 +2,7 @@
   class="ponto-mes-dia"
   [class.ponto-mes-dia--nao-util]="!dia.ehDiaUtil"
   [class.ponto-mes-dia--clicavel]="temRegistro"
+  [class.ponto-mes-dia--hoje]="ehHoje"
 >
   <div class="ponto-mes-dia__linha" (click)="alternar()">
     <span class="ponto-mes-dia__data">
@@ -53,18 +54,19 @@
               @if (execucao.fimData) {
                 {{ execucao.fimData | date: 'HH:mm' }}
               } @else {
-                <app-execucao-timer [inicioData]="execucao.inicioData" />
+                <app-execucao-timer [inicioData]="execucao.inicioData" tamanho="compacto" />
               }
             </span>
           </ng-template>
           <ng-template pTemplate="content" let-execucao>
-            <a
-              [routerLink]="['/atividade', execucao.atividadeId]"
+            <button
+              type="button"
               class="ponto-mes-dia__execucao-atividade"
+              (click)="atividadeSelecionada.emit(execucao.atividadeId)"
             >
               <i class="pi pi-check-square"></i>
               <span>{{ execucao.nomeAtividade }}</span>
-            </a>
+            </button>
           </ng-template>
         </p-timeline>
 

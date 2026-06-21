@@ -2,6 +2,7 @@ import {
   Component,
   inject,
   signal,
+  computed,
   OnInit,
   HostListener,
 } from '@angular/core';
@@ -10,6 +11,8 @@ import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { DatePickerModule } from 'primeng/datepicker';
 import { Select } from 'primeng/select';
+import { ButtonModule } from 'primeng/button';
+import { TooltipModule } from 'primeng/tooltip';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import {
   PontoDiarioDto,
@@ -25,6 +28,7 @@ import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-hora
 import { PontoResumoCardComponent } from '../../components/ponto-resumo-card/ponto-resumo-card.component';
 import { PontoUsuarioCardComponent } from '../../components/ponto-usuario-card/ponto-usuario-card.component';
 import { PontoMesDiaComponent } from '../../components/ponto-mes-dia/ponto-mes-dia.component';
+import { AtividadeVisualizarDialogComponent } from '../../../atividade/components/atividade-visualizar-dialog/atividade-visualizar-dialog.component';
 import { formatarSaldoMinutos } from '../../models/ponto.model';
 
 type ModoPonto = 'todos' | 'mensal';
@@ -37,11 +41,14 @@ type ModoPonto = 'todos' | 'mensal';
     ReactiveFormsModule,
     DatePickerModule,
     Select,
+    ButtonModule,
+    TooltipModule,
     ProgressSpinnerModule,
     MinutosParaHorasPipe,
     PontoResumoCardComponent,
     PontoUsuarioCardComponent,
     PontoMesDiaComponent,
+    AtividadeVisualizarDialogComponent,
   ],
   templateUrl: './ponto.page.html',
   styleUrl: './ponto.page.scss',
@@ -61,6 +68,13 @@ export class PontoPage implements OnInit {
 
   /** Gestor sem usuário filtrado → "todos hoje"; caso contrário → "mensal". */
   readonly modo = signal<ModoPonto>(this.sessao.eGestor() ? 'todos' : 'mensal');
+
+  /** Mês em exibição, espelhado em signal para habilitar/desabilitar a navegação. */
+  readonly mesSelecionado = signal<Date>(this.hoje);
+  readonly visualizandoMesAtual = computed(() => {
+    const mes = this.mesSelecionado();
+    return mes.getFullYear() === this.hoje.getFullYear() && mes.getMonth() === this.hoje.getMonth();
+  });
 
   readonly carregando = signal<boolean>(false);
   readonly pontosTodos = signal<PontoDiarioDto[]>([]);
@@ -94,7 +108,28 @@ export class PontoPage implements OnInit {
   }
 
   aoMudarMes(): void {
+    const mesAno = this.formularioFiltros.value.mesAno ?? this.hoje;
+    this.mesSelecionado.set(mesAno);
     this.carregar();
+  }
+
+  /** Avança um mês. Bloqueado quando já se está no mês atual (sem meses futuros). */
+  avancarMes(): void {
+    if (this.visualizandoMesAtual()) return;
+    this.deslocarMes(1);
+  }
+
+  /** Retorna um mês. Sempre disponível — não há limite para o passado. */
+  retornarMes(): void {
+    this.deslocarMes(-1);
+  }
+
+  private deslocarMes(meses: number): void {
+    const atual = this.formularioFiltros.value.mesAno ?? this.hoje;
+    const nova = new Date(atual.getFullYear(), atual.getMonth() + meses, 1);
+    const limitada = nova > this.hoje ? this.hoje : nova;
+    this.formularioFiltros.patchValue({ mesAno: limitada });
+    this.aoMudarMes();
   }
 
   formatarSaldo(saldoMinutos: number): string {
