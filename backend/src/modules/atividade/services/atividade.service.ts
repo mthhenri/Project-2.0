@@ -8,7 +8,8 @@ import {
   AtividadeListarDto,
   AtividadeResumoDto,
   AtividadeRecuperadaDto,
-  AtividadeAlterarDto,
+  AtividadeRecuperarDto,
+  AtividadeInternoAlterarDto,
   AtividadeAlteradaDto,
   AtividadeTagsAtribuirDto,
   AtividadeTagsAtribuidasDto,
@@ -127,10 +128,10 @@ export class AtividadeService {
    * Desenvolvedor precisa estar atribuído à demanda da atividade para acessá-la.
    */
   async recuperar(
-    id: number,
+    dto: AtividadeRecuperarDto,
     usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<AtividadeRecuperadaDto>> {
-    const atividadeEncontrada = await this.atividadeRepositorio.recuperar({ id });
+    const atividadeEncontrada = await this.atividadeRepositorio.recuperar({ id: dto.id });
     if (!atividadeEncontrada) {
       throw new ResourceNotFoundException('Atividade');
     }
@@ -158,11 +159,10 @@ export class AtividadeService {
    * onde está atribuído à demanda.
    */
   async alterar(
-    id: number,
-    dto: AtividadeAlterarDto,
+    dto: AtividadeInternoAlterarDto,
     usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<AtividadeAlteradaDto>> {
-    const atividadeEncontrada = await this.atividadeRepositorio.recuperar({ id });
+    const atividadeEncontrada = await this.atividadeRepositorio.recuperar({ id: dto.id });
     if (!atividadeEncontrada) {
       throw new ResourceNotFoundException('Atividade');
     }
@@ -181,7 +181,8 @@ export class AtividadeService {
       }
     }
 
-    const atividadeAlterada = await this.atividadeRepositorio.alterar(id, {
+    const atividadeAlterada = await this.atividadeRepositorio.alterar({
+      id:            dto.id,
       nome:          dto.nome,
       descricao:     dto.descricao,
       status:        dto.status,
@@ -196,13 +197,13 @@ export class AtividadeService {
   }
 
   /** Realiza soft delete da atividade. Restrito a gestores. */
-  async excluir(id: number): Promise<StandardResponse<void>> {
-    const atividadeEncontrada = await this.atividadeRepositorio.recuperar({ id });
+  async excluir(dto: AtividadeRecuperarDto): Promise<StandardResponse<void>> {
+    const atividadeEncontrada = await this.atividadeRepositorio.recuperar({ id: dto.id });
     if (!atividadeEncontrada) {
       throw new ResourceNotFoundException('Atividade');
     }
 
-    await this.atividadeRepositorio.excluir({ id });
+    await this.atividadeRepositorio.excluir({ id: dto.id });
 
     return {
       sucesso:  true,
@@ -217,11 +218,12 @@ export class AtividadeService {
    * (usuarioId) ou onde está atribuído à demanda. Gestor é sempre liberado.
    */
   async alterarTags(
-    id: number,
     dto: AtividadeTagsAtribuirDto,
     usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<AtividadeTagsAtribuidasDto>> {
-    const atividadeEncontrada = await this.atividadeRepositorio.recuperar({ id });
+    const atividadeId = dto.id!;
+
+    const atividadeEncontrada = await this.atividadeRepositorio.recuperar({ id: atividadeId });
     if (!atividadeEncontrada) {
       throw new ResourceNotFoundException('Atividade');
     }
@@ -247,13 +249,13 @@ export class AtividadeService {
       }
     }
 
-    await this.atividadeRepositorio.alterarTags({ atividadeId: id, tagIds: dto.tagIds });
+    await this.atividadeRepositorio.alterarTags({ atividadeId, tagIds: dto.tagIds });
 
-    const tagsAlteradas = await this.atividadeRepositorio.listarTags({ atividadeId: id });
+    const tagsAlteradas = await this.atividadeRepositorio.listarTags({ atividadeId });
 
     return {
       sucesso:  true,
-      dados:    { atividadeId: id, tags: tagsAlteradas },
+      dados:    { atividadeId, tags: tagsAlteradas },
       mensagem: 'Tags da atividade alteradas com sucesso',
     };
   }
@@ -262,10 +264,10 @@ export class AtividadeService {
    * Lista as tags ativas de uma atividade.
    */
   async listarTags(
-    id: number,
+    dto: AtividadeRecuperarDto,
     usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<TagResumoDto[]>> {
-    const atividadeEncontrada = await this.atividadeRepositorio.recuperar({ id });
+    const atividadeEncontrada = await this.atividadeRepositorio.recuperar({ id: dto.id });
     if (!atividadeEncontrada) {
       throw new ResourceNotFoundException('Atividade');
     }
@@ -280,7 +282,7 @@ export class AtividadeService {
       }
     }
 
-    const tags = await this.atividadeRepositorio.listarTags({ atividadeId: id });
+    const tags = await this.atividadeRepositorio.listarTags({ atividadeId: dto.id });
 
     return {
       sucesso:  true,

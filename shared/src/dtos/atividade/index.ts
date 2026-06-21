@@ -6,6 +6,7 @@ export * from './AtividadeRecuperarDto';
 export * from './AtividadeAlteradaDto';
 export * from './AtividadeListarDto';
 export * from './AtividadeAlterarDto';
+export * from './AtividadeInternoAlterarDto';
 export * from './AtividadeTagsAtribuirDto';
 export * from './AtividadeTagsAtribuidasDto';
 export * from './AtividadeExcluirDto';

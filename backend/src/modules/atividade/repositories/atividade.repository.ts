@@ -12,6 +12,7 @@ import {
   TagResumoDto,
   AtividadeRecuperarDto,
   AtividadeExcluirDto,
+  AtividadeInternoAlterarDto,
   AtividadeTagsListarDto,
   AtividadeTagsAlterarDto,
   DemandaAcessoVerificarDto,
@@ -194,25 +195,25 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
   /**
    * Altera campos da atividade e retorna o estado alterado.
    */
-  async alterar(id: number, dados: Partial<Atividade>): Promise<AtividadeAlteradaDto> {
+  async alterar(dto: AtividadeInternoAlterarDto): Promise<AtividadeAlteradaDto> {
     const setClauses: string[] = ['updated_date = NOW()'];
-    const parametros: Record<string, unknown> = { id };
+    const parametros: Record<string, unknown> = { id: dto.id };
 
-    if (dados.nome !== undefined) {
+    if (dto.nome !== undefined) {
       setClauses.push('nome = :nome');
-      parametros.nome = dados.nome;
+      parametros.nome = dto.nome;
     }
-    if (dados.descricao !== undefined) {
+    if (dto.descricao !== undefined) {
       setClauses.push('descricao = :descricao');
-      parametros.descricao = dados.descricao;
+      parametros.descricao = dto.descricao;
     }
-    if (dados.status !== undefined) {
+    if (dto.status !== undefined) {
       setClauses.push('status = :status');
-      parametros.status = dados.status;
+      parametros.status = dto.status;
     }
-    if (dados.ordemExibicao !== undefined) {
+    if (dto.ordemExibicao !== undefined) {
       setClauses.push('ordem_exibicao = :ordemExibicao');
-      parametros.ordemExibicao = dados.ordemExibicao;
+      parametros.ordemExibicao = dto.ordemExibicao;
     }
 
     const resultado = await this.executarConsulta<AtividadeAlteradaDto>(

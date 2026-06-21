@@ -65,7 +65,7 @@ export class AtividadeController {
     @Param('id', ParseIntPipe) id: number,
     @ActiveUser() usuarioAtivo: JwtPayload,
   ) {
-    return this.atividadeService.recuperar(id, usuarioAtivo);
+    return this.atividadeService.recuperar({ id }, usuarioAtivo);
   }
 
   @ApiOperation({ summary: 'Alterar atividade' })
@@ -80,7 +80,7 @@ export class AtividadeController {
     @Body() dto: AtividadeAlterarDto,
     @ActiveUser() usuarioAtivo: JwtPayload,
   ) {
-    return this.atividadeService.alterar(id, dto, usuarioAtivo);
+    return this.atividadeService.alterar({ ...dto, id }, usuarioAtivo);
   }
 
   @ApiOperation({ summary: 'Excluir atividade via soft delete (somente gestor)' })
@@ -91,7 +91,7 @@ export class AtividadeController {
   @GestorOnly()
   @Delete(':id')
   excluir(@Param('id', ParseIntPipe) id: number) {
-    return this.atividadeService.excluir(id);
+    return this.atividadeService.excluir({ id });
   }
 
   @ApiOperation({ summary: 'Sincronizar tags da atividade (gestor ou desenvolvedor dono da atividade)' })
@@ -106,7 +106,7 @@ export class AtividadeController {
     @Body() dto: AtividadeTagsAtribuirDto,
     @ActiveUser() usuarioAtivo: JwtPayload,
   ) {
-    return this.atividadeService.alterarTags(id, dto, usuarioAtivo);
+    return this.atividadeService.alterarTags({ ...dto, id }, usuarioAtivo);
   }
 
   @ApiOperation({ summary: 'Listar tags da atividade' })
@@ -118,6 +118,6 @@ export class AtividadeController {
     @Param('id', ParseIntPipe) id: number,
     @ActiveUser() usuarioAtivo: JwtPayload,
   ) {
-    return this.atividadeService.listarTags(id, usuarioAtivo);
+    return this.atividadeService.listarTags({ id }, usuarioAtivo);
   }
 }
