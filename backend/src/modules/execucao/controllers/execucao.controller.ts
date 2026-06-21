@@ -90,7 +90,7 @@ export class ExecucaoController {
     @Param('id', ParseIntPipe) id: number,
     @ActiveUser() usuarioAtivo: JwtPayload,
   ) {
-    return this.execucaoService.recuperar(id, usuarioAtivo);
+    return this.execucaoService.recuperar({ id }, usuarioAtivo);
   }
 
   @ApiOperation({ summary: 'Encerrar execução em andamento' })
@@ -105,7 +105,7 @@ export class ExecucaoController {
     @Body() dto: ExecucaoEncerrarDto,
     @ActiveUser() usuarioAtivo: JwtPayload,
   ) {
-    return this.execucaoService.encerrar(id, dto, usuarioAtivo);
+    return this.execucaoService.encerrar({ ...dto, id }, usuarioAtivo);
   }
 
   @ApiOperation({ summary: 'Alterar descrição de uma execução' })
@@ -120,7 +120,7 @@ export class ExecucaoController {
     @Body() dto: ExecucaoAlterarDto,
     @ActiveUser() usuarioAtivo: JwtPayload,
   ) {
-    return this.execucaoService.alterar(id, dto, usuarioAtivo);
+    return this.execucaoService.alterar({ ...dto, id }, usuarioAtivo);
   }
 
   @ApiOperation({ summary: 'Excluir execução via soft delete (somente gestor)' })
@@ -134,6 +134,6 @@ export class ExecucaoController {
     @Param('id', ParseIntPipe) id: number,
     @ActiveUser() usuarioAtivo: JwtPayload,
   ) {
-    return this.execucaoService.excluir(id, usuarioAtivo);
+    return this.execucaoService.excluir({ id }, usuarioAtivo);
   }
 }

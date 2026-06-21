@@ -10,9 +10,9 @@ import {
   ExecucaoListarDto,
   ExecucaoResumoDto,
   ExecucaoRecuperarDto,
-  ExecucaoEncerrarInternoDto,
+  ExecucaoInternoEncerrarDto,
   ExecucaoAtivaRecuperarDto,
-  ExecucaoAlterarInternoDto,
+  ExecucaoInternoAlterarDto,
   ExecucaoExcluirDto,
   ExecucaoUsuarioRecuperarDto,
   ExecucaoAtivaDto,
@@ -20,6 +20,7 @@ import {
   ExecucaoDiaResumoDto,
   ExecucaoRegistradaDto,
   ExecucaoSobreposicaoValidarDto,
+  ExecucaoAcessoFiltrarDto,
 } from '@project20/shared';
 
 @Injectable()
@@ -117,7 +118,7 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
    * Encerra uma execução definindo fim_data e atualizando a descrição.
    * Retorna a execução encerrada com duração calculada em minutos.
    */
-  async encerrar(dto: ExecucaoEncerrarInternoDto): Promise<ExecucaoEncerradaDto> {
+  async encerrar(dto: ExecucaoInternoEncerrarDto): Promise<ExecucaoEncerradaDto> {
     const resultado = await this.executarConsulta<ExecucaoEncerradaDto>(
       `UPDATE execucao
        SET fim_data     = :fimData,
@@ -165,11 +166,11 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
 
   /**
    * Lista execuções com filtros opcionais de atividade, usuário e data.
-   * Quando usuarioIdRestricao é fornecido, filtra apenas execuções daquele usuário.
+   * Quando restricao é fornecida, filtra apenas execuções do usuário daquele DTO.
    */
   async listar(
     filtros: ExecucaoListarDto,
-    usuarioIdRestricao?: number,
+    restricao?: ExecucaoAcessoFiltrarDto,
   ): Promise<{ itens: ExecucaoResumoDto[]; total: number; totalMinutosDia: number }> {
     const pagina         = filtros.pagina ?? 1;
     const itensPorPagina = filtros.itensPorPagina ?? 20;
@@ -182,7 +183,7 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
       'projeto.is_deleted = false',
     ];
 
-    const usuarioFiltrado = usuarioIdRestricao ?? filtros.usuarioId;
+    const usuarioFiltrado = restricao?.usuarioId ?? filtros.usuarioId;
     if (usuarioFiltrado !== undefined) {
       condicoes.push('atividade.usuario_id = :usuarioId');
       parametros.usuarioId = usuarioFiltrado;
@@ -325,7 +326,7 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
    * Altera a descrição, o início e o fim de uma execução.
    * Retorna a execução alterada com duração recalculada.
    */
-  async alterar(dto: ExecucaoAlterarInternoDto): Promise<ExecucaoAlteradaDto> {
+  async alterar(dto: ExecucaoInternoAlterarDto): Promise<ExecucaoAlteradaDto> {
     const resultado = await this.executarConsulta<ExecucaoAlteradaDto>(
       `UPDATE execucao
        SET descricao    = :descricao,

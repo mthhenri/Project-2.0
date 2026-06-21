@@ -63,6 +63,8 @@ usuario-listagem.page.ts
   - `membro interno` (complemento 2 palavras) + `atribuir` → `DemandaMembroInternoAtribuirDto` ✅
   - `DemandaMembroAtribuirInternoDto` ❌ — verbo no meio do complemento
   - `tag interno` + `remover` → `DemandaTagInternoRemoverDto` ✅
+  - `interno` (único complemento) + `alterar` → `ExecucaoInternoAlterarDto` ✅ — nunca `ExecucaoAlterarInternoDto` ❌
+  - `interno` (único complemento) + `encerrar` → `ExecucaoInternoEncerrarDto` ✅ — nunca `ExecucaoEncerrarInternoDto` ❌
 
 **DTOs de relatório / consulta computada** (não são CRUD, descrevem um recorte calculado) → `Entidade + Recorte + Dto`, **sem verbo**:
 - `PontoDiarioDto`, `PontoMensalDto` — o DTO de parâmetros de entrada, se houver, segue o padrão normal (`PontoDiarioConsultarDto`)

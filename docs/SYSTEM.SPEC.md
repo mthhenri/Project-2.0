@@ -160,6 +160,13 @@ tag    + interno → complemento "TagInterno"    → DemandaTagInternoRemoverDto
 tags   + interno → complemento "TagsInterno"   → DemandaTagsInternoAtribuirDto    ✅
 ```
 
+A mesma ordem vale quando `Interno` é o **único** complemento (sem outro substantivo): o qualificador continua antes do verbo, nunca depois:
+
+```
+interno → complemento "Interno" → ExecucaoInternoAlterarDto   ✅  / ExecucaoAlterarInternoDto   ❌
+interno → complemento "Interno" → ExecucaoInternoEncerrarDto  ✅  / ExecucaoEncerrarInternoDto  ❌
+```
+
 **Entrada (verbo no infinitivo):**
 ```
 UsuarioCriarDto                   ← operação pura no modelo inteiro

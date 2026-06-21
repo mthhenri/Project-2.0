@@ -1,4 +1,4 @@
-export class ExecucaoAlterarInternoDto {
+export class ExecucaoInternoAlterarDto {
   id: number;
   descricao: string;
   inicioData: Date;

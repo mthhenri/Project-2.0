@@ -1,4 +1,4 @@
-export class ExecucaoEncerrarInternoDto {
+export class ExecucaoInternoEncerrarDto {
   id: number;
   fimData: Date;
   descricao: string;

@@ -10,6 +10,7 @@ import {
   ExecucaoListarDto,
   ExecucaoListaDto,
   ExecucaoAlterarDto,
+  ExecucaoRecuperarDto,
   ExecucaoAtivaDto,
   ExecucaoRegistrarDto,
   ExecucaoRegistradaDto,
@@ -124,11 +125,10 @@ export class ExecucaoService {
    * Desenvolvedor só pode encerrar as próprias; gestor pode encerrar qualquer uma.
    */
   async encerrar(
-    id: number,
-    dto: ExecucaoEncerrarDto,
+    dto: ExecucaoEncerrarDto & { id: number },
     usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<ExecucaoEncerradaDto>> {
-    const execucaoEncontrada = await this.execucaoRepositorio.recuperar({ id });
+    const execucaoEncontrada = await this.execucaoRepositorio.recuperar({ id: dto.id });
     if (!execucaoEncontrada) {
       throw new ResourceNotFoundException('Execução');
     }
@@ -138,13 +138,13 @@ export class ExecucaoService {
     }
 
     if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR) {
-      const usuarioDaExecucao = await this.execucaoRepositorio.recuperarUsuario({ execucaoId: id });
+      const usuarioDaExecucao = await this.execucaoRepositorio.recuperarUsuario({ execucaoId: dto.id });
       if (usuarioDaExecucao !== usuarioAtivo.sub) {
         throw new UnauthorizedAccessException('Desenvolvedor não pode encerrar execução de outro usuário');
       }
     }
 
-    const execucaoEncerrada = await this.execucaoRepositorio.encerrar({ id, fimData: new Date(), descricao: dto.descricao });
+    const execucaoEncerrada = await this.execucaoRepositorio.encerrar({ id: dto.id, fimData: new Date(), descricao: dto.descricao });
 
     return {
       sucesso:  true,
@@ -180,10 +180,10 @@ export class ExecucaoService {
     const pagina         = filtros.pagina ?? 1;
     const itensPorPagina = filtros.itensPorPagina ?? 20;
 
-    const usuarioIdRestricao =
-      usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
+    const restricao =
+      usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR ? { usuarioId: usuarioAtivo.sub } : undefined;
 
-    const { itens, total, totalMinutosDia } = await this.execucaoRepositorio.listar(filtros, usuarioIdRestricao);
+    const { itens, total, totalMinutosDia } = await this.execucaoRepositorio.listar(filtros, restricao);
     const totalPaginas = Math.ceil(total / itensPorPagina);
 
     return {
@@ -205,16 +205,16 @@ export class ExecucaoService {
    * Desenvolvedor só pode acessar as próprias.
    */
   async recuperar(
-    id: number,
+    dto: ExecucaoRecuperarDto,
     usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<ExecucaoEncerradaDto>> {
-    const execucaoEncontrada = await this.execucaoRepositorio.recuperar({ id });
+    const execucaoEncontrada = await this.execucaoRepositorio.recuperar({ id: dto.id });
     if (!execucaoEncontrada) {
       throw new ResourceNotFoundException('Execução');
     }
 
     if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR) {
-      const usuarioDaExecucao = await this.execucaoRepositorio.recuperarUsuario({ execucaoId: id });
+      const usuarioDaExecucao = await this.execucaoRepositorio.recuperarUsuario({ execucaoId: dto.id });
       if (usuarioDaExecucao !== usuarioAtivo.sub) {
         throw new UnauthorizedAccessException('Desenvolvedor não pode acessar execução de outro usuário');
       }
@@ -232,17 +232,16 @@ export class ExecucaoService {
    * Desenvolvedor só pode editar as próprias; gestor pode editar qualquer uma.
    */
   async alterar(
-    id: number,
-    dto: ExecucaoAlterarDto,
+    dto: ExecucaoAlterarDto & { id: number },
     usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<ExecucaoAlteradaDto>> {
-    const execucaoEncontrada = await this.execucaoRepositorio.recuperar({ id });
+    const execucaoEncontrada = await this.execucaoRepositorio.recuperar({ id: dto.id });
     if (!execucaoEncontrada) {
       throw new ResourceNotFoundException('Execução');
     }
 
     if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR) {
-      const usuarioDaExecucao = await this.execucaoRepositorio.recuperarUsuario({ execucaoId: id });
+      const usuarioDaExecucao = await this.execucaoRepositorio.recuperarUsuario({ execucaoId: dto.id });
       if (usuarioDaExecucao !== usuarioAtivo.sub) {
         throw new UnauthorizedAccessException('Desenvolvedor não pode editar execução de outro usuário');
       }
@@ -271,7 +270,7 @@ export class ExecucaoService {
     }
 
     const execucaoAlterada = await this.execucaoRepositorio.alterar({
-      id,
+      id: dto.id,
       descricao: dto.descricao,
       inicioData,
       fimData,
@@ -286,15 +285,15 @@ export class ExecucaoService {
 
   /** Realiza soft delete da execução. Restrito a gestores. */
   async excluir(
-    id: number,
+    dto: ExecucaoRecuperarDto,
     usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<void>> {
-    const execucaoEncontrada = await this.execucaoRepositorio.recuperar({ id });
+    const execucaoEncontrada = await this.execucaoRepositorio.recuperar({ id: dto.id });
     if (!execucaoEncontrada) {
       throw new ResourceNotFoundException('Execução');
     }
 
-    await this.execucaoRepositorio.excluir({ id });
+    await this.execucaoRepositorio.excluir({ id: dto.id });
 
     return {
       sucesso:  true,

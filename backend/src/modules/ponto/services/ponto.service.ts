@@ -228,7 +228,7 @@ export class PontoService {
     const filtrosListagem: ExecucaoListarDto = { data, itensPorPagina: 500 };
     const { itens: execucoesDesordenadas } = await this.execucaoRepositorio.listar(
       filtrosListagem,
-      usuario.id,
+      { usuarioId: usuario.id },
     );
 
     const execucoes = [...execucoesDesordenadas].sort(
