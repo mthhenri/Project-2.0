@@ -9,6 +9,6 @@ export class AtividadeRecuperadaDto {
   descricao: string | null;
   status: AtividadeStatusEnum;
   ordemExibicao: number;
-  totalAtividadesUsuario: number;
+  posicaoAtividadeUsuario: number;
   createdDate: Date;
 }

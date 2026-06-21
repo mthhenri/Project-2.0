@@ -75,7 +75,10 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
          (SELECT COUNT(*)::int
             FROM atividade atividade_do_usuario
            WHERE atividade_do_usuario.usuario_id = atividade.usuario_id
-             AND atividade_do_usuario.is_deleted = false) AS "totalAtividadesUsuario",
+             AND atividade_do_usuario.is_deleted = false
+             AND (atividade_do_usuario.created_date < atividade.created_date
+                  OR (atividade_do_usuario.created_date = atividade.created_date
+                      AND atividade_do_usuario.id <= atividade.id))) AS "posicaoAtividadeUsuario",
          atividade.created_date    AS "createdDate"
        FROM atividade
        INNER JOIN usuario
