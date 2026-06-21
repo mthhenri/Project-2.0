@@ -1,31 +1,50 @@
 @use '../../styles/form' as *;
 
 .seletor-cor {
-  &__principal {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  &__topo {
     display: flex;
     align-items: flex-start;
     gap: 1rem;
-    flex-wrap: wrap;
   }
 
-  &__lado {
+  &__atual {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
-    flex: 1 1 auto;
-    min-width: 9rem;
+    align-items: flex-start;
+    gap: 0.5rem;
   }
 
+  &__amostra-atual {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 8px;
+    border: 1px solid var(--app-surface-300);
+    flex-shrink: 0;
+  }
+
+  &__hex-input {
+    @include form-cor-input;
+    text-align: center;
+  }
+
+  // Grade adaptativa: o número de colunas se ajusta à largura do campo (5 em
+  // dialogs estreitos, 6 nos mais largos) e o espaço que sobra é distribuído
+  // entre as colunas (space-between), encostando nas duas bordas — sem gap
+  // branco de um lado só e sem variar o tamanho fixo das amostras (3.5rem).
   &__paleta {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(auto-fill, 3.5rem);
+    justify-content: space-between;
     gap: 0.375rem;
   }
 
   &__amostra {
-    width: 100%;
-    aspect-ratio: 1;
-    min-width: 1.5rem;
+    width: 3.5rem;
+    height: 3.5rem;
     border-radius: 6px;
     border: 2px solid transparent;
     cursor: pointer;
@@ -46,13 +65,4 @@
       box-shadow: 0 0 0 2px var(--app-surface-0), 0 0 0 4px var(--p-primary-color);
     }
   }
-
-  &__hex {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  &__amostra-atual { @include form-cor-preview; }
-  &__hex-input     { @include form-cor-input; }
 }
