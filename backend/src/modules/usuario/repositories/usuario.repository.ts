@@ -99,6 +99,11 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
       parametros.status = filtros.status;
     }
 
+    if (filtros.busca !== undefined && filtros.busca.trim() !== '') {
+      condicoes.push('(usuario.nome_completo ILIKE :busca OR usuario.login ILIKE :busca)');
+      parametros.busca = `%${filtros.busca.trim()}%`;
+    }
+
     const clausulaWhere = condicoes.join(' AND ');
 
     const resultadoTotal = await this.executarConsulta<{ total: string }>(

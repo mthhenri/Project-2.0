@@ -11,14 +11,6 @@ export const usuarioRotas: Routes = [
       ),
   },
   {
-    path: 'novo',
-    canActivate: [gestorGuard],
-    loadComponent: () =>
-      import('./pages/usuario-formulario/usuario-formulario.page').then(
-        (m) => m.UsuarioFormularioPage,
-      ),
-  },
-  {
     path: ':id/anotacoes',
     loadComponent: () =>
       import('./pages/usuario-anotacoes/usuario-anotacoes.page').then(

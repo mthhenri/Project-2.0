@@ -1,10 +1,11 @@
-import { Component, inject, signal, OnInit, HostListener } from '@angular/core';
+import { Component, inject, signal, OnInit, HostListener, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
-import { Router } from '@angular/router';
-import { finalize } from 'rxjs/operators';
+import { finalize, debounceTime, distinctUntilChanged } from 'rxjs';
 import { TableModule, TableLazyLoadEvent } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { Select } from 'primeng/select';
+import { InputTextModule } from 'primeng/inputtext';
 import { Tag } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -14,24 +15,26 @@ import { UsuarioService } from '../../services/usuario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { UsuarioAnotacoesDialogComponent } from '../../components/usuario-anotacoes-dialog/usuario-anotacoes-dialog.component';
 import { UsuarioPerfilDialogComponent } from '../../components/usuario-perfil-dialog/usuario-perfil-dialog.component';
+import { UsuarioFormularioDialogComponent } from '../../components/usuario-formulario-dialog/usuario-formulario-dialog.component';
 
 @Component({
   selector: 'app-usuario-listagem',
   standalone: true,
-  imports: [ReactiveFormsModule, TableModule, ButtonModule, Select, Tag, TooltipModule, ConfirmDialogModule, UsuarioAnotacoesDialogComponent, UsuarioPerfilDialogComponent],
+  imports: [ReactiveFormsModule, TableModule, ButtonModule, Select, InputTextModule, Tag, TooltipModule, ConfirmDialogModule, UsuarioAnotacoesDialogComponent, UsuarioPerfilDialogComponent, UsuarioFormularioDialogComponent],
   templateUrl: './usuario-listagem.page.html',
   styleUrl: './usuario-listagem.page.scss',
   providers: [ConfirmationService],
 })
 export class UsuarioListagemPage implements OnInit {
   private readonly usuarioService = inject(UsuarioService);
-  private readonly router = inject(Router);
   readonly sessao = inject(UsuarioSessaoService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly messageService = inject(MessageService);
   private readonly formBuilder = inject(FormBuilder);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly formularioFiltros = this.formBuilder.group({
+    busca: [''],
     tipo: [null as UsuarioTipoEnum | null],
     status: [null as UsuarioStatusEnum | null],
   });
@@ -55,6 +58,10 @@ export class UsuarioListagemPage implements OnInit {
   ];
 
   ngOnInit(): void {
+    this.formularioFiltros.controls.busca.valueChanges
+      .pipe(debounceTime(400), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.aoMudarFiltro());
+
     this.buscarUsuarios();
   }
 
@@ -67,13 +74,14 @@ export class UsuarioListagemPage implements OnInit {
   buscarUsuarios(): void {
     this.carregando.set(true);
 
-    const { tipo, status } = this.formularioFiltros.value;
+    const { tipo, status, busca } = this.formularioFiltros.value;
     const filtros: UsuarioListarDto = {
       pagina: this.paginaAtual(),
       itensPorPagina: this.itensPorPagina(),
     };
     if (tipo) filtros.tipo = tipo;
     if (status) filtros.status = status;
+    if (busca?.trim()) filtros.busca = busca.trim();
 
     this.usuarioService
       .listar(filtros)
@@ -99,10 +107,6 @@ export class UsuarioListagemPage implements OnInit {
   aoMudarFiltro(): void {
     this.paginaAtual.set(1);
     this.buscarUsuarios();
-  }
-
-  navegarParaNovo(): void {
-    this.router.navigate(['/usuario/novo']);
   }
 
   confirmarExclusao(usuario: UsuarioResumoDto): void {

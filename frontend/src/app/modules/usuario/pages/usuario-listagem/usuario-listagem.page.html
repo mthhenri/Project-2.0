@@ -4,11 +4,21 @@
     <p-button
       label="Novo Usuário"
       icon="pi pi-plus"
-      (onClick)="navegarParaNovo()"
+      (onClick)="formularioDialog.abrir()"
     />
   </div>
 
   <form [formGroup]="formularioFiltros" class="usuario-listagem__filtros">
+    <div class="usuario-listagem__filtro-campo usuario-listagem__filtro-campo--busca">
+      <label for="filtro-busca" class="usuario-listagem__filtro-label">Buscar</label>
+      <input
+        id="filtro-busca"
+        pInputText
+        formControlName="busca"
+        placeholder="Nome ou login"
+        class="w-full"
+      />
+    </div>
     <div class="usuario-listagem__filtro-campo">
       <label for="filtro-tipo" class="usuario-listagem__filtro-label">Tipo</label>
       <p-select
@@ -129,3 +139,4 @@
 <p-confirmDialog />
 <app-usuario-anotacoes-dialog #anotacoesDialog />
 <app-usuario-perfil-dialog #perfilDialog (aoAlterar)="buscarUsuarios()" />
+<app-usuario-formulario-dialog #formularioDialog (aoCriar)="buscarUsuarios()" />

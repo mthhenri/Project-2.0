@@ -1,4 +1,4 @@
-import { IsOptional, IsEnum, IsNumber, Min, Max } from 'class-validator';
+import { IsOptional, IsEnum, IsNumber, IsString, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { UsuarioTipoEnum } from '../../enums/usuario-tipo.enum';
@@ -14,6 +14,11 @@ export class UsuarioListarDto {
   @IsOptional()
   @IsEnum(UsuarioStatusEnum)
   status?: UsuarioStatusEnum;
+
+  @ApiPropertyOptional({ example: 'joão' })
+  @IsOptional()
+  @IsString()
+  busca?: string;
 
   @ApiPropertyOptional({ example: 1 })
   @IsOptional()

@@ -25,6 +25,7 @@ export class UsuarioService {
     let params = new HttpParams();
     if (filtros.tipo) params = params.set('tipo', filtros.tipo);
     if (filtros.status) params = params.set('status', filtros.status);
+    if (filtros.busca) params = params.set('busca', filtros.busca);
     if (filtros.pagina) params = params.set('pagina', String(filtros.pagina));
     if (filtros.itensPorPagina) params = params.set('itensPorPagina', String(filtros.itensPorPagina));
     return this.httpClient.get<StandardResponse<PaginatedResult<UsuarioResumoDto>>>(this.urlBase, { params });
