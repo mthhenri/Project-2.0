@@ -32,7 +32,11 @@
 
   &__grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    // auto-fill adapta o número de colunas à largura disponível: ~5 num
+    // notebook (~1366px) e 7-8 num monitor grande (~1920px). O mínimo de
+    // 210px acomoda inteiro o nome típico de tag; nomes longos truncam
+    // via ellipsis no próprio pill (.tag-listagem__tag-preview).
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
     gap: 0.625rem;
   }
 

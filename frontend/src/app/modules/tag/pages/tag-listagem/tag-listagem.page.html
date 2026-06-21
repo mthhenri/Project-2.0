@@ -71,9 +71,15 @@
   <form [formGroup]="formularioNova" class="tag-listagem__dialog-form">
     <div class="tag-listagem__dialog-campo">
       <label class="tag-listagem__label">Nome <span class="tag-listagem__obrigatorio">*</span></label>
-      <input pInputText spellcheck="true" formControlName="nome" placeholder="ex: Backend" class="w-full" />
+      <input pInputText spellcheck="true" formControlName="nome" placeholder="ex: Backend" maxlength="100" class="w-full" />
       @if (campoNovaInvalido('nome')) {
-        <small class="tag-listagem__erro">Nome é obrigatório</small>
+        <small class="tag-listagem__erro">
+          @if (formularioNova.controls.nome.hasError('required')) {
+            Nome é obrigatório
+          } @else if (formularioNova.controls.nome.hasError('maxlength')) {
+            Nome deve ter no máximo 100 caracteres
+          }
+        </small>
       }
     </div>
 
@@ -124,9 +130,15 @@
   <form [formGroup]="formularioEditar" class="tag-listagem__dialog-form">
     <div class="tag-listagem__dialog-campo">
       <label class="tag-listagem__label">Nome <span class="tag-listagem__obrigatorio">*</span></label>
-      <input pInputText spellcheck="true" formControlName="nome" class="w-full" />
+      <input pInputText spellcheck="true" formControlName="nome" maxlength="100" class="w-full" />
       @if (campoEditarInvalido('nome')) {
-        <small class="tag-listagem__erro">Nome é obrigatório</small>
+        <small class="tag-listagem__erro">
+          @if (formularioEditar.controls.nome.hasError('required')) {
+            Nome é obrigatório
+          } @else if (formularioEditar.controls.nome.hasError('maxlength')) {
+            Nome deve ter no máximo 100 caracteres
+          }
+        </small>
       }
     </div>
 
