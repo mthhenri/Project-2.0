@@ -46,6 +46,12 @@ $raio-borda-padrao: 0.5rem;
 
   // Realce de linha/opção selecionada (fundo tom primário, texto normal por cima).
   --app-realce-sutil: var(--p-primary-50);
+
+  // Ícones de descrição da demanda, todos na família azul (cliente / técnica /
+  // documentação). Tons mais escuros para contraste sobre superfície clara.
+  --app-icone-cliente: var(--p-blue-600);
+  --app-icone-tecnica: var(--p-indigo-600);
+  --app-icone-doc:     var(--p-cyan-600);
 }
 
 .app-escuro {
@@ -67,6 +73,11 @@ $raio-borda-padrao: 0.5rem;
   --app-avatar-fundo: color-mix(in srgb, var(--p-primary-400) 26%, transparent);
   --app-avatar-cor:   var(--p-primary-200);
   --app-realce-sutil: color-mix(in srgb, var(--p-primary-400) 16%, transparent);
+
+  // No escuro, tons mais claros leem melhor sobre superfície escura.
+  --app-icone-cliente: var(--p-blue-400);
+  --app-icone-tecnica: var(--p-indigo-400);
+  --app-icone-doc:     var(--p-cyan-400);
 }
 
 // Fundo e cor de texto base. `--p-text-color` já troca sozinho no tema escuro.
