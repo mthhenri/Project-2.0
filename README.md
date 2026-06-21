@@ -59,6 +59,16 @@ npm run db:up
 npm run db:migrate --workspace=backend
 ```
 
+> **Usuário gestor inicial:** as migrations criam (via seed idempotente) um gestor
+> para o primeiro acesso ao sistema:
+>
+> | Login | Senha |
+> |---|---|
+> | `gestor.inicial` | `project2026` |
+>
+> Troque a senha após o primeiro login. Em produção, recomenda-se remover ou
+> desativar esse usuário.
+
 ### 5. Inicie o backend e o frontend
 
 ```bash
