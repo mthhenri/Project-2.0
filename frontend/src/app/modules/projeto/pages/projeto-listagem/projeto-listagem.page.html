@@ -5,7 +5,7 @@
       <p-button
         label="Novo Projeto"
         icon="pi pi-plus"
-        (onClick)="navegarParaNovo()"
+        (onClick)="formularioDialog.abrir()"
       />
     }
   </div>
@@ -90,3 +90,5 @@
 </div>
 
 <p-confirmDialog />
+
+<app-projeto-formulario-dialog #formularioDialog (aoCriar)="aoCriarProjeto($event)" />

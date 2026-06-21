@@ -12,11 +12,12 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { ProjetoResumoDto, ProjetoListarDto, ProjetoStatusEnum } from '@project20/shared';
 import { ProjetoService } from '../../services/projeto.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
+import { ProjetoFormularioDialogComponent } from '../../components/projeto-formulario-dialog/projeto-formulario-dialog.component';
 
 @Component({
   selector: 'app-projeto-listagem',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonModule, Select, Tag, TooltipModule, ConfirmDialogModule, PaginatorModule],
+  imports: [ReactiveFormsModule, ButtonModule, Select, Tag, TooltipModule, ConfirmDialogModule, PaginatorModule, ProjetoFormularioDialogComponent],
   templateUrl: './projeto-listagem.page.html',
   styleUrl: './projeto-listagem.page.scss',
   providers: [ConfirmationService],
@@ -87,8 +88,8 @@ export class ProjetoListagemPage implements OnInit {
     this.buscarProjetos();
   }
 
-  navegarParaNovo(): void {
-    this.router.navigate(['/projeto/novo']);
+  aoCriarProjeto(projetoId: number): void {
+    this.router.navigate(['/projeto', projetoId]);
   }
 
   navegarParaDetalhe(projeto: ProjetoResumoDto): void {

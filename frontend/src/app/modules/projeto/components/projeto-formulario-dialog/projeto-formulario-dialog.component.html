@@ -1,0 +1,127 @@
+<p-dialog
+  header="Novo Projeto"
+  [(visible)]="mostrarDialog"
+  [modal]="true"
+  [style]="{ width: '42rem' }"
+  [draggable]="false"
+>
+  <form [formGroup]="formulario" class="projeto-formulario-dialog__form">
+
+    <div class="projeto-formulario-dialog__linha">
+      <div class="projeto-formulario-dialog__campo">
+        <label for="nome" class="projeto-formulario-dialog__label">
+          Nome <span class="projeto-formulario-dialog__obrigatorio">*</span>
+        </label>
+        <input
+          id="nome"
+          pInputText
+          spellcheck="true"
+          formControlName="nome"
+          placeholder="ex: Sistema de Gestão"
+          class="w-full"
+        />
+        @if (campoInvalido('nome')) {
+          <small class="projeto-formulario-dialog__erro">Nome é obrigatório</small>
+        }
+      </div>
+
+      <div class="projeto-formulario-dialog__campo">
+        <label for="codigo" class="projeto-formulario-dialog__label">
+          Código <span class="projeto-formulario-dialog__obrigatorio">*</span>
+        </label>
+        <input
+          id="codigo"
+          pInputText
+          formControlName="codigo"
+          placeholder="Gerado a partir do nome"
+          class="w-full projeto-formulario-dialog__input-codigo"
+        />
+        @if (campoInvalido('codigo')) {
+          <small class="projeto-formulario-dialog__erro">Código é obrigatório</small>
+        } @else if (!codigoEditadoManualmente()) {
+          <small class="projeto-formulario-dialog__dica">
+            Preenchido automaticamente pelo nome — edite se quiser um código próprio
+          </small>
+        }
+      </div>
+    </div>
+
+    <div class="projeto-formulario-dialog__linha">
+      <div class="projeto-formulario-dialog__campo">
+        <label for="status" class="projeto-formulario-dialog__label">
+          Status <span class="projeto-formulario-dialog__obrigatorio">*</span>
+        </label>
+        <p-select
+          inputId="status"
+          formControlName="status"
+          [options]="statusOpcoes"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Selecione o status"
+          appendTo="body"
+          class="w-full"
+        />
+        @if (campoInvalido('status')) {
+          <small class="projeto-formulario-dialog__erro">Status é obrigatório</small>
+        }
+      </div>
+
+      <div class="projeto-formulario-dialog__campo">
+        <label class="projeto-formulario-dialog__label">
+          Cor de identificação <span class="projeto-formulario-dialog__obrigatorio">*</span>
+        </label>
+        <app-seletor-cor formControlName="cor" />
+        @if (campoInvalido('cor')) {
+          <small class="projeto-formulario-dialog__erro">Cor é obrigatória (formato hex)</small>
+        }
+      </div>
+    </div>
+
+    <div class="projeto-formulario-dialog__linha">
+      <div class="projeto-formulario-dialog__campo">
+        <label for="inicioData" class="projeto-formulario-dialog__label">Data de Início</label>
+        <p-datepicker
+          inputId="inicioData"
+          formControlName="inicioData"
+          dateFormat="dd/mm/yy"
+          placeholder="dd/mm/aaaa"
+          [showIcon]="true"
+          appendTo="body"
+          class="w-full"
+        />
+      </div>
+
+      <div class="projeto-formulario-dialog__campo">
+        <label for="previsaoFimData" class="projeto-formulario-dialog__label">Previsão de Término</label>
+        <p-datepicker
+          inputId="previsaoFimData"
+          formControlName="previsaoFimData"
+          dateFormat="dd/mm/yy"
+          placeholder="dd/mm/aaaa"
+          [showIcon]="true"
+          appendTo="body"
+          class="w-full"
+        />
+        @if (previsaoAnteriorAoInicio) {
+          <small class="projeto-formulario-dialog__erro">Previsão deve ser posterior à data de início</small>
+        }
+      </div>
+    </div>
+
+  </form>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cancelar"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="mostrarDialog.set(false)"
+    />
+    <p-button
+      label="Salvar"
+      icon="pi pi-check"
+      [loading]="carregando()"
+      (onClick)="salvar()"
+    />
+  </ng-template>
+</p-dialog>

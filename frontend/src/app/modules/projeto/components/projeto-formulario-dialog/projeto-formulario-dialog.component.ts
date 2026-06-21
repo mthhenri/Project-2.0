@@ -1,12 +1,12 @@
-import { Component, inject, signal, DestroyRef, OnInit } from '@angular/core';
+import { Component, inject, signal, output, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
-import { Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 import { DatePickerModule } from 'primeng/datepicker';
+import { DialogModule } from 'primeng/dialog';
 import { MessageService } from 'primeng/api';
 import { ProjetoCriarDto, ProjetoStatusEnum } from '@project20/shared';
 import { ProjetoService } from '../../services/projeto.service';
@@ -14,18 +14,20 @@ import { gerarCodigoDoNome } from '../../models/projeto.model';
 import { SeletorCorComponent } from '../../../../shared/components/seletor-cor/seletor-cor.component';
 
 @Component({
-  selector: 'app-projeto-formulario',
+  selector: 'app-projeto-formulario-dialog',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonModule, InputTextModule, Select, SeletorCorComponent, DatePickerModule],
-  templateUrl: './projeto-formulario.page.html',
-  styleUrl: './projeto-formulario.page.scss',
+  imports: [ReactiveFormsModule, ButtonModule, InputTextModule, Select, SeletorCorComponent, DatePickerModule, DialogModule],
+  templateUrl: './projeto-formulario-dialog.component.html',
+  styleUrl: './projeto-formulario-dialog.component.scss',
 })
-export class ProjetoFormularioPage implements OnInit {
+export class ProjetoFormularioDialogComponent {
   private readonly projetoService = inject(ProjetoService);
-  private readonly router = inject(Router);
   private readonly messageService = inject(MessageService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
+
+  /** Emitido com o id do projeto criado, para a listagem navegar até o detalhe. */
+  readonly aoCriar = output<number>();
 
   readonly formulario = this.formBuilder.group(
     {
@@ -40,6 +42,7 @@ export class ProjetoFormularioPage implements OnInit {
   );
 
   readonly carregando = signal<boolean>(false);
+  readonly mostrarDialog = signal<boolean>(false);
 
   /**
    * Enquanto `false`, o código acompanha o nome (slug derivado). Vira `true` no
@@ -55,7 +58,7 @@ export class ProjetoFormularioPage implements OnInit {
     { label: 'Cancelado', value: ProjetoStatusEnum.CANCELADO },
   ];
 
-  ngOnInit(): void {
+  constructor() {
     // Nome -> Código: enquanto o gestor não assumir o código, ele segue derivado
     // do nome. `emitEvent: false` evita disparar o valueChanges do próprio código
     // (que marcaria edição manual e criaria laço).
@@ -74,6 +77,13 @@ export class ProjetoFormularioPage implements OnInit {
       .subscribe((codigo) => {
         this.codigoEditadoManualmente.set(!!codigo?.trim());
       });
+  }
+
+  /** Abre o dialog com o formulário limpo. */
+  abrir(): void {
+    this.formulario.reset({ cor: '#3b82f6', status: ProjetoStatusEnum.ATIVO });
+    this.codigoEditadoManualmente.set(false);
+    this.mostrarDialog.set(true);
   }
 
   salvar(): void {
@@ -104,13 +114,12 @@ export class ProjetoFormularioPage implements OnInit {
             summary: 'Sucesso',
             detail: 'Projeto criado com sucesso',
           });
-          this.router.navigate(['/projeto', resposta.dados?.id]);
+          this.mostrarDialog.set(false);
+          if (resposta.dados?.id !== undefined) {
+            this.aoCriar.emit(resposta.dados.id);
+          }
         },
       });
-  }
-
-  cancelar(): void {
-    this.router.navigate(['/projeto']);
   }
 
   campoInvalido(nomeCampo: string): boolean {
