@@ -8,6 +8,7 @@ import {
   TagRecuperadaDto,
   TagResumoDto,
   TagAlteradaDto,
+  TagInternoAlterarDto,
   TagValidarNomeDto,
   TagRecuperarDto,
   TagExcluirDto,
@@ -86,17 +87,17 @@ export class TagRepository extends BaseRepository<Tag> {
   }
 
   /** Altera campos da tag e retorna os dados alterados. */
-  async alterar(id: number, dados: Partial<Tag>): Promise<TagAlteradaDto> {
+  async alterar(dto: TagInternoAlterarDto): Promise<TagAlteradaDto> {
     const setClauses: string[] = ['updated_date = NOW()'];
-    const parametros: Record<string, unknown> = { id };
+    const parametros: Record<string, unknown> = { id: dto.id };
 
-    if (dados.nome !== undefined) {
+    if (dto.nome !== undefined) {
       setClauses.push('nome = :nome');
-      parametros.nome = dados.nome;
+      parametros.nome = dto.nome;
     }
-    if (dados.cor !== undefined) {
+    if (dto.cor !== undefined) {
       setClauses.push('cor = :cor');
-      parametros.cor = dados.cor;
+      parametros.cor = dto.cor;
     }
 
     const resultado = await this.executarConsulta<TagAlteradaDto>(

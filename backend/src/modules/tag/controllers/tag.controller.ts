@@ -50,7 +50,7 @@ export class TagController {
   @ApiResponse({ status: 404, description: 'Tag não encontrada', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
   @Get(':id')
   recuperar(@Param('id', ParseIntPipe) id: number) {
-    return this.tagService.recuperar(id);
+    return this.tagService.recuperar({ id });
   }
 
   @ApiOperation({ summary: 'Alterar tag (somente gestor)' })
@@ -65,7 +65,7 @@ export class TagController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: TagAlterarDto,
   ) {
-    return this.tagService.alterar(id, dto);
+    return this.tagService.alterar({ ...dto, id });
   }
 
   @ApiOperation({ summary: 'Excluir tag via soft delete (somente gestor)' })
@@ -76,6 +76,6 @@ export class TagController {
   @GestorOnly()
   @Delete(':id')
   excluir(@Param('id', ParseIntPipe) id: number) {
-    return this.tagService.excluir(id);
+    return this.tagService.excluir({ id });
   }
 }

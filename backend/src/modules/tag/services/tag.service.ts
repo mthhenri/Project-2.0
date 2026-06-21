@@ -5,8 +5,9 @@ import {
   TagCriadaDto,
   TagResumoDto,
   TagRecuperadaDto,
-  TagAlterarDto,
+  TagInternoAlterarDto,
   TagAlteradaDto,
+  TagRecuperarDto,
 } from '@project20/shared';
 import { StandardResponse } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
@@ -45,8 +46,8 @@ export class TagService {
   }
 
   /** Recupera tag por ID. Lança exceção se não encontrada. */
-  async recuperar(id: number): Promise<StandardResponse<TagRecuperadaDto>> {
-    const tagEncontrada = await this.tagRepositorio.recuperar({ id });
+  async recuperar(dto: TagRecuperarDto): Promise<StandardResponse<TagRecuperadaDto>> {
+    const tagEncontrada = await this.tagRepositorio.recuperar({ id: dto.id });
 
     if (!tagEncontrada) {
       throw new ResourceNotFoundException('Tag');
@@ -60,21 +61,21 @@ export class TagService {
   }
 
   /** Altera nome e/ou cor da tag. Restrito a gestores. */
-  async alterar(id: number, dto: TagAlterarDto): Promise<StandardResponse<TagAlteradaDto>> {
-    const tagEncontrada = await this.tagRepositorio.recuperar({ id });
+  async alterar(dto: TagInternoAlterarDto): Promise<StandardResponse<TagAlteradaDto>> {
+    const tagEncontrada = await this.tagRepositorio.recuperar({ id: dto.id });
 
     if (!tagEncontrada) {
       throw new ResourceNotFoundException('Tag');
     }
 
     if (dto.nome !== undefined) {
-      const nomeJaExiste = await this.tagRepositorio.validarNome({ nome: dto.nome, idExcluir: id });
+      const nomeJaExiste = await this.tagRepositorio.validarNome({ nome: dto.nome, idExcluir: dto.id });
       if (nomeJaExiste) {
         throw new BusinessException('Já existe uma tag com esse nome');
       }
     }
 
-    const tagAlterada = await this.tagRepositorio.alterar(id, { nome: dto.nome, cor: dto.cor });
+    const tagAlterada = await this.tagRepositorio.alterar({ id: dto.id, nome: dto.nome, cor: dto.cor });
 
     return {
       sucesso:  true,
@@ -84,14 +85,14 @@ export class TagService {
   }
 
   /** Realiza soft delete da tag. Restrito a gestores. */
-  async excluir(id: number): Promise<StandardResponse<void>> {
-    const tagEncontrada = await this.tagRepositorio.recuperar({ id });
+  async excluir(dto: TagRecuperarDto): Promise<StandardResponse<void>> {
+    const tagEncontrada = await this.tagRepositorio.recuperar({ id: dto.id });
 
     if (!tagEncontrada) {
       throw new ResourceNotFoundException('Tag');
     }
 
-    await this.tagRepositorio.excluir({ id });
+    await this.tagRepositorio.excluir({ id: dto.id });
 
     return {
       sucesso:  true,

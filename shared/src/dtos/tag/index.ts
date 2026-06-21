@@ -1,6 +1,7 @@
 export * from './TagCriarDto';
 export * from './TagCriadaDto';
 export * from './TagAlterarDto';
+export * from './TagInternoAlterarDto';
 export * from './TagAlteradaDto';
 export * from './TagValidarNomeDto';
 export * from './TagResumoDto';
