@@ -29,10 +29,10 @@ import {
   DemandaAtribuidaDto,
   DemandaRecuperadaDto,
   ExecucaoResumoDto,
-  ExecucaoAtivaDto,
   ExecucaoIniciarDto,
   ExecucaoEncerrarDto,
   ExecucaoRegistrarDto,
+  UsuarioTipoEnum,
 } from '@project20/shared';
 import { AtividadeService } from '../../services/atividade.service';
 import { ExecucaoService } from '../../../execucao/services/execucao.service';
@@ -116,8 +116,6 @@ export class AtividadeListagemPage implements OnInit {
   readonly severidadeStatus = severidadeStatusAtividade;
   readonly rotuloStatus = rotuloStatusAtividade;
 
-  readonly execucaoAtiva = signal<ExecucaoAtivaDto | null>(null);
-
   // --- Troca de status inline ---
   readonly atividadeStatusEdicao = signal<AtividadeResumoDto | null>(null);
 
@@ -180,6 +178,8 @@ export class AtividadeListagemPage implements OnInit {
   readonly formularioExecucao = this.formBuilder.group({
     descricao: ['', [Validators.required]],
   });
+  /** Descrição opcional quando o dono da atividade em execução é gestor. */
+  readonly descricaoExecucaoOpcional = signal<boolean>(false);
 
   // --- Dialog: registrar execução manual (somente gestor) ---
   readonly mostrarDialogRegistro = signal<boolean>(false);
@@ -206,7 +206,6 @@ export class AtividadeListagemPage implements OnInit {
       .subscribe(() => this.aoMudarFiltro());
 
     this.buscarAtividades();
-    this.carregarExecucaoAtiva();
   }
 
   /**
@@ -220,7 +219,6 @@ export class AtividadeListagemPage implements OnInit {
   aoVoltarParaAba(): void {
     if (document.visibilityState !== 'visible' || this.carregando()) return;
     this.buscarAtividades();
-    this.carregarExecucaoAtiva();
   }
 
   buscarAtividades(): void {
@@ -520,14 +518,6 @@ export class AtividadeListagemPage implements OnInit {
   // Execução (play/pause)
   // ---------------------------------------------------------------------------
 
-  carregarExecucaoAtiva(): void {
-    this.atividadeService.recuperarExecucaoAtiva().subscribe({
-      next: (resposta) => {
-        if (resposta.sucesso) this.execucaoAtiva.set(resposta.dados ?? null);
-      },
-    });
-  }
-
   podeExecutar(atividade: AtividadeResumoDto): boolean {
     return this.sessao.eGestor() || atividade.usuarioId === this.sessao.id();
   }
@@ -537,17 +527,25 @@ export class AtividadeListagemPage implements OnInit {
     return this.podeExecutar(atividade);
   }
 
-  atividadeEmExecucao(atividadeId: number): boolean {
-    return this.execucaoAtiva()?.atividadeId === atividadeId;
+  /** Há execução em andamento nesta atividade (de qualquer usuário). */
+  atividadeEmExecucao(atividade: AtividadeResumoDto): boolean {
+    return atividade.execucaoAtivaId !== null;
   }
 
   alternarExecucao(atividade: AtividadeResumoDto): void {
-    const modo = this.atividadeEmExecucao(atividade.id) ? 'encerrar' : 'iniciar';
+    const modo = this.atividadeEmExecucao(atividade) ? 'encerrar' : 'iniciar';
     this.modoExecucao.set(modo);
     this.atividadeExecucao.set(atividade);
 
-    const descricaoInicial = modo === 'encerrar' ? this.execucaoAtiva()?.descricao ?? '' : '';
+    const descricaoInicial = modo === 'encerrar' ? atividade.execucaoAtivaDescricao ?? '' : '';
     this.formularioExecucao.reset({ descricao: descricaoInicial });
+
+    // Descrição obrigatória apenas quando o dono da atividade é desenvolvedor.
+    const donoEhGestor = atividade.usuarioTipo === UsuarioTipoEnum.GESTOR;
+    this.descricaoExecucaoOpcional.set(donoEhGestor);
+    const controleDescricao = this.formularioExecucao.get('descricao')!;
+    controleDescricao.setValidators(donoEhGestor ? [] : [Validators.required]);
+    controleDescricao.updateValueAndValidity();
 
     this.carregarExecucoesDialog(atividade.id);
     this.mostrarDialogExecucao.set(true);
@@ -572,14 +570,14 @@ export class AtividadeListagemPage implements OnInit {
         .pipe(finalize(() => this.salvandoExecucao.set(false)))
         .subscribe({ next: (resposta) => this.aposExecucao(resposta.sucesso, 'Execução iniciada com sucesso') });
     } else {
-      const execucao = this.execucaoAtiva();
-      if (!execucao) {
+      const execucaoAtivaId = atividade.execucaoAtivaId;
+      if (execucaoAtivaId === null) {
         this.salvandoExecucao.set(false);
         return;
       }
       const dto: ExecucaoEncerrarDto = { descricao };
       this.atividadeService
-        .encerrarExecucao(execucao.id, dto)
+        .encerrarExecucao(execucaoAtivaId, dto)
         .pipe(finalize(() => this.salvandoExecucao.set(false)))
         .subscribe({ next: (resposta) => this.aposExecucao(resposta.sucesso, 'Execução encerrada com sucesso') });
     }
@@ -690,7 +688,7 @@ export class AtividadeListagemPage implements OnInit {
     if (!sucesso) return;
     this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: mensagem });
     this.mostrarDialogExecucao.set(false);
-    this.carregarExecucaoAtiva();
+    this.buscarAtividades();
   }
 
   private carregarExecucoesDialog(atividadeId: number): void {

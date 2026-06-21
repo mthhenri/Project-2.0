@@ -83,6 +83,12 @@
     color: var(--p-text-color);
   }
 
+  &__label-opcional {
+    margin-left: 0.25rem;
+    font-weight: 400;
+    color: var(--p-text-muted-color);
+  }
+
   &__erro {
     font-size: 0.75rem;
     color: var(--p-red-500);

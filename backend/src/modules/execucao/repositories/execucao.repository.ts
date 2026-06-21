@@ -21,6 +21,7 @@ import {
   ExecucaoRegistradaDto,
   ExecucaoSobreposicaoValidarDto,
   ExecucaoAcessoFiltrarDto,
+  UsuarioTipoEnum,
 } from '@project20/shared';
 
 @Injectable()
@@ -369,5 +370,24 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
       { execucaoId: dto.execucaoId },
     );
     return resultado[0]?.usuarioId ?? null;
+  }
+
+  /**
+   * Recupera o tipo do dono de uma atividade (via atividade.usuario_id).
+   * Usado para decidir se a descrição da execução é obrigatória.
+   */
+  async recuperarTipoUsuarioDaAtividade(dto: { atividadeId: number }): Promise<UsuarioTipoEnum | null> {
+    const resultado = await this.executarConsulta<{ tipo: UsuarioTipoEnum }>(
+      `SELECT usuario.tipo
+       FROM atividade
+       INNER JOIN usuario
+         ON usuario.id = atividade.usuario_id
+         AND usuario.is_deleted = false
+       WHERE atividade.id = :atividadeId
+         AND atividade.is_deleted = false
+       LIMIT 1`,
+      { atividadeId: dto.atividadeId },
+    );
+    return resultado[0]?.tipo ?? null;
   }
 }

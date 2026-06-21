@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsNotEmpty, IsNumber, IsString, Min } from 'class-validator';
+import { IsNumber, IsOptional, IsString, Min } from 'class-validator';
 
 export class ExecucaoIniciarDto {
   @IsNumber()
@@ -7,7 +7,11 @@ export class ExecucaoIniciarDto {
   @Type(() => Number)
   atividadeId: number;
 
+  /**
+   * Obrigatória para desenvolvedores; opcional para gestores.
+   * A regra é validada no service conforme o tipo do usuário autenticado.
+   */
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  descricao: string;
+  descricao?: string;
 }

@@ -207,11 +207,11 @@
           <div class="atividade-listagem__acoes">
             @if (podeExecutar(atividade)) {
               <p-button
-                [icon]="atividadeEmExecucao(atividade.id) ? 'pi pi-pause' : 'pi pi-play'"
+                [icon]="atividadeEmExecucao(atividade) ? 'pi pi-pause' : 'pi pi-play'"
                 [text]="true"
                 size="small"
-                [severity]="atividadeEmExecucao(atividade.id) ? 'warn' : 'success'"
-                [pTooltip]="atividadeEmExecucao(atividade.id) ? 'Encerrar execução' : 'Iniciar execução'"
+                [severity]="atividadeEmExecucao(atividade) ? 'warn' : 'success'"
+                [pTooltip]="atividadeEmExecucao(atividade) ? 'Encerrar execução' : 'Iniciar execução'"
                 tooltipPosition="left"
                 (onClick)="alternarExecucao(atividade)"
               />
@@ -511,7 +511,7 @@
   <form [formGroup]="formularioExecucao" class="atividade-listagem__dialog-form">
     <div class="atividade-listagem__dialog-campo">
       <label for="execucao-descricao" class="atividade-listagem__filtro-label">
-        {{ modoExecucao() === 'iniciar' ? 'O que você vai desenvolver? *' : 'Revise a descrição da execução *' }}
+        {{ modoExecucao() === 'iniciar' ? 'O que você vai desenvolver?' : 'Revise a descrição da execução' }}{{ descricaoExecucaoOpcional() ? ' (opcional)' : ' *' }}
       </label>
       <textarea
         id="execucao-descricao"

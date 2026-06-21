@@ -42,6 +42,11 @@ export class ExecucaoService {
       throw new ResourceNotFoundException('Atividade');
     }
 
+    const descricao = dto.descricao?.trim() ?? '';
+    if (!descricao && (await this.descricaoObrigatoria(dto.atividadeId))) {
+      throw new BusinessException('A descrição é obrigatória');
+    }
+
     const temAcesso = await this.atividadeRepositorio.validarAcessoDemanda({
       demandaId: atividadeEncontrada.demandaId,
       usuarioId: usuarioAtivo.sub,
@@ -57,7 +62,7 @@ export class ExecucaoService {
 
     const execucaoIniciada = await this.execucaoRepositorio.inserir({
       atividadeId: dto.atividadeId,
-      descricao:   dto.descricao,
+      descricao,
       inicioData:  new Date(),
     });
 
@@ -144,7 +149,12 @@ export class ExecucaoService {
       }
     }
 
-    const execucaoEncerrada = await this.execucaoRepositorio.encerrar({ id: dto.id, fimData: new Date(), descricao: dto.descricao });
+    const descricao = dto.descricao?.trim() ?? '';
+    if (!descricao && (await this.descricaoObrigatoria(execucaoEncontrada.atividadeId))) {
+      throw new BusinessException('A descrição é obrigatória');
+    }
+
+    const execucaoEncerrada = await this.execucaoRepositorio.encerrar({ id: dto.id, fimData: new Date(), descricao });
 
     return {
       sucesso:  true,
@@ -300,5 +310,14 @@ export class ExecucaoService {
       dados:    null,
       mensagem: 'Execução excluída com sucesso',
     };
+  }
+
+  /**
+   * A descrição da execução é obrigatória quando o dono da atividade é
+   * desenvolvedor; gestores podem iniciar/encerrar suas execuções sem descrição.
+   */
+  private async descricaoObrigatoria(atividadeId: number): Promise<boolean> {
+    const tipoDono = await this.execucaoRepositorio.recuperarTipoUsuarioDaAtividade({ atividadeId });
+    return tipoDono !== UsuarioTipoEnum.GESTOR;
   }
 }

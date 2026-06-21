@@ -34,7 +34,9 @@
 
         <form [formGroup]="formularioDescricao" class="execucao-ativa__form" (ngSubmit)="encerrar()">
           <div class="execucao-ativa__campo">
-            <label class="execucao-ativa__label" for="descricao-andamento">Descrição</label>
+            <label class="execucao-ativa__label" for="descricao-andamento">
+              Descrição @if (descricaoEncerrarOpcional()) {<span class="execucao-ativa__label-opcional">(opcional)</span>}
+            </label>
             <textarea
               id="descricao-andamento"
               pTextarea
@@ -97,7 +99,9 @@
         </div>
 
         <div class="execucao-ativa__campo">
-          <label class="execucao-ativa__label" for="descricao-iniciar">Descrição</label>
+          <label class="execucao-ativa__label" for="descricao-iniciar">
+            Descrição @if (descricaoIniciarOpcional()) {<span class="execucao-ativa__label-opcional">(opcional)</span>}
+          </label>
           <textarea
             id="descricao-iniciar"
             pTextarea

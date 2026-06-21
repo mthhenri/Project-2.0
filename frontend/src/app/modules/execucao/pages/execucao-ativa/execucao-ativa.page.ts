@@ -1,4 +1,5 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterModule } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { finalize, forkJoin } from 'rxjs';
@@ -13,8 +14,10 @@ import {
   ExecucaoAtivaDto,
   ExecucaoIniciarDto,
   ExecucaoEncerrarDto,
+  UsuarioTipoEnum,
 } from '@project20/shared';
 import { ExecucaoService } from '../../services/execucao.service';
+import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { AtividadeService } from '../../../atividade/services/atividade.service';
 import { DemandaService } from '../../../demanda/services/demanda.service';
 import { ExecucaoTimerComponent } from '../../components/execucao-timer/execucao-timer.component';
@@ -54,6 +57,15 @@ export class ExecucaoAtivaPage implements OnInit {
   private readonly demandaService = inject(DemandaService);
   private readonly messageService = inject(MessageService);
   private readonly formBuilder = inject(FormBuilder);
+  private readonly usuarioSessao = inject(UsuarioSessaoService);
+  private readonly destroyRef = inject(DestroyRef);
+
+  readonly eGestor = this.usuarioSessao.eGestor;
+
+  /** Descrição opcional ao iniciar quando o dono da atividade selecionada é gestor. */
+  readonly descricaoIniciarOpcional = signal<boolean>(false);
+  /** Descrição opcional ao encerrar a própria execução quando o usuário é gestor. */
+  readonly descricaoEncerrarOpcional = this.eGestor;
 
   readonly carregando = signal<boolean>(false);
   readonly execucaoAtiva = signal<ExecucaoAtivaDto | null>(null);
@@ -71,11 +83,28 @@ export class ExecucaoAtivaPage implements OnInit {
   // --- Execução em andamento ---
   readonly salvandoEncerrar = signal<boolean>(false);
   readonly formularioDescricao = this.formBuilder.group({
-    descricao: ['', [Validators.required]],
+    // Encerrar é sempre da própria execução; gestor não precisa descrever.
+    descricao: ['', this.eGestor() ? [] : [Validators.required]],
   });
 
   ngOnInit(): void {
+    // A obrigatoriedade da descrição depende do dono da atividade selecionada.
+    this.formularioIniciar
+      .get('atividade')!
+      .valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((atividade) => this.aplicarObrigatoriedadeIniciar(atividade));
+
     this.carregarEstado();
+  }
+
+  /** Ajusta o validador da descrição conforme o tipo do dono da atividade. */
+  private aplicarObrigatoriedadeIniciar(atividade: AtividadeResumoDto | null): void {
+    const donoEhGestor = atividade?.usuarioTipo === UsuarioTipoEnum.GESTOR;
+    this.descricaoIniciarOpcional.set(donoEhGestor);
+
+    const controle = this.formularioIniciar.get('descricao')!;
+    controle.setValidators(donoEhGestor ? [] : [Validators.required]);
+    controle.updateValueAndValidity({ emitEvent: false });
   }
 
   carregarEstado(): void {

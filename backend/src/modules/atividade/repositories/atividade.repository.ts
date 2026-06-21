@@ -171,6 +171,7 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
          atividade.ordem_exibicao  AS "ordemExibicao",
          atividade.usuario_id      AS "usuarioId",
          usuario.nome_completo     AS "nomeUsuario",
+         usuario.tipo              AS "usuarioTipo",
          atividade.demanda_id      AS "demandaId",
          demanda.nome              AS "nomeDemanda",
          (COALESCE(TRIM(demanda.descricao_cliente), '') <> '') AS "demandaTemDescricaoCliente",
@@ -183,9 +184,19 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
            WHERE execucao.atividade_id = atividade.id
              AND execucao.is_deleted = false
              AND execucao.fim_data IS NOT NULL) AS "totalMinutosExecutados",
+         execucao_ativa.id         AS "execucaoAtivaId",
+         execucao_ativa.descricao  AS "execucaoAtivaDescricao",
          atividade.created_date    AS "createdDate"
        FROM atividade
        ${clausulasJoin}
+       LEFT JOIN LATERAL (
+         SELECT execucao.id, execucao.descricao
+         FROM execucao
+         WHERE execucao.atividade_id = atividade.id
+           AND execucao.fim_data IS NULL
+           AND execucao.is_deleted = false
+         LIMIT 1
+       ) execucao_ativa ON true
        WHERE ${clausulaWhere}
        ORDER BY usuario.nome_completo ASC, atividade.created_date DESC, atividade.nome ASC
        LIMIT ${itensPorPagina} OFFSET ${deslocamento}`,
