@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsEnum,
   IsBoolean,
+  IsArray,
   Min,
   MaxLength,
   IsDateString,
@@ -77,4 +78,16 @@ export class DemandaCriarDto {
   @Min(0)
   @Type(() => Number)
   ordemExibicao: number;
+
+  @ApiPropertyOptional({ example: [1, 2] })
+  @IsOptional()
+  @IsArray()
+  @IsNumber({}, { each: true })
+  tagIds?: number[];
+
+  @ApiPropertyOptional({ example: [3, 4], description: 'Membros adicionais a atribuir na criação (gestor-only).' })
+  @IsOptional()
+  @IsArray()
+  @IsNumber({}, { each: true })
+  usuarioIds?: number[];
 }

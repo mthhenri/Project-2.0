@@ -98,6 +98,29 @@ export class DemandaService {
     const gestoresAtivos = await this.usuarioRepositorio.listarGestoresAtivos();
     const gestorIds = gestoresAtivos.map((gestor) => gestor.id);
 
+    const membroIds = [...new Set(dto.usuarioIds ?? [])];
+    if (membroIds.length > 0) {
+      if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR) {
+        const apenasProprio = membroIds.every((membroId) => membroId === usuarioAtivo.sub);
+        if (!apenasProprio) {
+          throw new UnauthorizedAccessException(
+            'Desenvolvedor não pode atribuir outros membros na criação',
+          );
+        }
+      }
+
+      for (const membroId of membroIds) {
+        const usuarioEncontrado = await this.usuarioRepositorio.recuperar({ id: membroId });
+        if (!usuarioEncontrado) {
+          throw new ResourceNotFoundException(`Usuário com id ${membroId}`);
+        }
+      }
+    }
+
+    if (dto.tagIds && dto.tagIds.length > 0 && usuarioAtivo.tipo !== UsuarioTipoEnum.GESTOR) {
+      throw new UnauthorizedAccessException('Apenas gestores podem atribuir tags às demandas');
+    }
+
     const demandaCriada = await this.demandaRepositorio.inserirComAtribuicao(
       {
         projetoId:        dto.projetoId,
@@ -113,8 +136,18 @@ export class DemandaService {
         previsaoFimData:  dto.previsaoFimData ? new Date(dto.previsaoFimData) : null,
         ordemExibicao:    dto.ordemExibicao,
       },
-      { criadorId: usuarioAtivo.sub, gestorIds },
+      { criadorId: usuarioAtivo.sub, gestorIds, membroIds },
     );
+
+    if (dto.tagIds && dto.tagIds.length > 0) {
+      for (const tagId of dto.tagIds) {
+        const tagEncontrada = await this.tagRepositorio.recuperar({ id: tagId });
+        if (!tagEncontrada) {
+          throw new ResourceNotFoundException(`Tag com id ${tagId}`);
+        }
+      }
+      await this.demandaRepositorio.atribuirTagsDemanda({ demandaId: demandaCriada.id, tagIds: dto.tagIds });
+    }
 
     return {
       sucesso:  true,
@@ -545,16 +578,10 @@ export class DemandaService {
       throw new ResourceNotFoundException('Demanda');
     }
 
-    if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR) {
-      const eMembro = await this.demandaRepositorio.validarMembro({
-        demandaId,
-        usuarioId: usuarioAtivo.sub,
-      });
-      if (!eMembro) {
-        throw new UnauthorizedAccessException(
-          'Você só pode atribuir tags em demandas das quais é membro',
-        );
-      }
+    if (usuarioAtivo.tipo !== UsuarioTipoEnum.GESTOR) {
+      throw new UnauthorizedAccessException(
+        'Apenas gestores podem atribuir tags às demandas',
+      );
     }
 
     for (const tagId of dto.tagIds) {

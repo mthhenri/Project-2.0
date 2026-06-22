@@ -127,12 +127,18 @@ export class DemandaRepository extends BaseRepository<Demanda> {
   ): Promise<DemandaCriadaDto> {
     return this.conexaoBancoDados.transaction(async (transacao) => {
       const demandaCriada = await this.inserir(dados, transacao);
-      await this.inserirDemandaUsuario({ demandaId: demandaCriada.id, usuarioId: dto.criadorId }, transacao);
-      for (const gestorId of dto.gestorIds) {
-        if (gestorId !== dto.criadorId) {
-          await this.inserirDemandaUsuario({ demandaId: demandaCriada.id, usuarioId: gestorId }, transacao);
-        }
-      }
+
+      const atribuidos = new Set<number>();
+      const atribuir = async (usuarioId: number) => {
+        if (atribuidos.has(usuarioId)) return;
+        atribuidos.add(usuarioId);
+        await this.inserirDemandaUsuario({ demandaId: demandaCriada.id, usuarioId }, transacao);
+      };
+
+      await atribuir(dto.criadorId);
+      for (const gestorId of dto.gestorIds) await atribuir(gestorId);
+      for (const membroId of dto.membroIds) await atribuir(membroId);
+
       return demandaCriada;
     });
   }
