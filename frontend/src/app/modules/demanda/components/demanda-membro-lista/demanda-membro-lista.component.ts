@@ -57,18 +57,33 @@ export class DemandaMembroListaComponent implements OnInit {
   }
 
   abrirDialog(): void {
-    this.formularioMembro.reset({ usuarioIds: [] });
+    this.formularioMembro.reset({ usuarioIds: this.membros().map((membro) => membro.usuarioId) });
     this.mostrarDialog.set(true);
   }
 
-  atribuirMembros(): void {
-    const usuarioIds = this.formularioMembro.value.usuarioIds ?? [];
-    if (usuarioIds.length === 0) return;
+  /**
+   * Sincroniza os membros da demanda com a seleção do multiselect: atribui os
+   * marcados que ainda não são membros e remove os membros desmarcados.
+   */
+  salvarMembros(): void {
+    const selecionados = this.formularioMembro.value.usuarioIds ?? [];
+    const atuais = this.membros().map((membro) => membro.usuarioId);
 
-    const chamadas = usuarioIds.map((usuarioId) => {
-      const dto: DemandaUsuarioAtribuirDto = { usuarioId };
-      return this.demandaService.atribuirMembro(this.demandaId, dto);
-    });
+    const aAdicionar = selecionados.filter((usuarioId) => !atuais.includes(usuarioId));
+    const aRemover = atuais.filter((usuarioId) => !selecionados.includes(usuarioId));
+
+    if (aAdicionar.length === 0 && aRemover.length === 0) {
+      this.mostrarDialog.set(false);
+      return;
+    }
+
+    const chamadas = [
+      ...aAdicionar.map((usuarioId) => {
+        const dto: DemandaUsuarioAtribuirDto = { usuarioId };
+        return this.demandaService.atribuirMembro(this.demandaId, dto);
+      }),
+      ...aRemover.map((usuarioId) => this.demandaService.removerMembro(this.demandaId, usuarioId)),
+    ];
 
     this.carregandoSalvar.set(true);
     forkJoin(chamadas)
@@ -77,9 +92,7 @@ export class DemandaMembroListaComponent implements OnInit {
         next: () => {
           this.mostrarDialog.set(false);
           this.carregarMembros();
-          const quantidade = usuarioIds.length;
-          const detalhe = quantidade === 1 ? 'Membro adicionado' : `${quantidade} membros adicionados`;
-          this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: detalhe });
+          this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Membros atualizados' });
         },
       });
   }

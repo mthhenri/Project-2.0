@@ -8,8 +8,8 @@
     </span>
     @if (sessao.eGestor()) {
       <p-button
-        icon="pi pi-user-plus"
-        label="Adicionar"
+        icon="pi pi-users"
+        label="Gerenciar"
         size="small"
         [outlined]="true"
         (onClick)="abrirDialog()"
@@ -75,17 +75,17 @@
   }
 </div>
 
-<!-- Dialog adicionar membros -->
+<!-- Dialog gerenciar membros -->
 <p-dialog
-  header="Adicionar Membros"
+  header="Gerenciar Membros"
   [(visible)]="mostrarDialog"
   [modal]="true"
-  [style]="{ width: '420px' }"
+  [style]="{ width: '90vw', maxWidth: '560px' }"
   [draggable]="false"
 >
   <form [formGroup]="formularioMembro" class="demanda-membro-lista__form">
     <div class="demanda-membro-lista__form-campo">
-      <label>Usuários <span class="demanda-membro-lista__obrigatorio">*</span></label>
+      <label>Usuários</label>
       <p-multiselect
         formControlName="usuarioIds"
         [options]="usuariosDisponiveis()"
@@ -108,11 +108,10 @@
       (onClick)="mostrarDialog.set(false)"
     />
     <p-button
-      label="Adicionar"
+      label="Salvar"
       icon="pi pi-check"
       [loading]="carregandoSalvar()"
-      [disabled]="(formularioMembro.value.usuarioIds?.length ?? 0) === 0"
-      (onClick)="atribuirMembros()"
+      (onClick)="salvarMembros()"
     />
   </ng-template>
 </p-dialog>
