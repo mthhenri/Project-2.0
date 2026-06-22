@@ -26,10 +26,10 @@ O `AssistenteService` ([assistente.service.ts](../../../backend/src/modules/assi
 
 ## Decisões de escopo (registradas)
 
-1. **Controle de acesso (segue a matriz §14):**
-   - **Gestor** → relatório com **todas** as execuções do projeto.
-   - **Desenvolvedor** → precisa ter acesso ao projeto (via `demanda_usuario`, `DemandaRepository.validarAcessoProjeto`); o relatório traz **apenas as próprias execuções** dentro daquele projeto (mesma `restricao` `{ usuarioId: sub }` usada em `ExecucaoService.listar`). Sem acesso → `UnauthorizedAccessException`.
-   > Consistente com "Ver execuções de todos: Gestor ✅ / Desenvolvedor ❌ ver apenas próprias". Se no futuro o desejado for relatório do projeto inteiro também para o dev membro, é outra task.
+1. **Controle de acesso — exclusivo de gestor:**
+   - O relatório é **somente para gestor**. Desenvolvedor **não acessa** o relatório — aliás, nem tem acesso à própria tela de projetos. Todas as rotas de relatório levam **`@GestorOnly()`** (além do `JwtAuthGuard`), no mesmo padrão de `GET /ponto/todos` e das rotas gestor-only de execução.
+   - O relatório traz **todas** as execuções do projeto no período (sem restrição por usuário).
+   - Como é gestor-only, **não há** ramo de "desenvolvedor vê só as próprias", nem uso de `ExecucaoAcessoFiltrarDto`/`validarAcessoProjeto` neste fluxo.
 2. **Formatos:** **CSV** é obrigatório (sem dependência nova — string montada no service, com BOM UTF-8 para abrir certo no Excel). **XLSX** é recomendado via dependência nova **`exceljs`** no `backend`. Se a inclusão da dependência não for desejada nesta task, entregar **só CSV** e deixar o XLSX como follow-up (o enum `RelatorioFormatoEnum` já prevê os dois).
 3. **Revisão por IA = groundwork:** esta task entrega a **plumbing completa** (enum/DTOs/endpoint/service com prompt estruturado e parsing de findings) e uma **versão básica funcional**. O motor de heurísticas avançadas (ver "NÃO implementar") fica para uma task futura.
 4. **Geração do arquivo no backend** (não no frontend): o backend já tem os dados e o acesso à IA, e centralizar a montagem garante CSV e XLSX idênticos em colunas.
@@ -103,7 +103,7 @@ export class RelatorioExecucaoFiltrarDto {
   dataFim: string;     // YYYY-MM-DD
 }
 ```
-> A restrição de escopo do desenvolvedor reutiliza o **`ExecucaoAcessoFiltrarDto { usuarioId }`** já existente em `shared` (mesmo padrão de `ExecucaoRepository.listar`).
+> Como o relatório é **gestor-only**, **não há** DTO de restrição por usuário — o filtro é só projeto + período.
 
 **Saída — linha do relatório (value-object por execução):**
 
@@ -183,18 +183,17 @@ backend/src/modules/relatorio/
   relatorio.module.ts
 ```
 
-Registrar `RelatorioModule` em `app.module.ts`. O módulo importa o que expõe `ExecucaoRepository`, `ProjetoRepository` e `DemandaRepository` (seguir como o `PontoModule` resolve as dependências de outros módulos — `exports` nos módulos de origem + `imports` no `RelatorioModule`; ajustar `exports` onde algum repositório ainda não for exportado).
+Registrar `RelatorioModule` em `app.module.ts`. O módulo importa o que expõe `ExecucaoRepository` e `ProjetoRepository` (seguir como o `PontoModule` resolve as dependências de outros módulos — `exports` nos módulos de origem + `imports` no `RelatorioModule`; ajustar `exports` onde algum repositório ainda não for exportado). `DemandaRepository` **não** é necessário (sem checagem de acesso por usuário — relatório é gestor-only).
 
 ### `ExecucaoRepository` — novo método (a query de execução é responsabilidade deste módulo, §25)
 
 ```typescript
 /**
  * Lista TODAS as execuções de um projeto dentro de um intervalo de datas (sem paginação),
- * para fins de relatório. Quando restricao é fornecida, filtra só as execuções daquele usuário.
+ * para fins de relatório. Uso restrito a gestor (garantido na camada de controller/service).
  */
 async listarParaRelatorio(
   filtros: RelatorioExecucaoFiltrarDto,
-  restricao?: ExecucaoAcessoFiltrarDto,
 ): Promise<RelatorioExecucaoLinhaDto[]>
 ```
 
@@ -224,7 +223,6 @@ WHERE execucao.is_deleted = false
   AND projeto.is_deleted = false
   AND projeto.id = :projetoId
   AND DATE(execucao.inicio_data) BETWEEN :dataInicio::DATE AND :dataFim::DATE
-  -- quando restricao: AND atividade.usuario_id = :usuarioId
 ORDER BY usuario.nome_completo ASC, execucao.inicio_data ASC
 ```
 
@@ -232,25 +230,22 @@ ORDER BY usuario.nome_completo ASC, execucao.inicio_data ASC
 
 ### `RelatorioService`
 
-Métodos públicos (todos com JSDoc — §16 #17). Recebe sempre DTO (§16 #21); o `usuarioAtivo: JwtPayload` é objeto de contexto permitido.
+Métodos públicos (todos com JSDoc — §16 #17). Recebe sempre DTO (§16 #21). Como o acesso gestor-only é resolvido pelo `@GestorOnly()` na controller e o relatório não filtra por usuário, os métodos **não** precisam de `usuarioAtivo`.
 
 ```typescript
 // 1) Dados do relatório (preview e base da revisão)
 async gerarRelatorio(
   dto: RelatorioExecucaoConsultarDto,
-  usuarioAtivo: JwtPayload,
 ): Promise<StandardResponse<RelatorioExecucaoDto>>
 
 // 2) Arquivo para download (CSV/XLSX). Devolve conteúdo + metadados; o controller só seta headers.
 async baixarRelatorio(
   dto: RelatorioExecucaoBaixarDto,
-  usuarioAtivo: JwtPayload,
 ): Promise<{ conteudo: Buffer; nomeArquivo: string; mimeType: string }>
 
 // 3) Groundwork — revisão por IA
 async revisarRelatorio(
   dto: RelatorioRevisaoSolicitarDto,
-  usuarioAtivo: JwtPayload,
 ): Promise<StandardResponse<RelatorioRevisaoDto>>
 ```
 
@@ -260,8 +255,8 @@ Lógica compartilhada (privada):
   - `MENSAL`: primeiro e último dia do mês (`mes` 1–12; usar último dia real do mês).
   - `CUSTOM`: usa `dataInicio`/`dataFim`; validar `dataFim >= dataInicio` → senão `BusinessException`.
   - Campos faltantes para o tipo escolhido → `BusinessException` (defesa em profundidade além do `@ValidateIf`).
-- **Acesso + projeto:** recuperar o projeto (`ProjetoRepository.recuperar({ id: dto.projetoId })`); não achou → `ResourceNotFoundException('Projeto')`. Se desenvolvedor: `DemandaRepository.validarAcessoProjeto({ projetoId, usuarioId: sub })`; sem acesso → `UnauthorizedAccessException`. Definir `restricao = dev ? { usuarioId: sub } : undefined`.
-- **Buscar linhas:** `execucaoRepositorio.listarParaRelatorio({ projetoId, dataInicio, dataFim }, restricao)`.
+- **Projeto:** recuperar o projeto (`ProjetoRepository.recuperar({ id: dto.projetoId })`); não achou → `ResourceNotFoundException('Projeto')`. O acesso gestor-only é garantido pelo `@GestorOnly()` na controller — **sem** ramo de desenvolvedor nem `validarAcessoProjeto` aqui.
+- **Buscar linhas:** `execucaoRepositorio.listarParaRelatorio({ projetoId, dataInicio, dataFim })`.
 - **Totais:** `totalExecucoes = linhas.length`, `totalMinutos = soma(duracaoMinutos)`.
 
 `baixarRelatorio` reutiliza `gerarRelatorio` (mesmo acesso/dados) e serializa:
@@ -279,28 +274,29 @@ Lógica compartilhada (privada):
 
 ### `RelatorioController` (`@Controller('relatorio')`, `@UseGuards(JwtAuthGuard)`)
 
-Controller burra (§7.2). A **única microinteligência** é montar o DTO injetando `projetoId` (vindo de `@Query('projetoId')` com `ParseIntPipe`) e, no download, setar os headers HTTP a partir do retorno do service.
+Controller burra (§7.2). **Todas as rotas levam `@GestorOnly()`** (relatório é exclusivo de gestor). A **única microinteligência** é montar o DTO injetando `projetoId` (vindo de `@Query('projetoId')` com `ParseIntPipe`) e, no download, setar os headers HTTP a partir do retorno do service.
 
 ```typescript
+@GestorOnly()
 @Get('execucao')
-gerar(@Query() dto: RelatorioExecucaoConsultarDto, @Query('projetoId', ParseIntPipe) projetoId: number,
-      @ActiveUser() usuarioAtivo: JwtPayload) {
-  return this.relatorioService.gerarRelatorio({ ...dto, projetoId }, usuarioAtivo);
+gerar(@Query() dto: RelatorioExecucaoConsultarDto, @Query('projetoId', ParseIntPipe) projetoId: number) {
+  return this.relatorioService.gerarRelatorio({ ...dto, projetoId });
 }
 
+@GestorOnly()
 @Get('execucao/download')
 async baixar(@Query() dto: RelatorioExecucaoBaixarDto, @Query('projetoId', ParseIntPipe) projetoId: number,
-             @ActiveUser() usuarioAtivo: JwtPayload, @Res({ passthrough: true }) resposta: Response) {
-  const arquivo = await this.relatorioService.baixarRelatorio({ ...dto, projetoId }, usuarioAtivo);
+             @Res({ passthrough: true }) resposta: Response) {
+  const arquivo = await this.relatorioService.baixarRelatorio({ ...dto, projetoId });
   resposta.setHeader('Content-Type', arquivo.mimeType);
   resposta.setHeader('Content-Disposition', `attachment; filename="${arquivo.nomeArquivo}"`);
   return new StreamableFile(arquivo.conteudo);
 }
 
+@GestorOnly()
 @Post('execucao/revisar')
-revisar(@Body() dto: RelatorioRevisaoSolicitarDto, @Query('projetoId', ParseIntPipe) projetoId: number,
-        @ActiveUser() usuarioAtivo: JwtPayload) {
-  return this.relatorioService.revisarRelatorio({ ...dto, projetoId }, usuarioAtivo);
+revisar(@Body() dto: RelatorioRevisaoSolicitarDto, @Query('projetoId', ParseIntPipe) projetoId: number) {
+  return this.relatorioService.revisarRelatorio({ ...dto, projetoId });
 }
 ```
 
@@ -328,7 +324,7 @@ revisar(@Body() dto: RelatorioRevisaoSolicitarDto, @Query('projetoId', ParseIntP
 - **Revisar com IA (groundwork):** botão "Revisar com IA" chama `revisarRelatorio`, mostra `resumo` + lista de `inconsistencias` (tipo/severidade/descrição/referência) num painel. Estado de carregamento próprio.
 - Estilos `.scss` com BEM em português + Tailwind para layout; mixins de `shared/styles/_form` quando aplicável; `appendTo="body"` nos selects/datepickers dentro do dialog.
 
-> Acesso no front: o botão "Relatório" pode aparecer para todos com acesso ao projeto (gestor e dev membro). O backend é a fonte da verdade do escopo (dev recebe só as próprias execuções).
+> Acesso no front: o botão "Relatório" vive dentro da tela de detalhe do projeto, que já é **gestor-only** (desenvolvedor não acessa a área de projetos). Ainda assim, o backend (`@GestorOnly()`) é a fonte da verdade — nenhuma checagem extra de tipo é necessária no componente.
 
 ---
 
@@ -353,7 +349,7 @@ backend/src/modules/relatorio/controllers/relatorio.controller.ts     (novo)
 backend/src/modules/relatorio/services/relatorio.service.ts          (novo)
 backend/src/modules/execucao/repositories/execucao.repository.ts    (+ listarParaRelatorio)
 backend/src/app.module.ts                                          (registrar RelatorioModule)
-backend/src/modules/{execucao,projeto,demanda}/*.module.ts        (exports de repositório se faltarem)
+backend/src/modules/{execucao,projeto}/*.module.ts               (exports de repositório se faltarem)
 backend/package.json                                              (exceljs — se XLSX nesta task)
 
 frontend/src/app/modules/relatorio/services/relatorio.service.ts                         (novo)
@@ -370,7 +366,7 @@ Sem migration — nenhuma mudança de schema.
 1. `npm run build --workspace=backend` (nest build — cobre o type-check do `shared`) sem erros.
 2. `npm run build --workspace=frontend` OK (só warnings pré-existentes de budget/CommonJS).
 3. `GET /relatorio/execucao?projetoId=…&periodoTipo=MENSAL&ano=2026&mes=6` retorna `RelatorioExecucaoDto` com `linhas`, `totalExecucoes`, `totalMinutos` e `periodoDescricao` corretos; ANUAL e CUSTOM idem.
-4. **Acesso:** desenvolvedor com acesso ao projeto recebe só as próprias execuções; desenvolvedor sem acesso → 403; gestor → todas.
+4. **Acesso:** gestor recebe todas as execuções do projeto no período; desenvolvedor (qualquer rota de relatório) → **403** (`@GestorOnly()`).
 5. `GET /relatorio/execucao/download?...&formato=CSV` baixa um `.csv` que abre no Excel com acentos corretos (BOM) e colunas na ordem definida; o conteúdo bate com o preview.
 6. (Se XLSX nesta task) `formato=XLSX` baixa um `.xlsx` válido; senão, retorna `BusinessException` e o front não oferece Excel.
 7. `POST /relatorio/execucao/revisar` retorna `RelatorioRevisaoDto` (`resumo` + `inconsistencias[]`) a partir das linhas do período; falha de IA/parse → `BusinessException` tratada, sem derrubar a request.
@@ -384,6 +380,6 @@ Sem migration — nenhuma mudança de schema.
 - **Chunking/streaming sofisticado** do relatório para a IA além do limite simples de linhas descrito.
 - **Agendamento/envio por e-mail** do relatório, histórico de relatórios gerados ou persistência do relatório em tabela (nada de migration).
 - **Relatórios de outras entidades** (ponto consolidado, por usuário fora do projeto, por demanda isolada) — escopo é execuções **de um projeto** por período.
-- **Filtros adicionais** no relatório (por usuário específico para gestor, por demanda, por status) além do período — podem ser uma task futura.
+- **Filtros adicionais** no relatório (por usuário específico, por demanda, por status) além do período — podem ser uma task futura.
 - Alterar o fluxo/colunas da listagem de execuções existente (`execucao-historico`) ou o módulo `assistente` (a revisão vive no novo módulo `relatorio`).
-- Dar ao desenvolvedor acesso às execuções de **outros** no relatório (mantém-se a matriz §14).
+- **Qualquer acesso de desenvolvedor ao relatório** — é exclusivo de gestor (`@GestorOnly()` em todas as rotas); não criar caminho de dev nem restrição por usuário.
