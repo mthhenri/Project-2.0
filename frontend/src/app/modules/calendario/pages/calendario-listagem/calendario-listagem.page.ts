@@ -22,7 +22,6 @@ import {
 } from '@project20/shared';
 import { CalendarioService } from '../../services/calendario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
-import { DataBrasileiraPipe } from '../../../../shared/pipes/data-brasileira.pipe';
 import {
   DIA_NAO_UTIL_TIPO_OPCOES,
   DIA_NAO_UTIL_DURACAO_OPCOES,
@@ -50,7 +49,6 @@ import {
     CheckboxModule,
     MessageModule,
     TooltipModule,
-    DataBrasileiraPipe,
   ],
   templateUrl: './calendario-listagem.page.html',
   styleUrl: './calendario-listagem.page.scss',
@@ -159,6 +157,19 @@ export class CalendarioListagemPage implements OnInit {
           }
         },
       });
+  }
+
+  /**
+   * Data formatada para a tabela. Para feriados recorrentes usa o ano do mês
+   * atualmente exibido (o dia/mês valem para qualquer ano), evitando exibir o ano
+   * de cadastro ao navegar para outros anos.
+   */
+  dataExibicao(dia: DiaNaoUtilResumoDto): string {
+    const { ano, mes, dia: numeroDia } = partesDaData(dia.diaData);
+    const anoExibido = dia.recorrente ? this.mesExibido().ano : ano;
+    const diaTexto = String(numeroDia).padStart(2, '0');
+    const mesTexto = String(mes).padStart(2, '0');
+    return `${diaTexto}/${mesTexto}/${anoExibido}`;
   }
 
   severidadeTipo(tipo: DiaNaoUtilTipoEnum): SeveridadeTag {

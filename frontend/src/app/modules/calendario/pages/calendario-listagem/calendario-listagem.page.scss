@@ -121,6 +121,7 @@
   }
 
   &__dialog-form  { @include form-dialog-form; }
+  &__dialog-linha { @include form-dialog-linha; }
   &__dialog-campo { @include form-campo; }
   &__label        { @include form-label; }
   &__obrigatorio  { @include form-obrigatorio; }

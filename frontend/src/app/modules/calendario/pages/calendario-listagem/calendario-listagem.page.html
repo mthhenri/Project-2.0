@@ -65,7 +65,7 @@
               [attr.data-dia-id]="dia.id"
               [class.calendario-listagem__linha--destacada]="dia.id === diaDestacadoId()"
             >
-              <td>{{ dia.diaData | dataBrasileira }}</td>
+              <td>{{ dataExibicao(dia) }}</td>
               <td>{{ dia.descricao }}</td>
               <td>
                 <p-tag [value]="rotuloTipo(dia.tipo)" [severity]="severidadeTipo(dia.tipo)" />
@@ -168,36 +168,39 @@
       }
     </div>
 
-    <div class="calendario-listagem__dialog-campo">
-      <label class="calendario-listagem__label">
-        Tipo <span class="calendario-listagem__obrigatorio">*</span>
-      </label>
-      <p-select
-        formControlName="tipo"
-        [options]="tipoOpcoes"
-        optionLabel="label"
-        optionValue="value"
-        appendTo="body"
-        class="w-full"
-      />
+    <div class="calendario-listagem__dialog-linha">
+      <div class="calendario-listagem__dialog-campo">
+        <label class="calendario-listagem__label">
+          Tipo <span class="calendario-listagem__obrigatorio">*</span>
+        </label>
+        <p-select
+          formControlName="tipo"
+          [options]="tipoOpcoes"
+          optionLabel="label"
+          optionValue="value"
+          appendTo="body"
+          class="w-full"
+        />
+      </div>
+
+      <div class="calendario-listagem__dialog-campo">
+        <label class="calendario-listagem__label">
+          Duração <span class="calendario-listagem__obrigatorio">*</span>
+        </label>
+        <p-select
+          formControlName="duracao"
+          [options]="duracaoOpcoes"
+          optionLabel="label"
+          optionValue="value"
+          appendTo="body"
+          class="w-full"
+        />
+      </div>
     </div>
 
-    <div class="calendario-listagem__dialog-campo">
-      <label class="calendario-listagem__label">
-        Duração <span class="calendario-listagem__obrigatorio">*</span>
-      </label>
-      <p-select
-        formControlName="duracao"
-        [options]="duracaoOpcoes"
-        optionLabel="label"
-        optionValue="value"
-        appendTo="body"
-        class="w-full"
-      />
-      @if (formulario.value.duracao === DiaNaoUtilDuracaoEnum.MEIO_PERIODO) {
-        <small class="text-muted-color">A meta diária do ponto é reduzida à metade neste dia.</small>
-      }
-    </div>
+    @if (formulario.value.duracao === DiaNaoUtilDuracaoEnum.MEIO_PERIODO) {
+      <small class="text-muted-color">A meta diária do ponto é reduzida à metade neste dia.</small>
+    }
 
     <div class="calendario-listagem__dialog-campo">
       <div class="calendario-listagem__checkbox-linha">
