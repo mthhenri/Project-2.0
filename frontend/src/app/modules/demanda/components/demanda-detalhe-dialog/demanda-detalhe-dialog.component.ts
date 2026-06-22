@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, inject, signal, computed } from '@angular/core';
-import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, AbstractControl } from '@angular/forms';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { forkJoin, of } from 'rxjs';
@@ -20,10 +20,17 @@ import {
   DemandaAlterarDto,
   UsuarioResumoDto,
   DemandaStatusEnum,
+  AtividadeResumoDto,
+  AtividadeListarDto,
 } from '@project20/shared';
 import { DemandaService } from '../../services/demanda.service';
 import { TagService } from '../../../tag/services/tag.service';
 import { UsuarioService } from '../../../usuario/services/usuario.service';
+import { AtividadeService } from '../../../atividade/services/atividade.service';
+import {
+  severidadeStatusAtividade,
+  rotuloStatusAtividade,
+} from '../../../atividade/models/atividade.model';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { DemandaArvoreItemComponent } from '../demanda-arvore-item/demanda-arvore-item.component';
 import { DemandaConexaoListaComponent } from '../demanda-conexao-lista/demanda-conexao-lista.component';
@@ -32,6 +39,7 @@ import { DemandaEdicaoDialogComponent } from '../demanda-edicao-dialog/demanda-e
 import { DemandaFormularioDialogComponent } from '../demanda-formulario-dialog/demanda-formulario-dialog.component';
 import { AssistenteDescricaoComponent } from '../../../../shared/components/assistente-descricao/assistente-descricao.component';
 import { DataBrasileiraPipe } from '../../../../shared/pipes/data-brasileira.pipe';
+import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-horas.pipe';
 
 type CampoDescricao = 'descricaoTecnica' | 'descricaoCliente' | 'documentacao';
 
@@ -54,6 +62,7 @@ type CampoDescricao = 'descricaoTecnica' | 'descricaoCliente' | 'documentacao';
     DemandaFormularioDialogComponent,
     AssistenteDescricaoComponent,
     DataBrasileiraPipe,
+    MinutosParaHorasPipe,
   ],
   providers: [ConfirmationService],
   templateUrl: './demanda-detalhe-dialog.component.html',
@@ -69,6 +78,7 @@ export class DemandaDetalheDialogComponent implements OnChanges {
   private readonly demandaService = inject(DemandaService);
   private readonly tagService = inject(TagService);
   private readonly usuarioService = inject(UsuarioService);
+  private readonly atividadeService = inject(AtividadeService);
   private readonly router = inject(Router);
   private readonly messageService = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
@@ -83,7 +93,12 @@ export class DemandaDetalheDialogComponent implements OnChanges {
   readonly tagsDaDemanda = signal<TagResumoDto[]>([]);
   readonly todosUsuarios = signal<UsuarioResumoDto[]>([]);
   readonly todasDemandas = signal<Array<{ demandaConectadaId: number; nomeDemandaConectada: string }>>([]);
+  readonly atividades = signal<AtividadeResumoDto[]>([]);
+  readonly carregandoAtividades = signal<boolean>(false);
   readonly carregando = signal<boolean>(false);
+
+  readonly severidadeStatusAtividade = severidadeStatusAtividade;
+  readonly rotuloStatusAtividade = rotuloStatusAtividade;
   readonly mostrarDialogEditar = signal<boolean>(false);
   readonly mostrarDialogTags = signal<boolean>(false);
   readonly mostrarDialogNovaSubDemanda = signal<boolean>(false);
@@ -204,6 +219,36 @@ export class DemandaDetalheDialogComponent implements OnChanges {
     this.fechar();
   }
 
+  iniciaisUsuario(nome: string): string {
+    return (nome ?? '')
+      .split(' ')
+      .slice(0, 2)
+      .map((parte) => parte[0])
+      .join('')
+      .toUpperCase();
+  }
+
+  private carregarAtividades(demandaId: number): void {
+    this.carregandoAtividades.set(true);
+    this.atividades.set([]);
+
+    // Gestor vê todas as atividades da demanda; desenvolvedor vê apenas as próprias.
+    const filtros: AtividadeListarDto = { demandaId, itensPorPagina: 100 };
+    if (!this.sessao.eGestor()) {
+      const usuarioId = this.sessao.id();
+      if (usuarioId !== undefined) filtros.usuarioId = usuarioId;
+    }
+
+    this.atividadeService
+      .listar(filtros)
+      .pipe(finalize(() => this.carregandoAtividades.set(false)))
+      .subscribe({
+        next: (resposta) => {
+          if (resposta.sucesso && resposta.dados) this.atividades.set(resposta.dados.itens);
+        },
+      });
+  }
+
   abrirDialogDescricao(campo: CampoDescricao): void {
     const demandaDados = this.demanda();
     if (!demandaDados) return;
@@ -298,16 +343,18 @@ export class DemandaDetalheDialogComponent implements OnChanges {
     });
   }
 
-  toggleTag(tagId: number, evento: Event): void {
-    const marcado = (evento.target as HTMLInputElement).checked;
-    const tagIdsAtuais = [...(this.formularioTags.value.tagIds ?? [])];
-    if (marcado) {
-      if (!tagIdsAtuais.includes(tagId)) tagIdsAtuais.push(tagId);
-    } else {
-      const indice = tagIdsAtuais.indexOf(tagId);
-      if (indice > -1) tagIdsAtuais.splice(indice, 1);
-    }
-    this.formularioTags.patchValue({ tagIds: tagIdsAtuais });
+  /** Alterna a seleção de uma tag no controle informado (seletor de chips). */
+  alternarTagSelecao(controle: AbstractControl, tagId: number): void {
+    const selecionadas = (controle.value as number[] | null) ?? [];
+    const novas = selecionadas.includes(tagId)
+      ? selecionadas.filter((id) => id !== tagId)
+      : [...selecionadas, tagId];
+    controle.setValue(novas);
+    controle.markAsDirty();
+  }
+
+  tagEstaSelecionada(controle: AbstractControl, tagId: number): boolean {
+    return ((controle.value as number[] | null) ?? []).includes(tagId);
   }
 
   severidadeStatus(status: DemandaStatusEnum): 'secondary' | 'info' | 'success' {
@@ -366,6 +413,7 @@ export class DemandaDetalheDialogComponent implements OnChanges {
             this.demanda.set(demanda.dados);
             this.carregarTagsDaDemanda(identificador);
             this.carregarDemandasParaConexao(demanda.dados.projetoId, identificador);
+            if (this.eMembro()) this.carregarAtividades(identificador);
           }
           if (ancestrais.sucesso && ancestrais.dados) {
             this.ancestrais.set(ancestrais.dados);

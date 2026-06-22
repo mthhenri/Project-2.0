@@ -191,6 +191,11 @@
         <p-tabpanel value="1">
           <div class="demanda-detalhe-dialog__atividades">
             <div class="demanda-detalhe-dialog__atividades-header">
+              @if (atividades().length > 0) {
+                <span class="demanda-detalhe-dialog__atividades-contador">
+                  {{ atividades().length }} atividade(s)
+                </span>
+              }
               <p-button
                 label="Ver Atividades"
                 icon="pi pi-external-link"
@@ -200,9 +205,41 @@
                 (onClick)="navegarParaAtividades()"
               />
             </div>
-            <p class="text-muted-color text-sm">
-              Gerencie as atividades desta demanda no módulo de atividades.
-            </p>
+
+            @if (carregandoAtividades()) {
+              <div class="demanda-detalhe-dialog__atividades-carregando">
+                <i class="pi pi-spin pi-spinner"></i>
+              </div>
+            } @else if (atividades().length === 0) {
+              <div class="demanda-detalhe-dialog__atividades-vazio">
+                <i class="pi pi-check-square"></i>
+                <p>Nenhuma atividade nesta demanda</p>
+              </div>
+            } @else {
+              <div class="demanda-detalhe-dialog__atividades-lista">
+                @for (atividade of atividades(); track atividade.id) {
+                  <div class="demanda-detalhe-dialog__atividade-item">
+                    <div class="demanda-detalhe-dialog__atividade-principal">
+                      <span class="demanda-detalhe-dialog__atividade-nome">{{ atividade.nome }}</span>
+                      <p-tag
+                        [value]="rotuloStatusAtividade(atividade.status)"
+                        [severity]="severidadeStatusAtividade(atividade.status)"
+                      />
+                    </div>
+                    <div class="demanda-detalhe-dialog__atividade-meta">
+                      <span class="demanda-detalhe-dialog__atividade-executor">
+                        <span class="demanda-detalhe-dialog__atividade-avatar">{{ iniciaisUsuario(atividade.nomeUsuario) }}</span>
+                        {{ atividade.nomeUsuario }}
+                      </span>
+                      <span class="demanda-detalhe-dialog__atividade-tempo">
+                        <i class="pi pi-clock"></i>
+                        {{ atividade.totalMinutosExecutados | minutosParagHoras }}
+                      </span>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
           </div>
         </p-tabpanel>
         }
@@ -225,7 +262,7 @@
                   <span class="demanda-detalhe-dialog__tags-contador">{{ tagsDaDemanda().length }}</span>
                 }
               </span>
-              @if (eMembro()) {
+              @if (sessao.eGestor()) {
                 <p-button
                   label="Editar"
                   icon="pi pi-pencil"
@@ -365,25 +402,24 @@
   [draggable]="false"
 >
   <form [formGroup]="formularioTags" class="demanda-detalhe-dialog__dialog-form">
-    <div class="demanda-detalhe-dialog__tags-selecao">
+    <div class="demanda-detalhe-dialog__tags-seletor">
       @for (tag of tagsDisponiveis(); track tag.id) {
-        <label class="demanda-detalhe-dialog__tag-opcao">
-          <input
-            type="checkbox"
-            [value]="tag.id"
-            [checked]="(formularioTags.value.tagIds || []).includes(tag.id)"
-            (change)="toggleTag(tag.id, $event)"
-          />
-          <span
-            class="demanda-detalhe-dialog__tag-chip"
-            [style.background-color]="tag.cor + '22'"
-            [style.border-color]="tag.cor + '55'"
-            [style.color]="tag.cor"
-          >
+        <button
+          type="button"
+          class="demanda-detalhe-dialog__tag-seletor-chip"
+          [class.demanda-detalhe-dialog__tag-seletor-chip--ativo]="tagEstaSelecionada(formularioTags.controls.tagIds, tag.id)"
+          [style.--cor-tag]="tag.cor"
+          (click)="alternarTagSelecao(formularioTags.controls.tagIds, tag.id)"
+        >
+          @if (tagEstaSelecionada(formularioTags.controls.tagIds, tag.id)) {
+            <i class="pi pi-check demanda-detalhe-dialog__tag-seletor-check"></i>
+          } @else {
             <span class="demanda-detalhe-dialog__tag-bolinha" [style.background-color]="tag.cor"></span>
-            {{ tag.nome }}
-          </span>
-        </label>
+          }
+          {{ tag.nome }}
+        </button>
+      } @empty {
+        <span class="text-muted-color">Nenhuma tag cadastrada</span>
       }
     </div>
   </form>
