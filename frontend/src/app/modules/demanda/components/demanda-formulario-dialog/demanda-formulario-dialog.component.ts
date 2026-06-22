@@ -1,10 +1,11 @@
 import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, inject, signal } from '@angular/core';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { Select } from 'primeng/select';
+import { MultiSelect } from 'primeng/multiselect';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DatePickerModule } from 'primeng/datepicker';
 import { DialogModule } from 'primeng/dialog';
@@ -15,8 +16,13 @@ import {
   DemandaResumoDto,
   DemandaStatusEnum,
   DemandaPrioridadeEnum,
+  TagResumoDto,
+  UsuarioResumoDto,
 } from '@project20/shared';
 import { DemandaService } from '../../services/demanda.service';
+import { TagService } from '../../../tag/services/tag.service';
+import { UsuarioService } from '../../../usuario/services/usuario.service';
+import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 
 @Component({
   selector: 'app-demanda-formulario-dialog',
@@ -27,6 +33,7 @@ import { DemandaService } from '../../services/demanda.service';
     InputTextModule,
     InputNumberModule,
     Select,
+    MultiSelect,
     CheckboxModule,
     DatePickerModule,
     DialogModule,
@@ -42,21 +49,29 @@ export class DemandaFormularioDialogComponent implements OnChanges {
   @Output() demandaCriada = new EventEmitter<DemandaCriadaDto>();
 
   private readonly demandaService = inject(DemandaService);
+  private readonly tagService = inject(TagService);
+  private readonly usuarioService = inject(UsuarioService);
   private readonly messageService = inject(MessageService);
   private readonly formBuilder = inject(FormBuilder);
+  readonly sessao = inject(UsuarioSessaoService);
 
   readonly demandasPaiOpcoes = signal<DemandaResumoDto[]>([]);
   readonly carregando = signal<boolean>(false);
+  readonly todasAsTags = signal<TagResumoDto[]>([]);
+  readonly carregandoTags = signal<boolean>(false);
+  readonly usuariosDisponiveis = signal<UsuarioResumoDto[]>([]);
 
   readonly formulario = this.formBuilder.group({
     nome:            ['', [Validators.required, Validators.maxLength(255)]],
     demandaPaiId:    [null as number | null],
     prioridade:      [DemandaPrioridadeEnum.MEDIA as DemandaPrioridadeEnum, [Validators.required]],
-    status:          [DemandaStatusEnum.PENDENTE as DemandaStatusEnum, [Validators.required]],
+    status:          [DemandaStatusEnum.PLANEJADA as DemandaStatusEnum, [Validators.required]],
     isEstrutural:    [false],
     horasEstimadas:  [0, [Validators.required, Validators.min(0)]],
     previsaoFimData: [null as Date | null],
     ordemExibicao:   [0, [Validators.min(0)]],
+    tagIds:          [[] as number[]],
+    usuarioIds:      [[] as number[]],
   });
 
   readonly prioridadeOpcoes = [
@@ -78,12 +93,18 @@ export class DemandaFormularioDialogComponent implements OnChanges {
         nome:           '',
         demandaPaiId:   this.demandaPaiIdInicial ?? null,
         prioridade:     DemandaPrioridadeEnum.MEDIA,
-        status:         DemandaStatusEnum.PENDENTE,
+        status:         DemandaStatusEnum.PLANEJADA,
         isEstrutural:   false,
         horasEstimadas: 0,
         ordemExibicao:  0,
+        tagIds:         [],
+        usuarioIds:     [],
       });
       this.carregarDemandasPai();
+      if (this.sessao.eGestor()) {
+        if (this.todasAsTags().length === 0) this.carregarTodasAsTags();
+        if (this.usuariosDisponiveis().length === 0) this.carregarUsuarios();
+      }
     }
   }
 
@@ -111,6 +132,10 @@ export class DemandaFormularioDialogComponent implements OnChanges {
       previsaoFimData: valor.previsaoFimData ? this.formatarData(valor.previsaoFimData) : undefined,
       ordemExibicao:   valor.ordemExibicao ?? 0,
     };
+    if (this.sessao.eGestor()) {
+      if (valor.tagIds?.length) dto.tagIds = valor.tagIds;
+      if (valor.usuarioIds?.length) dto.usuarioIds = valor.usuarioIds;
+    }
 
     this.demandaService
       .criar(dto)
@@ -132,6 +157,8 @@ export class DemandaFormularioDialogComponent implements OnChanges {
               isEstrutural:   false,
               horasEstimadas: 0,
               ordemExibicao:  0,
+              tagIds:         [],
+              usuarioIds:     [],
             });
           }
         },
@@ -141,6 +168,41 @@ export class DemandaFormularioDialogComponent implements OnChanges {
   campoInvalido(nomeCampo: string): boolean {
     const controle = this.formulario.get(nomeCampo);
     return !!(controle?.invalid && controle?.touched);
+  }
+
+  /** Alterna a seleção de uma tag no controle informado (seletor de chips). */
+  alternarTagSelecao(controle: AbstractControl, tagId: number): void {
+    const selecionadas = (controle.value as number[] | null) ?? [];
+    const novas = selecionadas.includes(tagId)
+      ? selecionadas.filter((id) => id !== tagId)
+      : [...selecionadas, tagId];
+    controle.setValue(novas);
+    controle.markAsDirty();
+  }
+
+  tagEstaSelecionada(controle: AbstractControl, tagId: number): boolean {
+    return ((controle.value as number[] | null) ?? []).includes(tagId);
+  }
+
+  private carregarTodasAsTags(): void {
+    this.carregandoTags.set(true);
+    this.tagService
+      .listar()
+      .pipe(finalize(() => this.carregandoTags.set(false)))
+      .subscribe({
+        next: (resposta) => {
+          if (resposta.sucesso && resposta.dados) this.todasAsTags.set(resposta.dados);
+        },
+      });
+  }
+
+  /** Lista completa de usuários (GET /usuario) é gestor-only — alimenta o multiselect de membros. */
+  private carregarUsuarios(): void {
+    this.usuarioService.listar({ itensPorPagina: 100 }).subscribe({
+      next: (resposta) => {
+        if (resposta.sucesso && resposta.dados) this.usuariosDisponiveis.set(resposta.dados.itens);
+      },
+    });
   }
 
   private carregarDemandasPai(): void {
