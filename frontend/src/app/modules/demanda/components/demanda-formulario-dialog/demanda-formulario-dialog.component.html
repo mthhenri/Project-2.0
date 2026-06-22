@@ -16,16 +16,28 @@
       }
     </div>
 
+    <div class="demanda-dialog__campo demanda-dialog__campo--full">
+      <label class="demanda-dialog__label">Demanda Pai</label>
+      <p-select
+        formControlName="demandaPaiId"
+        [options]="demandasPaiOpcoes()"
+        optionLabel="nome"
+        optionValue="id"
+        placeholder="Nenhuma (raiz)"
+        [showClear]="true"
+        appendTo="body"
+        class="w-full"
+      />
+    </div>
+
     <div class="demanda-dialog__linha">
       <div class="demanda-dialog__campo">
-        <label class="demanda-dialog__label">Demanda Pai</label>
+        <label class="demanda-dialog__label">Status <span class="demanda-dialog__obrigatorio">*</span></label>
         <p-select
-          formControlName="demandaPaiId"
-          [options]="demandasPaiOpcoes()"
-          optionLabel="nome"
-          optionValue="id"
-          placeholder="Nenhuma (raiz)"
-          [showClear]="true"
+          formControlName="status"
+          [options]="statusOpcoes"
+          optionLabel="label"
+          optionValue="value"
           appendTo="body"
           class="w-full"
         />
@@ -46,12 +58,11 @@
 
     <div class="demanda-dialog__linha">
       <div class="demanda-dialog__campo">
-        <label class="demanda-dialog__label">Status <span class="demanda-dialog__obrigatorio">*</span></label>
-        <p-select
-          formControlName="status"
-          [options]="statusOpcoes"
-          optionLabel="label"
-          optionValue="value"
+        <label class="demanda-dialog__label">Previsão de Término</label>
+        <p-datepicker
+          formControlName="previsaoFimData"
+          dateFormat="dd/mm/yy"
+          [showIcon]="true"
           appendTo="body"
           class="w-full"
         />
@@ -63,19 +74,6 @@
           formControlName="horasEstimadas"
           [min]="0"
           suffix="h"
-          class="w-full"
-        />
-      </div>
-    </div>
-
-    <div class="demanda-dialog__linha">
-      <div class="demanda-dialog__campo">
-        <label class="demanda-dialog__label">Previsão de Término</label>
-        <p-datepicker
-          formControlName="previsaoFimData"
-          dateFormat="dd/mm/yy"
-          [showIcon]="true"
-          appendTo="body"
           class="w-full"
         />
       </div>
