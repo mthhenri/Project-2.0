@@ -308,7 +308,6 @@ export class AtividadeListagemPage implements OnInit {
       demandaId:     valor.demandaId!,
       nome:          valor.nome!,
       status:        valor.status!,
-      ordemExibicao: 0,
     };
     const descricao = valor.descricao?.trim();
     if (descricao) dto.descricao = descricao;

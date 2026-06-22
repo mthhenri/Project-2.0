@@ -70,11 +70,4 @@ export class DemandaAlterarDto {
   @IsOptional()
   @IsDateString()
   previsaoFimData?: string;
-
-  @ApiPropertyOptional({ example: 0 })
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  @Type(() => Number)
-  ordemExibicao?: number;
 }

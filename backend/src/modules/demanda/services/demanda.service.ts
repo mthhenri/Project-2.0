@@ -134,7 +134,6 @@ export class DemandaService {
         status:           dto.status,
         isEstrutural:     dto.isEstrutural,
         previsaoFimData:  dto.previsaoFimData ? new Date(dto.previsaoFimData) : null,
-        ordemExibicao:    dto.ordemExibicao,
       },
       { criadorId: usuarioAtivo.sub, gestorIds, membroIds },
     );
@@ -306,7 +305,6 @@ export class DemandaService {
       status:           dto.status,
       isEstrutural:     dto.isEstrutural,
       previsaoFimData:  dto.previsaoFimData,
-      ordemExibicao:    dto.ordemExibicao,
     });
 
     return {

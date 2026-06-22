@@ -20,7 +20,4 @@ export class DemandaResumoDto {
 
   @ApiProperty({ example: 8 })
   horasEstimadas: number;
-
-  @ApiProperty({ example: 0 })
-  ordemExibicao: number;
 }

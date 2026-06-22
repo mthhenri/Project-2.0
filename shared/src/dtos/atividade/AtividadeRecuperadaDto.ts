@@ -8,7 +8,6 @@ export class AtividadeRecuperadaDto {
   nome: string;
   descricao: string | null;
   status: AtividadeStatusEnum;
-  ordemExibicao: number;
   posicaoAtividadeUsuario: number;
   createdDate: Date;
 }

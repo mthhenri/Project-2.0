@@ -30,9 +30,6 @@ export class DemandaCriadaDto {
   @ApiPropertyOptional({ example: '2026-12-31' })
   previsaoFimData: string | null;
 
-  @ApiProperty({ example: 0 })
-  ordemExibicao: number;
-
   @ApiProperty({ example: '2026-06-13T12:00:00.000Z' })
   createdDate: string;
 }

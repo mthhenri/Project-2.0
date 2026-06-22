@@ -4,7 +4,6 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
-import { InputNumberModule } from 'primeng/inputnumber';
 import { TextareaModule } from 'primeng/textarea';
 import { Select } from 'primeng/select';
 import { MessageService } from 'primeng/api';
@@ -21,7 +20,6 @@ import { ATIVIDADE_STATUS_OPCOES } from '../../models/atividade.model';
     ReactiveFormsModule,
     ButtonModule,
     InputTextModule,
-    InputNumberModule,
     TextareaModule,
     Select,
     AssistenteDescricaoComponent,
@@ -41,7 +39,6 @@ export class AtividadeFormularioPage implements OnInit {
     nome:          ['', [Validators.required, Validators.minLength(3), Validators.maxLength(255)]],
     descricao:     [''],
     status:        [AtividadeStatusEnum.PLANEJADA as AtividadeStatusEnum, [Validators.required]],
-    ordemExibicao: [0, [Validators.required, Validators.min(0)]],
   });
 
   readonly demandaId = signal<number | null>(null);
@@ -80,7 +77,6 @@ export class AtividadeFormularioPage implements OnInit {
       demandaId,
       nome:          valor.nome!,
       status:        valor.status!,
-      ordemExibicao: valor.ordemExibicao!,
     };
     const descricao = valor.descricao?.trim();
     if (descricao) dto.descricao = descricao;

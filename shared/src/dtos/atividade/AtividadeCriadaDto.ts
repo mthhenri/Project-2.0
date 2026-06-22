@@ -7,6 +7,5 @@ export class AtividadeCriadaDto {
   nome: string;
   descricao: string | null;
   status: AtividadeStatusEnum;
-  ordemExibicao: number;
   createdDate: Date;
 }

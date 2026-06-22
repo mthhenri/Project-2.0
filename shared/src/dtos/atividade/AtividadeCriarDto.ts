@@ -26,10 +26,6 @@ export class AtividadeCriarDto {
   @IsEnum(AtividadeStatusEnum)
   status: AtividadeStatusEnum;
 
-  @IsNumber()
-  @Min(0)
-  ordemExibicao: number;
-
   @IsOptional()
   @IsArray()
   @IsNumber({}, { each: true })

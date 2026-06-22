@@ -11,5 +11,4 @@ export class AtividadeInternoAlterarDto {
   nome?: string;
   descricao?: string;
   status?: AtividadeStatusEnum;
-  ordemExibicao?: number;
 }

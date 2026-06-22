@@ -13,5 +13,4 @@ export class Demanda extends BaseEntity {
   status: DemandaStatusEnum;
   isEstrutural: boolean;
   previsaoFimData: Date | null;
-  ordemExibicao: number;
 }

@@ -34,8 +34,8 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
    */
   async inserir(dados: AtividadeInserirDados): Promise<AtividadeCriadaDto> {
     const resultado = await this.executarConsulta<AtividadeCriadaDto>(
-      `INSERT INTO atividade (demanda_id, usuario_id, nome, descricao, status, ordem_exibicao, created_date, updated_date, is_deleted)
-       SELECT :demandaId, :usuarioId, :nome, :descricao, :status, :ordemExibicao, NOW(), NOW(), false
+      `INSERT INTO atividade (demanda_id, usuario_id, nome, descricao, status, created_date, updated_date, is_deleted)
+       SELECT :demandaId, :usuarioId, :nome, :descricao, :status, NOW(), NOW(), false
        RETURNING
          id,
          demanda_id      AS "demandaId",
@@ -43,7 +43,6 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
          nome,
          descricao,
          status,
-         ordem_exibicao  AS "ordemExibicao",
          created_date    AS "createdDate"`,
       {
         demandaId:     dados.demandaId,
@@ -51,7 +50,6 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
         nome:          dados.nome,
         descricao:     dados.descricao ?? null,
         status:        dados.status,
-        ordemExibicao: dados.ordemExibicao,
       },
     );
     return resultado[0];
@@ -71,7 +69,6 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
          atividade.nome,
          atividade.descricao,
          atividade.status,
-         atividade.ordem_exibicao  AS "ordemExibicao",
          (SELECT COUNT(*)::int
             FROM atividade atividade_do_usuario
            WHERE atividade_do_usuario.usuario_id = atividade.usuario_id
@@ -168,7 +165,6 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
          atividade.id,
          atividade.nome,
          atividade.status,
-         atividade.ordem_exibicao  AS "ordemExibicao",
          atividade.usuario_id      AS "usuarioId",
          usuario.nome_completo     AS "nomeUsuario",
          usuario.tipo              AS "usuarioTipo",
@@ -237,10 +233,6 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
       setClauses.push('status = :status');
       parametros.status = dto.status;
     }
-    if (dto.ordemExibicao !== undefined) {
-      setClauses.push('ordem_exibicao = :ordemExibicao');
-      parametros.ordemExibicao = dto.ordemExibicao;
-    }
 
     const resultado = await this.executarConsulta<AtividadeAlteradaDto>(
       `UPDATE atividade
@@ -254,7 +246,6 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
          nome,
          descricao,
          status,
-         ordem_exibicao  AS "ordemExibicao",
          created_date    AS "createdDate"`,
       parametros,
     );

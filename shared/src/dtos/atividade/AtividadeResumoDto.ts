@@ -6,7 +6,6 @@ export class AtividadeResumoDto {
   id: number;
   nome: string;
   status: AtividadeStatusEnum;
-  ordemExibicao: number;
   usuarioId: number;
   nomeUsuario: string;
   /** Tipo do dono da atividade. Define se a descrição da execução é obrigatória. */

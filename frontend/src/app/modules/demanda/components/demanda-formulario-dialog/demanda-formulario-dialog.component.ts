@@ -69,7 +69,6 @@ export class DemandaFormularioDialogComponent implements OnChanges {
     isEstrutural:    [false],
     horasEstimadas:  [0, [Validators.required, Validators.min(0)]],
     previsaoFimData: [null as Date | null],
-    ordemExibicao:   [0, [Validators.min(0)]],
     tagIds:          [[] as number[]],
     usuarioIds:      [[] as number[]],
   });
@@ -96,7 +95,6 @@ export class DemandaFormularioDialogComponent implements OnChanges {
         status:         DemandaStatusEnum.PLANEJADA,
         isEstrutural:   false,
         horasEstimadas: 0,
-        ordemExibicao:  0,
         tagIds:         [],
         usuarioIds:     [],
       });
@@ -130,7 +128,6 @@ export class DemandaFormularioDialogComponent implements OnChanges {
       isEstrutural:    valor.isEstrutural ?? false,
       horasEstimadas:  valor.horasEstimadas ?? 0,
       previsaoFimData: valor.previsaoFimData ? this.formatarData(valor.previsaoFimData) : undefined,
-      ordemExibicao:   valor.ordemExibicao ?? 0,
     };
     if (this.sessao.eGestor()) {
       if (valor.tagIds?.length) dto.tagIds = valor.tagIds;
@@ -156,7 +153,6 @@ export class DemandaFormularioDialogComponent implements OnChanges {
               status:         DemandaStatusEnum.PLANEJADA,
               isEstrutural:   false,
               horasEstimadas: 0,
-              ordemExibicao:  0,
               tagIds:         [],
               usuarioIds:     [],
             });

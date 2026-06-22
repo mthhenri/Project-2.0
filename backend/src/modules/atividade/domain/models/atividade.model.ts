@@ -7,5 +7,4 @@ export class Atividade extends BaseEntity {
   nome: string;
   descricao: string | null;
   status: AtividadeStatusEnum;
-  ordemExibicao: number;
 }

@@ -41,34 +41,19 @@
         </div>
       </div>
 
-      <div class="atividade-formulario__linha">
-        <div class="atividade-formulario__campo">
-          <label for="status" class="atividade-formulario__label">
-            Status <span class="atividade-formulario__obrigatorio">*</span>
-          </label>
-          <p-select
-            inputId="status"
-            formControlName="status"
-            [options]="statusOpcoes"
-            optionLabel="label"
-            optionValue="value"
-            placeholder="Selecione o status"
-            class="w-full"
-          />
-        </div>
-
-        <div class="atividade-formulario__campo">
-          <label for="ordemExibicao" class="atividade-formulario__label">
-            Ordem de exibição <span class="atividade-formulario__obrigatorio">*</span>
-          </label>
-          <p-inputNumber
-            inputId="ordemExibicao"
-            formControlName="ordemExibicao"
-            [min]="0"
-            [showButtons]="true"
-            class="w-full"
-          />
-        </div>
+      <div class="atividade-formulario__campo">
+        <label for="status" class="atividade-formulario__label">
+          Status <span class="atividade-formulario__obrigatorio">*</span>
+        </label>
+        <p-select
+          inputId="status"
+          formControlName="status"
+          [options]="statusOpcoes"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Selecione o status"
+          class="w-full"
+        />
       </div>
 
       <div class="atividade-formulario__campo">

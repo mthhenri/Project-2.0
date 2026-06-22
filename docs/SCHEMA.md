@@ -224,8 +224,7 @@ CREATE TABLE demanda (
   status            VARCHAR(30)  NOT NULL
                       CHECK (status IN ('PLANEJADA', 'EM_DESENVOLVIMENTO', 'CONCLUIDA')),
   is_estrutural     BOOLEAN      NOT NULL,
-  previsao_fim_data DATE,
-  ordem_exibicao    INTEGER      NOT NULL
+  previsao_fim_data DATE
 );
 
 CREATE INDEX ix_demanda_projeto
@@ -376,8 +375,7 @@ CREATE TABLE atividade (
   nome            VARCHAR(255) NOT NULL,
   descricao       TEXT,
   status          VARCHAR(20)  NOT NULL
-                    CHECK (status IN ('PLANEJADA', 'PENDENTE', 'DESENVOLVENDO', 'DESENVOLVIDA')),
-  ordem_exibicao  INTEGER      NOT NULL
+                    CHECK (status IN ('PLANEJADA', 'PENDENTE', 'DESENVOLVENDO', 'DESENVOLVIDA'))
 );
 
 CREATE INDEX ix_atividade_demanda

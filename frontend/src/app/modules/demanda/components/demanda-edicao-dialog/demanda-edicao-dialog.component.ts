@@ -57,7 +57,6 @@ export class DemandaEdicaoDialogComponent implements OnChanges {
     isEstrutural:     [false],
     horasEstimadas:   [0, [Validators.required, Validators.min(0)]],
     previsaoFimData:  [null as Date | null],
-    ordemExibicao:    [0, [Validators.min(0)]],
   });
 
   readonly prioridadeOpcoes = [
@@ -100,7 +99,6 @@ export class DemandaEdicaoDialogComponent implements OnChanges {
       isEstrutural:     valor.isEstrutural ?? undefined,
       horasEstimadas:   valor.horasEstimadas ?? undefined,
       previsaoFimData:  valor.previsaoFimData ? this.formatarData(valor.previsaoFimData) : undefined,
-      ordemExibicao:    valor.ordemExibicao ?? undefined,
     };
 
     this.demandaService
@@ -145,7 +143,6 @@ export class DemandaEdicaoDialogComponent implements OnChanges {
               previsaoFimData:  demanda.previsaoFimData
                                   ? new Date(demanda.previsaoFimData + 'T12:00:00')
                                   : null,
-              ordemExibicao:    demanda.ordemExibicao,
             });
 
             this.carregarDemandasPai();

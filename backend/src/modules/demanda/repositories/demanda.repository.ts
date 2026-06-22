@@ -63,12 +63,12 @@ export class DemandaRepository extends BaseRepository<Demanda> {
       `INSERT INTO demanda (
          projeto_id, demanda_pai_id, nome, descricao_tecnica, descricao_cliente,
          documentacao, horas_estimadas, prioridade, status, is_estrutural,
-         previsao_fim_data, ordem_exibicao, created_date, updated_date, is_deleted
+         previsao_fim_data, created_date, updated_date, is_deleted
        )
        SELECT
          :projetoId, :demandaPaiId, :nome, :descricaoTecnica, :descricaoCliente,
          :documentacao, :horasEstimadas, :prioridade, :status, :isEstrutural,
-         :previsaoFimData, :ordemExibicao, NOW(), NOW(), false
+         :previsaoFimData, NOW(), NOW(), false
        RETURNING
          id,
          projeto_id         AS "projetoId",
@@ -79,7 +79,6 @@ export class DemandaRepository extends BaseRepository<Demanda> {
          status,
          is_estrutural      AS "isEstrutural",
          previsao_fim_data  AS "previsaoFimData",
-         ordem_exibicao     AS "ordemExibicao",
          created_date       AS "createdDate"`,
       {
         projetoId:        dados.projetoId,
@@ -93,7 +92,6 @@ export class DemandaRepository extends BaseRepository<Demanda> {
         status:           dados.status,
         isEstrutural:     dados.isEstrutural,
         previsaoFimData:  dados.previsaoFimData ?? null,
-        ordemExibicao:    dados.ordemExibicao,
       },
       transacao,
     );
@@ -182,7 +180,6 @@ export class DemandaRepository extends BaseRepository<Demanda> {
          demanda.status,
          demanda.is_estrutural      AS "isEstrutural",
          demanda.previsao_fim_data  AS "previsaoFimData",
-         demanda.ordem_exibicao     AS "ordemExibicao",
          demanda.created_date       AS "createdDate"
        FROM demanda
        WHERE ${condicoes.join(' AND ')}
@@ -256,12 +253,11 @@ export class DemandaRepository extends BaseRepository<Demanda> {
          demanda.prioridade,
          demanda.status,
          demanda.is_estrutural   AS "isEstrutural",
-         demanda.horas_estimadas AS "horasEstimadas",
-         demanda.ordem_exibicao  AS "ordemExibicao"
+         demanda.horas_estimadas AS "horasEstimadas"
        FROM demanda
        ${joinDemandaUsuario}
        WHERE ${clausulaWhere}
-       ORDER BY demanda.ordem_exibicao ASC, demanda.nome ASC
+       ORDER BY demanda.nome ASC
        LIMIT ${itensPorPagina} OFFSET ${deslocamento}`,
       parametros,
     );
@@ -340,10 +336,6 @@ export class DemandaRepository extends BaseRepository<Demanda> {
       setClauses.push('previsao_fim_data = :previsaoFimData');
       parametros.previsaoFimData = dto.previsaoFimData;
     }
-    if (dto.ordemExibicao !== undefined) {
-      setClauses.push('ordem_exibicao = :ordemExibicao');
-      parametros.ordemExibicao = dto.ordemExibicao;
-    }
 
     const resultado = await this.executarConsulta<DemandaRecuperadaDto>(
       `UPDATE demanda
@@ -363,7 +355,6 @@ export class DemandaRepository extends BaseRepository<Demanda> {
          status,
          is_estrutural      AS "isEstrutural",
          previsao_fim_data  AS "previsaoFimData",
-         ordem_exibicao     AS "ordemExibicao",
          created_date       AS "createdDate"`,
       parametros,
     );
@@ -532,7 +523,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
        FROM demanda
        WHERE demanda.projeto_id = :projetoId
          AND demanda.is_deleted = false
-       ORDER BY demanda.ordem_exibicao ASC`,
+       ORDER BY demanda.nome ASC`,
       { projetoId: dto.projetoId },
     );
 

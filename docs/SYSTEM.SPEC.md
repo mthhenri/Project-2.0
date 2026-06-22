@@ -1054,7 +1054,6 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 | `status` | ENUM | PLANEJADA, EM_DESENVOLVIMENTO, CONCLUIDA |
 | `is_estrutural` | BOOLEAN | demanda-container que agrupa sub-demandas |
 | `previsao_fim_data` | DATE \| NULL | |
-| `ordem_exibicao` | INTEGER | para ordenação em listas e kanban |
 
 ### DemandaUsuario
 
@@ -1098,7 +1097,6 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 | `nome` | VARCHAR | |
 | `descricao` | TEXT \| NULL | opcional |
 | `status` | ENUM | PLANEJADA, PENDENTE, DESENVOLVENDO, DESENVOLVIDA |
-| `ordem_exibicao` | INTEGER | |
 
 ### AtividadeTag
 

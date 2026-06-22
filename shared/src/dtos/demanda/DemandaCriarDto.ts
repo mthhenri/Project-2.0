@@ -73,12 +73,6 @@ export class DemandaCriarDto {
   @IsDateString()
   previsaoFimData?: string;
 
-  @ApiProperty({ example: 0 })
-  @IsNumber()
-  @Min(0)
-  @Type(() => Number)
-  ordemExibicao: number;
-
   @ApiPropertyOptional({ example: [1, 2] })
   @IsOptional()
   @IsArray()

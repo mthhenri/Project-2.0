@@ -64,7 +64,6 @@ export class AtividadeService {
       nome:          dto.nome,
       descricao:     dto.descricao ?? null,
       status:        dto.status,
-      ordemExibicao: dto.ordemExibicao,
     });
 
     if (dto.tagIds && dto.tagIds.length > 0) {
@@ -196,7 +195,6 @@ export class AtividadeService {
       nome:          dto.nome,
       descricao:     dto.descricao,
       status:        dto.status,
-      ordemExibicao: dto.ordemExibicao,
     });
 
     return {
