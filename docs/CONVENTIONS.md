@@ -258,6 +258,22 @@ export enum UsuarioTipoEnum {
 
 Sempre: string enum, valor igual ao nome, em SCREAMING_SNAKE_CASE.
 
+**Todo enum é uma tabela de referência no banco** — nunca `VARCHAR + CHECK` nem `ENUM` nativo.
+O enum TypeScript continua sendo o contrato tipado (`@IsEnum`, DTOs, frontend) e espelha os
+`codigo` da tabela. Nome da tabela: `tipo_<tabela>_<complemento?>` (`TIPO + TABELA + COMPLEMENTO`,
+snake_case singular):
+
+```
+usuario.tipo        → UsuarioTipoEnum        → tabela tipo_usuario              → coluna tipo_usuario_id
+atividade.status    → AtividadeStatusEnum    → tabela tipo_atividade_status     → coluna tipo_atividade_status_id
+dia_nao_util.duracao→ DiaNaoUtilDuracaoEnum  → tabela tipo_dia_nao_util_duracao → coluna tipo_dia_nao_util_duracao_id
+```
+
+A tabela de referência segue a BaseEntity + `codigo` (= valor do enum) + `descricao` (rótulo). A
+coluna de negócio é `INTEGER` FK para o `id` dela. O repositório traduz `codigo ⇄ id` no SQL
+(subselect por `codigo` no INSERT/UPDATE; JOIN com `codigo AS <campo>` no SELECT) — DTOs/services/
+frontend nunca veem o id.
+
 ---
 
 ## Estilos
@@ -297,6 +313,7 @@ var(--p-primary-600)  // ícone/texto ativo, títulos em destaque
 | `?` posicional em SQL | `:nomeParametro` com objeto |
 | `VALUES` no INSERT | `INSERT ... SELECT ... RETURNING` |
 | `DEFAULT` em coluna SQL | Aplicação sempre fornece todos os valores |
+| `VARCHAR + CHECK` ou `ENUM` nativo para enum | Tabela de referência `tipo_<tabela>` (`codigo` + `descricao`) + coluna `INTEGER` FK; enum TS espelha os `codigo` |
 | Alias abreviado em SQL (`a`, `d`, `e`) | Nome completo ou alias descritivo (`demanda_filho`) |
 | Campo de data fora do padrão (`iniciado_em`, `data_inicio`) | `inicio_data`, `fim_data`, `created_date` |
 | `process.env` diretamente | `ConfigService` injetado |

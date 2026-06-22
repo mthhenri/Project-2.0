@@ -284,6 +284,33 @@ export enum AtividadeStatusEnum {
 }
 ```
 
+#### Enums são sempre tabelas de referência
+
+Todo enum de domínio fechado existe, no banco, como uma **tabela de referência** —
+**nunca** `VARCHAR + CHECK` nem tipo `ENUM` nativo do PostgreSQL. O enum TypeScript em
+`shared/src/enums/` permanece como **contrato tipado** (usado em `@IsEnum`, DTOs e frontend)
+e espelha exatamente os `codigo` da tabela. A tradução `codigo ⇄ id` acontece **só no
+repositório** (SQL) — DTOs, services e frontend continuam usando o **valor do enum**, nunca o id.
+
+**Nome da tabela:** `tipo_<tabela>_<complemento?>` — sempre começa por `tipo`, snake_case
+singular português (`TIPO + TABELA + COMPLEMENTO`):
+
+| Coluna de negócio | Enum TypeScript | Tabela de referência | Coluna FK |
+|---|---|---|---|
+| `usuario.tipo` | `UsuarioTipoEnum` | `tipo_usuario` | `tipo_usuario_id` |
+| `usuario.status` | `UsuarioStatusEnum` | `tipo_usuario_status` | `tipo_usuario_status_id` |
+| `projeto.status` | `ProjetoStatusEnum` | `tipo_projeto_status` | `tipo_projeto_status_id` |
+| `demanda.status` | `DemandaStatusEnum` | `tipo_demanda_status` | `tipo_demanda_status_id` |
+| `demanda.prioridade` | `DemandaPrioridadeEnum` | `tipo_demanda_prioridade` | `tipo_demanda_prioridade_id` |
+| `atividade.status` | `AtividadeStatusEnum` | `tipo_atividade_status` | `tipo_atividade_status_id` |
+| `dia_nao_util.tipo` | `DiaNaoUtilTipoEnum` | `tipo_dia_nao_util` | `tipo_dia_nao_util_id` |
+| `dia_nao_util.duracao` | `DiaNaoUtilDuracaoEnum` | `tipo_dia_nao_util_duracao` | `tipo_dia_nao_util_duracao_id` |
+
+A tabela de referência segue a BaseEntity e tem `codigo` (valor SCREAMING_SNAKE, **igual** ao
+valor do enum TS) e `descricao` (rótulo legível). A coluna de negócio é um `INTEGER` FK para o
+`id` dessa tabela, nomeada `<tabela_referencia>_id`. No repositório: subselect por `codigo` no
+INSERT/UPDATE; JOIN expondo `tabela_referencia.codigo AS <campo>` no SELECT/RETURNING.
+
 ---
 
 ## 6. Pacote Compartilhado (`shared/`)
@@ -886,6 +913,7 @@ export abstract class BaseEntity {
 10. **Hierarquias e grafos** via CTEs recursivos do PostgreSQL
 11. **Soft delete** via `executarSoftDelete()` do BaseRepository — nunca DELETE físico
 12. **Objetos genéricos de banco** (funções/triggers de infraestrutura) em **inglês** — `fn_set_updated_date()`, `trg_usuario_updated_date` ✅; `fn_atualizar_updated_date()` ❌ (idioma misto em mecanismo genérico, §16 #12). Apenas tabelas e colunas de negócio são em português
+13. **Enums sempre como tabela de referência** — toda coluna de domínio fechado é `INTEGER` FK para uma tabela `tipo_<tabela>_<complemento?>` (com `codigo` + `descricao`), **nunca** `VARCHAR + CHECK` nem tipo `ENUM` nativo. O enum TypeScript de `shared/` espelha os `codigo`; o repositório traduz `codigo ⇄ id` no SQL (ver §5.4)
 
 ### 9.3 Paginação Padrão
 
@@ -1236,3 +1264,4 @@ Estas regras **jamais** devem ser violadas. São inegociáveis independente do c
 | 23 | **Nunca criar DTO como alias ou re-export** de outro DTO — cada DTO define explicitamente todos os seus campos |
 | 24 | **Nunca usar `atualizar`** em nomes de DTO ou método de negócio — usar `alterar` (`UsuarioAlterarDto`, `alterar()`) |
 | 25 | **Nunca colocar em repositório A** uma query cuja responsabilidade é do módulo B — usar o repositório do módulo correto |
+| 26 | **Nunca representar enum como `VARCHAR + CHECK` ou `ENUM` nativo** — todo enum é uma tabela de referência `tipo_<tabela>_<complemento?>` (`codigo` + `descricao`) e a coluna de negócio é `INTEGER` FK para o `id` dela; o enum TypeScript de `shared/` é o contrato tipado que espelha os `codigo` (ver §5.4) |
