@@ -1,0 +1,180 @@
+<!-- Lista de demandas (árvore) -->
+@for (item of raizes; track item.id) {
+  <app-demanda-arvore-item
+    [arvoreItem]="item"
+    [nivel]="0"
+    (demandaSelecionada)="abrirDetalhe($event)"
+    (demandaEditarSolicitada)="abrirEdicao($event)"
+    (demandaEditarDescricaoSolicitada)="abrirDialogDescricaoPorId($event.id, $event.campo)"
+    (demandaNovaFilhaSolicitada)="abrirNovaFilha($event)"
+    (demandaTagsSolicitadas)="abrirDialogTagsPorId($event)"
+    (demandaMembrosSolicitados)="abrirDialogMembros($event)"
+  />
+}
+
+<!-- Dialog de detalhe -->
+@if (demandaIdSelecionada()) {
+  <app-demanda-detalhe-dialog
+    [demandaId]="demandaIdSelecionada()"
+    [visivel]="mostrarDialogDetalhe()"
+    (visivelChange)="mostrarDialogDetalhe.set($event)"
+    (demandaExcluida)="aoDemandaExcluida()"
+    (demandaAlterada)="aoDemandaAlterada()"
+  />
+}
+
+<!-- Dialog de edição -->
+@if (demandaIdParaEditar()) {
+  <app-demanda-edicao-dialog
+    [demandaId]="demandaIdParaEditar()"
+    [visivel]="mostrarDialogEdicao()"
+    (visivelChange)="mostrarDialogEdicao.set($event)"
+    (demandaAlterada)="aoDemandaAlterada()"
+  />
+}
+
+<!-- Dialog de nova sub-demanda (via context menu) -->
+@if (demandaPaiIdNovaFilha()) {
+  <app-demanda-formulario-dialog
+    [projetoId]="projetoId"
+    [demandaPaiIdInicial]="demandaPaiIdNovaFilha()"
+    [visivel]="mostrarDialogNovaFilha()"
+    (visivelChange)="mostrarDialogNovaFilha.set($event)"
+    (demandaCriada)="aoDemandaCriada()"
+  />
+}
+
+<!-- Dialog de tags -->
+<p-dialog
+  header="Editar Tags"
+  [visible]="mostrarDialogTags()"
+  (visibleChange)="mostrarDialogTags.set($event)"
+  [modal]="true"
+  [style]="{ width: '420px' }"
+  [draggable]="false"
+>
+  <form [formGroup]="formularioTags" class="demanda-arvore-painel__dialog-tags-form">
+    <div class="demanda-arvore-painel__tags-seletor">
+      @for (tag of tagsDisponiveis(); track tag.id) {
+        <button
+          type="button"
+          class="demanda-arvore-painel__tag-chip"
+          [class.demanda-arvore-painel__tag-chip--ativo]="tagEstaSelecionada(formularioTags.controls.tagIds, tag.id)"
+          [style.--cor-tag]="tag.cor"
+          (click)="alternarTagSelecao(formularioTags.controls.tagIds, tag.id)"
+        >
+          @if (tagEstaSelecionada(formularioTags.controls.tagIds, tag.id)) {
+            <i class="pi pi-check demanda-arvore-painel__tag-chip-check"></i>
+          } @else {
+            <span class="demanda-arvore-painel__tag-bolinha" [style.background-color]="tag.cor"></span>
+          }
+          {{ tag.nome }}
+        </button>
+      } @empty {
+        <span class="text-muted-color">Nenhuma tag cadastrada</span>
+      }
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cancelar"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="mostrarDialogTags.set(false)"
+    />
+    <p-button
+      label="Salvar"
+      icon="pi pi-check"
+      [loading]="carregandoSalvarTags()"
+      (onClick)="salvarTags()"
+    />
+  </ng-template>
+</p-dialog>
+
+<!-- Dialog de membros -->
+<p-dialog
+  header="Membros da Demanda"
+  [visible]="mostrarDialogMembros()"
+  (visibleChange)="mostrarDialogMembros.set($event)"
+  [modal]="true"
+  [style]="{ width: '90vw', maxWidth: '720px' }"
+  [draggable]="false"
+  [dismissableMask]="true"
+>
+  @if (mostrarDialogMembros()) {
+    <app-demanda-membro-lista
+      [demandaId]="demandaIdMembros()"
+      [usuariosDisponiveis]="usuariosDisponiveis"
+    />
+  }
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Fechar"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="mostrarDialogMembros.set(false)"
+    />
+  </ng-template>
+</p-dialog>
+
+<!-- Dialog de edição de descrição -->
+@if (campoDescricaoEditando()) {
+  <p-dialog
+    [header]="tituloDialogDescricao()"
+    [(visible)]="mostrarDialogDescricao"
+    [modal]="true"
+    [style]="{ width: '95vw', height: '95vh' }"
+    [contentStyle]="{ display: 'flex', flexDirection: 'column' }"
+    [draggable]="false"
+    [resizable]="false"
+  >
+    @if (podeEditarDescricaoAtual()) {
+      <form [formGroup]="formularioDescricao" class="demanda-arvore-painel__descricao-dialog-form">
+        <p-editor
+          formControlName="valor"
+          class="demanda-arvore-painel__editor"
+        />
+        <app-assistente-descricao
+          [textoAtual]="formularioDescricao.value.valor || ''"
+          tipoEntidade="demanda"
+          [contextoEntidade]="nomeDemandaDescricaoEditando()"
+          (textoAuxiliadoAceito)="aceitarDescricaoAssistente($event)"
+        />
+      </form>
+    } @else {
+      @if (formularioDescricao.value.valor) {
+        <div class="demanda-arvore-painel__descricao-leitura ql-snow">
+          <div class="ql-editor" [innerHTML]="formularioDescricao.value.valor"></div>
+        </div>
+      } @else {
+        <div class="demanda-arvore-painel__descricao-vazia">Sem conteúdo</div>
+      }
+    }
+
+    <ng-template pTemplate="footer">
+      @if (podeEditarDescricaoAtual()) {
+        <p-button
+          label="Cancelar"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="mostrarDialogDescricao.set(false)"
+        />
+        <p-button
+          label="Salvar"
+          icon="pi pi-check"
+          [loading]="carregandoSalvarDescricao()"
+          (onClick)="salvarDescricao()"
+        />
+      } @else {
+        <p-button
+          label="Fechar"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="mostrarDialogDescricao.set(false)"
+        />
+      }
+    </ng-template>
+  </p-dialog>
+}

@@ -1,38 +1,27 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ReactiveFormsModule, FormBuilder, FormControl } from '@angular/forms';
+import { ReactiveFormsModule, FormControl } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { Select } from 'primeng/select';
-import { EditorModule } from 'primeng/editor';
 import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
 import {
   DemandaGrafoDto,
   DemandaGrafoNoDto,
   DemandaArvoreItemDto,
-  DemandaAlterarDto,
   DemandaStatusEnum,
-  DemandaCriadaDto,
-  DemandaTagsAtribuirDto,
-  TagResumoDto,
   ProjetoResumoDto,
 } from '@project20/shared';
 import { DemandaService } from '../../services/demanda.service';
 import { ProjetoService } from '../../../projeto/services/projeto.service';
-import { TagService } from '../../../tag/services/tag.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
-import { AssistenteDescricaoComponent } from '../../../../shared/components/assistente-descricao/assistente-descricao.component';
 import { DemandaGrafoComponent } from '../../components/demanda-grafo/demanda-grafo.component';
-import { DemandaArvoreItemComponent } from '../../components/demanda-arvore-item/demanda-arvore-item.component';
 import { DemandaFormularioDialogComponent } from '../../components/demanda-formulario-dialog/demanda-formulario-dialog.component';
-import { DemandaDetalheDialogComponent } from '../../components/demanda-detalhe-dialog/demanda-detalhe-dialog.component';
-import { DemandaEdicaoDialogComponent } from '../../components/demanda-edicao-dialog/demanda-edicao-dialog.component';
+import { DemandaArvorePainelComponent } from '../../components/demanda-arvore-painel/demanda-arvore-painel.component';
 import { ModoVisualizacao } from '../../models/demanda.model';
 import { COR_NO_BORDA } from '../../constants/demanda-cores.constants';
-
-type CampoDescricao = 'descricaoTecnica' | 'descricaoCliente' | 'documentacao';
 
 @Component({
   selector: 'app-demanda-projeto',
@@ -42,14 +31,10 @@ type CampoDescricao = 'descricaoTecnica' | 'descricaoCliente' | 'documentacao';
     ButtonModule,
     DialogModule,
     Select,
-    EditorModule,
     TooltipModule,
-    AssistenteDescricaoComponent,
     DemandaGrafoComponent,
-    DemandaArvoreItemComponent,
     DemandaFormularioDialogComponent,
-    DemandaDetalheDialogComponent,
-    DemandaEdicaoDialogComponent,
+    DemandaArvorePainelComponent,
   ],
   templateUrl: './demanda-projeto.page.html',
   styleUrl: './demanda-projeto.page.scss',
@@ -57,11 +42,9 @@ type CampoDescricao = 'descricaoTecnica' | 'descricaoCliente' | 'documentacao';
 export class DemandaProjetoPage implements OnInit {
   private readonly demandaService = inject(DemandaService);
   private readonly projetoService = inject(ProjetoService);
-  private readonly tagService = inject(TagService);
   private readonly messageService = inject(MessageService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly formBuilder = inject(FormBuilder);
   readonly sessao = inject(UsuarioSessaoService);
 
   readonly projetos = signal<ProjetoResumoDto[]>([]);
@@ -73,62 +56,12 @@ export class DemandaProjetoPage implements OnInit {
   readonly modoVisualizacao = signal<ModoVisualizacao>('lista');
   readonly painelLateralAberto = signal<boolean>(true);
   readonly mostrarDialogNovaDemanda = signal<boolean>(false);
-  readonly mostrarDialogDetalhe = signal<boolean>(false);
-  readonly demandaIdSelecionada = signal<number>(0);
-  readonly mostrarDialogEdicao = signal<boolean>(false);
-  readonly demandaIdParaEditar = signal<number>(0);
-  readonly mostrarDialogNovaFilha = signal<boolean>(false);
-  readonly demandaPaiIdNovaFilha = signal<number>(0);
-
-  readonly tagsDisponiveis = signal<TagResumoDto[]>([]);
-  readonly demandaIdTagsEditando = signal<number>(0);
-  readonly mostrarDialogTags = signal<boolean>(false);
-  readonly carregandoSalvarTags = signal<boolean>(false);
-
-  readonly formularioTags = this.formBuilder.group({
-    tagIds: [[] as number[]],
-  });
-
-  readonly campoDescricaoEditando = signal<CampoDescricao | null>(null);
-  readonly mostrarDialogDescricao = signal<boolean>(false);
-  readonly carregandoSalvarDescricao = signal<boolean>(false);
-  readonly demandaIdDescricaoEditando = signal<number>(0);
-  readonly nomeDemandaDescricaoEditando = signal<string>('');
-
-  /** Editabilidade da demanda cuja descrição está aberta (espelha `podeEditar` do backend). */
-  readonly descricaoEditavel = signal<boolean>(false);
-
-  readonly formularioDescricao = this.formBuilder.group({
-    valor: ['' as string | null],
-  });
 
   readonly legendaStatus = [
     { rotulo: 'Pendente',  cor: COR_NO_BORDA[DemandaStatusEnum.PENDENTE] },
     { rotulo: 'Planejada', cor: COR_NO_BORDA[DemandaStatusEnum.PLANEJADA] },
     { rotulo: 'Concluída', cor: COR_NO_BORDA[DemandaStatusEnum.CONCLUIDA] },
   ];
-
-  readonly tituloDialogDescricao = computed(() => {
-    const campo = this.campoDescricaoEditando();
-    if (!campo) return '';
-    const titulos: Record<CampoDescricao, string> = {
-      descricaoTecnica: 'Descrição Técnica',
-      descricaoCliente: 'Descrição para o Cliente',
-      documentacao:     'Documentação',
-    };
-    return titulos[campo];
-  });
-
-  /**
-   * Quem pode editar a descrição aberta: descrição do cliente é exclusiva do gestor;
-   * técnica e documentação seguem a editabilidade da demanda (`podeEditar` — membro).
-   */
-  readonly podeEditarDescricaoAtual = computed(() => {
-    const campo = this.campoDescricaoEditando();
-    if (!campo) return false;
-    if (campo === 'descricaoCliente') return this.sessao.eGestor();
-    return this.descricaoEditavel();
-  });
 
   readonly arvoreRaizes = computed<DemandaArvoreItemDto[]>(() => {
     const grafoAtual = this.grafo();
@@ -157,138 +90,20 @@ export class DemandaProjetoPage implements OnInit {
     this.painelLateralAberto.update((aberto) => !aberto);
   }
 
-  abrirDetalhe(demandaId: number): void {
-    this.demandaIdSelecionada.set(demandaId);
-    this.mostrarDialogDetalhe.set(true);
-  }
-
-  abrirEdicao(demandaId: number): void {
-    this.demandaIdParaEditar.set(demandaId);
-    this.mostrarDialogEdicao.set(true);
-  }
-
-  abrirNovaFilha(demandaPaiId: number): void {
-    this.demandaPaiIdNovaFilha.set(demandaPaiId);
-    this.mostrarDialogNovaFilha.set(true);
-  }
-
-  abrirDialogTagsPorId(demandaId: number): void {
-    this.demandaIdTagsEditando.set(demandaId);
-
-    const carregarTagsDemanda = () => {
-      this.demandaService.listarTags(demandaId).subscribe({
-        next: (resposta) => {
-          const tagIds = resposta.sucesso && resposta.dados ? resposta.dados.map((tag) => tag.id) : [];
-          this.formularioTags.patchValue({ tagIds });
-          this.mostrarDialogTags.set(true);
-        },
-      });
-    };
-
-    if (this.tagsDisponiveis().length > 0) {
-      carregarTagsDemanda();
-    } else {
-      this.tagService.listar().subscribe({
-        next: (resposta) => {
-          if (resposta.sucesso && resposta.dados) {
-            this.tagsDisponiveis.set(resposta.dados);
-          }
-          carregarTagsDemanda();
-        },
-      });
-    }
-  }
-
-  salvarTags(): void {
-    const idEditando = this.demandaIdTagsEditando();
-    if (!idEditando) return;
-
-    const dto: DemandaTagsAtribuirDto = {
-      tagIds: this.formularioTags.value.tagIds ?? [],
-    };
-
-    this.carregandoSalvarTags.set(true);
-    this.demandaService
-      .alterarTags(idEditando, dto)
-      .pipe(finalize(() => this.carregandoSalvarTags.set(false)))
-      .subscribe({
-        next: () => {
-          this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Tags atualizadas' });
-          this.mostrarDialogTags.set(false);
-          this.recarregarGrafo();
-        },
-      });
-  }
-
-  toggleTag(tagId: number, evento: Event): void {
-    const marcado = (evento.target as HTMLInputElement).checked;
-    const tagIdsAtuais = [...(this.formularioTags.value.tagIds ?? [])];
-    if (marcado) {
-      if (!tagIdsAtuais.includes(tagId)) tagIdsAtuais.push(tagId);
-    } else {
-      const indice = tagIdsAtuais.indexOf(tagId);
-      if (indice > -1) tagIdsAtuais.splice(indice, 1);
-    }
-    this.formularioTags.patchValue({ tagIds: tagIdsAtuais });
-  }
-
-  aoDemandaAlterada(): void {
-    this.recarregarGrafo();
-  }
-
-  abrirDialogDescricaoPorId(demandaId: number, campo: CampoDescricao): void {
-    this.demandaService.recuperar(demandaId).subscribe({
+  /** Recarrega o grafo após qualquer alteração feita pelo painel da árvore. */
+  recarregarGrafo(): void {
+    this.demandaService.recuperarGrafo(this.projetoId()).subscribe({
       next: (resposta) => {
-        if (!resposta.sucesso || !resposta.dados) return;
-        const demandaDados = resposta.dados;
-        const valores: Record<CampoDescricao, string | null | undefined> = {
-          descricaoTecnica: demandaDados.descricaoTecnica,
-          descricaoCliente: demandaDados.descricaoCliente,
-          documentacao:     demandaDados.documentacao,
-        };
-        this.demandaIdDescricaoEditando.set(demandaId);
-        this.nomeDemandaDescricaoEditando.set(demandaDados.nome);
-        this.campoDescricaoEditando.set(campo);
-        this.descricaoEditavel.set(demandaDados.podeEditar);
-        this.formularioDescricao.patchValue({ valor: valores[campo] ?? '' });
-        this.mostrarDialogDescricao.set(true);
+        if (resposta.sucesso && resposta.dados) this.grafo.set(resposta.dados);
+      },
+      error: () => {
+        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Não foi possível atualizar o grafo' });
       },
     });
   }
 
-  salvarDescricao(): void {
-    const campo = this.campoDescricaoEditando();
-    const idEditando = this.demandaIdDescricaoEditando();
-    if (!campo || !idEditando || !this.podeEditarDescricaoAtual()) return;
-
-    this.carregandoSalvarDescricao.set(true);
-    const dto = { [campo]: this.formularioDescricao.value.valor ?? undefined } as DemandaAlterarDto;
-
-    this.demandaService
-      .alterar(idEditando, dto)
-      .pipe(finalize(() => this.carregandoSalvarDescricao.set(false)))
-      .subscribe({
-        next: () => {
-          this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: `${this.tituloDialogDescricao()} salva` });
-          this.mostrarDialogDescricao.set(false);
-        },
-      });
-  }
-
-  aceitarDescricaoAssistente(texto: string): void {
-    this.formularioDescricao.patchValue({ valor: texto });
-  }
-
-  aoDemandaCriada(_demandaCriada: DemandaCriadaDto): void {
-    this.recarregarGrafo();
-  }
-
-  aoDemandaExcluida(): void {
-    this.recarregarGrafo();
-  }
-
   projetoAtual(): ProjetoResumoDto | undefined {
-    return this.projetos().find((p) => p.id === this.projetoId());
+    return this.projetos().find((projeto) => projeto.id === this.projetoId());
   }
 
   navegarParaProjeto(): void {
@@ -297,19 +112,6 @@ export class DemandaProjetoPage implements OnInit {
     } else {
       this.router.navigate(['/projeto']);
     }
-  }
-
-  rotuloStatus(status: DemandaStatusEnum): string {
-    const mapa: Record<DemandaStatusEnum, string> = {
-      [DemandaStatusEnum.PENDENTE]:  'Pendente',
-      [DemandaStatusEnum.PLANEJADA]: 'Planejada',
-      [DemandaStatusEnum.CONCLUIDA]: 'Concluída',
-    };
-    return mapa[status];
-  }
-
-  corStatus(status: DemandaStatusEnum): string {
-    return COR_NO_BORDA[status];
   }
 
   private carregarProjetos(): void {
@@ -335,21 +137,6 @@ export class DemandaProjetoPage implements OnInit {
       });
   }
 
-  private recarregarGrafo(): void {
-    this.demandaService
-      .recuperarGrafo(this.projetoId())
-      .subscribe({
-        next: (resposta) => {
-          if (resposta.sucesso && resposta.dados) {
-            this.grafo.set(resposta.dados);
-          }
-        },
-        error: () => {
-          this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Não foi possível atualizar o grafo' });
-        },
-      });
-  }
-
   private carregarGrafo(): void {
     this.carregando.set(true);
     this.grafo.set(null);
@@ -358,9 +145,7 @@ export class DemandaProjetoPage implements OnInit {
       .pipe(finalize(() => this.carregando.set(false)))
       .subscribe({
         next: (resposta) => {
-          if (resposta.sucesso && resposta.dados) {
-            this.grafo.set(resposta.dados);
-          }
+          if (resposta.sucesso && resposta.dados) this.grafo.set(resposta.dados);
         },
         error: () => {
           this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Não foi possível carregar as demandas' });

@@ -93,17 +93,11 @@
 
       @if (arvoreRaizes().length > 0) {
         <div class="projeto-detalhe__demandas-lista">
-          @for (item of arvoreRaizes(); track item.id) {
-            <app-demanda-arvore-item
-              [arvoreItem]="item"
-              [nivel]="0"
-              (demandaSelecionada)="abrirDetalhe($event)"
-              (demandaEditarSolicitada)="abrirEdicao($event)"
-              (demandaEditarDescricaoSolicitada)="abrirDetalhe($event.id)"
-              (demandaNovaFilhaSolicitada)="abrirNovaFilha($event)"
-              (demandaTagsSolicitadas)="abrirDialogTagsPorId($event)"
-            />
-          }
+          <app-demanda-arvore-painel
+            [raizes]="arvoreRaizes()"
+            [projetoId]="projeto()!.id"
+            (alterado)="recarregarDemandas()"
+          />
         </div>
       }
     }
@@ -188,93 +182,12 @@
   </ng-template>
 </p-dialog>
 
-<!-- Dialog de detalhe -->
-@if (demandaIdSelecionada()) {
-  <app-demanda-detalhe-dialog
-    [demandaId]="demandaIdSelecionada()"
-    [visivel]="mostrarDialogDetalhe()"
-    (visivelChange)="mostrarDialogDetalhe.set($event)"
-    (demandaExcluida)="aoDemandaCriada()"
-    (demandaAlterada)="aoDemandaAlterada()"
-  />
-}
-
-<!-- Dialog de edição -->
-@if (demandaIdParaEditar()) {
-  <app-demanda-edicao-dialog
-    [demandaId]="demandaIdParaEditar()"
-    [visivel]="mostrarDialogEdicao()"
-    (visivelChange)="mostrarDialogEdicao.set($event)"
-    (demandaAlterada)="aoDemandaAlterada()"
-  />
-}
-
-<!-- Dialog de nova demanda -->
+<!-- Dialog de nova demanda (raiz) -->
 @if (projeto()) {
   <app-demanda-formulario-dialog
     [projetoId]="projeto()!.id"
     [visivel]="mostrarDialogNovaDemanda()"
     (visivelChange)="mostrarDialogNovaDemanda.set($event)"
-    (demandaCriada)="aoDemandaCriada()"
+    (demandaCriada)="recarregarDemandas()"
   />
 }
-
-<!-- Dialog de nova sub-demanda (via context menu) -->
-@if (projeto() && demandaPaiIdNovaFilha()) {
-  <app-demanda-formulario-dialog
-    [projetoId]="projeto()!.id"
-    [demandaPaiIdInicial]="demandaPaiIdNovaFilha()"
-    [visivel]="mostrarDialogNovaFilha()"
-    (visivelChange)="mostrarDialogNovaFilha.set($event)"
-    (demandaCriada)="aoDemandaCriada()"
-  />
-}
-
-<!-- Dialog de tags -->
-<p-dialog
-  header="Editar Tags"
-  [visible]="mostrarDialogTags()"
-  (visibleChange)="mostrarDialogTags.set($event)"
-  [modal]="true"
-  [style]="{ width: '420px' }"
-  [draggable]="false"
->
-  <form [formGroup]="formularioTags" class="projeto-detalhe__dialog-tags-form">
-    <div class="projeto-detalhe__tags-selecao">
-      @for (tag of tagsDisponiveis(); track tag.id) {
-        <label class="projeto-detalhe__tag-opcao">
-          <input
-            type="checkbox"
-            [value]="tag.id"
-            [checked]="(formularioTags.value.tagIds || []).includes(tag.id)"
-            (change)="toggleTag(tag.id, $event)"
-          />
-          <span
-            class="projeto-detalhe__tag-chip"
-            [style.background-color]="tag.cor + '22'"
-            [style.border-color]="tag.cor + '55'"
-            [style.color]="tag.cor"
-          >
-            <span class="projeto-detalhe__tag-bolinha" [style.background-color]="tag.cor"></span>
-            {{ tag.nome }}
-          </span>
-        </label>
-      }
-    </div>
-  </form>
-
-  <ng-template pTemplate="footer">
-    <p-button
-      label="Cancelar"
-      severity="secondary"
-      [outlined]="true"
-      (onClick)="mostrarDialogTags.set(false)"
-    />
-    <p-button
-      label="Salvar"
-      icon="pi pi-check"
-      [loading]="carregandoSalvarTags()"
-      (onClick)="salvarTags()"
-    />
-  </ng-template>
-</p-dialog>

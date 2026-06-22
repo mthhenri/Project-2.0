@@ -49,12 +49,19 @@
     <div class="demanda-projeto__header-direita">
       @if (projetoId() && modoVisualizacao() === 'grafo') {
         <p-button
-          icon="pi pi-filter"
+          icon="pi pi-info-circle"
           [text]="true"
           severity="secondary"
           size="small"
-          pTooltip="Filtros e legenda"
+          pTooltip="Legenda"
           (onClick)="alternarPainel()"
+        />
+      }
+      @if (sessao.eGestor() && projetoId()) {
+        <p-button
+          label="Nova Demanda"
+          icon="pi pi-plus"
+          (onClick)="mostrarDialogNovaDemanda.set(true)"
         />
       }
     </div>
@@ -77,7 +84,7 @@
           @if (grafo()) {
             <app-demanda-grafo
               [grafo]="grafo()!"
-              (demandaSelecionada)="abrirDetalhe($event)"
+              (demandaSelecionada)="painel.abrirDetalhe($event)"
             />
           } @else {
             <div class="demanda-projeto__vazio">
@@ -87,27 +94,22 @@
           }
         }
 
-        @if (modoVisualizacao() === 'lista') {
-          <div class="demanda-projeto__lista">
-            @if (arvoreRaizes().length === 0) {
-              <div class="demanda-projeto__vazio demanda-projeto__vazio--lista">
-                <i class="pi pi-inbox text-4xl text-muted-color"></i>
-                <p class="text-muted-color mt-2">Nenhuma demanda encontrada</p>
-              </div>
-            }
-            @for (item of arvoreRaizes(); track item.id) {
-              <app-demanda-arvore-item
-                [arvoreItem]="item"
-                [nivel]="0"
-                (demandaSelecionada)="abrirDetalhe($event)"
-                (demandaEditarSolicitada)="abrirEdicao($event)"
-                (demandaEditarDescricaoSolicitada)="abrirDialogDescricaoPorId($event.id, $event.campo)"
-                (demandaNovaFilhaSolicitada)="abrirNovaFilha($event)"
-                (demandaTagsSolicitadas)="abrirDialogTagsPorId($event)"
-              />
-            }
-          </div>
-        }
+        <!-- O painel é renderizado sempre (hospeda os diálogos e expõe abrirDetalhe
+             para o grafo); o container da lista fica oculto no modo grafo. -->
+        <div class="demanda-projeto__lista" [hidden]="modoVisualizacao() !== 'lista'">
+          @if (modoVisualizacao() === 'lista' && arvoreRaizes().length === 0) {
+            <div class="demanda-projeto__vazio demanda-projeto__vazio--lista">
+              <i class="pi pi-inbox text-4xl text-muted-color"></i>
+              <p class="text-muted-color mt-2">Nenhuma demanda encontrada</p>
+            </div>
+          }
+          <app-demanda-arvore-painel
+            #painel
+            [raizes]="arvoreRaizes()"
+            [projetoId]="projetoId()"
+            (alterado)="recarregarGrafo()"
+          />
+        </div>
       }
     </div>
 
@@ -155,165 +157,14 @@
     }
   </div>
 
-  <!-- Botão flutuante nova demanda -->
-  @if (sessao.eGestor() && projetoId()) {
-    <p-button
-      label="Nova Demanda"
-      icon="pi pi-plus"
-      class="demanda-projeto__fab"
-      (onClick)="mostrarDialogNovaDemanda.set(true)"
-    />
-  }
-
 </div>
 
-<!-- Dialog de edição de descrição -->
-@if (campoDescricaoEditando()) {
-  <p-dialog
-    [header]="tituloDialogDescricao()"
-    [(visible)]="mostrarDialogDescricao"
-    [modal]="true"
-    [style]="{ width: '95vw', height: '95vh' }"
-    [contentStyle]="{ display: 'flex', flexDirection: 'column' }"
-    [draggable]="false"
-    [resizable]="false"
-  >
-    @if (podeEditarDescricaoAtual()) {
-      <form [formGroup]="formularioDescricao" class="demanda-projeto__descricao-dialog-form">
-        <p-editor
-          formControlName="valor"
-          class="demanda-projeto__editor"
-        />
-        <app-assistente-descricao
-          [textoAtual]="formularioDescricao.value.valor || ''"
-          tipoEntidade="demanda"
-          [contextoEntidade]="nomeDemandaDescricaoEditando()"
-          (textoAuxiliadoAceito)="aceitarDescricaoAssistente($event)"
-        />
-      </form>
-    } @else {
-      @if (formularioDescricao.value.valor) {
-        <div class="demanda-projeto__descricao-leitura ql-snow">
-          <div class="ql-editor" [innerHTML]="formularioDescricao.value.valor"></div>
-        </div>
-      } @else {
-        <div class="demanda-projeto__descricao-vazia">Sem conteúdo</div>
-      }
-    }
-
-    <ng-template pTemplate="footer">
-      @if (podeEditarDescricaoAtual()) {
-        <p-button
-          label="Cancelar"
-          severity="secondary"
-          [outlined]="true"
-          (onClick)="mostrarDialogDescricao.set(false)"
-        />
-        <p-button
-          label="Salvar"
-          icon="pi pi-check"
-          [loading]="carregandoSalvarDescricao()"
-          (onClick)="salvarDescricao()"
-        />
-      } @else {
-        <p-button
-          label="Fechar"
-          severity="secondary"
-          [outlined]="true"
-          (onClick)="mostrarDialogDescricao.set(false)"
-        />
-      }
-    </ng-template>
-  </p-dialog>
-}
-
-<!-- Dialog de nova demanda -->
+<!-- Dialog de nova demanda (raiz) -->
 @if (projetoId()) {
   <app-demanda-formulario-dialog
     [projetoId]="projetoId()"
     [visivel]="mostrarDialogNovaDemanda()"
     (visivelChange)="mostrarDialogNovaDemanda.set($event)"
-    (demandaCriada)="aoDemandaCriada($event)"
+    (demandaCriada)="recarregarGrafo()"
   />
 }
-
-<!-- Dialog de nova sub-demanda (via context menu) -->
-@if (demandaPaiIdNovaFilha()) {
-  <app-demanda-formulario-dialog
-    [projetoId]="projetoId()"
-    [demandaPaiIdInicial]="demandaPaiIdNovaFilha()"
-    [visivel]="mostrarDialogNovaFilha()"
-    (visivelChange)="mostrarDialogNovaFilha.set($event)"
-    (demandaCriada)="aoDemandaCriada($event)"
-  />
-}
-
-<!-- Dialog de detalhe -->
-@if (demandaIdSelecionada()) {
-  <app-demanda-detalhe-dialog
-    [demandaId]="demandaIdSelecionada()"
-    [visivel]="mostrarDialogDetalhe()"
-    (visivelChange)="mostrarDialogDetalhe.set($event)"
-    (demandaExcluida)="aoDemandaExcluida()"
-    (demandaAlterada)="aoDemandaAlterada()"
-  />
-}
-
-<!-- Dialog de edição -->
-@if (demandaIdParaEditar()) {
-  <app-demanda-edicao-dialog
-    [demandaId]="demandaIdParaEditar()"
-    [visivel]="mostrarDialogEdicao()"
-    (visivelChange)="mostrarDialogEdicao.set($event)"
-    (demandaAlterada)="aoDemandaAlterada()"
-  />
-}
-
-<!-- Dialog de tags -->
-<p-dialog
-  header="Editar Tags"
-  [visible]="mostrarDialogTags()"
-  (visibleChange)="mostrarDialogTags.set($event)"
-  [modal]="true"
-  [style]="{ width: '420px' }"
-  [draggable]="false"
->
-  <form [formGroup]="formularioTags" class="demanda-projeto__dialog-tags-form">
-    <div class="demanda-projeto__tags-selecao">
-      @for (tag of tagsDisponiveis(); track tag.id) {
-        <label class="demanda-projeto__tag-opcao">
-          <input
-            type="checkbox"
-            [value]="tag.id"
-            [checked]="(formularioTags.value.tagIds || []).includes(tag.id)"
-            (change)="toggleTag(tag.id, $event)"
-          />
-          <span
-            class="demanda-projeto__tag-chip"
-            [style.background-color]="tag.cor + '22'"
-            [style.border-color]="tag.cor + '55'"
-            [style.color]="tag.cor"
-          >
-            <span class="demanda-projeto__tag-bolinha" [style.background-color]="tag.cor"></span>
-            {{ tag.nome }}
-          </span>
-        </label>
-      }
-    </div>
-  </form>
-
-  <ng-template pTemplate="footer">
-    <p-button
-      label="Cancelar"
-      severity="secondary"
-      [outlined]="true"
-      (onClick)="mostrarDialogTags.set(false)"
-    />
-    <p-button
-      label="Salvar"
-      icon="pi pi-check"
-      [loading]="carregandoSalvarTags()"
-      (onClick)="salvarTags()"
-    />
-  </ng-template>
-</p-dialog>

@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
@@ -7,7 +7,6 @@ import { InputTextModule } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 import { DatePickerModule } from 'primeng/datepicker';
 import { DialogModule } from 'primeng/dialog';
-import { TabsModule } from 'primeng/tabs';
 import { Tag } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
@@ -17,20 +16,14 @@ import {
   ProjetoStatusEnum,
   DemandaArvoreItemDto,
   DemandaGrafoNoDto,
-  TagResumoDto,
-  DemandaTagsAtribuirDto,
 } from '@project20/shared';
 import { ProjetoService } from '../../services/projeto.service';
 import { DemandaService } from '../../../demanda/services/demanda.service';
-import { TagService } from '../../../tag/services/tag.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { DataBrasileiraPipe } from '../../../../shared/pipes/data-brasileira.pipe';
-import { DemandaArvoreItemComponent } from '../../../demanda/components/demanda-arvore-item/demanda-arvore-item.component';
+import { DemandaArvorePainelComponent } from '../../../demanda/components/demanda-arvore-painel/demanda-arvore-painel.component';
 import { DemandaFormularioDialogComponent } from '../../../demanda/components/demanda-formulario-dialog/demanda-formulario-dialog.component';
-import { DemandaDetalheDialogComponent } from '../../../demanda/components/demanda-detalhe-dialog/demanda-detalhe-dialog.component';
-import { DemandaEdicaoDialogComponent } from '../../../demanda/components/demanda-edicao-dialog/demanda-edicao-dialog.component';
 import { SeletorCorComponent } from '../../../../shared/components/seletor-cor/seletor-cor.component';
-import { ambiente } from '../../../../../environments/environment';
 
 @Component({
   selector: 'app-projeto-detalhe',
@@ -42,14 +35,11 @@ import { ambiente } from '../../../../../environments/environment';
     Select,
     DatePickerModule,
     DialogModule,
-    TabsModule,
     Tag,
     TooltipModule,
     DataBrasileiraPipe,
-    DemandaArvoreItemComponent,
+    DemandaArvorePainelComponent,
     DemandaFormularioDialogComponent,
-    DemandaDetalheDialogComponent,
-    DemandaEdicaoDialogComponent,
     SeletorCorComponent,
   ],
   templateUrl: './projeto-detalhe.page.html',
@@ -58,7 +48,6 @@ import { ambiente } from '../../../../../environments/environment';
 export class ProjetoDetalhePage implements OnInit {
   private readonly projetoService = inject(ProjetoService);
   private readonly demandaService = inject(DemandaService);
-  private readonly tagService = inject(TagService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly messageService = inject(MessageService);
@@ -71,22 +60,7 @@ export class ProjetoDetalhePage implements OnInit {
   readonly carregandoDemandas = signal<boolean>(false);
   readonly mostrarDialogEditar = signal<boolean>(false);
   readonly mostrarDialogNovaDemanda = signal<boolean>(false);
-  readonly mostrarDialogDetalhe = signal<boolean>(false);
-  readonly demandaIdSelecionada = signal<number>(0);
-  readonly mostrarDialogEdicao = signal<boolean>(false);
-  readonly demandaIdParaEditar = signal<number>(0);
-  readonly mostrarDialogNovaFilha = signal<boolean>(false);
-  readonly demandaPaiIdNovaFilha = signal<number>(0);
   readonly carregandoSalvar = signal<boolean>(false);
-
-  readonly tagsDisponiveis = signal<TagResumoDto[]>([]);
-  readonly demandaIdTagsEditando = signal<number>(0);
-  readonly mostrarDialogTags = signal<boolean>(false);
-  readonly carregandoSalvarTags = signal<boolean>(false);
-
-  readonly formularioTags = this.formBuilder.group({
-    tagIds: [[] as number[]],
-  });
 
   readonly formularioEditar = this.formBuilder.group(
     {
@@ -161,89 +135,10 @@ export class ProjetoDetalhePage implements OnInit {
       });
   }
 
-  abrirDetalhe(demandaId: number): void {
-    this.demandaIdSelecionada.set(demandaId);
-    this.mostrarDialogDetalhe.set(true);
-  }
-
-  abrirEdicao(demandaId: number): void {
-    this.demandaIdParaEditar.set(demandaId);
-    this.mostrarDialogEdicao.set(true);
-  }
-
-  abrirNovaFilha(demandaPaiId: number): void {
-    this.demandaPaiIdNovaFilha.set(demandaPaiId);
-    this.mostrarDialogNovaFilha.set(true);
-  }
-
-  aoDemandaAlterada(): void {
+  /** Recarrega a árvore após criação/alteração feita pelo painel ou pela nova demanda raiz. */
+  recarregarDemandas(): void {
     const projetoDados = this.projeto();
     if (projetoDados) this.recarregarArvore(projetoDados.id);
-  }
-
-  aoDemandaCriada(): void {
-    const projetoDados = this.projeto();
-    if (projetoDados) this.recarregarArvore(projetoDados.id);
-  }
-
-  abrirDialogTagsPorId(demandaId: number): void {
-    this.demandaIdTagsEditando.set(demandaId);
-
-    const carregarTagsDemanda = () => {
-      this.demandaService.listarTags(demandaId).subscribe({
-        next: (resposta) => {
-          const tagIds = resposta.sucesso && resposta.dados ? resposta.dados.map((tag) => tag.id) : [];
-          this.formularioTags.patchValue({ tagIds });
-          this.mostrarDialogTags.set(true);
-        },
-      });
-    };
-
-    if (this.tagsDisponiveis().length > 0) {
-      carregarTagsDemanda();
-    } else {
-      this.tagService.listar().subscribe({
-        next: (resposta) => {
-          if (resposta.sucesso && resposta.dados) {
-            this.tagsDisponiveis.set(resposta.dados);
-          }
-          carregarTagsDemanda();
-        },
-      });
-    }
-  }
-
-  salvarTags(): void {
-    const idEditando = this.demandaIdTagsEditando();
-    if (!idEditando) return;
-
-    const dto: DemandaTagsAtribuirDto = {
-      tagIds: this.formularioTags.value.tagIds ?? [],
-    };
-
-    this.carregandoSalvarTags.set(true);
-    this.demandaService
-      .alterarTags(idEditando, dto)
-      .pipe(finalize(() => this.carregandoSalvarTags.set(false)))
-      .subscribe({
-        next: () => {
-          this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Tags atualizadas' });
-          this.mostrarDialogTags.set(false);
-          this.carregarArvore(this.projeto()!.id);
-        },
-      });
-  }
-
-  toggleTag(tagId: number, evento: Event): void {
-    const marcado = (evento.target as HTMLInputElement).checked;
-    const tagIdsAtuais = [...(this.formularioTags.value.tagIds ?? [])];
-    if (marcado) {
-      if (!tagIdsAtuais.includes(tagId)) tagIdsAtuais.push(tagId);
-    } else {
-      const indice = tagIdsAtuais.indexOf(tagId);
-      if (indice > -1) tagIdsAtuais.splice(indice, 1);
-    }
-    this.formularioTags.patchValue({ tagIds: tagIdsAtuais });
   }
 
   voltarParaListagem(): void {

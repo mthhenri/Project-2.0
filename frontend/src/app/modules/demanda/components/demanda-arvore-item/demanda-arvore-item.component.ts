@@ -22,6 +22,7 @@ export class DemandaArvoreItemComponent implements OnChanges {
   @Output() demandaEditarDescricaoSolicitada = new EventEmitter<{ id: number; campo: CampoDescricao }>();
   @Output() demandaNovaFilhaSolicitada = new EventEmitter<number>();
   @Output() demandaTagsSolicitadas = new EventEmitter<number>();
+  @Output() demandaMembrosSolicitados = new EventEmitter<number>();
 
   private readonly sessao = inject(UsuarioSessaoService);
 
@@ -63,7 +64,7 @@ export class DemandaArvoreItemComponent implements OnChanges {
       });
     }
 
-    // Tags depende de membresia (gestor-only na árvore, pelo mesmo motivo de Editar).
+    // Tags e Membros dependem de membresia (gestor-only na árvore, pelo mesmo motivo de Editar).
     if (this.sessao.eGestor()) {
       itensBase.push(
         { separator: true },
@@ -71,6 +72,11 @@ export class DemandaArvoreItemComponent implements OnChanges {
           label: 'Tags',
           icon: 'pi pi-tag',
           command: () => this.demandaTagsSolicitadas.emit(this.arvoreItem.id),
+        },
+        {
+          label: 'Membros',
+          icon: 'pi pi-users',
+          command: () => this.demandaMembrosSolicitados.emit(this.arvoreItem.id),
         },
       );
     }
