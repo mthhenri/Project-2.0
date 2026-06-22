@@ -261,22 +261,26 @@ const execs = await this.repo.list(id, d);
 
 ### 5.4 Enums
 
+**Nome do enum TS = nome da tabela de referência (PascalCase) + `Enum`.** Como toda tabela de
+enum é `tipo_<tabela>_<complemento?>`, o enum sempre começa por `Tipo`. O arquivo segue o nome
+da tabela em kebab-case + `.enum.ts`.
+
 ```typescript
-// usuario-tipo.enum.ts
-export enum UsuarioTipoEnum {
+// tipo-usuario.enum.ts            ← tabela tipo_usuario
+export enum TipoUsuarioEnum {
   DESENVOLVEDOR = 'DESENVOLVEDOR',
   GESTOR        = 'GESTOR',
 }
 
-// demanda-status.enum.ts
-export enum DemandaStatusEnum {
+// tipo-demanda-status.enum.ts     ← tabela tipo_demanda_status
+export enum TipoDemandaStatusEnum {
   PLANEJADA         = 'PLANEJADA',
   EM_DESENVOLVIMENTO = 'EM_DESENVOLVIMENTO',
   CONCLUIDA         = 'CONCLUIDA',
 }
 
-// atividade-status.enum.ts
-export enum AtividadeStatusEnum {
+// tipo-atividade-status.enum.ts   ← tabela tipo_atividade_status
+export enum TipoAtividadeStatusEnum {
   PLANEJADA    = 'PLANEJADA',
   PENDENTE     = 'PENDENTE',
   DESENVOLVENDO = 'DESENVOLVENDO',
@@ -295,21 +299,23 @@ repositório** (SQL) — DTOs, services e frontend continuam usando o **valor do
 **Nome da tabela:** `tipo_<tabela>_<complemento?>` — sempre começa por `tipo`, snake_case
 singular português (`TIPO + TABELA + COMPLEMENTO`):
 
-| Coluna de negócio | Enum TypeScript | Tabela de referência | Coluna FK |
+| Coluna de negócio | Tabela de referência | Enum TypeScript | Coluna FK |
 |---|---|---|---|
-| `usuario.tipo` | `UsuarioTipoEnum` | `tipo_usuario` | `tipo_usuario_id` |
-| `usuario.status` | `UsuarioStatusEnum` | `tipo_usuario_status` | `tipo_usuario_status_id` |
-| `projeto.status` | `ProjetoStatusEnum` | `tipo_projeto_status` | `tipo_projeto_status_id` |
-| `demanda.status` | `DemandaStatusEnum` | `tipo_demanda_status` | `tipo_demanda_status_id` |
-| `demanda.prioridade` | `DemandaPrioridadeEnum` | `tipo_demanda_prioridade` | `tipo_demanda_prioridade_id` |
-| `atividade.status` | `AtividadeStatusEnum` | `tipo_atividade_status` | `tipo_atividade_status_id` |
-| `dia_nao_util.tipo` | `DiaNaoUtilTipoEnum` | `tipo_dia_nao_util` | `tipo_dia_nao_util_id` |
-| `dia_nao_util.duracao` | `DiaNaoUtilDuracaoEnum` | `tipo_dia_nao_util_duracao` | `tipo_dia_nao_util_duracao_id` |
+| `usuario.tipo` | `tipo_usuario` | `TipoUsuarioEnum` | `tipo_usuario_id` |
+| `usuario.status` | `tipo_usuario_status` | `TipoUsuarioStatusEnum` | `tipo_usuario_status_id` |
+| `projeto.status` | `tipo_projeto_status` | `TipoProjetoStatusEnum` | `tipo_projeto_status_id` |
+| `demanda.status` | `tipo_demanda_status` | `TipoDemandaStatusEnum` | `tipo_demanda_status_id` |
+| `demanda.prioridade` | `tipo_demanda_prioridade` | `TipoDemandaPrioridadeEnum` | `tipo_demanda_prioridade_id` |
+| `atividade.status` | `tipo_atividade_status` | `TipoAtividadeStatusEnum` | `tipo_atividade_status_id` |
+| `dia_nao_util.tipo` | `tipo_dia_nao_util` | `TipoDiaNaoUtilEnum` | `tipo_dia_nao_util_id` |
+| `dia_nao_util.duracao` | `tipo_dia_nao_util_duracao` | `TipoDiaNaoUtilDuracaoEnum` | `tipo_dia_nao_util_duracao_id` |
 
-A tabela de referência segue a BaseEntity e tem `codigo` (valor SCREAMING_SNAKE, **igual** ao
-valor do enum TS) e `descricao` (rótulo legível). A coluna de negócio é um `INTEGER` FK para o
-`id` dessa tabela, nomeada `<tabela_referencia>_id`. No repositório: subselect por `codigo` no
-INSERT/UPDATE; JOIN expondo `tabela_referencia.codigo AS <campo>` no SELECT/RETURNING.
+O enum TS é nomeado a partir da **tabela** (não da coluna de origem): `tipo_dia_nao_util` →
+`TipoDiaNaoUtilEnum` (não `DiaNaoUtilTipoEnum`). A tabela de referência segue a BaseEntity e tem
+`codigo` (valor SCREAMING_SNAKE, **igual** ao valor do enum TS) e `descricao` (rótulo legível). A
+coluna de negócio é um `INTEGER` FK para o `id` dessa tabela, nomeada `<tabela_referencia>_id`. No
+repositório: subselect por `codigo` no INSERT/UPDATE; JOIN expondo `tabela_referencia.codigo AS
+<campo>` no SELECT/RETURNING.
 
 ---
 

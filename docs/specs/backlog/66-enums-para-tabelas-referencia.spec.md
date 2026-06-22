@@ -7,8 +7,9 @@ Converter **todos** os enums de domínio fechado do banco — hoje armazenados c
 coluna de negócio passando a ser um `INTEGER` FK para o `id` da tabela de referência.
 
 Os enums TypeScript de `shared/src/enums/` **permanecem** como contrato tipado (espelham os
-`codigo`); **DTOs, services, models e frontend não mudam**. A tradução `codigo ⇄ id` é
-encapsulada inteiramente no **repositório** (SQL).
+`codigo`), mas são **renomeados** para casar com a tabela (`TipoUsuarioEnum`, etc. — §0). Fora
+o rename, **a regra de negócio de DTOs, services, models e frontend não muda**: a tradução
+`codigo ⇄ id` é encapsulada inteiramente no **repositório** (SQL).
 
 > **Regra formalizada na criação desta task:** todo enum é sempre uma tabela
 > (`SYSTEM.SPEC.md` §5.4, §9.2 #13, §16 #26; `CONVENTIONS.md`). Esta task alinha o schema
@@ -35,14 +36,17 @@ Hoje cada enum é uma coluna `VARCHAR(n) NOT NULL CHECK (col IN (...))`. São **
 
 | Tabela | Coluna atual | Enum TS | Valores |
 |---|---|---|---|
-| `usuario` | `tipo` | `UsuarioTipoEnum` | DESENVOLVEDOR, GESTOR |
-| `usuario` | `status` | `UsuarioStatusEnum` | ATIVO, INATIVO |
-| `projeto` | `status` | `ProjetoStatusEnum` | ATIVO, PAUSADO, CONCLUIDO, CANCELADO |
-| `demanda` | `status` | `DemandaStatusEnum` | PLANEJADA, EM_DESENVOLVIMENTO, CONCLUIDA |
-| `demanda` | `prioridade` | `DemandaPrioridadeEnum` | BAIXA, MEDIA, ALTA, CRITICA |
-| `atividade` | `status` | `AtividadeStatusEnum` | PLANEJADA, PENDENTE, DESENVOLVENDO, DESENVOLVIDA |
-| `dia_nao_util` | `tipo` | `DiaNaoUtilTipoEnum` | FERIADO, RECESSO, PONTO_FACULTATIVO |
-| `dia_nao_util` | `duracao` | `DiaNaoUtilDuracaoEnum` | INTEGRAL, MEIO_PERIODO |
+| `usuario` | `tipo` | `UsuarioTipoEnum` → `TipoUsuarioEnum` | DESENVOLVEDOR, GESTOR |
+| `usuario` | `status` | `UsuarioStatusEnum` → `TipoUsuarioStatusEnum` | ATIVO, INATIVO |
+| `projeto` | `status` | `ProjetoStatusEnum` → `TipoProjetoStatusEnum` | ATIVO, PAUSADO, CONCLUIDO, CANCELADO |
+| `demanda` | `status` | `DemandaStatusEnum` → `TipoDemandaStatusEnum` | PLANEJADA, EM_DESENVOLVIMENTO, CONCLUIDA |
+| `demanda` | `prioridade` | `DemandaPrioridadeEnum` → `TipoDemandaPrioridadeEnum` | BAIXA, MEDIA, ALTA, CRITICA |
+| `atividade` | `status` | `AtividadeStatusEnum` → `TipoAtividadeStatusEnum` | PLANEJADA, PENDENTE, DESENVOLVENDO, DESENVOLVIDA |
+| `dia_nao_util` | `tipo` | `DiaNaoUtilTipoEnum` → `TipoDiaNaoUtilEnum` | FERIADO, RECESSO, PONTO_FACULTATIVO |
+| `dia_nao_util` | `duracao` | `DiaNaoUtilDuracaoEnum` → `TipoDiaNaoUtilDuracaoEnum` | INTEGRAL, MEIO_PERIODO |
+
+> A coluna "Enum TS" mostra `nome atual → nome novo`: o enum passa a se chamar como a **tabela
+> de referência** (PascalCase) + `Enum` (ver Escopo §0).
 
 > **Tabela esquecida no pedido original:** além de `projeto`, `demanda`, `atividade` e
 > `usuario`, o módulo **calendario** (`dia_nao_util`) tem **dois** enums — `tipo` e `duracao`.
@@ -51,6 +55,32 @@ Hoje cada enum é uma coluna `VARCHAR(n) NOT NULL CHECK (col IN (...))`. São **
 ---
 
 ## Escopo
+
+### 0. Renomear os enums TypeScript
+
+O enum TS passa a se chamar como a **tabela de referência** (PascalCase) + `Enum` — sempre
+começando por `Tipo`. Renomear, em `shared/src/enums/`, **arquivo + símbolo**:
+
+| Arquivo atual → novo | Símbolo atual → novo |
+|---|---|
+| `usuario-tipo.enum.ts` → `tipo-usuario.enum.ts` | `UsuarioTipoEnum` → `TipoUsuarioEnum` |
+| `usuario-status.enum.ts` → `tipo-usuario-status.enum.ts` | `UsuarioStatusEnum` → `TipoUsuarioStatusEnum` |
+| `projeto-status.enum.ts` → `tipo-projeto-status.enum.ts` | `ProjetoStatusEnum` → `TipoProjetoStatusEnum` |
+| `demanda-status.enum.ts` → `tipo-demanda-status.enum.ts` | `DemandaStatusEnum` → `TipoDemandaStatusEnum` |
+| `demanda-prioridade.enum.ts` → `tipo-demanda-prioridade.enum.ts` | `DemandaPrioridadeEnum` → `TipoDemandaPrioridadeEnum` |
+| `atividade-status.enum.ts` → `tipo-atividade-status.enum.ts` | `AtividadeStatusEnum` → `TipoAtividadeStatusEnum` |
+| `dia-nao-util-tipo.enum.ts` → `tipo-dia-nao-util.enum.ts` | `DiaNaoUtilTipoEnum` → `TipoDiaNaoUtilEnum` |
+| `dia-nao-util-duracao.enum.ts` → `tipo-dia-nao-util-duracao.enum.ts` | `DiaNaoUtilDuracaoEnum` → `TipoDiaNaoUtilDuracaoEnum` |
+
+- Atualizar o barrel `shared/src/enums/index.ts` (8 `export *` apontando para os arquivos novos).
+- Atualizar **todos os import sites** do `backend/` e `frontend/` (DTOs, services, models,
+  componentes, pipes) para o novo símbolo. É um rename mecânico — **valores e semântica não mudam**.
+- **Valores dos enums inalterados** (continuam `DESENVOLVEDOR`, `ATIVO`, etc.) — eles viram os
+  `codigo` das tabelas de referência.
+
+> Sugestão de execução: rename por símbolo (find/replace global, símbolo a símbolo para não
+> colidir — ex. `DemandaStatusEnum` antes de `DemandaPrioridadeEnum`), depois mover os arquivos e
+> ajustar o barrel; `npm run build` em backend e frontend valida que nenhum import ficou órfão.
 
 ### 1. Tabelas de referência (8 novas)
 
@@ -164,13 +194,17 @@ RETURNING id, login, nome_completo, cargo_titulo,
 (SELECTs de leitura podem usar `INNER JOIN` em vez de subselect no RETURNING — escolher o que
 ficar mais legível por query; alias sempre = nome do campo TS.)
 
-### 4. O que **não** muda
+### 4. O que **não** muda (de comportamento)
 
-- **Enums TS** (`shared/src/enums/*`) — inalterados; continuam sendo o contrato.
-- **DTOs** — `tipo`/`status`/`prioridade`/`duracao` continuam tipados como o enum.
-- **Models de backend** — mantêm o campo como o enum (o repositório traduz).
-- **Services** — nenhuma regra de negócio muda.
-- **Frontend** — nenhum componente muda (rótulos seguem vindo dos enums, como hoje).
+- **Valores dos enums** — inalterados; viram os `codigo` das tabelas de referência.
+- **DTOs** — `tipo`/`status`/`prioridade`/`duracao` continuam tipados como o enum (só o **nome**
+  do tipo importado muda — ver §0).
+- **Models de backend** — mantêm o campo como o enum (o repositório traduz `codigo ⇄ id`).
+- **Services** — nenhuma regra de negócio muda (apenas o símbolo do enum importado).
+- **Frontend** — nenhum comportamento muda; rótulos seguem vindo dos enums (só o nome do símbolo).
+
+> Atenção: o **rename dos enums TS** (§0) é mecânico mas toca DTOs/services/models/frontend nos
+> **import sites**. O que não muda é o **valor** e a **semântica** — não o identificador do tipo.
 
 > As tabelas de referência **não** são expostas via API nesta task (sem novo controller/DTO de
 > listagem de tipos) — isso é follow-up opcional.
@@ -211,7 +245,9 @@ ficar mais legível por query; alias sempre = nome do campo TS.)
 ## NÃO implementar nesta task
 
 - Expor as tabelas de referência via API (controller/DTO de listagem de tipos) — follow-up.
-- Remover ou renomear os enums TypeScript de `shared/` — eles permanecem como contrato.
-- Alterar DTOs, services, models ou frontend — só repositórios + migration + docs.
+- **Remover** os enums TypeScript de `shared/` — eles permanecem como contrato (apenas
+  **renomeados** conforme §0).
+- Alterar **comportamento/regra** de DTOs, services, models ou frontend — neles, só o rename
+  mecânico de import do enum (§0); a lógica de domínio fica intocada.
 - Editar in-place migrations já aplicadas.
 - Adicionar colunas extras às tabelas de referência (`ordem`, `cor`, etc.) — fora do escopo.

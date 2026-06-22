@@ -249,8 +249,8 @@ DTOs e enums **nunca** são redefinidos dentro de `backend/` ou `frontend/`.
 ## Enums
 
 ```typescript
-// shared/src/enums/usuario-tipo.enum.ts
-export enum UsuarioTipoEnum {
+// shared/src/enums/tipo-usuario.enum.ts
+export enum TipoUsuarioEnum {
   DESENVOLVEDOR = 'DESENVOLVEDOR',
   GESTOR        = 'GESTOR',
 }
@@ -261,12 +261,13 @@ Sempre: string enum, valor igual ao nome, em SCREAMING_SNAKE_CASE.
 **Todo enum é uma tabela de referência no banco** — nunca `VARCHAR + CHECK` nem `ENUM` nativo.
 O enum TypeScript continua sendo o contrato tipado (`@IsEnum`, DTOs, frontend) e espelha os
 `codigo` da tabela. Nome da tabela: `tipo_<tabela>_<complemento?>` (`TIPO + TABELA + COMPLEMENTO`,
-snake_case singular):
+snake_case singular). **O nome do enum TS = nome da tabela em PascalCase + `Enum`** (arquivo em
+kebab-case + `.enum.ts`):
 
 ```
-usuario.tipo        → UsuarioTipoEnum        → tabela tipo_usuario              → coluna tipo_usuario_id
-atividade.status    → AtividadeStatusEnum    → tabela tipo_atividade_status     → coluna tipo_atividade_status_id
-dia_nao_util.duracao→ DiaNaoUtilDuracaoEnum  → tabela tipo_dia_nao_util_duracao → coluna tipo_dia_nao_util_duracao_id
+usuario.tipo        → tabela tipo_usuario              → TipoUsuarioEnum             → coluna tipo_usuario_id
+atividade.status    → tabela tipo_atividade_status     → TipoAtividadeStatusEnum     → coluna tipo_atividade_status_id
+dia_nao_util.duracao→ tabela tipo_dia_nao_util_duracao → TipoDiaNaoUtilDuracaoEnum   → coluna tipo_dia_nao_util_duracao_id
 ```
 
 A tabela de referência segue a BaseEntity + `codigo` (= valor do enum) + `descricao` (rótulo). A
