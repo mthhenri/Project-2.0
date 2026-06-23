@@ -1,3 +1,5 @@
+import { palette, type ColorScale } from '@primeng/themes';
+
 /**
  * Paleta da cor primária do app (escala 50–950 do PrimeNG). É a fonte única tanto
  * para o preset inicial (`app.config.ts`) quanto para restaurar a cor padrão em runtime,
@@ -40,3 +42,24 @@ export const CORES_SUGERIDAS: readonly CorSugerida[] = [
   { nome: 'Rosa',     hex: '#ec4899' },
   { nome: 'Teal',     hex: '#14b8a6' },
 ];
+
+/** Garante o prefixo '#' no hex (o color picker emite sem ele). */
+export function normalizarHex(hex: string): string {
+  return hex.startsWith('#') ? hex : `#${hex}`;
+}
+
+/**
+ * Resolve a paleta primária a aplicar já na montagem do preset (antes do PrimeNG
+ * carregar o tema), lendo a preferência salva no `localStorage`. Evita a corrida
+ * em que aplicar a cor após o boot era sobrescrito pelo preset padrão (o que
+ * fazia o F5 voltar ao azul). Cai no padrão quando não há preferência válida.
+ */
+export function resolverPaletaPrimariaInicial(): ColorScale {
+  const desbloqueado = localStorage.getItem(COR_CHAVE_DESBLOQUEADO) === 'true';
+  const corSalva = localStorage.getItem(COR_CHAVE_COR);
+  if (desbloqueado && corSalva) {
+    // `palette()` chamado com um hex sempre retorna uma escala (nunca string).
+    return palette(normalizarHex(corSalva)) as ColorScale;
+  }
+  return { ...PALETA_PRIMARIA_PADRAO };
+}

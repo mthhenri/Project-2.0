@@ -8,7 +8,7 @@ import { definePreset } from '@primeng/themes';
 import { MessageService } from 'primeng/api';
 import Aura from '@primeng/themes/aura';
 import { rotas } from './app.routes';
-import { PALETA_PRIMARIA_PADRAO } from './core/models/tema-personalizado.model';
+import { resolverPaletaPrimariaInicial } from './core/models/tema-personalizado.model';
 import { TRADUCAO_PT_BR } from './core/config/primeng-traducao-pt-br';
 import { authTokenInterceptor } from './core/interceptors/auth-token.interceptor';
 import { errorHandlerInterceptor } from './core/interceptors/error-handler.interceptor';
@@ -16,7 +16,9 @@ import { loadingInterceptor } from './core/interceptors/loading.interceptor';
 
 const TemaAzul = definePreset(Aura, {
   semantic: {
-    primary: PALETA_PRIMARIA_PADRAO,
+    // Aplica a cor primária salva (se houver) já na montagem do preset, evitando
+    // que o tema padrão sobrescreva a preferência após o F5.
+    primary: resolverPaletaPrimariaInicial(),
     colorScheme: {
       // No tema escuro o backdrop padrão do PrimeNG (preto translúcido) some
       // sobre a página já escura. Trocamos por um véu claro/acinzentado

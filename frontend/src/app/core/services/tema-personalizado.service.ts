@@ -5,6 +5,7 @@ import {
   COR_CHAVE_DESBLOQUEADO,
   COR_CHAVE_DONO,
   PALETA_PRIMARIA_PADRAO,
+  normalizarHex,
 } from '../models/tema-personalizado.model';
 import { UsuarioSessaoService } from './usuario-sessao.service';
 
@@ -29,9 +30,8 @@ export class TemaPersonalizadoService {
   readonly corCustomizada = this._corCustomizada.asReadonly();
 
   constructor() {
-    if (this._desbloqueado() && this._corCustomizada()) {
-      this.aplicarCor(this._corCustomizada()!);
-    }
+    // A cor inicial já é aplicada na montagem do preset (ver app.config.ts), por
+    // isso aqui não reaplicamos — só reagimos a mudanças de sessão.
 
     // Esquece a preferência ao logar com um usuário diferente do dono. Um id nulo
     // (logout ou boot antes de restaurar a sessão) é ignorado de propósito, para
@@ -67,7 +67,7 @@ export class TemaPersonalizadoService {
 
   /** Define a cor primária a partir de um hex `#rrggbb` e persiste a escolha. */
   definirCor(hex: string): void {
-    const corNormalizada = this.normalizarHex(hex);
+    const corNormalizada = normalizarHex(hex);
     this._corCustomizada.set(corNormalizada);
     localStorage.setItem(COR_CHAVE_COR, corNormalizada);
     this.aplicarCor(corNormalizada);
@@ -83,10 +83,6 @@ export class TemaPersonalizadoService {
   /** Gera a escala 50–950 a partir do hex e aplica como paleta primária em runtime. */
   private aplicarCor(hex: string): void {
     updatePrimaryPalette(palette(hex));
-  }
-
-  private normalizarHex(hex: string): string {
-    return hex.startsWith('#') ? hex : `#${hex}`;
   }
 
   private lerDesbloqueado(): boolean {
