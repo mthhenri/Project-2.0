@@ -1,4 +1,4 @@
-import { Component, inject, output, signal } from '@angular/core';
+import { Component, ElementRef, inject, output, signal, viewChild } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { finalize, forkJoin } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
@@ -58,6 +58,8 @@ export class AtividadeVisualizarDialogComponent {
   readonly rotuloStatus = rotuloStatusAtividade;
 
   readonly aoAlterar = output<void>();
+
+  private readonly campoNome = viewChild<ElementRef<HTMLInputElement>>('campoNome');
 
   readonly formularioDescricao = this.formBuilder.group({
     descricao: [''],
@@ -121,6 +123,7 @@ export class AtividadeVisualizarDialogComponent {
     if (!atividade) return;
     this.formularioNome.reset({ nome: atividade.nome });
     this.editandoNome.set(true);
+    setTimeout(() => this.campoNome()?.nativeElement.focus());
   }
 
   /** Sai do modo de edição sem salvar. */

@@ -4,7 +4,8 @@
   [modal]="true"
   [style]="{ width: '46rem' }"
   [draggable]="false"
-  [dismissableMask]="true"
+  [dismissableMask]="!editandoNome()"
+  [closable]="!editandoNome()"
 >
   <ng-template #header>
     <div class="atividade-visualizar-dialog__header">
@@ -31,12 +32,12 @@
         >
           <div class="atividade-visualizar-dialog__nome-linha">
             <input
+              #campoNome
               pInputText
               type="text"
               formControlName="nome"
               class="atividade-visualizar-dialog__nome-input"
               autocomplete="off"
-              autofocus
             />
             <div class="atividade-visualizar-dialog__nome-acoes">
               <p-button
