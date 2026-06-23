@@ -92,11 +92,18 @@ com `--include=dev`** (ver abaixo). Não use `tsx`/esbuild: ele não emite
    | `INTERVALO_MINIMO_MINUTOS`| `15`                                               |
    | `APP_PORTA`               | `10000` *(fallback; o Render injeta `PORT` automaticamente e o app prioriza `PORT`)* |
    | `APP_AMBIENTE`            | `production`                                        |
+   | `TZ`                      | `America/Sao_Paulo` — **obrigatório**              |
    | `APP_CORS_ORIGEM`         | a URL do Cloudflare Pages — **preencha no passo 3** |
    | `ANTHROPIC_API_KEY`       | *(opcional — deixe vazio por enquanto; sem ela o auxílio de descrições por IA fica indisponível, o resto funciona)* |
 
    > **Não** defina `NODE_ENV=production` — isso faria o `npm install` pular `ts-node`/`typescript`.
    > Use `APP_AMBIENTE=production` para o ambiente lógico da aplicação.
+   >
+   > **`TZ=America/Sao_Paulo` é obrigatório.** O sistema grava wall-clock em colunas
+   > `TIMESTAMP` naïve (sem timezone) e assume que o relógio do processo é BRT. O
+   > container do Render sobe em **UTC** por padrão (independente da região física),
+   > então sem o `TZ` as execuções iniciadas à noite são gravadas com a data do dia
+   > seguinte e as durações/relatórios de ponto ficam deslocados.
 
 4. Faça o deploy. Anote a URL pública: `https://<seu-servico>.onrender.com`.
    Valide com `GET https://<seu-servico>.onrender.com/api/v1` e o Swagger em `/api/docs`.
