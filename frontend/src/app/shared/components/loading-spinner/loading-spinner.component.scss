@@ -1,10 +1,11 @@
 // Overlay global de carregamento. Cobre a viewport e centraliza o spinner.
-// A topbar tem z-index maior (9001), então permanece clicável e o scrim não
-// aparece por baixo dela.
+// A topbar tem z-index maior (801), então permanece clicável e o scrim não
+// aparece por baixo dela. Mantém-se abaixo das camadas do PrimeNG para não
+// cobrir dialogs/toasts.
 .loading-spinner {
   position: fixed;
   inset: 0;
-  z-index: 9000;
+  z-index: 800;
   display: flex;
   align-items: center;
   justify-content: center;

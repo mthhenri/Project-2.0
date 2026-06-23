@@ -1,8 +1,10 @@
 .topbar {
-  // Fica acima do overlay de carregamento (z-index 9000) para permanecer
+  // Fica acima do overlay de carregamento (z-index 800) para permanecer
   // clicável durante requisições; o fundo opaco impede o scrim de vazar.
+  // Abaixo das camadas do PrimeNG (dropdowns ~1000, dialogs/toasts ~1100+),
+  // para que scrims de dialog, toasts etc. apareçam por cima da topbar.
   position: relative;
-  z-index: 9001;
+  z-index: 801;
   background: var(--app-surface-0);
   border-color: var(--app-surface-200);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
