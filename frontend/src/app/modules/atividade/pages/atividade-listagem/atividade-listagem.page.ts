@@ -1,4 +1,4 @@
-import { Component, inject, signal, DestroyRef, OnInit, HostListener } from '@angular/core';
+import { Component, inject, signal, DestroyRef, OnInit, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -182,6 +182,8 @@ export class AtividadeListagemPage implements OnInit {
   readonly descricaoExecucaoOpcional = signal<boolean>(false);
 
   // --- Dialog: registrar execução manual (somente gestor) ---
+  /** Textarea de descrição; recebe o foco ao abrir o dialog, não o campo de início. */
+  @ViewChild('descricaoRegistro') private descricaoRegistro?: ElementRef<HTMLTextAreaElement>;
   readonly mostrarDialogRegistro = signal<boolean>(false);
   readonly salvandoRegistro = signal<boolean>(false);
   readonly atividadeRegistro = signal<AtividadeResumoDto | null>(null);
@@ -623,6 +625,11 @@ export class AtividadeListagemPage implements OnInit {
     this.atividadeRegistro.set(atividade);
     this.formularioRegistro.reset({ inicioData: null, fimData: null, descricao: '' });
     this.mostrarDialogRegistro.set(true);
+  }
+
+  /** Foca a descrição ao abrir o dialog — em vez do primeiro campo (início). */
+  focarDescricaoRegistro(): void {
+    this.descricaoRegistro?.nativeElement.focus();
   }
 
   salvarRegistro(): void {

@@ -8,11 +8,4 @@ export const execucaoRotas: Routes = [
         (modulo) => modulo.ExecucaoHistoricoPage,
       ),
   },
-  {
-    path: 'ativa',
-    loadComponent: () =>
-      import('./pages/execucao-ativa/execucao-ativa.page').then(
-        (modulo) => modulo.ExecucaoAtivaPage,
-      ),
-  },
 ];

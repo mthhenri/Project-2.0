@@ -5,6 +5,8 @@ import {
   computed,
   OnInit,
   HostListener,
+  ViewChild,
+  ElementRef,
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
@@ -88,6 +90,9 @@ export class ExecucaoHistoricoPage implements OnInit {
     inicioData: [null as Date | null, [Validators.required]],
     fimData:    [null as Date | null],
   });
+
+  /** Textarea de descrição; recebe o foco ao abrir o dialog, não o campo de início. */
+  @ViewChild('descricaoEdicao') private descricaoEdicao?: ElementRef<HTMLTextAreaElement>;
 
   ngOnInit(): void {
     if (this.sessao.eGestor()) this.carregarUsuarios();
@@ -186,6 +191,11 @@ export class ExecucaoHistoricoPage implements OnInit {
       fimData:    execucao.fimData ? new Date(execucao.fimData) : null,
     });
     this.mostrarDialogEditar.set(true);
+  }
+
+  /** Foca a descrição ao abrir o dialog — em vez do primeiro campo (início). */
+  focarDescricaoEdicao(): void {
+    this.descricaoEdicao?.nativeElement.focus();
   }
 
   salvarEdicao(): void {

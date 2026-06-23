@@ -173,6 +173,8 @@
   [resizable]="false"
   [style]="{ width: '34rem' }"
   [dismissableMask]="true"
+  [focusOnShow]="false"
+  (onShow)="focarDescricaoEdicao()"
 >
   <form [formGroup]="formularioEdicao" class="execucao-historico__dialog-form" (ngSubmit)="salvarEdicao()">
     <div class="execucao-historico__dialog-periodo">
@@ -217,6 +219,7 @@
     <div class="execucao-historico__filtro-campo">
       <label class="execucao-historico__filtro-label" for="editar-descricao">Descrição</label>
       <textarea
+        #descricaoEdicao
         id="editar-descricao"
         pTextarea
         formControlName="descricao"

@@ -616,6 +616,8 @@
   [style]="{ width: '42rem' }"
   [draggable]="false"
   [dismissableMask]="true"
+  [focusOnShow]="false"
+  (onShow)="focarDescricaoRegistro()"
 >
   @if (atividadeRegistro(); as atividade) {
     <p class="atividade-listagem__execucao-atividade">{{ atividade.nomeProjeto }} · {{ atividade.nome }}</p>
@@ -666,6 +668,7 @@
     <div class="atividade-listagem__dialog-campo">
       <label for="registro-descricao" class="atividade-listagem__filtro-label">Descrição *</label>
       <textarea
+        #descricaoRegistro
         id="registro-descricao"
         pTextarea
         spellcheck="true"
