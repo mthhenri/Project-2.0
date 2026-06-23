@@ -47,6 +47,7 @@ import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-hora
 import {
   ATIVIDADE_STATUS_OPCOES,
   ATIVIDADE_STATUS_NAO_DESENVOLVIDA,
+  ATIVIDADE_STATUS_EXECUTAVEL,
   severidadeStatusAtividade,
   rotuloStatusAtividade,
   SeveridadeTag,
@@ -547,6 +548,28 @@ export class AtividadeListagemPage implements OnInit {
   /** Há execução em andamento nesta atividade (de qualquer usuário). */
   atividadeEmExecucao(atividade: AtividadeResumoDto): boolean {
     return atividade.execucaoAtivaId !== null;
+  }
+
+  /** Play só é permitido em atividades planejadas ou em desenvolvimento. */
+  podeIniciarExecucao(atividade: AtividadeResumoDto): boolean {
+    return ATIVIDADE_STATUS_EXECUTAVEL.includes(atividade.status);
+  }
+
+  /**
+   * Exibe o botão de play/pause. Encerrar (pause) fica sempre disponível quando há
+   * execução ativa; iniciar (play) só quando o status permite. Assim, atividades
+   * pendentes/desenvolvidas não ganham play, mas execuções já ativas podem ser encerradas.
+   */
+  mostrarBotaoExecucao(atividade: AtividadeResumoDto): boolean {
+    return (
+      this.podeExecutar(atividade) &&
+      (this.atividadeEmExecucao(atividade) || this.podeIniciarExecucao(atividade))
+    );
+  }
+
+  /** O status não pode ser trocado enquanto houver execução em andamento. */
+  podeTrocarStatus(atividade: AtividadeResumoDto): boolean {
+    return this.podeEditar(atividade) && !this.atividadeEmExecucao(atividade);
   }
 
   alternarExecucao(atividade: AtividadeResumoDto): void {

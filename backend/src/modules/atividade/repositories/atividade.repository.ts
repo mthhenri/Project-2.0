@@ -273,6 +273,24 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
   }
 
   /**
+   * Indica se a atividade possui execução em andamento (sem fim_data).
+   * Usado para travar a troca de status enquanto há uma execução ativa.
+   */
+  async possuiExecucaoAtiva(dto: AtividadeRecuperarDto): Promise<boolean> {
+    const resultado = await this.executarConsulta<{ existe: boolean }>(
+      `SELECT EXISTS(
+         SELECT 1
+         FROM execucao
+         WHERE execucao.atividade_id = :atividadeId
+           AND execucao.fim_data IS NULL
+           AND execucao.is_deleted = false
+       ) AS existe`,
+      { atividadeId: dto.id },
+    );
+    return resultado[0].existe;
+  }
+
+  /**
    * Verifica se o usuário está atribuído à demanda via demanda_usuario.
    * Usado para controle de acesso na criação e atualização de atividades.
    */

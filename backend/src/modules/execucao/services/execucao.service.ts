@@ -15,6 +15,7 @@ import {
   ExecucaoRegistrarDto,
   ExecucaoRegistradaDto,
   UsuarioTipoEnum,
+  AtividadeStatusEnum,
 } from '@project20/shared';
 import { StandardResponse } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
@@ -24,6 +25,12 @@ import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.int
 
 @Injectable()
 export class ExecucaoService {
+  /** Status em que uma execução pode ser iniciada. */
+  private static readonly STATUS_EXECUTAVEL: AtividadeStatusEnum[] = [
+    AtividadeStatusEnum.PLANEJADA,
+    AtividadeStatusEnum.DESENVOLVENDO,
+  ];
+
   constructor(
     private readonly execucaoRepositorio: ExecucaoRepository,
     private readonly atividadeRepositorio: AtividadeRepository,
@@ -40,6 +47,10 @@ export class ExecucaoService {
     const atividadeEncontrada = await this.atividadeRepositorio.recuperar({ id: dto.atividadeId });
     if (!atividadeEncontrada) {
       throw new ResourceNotFoundException('Atividade');
+    }
+
+    if (!ExecucaoService.STATUS_EXECUTAVEL.includes(atividadeEncontrada.status)) {
+      throw new BusinessException('Só é possível iniciar execução em atividades planejadas ou em desenvolvimento');
     }
 
     const descricao = dto.descricao?.trim() ?? '';

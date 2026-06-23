@@ -26,6 +26,12 @@ export const ATIVIDADE_STATUS_NAO_DESENVOLVIDA: AtividadeStatusEnum[] = [
   AtividadeStatusEnum.DESENVOLVENDO,
 ];
 
+/** Status em que se pode INICIAR uma execução (botão de play); fora deles só resta encerrar. */
+export const ATIVIDADE_STATUS_EXECUTAVEL: AtividadeStatusEnum[] = [
+  AtividadeStatusEnum.PLANEJADA,
+  AtividadeStatusEnum.DESENVOLVENDO,
+];
+
 const SEVERIDADE_POR_STATUS: Record<AtividadeStatusEnum, SeveridadeTag> = {
   [AtividadeStatusEnum.PLANEJADA]:     'secondary',
   [AtividadeStatusEnum.PENDENTE]:      'warn',

@@ -190,6 +190,15 @@ export class AtividadeService {
       }
     }
 
+    if (dto.status !== undefined && dto.status !== atividadeEncontrada.status) {
+      const possuiExecucaoAtiva = await this.atividadeRepositorio.possuiExecucaoAtiva({ id: dto.id });
+      if (possuiExecucaoAtiva) {
+        throw new BusinessException(
+          'Não é possível alterar o status de uma atividade com execução em andamento',
+        );
+      }
+    }
+
     const atividadeAlterada = await this.atividadeRepositorio.alterar({
       id:            dto.id,
       nome:          dto.nome,

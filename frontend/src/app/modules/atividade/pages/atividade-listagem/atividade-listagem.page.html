@@ -165,7 +165,7 @@
           </td>
         }
         <td>
-          @if (podeEditar(atividade)) {
+          @if (podeTrocarStatus(atividade)) {
             <button
               type="button"
               class="atividade-listagem__status-gatilho"
@@ -183,6 +183,8 @@
             <p-tag
               [value]="rotuloStatus(atividade.status)"
               [severity]="severidadeStatus(atividade.status)"
+              [pTooltip]="atividadeEmExecucao(atividade) ? 'Status bloqueado durante execução em andamento' : ''"
+              tooltipPosition="top"
             />
           }
         </td>
@@ -205,17 +207,16 @@
         </td>
         <td>
           <div class="atividade-listagem__acoes">
-            @if (podeExecutar(atividade)) {
-              <p-button
-                [icon]="atividadeEmExecucao(atividade) ? 'pi pi-pause' : 'pi pi-play'"
-                [text]="true"
-                size="small"
-                [severity]="atividadeEmExecucao(atividade) ? 'warn' : 'success'"
-                [pTooltip]="atividadeEmExecucao(atividade) ? 'Encerrar execução' : 'Iniciar execução'"
-                tooltipPosition="left"
-                (onClick)="alternarExecucao(atividade)"
-              />
-            }
+            <p-button
+              [icon]="atividadeEmExecucao(atividade) ? 'pi pi-pause' : 'pi pi-play'"
+              [text]="true"
+              size="small"
+              [severity]="atividadeEmExecucao(atividade) ? 'warn' : 'success'"
+              [pTooltip]="atividadeEmExecucao(atividade) ? 'Encerrar execução' : 'Iniciar execução'"
+              tooltipPosition="left"
+              (onClick)="alternarExecucao(atividade)"
+              [style.visibility]="mostrarBotaoExecucao(atividade) ? 'visible' : 'hidden'"
+            />
             <p-button
               icon="pi pi-eye"
               [text]="true"
