@@ -72,9 +72,15 @@ com `--include=dev`** (ver abaixo). Não use `tsx`/esbuild: ele não emite
    |------------------------|--------------------------------------------------|
    | **Root Directory**     | *(vazio — raiz do repo; o symlink do workspace `shared` depende disso)* |
    | **Runtime**            | Node                                             |
-   | **Build Command**      | `npm install --include=dev`                      |
-   | **Pre-Deploy Command** | `npm run db:migrate --workspace=backend`         |
+   | **Build Command**      | `npm install --include=dev && npm run db:migrate --workspace=backend` |
+   | **Pre-Deploy Command** | *(vazio — é recurso pago; a migration roda no Build Command)* |
    | **Start Command**      | `npm run start:prod --workspace=backend`         |
+
+   > **Free tier:** o Pre-Deploy Command e o Shell são exclusivos de instâncias pagas.
+   > Por isso a migration roda dentro do **Build Command**. As migrations são
+   > idempotentes (o Knex controla o que já foi aplicado na tabela `knex_migrations`),
+   > então rodar a cada deploy é seguro — só aplica o que estiver pendente. As variáveis
+   > de ambiente do serviço já estão disponíveis na fase de build.
 
 3. **Environment Variables** (Settings → Environment):
 
@@ -145,7 +151,7 @@ com `--include=dev`** (ver abaixo). Não use `tsx`/esbuild: ele não emite
 ## Checklist rápido
 
 - [ ] Supabase criado; Session pooler copiado; `DB_SSL=true`
-- [ ] Render: Build `npm install --include=dev`, Start `start:prod`, Pre-Deploy `db:migrate`
+- [ ] Render: Build `npm install --include=dev && npm run db:migrate --workspace=backend`, Start `start:prod` (Pre-Deploy vazio — free tier)
 - [ ] Render: envs preenchidas; `JWT_SECRETO` forte; **sem** `NODE_ENV=production`
 - [ ] `environment.production.ts` apontando para a URL do Render (commitado)
 - [ ] Cloudflare Pages: output `frontend/dist/frontend/browser`
