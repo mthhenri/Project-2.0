@@ -7,6 +7,7 @@ import { carregamento } from '../../../core/signals/carregamento.signal';
   standalone: true,
   imports: [ProgressSpinnerModule],
   templateUrl: './loading-spinner.component.html',
+  styleUrl: './loading-spinner.component.scss',
 })
 export class LoadingSpinnerComponent {
   readonly carregando = carregamento;

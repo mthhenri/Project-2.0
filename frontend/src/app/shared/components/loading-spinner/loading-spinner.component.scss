@@ -1,0 +1,25 @@
+// Overlay global de carregamento. Cobre toda a viewport e centraliza o spinner.
+// Sem estes estilos a div renderizava no fluxo normal, no rodapé da coluna do
+// layout (canto inferior esquerdo) e "piscava" a cada requisição HTTP.
+.loading-spinner {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &__overlay {
+    position: absolute;
+    inset: 0;
+    background-color: rgb(0 0 0 / 35%);
+    backdrop-filter: blur(1px);
+  }
+
+  &__conteudo {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
