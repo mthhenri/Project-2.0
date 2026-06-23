@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, DestroyRef, inject, signal, computed } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { PopoverModule } from 'primeng/popover';
@@ -22,6 +22,7 @@ export class TopbarComponent {
   private readonly autenticacaoService = inject(AutenticacaoService);
   readonly sessao = inject(UsuarioSessaoService);
   readonly tema = inject(TemaService);
+  private readonly destroyRef = inject(DestroyRef);
   readonly horaAtual = signal<string>('');
 
   private readonly todosItensNavegacao = [
@@ -41,9 +42,18 @@ export class TopbarComponent {
 
   constructor() {
     this.atualizarHora();
+    this.agendarProximaAtualizacao();
+  }
+
+  private agendarProximaAtualizacao(): void {
     const agora = new Date();
     const msAteProximoMinuto = (60 - agora.getSeconds()) * 1000 - agora.getMilliseconds();
-    timer(msAteProximoMinuto, 60000).pipe(takeUntilDestroyed()).subscribe(() => this.atualizarHora());
+    timer(msAteProximoMinuto)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.atualizarHora();
+        this.agendarProximaAtualizacao();
+      });
   }
 
   private atualizarHora(): void {
