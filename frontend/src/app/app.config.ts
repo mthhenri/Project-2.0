@@ -1,4 +1,5 @@
 import { ApplicationConfig } from '@angular/core';
+import { DATE_PIPE_DEFAULT_OPTIONS } from '@angular/common';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
@@ -46,5 +47,9 @@ export const appConfig: ApplicationConfig = {
       translation: TRADUCAO_PT_BR,
     }),
     MessageService,
+    // Datas/horas sempre no horário do Brasil (UTC-3 fixo, sem horário de verão desde 2019),
+    // independente do fuso do computador do usuário. O DatePipe não aceita nome IANA
+    // (America/Sao_Paulo) — só offset. Ver docs/DEPLOY.md (timestamps naïve assumem BRT).
+    { provide: DATE_PIPE_DEFAULT_OPTIONS, useValue: { timezone: '-0300' } },
   ],
 };
