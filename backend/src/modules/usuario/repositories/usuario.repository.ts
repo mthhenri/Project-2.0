@@ -121,7 +121,8 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
          usuario.nome_completo AS "nomeCompleto",
          usuario.cargo_titulo  AS "cargoTitulo",
          usuario.tipo,
-         usuario.status
+         usuario.status,
+         (usuario.anotacoes IS NOT NULL AND btrim(usuario.anotacoes) <> '') AS "temAnotacoes"
        FROM usuario
        WHERE ${clausulaWhere}
        ORDER BY usuario.nome_completo ASC

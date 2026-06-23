@@ -52,6 +52,10 @@ $raio-borda-padrao: 0.5rem;
   --app-icone-cliente: var(--p-blue-600);
   --app-icone-tecnica: var(--p-indigo-600);
   --app-icone-doc:     var(--p-cyan-600);
+
+  // Realce do ícone de anotações do usuário: azul-céu vibrante, distinto da
+  // família de ícones de descrição da demanda.
+  --app-icone-anotacao: var(--p-sky-500);
 }
 
 .app-escuro {
@@ -78,6 +82,9 @@ $raio-borda-padrao: 0.5rem;
   --app-icone-cliente: var(--p-blue-400);
   --app-icone-tecnica: var(--p-indigo-400);
   --app-icone-doc:     var(--p-cyan-400);
+
+  // No escuro, tom mais claro do azul-céu lê melhor sobre superfície escura.
+  --app-icone-anotacao: var(--p-sky-400);
 }
 
 // Fundo e cor de texto base. `--p-text-color` já troca sozinho no tema escuro.

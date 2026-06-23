@@ -104,8 +104,9 @@
                 [text]="true"
                 severity="secondary"
                 size="small"
-                pTooltip="Anotações"
+                [pTooltip]="usuario.temAnotacoes ? 'Ver anotações' : 'Anotações'"
                 tooltipPosition="left"
+                [styleClass]="usuario.temAnotacoes ? 'usuario-listagem__btn-anotacao--ativo' : ''"
                 (onClick)="anotacoesDialog.abrir(usuario.id, usuario.nomeCompleto)"
               />
             }

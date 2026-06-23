@@ -20,4 +20,7 @@ export class UsuarioResumoDto {
 
   @ApiProperty({ enum: UsuarioStatusEnum, example: UsuarioStatusEnum.ATIVO })
   status: UsuarioStatusEnum;
+
+  @ApiProperty({ example: true, description: 'Indica se o usuário possui anotações registradas' })
+  temAnotacoes: boolean;
 }

@@ -56,3 +56,11 @@
     padding: 3rem 0;
   }
 }
+
+// Botão de anotações realçado quando o usuário possui anotações: ícone em
+// azul-céu com bold + glow, mesmo tratamento dos ícones de descrição da demanda.
+:host ::ng-deep .usuario-listagem__btn-anotacao--ativo .p-button-icon {
+  color: var(--app-icone-anotacao);
+  font-weight: 700;
+  text-shadow: 0 0 4px color-mix(in srgb, currentColor 45%, transparent);
+}
