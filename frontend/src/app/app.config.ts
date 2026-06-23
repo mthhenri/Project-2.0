@@ -28,6 +28,17 @@ const TemaAzul = definePreset(Aura, {
       900: '{blue.900}',
       950: '{blue.950}',
     },
+    colorScheme: {
+      // No tema escuro o backdrop padrão do PrimeNG (preto translúcido) some
+      // sobre a página já escura. Trocamos por um véu claro/acinzentado
+      // (branco translúcido) que destaca o dialog por cima. Ajuste a % para
+      // mais branco (maior) ou mais sutil (menor).
+      dark: {
+        mask: {
+          background: 'color-mix(in srgb, {surface.0} 15%, transparent)',
+        },
+      },
+    },
   },
 });
 
