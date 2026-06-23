@@ -261,28 +261,61 @@ const execs = await this.repo.list(id, d);
 
 ### 5.4 Enums
 
+**Nome do enum TS = nome da tabela de referência (PascalCase) + `Enum`.** Como toda tabela de
+enum é `tipo_<tabela>_<complemento?>`, o enum sempre começa por `Tipo`. O arquivo segue o nome
+da tabela em kebab-case + `.enum.ts`.
+
 ```typescript
-// usuario-tipo.enum.ts
-export enum UsuarioTipoEnum {
+// tipo-usuario.enum.ts            ← tabela tipo_usuario
+export enum TipoUsuarioEnum {
   DESENVOLVEDOR = 'DESENVOLVEDOR',
   GESTOR        = 'GESTOR',
 }
 
-// demanda-status.enum.ts
-export enum DemandaStatusEnum {
+// tipo-demanda-status.enum.ts     ← tabela tipo_demanda_status
+export enum TipoDemandaStatusEnum {
   PLANEJADA         = 'PLANEJADA',
   EM_DESENVOLVIMENTO = 'EM_DESENVOLVIMENTO',
   CONCLUIDA         = 'CONCLUIDA',
 }
 
-// atividade-status.enum.ts
-export enum AtividadeStatusEnum {
+// tipo-atividade-status.enum.ts   ← tabela tipo_atividade_status
+export enum TipoAtividadeStatusEnum {
   PLANEJADA    = 'PLANEJADA',
   PENDENTE     = 'PENDENTE',
   DESENVOLVENDO = 'DESENVOLVENDO',
   DESENVOLVIDA = 'DESENVOLVIDA',
 }
 ```
+
+#### Enums são sempre tabelas de referência
+
+Todo enum de domínio fechado existe, no banco, como uma **tabela de referência** —
+**nunca** `VARCHAR + CHECK` nem tipo `ENUM` nativo do PostgreSQL. O enum TypeScript em
+`shared/src/enums/` permanece como **contrato tipado** (usado em `@IsEnum`, DTOs e frontend)
+e espelha exatamente os `codigo` da tabela. A tradução `codigo ⇄ id` acontece **só no
+repositório** (SQL) — DTOs, services e frontend continuam usando o **valor do enum**, nunca o id.
+
+**Nome da tabela:** `tipo_<tabela>_<complemento?>` — sempre começa por `tipo`, snake_case
+singular português (`TIPO + TABELA + COMPLEMENTO`):
+
+| Coluna de negócio | Tabela de referência | Enum TypeScript | Coluna FK |
+|---|---|---|---|
+| `usuario.tipo` | `tipo_usuario` | `TipoUsuarioEnum` | `tipo_usuario_id` |
+| `usuario.status` | `tipo_usuario_status` | `TipoUsuarioStatusEnum` | `tipo_usuario_status_id` |
+| `projeto.status` | `tipo_projeto_status` | `TipoProjetoStatusEnum` | `tipo_projeto_status_id` |
+| `demanda.status` | `tipo_demanda_status` | `TipoDemandaStatusEnum` | `tipo_demanda_status_id` |
+| `demanda.prioridade` | `tipo_demanda_prioridade` | `TipoDemandaPrioridadeEnum` | `tipo_demanda_prioridade_id` |
+| `atividade.status` | `tipo_atividade_status` | `TipoAtividadeStatusEnum` | `tipo_atividade_status_id` |
+| `dia_nao_util.tipo` | `tipo_dia_nao_util` | `TipoDiaNaoUtilEnum` | `tipo_dia_nao_util_id` |
+| `dia_nao_util.duracao` | `tipo_dia_nao_util_duracao` | `TipoDiaNaoUtilDuracaoEnum` | `tipo_dia_nao_util_duracao_id` |
+
+O enum TS é nomeado a partir da **tabela** (não da coluna de origem): `tipo_dia_nao_util` →
+`TipoDiaNaoUtilEnum` (não `DiaNaoUtilTipoEnum`). A tabela de referência segue a BaseEntity e tem
+`codigo` (valor SCREAMING_SNAKE, **igual** ao valor do enum TS) e `descricao` (rótulo legível). A
+coluna de negócio é um `INTEGER` FK para o `id` dessa tabela, nomeada `<tabela_referencia>_id`. No
+repositório: subselect por `codigo` no INSERT/UPDATE; JOIN expondo `tabela_referencia.codigo AS
+<campo>` no SELECT/RETURNING.
 
 ---
 
@@ -886,6 +919,7 @@ export abstract class BaseEntity {
 10. **Hierarquias e grafos** via CTEs recursivos do PostgreSQL
 11. **Soft delete** via `executarSoftDelete()` do BaseRepository — nunca DELETE físico
 12. **Objetos genéricos de banco** (funções/triggers de infraestrutura) em **inglês** — `fn_set_updated_date()`, `trg_usuario_updated_date` ✅; `fn_atualizar_updated_date()` ❌ (idioma misto em mecanismo genérico, §16 #12). Apenas tabelas e colunas de negócio são em português
+13. **Enums sempre como tabela de referência** — toda coluna de domínio fechado é `INTEGER` FK para uma tabela `tipo_<tabela>_<complemento?>` (com `codigo` + `descricao`), **nunca** `VARCHAR + CHECK` nem tipo `ENUM` nativo. O enum TypeScript de `shared/` espelha os `codigo`; o repositório traduz `codigo ⇄ id` no SQL (ver §5.4)
 
 ### 9.3 Paginação Padrão
 
@@ -1236,3 +1270,4 @@ Estas regras **jamais** devem ser violadas. São inegociáveis independente do c
 | 23 | **Nunca criar DTO como alias ou re-export** de outro DTO — cada DTO define explicitamente todos os seus campos |
 | 24 | **Nunca usar `atualizar`** em nomes de DTO ou método de negócio — usar `alterar` (`UsuarioAlterarDto`, `alterar()`) |
 | 25 | **Nunca colocar em repositório A** uma query cuja responsabilidade é do módulo B — usar o repositório do módulo correto |
+| 26 | **Nunca representar enum como `VARCHAR + CHECK` ou `ENUM` nativo** — todo enum é uma tabela de referência `tipo_<tabela>_<complemento?>` (`codigo` + `descricao`) e a coluna de negócio é `INTEGER` FK para o `id` dela; o enum TypeScript de `shared/` é o contrato tipado que espelha os `codigo` (ver §5.4) |
