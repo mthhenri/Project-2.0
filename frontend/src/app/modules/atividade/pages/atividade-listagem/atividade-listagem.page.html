@@ -412,7 +412,7 @@
   </ng-template>
 </p-dialog>
 
-<app-atividade-visualizar-dialog #visualizarDialog />
+<app-atividade-visualizar-dialog #visualizarDialog (aoAlterar)="buscarAtividades()" />
 
 <!-- Dialog: atribuir tags -->
 <p-dialog

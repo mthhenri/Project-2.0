@@ -1,12 +1,76 @@
 <p-dialog
   [visible]="mostrarDialog()"
   (visibleChange)="mostrarDialog.set($event)"
-  [header]="atividadeVisualizada()?.nome || 'Atividade'"
   [modal]="true"
   [style]="{ width: '46rem' }"
   [draggable]="false"
   [dismissableMask]="true"
 >
+  <ng-template #header>
+    <div class="atividade-visualizar-dialog__header">
+      @if (!editandoNome()) {
+        <span class="atividade-visualizar-dialog__titulo">
+          {{ atividadeVisualizada()?.nome || 'Atividade' }}
+        </span>
+        @if (sessao.eGestor() && atividadeVisualizada()) {
+          <button
+            type="button"
+            class="atividade-visualizar-dialog__editar-nome"
+            pTooltip="Editar nome"
+            tooltipPosition="top"
+            (click)="iniciarEdicaoNome()"
+          >
+            <i class="pi pi-pencil"></i>
+          </button>
+        }
+      } @else {
+        <form
+          [formGroup]="formularioNome"
+          class="atividade-visualizar-dialog__nome-form"
+          (ngSubmit)="salvarNome()"
+        >
+          <div class="atividade-visualizar-dialog__nome-linha">
+            <input
+              pInputText
+              type="text"
+              formControlName="nome"
+              class="atividade-visualizar-dialog__nome-input"
+              autocomplete="off"
+              autofocus
+            />
+            <div class="atividade-visualizar-dialog__nome-acoes">
+              <p-button
+                type="submit"
+                icon="pi pi-check"
+                severity="success"
+                [text]="true"
+                [rounded]="true"
+                [loading]="salvandoNome()"
+                [disabled]="formularioNome.invalid || salvandoNome()"
+              />
+              <p-button
+                type="button"
+                icon="pi pi-times"
+                severity="secondary"
+                [text]="true"
+                [rounded]="true"
+                (onClick)="cancelarEdicaoNome()"
+              />
+            </div>
+          </div>
+          @if (
+            formularioNome.controls.nome.invalid &&
+            (formularioNome.controls.nome.touched || formularioNome.controls.nome.dirty)
+          ) {
+            <span class="atividade-visualizar-dialog__nome-erro">
+              O nome deve ter no mínimo 3 caracteres.
+            </span>
+          }
+        </form>
+      }
+    </div>
+  </ng-template>
+
   @if (carregandoVisualizar()) {
     <div class="atividade-visualizar-dialog__carregando">
       <i class="pi pi-spin pi-spinner text-2xl text-muted-color"></i>

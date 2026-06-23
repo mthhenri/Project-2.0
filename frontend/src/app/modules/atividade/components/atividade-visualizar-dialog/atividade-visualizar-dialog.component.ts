@@ -1,9 +1,10 @@
-import { Component, inject, signal } from '@angular/core';
-import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
+import { Component, inject, output, signal } from '@angular/core';
+import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { finalize, forkJoin } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { EditorModule } from 'primeng/editor';
+import { InputTextModule } from 'primeng/inputtext';
 import { TabsModule } from 'primeng/tabs';
 import { Tag } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
@@ -15,6 +16,7 @@ import {
   ExecucaoResumoDto,
 } from '@project20/shared';
 import { AtividadeService } from '../../services/atividade.service';
+import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { DataBrasileiraPipe } from '../../../../shared/pipes/data-brasileira.pipe';
 import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-horas.pipe';
 import { severidadeStatusAtividade, rotuloStatusAtividade } from '../../models/atividade.model';
@@ -27,6 +29,7 @@ import { severidadeStatusAtividade, rotuloStatusAtividade } from '../../models/a
     ButtonModule,
     DialogModule,
     EditorModule,
+    InputTextModule,
     TabsModule,
     Tag,
     TooltipModule,
@@ -40,6 +43,7 @@ export class AtividadeVisualizarDialogComponent {
   private readonly atividadeService = inject(AtividadeService);
   private readonly messageService = inject(MessageService);
   private readonly formBuilder = inject(FormBuilder);
+  readonly sessao = inject(UsuarioSessaoService);
 
   readonly mostrarDialog = signal<boolean>(false);
   readonly carregandoVisualizar = signal<boolean>(false);
@@ -47,12 +51,20 @@ export class AtividadeVisualizarDialogComponent {
   readonly tagsVisualizar = signal<TagResumoDto[]>([]);
   readonly execucoesVisualizar = signal<ExecucaoResumoDto[]>([]);
   readonly salvandoDescricao = signal<boolean>(false);
+  readonly editandoNome = signal<boolean>(false);
+  readonly salvandoNome = signal<boolean>(false);
 
   readonly severidadeStatus = severidadeStatusAtividade;
   readonly rotuloStatus = rotuloStatusAtividade;
 
+  readonly aoAlterar = output<void>();
+
   readonly formularioDescricao = this.formBuilder.group({
     descricao: [''],
+  });
+
+  readonly formularioNome = this.formBuilder.group({
+    nome: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(255)]],
   });
 
   /** Abre o dialog e carrega atividade, tags e execuções. */
@@ -62,6 +74,7 @@ export class AtividadeVisualizarDialogComponent {
     this.tagsVisualizar.set([]);
     this.execucoesVisualizar.set([]);
     this.formularioDescricao.reset({ descricao: '' });
+    this.editandoNome.set(false);
     this.mostrarDialog.set(true);
 
     forkJoin({
@@ -97,6 +110,43 @@ export class AtividadeVisualizarDialogComponent {
             const alterada = resposta.dados;
             this.atividadeVisualizada.update((atual) => (atual ? { ...atual, descricao: alterada.descricao } : atual));
             this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Descrição salva' });
+          }
+        },
+      });
+  }
+
+  /** Entra no modo de edição do nome (só gestor), preenchendo o form com o nome atual. */
+  iniciarEdicaoNome(): void {
+    const atividade = this.atividadeVisualizada();
+    if (!atividade) return;
+    this.formularioNome.reset({ nome: atividade.nome });
+    this.editandoNome.set(true);
+  }
+
+  /** Sai do modo de edição sem salvar. */
+  cancelarEdicaoNome(): void {
+    this.editandoNome.set(false);
+  }
+
+  /** Salva o novo nome (gestor). Atualiza o header, emite aoAlterar, fecha o modo de edição. */
+  salvarNome(): void {
+    const atividade = this.atividadeVisualizada();
+    if (!atividade || this.formularioNome.invalid) return;
+
+    const nome = (this.formularioNome.value.nome ?? '').trim();
+    this.salvandoNome.set(true);
+    const dto: AtividadeAlterarDto = { nome };
+    this.atividadeService
+      .alterar(atividade.id, dto)
+      .pipe(finalize(() => this.salvandoNome.set(false)))
+      .subscribe({
+        next: (resposta) => {
+          if (resposta.sucesso && resposta.dados) {
+            const alterada = resposta.dados;
+            this.atividadeVisualizada.update((atual) => (atual ? { ...atual, nome: alterada.nome } : atual));
+            this.editandoNome.set(false);
+            this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Nome alterado' });
+            this.aoAlterar.emit();
           }
         },
       });

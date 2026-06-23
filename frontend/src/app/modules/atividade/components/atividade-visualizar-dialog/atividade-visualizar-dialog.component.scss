@@ -1,4 +1,73 @@
 .atividade-visualizar-dialog {
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__titulo {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--p-text-color);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__editar-nome {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--p-text-muted-color);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s, color 0.15s;
+
+    &:hover {
+      background: var(--app-realce-sutil);
+      color: var(--p-primary-color);
+    }
+  }
+
+  &__nome-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__nome-linha {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__nome-input {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__nome-acoes {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex-shrink: 0;
+  }
+
+  &__nome-erro {
+    font-size: 0.75rem;
+    color: var(--p-red-500);
+  }
+
   &__carregando {
     display: flex;
     align-items: center;
