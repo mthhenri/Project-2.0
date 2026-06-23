@@ -1,6 +1,6 @@
-// Overlay global de carregamento. Cobre toda a viewport e centraliza o spinner.
-// Sem estes estilos a div renderizava no fluxo normal, no rodapé da coluna do
-// layout (canto inferior esquerdo) e "piscava" a cada requisição HTTP.
+// Overlay global de carregamento. Cobre a viewport e centraliza o spinner.
+// A topbar tem z-index maior (9001), então permanece clicável e o scrim não
+// aparece por baixo dela.
 .loading-spinner {
   position: fixed;
   inset: 0;
@@ -9,17 +9,33 @@
   align-items: center;
   justify-content: center;
 
+  // Scrim sutil baseado na superfície (claro = véu claro, escuro = véu escuro),
+  // bem mais discreto que um preto sólido.
   &__overlay {
     position: absolute;
     inset: 0;
-    background-color: rgb(0 0 0 / 35%);
+    background-color: color-mix(in srgb, var(--app-surface-0) 55%, transparent);
     backdrop-filter: blur(1px);
   }
 
   &__conteudo {
     position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  }
+
+  // Anel minimalista monocromático: trilha neutra translúcida + um arco na cor
+  // primária girando. Sem a animação multicolor padrão do PrimeNG.
+  &__circulo {
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 3px solid color-mix(in srgb, var(--p-text-color) 15%, transparent);
+    border-top-color: var(--p-primary-color);
+    border-radius: 50%;
+    animation: loading-spinner-girar 0.7s linear infinite;
+  }
+}
+
+@keyframes loading-spinner-girar {
+  to {
+    transform: rotate(360deg);
   }
 }

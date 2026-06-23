@@ -1,4 +1,8 @@
 .topbar {
+  // Fica acima do overlay de carregamento (z-index 9000) para permanecer
+  // clicável durante requisições; o fundo opaco impede o scrim de vazar.
+  position: relative;
+  z-index: 9001;
   background: var(--app-surface-0);
   border-color: var(--app-surface-200);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
