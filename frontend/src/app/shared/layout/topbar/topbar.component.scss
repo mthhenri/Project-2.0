@@ -15,12 +15,15 @@
   }
 
   &__nav-item--ativo {
-    // Tokens de realce (selecionado) do PrimeNG — acompanham claro/escuro.
+    // Fundo de realce (translúcido na cor do tema) + texto/ícone na cor primária
+    // com glow, no mesmo estilo dos ícones de descrição, para destacar o item.
     background-color: var(--p-highlight-background);
-    color: var(--p-highlight-color);
+    color: var(--app-realce-primario);
+    font-weight: 600;
+    text-shadow: 0 0 4px color-mix(in srgb, currentColor 45%, transparent);
 
     i {
-      color: var(--p-highlight-color);
+      color: var(--app-realce-primario);
     }
   }
 
@@ -47,6 +50,50 @@
     &:disabled {
       opacity: 0.5;
       cursor: not-allowed;
+    }
+  }
+
+  &__enigma {
+    color: var(--p-text-muted-color);
+    letter-spacing: 0.1em;
+    line-height: 1;
+    transition: color 0.15s, transform 0.15s;
+
+    &:hover {
+      color: var(--p-primary-600);
+      transform: scale(1.1);
+    }
+  }
+
+  &__swatch {
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 9999px;
+    border: 2px solid var(--app-surface-200);
+    transition: transform 0.15s, border-color 0.15s;
+
+    &:hover {
+      transform: scale(1.15);
+      border-color: var(--p-primary-400);
+    }
+  }
+
+  &__cor-acao {
+    color: var(--p-primary-600);
+    text-decoration: none;
+    transition: color 0.15s;
+
+    &:hover {
+      color: var(--p-primary-700);
+      text-decoration: underline;
+    }
+
+    &--sutil {
+      color: var(--p-text-muted-color);
+
+      &:hover {
+        color: var(--p-text-color);
+      }
     }
   }
 }

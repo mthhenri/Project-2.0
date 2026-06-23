@@ -52,14 +52,63 @@
             <i class="pi pi-file-edit text-xs"></i>
             <span>Minhas Anotações</span>
           </button>
-          <button
-            type="button"
-            class="topbar__tema flex items-center gap-2 text-sm"
-            (click)="tema.alternarTema()"
-          >
-            <i class="text-xs" [class]="tema.eEscuro() ? 'pi pi-sun' : 'pi pi-moon'"></i>
-            <span>{{ tema.eEscuro() ? 'Tema claro' : 'Tema escuro' }}</span>
-          </button>
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              class="topbar__tema flex items-center gap-2 text-sm"
+              (click)="tema.alternarTema()"
+              (contextmenu)="revelarEnigma($event)"
+            >
+              <i class="text-xs" [class]="tema.eEscuro() ? 'pi pi-sun' : 'pi pi-moon'"></i>
+              <span>{{ tema.eEscuro() ? 'Tema claro' : 'Tema escuro' }}</span>
+            </button>
+
+            @if (mostrarEnigma() && !temaPersonalizado.desbloqueado()) {
+              <button
+                type="button"
+                class="topbar__enigma text-sm font-mono"
+                (click)="desbloquearTema()"
+              >
+                ???
+              </button>
+            }
+          </div>
+
+          @if (temaPersonalizado.desbloqueado()) {
+            <p-divider class="my-0" />
+            <div class="topbar__cores flex flex-col gap-2">
+              <span class="text-xs text-muted-color">Tema personalizado</span>
+
+              <div class="flex items-center gap-2 flex-wrap">
+                @for (cor of coresSugeridas; track cor.hex) {
+                  <button
+                    type="button"
+                    class="topbar__swatch"
+                    [style.background-color]="cor.hex"
+                    [pTooltip]="cor.nome"
+                    tooltipPosition="top"
+                    (click)="aplicarCorSugerida(cor.hex)"
+                  ></button>
+                }
+              </div>
+
+              <p-colorpicker
+                [inline]="true"
+                format="hex"
+                [formControl]="corControl"
+                (onChange)="aplicarCorEscolhida($event.value)"
+              />
+
+              <div class="flex items-center gap-3 text-xs">
+                <button type="button" class="topbar__cor-acao" (click)="voltarAoPadrao()">
+                  Voltar ao azul
+                </button>
+                <button type="button" class="topbar__cor-acao topbar__cor-acao--sutil" (click)="esquecerTema()">
+                  Esquecer
+                </button>
+              </div>
+            </div>
+          }
         </div>
       }
     </p-popover>

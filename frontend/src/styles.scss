@@ -47,15 +47,21 @@ $raio-borda-padrao: 0.5rem;
   // Realce de linha/opção selecionada (fundo tom primário, texto normal por cima).
   --app-realce-sutil: var(--p-primary-50);
 
-  // Ícones de descrição da demanda, todos na família azul (cliente / técnica /
-  // documentação). Tons mais escuros para contraste sobre superfície clara.
-  --app-icone-cliente: var(--p-blue-600);
-  --app-icone-tecnica: var(--p-indigo-600);
-  --app-icone-doc:     var(--p-cyan-600);
+  // Texto/ícone de realce na cor primária (tom meio-termo), usado com glow para
+  // destacar o item selecionado. Acompanha a troca de cor do tema.
+  --app-realce-primario: var(--p-primary-600);
 
-  // Realce do ícone de anotações do usuário: azul-céu vibrante, distinto da
-  // família de ícones de descrição da demanda.
-  --app-icone-anotacao: var(--p-sky-500);
+  // Ícones de descrição da demanda (cliente / técnica / documentação). Ancorados
+  // na cor primária para acompanhar a troca de tema, com um resíduo da família
+  // original (azul / índigo / ciano) preservando a distinção entre os tipos. Com
+  // o primário azul (padrão) o resultado fica praticamente igual ao original.
+  --app-icone-cliente: var(--p-primary-600);
+  --app-icone-tecnica: color-mix(in srgb, var(--p-primary-600) 65%, var(--p-indigo-600));
+  --app-icone-doc:     color-mix(in srgb, var(--p-primary-600) 65%, var(--p-cyan-600));
+
+  // Realce do ícone de anotações do usuário: vibrante e distinto, também puxando
+  // para a cor primária (resíduo de azul-céu mantém o brilho).
+  --app-icone-anotacao: color-mix(in srgb, var(--p-primary-500) 70%, var(--p-sky-500));
 }
 
 .app-escuro {
@@ -78,18 +84,62 @@ $raio-borda-padrao: 0.5rem;
   --app-avatar-cor:   var(--p-primary-200);
   --app-realce-sutil: color-mix(in srgb, var(--p-primary-400) 16%, transparent);
 
-  // No escuro, tons mais claros leem melhor sobre superfície escura.
-  --app-icone-cliente: var(--p-blue-400);
-  --app-icone-tecnica: var(--p-indigo-400);
-  --app-icone-doc:     var(--p-cyan-400);
+  // No escuro, tom mais claro do primário lê melhor para o texto de realce.
+  --app-realce-primario: var(--p-primary-400);
 
-  // No escuro, tom mais claro do azul-céu lê melhor sobre superfície escura.
-  --app-icone-anotacao: var(--p-sky-400);
+  // No escuro, tons mais claros leem melhor sobre superfície escura. Mesma lógica
+  // do tema claro: primário + resíduo da família original.
+  --app-icone-cliente: var(--p-primary-400);
+  --app-icone-tecnica: color-mix(in srgb, var(--p-primary-400) 65%, var(--p-indigo-400));
+  --app-icone-doc:     color-mix(in srgb, var(--p-primary-400) 65%, var(--p-cyan-400));
+
+  // No escuro, tom mais claro mantém o brilho do azul-céu puxando para o primário.
+  --app-icone-anotacao: color-mix(in srgb, var(--p-primary-400) 70%, var(--p-sky-400));
 }
 
 // Fundo e cor de texto base. `--p-text-color` já troca sozinho no tema escuro.
 body {
   background-color: var(--app-fundo);
   color: var(--p-text-color);
+}
+
+// ---------------------------------------------------------------------------
+// Barra de rolagem global — fina, arredondada e discreta (cinza que acompanha
+// claro/escuro via aliases de superfície). Substitui o scrollbar padrão do
+// navegador em todo o sistema, vertical e horizontal.
+//
+// Firefox: `scrollbar-width`/`scrollbar-color` são herdados, então defini-los no
+// `html` cascateia para todos os contêineres roláveis.
+// WebKit/Chromium: pseudo-elementos sem prefixo de elemento valem globalmente.
+// O thumb usa borda transparente + `background-clip: padding-box` para parecer
+// mais fino e ganhar respiro nas bordas.
+// ---------------------------------------------------------------------------
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--app-surface-300) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--app-surface-300);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+
+  &:hover {
+    background-color: var(--app-surface-400);
+  }
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
 }
 

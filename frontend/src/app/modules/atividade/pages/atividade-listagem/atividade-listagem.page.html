@@ -208,6 +208,7 @@
         <td>
           <div class="atividade-listagem__acoes">
             <p-button
+              styleClass="atividade-listagem__botao-execucao"
               [icon]="atividadeEmExecucao(atividade) ? 'pi pi-pause' : 'pi pi-play'"
               [text]="true"
               size="small"
@@ -218,6 +219,7 @@
               [style.visibility]="mostrarBotaoExecucao(atividade) ? 'visible' : 'hidden'"
             />
             <p-button
+              styleClass="atividade-listagem__botao-visualizar"
               icon="pi pi-eye"
               [text]="true"
               size="small"
@@ -238,9 +240,10 @@
             }
             @if (sessao.eGestor()) {
               <p-button
+                styleClass="atividade-listagem__botao-registrar"
                 icon="pi pi-calendar-plus"
                 [text]="true"
-                severity="help"
+                severity="secondary"
                 size="small"
                 pTooltip="Registrar execução"
                 tooltipPosition="left"
