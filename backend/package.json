@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "start:dev": "node --watch --require ts-node/register src/main.ts",
+    "start:prod": "node --require ts-node/register src/main.ts",
     "build": "nest build",
     "db:migrate": "knex --knexfile src/database/knexfile.ts migrate:latest",
     "db:rollback": "knex --knexfile src/database/knexfile.ts migrate:rollback"

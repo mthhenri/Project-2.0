@@ -7,12 +7,11 @@ import { StandardResponse } from '../../../core/interfaces/standard-response.int
 
 @Injectable()
 export class AssistenteService {
-  private readonly clienteAnthropic: Anthropic;
+  private readonly clienteAnthropic: Anthropic | null;
 
   constructor(private readonly configService: ConfigService) {
-    this.clienteAnthropic = new Anthropic({
-      apiKey: configService.obter().anthropic.apiKey,
-    });
+    const apiKey = configService.obter().anthropic.apiKey;
+    this.clienteAnthropic = apiKey ? new Anthropic({ apiKey }) : null;
   }
 
   /**
@@ -21,6 +20,10 @@ export class AssistenteService {
   async auxiliarDescricao(
     dto: AssistenteDescricaoAuxiliarDto,
   ): Promise<StandardResponse<AssistenteDescricaoAuxiliadaDto>> {
+    if (!this.clienteAnthropic) {
+      throw new BusinessException('Recurso de IA não está configurado neste ambiente');
+    }
+
     const configuracao = this.configService.obter().anthropic;
 
     const tipoEntidadeFormatado = {
@@ -39,7 +42,7 @@ ${dto.textoOriginal}
 Refine, clarifique e complemente esse texto mantendo a voz e intenção original do usuário. Corrija erros gramaticais, melhore a clareza técnica e adicione detalhes relevantes quando faltarem. Responda apenas com o texto refinado, sem explicações adicionais.`;
 
     try {
-      const resposta = await this.clienteAnthropic.messages.create({
+      const resposta = await this.clienteAnthropic!.messages.create({
         model:      configuracao.modelo,
         max_tokens: configuracao.maximoTokens,
         messages:   [{ role: 'user', content: prompt }],

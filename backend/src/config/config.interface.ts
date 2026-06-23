@@ -4,6 +4,7 @@ export interface ConfiguracaoBancoDados {
   nome: string;
   usuario: string;
   senha: string;
+  ssl: boolean;
 }
 
 export interface ConfiguracaoJwt {
@@ -12,7 +13,7 @@ export interface ConfiguracaoJwt {
 }
 
 export interface ConfiguracaoAnthropic {
-  apiKey: string;
+  apiKey: string | undefined;
   modelo: string;
   maximoTokens: number;
 }
@@ -20,6 +21,7 @@ export interface ConfiguracaoAnthropic {
 export interface ConfiguracaoAplicacao {
   porta: number;
   ambiente: string;
+  corsOrigem: string | undefined;
 }
 
 export interface ConfiguracaoNegocio {

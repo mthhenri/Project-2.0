@@ -12,6 +12,14 @@ import { ConfigService } from './config/config.service';
 async function inicializar(): Promise<void> {
   const aplicacao = await NestFactory.create(AppModule);
 
+  const configService = aplicacao.get(ConfigService);
+  const corsOrigem = configService.obter().aplicacao.corsOrigem;
+
+  aplicacao.enableCors({
+    origin:      corsOrigem ?? true,
+    credentials: true,
+  });
+
   aplicacao.useGlobalPipes(
     new ValidationPipe({
       whitelist:            true,
@@ -32,11 +40,10 @@ async function inicializar(): Promise<void> {
   const documento = SwaggerModule.createDocument(aplicacao, documentoConfig);
   SwaggerModule.setup('api/docs', aplicacao, documento);
 
-  const configService = aplicacao.get(ConfigService);
+  const porta = configService.obter().aplicacao.porta;
+  await aplicacao.listen(porta, '0.0.0.0');
 
-  await aplicacao.listen(configService.obter().aplicacao.porta);
-
-  console.log(`Backend rodando na porta ${configService.obter().aplicacao.porta}`);
+  console.log(`Backend rodando na porta ${porta}`);
 }
 
 inicializar();
