@@ -25,8 +25,7 @@ import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.s
 import {
   DIA_NAO_UTIL_TIPO_OPCOES,
   DIA_NAO_UTIL_DURACAO_OPCOES,
-  SeveridadeTag,
-  severidadeTipoDiaNaoUtil,
+  classeTagTipoDiaNaoUtil,
   rotuloTipoDiaNaoUtil,
   rotuloDuracaoDiaNaoUtil,
   formatarDataIso,
@@ -63,6 +62,7 @@ export class CalendarioListagemPage implements OnInit {
 
   readonly tipoOpcoes = DIA_NAO_UTIL_TIPO_OPCOES;
   readonly duracaoOpcoes = DIA_NAO_UTIL_DURACAO_OPCOES;
+  readonly DiaNaoUtilTipoEnum = DiaNaoUtilTipoEnum;
   readonly DiaNaoUtilDuracaoEnum = DiaNaoUtilDuracaoEnum;
 
   readonly diasNaoUteis = signal<DiaNaoUtilResumoDto[]>([]);
@@ -172,8 +172,8 @@ export class CalendarioListagemPage implements OnInit {
     return `${diaTexto}/${mesTexto}/${anoExibido}`;
   }
 
-  severidadeTipo(tipo: DiaNaoUtilTipoEnum): SeveridadeTag {
-    return severidadeTipoDiaNaoUtil(tipo);
+  classeTagTipo(tipo: DiaNaoUtilTipoEnum): string {
+    return classeTagTipoDiaNaoUtil(tipo);
   }
 
   rotuloTipo(tipo: DiaNaoUtilTipoEnum): string {

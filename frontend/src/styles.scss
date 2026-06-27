@@ -62,6 +62,20 @@ $raio-borda-padrao: 0.5rem;
   // Realce do ícone de anotações do usuário: vibrante e distinto, também puxando
   // para a cor primária (resíduo de azul-céu mantém o brilho).
   --app-icone-anotacao: color-mix(in srgb, var(--p-primary-500) 70%, var(--p-sky-500));
+
+  // Marcas de TIPO (badge do calendário + tag da tabela) — ancoradas na cor primária
+  // do tema selecionado (seguem claro/escuro e presets customizados), mas com um
+  // deslocamento de matiz para os "primos" da família azul, dando diferenciação sem
+  // sair da linha do tema: feriado puxa para indigo (azul mais fundo), recesso fica
+  // no azul puro do tema, ponto facultativo puxa para ciano (azul indo ao verde). A
+  // gradação de tom (fundo 200/100/50) reforça a separação. Mesmo padrão dos
+  // --app-icone-* (primário dominante + resíduo do vizinho).
+  --app-marca-feriado-fundo:     color-mix(in srgb, var(--p-primary-200) 50%, var(--p-indigo-300));
+  --app-marca-feriado-cor:       color-mix(in srgb, var(--p-primary-800) 55%, var(--p-indigo-800));
+  --app-marca-recesso-fundo:     var(--p-primary-100);
+  --app-marca-recesso-cor:       var(--p-primary-700);
+  --app-marca-facultativo-fundo: color-mix(in srgb, var(--p-primary-100) 40%, var(--p-cyan-200));
+  --app-marca-facultativo-cor:   color-mix(in srgb, var(--p-primary-700) 45%, var(--p-cyan-700));
 }
 
 .app-escuro {
@@ -95,6 +109,17 @@ $raio-borda-padrao: 0.5rem;
 
   // No escuro, tom mais claro mantém o brilho do azul-céu puxando para o primário.
   --app-icone-anotacao: color-mix(in srgb, var(--p-primary-400) 70%, var(--p-sky-400));
+
+  // No escuro, tinta translúcida do tom 400 (que já inverte) com o mesmo
+  // deslocamento de matiz (indigo no feriado, ciano no facultativo); a opacidade
+  // decrescente (38/26/16%) mantém a gradação feriado→facultativo e o texto usa os
+  // tons claros com o mesmo resíduo do vizinho.
+  --app-marca-feriado-fundo:     color-mix(in srgb, color-mix(in srgb, var(--p-primary-400) 50%, var(--p-indigo-400)) 42%, transparent);
+  --app-marca-feriado-cor:       color-mix(in srgb, var(--p-primary-200) 55%, var(--p-indigo-200));
+  --app-marca-recesso-fundo:     color-mix(in srgb, var(--p-primary-400) 30%, transparent);
+  --app-marca-recesso-cor:       var(--p-primary-200);
+  --app-marca-facultativo-fundo: color-mix(in srgb, color-mix(in srgb, var(--p-primary-400) 45%, var(--p-cyan-400)) 26%, transparent);
+  --app-marca-facultativo-cor:   color-mix(in srgb, var(--p-primary-300) 50%, var(--p-cyan-300));
 }
 
 // Fundo e cor de texto base. `--p-text-color` já troca sozinho no tema escuro.

@@ -1,7 +1,5 @@
 import { DiaNaoUtilTipoEnum, DiaNaoUtilDuracaoEnum } from '@project20/shared';
 
-export type SeveridadeTag = 'secondary' | 'warn' | 'info' | 'success' | 'danger';
-
 export interface DiaNaoUtilTipoOpcao {
   label: string;
   value: DiaNaoUtilTipoEnum;
@@ -39,10 +37,13 @@ export function rotuloDuracaoDiaNaoUtil(duracao: DiaNaoUtilDuracaoEnum): string 
   return ROTULO_POR_DURACAO[duracao];
 }
 
-const SEVERIDADE_POR_TIPO: Record<DiaNaoUtilTipoEnum, SeveridadeTag> = {
-  [DiaNaoUtilTipoEnum.FERIADO]:           'danger',
-  [DiaNaoUtilTipoEnum.RECESSO]:           'warn',
-  [DiaNaoUtilTipoEnum.PONTO_FACULTATIVO]: 'info',
+// Classe de marca (tom da primária) aplicada ao wrapper da tag de tipo na tabela.
+// A diferenciação entre os tipos é por tonalidade do mesmo matiz do tema; os
+// valores de cor ficam nos aliases --app-marca-* de styles.scss.
+const CLASSE_TAG_POR_TIPO: Record<DiaNaoUtilTipoEnum, string> = {
+  [DiaNaoUtilTipoEnum.FERIADO]:           'marca-tag marca-tag--feriado',
+  [DiaNaoUtilTipoEnum.RECESSO]:           'marca-tag marca-tag--recesso',
+  [DiaNaoUtilTipoEnum.PONTO_FACULTATIVO]: 'marca-tag marca-tag--facultativo',
 };
 
 const ROTULO_POR_TIPO: Record<DiaNaoUtilTipoEnum, string> = {
@@ -51,8 +52,8 @@ const ROTULO_POR_TIPO: Record<DiaNaoUtilTipoEnum, string> = {
   [DiaNaoUtilTipoEnum.PONTO_FACULTATIVO]: 'Ponto Facultativo',
 };
 
-export function severidadeTipoDiaNaoUtil(tipo: DiaNaoUtilTipoEnum): SeveridadeTag {
-  return SEVERIDADE_POR_TIPO[tipo];
+export function classeTagTipoDiaNaoUtil(tipo: DiaNaoUtilTipoEnum): string {
+  return CLASSE_TAG_POR_TIPO[tipo];
 }
 
 export function rotuloTipoDiaNaoUtil(tipo: DiaNaoUtilTipoEnum): string {

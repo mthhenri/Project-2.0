@@ -25,6 +25,9 @@
             @if (marcado) {
               <span
                 class="calendario-listagem__dia-marcado"
+                [class.calendario-listagem__dia-marcado--recesso]="marcado.tipo === DiaNaoUtilTipoEnum.RECESSO"
+                [class.calendario-listagem__dia-marcado--facultativo]="marcado.tipo === DiaNaoUtilTipoEnum.PONTO_FACULTATIVO"
+                [class.calendario-listagem__dia-marcado--meio-periodo]="marcado.duracao === DiaNaoUtilDuracaoEnum.MEIO_PERIODO"
                 [pTooltip]="marcado.descricao + ' — ' + rotuloTipo(marcado.tipo)
                   + (marcado.duracao === DiaNaoUtilDuracaoEnum.MEIO_PERIODO ? ' (meio período)' : '')"
               >
@@ -68,14 +71,12 @@
               <td>{{ dataExibicao(dia) }}</td>
               <td>{{ dia.descricao }}</td>
               <td>
-                <p-tag [value]="rotuloTipo(dia.tipo)" [severity]="severidadeTipo(dia.tipo)" />
+                <span [class]="classeTagTipo(dia.tipo)">
+                  <p-tag [value]="rotuloTipo(dia.tipo)" />
+                </span>
               </td>
               <td>
-                @if (dia.duracao === DiaNaoUtilDuracaoEnum.MEIO_PERIODO) {
-                  <p-tag value="½ dia" severity="warn" />
-                } @else {
-                  <span class="text-muted-color">Integral</span>
-                }
+                <span class="text-muted-color">{{ rotuloDuracao(dia.duracao) }}</span>
               </td>
               <td class="calendario-listagem__col-centro">
                 @if (dia.recorrente) {

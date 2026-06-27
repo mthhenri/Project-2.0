@@ -102,6 +102,10 @@
     height: 100%;
   }
 
+  // Badge do dia no calendário — tom da primária por tipo (feriado é o caso base;
+  // recesso e ponto facultativo sobrescrevem). Aliases de tema em styles.scss.
+  // Duração: integral = bolinha preenchida; meio período = só o contorno (anel),
+  // fundo transparente — o modificador --meio-periodo é ortogonal ao tipo.
   &__dia-marcado {
     display: inline-flex;
     align-items: center;
@@ -109,9 +113,43 @@
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background: var(--p-red-100);
-    color: var(--p-red-700);
+    background: var(--app-marca-feriado-fundo);
+    color: var(--app-marca-feriado-cor);
     font-weight: 600;
+
+    &--recesso {
+      background: var(--app-marca-recesso-fundo);
+      color: var(--app-marca-recesso-cor);
+    }
+
+    &--facultativo {
+      background: var(--app-marca-facultativo-fundo);
+      color: var(--app-marca-facultativo-cor);
+    }
+
+    // Meio período: troca o preenchido por um anel (box-shadow inset não altera o
+    // tamanho da bolinha). O número usa o tom forte (-cor) do tipo; o anel usa o
+    // mesmo tom com opacidade reduzida (~70%) para ficar mais leve. Vem depois das
+    // regras de tipo para o `background: transparent` vencer por ordem.
+    &--meio-periodo {
+      background: transparent;
+      color: var(--app-marca-feriado-cor);
+      box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--app-marca-feriado-cor) 70%, transparent);
+    }
+
+    &--recesso#{&}--meio-periodo {
+      color: var(--app-marca-recesso-cor);
+      box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--app-marca-recesso-cor) 70%, transparent);
+    }
+
+    &--facultativo#{&}--meio-periodo {
+      color: var(--app-marca-facultativo-cor);
+      box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--app-marca-facultativo-cor) 70%, transparent);
+    }
+  }
+
+  .marca-tag {
+    display: inline-flex;
   }
 
   &__checkbox-linha {
@@ -126,4 +164,25 @@
   &__label        { @include form-label; }
   &__obrigatorio  { @include form-obrigatorio; }
   &__erro         { @include form-erro; }
+}
+
+// Tag de TIPO da tabela alinhada ao tom da primária do tema (mesma cor do badge do
+// calendário), em vez das severidades fixas do PrimeNG. O ::ng-deep precisa ficar no
+// nível raiz do arquivo (fora de .calendario-listagem) — aninhá-lo geraria
+// `.calendario-listagem :host`, que nunca casa. O wrapper .marca-tag é deste template;
+// o ::ng-deep alcança o .p-tag do PrimeNG (que reescreve o próprio class via host
+// binding, por isso a cor vem de um wrapper que controlamos).
+:host ::ng-deep {
+  .marca-tag--feriado .p-tag {
+    background: var(--app-marca-feriado-fundo);
+    color: var(--app-marca-feriado-cor);
+  }
+  .marca-tag--recesso .p-tag {
+    background: var(--app-marca-recesso-fundo);
+    color: var(--app-marca-recesso-cor);
+  }
+  .marca-tag--facultativo .p-tag {
+    background: var(--app-marca-facultativo-fundo);
+    color: var(--app-marca-facultativo-cor);
+  }
 }
