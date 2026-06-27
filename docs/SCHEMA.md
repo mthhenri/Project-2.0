@@ -4,6 +4,14 @@
 > Este arquivo reflete o estado atual das tabelas e deve ser atualizado sempre que uma migration alterar a estrutura.
 > Migrations ficam em `backend/src/database/migrations/`.
 
+> **Histórico de migrations além das 12 de criação (`20240001`–`20240012`):**
+> - `20240013_alterar_status_demanda` — status de demanda para `PENDENTE, PLANEJADA, CONCLUIDA`.
+> - `20240014_adicionar_duracao_dia_nao_util` — coluna `dia_nao_util.duracao` (`INTEGRAL` / `MEIO_PERIODO`).
+> - `20240015_seed_usuario_gestor_inicial` — seed idempotente do gestor inicial.
+> - `20240016_renomear_funcao_updated_date` — renomeia `fn_atualizar_updated_date` → `fn_set_updated_date` (mecanismo genérico de BaseEntity em inglês; estado final já refletido abaixo).
+> - `20240017`/`20240018_seed_tags_padrao(_complemento)` — seed de tags padrão.
+> - `20240019_remover_ordem_exibicao` — remove `ordem_exibicao` de `demanda` e `atividade`.
+
 ---
 
 ## Convenções deste Schema
@@ -222,7 +230,7 @@ CREATE TABLE demanda (
   prioridade        VARCHAR(20)  NOT NULL
                       CHECK (prioridade IN ('BAIXA', 'MEDIA', 'ALTA', 'CRITICA')),
   status            VARCHAR(30)  NOT NULL
-                      CHECK (status IN ('PLANEJADA', 'EM_DESENVOLVIMENTO', 'CONCLUIDA')),
+                      CHECK (status IN ('PENDENTE', 'PLANEJADA', 'CONCLUIDA')),
   is_estrutural     BOOLEAN      NOT NULL,
   previsao_fim_data DATE
 );
@@ -483,6 +491,13 @@ Finais de semana são tratados automaticamente pela aplicação — não precisa
 `recorrente = true`: o dia se repete todo ano na mesma data (dia + mês).
 A aplicação verifica mês e dia independentemente do ano ao calcular o ponto.
 
+`duracao` (`INTEGRAL` / `MEIO_PERIODO`, migration `20240014`) é independente do `tipo`:
+`MEIO_PERIODO` reduz a meta diária à metade no módulo `ponto` (sem distinção de turno).
+
+> **Nome da constraint:** o nome atual é `ck_dia_nao_util_duracao` (definido na migration
+> `20240014`). A task 70 padroniza o prefixo para `chk_dia_nao_util_duracao`; até a 70 rodar,
+> o nome vigente é `ck_dia_nao_util_duracao`.
+
 ```sql
 CREATE TABLE dia_nao_util (
   id            SERIAL    PRIMARY KEY,
@@ -495,6 +510,9 @@ CREATE TABLE dia_nao_util (
   descricao   VARCHAR(255) NOT NULL,
   tipo        VARCHAR(30)  NOT NULL
                 CHECK (tipo IN ('FERIADO', 'RECESSO', 'PONTO_FACULTATIVO')),
+  duracao     VARCHAR(20)  NOT NULL
+                CONSTRAINT ck_dia_nao_util_duracao
+                CHECK (duracao IN ('INTEGRAL', 'MEIO_PERIODO')),
   recorrente  BOOLEAN      NOT NULL
 );
 

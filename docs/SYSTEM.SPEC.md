@@ -100,7 +100,7 @@ project-2.0/
 | Campos de BaseEntity em TypeScript: `id`, `isDeleted`, `createdDate`, `updatedDate`, `deletedDate` | DTOs de negócio: `UsuarioCriarDto`, `DemandaAlterarDto`, `ExecucaoIniciarDto` |
 | Colunas BaseEntity em SQL: `id`, `is_deleted`, `created_date`, `updated_date`, `deleted_date` | Tabelas e colunas de negócio em SQL: `usuario`, `nome_completo`, `horas_estimadas`, `is_estrutural` |
 | Padrões técnicos: `global-exception.filter.ts`, `auth-token.interceptor.ts`, `base.repository.ts` | Propriedades de modelo: `nomeCompleto`, `descricaoTecnica`, `horasDiariasNecessarias` |
-| Exceptions genéricas: `BusinessException`, `ResourceNotFoundException` | Valores de enum: `DESENVOLVEDOR`, `GESTOR`, `PLANEJADA`, `EM_DESENVOLVIMENTO` |
+| Exceptions genéricas: `BusinessException`, `ResourceNotFoundException` | Valores de enum: `DESENVOLVEDOR`, `GESTOR`, `PLANEJADA`, `DESENVOLVENDO` |
 | Decorators: `@Public()`, `@GestorOnly()`, `@ActiveUser()` | Nomes de módulo de negócio (pasta): `usuario/`, `demanda/`, `execucao/` |
 
 ### Exemplos Concretos
@@ -274,9 +274,9 @@ export enum TipoUsuarioEnum {
 
 // tipo-demanda-status.enum.ts     ← tabela tipo_demanda_status
 export enum TipoDemandaStatusEnum {
-  PLANEJADA         = 'PLANEJADA',
-  EM_DESENVOLVIMENTO = 'EM_DESENVOLVIMENTO',
-  CONCLUIDA         = 'CONCLUIDA',
+  PENDENTE  = 'PENDENTE',
+  PLANEJADA = 'PLANEJADA',
+  CONCLUIDA = 'CONCLUIDA',
 }
 
 // tipo-atividade-status.enum.ts   ← tabela tipo_atividade_status
@@ -365,6 +365,7 @@ shared/src/
     atividade-status.enum.ts
     projeto-status.enum.ts
     dia-nao-util-tipo.enum.ts
+    dia-nao-util-duracao.enum.ts
   interfaces/
     standard-response.interface.ts
     paginated-result.interface.ts
@@ -409,7 +410,7 @@ import { StandardResponse }        from '@project20/shared/interfaces';
 
 ## 7. Arquitetura do Backend
 
-### 8.1 Estrutura de Pastas
+### 7.1 Estrutura de Pastas
 
 > DTOs e enums de negócio vivem em `shared/` e são importados via `@project20/shared`. O backend mantém apenas o que é exclusivo de sua camada.
 
@@ -845,7 +846,7 @@ Estilos globais ficam em `src/styles.scss`. Estilos de componente ficam no arqui
 ### 8.5 Tema e Paleta de Cores
 
 **Tema base:** PrimeNG Aura, sobrescrito com preset `TemaAzul` via `definePreset` em `app.config.ts`.
-**Dark mode:** permanentemente desabilitado (`darkModeSelector: false`) — o sistema é sempre claro.
+**Tema claro/escuro:** habilitado (`darkModeSelector: '.app-escuro'` em `app.config.ts`). O tema escuro ativa pela classe `app-escuro` no `<html>`, controlada pelo `TemaService` (`core/services/tema.service.ts` + `core/models/tema.model.ts`, Signals) e persistida em `localStorage`; o toggle fica no popover de perfil da topbar (`shared/layout/topbar/topbar.component.html`, `(click)="tema.alternarTema()"`). Um `<script>` inline no `index.html` aplica a classe antes do bootstrap para evitar flash. O tema padrão é claro.
 
 **Paleta primária — azul:**
 O Aura usa índigo por padrão. O projeto sobrescreve para azul puro via `{blue.*}`:
@@ -863,19 +864,21 @@ const TemaAzul = definePreset(Aura, {
 });
 ```
 
-**Regra de uso de cores — surface como base, primary como acento:**
+**Regra de uso de cores — aliases semânticos que funcionam nos dois temas:**
 
-| Token | Uso |
+No Aura/PrimeNG 21 a escala bruta `--p-surface-0..950` é **fixa** nos dois temas (não inverte) — só os semânticos invertem. Por isso, em SCSS **nunca** se usa `var(--p-surface-N)` direto: usa-se os aliases `var(--app-surface-N)` definidos em `frontend/src/styles.scss` (claro = igual ao PrimeNG; escuro = invertido num único lugar). Em templates (Tailwind), usa-se os utilitários semânticos que invertem (`text-color`, `text-muted-color`, `bg-emphasis`, `border-surface`) ou o par explícito `bg-surface-0 dark:bg-surface-900`.
+
+| Token (alias) | Uso |
 |---|---|
-| `bg-surface-0` | Fundo de painéis e topbar (branco) |
-| `bg-surface-50` | Fundo de página / área de conteúdo (cinza claríssimo) |
-| `border-surface-200` | Bordas e divisores |
-| `text-surface-700` | Texto de interface (labels, itens de nav) |
-| `text-surface-600` | Texto secundário (horário, subtítulos) |
-| `var(--p-primary-50)` | Fundo de item ativo na navegação |
-| `var(--p-primary-600)` | Cor do ícone/texto de item ativo, títulos em destaque |
+| `var(--app-surface-0)` | Fundo de painéis e topbar (cartão/painel) |
+| `var(--app-surface-50)` | Fundo de página / área de conteúdo |
+| `var(--app-surface-200)` | Bordas e divisores |
+| `var(--app-surface-700)` | Texto de interface (labels, itens de nav) |
+| `var(--app-surface-600)` | Texto secundário (horário, subtítulos) |
+| `var(--app-realce-sutil)` | Fundo de realce sutil (item ativo, hover de linha) |
+| `var(--app-realce-primario)` | Ícone/texto de item ativo, títulos em destaque |
 
-A cor `primary` aparece **apenas em pontos de destaque**: estado ativo na navegação, botões de ação principal, títulos que representam a identidade do produto. Fundos estruturais usam sempre tokens `surface`.
+A cor `primary` aparece **apenas em pontos de destaque**: estado ativo na navegação, botões de ação principal, títulos que representam a identidade do produto. Fundos estruturais usam sempre os aliases `--app-surface-*`. Aliases adicionais: `--app-avatar-fundo`/`--app-avatar-cor` (avatares) e `--app-fundo` (fundo de página). **Exceção:** a página do grafo (`demanda-projeto`/`demanda-grafo`) é canvas escuro proposital com hex fixos.
 
 ---
 
@@ -925,7 +928,7 @@ export abstract class BaseEntity {
 
 Query params sempre nomeados assim: `pagina`, `itensPorPagina`, `ordenarPor`, `direcao`
 
-### 10.4 Configuração de Ambiente (.env)
+### 9.4 Configuração de Ambiente (.env)
 
 ```env
 # Banco de dados
@@ -1035,8 +1038,8 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 | `projeto` | CRUD de projetos — apenas gestor cria |
 | `demanda` | CRUD, hierarquia, grafo force-directed (D3), tags, atribuições |
 | `atividade` | CRUD de atividades vinculadas a demandas, tags, controle de status |
-| `execucao` | Iniciar e encerrar execuções, histórico por atividade |
-| `ponto` | Resumo diário: horas trabalhadas, intervalos calculados, comparativo com meta |
+| `execucao` | Iniciar e encerrar execuções, histórico por atividade. O **gestor** também pode **registrar manualmente** uma execução já encerrada (`@GestorOnly POST /execucao/registro`), informando início e fim para o dono da atividade (valida datas e sobreposição). A **edição** de execução (`PUT /execucao/:id`) altera `descricao`, `inicio_data` e `fim_data` |
+| `ponto` | Resumo de ponto em três modos: **diário** (`GET /ponto/diario`), **mensal** (`GET /ponto/mensal`) e **todos hoje** (`GET /ponto/todos`, `@GestorOnly`). Calcula horas trabalhadas, intervalos e comparativo com meta; a meta é ponderada por **fração de dia** (1 dia útil, 0.5 meio período, 0 não útil/fim de semana) |
 | `calendario` | Gestão de dias não úteis (feriados, recessos) |
 | `tag` | CRUD de tags — apenas gestor cria e atribui |
 | `assistente` | Auxílio de IA para refinamento de descrições já escritas pelo usuário |
@@ -1065,7 +1068,7 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 | Coluna SQL | Tipo | Notas |
 |---|---|---|
 | `nome` | VARCHAR | |
-| `codigo` | VARCHAR | referência curta, ex: "PROJ-001" |
+| `codigo` | VARCHAR | referência curta, **auto-derivada do nome** no formulário (ex: "Sistema de Gestão" → "SISTEMA-DE-GESTAO"), permanecendo editável; o backend valida unicidade |
 | `cor` | VARCHAR | hex, para identificação visual |
 | `status` | ENUM | ATIVO, PAUSADO, CONCLUIDO, CANCELADO |
 | `inicio_data` | DATE \| NULL | |
@@ -1085,7 +1088,7 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 | `documentacao` | TEXT \| NULL | markdown |
 | `horas_estimadas` | INTEGER | |
 | `prioridade` | ENUM | BAIXA, MEDIA, ALTA, CRITICA |
-| `status` | ENUM | PLANEJADA, EM_DESENVOLVIMENTO, CONCLUIDA |
+| `status` | ENUM | PENDENTE, PLANEJADA, CONCLUIDA |
 | `is_estrutural` | BOOLEAN | demanda-container que agrupa sub-demandas |
 | `previsao_fim_data` | DATE \| NULL | |
 
@@ -1145,8 +1148,10 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 |---|---|---|
 | `atividade_id` | INTEGER FK | → atividade |
 | `descricao` | TEXT | obrigatória |
-| `inicio_data` | TIMESTAMP | |
-| `fim_data` | TIMESTAMP \| NULL | NULL = execução em andamento |
+| `inicio_data` | TIMESTAMP | editável na edição da execução |
+| `fim_data` | TIMESTAMP \| NULL | NULL = execução em andamento; editável na edição |
+
+> A edição de execução (`PUT /execucao/:id`) altera `descricao`, `inicio_data` e `fim_data` — não apenas a descrição.
 
 ### DiaNaoUtil
 
@@ -1155,6 +1160,7 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 | `dia_data` | DATE | |
 | `descricao` | VARCHAR | ex: "Natal", "Recesso de fim de ano" |
 | `tipo` | ENUM | FERIADO, RECESSO, PONTO_FACULTATIVO |
+| `duracao` | ENUM | INTEGRAL, MEIO_PERIODO — meio período reduz a meta diária à metade |
 | `recorrente` | BOOLEAN | se true, repete no mesmo dia todo ano |
 
 ---
@@ -1167,9 +1173,12 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 |---|---|---|
 | Criar projeto | ✅ | ❌ |
 | Ver todos os projetos | ✅ | ❌ ver apenas projetos com ao menos uma demanda atribuída |
-| Criar demanda | ✅ | ✅ em projetos com acesso |
-| Atribuir usuário a demanda manualmente | ✅ | ❌ |
-| Criar e atribuir tag | ✅ | ❌ |
+| Criar demanda raiz | ✅ | ❌ — só pode criar **sub-demanda** (`demandaPaiId` obrigatório) |
+| Ver demanda | ✅ todas | ❌ ver qualquer demanda de **projeto acessível** (não só as que é membro) |
+| Editar demanda | ✅ todas | ❌ editar apenas demandas das quais **é membro** (`podeEditar`) |
+| Editar `descricaoCliente` da demanda | ✅ | ❌ — exclusiva do gestor (demais descrições liberadas ao membro) |
+| Atribuir usuário a demanda manualmente | ✅ | ❌ — exceto **incluir/remover a si mesmo** como membro |
+| Criar e atribuir tag | ✅ | ❌ atribuir tag apenas em demandas das quais é membro |
 | Ver execuções de todos | ✅ | ❌ ver apenas próprias |
 | Editar execuções de outros | ✅ | ❌ |
 | Cadastrar dia não útil | ✅ | ❌ |
@@ -1179,8 +1188,12 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 ### Demandas
 
 - Ao criar uma demanda, o sistema **auto-atribui automaticamente** o criador (desenvolvedor ou gestor) e **todos os gestores ativos** via `demanda_usuario`
+- O desenvolvedor só cria **sub-demanda** (informando `demandaPaiId`); a criação de demanda raiz é exclusiva do gestor
+- Desenvolvedor **vê** qualquer demanda de um projeto a que tem acesso, mas só **edita** as que é membro (a `descricaoCliente` é sempre exclusiva do gestor)
 - Gestor pode atribuir e remover usuários manualmente após a criação
-- Desenvolvedor não pode gerenciar atribuições — apenas visualiza os membros da demanda
+- Desenvolvedor não gerencia atribuições de terceiros, mas **pode incluir e remover a si mesmo** como membro de uma demanda em projeto acessível — esta é a exceção à regra "Atribuir usuário manualmente — Dev ❌"
+- O **último membro** de uma demanda não pode ser removido
+- **Overlap futuro:** a task `backlog/71-demanda-gestor-acesso-total-sem-atribuicao` pode alterar esta matriz (gestor com acesso total sem atribuição); o texto acima descreve o **estado atual**.
 
 - Um usuário **não pode ter duas execuções ativas** (sem `fim_data`) simultaneamente
 - O campo `fim_data` é obrigatório para fechar uma execução
@@ -1197,6 +1210,7 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 - Finais de semana não precisam ser cadastrados — são ignorados automaticamente pelo módulo de ponto
 - Feriados com `recorrente = true` são considerados em qualquer ano
 - O módulo de ponto cruza as execuções com `dia_nao_util` para calcular métricas corretas
+- Cada `dia_nao_util` tem `duracao` (`INTEGRAL` / `MEIO_PERIODO`): **integral** zera a meta do dia (fração 0); **meio período** reduz a meta à metade (fração 0.5 — o excedente vira hora extra e o saldo do dia nunca fica positivo). A `duracao` é independente do `tipo` e não distingue turno
 
 ### Grafo de Demandas
 

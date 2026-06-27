@@ -10,6 +10,8 @@
 **Escopo varrido:** `shared/`, `backend/src/`, `frontend/src/`, migrations e `docs/`
 **Base normativa:** as 25 Proibições Absolutas do `SYSTEM.SPEC.md` §16 + tabela de proibições do `CONVENTIONS.md`
 
+> **Errata (task 69):** este relatório é de **2026-06-19** e **antecede** as specs 45/46 e as migrations `20240015`/`20240016`. Os achados **C1** (herança de DTO de negócio) e **C2** (`ngModel` no seletor de cor) foram identificados depois e endereçados pelas tasks **63** (C1) e **62** (C2).
+
 ---
 
 ## 1. Metodologia
