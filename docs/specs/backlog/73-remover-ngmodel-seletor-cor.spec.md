@@ -1,4 +1,4 @@
-# Task 62 — frontend: Remover ngModel do seletor-cor
+# Task 73 — frontend: Remover ngModel do seletor-cor
 
 ## Objetivo
 
@@ -64,7 +64,7 @@ ligado por `[formControl]` (ReactiveFormsModule).
    forms / sem `ngModel`"; ao embrulhar um controle de terceiros, usar `ControlValueAccessor`
    + `FormControl` interno (`[formControl]`), nunca `ngModel`.
 2. `docs/AUDITORIA.md` — errata pontual: o achado "0 ngModel" foi posterior ao componente
-   `seletor-cor`; corrigido por esta task (cruzar com a errata da task 59/D4).
+   `seletor-cor`; corrigido por esta task (cruzar com a errata da task 69/D4).
 
 ---
 

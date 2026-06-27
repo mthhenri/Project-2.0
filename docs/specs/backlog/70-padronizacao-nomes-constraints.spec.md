@@ -1,4 +1,4 @@
-# Task 60 — core/db: Padronização de Nomes de Constraints
+# Task 70 — core/db: Padronização de Nomes de Constraints
 
 ## Objetivo
 
@@ -43,7 +43,7 @@ Padrão `<prefixo>_<tabela>_<proposito>`:
 
 ### 2. Migration de renomeação
 
-**Arquivo novo:** `backend/src/database/migrations/20240017_padronizar_nomes_constraints.ts`
+**Arquivo novo:** `backend/src/database/migrations/20240020_padronizar_nomes_constraints.ts`
 
 **`up`:**
 ```sql
@@ -62,7 +62,7 @@ ALTER TABLE dia_nao_util RENAME CONSTRAINT ck_dia_nao_util_duracao TO chk_dia_na
 ## Atualização de Documentação (obrigatória)
 
 1. `SCHEMA.md` — bloco de convenção de nomes + atualizar o nome da constraint de `dia_nao_util`
-   para `chk_dia_nao_util_duracao` (sincroniza com a task 59/A2, se já tiver rodado).
+   para `chk_dia_nao_util_duracao` (sincroniza com a task 69/A2, se já tiver rodado).
 2. `CONVENTIONS.md` — tabela de prefixos na seção SQL.
 3. `CONTEXT.md` — registrar a migration `20240017` na tabela "Banco de Dados" e a decisão de padrão de nomes.
 

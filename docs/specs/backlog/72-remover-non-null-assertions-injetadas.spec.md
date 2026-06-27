@@ -1,4 +1,4 @@
-# Task 61 — backend: Remover non-null assertions injetadas + JSDoc
+# Task 72 — backend: Remover non-null assertions injetadas + JSDoc
 
 ## Objetivo
 

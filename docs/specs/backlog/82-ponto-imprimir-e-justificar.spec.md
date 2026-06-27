@@ -1,4 +1,4 @@
-# 64 — Ponto: Imprimir e Justificar (com usuário filtrado)
+# 82 — Ponto: Imprimir e Justificar (com usuário filtrado)
 
 **Depende de:** 17 (backend ponto), 29 (frontend ponto), 38 (dia não útil / fração de meta), 16/30 (calendário), 06 (usuário)
 **Entrega:** na tela de **Ponto**, quando o gestor **filtra um usuário** (visão mensal), surgem duas ações:
@@ -70,7 +70,10 @@ Entidade **`PontoJustificativa`** → prefixo de DTO `PontoJustificativa` (§5.1
 
 ## Banco de Dados
 
-### Nova migration — criar `ponto_justificativa`
+### Nova migration — `20240026_criar_ponto_justificativa.ts` (criar `ponto_justificativa`)
+
+> **Número (`20240026`):** última migration do backlog reorganizado — roda depois de todas as
+> demais (`20240020`–`20240025`). Confirmar o maior número aplicado antes de nomear.
 
 Tabela de negócio (português), com BaseEntity em inglês, **sem DEFAULT** em nenhuma coluna, sem `VALUES` (não se aplica — é DDL):
 

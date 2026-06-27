@@ -1,4 +1,4 @@
-# Task 65 — Seed dos feriados nacionais de data fixa (recorrentes)
+# Task 74 — Seed dos feriados nacionais de data fixa (recorrentes)
 
 ## Objetivo
 
@@ -37,7 +37,7 @@ mês/dia e portanto não entram neste seed.
 
 ## Escopo
 
-### Migration NOVA — `20240020_seed_feriados_nacionais.ts`
+### Migration NOVA — `20240021_seed_feriados_nacionais.ts`
 
 Seguir **exatamente** o padrão de `20240017_seed_tags_padrao.ts`:
 

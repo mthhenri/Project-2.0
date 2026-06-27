@@ -1,4 +1,4 @@
-# Task 63 — shared: Herança de DTO core e listagem de execução
+# Task 78 — shared: Herança de DTO core e listagem de execução
 
 ## Objetivo
 
@@ -147,5 +147,5 @@ Substituir por declaração explícita dos mesmos campos do "pai" (copiando os d
 
 - Converter `StandardResponse` em classe (permanece interface — ninguém a herda).
 - Criar wrappers nomeados para listagens que já usam `PaginatedResult<XResumoDto>` via genérico (não duplicam campos — sem mudança).
-- Reconciliação documental de schema/comportamento (task 59), constraints (task 60), `!`/JSDoc (task 61), `ngModel` (task 62).
+- Reconciliação documental de schema/comportamento (task 69), constraints (task 70), `!`/JSDoc (task 72), `ngModel` (task 73).
 - Mudar SQL, validações ou regras — apenas a forma/herança dos DTOs e seus importadores.

@@ -1,4 +1,4 @@
-# 58 — Migração das colunas de data para `timestamptz` (correção definitiva de fuso)
+# 75 — Migração das colunas de data para `timestamptz` (correção definitiva de fuso)
 
 **Depende de:** 03 (migrations), 04 (core-module), 05 (config-service), 15 (execucao-module), 16 (calendario-module), 17 (ponto-module)
 **Entrega:** correção de raiz do problema de fuso horário: as colunas de data/hora passam a ser `timestamp with time zone` (`timestamptz`) e armazenam **instantes reais** (UTC no banco), com a sessão do banco fixada no fuso da aplicação para que `NOW()` e o bucketing por dia fiquem corretos. Remove o workaround pontual introduzido na correção anterior (`CAST(:agora AS timestamp)`).
@@ -69,7 +69,7 @@ return Knex({
 - `fusoHorario` vem do `ConfigService`. **Não** interpolar valor de runtime do usuário aqui (é config de servidor, não entrada de request) — aceitável interpolar a config do servidor neste ponto de bootstrap.
 - Fazer o mesmo no **`knexfile.ts`** (usado pela CLI de migração), lendo `process.env.APP_TIMEZONE` (o comentário do arquivo já documenta que `process.env` é intencional ali). Garante que as próprias migrations e o bucketing rodem no fuso certo.
 
-### Migration `20240020_converter_datas_para_timestamptz.ts`
+### Migration `20240022_converter_datas_para_timestamptz.ts`
 
 Converter **apenas** as colunas de data/hora (não as `date` puras), preservando o instante real de cada uma conforme sua semântica de gravação:
 
@@ -138,7 +138,7 @@ Com a sessão em `America/Sao_Paulo`, `DATE(inicio_data)`, `::date` e `GROUP BY 
 backend/src/config/** (ConfigService + tipo de config)            (expor fusoHorario)
 backend/src/core/database/database.provider.ts                    (pool.afterCreate → SET TIME ZONE)
 backend/src/database/knexfile.ts                                  (connection + SET TIME ZONE p/ CLI)
-backend/src/database/migrations/20240020_converter_datas_para_timestamptz.ts  (nova)
+backend/src/database/migrations/20240022_converter_datas_para_timestamptz.ts  (nova)
 backend/src/modules/execucao/repositories/execucao.repository.ts  (reverter :agora → NOW())
 
 docs/SYSTEM.SPEC.md  (tipos TIMESTAMP → TIMESTAMPTZ + nota de fuso)

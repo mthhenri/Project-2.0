@@ -1,4 +1,4 @@
-# 67 — Projeto: relatório de execuções por período (CSV/Excel) + base para revisão com IA
+# 80 — Projeto: relatório de execuções por período (CSV/Excel) + base para revisão com IA
 
 **Depende de:** 09 (projeto-module), 15 (execucao-module), 17 (ponto-module — padrão de service sem repositório próprio), 18 (assistente-module — padrão de chamada à Anthropic), 25/26 (frontend projeto/demanda), 41 (execucao: colunas projeto/demanda + total)
 

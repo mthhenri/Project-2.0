@@ -1,4 +1,4 @@
-# Task 66 — Enums como Tabelas de Referência
+# Task 79 — Enums como Tabelas de Referência
 
 ## Objetivo
 
@@ -31,7 +31,7 @@ o rename, **a regra de negócio de DTOs, services, models e frontend não muda**
 
 ## Contexto
 
-Hoje cada enum é uma coluna `VARCHAR(n) NOT NULL CHECK (col IN (...))`. São **8** colunas em
+Hoje cada enum é uma coluna `VARCHAR(n) NOT NULL CHECK (col IN (...))`. São **7** colunas em
 **5** tabelas:
 
 | Tabela | Coluna atual | Enum TS | Valores |
@@ -40,13 +40,17 @@ Hoje cada enum é uma coluna `VARCHAR(n) NOT NULL CHECK (col IN (...))`. São **
 | `usuario` | `status` | `UsuarioStatusEnum` → `TipoUsuarioStatusEnum` | ATIVO, INATIVO |
 | `projeto` | `status` | `ProjetoStatusEnum` → `TipoProjetoStatusEnum` | ATIVO, PAUSADO, CONCLUIDO, CANCELADO |
 | `demanda` | `status` | `DemandaStatusEnum` → `TipoDemandaStatusEnum` | PLANEJADA, EM_DESENVOLVIMENTO, CONCLUIDA |
-| `demanda` | `prioridade` | `DemandaPrioridadeEnum` → `TipoDemandaPrioridadeEnum` | BAIXA, MEDIA, ALTA, CRITICA |
 | `atividade` | `status` | `AtividadeStatusEnum` → `TipoAtividadeStatusEnum` | PLANEJADA, PENDENTE, DESENVOLVENDO, DESENVOLVIDA |
 | `dia_nao_util` | `tipo` | `DiaNaoUtilTipoEnum` → `TipoDiaNaoUtilEnum` | FERIADO, RECESSO, PONTO_FACULTATIVO |
 | `dia_nao_util` | `duracao` | `DiaNaoUtilDuracaoEnum` → `TipoDiaNaoUtilDuracaoEnum` | INTEGRAL, MEIO_PERIODO |
 
 > A coluna "Enum TS" mostra `nome atual → nome novo`: o enum passa a se chamar como a **tabela
 > de referência** (PascalCase) + `Enum` (ver Escopo §0).
+
+> **`demanda.prioridade` foi removido do escopo:** o campo `prioridade` da demanda é eliminado
+> por completo pela **task 76** (`76-remover-prioridade-demanda`). Esta task não cria
+> `tipo_demanda_prioridade`. Execute a 69 **antes** desta; se por algum motivo a 66 rodar
+> primeiro, reintroduza a linha `demanda.prioridade → tipo_demanda_prioridade` aqui.
 
 > **Tabela esquecida no pedido original:** além de `projeto`, `demanda`, `atividade` e
 > `usuario`, o módulo **calendario** (`dia_nao_util`) tem **dois** enums — `tipo` e `duracao`.
@@ -67,22 +71,21 @@ começando por `Tipo`. Renomear, em `shared/src/enums/`, **arquivo + símbolo**:
 | `usuario-status.enum.ts` → `tipo-usuario-status.enum.ts` | `UsuarioStatusEnum` → `TipoUsuarioStatusEnum` |
 | `projeto-status.enum.ts` → `tipo-projeto-status.enum.ts` | `ProjetoStatusEnum` → `TipoProjetoStatusEnum` |
 | `demanda-status.enum.ts` → `tipo-demanda-status.enum.ts` | `DemandaStatusEnum` → `TipoDemandaStatusEnum` |
-| `demanda-prioridade.enum.ts` → `tipo-demanda-prioridade.enum.ts` | `DemandaPrioridadeEnum` → `TipoDemandaPrioridadeEnum` |
 | `atividade-status.enum.ts` → `tipo-atividade-status.enum.ts` | `AtividadeStatusEnum` → `TipoAtividadeStatusEnum` |
 | `dia-nao-util-tipo.enum.ts` → `tipo-dia-nao-util.enum.ts` | `DiaNaoUtilTipoEnum` → `TipoDiaNaoUtilEnum` |
 | `dia-nao-util-duracao.enum.ts` → `tipo-dia-nao-util-duracao.enum.ts` | `DiaNaoUtilDuracaoEnum` → `TipoDiaNaoUtilDuracaoEnum` |
 
-- Atualizar o barrel `shared/src/enums/index.ts` (8 `export *` apontando para os arquivos novos).
+- Atualizar o barrel `shared/src/enums/index.ts` (7 `export *` apontando para os arquivos novos).
 - Atualizar **todos os import sites** do `backend/` e `frontend/` (DTOs, services, models,
   componentes, pipes) para o novo símbolo. É um rename mecânico — **valores e semântica não mudam**.
 - **Valores dos enums inalterados** (continuam `DESENVOLVEDOR`, `ATIVO`, etc.) — eles viram os
   `codigo` das tabelas de referência.
 
-> Sugestão de execução: rename por símbolo (find/replace global, símbolo a símbolo para não
-> colidir — ex. `DemandaStatusEnum` antes de `DemandaPrioridadeEnum`), depois mover os arquivos e
-> ajustar o barrel; `npm run build` em backend e frontend valida que nenhum import ficou órfão.
+> Sugestão de execução: rename por símbolo (find/replace global, símbolo a símbolo), depois mover
+> os arquivos e ajustar o barrel; `npm run build` em backend e frontend valida que nenhum import
+> ficou órfão.
 
-### 1. Tabelas de referência (8 novas)
+### 1. Tabelas de referência (7 novas)
 
 Cada uma segue a **BaseEntity** (`id`, `created_date`, `updated_date`, `is_deleted`,
 `deleted_date` — sem `DEFAULT`) e tem:
@@ -95,8 +98,7 @@ Cada uma segue a **BaseEntity** (`id`, `created_date`, `updated_date`, `is_delet
 Tabelas (`tipo_<tabela>_<complemento?>`):
 
 `tipo_usuario`, `tipo_usuario_status`, `tipo_projeto_status`, `tipo_demanda_status`,
-`tipo_demanda_prioridade`, `tipo_atividade_status`, `tipo_dia_nao_util`,
-`tipo_dia_nao_util_duracao`.
+`tipo_atividade_status`, `tipo_dia_nao_util`, `tipo_dia_nao_util_duracao`.
 
 Para cada uma:
 - Índice único parcial: `uix_<tabela>_codigo ON <tabela>(codigo) WHERE is_deleted = false`
@@ -110,20 +112,22 @@ Para cada uma:
 - `tipo_usuario_status`: ATIVO→"Ativo", INATIVO→"Inativo"
 - `tipo_projeto_status`: ATIVO→"Ativo", PAUSADO→"Pausado", CONCLUIDO→"Concluído", CANCELADO→"Cancelado"
 - `tipo_demanda_status`: PLANEJADA→"Planejada", EM_DESENVOLVIMENTO→"Em desenvolvimento", CONCLUIDA→"Concluída"
-- `tipo_demanda_prioridade`: BAIXA→"Baixa", MEDIA→"Média", ALTA→"Alta", CRITICA→"Crítica"
 - `tipo_atividade_status`: PLANEJADA→"Planejada", PENDENTE→"Pendente", DESENVOLVENDO→"Desenvolvendo", DESENVOLVIDA→"Desenvolvida"
 - `tipo_dia_nao_util`: FERIADO→"Feriado", RECESSO→"Recesso", PONTO_FACULTATIVO→"Ponto facultativo"
 - `tipo_dia_nao_util_duracao`: INTEGRAL→"Integral", MEIO_PERIODO→"Meio período"
 
 ### 2. Migration nova
 
-**Arquivo:** `backend/src/database/migrations/20240020_enums_para_tabelas_referencia.ts`
-(usar o **próximo número sequencial livre** no momento da implementação — confirmar que
-`20240019` ainda é o maior aplicado). **Não editar migrations já aplicadas.**
+**Arquivo:** `backend/src/database/migrations/20240025_enums_para_tabelas_referencia.ts`
+(número fixado pela ordem de execução do backlog — esta é a **última migration de schema**
+do lote, depois de `20240020`–`20240024` das specs 70/74/75/76/77. A task 76
+(`remover-prioridade-demanda`) já removeu `demanda.prioridade` **antes** desta, por isso o
+escopo aqui não inclui `tipo_demanda_prioridade`. Confirmar o maior número aplicado no momento.)
+**Não editar migrations já aplicadas.**
 
 **`up`** (ordem importante):
-1. Criar as 8 tabelas de referência + índice único + trigger.
-2. Seedar as 8 tabelas.
+1. Criar as 7 tabelas de referência + índice único + trigger.
+2. Seedar as 7 tabelas.
 3. Para **cada** coluna de enum nas 5 tabelas de negócio:
    1. `ADD COLUMN <tabela_referencia>_id INTEGER` (nullable nesta etapa).
    2. `UPDATE <tabela_negocio> SET <ref>_id = <ref>.id FROM <tabela_referencia> AS <ref>
@@ -137,7 +141,7 @@ Para cada uma:
 
 **`down`:** reverter na ordem inversa — recriar a coluna `VARCHAR` + `CHECK` + índice antigo,
 repopular via JOIN com a tabela de referência (por `id`), dropar a coluna FK e a FK constraint, e
-por fim dropar as 8 tabelas de referência (triggers/índices junto).
+por fim dropar as 7 tabelas de referência (triggers/índices junto).
 
 **Mapeamento coluna → FK / constraint / índice:**
 
@@ -147,13 +151,12 @@ por fim dropar as 8 tabelas de referência (triggers/índices junto).
 | `usuario.status` | `tipo_usuario_status_id` | `fk_usuario_tipo_usuario_status` | — (não havia índice) |
 | `projeto.status` | `tipo_projeto_status_id` | `fk_projeto_tipo_projeto_status` | `ix_projeto_tipo_projeto_status_id` (era `ix_projeto_status`) |
 | `demanda.status` | `tipo_demanda_status_id` | `fk_demanda_tipo_demanda_status` | `ix_demanda_tipo_demanda_status_id` (era `ix_demanda_status`) |
-| `demanda.prioridade` | `tipo_demanda_prioridade_id` | `fk_demanda_tipo_demanda_prioridade` | `ix_demanda_tipo_demanda_prioridade_id` (era `ix_demanda_prioridade`) |
 | `atividade.status` | `tipo_atividade_status_id` | `fk_atividade_tipo_atividade_status` | `ix_atividade_tipo_atividade_status_id` (era `ix_atividade_status`) |
 | `dia_nao_util.tipo` | `tipo_dia_nao_util_id` | `fk_dia_nao_util_tipo_dia_nao_util` | — |
 | `dia_nao_util.duracao` | `tipo_dia_nao_util_duracao_id` | `fk_dia_nao_util_tipo_dia_nao_util_duracao` | — |
 
-> A constraint `chk_demanda_status` / `ck_dia_nao_util_duracao` (vide task 60) some junto, pois
-> o `CHECK` é dropado. Se a task 60 já tiver rodado, dropar pelo nome `chk_*`; senão, pelo nome
+> A constraint `chk_demanda_status` / `ck_dia_nao_util_duracao` (vide task 70) some junto, pois
+> o `CHECK` é dropado. Se a task 70 já tiver rodado, dropar pelo nome `chk_*`; senão, pelo nome
 > auto-gerado. A implementação deve consultar o nome real no banco.
 
 ### 3. Backend — repositórios
@@ -197,7 +200,7 @@ ficar mais legível por query; alias sempre = nome do campo TS.)
 ### 4. O que **não** muda (de comportamento)
 
 - **Valores dos enums** — inalterados; viram os `codigo` das tabelas de referência.
-- **DTOs** — `tipo`/`status`/`prioridade`/`duracao` continuam tipados como o enum (só o **nome**
+- **DTOs** — `tipo`/`status`/`duracao` continuam tipados como o enum (só o **nome**
   do tipo importado muda — ver §0).
 - **Models de backend** — mantêm o campo como o enum (o repositório traduz `codigo ⇄ id`).
 - **Services** — nenhuma regra de negócio muda (apenas o símbolo do enum importado).
@@ -217,21 +220,21 @@ ficar mais legível por query; alias sempre = nome do campo TS.)
 > Enums e Proibições) **já foram atualizados na criação desta task**. Restam os documentos de
 > **estado do schema**:
 
-1. `SCHEMA.md` — adicionar os 8 `CREATE TABLE` de referência (+ índice único + trigger + seeds) e
+1. `SCHEMA.md` — adicionar os 7 `CREATE TABLE` de referência (+ índice único + trigger + seeds) e
    trocar, nas 5 tabelas de negócio, a coluna `VARCHAR + CHECK` pela coluna `INTEGER` FK (+ FK +
    índice renomeado).
 2. `SYSTEM.SPEC.md` §13 (Entidades e Campos) — atualizar as linhas das colunas de enum para FK e
-   acrescentar as 8 entidades de referência.
-3. `CONTEXT.md` — registrar a migration `20240020`, as 8 tabelas e a decisão "FK por id + enum TS".
+   acrescentar as 7 entidades de referência.
+3. `CONTEXT.md` — registrar a migration, as 7 tabelas e a decisão "FK por id + enum TS".
 
 ---
 
 ## Verificação
 
 1. `npm run build --workspace=backend` OK; `npm run build --workspace=frontend` OK.
-2. `npm run db:migrate --workspace=backend` aplica a `20240020`; `db:rollback` reverte; reaplicar
+2. `npm run db:migrate --workspace=backend` aplica a migration; `db:rollback` reverte; reaplicar
    — sem erro e sem perda de dados (valores de enum preservados antes/depois).
-3. No banco: as 8 tabelas `tipo_*` existem e estão seedadas; as colunas de negócio são `INTEGER`
+3. No banco: as 7 tabelas `tipo_*` existem e estão seedadas; as colunas de negócio são `INTEGER`
    FK (`\d usuario` mostra `tipo_usuario_id` + FK, sem `tipo`/`CHECK`); nenhuma coluna de enum
    restou como `VARCHAR + CHECK`.
 4. Smoke de API: criar usuário/projeto/demanda/atividade/dia-não-útil e recuperá-los —

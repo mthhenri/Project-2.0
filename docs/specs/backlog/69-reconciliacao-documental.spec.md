@@ -1,4 +1,4 @@
-# Task 59 — docs: Reconciliação Documental (schema + comportamento)
+# Task 69 — docs: Reconciliação Documental (schema + comportamento)
 
 ## Objetivo
 
@@ -11,8 +11,8 @@ constatou que, em vários pontos, a documentação ficou para trás de mudanças
 comportamento.** O código já é o estado correto; a doc é que se atualiza.
 
 > **Referência cruzada:** audit de consistência (categorias A, B, D, E2).
-> **Overlap:** `backlog/56-demanda-gestor-acesso-total-sem-atribuicao` pode alterar a
-> matriz de permissão da demanda; documentar aqui o **estado atual** e referenciar a 56
+> **Overlap:** `backlog/71-demanda-gestor-acesso-total-sem-atribuicao` pode alterar a
+> matriz de permissão da demanda; documentar aqui o **estado atual** e referenciar a 71
 > como possível atualização futura desse trecho (não antecipar a 56).
 
 ---
@@ -43,7 +43,7 @@ erradas. Esta task fecha o débito documental acumulado.
 #### A2 — Coluna `dia_nao_util.duracao`
 - **Real:** `migration 20240014_adicionar_duracao_dia_nao_util.ts` adiciona `duracao VARCHAR(20) NOT NULL CHECK (duracao IN ('INTEGRAL','MEIO_PERIODO'))`; enum `shared/src/enums/dia-nao-util-duracao.enum.ts`.
 - **Doc a corrigir:**
-  - `SCHEMA.md` tabela `dia_nao_util` (~linha 489): adicionar a coluna `duracao` + a constraint. **Nome da constraint:** usar o nome final definido pela task 60 (`chk_dia_nao_util_duracao`) — se a 60 ainda não tiver sido executada, documentar o nome atual `ck_dia_nao_util_duracao` e deixar nota de que a 60 padroniza.
+  - `SCHEMA.md` tabela `dia_nao_util` (~linha 489): adicionar a coluna `duracao` + a constraint. **Nome da constraint:** usar o nome final definido pela task 70 (`chk_dia_nao_util_duracao`) — se a 70 ainda não tiver sido executada, documentar o nome atual `ck_dia_nao_util_duracao` e deixar nota de que a 70 padroniza.
   - `SYSTEM.SPEC.md` §13 tabela DiaNaoUtil (~linha 1119): adicionar `duracao | ENUM | INTEGRAL, MEIO_PERIODO`; §6.2 lista de enums: incluir `dia-nao-util-duracao.enum.ts`.
 
 #### A3 — Migrations 15 e 16
@@ -63,7 +63,7 @@ erradas. Esta task fecha o débito documental acumulado.
 #### B4 + B5 — Matriz de permissão da demanda
 - **Real (`demanda.service.ts`):** desenvolvedor só cria **sub-demanda** (`demandaPaiId` obrigatório, l.54-61); dev vê qualquer demanda de projeto acessível mas só **edita se membro** (`podeEditar`, l.195-197 / l.227-237); `descricaoCliente` exclusiva do gestor (l.239-246); proteção do **último membro** (l.728-731); dev pode **incluir/remover a si mesmo** como membro (l.650-666 / l.714-721).
 - **Doc a corrigir:** §14 "Acesso e Permissões" + "Demandas" (~linhas 1132-1153): refletir essas regras. Acrescentar nota: a inclusão/remoção de si mesmo é a exceção à linha "Atribuir usuário manualmente — Dev ❌".
-- **Cuidado:** ver overlap com `backlog/56` (gestor acesso total) — documentar o estado atual e referenciar a 56.
+- **Cuidado:** ver overlap com `backlog/71` (gestor acesso total) — documentar o estado atual e referenciar a 71.
 
 #### B6 — Registro manual de execução
 - **Real:** `execucao.controller.ts:55-56` `@GestorOnly @Post('registro')`; `execucao.service.ts:77-121` `registrar()` (valida datas e sobreposição; usuário = dono da atividade).
@@ -87,7 +87,7 @@ erradas. Esta task fecha o débito documental acumulado.
 - **Doc a corrigir:** remover/atualizar a narrativa "Task em andamento: 45-frontend-tema-escuro… `[disabled]="true"`… Pendente: remover o `[disabled]`" (~linhas 26-27). A seção "Tasks em Andamento" já diz "Nenhuma" — alinhar a narrativa.
 
 #### D2 — Tabela de migrations
-- **Doc a corrigir:** seção "Banco de Dados" (~linhas 198-199): atualizar de "12 + 20240013 + 20240014" para o total real (incluir `20240015`, `20240016` e — quando a task 60 rodar — `20240017`).
+- **Doc a corrigir:** seção "Banco de Dados" (~linhas 198-199): atualizar de "12 + 20240013 + 20240014" para o total real (incluir `20240015`, `20240016` e — quando a task 70 rodar — `20240020`).
 
 #### D3 — Log de decisões obsoleto
 - **Doc a corrigir:** entradas que citam `AtividadeAtualizadaDto`/`ExecucaoAtualizadaDto` como aliases re-exportados (~linhas 242, 244) não correspondem ao código atual (renomeados; nenhum alias por re-export existe hoje). Anotar como histórico ou remover.
@@ -121,5 +121,5 @@ Esta task **é** a atualização de documentação. Garantir consistência cruza
 ## NÃO implementar nesta task
 
 - Qualquer mudança de código, DTO, migration ou comportamento — esta task só edita `docs/`.
-- A regra de herança de DTO e os DTOs em si (task 63), a padronização de constraints/migration (task 60), os `!`/JSDoc (task 61) e o `ngModel` (task 62) — cada um na sua spec, com seu próprio reforço documental.
-- Não antecipar mudanças da `backlog/56` (gestor acesso total) — apenas referenciar.
+- A regra de herança de DTO e os DTOs em si (task 78), a padronização de constraints/migration (task 70), os `!`/JSDoc (task 72) e o `ngModel` (task 73) — cada um na sua spec, com seu próprio reforço documental.
+- Não antecipar mudanças da `backlog/71` (gestor acesso total) — apenas referenciar.

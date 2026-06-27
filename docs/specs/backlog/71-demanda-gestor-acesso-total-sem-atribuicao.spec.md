@@ -1,4 +1,4 @@
-# 56 — Demanda: gestor com acesso total sem auto-atribuição + listagem de demandas (criação de atividade) só planejadas/pendentes
+# 71 — Demanda: gestor com acesso total sem auto-atribuição + listagem de demandas (criação de atividade) só planejadas/pendentes
 
 **Depende de:** 06 (usuario-module), 10 (demanda-crud), 14 (atividade-module), 46 (demanda-permissoes-visualizacao)
 **Entrega:** dois ajustes relacionados ao acesso do gestor às demandas.
