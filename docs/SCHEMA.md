@@ -11,10 +11,25 @@
 > - `20240016_renomear_funcao_updated_date` — renomeia `fn_atualizar_updated_date` → `fn_set_updated_date` (mecanismo genérico de BaseEntity em inglês; estado final já refletido abaixo).
 > - `20240017`/`20240018_seed_tags_padrao(_complemento)` — seed de tags padrão.
 > - `20240019_remover_ordem_exibicao` — remove `ordem_exibicao` de `demanda` e `atividade`.
+> - `20240020_padronizar_nomes_constraints` — renomeia `demanda_status_check` → `chk_demanda_status` e `ck_dia_nao_util_duracao` → `chk_dia_nao_util_duracao` (alinha ao prefixo `chk_`; estado final já refletido abaixo).
 
 ---
 
 ## Convenções deste Schema
+
+**Nomenclatura de objetos de banco.** Todo objeto segue o padrão `<prefixo>_<tabela>_<proposito>`,
+com prefixo por tipo de objeto. Os nomes são genéricos/arquiteturais (inglês); apenas tabelas e
+colunas de negócio permanecem em português.
+
+| Objeto | Prefixo | Exemplo |
+|---|---|---|
+| Primary key | `pk_` | `pk_usuario` |
+| Foreign key | `fk_` | `fk_demanda_projeto` |
+| Unique index | `uix_` | `uix_usuario_login_ativo` |
+| Index | `ix_` | `ix_demanda_status` |
+| Check constraint | `chk_` | `chk_execucao_periodo_valido` |
+| Trigger | `trg_` | `trg_usuario_updated_date` |
+| Function | `fn_` | `fn_set_updated_date` |
 
 **Sem DEFAULT em nenhuma coluna.** Todo valor deve ser fornecido explicitamente pela aplicação.
 Defaults implícitos escondem validações e permitem que dados inválidos entrem no banco sem passar pela service.
@@ -230,6 +245,7 @@ CREATE TABLE demanda (
   prioridade        VARCHAR(20)  NOT NULL
                       CHECK (prioridade IN ('BAIXA', 'MEDIA', 'ALTA', 'CRITICA')),
   status            VARCHAR(30)  NOT NULL
+                      CONSTRAINT chk_demanda_status
                       CHECK (status IN ('PENDENTE', 'PLANEJADA', 'CONCLUIDA')),
   is_estrutural     BOOLEAN      NOT NULL,
   previsao_fim_data DATE
@@ -494,9 +510,8 @@ A aplicação verifica mês e dia independentemente do ano ao calcular o ponto.
 `duracao` (`INTEGRAL` / `MEIO_PERIODO`, migration `20240014`) é independente do `tipo`:
 `MEIO_PERIODO` reduz a meta diária à metade no módulo `ponto` (sem distinção de turno).
 
-> **Nome da constraint:** o nome atual é `ck_dia_nao_util_duracao` (definido na migration
-> `20240014`). A task 70 padroniza o prefixo para `chk_dia_nao_util_duracao`; até a 70 rodar,
-> o nome vigente é `ck_dia_nao_util_duracao`.
+> **Nome da constraint:** `chk_dia_nao_util_duracao` (prefixo `chk_`). A constraint foi criada
+> como `ck_dia_nao_util_duracao` na migration `20240014` e renomeada pela `20240020`.
 
 ```sql
 CREATE TABLE dia_nao_util (
@@ -511,7 +526,7 @@ CREATE TABLE dia_nao_util (
   tipo        VARCHAR(30)  NOT NULL
                 CHECK (tipo IN ('FERIADO', 'RECESSO', 'PONTO_FACULTATIVO')),
   duracao     VARCHAR(20)  NOT NULL
-                CONSTRAINT ck_dia_nao_util_duracao
+                CONSTRAINT chk_dia_nao_util_duracao
                 CHECK (duracao IN ('INTEGRAL', 'MEIO_PERIODO')),
   recorrente  BOOLEAN      NOT NULL
 );

@@ -175,6 +175,29 @@ CREATE FUNCTION fn_atualizar_updated_date() ... -- idioma misto: proibido
 CREATE TABLE dia_nao_util ( nome_completo VARCHAR ... )
 ```
 
+**Nomes de constraints, índices, triggers e funções: prefixo por tipo.**
+Padrão `<prefixo>_<tabela>_<proposito>` (nomes genéricos em inglês; nunca deixar o PostgreSQL
+auto-gerar — sempre nomear explicitamente):
+
+| Objeto | Prefixo | Exemplo |
+|---|---|---|
+| Primary key | `pk_` | `pk_usuario` |
+| Foreign key | `fk_` | `fk_demanda_projeto` |
+| Unique index | `uix_` | `uix_usuario_login_ativo` |
+| Index | `ix_` | `ix_demanda_status` |
+| Check constraint | `chk_` | `chk_execucao_periodo_valido` |
+| Trigger | `trg_` | `trg_usuario_updated_date` |
+| Function | `fn_` | `fn_set_updated_date` |
+
+```sql
+-- ✅ Constraint nomeada com prefixo chk_
+ADD CONSTRAINT chk_dia_nao_util_duracao CHECK (duracao IN ('INTEGRAL', 'MEIO_PERIODO'))
+
+-- ❌ Prefixo fora do padrão / nome auto-gerado pelo PostgreSQL
+ADD CONSTRAINT ck_dia_nao_util_duracao CHECK (...)   -- prefixo ck_ proibido (use chk_)
+CHECK (status IN (...))                              -- gera demanda_status_check: proibido
+```
+
 ---
 
 ## Camadas — Regras Rápidas
