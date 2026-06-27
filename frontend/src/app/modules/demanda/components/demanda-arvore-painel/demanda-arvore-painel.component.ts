@@ -11,6 +11,7 @@ import {
   DemandaTagsAtribuirDto,
   TagResumoDto,
   UsuarioResumoDto,
+  UsuarioTipoEnum,
 } from '@project20/shared';
 import { DemandaService } from '../../services/demanda.service';
 import { TagService } from '../../../tag/services/tag.service';
@@ -226,7 +227,13 @@ export class DemandaArvorePainelComponent {
     if (this.usuariosDisponiveis().length === 0) {
       this.usuarioService.listar({ itensPorPagina: 100 }).subscribe({
         next: (resposta) => {
-          if (resposta.sucesso && resposta.dados) this.usuariosDisponiveis.set(resposta.dados.itens);
+          if (resposta.sucesso && resposta.dados) {
+            // Gestores não entram no multiselect de membros: têm acesso total a
+            // qualquer demanda por serem gestores, sem atribuição em demanda_usuario (task 71).
+            this.usuariosDisponiveis.set(
+              resposta.dados.itens.filter((usuario) => usuario.tipo !== UsuarioTipoEnum.GESTOR),
+            );
+          }
         },
       });
     }

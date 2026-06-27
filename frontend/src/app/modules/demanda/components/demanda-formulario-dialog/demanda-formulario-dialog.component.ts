@@ -18,6 +18,7 @@ import {
   DemandaPrioridadeEnum,
   TagResumoDto,
   UsuarioResumoDto,
+  UsuarioTipoEnum,
 } from '@project20/shared';
 import { DemandaService } from '../../services/demanda.service';
 import { TagService } from '../../../tag/services/tag.service';
@@ -192,11 +193,19 @@ export class DemandaFormularioDialogComponent implements OnChanges {
       });
   }
 
-  /** Lista completa de usuários (GET /usuario) é gestor-only — alimenta o multiselect de membros. */
+  /**
+   * Lista completa de usuários (GET /usuario) é gestor-only — alimenta o multiselect de membros.
+   * Gestores são excluídos: têm acesso total a qualquer demanda por serem gestores, sem
+   * necessidade de atribuição em demanda_usuario (task 71).
+   */
   private carregarUsuarios(): void {
     this.usuarioService.listar({ itensPorPagina: 100 }).subscribe({
       next: (resposta) => {
-        if (resposta.sucesso && resposta.dados) this.usuariosDisponiveis.set(resposta.dados.itens);
+        if (resposta.sucesso && resposta.dados) {
+          this.usuariosDisponiveis.set(
+            resposta.dados.itens.filter((usuario) => usuario.tipo !== UsuarioTipoEnum.GESTOR),
+          );
+        }
       },
     });
   }

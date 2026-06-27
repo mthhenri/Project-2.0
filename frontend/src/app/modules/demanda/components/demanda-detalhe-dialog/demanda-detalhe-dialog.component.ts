@@ -19,6 +19,7 @@ import {
   DemandaTagsAtribuirDto,
   DemandaAlterarDto,
   UsuarioResumoDto,
+  UsuarioTipoEnum,
   DemandaStatusEnum,
   AtividadeResumoDto,
   AtividadeListarDto,
@@ -425,7 +426,11 @@ export class DemandaDetalheDialogComponent implements OnChanges {
             this.tagsDisponiveis.set(tags.dados);
           }
           if (usuarios && usuarios.sucesso && usuarios.dados) {
-            this.todosUsuarios.set(usuarios.dados.itens);
+            // Gestores não entram no multiselect de membros: têm acesso total a
+            // qualquer demanda por serem gestores, sem atribuição em demanda_usuario (task 71).
+            this.todosUsuarios.set(
+              usuarios.dados.itens.filter((usuario) => usuario.tipo !== UsuarioTipoEnum.GESTOR),
+            );
           }
         },
       });
