@@ -360,7 +360,7 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
 
   /**
    * Busca o usuarioId associado a uma execução via atividade.usuario_id.
-   * Usado para autorização nas operações de encerrar, atualizar e excluir.
+   * Usado para autorização nas operações de encerrar, alterar e excluir.
    */
   async recuperarUsuario(dto: ExecucaoUsuarioRecuperarDto): Promise<number | null> {
     const resultado = await this.executarConsulta<{ usuarioId: number }>(

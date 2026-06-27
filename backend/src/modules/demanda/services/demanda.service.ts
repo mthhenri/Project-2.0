@@ -415,9 +415,9 @@ export class DemandaService {
    * Restrito a gestores.
    */
   async criarConexao(
-    dto: DemandaConexaoCriarDto,
+    dto: DemandaConexaoCriarDto & { demandaOrigemId: number },
   ): Promise<StandardResponse<DemandaConexaoCriadaDto>> {
-    const demandaOrigemId = dto.demandaOrigemId!;
+    const demandaOrigemId = dto.demandaOrigemId;
 
     const demandaOrigemEncontrada = await this.demandaRepositorio.recuperar(
       { id: demandaOrigemId },
@@ -576,10 +576,10 @@ export class DemandaService {
    * Gestor sempre pode; desenvolvedor só nas demandas das quais é membro.
    */
   async alterarTagsDemanda(
-    dto: DemandaTagsAtribuirDto,
+    dto: DemandaTagsAtribuirDto & { demandaId: number },
     usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<DemandaTagsAtribuidasDto>> {
-    const demandaId = dto.demandaId!;
+    const demandaId = dto.demandaId;
 
     const demandaEncontrada = await this.demandaRepositorio.recuperar({ id: demandaId });
     if (!demandaEncontrada) {
@@ -672,10 +672,10 @@ export class DemandaService {
    * desde que tenha acesso ao projeto da demanda.
    */
   async atribuirMembro(
-    dto: DemandaUsuarioAtribuirDto,
+    dto: DemandaUsuarioAtribuirDto & { demandaId: number },
     usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<DemandaUsuarioAtribuidoDto>> {
-    const demandaId = dto.demandaId!;
+    const demandaId = dto.demandaId;
 
     const demandaEncontrada = await this.demandaRepositorio.recuperar({ id: demandaId });
     if (!demandaEncontrada) {

@@ -238,10 +238,10 @@ export class AtividadeService {
    * (usuarioId) ou onde está atribuído à demanda. Gestor é sempre liberado.
    */
   async alterarTags(
-    dto: AtividadeTagsAtribuirDto,
+    dto: AtividadeTagsAtribuirDto & { id: number },
     usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<AtividadeTagsAtribuidasDto>> {
-    const atividadeId = dto.id!;
+    const atividadeId = dto.id;
 
     const atividadeEncontrada = await this.atividadeRepositorio.recuperar({ id: atividadeId });
     if (!atividadeEncontrada) {
