@@ -32,7 +32,7 @@ const NAO_ENCONTRADO_EXEMPLO  = { sucesso: false, dados: null, mensagem: 'Demand
 export class DemandaController {
   constructor(private readonly demandaService: DemandaService) {}
 
-  @ApiOperation({ summary: 'Criar nova demanda (auto-atribui criador e gestores ativos)' })
+  @ApiOperation({ summary: 'Criar nova demanda (auto-atribui o criador desenvolvedor; gestor tem acesso total sem atribuição)' })
   @ApiResponse({ status: 201, description: 'Demanda criada com sucesso' })
   @ApiResponse({ status: 400, description: 'Dados inválidos', schema: { example: { sucesso: false, dados: null, mensagem: 'A demanda pai deve pertencer ao mesmo projeto', erros: [] } } })
   @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
@@ -92,7 +92,7 @@ export class DemandaController {
     return this.demandaService.recuperarAncestral({ id }, usuarioAtivo);
   }
 
-  @ApiOperation({ summary: 'Listar demandas às quais o usuário logado está atribuído (todos os projetos)' })
+  @ApiOperation({ summary: 'Listar demandas planejadas/pendentes para criação de atividade (desenvolvedor vê as atribuídas; gestor vê todas)' })
   @ApiResponse({ status: 200, description: 'Demandas atribuídas listadas com sucesso' })
   @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
   @Get('atribuidas')

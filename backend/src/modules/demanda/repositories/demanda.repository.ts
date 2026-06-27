@@ -116,8 +116,9 @@ export class DemandaRepository extends BaseRepository<Demanda> {
 
   /**
    * Insere a demanda e suas atribuições iniciais em uma única transação atômica.
-   * O criador e todos os gestores ativos são atribuídos automaticamente.
-   * Gestores que são o próprio criador não são duplicados.
+   * Apenas os usuários informados em `usuarioIds` recebem linha em demanda_usuario
+   * (criador desenvolvedor e membros selecionados na criação). O gestor não é atribuído
+   * por ser gestor — `usuarioIds` pode ser `[]` (criação por gestor sem membros).
    */
   async inserirComAtribuicao(
     dados: DemandaCriarDados,
@@ -126,16 +127,9 @@ export class DemandaRepository extends BaseRepository<Demanda> {
     return this.conexaoBancoDados.transaction(async (transacao) => {
       const demandaCriada = await this.inserir(dados, transacao);
 
-      const atribuidos = new Set<number>();
-      const atribuir = async (usuarioId: number) => {
-        if (atribuidos.has(usuarioId)) return;
-        atribuidos.add(usuarioId);
+      for (const usuarioId of dto.usuarioIds) {
         await this.inserirDemandaUsuario({ demandaId: demandaCriada.id, usuarioId }, transacao);
-      };
-
-      await atribuir(dto.criadorId);
-      for (const gestorId of dto.gestorIds) await atribuir(gestorId);
-      for (const membroId of dto.membroIds) await atribuir(membroId);
+      }
 
       return demandaCriada;
     });
@@ -266,24 +260,31 @@ export class DemandaRepository extends BaseRepository<Demanda> {
   }
 
   /**
-   * Lista todas as demandas às quais o usuário está atribuído, em qualquer projeto,
-   * já com o nome do projeto para exibição "Projeto - Demanda".
+   * Lista as demandas planejadas/pendentes (exclui CONCLUIDA) já com o nome do projeto
+   * para exibição "Projeto - Demanda".
+   * Quando `apenasAtribuidas` é true (desenvolvedor), restringe às demandas às quais o
+   * usuário está atribuído via demanda_usuario; quando false (gestor), retorna todas.
    */
   async listarAtribuidas(dto: DemandaAtribuidasListarDto): Promise<DemandaAtribuidaDto[]> {
+    const joinAtribuicao = dto.apenasAtribuidas
+      ? `INNER JOIN demanda_usuario
+           ON demanda_usuario.demanda_id = demanda.id
+           AND demanda_usuario.usuario_id = :usuarioId
+           AND demanda_usuario.is_deleted = false`
+      : '';
+
     return this.executarConsulta<DemandaAtribuidaDto>(
       `SELECT demanda.id,
               demanda.nome,
               projeto.id   AS "projetoId",
               projeto.nome AS "nomeProjeto"
        FROM demanda
-       INNER JOIN demanda_usuario
-         ON demanda_usuario.demanda_id = demanda.id
-         AND demanda_usuario.usuario_id = :usuarioId
-         AND demanda_usuario.is_deleted = false
+       ${joinAtribuicao}
        INNER JOIN projeto
          ON projeto.id = demanda.projeto_id
          AND projeto.is_deleted = false
        WHERE demanda.is_deleted = false
+         AND demanda.status IN ('PLANEJADA', 'PENDENTE')
        ORDER BY projeto.nome ASC, demanda.nome ASC`,
       { usuarioId: dto.usuarioId },
     );

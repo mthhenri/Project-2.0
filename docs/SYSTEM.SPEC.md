@@ -1099,7 +1099,7 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 | `demanda_id` | INTEGER FK | → demanda |
 | `usuario_id` | INTEGER FK | → usuario |
 
-> Essa tabela deriva o acesso ao projeto: desenvolvedor vê um projeto se tiver ao menos uma linha aqui vinculada a uma demanda desse projeto.
+> Essa tabela deriva o acesso ao projeto **do desenvolvedor**: ele vê um projeto se tiver ao menos uma linha aqui vinculada a uma demanda desse projeto. O **gestor não depende** desta tabela — tem acesso total a qualquer demanda/projeto por ser gestor.
 
 ### DemandaConexao
 
@@ -1187,13 +1187,13 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 
 ### Demandas
 
-- Ao criar uma demanda, o sistema **auto-atribui automaticamente** o criador (desenvolvedor ou gestor) e **todos os gestores ativos** via `demanda_usuario`
+- Ao criar uma demanda, o sistema **auto-atribui apenas o criador desenvolvedor** via `demanda_usuario` (além de quaisquer membros explicitamente selecionados na criação). O **gestor não é atribuído** — tem acesso total a qualquer demanda/projeto por ser gestor, independentemente de `demanda_usuario`
 - O desenvolvedor só cria **sub-demanda** (informando `demandaPaiId`); a criação de demanda raiz é exclusiva do gestor
 - Desenvolvedor **vê** qualquer demanda de um projeto a que tem acesso, mas só **edita** as que é membro (a `descricaoCliente` é sempre exclusiva do gestor)
 - Gestor pode atribuir e remover usuários manualmente após a criação
 - Desenvolvedor não gerencia atribuições de terceiros, mas **pode incluir e remover a si mesmo** como membro de uma demanda em projeto acessível — esta é a exceção à regra "Atribuir usuário manualmente — Dev ❌"
 - O **último membro** de uma demanda não pode ser removido
-- **Overlap futuro:** a task `backlog/71-demanda-gestor-acesso-total-sem-atribuicao` pode alterar esta matriz (gestor com acesso total sem atribuição); o texto acima descreve o **estado atual**.
+- O **gestor** tem acesso total a qualquer demanda/projeto **por ser gestor**, sem depender de `demanda_usuario` (task `done/71-demanda-gestor-acesso-total-sem-atribuicao`); por isso não é atribuído na criação de demandas.
 
 - Um usuário **não pode ter duas execuções ativas** (sem `fim_data`) simultaneamente
 - O campo `fim_data` é obrigatório para fechar uma execução

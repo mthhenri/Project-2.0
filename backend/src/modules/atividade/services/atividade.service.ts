@@ -34,7 +34,8 @@ export class AtividadeService {
   /**
    * Cria nova atividade vinculada à demanda.
    * O usuário autenticado torna-se o executor principal.
-   * Verifica existência da demanda e acesso do usuário via demanda_usuario.
+   * Verifica existência da demanda; o acesso via demanda_usuario só é exigido do
+   * desenvolvedor (gestor tem acesso total a qualquer demanda, sem atribuição).
    */
   async criar(
     dto: AtividadeCriarDto,
@@ -50,12 +51,14 @@ export class AtividadeService {
         ? (dto.usuarioId ?? usuarioAtivo.sub)
         : usuarioAtivo.sub;
 
-    const temAcesso = await this.atividadeRepositorio.validarAcessoDemanda({
-      demandaId: dto.demandaId,
-      usuarioId: usuarioAtivo.sub,
-    });
-    if (!temAcesso) {
-      throw new UnauthorizedAccessException('Usuário não tem acesso à demanda informada');
+    if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR) {
+      const temAcesso = await this.atividadeRepositorio.validarAcessoDemanda({
+        demandaId: dto.demandaId,
+        usuarioId: usuarioAtivo.sub,
+      });
+      if (!temAcesso) {
+        throw new UnauthorizedAccessException('Usuário não tem acesso à demanda informada');
+      }
     }
 
     const atividadeCriada = await this.atividadeRepositorio.inserir({

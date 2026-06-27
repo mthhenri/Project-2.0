@@ -44,7 +44,9 @@ export class DemandaService {
   ) {}
 
   /**
-   * Cria nova demanda com auto-atribuição transacional do criador e de todos os gestores ativos.
+   * Cria nova demanda com atribuição transacional apenas do criador desenvolvedor
+   * (e dos membros explicitamente selecionados na criação). O gestor tem acesso total
+   * a qualquer demanda/projeto por ser gestor — não é atribuído via demanda_usuario.
    * Desenvolvedor só pode criar em projetos onde já tem acesso via demanda_usuario.
    */
   async criar(
@@ -95,9 +97,6 @@ export class DemandaService {
       }
     }
 
-    const gestoresAtivos = await this.usuarioRepositorio.listarGestoresAtivos();
-    const gestorIds = gestoresAtivos.map((gestor) => gestor.id);
-
     const membroIds = [...new Set(dto.usuarioIds ?? [])];
     if (membroIds.length > 0) {
       if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR) {
@@ -121,6 +120,13 @@ export class DemandaService {
       throw new UnauthorizedAccessException('Apenas gestores podem atribuir tags às demandas');
     }
 
+    const usuarioIds = [
+      ...new Set([
+        ...(usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR ? [usuarioAtivo.sub] : []),
+        ...membroIds,
+      ]),
+    ];
+
     const demandaCriada = await this.demandaRepositorio.inserirComAtribuicao(
       {
         projetoId:        dto.projetoId,
@@ -135,7 +141,7 @@ export class DemandaService {
         isEstrutural:     dto.isEstrutural,
         previsaoFimData:  dto.previsaoFimData ? new Date(dto.previsaoFimData) : null,
       },
-      { criadorId: usuarioAtivo.sub, gestorIds, membroIds },
+      { usuarioIds },
     );
 
     if (dto.tagIds && dto.tagIds.length > 0) {
@@ -188,13 +194,17 @@ export class DemandaService {
   }
 
   /**
-   * Lista todas as demandas às quais o usuário logado está atribuído,
-   * em qualquer projeto, para seleção na criação de atividades.
+   * Lista as demandas planejadas/pendentes para seleção na criação de atividades.
+   * Desenvolvedor recebe apenas as demandas às quais está atribuído (demanda_usuario);
+   * gestor recebe todas as demandas não-concluídas de todos os projetos (acesso total).
    */
   async listarAtribuidas(
     usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<DemandaAtribuidaDto[]>> {
-    const demandas = await this.demandaRepositorio.listarAtribuidas({ usuarioId: usuarioAtivo.sub });
+    const demandas = await this.demandaRepositorio.listarAtribuidas({
+      usuarioId: usuarioAtivo.sub,
+      apenasAtribuidas: usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR,
+    });
 
     return {
       sucesso: true,
