@@ -1,5 +1,6 @@
 import { Component, forwardRef, signal } from '@angular/core';
-import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ControlValueAccessor, FormControl, NG_VALUE_ACCESSOR, ReactiveFormsModule } from '@angular/forms';
 import { ColorPickerModule } from 'primeng/colorpicker';
 
 const CORES_PREDEFINIDAS: readonly string[] = [
@@ -11,7 +12,7 @@ const CORES_PREDEFINIDAS: readonly string[] = [
 @Component({
   selector: 'app-seletor-cor',
   standalone: true,
-  imports: [FormsModule, ColorPickerModule],
+  imports: [ReactiveFormsModule, ColorPickerModule],
   templateUrl: './seletor-cor.component.html',
   styleUrl: './seletor-cor.component.scss',
   providers: [
@@ -24,14 +25,25 @@ const CORES_PREDEFINIDAS: readonly string[] = [
 })
 export class SeletorCorComponent implements ControlValueAccessor {
   readonly coresPredefinidas = CORES_PREDEFINIDAS;
+  readonly controleCor = new FormControl<string>('#3b82f6', { nonNullable: true });
   readonly cor = signal<string>('#3b82f6');
   readonly desabilitado = signal<boolean>(false);
 
   private aoMudar: (valor: string) => void = () => {};
   private aoTocar: () => void = () => {};
 
+  constructor() {
+    this.controleCor.valueChanges.pipe(takeUntilDestroyed()).subscribe((valor) => {
+      this.cor.set(valor);
+      this.aoMudar(valor);
+      this.aoTocar();
+    });
+  }
+
   writeValue(valor: string | null): void {
-    this.cor.set(valor ?? '#3b82f6');
+    const corResolvida = valor ?? '#3b82f6';
+    this.controleCor.setValue(corResolvida, { emitEvent: false });
+    this.cor.set(corResolvida);
   }
 
   registerOnChange(fn: (valor: string) => void): void {
@@ -44,6 +56,11 @@ export class SeletorCorComponent implements ControlValueAccessor {
 
   setDisabledState(desabilitado: boolean): void {
     this.desabilitado.set(desabilitado);
+    if (desabilitado) {
+      this.controleCor.disable({ emitEvent: false });
+    } else {
+      this.controleCor.enable({ emitEvent: false });
+    }
   }
 
   corSelecionada(valor: string): boolean {
@@ -52,24 +69,14 @@ export class SeletorCorComponent implements ControlValueAccessor {
 
   selecionarPredefinida(valor: string): void {
     if (this.desabilitado()) return;
-    this.atualizar(valor);
-  }
-
-  atualizarDoPicker(valor: string): void {
-    this.atualizar(valor);
+    this.controleCor.setValue(valor);
   }
 
   digitarHex(evento: Event): void {
     const valor = (evento.target as HTMLInputElement).value.trim();
     const hexNormalizado = valor.startsWith('#') ? valor : '#' + valor;
     if (/^#[0-9A-Fa-f]{6}$/.test(hexNormalizado)) {
-      this.atualizar(hexNormalizado);
+      this.controleCor.setValue(hexNormalizado);
     }
-  }
-
-  private atualizar(valor: string): void {
-    this.cor.set(valor);
-    this.aoMudar(valor);
-    this.aoTocar();
   }
 }

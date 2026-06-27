@@ -3,8 +3,7 @@
     <p-colorpicker
       [inline]="true"
       format="hex"
-      [ngModel]="cor()"
-      (ngModelChange)="atualizarDoPicker($event)"
+      [formControl]="controleCor"
       [disabled]="desabilitado()"
     />
 

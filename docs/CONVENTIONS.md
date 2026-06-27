@@ -300,6 +300,29 @@ frontend nunca veem o id.
 
 ---
 
+## Frontend (Angular)
+
+- **Standalone components** sempre — nunca `NgModule` por feature
+- **Signals** (`signal`/`computed`/`effect`) para estado reativo — evitar `Subject`/`BehaviorSubject`
+- **Reactive Forms** em **todos** os formulários — **sem template-driven forms**, **sem `ngModel`/`FormsModule`**
+- **Lazy loading** por rota via `loadComponent`/`loadChildren`
+
+**Embrulhar um controle de terceiros (ex.: `p-colorpicker`):** implementar `ControlValueAccessor`
+e dirigir o controle interno por um `FormControl` + `[formControl]` — **nunca** `[ngModel]`/`(ngModelChange)`.
+O `ngModel` é template-driven e está proibido mesmo dentro de um CVA.
+
+```typescript
+// ✅ CVA com FormControl interno (Reactive Forms)
+readonly controleCor = new FormControl<string>('#3b82f6', { nonNullable: true });
+writeValue(valor: string | null) { this.controleCor.setValue(valor ?? '#3b82f6', { emitEvent: false }); }
+// template: <p-colorpicker [formControl]="controleCor" />
+
+// ❌ Proibido — template-driven dentro do componente
+// template: <p-colorpicker [ngModel]="cor()" (ngModelChange)="atualizar($event)" />
+```
+
+---
+
 ## Estilos
 
 **Extensão:** sempre `.scss`, nunca `.css`

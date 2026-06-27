@@ -11,6 +11,8 @@
 **Base normativa:** as 25 Proibições Absolutas do `SYSTEM.SPEC.md` §16 + tabela de proibições do `CONVENTIONS.md`
 
 > **Errata (task 69):** este relatório é de **2026-06-19** e **antecede** as specs 45/46 e as migrations `20240015`/`20240016`. Os achados **C1** (herança de DTO de negócio) e **C2** (`ngModel` no seletor de cor) foram identificados depois e endereçados pelas tasks **63** (C1) e **62** (C2).
+>
+> **Errata (task 73):** a varredura negativa de frontend desta auditoria registrava `ngModel`/template-driven (0) (ver §"Conformes"). O componente `seletor-cor` foi adicionado **depois** da auditoria e voltou a usar `[ngModel]`/`(ngModelChange)` no `p-colorpicker` — o "0" deixou de valer. A task **73** removeu esse `ngModel`, trocando-o por `FormControl` interno + `[formControl]` (CVA preservado); o frontend voltou a `ngModel` (0). Esta errata **substitui** a atribuição do C2 à task 62 acima: o `ngModel` do `seletor-cor` só foi efetivamente eliminado na task **73**.
 
 ---
 
@@ -161,7 +163,9 @@ Transparência sobre o que **passou** na varredura — para não gerar ruído no
   é o item cross-cutting do §5, não um desvio do módulo.
 - **autenticacao / assistente** — sem CRUD de entidade; assinaturas já em DTO; sem SQL fora de padrão.
 - **frontend (todos os módulos)** — varredura **negativa** confirmada em:
-  `NgModule` (0), `Subject`/`BehaviorSubject` (0), `ngModel`/template-driven (0),
+  `NgModule` (0), `Subject`/`BehaviorSubject` (0), `ngModel`/template-driven (0
+  na data da auditoria; reintroduzido pelo `seletor-cor` adicionado depois e
+  removido na task **73** — ver errata acima),
   arquivos `.css` (0), `style=""` inline (0), seletores de ID em SCSS (0), rotas sem
   `loadComponent`/`loadChildren` (0), DTO/enum redefinido localmente (0 — os
   `models/` usam aliases de DTO do shared, **explicitamente permitidos** pelo SPEC §8.1).
