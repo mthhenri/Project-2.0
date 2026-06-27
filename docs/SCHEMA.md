@@ -12,6 +12,7 @@
 > - `20240017`/`20240018_seed_tags_padrao(_complemento)` — seed de tags padrão.
 > - `20240019_remover_ordem_exibicao` — remove `ordem_exibicao` de `demanda` e `atividade`.
 > - `20240020_padronizar_nomes_constraints` — renomeia `demanda_status_check` → `chk_demanda_status` e `ck_dia_nao_util_duracao` → `chk_dia_nao_util_duracao` (alinha ao prefixo `chk_`; estado final já refletido abaixo).
+> - `20240021_seed_feriados_nacionais` — seed idempotente dos 9 feriados nacionais de data fixa em `dia_nao_util` (`recorrente = true`, `tipo = FERIADO`, `duracao = INTEGRAL`; idempotência por mês/dia). Feriados móveis ficam de fora.
 
 ---
 
