@@ -22,6 +22,7 @@ export interface ConfiguracaoAplicacao {
   porta: number;
   ambiente: string;
   corsOrigem: string | undefined;
+  fusoHorario: string;
 }
 
 export interface ConfiguracaoNegocio {

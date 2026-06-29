@@ -25,9 +25,10 @@ export class ConfigService {
         maximoTokens: Number(this.opcional('ANTHROPIC_MAXIMO_TOKENS') ?? '1024'),
       },
       aplicacao: {
-        porta:      Number(this.opcional('PORT') ?? this.obrigatoria('APP_PORTA')),
-        ambiente:   this.obrigatoria('APP_AMBIENTE'),
-        corsOrigem: this.opcional('APP_CORS_ORIGEM'),
+        porta:       Number(this.opcional('PORT') ?? this.obrigatoria('APP_PORTA')),
+        ambiente:    this.obrigatoria('APP_AMBIENTE'),
+        corsOrigem:  this.opcional('APP_CORS_ORIGEM'),
+        fusoHorario: this.opcional('APP_TIMEZONE') ?? 'America/Sao_Paulo',
       },
       negocio: {
         intervaloMinimoMinutos: Number(this.obrigatoria('INTERVALO_MINIMO_MINUTOS')),

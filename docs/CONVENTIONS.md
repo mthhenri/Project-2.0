@@ -154,6 +154,10 @@ cor VARCHAR(7) NOT NULL DEFAULT '#6366f1'       -- DEFAULT proibido
 - Negócio (português): `inicio_data`, `fim_data`, `previsao_fim_data`, `dia_data`
 - Padrão: `[contexto]_date` ou `[contexto]_data` — nunca `_at`, nunca `_em`, nunca `data_[contexto]`
 
+**Tipo de coluna de data:**
+- Com instante (data + hora): `timestamptz` — `created_date`, `updated_date`, `deleted_date`, `inicio_data`, `fim_data`. Banco armazena UTC; sessão fixada em `APP_TIMEZONE` para `NOW()`/bucketing por dia
+- Calendário puro (sem hora/fuso): `date` — `dia_data`, `previsao_fim_data`, `projeto.inicio_data`
+
 **Nomes:**
 - Tabelas: singular português — `usuario`, `demanda`, `dia_nao_util`
 - Colunas de negócio: snake_case português — `nome_completo`, `horas_estimadas`

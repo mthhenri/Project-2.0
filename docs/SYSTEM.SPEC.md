@@ -889,11 +889,11 @@ A cor `primary` aparece **apenas em pontos de destaque**: estado ativo na navega
 Nomes em inglês por serem genéricos. **Sem DEFAULT** — todos os valores fornecidos explicitamente no INSERT.
 
 ```sql
-id            SERIAL    PRIMARY KEY,
-created_date  TIMESTAMP NOT NULL,
-updated_date  TIMESTAMP NOT NULL,
-is_deleted    BOOLEAN   NOT NULL,
-deleted_date  TIMESTAMP
+id            SERIAL      PRIMARY KEY,
+created_date  TIMESTAMPTZ NOT NULL,
+updated_date  TIMESTAMPTZ NOT NULL,
+is_deleted    BOOLEAN     NOT NULL,
+deleted_date  TIMESTAMPTZ
 ```
 
 Em TypeScript:
@@ -915,6 +915,7 @@ export abstract class BaseEntity {
 3. **Colunas de negócio** em snake_case português: `nome_completo`, `horas_estimadas`
 4. **Colunas de BaseEntity** em snake_case inglês: `is_deleted`, `created_date`, `updated_date`
 5. **Campos de data** seguem o padrão `[contexto]_date` (inglês) ou `[contexto]_data` (português): `created_date`, `inicio_data`, `fim_data`, `previsao_fim_data`
+   - **Tipo:** colunas de data/hora (com instante) são `timestamptz` — o banco armazena **UTC** e devolve o instante; o front converte para o fuso local. A **sessão do banco** roda no fuso da aplicação (`APP_TIMEZONE`, fixado via `afterCreate` do pool e do `knexfile.ts`), para que `NOW()` e o bucketing por dia (`DATE(...)`/`::date`) extraiam o **dia local** correto. Colunas de **calendário puro** (sem hora/fuso) permanecem `date`: `projeto.inicio_data`, `projeto.previsao_fim_data`, `demanda.previsao_fim_data`, `dia_nao_util.dia_data`
 6. **Sem DEFAULT** em nenhuma coluna — a aplicação sempre fornece todos os valores explicitamente
 7. **Sem aliases abreviados** em queries — usar nome completo da tabela ou alias descritivo (`demanda_filho`, não `d`)
 8. **Parâmetros nomeados** `:nome` com objeto (Knex) — nunca `?` posicional, nunca interpolação de string
@@ -1148,8 +1149,8 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 |---|---|---|
 | `atividade_id` | INTEGER FK | → atividade |
 | `descricao` | TEXT | obrigatória |
-| `inicio_data` | TIMESTAMP | editável na edição da execução |
-| `fim_data` | TIMESTAMP \| NULL | NULL = execução em andamento; editável na edição |
+| `inicio_data` | TIMESTAMPTZ | editável na edição da execução |
+| `fim_data` | TIMESTAMPTZ \| NULL | NULL = execução em andamento; editável na edição |
 
 > A edição de execução (`PUT /execucao/:id`) altera `descricao`, `inicio_data` e `fim_data` — não apenas a descrição.
 

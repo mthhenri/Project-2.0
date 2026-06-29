@@ -202,11 +202,6 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
 
     const clausulaWhere = condicoes.join(' AND ');
 
-    // "Agora" vem do relógio da aplicação (mesmo frame naïve-local em que inicio_data
-    // é gravado), e não de NOW() do banco — que é UTC e infla a duração de execuções
-    // em andamento pelo deslocamento do fuso.
-    parametros.agora = new Date();
-
     const [{ total }] = await this.executarConsulta<{ total: number }>(
       `SELECT COUNT(execucao.id)::int AS total
        FROM execucao
@@ -224,7 +219,7 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
 
     const [{ totalMinutosDia }] = await this.executarConsulta<{ totalMinutosDia: number }>(
       `SELECT COALESCE(SUM(
-         EXTRACT(EPOCH FROM (COALESCE(execucao.fim_data, CAST(:agora AS timestamp)) - execucao.inicio_data))::int / 60
+         EXTRACT(EPOCH FROM (COALESCE(execucao.fim_data, NOW()) - execucao.inicio_data))::int / 60
        ), 0)::int AS "totalMinutosDia"
        FROM execucao
        INNER JOIN atividade
@@ -252,7 +247,7 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
          execucao.descricao,
          execucao.inicio_data                                                            AS "inicioData",
          execucao.fim_data                                                               AS "fimData",
-         EXTRACT(EPOCH FROM (COALESCE(execucao.fim_data, CAST(:agora AS timestamp)) - execucao.inicio_data))::int / 60 AS "duracaoMinutos",
+         EXTRACT(EPOCH FROM (COALESCE(execucao.fim_data, NOW()) - execucao.inicio_data))::int / 60 AS "duracaoMinutos",
          atividade.usuario_id                                                            AS "usuarioId",
          usuario.nome_completo                                                           AS "nomeUsuario"
        FROM execucao
@@ -347,8 +342,8 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
          descricao,
          inicio_data  AS "inicioData",
          fim_data     AS "fimData",
-         EXTRACT(EPOCH FROM (COALESCE(fim_data, CAST(:agora AS timestamp)) - inicio_data))::int / 60 AS "duracaoMinutos"`,
-      { id: dto.id, descricao: dto.descricao, inicioData: dto.inicioData, fimData: dto.fimData, agora: new Date() },
+         EXTRACT(EPOCH FROM (COALESCE(fim_data, NOW()) - inicio_data))::int / 60 AS "duracaoMinutos"`,
+      { id: dto.id, descricao: dto.descricao, inicioData: dto.inicioData, fimData: dto.fimData },
     );
     return resultado[0];
   }

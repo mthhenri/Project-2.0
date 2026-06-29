@@ -92,18 +92,21 @@ com `--include=dev`** (ver abaixo). Não use `tsx`/esbuild: ele não emite
    | `INTERVALO_MINIMO_MINUTOS`| `15`                                               |
    | `APP_PORTA`               | `10000` *(fallback; o Render injeta `PORT` automaticamente e o app prioriza `PORT`)* |
    | `APP_AMBIENTE`            | `production`                                        |
-   | `TZ`                      | `America/Sao_Paulo` — **obrigatório**              |
+   | `APP_TIMEZONE`            | `America/Sao_Paulo` — fixa o fuso da **sessão do banco** |
+   | `TZ`                      | `America/Sao_Paulo` — recomendado (logs/exibição local) |
    | `APP_CORS_ORIGEM`         | a URL do Cloudflare Pages — **preencha no passo 3** |
    | `ANTHROPIC_API_KEY`       | *(opcional — deixe vazio por enquanto; sem ela o auxílio de descrições por IA fica indisponível, o resto funciona)* |
 
    > **Não** defina `NODE_ENV=production` — isso faria o `npm install` pular `ts-node`/`typescript`.
    > Use `APP_AMBIENTE=production` para o ambiente lógico da aplicação.
    >
-   > **`TZ=America/Sao_Paulo` é obrigatório.** O sistema grava wall-clock em colunas
-   > `TIMESTAMP` naïve (sem timezone) e assume que o relógio do processo é BRT. O
-   > container do Render sobe em **UTC** por padrão (independente da região física),
-   > então sem o `TZ` as execuções iniciadas à noite são gravadas com a data do dia
-   > seguinte e as durações/relatórios de ponto ficam deslocados.
+   > **Fuso horário (task 75):** as colunas de data/hora são `timestamptz` (instante UTC
+   > no banco). A correção de fuso **não depende mais do `TZ` do processo** — quem garante
+   > `NOW()` e o bucketing por dia corretos é `APP_TIMEZONE`, que fixa a sessão do banco
+   > (via `afterCreate` do pool e do `knexfile.ts`). Tem default `America/Sao_Paulo`, mas
+   > defina explicitamente em produção. O `TZ` do processo passou a ser apenas cosmético
+   > (logs e `Date.toString()` do Node) — recomendado, não obrigatório para a correção.
+   > A exibição no front já é fixada em BRT (`DATE_PIPE_DEFAULT_OPTIONS: { timezone: '-0300' }`).
 
 4. Faça o deploy. Anote a URL pública: `https://<seu-servico>.onrender.com`.
    Valide com `GET https://<seu-servico>.onrender.com/api/v1` e o Swagger em `/api/docs`.

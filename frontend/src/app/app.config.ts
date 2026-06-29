@@ -51,7 +51,8 @@ export const appConfig: ApplicationConfig = {
     MessageService,
     // Datas/horas sempre no horário do Brasil (UTC-3 fixo, sem horário de verão desde 2019),
     // independente do fuso do computador do usuário. O DatePipe não aceita nome IANA
-    // (America/Sao_Paulo) — só offset. Ver docs/DEPLOY.md (timestamps naïve assumem BRT).
+    // (America/Sao_Paulo) — só offset. O backend devolve instantes ISO (colunas timestamptz,
+    // task 75); este offset apenas garante que a renderização seja sempre BRT.
     { provide: DATE_PIPE_DEFAULT_OPTIONS, useValue: { timezone: '-0300' } },
   ],
 };

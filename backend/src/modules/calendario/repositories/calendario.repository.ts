@@ -148,6 +148,11 @@ export class CalendarioRepository extends BaseRepository<DiaNaoUtil> {
   /**
    * Verifica se uma data específica está cadastrada como não útil.
    * Considera tanto dias exatos quanto recorrentes (mesmo mês/dia, qualquer ano).
+   *
+   * `dto.data` chega como instante em meia-noite UTC (convenção do calendário, que usa
+   * `getUTCDay`/`Date.UTC`). Como a sessão do banco roda no fuso da app (timestamptz),
+   * extrai-se o dia de calendário com `AT TIME ZONE 'UTC'` antes do `::date` — assim o
+   * dia casado independe do fuso da sessão (evita off-by-one ao bucketizar em BRT).
    */
   async validarDia(dto: CalendarioVerificarDiaDto): Promise<boolean> {
     const resultado = await this.executarConsulta<{ ehDiaNaoUtil: boolean }>(
@@ -156,12 +161,12 @@ export class CalendarioRepository extends BaseRepository<DiaNaoUtil> {
          FROM dia_nao_util
          WHERE dia_nao_util.is_deleted = false
            AND (
-             (dia_nao_util.recorrente = false AND dia_nao_util.dia_data = :data::DATE)
+             (dia_nao_util.recorrente = false AND dia_nao_util.dia_data = (:data AT TIME ZONE 'UTC')::date)
              OR
              (
                dia_nao_util.recorrente = true
-               AND EXTRACT(MONTH FROM dia_nao_util.dia_data) = EXTRACT(MONTH FROM :data::DATE)
-               AND EXTRACT(DAY FROM dia_nao_util.dia_data)   = EXTRACT(DAY FROM :data::DATE)
+               AND EXTRACT(MONTH FROM dia_nao_util.dia_data) = EXTRACT(MONTH FROM (:data AT TIME ZONE 'UTC')::date)
+               AND EXTRACT(DAY FROM dia_nao_util.dia_data)   = EXTRACT(DAY FROM (:data AT TIME ZONE 'UTC')::date)
              )
            )
        ) AS "ehDiaNaoUtil"`,
@@ -203,6 +208,10 @@ export class CalendarioRepository extends BaseRepository<DiaNaoUtil> {
   /**
    * Retorna o tipo e a duração do dia não útil cadastrado para a data informada.
    * Considera dias exatos e recorrentes. Retorna null se a data for dia útil.
+   *
+   * `dto.data` é instante em meia-noite UTC; extrai-se o dia de calendário com
+   * `AT TIME ZONE 'UTC'` antes do `::date` para que o casamento independa do fuso da
+   * sessão (que roda em BRT desde a migração para timestamptz). Ver `validarDia`.
    */
   async recuperarTipo(dto: CalendarioVerificarDiaDto): Promise<DiaNaoUtilInfo | null> {
     const resultado = await this.executarConsulta<DiaNaoUtilInfo>(
@@ -210,12 +219,12 @@ export class CalendarioRepository extends BaseRepository<DiaNaoUtil> {
        FROM dia_nao_util
        WHERE dia_nao_util.is_deleted = false
          AND (
-           (dia_nao_util.recorrente = false AND dia_nao_util.dia_data = :data::DATE)
+           (dia_nao_util.recorrente = false AND dia_nao_util.dia_data = (:data AT TIME ZONE 'UTC')::date)
            OR
            (
              dia_nao_util.recorrente = true
-             AND EXTRACT(MONTH FROM dia_nao_util.dia_data) = EXTRACT(MONTH FROM :data::DATE)
-             AND EXTRACT(DAY FROM dia_nao_util.dia_data)   = EXTRACT(DAY FROM :data::DATE)
+             AND EXTRACT(MONTH FROM dia_nao_util.dia_data) = EXTRACT(MONTH FROM (:data AT TIME ZONE 'UTC')::date)
+             AND EXTRACT(DAY FROM dia_nao_util.dia_data)   = EXTRACT(DAY FROM (:data AT TIME ZONE 'UTC')::date)
            )
          )
        LIMIT 1`,
