@@ -65,6 +65,7 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
          usuario.nome_completo             AS "nomeCompleto",
          usuario.cargo_titulo              AS "cargoTitulo",
          usuario.anotacoes,
+         usuario.anotacoes_alteracao_data  AS "anotacoesAlteracaoData",
          usuario.horas_diarias_necessarias AS "horasDiariasNecessarias",
          usuario.tipo,
          usuario.status,
@@ -122,7 +123,8 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
          usuario.cargo_titulo  AS "cargoTitulo",
          usuario.tipo,
          usuario.status,
-         (usuario.anotacoes IS NOT NULL AND btrim(usuario.anotacoes) <> '') AS "temAnotacoes"
+         (usuario.anotacoes IS NOT NULL
+            AND regexp_replace(usuario.anotacoes, '<[^>]*>|&nbsp;|&#160;|[[:space:]]+', '', 'gi') <> '') AS "temAnotacoes"
        FROM usuario
        WHERE ${clausulaWhere}
        ORDER BY usuario.nome_completo ASC
@@ -189,6 +191,9 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
     }
     if (dto.anotacoes !== undefined) {
       setClauses.push('anotacoes = :anotacoes');
+      setClauses.push(
+        'anotacoes_alteracao_data = CASE WHEN anotacoes IS DISTINCT FROM :anotacoes THEN NOW() ELSE anotacoes_alteracao_data END',
+      );
       parametros.anotacoes = dto.anotacoes;
     }
     if (dto.horasDiariasNecessarias !== undefined) {
@@ -215,6 +220,7 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
          nome_completo             AS "nomeCompleto",
          cargo_titulo              AS "cargoTitulo",
          anotacoes,
+         anotacoes_alteracao_data  AS "anotacoesAlteracaoData",
          tipo,
          status,
          horas_diarias_necessarias AS "horasDiariasNecessarias",

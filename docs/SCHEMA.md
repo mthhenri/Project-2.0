@@ -15,6 +15,7 @@
 > - `20240021_seed_feriados_nacionais` — seed idempotente dos 9 feriados nacionais de data fixa em `dia_nao_util` (`recorrente = true`, `tipo = FERIADO`, `duracao = INTEGRAL`; idempotência por mês/dia). Feriados móveis ficam de fora.
 > - `20240022_converter_datas_para_timestamptz` — converte as colunas de data/hora das 11 tabelas com BaseEntity para `timestamptz` (instante UTC; sessão do banco no fuso da app).
 > - `20240023_remover_prioridade_demanda` — remove a coluna `demanda.prioridade` e o índice `ix_demanda_prioridade` (conceito de prioridade descontinuado).
+> - `20240024_adicionar_anotacoes_alteracao_data_usuario` — adiciona `usuario.anotacoes_alteracao_data TIMESTAMPTZ` (nullable, sem `DEFAULT`); carimba a data da última alteração das anotações.
 
 ---
 
@@ -138,6 +139,7 @@ CREATE TABLE usuario (
   nome_completo             VARCHAR(255) NOT NULL,
   cargo_titulo              VARCHAR(150) NOT NULL,
   anotacoes                 TEXT,
+  anotacoes_alteracao_data  TIMESTAMPTZ,
   horas_diarias_necessarias INTEGER      NOT NULL,
   tipo                      VARCHAR(20)  NOT NULL
                               CHECK (tipo IN ('DESENVOLVEDOR', 'GESTOR')),

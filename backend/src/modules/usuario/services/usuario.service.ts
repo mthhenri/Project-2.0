@@ -174,6 +174,7 @@ export class UsuarioService {
       nomeCompleto:            usuario.nomeCompleto,
       cargoTitulo:             usuario.cargoTitulo,
       anotacoes:               usuario.anotacoes,
+      anotacoesAlteracaoData:  usuario.anotacoesAlteracaoData,
       tipo:                    usuario.tipo,
       status:                  usuario.status,
       horasDiariasNecessarias: usuario.horasDiariasNecessarias,

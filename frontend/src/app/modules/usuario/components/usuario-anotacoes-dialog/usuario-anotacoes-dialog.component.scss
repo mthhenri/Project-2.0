@@ -1,4 +1,37 @@
 .anotacoes-dialog {
+  &__cabecalho {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  &__titulo-linha {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__titulo {
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+
+  &__chip {
+    font-size: 0.7rem;
+  }
+
+  &__alteracao {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.8rem;
+    color: var(--p-text-muted-color);
+
+    i {
+      font-size: 0.75rem;
+    }
+  }
+
   &__carregando {
     display: flex;
     flex-direction: column;

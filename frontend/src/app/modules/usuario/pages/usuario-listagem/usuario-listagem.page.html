@@ -138,6 +138,6 @@
 </div>
 
 <p-confirmDialog />
-<app-usuario-anotacoes-dialog #anotacoesDialog />
+<app-usuario-anotacoes-dialog #anotacoesDialog (aoAlterar)="buscarUsuarios()" />
 <app-usuario-perfil-dialog #perfilDialog (aoAlterar)="buscarUsuarios()" />
 <app-usuario-formulario-dialog #formularioDialog (aoCriar)="buscarUsuarios()" />

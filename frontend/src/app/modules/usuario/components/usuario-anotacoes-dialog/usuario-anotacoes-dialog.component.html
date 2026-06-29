@@ -1,5 +1,4 @@
 <p-dialog
-  [header]="tituloDialog()"
   [(visible)]="visivel"
   [modal]="true"
   [style]="{ width: '95vw', height: '95vh' }"
@@ -8,7 +7,32 @@
   [resizable]="false"
   [dismissableMask]="false"
   [closeOnEscape]="false"
+  (onHide)="aoFecharDialog()"
 >
+  <ng-template #header>
+    <div class="anotacoes-dialog__cabecalho">
+      <span class="anotacoes-dialog__titulo-linha">
+        <span class="anotacoes-dialog__titulo">{{ tituloDialog() }}</span>
+        @if (temAlteracoesNaoSalvas()) {
+          <p-tag
+            class="anotacoes-dialog__chip"
+            value="Alterado"
+            icon="pi pi-pencil"
+            severity="warn"
+          />
+        }
+      </span>
+      <span class="anotacoes-dialog__alteracao">
+        <i class="pi pi-history"></i>
+        @if (anotacoesAlteracaoData()) {
+          Última alteração: {{ anotacoesAlteracaoData() | date: 'dd/MM/yyyy HH:mm:ss' }}
+        } @else {
+          Sem alterações registradas
+        }
+      </span>
+    </div>
+  </ng-template>
+
   @if (carregando()) {
     <div class="anotacoes-dialog__carregando">
       <i class="pi pi-spin pi-spinner"></i>

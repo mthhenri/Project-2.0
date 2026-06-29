@@ -1058,6 +1058,7 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 | `nome_completo` | VARCHAR | |
 | `cargo_titulo` | VARCHAR | ex: "Desenvolvedor Sênior" |
 | `anotacoes` | TEXT \| NULL | HTML gerado pelo p-editor |
+| `anotacoes_alteracao_data` | TIMESTAMPTZ \| NULL | data da última alteração das anotações (`NULL` = nunca alteradas). `timestamptz` desde já (escrita por `NOW()`); demais colunas de `usuario` seguem `timestamp` até a spec 75 |
 | `horas_diarias_necessarias` | INTEGER | em horas (ex: 8) |
 | `tipo` | ENUM | DESENVOLVEDOR, GESTOR |
 | `status` | ENUM | ATIVO, INATIVO |

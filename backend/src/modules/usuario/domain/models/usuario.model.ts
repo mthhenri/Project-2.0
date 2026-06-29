@@ -7,6 +7,7 @@ export class Usuario extends BaseEntity {
   nomeCompleto: string;
   cargoTitulo: string;
   anotacoes: string | null;
+  anotacoesAlteracaoData: Date | null;
   horasDiariasNecessarias: number;
   tipo: UsuarioTipoEnum;
   status: UsuarioStatusEnum;
