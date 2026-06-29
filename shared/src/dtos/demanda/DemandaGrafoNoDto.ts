@@ -1,6 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { DemandaStatusEnum } from '../../enums/demanda-status.enum';
-import { DemandaPrioridadeEnum } from '../../enums/demanda-prioridade.enum';
 import { TagResumoDto } from '../tag/TagResumoDto';
 
 export class DemandaGrafoNoDto {
@@ -12,9 +11,6 @@ export class DemandaGrafoNoDto {
 
   @ApiProperty({ enum: DemandaStatusEnum, example: DemandaStatusEnum.PLANEJADA })
   status: DemandaStatusEnum;
-
-  @ApiProperty({ enum: DemandaPrioridadeEnum, example: DemandaPrioridadeEnum.MEDIA })
-  prioridade: DemandaPrioridadeEnum;
 
   @ApiProperty({ example: false })
   isEstrutural: boolean;

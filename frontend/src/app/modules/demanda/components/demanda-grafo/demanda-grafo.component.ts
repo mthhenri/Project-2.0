@@ -16,7 +16,6 @@ import {
   DemandaGrafoNoDto,
   DemandaGrafoArestaDto,
   DemandaStatusEnum,
-  DemandaPrioridadeEnum,
 } from '@project20/shared';
 import { COR_NO_PREENCHIMENTO, COR_NO_BORDA } from '../../constants/demanda-cores.constants';
 
@@ -218,13 +217,7 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   private calcularRaioNo(no: DemandaGrafoNoDto): number {
-    if (no.isEstrutural) return 28;
-    const raioPorPrioridade: Record<DemandaPrioridadeEnum, number> = {
-      [DemandaPrioridadeEnum.BAIXA]:   12,
-      [DemandaPrioridadeEnum.MEDIA]:   15,
-      [DemandaPrioridadeEnum.ALTA]:    19,
-      [DemandaPrioridadeEnum.CRITICA]: 22,
-    };
-    return raioPorPrioridade[no.prioridade] ?? 12;
+    const raioEstrutural = 28;
+    return no.isEstrutural ? raioEstrutural : raioEstrutural * 0.6; // 16.8 (40% menor)
   }
 }

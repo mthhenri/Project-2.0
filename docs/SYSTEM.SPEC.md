@@ -305,7 +305,6 @@ singular português (`TIPO + TABELA + COMPLEMENTO`):
 | `usuario.status` | `tipo_usuario_status` | `TipoUsuarioStatusEnum` | `tipo_usuario_status_id` |
 | `projeto.status` | `tipo_projeto_status` | `TipoProjetoStatusEnum` | `tipo_projeto_status_id` |
 | `demanda.status` | `tipo_demanda_status` | `TipoDemandaStatusEnum` | `tipo_demanda_status_id` |
-| `demanda.prioridade` | `tipo_demanda_prioridade` | `TipoDemandaPrioridadeEnum` | `tipo_demanda_prioridade_id` |
 | `atividade.status` | `tipo_atividade_status` | `TipoAtividadeStatusEnum` | `tipo_atividade_status_id` |
 | `dia_nao_util.tipo` | `tipo_dia_nao_util` | `TipoDiaNaoUtilEnum` | `tipo_dia_nao_util_id` |
 | `dia_nao_util.duracao` | `tipo_dia_nao_util_duracao` | `TipoDiaNaoUtilDuracaoEnum` | `tipo_dia_nao_util_duracao_id` |
@@ -361,7 +360,6 @@ shared/src/
     usuario-tipo.enum.ts
     usuario-status.enum.ts
     demanda-status.enum.ts
-    demanda-prioridade.enum.ts
     atividade-status.enum.ts
     projeto-status.enum.ts
     dia-nao-util-tipo.enum.ts
@@ -1088,7 +1086,6 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 | `descricao_cliente` | TEXT \| NULL | |
 | `documentacao` | TEXT \| NULL | markdown |
 | `horas_estimadas` | INTEGER | |
-| `prioridade` | ENUM | BAIXA, MEDIA, ALTA, CRITICA |
 | `status` | ENUM | PENDENTE, PLANEJADA, CONCLUIDA |
 | `is_estrutural` | BOOLEAN | demanda-container que agrupa sub-demandas |
 | `previsao_fim_data` | DATE \| NULL | |

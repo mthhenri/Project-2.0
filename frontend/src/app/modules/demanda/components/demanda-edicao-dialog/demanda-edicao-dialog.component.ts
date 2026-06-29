@@ -13,7 +13,6 @@ import {
   DemandaAlterarDto,
   DemandaResumoDto,
   DemandaStatusEnum,
-  DemandaPrioridadeEnum,
 } from '@project20/shared';
 import { DemandaService } from '../../services/demanda.service';
 
@@ -52,19 +51,11 @@ export class DemandaEdicaoDialogComponent implements OnChanges {
   readonly formulario = this.formBuilder.group({
     nome:             ['', [Validators.required, Validators.maxLength(255)]],
     demandaPaiId:     [null as number | null],
-    prioridade:       [DemandaPrioridadeEnum.MEDIA as DemandaPrioridadeEnum, [Validators.required]],
     status:           [DemandaStatusEnum.PENDENTE as DemandaStatusEnum, [Validators.required]],
     isEstrutural:     [false],
     horasEstimadas:   [0, [Validators.required, Validators.min(0)]],
     previsaoFimData:  [null as Date | null],
   });
-
-  readonly prioridadeOpcoes = [
-    { label: 'Baixa',   value: DemandaPrioridadeEnum.BAIXA },
-    { label: 'Média',   value: DemandaPrioridadeEnum.MEDIA },
-    { label: 'Alta',    value: DemandaPrioridadeEnum.ALTA },
-    { label: 'Crítica', value: DemandaPrioridadeEnum.CRITICA },
-  ];
 
   readonly statusOpcoes = [
     { label: 'Pendente',  value: DemandaStatusEnum.PENDENTE },
@@ -94,7 +85,6 @@ export class DemandaEdicaoDialogComponent implements OnChanges {
     const dto: DemandaAlterarDto = {
       nome:             valor.nome ?? undefined,
       demandaPaiId:     valor.demandaPaiId ?? undefined,
-      prioridade:       valor.prioridade ?? undefined,
       status:           valor.status ?? undefined,
       isEstrutural:     valor.isEstrutural ?? undefined,
       horasEstimadas:   valor.horasEstimadas ?? undefined,
@@ -136,7 +126,6 @@ export class DemandaEdicaoDialogComponent implements OnChanges {
             this.formulario.patchValue({
               nome:             demanda.nome,
               demandaPaiId:     demanda.demandaPaiId ?? null,
-              prioridade:       demanda.prioridade,
               status:           demanda.status,
               isEstrutural:     demanda.isEstrutural,
               horasEstimadas:   demanda.horasEstimadas,

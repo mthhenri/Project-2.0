@@ -2,7 +2,7 @@ import { Component, Input, Output, EventEmitter, forwardRef, inject, signal, OnC
 import { Tag } from 'primeng/tag';
 import { ContextMenu } from 'primeng/contextmenu';
 import { MenuItem } from 'primeng/api';
-import { DemandaArvoreItemDto, DemandaStatusEnum, DemandaPrioridadeEnum } from '@project20/shared';
+import { DemandaArvoreItemDto, DemandaStatusEnum } from '@project20/shared';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 
 type CampoDescricao = 'descricaoTecnica' | 'descricaoCliente' | 'documentacao';
@@ -159,15 +159,5 @@ export class DemandaArvoreItemComponent implements OnChanges {
       [DemandaStatusEnum.CONCLUIDA]:          'Concluída',
     };
     return mapa[status];
-  }
-
-  severidadePrioridade(prioridade: DemandaPrioridadeEnum): 'secondary' | 'info' | 'warn' | 'danger' {
-    const mapa: Record<DemandaPrioridadeEnum, 'secondary' | 'info' | 'warn' | 'danger'> = {
-      [DemandaPrioridadeEnum.BAIXA]:   'secondary',
-      [DemandaPrioridadeEnum.MEDIA]:   'info',
-      [DemandaPrioridadeEnum.ALTA]:    'warn',
-      [DemandaPrioridadeEnum.CRITICA]: 'danger',
-    };
-    return mapa[prioridade];
   }
 }

@@ -2,7 +2,6 @@ import { IsNumber, IsOptional, IsEnum, IsBoolean, Min } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { DemandaStatusEnum } from '../../enums/demanda-status.enum';
-import { DemandaPrioridadeEnum } from '../../enums/demanda-prioridade.enum';
 
 export class DemandaListarDto {
   @ApiProperty({ example: 1 })
@@ -21,11 +20,6 @@ export class DemandaListarDto {
   @IsOptional()
   @IsEnum(DemandaStatusEnum)
   status?: DemandaStatusEnum;
-
-  @ApiPropertyOptional({ enum: DemandaPrioridadeEnum, example: DemandaPrioridadeEnum.ALTA })
-  @IsOptional()
-  @IsEnum(DemandaPrioridadeEnum)
-  prioridade?: DemandaPrioridadeEnum;
 
   @ApiPropertyOptional({ example: false })
   @IsOptional()

@@ -13,7 +13,6 @@ import {
   DemandaGrafoArestaDto,
   DemandaAncestralDto,
   DemandaStatusEnum,
-  DemandaPrioridadeEnum,
   DemandaConexaoCriadaDto,
   DemandaConexaoResumoDto,
   DemandaMembroDto,
@@ -62,12 +61,12 @@ export class DemandaRepository extends BaseRepository<Demanda> {
     const resultado = await this.executarConsulta<DemandaCriadaDto>(
       `INSERT INTO demanda (
          projeto_id, demanda_pai_id, nome, descricao_tecnica, descricao_cliente,
-         documentacao, horas_estimadas, prioridade, status, is_estrutural,
+         documentacao, horas_estimadas, status, is_estrutural,
          previsao_fim_data, created_date, updated_date, is_deleted
        )
        SELECT
          :projetoId, :demandaPaiId, :nome, :descricaoTecnica, :descricaoCliente,
-         :documentacao, :horasEstimadas, :prioridade, :status, :isEstrutural,
+         :documentacao, :horasEstimadas, :status, :isEstrutural,
          :previsaoFimData, NOW(), NOW(), false
        RETURNING
          id,
@@ -75,7 +74,6 @@ export class DemandaRepository extends BaseRepository<Demanda> {
          demanda_pai_id     AS "demandaPaiId",
          nome,
          horas_estimadas    AS "horasEstimadas",
-         prioridade,
          status,
          is_estrutural      AS "isEstrutural",
          previsao_fim_data  AS "previsaoFimData",
@@ -88,7 +86,6 @@ export class DemandaRepository extends BaseRepository<Demanda> {
         descricaoCliente: dados.descricaoCliente ?? null,
         documentacao:     dados.documentacao ?? null,
         horasEstimadas:   dados.horasEstimadas,
-        prioridade:       dados.prioridade,
         status:           dados.status,
         isEstrutural:     dados.isEstrutural,
         previsaoFimData:  dados.previsaoFimData ?? null,
@@ -170,7 +167,6 @@ export class DemandaRepository extends BaseRepository<Demanda> {
          demanda.descricao_cliente  AS "descricaoCliente",
          demanda.documentacao,
          demanda.horas_estimadas    AS "horasEstimadas",
-         demanda.prioridade,
          demanda.status,
          demanda.is_estrutural      AS "isEstrutural",
          demanda.previsao_fim_data  AS "previsaoFimData",
@@ -214,11 +210,6 @@ export class DemandaRepository extends BaseRepository<Demanda> {
       parametros.status = filtros.status;
     }
 
-    if (filtros.prioridade !== undefined) {
-      condicoes.push('demanda.prioridade = :prioridade');
-      parametros.prioridade = filtros.prioridade;
-    }
-
     if (filtros.isEstrutural !== undefined) {
       condicoes.push('demanda.is_estrutural = :isEstrutural');
       parametros.isEstrutural = filtros.isEstrutural;
@@ -244,7 +235,6 @@ export class DemandaRepository extends BaseRepository<Demanda> {
       `SELECT DISTINCT
          demanda.id,
          demanda.nome,
-         demanda.prioridade,
          demanda.status,
          demanda.is_estrutural   AS "isEstrutural",
          demanda.horas_estimadas AS "horasEstimadas"
@@ -321,10 +311,6 @@ export class DemandaRepository extends BaseRepository<Demanda> {
       setClauses.push('horas_estimadas = :horasEstimadas');
       parametros.horasEstimadas = dto.horasEstimadas;
     }
-    if (dto.prioridade !== undefined) {
-      setClauses.push('prioridade = :prioridade');
-      parametros.prioridade = dto.prioridade;
-    }
     if (dto.status !== undefined) {
       setClauses.push('status = :status');
       parametros.status = dto.status;
@@ -352,7 +338,6 @@ export class DemandaRepository extends BaseRepository<Demanda> {
          descricao_cliente  AS "descricaoCliente",
          documentacao,
          horas_estimadas    AS "horasEstimadas",
-         prioridade,
          status,
          is_estrutural      AS "isEstrutural",
          previsao_fim_data  AS "previsaoFimData",
@@ -371,7 +356,6 @@ export class DemandaRepository extends BaseRepository<Demanda> {
     demandaPaiId: number | null;
     nome: string;
     status: DemandaStatusEnum;
-    prioridade: DemandaPrioridadeEnum;
     isEstrutural: boolean;
     horasEstimadas: number;
     nivel: number;
@@ -385,7 +369,6 @@ export class DemandaRepository extends BaseRepository<Demanda> {
       demandaPaiId: number | null;
       nome: string;
       status: DemandaStatusEnum;
-      prioridade: DemandaPrioridadeEnum;
       isEstrutural: boolean;
       horasEstimadas: number;
       nivel: number;
@@ -395,7 +378,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
       tags: TagResumoDto[];
     }>(
       `WITH RECURSIVE arvore_demanda AS (
-         SELECT id, demanda_pai_id, nome, status, prioridade, is_estrutural,
+         SELECT id, demanda_pai_id, nome, status, is_estrutural,
                 horas_estimadas, 0 AS nivel
          FROM demanda
          WHERE id = :demandaId
@@ -404,7 +387,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
          UNION ALL
 
          SELECT demanda_filho.id, demanda_filho.demanda_pai_id, demanda_filho.nome,
-                demanda_filho.status, demanda_filho.prioridade, demanda_filho.is_estrutural,
+                demanda_filho.status, demanda_filho.is_estrutural,
                 demanda_filho.horas_estimadas, arvore_demanda.nivel + 1
          FROM demanda AS demanda_filho
          INNER JOIN arvore_demanda
@@ -416,7 +399,6 @@ export class DemandaRepository extends BaseRepository<Demanda> {
          arvore_demanda.demanda_pai_id  AS "demandaPaiId",
          arvore_demanda.nome,
          arvore_demanda.status,
-         arvore_demanda.prioridade,
          arvore_demanda.is_estrutural   AS "isEstrutural",
          arvore_demanda.horas_estimadas AS "horasEstimadas",
          arvore_demanda.nivel,
@@ -505,7 +487,6 @@ export class DemandaRepository extends BaseRepository<Demanda> {
          demanda.id,
          demanda.nome,
          demanda.status,
-         demanda.prioridade,
          demanda.is_estrutural    AS "isEstrutural",
          demanda.horas_estimadas  AS "horasEstimadas",
          demanda.demanda_pai_id   AS "demandaPaiId",

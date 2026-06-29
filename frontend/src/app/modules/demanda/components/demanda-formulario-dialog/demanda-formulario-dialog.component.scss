@@ -11,8 +11,17 @@
     flex-direction: column;
     gap: 0.375rem;
     flex: 1;
+    // Sem isto, itens flex usam min-width:auto e não encolhem abaixo da largura
+    // intrínseca do controle (o p-inputnumber fica enorme e rouba a coluna da
+    // previsão). min-width:0 faz o flex respeitar as proporções abaixo.
+    min-width: 0;
 
     &--full { width: 100%; }
+
+    // Previsão de Término precisa caber a data completa (dd/mm/aaaa) + ícone;
+    // Horas Estimadas é curto ("0h"), então cede espaço para a previsão.
+    &--previsao { flex: 1.4; }
+    &--horas { flex: 0.85; }
 
     &--checkbox {
       flex-direction: row;

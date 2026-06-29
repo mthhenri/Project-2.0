@@ -15,7 +15,6 @@ import {
   DemandaCriadaDto,
   DemandaResumoDto,
   DemandaStatusEnum,
-  DemandaPrioridadeEnum,
   TagResumoDto,
   UsuarioResumoDto,
   UsuarioTipoEnum,
@@ -65,7 +64,6 @@ export class DemandaFormularioDialogComponent implements OnChanges {
   readonly formulario = this.formBuilder.group({
     nome:            ['', [Validators.required, Validators.maxLength(255)]],
     demandaPaiId:    [null as number | null],
-    prioridade:      [DemandaPrioridadeEnum.MEDIA as DemandaPrioridadeEnum, [Validators.required]],
     status:          [DemandaStatusEnum.PLANEJADA as DemandaStatusEnum, [Validators.required]],
     isEstrutural:    [false],
     horasEstimadas:  [0, [Validators.required, Validators.min(0)]],
@@ -73,13 +71,6 @@ export class DemandaFormularioDialogComponent implements OnChanges {
     tagIds:          [[] as number[]],
     usuarioIds:      [[] as number[]],
   });
-
-  readonly prioridadeOpcoes = [
-    { label: 'Baixa',   value: DemandaPrioridadeEnum.BAIXA },
-    { label: 'Média',   value: DemandaPrioridadeEnum.MEDIA },
-    { label: 'Alta',    value: DemandaPrioridadeEnum.ALTA },
-    { label: 'Crítica', value: DemandaPrioridadeEnum.CRITICA },
-  ];
 
   readonly statusOpcoes = [
     { label: 'Pendente',  value: DemandaStatusEnum.PENDENTE },
@@ -92,7 +83,6 @@ export class DemandaFormularioDialogComponent implements OnChanges {
       this.formulario.reset({
         nome:           '',
         demandaPaiId:   this.demandaPaiIdInicial ?? null,
-        prioridade:     DemandaPrioridadeEnum.MEDIA,
         status:         DemandaStatusEnum.PLANEJADA,
         isEstrutural:   false,
         horasEstimadas: 0,
@@ -124,7 +114,6 @@ export class DemandaFormularioDialogComponent implements OnChanges {
       projetoId:       this.projetoId,
       nome:            valor.nome!,
       demandaPaiId:    valor.demandaPaiId ?? undefined,
-      prioridade:      valor.prioridade!,
       status:          valor.status!,
       isEstrutural:    valor.isEstrutural ?? false,
       horasEstimadas:  valor.horasEstimadas ?? 0,
@@ -150,7 +139,6 @@ export class DemandaFormularioDialogComponent implements OnChanges {
             this.formulario.reset({
               nome:           '',
               demandaPaiId:   this.demandaPaiIdInicial ?? null,
-              prioridade:     DemandaPrioridadeEnum.MEDIA,
               status:         DemandaStatusEnum.PLANEJADA,
               isEstrutural:   false,
               horasEstimadas: 0,

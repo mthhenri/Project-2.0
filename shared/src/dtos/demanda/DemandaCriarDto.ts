@@ -13,7 +13,6 @@ import {
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { DemandaStatusEnum } from '../../enums/demanda-status.enum';
-import { DemandaPrioridadeEnum } from '../../enums/demanda-prioridade.enum';
 
 export class DemandaCriarDto {
   @ApiProperty({ example: 1 })
@@ -55,10 +54,6 @@ export class DemandaCriarDto {
   @Min(0)
   @Type(() => Number)
   horasEstimadas: number;
-
-  @ApiProperty({ enum: DemandaPrioridadeEnum, example: DemandaPrioridadeEnum.MEDIA })
-  @IsEnum(DemandaPrioridadeEnum)
-  prioridade: DemandaPrioridadeEnum;
 
   @ApiProperty({ enum: DemandaStatusEnum, example: DemandaStatusEnum.PLANEJADA })
   @IsEnum(DemandaStatusEnum)

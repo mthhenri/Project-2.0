@@ -13,6 +13,8 @@
 > - `20240019_remover_ordem_exibicao` — remove `ordem_exibicao` de `demanda` e `atividade`.
 > - `20240020_padronizar_nomes_constraints` — renomeia `demanda_status_check` → `chk_demanda_status` e `ck_dia_nao_util_duracao` → `chk_dia_nao_util_duracao` (alinha ao prefixo `chk_`; estado final já refletido abaixo).
 > - `20240021_seed_feriados_nacionais` — seed idempotente dos 9 feriados nacionais de data fixa em `dia_nao_util` (`recorrente = true`, `tipo = FERIADO`, `duracao = INTEGRAL`; idempotência por mês/dia). Feriados móveis ficam de fora.
+> - `20240022_converter_datas_para_timestamptz` — converte as colunas de data/hora das 11 tabelas com BaseEntity para `timestamptz` (instante UTC; sessão do banco no fuso da app).
+> - `20240023_remover_prioridade_demanda` — remove a coluna `demanda.prioridade` e o índice `ix_demanda_prioridade` (conceito de prioridade descontinuado).
 
 ---
 
@@ -243,8 +245,6 @@ CREATE TABLE demanda (
   descricao_cliente TEXT,
   documentacao      TEXT,
   horas_estimadas   INTEGER      NOT NULL,
-  prioridade        VARCHAR(20)  NOT NULL
-                      CHECK (prioridade IN ('BAIXA', 'MEDIA', 'ALTA', 'CRITICA')),
   status            VARCHAR(30)  NOT NULL
                       CONSTRAINT chk_demanda_status
                       CHECK (status IN ('PENDENTE', 'PLANEJADA', 'CONCLUIDA')),
@@ -262,10 +262,6 @@ CREATE INDEX ix_demanda_pai
 
 CREATE INDEX ix_demanda_status
   ON demanda(status)
-  WHERE is_deleted = false;
-
-CREATE INDEX ix_demanda_prioridade
-  ON demanda(prioridade)
   WHERE is_deleted = false;
 
 CREATE TRIGGER trg_demanda_updated_date

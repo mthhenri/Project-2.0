@@ -223,7 +223,6 @@ export class ProjetoDetalhePage implements OnInit {
         id:                  no.id,
         nome:                no.nome,
         status:              no.status,
-        prioridade:          no.prioridade,
         isEstrutural:        no.isEstrutural,
         horasEstimadas:      no.horasEstimadas,
         temDescricaoTecnica: no.temDescricaoTecnica,

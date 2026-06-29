@@ -6,6 +6,7 @@
   [style]="{ width: '600px' }"
   [draggable]="false"
   [resizable]="false"
+  appendTo="body"
 >
   @if (carregandoDados()) {
     <div class="demanda-edicao-dialog__carregando">
@@ -41,17 +42,6 @@
 
       <div class="demanda-edicao-dialog__linha">
         <div class="demanda-edicao-dialog__campo">
-          <label class="demanda-edicao-dialog__label">Prioridade</label>
-          <p-select
-            formControlName="prioridade"
-            [options]="prioridadeOpcoes"
-            optionLabel="label"
-            optionValue="value"
-            appendTo="body"
-            class="w-full"
-          />
-        </div>
-        <div class="demanda-edicao-dialog__campo">
           <label class="demanda-edicao-dialog__label">Status</label>
           <p-select
             formControlName="status"
@@ -62,19 +52,7 @@
             class="w-full"
           />
         </div>
-      </div>
-
-      <div class="demanda-edicao-dialog__linha">
-        <div class="demanda-edicao-dialog__campo">
-          <label class="demanda-edicao-dialog__label">Horas Estimadas</label>
-          <p-inputnumber
-            formControlName="horasEstimadas"
-            [min]="0"
-            [showButtons]="true"
-            class="w-full"
-          />
-        </div>
-        <div class="demanda-edicao-dialog__campo">
+        <div class="demanda-edicao-dialog__campo demanda-edicao-dialog__campo--previsao">
           <label class="demanda-edicao-dialog__label">Previsão de Término</label>
           <p-datepicker
             formControlName="previsaoFimData"
@@ -82,6 +60,16 @@
             [showIcon]="true"
             appendTo="body"
             class="w-full"
+          />
+        </div>
+        <div class="demanda-edicao-dialog__campo demanda-edicao-dialog__campo--horas">
+          <label class="demanda-edicao-dialog__label">Horas Estimadas</label>
+          <p-inputnumber
+            formControlName="horasEstimadas"
+            [min]="0"
+            [showButtons]="true"
+            class="w-full"
+            [inputStyle]="{ width: '100%' }"
           />
         </div>
       </div>

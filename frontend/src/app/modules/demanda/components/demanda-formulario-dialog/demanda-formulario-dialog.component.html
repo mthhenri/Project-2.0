@@ -5,6 +5,7 @@
   [modal]="true"
   [style]="{ width: '560px' }"
   [draggable]="false"
+  appendTo="body"
 >
   <form [formGroup]="formulario" class="demanda-dialog__form">
 
@@ -43,21 +44,7 @@
         />
       </div>
 
-      <div class="demanda-dialog__campo">
-        <label class="demanda-dialog__label">Prioridade <span class="demanda-dialog__obrigatorio">*</span></label>
-        <p-select
-          formControlName="prioridade"
-          [options]="prioridadeOpcoes"
-          optionLabel="label"
-          optionValue="value"
-          appendTo="body"
-          class="w-full"
-        />
-      </div>
-    </div>
-
-    <div class="demanda-dialog__linha">
-      <div class="demanda-dialog__campo">
+      <div class="demanda-dialog__campo demanda-dialog__campo--previsao">
         <label class="demanda-dialog__label">Previsão de Término</label>
         <p-datepicker
           formControlName="previsaoFimData"
@@ -68,13 +55,14 @@
         />
       </div>
 
-      <div class="demanda-dialog__campo">
+      <div class="demanda-dialog__campo demanda-dialog__campo--horas">
         <label class="demanda-dialog__label">Horas Estimadas <span class="demanda-dialog__obrigatorio">*</span></label>
         <p-inputnumber
           formControlName="horasEstimadas"
           [min]="0"
           suffix="h"
           class="w-full"
+          [inputStyle]="{ width: '100%' }"
         />
       </div>
     </div>

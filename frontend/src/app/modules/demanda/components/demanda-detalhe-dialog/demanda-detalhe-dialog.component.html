@@ -7,6 +7,7 @@
   [maximizable]="true"
   [draggable]="false"
   [resizable]="false"
+  appendTo="body"
 >
 
   @if (carregando()) {
@@ -102,10 +103,6 @@
           [value]="rotuloStatus(demanda()!.status)"
           [severity]="severidadeStatus(demanda()!.status)"
         />
-      </div>
-      <div class="demanda-detalhe-dialog__info-campo">
-        <span class="demanda-detalhe-dialog__info-label">Prioridade</span>
-        <span class="demanda-detalhe-dialog__info-valor">{{ demanda()!.prioridade }}</span>
       </div>
       <div class="demanda-detalhe-dialog__info-campo">
         <span class="demanda-detalhe-dialog__info-label">Horas Estimadas</span>
@@ -333,6 +330,7 @@
     [contentStyle]="{ display: 'flex', flexDirection: 'column' }"
     [draggable]="false"
     [resizable]="false"
+    appendTo="body"
   >
     @if (podeEditarDescricaoAtual()) {
       <form [formGroup]="formularioDescricao" class="demanda-detalhe-dialog__descricao-dialog-form">
@@ -400,6 +398,7 @@
   [modal]="true"
   [style]="{ width: '420px' }"
   [draggable]="false"
+  appendTo="body"
 >
   <form [formGroup]="formularioTags" class="demanda-detalhe-dialog__dialog-form">
     <div class="demanda-detalhe-dialog__tags-seletor">
