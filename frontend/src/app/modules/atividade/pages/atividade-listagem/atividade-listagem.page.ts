@@ -28,7 +28,7 @@ import {
   UsuarioStatusEnum,
   DemandaAtribuidaDto,
   DemandaRecuperadaDto,
-  ExecucaoResumoDto,
+  ExecucaoItemDto,
   ExecucaoIniciarDto,
   ExecucaoEncerrarDto,
   ExecucaoRegistrarDto,
@@ -173,7 +173,7 @@ export class AtividadeListagemPage implements OnInit {
   readonly salvandoExecucao = signal<boolean>(false);
   readonly modoExecucao = signal<'iniciar' | 'encerrar'>('iniciar');
   readonly atividadeExecucao = signal<AtividadeResumoDto | null>(null);
-  readonly execucoesDialogExecucao = signal<ExecucaoResumoDto[]>([]);
+  readonly execucoesDialogExecucao = signal<ExecucaoItemDto[]>([]);
   readonly carregandoExecucoesDialog = signal<boolean>(false);
 
   readonly formularioExecucao = this.formBuilder.group({

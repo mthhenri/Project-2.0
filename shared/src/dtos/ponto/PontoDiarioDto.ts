@@ -1,4 +1,4 @@
-import { ExecucaoResumoDto } from '../execucao/ExecucaoResumoDto';
+import { ExecucaoItemDto } from '../execucao/ExecucaoItemDto';
 import { IntervaloDto } from './IntervaloDto';
 
 export class PontoDiarioDto {
@@ -13,5 +13,5 @@ export class PontoDiarioDto {
   totalMinutosTrabalhados: number;
   saldoMinutos: number;
   intervalos: IntervaloDto[];
-  execucoes: ExecucaoResumoDto[];
+  execucoes: ExecucaoItemDto[];
 }

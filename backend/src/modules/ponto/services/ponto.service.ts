@@ -10,7 +10,7 @@ import {
   DiaNaoUtilTipoEnum,
   DiaNaoUtilDuracaoEnum,
   ExecucaoListarDto,
-  ExecucaoResumoDto,
+  ExecucaoItemDto,
   IntervaloDto,
   PontoConsultarDto,
   PontoDiarioDto,
@@ -284,7 +284,7 @@ export class PontoService {
 
   /** Identifica gaps entre execuções consecutivas e retorna os que superam o mínimo. */
   private calcularIntervalos(
-    execucoes: ExecucaoResumoDto[],
+    execucoes: ExecucaoItemDto[],
     intervaloMinimoMinutos: number,
   ): IntervaloDto[] {
     const intervalos: IntervaloDto[] = [];

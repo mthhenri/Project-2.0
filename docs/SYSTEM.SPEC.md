@@ -217,6 +217,45 @@ Use esta forma apenas para value-objects genuínos (sem ciclo de vida próprio, 
 - Toda operação que recebe parâmetros, mesmo que seja um único campo, usa DTO — zero primitivos em assinaturas de service e repository
 - Nenhum DTO pode ser alias ou re-export de outro — mesmo que os campos sejam idênticos, cada DTO define os seus próprios campos explicitamente
 
+**Herança de DTO — negócio nunca herda negócio; negócio herda core:**
+
+Um DTO de **negócio** (`UsuarioAlteradoDto`, `DemandaRecuperadaDto`, `ProjetoCriadoDto`…)
+**nunca** herda outro DTO de **negócio** — cada um **declara os seus próprios campos
+explicitamente**, mesmo que sejam idênticos aos de outro DTO. Pares como `Criado`/`Alterado`
+tendem a divergir com o tempo; herança permanente entre eles cria acoplamento frágil e
+viola a regra de campos explícitos.
+
+```typescript
+// ❌ Proibido — DTO de negócio estendendo DTO de negócio (mesmo vazio)
+export class UsuarioAlteradoDto extends UsuarioRecuperadoDto {}
+export class ProjetoRecuperadoDto extends ProjetoCriadoDto {}
+
+// ✅ Cada DTO de negócio declara os seus campos
+export class UsuarioAlteradoDto {
+  id: number; login: string; /* … todos os campos, com @ApiProperty */
+}
+```
+
+Um DTO de negócio **pode e deve** herdar um DTO **core** (genérico/arquitetural de
+`shared/src/interfaces/`, como `PaginatedResult<TItem>` e `StandardResponse<TData>`) — aí a
+herança **evita duplicar** os campos genéricos. O teste é o de linguagem (§4): a base
+existiria em qualquer projeto → é core → herança permitida.
+
+```typescript
+// ✅ Wrapper de listagem herdando o core PaginatedResult (não redeclara itens/totalItens/…)
+export class ExecucaoResumoDto extends PaginatedResult<ExecucaoItemDto> {
+  totalMinutosDia: number;
+}
+```
+
+O par **item/wrapper** de listagem segue este molde: o **item** é um DTO de negócio com
+campos explícitos (`ExecucaoItemDto`); o **wrapper** (`ExecucaoResumoDto`) herda
+`PaginatedResult<ExecucaoItemDto>` e acrescenta só o que é específico (`totalMinutosDia`).
+`PaginatedResult` é **classe** (não interface) para poder ser estendida; retornos por
+object-literal nos services continuam válidos por tipagem estrutural. `StandardResponse`
+permanece interface — nenhum DTO de negócio a herda (o wrapper de resposta é montado pelo
+interceptor).
+
 ### 5.2 Métodos
 
 Sempre `verbo + entidade`, em português, sem abreviações:
@@ -1280,7 +1319,7 @@ Estas regras **jamais** devem ser violadas. São inegociáveis independente do c
 | 20 | **Nunca usar** style="" inline no HTML — sempre SCSS ou Tailwind |
 | 21 | **Nunca passar primitivos** como parâmetros em métodos de service ou repository — sempre DTO, mesmo que seja um único campo. O `id` que chega por `@Param`/`@Query` é injetado no DTO **pela controller** antes do repasse (ver §7.2); a service nunca recebe `id`/`*Id` solto. Objetos de contexto (payload do JWT via `@ActiveUser()`) não são primitivos e podem ser parâmetro próprio |
 | 22 | **Nunca nomear métodos com `existe*`** — usar `validar*` (ex: `validarLogin`, `validarNome`, `validarCodigo`) |
-| 23 | **Nunca criar DTO como alias ou re-export** de outro DTO — cada DTO define explicitamente todos os seus campos |
+| 23 | **Nunca criar DTO como alias, re-export ou subclasse de outro DTO de negócio** — cada DTO de negócio define explicitamente todos os seus campos (negócio nunca herda negócio, nem vazio). A **única** herança permitida é de um DTO **core** (`PaginatedResult`, `StandardResponse`), que evita duplicar campos genéricos (ver §5.1) |
 | 24 | **Nunca usar `atualizar`** em nomes de DTO ou método de negócio — usar `alterar` (`UsuarioAlterarDto`, `alterar()`) |
 | 25 | **Nunca colocar em repositório A** uma query cuja responsabilidade é do módulo B — usar o repositório do módulo correto |
 | 26 | **Nunca representar enum como `VARCHAR + CHECK` ou `ENUM` nativo** — todo enum é uma tabela de referência `tipo_<tabela>_<complemento?>` (`codigo` + `descricao`) e a coluna de negócio é `INTEGER` FK para o `id` dela; o enum TypeScript de `shared/` é o contrato tipado que espelha os `codigo` (ver §5.4) |

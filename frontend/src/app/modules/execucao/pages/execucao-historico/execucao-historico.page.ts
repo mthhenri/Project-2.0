@@ -21,7 +21,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
 import {
   ExecucaoListarDto,
-  ExecucaoResumoDto,
+  ExecucaoItemDto,
   ExecucaoAlterarDto,
   UsuarioResumoDto,
   UsuarioStatusEnum,
@@ -67,7 +67,7 @@ export class ExecucaoHistoricoPage implements OnInit {
     usuarioId: [null as number | null],
   });
 
-  readonly execucoes = signal<ExecucaoResumoDto[]>([]);
+  readonly execucoes = signal<ExecucaoItemDto[]>([]);
   readonly usuarios = signal<UsuarioResumoDto[]>([]);
   readonly totalRegistros = signal<number>(0);
   readonly totalMinutosDia = signal<number>(0);
@@ -82,7 +82,7 @@ export class ExecucaoHistoricoPage implements OnInit {
   // --- Dialog: editar execução (gestor) ---
   readonly mostrarDialogEditar = signal<boolean>(false);
   readonly salvandoDescricao = signal<boolean>(false);
-  readonly execucaoEmEdicao = signal<ExecucaoResumoDto | null>(null);
+  readonly execucaoEmEdicao = signal<ExecucaoItemDto | null>(null);
   /** Limite máximo (momento atual) para os campos de data/hora da edição. */
   readonly dataMaximaEdicao = signal<Date>(new Date());
   readonly formularioEdicao = this.formBuilder.group({
@@ -181,7 +181,7 @@ export class ExecucaoHistoricoPage implements OnInit {
   // Edição de descrição (apenas gestor)
   // ---------------------------------------------------------------------------
 
-  abrirEdicao(execucao: ExecucaoResumoDto): void {
+  abrirEdicao(execucao: ExecucaoItemDto): void {
     if (!this.sessao.eGestor()) return;
     this.execucaoEmEdicao.set(execucao);
     this.dataMaximaEdicao.set(new Date());

@@ -20,7 +20,7 @@ import {
   TagResumoDto,
   ExecucaoIniciarDto,
   ExecucaoIniciadaDto,
-  ExecucaoResumoDto,
+  ExecucaoItemDto,
   StandardResponse,
   PaginatedResult,
 } from '@project20/shared';
@@ -68,7 +68,7 @@ export class AtividadeDetalhePage implements OnInit {
   readonly atividade = signal<AtividadeRecuperadaDto | null>(null);
   readonly tagsDaAtividade = signal<TagResumoDto[]>([]);
   readonly tagsDisponiveis = signal<TagResumoDto[]>([]);
-  readonly execucoesRecentes = signal<ExecucaoResumoDto[]>([]);
+  readonly execucoesRecentes = signal<ExecucaoItemDto[]>([]);
   readonly carregando = signal<boolean>(false);
 
   readonly mostrarDialogDescricao = signal<boolean>(false);
@@ -225,7 +225,7 @@ export class AtividadeDetalhePage implements OnInit {
       atividade: this.atividadeService.recuperar(id),
       tags:      this.atividadeService.listarTags(id),
       todasTags: this.tagService.listar(),
-      execucoes: this.httpClient.get<StandardResponse<PaginatedResult<ExecucaoResumoDto>>>(
+      execucoes: this.httpClient.get<StandardResponse<PaginatedResult<ExecucaoItemDto>>>(
         `${ambiente.apiUrl}/execucao`,
         { params: { atividadeId: String(id), itensPorPagina: '5' } },
       ),

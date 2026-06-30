@@ -8,7 +8,7 @@ import {
   ExecucaoEncerradaDto,
   ExecucaoAlteradaDto,
   ExecucaoListarDto,
-  ExecucaoListaDto,
+  ExecucaoResumoDto,
   ExecucaoAlterarDto,
   ExecucaoRecuperarDto,
   ExecucaoAtivaDto,
@@ -197,7 +197,7 @@ export class ExecucaoService {
   async listar(
     filtros: ExecucaoListarDto,
     usuarioAtivo: JwtPayload,
-  ): Promise<StandardResponse<ExecucaoListaDto>> {
+  ): Promise<StandardResponse<ExecucaoResumoDto>> {
     const pagina         = filtros.pagina ?? 1;
     const itensPorPagina = filtros.itensPorPagina ?? 20;
 

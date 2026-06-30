@@ -79,6 +79,17 @@ usuario-listagem.page.ts
 - `alterar` segue a mesma regra de `recuperar`: id dentro do DTO (`EntidadeInternoAlterarDto`), nunca `alterar(id, dados)`
 - Nenhum DTO pode ser alias ou re-export de outro — cada um define os próprios campos
 
+**Herança de DTO — negócio nunca herda negócio; negócio herda core:**
+- Um DTO de **negócio** nunca herda outro DTO de **negócio** (nem subclasse vazia `extends X {}`) — declara os próprios campos explicitamente, mesmo idênticos. Pares `Criado`/`Alterado` divergem com o tempo.
+- Um DTO de negócio **herda** um DTO **core** (`PaginatedResult<TItem>`, `StandardResponse<TData>` de `shared/src/interfaces/`) — evita duplicar os campos genéricos. `PaginatedResult` é **classe** para poder ser estendida.
+- Par item/wrapper de listagem: o **item** é DTO de negócio com campos explícitos; o **wrapper** herda o core e acrescenta só o específico.
+
+```typescript
+// ❌ negócio herda negócio          // ✅ negócio herda core
+class ProjetoRecuperadoDto extends    class ExecucaoResumoDto extends
+  ProjetoCriadoDto {}                   PaginatedResult<ExecucaoItemDto> { totalMinutosDia: number; }
+```
+
 **Localização:** sempre em `shared/src/dtos/[modulo]/` — nunca dentro de `backend/` ou `frontend/`
 
 ---
@@ -383,6 +394,6 @@ var(--p-primary-600)  // ícone/texto ativo, títulos em destaque
 | `id` de `@Param` repassado solto à service (`service.alterar(id, dto)`) | Controller injeta no DTO: `service.alterar({ ...dto, id })` |
 | `repository.alterar(id: number, dados)` — primitivo no `alterar` | `alterar(dto: EntidadeInternoAlterarDto)` — id dentro do DTO, como `recuperar(dto)` |
 | `existe*` em nome de método | `validar*` (ex: `validarLogin`, `validarNome`, `validarCodigo`) |
-| DTO como alias ou re-export de outro DTO | Cada DTO define seus próprios campos explicitamente |
+| DTO como alias, re-export ou subclasse de outro DTO **de negócio** (mesmo vazio) | Cada DTO de negócio define seus campos; herança só de DTO **core** (`PaginatedResult`/`StandardResponse`) |
 | `Atualizar`/`Atualizado` em DTO ou método | `Alterar`/`Alterado` |
 | Query de módulo A no repositório de módulo B | Usar o repositório do módulo correto |

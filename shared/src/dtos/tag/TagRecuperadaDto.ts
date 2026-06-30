@@ -1,3 +1,6 @@
-import { TagCriadaDto } from './TagCriadaDto';
-
-export class TagRecuperadaDto extends TagCriadaDto {}
+export class TagRecuperadaDto {
+  id: number;
+  nome: string;
+  cor: string;
+  createdDate: Date;
+}

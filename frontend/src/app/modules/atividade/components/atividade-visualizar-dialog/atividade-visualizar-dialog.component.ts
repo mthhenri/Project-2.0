@@ -13,7 +13,7 @@ import {
   AtividadeRecuperadaDto,
   AtividadeAlterarDto,
   TagResumoDto,
-  ExecucaoResumoDto,
+  ExecucaoItemDto,
 } from '@project20/shared';
 import { AtividadeService } from '../../services/atividade.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
@@ -49,7 +49,7 @@ export class AtividadeVisualizarDialogComponent {
   readonly carregandoVisualizar = signal<boolean>(false);
   readonly atividadeVisualizada = signal<AtividadeRecuperadaDto | null>(null);
   readonly tagsVisualizar = signal<TagResumoDto[]>([]);
-  readonly execucoesVisualizar = signal<ExecucaoResumoDto[]>([]);
+  readonly execucoesVisualizar = signal<ExecucaoItemDto[]>([]);
   readonly salvandoDescricao = signal<boolean>(false);
   readonly editandoNome = signal<boolean>(false);
   readonly salvandoNome = signal<boolean>(false);

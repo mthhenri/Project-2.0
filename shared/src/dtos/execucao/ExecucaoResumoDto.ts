@@ -1,15 +1,6 @@
-export class ExecucaoResumoDto {
-  id: number;
-  atividadeId: number;
-  nomeAtividade: string;
-  demandaId: number;
-  nomeDemanda: string;
-  projetoId: number;
-  nomeProjeto: string;
-  descricao: string;
-  inicioData: Date;
-  fimData: Date | null;
-  duracaoMinutos: number | null;
-  usuarioId: number;
-  nomeUsuario: string;
+import { PaginatedResult } from '../../interfaces/paginated-result.interface';
+import { ExecucaoItemDto } from './ExecucaoItemDto';
+
+export class ExecucaoResumoDto extends PaginatedResult<ExecucaoItemDto> {
+  totalMinutosDia: number;
 }

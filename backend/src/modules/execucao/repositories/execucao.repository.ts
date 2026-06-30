@@ -8,7 +8,7 @@ import {
   ExecucaoEncerradaDto,
   ExecucaoAlteradaDto,
   ExecucaoListarDto,
-  ExecucaoResumoDto,
+  ExecucaoItemDto,
   ExecucaoRecuperarDto,
   ExecucaoInternoEncerrarDto,
   ExecucaoAtivaRecuperarDto,
@@ -172,7 +172,7 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
   async listar(
     filtros: ExecucaoListarDto,
     restricao?: ExecucaoAcessoFiltrarDto,
-  ): Promise<{ itens: ExecucaoResumoDto[]; total: number; totalMinutosDia: number }> {
+  ): Promise<{ itens: ExecucaoItemDto[]; total: number; totalMinutosDia: number }> {
     const pagina         = filtros.pagina ?? 1;
     const itensPorPagina = filtros.itensPorPagina ?? 20;
     const parametros: Record<string, unknown> = {};
@@ -235,7 +235,7 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
     );
 
     const deslocamento = (pagina - 1) * itensPorPagina;
-    const itens = await this.executarConsulta<ExecucaoResumoDto>(
+    const itens = await this.executarConsulta<ExecucaoItemDto>(
       `SELECT
          execucao.id,
          execucao.atividade_id                                                          AS "atividadeId",

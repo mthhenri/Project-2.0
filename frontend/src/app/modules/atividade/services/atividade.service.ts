@@ -16,7 +16,7 @@ import {
   ExecucaoIniciadaDto,
   ExecucaoEncerrarDto,
   ExecucaoEncerradaDto,
-  ExecucaoResumoDto,
+  ExecucaoItemDto,
   ExecucaoAtivaDto,
   StandardResponse,
   PaginatedResult,
@@ -82,10 +82,10 @@ export class AtividadeService {
     return this.httpClient.patch<StandardResponse<ExecucaoEncerradaDto>>(`${this.urlExecucao}/${id}/encerrar`, dto);
   }
 
-  listarExecucoesPorAtividade(atividadeId: number): Observable<StandardResponse<PaginatedResult<ExecucaoResumoDto>>> {
+  listarExecucoesPorAtividade(atividadeId: number): Observable<StandardResponse<PaginatedResult<ExecucaoItemDto>>> {
     const params = new HttpParams()
       .set('atividadeId', String(atividadeId))
       .set('itensPorPagina', '200');
-    return this.httpClient.get<StandardResponse<PaginatedResult<ExecucaoResumoDto>>>(this.urlExecucao, { params });
+    return this.httpClient.get<StandardResponse<PaginatedResult<ExecucaoItemDto>>>(this.urlExecucao, { params });
   }
 }
