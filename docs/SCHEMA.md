@@ -16,6 +16,7 @@
 > - `20240022_converter_datas_para_timestamptz` — converte as colunas de data/hora das 11 tabelas com BaseEntity para `timestamptz` (instante UTC; sessão do banco no fuso da app).
 > - `20240023_remover_prioridade_demanda` — remove a coluna `demanda.prioridade` e o índice `ix_demanda_prioridade` (conceito de prioridade descontinuado).
 > - `20240024_adicionar_anotacoes_alteracao_data_usuario` — adiciona `usuario.anotacoes_alteracao_data TIMESTAMPTZ` (nullable, sem `DEFAULT`); carimba a data da última alteração das anotações.
+> - `20240025_enums_para_tabelas_referencia` — converte os 7 enums (`VARCHAR + CHECK`) em **tabelas de referência** `tipo_*` (`codigo` + `descricao`); as 5 tabelas de negócio passam a usar `INTEGER` FK (`tipo_usuario_id`, `tipo_usuario_status_id`, `tipo_projeto_status_id`, `tipo_demanda_status_id`, `tipo_atividade_status_id`, `tipo_dia_nao_util_id`, `tipo_dia_nao_util_duracao_id`). Enums TS de `shared/` renomeados (`TipoUsuarioEnum`, …) e mantidos como contrato; o repositório traduz `codigo ⇄ id` no SQL.
 
 ---
 
@@ -141,18 +142,18 @@ CREATE TABLE usuario (
   anotacoes                 TEXT,
   anotacoes_alteracao_data  TIMESTAMPTZ,
   horas_diarias_necessarias INTEGER      NOT NULL,
-  tipo                      VARCHAR(20)  NOT NULL
-                              CHECK (tipo IN ('DESENVOLVEDOR', 'GESTOR')),
-  status                    VARCHAR(20)  NOT NULL
-                              CHECK (status IN ('ATIVO', 'INATIVO'))
+  tipo_usuario_id           INTEGER      NOT NULL
+                              CONSTRAINT fk_usuario_tipo_usuario REFERENCES tipo_usuario(id),
+  tipo_usuario_status_id    INTEGER      NOT NULL
+                              CONSTRAINT fk_usuario_tipo_usuario_status REFERENCES tipo_usuario_status(id)
 );
 
 CREATE UNIQUE INDEX uix_usuario_login_ativo
   ON usuario(login)
   WHERE is_deleted = false;
 
-CREATE INDEX ix_usuario_tipo
-  ON usuario(tipo)
+CREATE INDEX ix_usuario_tipo_usuario_id
+  ON usuario(tipo_usuario_id)
   WHERE is_deleted = false;
 
 CREATE TRIGGER trg_usuario_updated_date
@@ -178,8 +179,8 @@ CREATE TABLE projeto (
   nome              VARCHAR(255) NOT NULL,
   codigo            VARCHAR(50)  NOT NULL,
   cor               VARCHAR(7)   NOT NULL,
-  status            VARCHAR(20)  NOT NULL
-                      CHECK (status IN ('ATIVO', 'PAUSADO', 'CONCLUIDO', 'CANCELADO')),
+  tipo_projeto_status_id INTEGER NOT NULL
+                      CONSTRAINT fk_projeto_tipo_projeto_status REFERENCES tipo_projeto_status(id),
   inicio_data       DATE,
   previsao_fim_data DATE
 );
@@ -188,8 +189,8 @@ CREATE UNIQUE INDEX uix_projeto_codigo_ativo
   ON projeto(codigo)
   WHERE is_deleted = false;
 
-CREATE INDEX ix_projeto_status
-  ON projeto(status)
+CREATE INDEX ix_projeto_tipo_projeto_status_id
+  ON projeto(tipo_projeto_status_id)
   WHERE is_deleted = false;
 
 CREATE TRIGGER trg_projeto_updated_date
@@ -247,9 +248,8 @@ CREATE TABLE demanda (
   descricao_cliente TEXT,
   documentacao      TEXT,
   horas_estimadas   INTEGER      NOT NULL,
-  status            VARCHAR(30)  NOT NULL
-                      CONSTRAINT chk_demanda_status
-                      CHECK (status IN ('PENDENTE', 'PLANEJADA', 'CONCLUIDA')),
+  tipo_demanda_status_id INTEGER NOT NULL
+                      CONSTRAINT fk_demanda_tipo_demanda_status REFERENCES tipo_demanda_status(id),
   is_estrutural     BOOLEAN      NOT NULL,
   previsao_fim_data DATE
 );
@@ -262,8 +262,8 @@ CREATE INDEX ix_demanda_pai
   ON demanda(demanda_pai_id)
   WHERE is_deleted = false AND demanda_pai_id IS NOT NULL;
 
-CREATE INDEX ix_demanda_status
-  ON demanda(status)
+CREATE INDEX ix_demanda_tipo_demanda_status_id
+  ON demanda(tipo_demanda_status_id)
   WHERE is_deleted = false;
 
 CREATE TRIGGER trg_demanda_updated_date
@@ -397,8 +397,8 @@ CREATE TABLE atividade (
   usuario_id      INTEGER      NOT NULL REFERENCES usuario(id),
   nome            VARCHAR(255) NOT NULL,
   descricao       TEXT,
-  status          VARCHAR(20)  NOT NULL
-                    CHECK (status IN ('PLANEJADA', 'PENDENTE', 'DESENVOLVENDO', 'DESENVOLVIDA'))
+  tipo_atividade_status_id INTEGER NOT NULL
+                    CONSTRAINT fk_atividade_tipo_atividade_status REFERENCES tipo_atividade_status(id)
 );
 
 CREATE INDEX ix_atividade_demanda
@@ -409,8 +409,8 @@ CREATE INDEX ix_atividade_usuario
   ON atividade(usuario_id)
   WHERE is_deleted = false;
 
-CREATE INDEX ix_atividade_status
-  ON atividade(status)
+CREATE INDEX ix_atividade_tipo_atividade_status_id
+  ON atividade(tipo_atividade_status_id)
   WHERE is_deleted = false;
 
 CREATE TRIGGER trg_atividade_updated_date
@@ -509,8 +509,9 @@ A aplicação verifica mês e dia independentemente do ano ao calcular o ponto.
 `duracao` (`INTEGRAL` / `MEIO_PERIODO`, migration `20240014`) é independente do `tipo`:
 `MEIO_PERIODO` reduz a meta diária à metade no módulo `ponto` (sem distinção de turno).
 
-> **Nome da constraint:** `chk_dia_nao_util_duracao` (prefixo `chk_`). A constraint foi criada
-> como `ck_dia_nao_util_duracao` na migration `20240014` e renomeada pela `20240020`.
+> **Enums como FK (migration `20240025`):** `tipo` e `duracao` deixaram de ser `VARCHAR + CHECK`
+> e passaram a ser FK (`tipo_dia_nao_util_id`, `tipo_dia_nao_util_duracao_id`) para as tabelas de
+> referência. A antiga `chk_dia_nao_util_duracao` foi removida junto com a coluna `VARCHAR`.
 
 ```sql
 CREATE TABLE dia_nao_util (
@@ -522,11 +523,10 @@ CREATE TABLE dia_nao_util (
 
   dia_data    DATE         NOT NULL,
   descricao   VARCHAR(255) NOT NULL,
-  tipo        VARCHAR(30)  NOT NULL
-                CHECK (tipo IN ('FERIADO', 'RECESSO', 'PONTO_FACULTATIVO')),
-  duracao     VARCHAR(20)  NOT NULL
-                CONSTRAINT chk_dia_nao_util_duracao
-                CHECK (duracao IN ('INTEGRAL', 'MEIO_PERIODO')),
+  tipo_dia_nao_util_id         INTEGER NOT NULL
+                CONSTRAINT fk_dia_nao_util_tipo_dia_nao_util REFERENCES tipo_dia_nao_util(id),
+  tipo_dia_nao_util_duracao_id INTEGER NOT NULL
+                CONSTRAINT fk_dia_nao_util_tipo_dia_nao_util_duracao REFERENCES tipo_dia_nao_util_duracao(id),
   recorrente  BOOLEAN      NOT NULL
 );
 
@@ -538,6 +538,53 @@ CREATE TRIGGER trg_dia_nao_util_updated_date
   BEFORE UPDATE ON dia_nao_util
   FOR EACH ROW EXECUTE FUNCTION fn_set_updated_date();
 ```
+
+---
+
+### Tabelas de referência (enums) — migration `20240025`
+
+Todo enum de domínio fechado é uma **tabela de referência** `tipo_<tabela>_<complemento?>`
+(`SYSTEM.SPEC.md` §5.4, §9.2 #13, §16 #26) — **nunca** `VARCHAR + CHECK` nem `ENUM` nativo. Cada
+tabela segue a BaseEntity + `codigo` (valor SCREAMING_SNAKE, espelha o enum TS de `shared/`) +
+`descricao` (rótulo legível). A coluna de negócio é um `INTEGER` FK para o `id` dela; o
+repositório traduz `codigo ⇄ id` no SQL (subselect no INSERT/UPDATE, JOIN expondo
+`codigo AS <campo>` no SELECT/RETURNING). As 7 tabelas:
+`tipo_usuario`, `tipo_usuario_status`, `tipo_projeto_status`, `tipo_demanda_status`,
+`tipo_atividade_status`, `tipo_dia_nao_util`, `tipo_dia_nao_util_duracao`.
+
+```sql
+-- Molde comum (uma CREATE por tabela acima):
+CREATE TABLE tipo_usuario (
+  id            SERIAL      PRIMARY KEY,
+  created_date  TIMESTAMPTZ NOT NULL,
+  updated_date  TIMESTAMPTZ NOT NULL,
+  is_deleted    BOOLEAN     NOT NULL,
+  deleted_date  TIMESTAMPTZ,
+
+  codigo        VARCHAR(40)  NOT NULL,
+  descricao     VARCHAR(100) NOT NULL
+);
+
+CREATE UNIQUE INDEX uix_tipo_usuario_codigo
+  ON tipo_usuario(codigo)
+  WHERE is_deleted = false;
+
+CREATE TRIGGER trg_tipo_usuario_updated_date
+  BEFORE UPDATE ON tipo_usuario
+  FOR EACH ROW EXECUTE FUNCTION fn_set_updated_date();
+```
+
+Seeds (`codigo` → `descricao`):
+
+| Tabela | Seeds |
+|---|---|
+| `tipo_usuario` | DESENVOLVEDOR→"Desenvolvedor", GESTOR→"Gestor" |
+| `tipo_usuario_status` | ATIVO→"Ativo", INATIVO→"Inativo" |
+| `tipo_projeto_status` | ATIVO→"Ativo", PAUSADO→"Pausado", CONCLUIDO→"Concluído", CANCELADO→"Cancelado" |
+| `tipo_demanda_status` | PENDENTE→"Pendente", PLANEJADA→"Planejada", CONCLUIDA→"Concluída" |
+| `tipo_atividade_status` | PLANEJADA→"Planejada", PENDENTE→"Pendente", DESENVOLVENDO→"Desenvolvendo", DESENVOLVIDA→"Desenvolvida" |
+| `tipo_dia_nao_util` | FERIADO→"Feriado", RECESSO→"Recesso", PONTO_FACULTATIVO→"Ponto facultativo" |
+| `tipo_dia_nao_util_duracao` | INTEGRAL→"Integral", MEIO_PERIODO→"Meio período" |
 
 ---
 

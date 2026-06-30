@@ -1,6 +1,6 @@
 import { IsDateString, IsString, IsNotEmpty, MaxLength, IsEnum, IsBoolean } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { DiaNaoUtilTipoEnum, DiaNaoUtilDuracaoEnum } from '../../enums';
+import { TipoDiaNaoUtilEnum, TipoDiaNaoUtilDuracaoEnum } from '../../enums';
 
 export class DiaNaoUtilCriarDto {
   @ApiProperty({ example: '2026-12-25' })
@@ -13,13 +13,13 @@ export class DiaNaoUtilCriarDto {
   @MaxLength(255)
   descricao: string;
 
-  @ApiProperty({ enum: DiaNaoUtilTipoEnum })
-  @IsEnum(DiaNaoUtilTipoEnum)
-  tipo: DiaNaoUtilTipoEnum;
+  @ApiProperty({ enum: TipoDiaNaoUtilEnum })
+  @IsEnum(TipoDiaNaoUtilEnum)
+  tipo: TipoDiaNaoUtilEnum;
 
-  @ApiProperty({ enum: DiaNaoUtilDuracaoEnum })
-  @IsEnum(DiaNaoUtilDuracaoEnum)
-  duracao: DiaNaoUtilDuracaoEnum;
+  @ApiProperty({ enum: TipoDiaNaoUtilDuracaoEnum })
+  @IsEnum(TipoDiaNaoUtilDuracaoEnum)
+  duracao: TipoDiaNaoUtilDuracaoEnum;
 
   @ApiProperty({ example: true })
   @IsBoolean()

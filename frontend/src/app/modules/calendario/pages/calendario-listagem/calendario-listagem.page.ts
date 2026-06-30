@@ -17,8 +17,8 @@ import {
   DiaNaoUtilResumoDto,
   DiaNaoUtilCriarDto,
   DiaNaoUtilAlterarDto,
-  DiaNaoUtilTipoEnum,
-  DiaNaoUtilDuracaoEnum,
+  TipoDiaNaoUtilEnum,
+  TipoDiaNaoUtilDuracaoEnum,
 } from '@project20/shared';
 import { CalendarioService } from '../../services/calendario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
@@ -62,8 +62,8 @@ export class CalendarioListagemPage implements OnInit {
 
   readonly tipoOpcoes = DIA_NAO_UTIL_TIPO_OPCOES;
   readonly duracaoOpcoes = DIA_NAO_UTIL_DURACAO_OPCOES;
-  readonly DiaNaoUtilTipoEnum = DiaNaoUtilTipoEnum;
-  readonly DiaNaoUtilDuracaoEnum = DiaNaoUtilDuracaoEnum;
+  readonly TipoDiaNaoUtilEnum = TipoDiaNaoUtilEnum;
+  readonly TipoDiaNaoUtilDuracaoEnum = TipoDiaNaoUtilDuracaoEnum;
 
   readonly diasNaoUteis = signal<DiaNaoUtilResumoDto[]>([]);
   readonly carregando = signal<boolean>(false);
@@ -88,8 +88,8 @@ export class CalendarioListagemPage implements OnInit {
   readonly formulario = this.formBuilder.group({
     diaData:    this.formBuilder.control<Date | null>(null, Validators.required),
     descricao:  this.formBuilder.control<string>('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(255)] }),
-    tipo:       this.formBuilder.control<DiaNaoUtilTipoEnum>(DiaNaoUtilTipoEnum.FERIADO, { nonNullable: true, validators: [Validators.required] }),
-    duracao:    this.formBuilder.control<DiaNaoUtilDuracaoEnum>(DiaNaoUtilDuracaoEnum.INTEGRAL, { nonNullable: true, validators: [Validators.required] }),
+    tipo:       this.formBuilder.control<TipoDiaNaoUtilEnum>(TipoDiaNaoUtilEnum.FERIADO, { nonNullable: true, validators: [Validators.required] }),
+    duracao:    this.formBuilder.control<TipoDiaNaoUtilDuracaoEnum>(TipoDiaNaoUtilDuracaoEnum.INTEGRAL, { nonNullable: true, validators: [Validators.required] }),
     recorrente: this.formBuilder.control<boolean>(false, { nonNullable: true }),
   });
 
@@ -172,15 +172,15 @@ export class CalendarioListagemPage implements OnInit {
     return `${diaTexto}/${mesTexto}/${anoExibido}`;
   }
 
-  classeTagTipo(tipo: DiaNaoUtilTipoEnum): string {
+  classeTagTipo(tipo: TipoDiaNaoUtilEnum): string {
     return classeTagTipoDiaNaoUtil(tipo);
   }
 
-  rotuloTipo(tipo: DiaNaoUtilTipoEnum): string {
+  rotuloTipo(tipo: TipoDiaNaoUtilEnum): string {
     return rotuloTipoDiaNaoUtil(tipo);
   }
 
-  rotuloDuracao(duracao: DiaNaoUtilDuracaoEnum): string {
+  rotuloDuracao(duracao: TipoDiaNaoUtilDuracaoEnum): string {
     return rotuloDuracaoDiaNaoUtil(duracao);
   }
 
@@ -235,8 +235,8 @@ export class CalendarioListagemPage implements OnInit {
     this.formulario.reset({
       diaData:    dataInicial,
       descricao:  '',
-      tipo:       DiaNaoUtilTipoEnum.FERIADO,
-      duracao:    DiaNaoUtilDuracaoEnum.INTEGRAL,
+      tipo:       TipoDiaNaoUtilEnum.FERIADO,
+      duracao:    TipoDiaNaoUtilDuracaoEnum.INTEGRAL,
       recorrente: false,
     });
     this.formulario.get('diaData')!.enable();

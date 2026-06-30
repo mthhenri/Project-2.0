@@ -1,6 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { Tag } from 'primeng/tag';
-import { UsuarioResumoDto, UsuarioTipoEnum } from '@project20/shared';
+import { UsuarioResumoDto, TipoUsuarioEnum } from '@project20/shared';
 
 @Component({
   selector: 'app-usuario-cartao',
@@ -22,6 +22,6 @@ export class UsuarioCartaoComponent {
   }
 
   get ehGestor(): boolean {
-    return this.usuario?.tipo === UsuarioTipoEnum.GESTOR;
+    return this.usuario?.tipo === TipoUsuarioEnum.GESTOR;
   }
 }

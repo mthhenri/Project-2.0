@@ -15,7 +15,7 @@ import {
   DemandaGrafoDto,
   DemandaGrafoNoDto,
   DemandaGrafoArestaDto,
-  DemandaStatusEnum,
+  TipoDemandaStatusEnum,
 } from '@project20/shared';
 import { COR_NO_PREENCHIMENTO, COR_NO_BORDA } from '../../constants/demanda-cores.constants';
 
@@ -27,7 +27,7 @@ import { COR_NO_PREENCHIMENTO, COR_NO_BORDA } from '../../constants/demanda-core
 })
 export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
   @Input({ required: true }) grafo!: DemandaGrafoDto;
-  @Input() filtroStatus?: DemandaStatusEnum[];
+  @Input() filtroStatus?: TipoDemandaStatusEnum[];
   @Output() demandaSelecionada = new EventEmitter<number>();
 
   private readonly elementRef = inject(ElementRef);

@@ -14,7 +14,7 @@ import {
   UsuarioExcluirDto,
   UsuarioSenhaAlterarDto,
   UsuarioSenhaAlteradaDto,
-  UsuarioTipoEnum,
+  TipoUsuarioEnum,
 } from '@project20/shared';
 import { StandardResponse, PaginatedResult } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
@@ -75,7 +75,7 @@ export class UsuarioService {
 
   /** Recupera usuário por ID. Desenvolvedor só pode ver o próprio perfil. */
   async recuperar(dto: UsuarioRecuperarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<UsuarioRecuperadoDto>> {
-    if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR && usuarioAtivo.sub !== dto.id) {
+    if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR && usuarioAtivo.sub !== dto.id) {
       throw new UnauthorizedAccessException('Desenvolvedor pode acessar apenas o próprio perfil');
     }
 
@@ -94,11 +94,11 @@ export class UsuarioService {
 
   /** Altera campos do usuário. Desenvolvedor só pode alterar o próprio perfil. */
   async alterar(dto: UsuarioInternoAlterarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<UsuarioAlteradoDto>> {
-    if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR && usuarioAtivo.sub !== dto.id) {
+    if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR && usuarioAtivo.sub !== dto.id) {
       throw new UnauthorizedAccessException('Desenvolvedor pode alterar apenas o próprio perfil');
     }
 
-    if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR && dto.tipo !== undefined) {
+    if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR && dto.tipo !== undefined) {
       throw new UnauthorizedAccessException('Apenas gestores podem alterar o tipo de usuário');
     }
 
@@ -109,8 +109,8 @@ export class UsuarioService {
     }
 
     const estaRebaixandoGestor =
-      usuarioEncontrado.tipo === UsuarioTipoEnum.GESTOR &&
-      dto.tipo === UsuarioTipoEnum.DESENVOLVEDOR;
+      usuarioEncontrado.tipo === TipoUsuarioEnum.GESTOR &&
+      dto.tipo === TipoUsuarioEnum.DESENVOLVEDOR;
 
     if (estaRebaixandoGestor) {
       if (usuarioAtivo.sub === dto.id) {

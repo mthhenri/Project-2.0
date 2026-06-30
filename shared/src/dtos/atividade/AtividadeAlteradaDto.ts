@@ -1,4 +1,4 @@
-import { AtividadeStatusEnum } from '../../enums/atividade-status.enum';
+import { TipoAtividadeStatusEnum } from '../../enums/tipo-atividade-status.enum';
 
 export class AtividadeAlteradaDto {
   id: number;
@@ -7,6 +7,6 @@ export class AtividadeAlteradaDto {
   nomeUsuario: string;
   nome: string;
   descricao: string | null;
-  status: AtividadeStatusEnum;
+  status: TipoAtividadeStatusEnum;
   createdDate: Date;
 }

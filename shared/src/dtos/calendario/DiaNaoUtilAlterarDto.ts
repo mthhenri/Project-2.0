@@ -1,6 +1,6 @@
 import { IsOptional, IsString, IsNotEmpty, MaxLength, IsEnum, IsBoolean } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { DiaNaoUtilTipoEnum, DiaNaoUtilDuracaoEnum } from '../../enums';
+import { TipoDiaNaoUtilEnum, TipoDiaNaoUtilDuracaoEnum } from '../../enums';
 
 export class DiaNaoUtilAlterarDto {
   @ApiPropertyOptional({ example: 'Natal' })
@@ -10,15 +10,15 @@ export class DiaNaoUtilAlterarDto {
   @MaxLength(255)
   descricao?: string;
 
-  @ApiPropertyOptional({ enum: DiaNaoUtilTipoEnum })
+  @ApiPropertyOptional({ enum: TipoDiaNaoUtilEnum })
   @IsOptional()
-  @IsEnum(DiaNaoUtilTipoEnum)
-  tipo?: DiaNaoUtilTipoEnum;
+  @IsEnum(TipoDiaNaoUtilEnum)
+  tipo?: TipoDiaNaoUtilEnum;
 
-  @ApiPropertyOptional({ enum: DiaNaoUtilDuracaoEnum })
+  @ApiPropertyOptional({ enum: TipoDiaNaoUtilDuracaoEnum })
   @IsOptional()
-  @IsEnum(DiaNaoUtilDuracaoEnum)
-  duracao?: DiaNaoUtilDuracaoEnum;
+  @IsEnum(TipoDiaNaoUtilDuracaoEnum)
+  duracao?: TipoDiaNaoUtilDuracaoEnum;
 
   @ApiPropertyOptional({ example: true })
   @IsOptional()

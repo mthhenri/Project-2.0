@@ -11,7 +11,7 @@ import {
   DemandaGrafoDto,
   DemandaGrafoNoDto,
   DemandaArvoreItemDto,
-  DemandaStatusEnum,
+  TipoDemandaStatusEnum,
   ProjetoResumoDto,
 } from '@project20/shared';
 import { DemandaService } from '../../services/demanda.service';
@@ -58,9 +58,9 @@ export class DemandaProjetoPage implements OnInit {
   readonly mostrarDialogNovaDemanda = signal<boolean>(false);
 
   readonly legendaStatus = [
-    { rotulo: 'Pendente',  cor: COR_NO_BORDA[DemandaStatusEnum.PENDENTE] },
-    { rotulo: 'Planejada', cor: COR_NO_BORDA[DemandaStatusEnum.PLANEJADA] },
-    { rotulo: 'Concluída', cor: COR_NO_BORDA[DemandaStatusEnum.CONCLUIDA] },
+    { rotulo: 'Pendente',  cor: COR_NO_BORDA[TipoDemandaStatusEnum.PENDENTE] },
+    { rotulo: 'Planejada', cor: COR_NO_BORDA[TipoDemandaStatusEnum.PLANEJADA] },
+    { rotulo: 'Concluída', cor: COR_NO_BORDA[TipoDemandaStatusEnum.CONCLUIDA] },
   ];
 
   readonly arvoreRaizes = computed<DemandaArvoreItemDto[]>(() => {

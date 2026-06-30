@@ -2,7 +2,7 @@ import { Component, Input, Output, EventEmitter, forwardRef, inject, signal, OnC
 import { Tag } from 'primeng/tag';
 import { ContextMenu } from 'primeng/contextmenu';
 import { MenuItem } from 'primeng/api';
-import { DemandaArvoreItemDto, DemandaStatusEnum } from '@project20/shared';
+import { DemandaArvoreItemDto, TipoDemandaStatusEnum } from '@project20/shared';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 
 type CampoDescricao = 'descricaoTecnica' | 'descricaoCliente' | 'documentacao';
@@ -143,20 +143,20 @@ export class DemandaArvoreItemComponent implements OnChanges {
     this.expandido.update((v) => !v);
   }
 
-  severidadeStatus(status: DemandaStatusEnum): 'secondary' | 'info' | 'success' {
-    const mapa: Record<DemandaStatusEnum, 'secondary' | 'info' | 'success'> = {
-      [DemandaStatusEnum.PENDENTE]:  'secondary',
-      [DemandaStatusEnum.PLANEJADA]: 'info',
-      [DemandaStatusEnum.CONCLUIDA]: 'success',
+  severidadeStatus(status: TipoDemandaStatusEnum): 'secondary' | 'info' | 'success' {
+    const mapa: Record<TipoDemandaStatusEnum, 'secondary' | 'info' | 'success'> = {
+      [TipoDemandaStatusEnum.PENDENTE]:  'secondary',
+      [TipoDemandaStatusEnum.PLANEJADA]: 'info',
+      [TipoDemandaStatusEnum.CONCLUIDA]: 'success',
     };
     return mapa[status];
   }
 
-  rotuloStatus(status: DemandaStatusEnum): string {
-    const mapa: Record<DemandaStatusEnum, string> = {
-      [DemandaStatusEnum.PENDENTE]:  'Pendente',
-      [DemandaStatusEnum.PLANEJADA]: 'Planejada',
-      [DemandaStatusEnum.CONCLUIDA]:          'Concluída',
+  rotuloStatus(status: TipoDemandaStatusEnum): string {
+    const mapa: Record<TipoDemandaStatusEnum, string> = {
+      [TipoDemandaStatusEnum.PENDENTE]:  'Pendente',
+      [TipoDemandaStatusEnum.PLANEJADA]: 'Planejada',
+      [TipoDemandaStatusEnum.CONCLUIDA]:          'Concluída',
     };
     return mapa[status];
   }

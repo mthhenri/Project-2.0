@@ -43,14 +43,18 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
   /** Insere novo projeto e retorna os dados do projeto criado. */
   async inserir(dados: ProjetoCriarDados): Promise<ProjetoCriadoDto> {
     const resultado = await this.executarConsulta<ProjetoCriadoDto>(
-      `INSERT INTO projeto (nome, codigo, cor, status, inicio_data, previsao_fim_data, created_date, updated_date, is_deleted)
-       SELECT :nome, :codigo, :cor, :status, :inicioData, :previsaoFimData, NOW(), NOW(), false
+      `INSERT INTO projeto (nome, codigo, cor, tipo_projeto_status_id, inicio_data, previsao_fim_data, created_date, updated_date, is_deleted)
+       SELECT :nome, :codigo, :cor,
+         (SELECT tipo_projeto_status.id FROM tipo_projeto_status
+            WHERE tipo_projeto_status.codigo = :status AND tipo_projeto_status.is_deleted = false),
+         :inicioData, :previsaoFimData, NOW(), NOW(), false
        RETURNING
          id,
          nome,
          codigo,
          cor,
-         status,
+         (SELECT tipo_projeto_status.codigo FROM tipo_projeto_status
+            WHERE tipo_projeto_status.id = projeto.tipo_projeto_status_id) AS status,
          inicio_data::text       AS "inicioData",
          previsao_fim_data::text AS "previsaoFimData",
          created_date            AS "createdDate"`,
@@ -74,11 +78,14 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
          projeto.nome,
          projeto.codigo,
          projeto.cor,
-         projeto.status,
+         tipo_projeto_status.codigo      AS status,
          projeto.inicio_data::text       AS "inicioData",
          projeto.previsao_fim_data::text AS "previsaoFimData",
          projeto.created_date            AS "createdDate"
        FROM projeto
+       INNER JOIN tipo_projeto_status
+         ON tipo_projeto_status.id = projeto.tipo_projeto_status_id
+         AND tipo_projeto_status.is_deleted = false
        WHERE projeto.id = :id
          AND projeto.is_deleted = false
        LIMIT 1`,
@@ -95,15 +102,20 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
     const condicoes: string[] = ['projeto.is_deleted = false'];
 
     if (filtros.status !== undefined) {
-      condicoes.push('projeto.status = :status');
+      condicoes.push('tipo_projeto_status.codigo = :status');
       parametros.status = filtros.status;
     }
 
     const clausulaWhere = condicoes.join(' AND ');
+    const clausulaJoin = `
+       INNER JOIN tipo_projeto_status
+         ON tipo_projeto_status.id = projeto.tipo_projeto_status_id
+         AND tipo_projeto_status.is_deleted = false`;
 
     const [{ total }] = await this.executarConsulta<{ total: number }>(
       `SELECT COUNT(*)::int AS total
        FROM projeto
+       ${clausulaJoin}
        WHERE ${clausulaWhere}`,
       parametros,
     );
@@ -115,8 +127,9 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
          projeto.nome,
          projeto.codigo,
          projeto.cor,
-         projeto.status
+         tipo_projeto_status.codigo AS status
        FROM projeto
+       ${clausulaJoin}
        WHERE ${clausulaWhere}
        ORDER BY projeto.nome ASC
        LIMIT ${itensPorPagina} OFFSET ${deslocamento}`,
@@ -139,7 +152,7 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
     const condicoesExtras: string[] = [];
 
     if (dto.filtros.status !== undefined) {
-      condicoesExtras.push('AND projeto.status = :status');
+      condicoesExtras.push('AND tipo_projeto_status.codigo = :status');
       parametros.status = dto.filtros.status;
     }
 
@@ -148,6 +161,9 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
     const [{ total }] = await this.executarConsulta<{ total: number }>(
       `SELECT COUNT(DISTINCT projeto.id)::int AS total
        FROM projeto
+       INNER JOIN tipo_projeto_status
+         ON tipo_projeto_status.id = projeto.tipo_projeto_status_id
+         AND tipo_projeto_status.is_deleted = false
        INNER JOIN demanda
          ON demanda.projeto_id = projeto.id
          AND demanda.is_deleted = false
@@ -167,8 +183,11 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
          projeto.nome,
          projeto.codigo,
          projeto.cor,
-         projeto.status
+         tipo_projeto_status.codigo AS status
        FROM projeto
+       INNER JOIN tipo_projeto_status
+         ON tipo_projeto_status.id = projeto.tipo_projeto_status_id
+         AND tipo_projeto_status.is_deleted = false
        INNER JOIN demanda
          ON demanda.projeto_id = projeto.id
          AND demanda.is_deleted = false
@@ -200,7 +219,9 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
       parametros.cor = dto.cor;
     }
     if (dto.status !== undefined) {
-      setClauses.push('status = :status');
+      setClauses.push(
+        'tipo_projeto_status_id = (SELECT tipo_projeto_status.id FROM tipo_projeto_status WHERE tipo_projeto_status.codigo = :status AND tipo_projeto_status.is_deleted = false)',
+      );
       parametros.status = dto.status;
     }
     if (dto.inicioData !== undefined) {
@@ -222,7 +243,8 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
          nome,
          codigo,
          cor,
-         status,
+         (SELECT tipo_projeto_status.codigo FROM tipo_projeto_status
+            WHERE tipo_projeto_status.id = projeto.tipo_projeto_status_id) AS status,
          inicio_data::text       AS "inicioData",
          previsao_fim_data::text AS "previsaoFimData",
          created_date            AS "createdDate"`,

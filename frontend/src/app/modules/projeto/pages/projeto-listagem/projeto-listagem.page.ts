@@ -9,7 +9,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { PaginatorModule, PaginatorState } from 'primeng/paginator';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { ProjetoResumoDto, ProjetoListarDto, ProjetoStatusEnum } from '@project20/shared';
+import { ProjetoResumoDto, ProjetoListarDto, TipoProjetoStatusEnum } from '@project20/shared';
 import { ProjetoService } from '../../services/projeto.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { ProjetoFormularioDialogComponent } from '../../components/projeto-formulario-dialog/projeto-formulario-dialog.component';
@@ -31,7 +31,7 @@ export class ProjetoListagemPage implements OnInit {
   private readonly formBuilder = inject(FormBuilder);
 
   readonly formularioFiltros = this.formBuilder.group({
-    status: [null as ProjetoStatusEnum | null],
+    status: [null as TipoProjetoStatusEnum | null],
   });
 
   readonly projetos = signal<ProjetoResumoDto[]>([]);
@@ -42,10 +42,10 @@ export class ProjetoListagemPage implements OnInit {
 
   readonly statusOpcoes = [
     { label: 'Todos', value: null },
-    { label: 'Ativo', value: ProjetoStatusEnum.ATIVO },
-    { label: 'Pausado', value: ProjetoStatusEnum.PAUSADO },
-    { label: 'Concluído', value: ProjetoStatusEnum.CONCLUIDO },
-    { label: 'Cancelado', value: ProjetoStatusEnum.CANCELADO },
+    { label: 'Ativo', value: TipoProjetoStatusEnum.ATIVO },
+    { label: 'Pausado', value: TipoProjetoStatusEnum.PAUSADO },
+    { label: 'Concluído', value: TipoProjetoStatusEnum.CONCLUIDO },
+    { label: 'Cancelado', value: TipoProjetoStatusEnum.CANCELADO },
   ];
 
   ngOnInit(): void {
@@ -109,22 +109,22 @@ export class ProjetoListagemPage implements OnInit {
     });
   }
 
-  severidadeStatus(status: ProjetoStatusEnum): 'success' | 'warn' | 'info' | 'danger' {
-    const mapa: Record<ProjetoStatusEnum, 'success' | 'warn' | 'info' | 'danger'> = {
-      [ProjetoStatusEnum.ATIVO]:     'success',
-      [ProjetoStatusEnum.PAUSADO]:   'warn',
-      [ProjetoStatusEnum.CONCLUIDO]: 'info',
-      [ProjetoStatusEnum.CANCELADO]: 'danger',
+  severidadeStatus(status: TipoProjetoStatusEnum): 'success' | 'warn' | 'info' | 'danger' {
+    const mapa: Record<TipoProjetoStatusEnum, 'success' | 'warn' | 'info' | 'danger'> = {
+      [TipoProjetoStatusEnum.ATIVO]:     'success',
+      [TipoProjetoStatusEnum.PAUSADO]:   'warn',
+      [TipoProjetoStatusEnum.CONCLUIDO]: 'info',
+      [TipoProjetoStatusEnum.CANCELADO]: 'danger',
     };
     return mapa[status];
   }
 
-  rotuloStatus(status: ProjetoStatusEnum): string {
-    const mapa: Record<ProjetoStatusEnum, string> = {
-      [ProjetoStatusEnum.ATIVO]:     'Ativo',
-      [ProjetoStatusEnum.PAUSADO]:   'Pausado',
-      [ProjetoStatusEnum.CONCLUIDO]: 'Concluído',
-      [ProjetoStatusEnum.CANCELADO]: 'Cancelado',
+  rotuloStatus(status: TipoProjetoStatusEnum): string {
+    const mapa: Record<TipoProjetoStatusEnum, string> = {
+      [TipoProjetoStatusEnum.ATIVO]:     'Ativo',
+      [TipoProjetoStatusEnum.PAUSADO]:   'Pausado',
+      [TipoProjetoStatusEnum.CONCLUIDO]: 'Concluído',
+      [TipoProjetoStatusEnum.CANCELADO]: 'Cancelado',
     };
     return mapa[status];
   }

@@ -1,5 +1,5 @@
 import { IsEnum, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
-import { AtividadeStatusEnum } from '../../enums/atividade-status.enum';
+import { TipoAtividadeStatusEnum } from '../../enums/tipo-atividade-status.enum';
 
 export class AtividadeAlterarDto {
   @IsOptional()
@@ -13,6 +13,6 @@ export class AtividadeAlterarDto {
   descricao?: string;
 
   @IsOptional()
-  @IsEnum(AtividadeStatusEnum)
-  status?: AtividadeStatusEnum;
+  @IsEnum(TipoAtividadeStatusEnum)
+  status?: TipoAtividadeStatusEnum;
 }

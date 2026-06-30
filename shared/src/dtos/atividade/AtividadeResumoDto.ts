@@ -1,15 +1,15 @@
-import { AtividadeStatusEnum } from '../../enums/atividade-status.enum';
-import { UsuarioTipoEnum } from '../../enums/usuario-tipo.enum';
+import { TipoAtividadeStatusEnum } from '../../enums/tipo-atividade-status.enum';
+import { TipoUsuarioEnum } from '../../enums/tipo-usuario.enum';
 import { TagResumoDto } from '../tag/TagResumoDto';
 
 export class AtividadeResumoDto {
   id: number;
   nome: string;
-  status: AtividadeStatusEnum;
+  status: TipoAtividadeStatusEnum;
   usuarioId: number;
   nomeUsuario: string;
   /** Tipo do dono da atividade. Define se a descrição da execução é obrigatória. */
-  usuarioTipo: UsuarioTipoEnum;
+  usuarioTipo: TipoUsuarioEnum;
   demandaId: number;
   nomeDemanda: string;
   demandaTemDescricaoCliente: boolean;

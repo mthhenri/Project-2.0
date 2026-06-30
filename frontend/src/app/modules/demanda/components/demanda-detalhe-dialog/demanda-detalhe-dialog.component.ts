@@ -19,8 +19,8 @@ import {
   DemandaTagsAtribuirDto,
   DemandaAlterarDto,
   UsuarioResumoDto,
-  UsuarioTipoEnum,
-  DemandaStatusEnum,
+  TipoUsuarioEnum,
+  TipoDemandaStatusEnum,
   AtividadeResumoDto,
   AtividadeListarDto,
 } from '@project20/shared';
@@ -358,20 +358,20 @@ export class DemandaDetalheDialogComponent implements OnChanges {
     return ((controle.value as number[] | null) ?? []).includes(tagId);
   }
 
-  severidadeStatus(status: DemandaStatusEnum): 'secondary' | 'info' | 'success' {
-    const mapa: Record<DemandaStatusEnum, 'secondary' | 'info' | 'success'> = {
-      [DemandaStatusEnum.PENDENTE]:  'secondary',
-      [DemandaStatusEnum.PLANEJADA]: 'info',
-      [DemandaStatusEnum.CONCLUIDA]: 'success',
+  severidadeStatus(status: TipoDemandaStatusEnum): 'secondary' | 'info' | 'success' {
+    const mapa: Record<TipoDemandaStatusEnum, 'secondary' | 'info' | 'success'> = {
+      [TipoDemandaStatusEnum.PENDENTE]:  'secondary',
+      [TipoDemandaStatusEnum.PLANEJADA]: 'info',
+      [TipoDemandaStatusEnum.CONCLUIDA]: 'success',
     };
     return mapa[status];
   }
 
-  rotuloStatus(status: DemandaStatusEnum): string {
-    const mapa: Record<DemandaStatusEnum, string> = {
-      [DemandaStatusEnum.PENDENTE]:  'Pendente',
-      [DemandaStatusEnum.PLANEJADA]: 'Planejada',
-      [DemandaStatusEnum.CONCLUIDA]:          'Concluída',
+  rotuloStatus(status: TipoDemandaStatusEnum): string {
+    const mapa: Record<TipoDemandaStatusEnum, string> = {
+      [TipoDemandaStatusEnum.PENDENTE]:  'Pendente',
+      [TipoDemandaStatusEnum.PLANEJADA]: 'Planejada',
+      [TipoDemandaStatusEnum.CONCLUIDA]:          'Concluída',
     };
     return mapa[status];
   }
@@ -429,7 +429,7 @@ export class DemandaDetalheDialogComponent implements OnChanges {
             // Gestores não entram no multiselect de membros: têm acesso total a
             // qualquer demanda por serem gestores, sem atribuição em demanda_usuario (task 71).
             this.todosUsuarios.set(
-              usuarios.dados.itens.filter((usuario) => usuario.tipo !== UsuarioTipoEnum.GESTOR),
+              usuarios.dados.itens.filter((usuario) => usuario.tipo !== TipoUsuarioEnum.GESTOR),
             );
           }
         },

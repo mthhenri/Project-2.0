@@ -1,5 +1,5 @@
 import { Injectable, computed, signal } from '@angular/core';
-import { UsuarioRecuperadoDto, UsuarioTipoEnum } from '@project20/shared';
+import { UsuarioRecuperadoDto, TipoUsuarioEnum } from '@project20/shared';
 
 @Injectable({ providedIn: 'root' })
 export class UsuarioSessaoService {
@@ -11,7 +11,7 @@ export class UsuarioSessaoService {
   readonly id            = computed(() => this._usuario()?.id);
   readonly login         = computed(() => this._usuario()?.login);
   readonly nomeCompleto  = computed(() => this._usuario()?.nomeCompleto);
-  readonly eGestor       = computed(() => this._usuario()?.tipo === UsuarioTipoEnum.GESTOR);
+  readonly eGestor       = computed(() => this._usuario()?.tipo === TipoUsuarioEnum.GESTOR);
 
   constructor() {
     this.restaurarSessao();

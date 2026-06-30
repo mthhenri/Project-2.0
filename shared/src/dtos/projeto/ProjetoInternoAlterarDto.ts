@@ -1,10 +1,10 @@
-import { ProjetoStatusEnum } from '../../enums/projeto-status.enum';
+import { TipoProjetoStatusEnum } from '../../enums/tipo-projeto-status.enum';
 
 export class ProjetoInternoAlterarDto {
   id: number;
   nome?: string;
   cor?: string;
-  status?: ProjetoStatusEnum;
+  status?: TipoProjetoStatusEnum;
   inicioData?: string | null;
   previsaoFimData?: string | null;
 }

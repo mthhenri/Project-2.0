@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { DemandaStatusEnum } from '../../enums/demanda-status.enum';
+import { TipoDemandaStatusEnum } from '../../enums/tipo-demanda-status.enum';
 import { TagResumoDto } from '../tag/TagResumoDto';
 
 export class DemandaGrafoNoDto {
@@ -9,8 +9,8 @@ export class DemandaGrafoNoDto {
   @ApiProperty({ example: 'Implementar módulo de login' })
   nome: string;
 
-  @ApiProperty({ enum: DemandaStatusEnum, example: DemandaStatusEnum.PLANEJADA })
-  status: DemandaStatusEnum;
+  @ApiProperty({ enum: TipoDemandaStatusEnum, example: TipoDemandaStatusEnum.PLANEJADA })
+  status: TipoDemandaStatusEnum;
 
   @ApiProperty({ example: false })
   isEstrutural: boolean;

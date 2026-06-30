@@ -15,7 +15,7 @@ import {
   UsuarioSenhaInternoAlterarDto,
   UsuarioExcluirDto,
 } from '@project20/shared';
-import { UsuarioTipoEnum, UsuarioStatusEnum } from '@project20/shared';
+import { TipoUsuarioEnum, TipoUsuarioStatusEnum } from '@project20/shared';
 
 @Injectable()
 export class UsuarioRepository extends BaseRepository<Usuario> {
@@ -67,13 +67,19 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
          usuario.anotacoes,
          usuario.anotacoes_alteracao_data  AS "anotacoesAlteracaoData",
          usuario.horas_diarias_necessarias AS "horasDiariasNecessarias",
-         usuario.tipo,
-         usuario.status,
+         tipo_usuario.codigo               AS tipo,
+         tipo_usuario_status.codigo        AS status,
          usuario.created_date              AS "createdDate",
          usuario.updated_date              AS "updatedDate",
          usuario.is_deleted                AS "isDeleted",
          usuario.deleted_date              AS "deletedDate"
        FROM usuario
+       INNER JOIN tipo_usuario
+         ON tipo_usuario.id = usuario.tipo_usuario_id
+         AND tipo_usuario.is_deleted = false
+       INNER JOIN tipo_usuario_status
+         ON tipo_usuario_status.id = usuario.tipo_usuario_status_id
+         AND tipo_usuario_status.is_deleted = false
        WHERE ${condicoes.join(' AND ')}
        LIMIT 1`,
       parametros,
@@ -91,12 +97,12 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
     const parametros: Record<string, unknown> = {};
 
     if (filtros.tipo) {
-      condicoes.push('usuario.tipo = :tipo');
+      condicoes.push('tipo_usuario.codigo = :tipo');
       parametros.tipo = filtros.tipo;
     }
 
     if (filtros.status) {
-      condicoes.push('usuario.status = :status');
+      condicoes.push('tipo_usuario_status.codigo = :status');
       parametros.status = filtros.status;
     }
 
@@ -106,9 +112,16 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
     }
 
     const clausulaWhere = condicoes.join(' AND ');
+    const clausulasJoin = `
+       INNER JOIN tipo_usuario
+         ON tipo_usuario.id = usuario.tipo_usuario_id
+         AND tipo_usuario.is_deleted = false
+       INNER JOIN tipo_usuario_status
+         ON tipo_usuario_status.id = usuario.tipo_usuario_status_id
+         AND tipo_usuario_status.is_deleted = false`;
 
     const resultadoTotal = await this.executarConsulta<{ total: string }>(
-      `SELECT COUNT(*) AS total FROM usuario WHERE ${clausulaWhere}`,
+      `SELECT COUNT(*) AS total FROM usuario ${clausulasJoin} WHERE ${clausulaWhere}`,
       parametros,
     );
 
@@ -121,11 +134,12 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
          usuario.login,
          usuario.nome_completo AS "nomeCompleto",
          usuario.cargo_titulo  AS "cargoTitulo",
-         usuario.tipo,
-         usuario.status,
+         tipo_usuario.codigo        AS tipo,
+         tipo_usuario_status.codigo AS status,
          (usuario.anotacoes IS NOT NULL
             AND regexp_replace(usuario.anotacoes, '<[^>]*>|&nbsp;|&#160;|[[:space:]]+', '', 'gi') <> '') AS "temAnotacoes"
        FROM usuario
+       ${clausulasJoin}
        WHERE ${clausulaWhere}
        ORDER BY usuario.nome_completo ASC
        LIMIT ${itensPorPagina} OFFSET ${deslocamento}`,
@@ -141,26 +155,32 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
     senhaEncriptada: string;
     nomeCompleto: string;
     cargoTitulo: string;
-    tipo: UsuarioTipoEnum;
+    tipo: TipoUsuarioEnum;
     horasDiariasNecessarias: number;
   }): Promise<UsuarioCriadoDto> {
     const resultado = await this.executarConsulta<UsuarioCriadoDto>(
       `INSERT INTO usuario (
          login, senha_encriptada, nome_completo, cargo_titulo,
-         tipo, horas_diarias_necessarias, status,
+         tipo_usuario_id, horas_diarias_necessarias, tipo_usuario_status_id,
          created_date, updated_date, is_deleted
        )
        SELECT
          :login, :senhaEncriptada, :nomeCompleto, :cargoTitulo,
-         :tipo, :horasDiariasNecessarias, :status,
+         (SELECT tipo_usuario.id FROM tipo_usuario
+            WHERE tipo_usuario.codigo = :tipo AND tipo_usuario.is_deleted = false),
+         :horasDiariasNecessarias,
+         (SELECT tipo_usuario_status.id FROM tipo_usuario_status
+            WHERE tipo_usuario_status.codigo = :status AND tipo_usuario_status.is_deleted = false),
          NOW(), NOW(), false
        RETURNING
          id,
          login,
          nome_completo             AS "nomeCompleto",
          cargo_titulo              AS "cargoTitulo",
-         tipo,
-         status,
+         (SELECT tipo_usuario.codigo FROM tipo_usuario
+            WHERE tipo_usuario.id = usuario.tipo_usuario_id)               AS tipo,
+         (SELECT tipo_usuario_status.codigo FROM tipo_usuario_status
+            WHERE tipo_usuario_status.id = usuario.tipo_usuario_status_id) AS status,
          horas_diarias_necessarias AS "horasDiariasNecessarias",
          created_date              AS "createdDate"`,
       {
@@ -170,7 +190,7 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
         cargoTitulo:             dados.cargoTitulo,
         tipo:                    dados.tipo,
         horasDiariasNecessarias: dados.horasDiariasNecessarias,
-        status:                  UsuarioStatusEnum.ATIVO,
+        status:                  TipoUsuarioStatusEnum.ATIVO,
       },
     );
     return resultado[0];
@@ -201,11 +221,15 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
       parametros.horasDiariasNecessarias = dto.horasDiariasNecessarias;
     }
     if (dto.status !== undefined) {
-      setClauses.push('status = :status');
+      setClauses.push(
+        'tipo_usuario_status_id = (SELECT tipo_usuario_status.id FROM tipo_usuario_status WHERE tipo_usuario_status.codigo = :status AND tipo_usuario_status.is_deleted = false)',
+      );
       parametros.status = dto.status;
     }
     if (dto.tipo !== undefined) {
-      setClauses.push('tipo = :tipo');
+      setClauses.push(
+        'tipo_usuario_id = (SELECT tipo_usuario.id FROM tipo_usuario WHERE tipo_usuario.codigo = :tipo AND tipo_usuario.is_deleted = false)',
+      );
       parametros.tipo = dto.tipo;
     }
 
@@ -221,8 +245,10 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
          cargo_titulo              AS "cargoTitulo",
          anotacoes,
          anotacoes_alteracao_data  AS "anotacoesAlteracaoData",
-         tipo,
-         status,
+         (SELECT tipo_usuario.codigo FROM tipo_usuario
+            WHERE tipo_usuario.id = usuario.tipo_usuario_id)               AS tipo,
+         (SELECT tipo_usuario_status.codigo FROM tipo_usuario_status
+            WHERE tipo_usuario_status.id = usuario.tipo_usuario_status_id) AS status,
          horas_diarias_necessarias AS "horasDiariasNecessarias",
          created_date              AS "createdDate"`,
       parametros,
@@ -264,10 +290,13 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
          usuario.nome_completo             AS "nomeCompleto",
          usuario.horas_diarias_necessarias AS "horasDiariasNecessarias"
        FROM usuario
-       WHERE usuario.status = :status
+       WHERE usuario.tipo_usuario_status_id = (
+               SELECT tipo_usuario_status.id FROM tipo_usuario_status
+               WHERE tipo_usuario_status.codigo = :status AND tipo_usuario_status.is_deleted = false
+             )
          AND usuario.is_deleted = false
        ORDER BY usuario.nome_completo ASC`,
-      { status: UsuarioStatusEnum.ATIVO },
+      { status: TipoUsuarioStatusEnum.ATIVO },
     );
   }
 
@@ -276,10 +305,16 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
     return this.executarConsulta<{ id: number }>(
       `SELECT usuario.id
        FROM usuario
-       WHERE usuario.tipo = :tipo
-         AND usuario.status = :status
+       WHERE usuario.tipo_usuario_id = (
+               SELECT tipo_usuario.id FROM tipo_usuario
+               WHERE tipo_usuario.codigo = :tipo AND tipo_usuario.is_deleted = false
+             )
+         AND usuario.tipo_usuario_status_id = (
+               SELECT tipo_usuario_status.id FROM tipo_usuario_status
+               WHERE tipo_usuario_status.codigo = :status AND tipo_usuario_status.is_deleted = false
+             )
          AND usuario.is_deleted = false`,
-      { tipo: UsuarioTipoEnum.GESTOR, status: UsuarioStatusEnum.ATIVO },
+      { tipo: TipoUsuarioEnum.GESTOR, status: TipoUsuarioStatusEnum.ATIVO },
     );
   }
 }

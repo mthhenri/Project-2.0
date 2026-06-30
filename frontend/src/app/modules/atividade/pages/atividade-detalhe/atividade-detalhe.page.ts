@@ -14,7 +14,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
 import {
   AtividadeRecuperadaDto,
-  AtividadeStatusEnum,
+  TipoAtividadeStatusEnum,
   AtividadeAlterarDto,
   AtividadeTagsAtribuirDto,
   TagResumoDto,
@@ -83,7 +83,7 @@ export class AtividadeDetalhePage implements OnInit {
   readonly rotuloStatus = rotuloStatusAtividade;
 
   readonly formularioStatus = this.formBuilder.group({
-    status: [AtividadeStatusEnum.PLANEJADA as AtividadeStatusEnum],
+    status: [TipoAtividadeStatusEnum.PLANEJADA as TipoAtividadeStatusEnum],
   });
 
   readonly formularioDescricao = this.formBuilder.group({

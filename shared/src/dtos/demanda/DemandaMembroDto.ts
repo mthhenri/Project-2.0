@@ -1,9 +1,9 @@
-import { UsuarioTipoEnum } from '../../enums/usuario-tipo.enum';
+import { TipoUsuarioEnum } from '../../enums/tipo-usuario.enum';
 
 export class DemandaMembroDto {
   usuarioId: number;
   nomeCompleto: string;
   login: string;
-  tipo: UsuarioTipoEnum;
+  tipo: TipoUsuarioEnum;
   cargoTitulo: string;
 }

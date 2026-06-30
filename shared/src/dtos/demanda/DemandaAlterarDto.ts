@@ -11,7 +11,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { DemandaStatusEnum } from '../../enums/demanda-status.enum';
+import { TipoDemandaStatusEnum } from '../../enums/tipo-demanda-status.enum';
 
 export class DemandaAlterarDto {
   @ApiPropertyOptional({ example: null })
@@ -50,10 +50,10 @@ export class DemandaAlterarDto {
   @Type(() => Number)
   horasEstimadas?: number;
 
-  @ApiPropertyOptional({ enum: DemandaStatusEnum, example: DemandaStatusEnum.PLANEJADA })
+  @ApiPropertyOptional({ enum: TipoDemandaStatusEnum, example: TipoDemandaStatusEnum.PLANEJADA })
   @IsOptional()
-  @IsEnum(DemandaStatusEnum)
-  status?: DemandaStatusEnum;
+  @IsEnum(TipoDemandaStatusEnum)
+  status?: TipoDemandaStatusEnum;
 
   @ApiPropertyOptional({ example: false })
   @IsOptional()

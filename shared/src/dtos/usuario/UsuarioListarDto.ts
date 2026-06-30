@@ -1,19 +1,19 @@
 import { IsOptional, IsEnum, IsNumber, IsString, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { UsuarioTipoEnum } from '../../enums/usuario-tipo.enum';
-import { UsuarioStatusEnum } from '../../enums/usuario-status.enum';
+import { TipoUsuarioEnum } from '../../enums/tipo-usuario.enum';
+import { TipoUsuarioStatusEnum } from '../../enums/tipo-usuario-status.enum';
 
 export class UsuarioListarDto {
-  @ApiPropertyOptional({ enum: UsuarioTipoEnum, example: UsuarioTipoEnum.DESENVOLVEDOR })
+  @ApiPropertyOptional({ enum: TipoUsuarioEnum, example: TipoUsuarioEnum.DESENVOLVEDOR })
   @IsOptional()
-  @IsEnum(UsuarioTipoEnum)
-  tipo?: UsuarioTipoEnum;
+  @IsEnum(TipoUsuarioEnum)
+  tipo?: TipoUsuarioEnum;
 
-  @ApiPropertyOptional({ enum: UsuarioStatusEnum, example: UsuarioStatusEnum.ATIVO })
+  @ApiPropertyOptional({ enum: TipoUsuarioStatusEnum, example: TipoUsuarioStatusEnum.ATIVO })
   @IsOptional()
-  @IsEnum(UsuarioStatusEnum)
-  status?: UsuarioStatusEnum;
+  @IsEnum(TipoUsuarioStatusEnum)
+  status?: TipoUsuarioStatusEnum;
 
   @ApiPropertyOptional({ example: 'joão' })
   @IsOptional()

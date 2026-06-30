@@ -1,6 +1,6 @@
 import { Type } from 'class-transformer';
 import { IsArray, IsEnum, IsNumber, IsOptional, IsString, MaxLength, Min, MinLength } from 'class-validator';
-import { AtividadeStatusEnum } from '../../enums/atividade-status.enum';
+import { TipoAtividadeStatusEnum } from '../../enums/tipo-atividade-status.enum';
 
 export class AtividadeCriarDto {
   @IsNumber()
@@ -23,8 +23,8 @@ export class AtividadeCriarDto {
   @IsString()
   descricao?: string;
 
-  @IsEnum(AtividadeStatusEnum)
-  status: AtividadeStatusEnum;
+  @IsEnum(TipoAtividadeStatusEnum)
+  status: TipoAtividadeStatusEnum;
 
   @IsOptional()
   @IsArray()

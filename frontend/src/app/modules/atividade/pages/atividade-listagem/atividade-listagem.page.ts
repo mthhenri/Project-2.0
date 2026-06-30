@@ -19,20 +19,20 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import {
   AtividadeResumoDto,
-  AtividadeStatusEnum,
+  TipoAtividadeStatusEnum,
   AtividadeListarDto,
   AtividadeCriarDto,
   AtividadeAlterarDto,
   TagResumoDto,
   UsuarioResumoDto,
-  UsuarioStatusEnum,
+  TipoUsuarioStatusEnum,
   DemandaAtribuidaDto,
   DemandaRecuperadaDto,
   ExecucaoItemDto,
   ExecucaoIniciarDto,
   ExecucaoEncerrarDto,
   ExecucaoRegistrarDto,
-  UsuarioTipoEnum,
+  TipoUsuarioEnum,
 } from '@project20/shared';
 import { AtividadeService } from '../../services/atividade.service';
 import { ExecucaoService } from '../../../execucao/services/execucao.service';
@@ -98,7 +98,7 @@ export class AtividadeListagemPage implements OnInit {
   readonly sessao = inject(UsuarioSessaoService);
 
   readonly formularioFiltros = this.formBuilder.group({
-    status:    [ATIVIDADE_STATUS_NAO_DESENVOLVIDA as AtividadeStatusEnum[]],
+    status:    [ATIVIDADE_STATUS_NAO_DESENVOLVIDA as TipoAtividadeStatusEnum[]],
     usuarioId: [null as number | null],
     busca:     [''],
     intervalo: [null as (Date | null)[] | null],
@@ -129,7 +129,7 @@ export class AtividadeListagemPage implements OnInit {
     nome:      ['', [Validators.required, Validators.minLength(3), Validators.maxLength(255)]],
     demandaId: [null as number | null, [Validators.required]],
     usuarioId: [null as number | null],
-    status:    [AtividadeStatusEnum.DESENVOLVENDO as AtividadeStatusEnum, [Validators.required]],
+    status:    [TipoAtividadeStatusEnum.DESENVOLVENDO as TipoAtividadeStatusEnum, [Validators.required]],
     descricao: [''],
     tagIds:    [[] as number[]],
   });
@@ -290,7 +290,7 @@ export class AtividadeListagemPage implements OnInit {
       nome:      '',
       demandaId: this.demandaId(),
       usuarioId: null,
-      status:    AtividadeStatusEnum.DESENVOLVENDO,
+      status:    TipoAtividadeStatusEnum.DESENVOLVENDO,
       descricao: '',
       tagIds:    [],
     });
@@ -353,11 +353,11 @@ export class AtividadeListagemPage implements OnInit {
     popover.toggle(evento);
   }
 
-  severidadeOpcao(status: AtividadeStatusEnum | null): SeveridadeTag | undefined {
+  severidadeOpcao(status: TipoAtividadeStatusEnum | null): SeveridadeTag | undefined {
     return status ? this.severidadeStatus(status) : undefined;
   }
 
-  alterarStatus(novoStatus: AtividadeStatusEnum | null, popover: Popover): void {
+  alterarStatus(novoStatus: TipoAtividadeStatusEnum | null, popover: Popover): void {
     const atividade = this.atividadeStatusEdicao();
     popover.hide();
 
@@ -581,7 +581,7 @@ export class AtividadeListagemPage implements OnInit {
     this.formularioExecucao.reset({ descricao: descricaoInicial });
 
     // Descrição obrigatória apenas quando o dono da atividade é desenvolvedor.
-    const donoEhGestor = atividade.usuarioTipo === UsuarioTipoEnum.GESTOR;
+    const donoEhGestor = atividade.usuarioTipo === TipoUsuarioEnum.GESTOR;
     this.descricaoExecucaoOpcional.set(donoEhGestor);
     const controleDescricao = this.formularioExecucao.get('descricao')!;
     controleDescricao.setValidators(donoEhGestor ? [] : [Validators.required]);
@@ -762,7 +762,7 @@ export class AtividadeListagemPage implements OnInit {
   }
 
   private carregarUsuarios(): void {
-    this.usuarioService.listar({ status: UsuarioStatusEnum.ATIVO, itensPorPagina: 100 }).subscribe({
+    this.usuarioService.listar({ status: TipoUsuarioStatusEnum.ATIVO, itensPorPagina: 100 }).subscribe({
       next: (resposta) => {
         if (resposta.sucesso && resposta.dados) this.usuarios.set(resposta.dados.itens);
       },

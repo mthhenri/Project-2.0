@@ -8,7 +8,7 @@ import { Select } from 'primeng/select';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { DialogModule } from 'primeng/dialog';
 import { MessageService } from 'primeng/api';
-import { UsuarioCriarDto, UsuarioTipoEnum } from '@project20/shared';
+import { UsuarioCriarDto, TipoUsuarioEnum } from '@project20/shared';
 import { UsuarioService } from '../../services/usuario.service';
 
 @Component({
@@ -31,7 +31,7 @@ export class UsuarioFormularioDialogComponent {
     senhaNaoEncriptada: ['', [Validators.required, Validators.minLength(8)]],
     nomeCompleto: ['', [Validators.required, Validators.minLength(3)]],
     cargoTitulo: ['', [Validators.required]],
-    tipo: [null as UsuarioTipoEnum | null, [Validators.required]],
+    tipo: [null as TipoUsuarioEnum | null, [Validators.required]],
     horasDiariasNecessarias: [8, [Validators.required]],
   });
 
@@ -39,8 +39,8 @@ export class UsuarioFormularioDialogComponent {
   readonly mostrarDialog = signal<boolean>(false);
 
   readonly tiposOpcoes = [
-    { label: 'Desenvolvedor', value: UsuarioTipoEnum.DESENVOLVEDOR },
-    { label: 'Gestor', value: UsuarioTipoEnum.GESTOR },
+    { label: 'Desenvolvedor', value: TipoUsuarioEnum.DESENVOLVEDOR },
+    { label: 'Gestor', value: TipoUsuarioEnum.GESTOR },
   ];
 
   /** Abre o dialog com o formulário limpo. */

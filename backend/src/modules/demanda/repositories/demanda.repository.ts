@@ -12,7 +12,7 @@ import {
   DemandaGrafoNoDto,
   DemandaGrafoArestaDto,
   DemandaAncestralDto,
-  DemandaStatusEnum,
+  TipoDemandaStatusEnum,
   DemandaConexaoCriadaDto,
   DemandaConexaoResumoDto,
   DemandaMembroDto,
@@ -61,12 +61,15 @@ export class DemandaRepository extends BaseRepository<Demanda> {
     const resultado = await this.executarConsulta<DemandaCriadaDto>(
       `INSERT INTO demanda (
          projeto_id, demanda_pai_id, nome, descricao_tecnica, descricao_cliente,
-         documentacao, horas_estimadas, status, is_estrutural,
+         documentacao, horas_estimadas, tipo_demanda_status_id, is_estrutural,
          previsao_fim_data, created_date, updated_date, is_deleted
        )
        SELECT
          :projetoId, :demandaPaiId, :nome, :descricaoTecnica, :descricaoCliente,
-         :documentacao, :horasEstimadas, :status, :isEstrutural,
+         :documentacao, :horasEstimadas,
+         (SELECT tipo_demanda_status.id FROM tipo_demanda_status
+            WHERE tipo_demanda_status.codigo = :status AND tipo_demanda_status.is_deleted = false),
+         :isEstrutural,
          :previsaoFimData, NOW(), NOW(), false
        RETURNING
          id,
@@ -74,7 +77,8 @@ export class DemandaRepository extends BaseRepository<Demanda> {
          demanda_pai_id     AS "demandaPaiId",
          nome,
          horas_estimadas    AS "horasEstimadas",
-         status,
+         (SELECT tipo_demanda_status.codigo FROM tipo_demanda_status
+            WHERE tipo_demanda_status.id = demanda.tipo_demanda_status_id) AS status,
          is_estrutural      AS "isEstrutural",
          previsao_fim_data  AS "previsaoFimData",
          created_date       AS "createdDate"`,
@@ -167,11 +171,14 @@ export class DemandaRepository extends BaseRepository<Demanda> {
          demanda.descricao_cliente  AS "descricaoCliente",
          demanda.documentacao,
          demanda.horas_estimadas    AS "horasEstimadas",
-         demanda.status,
+         tipo_demanda_status.codigo AS status,
          demanda.is_estrutural      AS "isEstrutural",
          demanda.previsao_fim_data  AS "previsaoFimData",
          demanda.created_date       AS "createdDate"
        FROM demanda
+       INNER JOIN tipo_demanda_status
+         ON tipo_demanda_status.id = demanda.tipo_demanda_status_id
+         AND tipo_demanda_status.is_deleted = false
        WHERE ${condicoes.join(' AND ')}
        LIMIT 1`,
       parametros,
@@ -205,8 +212,13 @@ export class DemandaRepository extends BaseRepository<Demanda> {
       parametros.usuarioId = restricao.usuarioId;
     }
 
+    const joinStatus = `
+        INNER JOIN tipo_demanda_status
+          ON tipo_demanda_status.id = demanda.tipo_demanda_status_id
+          AND tipo_demanda_status.is_deleted = false`;
+
     if (filtros.status !== undefined) {
-      condicoes.push('demanda.status = :status');
+      condicoes.push('tipo_demanda_status.codigo = :status');
       parametros.status = filtros.status;
     }
 
@@ -225,6 +237,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
     const [{ total }] = await this.executarConsulta<{ total: number }>(
       `SELECT COUNT(DISTINCT demanda.id)::int AS total
        FROM demanda
+       ${joinStatus}
        ${joinDemandaUsuario}
        WHERE ${clausulaWhere}`,
       parametros,
@@ -235,10 +248,11 @@ export class DemandaRepository extends BaseRepository<Demanda> {
       `SELECT DISTINCT
          demanda.id,
          demanda.nome,
-         demanda.status,
+         tipo_demanda_status.codigo AS status,
          demanda.is_estrutural   AS "isEstrutural",
          demanda.horas_estimadas AS "horasEstimadas"
        FROM demanda
+       ${joinStatus}
        ${joinDemandaUsuario}
        WHERE ${clausulaWhere}
        ORDER BY demanda.nome ASC
@@ -270,11 +284,14 @@ export class DemandaRepository extends BaseRepository<Demanda> {
               projeto.nome AS "nomeProjeto"
        FROM demanda
        ${joinAtribuicao}
+       INNER JOIN tipo_demanda_status
+         ON tipo_demanda_status.id = demanda.tipo_demanda_status_id
+         AND tipo_demanda_status.is_deleted = false
        INNER JOIN projeto
          ON projeto.id = demanda.projeto_id
          AND projeto.is_deleted = false
        WHERE demanda.is_deleted = false
-         AND demanda.status IN ('PLANEJADA', 'PENDENTE')
+         AND tipo_demanda_status.codigo IN ('PLANEJADA', 'PENDENTE')
        ORDER BY projeto.nome ASC, demanda.nome ASC`,
       { usuarioId: dto.usuarioId },
     );
@@ -312,7 +329,9 @@ export class DemandaRepository extends BaseRepository<Demanda> {
       parametros.horasEstimadas = dto.horasEstimadas;
     }
     if (dto.status !== undefined) {
-      setClauses.push('status = :status');
+      setClauses.push(
+        'tipo_demanda_status_id = (SELECT tipo_demanda_status.id FROM tipo_demanda_status WHERE tipo_demanda_status.codigo = :status AND tipo_demanda_status.is_deleted = false)',
+      );
       parametros.status = dto.status;
     }
     if (dto.isEstrutural !== undefined) {
@@ -338,7 +357,8 @@ export class DemandaRepository extends BaseRepository<Demanda> {
          descricao_cliente  AS "descricaoCliente",
          documentacao,
          horas_estimadas    AS "horasEstimadas",
-         status,
+         (SELECT tipo_demanda_status.codigo FROM tipo_demanda_status
+            WHERE tipo_demanda_status.id = demanda.tipo_demanda_status_id) AS status,
          is_estrutural      AS "isEstrutural",
          previsao_fim_data  AS "previsaoFimData",
          created_date       AS "createdDate"`,
@@ -355,7 +375,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
     id: number;
     demandaPaiId: number | null;
     nome: string;
-    status: DemandaStatusEnum;
+    status: TipoDemandaStatusEnum;
     isEstrutural: boolean;
     horasEstimadas: number;
     nivel: number;
@@ -368,7 +388,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
       id: number;
       demandaPaiId: number | null;
       nome: string;
-      status: DemandaStatusEnum;
+      status: TipoDemandaStatusEnum;
       isEstrutural: boolean;
       horasEstimadas: number;
       nivel: number;
@@ -378,7 +398,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
       tags: TagResumoDto[];
     }>(
       `WITH RECURSIVE arvore_demanda AS (
-         SELECT id, demanda_pai_id, nome, status, is_estrutural,
+         SELECT id, demanda_pai_id, nome, is_estrutural,
                 horas_estimadas, 0 AS nivel
          FROM demanda
          WHERE id = :demandaId
@@ -387,7 +407,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
          UNION ALL
 
          SELECT demanda_filho.id, demanda_filho.demanda_pai_id, demanda_filho.nome,
-                demanda_filho.status, demanda_filho.is_estrutural,
+                demanda_filho.is_estrutural,
                 demanda_filho.horas_estimadas, arvore_demanda.nivel + 1
          FROM demanda AS demanda_filho
          INNER JOIN arvore_demanda
@@ -398,7 +418,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
          arvore_demanda.id,
          arvore_demanda.demanda_pai_id  AS "demandaPaiId",
          arvore_demanda.nome,
-         arvore_demanda.status,
+         tipo_demanda_status.codigo     AS status,
          arvore_demanda.is_estrutural   AS "isEstrutural",
          arvore_demanda.horas_estimadas AS "horasEstimadas",
          arvore_demanda.nivel,
@@ -416,6 +436,9 @@ export class DemandaRepository extends BaseRepository<Demanda> {
          ) AS tags
        FROM arvore_demanda
        INNER JOIN demanda ON demanda.id = arvore_demanda.id
+       INNER JOIN tipo_demanda_status
+         ON tipo_demanda_status.id = demanda.tipo_demanda_status_id
+         AND tipo_demanda_status.is_deleted = false
        ORDER BY arvore_demanda.nivel, arvore_demanda.nome`,
       { demandaId: dto.demandaId },
     );
@@ -486,7 +509,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
       `SELECT
          demanda.id,
          demanda.nome,
-         demanda.status,
+         tipo_demanda_status.codigo AS status,
          demanda.is_estrutural    AS "isEstrutural",
          demanda.horas_estimadas  AS "horasEstimadas",
          demanda.demanda_pai_id   AS "demandaPaiId",
@@ -503,6 +526,9 @@ export class DemandaRepository extends BaseRepository<Demanda> {
            '[]'::json
          ) AS tags
        FROM demanda
+       INNER JOIN tipo_demanda_status
+         ON tipo_demanda_status.id = demanda.tipo_demanda_status_id
+         AND tipo_demanda_status.is_deleted = false
        WHERE demanda.projeto_id = :projetoId
          AND demanda.is_deleted = false
        ORDER BY demanda.nome ASC`,
@@ -756,12 +782,15 @@ export class DemandaRepository extends BaseRepository<Demanda> {
          usuario.id         AS "usuarioId",
          usuario.nome_completo AS "nomeCompleto",
          usuario.login,
-         usuario.tipo,
+         tipo_usuario.codigo   AS tipo,
          usuario.cargo_titulo  AS "cargoTitulo"
        FROM demanda_usuario
        INNER JOIN usuario
          ON usuario.id = demanda_usuario.usuario_id
          AND usuario.is_deleted = false
+       INNER JOIN tipo_usuario
+         ON tipo_usuario.id = usuario.tipo_usuario_id
+         AND tipo_usuario.is_deleted = false
        WHERE demanda_usuario.demanda_id = :demandaId
          AND demanda_usuario.is_deleted = false`,
       { demandaId: dto.demandaId },

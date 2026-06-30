@@ -9,7 +9,7 @@ import {
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ProjetoStatusEnum } from '../../enums/projeto-status.enum';
+import { TipoProjetoStatusEnum } from '../../enums/tipo-projeto-status.enum';
 
 export class ProjetoCriarDto {
   @ApiProperty({ example: 'Sistema de Gestão' })
@@ -30,9 +30,9 @@ export class ProjetoCriarDto {
   @Matches(/^#[0-9A-Fa-f]{6}$/)
   cor: string;
 
-  @ApiProperty({ enum: ProjetoStatusEnum, example: ProjetoStatusEnum.ATIVO })
-  @IsEnum(ProjetoStatusEnum)
-  status: ProjetoStatusEnum;
+  @ApiProperty({ enum: TipoProjetoStatusEnum, example: TipoProjetoStatusEnum.ATIVO })
+  @IsEnum(TipoProjetoStatusEnum)
+  status: TipoProjetoStatusEnum;
 
   @ApiPropertyOptional({ example: '2026-01-01' })
   @IsOptional()

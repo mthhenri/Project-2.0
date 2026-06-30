@@ -12,7 +12,7 @@ import { MessageService } from 'primeng/api';
 import {
   DemandaAlterarDto,
   DemandaResumoDto,
-  DemandaStatusEnum,
+  TipoDemandaStatusEnum,
 } from '@project20/shared';
 import { DemandaService } from '../../services/demanda.service';
 
@@ -51,16 +51,16 @@ export class DemandaEdicaoDialogComponent implements OnChanges {
   readonly formulario = this.formBuilder.group({
     nome:             ['', [Validators.required, Validators.maxLength(255)]],
     demandaPaiId:     [null as number | null],
-    status:           [DemandaStatusEnum.PENDENTE as DemandaStatusEnum, [Validators.required]],
+    status:           [TipoDemandaStatusEnum.PENDENTE as TipoDemandaStatusEnum, [Validators.required]],
     isEstrutural:     [false],
     horasEstimadas:   [0, [Validators.required, Validators.min(0)]],
     previsaoFimData:  [null as Date | null],
   });
 
   readonly statusOpcoes = [
-    { label: 'Pendente',  value: DemandaStatusEnum.PENDENTE },
-    { label: 'Planejada', value: DemandaStatusEnum.PLANEJADA },
-    { label: 'Concluída', value: DemandaStatusEnum.CONCLUIDA },
+    { label: 'Pendente',  value: TipoDemandaStatusEnum.PENDENTE },
+    { label: 'Planejada', value: TipoDemandaStatusEnum.PLANEJADA },
+    { label: 'Concluída', value: TipoDemandaStatusEnum.CONCLUIDA },
   ];
 
   ngOnChanges(mudancas: SimpleChanges): void {

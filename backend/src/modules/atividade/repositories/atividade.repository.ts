@@ -34,15 +34,19 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
    */
   async inserir(dados: AtividadeInserirDados): Promise<AtividadeCriadaDto> {
     const resultado = await this.executarConsulta<AtividadeCriadaDto>(
-      `INSERT INTO atividade (demanda_id, usuario_id, nome, descricao, status, created_date, updated_date, is_deleted)
-       SELECT :demandaId, :usuarioId, :nome, :descricao, :status, NOW(), NOW(), false
+      `INSERT INTO atividade (demanda_id, usuario_id, nome, descricao, tipo_atividade_status_id, created_date, updated_date, is_deleted)
+       SELECT :demandaId, :usuarioId, :nome, :descricao,
+         (SELECT tipo_atividade_status.id FROM tipo_atividade_status
+            WHERE tipo_atividade_status.codigo = :status AND tipo_atividade_status.is_deleted = false),
+         NOW(), NOW(), false
        RETURNING
          id,
          demanda_id      AS "demandaId",
          usuario_id      AS "usuarioId",
          nome,
          descricao,
-         status,
+         (SELECT tipo_atividade_status.codigo FROM tipo_atividade_status
+            WHERE tipo_atividade_status.id = atividade.tipo_atividade_status_id) AS status,
          created_date    AS "createdDate"`,
       {
         demandaId:     dados.demandaId,
@@ -68,7 +72,7 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
          usuario.nome_completo     AS "nomeUsuario",
          atividade.nome,
          atividade.descricao,
-         atividade.status,
+         tipo_atividade_status.codigo AS status,
          (SELECT COUNT(*)::int
             FROM atividade atividade_do_usuario
            WHERE atividade_do_usuario.usuario_id = atividade.usuario_id
@@ -81,6 +85,9 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
        INNER JOIN usuario
          ON usuario.id = atividade.usuario_id
          AND usuario.is_deleted = false
+       INNER JOIN tipo_atividade_status
+         ON tipo_atividade_status.id = atividade.tipo_atividade_status_id
+         AND tipo_atividade_status.is_deleted = false
        WHERE atividade.id = :id
          AND atividade.is_deleted = false
        LIMIT 1`,
@@ -120,7 +127,7 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
     }
 
     if (filtros.status !== undefined && filtros.status.length > 0) {
-      condicoes.push('atividade.status = ANY(:status)');
+      condicoes.push('tipo_atividade_status.codigo = ANY(:status)');
       parametros.status = filtros.status;
     }
 
@@ -146,6 +153,12 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
        INNER JOIN usuario
          ON usuario.id = atividade.usuario_id
          AND usuario.is_deleted = false
+       INNER JOIN tipo_usuario
+         ON tipo_usuario.id = usuario.tipo_usuario_id
+         AND tipo_usuario.is_deleted = false
+       INNER JOIN tipo_atividade_status
+         ON tipo_atividade_status.id = atividade.tipo_atividade_status_id
+         AND tipo_atividade_status.is_deleted = false
        INNER JOIN demanda
          ON demanda.id = atividade.demanda_id
        INNER JOIN projeto
@@ -164,10 +177,10 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
       `SELECT
          atividade.id,
          atividade.nome,
-         atividade.status,
+         tipo_atividade_status.codigo AS status,
          atividade.usuario_id      AS "usuarioId",
          usuario.nome_completo     AS "nomeUsuario",
-         usuario.tipo              AS "usuarioTipo",
+         tipo_usuario.codigo       AS "usuarioTipo",
          atividade.demanda_id      AS "demandaId",
          demanda.nome              AS "nomeDemanda",
          (COALESCE(TRIM(demanda.descricao_cliente), '') <> '') AS "demandaTemDescricaoCliente",
@@ -230,7 +243,9 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
       parametros.descricao = dto.descricao;
     }
     if (dto.status !== undefined) {
-      setClauses.push('status = :status');
+      setClauses.push(
+        'tipo_atividade_status_id = (SELECT tipo_atividade_status.id FROM tipo_atividade_status WHERE tipo_atividade_status.codigo = :status AND tipo_atividade_status.is_deleted = false)',
+      );
       parametros.status = dto.status;
     }
 
@@ -245,7 +260,8 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
          usuario_id      AS "usuarioId",
          nome,
          descricao,
-         status,
+         (SELECT tipo_atividade_status.codigo FROM tipo_atividade_status
+            WHERE tipo_atividade_status.id = atividade.tipo_atividade_status_id) AS status,
          created_date    AS "createdDate"`,
       parametros,
     );

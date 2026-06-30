@@ -7,8 +7,8 @@ import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.int
 import { UnauthorizedAccessException } from '../../../core/exceptions/unauthorized-access.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
 import {
-  DiaNaoUtilTipoEnum,
-  DiaNaoUtilDuracaoEnum,
+  TipoDiaNaoUtilEnum,
+  TipoDiaNaoUtilDuracaoEnum,
   ExecucaoListarDto,
   ExecucaoItemDto,
   IntervaloDto,
@@ -19,7 +19,7 @@ import {
   PontoMensalDto,
   PontoDiaResumoDto,
   UsuarioRecuperarDto,
-  UsuarioTipoEnum,
+  TipoUsuarioEnum,
 } from '@project20/shared';
 
 /**
@@ -55,7 +55,7 @@ export class PontoService {
   async consultarDiario(dto: PontoConsultarDto, usuarioAtivo: JwtPayload): Promise<PontoDiarioDto> {
     const usuarioId = dto.usuarioId ?? usuarioAtivo.sub;
 
-    if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR && usuarioId !== usuarioAtivo.sub) {
+    if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR && usuarioId !== usuarioAtivo.sub) {
       throw new UnauthorizedAccessException();
     }
 
@@ -90,7 +90,7 @@ export class PontoService {
   async consultarMensal(dto: PontoMensalConsultarDto, usuarioAtivo: JwtPayload): Promise<PontoMensalDto> {
     const usuarioId = dto.usuarioId ?? usuarioAtivo.sub;
 
-    if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR && usuarioId !== usuarioAtivo.sub) {
+    if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR && usuarioId !== usuarioAtivo.sub) {
       throw new UnauthorizedAccessException();
     }
 
@@ -128,9 +128,9 @@ export class PontoService {
       // Fração da jornada exigida no dia: 1 (útil integral), 0.5 (meio período), 0 (fim de
       // semana ou dia não útil integral). Soma das frações compõe a meta do mês.
       let fracaoMeta: number;
-      if (ehFimDeSemana || (registradoComoNaoUtil && diaNaoUtil!.duracao === DiaNaoUtilDuracaoEnum.INTEGRAL)) {
+      if (ehFimDeSemana || (registradoComoNaoUtil && diaNaoUtil!.duracao === TipoDiaNaoUtilDuracaoEnum.INTEGRAL)) {
         fracaoMeta = 0;
-      } else if (registradoComoNaoUtil && diaNaoUtil!.duracao === DiaNaoUtilDuracaoEnum.MEIO_PERIODO) {
+      } else if (registradoComoNaoUtil && diaNaoUtil!.duracao === TipoDiaNaoUtilDuracaoEnum.MEIO_PERIODO) {
         fracaoMeta = 0.5;
       } else {
         fracaoMeta = 1;
@@ -209,7 +209,7 @@ export class PontoService {
 
     const motivoBase = this.mapearTipoParaMotivo(diaNaoUtil.tipo);
 
-    if (diaNaoUtil.duracao === DiaNaoUtilDuracaoEnum.MEIO_PERIODO) {
+    if (diaNaoUtil.duracao === TipoDiaNaoUtilDuracaoEnum.MEIO_PERIODO) {
       return { fracaoMeta: 0.5, motivoNaoUtil: `${motivoBase} (meio período)` };
     }
 
@@ -306,12 +306,12 @@ export class PontoService {
   }
 
   /** Converte o enum de tipo de dia não útil para um texto legível em português. */
-  private mapearTipoParaMotivo(tipo: DiaNaoUtilTipoEnum | null): string {
+  private mapearTipoParaMotivo(tipo: TipoDiaNaoUtilEnum | null): string {
     if (tipo === null) return 'Dia não útil';
-    const mapeamento: Record<DiaNaoUtilTipoEnum, string> = {
-      [DiaNaoUtilTipoEnum.FERIADO]:           'Feriado',
-      [DiaNaoUtilTipoEnum.RECESSO]:           'Recesso',
-      [DiaNaoUtilTipoEnum.PONTO_FACULTATIVO]: 'Ponto facultativo',
+    const mapeamento: Record<TipoDiaNaoUtilEnum, string> = {
+      [TipoDiaNaoUtilEnum.FERIADO]:           'Feriado',
+      [TipoDiaNaoUtilEnum.RECESSO]:           'Recesso',
+      [TipoDiaNaoUtilEnum.PONTO_FACULTATIVO]: 'Ponto facultativo',
     };
     return mapeamento[tipo];
   }

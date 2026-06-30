@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ProjetoStatusEnum } from '../../enums/projeto-status.enum';
+import { TipoProjetoStatusEnum } from '../../enums/tipo-projeto-status.enum';
 
 export class ProjetoResumoDto {
   @ApiProperty({ example: 1 })
@@ -14,6 +14,6 @@ export class ProjetoResumoDto {
   @ApiProperty({ example: '#6366f1' })
   cor: string;
 
-  @ApiProperty({ enum: ProjetoStatusEnum, example: ProjetoStatusEnum.ATIVO })
-  status: ProjetoStatusEnum;
+  @ApiProperty({ enum: TipoProjetoStatusEnum, example: TipoProjetoStatusEnum.ATIVO })
+  status: TipoProjetoStatusEnum;
 }

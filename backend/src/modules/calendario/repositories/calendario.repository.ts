@@ -7,8 +7,8 @@ import {
   DiaNaoUtilCriadoDto,
   DiaNaoUtilResumoDto,
   DiaNaoUtilAlteradoDto,
-  DiaNaoUtilTipoEnum,
-  DiaNaoUtilDuracaoEnum,
+  TipoDiaNaoUtilEnum,
+  TipoDiaNaoUtilDuracaoEnum,
   CalendarioRecuperarDto,
   CalendarioInternoAlterarDto,
   CalendarioExcluirDto,
@@ -20,15 +20,15 @@ import {
 interface DiaNaoUtilInserirDados {
   diaData: string;
   descricao: string;
-  tipo: DiaNaoUtilTipoEnum;
-  duracao: DiaNaoUtilDuracaoEnum;
+  tipo: TipoDiaNaoUtilEnum;
+  duracao: TipoDiaNaoUtilDuracaoEnum;
   recorrente: boolean;
 }
 
 /** Tipo e duração do dia não útil cadastrado para uma data. */
 interface DiaNaoUtilInfo {
-  tipo: DiaNaoUtilTipoEnum;
-  duracao: DiaNaoUtilDuracaoEnum;
+  tipo: TipoDiaNaoUtilEnum;
+  duracao: TipoDiaNaoUtilDuracaoEnum;
 }
 
 @Injectable()
@@ -43,14 +43,21 @@ export class CalendarioRepository extends BaseRepository<DiaNaoUtil> {
   /** Insere novo dia não útil e retorna os dados criados. */
   async inserir(dados: DiaNaoUtilInserirDados): Promise<DiaNaoUtilCriadoDto> {
     const resultado = await this.executarConsulta<DiaNaoUtilCriadoDto>(
-      `INSERT INTO dia_nao_util (dia_data, descricao, tipo, duracao, recorrente, created_date, updated_date, is_deleted)
-       SELECT :diaData::DATE, :descricao, :tipo, :duracao, :recorrente, NOW(), NOW(), false
+      `INSERT INTO dia_nao_util (dia_data, descricao, tipo_dia_nao_util_id, tipo_dia_nao_util_duracao_id, recorrente, created_date, updated_date, is_deleted)
+       SELECT :diaData::DATE, :descricao,
+         (SELECT tipo_dia_nao_util.id FROM tipo_dia_nao_util
+            WHERE tipo_dia_nao_util.codigo = :tipo AND tipo_dia_nao_util.is_deleted = false),
+         (SELECT tipo_dia_nao_util_duracao.id FROM tipo_dia_nao_util_duracao
+            WHERE tipo_dia_nao_util_duracao.codigo = :duracao AND tipo_dia_nao_util_duracao.is_deleted = false),
+         :recorrente, NOW(), NOW(), false
        RETURNING
          id,
          dia_data    AS "diaData",
          descricao,
-         tipo,
-         duracao,
+         (SELECT tipo_dia_nao_util.codigo FROM tipo_dia_nao_util
+            WHERE tipo_dia_nao_util.id = dia_nao_util.tipo_dia_nao_util_id) AS tipo,
+         (SELECT tipo_dia_nao_util_duracao.codigo FROM tipo_dia_nao_util_duracao
+            WHERE tipo_dia_nao_util_duracao.id = dia_nao_util.tipo_dia_nao_util_duracao_id) AS duracao,
          recorrente,
          created_date AS "createdDate"`,
       {
@@ -71,11 +78,17 @@ export class CalendarioRepository extends BaseRepository<DiaNaoUtil> {
          dia_nao_util.id,
          dia_nao_util.dia_data    AS "diaData",
          dia_nao_util.descricao,
-         dia_nao_util.tipo,
-         dia_nao_util.duracao,
+         tipo_dia_nao_util.codigo         AS tipo,
+         tipo_dia_nao_util_duracao.codigo AS duracao,
          dia_nao_util.recorrente,
          dia_nao_util.created_date AS "createdDate"
        FROM dia_nao_util
+       INNER JOIN tipo_dia_nao_util
+         ON tipo_dia_nao_util.id = dia_nao_util.tipo_dia_nao_util_id
+         AND tipo_dia_nao_util.is_deleted = false
+       INNER JOIN tipo_dia_nao_util_duracao
+         ON tipo_dia_nao_util_duracao.id = dia_nao_util.tipo_dia_nao_util_duracao_id
+         AND tipo_dia_nao_util_duracao.is_deleted = false
        WHERE dia_nao_util.id = :id
          AND dia_nao_util.is_deleted = false
        LIMIT 1`,
@@ -91,10 +104,16 @@ export class CalendarioRepository extends BaseRepository<DiaNaoUtil> {
          dia_nao_util.id,
          dia_nao_util.dia_data    AS "diaData",
          dia_nao_util.descricao,
-         dia_nao_util.tipo,
-         dia_nao_util.duracao,
+         tipo_dia_nao_util.codigo         AS tipo,
+         tipo_dia_nao_util_duracao.codigo AS duracao,
          dia_nao_util.recorrente
        FROM dia_nao_util
+       INNER JOIN tipo_dia_nao_util
+         ON tipo_dia_nao_util.id = dia_nao_util.tipo_dia_nao_util_id
+         AND tipo_dia_nao_util.is_deleted = false
+       INNER JOIN tipo_dia_nao_util_duracao
+         ON tipo_dia_nao_util_duracao.id = dia_nao_util.tipo_dia_nao_util_duracao_id
+         AND tipo_dia_nao_util_duracao.is_deleted = false
        WHERE dia_nao_util.is_deleted = false
        ORDER BY dia_nao_util.dia_data ASC`,
     );
@@ -110,11 +129,15 @@ export class CalendarioRepository extends BaseRepository<DiaNaoUtil> {
       parametros.descricao = dto.descricao;
     }
     if (dto.tipo !== undefined) {
-      setClauses.push('tipo = :tipo');
+      setClauses.push(
+        'tipo_dia_nao_util_id = (SELECT tipo_dia_nao_util.id FROM tipo_dia_nao_util WHERE tipo_dia_nao_util.codigo = :tipo AND tipo_dia_nao_util.is_deleted = false)',
+      );
       parametros.tipo = dto.tipo;
     }
     if (dto.duracao !== undefined) {
-      setClauses.push('duracao = :duracao');
+      setClauses.push(
+        'tipo_dia_nao_util_duracao_id = (SELECT tipo_dia_nao_util_duracao.id FROM tipo_dia_nao_util_duracao WHERE tipo_dia_nao_util_duracao.codigo = :duracao AND tipo_dia_nao_util_duracao.is_deleted = false)',
+      );
       parametros.duracao = dto.duracao;
     }
     if (dto.recorrente !== undefined) {
@@ -131,8 +154,10 @@ export class CalendarioRepository extends BaseRepository<DiaNaoUtil> {
          id,
          dia_data    AS "diaData",
          descricao,
-         tipo,
-         duracao,
+         (SELECT tipo_dia_nao_util.codigo FROM tipo_dia_nao_util
+            WHERE tipo_dia_nao_util.id = dia_nao_util.tipo_dia_nao_util_id) AS tipo,
+         (SELECT tipo_dia_nao_util_duracao.codigo FROM tipo_dia_nao_util_duracao
+            WHERE tipo_dia_nao_util_duracao.id = dia_nao_util.tipo_dia_nao_util_duracao_id) AS duracao,
          recorrente,
          created_date AS "createdDate"`,
       parametros,
@@ -184,9 +209,15 @@ export class CalendarioRepository extends BaseRepository<DiaNaoUtil> {
     return this.executarConsulta<CalendarioDiaNaoUtilMesDto>(
       `SELECT DISTINCT
          EXTRACT(DAY FROM dia_nao_util.dia_data)::int AS "dia",
-         dia_nao_util.tipo,
-         dia_nao_util.duracao
+         tipo_dia_nao_util.codigo         AS tipo,
+         tipo_dia_nao_util_duracao.codigo AS duracao
        FROM dia_nao_util
+       INNER JOIN tipo_dia_nao_util
+         ON tipo_dia_nao_util.id = dia_nao_util.tipo_dia_nao_util_id
+         AND tipo_dia_nao_util.is_deleted = false
+       INNER JOIN tipo_dia_nao_util_duracao
+         ON tipo_dia_nao_util_duracao.id = dia_nao_util.tipo_dia_nao_util_duracao_id
+         AND tipo_dia_nao_util_duracao.is_deleted = false
        WHERE dia_nao_util.is_deleted = false
          AND (
            (
@@ -215,8 +246,14 @@ export class CalendarioRepository extends BaseRepository<DiaNaoUtil> {
    */
   async recuperarTipo(dto: CalendarioVerificarDiaDto): Promise<DiaNaoUtilInfo | null> {
     const resultado = await this.executarConsulta<DiaNaoUtilInfo>(
-      `SELECT dia_nao_util.tipo, dia_nao_util.duracao
+      `SELECT tipo_dia_nao_util.codigo AS tipo, tipo_dia_nao_util_duracao.codigo AS duracao
        FROM dia_nao_util
+       INNER JOIN tipo_dia_nao_util
+         ON tipo_dia_nao_util.id = dia_nao_util.tipo_dia_nao_util_id
+         AND tipo_dia_nao_util.is_deleted = false
+       INNER JOIN tipo_dia_nao_util_duracao
+         ON tipo_dia_nao_util_duracao.id = dia_nao_util.tipo_dia_nao_util_duracao_id
+         AND tipo_dia_nao_util_duracao.is_deleted = false
        WHERE dia_nao_util.is_deleted = false
          AND (
            (dia_nao_util.recorrente = false AND dia_nao_util.dia_data = (:data AT TIME ZONE 'UTC')::date)

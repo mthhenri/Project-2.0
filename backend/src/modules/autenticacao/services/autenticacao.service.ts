@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { UsuarioRepository } from '../../usuario/repositories/usuario.repository';
 import { Usuario } from '../../usuario/domain/models/usuario.model';
-import { UsuarioStatusEnum } from '@project20/shared';
+import { TipoUsuarioStatusEnum } from '@project20/shared';
 import { AutenticacaoLoginDto, AutenticacaoTokenDto } from '@project20/shared';
 import { StandardResponse } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
@@ -24,7 +24,7 @@ export class AutenticacaoService {
       return null;
     }
 
-    if (usuarioEncontrado.status === UsuarioStatusEnum.INATIVO) {
+    if (usuarioEncontrado.status === TipoUsuarioStatusEnum.INATIVO) {
       throw new BusinessException('Usuário inativo');
     }
 

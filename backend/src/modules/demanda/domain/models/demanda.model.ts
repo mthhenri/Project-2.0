@@ -1,5 +1,5 @@
 import { BaseEntity } from '../../../../core/base/base.entity';
-import { DemandaStatusEnum } from '@project20/shared';
+import { TipoDemandaStatusEnum } from '@project20/shared';
 
 export class Demanda extends BaseEntity {
   projetoId: number;
@@ -9,7 +9,7 @@ export class Demanda extends BaseEntity {
   descricaoCliente: string | null;
   documentacao: string | null;
   horasEstimadas: number;
-  status: DemandaStatusEnum;
+  status: TipoDemandaStatusEnum;
   isEstrutural: boolean;
   previsaoFimData: Date | null;
 }

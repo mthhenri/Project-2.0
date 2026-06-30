@@ -14,10 +14,10 @@ import {
   DemandaCriarDto,
   DemandaCriadaDto,
   DemandaResumoDto,
-  DemandaStatusEnum,
+  TipoDemandaStatusEnum,
   TagResumoDto,
   UsuarioResumoDto,
-  UsuarioTipoEnum,
+  TipoUsuarioEnum,
 } from '@project20/shared';
 import { DemandaService } from '../../services/demanda.service';
 import { TagService } from '../../../tag/services/tag.service';
@@ -64,7 +64,7 @@ export class DemandaFormularioDialogComponent implements OnChanges {
   readonly formulario = this.formBuilder.group({
     nome:            ['', [Validators.required, Validators.maxLength(255)]],
     demandaPaiId:    [null as number | null],
-    status:          [DemandaStatusEnum.PLANEJADA as DemandaStatusEnum, [Validators.required]],
+    status:          [TipoDemandaStatusEnum.PLANEJADA as TipoDemandaStatusEnum, [Validators.required]],
     isEstrutural:    [false],
     horasEstimadas:  [0, [Validators.required, Validators.min(0)]],
     previsaoFimData: [null as Date | null],
@@ -73,9 +73,9 @@ export class DemandaFormularioDialogComponent implements OnChanges {
   });
 
   readonly statusOpcoes = [
-    { label: 'Pendente',  value: DemandaStatusEnum.PENDENTE },
-    { label: 'Planejada', value: DemandaStatusEnum.PLANEJADA },
-    { label: 'Concluída', value: DemandaStatusEnum.CONCLUIDA },
+    { label: 'Pendente',  value: TipoDemandaStatusEnum.PENDENTE },
+    { label: 'Planejada', value: TipoDemandaStatusEnum.PLANEJADA },
+    { label: 'Concluída', value: TipoDemandaStatusEnum.CONCLUIDA },
   ];
 
   ngOnChanges(mudancas: SimpleChanges): void {
@@ -83,7 +83,7 @@ export class DemandaFormularioDialogComponent implements OnChanges {
       this.formulario.reset({
         nome:           '',
         demandaPaiId:   this.demandaPaiIdInicial ?? null,
-        status:         DemandaStatusEnum.PLANEJADA,
+        status:         TipoDemandaStatusEnum.PLANEJADA,
         isEstrutural:   false,
         horasEstimadas: 0,
         tagIds:         [],
@@ -139,7 +139,7 @@ export class DemandaFormularioDialogComponent implements OnChanges {
             this.formulario.reset({
               nome:           '',
               demandaPaiId:   this.demandaPaiIdInicial ?? null,
-              status:         DemandaStatusEnum.PLANEJADA,
+              status:         TipoDemandaStatusEnum.PLANEJADA,
               isEstrutural:   false,
               horasEstimadas: 0,
               tagIds:         [],
@@ -191,7 +191,7 @@ export class DemandaFormularioDialogComponent implements OnChanges {
       next: (resposta) => {
         if (resposta.sucesso && resposta.dados) {
           this.usuariosDisponiveis.set(
-            resposta.dados.itens.filter((usuario) => usuario.tipo !== UsuarioTipoEnum.GESTOR),
+            resposta.dados.itens.filter((usuario) => usuario.tipo !== TipoUsuarioEnum.GESTOR),
           );
         }
       },

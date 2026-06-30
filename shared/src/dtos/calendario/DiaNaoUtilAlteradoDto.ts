@@ -1,11 +1,11 @@
-import { DiaNaoUtilTipoEnum, DiaNaoUtilDuracaoEnum } from '../../enums';
+import { TipoDiaNaoUtilEnum, TipoDiaNaoUtilDuracaoEnum } from '../../enums';
 
 export class DiaNaoUtilAlteradoDto {
   id: number;
   diaData: string;
   descricao: string;
-  tipo: DiaNaoUtilTipoEnum;
-  duracao: DiaNaoUtilDuracaoEnum;
+  tipo: TipoDiaNaoUtilEnum;
+  duracao: TipoDiaNaoUtilDuracaoEnum;
   recorrente: boolean;
   createdDate: Date;
 }

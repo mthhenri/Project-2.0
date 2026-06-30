@@ -1,9 +1,9 @@
-import { DemandaStatusEnum } from '@project20/shared';
+import { TipoDemandaStatusEnum } from '@project20/shared';
 
 export interface DemandaVisualizacao {
   id: number;
   nome: string;
-  status: DemandaStatusEnum;
+  status: TipoDemandaStatusEnum;
   isEstrutural: boolean;
   horasEstimadas: number;
   demandaPaiId: number | null;

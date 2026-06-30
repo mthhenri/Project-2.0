@@ -1,4 +1,4 @@
-export enum AtividadeStatusEnum {
+export enum TipoAtividadeStatusEnum {
   PLANEJADA     = 'PLANEJADA',
   PENDENTE      = 'PENDENTE',
   DESENVOLVENDO = 'DESENVOLVENDO',

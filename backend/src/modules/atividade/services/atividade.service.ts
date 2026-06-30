@@ -14,7 +14,7 @@ import {
   AtividadeTagsAtribuirDto,
   AtividadeTagsAtribuidasDto,
   TagResumoDto,
-  UsuarioTipoEnum,
+  TipoUsuarioEnum,
 } from '@project20/shared';
 import { StandardResponse } from '@project20/shared';
 import { PaginatedResult } from '@project20/shared';
@@ -47,11 +47,11 @@ export class AtividadeService {
     }
 
     const executorId =
-      usuarioAtivo.tipo === UsuarioTipoEnum.GESTOR
+      usuarioAtivo.tipo === TipoUsuarioEnum.GESTOR
         ? (dto.usuarioId ?? usuarioAtivo.sub)
         : usuarioAtivo.sub;
 
-    if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR) {
+    if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
       const temAcesso = await this.atividadeRepositorio.validarAcessoDemanda({
         demandaId: dto.demandaId,
         usuarioId: usuarioAtivo.sub,
@@ -106,7 +106,7 @@ export class AtividadeService {
     const itensPorPagina = filtros.itensPorPagina ?? 20;
 
     let filtrosEfetivos: AtividadeListarDto = filtros;
-    if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR) {
+    if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
       const eMembroDaDemanda =
         filtros.demandaId !== undefined &&
         (await this.atividadeRepositorio.validarAcessoDemanda({
@@ -148,7 +148,7 @@ export class AtividadeService {
       throw new ResourceNotFoundException('Atividade');
     }
 
-    if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR) {
+    if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
       const temAcesso = await this.atividadeRepositorio.validarAcessoDemanda({
         demandaId: atividadeEncontrada.demandaId,
         usuarioId: usuarioAtivo.sub,
@@ -179,7 +179,7 @@ export class AtividadeService {
       throw new ResourceNotFoundException('Atividade');
     }
 
-    if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR) {
+    if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
       const eAutor = atividadeEncontrada.usuarioId === usuarioAtivo.sub;
       const temAcesso = await this.atividadeRepositorio.validarAcessoDemanda({
         demandaId: atividadeEncontrada.demandaId,
@@ -248,7 +248,7 @@ export class AtividadeService {
       throw new ResourceNotFoundException('Atividade');
     }
 
-    if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR) {
+    if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
       const eAutor = atividadeEncontrada.usuarioId === usuarioAtivo.sub;
       const temAcesso = await this.atividadeRepositorio.validarAcessoDemanda({
         demandaId: atividadeEncontrada.demandaId,
@@ -292,7 +292,7 @@ export class AtividadeService {
       throw new ResourceNotFoundException('Atividade');
     }
 
-    if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR) {
+    if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
       const temAcesso = await this.atividadeRepositorio.validarAcessoDemanda({
         demandaId: atividadeEncontrada.demandaId,
         usuarioId: usuarioAtivo.sub,

@@ -1,6 +1,6 @@
 import { IsOptional, IsString, MinLength, Matches, IsEnum, IsDateString } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { ProjetoStatusEnum } from '../../enums/projeto-status.enum';
+import { TipoProjetoStatusEnum } from '../../enums/tipo-projeto-status.enum';
 
 export class ProjetoAlterarDto {
   @ApiPropertyOptional({ example: 'Sistema de Gestão v2' })
@@ -15,10 +15,10 @@ export class ProjetoAlterarDto {
   @Matches(/^#[0-9A-Fa-f]{6}$/)
   cor?: string;
 
-  @ApiPropertyOptional({ enum: ProjetoStatusEnum })
+  @ApiPropertyOptional({ enum: TipoProjetoStatusEnum })
   @IsOptional()
-  @IsEnum(ProjetoStatusEnum)
-  status?: ProjetoStatusEnum;
+  @IsEnum(TipoProjetoStatusEnum)
+  status?: TipoProjetoStatusEnum;
 
   @ApiPropertyOptional({ example: '2026-01-01' })
   @IsOptional()

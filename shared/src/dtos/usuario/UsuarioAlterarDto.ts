@@ -1,7 +1,7 @@
 import { IsOptional, IsString, IsEnum, IsNumber, Min, Max, MinLength } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { UsuarioStatusEnum } from '../../enums/usuario-status.enum';
-import { UsuarioTipoEnum } from '../../enums/usuario-tipo.enum';
+import { TipoUsuarioStatusEnum } from '../../enums/tipo-usuario-status.enum';
+import { TipoUsuarioEnum } from '../../enums/tipo-usuario.enum';
 
 export class UsuarioAlterarDto {
   @ApiPropertyOptional({ example: 'João Silva' })
@@ -27,13 +27,13 @@ export class UsuarioAlterarDto {
   @Max(24)
   horasDiariasNecessarias?: number;
 
-  @ApiPropertyOptional({ enum: UsuarioStatusEnum, example: UsuarioStatusEnum.ATIVO })
+  @ApiPropertyOptional({ enum: TipoUsuarioStatusEnum, example: TipoUsuarioStatusEnum.ATIVO })
   @IsOptional()
-  @IsEnum(UsuarioStatusEnum)
-  status?: UsuarioStatusEnum;
+  @IsEnum(TipoUsuarioStatusEnum)
+  status?: TipoUsuarioStatusEnum;
 
-  @ApiPropertyOptional({ enum: UsuarioTipoEnum, example: UsuarioTipoEnum.GESTOR })
+  @ApiPropertyOptional({ enum: TipoUsuarioEnum, example: TipoUsuarioEnum.GESTOR })
   @IsOptional()
-  @IsEnum(UsuarioTipoEnum)
-  tipo?: UsuarioTipoEnum;
+  @IsEnum(TipoUsuarioEnum)
+  tipo?: TipoUsuarioEnum;
 }

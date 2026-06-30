@@ -10,7 +10,7 @@ import { Tag } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { UsuarioResumoDto, UsuarioTipoEnum, UsuarioStatusEnum, UsuarioListarDto } from '@project20/shared';
+import { UsuarioResumoDto, TipoUsuarioEnum, TipoUsuarioStatusEnum, UsuarioListarDto } from '@project20/shared';
 import { UsuarioService } from '../../services/usuario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { UsuarioAnotacoesDialogComponent } from '../../components/usuario-anotacoes-dialog/usuario-anotacoes-dialog.component';
@@ -35,8 +35,8 @@ export class UsuarioListagemPage implements OnInit {
 
   readonly formularioFiltros = this.formBuilder.group({
     busca: [''],
-    tipo: [null as UsuarioTipoEnum | null],
-    status: [null as UsuarioStatusEnum | null],
+    tipo: [null as TipoUsuarioEnum | null],
+    status: [null as TipoUsuarioStatusEnum | null],
   });
 
   readonly usuarios = signal<UsuarioResumoDto[]>([]);
@@ -47,14 +47,14 @@ export class UsuarioListagemPage implements OnInit {
 
   readonly tiposOpcoes = [
     { label: 'Todos', value: null },
-    { label: 'Desenvolvedor', value: UsuarioTipoEnum.DESENVOLVEDOR },
-    { label: 'Gestor', value: UsuarioTipoEnum.GESTOR },
+    { label: 'Desenvolvedor', value: TipoUsuarioEnum.DESENVOLVEDOR },
+    { label: 'Gestor', value: TipoUsuarioEnum.GESTOR },
   ];
 
   readonly statusOpcoes = [
     { label: 'Todos', value: null },
-    { label: 'Ativo', value: UsuarioStatusEnum.ATIVO },
-    { label: 'Inativo', value: UsuarioStatusEnum.INATIVO },
+    { label: 'Ativo', value: TipoUsuarioStatusEnum.ATIVO },
+    { label: 'Inativo', value: TipoUsuarioStatusEnum.INATIVO },
   ];
 
   ngOnInit(): void {
@@ -121,12 +121,12 @@ export class UsuarioListagemPage implements OnInit {
     });
   }
 
-  severidadeTipo(tipo: UsuarioTipoEnum): 'info' | 'warn' {
-    return tipo === UsuarioTipoEnum.GESTOR ? 'warn' : 'info';
+  severidadeTipo(tipo: TipoUsuarioEnum): 'info' | 'warn' {
+    return tipo === TipoUsuarioEnum.GESTOR ? 'warn' : 'info';
   }
 
-  severidadeStatus(status: UsuarioStatusEnum): 'success' | 'danger' {
-    return status === UsuarioStatusEnum.ATIVO ? 'success' : 'danger';
+  severidadeStatus(status: TipoUsuarioStatusEnum): 'success' | 'danger' {
+    return status === TipoUsuarioStatusEnum.ATIVO ? 'success' : 'danger';
   }
 
   private excluirUsuario(usuario: UsuarioResumoDto): void {

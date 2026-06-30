@@ -26,7 +26,7 @@ import {
   DemandaMembroDto,
   DemandaMembroRemoverDto,
   TagResumoDto,
-  UsuarioTipoEnum,
+  TipoUsuarioEnum,
 } from '@project20/shared';
 import { StandardResponse } from '@project20/shared';
 import { PaginatedResult } from '@project20/shared';
@@ -54,7 +54,7 @@ export class DemandaService {
     usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<DemandaCriadaDto>> {
     if (
-      usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR &&
+      usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR &&
       dto.demandaPaiId === undefined
     ) {
       throw new UnauthorizedAccessException(
@@ -62,7 +62,7 @@ export class DemandaService {
       );
     }
 
-    if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR) {
+    if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
       const temAcesso = await this.demandaRepositorio.validarAcessoProjeto({
         projetoId: dto.projetoId,
         usuarioId: usuarioAtivo.sub,
@@ -99,7 +99,7 @@ export class DemandaService {
 
     const membroIds = [...new Set(dto.usuarioIds ?? [])];
     if (membroIds.length > 0) {
-      if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR) {
+      if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
         const apenasProprio = membroIds.every((membroId) => membroId === usuarioAtivo.sub);
         if (!apenasProprio) {
           throw new UnauthorizedAccessException(
@@ -116,13 +116,13 @@ export class DemandaService {
       }
     }
 
-    if (dto.tagIds && dto.tagIds.length > 0 && usuarioAtivo.tipo !== UsuarioTipoEnum.GESTOR) {
+    if (dto.tagIds && dto.tagIds.length > 0 && usuarioAtivo.tipo !== TipoUsuarioEnum.GESTOR) {
       throw new UnauthorizedAccessException('Apenas gestores podem atribuir tags às demandas');
     }
 
     const usuarioIds = [
       ...new Set([
-        ...(usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR ? [usuarioAtivo.sub] : []),
+        ...(usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR ? [usuarioAtivo.sub] : []),
         ...membroIds,
       ]),
     ];
@@ -172,7 +172,7 @@ export class DemandaService {
     const itensPorPagina = filtros.itensPorPagina ?? 20;
 
     const restricao =
-      usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR
+      usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR
         ? { usuarioId: usuarioAtivo.sub }
         : undefined;
 
@@ -202,7 +202,7 @@ export class DemandaService {
   ): Promise<StandardResponse<DemandaAtribuidaDto[]>> {
     const demandas = await this.demandaRepositorio.listarAtribuidas({
       usuarioId: usuarioAtivo.sub,
-      apenasAtribuidas: usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR,
+      apenasAtribuidas: usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR,
     });
 
     return {
@@ -222,7 +222,7 @@ export class DemandaService {
     usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<DemandaRecuperadaDto>> {
     const usuarioId =
-      usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
+      usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
 
     const demandaEncontrada = await this.demandaRepositorio.recuperar(
       { id: dto.id },
@@ -234,7 +234,7 @@ export class DemandaService {
     }
 
     demandaEncontrada.podeEditar =
-      usuarioAtivo.tipo !== UsuarioTipoEnum.DESENVOLVEDOR ||
+      usuarioAtivo.tipo !== TipoUsuarioEnum.DESENVOLVEDOR ||
       (await this.demandaRepositorio.validarMembro({ demandaId: dto.id, usuarioId: usuarioAtivo.sub }));
 
     return {
@@ -254,7 +254,7 @@ export class DemandaService {
     usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<DemandaRecuperadaDto>> {
     const usuarioId =
-      usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
+      usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
 
     const demandaEncontrada = await this.demandaRepositorio.recuperar(
       { id: dto.id },
@@ -265,7 +265,7 @@ export class DemandaService {
       throw new ResourceNotFoundException('Demanda');
     }
 
-    if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR) {
+    if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
       const eMembro = await this.demandaRepositorio.validarMembro({
         demandaId: dto.id,
         usuarioId: usuarioAtivo.sub,
@@ -278,7 +278,7 @@ export class DemandaService {
     }
 
     if (
-      usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR &&
+      usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR &&
       dto.descricaoCliente !== undefined
     ) {
       throw new UnauthorizedAccessException(
@@ -332,7 +332,7 @@ export class DemandaService {
     usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<DemandaArvoreItemDto>> {
     const usuarioId =
-      usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
+      usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
 
     const demandaEncontrada = await this.demandaRepositorio.recuperar(
       { id: dto.id },
@@ -387,7 +387,7 @@ export class DemandaService {
     usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<DemandaAncestralDto[]>> {
     const usuarioId =
-      usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
+      usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
 
     const demandaEncontrada = await this.demandaRepositorio.recuperar(
       { id: dto.id },
@@ -472,7 +472,7 @@ export class DemandaService {
     usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<DemandaConexaoResumoDto[]>> {
     const usuarioId =
-      usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
+      usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
 
     const demandaEncontrada = await this.demandaRepositorio.recuperar(
       { id: dto.id },
@@ -545,7 +545,7 @@ export class DemandaService {
     dto: DemandaGrafoRecuperarDto,
     usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<DemandaGrafoDto>> {
-    if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR) {
+    if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
       const temAcesso = await this.demandaRepositorio.validarAcessoProjeto({
         projetoId: dto.projetoId,
         usuarioId: usuarioAtivo.sub,
@@ -583,7 +583,7 @@ export class DemandaService {
       throw new ResourceNotFoundException('Demanda');
     }
 
-    if (usuarioAtivo.tipo !== UsuarioTipoEnum.GESTOR) {
+    if (usuarioAtivo.tipo !== TipoUsuarioEnum.GESTOR) {
       throw new UnauthorizedAccessException(
         'Apenas gestores podem atribuir tags às demandas',
       );
@@ -616,7 +616,7 @@ export class DemandaService {
     usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<TagResumoDto[]>> {
     const usuarioId =
-      usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
+      usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
 
     const demandaEncontrada = await this.demandaRepositorio.recuperar(
       { id: dto.id },
@@ -644,7 +644,7 @@ export class DemandaService {
     usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<DemandaMembroDto[]>> {
     const usuarioId =
-      usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
+      usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
 
     const demandaEncontrada = await this.demandaRepositorio.recuperar(
       { id: dto.id },
@@ -679,7 +679,7 @@ export class DemandaService {
       throw new ResourceNotFoundException('Demanda');
     }
 
-    if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR) {
+    if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
       if (dto.usuarioId !== usuarioAtivo.sub) {
         throw new UnauthorizedAccessException(
           'Desenvolvedor só pode incluir a si mesmo como membro',
@@ -744,7 +744,7 @@ export class DemandaService {
     }
 
     if (
-      usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR &&
+      usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR &&
       usuarioId !== usuarioAtivo.sub
     ) {
       throw new UnauthorizedAccessException(

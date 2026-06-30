@@ -8,7 +8,7 @@ import {
   IsString,
   Min,
 } from 'class-validator';
-import { AtividadeStatusEnum } from '../../enums/atividade-status.enum';
+import { TipoAtividadeStatusEnum } from '../../enums/tipo-atividade-status.enum';
 
 export class AtividadeListarDto {
   @IsOptional()
@@ -26,8 +26,8 @@ export class AtividadeListarDto {
   @IsOptional()
   @Transform(({ value }) => (Array.isArray(value) ? value : [value]))
   @IsArray()
-  @IsEnum(AtividadeStatusEnum, { each: true })
-  status?: AtividadeStatusEnum[];
+  @IsEnum(TipoAtividadeStatusEnum, { each: true })
+  status?: TipoAtividadeStatusEnum[];
 
   @IsOptional()
   @IsString()

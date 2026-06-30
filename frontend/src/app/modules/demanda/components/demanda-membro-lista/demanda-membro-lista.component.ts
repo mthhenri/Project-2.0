@@ -8,7 +8,7 @@ import { MultiSelect } from 'primeng/multiselect';
 import { Tag } from 'primeng/tag';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { DemandaMembroDto, DemandaUsuarioAtribuirDto, UsuarioResumoDto, UsuarioTipoEnum } from '@project20/shared';
+import { DemandaMembroDto, DemandaUsuarioAtribuirDto, UsuarioResumoDto, TipoUsuarioEnum } from '@project20/shared';
 import { DemandaService } from '../../services/demanda.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 
@@ -41,7 +41,7 @@ export class DemandaMembroListaComponent implements OnInit {
   readonly carregando = signal<boolean>(false);
   readonly mostrarDialog = signal<boolean>(false);
   readonly carregandoSalvar = signal<boolean>(false);
-  readonly tipoEnum = UsuarioTipoEnum;
+  readonly tipoEnum = TipoUsuarioEnum;
 
   /** Indica se o usuário logado já é membro desta demanda (auto-inclusão/saída do dev). */
   readonly souMembro = computed(() =>
@@ -138,8 +138,8 @@ export class DemandaMembroListaComponent implements OnInit {
       .toUpperCase();
   }
 
-  rotuloTipo(tipo: UsuarioTipoEnum): string {
-    return tipo === UsuarioTipoEnum.GESTOR ? 'Gestor' : 'Dev';
+  rotuloTipo(tipo: TipoUsuarioEnum): string {
+    return tipo === TipoUsuarioEnum.GESTOR ? 'Gestor' : 'Dev';
   }
 
   private removerMembro(usuarioId: number): void {

@@ -1,7 +1,7 @@
 import { IsString, IsNotEmpty, MinLength, IsEnum, IsNumber, Min, Max } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
-import { UsuarioTipoEnum } from '../../enums';
+import { TipoUsuarioEnum } from '../../enums';
 
 export class UsuarioCriarDto {
   @ApiProperty({ example: 'joao.silva' })
@@ -26,9 +26,9 @@ export class UsuarioCriarDto {
   @IsNotEmpty()
   cargoTitulo: string;
 
-  @ApiProperty({ enum: UsuarioTipoEnum, example: UsuarioTipoEnum.DESENVOLVEDOR })
-  @IsEnum(UsuarioTipoEnum)
-  tipo: UsuarioTipoEnum;
+  @ApiProperty({ enum: TipoUsuarioEnum, example: TipoUsuarioEnum.DESENVOLVEDOR })
+  @IsEnum(TipoUsuarioEnum)
+  tipo: TipoUsuarioEnum;
 
   @ApiProperty({ example: 8 })
   @IsNumber()

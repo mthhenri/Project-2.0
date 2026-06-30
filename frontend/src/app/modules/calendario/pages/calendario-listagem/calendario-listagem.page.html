@@ -25,11 +25,11 @@
             @if (marcado) {
               <span
                 class="calendario-listagem__dia-marcado"
-                [class.calendario-listagem__dia-marcado--recesso]="marcado.tipo === DiaNaoUtilTipoEnum.RECESSO"
-                [class.calendario-listagem__dia-marcado--facultativo]="marcado.tipo === DiaNaoUtilTipoEnum.PONTO_FACULTATIVO"
-                [class.calendario-listagem__dia-marcado--meio-periodo]="marcado.duracao === DiaNaoUtilDuracaoEnum.MEIO_PERIODO"
+                [class.calendario-listagem__dia-marcado--recesso]="marcado.tipo === TipoDiaNaoUtilEnum.RECESSO"
+                [class.calendario-listagem__dia-marcado--facultativo]="marcado.tipo === TipoDiaNaoUtilEnum.PONTO_FACULTATIVO"
+                [class.calendario-listagem__dia-marcado--meio-periodo]="marcado.duracao === TipoDiaNaoUtilDuracaoEnum.MEIO_PERIODO"
                 [pTooltip]="marcado.descricao + ' — ' + rotuloTipo(marcado.tipo)
-                  + (marcado.duracao === DiaNaoUtilDuracaoEnum.MEIO_PERIODO ? ' (meio período)' : '')"
+                  + (marcado.duracao === TipoDiaNaoUtilDuracaoEnum.MEIO_PERIODO ? ' (meio período)' : '')"
               >
                 {{ date.day }}
               </span>
@@ -199,7 +199,7 @@
       </div>
     </div>
 
-    @if (formulario.value.duracao === DiaNaoUtilDuracaoEnum.MEIO_PERIODO) {
+    @if (formulario.value.duracao === TipoDiaNaoUtilDuracaoEnum.MEIO_PERIODO) {
       <small class="text-muted-color">A meta diária do ponto é reduzida à metade neste dia.</small>
     }
 

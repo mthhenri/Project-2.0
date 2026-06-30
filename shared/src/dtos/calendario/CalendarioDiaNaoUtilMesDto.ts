@@ -1,8 +1,8 @@
-import { DiaNaoUtilTipoEnum } from '../../enums/dia-nao-util-tipo.enum';
-import { DiaNaoUtilDuracaoEnum } from '../../enums/dia-nao-util-duracao.enum';
+import { TipoDiaNaoUtilEnum } from '../../enums/tipo-dia-nao-util.enum';
+import { TipoDiaNaoUtilDuracaoEnum } from '../../enums/tipo-dia-nao-util-duracao.enum';
 
 export class CalendarioDiaNaoUtilMesDto {
   dia: number;
-  tipo: DiaNaoUtilTipoEnum;
-  duracao: DiaNaoUtilDuracaoEnum;
+  tipo: TipoDiaNaoUtilEnum;
+  duracao: TipoDiaNaoUtilDuracaoEnum;
 }

@@ -5,7 +5,7 @@ import {
   DiaNaoUtilCriadoDto,
   DiaNaoUtilResumoDto,
   DiaNaoUtilAlteradoDto,
-  DiaNaoUtilDuracaoEnum,
+  TipoDiaNaoUtilDuracaoEnum,
   CalendarioRecuperarDto,
   CalendarioInternoAlterarDto,
 } from '@project20/shared';
@@ -123,7 +123,7 @@ export class CalendarioService {
     const diaNaoUtil = await this.calendarioRepositorio.recuperarTipo({ data: dataObjeto });
 
     if (diaNaoUtil !== null) {
-      const motivo = diaNaoUtil.duracao === DiaNaoUtilDuracaoEnum.MEIO_PERIODO
+      const motivo = diaNaoUtil.duracao === TipoDiaNaoUtilDuracaoEnum.MEIO_PERIODO
         ? `${diaNaoUtil.tipo} (meio período)`
         : diaNaoUtil.tipo;
 

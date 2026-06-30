@@ -13,7 +13,7 @@ import { MessageService } from 'primeng/api';
 import {
   ProjetoRecuperadoDto,
   ProjetoAlterarDto,
-  ProjetoStatusEnum,
+  TipoProjetoStatusEnum,
   DemandaArvoreItemDto,
   DemandaGrafoNoDto,
 } from '@project20/shared';
@@ -66,7 +66,7 @@ export class ProjetoDetalhePage implements OnInit {
     {
       nome:            ['', [Validators.required, Validators.maxLength(255)]],
       cor:             ['#3b82f6', [Validators.required, Validators.pattern(/^#[0-9A-Fa-f]{6}$/)]],
-      status:          [ProjetoStatusEnum.ATIVO as ProjetoStatusEnum, [Validators.required]],
+      status:          [TipoProjetoStatusEnum.ATIVO as TipoProjetoStatusEnum, [Validators.required]],
       inicioData:      [null as Date | null],
       previsaoFimData: [null as Date | null],
     },
@@ -74,10 +74,10 @@ export class ProjetoDetalhePage implements OnInit {
   );
 
   readonly statusOpcoes = [
-    { label: 'Ativo',     value: ProjetoStatusEnum.ATIVO },
-    { label: 'Pausado',   value: ProjetoStatusEnum.PAUSADO },
-    { label: 'Concluído', value: ProjetoStatusEnum.CONCLUIDO },
-    { label: 'Cancelado', value: ProjetoStatusEnum.CANCELADO },
+    { label: 'Ativo',     value: TipoProjetoStatusEnum.ATIVO },
+    { label: 'Pausado',   value: TipoProjetoStatusEnum.PAUSADO },
+    { label: 'Concluído', value: TipoProjetoStatusEnum.CONCLUIDO },
+    { label: 'Cancelado', value: TipoProjetoStatusEnum.CANCELADO },
   ];
 
   ngOnInit(): void {
@@ -145,22 +145,22 @@ export class ProjetoDetalhePage implements OnInit {
     this.router.navigate(['/projeto']);
   }
 
-  severidadeStatus(status: ProjetoStatusEnum): 'success' | 'warn' | 'info' | 'danger' {
-    const mapa: Record<ProjetoStatusEnum, 'success' | 'warn' | 'info' | 'danger'> = {
-      [ProjetoStatusEnum.ATIVO]:     'success',
-      [ProjetoStatusEnum.PAUSADO]:   'warn',
-      [ProjetoStatusEnum.CONCLUIDO]: 'info',
-      [ProjetoStatusEnum.CANCELADO]: 'danger',
+  severidadeStatus(status: TipoProjetoStatusEnum): 'success' | 'warn' | 'info' | 'danger' {
+    const mapa: Record<TipoProjetoStatusEnum, 'success' | 'warn' | 'info' | 'danger'> = {
+      [TipoProjetoStatusEnum.ATIVO]:     'success',
+      [TipoProjetoStatusEnum.PAUSADO]:   'warn',
+      [TipoProjetoStatusEnum.CONCLUIDO]: 'info',
+      [TipoProjetoStatusEnum.CANCELADO]: 'danger',
     };
     return mapa[status];
   }
 
-  rotuloStatus(status: ProjetoStatusEnum): string {
-    const mapa: Record<ProjetoStatusEnum, string> = {
-      [ProjetoStatusEnum.ATIVO]:     'Ativo',
-      [ProjetoStatusEnum.PAUSADO]:   'Pausado',
-      [ProjetoStatusEnum.CONCLUIDO]: 'Concluído',
-      [ProjetoStatusEnum.CANCELADO]: 'Cancelado',
+  rotuloStatus(status: TipoProjetoStatusEnum): string {
+    const mapa: Record<TipoProjetoStatusEnum, string> = {
+      [TipoProjetoStatusEnum.ATIVO]:     'Ativo',
+      [TipoProjetoStatusEnum.PAUSADO]:   'Pausado',
+      [TipoProjetoStatusEnum.CONCLUIDO]: 'Concluído',
+      [TipoProjetoStatusEnum.CANCELADO]: 'Cancelado',
     };
     return mapa[status];
   }

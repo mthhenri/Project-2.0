@@ -1,6 +1,6 @@
 import { Injectable, ExecutionContext, CanActivate } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { UsuarioTipoEnum } from '@project20/shared';
+import { TipoUsuarioEnum } from '@project20/shared';
 import { JwtPayload } from '../domain/interfaces/jwt-payload.interface';
 import { UnauthorizedAccessException } from '../../../core/exceptions/unauthorized-access.exception';
 
@@ -16,7 +16,7 @@ export class GestorGuard implements CanActivate {
     if (!gestorOnly) return true;
 
     const usuarioAtivo: JwtPayload = contexto.switchToHttp().getRequest().user;
-    if (usuarioAtivo?.tipo !== UsuarioTipoEnum.GESTOR) {
+    if (usuarioAtivo?.tipo !== TipoUsuarioEnum.GESTOR) {
       throw new UnauthorizedAccessException('Acesso restrito a gestores');
     }
     return true;

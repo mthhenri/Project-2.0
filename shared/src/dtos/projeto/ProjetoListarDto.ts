@@ -1,13 +1,13 @@
 import { IsOptional, IsEnum, IsNumber, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { ProjetoStatusEnum } from '../../enums/projeto-status.enum';
+import { TipoProjetoStatusEnum } from '../../enums/tipo-projeto-status.enum';
 
 export class ProjetoListarDto {
-  @ApiPropertyOptional({ enum: ProjetoStatusEnum })
+  @ApiPropertyOptional({ enum: TipoProjetoStatusEnum })
   @IsOptional()
-  @IsEnum(ProjetoStatusEnum)
-  status?: ProjetoStatusEnum;
+  @IsEnum(TipoProjetoStatusEnum)
+  status?: TipoProjetoStatusEnum;
 
   @ApiPropertyOptional({ example: 1, default: 1 })
   @IsOptional()

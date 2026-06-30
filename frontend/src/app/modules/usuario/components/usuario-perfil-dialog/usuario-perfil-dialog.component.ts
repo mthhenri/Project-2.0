@@ -13,8 +13,8 @@ import {
   UsuarioRecuperadoDto,
   UsuarioAlterarDto,
   UsuarioSenhaAlterarDto,
-  UsuarioTipoEnum,
-  UsuarioStatusEnum,
+  TipoUsuarioEnum,
+  TipoUsuarioStatusEnum,
 } from '@project20/shared';
 import { UsuarioService } from '../../services/usuario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
@@ -47,8 +47,8 @@ export class UsuarioPerfilDialogComponent {
     nomeCompleto: ['', [Validators.required, Validators.minLength(3)]],
     cargoTitulo: ['', [Validators.required]],
     horasDiariasNecessarias: [8, [Validators.required]],
-    status: [UsuarioStatusEnum.ATIVO as UsuarioStatusEnum, [Validators.required]],
-    tipo: [UsuarioTipoEnum.DESENVOLVEDOR as UsuarioTipoEnum, [Validators.required]],
+    status: [TipoUsuarioStatusEnum.ATIVO as TipoUsuarioStatusEnum, [Validators.required]],
+    tipo: [TipoUsuarioEnum.DESENVOLVEDOR as TipoUsuarioEnum, [Validators.required]],
   });
 
   readonly formularioSenha = this.formBuilder.group(
@@ -60,13 +60,13 @@ export class UsuarioPerfilDialogComponent {
   );
 
   readonly statusOpcoes = [
-    { label: 'Ativo', value: UsuarioStatusEnum.ATIVO },
-    { label: 'Inativo', value: UsuarioStatusEnum.INATIVO },
+    { label: 'Ativo', value: TipoUsuarioStatusEnum.ATIVO },
+    { label: 'Inativo', value: TipoUsuarioStatusEnum.INATIVO },
   ];
 
   readonly tiposOpcoes = [
-    { label: 'Desenvolvedor', value: UsuarioTipoEnum.DESENVOLVEDOR },
-    { label: 'Gestor', value: UsuarioTipoEnum.GESTOR },
+    { label: 'Desenvolvedor', value: TipoUsuarioEnum.DESENVOLVEDOR },
+    { label: 'Gestor', value: TipoUsuarioEnum.GESTOR },
   ];
 
   readonly podeEditar = computed(() => {
@@ -181,16 +181,16 @@ export class UsuarioPerfilDialogComponent {
       });
   }
 
-  rotulaTipo(tipo: UsuarioTipoEnum): string {
-    return tipo === UsuarioTipoEnum.GESTOR ? 'Gestor' : 'Desenvolvedor';
+  rotulaTipo(tipo: TipoUsuarioEnum): string {
+    return tipo === TipoUsuarioEnum.GESTOR ? 'Gestor' : 'Desenvolvedor';
   }
 
-  severidadeTipo(tipo: UsuarioTipoEnum): 'info' | 'warn' {
-    return tipo === UsuarioTipoEnum.GESTOR ? 'warn' : 'info';
+  severidadeTipo(tipo: TipoUsuarioEnum): 'info' | 'warn' {
+    return tipo === TipoUsuarioEnum.GESTOR ? 'warn' : 'info';
   }
 
-  severidadeStatus(status: UsuarioStatusEnum): 'success' | 'danger' {
-    return status === UsuarioStatusEnum.ATIVO ? 'success' : 'danger';
+  severidadeStatus(status: TipoUsuarioStatusEnum): 'success' | 'danger' {
+    return status === TipoUsuarioStatusEnum.ATIVO ? 'success' : 'danger';
   }
 
   campoEditarInvalido(nomeCampo: string): boolean {

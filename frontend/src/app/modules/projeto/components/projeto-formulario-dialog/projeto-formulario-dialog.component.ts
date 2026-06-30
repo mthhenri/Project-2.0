@@ -8,7 +8,7 @@ import { Select } from 'primeng/select';
 import { DatePickerModule } from 'primeng/datepicker';
 import { DialogModule } from 'primeng/dialog';
 import { MessageService } from 'primeng/api';
-import { ProjetoCriarDto, ProjetoStatusEnum } from '@project20/shared';
+import { ProjetoCriarDto, TipoProjetoStatusEnum } from '@project20/shared';
 import { ProjetoService } from '../../services/projeto.service';
 import { gerarCodigoDoNome } from '../../models/projeto.model';
 import { SeletorCorComponent } from '../../../../shared/components/seletor-cor/seletor-cor.component';
@@ -34,7 +34,7 @@ export class ProjetoFormularioDialogComponent {
       nome:            ['', [Validators.required, Validators.maxLength(255)]],
       codigo:          ['', [Validators.required, Validators.maxLength(50)]],
       cor:             ['#3b82f6', [Validators.required, Validators.pattern(/^#[0-9A-Fa-f]{6}$/)]],
-      status:          [ProjetoStatusEnum.ATIVO as ProjetoStatusEnum, [Validators.required]],
+      status:          [TipoProjetoStatusEnum.ATIVO as TipoProjetoStatusEnum, [Validators.required]],
       inicioData:      [null as Date | null],
       previsaoFimData: [null as Date | null],
     },
@@ -52,10 +52,10 @@ export class ProjetoFormularioDialogComponent {
   readonly codigoEditadoManualmente = signal<boolean>(false);
 
   readonly statusOpcoes = [
-    { label: 'Ativo',     value: ProjetoStatusEnum.ATIVO },
-    { label: 'Pausado',   value: ProjetoStatusEnum.PAUSADO },
-    { label: 'Concluído', value: ProjetoStatusEnum.CONCLUIDO },
-    { label: 'Cancelado', value: ProjetoStatusEnum.CANCELADO },
+    { label: 'Ativo',     value: TipoProjetoStatusEnum.ATIVO },
+    { label: 'Pausado',   value: TipoProjetoStatusEnum.PAUSADO },
+    { label: 'Concluído', value: TipoProjetoStatusEnum.CONCLUIDO },
+    { label: 'Cancelado', value: TipoProjetoStatusEnum.CANCELADO },
   ];
 
   constructor() {
@@ -81,7 +81,7 @@ export class ProjetoFormularioDialogComponent {
 
   /** Abre o dialog com o formulário limpo. */
   abrir(): void {
-    this.formulario.reset({ cor: '#3b82f6', status: ProjetoStatusEnum.ATIVO });
+    this.formulario.reset({ cor: '#3b82f6', status: TipoProjetoStatusEnum.ATIVO });
     this.codigoEditadoManualmente.set(false);
     this.mostrarDialog.set(true);
   }

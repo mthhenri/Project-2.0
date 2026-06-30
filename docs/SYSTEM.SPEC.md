@@ -1099,8 +1099,8 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 | `anotacoes` | TEXT \| NULL | HTML gerado pelo p-editor |
 | `anotacoes_alteracao_data` | TIMESTAMPTZ \| NULL | data da última alteração das anotações (`NULL` = nunca alteradas). `timestamptz` desde já (escrita por `NOW()`); demais colunas de `usuario` seguem `timestamp` até a spec 75 |
 | `horas_diarias_necessarias` | INTEGER | em horas (ex: 8) |
-| `tipo` | ENUM | DESENVOLVEDOR, GESTOR |
-| `status` | ENUM | ATIVO, INATIVO |
+| `tipo_usuario_id` | INTEGER FK | → `tipo_usuario` (DESENVOLVEDOR, GESTOR) |
+| `tipo_usuario_status_id` | INTEGER FK | → `tipo_usuario_status` (ATIVO, INATIVO) |
 
 ### Projeto
 
@@ -1109,7 +1109,7 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 | `nome` | VARCHAR | |
 | `codigo` | VARCHAR | referência curta, **auto-derivada do nome** no formulário (ex: "Sistema de Gestão" → "SISTEMA-DE-GESTAO"), permanecendo editável; o backend valida unicidade |
 | `cor` | VARCHAR | hex, para identificação visual |
-| `status` | ENUM | ATIVO, PAUSADO, CONCLUIDO, CANCELADO |
+| `tipo_projeto_status_id` | INTEGER FK | → `tipo_projeto_status` (ATIVO, PAUSADO, CONCLUIDO, CANCELADO) |
 | `inicio_data` | DATE \| NULL | |
 | `previsao_fim_data` | DATE \| NULL | |
 
@@ -1126,7 +1126,7 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 | `descricao_cliente` | TEXT \| NULL | |
 | `documentacao` | TEXT \| NULL | markdown |
 | `horas_estimadas` | INTEGER | |
-| `status` | ENUM | PENDENTE, PLANEJADA, CONCLUIDA |
+| `tipo_demanda_status_id` | INTEGER FK | → `tipo_demanda_status` (PENDENTE, PLANEJADA, CONCLUIDA) |
 | `is_estrutural` | BOOLEAN | demanda-container que agrupa sub-demandas |
 | `previsao_fim_data` | DATE \| NULL | |
 
@@ -1171,7 +1171,7 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 | `usuario_id` | INTEGER FK | → usuario (executor principal) |
 | `nome` | VARCHAR | |
 | `descricao` | TEXT \| NULL | opcional |
-| `status` | ENUM | PLANEJADA, PENDENTE, DESENVOLVENDO, DESENVOLVIDA |
+| `tipo_atividade_status_id` | INTEGER FK | → `tipo_atividade_status` (PLANEJADA, PENDENTE, DESENVOLVENDO, DESENVOLVIDA) |
 
 ### AtividadeTag
 
@@ -1197,9 +1197,26 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 |---|---|---|
 | `dia_data` | DATE | |
 | `descricao` | VARCHAR | ex: "Natal", "Recesso de fim de ano" |
-| `tipo` | ENUM | FERIADO, RECESSO, PONTO_FACULTATIVO |
-| `duracao` | ENUM | INTEGRAL, MEIO_PERIODO — meio período reduz a meta diária à metade |
+| `tipo_dia_nao_util_id` | INTEGER FK | → `tipo_dia_nao_util` (FERIADO, RECESSO, PONTO_FACULTATIVO) |
+| `tipo_dia_nao_util_duracao_id` | INTEGER FK | → `tipo_dia_nao_util_duracao` (INTEGRAL, MEIO_PERIODO — meio período reduz a meta diária à metade) |
 | `recorrente` | BOOLEAN | se true, repete no mesmo dia todo ano |
+
+### Tabelas de Referência (Enums)
+
+Todo enum de domínio fechado é uma **tabela de referência** (§5.4, §9.2 #13, §16 #26), criada pela
+migration `20240025`. Cada uma segue a BaseEntity + `codigo` (VARCHAR — valor SCREAMING_SNAKE,
+espelha o enum TS de `shared/`) + `descricao` (VARCHAR — rótulo legível). A coluna de negócio
+correspondente é um `INTEGER` FK para o `id` dela; o repositório traduz `codigo ⇄ id` no SQL.
+
+| Tabela de referência | Enum TypeScript | Usada por (coluna FK) |
+|---|---|---|
+| `tipo_usuario` | `TipoUsuarioEnum` | `usuario.tipo_usuario_id` |
+| `tipo_usuario_status` | `TipoUsuarioStatusEnum` | `usuario.tipo_usuario_status_id` |
+| `tipo_projeto_status` | `TipoProjetoStatusEnum` | `projeto.tipo_projeto_status_id` |
+| `tipo_demanda_status` | `TipoDemandaStatusEnum` | `demanda.tipo_demanda_status_id` |
+| `tipo_atividade_status` | `TipoAtividadeStatusEnum` | `atividade.tipo_atividade_status_id` |
+| `tipo_dia_nao_util` | `TipoDiaNaoUtilEnum` | `dia_nao_util.tipo_dia_nao_util_id` |
+| `tipo_dia_nao_util_duracao` | `TipoDiaNaoUtilDuracaoEnum` | `dia_nao_util.tipo_dia_nao_util_duracao_id` |
 
 ---
 

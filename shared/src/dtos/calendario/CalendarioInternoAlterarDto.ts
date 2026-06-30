@@ -1,4 +1,4 @@
-import { DiaNaoUtilTipoEnum, DiaNaoUtilDuracaoEnum } from '../../enums';
+import { TipoDiaNaoUtilEnum, TipoDiaNaoUtilDuracaoEnum } from '../../enums';
 
 /**
  * DTO interno de alteração de dia não útil: carrega o `id` (WHERE) e os campos
@@ -9,7 +9,7 @@ import { DiaNaoUtilTipoEnum, DiaNaoUtilDuracaoEnum } from '../../enums';
 export class CalendarioInternoAlterarDto {
   id: number;
   descricao?: string;
-  tipo?: DiaNaoUtilTipoEnum;
-  duracao?: DiaNaoUtilDuracaoEnum;
+  tipo?: TipoDiaNaoUtilEnum;
+  duracao?: TipoDiaNaoUtilDuracaoEnum;
   recorrente?: boolean;
 }

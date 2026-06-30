@@ -1,4 +1,4 @@
-import { AtividadeStatusEnum } from '../../enums/atividade-status.enum';
+import { TipoAtividadeStatusEnum } from '../../enums/tipo-atividade-status.enum';
 
 /**
  * DTO interno de alteração de atividade: carrega o `id` (WHERE) e os campos
@@ -10,5 +10,5 @@ export class AtividadeInternoAlterarDto {
   id: number;
   nome?: string;
   descricao?: string;
-  status?: AtividadeStatusEnum;
+  status?: TipoAtividadeStatusEnum;
 }

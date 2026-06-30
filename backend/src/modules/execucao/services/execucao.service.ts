@@ -14,8 +14,8 @@ import {
   ExecucaoAtivaDto,
   ExecucaoRegistrarDto,
   ExecucaoRegistradaDto,
-  UsuarioTipoEnum,
-  AtividadeStatusEnum,
+  TipoUsuarioEnum,
+  TipoAtividadeStatusEnum,
 } from '@project20/shared';
 import { StandardResponse } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
@@ -26,9 +26,9 @@ import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.int
 @Injectable()
 export class ExecucaoService {
   /** Status em que uma execução pode ser iniciada. */
-  private static readonly STATUS_EXECUTAVEL: AtividadeStatusEnum[] = [
-    AtividadeStatusEnum.PLANEJADA,
-    AtividadeStatusEnum.DESENVOLVENDO,
+  private static readonly STATUS_EXECUTAVEL: TipoAtividadeStatusEnum[] = [
+    TipoAtividadeStatusEnum.PLANEJADA,
+    TipoAtividadeStatusEnum.DESENVOLVENDO,
   ];
 
   constructor(
@@ -153,7 +153,7 @@ export class ExecucaoService {
       throw new BusinessException('Esta execução já foi encerrada');
     }
 
-    if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR) {
+    if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
       const usuarioDaExecucao = await this.execucaoRepositorio.recuperarUsuario({ execucaoId: dto.id });
       if (usuarioDaExecucao !== usuarioAtivo.sub) {
         throw new UnauthorizedAccessException('Desenvolvedor não pode encerrar execução de outro usuário');
@@ -202,7 +202,7 @@ export class ExecucaoService {
     const itensPorPagina = filtros.itensPorPagina ?? 20;
 
     const restricao =
-      usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR ? { usuarioId: usuarioAtivo.sub } : undefined;
+      usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR ? { usuarioId: usuarioAtivo.sub } : undefined;
 
     const { itens, total, totalMinutosDia } = await this.execucaoRepositorio.listar(filtros, restricao);
     const totalPaginas = Math.ceil(total / itensPorPagina);
@@ -234,7 +234,7 @@ export class ExecucaoService {
       throw new ResourceNotFoundException('Execução');
     }
 
-    if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR) {
+    if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
       const usuarioDaExecucao = await this.execucaoRepositorio.recuperarUsuario({ execucaoId: dto.id });
       if (usuarioDaExecucao !== usuarioAtivo.sub) {
         throw new UnauthorizedAccessException('Desenvolvedor não pode acessar execução de outro usuário');
@@ -261,7 +261,7 @@ export class ExecucaoService {
       throw new ResourceNotFoundException('Execução');
     }
 
-    if (usuarioAtivo.tipo === UsuarioTipoEnum.DESENVOLVEDOR) {
+    if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
       const usuarioDaExecucao = await this.execucaoRepositorio.recuperarUsuario({ execucaoId: dto.id });
       if (usuarioDaExecucao !== usuarioAtivo.sub) {
         throw new UnauthorizedAccessException('Desenvolvedor não pode editar execução de outro usuário');
@@ -329,6 +329,6 @@ export class ExecucaoService {
    */
   private async descricaoObrigatoria(atividadeId: number): Promise<boolean> {
     const tipoDono = await this.execucaoRepositorio.recuperarTipoUsuarioDaAtividade({ atividadeId });
-    return tipoDono !== UsuarioTipoEnum.GESTOR;
+    return tipoDono !== TipoUsuarioEnum.GESTOR;
   }
 }

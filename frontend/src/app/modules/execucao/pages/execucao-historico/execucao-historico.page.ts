@@ -24,7 +24,7 @@ import {
   ExecucaoItemDto,
   ExecucaoAlterarDto,
   UsuarioResumoDto,
-  UsuarioStatusEnum,
+  TipoUsuarioStatusEnum,
 } from '@project20/shared';
 import { ExecucaoService } from '../../services/execucao.service';
 import { UsuarioService } from '../../../usuario/services/usuario.service';
@@ -260,7 +260,7 @@ export class ExecucaoHistoricoPage implements OnInit {
   }
 
   private carregarUsuarios(): void {
-    this.usuarioService.listar({ status: UsuarioStatusEnum.ATIVO, itensPorPagina: 100 }).subscribe({
+    this.usuarioService.listar({ status: TipoUsuarioStatusEnum.ATIVO, itensPorPagina: 100 }).subscribe({
       next: (resposta) => {
         if (resposta.sucesso && resposta.dados) this.usuarios.set(resposta.dados.itens);
       },

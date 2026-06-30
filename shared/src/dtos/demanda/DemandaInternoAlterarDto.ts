@@ -1,4 +1,4 @@
-import { DemandaStatusEnum } from '../../enums/demanda-status.enum';
+import { TipoDemandaStatusEnum } from '../../enums/tipo-demanda-status.enum';
 
 /**
  * DTO interno de alteração de demanda: carrega o `id` (WHERE) e os nove campos
@@ -14,7 +14,7 @@ export class DemandaInternoAlterarDto {
   descricaoCliente?: string | null;
   documentacao?: string | null;
   horasEstimadas?: number;
-  status?: DemandaStatusEnum;
+  status?: TipoDemandaStatusEnum;
   isEstrutural?: boolean;
   previsaoFimData?: string | null;
 }

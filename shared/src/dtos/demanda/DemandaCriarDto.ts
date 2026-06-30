@@ -12,7 +12,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { DemandaStatusEnum } from '../../enums/demanda-status.enum';
+import { TipoDemandaStatusEnum } from '../../enums/tipo-demanda-status.enum';
 
 export class DemandaCriarDto {
   @ApiProperty({ example: 1 })
@@ -55,9 +55,9 @@ export class DemandaCriarDto {
   @Type(() => Number)
   horasEstimadas: number;
 
-  @ApiProperty({ enum: DemandaStatusEnum, example: DemandaStatusEnum.PLANEJADA })
-  @IsEnum(DemandaStatusEnum)
-  status: DemandaStatusEnum;
+  @ApiProperty({ enum: TipoDemandaStatusEnum, example: TipoDemandaStatusEnum.PLANEJADA })
+  @IsEnum(TipoDemandaStatusEnum)
+  status: TipoDemandaStatusEnum;
 
   @ApiProperty({ example: false })
   @IsBoolean()

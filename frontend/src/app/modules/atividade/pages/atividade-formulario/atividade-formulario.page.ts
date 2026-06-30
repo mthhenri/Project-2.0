@@ -7,7 +7,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { Select } from 'primeng/select';
 import { MessageService } from 'primeng/api';
-import { AtividadeCriarDto, AtividadeStatusEnum } from '@project20/shared';
+import { AtividadeCriarDto, TipoAtividadeStatusEnum } from '@project20/shared';
 import { AtividadeService } from '../../services/atividade.service';
 import { DemandaService } from '../../../demanda/services/demanda.service';
 import { AssistenteDescricaoComponent } from '../../../../shared/components/assistente-descricao/assistente-descricao.component';
@@ -38,7 +38,7 @@ export class AtividadeFormularioPage implements OnInit {
   readonly formulario = this.formBuilder.group({
     nome:          ['', [Validators.required, Validators.minLength(3), Validators.maxLength(255)]],
     descricao:     [''],
-    status:        [AtividadeStatusEnum.PLANEJADA as AtividadeStatusEnum, [Validators.required]],
+    status:        [TipoAtividadeStatusEnum.PLANEJADA as TipoAtividadeStatusEnum, [Validators.required]],
   });
 
   readonly demandaId = signal<number | null>(null);

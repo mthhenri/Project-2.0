@@ -1,13 +1,13 @@
-import { DiaNaoUtilTipoEnum, DiaNaoUtilDuracaoEnum } from '@project20/shared';
+import { TipoDiaNaoUtilEnum, TipoDiaNaoUtilDuracaoEnum } from '@project20/shared';
 
 export interface DiaNaoUtilTipoOpcao {
   label: string;
-  value: DiaNaoUtilTipoEnum;
+  value: TipoDiaNaoUtilEnum;
 }
 
 export interface DiaNaoUtilDuracaoOpcao {
   label: string;
-  value: DiaNaoUtilDuracaoEnum;
+  value: TipoDiaNaoUtilDuracaoEnum;
 }
 
 /** Resultado da verificação de dia útil retornado por `GET /calendario/verificar`. */
@@ -18,45 +18,45 @@ export interface VerificacaoDiaUtil {
 }
 
 export const DIA_NAO_UTIL_TIPO_OPCOES: DiaNaoUtilTipoOpcao[] = [
-  { label: 'Feriado',           value: DiaNaoUtilTipoEnum.FERIADO },
-  { label: 'Recesso',           value: DiaNaoUtilTipoEnum.RECESSO },
-  { label: 'Ponto Facultativo', value: DiaNaoUtilTipoEnum.PONTO_FACULTATIVO },
+  { label: 'Feriado',           value: TipoDiaNaoUtilEnum.FERIADO },
+  { label: 'Recesso',           value: TipoDiaNaoUtilEnum.RECESSO },
+  { label: 'Ponto Facultativo', value: TipoDiaNaoUtilEnum.PONTO_FACULTATIVO },
 ];
 
 export const DIA_NAO_UTIL_DURACAO_OPCOES: DiaNaoUtilDuracaoOpcao[] = [
-  { label: 'Integral',     value: DiaNaoUtilDuracaoEnum.INTEGRAL },
-  { label: 'Meio período', value: DiaNaoUtilDuracaoEnum.MEIO_PERIODO },
+  { label: 'Integral',     value: TipoDiaNaoUtilDuracaoEnum.INTEGRAL },
+  { label: 'Meio período', value: TipoDiaNaoUtilDuracaoEnum.MEIO_PERIODO },
 ];
 
-const ROTULO_POR_DURACAO: Record<DiaNaoUtilDuracaoEnum, string> = {
-  [DiaNaoUtilDuracaoEnum.INTEGRAL]:     'Integral',
-  [DiaNaoUtilDuracaoEnum.MEIO_PERIODO]: 'Meio período',
+const ROTULO_POR_DURACAO: Record<TipoDiaNaoUtilDuracaoEnum, string> = {
+  [TipoDiaNaoUtilDuracaoEnum.INTEGRAL]:     'Integral',
+  [TipoDiaNaoUtilDuracaoEnum.MEIO_PERIODO]: 'Meio período',
 };
 
-export function rotuloDuracaoDiaNaoUtil(duracao: DiaNaoUtilDuracaoEnum): string {
+export function rotuloDuracaoDiaNaoUtil(duracao: TipoDiaNaoUtilDuracaoEnum): string {
   return ROTULO_POR_DURACAO[duracao];
 }
 
 // Classe de marca (tom da primária) aplicada ao wrapper da tag de tipo na tabela.
 // A diferenciação entre os tipos é por tonalidade do mesmo matiz do tema; os
 // valores de cor ficam nos aliases --app-marca-* de styles.scss.
-const CLASSE_TAG_POR_TIPO: Record<DiaNaoUtilTipoEnum, string> = {
-  [DiaNaoUtilTipoEnum.FERIADO]:           'marca-tag marca-tag--feriado',
-  [DiaNaoUtilTipoEnum.RECESSO]:           'marca-tag marca-tag--recesso',
-  [DiaNaoUtilTipoEnum.PONTO_FACULTATIVO]: 'marca-tag marca-tag--facultativo',
+const CLASSE_TAG_POR_TIPO: Record<TipoDiaNaoUtilEnum, string> = {
+  [TipoDiaNaoUtilEnum.FERIADO]:           'marca-tag marca-tag--feriado',
+  [TipoDiaNaoUtilEnum.RECESSO]:           'marca-tag marca-tag--recesso',
+  [TipoDiaNaoUtilEnum.PONTO_FACULTATIVO]: 'marca-tag marca-tag--facultativo',
 };
 
-const ROTULO_POR_TIPO: Record<DiaNaoUtilTipoEnum, string> = {
-  [DiaNaoUtilTipoEnum.FERIADO]:           'Feriado',
-  [DiaNaoUtilTipoEnum.RECESSO]:           'Recesso',
-  [DiaNaoUtilTipoEnum.PONTO_FACULTATIVO]: 'Ponto Facultativo',
+const ROTULO_POR_TIPO: Record<TipoDiaNaoUtilEnum, string> = {
+  [TipoDiaNaoUtilEnum.FERIADO]:           'Feriado',
+  [TipoDiaNaoUtilEnum.RECESSO]:           'Recesso',
+  [TipoDiaNaoUtilEnum.PONTO_FACULTATIVO]: 'Ponto Facultativo',
 };
 
-export function classeTagTipoDiaNaoUtil(tipo: DiaNaoUtilTipoEnum): string {
+export function classeTagTipoDiaNaoUtil(tipo: TipoDiaNaoUtilEnum): string {
   return CLASSE_TAG_POR_TIPO[tipo];
 }
 
-export function rotuloTipoDiaNaoUtil(tipo: DiaNaoUtilTipoEnum): string {
+export function rotuloTipoDiaNaoUtil(tipo: TipoDiaNaoUtilEnum): string {
   return ROTULO_POR_TIPO[tipo];
 }
 
