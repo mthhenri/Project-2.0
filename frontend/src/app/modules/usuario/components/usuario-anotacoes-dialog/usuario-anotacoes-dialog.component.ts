@@ -85,12 +85,61 @@ export class UsuarioAnotacoesDialogComponent implements OnDestroy {
     this.visivel.set(true);
   }
 
-  /** Disparado ao fechar o dialog — recarrega a listagem se algo foi salvo. */
-  aoFecharDialog(): void {
-    if (this.houveAlteracao()) {
-      this.aoAlterar.emit();
-      this.houveAlteracao.set(false);
+  /**
+   * Intercepta qualquer tentativa de fechar o dialog (X, ESC, clique fora). Se há
+   * edições não salvas, pergunta ao usuário se quer salvar antes de fechar — só
+   * fecha de fato após a decisão. Sem alterações pendentes, fecha direto.
+   */
+  aoTentarFechar(visivel: boolean): void {
+    if (visivel) return;
+    const precisaConfirmar = this.temAlteracoesNaoSalvas();
+    // Fecha de fato (mantém o signal coerente com o estado real do PrimeNG) e,
+    // havendo edições pendentes, pergunta se o usuário quer salvá-las.
+    this.fecharEfetivamente();
+    if (precisaConfirmar) {
+      this.confirmationService.confirm({
+        key: 'anotacoes-fechar',
+        header: 'Alterações não salvas',
+        message: 'Você tem anotações que ainda não foram salvas. Deseja salvar antes de fechar?',
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: 'Salvar',
+        rejectLabel: 'Descartar',
+        accept: () => this.salvarEFechar(),
+        reject: () => {},
+      });
     }
+  }
+
+  /** Fecha o dialog e recarrega a listagem se algo foi salvo durante a sessão. */
+  private fecharEfetivamente(): void {
+    this.visivel.set(false);
+    if (this.houveAlteracao()) this.aoAlterar.emit();
+    this.houveAlteracao.set(false);
+  }
+
+  /** Salva as anotações pendentes e, ao concluir, fecha o dialog. */
+  private salvarEFechar(): void {
+    const id = this.usuarioId();
+    if (!id) {
+      this.fecharEfetivamente();
+      return;
+    }
+
+    const anotacoesEnviadas = this.formulario.value.anotacoes ?? '';
+    this.carregandoSalvar.set(true);
+    this.usuarioService
+      .alterar(id, { anotacoes: anotacoesEnviadas })
+      .pipe(finalize(() => this.carregandoSalvar.set(false)))
+      .subscribe({
+        next: (resposta) => {
+          this.conteudoSalvo.set(anotacoesEnviadas);
+          this.houveAlteracao.set(true);
+          this.anotacoesAlteracaoData.set(
+            resposta.dados?.anotacoesAlteracaoData ?? this.anotacoesAlteracaoData(),
+          );
+          this.fecharEfetivamente();
+        },
+      });
   }
 
   salvar(): void {

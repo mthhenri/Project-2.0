@@ -4,7 +4,8 @@ import { finalize } from 'rxjs/operators';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { EditorModule } from 'primeng/editor';
-import { MessageService } from 'primeng/api';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { MessageService, ConfirmationService } from 'primeng/api';
 import {
   DemandaArvoreItemDto,
   DemandaAlterarDto,
@@ -44,6 +45,7 @@ type CampoDescricao = 'descricaoTecnica' | 'descricaoCliente' | 'documentacao';
     ButtonModule,
     DialogModule,
     EditorModule,
+    ConfirmDialogModule,
     AssistenteDescricaoComponent,
     DemandaArvoreItemComponent,
     DemandaDetalheDialogComponent,
@@ -51,6 +53,7 @@ type CampoDescricao = 'descricaoTecnica' | 'descricaoCliente' | 'documentacao';
     DemandaFormularioDialogComponent,
     DemandaMembroListaComponent,
   ],
+  providers: [ConfirmationService],
   templateUrl: './demanda-arvore-painel.component.html',
   styleUrl: './demanda-arvore-painel.component.scss',
 })
@@ -64,6 +67,7 @@ export class DemandaArvorePainelComponent {
   private readonly tagService = inject(TagService);
   private readonly usuarioService = inject(UsuarioService);
   private readonly messageService = inject(MessageService);
+  private readonly confirmationService = inject(ConfirmationService);
   private readonly formBuilder = inject(FormBuilder);
   readonly sessao = inject(UsuarioSessaoService);
 
@@ -99,6 +103,9 @@ export class DemandaArvorePainelComponent {
   readonly formularioDescricao = this.formBuilder.group({
     valor: ['' as string | null],
   });
+
+  /** Último conteúdo persistido da descrição aberta — base da detecção de alterações não salvas. */
+  private readonly descricaoConteudoSalvo = signal<string>('');
 
   readonly tituloDialogDescricao = computed(() => {
     const campo = this.campoDescricaoEditando();
@@ -260,9 +267,40 @@ export class DemandaArvorePainelComponent {
         this.campoDescricaoEditando.set(campo);
         this.descricaoEditavel.set(demandaDados.podeEditar);
         this.formularioDescricao.patchValue({ valor: valores[campo] ?? '' });
+        this.descricaoConteudoSalvo.set(valores[campo] ?? '');
         this.mostrarDialogDescricao.set(true);
       },
     });
+  }
+
+  /** Verdadeiro quando o editor tem conteúdo ainda não persistido na base. */
+  private descricaoTemAlteracoesNaoSalvas(): boolean {
+    return (this.formularioDescricao.value.valor ?? '') !== this.descricaoConteudoSalvo();
+  }
+
+  /**
+   * Intercepta qualquer fechamento do dialog de descrição (X, ESC, Cancelar). Com
+   * alterações não salvas e permissão de edição, pergunta se quer salvar antes de
+   * fechar; caso contrário fecha direto.
+   */
+  aoTentarFecharDescricao(visivel: boolean): void {
+    if (visivel) return;
+    const precisaConfirmar = this.podeEditarDescricaoAtual() && this.descricaoTemAlteracoesNaoSalvas();
+    // Fecha de fato (mantém o signal coerente com o estado real do PrimeNG) e,
+    // havendo edições pendentes, pergunta se o usuário quer salvá-las antes.
+    this.mostrarDialogDescricao.set(false);
+    if (precisaConfirmar) {
+      this.confirmationService.confirm({
+        key: 'descricao-fechar',
+        header: 'Alterações não salvas',
+        message: `Você fez alterações em "${this.tituloDialogDescricao()}" que ainda não foram salvas. Deseja salvar antes de fechar?`,
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: 'Salvar',
+        rejectLabel: 'Descartar',
+        accept: () => this.salvarDescricao(),
+        reject: () => {},
+      });
+    }
   }
 
   salvarDescricao(): void {
@@ -271,6 +309,7 @@ export class DemandaArvorePainelComponent {
     if (!campo || !idEditando || !this.podeEditarDescricaoAtual()) return;
 
     this.carregandoSalvarDescricao.set(true);
+    const valorEnviado = this.formularioDescricao.value.valor ?? '';
     const dto = { [campo]: this.formularioDescricao.value.valor ?? undefined } as DemandaAlterarDto;
 
     this.demandaService
@@ -278,6 +317,7 @@ export class DemandaArvorePainelComponent {
       .pipe(finalize(() => this.carregandoSalvarDescricao.set(false)))
       .subscribe({
         next: () => {
+          this.descricaoConteudoSalvo.set(valorEnviado);
           this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: `${this.tituloDialogDescricao()} salva` });
           this.mostrarDialogDescricao.set(false);
           this.alterado.emit();

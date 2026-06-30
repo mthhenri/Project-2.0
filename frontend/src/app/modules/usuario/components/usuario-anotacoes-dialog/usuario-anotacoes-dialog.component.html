@@ -1,5 +1,6 @@
 <p-dialog
-  [(visible)]="visivel"
+  [visible]="visivel()"
+  (visibleChange)="aoTentarFechar($event)"
   [modal]="true"
   [style]="{ width: '95vw', height: '95vh' }"
   [contentStyle]="{ padding: '1rem', overflow: 'hidden', display: 'flex', flexDirection: 'column' }"
@@ -7,7 +8,6 @@
   [resizable]="false"
   [dismissableMask]="false"
   [closeOnEscape]="false"
-  (onHide)="aoFecharDialog()"
 >
   <ng-template #header>
     <div class="anotacoes-dialog__cabecalho">
@@ -71,3 +71,4 @@
 </p-dialog>
 
 <p-confirmDialog key="anotacoes-limpar" />
+<p-confirmDialog key="anotacoes-fechar" />

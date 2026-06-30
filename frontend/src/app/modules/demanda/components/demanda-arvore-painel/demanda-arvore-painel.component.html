@@ -123,7 +123,8 @@
 @if (campoDescricaoEditando()) {
   <p-dialog
     [header]="tituloDialogDescricao()"
-    [(visible)]="mostrarDialogDescricao"
+    [visible]="mostrarDialogDescricao()"
+    (visibleChange)="aoTentarFecharDescricao($event)"
     [modal]="true"
     [style]="{ width: '95vw', height: '95vh' }"
     [contentStyle]="{ display: 'flex', flexDirection: 'column' }"
@@ -159,7 +160,7 @@
           label="Cancelar"
           severity="secondary"
           [outlined]="true"
-          (onClick)="mostrarDialogDescricao.set(false)"
+          (onClick)="aoTentarFecharDescricao(false)"
         />
         <p-button
           label="Salvar"
@@ -178,3 +179,5 @@
     </ng-template>
   </p-dialog>
 }
+
+<p-confirmDialog key="descricao-fechar" />
