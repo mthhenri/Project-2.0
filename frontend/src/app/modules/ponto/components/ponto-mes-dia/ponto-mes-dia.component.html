@@ -12,13 +12,24 @@
 
     <span class="ponto-mes-dia__periodo">
       @if (dia.primeiroInicioData) {
-        {{ dia.primeiroInicioData | date: 'HH:mm' }}
+        {{ dia.primeiroInicioData | date: 'dd/MM HH:mm' }}
         <i class="pi pi-arrow-right ponto-mes-dia__seta"></i>
-        {{ dia.ultimoFimData ? (dia.ultimoFimData | date: 'HH:mm') : 'em andamento' }}
+        {{ dia.ultimoFimData ? (dia.ultimoFimData | date: 'dd/MM HH:mm') : 'em andamento' }}
       } @else if (!dia.ehDiaUtil) {
         <span class="ponto-mes-dia__badge">{{ dia.motivoNaoUtil }}</span>
-      } @else {
+      } @else if (!dia.justificativaNome) {
         <span class="ponto-mes-dia__vazio">—</span>
+      }
+
+      @if (dia.justificativaNome) {
+        <span
+          class="ponto-mes-dia__badge ponto-mes-dia__badge--justificativa"
+          [pTooltip]="justificativaTooltip"
+          tooltipPosition="top"
+        >
+          <i class="pi pi-calendar-plus ponto-mes-dia__badge-icone"></i>
+          {{ dia.justificativaNome }}
+        </span>
       }
     </span>
 
@@ -49,10 +60,10 @@
         <p-timeline [value]="detalheDia.execucoes" align="left">
           <ng-template pTemplate="opposite" let-execucao>
             <span class="ponto-mes-dia__execucao-horario">
-              {{ execucao.inicioData | date: 'HH:mm' }}
+              {{ execucao.inicioData | date: 'dd/MM HH:mm' }}
               <i class="pi pi-arrow-right ponto-mes-dia__seta"></i>
               @if (execucao.fimData) {
-                {{ execucao.fimData | date: 'HH:mm' }}
+                {{ execucao.fimData | date: 'dd/MM HH:mm' }}
               } @else {
                 <app-execucao-timer [inicioData]="execucao.inicioData" tamanho="compacto" />
               }

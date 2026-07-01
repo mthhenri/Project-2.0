@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ExecucaoRepository } from '../../execucao/repositories/execucao.repository';
 import { CalendarioRepository } from '../../calendario/repositories/calendario.repository';
 import { UsuarioRepository } from '../../usuario/repositories/usuario.repository';
+import { PontoJustificativaRepository } from '../../ponto-justificativa/repositories/ponto-justificativa.repository';
 import { ConfigService } from '../../../config/config.service';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { UnauthorizedAccessException } from '../../../core/exceptions/unauthorized-access.exception';
@@ -18,6 +19,7 @@ import {
   PontoMensalConsultarDto,
   PontoMensalDto,
   PontoDiaResumoDto,
+  PontoJustificativaResumoDto,
   UsuarioRecuperarDto,
   TipoUsuarioEnum,
 } from '@project20/shared';
@@ -45,6 +47,7 @@ export class PontoService {
     private readonly execucaoRepositorio: ExecucaoRepository,
     private readonly calendarioRepositorio: CalendarioRepository,
     private readonly usuarioRepositorio: UsuarioRepository,
+    private readonly pontoJustificativaRepositorio: PontoJustificativaRepository,
     private readonly configService: ConfigService,
   ) {}
 
@@ -111,10 +114,17 @@ export class PontoService {
     const diasNaoUteis = await this.calendarioRepositorio.listarDiasNaoUteisDoMes({ ano, mes });
     const mapaDiaNaoUtilPorDia = new Map(diasNaoUteis.map((diaNaoUtil) => [diaNaoUtil.dia, diaNaoUtil]));
 
+    const justificativasDoMes = await this.pontoJustificativaRepositorio.listarPorUsuarioEMes({ usuarioId, ano, mes });
+    const mapaJustificativaPorDia = new Map<number, PontoJustificativaResumoDto>(
+      justificativasDoMes.map((justificativa) => [Number(justificativa.diaData.slice(8, 10)), justificativa]),
+    );
+
+    const { intervaloMinimoMinutos } = this.configService.obter().negocio;
     const metaDiariaMinutos = usuarioEncontrado.horasDiariasNecessarias * 60;
 
     let diasUteisMes = 0;
     let totalMinutosTrabalhadosMes = 0;
+    let metaMinutosMes = 0;
     const dias: PontoDiaResumoDto[] = [];
 
     for (let numeroDoDia = 1; numeroDoDia <= diasNoMes; numeroDoDia++) {
@@ -152,12 +162,32 @@ export class PontoService {
       const totalMinutosTrabalhados = agregado?.totalMinutosTrabalhados ?? 0;
       totalMinutosTrabalhadosMes += totalMinutosTrabalhados;
 
+      const justificativa = mapaJustificativaPorDia.get(numeroDoDia) ?? null;
+      const minutosCobertos = justificativa ? Math.round(justificativa.horasCobertas * 60) : 0;
+
+      // Meta base do dia (por fração) e, sobre ela, a meta efetiva já descontada a
+      // justificativa. Com minutosCobertos === 0 o resultado é idêntico ao anterior.
+      const metaDiaBase = fracaoMeta === 0.5
+        ? Math.round(metaDiariaMinutos * 0.5)
+        : (ehDiaUtil ? metaDiariaMinutos : 0);
+      const metaDiaEfetiva = Math.max(0, metaDiaBase - minutosCobertos);
+      metaMinutosMes += metaDiaEfetiva;
+
       let saldoMinutos: number;
       if (fracaoMeta === 0.5) {
-        const metaDiaMinutos = Math.round(metaDiariaMinutos * 0.5);
-        saldoMinutos = Math.min(totalMinutosTrabalhados, metaDiaMinutos) - metaDiaMinutos;
+        saldoMinutos = Math.min(totalMinutosTrabalhados, metaDiaEfetiva) - metaDiaEfetiva;
       } else {
-        saldoMinutos = totalMinutosTrabalhados - (ehDiaUtil ? metaDiariaMinutos : 0);
+        saldoMinutos = totalMinutosTrabalhados - metaDiaEfetiva;
+      }
+
+      // Intervalos do dia (para a impressão): só há gaps quando há execuções no dia.
+      let intervalos: IntervaloDto[] = [];
+      if (agregado) {
+        const { itens: execucoesDoDia } = await this.execucaoRepositorio.listar(
+          { data: dataIso, itensPorPagina: 500 },
+          { usuarioId },
+        );
+        intervalos = this.calcularIntervalos(this.ordenarPorInicio(execucoesDoDia), intervaloMinimoMinutos);
       }
 
       dias.push({
@@ -168,10 +198,13 @@ export class PontoService {
         ultimoFimData: agregado?.ultimoFimData ?? null,
         totalMinutosTrabalhados,
         saldoMinutos,
+        metaMinutos: metaDiaEfetiva,
+        intervalos,
+        justificativaNome: justificativa?.nome ?? null,
+        justificativaMinutosCobertos: justificativa ? minutosCobertos : null,
       });
     }
 
-    const metaMinutosMes = Math.round(metaDiariaMinutos * diasUteisMes);
     const saldoMinutosMes = totalMinutosTrabalhadosMes - metaMinutosMes;
 
     return {
@@ -231,10 +264,7 @@ export class PontoService {
       { usuarioId: usuario.id },
     );
 
-    const execucoes = [...execucoesDesordenadas].sort(
-      (execucaoA, execucaoB) =>
-        new Date(execucaoA.inicioData).getTime() - new Date(execucaoB.inicioData).getTime(),
-    );
+    const execucoes = this.ordenarPorInicio(execucoesDesordenadas);
 
     const totalMinutosTrabalhados = execucoes
       .filter((execucao) => execucao.fimData !== null)
@@ -242,6 +272,15 @@ export class PontoService {
 
     const { intervaloMinimoMinutos } = this.configService.obter().negocio;
     const intervalos = this.calcularIntervalos(execucoes, intervaloMinimoMinutos);
+
+    // Justificativa do dia (criada pelo gestor): reduz a meta do dia já reduzida por fração
+    // de meio período. Sem justificativa (minutosCobertos === 0) o resultado é idêntico ao
+    // comportamento anterior.
+    const justificativa = await this.pontoJustificativaRepositorio.recuperarPorUsuarioEDia({
+      usuarioId: usuario.id,
+      diaData:   data,
+    });
+    const minutosCobertos = justificativa ? Math.round(justificativa.horasCobertas * 60) : 0;
 
     const metaMinutosCompleta = usuario.horasDiariasNecessarias * 60;
     const ehDiaUtil = infoDia.fracaoMeta === 1;
@@ -252,15 +291,17 @@ export class PontoService {
     let saldoMinutos: number;
 
     if (infoDia.fracaoMeta === 0.5) {
-      // Meio período: meta pela metade e capacidade útil limitada a essa meta — o trabalho
-      // que excede vira extra, de modo que o saldo do dia nunca é positivo.
-      metaMinutos = Math.round(metaMinutosCompleta * 0.5);
+      // Meio período: meta pela metade (depois descontada a justificativa) e capacidade útil
+      // limitada a essa meta — o trabalho que excede vira extra, de modo que o saldo do dia
+      // nunca é positivo.
+      const metaBase = Math.round(metaMinutosCompleta * 0.5);
+      metaMinutos = Math.max(0, metaBase - minutosCobertos);
       minutosTrabalhadosDiaUtil = Math.min(totalMinutosTrabalhados, metaMinutos);
       minutosTrabalhadosExtra = totalMinutosTrabalhados - minutosTrabalhadosDiaUtil;
       saldoMinutos = minutosTrabalhadosDiaUtil - metaMinutos;
     } else {
-      // Dias integrais (úteis ou não úteis): comportamento preservado.
-      metaMinutos = metaMinutosCompleta;
+      // Dias integrais (úteis ou não úteis): meta completa descontada a justificativa.
+      metaMinutos = Math.max(0, metaMinutosCompleta - minutosCobertos);
       minutosTrabalhadosDiaUtil = ehDiaUtil ? totalMinutosTrabalhados : 0;
       minutosTrabalhadosExtra = ehDiaUtil ? 0 : totalMinutosTrabalhados;
       saldoMinutos = totalMinutosTrabalhados - metaMinutos;
@@ -280,6 +321,14 @@ export class PontoService {
       intervalos,
       execucoes,
     };
+  }
+
+  /** Ordena execuções por início — pré-requisito do cálculo de intervalos (gaps consecutivos). */
+  private ordenarPorInicio(execucoes: ExecucaoItemDto[]): ExecucaoItemDto[] {
+    return [...execucoes].sort(
+      (execucaoA, execucaoB) =>
+        new Date(execucaoA.inicioData).getTime() - new Date(execucaoB.inicioData).getTime(),
+    );
   }
 
   /** Identifica gaps entre execuções consecutivas e retorna os que superam o mínimo. */

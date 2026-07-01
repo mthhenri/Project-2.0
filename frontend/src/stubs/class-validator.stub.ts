@@ -10,6 +10,7 @@ export const IsInt        = d;
 export const IsNotEmpty   = d;
 export const IsNumber     = d;
 export const IsOptional   = d;
+export const IsPositive    = d;
 export const IsString     = d;
 export const Matches      = d;
 export const Max          = d;

@@ -28,6 +28,8 @@ import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-hora
 import { PontoResumoCardComponent } from '../../components/ponto-resumo-card/ponto-resumo-card.component';
 import { PontoUsuarioCardComponent } from '../../components/ponto-usuario-card/ponto-usuario-card.component';
 import { PontoMesDiaComponent } from '../../components/ponto-mes-dia/ponto-mes-dia.component';
+import { PontoJustificativaDialogComponent } from '../../components/ponto-justificativa-dialog/ponto-justificativa-dialog.component';
+import { PontoImpressaoComponent } from '../../components/ponto-impressao/ponto-impressao.component';
 import { AtividadeVisualizarDialogComponent } from '../../../atividade/components/atividade-visualizar-dialog/atividade-visualizar-dialog.component';
 import { formatarSaldoMinutos } from '../../models/ponto.model';
 
@@ -48,6 +50,8 @@ type ModoPonto = 'todos' | 'mensal';
     PontoResumoCardComponent,
     PontoUsuarioCardComponent,
     PontoMesDiaComponent,
+    PontoJustificativaDialogComponent,
+    PontoImpressaoComponent,
     AtividadeVisualizarDialogComponent,
   ],
   templateUrl: './ponto.page.html',

@@ -168,3 +168,24 @@ html {
   background: transparent;
 }
 
+/* Impressão do espelho de ponto: some com toda a página e revela apenas a folha
+   imprimível (.ponto-impressao), posicionada no topo da folha. Regra global porque
+   precisa alcançar elementos fora do componente de impressão. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .ponto-impressao,
+  .ponto-impressao * {
+    visibility: visible;
+  }
+
+  .ponto-impressao {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+}
+

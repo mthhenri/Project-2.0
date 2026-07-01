@@ -1,0 +1,98 @@
+@if (mensal; as dados) {
+  <div class="ponto-impressao">
+    <header class="ponto-impressao__cabecalho">
+      <h1 class="ponto-impressao__titulo">Espelho de Ponto</h1>
+      <div class="ponto-impressao__identificacao">
+        <div class="ponto-impressao__usuario">
+          <strong class="ponto-impressao__usuario-nome">{{ dados.nomeUsuario }}</strong>
+          @if (cargoUsuario()) {
+            <span class="ponto-impressao__usuario-cargo">{{ cargoUsuario() }}</span>
+          }
+        </div>
+        <div class="ponto-impressao__periodo">
+          <span>{{ nomeMes(dados.mes) }} de {{ dados.ano }}</span>
+          @if (jornadaDiaria() !== null) {
+            <span>Jornada diária: {{ jornadaDiaria() }}h</span>
+          }
+        </div>
+      </div>
+
+      <div class="ponto-impressao__totais">
+        <div class="ponto-impressao__total">
+          <span class="ponto-impressao__total-rotulo">Meta do mês</span>
+          <span class="ponto-impressao__total-valor">{{ dados.metaMinutosMes | minutosParagHoras }}</span>
+        </div>
+        <div class="ponto-impressao__total">
+          <span class="ponto-impressao__total-rotulo">Trabalhado</span>
+          <span class="ponto-impressao__total-valor">{{ dados.totalMinutosTrabalhadosMes | minutosParagHoras }}</span>
+        </div>
+        <div class="ponto-impressao__total">
+          <span class="ponto-impressao__total-rotulo">Saldo</span>
+          <span class="ponto-impressao__total-valor">{{ formatarSaldo(dados.saldoMinutosMes) }}</span>
+        </div>
+      </div>
+    </header>
+
+    <table class="ponto-impressao__tabela">
+      <thead>
+        <tr>
+          <th>Dia</th>
+          <th>Entrada</th>
+          <th>Saída</th>
+          <th>Intervalos</th>
+          <th>Trabalhado</th>
+          <th>Saldo</th>
+          <th>Observação</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (dia of dados.dias; track dia.data) {
+          <tr [class.ponto-impressao__linha--nao-util]="!dia.ehDiaUtil">
+            <td class="ponto-impressao__celula-dia">
+              {{ numero(dia.data) }} <span class="ponto-impressao__dia-semana">{{ abreviacao(dia.data) }}</span>
+            </td>
+            <td>{{ dia.primeiroInicioData ? (dia.primeiroInicioData | date: 'dd/MM HH:mm') : '—' }}</td>
+            <td>{{ dia.ultimoFimData ? (dia.ultimoFimData | date: 'dd/MM HH:mm') : '—' }}</td>
+            <td>
+              @if (dia.intervalos.length) {
+                <ul class="ponto-impressao__intervalos">
+                  @for (intervalo of dia.intervalos; track $index) {
+                    <li>{{ intervalo.inicioData | date: 'dd/MM HH:mm' }}–{{ intervalo.fimData | date: 'dd/MM HH:mm' }}</li>
+                  }
+                </ul>
+              } @else {
+                —
+              }
+            </td>
+            <td>{{ dia.totalMinutosTrabalhados | minutosParagHoras }}</td>
+            <td>{{ formatarSaldo(dia.saldoMinutos) }}</td>
+            <td class="ponto-impressao__celula-obs">
+              @if (dia.justificativaNome) {
+                <span class="ponto-impressao__justificativa">
+                  {{ dia.justificativaNome }}
+                  @if (dia.justificativaMinutosCobertos !== null) {
+                    ({{ horasCobertas(dia.justificativaMinutosCobertos) }})
+                  }
+                </span>
+              }
+              @if (dia.motivoNaoUtil) {
+                <span class="ponto-impressao__motivo">{{ dia.motivoNaoUtil }}</span>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <footer class="ponto-impressao__assinaturas">
+      <div class="ponto-impressao__assinatura">
+        <div class="ponto-impressao__assinatura-linha"></div>
+        <span class="ponto-impressao__assinatura-rotulo">Gestor responsável: {{ nomeGestor }}</span>
+      </div>
+      <div class="ponto-impressao__assinatura">
+        <div class="ponto-impressao__assinatura-linha"></div>
+        <span class="ponto-impressao__assinatura-rotulo">Colaborador: {{ dados.nomeUsuario }}</span>
+      </div>
+    </footer>
+  </div>
+}

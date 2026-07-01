@@ -5,6 +5,7 @@ export * from './demanda/index';
 export * from './atividade/index';
 export * from './execucao/index';
 export * from './ponto/index';
+export * from './ponto-justificativa/index';
 export * from './calendario/index';
 export * from './tag/index';
 export * from './assistente/index';

@@ -44,6 +44,25 @@
             (onClick)="avancarMes()"
           />
         </div>
+
+        @if (sessao.eGestor() && formularioFiltros.value.usuarioId) {
+          <div class="ponto__acoes">
+            <p-button
+              label="Imprimir"
+              icon="pi pi-print"
+              severity="secondary"
+              [outlined]="true"
+              pTooltip="Imprimir espelho do mês"
+              tooltipPosition="top"
+              (onClick)="impressao.imprimir()"
+            />
+            <p-button
+              label="Justificar"
+              icon="pi pi-calendar-plus"
+              (onClick)="justificativaDialog.abrir(formularioFiltros.value.usuarioId!, mesSelecionado())"
+            />
+          </div>
+        }
       }
     </form>
   </div>
@@ -111,4 +130,6 @@
   }
 
   <app-atividade-visualizar-dialog #visualizarDialog />
+  <app-ponto-justificativa-dialog #justificativaDialog (aoAlterar)="carregar()" />
+  <app-ponto-impressao #impressao [mensal]="pontoMensal()" [nomeGestor]="sessao.nomeCompleto() ?? ''" />
 </div>

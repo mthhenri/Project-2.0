@@ -1,0 +1,148 @@
+// Oculto na tela; revelado apenas na impressão. A regra global que esconde o restante da
+// página durante a impressão vive em styles.scss (@media print).
+:host {
+  display: none;
+}
+
+@media print {
+  :host {
+    display: block;
+  }
+
+  .ponto-impressao {
+    font-family: Arial, Helvetica, sans-serif;
+    color: #000;
+    font-size: 11px;
+
+    &__cabecalho {
+      margin-bottom: 1rem;
+    }
+
+    &__titulo {
+      font-size: 18px;
+      font-weight: 700;
+      margin: 0 0 0.5rem;
+    }
+
+    &__identificacao {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.75rem;
+    }
+
+    &__usuario {
+      display: flex;
+      flex-direction: column;
+    }
+
+    &__usuario-nome {
+      font-size: 13px;
+    }
+
+    &__usuario-cargo {
+      color: #333;
+    }
+
+    &__periodo {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      text-align: right;
+    }
+
+    &__totais {
+      display: flex;
+      gap: 2rem;
+      padding: 0.5rem 0;
+      border-top: 1px solid #000;
+      border-bottom: 1px solid #000;
+    }
+
+    &__total {
+      display: flex;
+      flex-direction: column;
+    }
+
+    &__total-rotulo {
+      font-size: 10px;
+      text-transform: uppercase;
+      color: #555;
+    }
+
+    &__total-valor {
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    &__tabela {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+
+      th,
+      td {
+        border: 1px solid #999;
+        padding: 3px 6px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        background: #eee;
+        font-size: 10px;
+        text-transform: uppercase;
+      }
+    }
+
+    &__linha--nao-util {
+      background: #f4f4f4;
+      color: #555;
+    }
+
+    &__dia-semana {
+      color: #666;
+      font-size: 10px;
+    }
+
+    &__intervalos {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    &__celula-obs {
+      display: flex;
+      flex-direction: column;
+    }
+
+    &__justificativa {
+      font-weight: 600;
+    }
+
+    &__motivo {
+      color: #666;
+    }
+
+    &__assinaturas {
+      display: flex;
+      justify-content: space-between;
+      gap: 3rem;
+      margin-top: 4rem;
+    }
+
+    &__assinatura {
+      flex: 1;
+      text-align: center;
+    }
+
+    &__assinatura-linha {
+      border-top: 1px solid #000;
+      margin-bottom: 0.35rem;
+    }
+
+    &__assinatura-rotulo {
+      font-size: 11px;
+    }
+  }
+}

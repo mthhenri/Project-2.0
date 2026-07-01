@@ -1,0 +1,138 @@
+<p-dialog
+  header="Justificar ponto"
+  [visible]="mostrarDialog()"
+  (visibleChange)="mostrarDialog.set($event)"
+  [modal]="true"
+  [style]="{ width: '40rem' }"
+  [draggable]="false"
+  [dismissableMask]="true"
+  appendTo="body"
+>
+  <form [formGroup]="formulario" class="ponto-justificativa-dialog__form">
+    <div class="ponto-justificativa-dialog__linha">
+      <div class="ponto-justificativa-dialog__campo">
+        <label class="ponto-justificativa-dialog__label">Dia *</label>
+        <p-datepicker
+          formControlName="diaData"
+          dateFormat="dd/mm/yy"
+          [minDate]="dataMinima()!"
+          [maxDate]="dataMaxima()!"
+          [showIcon]="true"
+          [readonlyInput]="true"
+          appendTo="body"
+          class="w-full"
+        />
+        @if (campoInvalido('diaData')) {
+          <small class="ponto-justificativa-dialog__erro">Informe o dia justificado</small>
+        }
+      </div>
+
+      <div class="ponto-justificativa-dialog__campo">
+        <label class="ponto-justificativa-dialog__label">Horas cobertas *</label>
+        <p-inputnumber
+          formControlName="horasCobertas"
+          [min]="0"
+          [max]="maximoHoras()"
+          [maxFractionDigits]="2"
+          [showButtons]="true"
+          suffix=" h"
+          class="w-full"
+        />
+        <small class="ponto-justificativa-dialog__dica">
+          Máximo: {{ maximoHoras() }} h (jornada diária do usuário)
+        </small>
+        @if (campoInvalido('horasCobertas')) {
+          <small class="ponto-justificativa-dialog__erro">Informe as horas cobertas</small>
+        }
+      </div>
+    </div>
+
+    <div class="ponto-justificativa-dialog__campo">
+      <label class="ponto-justificativa-dialog__label">Título *</label>
+      <input
+        pInputText
+        type="text"
+        formControlName="nome"
+        maxlength="255"
+        placeholder="Ex.: Consulta médica"
+        class="w-full"
+      />
+      @if (campoInvalido('nome')) {
+        <small class="ponto-justificativa-dialog__erro">Informe um título</small>
+      }
+    </div>
+
+    <div class="ponto-justificativa-dialog__campo">
+      <label class="ponto-justificativa-dialog__label">Motivo *</label>
+      <textarea
+        pTextarea
+        spellcheck="true"
+        formControlName="descricao"
+        rows="3"
+        placeholder="Descreva o motivo combinado com o usuário..."
+        class="w-full"
+      ></textarea>
+      @if (campoInvalido('descricao')) {
+        <small class="ponto-justificativa-dialog__erro">Informe o motivo da justificativa</small>
+      }
+    </div>
+
+    <div class="ponto-justificativa-dialog__acoes">
+      <p-button
+        label="Salvar justificativa"
+        icon="pi pi-check"
+        [loading]="salvando()"
+        (onClick)="salvar()"
+      />
+    </div>
+  </form>
+
+  <div class="ponto-justificativa-dialog__lista">
+    <h3 class="ponto-justificativa-dialog__lista-titulo">Justificativas do mês</h3>
+
+    @if (carregandoLista()) {
+      <i class="pi pi-spin pi-spinner text-muted-color"></i>
+    } @else if (justificativas().length) {
+      <ul class="ponto-justificativa-dialog__itens">
+        @for (justificativa of justificativas(); track justificativa.id) {
+          <li class="ponto-justificativa-dialog__item">
+            <div class="ponto-justificativa-dialog__item-info">
+              <div class="ponto-justificativa-dialog__item-cabecalho">
+                <span class="ponto-justificativa-dialog__item-dia">
+                  {{ justificativa.diaData | date: 'dd/MM/yyyy' : 'UTC' }}
+                </span>
+                <span class="ponto-justificativa-dialog__item-nome">{{ justificativa.nome }}</span>
+                <span class="ponto-justificativa-dialog__item-horas">{{ justificativa.horasCobertas }} h</span>
+              </div>
+              @if (justificativa.descricao) {
+                <span class="ponto-justificativa-dialog__item-descricao">{{ justificativa.descricao }}</span>
+              }
+            </div>
+            <p-button
+              icon="pi pi-trash"
+              severity="danger"
+              [text]="true"
+              [rounded]="true"
+              pTooltip="Remover"
+              tooltipPosition="top"
+              (onClick)="confirmarRemocao(justificativa)"
+            />
+          </li>
+        }
+      </ul>
+    } @else {
+      <p class="text-muted-color">Nenhuma justificativa neste mês.</p>
+    }
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Fechar"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="mostrarDialog.set(false)"
+    />
+  </ng-template>
+</p-dialog>
+
+<p-confirmDialog key="ponto-justificativa-remover" />

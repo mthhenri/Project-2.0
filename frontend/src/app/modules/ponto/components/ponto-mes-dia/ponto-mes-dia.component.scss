@@ -63,6 +63,7 @@
   &__periodo {
     display: inline-flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 0.375rem;
     font-size: 0.75rem;
     color: var(--p-text-muted-color);
@@ -79,6 +80,18 @@
     background: var(--app-surface-100);
     color: var(--p-text-muted-color);
     font-weight: 500;
+  }
+
+  &__badge--justificativa {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: var(--app-realce-sutil);
+    color: var(--app-realce-primario);
+  }
+
+  &__badge-icone {
+    font-size: 0.625rem;
   }
 
   &__vazio {

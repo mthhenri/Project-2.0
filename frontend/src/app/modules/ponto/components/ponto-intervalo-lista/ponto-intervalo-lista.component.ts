@@ -19,9 +19,9 @@ import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-hora
             <li class="flex items-center justify-between gap-4 py-2">
               <span class="flex items-center gap-2 text-sm text-color">
                 <i class="pi pi-pause-circle text-muted-color"></i>
-                {{ intervalo.inicioData | date: 'HH:mm' }}
+                {{ intervalo.inicioData | date: 'dd/MM HH:mm' }}
                 <i class="pi pi-arrow-right text-xs text-muted-color"></i>
-                {{ intervalo.fimData | date: 'HH:mm' }}
+                {{ intervalo.fimData | date: 'dd/MM HH:mm' }}
               </span>
               <span class="text-sm font-medium text-muted-color">
                 {{ intervalo.duracaoMinutos | minutosParagHoras }}

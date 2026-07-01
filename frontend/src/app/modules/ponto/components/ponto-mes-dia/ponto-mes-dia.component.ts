@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, Output, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { TimelineModule } from 'primeng/timeline';
+import { TooltipModule } from 'primeng/tooltip';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { finalize } from 'rxjs';
 import { PontoDiaResumoDto, PontoDiarioDto } from '@project20/shared';
@@ -21,6 +22,7 @@ import { ambiente } from '../../../../../environments/environment';
   imports: [
     DatePipe,
     TimelineModule,
+    TooltipModule,
     ProgressSpinnerModule,
     MinutosParaHorasPipe,
     ExecucaoTimerComponent,
@@ -53,6 +55,22 @@ export class PontoMesDiaComponent {
     const mes = String(agora.getMonth() + 1).padStart(2, '0');
     const dia = String(agora.getDate()).padStart(2, '0');
     return this.dia.data.slice(0, 10) === `${ano}-${mes}-${dia}`;
+  }
+
+  /** Horas cobertas pela justificativa do dia, formatadas de forma compacta (ex.: "3h", "3h 30min"). */
+  get justificativaCobertura(): string {
+    const minutos = this.dia.justificativaMinutosCobertos;
+    if (minutos === null) return '';
+    if (minutos === 0) return '0h';
+    const horas = Math.floor(minutos / 60);
+    const resto = minutos % 60;
+    if (horas === 0) return `${resto}min`;
+    return resto === 0 ? `${horas}h` : `${horas}h ${resto}min`;
+  }
+
+  /** Texto do tooltip do badge de justificativa (título + horas descontadas da meta). */
+  get justificativaTooltip(): string {
+    return `${this.dia.justificativaNome} · ${this.justificativaCobertura} descontadas da meta do dia`;
   }
 
   abreviacao(): string {

@@ -29,9 +29,9 @@
         @for (execucao of ponto.execucoes; track execucao.id) {
           <li class="ponto-usuario-card__execucao">
             <span class="ponto-usuario-card__horario">
-              {{ execucao.inicioData | date: 'HH:mm' }}
+              {{ execucao.inicioData | date: 'dd/MM HH:mm' }}
               @if (execucao.fimData) {
-                –{{ execucao.fimData | date: 'HH:mm' }}
+                –{{ execucao.fimData | date: 'dd/MM HH:mm' }}
               } @else {
                 <app-execucao-timer [inicioData]="execucao.inicioData" tamanho="compacto" />
               }

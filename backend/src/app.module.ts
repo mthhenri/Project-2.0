@@ -11,10 +11,11 @@ import { AtividadeModule } from './modules/atividade/atividade.module';
 import { ExecucaoModule } from './modules/execucao/execucao.module';
 import { CalendarioModule } from './modules/calendario/calendario.module';
 import { PontoModule } from './modules/ponto/ponto.module';
+import { PontoJustificativaModule } from './modules/ponto-justificativa/ponto-justificativa.module';
 import { AssistenteModule } from './modules/assistente/assistente.module';
 import { RelatorioModule } from './modules/relatorio/relatorio.module';
 
 @Module({
-  imports: [ConfigModule, DatabaseModule, CoreModule, AutenticacaoModule, UsuarioModule, TagModule, ProjetoModule, DemandaModule, AtividadeModule, ExecucaoModule, CalendarioModule, PontoModule, AssistenteModule, RelatorioModule],
+  imports: [ConfigModule, DatabaseModule, CoreModule, AutenticacaoModule, UsuarioModule, TagModule, ProjetoModule, DemandaModule, AtividadeModule, ExecucaoModule, CalendarioModule, PontoModule, PontoJustificativaModule, AssistenteModule, RelatorioModule],
 })
 export class AppModule {}

@@ -1,0 +1,103 @@
+@use '../../../../shared/styles/form' as *;
+
+.ponto-justificativa-dialog {
+  &__form {
+    @include form-dialog-form;
+  }
+
+  &__linha {
+    @include form-dialog-linha;
+  }
+
+  &__campo {
+    @include form-campo;
+  }
+
+  &__label {
+    @include form-label;
+  }
+
+  &__erro {
+    @include form-erro;
+  }
+
+  &__dica {
+    font-size: 0.75rem;
+    color: var(--p-text-muted-color);
+  }
+
+  &__acoes {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  &__lista {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--app-surface-200);
+  }
+
+  &__lista-titulo {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--app-surface-700);
+  }
+
+  &__itens {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  &__item {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--app-surface-200);
+    border-radius: 8px;
+    background: var(--app-realce-sutil);
+  }
+
+  &__item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+    flex: 1;
+  }
+
+  &__item-cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  &__item-descricao {
+    font-size: 0.75rem;
+    color: var(--p-text-muted-color);
+    word-break: break-word;
+  }
+
+  &__item-dia {
+    font-weight: 600;
+    color: var(--app-realce-primario);
+  }
+
+  &__item-nome {
+    color: var(--app-surface-700);
+  }
+
+  &__item-horas {
+    font-size: 0.875rem;
+    color: var(--p-text-muted-color);
+  }
+}
