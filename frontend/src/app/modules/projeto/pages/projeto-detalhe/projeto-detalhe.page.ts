@@ -24,6 +24,7 @@ import { DataBrasileiraPipe } from '../../../../shared/pipes/data-brasileira.pip
 import { DemandaArvorePainelComponent } from '../../../demanda/components/demanda-arvore-painel/demanda-arvore-painel.component';
 import { DemandaFormularioDialogComponent } from '../../../demanda/components/demanda-formulario-dialog/demanda-formulario-dialog.component';
 import { SeletorCorComponent } from '../../../../shared/components/seletor-cor/seletor-cor.component';
+import { RelatorioExecucaoDialogComponent } from '../../../relatorio/components/relatorio-execucao-dialog/relatorio-execucao-dialog.component';
 
 @Component({
   selector: 'app-projeto-detalhe',
@@ -41,6 +42,7 @@ import { SeletorCorComponent } from '../../../../shared/components/seletor-cor/s
     DemandaArvorePainelComponent,
     DemandaFormularioDialogComponent,
     SeletorCorComponent,
+    RelatorioExecucaoDialogComponent,
   ],
   templateUrl: './projeto-detalhe.page.html',
   styleUrl: './projeto-detalhe.page.scss',

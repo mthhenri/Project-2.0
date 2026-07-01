@@ -1,0 +1,140 @@
+@use '../../../../shared/styles/form' as *;
+
+.relatorio-dialog {
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding-top: 0.25rem;
+  }
+
+  &__filtros {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  &__campo {
+    @include form-campo;
+    min-width: 12rem;
+    flex: 1;
+  }
+
+  &__label { @include form-label; }
+  &__erro  { @include form-erro; }
+
+  &__acoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  &__resultado {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+  }
+
+  &__resumo {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+
+    &-projeto {
+      font-weight: 600;
+      color: var(--app-realce-primario);
+    }
+
+    &-periodo {
+      font-size: 0.875rem;
+      color: var(--p-text-muted-color);
+    }
+  }
+
+  &__descricao-celula {
+    max-width: 20rem;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  &__vazio {
+    text-align: center;
+    padding: 1.5rem;
+    color: var(--p-text-muted-color);
+  }
+
+  &__rodape {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1.5rem;
+    font-size: 0.875rem;
+    color: var(--app-surface-700);
+  }
+
+  &__revisao {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--app-surface-200);
+  }
+
+  &__revisao-titulo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--app-realce-primario);
+  }
+
+  &__revisao-resumo {
+    font-size: 0.9375rem;
+    color: var(--app-surface-700);
+  }
+
+  &__inconsistencias {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  &__inconsistencia {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.75rem;
+    border: 1px solid var(--app-surface-200);
+    border-radius: 8px;
+    background: var(--app-realce-sutil);
+
+    &-cabecalho {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    &-tipo {
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: var(--app-surface-700);
+    }
+
+    &-descricao {
+      font-size: 0.875rem;
+      color: var(--app-surface-700);
+    }
+
+    &-ref {
+      font-size: 0.75rem;
+      color: var(--p-text-muted-color);
+      font-family: monospace;
+    }
+  }
+}

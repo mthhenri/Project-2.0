@@ -21,6 +21,8 @@ import {
   ExecucaoRegistradaDto,
   ExecucaoSobreposicaoValidarDto,
   ExecucaoAcessoFiltrarDto,
+  RelatorioExecucaoFiltrarDto,
+  RelatorioExecucaoLinhaDto,
   TipoUsuarioEnum,
 } from '@project20/shared';
 
@@ -392,5 +394,48 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
       { atividadeId: dto.atividadeId },
     );
     return resultado[0]?.tipo ?? null;
+  }
+
+  /**
+   * Lista TODAS as execuções de um projeto dentro de um intervalo de datas (sem paginação),
+   * para fins de relatório. Uso restrito a gestor (garantido na camada de controller/service).
+   */
+  async listarParaRelatorio(
+    filtros: RelatorioExecucaoFiltrarDto,
+  ): Promise<RelatorioExecucaoLinhaDto[]> {
+    return this.executarConsulta<RelatorioExecucaoLinhaDto>(
+      `SELECT
+         projeto.nome                                                                             AS "nomeProjeto",
+         demanda.nome                                                                             AS "nomeDemanda",
+         atividade.nome                                                                           AS "nomeAtividade",
+         usuario.nome_completo                                                                    AS "nomeUsuario",
+         DATE(execucao.inicio_data)::text                                                         AS "dataExecucao",
+         execucao.inicio_data                                                                     AS "inicioData",
+         execucao.fim_data                                                                        AS "fimData",
+         EXTRACT(EPOCH FROM (COALESCE(execucao.fim_data, NOW()) - execucao.inicio_data))::int / 60 AS "duracaoMinutos",
+         execucao.descricao,
+         tipo_atividade_status.codigo                                                             AS "statusAtividade"
+       FROM execucao
+       INNER JOIN atividade
+         ON atividade.id = execucao.atividade_id
+       INNER JOIN usuario
+         ON usuario.id = atividade.usuario_id
+       INNER JOIN demanda
+         ON demanda.id = atividade.demanda_id
+       INNER JOIN projeto
+         ON projeto.id = demanda.projeto_id
+       INNER JOIN tipo_atividade_status
+         ON tipo_atividade_status.id = atividade.tipo_atividade_status_id
+       WHERE execucao.is_deleted = false
+         AND atividade.is_deleted = false
+         AND usuario.is_deleted = false
+         AND demanda.is_deleted = false
+         AND projeto.is_deleted = false
+         AND tipo_atividade_status.is_deleted = false
+         AND projeto.id = :projetoId
+         AND DATE(execucao.inicio_data) BETWEEN :dataInicio::DATE AND :dataFim::DATE
+       ORDER BY usuario.nome_completo ASC, execucao.inicio_data ASC`,
+      { projetoId: filtros.projetoId, dataInicio: filtros.dataInicio, dataFim: filtros.dataFim },
+    );
   }
 }

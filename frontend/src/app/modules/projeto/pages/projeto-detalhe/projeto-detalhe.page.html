@@ -39,6 +39,13 @@
             (onClick)="mostrarDialogNovaDemanda.set(true)"
           />
           <p-button
+            label="Relatório"
+            icon="pi pi-file"
+            severity="secondary"
+            [outlined]="true"
+            (onClick)="relatorioDialog.abrir(projeto()!.id)"
+          />
+          <p-button
             label="Editar"
             icon="pi pi-pencil"
             severity="secondary"
@@ -191,3 +198,6 @@
     (demandaCriada)="recarregarDemandas()"
   />
 }
+
+<!-- Dialog de relatório de execuções (gestor) -->
+<app-relatorio-execucao-dialog #relatorioDialog />

@@ -1,0 +1,186 @@
+<p-dialog
+  header="Relatório de Execuções"
+  [(visible)]="mostrarDialog"
+  [modal]="true"
+  [style]="{ width: '920px' }"
+  [draggable]="false"
+  appendTo="body"
+>
+  <form [formGroup]="formulario" class="relatorio-dialog__form">
+    <div class="relatorio-dialog__filtros">
+      <div class="relatorio-dialog__campo">
+        <label class="relatorio-dialog__label">Período</label>
+        <p-select
+          formControlName="periodoTipo"
+          [options]="periodoOpcoes"
+          optionLabel="label"
+          optionValue="value"
+          appendTo="body"
+          class="w-full"
+        />
+      </div>
+
+      @if (formulario.value.periodoTipo === TipoPeriodo.ANUAL || formulario.value.periodoTipo === TipoPeriodo.MENSAL) {
+        <div class="relatorio-dialog__campo">
+          <label class="relatorio-dialog__label">Ano</label>
+          <p-select
+            formControlName="ano"
+            [options]="anoOpcoes"
+            optionLabel="label"
+            optionValue="value"
+            appendTo="body"
+            class="w-full"
+          />
+        </div>
+      }
+
+      @if (formulario.value.periodoTipo === TipoPeriodo.MENSAL) {
+        <div class="relatorio-dialog__campo">
+          <label class="relatorio-dialog__label">Mês</label>
+          <p-select
+            formControlName="mes"
+            [options]="mesOpcoes"
+            optionLabel="label"
+            optionValue="value"
+            appendTo="body"
+            class="w-full"
+          />
+        </div>
+      }
+
+      @if (formulario.value.periodoTipo === TipoPeriodo.CUSTOM) {
+        <div class="relatorio-dialog__campo">
+          <label class="relatorio-dialog__label">Período</label>
+          <p-datepicker
+            formControlName="periodo"
+            selectionMode="range"
+            dateFormat="dd/mm/yy"
+            [showIcon]="true"
+            [readonlyInput]="true"
+            appendTo="body"
+            class="w-full"
+          />
+          @if (periodoIncompleto) {
+            <small class="relatorio-dialog__erro">Selecione a data inicial e a final</small>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="relatorio-dialog__acoes">
+      <p-button
+        label="Pré-visualizar"
+        icon="pi pi-search"
+        [loading]="carregandoPreview()"
+        (onClick)="preVisualizar()"
+      />
+      <p-button
+        label="Baixar CSV"
+        icon="pi pi-download"
+        severity="secondary"
+        [outlined]="true"
+        [loading]="baixando()"
+        (onClick)="baixarCsv()"
+      />
+      <p-button
+        label="Revisar com IA"
+        icon="pi pi-sparkles"
+        severity="help"
+        [outlined]="true"
+        [disabled]="true"
+        pTooltip="Em breve"
+        tooltipPosition="top"
+        [loading]="carregandoRevisao()"
+        (onClick)="revisarComIa()"
+      />
+    </div>
+  </form>
+
+  @if (relatorio(); as dados) {
+    <div class="relatorio-dialog__resultado">
+      <div class="relatorio-dialog__resumo">
+        <span class="relatorio-dialog__resumo-projeto">{{ dados.nomeProjeto }}</span>
+        <span class="relatorio-dialog__resumo-periodo">{{ dados.periodoDescricao }}</span>
+      </div>
+
+      <p-table
+        [value]="dados.linhas"
+        [scrollable]="true"
+        scrollHeight="320px"
+        styleClass="p-datatable-sm"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Demanda</th>
+            <th>Atividade</th>
+            <th>Usuário</th>
+            <th>Data Início</th>
+            <th>Data Fim</th>
+            <th>Tempo</th>
+            <th>Descrição</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-linha>
+          <tr>
+            <td>{{ linha.nomeDemanda }}</td>
+            <td>{{ linha.nomeAtividade }}</td>
+            <td>{{ linha.nomeUsuario }}</td>
+            <td>{{ linha.inicioData | date: 'dd/MM/yyyy HH:mm' }}</td>
+            <td>{{ linha.fimData ? (linha.fimData | date: 'dd/MM/yyyy HH:mm') : 'Em andamento' }}</td>
+            <td>{{ linha.duracaoMinutos | minutosParagHoras }}</td>
+            <td class="relatorio-dialog__descricao-celula">{{ linha.descricao }}</td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="7" class="relatorio-dialog__vazio">
+              Nenhuma execução encontrada no período.
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+
+      <div class="relatorio-dialog__rodape">
+        <span>Total de execuções: <strong>{{ dados.totalExecucoes }}</strong></span>
+        <span>Tempo total: <strong>{{ dados.totalMinutos | minutosParagHoras }}</strong></span>
+      </div>
+    </div>
+  }
+
+  @if (revisao(); as dadosRevisao) {
+    <div class="relatorio-dialog__revisao">
+      <h3 class="relatorio-dialog__revisao-titulo">
+        <i class="pi pi-sparkles"></i> Revisão por IA
+      </h3>
+      <p class="relatorio-dialog__revisao-resumo">{{ dadosRevisao.resumo }}</p>
+
+      @if (dadosRevisao.inconsistencias.length === 0) {
+        <p class="text-muted-color">Nenhuma inconsistência apontada.</p>
+      } @else {
+        <ul class="relatorio-dialog__inconsistencias">
+          @for (item of dadosRevisao.inconsistencias; track $index) {
+            <li class="relatorio-dialog__inconsistencia">
+              <div class="relatorio-dialog__inconsistencia-cabecalho">
+                <span class="relatorio-dialog__inconsistencia-tipo">{{ item.tipo }}</span>
+                <p-tag [value]="item.severidade" [severity]="severidadeInconsistencia(item.severidade)" />
+              </div>
+              <p class="relatorio-dialog__inconsistencia-descricao">{{ item.descricao }}</p>
+              @if (item.referencia) {
+                <small class="relatorio-dialog__inconsistencia-ref">{{ item.referencia }}</small>
+              }
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  }
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Fechar"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="mostrarDialog.set(false)"
+    />
+  </ng-template>
+</p-dialog>
