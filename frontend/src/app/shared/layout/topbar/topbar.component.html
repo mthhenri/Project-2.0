@@ -22,6 +22,18 @@
   <div class="topbar__acoes flex items-center gap-2 flex-shrink-0">
     <span class="topbar__hora text-sm text-muted-color font-mono tabular-nums">{{ horaAtual() }}</span>
 
+    @if (sessao.usuarioAtual()) {
+      <p-button
+        icon="pi pi-file-edit"
+        label="Minhas Anotações"
+        [text]="true"
+        size="small"
+        pTooltip="Suas anotações pessoais"
+        tooltipPosition="bottom"
+        (onClick)="anotacoesDialog.abrir(sessao.id()!, sessao.nomeCompleto()!)"
+      />
+    }
+
     <p-button
       icon="pi pi-user"
       severity="secondary"
@@ -44,14 +56,6 @@
             <i class="pi pi-id-card text-xs"></i>
             <span>{{ sessao.eGestor() ? 'Gestor' : 'Desenvolvedor' }}</span>
           </div>
-          <button
-            type="button"
-            class="topbar__link-anotacoes flex items-center gap-2 text-sm"
-            (click)="perfilPopover.hide(); anotacoesDialog.abrir(sessao.id()!, sessao.nomeCompleto()!)"
-          >
-            <i class="pi pi-file-edit text-xs"></i>
-            <span>Minhas Anotações</span>
-          </button>
           <div class="flex items-center gap-2">
             <button
               type="button"

@@ -27,17 +27,6 @@
     }
   }
 
-  &__link-anotacoes {
-    color: var(--p-primary-600);
-    text-decoration: none;
-    transition: color 0.15s;
-
-    &:hover {
-      color: var(--p-primary-700);
-      text-decoration: underline;
-    }
-  }
-
   &__tema {
     color: var(--p-text-color);
     text-decoration: none;
