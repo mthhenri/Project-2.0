@@ -7,10 +7,17 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { Select } from 'primeng/select';
 import { MessageService } from 'primeng/api';
-import { AtividadeCriarDto, TipoAtividadeStatusEnum } from '@project20/shared';
+import {
+  AtividadeCriarDto,
+  TipoAtividadeStatusEnum,
+  REGEX_SEM_CARACTERES_PROIBIDOS,
+  MENSAGEM_CARACTERES_PROIBIDOS,
+  MENSAGEM_CARACTERES_PROIBIDOS_DICA,
+} from '@project20/shared';
 import { AtividadeService } from '../../services/atividade.service';
 import { DemandaService } from '../../../demanda/services/demanda.service';
 import { AssistenteDescricaoComponent } from '../../../../shared/components/assistente-descricao/assistente-descricao.component';
+import { BloquearCaracteresProibidosDirective } from '../../../../shared/directives/bloquear-caracteres-proibidos.directive';
 import { ATIVIDADE_STATUS_OPCOES } from '../../models/atividade.model';
 
 @Component({
@@ -23,6 +30,7 @@ import { ATIVIDADE_STATUS_OPCOES } from '../../models/atividade.model';
     TextareaModule,
     Select,
     AssistenteDescricaoComponent,
+    BloquearCaracteresProibidosDirective,
   ],
   templateUrl: './atividade-formulario.page.html',
   styleUrl: './atividade-formulario.page.scss',
@@ -36,7 +44,7 @@ export class AtividadeFormularioPage implements OnInit {
   private readonly formBuilder = inject(FormBuilder);
 
   readonly formulario = this.formBuilder.group({
-    nome:          ['', [Validators.required, Validators.minLength(3), Validators.maxLength(255)]],
+    nome:          ['', [Validators.required, Validators.minLength(3), Validators.maxLength(255), Validators.pattern(REGEX_SEM_CARACTERES_PROIBIDOS)]],
     descricao:     [''],
     status:        [TipoAtividadeStatusEnum.PLANEJADA as TipoAtividadeStatusEnum, [Validators.required]],
   });
@@ -44,6 +52,9 @@ export class AtividadeFormularioPage implements OnInit {
   readonly demandaId = signal<number | null>(null);
   readonly nomeDemanda = signal<string>('');
   readonly carregando = signal<boolean>(false);
+
+  readonly mensagemCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS;
+  readonly dicaCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS_DICA;
 
   readonly statusOpcoes = ATIVIDADE_STATUS_OPCOES;
 

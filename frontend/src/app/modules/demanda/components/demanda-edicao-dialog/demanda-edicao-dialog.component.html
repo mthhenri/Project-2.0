@@ -20,9 +20,16 @@
         <label class="demanda-edicao-dialog__label">
           Nome <span class="demanda-edicao-dialog__obrigatorio">*</span>
         </label>
-        <input pInputText spellcheck="true" formControlName="nome" class="w-full" />
+        <input pInputText spellcheck="true" appBloquearCaracteresProibidos formControlName="nome" class="w-full" />
+        <small class="block mt-1 text-muted-color">{{ dicaCaracteresProibidos }}</small>
         @if (campoInvalido('nome')) {
-          <small class="demanda-edicao-dialog__erro">Nome é obrigatório</small>
+          <small class="demanda-edicao-dialog__erro">
+            @if (formulario.controls.nome.hasError('pattern')) {
+              {{ mensagemCaracteresProibidos }}
+            } @else {
+              Nome é obrigatório
+            }
+          </small>
         }
       </div>
 

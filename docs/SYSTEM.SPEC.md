@@ -1032,6 +1032,34 @@ export class UsuarioCriarDto {
 }
 ```
 
+#### Caracteres proibidos em nomes e descrição de execução
+
+Os **nomes** de projeto, demanda, atividade e tag e a **descrição de execução** não aceitam os
+caracteres `` '  "  `  ~  ^  \  ´ `` (aspas simples, aspas duplas, crase, til, circunflexo, barra
+invertida e acento agudo) — regra de **higiene de dados** (evita ruído em SQL/JSON/markdown e na exibição; a
+defesa contra SQL injection continua sendo os parâmetros nomeados). A rejeição é **autoritativa no
+backend** e **espelhada no frontend** para feedback imediato.
+
+**Fonte única:** o conjunto de caracteres (regex) e a mensagem vivem em um só lugar no `shared` —
+`shared/src/validators/caracteres-proibidos.validator.ts` — exportando `REGEX_SEM_CARACTERES_PROIBIDOS`
+e `MENSAGEM_CARACTERES_PROIBIDOS` (constantes puras, sem `class-validator`, pois o `shared` também é
+consumido pelo frontend). **Nunca** redeclarar a regex por DTO ou no frontend. A pasta `validators/`
+é inglês (conceito arquitetural); os identificadores do conteúdo são português de negócio.
+
+```typescript
+// no DTO de entrada (shared/src/dtos/...) — @IsOptional antes, em campos opcionais
+@Matches(REGEX_SEM_CARACTERES_PROIBIDOS, { message: MENSAGEM_CARACTERES_PROIBIDOS })
+nome: string; // (ou descricao)
+```
+
+DTOs de entrada cobertos: `ProjetoCriarDto`/`ProjetoAlterarDto`, `DemandaCriarDto`/`DemandaAlterarDto`,
+`AtividadeCriarDto`/`AtividadeAlterarDto`, `TagCriarDto`/`TagAlterarDto` (campo `nome`) e
+`ExecucaoIniciarDto`/`ExecucaoEncerrarDto`/`ExecucaoRegistrarDto`/`ExecucaoAlterarDto` (campo
+`descricao`). DTOs internos (`*InternoAlterarDto`) e de saída não recebem `@Matches`. No frontend,
+`Validators.pattern(REGEX_SEM_CARACTERES_PROIBIDOS)` espelha a regra nos Reactive Forms. Cor, código
+de projeto, descrições de demanda, descrição de atividade, anotações e login/senha estão **fora** do
+escopo desta regra.
+
 ### Camada 2 — Negócio (Service)
 
 Regras que exigem consulta ao banco ou lógica de domínio:

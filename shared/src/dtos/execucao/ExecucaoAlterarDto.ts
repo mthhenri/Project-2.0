@@ -1,8 +1,13 @@
-import { IsNotEmpty, IsString, IsOptional, IsDateString } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional, IsDateString, Matches } from 'class-validator';
+import {
+  REGEX_SEM_CARACTERES_PROIBIDOS,
+  MENSAGEM_CARACTERES_PROIBIDOS,
+} from '../../validators/caracteres-proibidos.validator';
 
 export class ExecucaoAlterarDto {
   @IsString()
   @IsNotEmpty()
+  @Matches(REGEX_SEM_CARACTERES_PROIBIDOS, { message: MENSAGEM_CARACTERES_PROIBIDOS })
   descricao: string;
 
   @IsOptional()

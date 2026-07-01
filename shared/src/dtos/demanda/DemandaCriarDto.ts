@@ -9,10 +9,15 @@ import {
   Min,
   MaxLength,
   IsDateString,
+  Matches,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { TipoDemandaStatusEnum } from '../../enums/tipo-demanda-status.enum';
+import {
+  REGEX_SEM_CARACTERES_PROIBIDOS,
+  MENSAGEM_CARACTERES_PROIBIDOS,
+} from '../../validators/caracteres-proibidos.validator';
 
 export class DemandaCriarDto {
   @ApiProperty({ example: 1 })
@@ -32,6 +37,7 @@ export class DemandaCriarDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
+  @Matches(REGEX_SEM_CARACTERES_PROIBIDOS, { message: MENSAGEM_CARACTERES_PROIBIDOS })
   nome: string;
 
   @ApiPropertyOptional({ example: 'Implementar autenticação JWT com refresh token' })

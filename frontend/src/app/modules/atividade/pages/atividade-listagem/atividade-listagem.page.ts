@@ -33,6 +33,9 @@ import {
   ExecucaoEncerrarDto,
   ExecucaoRegistrarDto,
   TipoUsuarioEnum,
+  REGEX_SEM_CARACTERES_PROIBIDOS,
+  MENSAGEM_CARACTERES_PROIBIDOS,
+  MENSAGEM_CARACTERES_PROIBIDOS_DICA,
 } from '@project20/shared';
 import { AtividadeService } from '../../services/atividade.service';
 import { ExecucaoService } from '../../../execucao/services/execucao.service';
@@ -44,6 +47,7 @@ import { AssistenteDescricaoComponent } from '../../../../shared/components/assi
 import { AtividadeVisualizarDialogComponent } from '../../components/atividade-visualizar-dialog/atividade-visualizar-dialog.component';
 import { DataBrasileiraPipe } from '../../../../shared/pipes/data-brasileira.pipe';
 import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-horas.pipe';
+import { BloquearCaracteresProibidosDirective } from '../../../../shared/directives/bloquear-caracteres-proibidos.directive';
 import {
   ATIVIDADE_STATUS_OPCOES,
   ATIVIDADE_STATUS_NAO_DESENVOLVIDA,
@@ -79,6 +83,7 @@ type CampoDescricaoDemanda = 'descricaoCliente' | 'descricaoTecnica' | 'document
     AtividadeVisualizarDialogComponent,
     DataBrasileiraPipe,
     MinutosParaHorasPipe,
+    BloquearCaracteresProibidosDirective,
   ],
   templateUrl: './atividade-listagem.page.html',
   styleUrl: './atividade-listagem.page.scss',
@@ -126,7 +131,7 @@ export class AtividadeListagemPage implements OnInit {
   readonly carregandoDemandasAtribuidas = signal<boolean>(false);
 
   readonly formularioNova = this.formBuilder.group({
-    nome:      ['', [Validators.required, Validators.minLength(3), Validators.maxLength(255)]],
+    nome:      ['', [Validators.required, Validators.minLength(3), Validators.maxLength(255), Validators.pattern(REGEX_SEM_CARACTERES_PROIBIDOS)]],
     demandaId: [null as number | null, [Validators.required]],
     usuarioId: [null as number | null],
     status:    [TipoAtividadeStatusEnum.DESENVOLVENDO as TipoAtividadeStatusEnum, [Validators.required]],
@@ -177,7 +182,7 @@ export class AtividadeListagemPage implements OnInit {
   readonly carregandoExecucoesDialog = signal<boolean>(false);
 
   readonly formularioExecucao = this.formBuilder.group({
-    descricao: ['', [Validators.required]],
+    descricao: ['', [Validators.required, Validators.pattern(REGEX_SEM_CARACTERES_PROIBIDOS)]],
   });
   /** Descrição opcional quando o dono da atividade em execução é gestor. */
   readonly descricaoExecucaoOpcional = signal<boolean>(false);
@@ -193,10 +198,13 @@ export class AtividadeListagemPage implements OnInit {
     {
       inicioData: [null as Date | null, [Validators.required]],
       fimData:    [null as Date | null, [Validators.required]],
-      descricao:  ['', [Validators.required]],
+      descricao:  ['', [Validators.required, Validators.pattern(REGEX_SEM_CARACTERES_PROIBIDOS)]],
     },
     { validators: [this.fimPosteriorAoInicio] },
   );
+
+  readonly mensagemCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS;
+  readonly dicaCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS_DICA;
 
   ngOnInit(): void {
     const demandaIdParam = Number(this.rotaAtiva.snapshot.queryParamMap.get('demandaId'));
@@ -584,7 +592,11 @@ export class AtividadeListagemPage implements OnInit {
     const donoEhGestor = atividade.usuarioTipo === TipoUsuarioEnum.GESTOR;
     this.descricaoExecucaoOpcional.set(donoEhGestor);
     const controleDescricao = this.formularioExecucao.get('descricao')!;
-    controleDescricao.setValidators(donoEhGestor ? [] : [Validators.required]);
+    controleDescricao.setValidators(
+      donoEhGestor
+        ? [Validators.pattern(REGEX_SEM_CARACTERES_PROIBIDOS)]
+        : [Validators.required, Validators.pattern(REGEX_SEM_CARACTERES_PROIBIDOS)],
+    );
     controleDescricao.updateValueAndValidity();
 
     this.carregarExecucoesDialog(atividade.id);

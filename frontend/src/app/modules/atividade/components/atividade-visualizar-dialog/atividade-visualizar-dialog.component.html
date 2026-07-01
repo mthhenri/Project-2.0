@@ -35,6 +35,7 @@
               #campoNome
               pInputText
               type="text"
+              appBloquearCaracteresProibidos
               formControlName="nome"
               class="atividade-visualizar-dialog__nome-input"
               autocomplete="off"
@@ -59,12 +60,17 @@
               />
             </div>
           </div>
+          <small class="block mt-1 text-muted-color">{{ dicaCaracteresProibidos }}</small>
           @if (
             formularioNome.controls.nome.invalid &&
             (formularioNome.controls.nome.touched || formularioNome.controls.nome.dirty)
           ) {
             <span class="atividade-visualizar-dialog__nome-erro">
-              O nome deve ter no mínimo 3 caracteres.
+              @if (formularioNome.controls.nome.hasError('pattern')) {
+                {{ mensagemCaracteresProibidos }}
+              } @else {
+                O nome deve ter no mínimo 3 caracteres.
+              }
             </span>
           }
         </form>

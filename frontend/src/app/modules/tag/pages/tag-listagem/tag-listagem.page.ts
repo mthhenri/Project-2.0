@@ -8,9 +8,17 @@ import { DialogModule } from 'primeng/dialog';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TooltipModule } from 'primeng/tooltip';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { TagResumoDto, TagCriarDto, TagAlterarDto } from '@project20/shared';
+import {
+  TagResumoDto,
+  TagCriarDto,
+  TagAlterarDto,
+  REGEX_SEM_CARACTERES_PROIBIDOS,
+  MENSAGEM_CARACTERES_PROIBIDOS,
+  MENSAGEM_CARACTERES_PROIBIDOS_DICA,
+} from '@project20/shared';
 import { TagService } from '../../services/tag.service';
 import { SeletorCorComponent } from '../../../../shared/components/seletor-cor/seletor-cor.component';
+import { BloquearCaracteresProibidosDirective } from '../../../../shared/directives/bloquear-caracteres-proibidos.directive';
 
 @Component({
   selector: 'app-tag-listagem',
@@ -24,6 +32,7 @@ import { SeletorCorComponent } from '../../../../shared/components/seletor-cor/s
     ConfirmDialogModule,
     TooltipModule,
     SeletorCorComponent,
+    BloquearCaracteresProibidosDirective,
   ],
   templateUrl: './tag-listagem.page.html',
   styleUrl: './tag-listagem.page.scss',
@@ -43,14 +52,17 @@ export class TagListagemPage implements OnInit {
   readonly tagEmEdicao = signal<TagResumoDto | null>(null);
 
   readonly formularioNova = this.formBuilder.group({
-    nome: ['', [Validators.required, Validators.maxLength(100)]],
+    nome: ['', [Validators.required, Validators.maxLength(100), Validators.pattern(REGEX_SEM_CARACTERES_PROIBIDOS)]],
     cor:  ['#3b82f6', [Validators.required, Validators.pattern(/^#[0-9A-Fa-f]{6}$/)]],
   });
 
   readonly formularioEditar = this.formBuilder.group({
-    nome: ['', [Validators.required, Validators.maxLength(100)]],
+    nome: ['', [Validators.required, Validators.maxLength(100), Validators.pattern(REGEX_SEM_CARACTERES_PROIBIDOS)]],
     cor:  ['#3b82f6', [Validators.required, Validators.pattern(/^#[0-9A-Fa-f]{6}$/)]],
   });
+
+  readonly mensagemCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS;
+  readonly dicaCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS_DICA;
 
   ngOnInit(): void {
     this.buscarTags();

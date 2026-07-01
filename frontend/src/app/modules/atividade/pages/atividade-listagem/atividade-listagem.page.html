@@ -295,12 +295,20 @@
         type="text"
         pInputText
         spellcheck="true"
+        appBloquearCaracteresProibidos
         formControlName="nome"
         placeholder="Nome da atividade"
         class="w-full"
       />
+      <small class="block mt-1 text-muted-color">{{ dicaCaracteresProibidos }}</small>
       @if (campoInvalidoNova('nome')) {
-        <small class="atividade-listagem__erro">Informe um nome com ao menos 3 caracteres</small>
+        <small class="atividade-listagem__erro">
+          @if (formularioNova.controls.nome.hasError('pattern')) {
+            {{ mensagemCaracteresProibidos }}
+          } @else {
+            Informe um nome com ao menos 3 caracteres
+          }
+        </small>
       }
     </div>
 
@@ -555,13 +563,21 @@
         id="execucao-descricao"
         pTextarea
         spellcheck="true"
+        appBloquearCaracteresProibidos
         formControlName="descricao"
         rows="4"
         placeholder="Descreva a execução..."
         class="w-full"
       ></textarea>
+      <small class="block mt-1 text-muted-color">{{ dicaCaracteresProibidos }}</small>
       @if (campoInvalidoExecucao('descricao')) {
-        <small class="atividade-listagem__erro">Informe a descrição da execução</small>
+        <small class="atividade-listagem__erro">
+          @if (formularioExecucao.controls.descricao.hasError('pattern')) {
+            {{ mensagemCaracteresProibidos }}
+          } @else {
+            Informe a descrição da execução
+          }
+        </small>
       }
       <app-assistente-descricao
         [textoAtual]="formularioExecucao.value.descricao || ''"
@@ -676,13 +692,21 @@
         id="registro-descricao"
         pTextarea
         spellcheck="true"
+        appBloquearCaracteresProibidos
         formControlName="descricao"
         rows="4"
         placeholder="Descreva a execução..."
         class="w-full"
       ></textarea>
+      <small class="block mt-1 text-muted-color">{{ dicaCaracteresProibidos }}</small>
       @if (campoInvalidoRegistro('descricao')) {
-        <small class="atividade-listagem__erro">Informe a descrição da execução</small>
+        <small class="atividade-listagem__erro">
+          @if (formularioRegistro.controls.descricao.hasError('pattern')) {
+            {{ mensagemCaracteresProibidos }}
+          } @else {
+            Informe a descrição da execução
+          }
+        </small>
       }
       <app-assistente-descricao
         [textoAtual]="formularioRegistro.value.descricao || ''"

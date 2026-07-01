@@ -16,6 +16,9 @@ import {
   TipoProjetoStatusEnum,
   DemandaArvoreItemDto,
   DemandaGrafoNoDto,
+  REGEX_SEM_CARACTERES_PROIBIDOS,
+  MENSAGEM_CARACTERES_PROIBIDOS,
+  MENSAGEM_CARACTERES_PROIBIDOS_DICA,
 } from '@project20/shared';
 import { ProjetoService } from '../../services/projeto.service';
 import { DemandaService } from '../../../demanda/services/demanda.service';
@@ -24,6 +27,7 @@ import { DataBrasileiraPipe } from '../../../../shared/pipes/data-brasileira.pip
 import { DemandaArvorePainelComponent } from '../../../demanda/components/demanda-arvore-painel/demanda-arvore-painel.component';
 import { DemandaFormularioDialogComponent } from '../../../demanda/components/demanda-formulario-dialog/demanda-formulario-dialog.component';
 import { SeletorCorComponent } from '../../../../shared/components/seletor-cor/seletor-cor.component';
+import { BloquearCaracteresProibidosDirective } from '../../../../shared/directives/bloquear-caracteres-proibidos.directive';
 import { RelatorioExecucaoDialogComponent } from '../../../relatorio/components/relatorio-execucao-dialog/relatorio-execucao-dialog.component';
 
 @Component({
@@ -43,6 +47,7 @@ import { RelatorioExecucaoDialogComponent } from '../../../relatorio/components/
     DemandaFormularioDialogComponent,
     SeletorCorComponent,
     RelatorioExecucaoDialogComponent,
+    BloquearCaracteresProibidosDirective,
   ],
   templateUrl: './projeto-detalhe.page.html',
   styleUrl: './projeto-detalhe.page.scss',
@@ -66,7 +71,7 @@ export class ProjetoDetalhePage implements OnInit {
 
   readonly formularioEditar = this.formBuilder.group(
     {
-      nome:            ['', [Validators.required, Validators.maxLength(255)]],
+      nome:            ['', [Validators.required, Validators.maxLength(255), Validators.pattern(REGEX_SEM_CARACTERES_PROIBIDOS)]],
       cor:             ['#3b82f6', [Validators.required, Validators.pattern(/^#[0-9A-Fa-f]{6}$/)]],
       status:          [TipoProjetoStatusEnum.ATIVO as TipoProjetoStatusEnum, [Validators.required]],
       inicioData:      [null as Date | null],
@@ -81,6 +86,9 @@ export class ProjetoDetalhePage implements OnInit {
     { label: 'Concluído', value: TipoProjetoStatusEnum.CONCLUIDO },
     { label: 'Cancelado', value: TipoProjetoStatusEnum.CANCELADO },
   ];
+
+  readonly mensagemCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS;
+  readonly dicaCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS_DICA;
 
   ngOnInit(): void {
     const identificador = Number(this.route.snapshot.paramMap.get('id'));

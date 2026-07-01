@@ -13,8 +13,12 @@ import {
   DemandaAlterarDto,
   DemandaResumoDto,
   TipoDemandaStatusEnum,
+  REGEX_SEM_CARACTERES_PROIBIDOS,
+  MENSAGEM_CARACTERES_PROIBIDOS,
+  MENSAGEM_CARACTERES_PROIBIDOS_DICA,
 } from '@project20/shared';
 import { DemandaService } from '../../services/demanda.service';
+import { BloquearCaracteresProibidosDirective } from '../../../../shared/directives/bloquear-caracteres-proibidos.directive';
 
 @Component({
   selector: 'app-demanda-edicao-dialog',
@@ -28,6 +32,7 @@ import { DemandaService } from '../../services/demanda.service';
     CheckboxModule,
     DatePickerModule,
     DialogModule,
+    BloquearCaracteresProibidosDirective,
   ],
   templateUrl: './demanda-edicao-dialog.component.html',
   styleUrl: './demanda-edicao-dialog.component.scss',
@@ -49,7 +54,7 @@ export class DemandaEdicaoDialogComponent implements OnChanges {
   private projetoId = 0;
 
   readonly formulario = this.formBuilder.group({
-    nome:             ['', [Validators.required, Validators.maxLength(255)]],
+    nome:             ['', [Validators.required, Validators.maxLength(255), Validators.pattern(REGEX_SEM_CARACTERES_PROIBIDOS)]],
     demandaPaiId:     [null as number | null],
     status:           [TipoDemandaStatusEnum.PENDENTE as TipoDemandaStatusEnum, [Validators.required]],
     isEstrutural:     [false],
@@ -62,6 +67,9 @@ export class DemandaEdicaoDialogComponent implements OnChanges {
     { label: 'Planejada', value: TipoDemandaStatusEnum.PLANEJADA },
     { label: 'Concluída', value: TipoDemandaStatusEnum.CONCLUIDA },
   ];
+
+  readonly mensagemCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS;
+  readonly dicaCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS_DICA;
 
   ngOnChanges(mudancas: SimpleChanges): void {
     if (mudancas['visivel']?.currentValue === true) {

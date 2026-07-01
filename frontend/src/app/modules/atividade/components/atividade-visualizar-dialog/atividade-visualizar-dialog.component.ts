@@ -14,11 +14,15 @@ import {
   AtividadeAlterarDto,
   TagResumoDto,
   ExecucaoItemDto,
+  REGEX_SEM_CARACTERES_PROIBIDOS,
+  MENSAGEM_CARACTERES_PROIBIDOS,
+  MENSAGEM_CARACTERES_PROIBIDOS_DICA,
 } from '@project20/shared';
 import { AtividadeService } from '../../services/atividade.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { DataBrasileiraPipe } from '../../../../shared/pipes/data-brasileira.pipe';
 import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-horas.pipe';
+import { BloquearCaracteresProibidosDirective } from '../../../../shared/directives/bloquear-caracteres-proibidos.directive';
 import { severidadeStatusAtividade, rotuloStatusAtividade } from '../../models/atividade.model';
 
 @Component({
@@ -35,6 +39,7 @@ import { severidadeStatusAtividade, rotuloStatusAtividade } from '../../models/a
     TooltipModule,
     DataBrasileiraPipe,
     MinutosParaHorasPipe,
+    BloquearCaracteresProibidosDirective,
   ],
   templateUrl: './atividade-visualizar-dialog.component.html',
   styleUrl: './atividade-visualizar-dialog.component.scss',
@@ -66,8 +71,11 @@ export class AtividadeVisualizarDialogComponent {
   });
 
   readonly formularioNome = this.formBuilder.group({
-    nome: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(255)]],
+    nome: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(255), Validators.pattern(REGEX_SEM_CARACTERES_PROIBIDOS)]],
   });
+
+  readonly mensagemCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS;
+  readonly dicaCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS_DICA;
 
   /** Abre o dialog e carrega atividade, tags e execuções. */
   abrir(atividadeId: number): void {

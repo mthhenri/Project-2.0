@@ -92,6 +92,22 @@ class ProjetoRecuperadoDto extends    class ExecucaoResumoDto extends
 
 **Localização:** sempre em `shared/src/dtos/[modulo]/` — nunca dentro de `backend/` ou `frontend/`
 
+**Caracteres proibidos em nomes e descrição de execução:**
+
+Os **nomes** de projeto, demanda, atividade e tag e a **descrição de execução** não podem conter
+`` '  "  `  ~  ^  \  ´ `` (aspas simples/duplas, crase, til, circunflexo, barra invertida, acento agudo) — higiene de
+dados (não é defesa contra SQL injection, que continua sendo os parâmetros nomeados). A regra
+(regex + mensagem) mora numa **fonte única** no `shared` — `shared/src/validators/caracteres-proibidos.validator.ts`
+(`REGEX_SEM_CARACTERES_PROIBIDOS`, `MENSAGEM_CARACTERES_PROIBIDOS`) — **nunca** redeclarar a regex.
+
+- **Backend (autoritativo):** `@Matches(REGEX_SEM_CARACTERES_PROIBIDOS, { message: MENSAGEM_CARACTERES_PROIBIDOS })`
+  no campo do DTO de **entrada** (`*Criar`/`*Alterar`/`ExecucaoIniciar`/`Encerrar`/`Registrar`/`Alterar`).
+  Em campos opcionais, `@IsOptional` vem antes e curto-circuita quando ausente.
+- **Frontend (espelho):** `Validators.pattern(REGEX_SEM_CARACTERES_PROIBIDOS)` no control e a mensagem
+  `MENSAGEM_CARACTERES_PROIBIDOS` exibida quando `errors?.['pattern']`.
+- **Fora do escopo:** cor, código de projeto, descrições de demanda, descrição de atividade,
+  anotações e login/senha não têm esta validação.
+
 ---
 
 ## Métodos

@@ -1,5 +1,9 @@
 import { Type } from 'class-transformer';
-import { IsNumber, IsOptional, IsString, Min } from 'class-validator';
+import { IsNumber, IsOptional, IsString, Matches, Min } from 'class-validator';
+import {
+  REGEX_SEM_CARACTERES_PROIBIDOS,
+  MENSAGEM_CARACTERES_PROIBIDOS,
+} from '../../validators/caracteres-proibidos.validator';
 
 export class ExecucaoIniciarDto {
   @IsNumber()
@@ -13,5 +17,6 @@ export class ExecucaoIniciarDto {
    */
   @IsOptional()
   @IsString()
+  @Matches(REGEX_SEM_CARACTERES_PROIBIDOS, { message: MENSAGEM_CARACTERES_PROIBIDOS })
   descricao?: string;
 }

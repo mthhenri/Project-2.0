@@ -16,12 +16,20 @@
           id="nome"
           pInputText
           spellcheck="true"
+          appBloquearCaracteresProibidos
           formControlName="nome"
           placeholder="ex: Sistema de Gestão"
           class="w-full"
         />
+        <small class="block mt-1 text-muted-color">{{ dicaCaracteresProibidos }}</small>
         @if (campoInvalido('nome')) {
-          <small class="projeto-formulario-dialog__erro">Nome é obrigatório</small>
+          <small class="projeto-formulario-dialog__erro">
+            @if (formulario.controls.nome.hasError('pattern')) {
+              {{ mensagemCaracteresProibidos }}
+            } @else {
+              Nome é obrigatório
+            }
+          </small>
         }
       </div>
 

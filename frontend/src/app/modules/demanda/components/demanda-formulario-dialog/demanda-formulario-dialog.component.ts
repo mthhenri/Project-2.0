@@ -18,11 +18,15 @@ import {
   TagResumoDto,
   UsuarioResumoDto,
   TipoUsuarioEnum,
+  REGEX_SEM_CARACTERES_PROIBIDOS,
+  MENSAGEM_CARACTERES_PROIBIDOS,
+  MENSAGEM_CARACTERES_PROIBIDOS_DICA,
 } from '@project20/shared';
 import { DemandaService } from '../../services/demanda.service';
 import { TagService } from '../../../tag/services/tag.service';
 import { UsuarioService } from '../../../usuario/services/usuario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
+import { BloquearCaracteresProibidosDirective } from '../../../../shared/directives/bloquear-caracteres-proibidos.directive';
 
 @Component({
   selector: 'app-demanda-formulario-dialog',
@@ -37,6 +41,7 @@ import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.s
     CheckboxModule,
     DatePickerModule,
     DialogModule,
+    BloquearCaracteresProibidosDirective,
   ],
   templateUrl: './demanda-formulario-dialog.component.html',
   styleUrl: './demanda-formulario-dialog.component.scss',
@@ -62,7 +67,7 @@ export class DemandaFormularioDialogComponent implements OnChanges {
   readonly usuariosDisponiveis = signal<UsuarioResumoDto[]>([]);
 
   readonly formulario = this.formBuilder.group({
-    nome:            ['', [Validators.required, Validators.maxLength(255)]],
+    nome:            ['', [Validators.required, Validators.maxLength(255), Validators.pattern(REGEX_SEM_CARACTERES_PROIBIDOS)]],
     demandaPaiId:    [null as number | null],
     status:          [TipoDemandaStatusEnum.PLANEJADA as TipoDemandaStatusEnum, [Validators.required]],
     isEstrutural:    [false],
@@ -77,6 +82,9 @@ export class DemandaFormularioDialogComponent implements OnChanges {
     { label: 'Planejada', value: TipoDemandaStatusEnum.PLANEJADA },
     { label: 'Concluída', value: TipoDemandaStatusEnum.CONCLUIDA },
   ];
+
+  readonly mensagemCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS;
+  readonly dicaCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS_DICA;
 
   ngOnChanges(mudancas: SimpleChanges): void {
     if (mudancas['visivel']?.currentValue === true) {

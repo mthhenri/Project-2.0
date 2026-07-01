@@ -10,12 +10,17 @@ import {
 import { Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { TipoProjetoStatusEnum } from '../../enums/tipo-projeto-status.enum';
+import {
+  REGEX_SEM_CARACTERES_PROIBIDOS,
+  MENSAGEM_CARACTERES_PROIBIDOS,
+} from '../../validators/caracteres-proibidos.validator';
 
 export class ProjetoCriarDto {
   @ApiProperty({ example: 'Sistema de Gestão' })
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
+  @Matches(REGEX_SEM_CARACTERES_PROIBIDOS, { message: MENSAGEM_CARACTERES_PROIBIDOS })
   nome: string;
 
   @ApiProperty({ example: 'PROJ-001' })

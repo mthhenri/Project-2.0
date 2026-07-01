@@ -71,13 +71,16 @@
   <form [formGroup]="formularioNova" class="tag-listagem__dialog-form">
     <div class="tag-listagem__dialog-campo">
       <label class="tag-listagem__label">Nome <span class="tag-listagem__obrigatorio">*</span></label>
-      <input pInputText spellcheck="true" formControlName="nome" placeholder="ex: Backend" maxlength="100" class="w-full" />
+      <input pInputText spellcheck="true" appBloquearCaracteresProibidos formControlName="nome" placeholder="ex: Backend" maxlength="100" class="w-full" />
+      <small class="block mt-1 text-muted-color">{{ dicaCaracteresProibidos }}</small>
       @if (campoNovaInvalido('nome')) {
         <small class="tag-listagem__erro">
           @if (formularioNova.controls.nome.hasError('required')) {
             Nome é obrigatório
           } @else if (formularioNova.controls.nome.hasError('maxlength')) {
             Nome deve ter no máximo 100 caracteres
+          } @else if (formularioNova.controls.nome.hasError('pattern')) {
+            {{ mensagemCaracteresProibidos }}
           }
         </small>
       }
@@ -130,13 +133,16 @@
   <form [formGroup]="formularioEditar" class="tag-listagem__dialog-form">
     <div class="tag-listagem__dialog-campo">
       <label class="tag-listagem__label">Nome <span class="tag-listagem__obrigatorio">*</span></label>
-      <input pInputText spellcheck="true" formControlName="nome" maxlength="100" class="w-full" />
+      <input pInputText spellcheck="true" appBloquearCaracteresProibidos formControlName="nome" maxlength="100" class="w-full" />
+      <small class="block mt-1 text-muted-color">{{ dicaCaracteresProibidos }}</small>
       @if (campoEditarInvalido('nome')) {
         <small class="tag-listagem__erro">
           @if (formularioEditar.controls.nome.hasError('required')) {
             Nome é obrigatório
           } @else if (formularioEditar.controls.nome.hasError('maxlength')) {
             Nome deve ter no máximo 100 caracteres
+          } @else if (formularioEditar.controls.nome.hasError('pattern')) {
+            {{ mensagemCaracteresProibidos }}
           }
         </small>
       }

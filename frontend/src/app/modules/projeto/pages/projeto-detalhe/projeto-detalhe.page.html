@@ -123,9 +123,16 @@
   <form [formGroup]="formularioEditar" class="projeto-detalhe__dialog-form">
     <div class="projeto-detalhe__dialog-campo">
       <label class="projeto-detalhe__label">Nome <span class="projeto-detalhe__obrigatorio">*</span></label>
-      <input pInputText spellcheck="true" formControlName="nome" class="w-full" />
+      <input pInputText spellcheck="true" appBloquearCaracteresProibidos formControlName="nome" class="w-full" />
+      <small class="block mt-1 text-muted-color">{{ dicaCaracteresProibidos }}</small>
       @if (campoEditarInvalido('nome')) {
-        <small class="projeto-detalhe__erro">Nome é obrigatório</small>
+        <small class="projeto-detalhe__erro">
+          @if (formularioEditar.controls.nome.hasError('pattern')) {
+            {{ mensagemCaracteresProibidos }}
+          } @else {
+            Nome é obrigatório
+          }
+        </small>
       }
     </div>
 

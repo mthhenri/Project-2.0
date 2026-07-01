@@ -8,15 +8,22 @@ import { Select } from 'primeng/select';
 import { DatePickerModule } from 'primeng/datepicker';
 import { DialogModule } from 'primeng/dialog';
 import { MessageService } from 'primeng/api';
-import { ProjetoCriarDto, TipoProjetoStatusEnum } from '@project20/shared';
+import {
+  ProjetoCriarDto,
+  TipoProjetoStatusEnum,
+  REGEX_SEM_CARACTERES_PROIBIDOS,
+  MENSAGEM_CARACTERES_PROIBIDOS,
+  MENSAGEM_CARACTERES_PROIBIDOS_DICA,
+} from '@project20/shared';
 import { ProjetoService } from '../../services/projeto.service';
 import { gerarCodigoDoNome } from '../../models/projeto.model';
 import { SeletorCorComponent } from '../../../../shared/components/seletor-cor/seletor-cor.component';
+import { BloquearCaracteresProibidosDirective } from '../../../../shared/directives/bloquear-caracteres-proibidos.directive';
 
 @Component({
   selector: 'app-projeto-formulario-dialog',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonModule, InputTextModule, Select, SeletorCorComponent, DatePickerModule, DialogModule],
+  imports: [ReactiveFormsModule, ButtonModule, InputTextModule, Select, SeletorCorComponent, DatePickerModule, DialogModule, BloquearCaracteresProibidosDirective],
   templateUrl: './projeto-formulario-dialog.component.html',
   styleUrl: './projeto-formulario-dialog.component.scss',
 })
@@ -31,7 +38,7 @@ export class ProjetoFormularioDialogComponent {
 
   readonly formulario = this.formBuilder.group(
     {
-      nome:            ['', [Validators.required, Validators.maxLength(255)]],
+      nome:            ['', [Validators.required, Validators.maxLength(255), Validators.pattern(REGEX_SEM_CARACTERES_PROIBIDOS)]],
       codigo:          ['', [Validators.required, Validators.maxLength(50)]],
       cor:             ['#3b82f6', [Validators.required, Validators.pattern(/^#[0-9A-Fa-f]{6}$/)]],
       status:          [TipoProjetoStatusEnum.ATIVO as TipoProjetoStatusEnum, [Validators.required]],
@@ -43,6 +50,9 @@ export class ProjetoFormularioDialogComponent {
 
   readonly carregando = signal<boolean>(false);
   readonly mostrarDialog = signal<boolean>(false);
+
+  readonly mensagemCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS;
+  readonly dicaCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS_DICA;
 
   /**
    * Enquanto `false`, o código acompanha o nome (slug derivado). Vira `true` no

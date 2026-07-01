@@ -222,14 +222,22 @@
         #descricaoEdicao
         id="editar-descricao"
         pTextarea
+        appBloquearCaracteresProibidos
         formControlName="descricao"
         rows="5"
         spellcheck="true"
         lang="pt-BR"
         [class.ng-invalid]="campoInvalidoDescricao()"
       ></textarea>
+      <small class="block mt-1 text-muted-color">{{ dicaCaracteresProibidos }}</small>
       @if (campoInvalidoDescricao()) {
-        <small class="execucao-historico__erro">A descrição é obrigatória.</small>
+        <small class="execucao-historico__erro">
+          @if (formularioEdicao.controls.descricao.hasError('pattern')) {
+            {{ mensagemCaracteresProibidos }}
+          } @else {
+            A descrição é obrigatória.
+          }
+        </small>
       }
     </div>
 

@@ -1,4 +1,8 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString, Matches } from 'class-validator';
+import {
+  REGEX_SEM_CARACTERES_PROIBIDOS,
+  MENSAGEM_CARACTERES_PROIBIDOS,
+} from '../../validators/caracteres-proibidos.validator';
 
 export class ExecucaoEncerrarDto {
   /**
@@ -7,5 +11,6 @@ export class ExecucaoEncerrarDto {
    */
   @IsOptional()
   @IsString()
+  @Matches(REGEX_SEM_CARACTERES_PROIBIDOS, { message: MENSAGEM_CARACTERES_PROIBIDOS })
   descricao?: string;
 }

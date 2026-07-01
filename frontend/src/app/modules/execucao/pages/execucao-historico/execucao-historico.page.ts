@@ -25,11 +25,15 @@ import {
   ExecucaoAlterarDto,
   UsuarioResumoDto,
   TipoUsuarioStatusEnum,
+  REGEX_SEM_CARACTERES_PROIBIDOS,
+  MENSAGEM_CARACTERES_PROIBIDOS,
+  MENSAGEM_CARACTERES_PROIBIDOS_DICA,
 } from '@project20/shared';
 import { ExecucaoService } from '../../services/execucao.service';
 import { UsuarioService } from '../../../usuario/services/usuario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-horas.pipe';
+import { BloquearCaracteresProibidosDirective } from '../../../../shared/directives/bloquear-caracteres-proibidos.directive';
 import { AtividadeVisualizarDialogComponent } from '../../../atividade/components/atividade-visualizar-dialog/atividade-visualizar-dialog.component';
 
 @Component({
@@ -47,6 +51,7 @@ import { AtividadeVisualizarDialogComponent } from '../../../atividade/component
     TooltipModule,
     MinutosParaHorasPipe,
     AtividadeVisualizarDialogComponent,
+    BloquearCaracteresProibidosDirective,
   ],
   templateUrl: './execucao-historico.page.html',
   styleUrl: './execucao-historico.page.scss',
@@ -86,10 +91,13 @@ export class ExecucaoHistoricoPage implements OnInit {
   /** Limite máximo (momento atual) para os campos de data/hora da edição. */
   readonly dataMaximaEdicao = signal<Date>(new Date());
   readonly formularioEdicao = this.formBuilder.group({
-    descricao:  ['', [Validators.required]],
+    descricao:  ['', [Validators.required, Validators.pattern(REGEX_SEM_CARACTERES_PROIBIDOS)]],
     inicioData: [null as Date | null, [Validators.required]],
     fimData:    [null as Date | null],
   });
+
+  readonly mensagemCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS;
+  readonly dicaCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS_DICA;
 
   /** Textarea de descrição; recebe o foco ao abrir o dialog, não o campo de início. */
   @ViewChild('descricaoEdicao') private descricaoEdicao?: ElementRef<HTMLTextAreaElement>;

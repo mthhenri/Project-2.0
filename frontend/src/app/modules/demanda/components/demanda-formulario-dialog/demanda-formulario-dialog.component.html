@@ -11,9 +11,16 @@
 
     <div class="demanda-dialog__campo demanda-dialog__campo--full">
       <label class="demanda-dialog__label">Nome <span class="demanda-dialog__obrigatorio">*</span></label>
-      <input pInputText spellcheck="true" formControlName="nome" class="w-full" placeholder="Nome da demanda" />
+      <input pInputText spellcheck="true" appBloquearCaracteresProibidos formControlName="nome" class="w-full" placeholder="Nome da demanda" />
+      <small class="block mt-1 text-muted-color">{{ dicaCaracteresProibidos }}</small>
       @if (campoInvalido('nome')) {
-        <small class="demanda-dialog__erro">Nome é obrigatório</small>
+        <small class="demanda-dialog__erro">
+          @if (formulario.controls.nome.hasError('pattern')) {
+            {{ mensagemCaracteresProibidos }}
+          } @else {
+            Nome é obrigatório
+          }
+        </small>
       }
     </div>
 
