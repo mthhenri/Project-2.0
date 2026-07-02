@@ -1,4 +1,4 @@
-# Task 84 — shared/backend: allRows — Ignorar Paginação nas Listagens
+# Task 85 — shared/backend: allRows — Ignorar Paginação nas Listagens
 
 ## Objetivo
 
@@ -107,7 +107,7 @@ if (dto.allRows) {
 
 1. `CONVENTIONS.md` — registrar a convenção `allRows` na seção de paginação/DTOs de filtro.
 2. `CONTEXT.md` — registrar a task concluída e os DTOs/repositórios tocados.
-3. Mover a spec `backlog/84-...` → `done/` ao concluir.
+3. Mover a spec `backlog/85-...` → `done/` ao concluir.
 
 ---
 

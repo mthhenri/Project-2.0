@@ -154,7 +154,7 @@
 
 ## Próxima Task
 
-Definir a próxima task a partir do backlog (`docs/specs/backlog/`). A spec **82-ponto-imprimir-e-justificar** foi concluída nesta sessão (shared + backend + frontend + migration; spec movida para `done/`). Backlog pendente (em ordem de execução): `83-demanda-visao-planejamento-e-horas-executadas`, `84-allrows-ignorar-paginacao-listagens`, `85-seletor-demanda-pai-apenas-estruturais`.
+Definir a próxima task a partir do backlog (`docs/specs/backlog/`). A spec **82-ponto-imprimir-e-justificar** foi concluída nesta sessão (shared + backend + frontend + migration; spec movida para `done/`). Backlog pendente (em ordem de execução): `83-demanda-visao-planejamento-e-horas-executadas`, `85-allrows-ignorar-paginacao-listagens`, `86-execucao-auto-stop-virada-dia`, `87-seletor-demanda-pai-apenas-estruturais`.
 
 > Cada spec referenciou `docs/AUDITORIA.md` e a linha do achado, e incluiu o passo obrigatório de **Atualização de Documentação** (fonte da verdade) para impedir recorrência. Padrão **estrutural** das correções de assinatura: `ExecucaoRepository.alterar(dto)`; padrão de **nomenclatura** (verbo no fim, §5): `EntidadeInternoAlterarDto` — a spec 56 corrigiu o próprio `ExecucaoAlterarInternoDto` → `ExecucaoInternoAlterarDto` (errata `docs/AUDITORIA.md` §8).
 
