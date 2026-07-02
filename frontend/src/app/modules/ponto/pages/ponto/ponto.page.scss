@@ -32,6 +32,14 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
+
+    ::ng-deep .p-datepicker {
+      width: 10rem;
+
+      .p-datepicker-input {
+        width: 100%;
+      }
+    }
   }
 
   &__acoes {
