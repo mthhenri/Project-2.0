@@ -177,6 +177,21 @@ export class DemandaService {
         : undefined;
 
     const { itens, total } = await this.demandaRepositorio.listar(filtros, restricao);
+
+    if (filtros.allRows) {
+      return {
+        sucesso: true,
+        dados: {
+          itens,
+          totalItens:     itens.length,
+          paginaAtual:    1,
+          itensPorPagina: itens.length,
+          totalPaginas:   1,
+        },
+        mensagem: 'Demandas listadas com sucesso',
+      };
+    }
+
     const totalPaginas     = Math.ceil(total / itensPorPagina);
 
     return {

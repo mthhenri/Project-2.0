@@ -56,6 +56,20 @@ export class UsuarioService {
   async listar(filtros: UsuarioListarDto): Promise<StandardResponse<PaginatedResult<UsuarioResumoDto>>> {
     const { itens, total } = await this.usuarioRepositorio.listar(filtros);
 
+    if (filtros.allRows) {
+      return {
+        sucesso:  true,
+        dados: {
+          itens,
+          totalItens:     itens.length,
+          paginaAtual:    1,
+          itensPorPagina: itens.length,
+          totalPaginas:   1,
+        },
+        mensagem: 'Usuários listados com sucesso',
+      };
+    }
+
     const paginaAtual = filtros.pagina ?? 1;
     const itensPorPagina = filtros.itensPorPagina ?? 20;
     const totalPaginas = Math.ceil(total / itensPorPagina);

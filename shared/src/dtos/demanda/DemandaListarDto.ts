@@ -44,4 +44,14 @@ export class DemandaListarDto {
   @Min(1)
   @Type(() => Number)
   itensPorPagina?: number;
+
+  @ApiPropertyOptional({ example: true, description: 'Quando true, ignora a paginação e retorna todos os registros' })
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return value;
+  })
+  allRows?: boolean;
 }

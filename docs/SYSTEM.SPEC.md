@@ -966,6 +966,38 @@ export abstract class BaseEntity {
 
 Query params sempre nomeados assim: `pagina`, `itensPorPagina`, `ordenarPor`, `direcao`
 
+**`allRows` — ignorar a paginação (padrão de todo o sistema):** todo DTO de filtro de uma listagem
+paginada expõe também um campo opcional `allRows?: boolean`. Quando `allRows = true`, o repositório
+**omite `LIMIT`/`OFFSET`** e devolve **todos** os registros que casam com os filtros, e o service
+preenche o `PaginatedResult<T>` de forma coerente — `totalItens = itensPorPagina = itens.length`,
+`paginaAtual = totalPaginas = 1`. A **estrutura da resposta `PaginatedResult<T>` não muda**: quem
+consome continua lendo apenas `itens`. O comportamento sem a flag (ou com `allRows = false`)
+permanece idêntico à paginação normal.
+
+- **Nome em inglês** (§4): `allRows` é conceito técnico genérico (existiria em qualquer software) —
+  nunca `todasAsLinhas`.
+- O campo vive no DTO de filtro em `shared/` (`UsuarioListarDto`, `ProjetoListarDto`,
+  `AtividadeListarDto`, `ExecucaoListarDto`, `DemandaListarDto`, …). Como todo query param chega
+  como **string**, o campo usa o mesmo `@Transform` de boolean de `DemandaListarDto.isEstrutural`
+  (converte `'true'`/`'false'`), senão `@IsBoolean()` rejeitaria a query:
+
+  ```typescript
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return value;
+  })
+  allRows?: boolean;
+  ```
+- Aplica-se **apenas** a listagens que retornam `PaginatedResult<T>`. Listagens que **já** devolvem
+  todos os registros sem paginação (`tag.listar`, `demanda.listarAtribuidas`/`listarDescendentes`,
+  `recuperarArvore`, `recuperarGrafo`, …) **não** recebem `allRows` — elas já são "allRows" por
+  natureza.
+- O frontend decide quando enviar `allRows: true` (ex.: selects de múltipla escolha, exportações,
+  relatórios) — em vez de forçar um `itensPorPagina` artificialmente alto.
+
 ### 9.4 Configuração de Ambiente (.env)
 
 ```env

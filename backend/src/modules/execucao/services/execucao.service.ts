@@ -205,6 +205,22 @@ export class ExecucaoService {
       usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR ? { usuarioId: usuarioAtivo.sub } : undefined;
 
     const { itens, total, totalMinutosDia } = await this.execucaoRepositorio.listar(filtros, restricao);
+
+    if (filtros.allRows) {
+      return {
+        sucesso: true,
+        dados: {
+          itens,
+          totalItens:     itens.length,
+          paginaAtual:    1,
+          itensPorPagina: itens.length,
+          totalPaginas:   1,
+          totalMinutosDia,
+        },
+        mensagem: 'Execuções listadas com sucesso',
+      };
+    }
+
     const totalPaginas = Math.ceil(total / itensPorPagina);
 
     return {

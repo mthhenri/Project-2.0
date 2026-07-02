@@ -236,7 +236,9 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
       parametros,
     );
 
-    const deslocamento = (pagina - 1) * itensPorPagina;
+    const clausulaPaginacao = filtros.allRows
+      ? ''
+      : `LIMIT ${itensPorPagina} OFFSET ${(pagina - 1) * itensPorPagina}`;
     const itens = await this.executarConsulta<ExecucaoItemDto>(
       `SELECT
          execucao.id,
@@ -263,7 +265,7 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
          ON projeto.id = demanda.projeto_id
        WHERE ${clausulaWhere}
        ORDER BY usuario.nome_completo ASC, execucao.inicio_data ASC
-       LIMIT ${itensPorPagina} OFFSET ${deslocamento}`,
+       ${clausulaPaginacao}`,
       parametros,
     );
 

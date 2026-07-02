@@ -120,7 +120,9 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
       parametros,
     );
 
-    const deslocamento = (pagina - 1) * itensPorPagina;
+    const clausulaPaginacao = filtros.allRows
+      ? ''
+      : `LIMIT ${itensPorPagina} OFFSET ${(pagina - 1) * itensPorPagina}`;
     const itens = await this.executarConsulta<ProjetoResumoDto>(
       `SELECT
          projeto.id,
@@ -132,7 +134,7 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
        ${clausulaJoin}
        WHERE ${clausulaWhere}
        ORDER BY projeto.nome ASC
-       LIMIT ${itensPorPagina} OFFSET ${deslocamento}`,
+       ${clausulaPaginacao}`,
       parametros,
     );
 
@@ -176,7 +178,9 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
       parametros,
     );
 
-    const deslocamento = (pagina - 1) * itensPorPagina;
+    const clausulaPaginacao = dto.filtros.allRows
+      ? ''
+      : `LIMIT ${itensPorPagina} OFFSET ${(pagina - 1) * itensPorPagina}`;
     const itens = await this.executarConsulta<ProjetoResumoDto>(
       `SELECT DISTINCT
          projeto.id,
@@ -198,7 +202,7 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
          AND demanda_usuario.usuario_id = :usuarioId
          ${filtroStatus}
        ORDER BY projeto.nome ASC
-       LIMIT ${itensPorPagina} OFFSET ${deslocamento}`,
+       ${clausulaPaginacao}`,
       parametros,
     );
 

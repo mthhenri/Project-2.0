@@ -172,7 +172,9 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
       parametros,
     );
 
-    const deslocamento = (pagina - 1) * itensPorPagina;
+    const clausulaPaginacao = filtros.allRows
+      ? ''
+      : `LIMIT ${itensPorPagina} OFFSET ${(pagina - 1) * itensPorPagina}`;
     const itens = await this.executarConsulta<AtividadeResumoDto>(
       `SELECT
          atividade.id,
@@ -220,7 +222,7 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
        ) execucao_ativa ON true
        WHERE ${clausulaWhere}
        ORDER BY usuario.nome_completo ASC, atividade.created_date DESC, atividade.nome ASC
-       LIMIT ${itensPorPagina} OFFSET ${deslocamento}`,
+       ${clausulaPaginacao}`,
       parametros,
     );
 

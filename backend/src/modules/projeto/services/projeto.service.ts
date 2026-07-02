@@ -66,6 +66,20 @@ export class ProjetoService {
         ? await this.projetoRepositorio.listarTodos(filtros)
         : await this.projetoRepositorio.listarPorUsuario({ usuarioId: usuarioAtivo.sub, filtros });
 
+    if (filtros.allRows) {
+      return {
+        sucesso: true,
+        dados: {
+          itens,
+          totalItens:     itens.length,
+          paginaAtual:    1,
+          itensPorPagina: itens.length,
+          totalPaginas:   1,
+        },
+        mensagem: 'Projetos listados com sucesso',
+      };
+    }
+
     const totalPaginas = Math.ceil(total / itensPorPagina);
 
     return {

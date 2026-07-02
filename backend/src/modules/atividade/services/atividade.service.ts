@@ -120,6 +120,21 @@ export class AtividadeService {
     }
 
     const { itens, total } = await this.atividadeRepositorio.listar(filtrosEfetivos);
+
+    if (filtros.allRows) {
+      return {
+        sucesso: true,
+        dados: {
+          itens,
+          totalItens:     itens.length,
+          paginaAtual:    1,
+          itensPorPagina: itens.length,
+          totalPaginas:   1,
+        },
+        mensagem: 'Atividades listadas com sucesso',
+      };
+    }
+
     const totalPaginas     = Math.ceil(total / itensPorPagina);
 
     return {

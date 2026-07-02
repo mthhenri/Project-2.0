@@ -1,5 +1,5 @@
-import { Type } from 'class-transformer';
-import { IsDateString, IsNumber, IsOptional, Min } from 'class-validator';
+import { Type, Transform } from 'class-transformer';
+import { IsBoolean, IsDateString, IsNumber, IsOptional, Min } from 'class-validator';
 
 export class ExecucaoListarDto {
   @IsOptional()
@@ -29,4 +29,13 @@ export class ExecucaoListarDto {
   @Min(1)
   @Type(() => Number)
   itensPorPagina?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return value;
+  })
+  allRows?: boolean;
 }

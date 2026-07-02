@@ -1,5 +1,5 @@
-import { IsOptional, IsEnum, IsNumber, Min, Max } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsOptional, IsEnum, IsNumber, IsBoolean, Min, Max } from 'class-validator';
+import { Type, Transform } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { TipoProjetoStatusEnum } from '../../enums/tipo-projeto-status.enum';
 
@@ -23,4 +23,14 @@ export class ProjetoListarDto {
   @Min(1)
   @Max(100)
   itensPorPagina?: number = 20;
+
+  @ApiPropertyOptional({ example: true, description: 'Quando true, ignora a paginação e retorna todos os registros' })
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return value;
+  })
+  allRows?: boolean;
 }

@@ -108,6 +108,32 @@ dados (não é defesa contra SQL injection, que continua sendo os parâmetros no
 - **Fora do escopo:** cor, código de projeto, descrições de demanda, descrição de atividade,
   anotações e login/senha não têm esta validação.
 
+**Paginação e `allRows` em DTOs de filtro:**
+
+Toda listagem paginada usa os query params `pagina`, `itensPorPagina`, `ordenarPor`, `direcao`
+(§9.3 do SYSTEM.SPEC). O DTO de filtro pode ainda expor `allRows?: boolean` — nome **em inglês**
+(conceito técnico genérico, existiria em qualquer software; nunca `todasAsLinhas`). Quando
+`allRows = true`, o repositório **omite `LIMIT`/`OFFSET`** e retorna todos os registros, e o service
+monta o `PaginatedResult<T>` de forma coerente (`totalItens = itensPorPagina = itens.length`,
+`paginaAtual = totalPaginas = 1`). A **estrutura da resposta não muda** — quem consome só lê `itens`.
+
+- Como query params chegam como **string**, o campo precisa do mesmo `@Transform` de boolean já
+  usado em `DemandaListarDto.isEstrutural` (converte `'true'`/`'false'`), senão `@IsBoolean()` rejeita:
+
+  ```typescript
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return value;
+  })
+  allRows?: boolean;
+  ```
+- Aplica-se apenas às listagens que retornam `PaginatedResult<T>`. Listagens que **já** retornam
+  todos os registros sem paginação (`Tag.listar`, `listarAtribuidas`, `listarDescendentes`,
+  `recuperarArvore`, `recuperarGrafo`) **não** recebem `allRows`.
+
 ---
 
 ## Métodos

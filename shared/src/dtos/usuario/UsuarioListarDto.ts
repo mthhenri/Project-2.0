@@ -1,5 +1,5 @@
-import { IsOptional, IsEnum, IsNumber, IsString, Min, Max } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsOptional, IsEnum, IsNumber, IsString, IsBoolean, Min, Max } from 'class-validator';
+import { Type, Transform } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { TipoUsuarioEnum } from '../../enums/tipo-usuario.enum';
 import { TipoUsuarioStatusEnum } from '../../enums/tipo-usuario-status.enum';
@@ -34,4 +34,14 @@ export class UsuarioListarDto {
   @Min(1)
   @Max(100)
   itensPorPagina?: number;
+
+  @ApiPropertyOptional({ example: true, description: 'Quando true, ignora a paginação e retorna todos os registros' })
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return value;
+  })
+  allRows?: boolean;
 }

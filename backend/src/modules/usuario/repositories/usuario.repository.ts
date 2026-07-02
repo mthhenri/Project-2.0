@@ -126,7 +126,9 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
     );
 
     const total = parseInt(resultadoTotal[0].total, 10);
-    const deslocamento = (pagina - 1) * itensPorPagina;
+    const clausulaPaginacao = filtros.allRows
+      ? ''
+      : `LIMIT ${itensPorPagina} OFFSET ${(pagina - 1) * itensPorPagina}`;
 
     const itens = await this.executarConsulta<UsuarioResumoDto>(
       `SELECT
@@ -142,7 +144,7 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
        ${clausulasJoin}
        WHERE ${clausulaWhere}
        ORDER BY usuario.nome_completo ASC
-       LIMIT ${itensPorPagina} OFFSET ${deslocamento}`,
+       ${clausulaPaginacao}`,
       parametros,
     );
 

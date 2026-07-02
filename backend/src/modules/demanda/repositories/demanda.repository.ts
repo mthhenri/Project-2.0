@@ -243,7 +243,9 @@ export class DemandaRepository extends BaseRepository<Demanda> {
       parametros,
     );
 
-    const deslocamento = (pagina - 1) * itensPorPagina;
+    const clausulaPaginacao = filtros.allRows
+      ? ''
+      : `LIMIT ${itensPorPagina} OFFSET ${(pagina - 1) * itensPorPagina}`;
     const itens = await this.executarConsulta<DemandaResumoDto>(
       `SELECT DISTINCT
          demanda.id,
@@ -256,7 +258,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
        ${joinDemandaUsuario}
        WHERE ${clausulaWhere}
        ORDER BY demanda.nome ASC
-       LIMIT ${itensPorPagina} OFFSET ${deslocamento}`,
+       ${clausulaPaginacao}`,
       parametros,
     );
 
