@@ -44,6 +44,9 @@ import {
 
 type DemandaCriarDados = Omit<Demanda, 'id' | 'isDeleted' | 'createdDate' | 'updatedDate' | 'deletedDate'>;
 
+/** Separador exibido entre os níveis do caminho da demanda (raiz → folha). */
+const SEPARADOR_CAMINHO = ' › ';
+
 @Injectable()
 export class DemandaRepository extends BaseRepository<Demanda> {
   constructor(
@@ -246,16 +249,33 @@ export class DemandaRepository extends BaseRepository<Demanda> {
     const clausulaPaginacao = filtros.allRows
       ? ''
       : `LIMIT ${itensPorPagina} OFFSET ${(pagina - 1) * itensPorPagina}`;
+    parametros.separadorCaminho = SEPARADOR_CAMINHO;
     const itens = await this.executarConsulta<DemandaResumoDto>(
-      `SELECT DISTINCT
+      `WITH RECURSIVE caminho_demanda AS (
+         SELECT demanda.id, demanda.nome::text AS caminho
+         FROM demanda
+         WHERE demanda.projeto_id = :projetoId
+           AND demanda.demanda_pai_id IS NULL
+           AND demanda.is_deleted = false
+         UNION ALL
+         SELECT demanda_filho.id,
+                (caminho_demanda.caminho || :separadorCaminho || demanda_filho.nome)::text
+         FROM demanda AS demanda_filho
+         INNER JOIN caminho_demanda ON demanda_filho.demanda_pai_id = caminho_demanda.id
+         WHERE demanda_filho.projeto_id = :projetoId
+           AND demanda_filho.is_deleted = false
+       )
+       SELECT DISTINCT
          demanda.id,
          demanda.nome,
+         COALESCE(caminho_demanda.caminho, demanda.nome) AS "caminho",
          tipo_demanda_status.codigo AS status,
          demanda.is_estrutural   AS "isEstrutural",
          demanda.horas_estimadas AS "horasEstimadas"
        FROM demanda
        ${joinStatus}
        ${joinDemandaUsuario}
+       LEFT JOIN caminho_demanda ON caminho_demanda.id = demanda.id
        WHERE ${clausulaWhere}
        ORDER BY demanda.nome ASC
        ${clausulaPaginacao}`,

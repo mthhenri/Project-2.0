@@ -8,6 +8,9 @@ export class DemandaResumoDto {
   @ApiProperty({ example: 'Implementar módulo de login' })
   nome: string;
 
+  @ApiProperty({ example: 'IA › Integrador Gemini › Parser' })
+  caminho: string;
+
   @ApiProperty({ enum: TipoDemandaStatusEnum, example: TipoDemandaStatusEnum.PLANEJADA })
   status: TipoDemandaStatusEnum;
 
