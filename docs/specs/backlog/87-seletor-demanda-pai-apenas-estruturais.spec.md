@@ -1,4 +1,4 @@
-# 85 — Seletor de Demanda Pai: exibir apenas demandas estruturais
+# 87 — Seletor de Demanda Pai: exibir apenas demandas estruturais
 
 **Depende de:** 10 (demanda CRUD), 11 (hierarquia), 26 (frontend demanda)
 **Entrega:** frontend apenas — sem backend, sem shared, sem migration
