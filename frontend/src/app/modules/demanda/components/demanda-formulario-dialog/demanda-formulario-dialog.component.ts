@@ -208,7 +208,7 @@ export class DemandaFormularioDialogComponent implements OnChanges {
 
   private carregarDemandasPai(): void {
     this.demandaService
-      .listar({ projetoId: this.projetoId, itensPorPagina: 200 })
+      .listar({ projetoId: this.projetoId, isEstrutural: true, itensPorPagina: 200 })
       .subscribe({
         next: (resposta) => {
           if (resposta.sucesso && resposta.dados) {

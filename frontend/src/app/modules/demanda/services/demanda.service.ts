@@ -36,6 +36,7 @@ export class DemandaService {
     if (filtros.pagina)    params = params.set('pagina', String(filtros.pagina));
     if (filtros.itensPorPagina) params = params.set('itensPorPagina', String(filtros.itensPorPagina));
     if (filtros.status)    params = params.set('status', filtros.status);
+    if (filtros.isEstrutural !== undefined) params = params.set('isEstrutural', String(filtros.isEstrutural));
     return this.httpClient.get<StandardResponse<PaginatedResult<DemandaResumoDto>>>(this.urlBase, { params });
   }
 
