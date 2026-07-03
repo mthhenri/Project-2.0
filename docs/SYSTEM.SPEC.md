@@ -316,6 +316,7 @@ export enum TipoDemandaStatusEnum {
   PENDENTE  = 'PENDENTE',
   PLANEJADA = 'PLANEJADA',
   CONCLUIDA = 'CONCLUIDA',
+  CANCELADA = 'CANCELADA',
 }
 
 // tipo-atividade-status.enum.ts   ← tabela tipo_atividade_status
@@ -1186,7 +1187,7 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 | `descricao_cliente` | TEXT \| NULL | |
 | `documentacao` | TEXT \| NULL | markdown |
 | `horas_estimadas` | INTEGER | |
-| `tipo_demanda_status_id` | INTEGER FK | → `tipo_demanda_status` (PENDENTE, PLANEJADA, CONCLUIDA) |
+| `tipo_demanda_status_id` | INTEGER FK | → `tipo_demanda_status` (PENDENTE, PLANEJADA, CONCLUIDA, CANCELADA) |
 | `is_estrutural` | BOOLEAN | demanda-container que agrupa sub-demandas |
 | `previsao_fim_data` | DATE \| NULL | |
 

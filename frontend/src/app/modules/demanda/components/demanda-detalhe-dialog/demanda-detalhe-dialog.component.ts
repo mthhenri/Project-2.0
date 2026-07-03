@@ -395,11 +395,12 @@ export class DemandaDetalheDialogComponent implements OnChanges {
     return ((controle.value as number[] | null) ?? []).includes(tagId);
   }
 
-  severidadeStatus(status: TipoDemandaStatusEnum): 'secondary' | 'info' | 'success' {
-    const mapa: Record<TipoDemandaStatusEnum, 'secondary' | 'info' | 'success'> = {
+  severidadeStatus(status: TipoDemandaStatusEnum): 'secondary' | 'info' | 'success' | 'danger' {
+    const mapa: Record<TipoDemandaStatusEnum, 'secondary' | 'info' | 'success' | 'danger'> = {
       [TipoDemandaStatusEnum.PENDENTE]:  'secondary',
       [TipoDemandaStatusEnum.PLANEJADA]: 'info',
       [TipoDemandaStatusEnum.CONCLUIDA]: 'success',
+      [TipoDemandaStatusEnum.CANCELADA]: 'danger',
     };
     return mapa[status];
   }
@@ -409,6 +410,7 @@ export class DemandaDetalheDialogComponent implements OnChanges {
       [TipoDemandaStatusEnum.PENDENTE]:  'Pendente',
       [TipoDemandaStatusEnum.PLANEJADA]: 'Planejada',
       [TipoDemandaStatusEnum.CONCLUIDA]:          'Concluída',
+      [TipoDemandaStatusEnum.CANCELADA]:          'Cancelada',
     };
     return mapa[status];
   }

@@ -66,6 +66,7 @@ export class DemandaEdicaoDialogComponent implements OnChanges {
     { label: 'Pendente',  value: TipoDemandaStatusEnum.PENDENTE },
     { label: 'Planejada', value: TipoDemandaStatusEnum.PLANEJADA },
     { label: 'Concluída', value: TipoDemandaStatusEnum.CONCLUIDA },
+    { label: 'Cancelada', value: TipoDemandaStatusEnum.CANCELADA },
   ];
 
   readonly mensagemCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS;

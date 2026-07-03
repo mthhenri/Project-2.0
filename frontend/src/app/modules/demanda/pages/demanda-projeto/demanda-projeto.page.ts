@@ -61,6 +61,7 @@ export class DemandaProjetoPage implements OnInit {
     { rotulo: 'Pendente',  cor: COR_NO_BORDA[TipoDemandaStatusEnum.PENDENTE] },
     { rotulo: 'Planejada', cor: COR_NO_BORDA[TipoDemandaStatusEnum.PLANEJADA] },
     { rotulo: 'Concluída', cor: COR_NO_BORDA[TipoDemandaStatusEnum.CONCLUIDA] },
+    { rotulo: 'Cancelada', cor: COR_NO_BORDA[TipoDemandaStatusEnum.CANCELADA] },
   ];
 
   readonly arvoreRaizes = computed<DemandaArvoreItemDto[]>(() => {

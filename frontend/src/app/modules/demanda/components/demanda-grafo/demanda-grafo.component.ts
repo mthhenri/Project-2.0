@@ -135,6 +135,9 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
       .enter()
       .append('g')
       .style('cursor', 'pointer')
+      .style('opacity', (no: DemandaGrafoNoDto) =>
+        no.status === TipoDemandaStatusEnum.CANCELADA ? 0.4 : 1,
+      )
       .call(
         d3.drag<SVGGElement, DemandaGrafoNoDto & d3.SimulationNodeDatum>()
           .on('start', (evento, no) => {
