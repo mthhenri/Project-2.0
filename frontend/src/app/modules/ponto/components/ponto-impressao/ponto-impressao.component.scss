@@ -14,6 +14,11 @@
     color: #000;
     font-size: 11px;
 
+    // Sem isto, Chrome, Edge e Firefox descartam as cores de fundo na impressão por
+    // padrão (cabeçalho cinza da tabela e linhas de dia não útil sairiam brancos).
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+
     &__cabecalho {
       margin-bottom: 1rem;
     }
@@ -80,6 +85,16 @@
       border-collapse: collapse;
       margin-top: 1rem;
 
+      // Repete o cabeçalho da tabela no topo de cada página impressa.
+      thead {
+        display: table-header-group;
+      }
+
+      // Impede que uma linha do mês seja partida entre duas páginas.
+      tr {
+        break-inside: avoid;
+      }
+
       th,
       td {
         border: 1px solid #999;
@@ -129,6 +144,8 @@
       justify-content: space-between;
       gap: 3rem;
       margin-top: 4rem;
+      // Mantém as duas assinaturas juntas, sem quebra de página no meio do bloco.
+      break-inside: avoid;
     }
 
     &__assinatura {

@@ -153,7 +153,7 @@ export class PontoService {
       if (ehFimDeSemana) {
         motivoNaoUtil = 'Fim de semana';
       } else if (registradoComoNaoUtil) {
-        const motivoBase = this.mapearTipoParaMotivo(diaNaoUtil!.tipo);
+        const motivoBase = this.mapearTipoParaMotivo(diaNaoUtil!.tipo, diaNaoUtil!.descricao);
         motivoNaoUtil = fracaoMeta === 0.5 ? `${motivoBase} (meio período)` : motivoBase;
       }
 
@@ -240,7 +240,7 @@ export class PontoService {
       return { fracaoMeta: 1, motivoNaoUtil: null };
     }
 
-    const motivoBase = this.mapearTipoParaMotivo(diaNaoUtil.tipo);
+    const motivoBase = this.mapearTipoParaMotivo(diaNaoUtil.tipo, diaNaoUtil.descricao);
 
     if (diaNaoUtil.duracao === TipoDiaNaoUtilDuracaoEnum.MEIO_PERIODO) {
       return { fracaoMeta: 0.5, motivoNaoUtil: `${motivoBase} (meio período)` };
@@ -354,15 +354,24 @@ export class PontoService {
     return intervalos;
   }
 
-  /** Converte o enum de tipo de dia não útil para um texto legível em português. */
-  private mapearTipoParaMotivo(tipo: TipoDiaNaoUtilEnum | null): string {
-    if (tipo === null) return 'Dia não útil';
-    const mapeamento: Record<TipoDiaNaoUtilEnum, string> = {
-      [TipoDiaNaoUtilEnum.FERIADO]:           'Feriado',
-      [TipoDiaNaoUtilEnum.RECESSO]:           'Recesso',
-      [TipoDiaNaoUtilEnum.PONTO_FACULTATIVO]: 'Ponto facultativo',
-    };
-    return mapeamento[tipo];
+  /**
+   * Compõe o motivo do dia não útil no formato `"<rótulo do tipo> - <descrição>"`
+   * (ex.: `Feriado - Dia do Trabalho`). Sem descrição cadastrada, devolve só o rótulo.
+   */
+  private mapearTipoParaMotivo(tipo: TipoDiaNaoUtilEnum | null, descricao: string | null): string {
+    let rotulo: string;
+    if (tipo === null) {
+      rotulo = 'Dia não útil';
+    } else {
+      const mapeamento: Record<TipoDiaNaoUtilEnum, string> = {
+        [TipoDiaNaoUtilEnum.FERIADO]:           'Feriado',
+        [TipoDiaNaoUtilEnum.RECESSO]:           'Recesso',
+        [TipoDiaNaoUtilEnum.PONTO_FACULTATIVO]: 'Ponto facultativo',
+      };
+      rotulo = mapeamento[tipo];
+    }
+    const descricaoLimpa = descricao?.trim();
+    return descricaoLimpa ? `${rotulo} - ${descricaoLimpa}` : rotulo;
   }
 
   /** Formata ano/mês/dia numéricos como string ISO `YYYY-MM-DD`. */

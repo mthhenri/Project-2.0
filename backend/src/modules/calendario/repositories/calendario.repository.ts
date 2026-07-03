@@ -25,10 +25,11 @@ interface DiaNaoUtilInserirDados {
   recorrente: boolean;
 }
 
-/** Tipo e duração do dia não útil cadastrado para uma data. */
+/** Tipo, duração e descrição do dia não útil cadastrado para uma data. */
 interface DiaNaoUtilInfo {
   tipo: TipoDiaNaoUtilEnum;
   duracao: TipoDiaNaoUtilDuracaoEnum;
+  descricao: string;
 }
 
 @Injectable()
@@ -209,6 +210,7 @@ export class CalendarioRepository extends BaseRepository<DiaNaoUtil> {
     return this.executarConsulta<CalendarioDiaNaoUtilMesDto>(
       `SELECT DISTINCT
          EXTRACT(DAY FROM dia_nao_util.dia_data)::int AS "dia",
+         dia_nao_util.descricao,
          tipo_dia_nao_util.codigo         AS tipo,
          tipo_dia_nao_util_duracao.codigo AS duracao
        FROM dia_nao_util
@@ -246,7 +248,7 @@ export class CalendarioRepository extends BaseRepository<DiaNaoUtil> {
    */
   async recuperarTipo(dto: CalendarioVerificarDiaDto): Promise<DiaNaoUtilInfo | null> {
     const resultado = await this.executarConsulta<DiaNaoUtilInfo>(
-      `SELECT tipo_dia_nao_util.codigo AS tipo, tipo_dia_nao_util_duracao.codigo AS duracao
+      `SELECT tipo_dia_nao_util.codigo AS tipo, tipo_dia_nao_util_duracao.codigo AS duracao, dia_nao_util.descricao
        FROM dia_nao_util
        INNER JOIN tipo_dia_nao_util
          ON tipo_dia_nao_util.id = dia_nao_util.tipo_dia_nao_util_id

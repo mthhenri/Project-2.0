@@ -171,6 +171,11 @@ html {
 /* Impressão do espelho de ponto: some com toda a página e revela apenas a folha
    imprimível (.ponto-impressao), posicionada no topo da folha. Regra global porque
    precisa alcançar elementos fora do componente de impressão. */
+@page {
+  size: A4 portrait;
+  margin: 12mm;
+}
+
 @media print {
   body * {
     visibility: hidden;

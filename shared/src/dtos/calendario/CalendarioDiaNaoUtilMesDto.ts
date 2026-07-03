@@ -3,6 +3,7 @@ import { TipoDiaNaoUtilDuracaoEnum } from '../../enums/tipo-dia-nao-util-duracao
 
 export class CalendarioDiaNaoUtilMesDto {
   dia: number;
+  descricao: string;
   tipo: TipoDiaNaoUtilEnum;
   duracao: TipoDiaNaoUtilDuracaoEnum;
 }
