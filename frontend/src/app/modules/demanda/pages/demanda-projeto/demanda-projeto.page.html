@@ -117,7 +117,7 @@
             #painel
             [raizes]="arvoreRaizes()"
             [projetoId]="projetoId()"
-            (alterado)="recarregarGrafo()"
+            (alterado)="aoAlteradoPlanejamento()"
           />
         </div>
 
@@ -125,6 +125,13 @@
           <app-demanda-planejamento-painel
             [itens]="planejamento()"
             [carregando]="carregandoPlanejamento()"
+            (demandaVisualizarSolicitada)="painel.abrirDetalhe($event)"
+            (demandaEditarSolicitada)="painel.abrirEdicao($event)"
+            (demandaNovaFilhaSolicitada)="painel.abrirNovaFilha($event)"
+            (demandaTagsSolicitadas)="painel.abrirDialogTagsPorId($event)"
+            (demandaMembrosSolicitados)="painel.abrirDialogMembros($event)"
+            (demandaDescricaoSolicitada)="painel.abrirDialogDescricaoPorId($event.id, $event.campo)"
+            (alterado)="aoAlteradoPlanejamento()"
           />
         }
       }

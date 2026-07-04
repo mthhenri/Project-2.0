@@ -370,6 +370,9 @@ export class DemandaRepository extends BaseRepository<Demanda> {
            WHERE atividade.demanda_id = caminho_demanda.id
              AND atividade.is_deleted = false
          ), 0)::int AS "minutosExecutados",
+         NULLIF(demanda.descricao_tecnica, '') IS NOT NULL AS "temDescricaoTecnica",
+         NULLIF(demanda.descricao_cliente,  '') IS NOT NULL AS "temDescricaoCliente",
+         NULLIF(demanda.documentacao,        '') IS NOT NULL AS "temDocumentacao",
          COALESCE((
            SELECT JSON_AGG(JSON_BUILD_OBJECT(
              'usuarioId', usuario.id,
@@ -390,6 +393,9 @@ export class DemandaRepository extends BaseRepository<Demanda> {
        INNER JOIN tipo_demanda_status
          ON tipo_demanda_status.id = caminho_demanda.tipo_demanda_status_id
          AND tipo_demanda_status.is_deleted = false
+       INNER JOIN demanda
+         ON demanda.id = caminho_demanda.id
+         AND demanda.is_deleted = false
        WHERE tipo_demanda_status.codigo IN ('PENDENTE', 'PLANEJADA')
        ORDER BY caminho_demanda.caminho ASC`,
       { projetoId: dto.projetoId, separadorCaminho: SEPARADOR_CAMINHO },

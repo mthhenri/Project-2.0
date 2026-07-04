@@ -5,8 +5,9 @@ import { MenuItem } from 'primeng/api';
 import { DemandaArvoreItemDto, TipoDemandaStatusEnum } from '@project20/shared';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-horas.pipe';
+import { construirMenuDemanda, CampoDescricaoDemanda } from '../../utils/demanda-context-menu.factory';
 
-type CampoDescricao = 'descricaoTecnica' | 'descricaoCliente' | 'documentacao';
+type CampoDescricao = CampoDescricaoDemanda;
 
 @Component({
   selector: 'app-demanda-arvore-item',
@@ -39,85 +40,18 @@ export class DemandaArvoreItemComponent implements OnChanges {
   }
 
   private reconstruirMenu(): void {
-    const itensBase: MenuItem[] = [
+    this.itensMenu = construirMenuDemanda(
+      this.arvoreItem,
       {
-        label: 'Visualizar',
-        icon: 'pi pi-eye',
-        command: () => this.demandaSelecionada.emit(this.arvoreItem.id),
+        aoVisualizar: (id) => this.demandaSelecionada.emit(id),
+        aoEditar:     (id) => this.demandaEditarSolicitada.emit(id),
+        aoNovaFilha:  (id) => this.demandaNovaFilhaSolicitada.emit(id),
+        aoTags:       (id) => this.demandaTagsSolicitadas.emit(id),
+        aoMembros:    (id) => this.demandaMembrosSolicitados.emit(id),
+        aoDescricao:  (id, campo) => this.demandaEditarDescricaoSolicitada.emit({ id, campo }),
       },
-    ];
-
-    // Editar é gestor-only na árvore; o desenvolvedor edita pela dialog de detalhe,
-    // onde a membresia da demanda (podeEditar) é conhecida.
-    if (this.sessao.eGestor()) {
-      itensBase.push({
-        label: 'Editar',
-        icon: 'pi pi-pencil',
-        command: () => this.demandaEditarSolicitada.emit(this.arvoreItem.id),
-      });
-    }
-
-    if (this.arvoreItem.isEstrutural) {
-      itensBase.push({
-        label: 'Nova Sub-demanda',
-        icon: 'pi pi-plus',
-        command: () => this.demandaNovaFilhaSolicitada.emit(this.arvoreItem.id),
-      });
-    }
-
-    // Tags e Membros dependem de membresia (gestor-only na árvore, pelo mesmo motivo de Editar).
-    if (this.sessao.eGestor()) {
-      itensBase.push(
-        { separator: true },
-        {
-          label: 'Tags',
-          icon: 'pi pi-tag',
-          command: () => this.demandaTagsSolicitadas.emit(this.arvoreItem.id),
-        },
-        {
-          label: 'Membros',
-          icon: 'pi pi-users',
-          command: () => this.demandaMembrosSolicitados.emit(this.arvoreItem.id),
-        },
-      );
-    }
-
-    itensBase.push(
-      { separator: true },
-      {
-        label: 'Desc. Técnica',
-        icon: 'pi pi-code',
-        iconStyle: this.estiloIconeDescricao('--app-icone-tecnica', this.arvoreItem.temDescricaoTecnica),
-        command: () => this.demandaEditarDescricaoSolicitada.emit({ id: this.arvoreItem.id, campo: 'descricaoTecnica' }),
-      },
-      {
-        label: 'Desc. Cliente',
-        icon: 'pi pi-user',
-        iconStyle: this.estiloIconeDescricao('--app-icone-cliente', this.arvoreItem.temDescricaoCliente),
-        command: () => this.demandaEditarDescricaoSolicitada.emit({ id: this.arvoreItem.id, campo: 'descricaoCliente' }),
-      },
-      {
-        label: 'Documentação',
-        icon: 'pi pi-book',
-        iconStyle: this.estiloIconeDescricao('--app-icone-doc', this.arvoreItem.temDocumentacao),
-        command: () => this.demandaEditarDescricaoSolicitada.emit({ id: this.arvoreItem.id, campo: 'documentacao' }),
-      },
+      this.sessao.eGestor(),
     );
-
-    this.itensMenu = itensBase;
-  }
-
-  /**
-   * Estilo do ícone de descrição: azul da família + bold + glow quando preenchido,
-   * neutro quando vazio. Padroniza com a listagem de atividades e o dialog de detalhe.
-   */
-  private estiloIconeDescricao(tokenCor: string, preenchido: boolean): { [klass: string]: string } {
-    if (!preenchido) return {};
-    return {
-      color: `var(${tokenCor})`,
-      fontWeight: '700',
-      textShadow: '0 0 4px color-mix(in srgb, currentColor 45%, transparent)',
-    };
   }
 
   /** Abre o menu desta demanda, fechando antes qualquer outro já aberto na árvore. */

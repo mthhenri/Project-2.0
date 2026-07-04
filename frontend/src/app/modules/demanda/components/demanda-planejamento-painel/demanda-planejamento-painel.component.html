@@ -1,4 +1,6 @@
 <div class="demanda-planejamento">
+  <p-contextmenu #menuContexto [model]="itensMenu" appendTo="body" />
+
   <p-table
     [value]="linhas()"
     [loading]="carregando()"
@@ -18,7 +20,7 @@
     </ng-template>
 
     <ng-template pTemplate="body" let-linha>
-      <tr>
+      <tr (contextmenu)="abrirMenu($event, linha, menuContexto)">
         <td class="demanda-planejamento__col-demanda">
           @if (linha.isEstrutural) {
             <i class="pi pi-folder demanda-planejamento__icone-estrutural" pTooltip="Demanda estrutural"></i>
@@ -27,12 +29,25 @@
         </td>
 
         <td class="demanda-planejamento__col-status">
-          <p-tag [value]="rotuloStatus(linha.status)" [severity]="severidadeStatus(linha.status)" />
+          @if (sessao.eGestor()) {
+            <button
+              type="button"
+              class="demanda-planejamento__status-gatilho"
+              aria-label="Trocar status"
+              pTooltip="Trocar status"
+              tooltipPosition="top"
+              (click)="abrirSeletorStatus($event, linha, statusPopover)"
+            >
+              <p-tag [value]="rotuloStatus(linha.status)" [severity]="severidadeStatus(linha.status)" />
+            </button>
+          } @else {
+            <p-tag [value]="rotuloStatus(linha.status)" [severity]="severidadeStatus(linha.status)" />
+          }
         </td>
 
         <td class="demanda-planejamento__col-progresso">
           <div class="demanda-planejamento__progresso">
-            <div class="demanda-planejamento__progresso-barra" [class.demanda-planejamento__progresso-barra--estouro]="linha.estourou">
+            <div class="demanda-planejamento__progresso-barra" [style.--cor-barra]="linha.corBarra">
               <p-progressbar [value]="linha.percentualBarra" [showValue]="false" />
             </div>
             <div class="demanda-planejamento__progresso-legenda">
@@ -49,6 +64,16 @@
               </span>
               @if (linha.percentualRotulo !== null) {
                 <span class="demanda-planejamento__percentual">({{ linha.percentualRotulo }}%)</span>
+              }
+              @if (linha.horasEstimadas > 0) {
+                <span class="demanda-planejamento__restante" pTooltip="Tempo restante até o máximo estimado">
+                  · restam
+                  @if (linha.minutosRestantes !== null) {
+                    {{ linha.minutosRestantes | minutosParagHoras }}
+                  } @else {
+                    —
+                  }
+                </span>
               }
             </div>
           </div>
@@ -94,3 +119,22 @@
     </ng-template>
   </p-table>
 </div>
+
+<!-- Popover: troca rápida de status -->
+<p-popover #statusPopover>
+  <div class="demanda-planejamento__status-opcoes">
+    @for (opcao of statusOpcoes; track opcao.value) {
+      <button
+        type="button"
+        class="demanda-planejamento__status-opcao"
+        [class.demanda-planejamento__status-opcao--ativo]="opcao.value === linhaStatusEdicao()?.status"
+        (click)="alterarStatus(opcao.value, statusPopover)"
+      >
+        <p-tag [value]="opcao.label" [severity]="severidadeStatus(opcao.value)" />
+        @if (opcao.value === linhaStatusEdicao()?.status) {
+          <i class="pi pi-check demanda-planejamento__status-opcao-check"></i>
+        }
+      </button>
+    }
+  </div>
+</p-popover>

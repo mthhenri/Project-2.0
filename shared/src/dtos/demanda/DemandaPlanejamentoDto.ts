@@ -29,6 +29,15 @@ export class DemandaPlanejamentoDto {
   @ApiProperty({ example: 120, description: 'Soma das execuções das atividades diretas; inclui a execução aberta como se encerrasse agora' })
   minutosExecutados: number;
 
+  @ApiProperty({ example: true, description: 'Descrição técnica preenchida — realça o ícone no menu de contexto' })
+  temDescricaoTecnica: boolean;
+
+  @ApiProperty({ example: false, description: 'Descrição para o cliente preenchida — realça o ícone no menu de contexto' })
+  temDescricaoCliente: boolean;
+
+  @ApiProperty({ example: false, description: 'Documentação preenchida — realça o ícone no menu de contexto' })
+  temDocumentacao: boolean;
+
   @ApiProperty({ type: [ExecutorAtivoDto] })
   executoresAtivos: ExecutorAtivoDto[];
 }

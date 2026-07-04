@@ -117,6 +117,17 @@ export class DemandaProjetoPage implements OnInit {
     this.painelLateralAberto.update((aberto) => !aberto);
   }
 
+  /**
+   * Alteração vinda do painel de Planejamento ou de um diálogo por ele acionado
+   * (status, edição, tags, etc.): atualiza o grafo e, se estiver no modo, o planejamento.
+   */
+  aoAlteradoPlanejamento(): void {
+    this.recarregarGrafo();
+    if (this.modoVisualizacao() === 'planejamento' && this.sessao.eGestor()) {
+      this.carregarPlanejamento();
+    }
+  }
+
   /** Recarrega o grafo após qualquer alteração feita pelo painel da árvore. */
   recarregarGrafo(): void {
     this.demandaService.recuperarGrafo(this.projetoId()).subscribe({
