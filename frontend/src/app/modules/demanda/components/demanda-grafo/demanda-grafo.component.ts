@@ -191,7 +191,10 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
       );
 
     gruposNo.append('title').text((no: DemandaGrafoNoDto) => {
-      const linhas = [`${no.nome}\n${no.status} • ${no.horasEstimadas}h estimadas`];
+      const horasExecutadas = (no.minutosExecutados / 60).toFixed(1).replace(/\.0$/, '');
+      const linhas = [
+        `${no.nome}\n${no.status} • ${no.horasEstimadas}h estimadas • ${horasExecutadas}h executadas`,
+      ];
       if (no.tags?.length) linhas.push(no.tags.map((t) => t.nome).join(', '));
       return linhas.join('\n');
     });

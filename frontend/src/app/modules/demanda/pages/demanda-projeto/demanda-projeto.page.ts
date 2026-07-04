@@ -11,6 +11,7 @@ import {
   DemandaGrafoDto,
   DemandaGrafoNoDto,
   DemandaArvoreItemDto,
+  DemandaPlanejamentoDto,
   TipoDemandaStatusEnum,
   ProjetoResumoDto,
 } from '@project20/shared';
@@ -20,6 +21,7 @@ import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.s
 import { DemandaGrafoComponent } from '../../components/demanda-grafo/demanda-grafo.component';
 import { DemandaFormularioDialogComponent } from '../../components/demanda-formulario-dialog/demanda-formulario-dialog.component';
 import { DemandaArvorePainelComponent } from '../../components/demanda-arvore-painel/demanda-arvore-painel.component';
+import { DemandaPlanejamentoPainelComponent } from '../../components/demanda-planejamento-painel/demanda-planejamento-painel.component';
 import { ModoVisualizacao } from '../../models/demanda.model';
 import { COR_NO_BORDA } from '../../constants/demanda-cores.constants';
 
@@ -35,6 +37,7 @@ import { COR_NO_BORDA } from '../../constants/demanda-cores.constants';
     DemandaGrafoComponent,
     DemandaFormularioDialogComponent,
     DemandaArvorePainelComponent,
+    DemandaPlanejamentoPainelComponent,
   ],
   templateUrl: './demanda-projeto.page.html',
   styleUrl: './demanda-projeto.page.scss',
@@ -56,6 +59,8 @@ export class DemandaProjetoPage implements OnInit {
   readonly modoVisualizacao = signal<ModoVisualizacao>('lista');
   readonly painelLateralAberto = signal<boolean>(true);
   readonly mostrarDialogNovaDemanda = signal<boolean>(false);
+  readonly planejamento = signal<DemandaPlanejamentoDto[]>([]);
+  readonly carregandoPlanejamento = signal<boolean>(false);
 
   readonly legendaStatus = [
     { rotulo: 'Pendente',  cor: COR_NO_BORDA[TipoDemandaStatusEnum.PENDENTE] },
@@ -81,10 +86,31 @@ export class DemandaProjetoPage implements OnInit {
     this.projetoId.set(projetoId);
     this.router.navigate([], { queryParams: { projetoId }, replaceUrl: true });
     this.carregarGrafo();
+    if (this.modoVisualizacao() === 'planejamento' && this.sessao.eGestor()) {
+      this.carregarPlanejamento();
+    }
   }
 
   alternarModo(modo: ModoVisualizacao): void {
     this.modoVisualizacao.set(modo);
+    if (modo === 'planejamento' && this.sessao.eGestor() && this.projetoId()) {
+      this.carregarPlanejamento();
+    }
+  }
+
+  private carregarPlanejamento(): void {
+    this.carregandoPlanejamento.set(true);
+    this.demandaService
+      .listarPlanejamento(this.projetoId())
+      .pipe(finalize(() => this.carregandoPlanejamento.set(false)))
+      .subscribe({
+        next: (resposta) => {
+          if (resposta.sucesso && resposta.dados) this.planejamento.set(resposta.dados);
+        },
+        error: () => {
+          this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Não foi possível carregar o planejamento' });
+        },
+      });
   }
 
   alternarPainel(): void {
@@ -164,6 +190,7 @@ export class DemandaProjetoPage implements OnInit {
         status:              no.status,
         isEstrutural:        no.isEstrutural,
         horasEstimadas:      no.horasEstimadas,
+        minutosExecutados:   no.minutosExecutados,
         temDescricaoTecnica: no.temDescricaoTecnica,
         temDescricaoCliente: no.temDescricaoCliente,
         temDocumentacao:     no.temDocumentacao,

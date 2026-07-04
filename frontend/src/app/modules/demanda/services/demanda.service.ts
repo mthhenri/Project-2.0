@@ -19,6 +19,7 @@ import {
   DemandaMembroDto,
   DemandaUsuarioAtribuirDto,
   DemandaAtribuidaDto,
+  DemandaPlanejamentoDto,
   TagResumoDto,
   StandardResponse,
   PaginatedResult,
@@ -47,6 +48,11 @@ export class DemandaService {
   recuperarGrafo(projetoId: number): Observable<StandardResponse<DemandaGrafoDto>> {
     const params = new HttpParams().set('projetoId', String(projetoId));
     return this.httpClient.get<StandardResponse<DemandaGrafoDto>>(`${this.urlBase}/grafo`, { params });
+  }
+
+  listarPlanejamento(projetoId: number): Observable<StandardResponse<DemandaPlanejamentoDto[]>> {
+    const params = new HttpParams().set('projetoId', String(projetoId));
+    return this.httpClient.get<StandardResponse<DemandaPlanejamentoDto[]>>(`${this.urlBase}/planejamento`, { params });
   }
 
   criar(dto: DemandaCriarDto): Observable<StandardResponse<DemandaCriadaDto>> {

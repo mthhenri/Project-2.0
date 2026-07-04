@@ -100,6 +100,19 @@ export class DemandaController {
     return this.demandaService.listarAtribuidas(usuarioAtivo);
   }
 
+  @ApiOperation({ summary: 'Listar demandas não-concluídas do projeto com horas executadas e execuções ativas (somente gestor)' })
+  @ApiResponse({ status: 200, description: 'Planejamento do projeto recuperado com sucesso' })
+  @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+  @ApiResponse({ status: 403, description: 'Acesso restrito a gestores', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+  @GestorOnly()
+  @Get('planejamento')
+  listarPlanejamento(
+    @Query('projetoId', ParseIntPipe) projetoId: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ) {
+    return this.demandaService.listarPlanejamento({ projetoId }, usuarioAtivo);
+  }
+
   @ApiOperation({ summary: 'Recuperar demanda por ID' })
   @ApiResponse({ status: 200, description: 'Demanda recuperada com sucesso' })
   @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })

@@ -18,6 +18,9 @@ export class DemandaGrafoNoDto {
   @ApiProperty({ example: 8 })
   horasEstimadas: number;
 
+  @ApiProperty({ example: 120 })
+  minutosExecutados: number;
+
   @ApiPropertyOptional({ example: null })
   demandaPaiId: number | null;
 

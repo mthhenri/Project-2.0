@@ -40,6 +40,8 @@ import {
   DemandaAtribuidaDto,
   DemandaAtribuidasListarDto,
   DemandaInternoAlterarDto,
+  DemandaPlanejamentoDto,
+  DemandaPlanejamentoListarDto,
 } from '@project20/shared';
 
 type DemandaCriarDados = Omit<Demanda, 'id' | 'isDeleted' | 'createdDate' | 'updatedDate' | 'deletedDate'>;
@@ -320,6 +322,81 @@ export class DemandaRepository extends BaseRepository<Demanda> {
   }
 
   /**
+   * Lista as demandas não-concluídas de um projeto (estruturais e folhas) para a visão de
+   * Planejamento do gestor. Estruturais também podem ter atividades/execuções próprias e
+   * horas estimadas, então também entram como linha. Cada linha traz o caminho hierárquico
+   * (raiz → demanda, via CTE recursiva), as horas estimadas, os minutos executados e os
+   * executores ativos (quem está com execução aberta agora).
+   *
+   * `minutosExecutados` soma as execuções das atividades diretas da demanda, tratando a
+   * execução em andamento (`fim_data IS NULL`) como se encerrasse agora — `COALESCE(fim_data, NOW())`.
+   * Como `execucao.inicio_data`/`fim_data` são `timestamptz`, a comparação com `NOW()` é correta.
+   */
+  async listarPlanejamento(dto: DemandaPlanejamentoListarDto): Promise<DemandaPlanejamentoDto[]> {
+    return this.executarConsulta<DemandaPlanejamentoDto>(
+      `WITH RECURSIVE caminho_demanda AS (
+         SELECT demanda.id,
+                demanda.nome::text          AS caminho,
+                demanda.is_estrutural,
+                demanda.tipo_demanda_status_id,
+                demanda.horas_estimadas
+         FROM demanda
+         WHERE demanda.projeto_id = :projetoId
+           AND demanda.demanda_pai_id IS NULL
+           AND demanda.is_deleted = false
+         UNION ALL
+         SELECT demanda_filho.id,
+                (caminho_demanda.caminho || :separadorCaminho || demanda_filho.nome)::text,
+                demanda_filho.is_estrutural,
+                demanda_filho.tipo_demanda_status_id,
+                demanda_filho.horas_estimadas
+         FROM demanda AS demanda_filho
+         INNER JOIN caminho_demanda ON demanda_filho.demanda_pai_id = caminho_demanda.id
+         WHERE demanda_filho.projeto_id = :projetoId
+           AND demanda_filho.is_deleted = false
+       )
+       SELECT
+         caminho_demanda.id              AS "demandaId",
+         caminho_demanda.caminho         AS "caminho",
+         caminho_demanda.is_estrutural   AS "isEstrutural",
+         tipo_demanda_status.codigo      AS status,
+         caminho_demanda.horas_estimadas AS "horasEstimadas",
+         COALESCE((
+           SELECT SUM(EXTRACT(EPOCH FROM (COALESCE(execucao.fim_data, NOW()) - execucao.inicio_data)) / 60)
+           FROM atividade
+           INNER JOIN execucao
+             ON execucao.atividade_id = atividade.id
+             AND execucao.is_deleted = false
+           WHERE atividade.demanda_id = caminho_demanda.id
+             AND atividade.is_deleted = false
+         ), 0)::int AS "minutosExecutados",
+         COALESCE((
+           SELECT JSON_AGG(JSON_BUILD_OBJECT(
+             'usuarioId', usuario.id,
+             'nomeCompleto', usuario.nome_completo
+           ))
+           FROM atividade
+           INNER JOIN execucao
+             ON execucao.atividade_id = atividade.id
+             AND execucao.is_deleted = false
+             AND execucao.fim_data IS NULL
+           INNER JOIN usuario
+             ON usuario.id = atividade.usuario_id
+             AND usuario.is_deleted = false
+           WHERE atividade.demanda_id = caminho_demanda.id
+             AND atividade.is_deleted = false
+         ), '[]'::json) AS "executoresAtivos"
+       FROM caminho_demanda
+       INNER JOIN tipo_demanda_status
+         ON tipo_demanda_status.id = caminho_demanda.tipo_demanda_status_id
+         AND tipo_demanda_status.is_deleted = false
+       WHERE tipo_demanda_status.codigo IN ('PENDENTE', 'PLANEJADA')
+       ORDER BY caminho_demanda.caminho ASC`,
+      { projetoId: dto.projetoId, separadorCaminho: SEPARADOR_CAMINHO },
+    );
+  }
+
+  /**
    * Altera campos da demanda e retorna o estado atualizado.
    */
   async alterar(dto: DemandaInternoAlterarDto): Promise<DemandaRecuperadaDto> {
@@ -400,6 +477,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
     status: TipoDemandaStatusEnum;
     isEstrutural: boolean;
     horasEstimadas: number;
+    minutosExecutados: number;
     nivel: number;
     temDescricaoTecnica: boolean;
     temDescricaoCliente: boolean;
@@ -413,6 +491,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
       status: TipoDemandaStatusEnum;
       isEstrutural: boolean;
       horasEstimadas: number;
+      minutosExecutados: number;
       nivel: number;
       temDescricaoTecnica: boolean;
       temDescricaoCliente: boolean;
@@ -443,6 +522,15 @@ export class DemandaRepository extends BaseRepository<Demanda> {
          tipo_demanda_status.codigo     AS status,
          arvore_demanda.is_estrutural   AS "isEstrutural",
          arvore_demanda.horas_estimadas AS "horasEstimadas",
+         COALESCE((
+           SELECT SUM(EXTRACT(EPOCH FROM (COALESCE(execucao.fim_data, NOW()) - execucao.inicio_data)) / 60)
+           FROM atividade
+           INNER JOIN execucao
+             ON execucao.atividade_id = atividade.id
+             AND execucao.is_deleted = false
+           WHERE atividade.demanda_id = demanda.id
+             AND atividade.is_deleted = false
+         ), 0)::int                     AS "minutosExecutados",
          arvore_demanda.nivel,
          NULLIF(demanda.descricao_tecnica, '') IS NOT NULL AS "temDescricaoTecnica",
          NULLIF(demanda.descricao_cliente,  '') IS NOT NULL AS "temDescricaoCliente",
@@ -534,6 +622,15 @@ export class DemandaRepository extends BaseRepository<Demanda> {
          tipo_demanda_status.codigo AS status,
          demanda.is_estrutural    AS "isEstrutural",
          demanda.horas_estimadas  AS "horasEstimadas",
+         COALESCE((
+           SELECT SUM(EXTRACT(EPOCH FROM (COALESCE(execucao.fim_data, NOW()) - execucao.inicio_data)) / 60)
+           FROM atividade
+           INNER JOIN execucao
+             ON execucao.atividade_id = atividade.id
+             AND execucao.is_deleted = false
+           WHERE atividade.demanda_id = demanda.id
+             AND atividade.is_deleted = false
+         ), 0)::int               AS "minutosExecutados",
          demanda.demanda_pai_id   AS "demandaPaiId",
          NULLIF(demanda.descricao_tecnica, '') IS NOT NULL AS "temDescricaoTecnica",
          NULLIF(demanda.descricao_cliente,  '') IS NOT NULL AS "temDescricaoCliente",

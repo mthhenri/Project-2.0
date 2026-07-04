@@ -42,7 +42,10 @@
         [severity]="severidadeStatus(arvoreItem.status)"
       />
       @if (arvoreItem.horasEstimadas > 0) {
-        <span class="demanda-arvore-item__horas">{{ arvoreItem.horasEstimadas }}h</span>
+        <span class="demanda-arvore-item__horas">{{ arvoreItem.horasEstimadas }}h est.</span>
+      }
+      @if (arvoreItem.minutosExecutados > 0) {
+        <span class="demanda-arvore-item__horas demanda-arvore-item__horas--exec">{{ arvoreItem.minutosExecutados | minutosParagHoras }} exec.</span>
       }
     </div>
   </div>

@@ -10,4 +10,4 @@ export interface DemandaVisualizacao {
   projetoId: number;
 }
 
-export type ModoVisualizacao = 'grafo' | 'lista';
+export type ModoVisualizacao = 'grafo' | 'lista' | 'planejamento';

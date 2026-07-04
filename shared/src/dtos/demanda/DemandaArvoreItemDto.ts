@@ -18,6 +18,9 @@ export class DemandaArvoreItemDto {
   @ApiProperty({ example: 8 })
   horasEstimadas: number;
 
+  @ApiProperty({ example: 120 })
+  minutosExecutados: number;
+
   @ApiProperty({ example: 0, description: 'Profundidade na árvore (0 = raiz da consulta)' })
   nivel: number;
 

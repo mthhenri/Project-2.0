@@ -26,11 +26,11 @@ Controle de acesso gestor-only já tem padrão pronto: o decorator `@GestorOnly(
 1. **"Em desenvolvimento" não é status.** Os status da demanda são apenas `PENDENTE`, `PLANEJADA`, `CONCLUIDA`. A visão de Planejamento lista as **não-concluídas** (`PENDENTE` + `PLANEJADA`). "Em desenvolvimento" é um **estado derivado** — a demanda tem execução ativa e/ou horas executadas — e **não** vira status novo. (O estado `DESENVOLVENDO` existe só no nível de `atividade`, o que é coerente com derivar isso das execuções.)
 2. **Escopo por projeto.** É o **terceiro modo** da tela atual de demandas (mesmo `projetoId` selecionado), não uma tela nova nem cross-project.
 3. **Só horas próprias.** As horas executadas de uma demanda somam **apenas as atividades diretas dela** — **sem rollup recursivo** para pais/estruturais. Mesma regra no grafo e na lista.
-4. **Linhas do flat = só folhas de trabalho.** Apenas demandas `is_estrutural = false` viram linha. As estruturais entram **somente como prefixo** no nome (`caminho`). Toda linha tem, portanto, comparação estimado × executado significativa.
+4. **Linhas do flat = todas as demandas não-concluídas (estruturais e folhas).** ~~Apenas demandas `is_estrutural = false` viram linha.~~ *(Ajuste pedido pelo usuário:)* demandas **estruturais também podem ser rodadas** (ter atividades/execuções próprias) e têm **planejamento de horas máximas** (`horas_estimadas`), então **também aparecem** como linha. O `caminho` continua mostrando a hierarquia (a estrutural também é prefixo dos filhos). O DTO ganha `isEstrutural: boolean` para o front distinguir visualmente (ícone de pasta). `minutosExecutados` continua sendo **só das atividades diretas** (sem rollup dos filhos — Decisão #3), então uma estrutural mostra apenas as horas das suas próprias execuções.
 5. **Granularidade: nível demanda.** Uma linha por demanda com os agregados. **Drill-down de atividades/execuções por demanda é fase 2** (fora desta task).
 6. **Colunas confirmadas:** estimado × executado + %, alerta de estouro, e quem executa agora. **Sem** coluna de `previsao_fim_data` nesta versão.
 7. **Horas sumarizadas no grafo/lista são para todos.** O número de horas executadas por demanda aparece no tooltip do grafo e no item da lista para qualquer usuário que já enxerga o grafo (dev e gestor). Só a **visão Planejamento** é exclusiva do gestor.
-8. **Cálculo invariante a fuso.** As horas somam **apenas execuções encerradas** (`fim_data IS NOT NULL`), pela diferença entre dois timestamps gravados; **nunca** comparar com `NOW()`/relógio do banco (coerente com a correção de fuso da task 75). "Quem executa agora" apenas **lista** os executores ativos (não calcula duração ao vivo).
+8. **Horas em tempo real (inclui execução em andamento).** `minutosExecutados` soma **todas** as execuções não-deletadas da demanda, tratando a execução **aberta** (`fim_data IS NULL`) como se tivesse encerrado **agora** — `COALESCE(execucao.fim_data, NOW())`. Assim o total reflete em tempo real quantas horas a demanda já consumiu, contando o cronômetro que está rodando. Como `execucao.inicio_data`/`fim_data` são **`timestamptz`** (migration `20240022`), comparar com `NOW()` (também `timestamptz`) é **correto** — não há offset de fuso; é o mesmo padrão já usado em `execucao.repository` (`listar`, `alterar`, `listarParaRelatorio`). "Quem executa agora" (`executoresAtivos`) continua **listando** os executores das execuções abertas. *(Ajuste pedido pelo usuário — substitui a versão original que somava só execuções encerradas.)*
 
 ---
 
@@ -44,7 +44,8 @@ A visão de Planejamento é um **recorte computado** (como `PontoDiarioDto`): `E
 // DemandaPlanejamentoDto.ts — item do recorte (uma demanda de trabalho)
 export class DemandaPlanejamentoDto {
   demandaId: number;
-  caminho: string;                  // "Pai - Filho - Neto" (nome com ancestrais)
+  caminho: string;                  // "Pai › Filho › Neto" (nome com ancestrais; separador ' › ' reusado de SEPARADOR_CAMINHO)
+  isEstrutural: boolean;            // estrutural também aparece (ajuste do usuário); front mostra ícone de pasta
   status: TipoDemandaStatusEnum;    // PENDENTE | PLANEJADA
   horasEstimadas: number;           // demanda.horas_estimadas
   minutosExecutados: number;        // soma das execuções encerradas das atividades diretas
@@ -83,18 +84,18 @@ export class DemandaPlanejamentoListarDto {
 **Novo — `listarPlanejamento(dto: DemandaPlanejamentoListarDto): Promise<DemandaPlanejamentoDto[]>`** (com JSDoc):
 - CTE recursiva descendo das raízes do projeto, acumulando o caminho:
   `caminho_demanda.caminho || ' - ' || demanda_filho.nome` (mesmo estilo de `listarDescendentes`/`listarAncestral`).
-- Seleciona da CTE apenas `is_estrutural = false` e `tipo_demanda_status.codigo IN ('PENDENTE','PLANEJADA')`, com `is_deleted = false` em todas as tabelas.
-- `minutosExecutados`: subconsulta escalar
-  `COALESCE((SELECT SUM(EXTRACT(EPOCH FROM (execucao.fim_data - execucao.inicio_data)) / 60)
+- Seleciona da CTE **todas** as demandas com `tipo_demanda_status.codigo IN ('PENDENTE','PLANEJADA')` (estruturais **e** folhas — ajuste do usuário), com `is_deleted = false` em todas as tabelas. Expõe `is_estrutural AS "isEstrutural"`.
+- `minutosExecutados`: subconsulta escalar (inclui execução em andamento via `COALESCE(fim_data, NOW())`)
+  `COALESCE((SELECT SUM(EXTRACT(EPOCH FROM (COALESCE(execucao.fim_data, NOW()) - execucao.inicio_data)) / 60)
              FROM atividade INNER JOIN execucao ON execucao.atividade_id = atividade.id
-               AND execucao.is_deleted = false AND execucao.fim_data IS NOT NULL
+               AND execucao.is_deleted = false
              WHERE atividade.demanda_id = caminho_demanda.id AND atividade.is_deleted = false), 0)::int`.
 - `executoresAtivos`: subconsulta `JSON_AGG`/`JSON_BUILD_OBJECT` (mesmo padrão das tags no `recuperarGrafo`)
   sobre execuções abertas (`execucao.fim_data IS NULL`) das atividades da demanda, juntando `usuario`
   (`usuario.id` = `atividade.usuario_id`), com `COALESCE(..., '[]'::json)`.
 - `ORDER BY caminho`. Parâmetros nomeados; nenhum `VALUES`/`DEFAULT`/alias abreviado.
 
-**Modificar — `recuperarGrafo`:** adicionar ao SELECT de **nós** a mesma subconsulta escalar de `minutosExecutados` (só atividades diretas, execuções encerradas). Arestas inalteradas.
+**Modificar — `recuperarGrafo`:** adicionar ao SELECT de **nós** a mesma subconsulta escalar de `minutosExecutados` (só atividades diretas, incluindo a execução aberta via `COALESCE(fim_data, NOW())`). Arestas inalteradas.
 
 ### `demanda.service.ts`
 
@@ -164,7 +165,7 @@ Sem migration — nenhuma mudança de schema.
 
 1. `npm run build --workspace=backend` (cobre o type-check do `shared`) e `npm run build --workspace=frontend` sem erros novos.
 2. Sem migration: `npm run db:up` e a API sobem sem `db:migrate` adicional.
-3. **Gestor:** `GET /demanda/planejamento?projetoId=<id>` → 200, lista flat **só** com demandas `is_estrutural=false` não-concluídas, `caminho` concatenado (`Pai - Filho - Neto`), `minutosExecutados` e `executoresAtivos` corretos.
+3. **Gestor:** `GET /demanda/planejamento?projetoId=<id>` → 200, lista flat com **todas** as demandas não-concluídas (estruturais **e** folhas), `caminho` concatenado (`Pai › Filho › Neto`), `isEstrutural`, `minutosExecutados` (inclui execução em andamento) e `executoresAtivos` corretos.
 4. **Desenvolvedor:** mesma rota → **403** (`@GestorOnly()`).
 5. `GET /demanda/grafo?projetoId=<id>` → cada nó traz `minutosExecutados`.
 6. **Frontend:** como **gestor** aparece o 3º botão "Planejamento"; como **desenvolvedor** só Grafo/Lista. A nova visão mostra estimado × executado + %, alerta de estouro e quem executa agora.

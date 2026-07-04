@@ -42,3 +42,6 @@ export * from './DemandaConexaoListarDto';
 export * from './DemandaAtribuidaDto';
 export * from './DemandaAtribuidasListarDto';
 export * from './DemandaMembroRemoverDto';
+export * from './DemandaPlanejamentoDto';
+export * from './ExecutorAtivoDto';
+export * from './DemandaPlanejamentoListarDto';

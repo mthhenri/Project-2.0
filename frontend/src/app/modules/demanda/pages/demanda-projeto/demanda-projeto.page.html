@@ -42,6 +42,16 @@
             size="small"
             (onClick)="alternarModo('lista')"
           />
+          @if (sessao.eGestor()) {
+            <p-button
+              label="Planejamento"
+              icon="pi pi-chart-bar"
+              [outlined]="modoVisualizacao() !== 'planejamento'"
+              [text]="modoVisualizacao() !== 'planejamento'"
+              size="small"
+              (onClick)="alternarModo('planejamento')"
+            />
+          }
         </div>
       }
     </div>
@@ -110,6 +120,13 @@
             (alterado)="recarregarGrafo()"
           />
         </div>
+
+        @if (modoVisualizacao() === 'planejamento') {
+          <app-demanda-planejamento-painel
+            [itens]="planejamento()"
+            [carregando]="carregandoPlanejamento()"
+          />
+        }
       }
     </div>
 

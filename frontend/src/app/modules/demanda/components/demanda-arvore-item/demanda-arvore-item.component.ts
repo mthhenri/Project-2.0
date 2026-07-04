@@ -4,13 +4,14 @@ import { ContextMenu } from 'primeng/contextmenu';
 import { MenuItem } from 'primeng/api';
 import { DemandaArvoreItemDto, TipoDemandaStatusEnum } from '@project20/shared';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
+import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-horas.pipe';
 
 type CampoDescricao = 'descricaoTecnica' | 'descricaoCliente' | 'documentacao';
 
 @Component({
   selector: 'app-demanda-arvore-item',
   standalone: true,
-  imports: [Tag, ContextMenu, forwardRef(() => DemandaArvoreItemComponent)],
+  imports: [Tag, ContextMenu, MinutosParaHorasPipe, forwardRef(() => DemandaArvoreItemComponent)],
   templateUrl: './demanda-arvore-item.component.html',
   styleUrl: './demanda-arvore-item.component.scss',
 })

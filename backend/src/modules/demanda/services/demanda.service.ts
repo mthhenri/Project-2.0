@@ -25,6 +25,8 @@ import {
   DemandaUsuarioAtribuidoDto,
   DemandaMembroDto,
   DemandaMembroRemoverDto,
+  DemandaPlanejamentoDto,
+  DemandaPlanejamentoListarDto,
   TagResumoDto,
   TipoUsuarioEnum,
 } from '@project20/shared';
@@ -228,6 +230,25 @@ export class DemandaService {
   }
 
   /**
+   * Lista as demandas de trabalho não-concluídas do projeto para a visão de Planejamento,
+   * com horas estimadas × executadas e execuções ativas. Restrito a gestor (garantido pelo
+   * `@GestorOnly()` da controller); gestor tem acesso total, sem filtro por demanda_usuario.
+   */
+  async listarPlanejamento(
+    dto: DemandaPlanejamentoListarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<StandardResponse<DemandaPlanejamentoDto[]>> {
+    void usuarioAtivo; // acesso gestor-only garantido pelo @GestorOnly() da controller
+    const itens = await this.demandaRepositorio.listarPlanejamento(dto);
+
+    return {
+      sucesso: true,
+      dados: itens,
+      mensagem: 'Planejamento do projeto recuperado com sucesso',
+    };
+  }
+
+  /**
    * Recupera demanda por ID.
    * Desenvolvedor pode visualizar qualquer demanda de um projeto ao qual tem acesso;
    * a flag `podeEditar` indica se ele pode editá-la (só quando é membro da demanda).
@@ -367,6 +388,7 @@ export class DemandaService {
         status:              item.status,
         isEstrutural:        item.isEstrutural,
         horasEstimadas:      item.horasEstimadas,
+        minutosExecutados:   item.minutosExecutados,
         temDescricaoTecnica: item.temDescricaoTecnica,
         temDescricaoCliente: item.temDescricaoCliente,
         temDocumentacao:     item.temDocumentacao,

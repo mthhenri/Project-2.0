@@ -91,6 +91,10 @@
     font-size: 0.8rem;
     color: var(--app-surface-500);
     font-weight: 500;
+
+    &--exec {
+      color: var(--app-realce-primario);
+    }
   }
 
   &__filhos {
