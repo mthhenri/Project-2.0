@@ -163,3 +163,7 @@ A pedido do usuário, a preferência **também** vale nos **formulários de cria
 - Na **edição**, ao abrir com a opção em dias, o valor em horas é convertido para dias na exibição (`horas / HORAS_POR_DIA`).
 - Arquivos: `demanda-formulario-dialog.component.{ts,html}`, `demanda-edicao-dialog.component.{ts,html}`.
 - **Verificado ao vivo:** em dias, criar com `1,5 dias` → `POST /demanda` com `horasEstimadas: 12` (demanda de teste removida em seguida).
+
+### Tempo executado da **atividade** em dias (revoga parcialmente a Decisão #5)
+
+A pedido do usuário, o **tempo executado total da atividade** (`totalMinutosExecutados`) também passa a aparecer em dias: coluna **"Tempo executado"** da listagem de atividades (`atividade-listagem`) e o total por atividade dentro do dialog de detalhe da demanda (`demanda-detalhe-dialog`, linha do `pi-clock`). Ambos com o mesmo `tempoDemanda` + tooltip do h/min no hover. **Continuam em h/min** (fora do "das atividades"): as durações de **cada execução** (`duracaoMinutos`) nas sub-listas de execução (0,05 dias p/ 24min é ruim), o **Ponto** (frequência) e o **histórico de Execuções**. **Verificado ao vivo:** listagem em dias → "0,04 dias", "20,33 dias", "1,05 dias".

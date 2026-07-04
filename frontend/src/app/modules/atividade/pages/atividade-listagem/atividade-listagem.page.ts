@@ -47,6 +47,8 @@ import { AssistenteDescricaoComponent } from '../../../../shared/components/assi
 import { AtividadeVisualizarDialogComponent } from '../../components/atividade-visualizar-dialog/atividade-visualizar-dialog.component';
 import { DataBrasileiraPipe } from '../../../../shared/pipes/data-brasileira.pipe';
 import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-horas.pipe';
+import { TempoDemandaPipe } from '../../../../shared/pipes/tempo-demanda.pipe';
+import { VisualizacaoTempoService } from '../../../../core/services/visualizacao-tempo.service';
 import { BloquearCaracteresProibidosDirective } from '../../../../shared/directives/bloquear-caracteres-proibidos.directive';
 import {
   ATIVIDADE_STATUS_OPCOES,
@@ -83,6 +85,7 @@ type CampoDescricaoDemanda = 'descricaoCliente' | 'descricaoTecnica' | 'document
     AtividadeVisualizarDialogComponent,
     DataBrasileiraPipe,
     MinutosParaHorasPipe,
+    TempoDemandaPipe,
     BloquearCaracteresProibidosDirective,
   ],
   templateUrl: './atividade-listagem.page.html',
@@ -101,6 +104,7 @@ export class AtividadeListagemPage implements OnInit {
   private readonly formBuilder = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
   readonly sessao = inject(UsuarioSessaoService);
+  readonly unidadeTempo = inject(VisualizacaoTempoService);
 
   readonly formularioFiltros = this.formBuilder.group({
     status:    [ATIVIDADE_STATUS_NAO_DESENVOLVIDA as TipoAtividadeStatusEnum[]],

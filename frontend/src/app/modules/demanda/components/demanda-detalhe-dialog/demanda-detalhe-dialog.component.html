@@ -231,9 +231,12 @@
                         <span class="demanda-detalhe-dialog__atividade-avatar">{{ iniciaisUsuario(atividade.nomeUsuario) }}</span>
                         {{ atividade.nomeUsuario }}
                       </span>
-                      <span class="demanda-detalhe-dialog__atividade-tempo">
+                      <span
+                        class="demanda-detalhe-dialog__atividade-tempo"
+                        [pTooltip]="unidadeTempo.emDias() ? (atividade.totalMinutosExecutados | tempoDemanda: false : 'minutos') : ''"
+                      >
                         <i class="pi pi-clock"></i>
-                        {{ atividade.totalMinutosExecutados | minutosParagHoras }}
+                        {{ atividade.totalMinutosExecutados | tempoDemanda: unidadeTempo.emDias() : 'minutos' }}
                       </span>
                     </div>
                   </div>

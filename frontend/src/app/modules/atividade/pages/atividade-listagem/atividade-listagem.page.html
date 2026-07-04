@@ -189,7 +189,10 @@
           }
         </td>
         <td>
-          <span class="text-color">{{ atividade.totalMinutosExecutados | minutosParagHoras }}</span>
+          <span
+            class="text-color"
+            [pTooltip]="unidadeTempo.emDias() ? (atividade.totalMinutosExecutados | tempoDemanda: false : 'minutos') : ''"
+          >{{ atividade.totalMinutosExecutados | tempoDemanda: unidadeTempo.emDias() : 'minutos' }}</span>
         </td>
         <td>
           <div class="atividade-listagem__tags">
