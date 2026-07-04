@@ -26,6 +26,8 @@ import { DemandaService } from '../../services/demanda.service';
 import { TagService } from '../../../tag/services/tag.service';
 import { UsuarioService } from '../../../usuario/services/usuario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
+import { VisualizacaoTempoService } from '../../../../core/services/visualizacao-tempo.service';
+import { HORAS_POR_DIA } from '../../../../core/models/visualizacao-tempo.model';
 import { BloquearCaracteresProibidosDirective } from '../../../../shared/directives/bloquear-caracteres-proibidos.directive';
 
 @Component({
@@ -59,6 +61,7 @@ export class DemandaFormularioDialogComponent implements OnChanges {
   private readonly messageService = inject(MessageService);
   private readonly formBuilder = inject(FormBuilder);
   readonly sessao = inject(UsuarioSessaoService);
+  readonly unidadeTempo = inject(VisualizacaoTempoService);
 
   readonly demandasPaiOpcoes = signal<DemandaResumoDto[]>([]);
   readonly carregando = signal<boolean>(false);
@@ -125,7 +128,7 @@ export class DemandaFormularioDialogComponent implements OnChanges {
       demandaPaiId:    valor.demandaPaiId ?? undefined,
       status:          valor.status!,
       isEstrutural:    valor.isEstrutural ?? false,
-      horasEstimadas:  valor.horasEstimadas ?? 0,
+      horasEstimadas:  this.paraHorasEstimadas(valor.horasEstimadas),
       previsaoFimData: valor.previsaoFimData ? this.formatarData(valor.previsaoFimData) : undefined,
     };
     if (this.sessao.eGestor()) {
@@ -217,6 +220,15 @@ export class DemandaFormularioDialogComponent implements OnChanges {
           }
         },
       });
+  }
+
+  /**
+   * Converte o valor do campo (em dias, quando a preferência está em dias) para horas
+   * antes de enviar ao backend, que sempre armazena horas. Em horas, passa direto.
+   */
+  private paraHorasEstimadas(valor: number | null | undefined): number {
+    const numero = valor ?? 0;
+    return this.unidadeTempo.emDias() ? Math.round(numero * HORAS_POR_DIA) : numero;
   }
 
   private formatarData(data: Date): string {

@@ -63,11 +63,18 @@
       </div>
 
       <div class="demanda-dialog__campo demanda-dialog__campo--horas">
-        <label class="demanda-dialog__label">Horas Estimadas <span class="demanda-dialog__obrigatorio">*</span></label>
+        <label class="demanda-dialog__label">
+          {{ unidadeTempo.emDias() ? 'Dias Estimados' : 'Horas Estimadas' }}
+          <span class="demanda-dialog__obrigatorio">*</span>
+        </label>
         <p-inputnumber
           formControlName="horasEstimadas"
           [min]="0"
-          suffix="h"
+          [step]="unidadeTempo.emDias() ? 0.5 : 1"
+          [minFractionDigits]="0"
+          [maxFractionDigits]="unidadeTempo.emDias() ? 2 : 0"
+          [suffix]="unidadeTempo.emDias() ? ' dia(s)' : 'h'"
+          locale="pt-BR"
           class="w-full"
           [inputStyle]="{ width: '100%' }"
         />

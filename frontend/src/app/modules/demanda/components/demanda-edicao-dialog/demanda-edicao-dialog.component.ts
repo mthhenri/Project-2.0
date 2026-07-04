@@ -18,6 +18,8 @@ import {
   MENSAGEM_CARACTERES_PROIBIDOS_DICA,
 } from '@project20/shared';
 import { DemandaService } from '../../services/demanda.service';
+import { VisualizacaoTempoService } from '../../../../core/services/visualizacao-tempo.service';
+import { HORAS_POR_DIA } from '../../../../core/models/visualizacao-tempo.model';
 import { BloquearCaracteresProibidosDirective } from '../../../../shared/directives/bloquear-caracteres-proibidos.directive';
 
 @Component({
@@ -46,6 +48,7 @@ export class DemandaEdicaoDialogComponent implements OnChanges {
   private readonly demandaService = inject(DemandaService);
   private readonly messageService = inject(MessageService);
   private readonly formBuilder = inject(FormBuilder);
+  readonly unidadeTempo = inject(VisualizacaoTempoService);
 
   readonly demandasPaiOpcoes = signal<DemandaResumoDto[]>([]);
   readonly carregando = signal<boolean>(false);
@@ -96,7 +99,7 @@ export class DemandaEdicaoDialogComponent implements OnChanges {
       demandaPaiId:     valor.demandaPaiId ?? undefined,
       status:           valor.status ?? undefined,
       isEstrutural:     valor.isEstrutural ?? undefined,
-      horasEstimadas:   valor.horasEstimadas ?? undefined,
+      horasEstimadas:   valor.horasEstimadas == null ? undefined : this.paraHorasEstimadas(valor.horasEstimadas),
       previsaoFimData:  valor.previsaoFimData ? this.formatarData(valor.previsaoFimData) : undefined,
     };
 
@@ -137,7 +140,9 @@ export class DemandaEdicaoDialogComponent implements OnChanges {
               demandaPaiId:     demanda.demandaPaiId ?? null,
               status:           demanda.status,
               isEstrutural:     demanda.isEstrutural,
-              horasEstimadas:   demanda.horasEstimadas,
+              horasEstimadas:   this.unidadeTempo.emDias()
+                                  ? demanda.horasEstimadas / HORAS_POR_DIA
+                                  : demanda.horasEstimadas,
               previsaoFimData:  demanda.previsaoFimData
                                   ? new Date(demanda.previsaoFimData + 'T12:00:00')
                                   : null,
@@ -162,6 +167,14 @@ export class DemandaEdicaoDialogComponent implements OnChanges {
           }
         },
       });
+  }
+
+  /**
+   * Converte o valor do campo (em dias, quando a preferência está em dias) para horas
+   * antes de enviar ao backend, que sempre armazena horas. Em horas, passa direto.
+   */
+  private paraHorasEstimadas(valor: number): number {
+    return this.unidadeTempo.emDias() ? Math.round(valor * HORAS_POR_DIA) : valor;
   }
 
   private formatarData(data: Date): string {

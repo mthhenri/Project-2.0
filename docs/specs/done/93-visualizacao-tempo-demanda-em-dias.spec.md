@@ -148,6 +148,18 @@ Sem backend, sem shared, sem migration.
 - **Backend/shared/migration** — nenhum. Valores continuam em horas/minutos no contrato.
 - **Configurar horas-por-dia** (por usuário/projeto/global) — fixo em 8; eventual configuração é outra task.
 - **Converter durações fora da demanda** (Ponto, Execuções, Atividades, relatórios, durações por atividade no detalhe) — Decisão #5.
-- **Alterar os inputs de `horasEstimadas`** nos dialogs de criar/editar — Decisão #6.
+- ~~**Alterar os inputs de `horasEstimadas`** nos dialogs de criar/editar — Decisão #6.~~ **Revogado no ajuste pós-entrega abaixo.**
 - **Alterar o pipe global `minutosParagHoras`** ou seu comportamento atual.
 - **Redesenhar o grafo ao togglar** — o tooltip pega a preferência no próximo desenho (Decisão #8).
+
+---
+
+## Ajuste pós-entrega (mesma sessão) — estimativa **em dias** nos formulários
+
+A pedido do usuário, a preferência **também** vale nos **formulários de criar e editar demanda** (revoga a Decisão #6). Com a opção em dias:
+
+- Rótulo vira **"Dias Estimados"**; o `p-inputnumber` aceita **decimais** (passo `0.5`, `maxFractionDigits=2`, `locale="pt-BR"` → vírgula) com sufixo `" dia(s)"`. Em horas, permanece **idêntico** (inteiro, passo 1, sufixo `h`/vazio).
+- **Conversão para horas no envio** (`Math.round(valor * HORAS_POR_DIA)`) — o backend continua recebendo/armazenando **horas**, sem mudança de contrato. Ex.: `1,5 dias → 12h`, `4 dias → 32h`.
+- Na **edição**, ao abrir com a opção em dias, o valor em horas é convertido para dias na exibição (`horas / HORAS_POR_DIA`).
+- Arquivos: `demanda-formulario-dialog.component.{ts,html}`, `demanda-edicao-dialog.component.{ts,html}`.
+- **Verificado ao vivo:** em dias, criar com `1,5 dias` → `POST /demanda` com `horasEstimadas: 12` (demanda de teste removida em seguida).
