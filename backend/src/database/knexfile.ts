@@ -1,6 +1,7 @@
 import type { Knex } from 'knex';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
+import { SqlMigrationSource } from './sql-migration-source';
 
 // process.env é intencional aqui: knexfile.ts é exclusivo da CLI do Knex (db:migrate/db:rollback)
 // e roda fora do contexto NestJS, onde injeção de ConfigService não é possível.
@@ -26,8 +27,7 @@ const configuracao: Knex.Config = {
     },
   },
   migrations: {
-    directory: './migrations',
-    extension: 'ts',
+    migrationSource: new SqlMigrationSource(path.resolve(__dirname, './migrations')),
   },
 };
 

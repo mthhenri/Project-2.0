@@ -1,6 +1,7 @@
 import Knex from 'knex';
 import * as path from 'path';
 import { ConfigService } from '../../config/config.service';
+import { SqlMigrationSource } from '../../database/sql-migration-source';
 
 export const DATABASE_CONNECTION = 'DATABASE_CONNECTION';
 
@@ -29,8 +30,9 @@ export const databaseProvider = {
         },
       },
       migrations: {
-        directory: path.resolve(__dirname, '../../database/migrations'),
-        extension: 'ts',
+        migrationSource: new SqlMigrationSource(
+          path.resolve(__dirname, '../../database/migrations'),
+        ),
       },
     });
   },

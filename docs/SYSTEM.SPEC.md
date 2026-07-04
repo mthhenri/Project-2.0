@@ -1026,6 +1026,56 @@ APP_PORTA=3000
 APP_AMBIENTE=development
 ```
 
+### 9.5 Migrations
+
+Cada migration é um **arquivo `.sql` puro** em `backend/src/database/migrations/`, nomeado
+`NNNN - Nome descritivo.sql` — prefixo inteiro sequencial de 4 dígitos (ordem de execução) +
+`" - "` + frase legível em português com inicial maiúscula. O Knex continua orquestrando
+`db:migrate`/`db:rollback` via um `Knex.MigrationSource` customizado (`sql-migration-source.ts`),
+registrado em `knexfile.ts` (CLI) e `database.provider.ts` (runtime). A tabela de controle
+continua sendo a `knex_migrations` interna do Knex.
+
+O arquivo tem duas seções, cada marcador sozinho na linha: `-- UP` (obrigatória) e `-- DOWN`
+(obrigatória, salvo justificativa em comentário no arquivo). A próxima migration nova começa em
+`0028`.
+
+```sql
+-- UP
+
+CREATE TABLE exemplo_tabela (
+  id            SERIAL      PRIMARY KEY,
+  created_date  TIMESTAMPTZ NOT NULL,
+  updated_date  TIMESTAMPTZ NOT NULL,
+  is_deleted    BOOLEAN     NOT NULL,
+  deleted_date  TIMESTAMPTZ,
+
+  nome          VARCHAR(255) NOT NULL
+);
+
+CREATE TRIGGER trg_exemplo_tabela_updated_date
+  BEFORE UPDATE ON exemplo_tabela
+  FOR EACH ROW EXECUTE FUNCTION fn_set_updated_date();
+
+-- DOWN
+
+DROP TRIGGER IF EXISTS trg_exemplo_tabela_updated_date ON exemplo_tabela;
+DROP TABLE IF EXISTS exemplo_tabela CASCADE;
+```
+
+**Transação automática via Knex — nunca escrita no `.sql`.** O Knex abre uma transação por
+migration antes de invocar `up`/`down`; se qualquer instrução do bloco falhar, ele emite `ROLLBACK`
+sozinho (tudo ou nada). Por isso o arquivo **nunca** contém `BEGIN`/`COMMIT`/`ROLLBACK` — um
+`COMMIT` manual encerraria a transação que o Knex acredita estar aberta e quebraria a garantia.
+Única exceção: instruções proibidas dentro de transação (ex.: `CREATE INDEX CONCURRENTLY`) sinalizam
+com `-- NO TRANSACTION` logo após o marcador, e o `SqlMigrationSource` desabilita a transação só
+naquela migration.
+
+**Exceção de valores literais (só dentro de `migrations/`).** Como migration não recebe input de
+usuário, os valores (nomes de tag, feriados, códigos de enum) são **literais SQL** escritos direto
+no arquivo (`'Backend'`, `'#3b82f6'`, escapando `'` como `''`) — a única exceção à regra de
+parâmetros nomeados (§9.2 #8). O runtime (repositórios) continua 100% `:nomeParametro`. Todas as
+demais regras SQL (§9.1/§9.2) valem sem afrouxamento.
+
 ---
 
 ## 10. Validações

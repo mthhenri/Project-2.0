@@ -257,6 +257,43 @@ CHECK (status IN (...))                              -- gera demanda_status_chec
 
 ---
 
+## Migrations
+
+Arquivo `.sql` puro em `backend/src/database/migrations/`, nome `NNNN - Nome descritivo.sql`
+(4 dígitos + `" - "` + frase em português). Duas seções por marcador sozinho na linha: `-- UP`
+(obrigatória) e `-- DOWN` (obrigatória, salvo justificativa no arquivo). Próxima migration: `0028`.
+Detalhes completos no `SYSTEM.SPEC.md` §9.5.
+
+```sql
+-- UP
+
+CREATE TABLE exemplo (
+  id            SERIAL      PRIMARY KEY,
+  created_date  TIMESTAMPTZ NOT NULL,
+  updated_date  TIMESTAMPTZ NOT NULL,
+  is_deleted    BOOLEAN     NOT NULL,
+  deleted_date  TIMESTAMPTZ,
+
+  nome          VARCHAR(255) NOT NULL
+);
+
+-- DOWN
+
+DROP TABLE IF EXISTS exemplo CASCADE;
+```
+
+| ❌ Nunca no arquivo de migration | ✅ Fazer |
+|---|---|
+| `BEGIN` / `COMMIT` / `ROLLBACK` | Nada — o Knex abre/fecha a transação por migration sozinho |
+| Arquivo `.ts` com `up`/`down` | Arquivo `.sql` com marcadores `-- UP` / `-- DOWN` |
+| Deixar a seção `-- DOWN` de fora | Sempre incluir (ou justificar em comentário) |
+
+**Única exceção à regra de parâmetros nomeados:** dentro de `migrations/`, valores constantes
+(nomes de tag, feriados, códigos de enum) são **literais SQL** (`'Backend'`, escapando `'` como
+`''`) — migration não tem input de usuário. O runtime (repositórios) continua 100% `:nomeParametro`.
+
+---
+
 ## Camadas — Regras Rápidas
 
 ### Controller → burra
