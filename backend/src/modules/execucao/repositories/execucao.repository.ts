@@ -142,6 +142,28 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
   }
 
   /**
+   * Encerra em massa todas as execuções em andamento do sistema (fim_data = NOW()),
+   * usadas pelo job de auto-stop na virada do dia. Retorna as execuções encerradas
+   * para fins de auditoria/log.
+   */
+  async encerrarTodasAbertas(): Promise<ExecucaoEncerradaDto[]> {
+    return this.executarConsulta<ExecucaoEncerradaDto>(
+      `UPDATE execucao
+       SET fim_data     = NOW(),
+           updated_date = NOW()
+       WHERE fim_data IS NULL
+         AND is_deleted = false
+       RETURNING
+         id,
+         atividade_id AS "atividadeId",
+         descricao,
+         inicio_data  AS "inicioData",
+         fim_data     AS "fimData",
+         EXTRACT(EPOCH FROM (fim_data - inicio_data))::int / 60 AS "duracaoMinutos"`,
+    );
+  }
+
+  /**
    * Recupera execução por ID com duração calculada.
    * Retorna null se não encontrada ou deletada.
    */

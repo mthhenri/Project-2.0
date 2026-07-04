@@ -1137,7 +1137,7 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 | `projeto` | CRUD de projetos — apenas gestor cria |
 | `demanda` | CRUD, hierarquia, grafo force-directed (D3), tags, atribuições |
 | `atividade` | CRUD de atividades vinculadas a demandas, tags, controle de status |
-| `execucao` | Iniciar e encerrar execuções, histórico por atividade. O **gestor** também pode **registrar manualmente** uma execução já encerrada (`@GestorOnly POST /execucao/registro`), informando início e fim para o dono da atividade (valida datas e sobreposição). A **edição** de execução (`PUT /execucao/:id`) altera `descricao`, `inicio_data` e `fim_data` |
+| `execucao` | Iniciar e encerrar execuções, histórico por atividade. O **gestor** também pode **registrar manualmente** uma execução já encerrada (`@GestorOnly POST /execucao/registro`), informando início e fim para o dono da atividade (valida datas e sobreposição). A **edição** de execução (`PUT /execucao/:id`) altera `descricao`, `inicio_data` e `fim_data`. Um **job interno de auto-stop** (cron às 23:59:59 no fuso `APP_TIMEZONE`) encerra automaticamente todas as execuções abertas na virada do dia |
 | `ponto` | Resumo de ponto em três modos: **diário** (`GET /ponto/diario`), **mensal** (`GET /ponto/mensal`) e **todos hoje** (`GET /ponto/todos`, `@GestorOnly`). Calcula horas trabalhadas, intervalos e comparativo com meta; a meta é ponderada por **fração de dia** (1 dia útil, 0.5 meio período, 0 não útil/fim de semana) |
 | `calendario` | Gestão de dias não úteis (feriados, recessos) |
 | `tag` | CRUD de tags — apenas gestor cria e atribui |
@@ -1313,6 +1313,7 @@ correspondente é um `INTEGER` FK para o `id` dela; o repositório traduz `codig
 
 - Um usuário **não pode ter duas execuções ativas** (sem `fim_data`) simultaneamente
 - O campo `fim_data` é obrigatório para fechar uma execução
+- Toda execução aberta (`fim_data IS NULL`) é encerrada automaticamente pelo servidor às 23:59:59 (fuso `APP_TIMEZONE`) — uma execução nunca atravessa a virada do dia
 - Execuções em finais de semana são permitidas mas marcadas como horas extras (não contam na meta diária)
 
 ### Intervalos

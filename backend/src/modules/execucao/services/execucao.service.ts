@@ -1,5 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { SchedulerRegistry } from '@nestjs/schedule';
+import { CronJob } from 'cron';
 import { ExecucaoRepository } from '../repositories/execucao.repository';
+import { ConfigService } from '../../../config/config.service';
 import { AtividadeRepository } from '../../atividade/repositories/atividade.repository';
 import {
   ExecucaoIniciarDto,
@@ -24,17 +27,46 @@ import { UnauthorizedAccessException } from '../../../core/exceptions/unauthoriz
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 
 @Injectable()
-export class ExecucaoService {
+export class ExecucaoService implements OnModuleInit {
   /** Status em que uma execução pode ser iniciada. */
   private static readonly STATUS_EXECUTAVEL: TipoAtividadeStatusEnum[] = [
     TipoAtividadeStatusEnum.PLANEJADA,
     TipoAtividadeStatusEnum.DESENVOLVENDO,
   ];
 
+  private readonly logger = new Logger(ExecucaoService.name);
+
   constructor(
     private readonly execucaoRepositorio: ExecucaoRepository,
     private readonly atividadeRepositorio: AtividadeRepository,
+    private readonly schedulerRegistry: SchedulerRegistry,
+    private readonly configService: ConfigService,
   ) {}
+
+  /**
+   * Registra dinamicamente o cron de auto-stop na virada do dia. O fuso é resolvido
+   * do ConfigService (APP_TIMEZONE) — feito aqui, e não via decorator @Cron, porque o
+   * decorator é avaliado antes da injeção de dependência e não teria acesso ao ConfigService.
+   */
+  onModuleInit(): void {
+    const fusoHorario = this.configService.obter().aplicacao.fusoHorario;
+    const job = new CronJob('59 59 23 * * *', () => this.encerrarExecucoesAbertas(), null, true, fusoHorario);
+    this.schedulerRegistry.addCronJob('execucao-auto-stop-virada-dia', job);
+  }
+
+  /**
+   * Encerra todas as execuções abertas do sistema (fim_data IS NULL), definindo
+   * fim_data = NOW(). Disparado pelo cron às 23:59:59 (fuso da aplicação) para que
+   * nenhuma execução atravesse a virada do dia. Loga a quantidade encerrada.
+   */
+  async encerrarExecucoesAbertas(): Promise<void> {
+    try {
+      const execucoesEncerradas = await this.execucaoRepositorio.encerrarTodasAbertas();
+      this.logger.log(`Auto-stop: ${execucoesEncerradas.length} execução(ões) encerrada(s) na virada do dia`);
+    } catch (erro) {
+      this.logger.error('Auto-stop: falha ao encerrar execuções na virada do dia', erro as Error);
+    }
+  }
 
   /**
    * Inicia uma nova execução para o usuário autenticado na atividade informada.

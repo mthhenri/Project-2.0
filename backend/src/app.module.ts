@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ConfigModule } from './config/config.module';
 import { DatabaseModule } from './core/database/database.module';
 import { CoreModule } from './core/core.module';
@@ -16,6 +17,6 @@ import { AssistenteModule } from './modules/assistente/assistente.module';
 import { RelatorioModule } from './modules/relatorio/relatorio.module';
 
 @Module({
-  imports: [ConfigModule, DatabaseModule, CoreModule, AutenticacaoModule, UsuarioModule, TagModule, ProjetoModule, DemandaModule, AtividadeModule, ExecucaoModule, CalendarioModule, PontoModule, PontoJustificativaModule, AssistenteModule, RelatorioModule],
+  imports: [ScheduleModule.forRoot(), ConfigModule, DatabaseModule, CoreModule, AutenticacaoModule, UsuarioModule, TagModule, ProjetoModule, DemandaModule, AtividadeModule, ExecucaoModule, CalendarioModule, PontoModule, PontoJustificativaModule, AssistenteModule, RelatorioModule],
 })
 export class AppModule {}
