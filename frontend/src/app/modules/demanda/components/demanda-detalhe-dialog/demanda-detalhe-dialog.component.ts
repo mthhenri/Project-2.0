@@ -40,7 +40,6 @@ import { DemandaEdicaoDialogComponent } from '../demanda-edicao-dialog/demanda-e
 import { DemandaFormularioDialogComponent } from '../demanda-formulario-dialog/demanda-formulario-dialog.component';
 import { AssistenteDescricaoComponent } from '../../../../shared/components/assistente-descricao/assistente-descricao.component';
 import { DataBrasileiraPipe } from '../../../../shared/pipes/data-brasileira.pipe';
-import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-horas.pipe';
 import { TempoDemandaPipe } from '../../../../shared/pipes/tempo-demanda.pipe';
 import { VisualizacaoTempoService } from '../../../../core/services/visualizacao-tempo.service';
 
@@ -65,7 +64,6 @@ type CampoDescricao = 'descricaoTecnica' | 'descricaoCliente' | 'documentacao';
     DemandaFormularioDialogComponent,
     AssistenteDescricaoComponent,
     DataBrasileiraPipe,
-    MinutosParaHorasPipe,
     TempoDemandaPipe,
   ],
   providers: [ConfirmationService],
