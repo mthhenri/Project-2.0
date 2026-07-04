@@ -54,15 +54,15 @@
               <span
                 class="demanda-planejamento__horas-exec"
                 [class.demanda-planejamento__horas-exec--estouro]="linha.estourou"
-                [pTooltip]="unidadeTempo.emDias() ? (linha.minutosExecutados | tempoDemanda: false : 'minutos') : ''"
+                [pTooltip]="unidadeTempo.emDias() ? (linha.minutosExecutados | tempoExibicao: false : 'minutos') : ''"
               >
-                {{ linha.minutosExecutados | tempoDemanda: unidadeTempo.emDias() : 'minutos' }}
+                {{ linha.minutosExecutados | tempoExibicao: unidadeTempo.emDias() : 'minutos' }}
               </span>
               <span class="demanda-planejamento__horas-sep">/</span>
               <span class="demanda-planejamento__horas-est">
                 @if (linha.horasEstimadas > 0) {
-                  <span [pTooltip]="unidadeTempo.emDias() ? (linha.horasEstimadas | tempoDemanda: false : 'horas') : ''">
-                    {{ linha.horasEstimadas | tempoDemanda: unidadeTempo.emDias() : 'horas' }} est.
+                  <span [pTooltip]="unidadeTempo.emDias() ? (linha.horasEstimadas | tempoExibicao: false : 'horas') : ''">
+                    {{ linha.horasEstimadas | tempoExibicao: unidadeTempo.emDias() : 'horas' }} est.
                   </span>
                 } @else {
                   sem estimativa
@@ -75,12 +75,12 @@
                 <span
                   class="demanda-planejamento__restante"
                   [pTooltip]="unidadeTempo.emDias() && linha.minutosRestantes !== null
-                    ? (linha.minutosRestantes | tempoDemanda: false : 'minutos') + ' restantes'
+                    ? (linha.minutosRestantes | tempoExibicao: false : 'minutos') + ' restantes'
                     : 'Tempo restante até o máximo estimado'"
                 >
                   · restam
                   @if (linha.minutosRestantes !== null) {
-                    {{ linha.minutosRestantes | tempoDemanda: unidadeTempo.emDias() : 'minutos' }}
+                    {{ linha.minutosRestantes | tempoExibicao: unidadeTempo.emDias() : 'minutos' }}
                   } @else {
                     —
                   }

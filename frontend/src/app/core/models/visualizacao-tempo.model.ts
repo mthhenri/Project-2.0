@@ -8,11 +8,11 @@ export const VISUALIZACAO_TEMPO_CHAVE_LOCAL_STORAGE = 'preferencia.tempo-em-dias
 export type UnidadeTempoEntrada = 'horas' | 'minutos';
 
 /**
- * Formata um tempo de demanda para exibição. No modo horas reproduz o formato atual
- * (`"{h}h"` para horas inteiras, `"{h}h {min}min"` para minutos); no modo dias converte
- * para dias (1 dia = `HORAS_POR_DIA` horas) em pt-BR.
+ * Formata um tempo de trabalho (de demanda ou atividade) para exibição. No modo horas
+ * reproduz o formato atual (`"{h}h"` para horas inteiras, `"{h}h {min}min"` para minutos);
+ * no modo dias converte para dias (1 dia = `HORAS_POR_DIA` horas) em pt-BR.
  */
-export function formatarTempoDemanda(
+export function formatarTempoExibicao(
   valor: number,
   emDias: boolean,
   unidade: UnidadeTempoEntrada,

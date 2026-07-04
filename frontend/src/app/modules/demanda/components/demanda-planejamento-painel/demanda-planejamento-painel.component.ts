@@ -7,7 +7,7 @@ import { ContextMenu } from 'primeng/contextmenu';
 import { Popover, PopoverModule } from 'primeng/popover';
 import { MenuItem, MessageService } from 'primeng/api';
 import { DemandaPlanejamentoDto, TipoDemandaStatusEnum } from '@project20/shared';
-import { TempoDemandaPipe } from '../../../../shared/pipes/tempo-demanda.pipe';
+import { TempoExibicaoPipe } from '../../../../shared/pipes/tempo-exibicao.pipe';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { VisualizacaoTempoService } from '../../../../core/services/visualizacao-tempo.service';
 import { DemandaService } from '../../services/demanda.service';
@@ -41,7 +41,7 @@ interface StatusOpcao {
 @Component({
   selector: 'app-demanda-planejamento-painel',
   standalone: true,
-  imports: [TableModule, Tag, ProgressBarModule, TooltipModule, ContextMenu, PopoverModule, TempoDemandaPipe],
+  imports: [TableModule, Tag, ProgressBarModule, TooltipModule, ContextMenu, PopoverModule, TempoExibicaoPipe],
   templateUrl: './demanda-planejamento-painel.component.html',
   styleUrl: './demanda-planejamento-painel.component.scss',
 })

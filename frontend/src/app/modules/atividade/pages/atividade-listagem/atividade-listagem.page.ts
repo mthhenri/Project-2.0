@@ -47,7 +47,7 @@ import { AssistenteDescricaoComponent } from '../../../../shared/components/assi
 import { AtividadeVisualizarDialogComponent } from '../../components/atividade-visualizar-dialog/atividade-visualizar-dialog.component';
 import { DataBrasileiraPipe } from '../../../../shared/pipes/data-brasileira.pipe';
 import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-horas.pipe';
-import { TempoDemandaPipe } from '../../../../shared/pipes/tempo-demanda.pipe';
+import { TempoExibicaoPipe } from '../../../../shared/pipes/tempo-exibicao.pipe';
 import { VisualizacaoTempoService } from '../../../../core/services/visualizacao-tempo.service';
 import { BloquearCaracteresProibidosDirective } from '../../../../shared/directives/bloquear-caracteres-proibidos.directive';
 import {
@@ -85,7 +85,7 @@ type CampoDescricaoDemanda = 'descricaoCliente' | 'descricaoTecnica' | 'document
     AtividadeVisualizarDialogComponent,
     DataBrasileiraPipe,
     MinutosParaHorasPipe,
-    TempoDemandaPipe,
+    TempoExibicaoPipe,
     BloquearCaracteresProibidosDirective,
   ],
   templateUrl: './atividade-listagem.page.html',

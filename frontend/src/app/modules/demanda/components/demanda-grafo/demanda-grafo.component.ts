@@ -19,7 +19,7 @@ import {
 } from '@project20/shared';
 import { COR_NO_PREENCHIMENTO, COR_NO_BORDA } from '../../constants/demanda-cores.constants';
 import { VisualizacaoTempoService } from '../../../../core/services/visualizacao-tempo.service';
-import { formatarTempoDemanda } from '../../../../core/models/visualizacao-tempo.model';
+import { formatarTempoExibicao } from '../../../../core/models/visualizacao-tempo.model';
 
 @Component({
   selector: 'app-demanda-grafo',
@@ -197,11 +197,11 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
     gruposNo.append('title').text((no: DemandaGrafoNoDto) => {
       // Em dias, o próprio <title> (tooltip nativa) mostra o h/min entre parênteses.
       const estimadas = emDias
-        ? `${formatarTempoDemanda(no.horasEstimadas, true, 'horas')} (${formatarTempoDemanda(no.horasEstimadas, false, 'horas')})`
-        : formatarTempoDemanda(no.horasEstimadas, false, 'horas');
+        ? `${formatarTempoExibicao(no.horasEstimadas, true, 'horas')} (${formatarTempoExibicao(no.horasEstimadas, false, 'horas')})`
+        : formatarTempoExibicao(no.horasEstimadas, false, 'horas');
       const executadas = emDias
-        ? `${formatarTempoDemanda(no.minutosExecutados, true, 'minutos')} (${formatarTempoDemanda(no.minutosExecutados, false, 'minutos')})`
-        : formatarTempoDemanda(no.minutosExecutados, false, 'minutos');
+        ? `${formatarTempoExibicao(no.minutosExecutados, true, 'minutos')} (${formatarTempoExibicao(no.minutosExecutados, false, 'minutos')})`
+        : formatarTempoExibicao(no.minutosExecutados, false, 'minutos');
       const linhas = [
         `${no.nome}\n${no.status} • ${estimadas} estimadas • ${executadas} executadas`,
       ];

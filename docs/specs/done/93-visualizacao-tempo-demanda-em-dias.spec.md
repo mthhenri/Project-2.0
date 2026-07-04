@@ -167,3 +167,7 @@ A pedido do usuário, a preferência **também** vale nos **formulários de cria
 ### Tempo executado da **atividade** em dias (revoga parcialmente a Decisão #5)
 
 A pedido do usuário, o **tempo executado total da atividade** (`totalMinutosExecutados`) também passa a aparecer em dias: coluna **"Tempo executado"** da listagem de atividades (`atividade-listagem`) e o total por atividade dentro do dialog de detalhe da demanda (`demanda-detalhe-dialog`, linha do `pi-clock`). Ambos com o mesmo `tempoDemanda` + tooltip do h/min no hover. **Continuam em h/min** (fora do "das atividades"): as durações de **cada execução** (`duracaoMinutos`) nas sub-listas de execução (0,05 dias p/ 24min é ruim), o **Ponto** (frequência) e o **histórico de Execuções**. **Verificado ao vivo:** listagem em dias → "0,04 dias", "20,33 dias", "1,05 dias".
+
+### Renomeação (pós-entrega) — o pipe passou a cobrir demanda **e** atividade
+
+Como a formatação passou a servir também o tempo executado de atividade, os identificadores foram renomeados de `*Demanda*` para `*Exibicao*` (nome neutro): `tempo-demanda.pipe.ts` → **`tempo-exibicao.pipe.ts`**, `TempoDemandaPipe` → **`TempoExibicaoPipe`**, pipe `tempoDemanda` → **`tempoExibicao`**, função `formatarTempoDemanda` → **`formatarTempoExibicao`**. As menções acima ao nome antigo referem-se ao estado no momento da implementação.

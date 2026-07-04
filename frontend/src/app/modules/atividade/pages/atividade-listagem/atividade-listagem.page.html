@@ -191,8 +191,8 @@
         <td>
           <span
             class="text-color"
-            [pTooltip]="unidadeTempo.emDias() ? (atividade.totalMinutosExecutados | tempoDemanda: false : 'minutos') : ''"
-          >{{ atividade.totalMinutosExecutados | tempoDemanda: unidadeTempo.emDias() : 'minutos' }}</span>
+            [pTooltip]="unidadeTempo.emDias() ? (atividade.totalMinutosExecutados | tempoExibicao: false : 'minutos') : ''"
+          >{{ atividade.totalMinutosExecutados | tempoExibicao: unidadeTempo.emDias() : 'minutos' }}</span>
         </td>
         <td>
           <div class="atividade-listagem__tags">

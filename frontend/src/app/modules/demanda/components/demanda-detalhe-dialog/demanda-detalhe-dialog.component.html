@@ -108,8 +108,8 @@
         <span class="demanda-detalhe-dialog__info-label">Estimado</span>
         <span
           class="demanda-detalhe-dialog__info-valor"
-          [pTooltip]="unidadeTempo.emDias() ? (demanda()!.horasEstimadas | tempoDemanda: false : 'horas') : ''"
-        >{{ demanda()!.horasEstimadas | tempoDemanda: unidadeTempo.emDias() : 'horas' }}</span>
+          [pTooltip]="unidadeTempo.emDias() ? (demanda()!.horasEstimadas | tempoExibicao: false : 'horas') : ''"
+        >{{ demanda()!.horasEstimadas | tempoExibicao: unidadeTempo.emDias() : 'horas' }}</span>
       </div>
       @if (demanda()!.previsaoFimData) {
         <div class="demanda-detalhe-dialog__info-campo">
@@ -233,10 +233,10 @@
                       </span>
                       <span
                         class="demanda-detalhe-dialog__atividade-tempo"
-                        [pTooltip]="unidadeTempo.emDias() ? (atividade.totalMinutosExecutados | tempoDemanda: false : 'minutos') : ''"
+                        [pTooltip]="unidadeTempo.emDias() ? (atividade.totalMinutosExecutados | tempoExibicao: false : 'minutos') : ''"
                       >
                         <i class="pi pi-clock"></i>
-                        {{ atividade.totalMinutosExecutados | tempoDemanda: unidadeTempo.emDias() : 'minutos' }}
+                        {{ atividade.totalMinutosExecutados | tempoExibicao: unidadeTempo.emDias() : 'minutos' }}
                       </span>
                     </div>
                   </div>

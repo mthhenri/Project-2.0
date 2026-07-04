@@ -6,7 +6,7 @@ import { MenuItem } from 'primeng/api';
 import { DemandaArvoreItemDto, TipoDemandaStatusEnum } from '@project20/shared';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { VisualizacaoTempoService } from '../../../../core/services/visualizacao-tempo.service';
-import { TempoDemandaPipe } from '../../../../shared/pipes/tempo-demanda.pipe';
+import { TempoExibicaoPipe } from '../../../../shared/pipes/tempo-exibicao.pipe';
 import { construirMenuDemanda, CampoDescricaoDemanda } from '../../utils/demanda-context-menu.factory';
 
 type CampoDescricao = CampoDescricaoDemanda;
@@ -14,7 +14,7 @@ type CampoDescricao = CampoDescricaoDemanda;
 @Component({
   selector: 'app-demanda-arvore-item',
   standalone: true,
-  imports: [Tag, ContextMenu, TooltipModule, TempoDemandaPipe, forwardRef(() => DemandaArvoreItemComponent)],
+  imports: [Tag, ContextMenu, TooltipModule, TempoExibicaoPipe, forwardRef(() => DemandaArvoreItemComponent)],
   templateUrl: './demanda-arvore-item.component.html',
   styleUrl: './demanda-arvore-item.component.scss',
 })
