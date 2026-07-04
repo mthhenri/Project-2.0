@@ -16,8 +16,8 @@ O SQL dentro do arquivo segue **exatamente** as mesmas regras já usadas no proj
 §9.1/§9.2, `CONVENTIONS.md` seção SQL) — nada muda na forma como se escreve DDL/DML, só o
 **empacotamento** (arquivo `.sql` em vez de módulo `.ts`).
 
-Esta task **inclui a conversão das 26 migrations legadas** (`backend/src/database/migrations/
-20240001_*.ts` … `20240026_*.ts`) para o novo padrão — não é só o mecanismo para migrations
+Esta task **inclui a conversão das 27 migrations legadas** (`backend/src/database/migrations/
+20240001_*.ts` … `20240027_*.ts`) para o novo padrão — não é só o mecanismo para migrations
 futuras, é a migração completa do histórico existente.
 
 ---
@@ -27,13 +27,13 @@ futuras, é a migração completa do histórico existente.
 > Estas decisões foram tomadas na criação da spec para deixar o escopo fechado. Se o desenvolvedor
 > que for implementar discordar de algum ponto, **alinhar com o usuário antes de começar**.
 
-1. **As 26 migrations legadas são convertidas nesta própria task.** Cada `NNNNNNNN_nome.ts` vira
+1. **As 27 migrations legadas são convertidas nesta própria task.** Cada `NNNNNNNN_nome.ts` vira
    `NNNN - Nome Descritivo.sql` (mapeamento completo em §1 do Escopo), preservando **exatamente**
    o mesmo SQL que cada `up`/`down` já executa hoje — é reempacotamento, não reescrita de lógica.
    Os `.ts` são removidos do diretório depois da conversão (git preserva o histórico). Isso exige
    também **realinhar os registros já gravados em `knex_migrations`** em todo ambiente onde essas
-   26 já rodaram (dev, e qualquer outro ambiente existente) — ver §6 do Escopo; sem esse passo o
-   Knex tentaria reaplicar as 26 do zero contra um schema que já as tem.
+   27 já rodaram (dev, e qualquer outro ambiente existente) — ver §6 do Escopo; sem esse passo o
+   Knex tentaria reaplicar as 27 do zero contra um schema que já as tem.
 2. **Continua usando o Knex como mecanismo de migration** (não um runner do zero). Os comandos
    `npm run db:migrate` / `npm run db:rollback` (`CLAUDE.md`) continuam existindo e com o mesmo
    comportamento externo — o que muda é **de onde o Knex lê as migrations**: em vez do
@@ -55,20 +55,20 @@ futuras, é a migração completa do histórico existente.
 
    A seção `-- DOWN` é **obrigatória**, salvo justificativa explícita em comentário no próprio
    arquivo — mesmo critério que as migrations `.ts` atuais já seguem (todas têm `up` e `down`,
-   nenhuma das 26 fica de fora dessa regra).
-4. **Numeração:** inteiro sequencial, zero-padded em 4 dígitos. As 26 legadas assumem `0001`–`0026`
-   **na mesma ordem em que já existem** (`20240001` → `0001`, … `20240026` → `0026`) — a numeração
+   nenhuma das 27 fica de fora dessa regra).
+4. **Numeração:** inteiro sequencial, zero-padded em 4 dígitos. As 27 legadas assumem `0001`–`0027`
+   **na mesma ordem em que já existem** (`20240001` → `0001`, … `20240027` → `0027`) — a numeração
    nova é só uma repadronização do prefixo, a ordem de execução histórica não muda. A **próxima**
-   migration a ser criada por qualquer task futura começa em `0027`. Separador entre número e nome:
+   migration a ser criada por qualquer task futura começa em `0028`. Separador entre número e nome:
    `" - "` (espaço, hífen, espaço). Nome descritivo em português, frase legível com inicial
    maiúscula (não kebab-case).
 5. **Diretório:** mesmo `backend/src/database/migrations/`. Ao final desta task, **só** existem
-   arquivos `.sql` nele (os 26 `.ts` são removidos) — o `MigrationSource` novo não precisa
+   arquivos `.sql` nele (os 27 `.ts` são removidos) — o `MigrationSource` novo não precisa
    reconhecer nem ignorar `.ts`, só varre `/^\d{4} - .+\.sql$/`.
 6. **Tabela de controle:** continua sendo a `knex_migrations` (interna do Knex) — não se cria uma
    tabela de controle própria. Como ainda é o Knex quem orquestra `migrate:latest`/`rollback`, ele
    mesmo grava o nome do arquivo aplicado nessa tabela. O detalhe delicado é o **realinhamento**
-   dos 26 registros já gravados sob o nome antigo (`20240001_criar_funcao_updated_date.ts`, etc.)
+   dos 27 registros já gravados sob o nome antigo (`20240001_criar_funcao_updated_date.ts`, etc.)
    para o nome novo (`0001 - Criação da função de manutenção de updated_date.sql`) — ver §6.
 7. **Transação por migration é automática via Knex — nada de `BEGIN`/`COMMIT`/`ROLLBACK` escrito no
    `.sql`.** Ver §5 do Escopo (é a resposta à pergunta "como o Knex lidaria com isso").
@@ -108,7 +108,7 @@ migrations: {
 }
 ```
 
-Seis das 26 migrations geram o SQL executado a partir de **loops em TypeScript** sobre arrays de
+Seis das 27 migrations geram o SQL executado a partir de **loops em TypeScript** sobre arrays de
 tabelas/valores (não é SQL estático dentro do template literal — é gerado dinamicamente,
 iteração a iteração, sempre sobre dados conhecidos em tempo de escrita, nunca dependentes de
 resultado de query): `20240016` (11 tabelas), `20240017` (14 tags), `20240018` (19 tags),
@@ -120,7 +120,7 @@ literal, na mesma ordem de iteração do array original, antes de virar `.sql`.
 
 ## Escopo
 
-### 1. Conversão das 26 migrations legadas
+### 1. Conversão das 27 migrations legadas
 
 Mapeamento completo — cada linha é uma conversão 1:1, mesmo SQL, só reempacotado:
 
@@ -152,6 +152,7 @@ Mapeamento completo — cada linha é uma conversão 1:1, mesmo SQL, só reempac
 | `20240024_adicionar_anotacoes_alteracao_data_usuario` | `0024 - Adição da coluna anotacoes_alteracao_data em usuario.sql` | não |
 | `20240025_enums_para_tabelas_referencia` | `0025 - Conversão dos enums em tabelas de referência.sql` | **sim** (7 tabelas × seeds + 7 conversões) |
 | `20240026_criar_ponto_justificativa` | `0026 - Criação da tabela ponto_justificativa.sql` | não |
+| `20240027_adicionar_status_cancelada_demanda` | `0027 - Adição do status Cancelada em tipo_demanda_status.sql` | não |
 
 **Regra de achatamento** (para as 6 marcadas "sim"): expandir o `for`/`.map()` do TypeScript em SQL
 literal repetido, **na mesma ordem do array original**, substituindo cada `:paramNomeado` pelo
@@ -325,32 +326,32 @@ aplicada (tudo ou nada). Isso é obtido **de graça** pelo próprio Knex, e é p
   qualquer instrução do arquivo posterior ao `COMMIT` manual rodaria **fora** da proteção
   transacional, quebrando exatamente a garantia que este padrão exige.
 - **Única exceção prevista:** instruções que o Postgres proíbe dentro de uma transação (ex.:
-  `CREATE INDEX CONCURRENTLY`). Para esse caso — não usado em nenhuma das 26 legadas, mas possível
+  `CREATE INDEX CONCURRENTLY`). Para esse caso — não usado em nenhuma das 27 legadas, mas possível
   no futuro —, o arquivo sinaliza com um comentário `-- NO TRANSACTION` logo após `-- UP`/`-- DOWN`,
   e o `SqlMigrationSource` devolve `{ up, down, config: { transaction: false } }` (opção que a API
   de `MigrationSource` do Knex já suporta por migration) só nesse caso.
 
-### 6. Realinhamento de `knex_migrations` para os ambientes onde as 26 já rodaram
+### 6. Realinhamento de `knex_migrations` para os ambientes onde as 27 já rodaram
 
-As 26 legadas já estão aplicadas (schema já existe) em qualquer ambiente que já rodou
+As 27 legadas já estão aplicadas (schema já existe) em qualquer ambiente que já rodou
 `db:migrate` antes desta task, e `knex_migrations.name` guarda o nome **antigo**
 (`20240001_criar_funcao_updated_date.ts`, etc.). Depois da conversão, o `SqlMigrationSource` só
 enxerga os nomes **novos** (`0001 - Criação da função de manutenção de updated_date.sql`, etc.) —
-sem esse passo, o Knex concluiria que nenhuma das 26 foi aplicada e tentaria rodá-las de novo
+sem esse passo, o Knex concluiria que nenhuma das 27 foi aplicada e tentaria rodá-las de novo
 contra tabelas que já existem (erro `relation already exists` na primeira, na melhor hipótese).
 
-Ordem obrigatória do corte, em cada ambiente que já tenha as 26 aplicadas:
+Ordem obrigatória do corte, em cada ambiente que já tenha as 27 aplicadas:
 
 1. **Antes** de trocar o código para o novo `MigrationSource` (ainda com o Knex apontando para o
    `FsMigrations`/`.ts` de sempre), rodar um script único de realinhamento — `UPDATE
    knex_migrations SET name = '<nome novo>' WHERE name = '<nome antigo>'`, uma linha por migration,
-   pelas 26 linhas do mapeamento de §1. Pode ser um script Node/ts-node avulso (não é uma
+   pelas 27 linhas do mapeamento de §1. Pode ser um script Node/ts-node avulso (não é uma
    migration) ou um `.sql` de administração rodado via `psql`/cliente do banco — não precisa
    passar pelo mecanismo de migration em si.
-2. Só então: remover os 26 `.ts`, adicionar os 26 `.sql` convertidos, trocar `knexfile.ts` e
+2. Só então: remover os 27 `.ts`, adicionar os 27 `.sql` convertidos, trocar `knexfile.ts` e
    `database.provider.ts` para o `SqlMigrationSource`.
 3. Rodar `npm run db:migrate --workspace=backend`: deve reportar que **não há migrations
-   pendentes** (as 26 já contam como aplicadas, agora sob o nome novo).
+   pendentes** (as 27 já contam como aplicadas, agora sob o nome novo).
 
 Esse script de realinhamento é executado **uma vez por ambiente já existente** (dev local, e
 qualquer outro ambiente que tenha rodado as migrations antes desta task) — não é reexecutável
@@ -362,8 +363,8 @@ metadado de controle, não sobre o schema de negócio).
 ## O que **não** muda
 
 - **Nenhuma tabela/coluna de schema muda de forma alguma** — a conversão é 1:1 do mesmo SQL que já
-  roda hoje. O resultado de aplicar as 26 `.sql` novas do zero num banco vazio deve ser
-  **byte-a-byte equivalente** (mesmo schema) ao resultado de aplicar as 26 `.ts` antigas.
+  roda hoje. O resultado de aplicar as 27 `.sql` novas do zero num banco vazio deve ser
+  **byte-a-byte equivalente** (mesmo schema) ao resultado de aplicar as 27 `.ts` antigas.
 - O **runtime** da aplicação (repositórios usando `knex.raw()` com parâmetros nomeados) não muda —
   esta task é só sobre o mecanismo de **migration**, não sobre como o backend consulta o banco. A
   exceção de valores literais (decisão de desenho #8) vale **só** para dentro de
@@ -380,8 +381,8 @@ metadado de controle, não sobre o schema de negócio).
    Knex (§5 do Escopo, resumida), a exceção de valores literais (decisão #8) e o diretório.
 2. `CONVENTIONS.md` — bloco novo (perto da seção SQL) com o exemplo de arquivo de migration, a
    regra de nomenclatura do arquivo e o aviso "nunca `BEGIN`/`COMMIT`/`ROLLBACK` no arquivo".
-3. `CONTEXT.md` — registrar a conversão das 26 legadas, a troca de mecanismo, e que a próxima
-   migration nova começa em `0027`.
+3. `CONTEXT.md` — registrar a conversão das 27 legadas, a troca de mecanismo, e que a próxima
+   migration nova começa em `0028`.
 
 ---
 
@@ -390,15 +391,15 @@ metadado de controle, não sobre o schema de negócio).
 1. `npm run build --workspace=backend` OK (o `SqlMigrationSource` é código TypeScript novo,
    compilado normalmente — as migrations em si viram `.sql`, fora do build TS).
 2. **Ambiente do zero:** com o código **anterior** a esta task, subir um Postgres limpo
-   (`npm run db:up` com volume novo) e rodar `db:migrate` (as 26 `.ts`); capturar
+   (`npm run db:up` com volume novo) e rodar `db:migrate` (as 27 `.ts`); capturar
    `pg_dump --schema-only` do resultado. Derrubar o banco, subir de novo limpo, trocar para o
-   código **desta task** (26 `.sql` + `SqlMigrationSource`) e rodar `db:migrate`; capturar
+   código **desta task** (27 `.sql` + `SqlMigrationSource`) e rodar `db:migrate`; capturar
    `pg_dump --schema-only` de novo. **Os dois dumps devem ser idênticos** (ignorando comentários/
    metadados irrelevantes do dump) — prova que a conversão não alterou o schema resultante.
-3. **Ambiente já existente** (com as 26 `.ts` já aplicadas): rodar o script de realinhamento de
+3. **Ambiente já existente** (com as 27 `.ts` já aplicadas): rodar o script de realinhamento de
    `knex_migrations` (§6), trocar o código, rodar `db:migrate` — deve reportar zero migrations
    pendentes.
-4. `db:rollback` reverte a última migration (`0026`) usando a seção `-- DOWN`; reaplicar
+4. `db:rollback` reverte a última migration (`0027`) usando a seção `-- DOWN`; reaplicar
    (`db:migrate`) sem erro; repetir para 2–3 migrations do meio do histórico (ex. `0016`, `0025`
    — as duas mais complexas) para validar que o achatamento de loop preservou o `down` corretamente.
 5. **Teste da garantia transacional:** com uma migration de teste descartável (não commitada),
@@ -406,7 +407,7 @@ metadado de controle, não sobre o schema de negócio).
    inexistente na 2ª instrução de 3) e confirmar que **nada** daquele bloco fica aplicado (a 1ª
    instrução, que teria sucesso isoladamente, também é revertida) — prova que o `ROLLBACK`
    automático do Knex está funcionando sem `BEGIN`/`COMMIT` manual no arquivo.
-6. Nenhum `.ts` remanescente em `backend/src/database/migrations/`; os 26 arquivos `.sql`
+6. Nenhum `.ts` remanescente em `backend/src/database/migrations/`; os 27 arquivos `.sql`
    convertidos existem com exatamente os nomes da tabela de §1 do Escopo.
 7. Boot da aplicação (`npm run backend:dev`) OK — `database.provider.ts` também referencia o
    `SqlMigrationSource`, então precisa continuar resolvendo a conexão normalmente mesmo sem migrar
@@ -417,7 +418,7 @@ metadado de controle, não sobre o schema de negócio).
 ## NÃO implementar nesta task
 
 - Criar uma migration real de **novo** schema (ex. alterar alguma tabela de negócio) — esta task
-  troca o mecanismo e converte o histórico; `0027` fica reservado para a próxima migration de
+  troca o mecanismo e converte o histórico; `0028` fica reservado para a próxima migration de
   schema que surgir em outra task.
 - Trocar o cliente de banco — `knex` como executor de runtime continua sendo usado normalmente nos
   repositórios via `knex.raw()` com parâmetros nomeados (a exceção de literais é só para dentro de
