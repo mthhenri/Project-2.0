@@ -7,8 +7,9 @@ import { ContextMenu } from 'primeng/contextmenu';
 import { Popover, PopoverModule } from 'primeng/popover';
 import { MenuItem, MessageService } from 'primeng/api';
 import { DemandaPlanejamentoDto, TipoDemandaStatusEnum } from '@project20/shared';
-import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-horas.pipe';
+import { TempoDemandaPipe } from '../../../../shared/pipes/tempo-demanda.pipe';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
+import { VisualizacaoTempoService } from '../../../../core/services/visualizacao-tempo.service';
 import { DemandaService } from '../../services/demanda.service';
 import {
   construirMenuDemanda,
@@ -40,7 +41,7 @@ interface StatusOpcao {
 @Component({
   selector: 'app-demanda-planejamento-painel',
   standalone: true,
-  imports: [TableModule, Tag, ProgressBarModule, TooltipModule, ContextMenu, PopoverModule, MinutosParaHorasPipe],
+  imports: [TableModule, Tag, ProgressBarModule, TooltipModule, ContextMenu, PopoverModule, TempoDemandaPipe],
   templateUrl: './demanda-planejamento-painel.component.html',
   styleUrl: './demanda-planejamento-painel.component.scss',
 })
@@ -48,6 +49,7 @@ export class DemandaPlanejamentoPainelComponent {
   private readonly demandaService = inject(DemandaService);
   private readonly messageService = inject(MessageService);
   readonly sessao = inject(UsuarioSessaoService);
+  readonly unidadeTempo = inject(VisualizacaoTempoService);
 
   readonly itens = input<DemandaPlanejamentoDto[]>([]);
   readonly carregando = input<boolean>(false);

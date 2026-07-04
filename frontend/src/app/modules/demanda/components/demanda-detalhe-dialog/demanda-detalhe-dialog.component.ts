@@ -41,6 +41,8 @@ import { DemandaFormularioDialogComponent } from '../demanda-formulario-dialog/d
 import { AssistenteDescricaoComponent } from '../../../../shared/components/assistente-descricao/assistente-descricao.component';
 import { DataBrasileiraPipe } from '../../../../shared/pipes/data-brasileira.pipe';
 import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-horas.pipe';
+import { TempoDemandaPipe } from '../../../../shared/pipes/tempo-demanda.pipe';
+import { VisualizacaoTempoService } from '../../../../core/services/visualizacao-tempo.service';
 
 type CampoDescricao = 'descricaoTecnica' | 'descricaoCliente' | 'documentacao';
 
@@ -64,6 +66,7 @@ type CampoDescricao = 'descricaoTecnica' | 'descricaoCliente' | 'documentacao';
     AssistenteDescricaoComponent,
     DataBrasileiraPipe,
     MinutosParaHorasPipe,
+    TempoDemandaPipe,
   ],
   providers: [ConfirmationService],
   templateUrl: './demanda-detalhe-dialog.component.html',
@@ -77,6 +80,7 @@ export class DemandaDetalheDialogComponent implements OnChanges {
   @Output() demandaAlterada = new EventEmitter<void>();
 
   private readonly demandaService = inject(DemandaService);
+  readonly unidadeTempo = inject(VisualizacaoTempoService);
   private readonly tagService = inject(TagService);
   private readonly usuarioService = inject(UsuarioService);
   private readonly atividadeService = inject(AtividadeService);

@@ -41,10 +41,16 @@
         [severity]="severidadeStatus(arvoreItem.status)"
       />
       @if (arvoreItem.horasEstimadas > 0) {
-        <span class="demanda-arvore-item__horas">{{ arvoreItem.horasEstimadas }}h est.</span>
+        <span
+          class="demanda-arvore-item__horas"
+          [pTooltip]="unidadeTempo.emDias() ? (arvoreItem.horasEstimadas | tempoDemanda: false : 'horas') : ''"
+        >{{ arvoreItem.horasEstimadas | tempoDemanda: unidadeTempo.emDias() : 'horas' }} est.</span>
       }
       @if (arvoreItem.minutosExecutados > 0) {
-        <span class="demanda-arvore-item__horas demanda-arvore-item__horas--exec">{{ arvoreItem.minutosExecutados | minutosParagHoras }} exec.</span>
+        <span
+          class="demanda-arvore-item__horas demanda-arvore-item__horas--exec"
+          [pTooltip]="unidadeTempo.emDias() ? (arvoreItem.minutosExecutados | tempoDemanda: false : 'minutos') : ''"
+        >{{ arvoreItem.minutosExecutados | tempoDemanda: unidadeTempo.emDias() : 'minutos' }} exec.</span>
       }
     </div>
   </div>

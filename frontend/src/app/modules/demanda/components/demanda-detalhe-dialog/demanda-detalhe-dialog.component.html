@@ -105,8 +105,11 @@
         />
       </div>
       <div class="demanda-detalhe-dialog__info-campo">
-        <span class="demanda-detalhe-dialog__info-label">Horas Estimadas</span>
-        <span class="demanda-detalhe-dialog__info-valor">{{ demanda()!.horasEstimadas }}h</span>
+        <span class="demanda-detalhe-dialog__info-label">Estimado</span>
+        <span
+          class="demanda-detalhe-dialog__info-valor"
+          [pTooltip]="unidadeTempo.emDias() ? (demanda()!.horasEstimadas | tempoDemanda: false : 'horas') : ''"
+        >{{ demanda()!.horasEstimadas | tempoDemanda: unidadeTempo.emDias() : 'horas' }}</span>
       </div>
       @if (demanda()!.previsaoFimData) {
         <div class="demanda-detalhe-dialog__info-campo">

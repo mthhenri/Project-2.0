@@ -1,10 +1,12 @@
 import { Component, Input, Output, EventEmitter, forwardRef, inject, signal, OnChanges, SimpleChanges } from '@angular/core';
 import { Tag } from 'primeng/tag';
 import { ContextMenu } from 'primeng/contextmenu';
+import { TooltipModule } from 'primeng/tooltip';
 import { MenuItem } from 'primeng/api';
 import { DemandaArvoreItemDto, TipoDemandaStatusEnum } from '@project20/shared';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
-import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-horas.pipe';
+import { VisualizacaoTempoService } from '../../../../core/services/visualizacao-tempo.service';
+import { TempoDemandaPipe } from '../../../../shared/pipes/tempo-demanda.pipe';
 import { construirMenuDemanda, CampoDescricaoDemanda } from '../../utils/demanda-context-menu.factory';
 
 type CampoDescricao = CampoDescricaoDemanda;
@@ -12,7 +14,7 @@ type CampoDescricao = CampoDescricaoDemanda;
 @Component({
   selector: 'app-demanda-arvore-item',
   standalone: true,
-  imports: [Tag, ContextMenu, MinutosParaHorasPipe, forwardRef(() => DemandaArvoreItemComponent)],
+  imports: [Tag, ContextMenu, TooltipModule, TempoDemandaPipe, forwardRef(() => DemandaArvoreItemComponent)],
   templateUrl: './demanda-arvore-item.component.html',
   styleUrl: './demanda-arvore-item.component.scss',
 })
@@ -27,6 +29,7 @@ export class DemandaArvoreItemComponent implements OnChanges {
   @Output() demandaMembrosSolicitados = new EventEmitter<number>();
 
   private readonly sessao = inject(UsuarioSessaoService);
+  readonly unidadeTempo = inject(VisualizacaoTempoService);
 
   /** Único menu de contexto aberto na árvore, compartilhado entre todas as instâncias. */
   private static menuAberto: ContextMenu | null = null;

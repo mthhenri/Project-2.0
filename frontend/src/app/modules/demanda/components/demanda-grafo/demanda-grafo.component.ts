@@ -18,6 +18,8 @@ import {
   TipoDemandaStatusEnum,
 } from '@project20/shared';
 import { COR_NO_PREENCHIMENTO, COR_NO_BORDA } from '../../constants/demanda-cores.constants';
+import { VisualizacaoTempoService } from '../../../../core/services/visualizacao-tempo.service';
+import { formatarTempoDemanda } from '../../../../core/models/visualizacao-tempo.model';
 
 @Component({
   selector: 'app-demanda-grafo',
@@ -31,6 +33,7 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
   @Output() demandaSelecionada = new EventEmitter<number>();
 
   private readonly elementRef = inject(ElementRef);
+  private readonly unidadeTempo = inject(VisualizacaoTempoService);
   private simulacao?: d3.Simulation<DemandaGrafoNoDto & d3.SimulationNodeDatum, undefined>;
 
   ngOnInit(): void {
@@ -190,10 +193,17 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
         no.nome.length > 24 ? `${no.nome.substring(0, 24)}…` : no.nome,
       );
 
+    const emDias = this.unidadeTempo.emDias();
     gruposNo.append('title').text((no: DemandaGrafoNoDto) => {
-      const horasExecutadas = (no.minutosExecutados / 60).toFixed(1).replace(/\.0$/, '');
+      // Em dias, o próprio <title> (tooltip nativa) mostra o h/min entre parênteses.
+      const estimadas = emDias
+        ? `${formatarTempoDemanda(no.horasEstimadas, true, 'horas')} (${formatarTempoDemanda(no.horasEstimadas, false, 'horas')})`
+        : formatarTempoDemanda(no.horasEstimadas, false, 'horas');
+      const executadas = emDias
+        ? `${formatarTempoDemanda(no.minutosExecutados, true, 'minutos')} (${formatarTempoDemanda(no.minutosExecutados, false, 'minutos')})`
+        : formatarTempoDemanda(no.minutosExecutados, false, 'minutos');
       const linhas = [
-        `${no.nome}\n${no.status} • ${no.horasEstimadas}h estimadas • ${horasExecutadas}h executadas`,
+        `${no.nome}\n${no.status} • ${estimadas} estimadas • ${executadas} executadas`,
       ];
       if (no.tags?.length) linhas.push(no.tags.map((t) => t.nome).join(', '));
       return linhas.join('\n');

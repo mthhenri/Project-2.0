@@ -12,6 +12,7 @@ import { AutenticacaoService } from '../../../core/services/autenticacao.service
 import { UsuarioSessaoService } from '../../../core/services/usuario-sessao.service';
 import { TemaService } from '../../../core/services/tema.service';
 import { TemaPersonalizadoService } from '../../../core/services/tema-personalizado.service';
+import { VisualizacaoTempoService } from '../../../core/services/visualizacao-tempo.service';
 import { CORES_SUGERIDAS, COR_PRIMARIA_PADRAO_HEX } from '../../../core/models/tema-personalizado.model';
 import { UsuarioAnotacoesDialogComponent } from '../../../modules/usuario/components/usuario-anotacoes-dialog/usuario-anotacoes-dialog.component';
 
@@ -36,6 +37,7 @@ export class TopbarComponent {
   readonly sessao = inject(UsuarioSessaoService);
   readonly tema = inject(TemaService);
   readonly temaPersonalizado = inject(TemaPersonalizadoService);
+  readonly unidadeTempo = inject(VisualizacaoTempoService);
   private readonly destroyRef = inject(DestroyRef);
   readonly horaAtual = signal<string>('');
 

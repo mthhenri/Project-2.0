@@ -78,6 +78,17 @@
             }
           </div>
 
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              class="topbar__unidade flex items-center gap-2 text-sm"
+              (click)="unidadeTempo.alternar()"
+            >
+              <i class="text-xs" [class]="unidadeTempo.emDias() ? 'pi pi-clock' : 'pi pi-calendar'"></i>
+              <span>{{ unidadeTempo.emDias() ? 'Ver tempos em horas' : 'Ver tempos em dias' }}</span>
+            </button>
+          </div>
+
           @if (temaPersonalizado.desbloqueado()) {
             <p-divider class="my-0" />
             <div class="topbar__cores flex flex-col gap-2">

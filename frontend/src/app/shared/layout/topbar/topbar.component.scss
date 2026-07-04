@@ -35,7 +35,8 @@
     }
   }
 
-  &__tema {
+  &__tema,
+  &__unidade {
     color: var(--p-text-color);
     text-decoration: none;
     transition: color 0.15s;
