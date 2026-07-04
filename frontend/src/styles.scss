@@ -168,6 +168,26 @@ html {
   background: transparent;
 }
 
+// ---------------------------------------------------------------------------
+// Toast sempre acima dos dialogs.
+//
+// O PrimeNG usa um contador global de z-index (categoria "modal", +2 por overlay)
+// e o Toast só grava o z-index no host UMA vez, enquanto houver mensagens na fila
+// (guard `style.zIndex === ''` em `onAnimationStart`). Se um toast já está visível
+// quando um `p-dialog` abre, o dialog pega um z-index MAIOR e passa à frente; o
+// próximo toast entra sem reelevar o host e fica ATRÁS do dialog. Mexer em
+// `[baseZIndex]` não resolve (é ignorado quando já há um modal registrado) e subir
+// `providePrimeNG.zIndex.modal` eleva os dois juntos.
+//
+// Como os dialogs são inline (`overlayAppendTo: 'self'`, mesmo stacking context da
+// raiz) e o host do toast não tem ancestral criando contexto, fixar um z-index bem
+// acima da faixa de modais resolve de forma determinística. `!important` é
+// necessário porque o PrimeNG grava o z-index inline no elemento.
+// ---------------------------------------------------------------------------
+.p-toast {
+  z-index: 1000000 !important;
+}
+
 /* Impressão do espelho de ponto: some com toda a página e revela apenas a folha
    imprimível (.ponto-impressao), posicionada no topo da folha. Regra global porque
    precisa alcançar elementos fora do componente de impressão. */
