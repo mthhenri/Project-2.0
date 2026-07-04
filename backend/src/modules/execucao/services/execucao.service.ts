@@ -69,8 +69,10 @@ export class ExecucaoService implements OnModuleInit {
   }
 
   /**
-   * Inicia uma nova execução para o usuário autenticado na atividade informada.
-   * Valida existência da atividade, acesso via demanda_usuario e ausência de execução ativa.
+   * Inicia uma nova execução na atividade informada. A execução pertence sempre ao
+   * dono da atividade (execucao → atividade.usuario_id), não a quem dispara.
+   * Autorização: gestor inicia qualquer atividade; desenvolvedor apenas as próprias.
+   * A regra "sem duas execuções ativas por usuário" recai sobre o dono da atividade.
    */
   async iniciar(
     dto: ExecucaoIniciarDto,
@@ -90,17 +92,26 @@ export class ExecucaoService implements OnModuleInit {
       throw new BusinessException('A descrição é obrigatória');
     }
 
-    const temAcesso = await this.atividadeRepositorio.validarAcessoDemanda({
-      demandaId: atividadeEncontrada.demandaId,
-      usuarioId: usuarioAtivo.sub,
-    });
-    if (!temAcesso) {
-      throw new UnauthorizedAccessException('Usuário não tem acesso à demanda desta atividade');
+    // Autorização: gestor inicia qualquer atividade; desenvolvedor apenas as próprias.
+    // O gestor não tem linha em demanda_usuario, então o acesso é por tipo + posse da
+    // atividade (execucao → atividade.usuario_id), nunca via validarAcessoDemanda.
+    if (
+      usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR &&
+      atividadeEncontrada.usuarioId !== usuarioAtivo.sub
+    ) {
+      throw new UnauthorizedAccessException('Desenvolvedor não pode iniciar execução em atividade de outro usuário');
     }
 
-    const execucaoAtiva = await this.execucaoRepositorio.recuperarAtiva({ usuarioId: usuarioAtivo.sub });
+    // A regra "sem duas execuções ativas por usuário" recai sobre o DONO da atividade,
+    // não sobre quem dispara — o gestor pode ter a própria execução ativa e ainda assim
+    // iniciar a de outro usuário.
+    const execucaoAtiva = await this.execucaoRepositorio.recuperarAtiva({ usuarioId: atividadeEncontrada.usuarioId });
     if (execucaoAtiva) {
-      throw new BusinessException('Você já tem uma execução em andamento. Encerre-a antes de iniciar outra');
+      throw new BusinessException(
+        atividadeEncontrada.usuarioId === usuarioAtivo.sub
+          ? 'Você já tem uma execução em andamento. Encerre-a antes de iniciar outra'
+          : 'O usuário desta atividade já tem uma execução em andamento. Encerre-a antes de iniciar outra',
+      );
     }
 
     const execucaoIniciada = await this.execucaoRepositorio.inserir({

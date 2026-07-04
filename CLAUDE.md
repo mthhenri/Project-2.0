@@ -96,10 +96,11 @@ import { StandardResponse }   from '@project20/shared/interfaces';
 
 ## Key Business Rules
 
-- No two active executions (without `fim_data`) per user simultaneously
+- No two active executions (without `fim_data`) per user simultaneously — enforced on the **activity owner** (`atividade.usuario_id`), since an execution has no user column of its own
+- Starting/pausing executions: a **gestor** can start and pause the execution of **any** user's activity; a **developer** can only start and pause their **own** activities. Authorization is by user type + activity ownership, never via a `demanda_usuario` check
 - Soft delete everywhere — never physical DELETE
 - Access control: Developers see only projects where they have at least one `demanda_usuario` entry
-- Creating a demand auto-assigns the creator and all active gestores via `demanda_usuario`
+- Gestores are **not** added to `demanda_usuario` (neither at demand creation nor when assigned an activity) — their access is granted by type (full access, bypassing the `demanda_usuario` filter), not by assignment
 - No `projeto_usuario` table — project access is derived from `demanda_usuario`
 - Graph connections (DemandaConexao) must be validated for cycles via recursive CTE before insert
 
