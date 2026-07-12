@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Atividades — listagem otimizada</title>
+<link rel="stylesheet" href="base.css">
+<style>
+  .pulso { width:9px; height:9px; border-radius:50%; background:var(--verde-600); box-shadow:0 0 0 3px rgba(22,163,74,.25); display:inline-block; }
+  .chip-exec { display:flex; align-items:center; gap:9px; background:var(--primario-50); border:1px solid var(--primario-200); border-radius:999px; padding:5px 6px 5px 12px; }
+  .doc-ind { display:inline-flex; align-items:center; gap:3px; color:var(--superficie-400); cursor:pointer; }
+  .doc-ind .pt { width:6px; height:6px; border-radius:50%; }
+  .menu-item { display:flex; align-items:center; gap:10px; padding:8px 13px; font-size:13px; color:var(--superficie-700); }
+  .menu-item:hover { background:var(--superficie-100); }
+</style>
+</head>
+<body data-altura="1080">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></symbol>
+    <symbol id="i-sitemap" viewBox="0 0 24 24"><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/></symbol>
+    <symbol id="i-check-square" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></symbol>
+    <symbol id="i-tag" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.83z"/><line x1="7" y1="7" x2="7.01" y2="7"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></symbol>
+    <symbol id="i-file-text" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></symbol>
+    <symbol id="i-chevron-down" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-more-v" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+  </defs>
+</svg>
+
+<div class="mk-app" style="min-height:1080px">
+  <header class="mk-topbar">
+    <div class="mk-topbar__logo">P2</div>
+    <nav class="mk-topbar__nav" style="gap:0">
+      <a class="mk-nav-item" style="padding:8px 9px"><svg class="ic"><use href="#i-clock"/></svg> Ponto</a>
+      <a class="mk-nav-item" style="padding:8px 9px"><svg class="ic"><use href="#i-calendar"/></svg> Calendário</a>
+      <a class="mk-nav-item" style="padding:8px 9px"><svg class="ic"><use href="#i-folder"/></svg> Projetos</a>
+      <a class="mk-nav-item" style="padding:8px 9px"><svg class="ic"><use href="#i-sitemap"/></svg> Demandas</a>
+      <a class="mk-nav-item mk-nav-item--ativo" style="padding:8px 9px"><svg class="ic"><use href="#i-check-square"/></svg> Atividades</a>
+      <a class="mk-nav-item" style="padding:8px 9px"><svg class="ic"><use href="#i-play"/></svg> Execuções</a>
+      <a class="mk-nav-item" style="padding:8px 9px"><svg class="ic"><use href="#i-tag"/></svg> Tags</a>
+      <a class="mk-nav-item" style="padding:8px 9px"><svg class="ic"><use href="#i-users"/></svg> Usuários</a>
+    </nav>
+    <div class="chip-exec">
+      <span class="pulso"></span>
+      <span style="font-size:12.5px; font-weight:600; color:var(--primario-800)">Checkout do carrinho</span>
+      <span class="mk-timer" style="font-size:13px; color:var(--primario-700)">01:47:32</span>
+      <button class="mk-btn mk-btn--sm mk-btn--icone" style="border-radius:999px; background:var(--primario-600)"><svg class="ic ic--sm"><use href="#i-pause"/></svg></button>
+    </div>
+    <div class="mk-topbar__acoes" style="gap:4px">
+      <span class="mk-topbar__hora">14:32</span>
+      <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic"><use href="#i-moon"/></svg></button>
+      <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic"><use href="#i-file-text"/></svg></button>
+      <button class="mk-btn mk-btn--texto-neutro mk-btn--sm" style="gap:6px; padding:0 8px"><span class="mk-avatar mk-avatar--sm" style="background:var(--primario-500); color:#fff">AS</span> Ana</button>
+    </div>
+  </header>
+
+  <main class="mk-conteudo">
+    <div class="mk-page-header">
+      <div>
+        <div class="mk-page-header__titulo">Atividades</div>
+        <div class="mk-page-header__subtitulo">128 atividades · 3 em execução</div>
+      </div>
+      <div class="mk-page-header__acoes">
+        <button class="mk-btn" title="Atalho: N"><svg class="ic"><use href="#i-plus"/></svg> Nova Atividade</button>
+      </div>
+    </div>
+
+    <!-- Toolbar de filtros persistentes -->
+    <div class="mk-toolbar">
+      <div class="mk-busca" style="width:320px">
+        <svg class="ic"><use href="#i-search"/></svg>
+        <div class="mk-input">extrato <span class="mk-kbd" style="margin-left:auto">/</span></div>
+      </div>
+      <div class="mk-select" style="width:150px">3 status <svg class="ic"><use href="#i-chevron-down"/></svg></div>
+      <div class="mk-select" style="width:170px">Bruno Lima <svg class="ic"><use href="#i-chevron-down"/></svg></div>
+      <span class="mk-tag mk-tag--azul" style="padding:6px 12px; cursor:pointer"><svg class="ic ic--sm"><use href="#i-user"/></svg> Minhas atividades</span>
+      <span class="mk-tag" style="padding:6px 10px">Demanda: Tela de extrato <svg class="ic ic--sm"><use href="#i-x"/></svg></span>
+      <button class="mk-btn mk-btn--texto" style="margin-left:auto">Limpar filtros (3)</button>
+    </div>
+
+    <!-- Tabela -->
+    <div class="mk-card" style="overflow:visible; position:relative">
+      <table class="mk-tabela">
+        <thead><tr>
+          <th style="width:36px"><span class="mk-check"></span></th>
+          <th>Projeto</th><th>Demanda</th><th>Atividade</th><th>Usuário</th><th>Status</th><th>Tempo</th><th>Tags</th><th style="text-align:right">Ações</th>
+        </tr></thead>
+        <tbody>
+          <!-- linha com execução ativa -->
+          <tr style="background:var(--primario-50); box-shadow:inset 3px 0 0 var(--primario-500)">
+            <td><span class="mk-check"></span></td>
+            <td>Portal do Cliente</td>
+            <td><span class="u-flex u-centro u-g6">Tela de extrato <span class="doc-ind"><svg class="ic"><use href="#i-file"/></svg><span class="pt" style="background:var(--primario-500)"></span><span class="pt" style="background:var(--roxo-600)"></span></span></span></td>
+            <td><a>Checkout do carrinho</a> <span class="mk-tag mk-tag--verde mk-timer" style="margin-left:4px">⏱ 01:47:32</span></td>
+            <td><span class="u-flex u-centro u-g8"><span class="mk-avatar mk-avatar--sm">AS</span> Ana Souza</span></td>
+            <td><span class="mk-tag mk-tag--azul">Desenvolvendo <svg class="ic ic--sm"><use href="#i-chevron-down"/></svg></span></td>
+            <td class="u-mono">12h 30min</td>
+            <td><span class="mk-tag mk-tag--azul">Backend</span></td>
+            <td><div class="mk-tabela__acoes">
+              <button class="mk-btn mk-btn--sm mk-btn--icone" style="background:var(--ambar-500)"><svg class="ic ic--sm"><use href="#i-pause"/></svg></button>
+              <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic"><use href="#i-eye"/></svg></button>
+              <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic"><use href="#i-more-v"/></svg></button>
+            </div></td>
+          </tr>
+          <tr>
+            <td><span class="mk-check mk-check--on"><svg class="ic ic--sm"><use href="#i-check"/></svg></span></td>
+            <td>Portal do Cliente</td>
+            <td><span class="u-flex u-centro u-g6">Tela de extrato <span class="doc-ind"><svg class="ic"><use href="#i-file"/></svg><span class="pt" style="background:var(--primario-500)"></span></span></span></td>
+            <td><a>Corrigir cálculo de juros do extrato</a></td>
+            <td><span class="u-flex u-centro u-g8"><span class="mk-avatar mk-avatar--sm">BL</span> Bruno Lima</span></td>
+            <td><span class="mk-tag mk-tag--ambar">Pendente <svg class="ic ic--sm"><use href="#i-chevron-down"/></svg></span></td>
+            <td class="u-mono">8h 15min</td>
+            <td><span class="mk-tag mk-tag--verm">Urgente</span> <span class="mk-tag mk-tag--azul">Backend</span></td>
+            <td><div class="mk-tabela__acoes">
+              <button class="mk-btn mk-btn--sm mk-btn--icone" style="background:var(--primario-100); color:var(--primario-700)" title="Iniciar execução"><svg class="ic ic--sm"><use href="#i-play"/></svg></button>
+              <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic"><use href="#i-eye"/></svg></button>
+              <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic"><use href="#i-more-v"/></svg></button>
+            </div></td>
+          </tr>
+          <!-- linha com kebab aberto -->
+          <tr class="mk-tabela__linha--hover" style="position:relative">
+            <td><span class="mk-check mk-check--on"><svg class="ic ic--sm"><use href="#i-check"/></svg></span></td>
+            <td>Portal do Cliente</td>
+            <td><span class="u-flex u-centro u-g6">Exportação de relatórios <span class="doc-ind"><svg class="ic"><use href="#i-file"/></svg><span class="pt" style="background:var(--primario-500)"></span><span class="pt" style="background:var(--roxo-600)"></span><span class="pt" style="background:var(--ciano-700)"></span></span></span></td>
+            <td><a>Gerar PDF do extrato mensal</a></td>
+            <td><span class="u-flex u-centro u-g8"><span class="mk-avatar mk-avatar--sm">BL</span> Bruno Lima</span></td>
+            <td><span class="mk-tag">Planejada <svg class="ic ic--sm"><use href="#i-chevron-down"/></svg></span></td>
+            <td class="u-mono">—</td>
+            <td><span class="mk-tag mk-tag--verde">Frontend</span></td>
+            <td><div class="mk-tabela__acoes">
+              <button class="mk-btn mk-btn--sm mk-btn--icone" style="background:var(--primario-100); color:var(--primario-700)"><svg class="ic ic--sm"><use href="#i-play"/></svg></button>
+              <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic"><use href="#i-eye"/></svg></button>
+              <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone" style="background:var(--superficie-100)"><svg class="ic"><use href="#i-more-v"/></svg></button>
+            </div></td>
+          </tr>
+          <tr>
+            <td><span class="mk-check"></span></td>
+            <td>App Financeiro</td>
+            <td>Implementar módulo de login</td>
+            <td><a>Testes E2E do fluxo de login</a></td>
+            <td><span class="u-flex u-centro u-g8"><span class="mk-avatar mk-avatar--sm">DR</span> Diego Ramos</span></td>
+            <td><span class="mk-tag mk-tag--verde">Desenvolvida <svg class="ic ic--sm"><use href="#i-chevron-down"/></svg></span></td>
+            <td class="u-mono">6h 40min</td>
+            <td><span class="mk-tag mk-tag--roxo">Refatoração</span></td>
+            <td><div class="mk-tabela__acoes">
+              <button class="mk-btn mk-btn--sm mk-btn--icone" style="background:var(--superficie-100); color:var(--superficie-400)" title="Mude o status para Planejada ou Desenvolvendo para iniciar"><svg class="ic ic--sm"><use href="#i-play"/></svg></button>
+              <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic"><use href="#i-eye"/></svg></button>
+              <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic"><use href="#i-more-v"/></svg></button>
+            </div></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Menu kebab aberto -->
+      <div class="mk-card" style="position:absolute; right:24px; top:196px; width:220px; padding:6px; box-shadow:var(--sombra-dialog); z-index:30">
+        <div class="menu-item"><svg class="ic"><use href="#i-tag"/></svg> Atribuir tags</div>
+        <div class="menu-item"><svg class="ic"><use href="#i-calendar"/></svg> Registrar execução</div>
+        <hr class="mk-divisor" style="margin:4px 0">
+        <div class="menu-item" style="color:var(--verm-600)"><svg class="ic"><use href="#i-trash"/></svg> Excluir</div>
+      </div>
+
+      <!-- paginação -->
+      <div class="u-flex u-centro u-entre" style="padding:12px 16px; border-top:1px solid var(--superficie-100)">
+        <span class="u-sm u-sec">Mostrando 1 a 10 de 42 atividades</span>
+        <div class="u-flex u-g4">
+          <button class="mk-btn mk-btn--sec mk-btn--sm mk-btn--icone" style="opacity:.45">‹</button>
+          <button class="mk-btn mk-btn--sm mk-btn--icone">1</button>
+          <button class="mk-btn mk-btn--sec mk-btn--sm mk-btn--icone">2</button>
+          <button class="mk-btn mk-btn--sec mk-btn--sm mk-btn--icone">›</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Barra de ações em massa -->
+    <div class="mk-card" style="position:absolute; bottom:96px; left:50%; transform:translateX(-50%); padding:10px 16px; box-shadow:var(--sombra-dialog); display:flex; align-items:center; gap:12px; z-index:40">
+      <span style="font-weight:700; font-size:13.5px; color:var(--primario-700)">2 selecionadas</span>
+      <span style="color:var(--superficie-300)">|</span>
+      <button class="mk-btn mk-btn--sec mk-btn--sm">Mudar status <svg class="ic ic--sm"><use href="#i-chevron-down"/></svg></button>
+      <button class="mk-btn mk-btn--sec mk-btn--sm"><svg class="ic ic--sm"><use href="#i-tag"/></svg> Atribuir tags</button>
+      <button class="mk-btn mk-btn--perigo-texto mk-btn--sm"><svg class="ic ic--sm"><use href="#i-trash"/></svg> Excluir</button>
+      <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic ic--sm"><use href="#i-x"/></svg></button>
+    </div>
+
+    <!-- Toast com desfazer -->
+    <div class="mk-toast">
+      <svg class="ic"><use href="#i-check"/></svg> Atividade "Testes E2E" excluída
+      <button class="mk-btn mk-btn--texto mk-btn--sm">Desfazer</button>
+    </div>
+  </main>
+
+  <!-- Callouts -->
+  <div class="mk-callout" style="top:44px; left:876px">1</div>    <!-- chip execução topbar -->
+  <div class="mk-callout" style="top:166px; left:700px">2</div>   <!-- minhas + chip demanda + persistência -->
+  <div class="mk-callout" style="top:296px; left:1152px">3</div>  <!-- ações enxutas: play grande + kebab -->
+  <div class="mk-callout" style="top:345px; left:836px">4</div>   <!-- status inline otimista -->
+  <div class="mk-callout" style="top:462px; left:1250px">5</div>  <!-- kebab aberto -->
+  <div class="mk-callout" style="top:518px; left:475px">6</div>   <!-- indicador único de docs -->
+  <div class="mk-callout" style="top:940px; left:905px">7</div>   <!-- barra ações em massa -->
+  <div class="mk-callout" style="top:1005px; left:868px">8</div>  <!-- toast desfazer -->
+</div>
+</body>
+</html>

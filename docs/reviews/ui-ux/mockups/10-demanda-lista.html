@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Demandas — modo Lista otimizado</title>
+<link rel="stylesheet" href="base.css">
+<style>
+  .arvore-linha { display:flex; align-items:center; gap:8px; height:42px; padding:0 12px; border-bottom:1px solid var(--superficie-100); font-size:13.5px; }
+  .arvore-linha:hover { background:var(--superficie-50); }
+  .chev { width:26px; height:26px; border-radius:6px; display:flex; align-items:center; justify-content:center; color:var(--superficie-400); flex-shrink:0; }
+  .prog { width:96px; height:7px; border-radius:999px; background:var(--superficie-200); overflow:hidden; flex-shrink:0; }
+  .prog > div { height:100%; border-radius:999px; }
+  .chip-status { display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:6px; font-size:11.5px; font-weight:700; cursor:pointer; }
+  .seg-modo { display:inline-flex; background:var(--superficie-100); border-radius:9px; padding:3px; gap:2px; }
+  .seg-modo__item { padding:6px 14px; border-radius:7px; font-size:13px; font-weight:600; color:var(--superficie-500); display:flex; align-items:center; gap:6px; }
+  .seg-modo__item--on { background:var(--primario-500); color:#fff; box-shadow:0 1px 3px rgba(37,99,235,.4); }
+  .chip-filtro { display:inline-flex; align-items:center; gap:6px; padding:5px 11px; border-radius:999px; border:1px solid var(--superficie-300); font-size:12px; font-weight:700; color:var(--superficie-500); cursor:pointer; background:var(--superficie-0); }
+  .chip-filtro--on { border-color:transparent; }
+  .tag-mini { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:600; color:var(--superficie-500); }
+  .tag-mini .pt { width:7px; height:7px; border-radius:50%; }
+</style>
+</head>
+<body data-altura="1000">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></symbol>
+    <symbol id="i-sitemap" viewBox="0 0 24 24"><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/></symbol>
+    <symbol id="i-check-square" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></symbol>
+    <symbol id="i-tag" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.83z"/><line x1="7" y1="7" x2="7.01" y2="7"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></symbol>
+    <symbol id="i-file-text" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></symbol>
+    <symbol id="i-chevron-down" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></symbol>
+    <symbol id="i-chevron-right" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+    <symbol id="i-more-v" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></symbol>
+    <symbol id="i-external" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></symbol>
+    <symbol id="i-graph" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
+  </defs>
+</svg>
+
+<div class="mk-app" style="min-height:1000px">
+  <header class="mk-topbar">
+    <div class="mk-topbar__logo">P2</div>
+    <nav class="mk-topbar__nav">
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-clock"/></svg> Ponto</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-calendar"/></svg> Calendário</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-folder"/></svg> Projetos</a>
+      <a class="mk-nav-item mk-nav-item--ativo"><svg class="ic"><use href="#i-sitemap"/></svg> Demandas</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-check-square"/></svg> Atividades</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-play"/></svg> Execuções</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-tag"/></svg> Tags</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-users"/></svg> Usuários</a>
+    </nav>
+    <div class="mk-topbar__acoes">
+      <span class="mk-topbar__hora">14:32</span>
+      <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic"><use href="#i-moon"/></svg></button>
+      <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic"><use href="#i-file-text"/></svg></button>
+      <button class="mk-btn mk-btn--texto-neutro mk-btn--sm" style="gap:6px; padding:0 8px"><span class="mk-avatar mk-avatar--sm" style="background:var(--primario-500); color:#fff">MC</span> Marina</button>
+    </div>
+  </header>
+
+  <main class="mk-conteudo" style="gap:12px">
+    <!-- Header -->
+    <div class="mk-page-header">
+      <div class="u-flex u-centro u-g10">
+        <div class="mk-select" style="width:260px"><span><span class="u-xs u-muted" style="display:block; line-height:1">Projeto</span><b style="color:var(--superficie-800)">Portal do Cliente</b></span> <svg class="ic"><use href="#i-chevron-down"/></svg></div>
+        <button class="mk-btn mk-btn--sec mk-btn--icone" title="Abrir página do projeto"><svg class="ic"><use href="#i-external"/></svg></button>
+        <div class="seg-modo">
+          <div class="seg-modo__item seg-modo__item--on"><svg class="ic ic--sm"><use href="#i-list"/></svg> Lista</div>
+          <div class="seg-modo__item"><svg class="ic ic--sm"><use href="#i-graph"/></svg> Grafo</div>
+          <div class="seg-modo__item"><svg class="ic ic--sm"><use href="#i-chart"/></svg> Planejamento</div>
+        </div>
+      </div>
+      <div class="mk-page-header__acoes">
+        <button class="mk-btn" title="Atalho: N"><svg class="ic"><use href="#i-plus"/></svg> Nova Demanda</button>
+      </div>
+    </div>
+
+    <!-- Toolbar busca + filtros -->
+    <div class="mk-toolbar">
+      <div class="mk-busca" style="width:300px">
+        <svg class="ic"><use href="#i-search"/></svg>
+        <div class="mk-input"><span class="mk-placeholder">Buscar demanda…</span> <span class="mk-kbd" style="margin-left:auto">/</span></div>
+      </div>
+      <span class="chip-filtro">Pendente · 3</span>
+      <span class="chip-filtro chip-filtro--on" style="background:var(--primario-100); color:var(--primario-700)">Planejada · 5</span>
+      <span class="chip-filtro chip-filtro--on" style="background:var(--verde-100); color:var(--verde-700)">Concluída · 2</span>
+      <span class="chip-filtro">Cancelada · 1</span>
+      <div class="mk-select" style="width:130px; height:32px">Tags <svg class="ic"><use href="#i-chevron-down"/></svg></div>
+      <div style="margin-left:auto" class="u-flex u-g4">
+        <button class="mk-btn mk-btn--texto mk-btn--sm">Expandir tudo</button>
+        <button class="mk-btn mk-btn--texto mk-btn--sm">Recolher tudo</button>
+      </div>
+    </div>
+
+    <!-- Árvore -->
+    <div class="mk-card" style="overflow:visible; position:relative">
+      <!-- estrutural expandida -->
+      <div class="arvore-linha">
+        <span class="chev" style="transform:rotate(90deg)"><svg class="ic"><use href="#i-chevron-right"/></svg></span>
+        <svg class="ic" style="color:var(--ambar-700)"><use href="#i-folder"/></svg>
+        <a class="u-forte" style="cursor:pointer">Autenticação e Acesso</a>
+        <span style="flex:1"></span>
+        <span class="u-sm u-sec u-mono">22h30 / 40h</span>
+        <span class="prog"><div style="width:56%; background:var(--primario-500)"></div></span>
+        <span class="chip-status" style="background:var(--primario-100); color:var(--primario-700)">Planejada <svg class="ic ic--sm"><use href="#i-chevron-down"/></svg></span>
+        <span style="width:64px"></span>
+      </div>
+
+      <!-- filha com hover: ações visíveis + popover status -->
+      <div class="arvore-linha" style="background:var(--superficie-50); position:relative">
+        <span style="width:26px"></span>
+        <span class="chev"><svg class="ic"><use href="#i-chevron-right"/></svg></span>
+        <a class="u-forte" style="cursor:pointer">Implementar login com e-mail e senha</a>
+        <span class="tag-mini"><span class="pt" style="background:var(--primario-500)"></span>Backend</span>
+        <span style="flex:1"></span>
+        <span class="u-sm u-sec u-mono">12h / 16h</span>
+        <span class="prog"><div style="width:75%; background:var(--ambar-500)"></div></span>
+        <span class="chip-status" style="background:var(--primario-100); color:var(--primario-700); outline:2px solid var(--primario-300)">Planejada <svg class="ic ic--sm"><use href="#i-chevron-down"/></svg></span>
+        <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic ic--sm"><use href="#i-more-v"/></svg></button>
+        <!-- popover de status -->
+        <div class="mk-card" style="position:absolute; right:30px; top:40px; width:190px; padding:6px; box-shadow:var(--sombra-dialog); z-index:30">
+          <div style="padding:7px 12px; font-size:13px; display:flex; align-items:center; gap:8px"><span class="mk-ponto" style="background:var(--superficie-400)"></span> Pendente</div>
+          <div style="padding:7px 12px; font-size:13px; display:flex; align-items:center; gap:8px; background:var(--primario-50); border-radius:7px; font-weight:700; color:var(--primario-700)"><span class="mk-ponto" style="background:var(--primario-500)"></span> Planejada <svg class="ic ic--sm" style="margin-left:auto"><use href="#i-check"/></svg></div>
+          <div style="padding:7px 12px; font-size:13px; display:flex; align-items:center; gap:8px"><span class="mk-ponto" style="background:var(--verde-600)"></span> Concluída</div>
+          <div style="padding:7px 12px; font-size:13px; display:flex; align-items:center; gap:8px"><span class="mk-ponto" style="background:var(--verm-500)"></span> Cancelada</div>
+        </div>
+      </div>
+
+      <div class="arvore-linha">
+        <span style="width:26px"></span>
+        <span class="chev" style="visibility:hidden"><svg class="ic"><use href="#i-chevron-right"/></svg></span>
+        <a style="cursor:pointer; color:var(--superficie-700)">Recuperação de senha</a>
+        <span class="tag-mini"><span class="pt" style="background:var(--primario-500)"></span>Backend</span>
+        <span style="flex:1"></span>
+        <span class="u-sm u-sec u-mono">0h / 8h</span>
+        <span class="prog"><div style="width:0%"></div></span>
+        <span class="chip-status" style="background:var(--superficie-100); color:var(--superficie-600)">Pendente <svg class="ic ic--sm"><use href="#i-chevron-down"/></svg></span>
+        <span style="width:34px"></span>
+      </div>
+
+      <!-- linha com executor ativo -->
+      <div class="arvore-linha">
+        <span style="width:26px"></span>
+        <span class="chev" style="visibility:hidden"><svg class="ic"><use href="#i-chevron-right"/></svg></span>
+        <a style="cursor:pointer; color:var(--superficie-700)">Tela de login responsiva</a>
+        <span class="tag-mini"><span class="pt" style="background:var(--verde-600)"></span>Frontend</span>
+        <span class="mk-tag mk-tag--verde" style="gap:6px"><span class="mk-ponto" style="background:var(--verde-600); box-shadow:0 0 0 3px rgba(22,163,74,.2)"></span> Ana Souza</span>
+        <span style="flex:1"></span>
+        <span class="u-sm u-sec u-mono">10h30 / 12h</span>
+        <span class="prog"><div style="width:88%; background:var(--ambar-500)"></div></span>
+        <span class="chip-status" style="background:var(--primario-100); color:var(--primario-700)">Planejada <svg class="ic ic--sm"><use href="#i-chevron-down"/></svg></span>
+        <span style="width:34px"></span>
+      </div>
+
+      <!-- estrutural recolhida com + no hover -->
+      <div class="arvore-linha" style="background:var(--superficie-50)">
+        <span class="chev"><svg class="ic"><use href="#i-chevron-right"/></svg></span>
+        <svg class="ic" style="color:var(--ambar-700)"><use href="#i-folder"/></svg>
+        <a class="u-forte" style="cursor:pointer">Área do Cliente</a>
+        <span class="u-sm u-muted">4 sub-demandas</span>
+        <span style="flex:1"></span>
+        <span class="u-sm u-sec u-mono">0h / 64h</span>
+        <span class="prog"><div style="width:0%"></div></span>
+        <span class="chip-status" style="background:var(--superficie-100); color:var(--superficie-600)">Pendente <svg class="ic ic--sm"><use href="#i-chevron-down"/></svg></span>
+        <button class="mk-btn mk-btn--texto mk-btn--sm mk-btn--icone" title="Nova sub-demanda"><svg class="ic ic--sm"><use href="#i-plus"/></svg></button>
+        <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic ic--sm"><use href="#i-more-v"/></svg></button>
+      </div>
+
+      <!-- estourada -->
+      <div class="arvore-linha" style="border-bottom:none">
+        <span class="chev" style="visibility:hidden"><svg class="ic"><use href="#i-chevron-right"/></svg></span>
+        <a style="cursor:pointer; color:var(--superficie-700)">Integração com gateway de pagamento</a>
+        <span class="tag-mini"><span class="pt" style="background:var(--roxo-600)"></span>Integração</span>
+        <span style="flex:1"></span>
+        <span class="u-sm u-mono" style="color:var(--verm-600); font-weight:700">26h10 / 24h</span>
+        <span class="prog"><div style="width:100%; background:var(--verm-500)"></div></span>
+        <svg class="ic ic--sm" style="color:var(--verm-500)"><use href="#i-alert"/></svg>
+        <span class="chip-status" style="background:var(--primario-100); color:var(--primario-700)">Planejada <svg class="ic ic--sm"><use href="#i-chevron-down"/></svg></span>
+        <span style="width:34px"></span>
+      </div>
+    </div>
+
+    <!-- Toast otimista -->
+    <div class="mk-toast" style="bottom:30px">
+      <svg class="ic"><use href="#i-check"/></svg> Status alterado para Concluída
+      <button class="mk-btn mk-btn--texto mk-btn--sm">Desfazer</button>
+    </div>
+  </main>
+
+  <!-- Callouts -->
+  <div class="mk-callout" style="top:100px; left:308px">4</div>   <!-- projeto lembrado + modo -->
+  <div class="mk-callout" style="top:162px; left:660px">1</div>   <!-- toolbar busca + chips -->
+  <div class="mk-callout" style="top:262px; left:1000px">2</div>  <!-- chip status popover otimista -->
+  <div class="mk-callout" style="top:262px; left:390px">3</div>   <!-- clique abre detalhe / hover -->
+  <div class="mk-callout" style="top:352px; left:560px">5</div>   <!-- executando agora na lista -->
+  <div class="mk-callout" style="top:392px; left:1236px">6</div>  <!-- + sub-demanda hover -->
+</div>
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Relatório de Execuções — dialog otimizado</title>
+<link rel="stylesheet" href="base.css">
+<style>
+  .chip-per { border:1px solid var(--superficie-300); background:var(--superficie-0); color:var(--superficie-600); border-radius:999px; padding:5px 13px; font-size:12.5px; font-weight:700; cursor:pointer; }
+  .chip-per--on { border-color:transparent; background:var(--primario-500); color:#fff; }
+  .tile { flex:1; border:1px solid var(--superficie-200); border-radius:10px; padding:12px 16px; }
+</style>
+</head>
+<body data-altura="1010">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-x" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
+    <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M12 3l1.9 5.8a2 2 0 0 0 1.3 1.3L21 12l-5.8 1.9a2 2 0 0 0-1.3 1.3L12 21l-1.9-5.8a2 2 0 0 0-1.3-1.3L3 12l5.8-1.9a2 2 0 0 0 1.3-1.3z"/></symbol>
+    <symbol id="i-chevron-down" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
+  </defs>
+</svg>
+
+<div class="mk-app" style="min-height:1010px">
+  <div style="opacity:.30; filter:saturate(.5); padding:24px; display:flex; flex-direction:column; gap:14px">
+    <div class="mk-page-header">
+      <div><div class="mk-page-header__titulo">Execuções</div><div class="mk-page-header__subtitulo">Quinta-feira, 10 de julho de 2026</div></div>
+      <button class="mk-btn mk-btn--sec">Relatório</button>
+    </div>
+    <div class="mk-card" style="height:700px"></div>
+  </div>
+
+  <div class="mk-backdrop" style="align-items:flex-start; padding-top:40px">
+    <div class="mk-dialog" style="width:920px; max-height:940px">
+      <div class="mk-dialog__header">
+        <div class="mk-dialog__titulo">Relatório de Execuções</div>
+        <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic"><use href="#i-x"/></svg></button>
+      </div>
+
+      <div class="mk-dialog__corpo" style="gap:16px">
+        <!-- contexto -->
+        <div class="u-flex u-centro u-g10 u-wrap">
+          <div class="mk-select" style="width:250px"><span class="u-flex u-centro u-g8"><svg class="ic u-muted"><use href="#i-search"/></svg> Portal do Cliente</span> <svg class="ic"><use href="#i-chevron-down"/></svg></div>
+          <div class="u-flex u-g6">
+            <span class="chip-per chip-per--on">Este mês</span>
+            <span class="chip-per">Mês passado</span>
+            <span class="chip-per">Este ano</span>
+            <span class="chip-per">Personalizado…</span>
+          </div>
+          <div style="margin-left:auto" class="u-flex u-g8">
+            <button class="mk-btn mk-btn--sec"><svg class="ic" style="color:var(--roxo-600)"><use href="#i-sparkles"/></svg> Revisar com IA</button>
+            <button class="mk-btn"><svg class="ic"><use href="#i-download"/></svg> Baixar CSV</button>
+          </div>
+        </div>
+
+        <!-- stat tiles -->
+        <div class="u-flex u-g12">
+          <div class="tile"><div class="u-xs u-muted" style="font-weight:700; letter-spacing:.05em">PERÍODO</div><div style="font-size:16px; font-weight:800; color:var(--superficie-800)">Julho/2026</div></div>
+          <div class="tile"><div class="u-xs u-muted" style="font-weight:700; letter-spacing:.05em">EXECUÇÕES</div><div style="font-size:16px; font-weight:800; color:var(--superficie-800)">47</div></div>
+          <div class="tile"><div class="u-xs u-muted" style="font-weight:700; letter-spacing:.05em">TEMPO TOTAL</div><div style="font-size:16px; font-weight:800; color:var(--primario-600)">182h20</div></div>
+        </div>
+
+        <!-- tabela -->
+        <div style="border:1px solid var(--superficie-200); border-radius:10px; overflow:hidden">
+          <table class="mk-tabela">
+            <thead><tr><th>Demanda</th><th>Atividade</th><th>Usuário</th><th>Início</th><th>Fim</th><th>Tempo</th></tr></thead>
+            <tbody>
+              <tr><td>Cadastro de clientes</td><td>Implementar validação de CPF</td><td>Ana Souza</td><td class="u-mono">03/07 09:10</td><td class="u-mono">03/07 12:02</td><td class="u-mono">2h52</td></tr>
+              <tr><td>API de autenticação</td><td>Testes de integração OAuth</td><td>Bruno Lima</td><td class="u-mono">12/07 08:00</td><td class="u-mono">12/07 19:30</td><td class="u-mono" style="color:var(--verm-600); font-weight:700">11h30</td></tr>
+              <tr><td>Dashboard de métricas</td><td>Gráfico de horas por demanda</td><td>Carla Mendes</td><td class="u-mono">19/06 10:00</td><td class="u-mono">19/06 13:15</td><td class="u-mono">3h15</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- revisão IA -->
+        <div style="border-top:2px solid var(--superficie-200); padding-top:14px">
+          <div class="u-flex u-centro u-g10" style="margin-bottom:10px">
+            <span class="u-flex u-centro u-g6" style="font-weight:800; color:var(--roxo-600)"><svg class="ic"><use href="#i-sparkles"/></svg> Revisão por IA</span>
+            <span class="mk-tag mk-tag--verm">1 ALTA</span>
+            <span class="mk-tag mk-tag--ambar">1 MÉDIA</span>
+            <span class="mk-tag">1 BAIXA</span>
+          </div>
+          <div style="font-size:13.5px; line-height:1.6; color:var(--superficie-700); background:var(--superficie-50); border-radius:10px; padding:12px 14px; margin-bottom:10px">
+            O período apresenta 47 execuções consistentes no geral, com três pontos de atenção: uma jornada acima de 11h sem pausa, descrições genéricas recorrentes e um registro em dia não útil.
+          </div>
+          <div class="u-col u-g8">
+            <div class="u-flex u-g10" style="padding:10px 12px; border:1px solid var(--superficie-200); border-left:3px solid var(--verm-500); border-radius:8px">
+              <span class="mk-tag mk-tag--verm">ALTA</span>
+              <div class="u-col u-g4">
+                <span style="font-size:13px">Execução de 11h30 sem pausa registrada em 12/07 — acima da jornada esperada.</span>
+                <span class="u-xs u-muted u-mono">API de autenticação / Testes de integração OAuth / 12/07/2026</span>
+              </div>
+            </div>
+            <div class="u-flex u-g10" style="padding:10px 12px; border:1px solid var(--superficie-200); border-left:3px solid var(--ambar-500); border-radius:8px">
+              <span class="mk-tag mk-tag--ambar">MÉDIA</span>
+              <div class="u-col u-g4">
+                <span style="font-size:13px">3 execuções com descrição "ajustes" não permitem auditoria do trabalho realizado.</span>
+                <span class="u-xs u-muted u-mono">API de autenticação / Bruno Lima</span>
+              </div>
+            </div>
+            <div class="u-flex u-g10" style="padding:10px 12px; border:1px solid var(--superficie-200); border-left:3px solid var(--superficie-400); border-radius:8px">
+              <span class="mk-tag">BAIXA</span>
+              <div class="u-col u-g4">
+                <span style="font-size:13px">Execução registrada em 19/06 (feriado de Corpus Christi).</span>
+                <span class="u-xs u-muted u-mono">Dashboard de métricas / 19/06/2026</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Callouts -->
+  <div class="mk-callout" style="top:150px; left:560px">1</div>   <!-- chips período -->
+  <div class="mk-callout" style="top:150px; left:1122px">2</div>  <!-- csv primário / preview automático -->
+  <div class="mk-callout" style="top:236px; left:1058px">3</div>  <!-- stat tiles -->
+  <div class="mk-callout" style="top:560px; left:520px">4</div>   <!-- revisão IA habilitada -->
+</div>
+</body>
+</html>

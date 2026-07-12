@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Nova Atividade — formulário otimizado</title>
+<link rel="stylesheet" href="base.css">
+<style>
+  .seg4 { display:flex; border:1px solid var(--superficie-300); border-radius:9px; overflow:hidden; }
+  .seg4 > div { flex:1; text-align:center; padding:9px 0; font-size:12.5px; font-weight:700; color:var(--superficie-500); background:var(--superficie-0); border-right:1px solid var(--superficie-200); cursor:pointer; }
+  .seg4 > div:last-child { border-right:none; }
+  .seg4 > .on { background:var(--primario-500); color:#fff; }
+</style>
+</head>
+<body data-altura="960">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></symbol>
+    <symbol id="i-sitemap" viewBox="0 0 24 24"><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/></symbol>
+    <symbol id="i-check-square" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></symbol>
+    <symbol id="i-tag" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.83z"/><line x1="7" y1="7" x2="7.01" y2="7"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></symbol>
+    <symbol id="i-file-text" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></symbol>
+    <symbol id="i-chevron-down" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></symbol>
+    <symbol id="i-chevron-left" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+    <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M12 3l1.9 5.8a2 2 0 0 0 1.3 1.3L21 12l-5.8 1.9a2 2 0 0 0-1.3 1.3L12 21l-1.9-5.8a2 2 0 0 0-1.3-1.3L3 12l5.8-1.9a2 2 0 0 0 1.3-1.3z"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></symbol>
+  </defs>
+</svg>
+
+<div class="mk-app" style="min-height:960px">
+  <header class="mk-topbar">
+    <div class="mk-topbar__logo">P2</div>
+    <nav class="mk-topbar__nav">
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-clock"/></svg> Ponto</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-calendar"/></svg> Calendário</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-folder"/></svg> Projetos</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-sitemap"/></svg> Demandas</a>
+      <a class="mk-nav-item mk-nav-item--ativo"><svg class="ic"><use href="#i-check-square"/></svg> Atividades</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-play"/></svg> Execuções</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-tag"/></svg> Tags</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-users"/></svg> Usuários</a>
+    </nav>
+    <div class="mk-topbar__acoes">
+      <span class="mk-topbar__hora">14:32</span>
+      <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic"><use href="#i-moon"/></svg></button>
+      <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic"><use href="#i-file-text"/></svg></button>
+      <button class="mk-btn mk-btn--texto-neutro mk-btn--sm" style="gap:6px; padding:0 8px"><span class="mk-avatar mk-avatar--sm" style="background:var(--primario-500); color:#fff">AS</span> Ana</button>
+    </div>
+  </header>
+
+  <main class="mk-conteudo" style="align-items:center">
+    <div style="width:800px">
+      <div class="u-flex u-centro u-g10" style="margin-bottom:14px">
+        <button class="mk-btn mk-btn--texto-neutro mk-btn--sm"><svg class="ic ic--sm"><use href="#i-chevron-left"/></svg> Atividades</button>
+        <div>
+          <div class="u-sm u-muted">Portal do Cliente / Autenticação de dois fatores</div>
+          <div class="mk-page-header__titulo" style="color:var(--primario-600)">Nova Atividade</div>
+        </div>
+      </div>
+
+      <div class="mk-card" style="padding:24px 28px; display:flex; flex-direction:column; gap:18px">
+        <div class="mk-campo">
+          <label class="mk-label">Demanda <span class="req">*</span></label>
+          <div class="mk-select"><span class="u-flex u-centro u-g8"><svg class="ic u-muted"><use href="#i-sitemap"/></svg> Portal do Cliente — Autenticação de dois fatores</span> <svg class="ic"><use href="#i-chevron-down"/></svg></div>
+          <div class="mk-ajuda">Pré-selecionada pela URL (?demandaId=42) · com busca</div>
+        </div>
+
+        <div class="mk-campo">
+          <label class="mk-label u-flex u-centro u-g6">Nome <span class="req">*</span> <svg class="ic ic--sm u-muted"><use href="#i-info"/></svg></label>
+          <div class="mk-input mk-input--foco">Implementar verificação por SMS<span style="border-left:1.5px solid var(--primario-600); height:16px"></span></div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:16px">
+          <div class="mk-campo">
+            <label class="mk-label">Status <span class="req">*</span></label>
+            <div class="seg4">
+              <div>Pendente</div><div>Planejada</div><div class="on">Desenvolvendo</div><div>Desenvolvida</div>
+            </div>
+          </div>
+          <div class="mk-campo">
+            <label class="mk-label">Responsável <span class="u-muted" style="font-weight:400; text-transform:none">(gestor)</span></label>
+            <div class="mk-select"><span class="u-flex u-centro u-g8"><span class="mk-avatar mk-avatar--sm" style="background:var(--verde-100); color:var(--verde-700)">BL</span> Bruno Lima</span> <svg class="ic"><use href="#i-chevron-down"/></svg></div>
+          </div>
+        </div>
+
+        <div class="mk-campo">
+          <label class="mk-label">Tags</label>
+          <div class="u-flex u-g6 u-wrap">
+            <span class="mk-tag mk-tag--azul" style="cursor:pointer">✓ Backend</span>
+            <span class="mk-tag" style="cursor:pointer">Frontend</span>
+            <span class="mk-tag mk-tag--verm" style="cursor:pointer">✓ Urgente</span>
+            <span class="mk-tag" style="cursor:pointer">Refatoração</span>
+          </div>
+        </div>
+
+        <div class="mk-campo">
+          <label class="mk-label">Descrição</label>
+          <div class="mk-textarea" style="min-height:92px">Implementar o envio de código de verificação por SMS no fluxo de login, com fallback para aplicativo autenticador.</div>
+          <div class="u-flex u-centro u-entre">
+            <button class="mk-btn mk-btn--sec mk-btn--sm"><svg class="ic ic--sm" style="color:var(--roxo-600)"><use href="#i-sparkles"/></svg> Auxiliar com IA</button>
+            <span class="u-xs u-muted">112 caracteres</span>
+          </div>
+        </div>
+
+        <hr class="mk-divisor">
+        <div class="u-flex u-centro u-entre">
+          <span class="u-xs u-muted"><span class="mk-kbd">Enter</span> salva · <span class="mk-kbd">Ctrl</span>+<span class="mk-kbd">Enter</span> salva da descrição · <span class="mk-kbd">Esc</span> volta</span>
+          <div class="u-flex u-g8">
+            <button class="mk-btn mk-btn--sec">Salvar e criar outra</button>
+            <button class="mk-btn"><svg class="ic"><use href="#i-check"/></svg> Salvar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Callouts -->
+  <div class="mk-callout" style="top:122px; left:625px">1</div>   <!-- breadcrumb + seletor -->
+  <div class="mk-callout" style="top:352px; left:735px">2</div>   <!-- status segmentado default -->
+  <div class="mk-callout" style="top:352px; left:1090px">3</div>  <!-- responsável + tags -->
+  <div class="mk-callout" style="top:648px; left:500px">5</div>   <!-- IA -->
+  <div class="mk-callout" style="top:756px; left:918px">6</div>   <!-- salvar e criar outra -->
+  <div class="mk-callout" style="top:756px; left:560px">4</div>   <!-- atalhos -->
+</div>
+</body>
+</html>

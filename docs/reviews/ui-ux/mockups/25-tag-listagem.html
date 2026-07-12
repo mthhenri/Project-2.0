@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Tags — gestão otimizada</title>
+<link rel="stylesheet" href="base.css">
+<style>
+  .grade-tags { display:grid; grid-template-columns:repeat(5, 1fr); gap:10px; }
+  .card-tag { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 10px; background:var(--superficie-0); border:1px solid var(--superficie-200); border-radius:8px; position:relative; }
+  .pill { display:inline-flex; align-items:center; gap:7px; padding:5px 12px; border-radius:999px; font-size:12.5px; font-weight:700; cursor:pointer; }
+  .pill .dot { width:11px; height:11px; border-radius:50%; cursor:pointer; }
+  .sw { width:30px; height:30px; border-radius:8px; cursor:pointer; }
+</style>
+</head>
+<body data-altura="800">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></symbol>
+    <symbol id="i-sitemap" viewBox="0 0 24 24"><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/></symbol>
+    <symbol id="i-check-square" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></symbol>
+    <symbol id="i-tag" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.83z"/><line x1="7" y1="7" x2="7.01" y2="7"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></symbol>
+    <symbol id="i-file-text" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+  </defs>
+</svg>
+
+<div class="mk-app" style="min-height:800px">
+  <header class="mk-topbar">
+    <div class="mk-topbar__logo">P2</div>
+    <nav class="mk-topbar__nav">
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-clock"/></svg> Ponto</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-calendar"/></svg> Calendário</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-folder"/></svg> Projetos</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-sitemap"/></svg> Demandas</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-check-square"/></svg> Atividades</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-play"/></svg> Execuções</a>
+      <a class="mk-nav-item mk-nav-item--ativo"><svg class="ic"><use href="#i-tag"/></svg> Tags</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-users"/></svg> Usuários</a>
+    </nav>
+    <div class="mk-topbar__acoes">
+      <span class="mk-topbar__hora">14:32</span>
+      <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic"><use href="#i-moon"/></svg></button>
+      <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic"><use href="#i-file-text"/></svg></button>
+      <button class="mk-btn mk-btn--texto-neutro mk-btn--sm" style="gap:6px; padding:0 8px"><span class="mk-avatar mk-avatar--sm" style="background:var(--primario-500); color:#fff">AS</span> Ana</button>
+    </div>
+  </header>
+
+  <main class="mk-conteudo">
+    <div class="mk-page-header">
+      <div><div class="mk-page-header__titulo">Tags <span class="u-sec" style="font-size:14px; font-weight:500">· 12 tags</span></div></div>
+      <div class="mk-busca" style="width:280px">
+        <svg class="ic"><use href="#i-search"/></svg>
+        <div class="mk-input"><span class="mk-placeholder">Buscar tag…</span> <span class="mk-kbd" style="margin-left:auto">/</span></div>
+      </div>
+    </div>
+
+    <!-- quick add -->
+    <div class="mk-card" style="padding:12px 14px; display:flex; align-items:center; gap:10px; position:relative">
+      <span class="sw" style="background:#22c55e; border-radius:50%; width:32px; height:32px; box-shadow:0 0 0 3px var(--verde-100)"></span>
+      <div class="mk-input mk-input--foco u-1">Banco de Dados<span style="border-left:1.5px solid var(--primario-600); height:16px"></span></div>
+      <button class="mk-btn"><svg class="ic"><use href="#i-plus"/></svg> Adicionar</button>
+      <span class="u-xs u-muted"><span class="mk-kbd">Enter</span> adiciona e mantém o foco</span>
+    </div>
+
+    <!-- grade -->
+    <div class="grade-tags">
+      <div class="card-tag"><span class="pill" style="background:#3b82f622; color:#2563eb"><span class="dot" style="background:#3b82f6"></span> Backend</span></div>
+      <div class="card-tag" style="box-shadow:var(--sombra-card); border-color:var(--primario-300)">
+        <span class="pill" style="background:#f9731622; color:#c2570c"><span class="dot" style="background:#f97316; box-shadow:0 0 0 3px #f9731633"></span> Bug</span>
+        <span class="u-flex u-g2">
+          <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic ic--sm"><use href="#i-edit"/></svg></button>
+          <button class="mk-btn mk-btn--perigo-texto mk-btn--sm mk-btn--icone"><svg class="ic ic--sm"><use href="#i-trash"/></svg></button>
+        </span>
+        <!-- popover paleta -->
+        <div class="mk-card" style="position:absolute; left:12px; top:48px; width:240px; padding:12px; box-shadow:var(--sombra-dialog); z-index:30">
+          <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:8px; margin-bottom:8px">
+            <span class="sw" style="background:#ef4444"></span><span class="sw" style="background:#f97316; box-shadow:0 0 0 2.5px var(--superficie-0), 0 0 0 4.5px #f97316"></span><span class="sw" style="background:#f59e0b"></span><span class="sw" style="background:#eab308"></span><span class="sw" style="background:#84cc16"></span>
+            <span class="sw" style="background:#22c55e"></span><span class="sw" style="background:#10b981"></span><span class="sw" style="background:#14b8a6"></span><span class="sw" style="background:#06b6d4"></span><span class="sw" style="background:#3b82f6"></span>
+            <span class="sw" style="background:#6366f1"></span><span class="sw" style="background:#8b5cf6"></span><span class="sw" style="background:#a855f7"></span><span class="sw" style="background:#ec4899"></span><span class="sw" style="background:#64748b"></span>
+          </div>
+          <a class="u-sm" style="color:var(--primario-600); font-weight:600; cursor:pointer">Personalizar…</a>
+        </div>
+      </div>
+      <div class="card-tag"><span class="pill" style="background:#14b8a622; color:#0f766e"><span class="dot" style="background:#14b8a6"></span> Documentação</span></div>
+      <div class="card-tag"><span class="pill" style="background:#8b5cf622; color:#7c3aed"><span class="dot" style="background:#8b5cf6"></span> Frontend</span></div>
+      <div class="card-tag"><span class="pill" style="background:#64748b22; color:#475569"><span class="dot" style="background:#64748b"></span> Infra</span></div>
+      <div class="card-tag"><span class="pill" style="background:#ec489922; color:#db2777"><span class="dot" style="background:#ec4899"></span> Mobile</span></div>
+      <div class="card-tag"><span class="pill" style="background:#06b6d422; color:#0e7490"><span class="dot" style="background:#06b6d4"></span> Portal do Cliente</span></div>
+      <div class="card-tag"><span class="pill" style="background:#22c55e22; color:#15803d"><span class="dot" style="background:#22c55e"></span> QA</span></div>
+      <div class="card-tag"><span class="pill" style="background:#6366f122; color:#4f46e5"><span class="dot" style="background:#6366f1"></span> Refatoração</span></div>
+      <div class="card-tag"><span class="pill" style="background:#eab30822; color:#a16207"><span class="dot" style="background:#eab308"></span> Reunião</span></div>
+      <div class="card-tag" style="opacity:.35; border-style:dashed"><span class="pill" style="background:#ef444422; color:#b91c1c"><span class="dot" style="background:#ef4444"></span> Urgente</span></div>
+    </div>
+
+    <div class="mk-toast">
+      <svg class="ic"><use href="#i-check"/></svg> Tag "Urgente" excluída
+      <button class="mk-btn mk-btn--texto mk-btn--sm">Desfazer</button>
+    </div>
+  </main>
+
+  <!-- Callouts -->
+  <div class="mk-callout" style="top:100px; left:1360px">1</div>  <!-- busca / -->
+  <div class="mk-callout" style="top:172px; left:530px">2</div>   <!-- quick add enter -->
+  <div class="mk-callout" style="top:248px; left:560px">3</div>   <!-- popover cor inline -->
+  <div class="mk-callout" style="top:248px; left:498px">4</div>   <!-- ações hover -->
+  <div class="mk-callout" style="top:726px; left:836px">5</div>   <!-- undo -->
+</div>
+</body>
+</html>

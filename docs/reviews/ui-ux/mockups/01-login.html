@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Login — otimizado</title>
+<link rel="stylesheet" href="base.css">
+</head>
+<body data-altura="900">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
+    <symbol id="i-login" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+  </defs>
+</svg>
+
+<div class="mk-app" style="background:var(--superficie-100)">
+
+  <!-- Toggle de tema no canto superior direito -->
+  <button class="mk-btn mk-btn--texto-neutro mk-btn--icone" style="position:absolute; top:18px; right:22px; border-radius:50%">
+    <svg class="ic ic--lg"><use href="#i-moon"/></svg>
+  </button>
+
+  <!-- Dois estados lado a lado -->
+  <div style="flex:1; display:flex; align-items:center; justify-content:center; gap:72px; padding-bottom:40px">
+
+    <!-- ESTADO B: primeiro acesso -->
+    <div class="u-col u-g12" style="width:400px">
+      <div class="u-centro-t u-sm u-muted" style="font-weight:700; text-transform:uppercase; letter-spacing:.08em">Primeiro acesso nesta máquina</div>
+      <div class="mk-card" style="padding:32px 34px">
+        <div class="u-centro-t" style="margin-bottom:22px">
+          <div style="font-size:24px; font-weight:800; color:var(--primario-600); letter-spacing:-.5px">Project 2.0</div>
+          <div class="u-sec" style="margin-top:4px">Entre para continuar</div>
+        </div>
+        <div class="u-col u-g16">
+          <div class="mk-campo">
+            <label class="mk-label">Login</label>
+            <div class="mk-input mk-input--foco">ana.souza<span style="border-left:1.5px solid var(--primario-600); margin-left:1px; height:16px"></span></div>
+            <div class="mk-ajuda">Normalizado automaticamente (minúsculas, sem espaços)</div>
+          </div>
+          <div class="mk-campo">
+            <label class="mk-label">Senha</label>
+            <div class="mk-input u-entre"><span class="mk-placeholder">••••••••</span><svg class="ic u-muted"><use href="#i-eye"/></svg></div>
+          </div>
+          <label class="u-flex u-centro u-g8" style="cursor:pointer">
+            <span class="mk-check mk-check--on"><svg class="ic ic--sm"><use href="#i-check"/></svg></span>
+            <span style="font-size:13px">Lembrar meu usuário neste computador</span>
+          </label>
+          <!-- área de mensagem com altura reservada -->
+          <div style="min-height:34px; border-radius:8px"></div>
+          <button class="mk-btn" style="width:100%; height:40px"><svg class="ic"><use href="#i-login"/></svg> Entrar</button>
+        </div>
+        <hr class="mk-divisor" style="margin:20px 0 14px">
+        <div class="u-centro-t u-sm u-muted">Esqueceu a senha? Solicite a redefinição a um gestor.</div>
+      </div>
+    </div>
+
+    <!-- ESTADO A: bem-vindo de volta -->
+    <div class="u-col u-g12" style="width:400px; position:relative">
+      <div class="u-centro-t u-sm u-muted" style="font-weight:700; text-transform:uppercase; letter-spacing:.08em">Acessos seguintes (usuário lembrado)</div>
+      <div class="mk-card" style="padding:32px 34px; position:relative">
+        <div class="u-centro-t" style="margin-bottom:18px">
+          <div style="font-size:24px; font-weight:800; color:var(--primario-600); letter-spacing:-.5px">Project 2.0</div>
+          <div class="u-sec" style="margin-top:4px">Bem-vindo de volta</div>
+        </div>
+
+        <!-- chip de identidade -->
+        <div class="u-col u-centro u-g6" style="align-items:center; margin-bottom:18px">
+          <div class="mk-avatar" style="width:44px; height:44px; font-size:15px">AS</div>
+          <div>
+            <div class="u-forte u-centro-t" style="font-size:14.5px">Ana Souza</div>
+            <div class="u-sm u-muted u-centro-t">@ana.souza</div>
+          </div>
+          <a style="font-size:12.5px; color:var(--primario-600); font-weight:600; cursor:pointer">Entrar com outro usuário</a>
+        </div>
+
+        <div class="u-col u-g16">
+          <div class="mk-campo">
+            <label class="mk-label">Senha</label>
+            <div class="mk-input mk-input--foco u-entre">
+              <span>•••••<span style="border-left:1.5px solid var(--primario-600); margin-left:1px; height:16px"></span></span>
+              <svg class="ic u-muted"><use href="#i-eye"/></svg>
+            </div>
+            <div class="u-flex u-centro u-g6" style="color:var(--ambar-700); font-size:12px; font-weight:600">
+              <svg class="ic ic--sm"><use href="#i-alert"/></svg> Caps Lock ativado
+            </div>
+          </div>
+          <div style="min-height:34px"></div>
+          <button class="mk-btn" style="width:100%; height:40px"><svg class="ic"><use href="#i-login"/></svg> Entrar</button>
+        </div>
+        <hr class="mk-divisor" style="margin:20px 0 14px">
+        <div class="u-centro-t u-sm u-muted">Esqueceu a senha? Solicite a redefinição a um gestor.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- rodapé -->
+  <div class="u-centro-t u-sm u-muted" style="position:absolute; bottom:16px; width:100%">Project 2.0</div>
+
+  <!-- Callouts -->
+  <div class="mk-callout" style="top:295px; left:355px">1</div>   <!-- autofocus no login (estado B) -->
+  <div class="mk-callout" style="top:432px; left:355px">6</div>   <!-- lembrar usuário / validação -->
+  <div class="mk-callout" style="top:262px; left:1215px">2</div>  <!-- chip identidade só login -->
+  <div class="mk-callout" style="top:330px; left:1215px">3</div>  <!-- entrar com outro usuário -->
+  <div class="mk-callout" style="top:475px; left:1215px">4</div>  <!-- caps lock + área reservada -->
+  <div class="mk-callout" style="top:600px; left:1215px">5</div>  <!-- entrar -> returnUrl -->
+</div>
+</body>
+</html>

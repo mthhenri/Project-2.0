@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Ponto — visão mensal otimizada</title>
+<link rel="stylesheet" href="base.css">
+<style>
+  .resumo { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+  .resumo__card { display:flex; align-items:center; gap:14px; padding:16px 18px; }
+  .resumo__icone { width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:var(--superficie-100); color:var(--superficie-500); }
+  .dia-linha { display:grid; grid-template-columns:90px 1fr 130px 120px 150px; align-items:center; padding:10px 16px; border-bottom:1px solid var(--superficie-100); font-size:13.5px; }
+  .dia-hoje { background:var(--primario-50); box-shadow:inset 3px 0 0 var(--primario-500); }
+  .dia-hover { background:var(--superficie-50); }
+</style>
+</head>
+<body data-altura="1050">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></symbol>
+    <symbol id="i-sitemap" viewBox="0 0 24 24"><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/></symbol>
+    <symbol id="i-check-square" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></symbol>
+    <symbol id="i-tag" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.83z"/><line x1="7" y1="7" x2="7.01" y2="7"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></symbol>
+    <symbol id="i-file-text" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></symbol>
+    <symbol id="i-chevron-down" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></symbol>
+    <symbol id="i-chevron-left" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></symbol>
+    <symbol id="i-chevron-right" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></symbol>
+    <symbol id="i-printer" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+    <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></symbol>
+  </defs>
+</svg>
+
+<div class="mk-app" style="min-height:1050px">
+  <header class="mk-topbar">
+    <div class="mk-topbar__logo">P2</div>
+    <nav class="mk-topbar__nav">
+      <a class="mk-nav-item mk-nav-item--ativo"><svg class="ic"><use href="#i-clock"/></svg> Ponto</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-calendar"/></svg> Calendário</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-folder"/></svg> Projetos</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-sitemap"/></svg> Demandas</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-check-square"/></svg> Atividades</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-play"/></svg> Execuções</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-tag"/></svg> Tags</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-users"/></svg> Usuários</a>
+    </nav>
+    <div class="mk-topbar__acoes">
+      <span class="mk-topbar__hora">14:32</span>
+      <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic"><use href="#i-moon"/></svg></button>
+      <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic"><use href="#i-file-text"/></svg></button>
+      <button class="mk-btn mk-btn--texto-neutro mk-btn--sm" style="gap:6px; padding:0 8px"><span class="mk-avatar mk-avatar--sm" style="background:var(--primario-500); color:#fff">CM</span> Carla <svg class="ic ic--sm"><use href="#i-chevron-down"/></svg></button>
+    </div>
+  </header>
+
+  <main class="mk-conteudo" style="max-width:1200px; width:100%; margin:0 auto">
+
+    <!-- Header com toolbar em posições fixas -->
+    <div class="mk-page-header">
+      <div>
+        <div class="mk-page-header__titulo">Ponto</div>
+        <div class="mk-page-header__subtitulo">Quinta-feira, 10 de julho de 2026</div>
+      </div>
+      <div class="mk-page-header__acoes">
+        <div class="mk-select" style="width:230px"><span class="u-flex u-centro u-g8"><svg class="ic u-muted"><use href="#i-search"/></svg> Ana Souza</span> <span class="u-flex u-centro u-g4"><svg class="ic ic--sm"><use href="#i-x"/></svg><svg class="ic"><use href="#i-chevron-down"/></svg></span></div>
+        <div class="u-flex u-centro u-g4">
+          <button class="mk-btn mk-btn--sec mk-btn--icone"><svg class="ic"><use href="#i-chevron-left"/></svg></button>
+          <div class="mk-select" style="width:110px; justify-content:center">07/2026</div>
+          <button class="mk-btn mk-btn--sec mk-btn--icone" style="opacity:.45"><svg class="ic"><use href="#i-chevron-right"/></svg></button>
+          <button class="mk-btn mk-btn--texto" style="opacity:.45">Hoje</button>
+        </div>
+        <button class="mk-btn mk-btn--sec"><svg class="ic"><use href="#i-printer"/></svg> Imprimir</button>
+        <button class="mk-btn"><svg class="ic"><use href="#i-calendar"/></svg> Justificar</button>
+      </div>
+    </div>
+
+    <!-- Contexto do mês + chip removível -->
+    <div class="u-flex u-centro u-g10">
+      <span style="font-size:15px; font-weight:700; color:var(--superficie-800)">Julho de 2026</span>
+      <span class="u-sec">· 23 dias úteis</span>
+      <span class="mk-tag mk-tag--azul" style="padding:4px 10px; gap:7px"><span class="mk-avatar" style="width:18px;height:18px;font-size:9px">AS</span> Ana Souza <svg class="ic ic--sm"><use href="#i-x"/></svg></span>
+    </div>
+
+    <!-- 4 cards de resumo -->
+    <div class="resumo">
+      <div class="mk-card resumo__card">
+        <div class="resumo__icone"><svg class="ic ic--lg"><use href="#i-flag"/></svg></div>
+        <div><div class="u-sm u-sec">Meta do mês</div><div style="font-size:19px; font-weight:800; color:var(--superficie-800)">184h 0min</div></div>
+      </div>
+      <div class="mk-card resumo__card">
+        <div class="resumo__icone" style="background:var(--primario-50); color:var(--primario-600)"><svg class="ic ic--lg"><use href="#i-clock"/></svg></div>
+        <div><div class="u-sm u-sec">Trabalhado</div><div style="font-size:19px; font-weight:800; color:var(--primario-600)">57h 42min</div></div>
+      </div>
+      <div class="mk-card resumo__card" style="border-color:var(--verde-600); border-width:1.5px">
+        <div class="resumo__icone" style="background:var(--verde-100); color:var(--verde-700)"><svg class="ic ic--lg"><use href="#i-calendar"/></svg></div>
+        <div><div class="u-sm u-sec">Saldo até hoje</div><div style="font-size:19px; font-weight:800; color:var(--verde-700)">+1h 42min</div></div>
+      </div>
+      <div class="mk-card resumo__card">
+        <div class="resumo__icone"><svg class="ic ic--lg"><use href="#i-chart"/></svg></div>
+        <div><div class="u-sm u-sec">Saldo do mês</div><div style="font-size:19px; font-weight:800; color:var(--verm-600)">−126h 18min</div></div>
+      </div>
+    </div>
+
+    <!-- Lista de dias -->
+    <div class="mk-card" style="overflow:hidden">
+      <div class="dia-linha" style="background:var(--superficie-50); font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--superficie-500); border-bottom:1px solid var(--superficie-200)">
+        <span>Dia</span><span>Período</span><span>Trabalhado</span><span>Saldo</span><span style="text-align:right">Ações</span>
+      </div>
+
+      <div class="dia-linha">
+        <span class="u-forte">Ter 01</span>
+        <span class="u-mono">08:04 → 17:02</span>
+        <span class="u-mono">8h 12min</span>
+        <span class="u-mono" style="color:var(--verde-700); font-weight:600">+0h 12min</span>
+        <span style="text-align:right"><svg class="ic u-muted"><use href="#i-chevron-down"/></svg></span>
+      </div>
+
+      <div class="dia-linha">
+        <span class="u-forte">Sáb 05</span>
+        <span><span class="mk-tag">Sábado</span></span>
+        <span class="u-mono u-muted">0h 0min</span>
+        <span class="u-mono u-muted">—</span>
+        <span></span>
+      </div>
+
+      <div class="dia-linha">
+        <span class="u-forte">Ter 08</span>
+        <span class="u-flex u-centro u-g8"><span class="u-mono">09:30 → 14:20</span> <span class="mk-tag mk-tag--azul" style="cursor:pointer"><svg class="ic ic--sm"><use href="#i-calendar"/></svg> Consulta médica · 4 h</span></span>
+        <span class="u-mono">4h 05min</span>
+        <span class="u-mono" style="color:var(--verde-700); font-weight:600">+0h 05min</span>
+        <span style="text-align:right"><svg class="ic u-muted"><use href="#i-chevron-down"/></svg></span>
+      </div>
+
+      <!-- linha com hover: dia vazio, ação inline -->
+      <div class="dia-linha dia-hover">
+        <span class="u-forte">Qua 09</span>
+        <span class="u-muted">—</span>
+        <span class="u-mono u-muted">0h 0min</span>
+        <span class="u-mono" style="color:var(--verm-600); font-weight:600">−8h 0min</span>
+        <span style="text-align:right"><button class="mk-btn mk-btn--texto mk-btn--sm"><svg class="ic ic--sm"><use href="#i-calendar"/></svg> Justificar</button></span>
+      </div>
+
+      <!-- hoje: em andamento -->
+      <div class="dia-linha dia-hoje">
+        <span class="u-forte" style="color:var(--primario-700)">Qui 10</span>
+        <span class="u-flex u-centro u-g8"><span class="u-mono">08:02 → em andamento</span> <span class="mk-tag mk-tag--verde mk-timer">⏱ 00:42:15</span></span>
+        <span class="u-mono">5h 40min</span>
+        <span class="u-mono" style="color:var(--verm-600); font-weight:600" title="Meta do dia: 8h">−2h 20min</span>
+        <span style="text-align:right"><svg class="ic u-muted"><use href="#i-chevron-up"/></svg></span>
+      </div>
+
+      <!-- expansão da linha de hoje -->
+      <div style="padding:14px 16px 16px 106px; background:var(--superficie-50); border-bottom:1px solid var(--superficie-100)">
+        <div class="u-col u-g8" style="border-left:2px solid var(--superficie-200); padding-left:16px">
+          <div class="u-flex u-centro u-g10" style="font-size:13px">
+            <span class="u-mono u-sec">08:02 → 11:45</span>
+            <a style="color:var(--primario-600); font-weight:600; cursor:pointer">Implementar login OAuth</a>
+            <span class="u-sm u-muted">· Portal do Cliente</span>
+          </div>
+          <div class="u-flex u-centro u-g10" style="font-size:13px">
+            <span class="u-mono u-sec">13:05 → <b style="color:var(--verde-700)">agora</b></span>
+            <a style="color:var(--primario-600); font-weight:600; cursor:pointer">Checkout do carrinho</a>
+            <span class="u-sm u-muted">· Portal do Cliente</span>
+          </div>
+          <div class="u-sm u-muted" style="margin-top:4px">Intervalos (≥ 15 min): <span class="u-mono">11:45 → 13:05 · 1h 20min</span></div>
+        </div>
+      </div>
+
+      <div class="dia-linha">
+        <span class="u-forte">Sex 11</span>
+        <span class="u-muted">—</span>
+        <span class="u-mono u-muted">0h 0min</span>
+        <span class="u-mono u-muted">−8h 0min</span>
+        <span></span>
+      </div>
+    </div>
+  </main>
+
+  <!-- Callouts -->
+  <div class="mk-callout" style="top:100px; left:1052px">3</div>  <!-- imprimir p/ dev -->
+  <div class="mk-callout" style="top:100px; left:936px">5</div>   <!-- hoje + setas -->
+  <div class="mk-callout" style="top:126px; left:448px">1</div>   <!-- chip removível -->
+  <div class="mk-callout" style="top:200px; left:800px">6</div>   <!-- saldo até hoje -->
+  <div class="mk-callout" style="top:436px; left:1140px">2</div>  <!-- justificar inline -->
+  <div class="mk-callout" style="top:388px; left:500px">4</div>   <!-- badge justificativa clicável -->
+</div>
+</body>
+</html>

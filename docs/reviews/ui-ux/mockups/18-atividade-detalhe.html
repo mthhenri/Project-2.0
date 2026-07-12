@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Atividade — detalhe com timer otimizado</title>
+<link rel="stylesheet" href="base.css">
+</head>
+<body data-altura="1060">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></symbol>
+    <symbol id="i-sitemap" viewBox="0 0 24 24"><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/></symbol>
+    <symbol id="i-check-square" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></symbol>
+    <symbol id="i-tag" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.83z"/><line x1="7" y1="7" x2="7.01" y2="7"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></symbol>
+    <symbol id="i-file-text" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></symbol>
+    <symbol id="i-chevron-down" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></symbol>
+    <symbol id="i-arrow-right" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></symbol>
+  </defs>
+</svg>
+
+<div class="mk-app" style="min-height:1060px">
+  <header class="mk-topbar">
+    <div class="mk-topbar__logo">P2</div>
+    <nav class="mk-topbar__nav">
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-clock"/></svg> Ponto</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-calendar"/></svg> Calendário</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-folder"/></svg> Projetos</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-sitemap"/></svg> Demandas</a>
+      <a class="mk-nav-item mk-nav-item--ativo"><svg class="ic"><use href="#i-check-square"/></svg> Atividades</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-play"/></svg> Execuções</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-tag"/></svg> Tags</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-users"/></svg> Usuários</a>
+    </nav>
+    <div class="mk-topbar__acoes">
+      <span class="mk-topbar__hora">11:29</span>
+      <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic"><use href="#i-moon"/></svg></button>
+      <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic"><use href="#i-file-text"/></svg></button>
+      <button class="mk-btn mk-btn--texto-neutro mk-btn--sm" style="gap:6px; padding:0 8px"><span class="mk-avatar mk-avatar--sm" style="background:var(--primario-500); color:#fff">AS</span> Ana</button>
+    </div>
+  </header>
+
+  <main class="mk-conteudo" style="align-items:center">
+    <div style="width:960px; display:flex; flex-direction:column; gap:16px">
+
+      <!-- cabeçalho -->
+      <div>
+        <div class="u-sm u-sec" style="margin-bottom:6px"><a style="color:var(--primario-600); cursor:pointer">Atividades</a> › <a style="color:var(--primario-600); cursor:pointer">Portal do Cliente · Demanda #42 — Checkout com um clique</a></div>
+        <div class="u-flex u-centro u-entre">
+          <div class="u-flex u-centro u-g10">
+            <span style="font-size:21px; font-weight:700; color:var(--superficie-900)">Implementar validação de cartão</span>
+            <span class="mk-tag mk-tag--azul">Desenvolvendo</span>
+          </div>
+          <div class="mk-select" style="width:190px; opacity:.55" title="Pause a execução para mudar o status">Desenvolvendo <svg class="ic"><use href="#i-chevron-down"/></svg></div>
+        </div>
+        <div class="u-flex u-centro u-g10 u-sm u-sec" style="margin-top:6px">
+          <span class="u-flex u-centro u-g6"><span class="mk-avatar mk-avatar--sm">AS</span> Ana Souza</span> · <span>Criada em 02/07/2026</span>
+        </div>
+      </div>
+
+      <!-- faixa de execução: estado A -->
+      <div class="mk-card" style="border-left:4px solid var(--primario-500); background:var(--primario-50); padding:18px 22px; display:flex; align-items:center; justify-content:space-between">
+        <div class="u-flex u-centro u-g16">
+          <svg class="ic ic--xl" style="color:var(--primario-600)"><use href="#i-clock"/></svg>
+          <div>
+            <div class="mk-timer" style="font-size:30px; color:var(--primario-700)">02:17:43</div>
+            <div class="u-sm u-sec">Ajustando regex do número do cartão · iniciada hoje às 09:12</div>
+          </div>
+        </div>
+        <div class="u-flex u-centro u-g8">
+          <button class="mk-btn mk-btn--texto">Editar descrição ao pausar</button>
+          <button class="mk-btn" style="height:42px; padding:0 20px; background:var(--ambar-500)"><svg class="ic"><use href="#i-pause"/></svg> Pausar</button>
+        </div>
+      </div>
+
+      <!-- variação estado C -->
+      <div style="border:1.5px dashed var(--ambar-500); border-radius:12px; padding:12px 16px; display:flex; align-items:center; justify-content:space-between; background:var(--ambar-100)">
+        <div class="u-flex u-centro u-g10" style="font-size:13px; color:var(--ambar-700)">
+          <svg class="ic"><use href="#i-alert"/></svg>
+          <span><b>Variação — já executando outra atividade:</b> "Revisar fluxo de estorno" (Demanda #38) · há 1h07</span>
+        </div>
+        <div class="u-flex u-g6">
+          <button class="mk-btn mk-btn--sm" style="background:var(--ambar-700)"><svg class="ic ic--sm"><use href="#i-refresh"/></svg> Pausar lá e iniciar aqui</button>
+          <button class="mk-btn mk-btn--texto-neutro mk-btn--sm">Ir para a outra atividade</button>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1.5fr 1fr; gap:16px">
+        <!-- descrição -->
+        <div class="mk-card mk-card__corpo">
+          <div class="u-flex u-centro u-entre" style="margin-bottom:10px">
+            <span class="mk-card__titulo">Descrição</span>
+            <svg class="ic u-muted" style="cursor:pointer"><use href="#i-edit"/></svg>
+          </div>
+          <div style="font-size:13.5px; line-height:1.65; color:var(--superficie-700); cursor:text">
+            Validar número, bandeira e CVV no front antes do envio, com máscara e mensagens de erro específicas.
+          </div>
+          <div class="u-xs u-muted" style="margin-top:8px">Clique no texto para editar · Ctrl+Enter salva</div>
+        </div>
+
+        <!-- tags -->
+        <div class="mk-card mk-card__corpo" style="position:relative">
+          <div class="u-flex u-centro u-entre" style="margin-bottom:10px">
+            <span class="mk-card__titulo">Tags</span>
+          </div>
+          <div class="u-flex u-g6 u-wrap">
+            <span class="mk-tag mk-tag--azul">Frontend</span>
+            <span class="mk-tag mk-tag--verde">Pagamentos</span>
+            <span class="mk-tag" style="border:1.5px dashed var(--superficie-300); background:transparent; cursor:pointer">+ Editar</span>
+          </div>
+          <!-- popover chips -->
+          <div class="mk-card" style="position:absolute; left:16px; top:96px; padding:12px; box-shadow:var(--sombra-dialog); z-index:20; display:flex; gap:6px; flex-wrap:wrap; width:300px">
+            <span class="mk-tag mk-tag--azul" style="cursor:pointer">✓ Frontend</span>
+            <span class="mk-tag mk-tag--verde" style="cursor:pointer">✓ Pagamentos</span>
+            <span class="mk-tag" style="cursor:pointer">Backend</span>
+            <span class="mk-tag" style="cursor:pointer">Urgente</span>
+            <span class="u-xs u-muted" style="width:100%; padding-top:4px">Fechar salva automaticamente</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- execuções recentes -->
+      <div class="mk-card">
+        <div class="u-flex u-centro u-entre" style="padding:14px 20px 10px">
+          <span class="mk-card__titulo">Execuções recentes</span>
+          <div class="u-flex u-g6">
+            <button class="mk-btn mk-btn--sec mk-btn--sm"><svg class="ic ic--sm"><use href="#i-plus"/></svg> Registrar tempo</button>
+            <button class="mk-btn mk-btn--texto mk-btn--sm">Ver todas <svg class="ic ic--sm"><use href="#i-arrow-right"/></svg></button>
+          </div>
+        </div>
+        <div class="u-flex u-centro u-entre" style="padding:11px 20px; background:var(--primario-50); border-top:1px solid var(--superficie-100)">
+          <div class="u-flex u-centro u-g10">
+            <span class="mk-timer" style="color:var(--primario-700); font-weight:800">02:17:43</span>
+            <span style="font-size:13.5px">Ajustando regex do número do cartão</span>
+            <span class="u-sm u-sec u-mono">hoje 09:12 → agora</span>
+          </div>
+          <div class="u-flex u-centro u-g8">
+            <span class="u-flex u-centro u-g6 u-sm"><span class="mk-avatar mk-avatar--sm">AS</span> Ana Souza</span>
+            <button class="mk-btn mk-btn--sm mk-btn--icone" style="background:var(--ambar-500)"><svg class="ic ic--sm"><use href="#i-pause"/></svg></button>
+          </div>
+        </div>
+        <div class="u-flex u-centro u-entre" style="padding:11px 20px; border-top:1px solid var(--superficie-100)">
+          <div class="u-flex u-centro u-g10">
+            <span class="u-mono" style="font-weight:700">2h15</span>
+            <span style="font-size:13.5px">Máscara de CVV e bandeira</span>
+            <span class="u-sm u-sec u-mono">ontem 14:03 → 16:18</span>
+          </div>
+          <span class="u-flex u-centro u-g6 u-sm"><span class="mk-avatar mk-avatar--sm">AS</span> Ana Souza</span>
+        </div>
+        <div class="u-flex u-centro u-entre" style="padding:11px 20px; border-top:1px solid var(--superficie-100)">
+          <div class="u-flex u-centro u-g10">
+            <span class="u-mono" style="font-weight:700">2h30</span>
+            <span style="font-size:13.5px">Setup do formulário de cartão</span>
+            <span class="u-sm u-sec u-mono">07/07 10:00 → 12:30</span>
+          </div>
+          <span class="u-flex u-centro u-g6 u-sm"><span class="mk-avatar mk-avatar--sm" style="background:var(--verde-100); color:var(--verde-700)">BL</span> Bruno Lima</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Callouts -->
+  <div class="mk-callout" style="top:96px; left:700px">1</div>    <!-- breadcrumb -->
+  <div class="mk-callout" style="top:238px; left:485px">3</div>   <!-- timer ao vivo, fica na página -->
+  <div class="mk-callout" style="top:238px; left:1130px">4</div>  <!-- pausar 1 clique -->
+  <div class="mk-callout" style="top:352px; left:1010px">4</div>  <!-- trocar em 1 clique -->
+  <div class="mk-callout" style="top:148px; left:1108px">5</div>  <!-- status bloqueado tooltip -->
+  <div class="mk-callout" style="top:475px; left:900px">6</div>   <!-- tags popover / descrição inline -->
+  <div class="mk-callout" style="top:700px; left:1035px">2</div>  <!-- registrar tempo -->
+</div>
+</body>
+</html>

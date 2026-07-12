@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Assistente de descrição (IA) — dialog otimizado</title>
+<link rel="stylesheet" href="base.css">
+</head>
+<body data-altura="760">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-x" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></symbol>
+    <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M12 3l1.9 5.8a2 2 0 0 0 1.3 1.3L21 12l-5.8 1.9a2 2 0 0 0-1.3 1.3L12 21l-1.9-5.8a2 2 0 0 0-1.3-1.3L3 12l5.8-1.9a2 2 0 0 0 1.3-1.3z"/></symbol>
+  </defs>
+</svg>
+
+<div class="mk-app" style="min-height:760px">
+  <div style="opacity:.30; filter:saturate(.5); padding:24px; display:flex; justify-content:center">
+    <div class="mk-card" style="width:800px; height:640px"></div>
+  </div>
+
+  <div class="mk-backdrop">
+    <div class="mk-dialog" style="width:880px">
+      <div class="mk-dialog__header">
+        <div class="mk-dialog__titulo u-flex u-centro u-g8"><svg class="ic ic--lg" style="color:var(--roxo-600)"><use href="#i-sparkles"/></svg> Assistente de descrição</div>
+        <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic"><use href="#i-x"/></svg></button>
+      </div>
+
+      <div class="mk-dialog__corpo">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
+          <div class="mk-campo">
+            <label class="mk-label">Texto original</label>
+            <div style="background:var(--superficie-50); border:1px solid var(--superficie-200); border-radius:10px; padding:12px 14px; font-size:13.5px; line-height:1.6; color:var(--superficie-600); min-height:170px">
+              implementar 2FA com sms e app autenticador pro login do portal
+            </div>
+          </div>
+          <div class="mk-campo">
+            <label class="mk-label" style="color:var(--roxo-600)">Sugestão da IA — editável</label>
+            <div class="mk-textarea" style="min-height:170px; border-color:var(--primario-300); box-shadow:0 0 0 3px var(--primario-50); font-size:13.5px; line-height:1.6">
+              Implementar autenticação de dois fatores (2FA) no login do Portal do Cliente, com envio de código por SMS e suporte a aplicativos autenticadores (TOTP). Inclui tela de configuração do segundo fator no perfil do usuário e fluxo de recuperação de acesso.<span style="border-left:1.5px solid var(--primario-600); height:15px; display:inline-block; vertical-align:-2px"></span>
+            </div>
+            <div class="mk-ajuda">Você pode ajustar o texto antes de usar</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mk-dialog__footer">
+        <button class="mk-btn mk-btn--texto mk-esq"><svg class="ic"><use href="#i-refresh"/></svg> Regenerar</button>
+        <button class="mk-btn mk-btn--sec">Cancelar</button>
+        <button class="mk-btn"><svg class="ic"><use href="#i-check"/></svg> Usar este texto</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- toast desfazer pós-aceite -->
+  <div class="mk-toast">
+    <svg class="ic"><use href="#i-check"/></svg> Descrição atualizada
+    <button class="mk-btn mk-btn--texto mk-btn--sm">Desfazer</button>
+  </div>
+
+  <!-- Callouts -->
+  <div class="mk-callout" style="top:236px; left:1108px">1</div>  <!-- editável antes de usar -->
+  <div class="mk-callout" style="top:560px; left:400px">2</div>   <!-- regenerar -->
+  <div class="mk-callout" style="top:688px; left:864px">3</div>   <!-- desfazer pós-aceite -->
+</div>
+</body>
+</html>
