@@ -1,5 +1,7 @@
 # Usuários — listagem (cartão de usuário, dialog de formulário criar/editar, dialog de perfil) (/usuario (só gestor))
 
+> ✅ Sugestões verificadas adversarialmente contra o código e as regras de negócio.
+
 ## Fluxos atuais
 - **Criar usuário novo** (5 cliques): Clicar 'Novo Usuário' → clicar no campo Login (sem autofocus) → digitar login, senha, nome, cargo (Tab entre campos) → abrir select Tipo → escolher tipo → clicar 'Salvar' (Enter não envia)
 - **Ver perfil de um usuário** (1 cliques): Clicar no ícone de olho na linha (nome não é clicável; aguarda GET com spinner)
@@ -29,7 +31,7 @@
 - [BAIXA] P15: Refetch em todo visibilitychange reexibe o loading da tabela mesmo com dados na tela (flicker); atualização deveria ser silenciosa quando já há conteúdo.
 - [BAIXA] P16: Ordem dos campos do formulário de criação começa por Login/Senha em vez de Nome — inverte o fluxo mental natural (identidade → credenciais) e impede sugerir o login a partir do nome.
 
-## Sugestões (JÁ VERIFICADAS)
+## Sugestões aprovadas na verificação
 ### S01 — Toggle de status inline na linha com undo (via p-toggleswitch) [impacto alto]
 Substituir a p-tag estática de Status por p-toggleswitch pequeno + rótulo. Clique dispara PUT /usuario/:id { status } de forma otimista (UsuarioAlterarDto.status já existe e o endpoint aceita alteração parcial — verificado no controller/service do backend) e toast 'Elisa Rocha inativada — Desfazer', onde Desfazer é um PUT reverso (sem backend novo). Reverter o switch se o backend retornar erro. Linha inativa com opacidade 0.6 e rótulo cinza neutro (hoje a tag usa severity danger/vermelho). Atenção: PrimeNG 21 não tem mais InputSwitch — o componente é ToggleSwitch. Nota: o backend hoje só bloqueia rebaixamento de tipo do último gestor, não a inativação por status — o undo mitiga acidente, mas vale registrar a lacuna.
 _Redução de esforço:_ de 5 cliques (olho → Editar → abrir select → escolher → Salvar) para 1 clique
@@ -67,10 +69,10 @@ O campo 'Confirmar Nova Senha' e o validador de igualdade são puramente client-
 _Redução de esforço:_ metade da digitação (1 campo em vez de 2); com gerador, fluxo completo em 2 cliques
 
 
-## Ajustes na spec (verificador)
+## Ajustes de implementação apontados pelo verificador
 1) Componente irreal: a spec cita 'InputSwitch', que não existe no PrimeNG 21 usado pelo projeto — usar p-toggleswitch (ToggleSwitch). 2) Dado inexistente no header: o contador '7 usuários · 6 ativos' não é fornecido pela API — a resposta paginada só traz totalItens do filtro corrente; exibir apenas '{totalItens} usuários' ou prever requisição extra de contagem (status=ATIVO, itensPorPagina=1). 3) Afirmação incorreta na seção 8: 'soft delete garante restauração' — não existe endpoint de restauração no backend; trocar por DELETE adiado no cliente (enviar ao expirar o toast de 6s ou em beforeunload; Desfazer cancela o request) ou especificar a criação de PATCH /usuario/:id/restaurar. 4) Dialog A modo edição aberto pelo lápis da linha: UsuarioResumoDto não contém horasDiariasNecessarias — especificar fetch de GET /usuario/:id com skeleton breve antes de preencher o formulário. 5) Seção 3, colunas 'ordenáveis' (Usuário e Cargo): UsuarioListarDto não tem parâmetros de ordenação e a tabela é lazy (backend ordena fixo por nome_completo ASC) — remover a ordenação da spec ou condicioná-la a novos campos ordenarPor/direcao no DTO e no repositório. 6) Seção 3, coluna Usuário: o usuario-cartao real mostra avatar + nome + cargo + tag 'Gestor' (não login) e hoje não é usado em nenhuma tela — a spec deve prever adaptação do componente (linha secundária configurável login/cargo e supressão da tag, pois Tipo tem coluna própria). 7) Seção 6, preview de anotações: o campo anotacoes é HTML gerado pelo p-editor (Quill) — especificar remoção de tags no preview. 8) Seção 9, atalho 'N': deve ser ignorado quando o foco está em um input (senão digitar 'n' na busca abre o dialog); o mesmo vale para '/'. 9) Seção 2: default 'Ativos' sugerido para o filtro Status só deve valer como persistência de escolha do usuário — primeira visita deve abrir em 'Todos' para não esconder usuários inativos sem ação explícita do gestor. 10) Seção 5: 'Esc fecha' e 'Horas Diárias default 8' já são comportamento atual (p-dialog closeOnEscape default e form com default 8) — não apresentar como melhorias novas no mockup/callouts. 11) Toggle de status (seção 3/callout ①): especificar reversão do switch em caso de erro do backend; registrar que o backend hoje permite inativar o último gestor ativo via status (a regra de 'mínimo 1 gestor' só cobre rebaixamento de tipo) — lacuna a validar com o time de backend.
 
-## REDESIGN SPEC
+## Especificação do redesign
 # Redesign — Usuários (listagem + dialogs) · rota `/usuario` (só gestor)
 
 Tela administrativa de contas do Project 2.0. Princípios do redesign: **toda ação frequente a 1 clique da linha** (status, editar, senha, excluir), **criação com defaults e Enter**, **filtros de 1 clique persistidos**, **undo no lugar de confirmação** (soft delete). Stack visual: PrimeNG Aura (primário azul) + Tailwind, tema claro/escuro, toasts bottom-center.

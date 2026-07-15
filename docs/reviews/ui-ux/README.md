@@ -39,6 +39,12 @@ Estes padrões se repetem em praticamente todas as telas e, corrigidos uma vez, 
 | G12 | **Inconsistências entre fluxos irmãos:** criar atividade tem 2 implementações divergentes (página órfã × dialog da listagem — defaults e recursos diferentes); tags são chips-toggle numa tela e multiselect+dialog em outra; criar × editar demanda divergem em largura/campos/labels. **Proposta: um componente por fluxo.** | Médio |
 | G13 | **Grafo de demandas com cores dark hardcoded** (`#0d1117` etc.) que quebram o tema claro — único lugar do app fora dos tokens do tema. | Médio |
 | G14 | **Toast global em bottom-center sobrepõe footers de dialogs** (mesma região). Proposta: bottom-right + suprimir o toast global duplicado nos erros tratados inline (ex.: login). | Baixo |
+| G15 | **Regras de permissão/negócio aplicadas de forma divergente entre telas** — ex.: a listagem de Atividades valida posse/status/execução dupla antes do play, o detalhe da atividade não valida nada (erro só do backend); troca de status bloqueada durante execução numa tela e livre em outra. Proposta: centralizar os predicados (`podeExecutar`, `podeTrocarStatus`…) em serviço compartilhado. | Alto |
+| G16 | **Dados que o backend já retorna não são exibidos** (custo zero de API): executor nas execuções recentes, `nomeUsuario`/`createdDate`, meta do dia, flags de descrições preenchidas. Mostrar o que já se tem antes de pedir campo novo. | Médio |
+| G17 | **Comportamento pós-criar imprevisível nos dialogs** — uns fecham, outros resetam silenciosamente (parece bug). Padrão único: criar fecha + toast; "Criar e adicionar outra" explícito preserva o contexto. | Alto |
+| G18 | **Seletor de cor duplicado** (Projetos e Tags) com colorpicker sempre expandido — extrair componente único com paleta + "Personalizar…" colapsado. | Baixo |
+
+*A lista completa, com detalhes e o top 10 na visão do agente de consistência, está em [`analise-detalhada/_consistencia-global.md`](./analise-detalhada/_consistencia-global.md).*
 
 ## 2. Top 10 prioridades (impacto × frequência de uso)
 
@@ -280,4 +286,4 @@ Durante a verificação contra o código e as regras de negócio, os seguintes a
 | [`mockups/`](./mockups) | Fonte HTML dos mockups (abra no navegador; `base.css` compartilhado) |
 | [`analise-detalhada/`](./analise-detalhada) | Análise completa por tela: fluxos com contagem de cliques, todos os problemas, sugestões com impacto e specs de redesign |
 
-> **Metodologia:** 15 agentes de análise leram o código real de cada tela (HTML/TS/SCSS + services/DTOs) e produziram problemas/sugestões/spec; 5 telas passaram por verificação adversarial completa contra o backend e as regras de negócio (as demais foram verificadas por amostragem — itens críticos conferidos manualmente no código, ex.: inexistência de endpoint de restauração). Os mockups seguem o tema atual (PrimeNG Aura, primário azul, claro/escuro) e **não inventam dados que o backend não fornece**.
+> **Metodologia:** 15 agentes de análise leram o código real de cada tela (HTML/TS/SCSS + services/DTOs) e produziram problemas/sugestões/spec; **todas as 15 telas passaram por verificação adversarial completa** contra o backend e as regras de negócio (0 sugestões refutadas; 1 fundida por duplicidade; ajustes de implementação anotados em cada arquivo de `analise-detalhada/`), seguida de uma síntese de consistência global com visão de todas as análises. Os mockups seguem o tema atual (PrimeNG Aura, primário azul, claro/escuro) e **não inventam dados que o backend não fornece**.

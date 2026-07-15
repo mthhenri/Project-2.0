@@ -1,5 +1,7 @@
 # Anotações do usuário (página órfã + dialog de anotações acessível pela topbar e pela listagem de usuários) (/usuario/:id/anotacoes)
 
+> ✅ Sugestões verificadas adversarialmente contra o código e as regras de negócio.
+
 ## Fluxos atuais
 - **Registrar uma anotação rápida nas próprias notas (a partir de qualquer tela)** (4 cliques): 1) Clicar em 'Minhas Anotações' na topbar; 2) aguardar carregar (spinner cobre tudo); 3) clicar dentro do editor para dar foco (não há autofoco); 4) digitar; 5) clicar 'Salvar Anotações' (ou esperar até 30s pelo auto-save); 6) clicar no X para fechar (Esc e clique-fora desabilitados).
 - **Gestor consultar as anotações de um usuário** (3 cliques): 1) Clicar em 'Usuários' na topbar; 2) localizar a linha e clicar no ícone de anotações (pi-file-edit); 3) ler no dialog de 95vw que cobre a listagem; 4) clicar no X para fechar.
@@ -21,7 +23,7 @@
 - [BAIXA] P10: Estado de carregamento substitui tudo por spinner central (sem skeleton do editor), causando salto de layout; altura mágica calc(95vh - 10rem) deixa folga inconsistente.
 - [BAIXA] P11: Ao fechar após qualquer salvamento (inclusive os auto-saves sem mudança), aoAlterar dispara buscarUsuarios() e recarrega a listagem inteira — sendo que o único dado derivado é o booleano temAnotacoes da linha.
 
-## Sugestões (JÁ VERIFICADAS)
+## Sugestões aprovadas na verificação
 ### S1 — Auto-save por mudança (debounce ~2s) + indicador de salvamento único e vivo [impacto alto]
 Substituir o interval(30000) — que hoje dispara PUT /usuario/:id a cada 30s MESMO SEM MUDANÇA (salvarSilencioso não checa temAlteracoesNaoSalvas) — por auto-save via valueChanges com debounce ~2s e flush imediato ao fechar/perder foco. Sem mudança = zero requisição. CORREÇÃO FACTUAL: o backend já protege o timestamp (usuario.repository.ts usa IS DISTINCT FROM no anotacoes_alteracao_data), então o ganho real não é 'não corromper Última alteração', e sim: (1) eliminar PUTs inúteis; (2) corrigir o houveAlteracao=true indevido que hoje força reload da listagem inteira ao fechar mesmo sem edição real — só emitir aoAlterar quando o conteúdo efetivamente mudou. Rodapé ganha indicador único 'Editando…' → 'Salvando…' (spinner) → '✓ Salvo às 14:32', substituindo a tag 'Alterado', a dica estática dos 30s e o toast de sucesso. Botão 'Salvar' vira fallback (Ctrl+S). O confirm 'Alterações não salvas' (aoTentarFechar + p-confirmDialog key anotacoes-fechar) é eliminado — nunca há mais que ~2s de texto não salvo.
 _Redução de esforço:_ Fluxo 'anotar rápido': de 4 cliques + decisão de confirm para 2 cliques (abrir, fechar); elimina 1 confirm dialog, o toast repetitivo e o reload desnecessário da listagem a cada fechamento
@@ -51,10 +53,10 @@ Hoje o título é sempre 'Anotações — {nome}' mesmo quando o próprio usuár
 _Redução de esforço:_ Leitura mais rápida do estado e do contexto (de quem são as notas); rótulos 1-2 palavras mais curtos sem perda de clareza
 
 
-## Ajustes na spec (verificador)
+## Ajustes de implementação apontados pelo verificador
 1) Corrigir a justificativa do auto-save (seção 4.1 e callout ③): o backend JÁ protege anotacoes_alteracao_data com 'IS DISTINCT FROM' no UPDATE (usuario.repository.ts), portanto salvar sem mudança não corrompe 'Editado há…'; o ganho real é eliminar PUTs inúteis a cada 30s e o houveAlteracao=true indevido que hoje força reload da listagem inteira ao fechar — a spec deve mandar emitir aoAlterar apenas quando houve mudança real. 2) Deep-link (seção 4.5): especificar o caso de desenvolvedor acessando /usuario/:id/anotacoes com id de OUTRO usuário — o backend responde 403 no GET /usuario/:id; redirecionar para /ponto sem abrir o drawer. A variante do gestor sobre a listagem deve preservar o gestorGuard existente. 3) Conflito entre flush-ao-fechar (4.2) e undo do Limpar (4.3): se o usuário fechar o drawer durante a janela de 7s, o flush não pode persistir o vazio imediatamente — definir que o undo tem precedência (toast permanece; vazio só persiste após expirar sem Desfazer). 4) Atualização local do ícone temAnotacoes (4.2): a regra do backend considera 'vazio efetivo' via regexp que descarta tags HTML, &nbsp; e espaços — a spec deve mandar replicar essa regra no frontend ou derivar do campo anotacoes retornado no PUT (UsuarioAlteradoDto traz anotacoes e anotacoesAlteracaoData), senão um conteúdo '<p><br></p>' deixaria o ícone azul indevidamente. 5) Atalho Alt+N (4.4): conflita com accesskeys nativos em navegadores como Firefox — validar ou trocar por combinação segura (ex.: Ctrl+Alt+N), mantendo a documentação no tooltip. 6) Mockup do Contexto B (seção 1): a tabela real de Usuários tem colunas Nome, Login, Cargo, Tipo, Status, Ações — incluir Login e Cargo nas linhas de exemplo para fidelidade; o destaque azul do ícone pi-file-edit quando temAnotacoes=true já existe hoje (styleClass usuario-listagem__btn-anotacao--ativo), o mockup deve retratá-lo como comportamento mantido, não novo. 7) Tooltip do X 'Fechar (Esc)' exige habilitar closeOnEscape/equivalente no drawer — hoje o dialog bloqueia Esc explicitamente; garantir que a spec mencione a mudança.
 
-## REDESIGN SPEC
+## Especificação do redesign
 # Redesign — Anotações do usuário (painel sobre a página, fundo escurecido)
 
 ## Conceito

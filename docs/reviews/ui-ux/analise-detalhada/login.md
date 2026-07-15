@@ -1,5 +1,7 @@
 # Login (/autenticacao)
 
+> ✅ Sugestões verificadas adversarialmente contra o código e as regras de negócio.
+
 ## Fluxos atuais
 - **Primeiro login na máquina (sem credencial salva)** (2 cliques): 1) Clicar no campo Login (sem autofocus); 2) Digitar login; 3) Tab; 4) Digitar senha; 5) Enter (ou clicar em Entrar); 6) Cai em /atividade mesmo que a rota padrão seja /ponto ou que tenha vindo de um deep link — precisa navegar manualmente ao destino.
 - **Login recorrente (credenciais salvas — inclusive a senha, em texto puro)** (2 cliques): Campos já preenchidos; Enter não funciona porque o foco não está no form; 1) Clicar em Entrar; 2) Navegar de /atividade até a tela desejada (ex.: Ponto = +1 clique).
@@ -21,7 +23,7 @@
 - [BAIXA] P11: Sem caminho de ajuda para senha esquecida: o backend não tem recuperação self-service, mas a tela também não orienta ('procure um gestor'), deixando o usuário travado sem próxima ação.
 - [BAIXA] P12: Sem toggle de tema claro/escuro na página de login (o app suporta ambos, mas antes de logar o usuário não tem acesso ao controle) e sem indicação de versão/ambiente no rodapé.
 
-## Sugestões (JÁ VERIFICADAS)
+## Sugestões aprovadas na verificação
 ### S1 — Autofocus gerenciado + guarda de re-submit no Enter [impacto alto]
 Confirmado: não há autofocus em nenhum campo (login.page.html) e Enter já submete via ngSubmit + botão type=submit — mas só quando o foco já está dentro do form, o que hoje exige um clique. Reformulação: (1) ao carregar, focar Login se não há usuário lembrado, ou Senha se há (Estado A da spec); (2) após erro de credencial, focar Senha com texto selecionado (a senha não é apagada hoje, então selecionar permite redigitar direto); (3) ao alternar para 'Entrar com outro usuário', focar Login; (4) adicionar guarda `if (this.carregando()) return;` no início de entrar() — hoje Enter durante o loading dispara ngSubmit de novo mesmo com o botão em spinner, podendo duplicar a request. Implementar foco via ViewChild + focus() (padrão já usado no projeto, ex.: atividade-visualizar-dialog.component.ts linha 134).
 _Redução de esforço:_ elimina o clique inicial no campo em todo login (primeiro acesso, recorrente e retentativa); Enter passa a funcionar de ponta a ponta sem mouse
@@ -55,10 +57,10 @@ Verificado: o módulo de autenticação do backend expõe apenas POST /autentica
 _Redução de esforço:_ dá próxima ação a quem esqueceu a senha (antes: beco sem saída); tema acessível sem logar — ganho pequeno e majoritariamente de conforto, coerente com impacto baixo
 
 
-## Ajustes na spec (verificador)
+## Ajustes de implementação apontados pelo verificador
 1) ERRO DE FATO no estado 'Erro de credencial (401)': neste backend credencial inválida retorna HTTP 400 (BusinessException) com mensagem 'Credenciais inválidas' ou 'Usuário inativo'; 401 é sessão expirada e é interceptado globalmente (limpa token + redireciona). Corrigir a spec para: 400 → banner de erro com a mensagem do backend (erro.error.mensagem); 0/5xx → banner âmbar 'Servidor indisponível'; remover toda referência a 401 no fluxo de login. 2) A spec deve prever a supressão do toast global do error-handler.interceptor para a request de login (ex.: HttpContext token) — sem isso, todo erro de credencial exibe banner inline + toast bottom-center duplicados. 3) Chip de identidade: gravar { login, nomeCompleto } no localStorage (nomeCompleto vem de AutenticacaoTokenDto.usuario na resposta de sucesso) — as iniciais 'AS' devem derivar do nomeCompleto real ('Ana Souza'), não da string de login; nunca gravar a senha. 4) returnUrl: exigir sanitização como caminho interno (router.parseUrl, rejeitar URL absoluta) contra open redirect, e aplicar a gravação de returnUrl também no redirect 401 do error-handler.interceptor (sessão expirada), não só no guard. 5) 'Enter ignorado até a resposta' requer guarda explícita em entrar() (hoje não há checagem de carregando(); ngSubmit dispara mesmo com o botão em loading). 6) 'Entrar com outro usuário': especificar que o login lembrado NÃO é apagado no clique — é sobrescrito apenas no próximo login bem-sucedido com a checkbox marcada (clique acidental não destrói o atalho). 7) Rodapé 'Project 2.0 · v1.4.0': a versão real nos package.json é 1.0.0 — usar a versão real ou omitir o número. 8) Estado B: manter o erro inline 'Mínimo de 4 caracteres' do login (o backend valida @MinLength(4)); a remoção de mínimo vale SÓ para a senha, como a spec já indica — apenas garantir que o mockup não remova a validação do login por engano.
 
-## REDESIGN SPEC
+## Especificação do redesign
 # Redesign — Tela de Login (`/autenticacao`)
 
 Página pública, sem topbar. Objetivo: login recorrente em **0 cliques** (senha + Enter), primeiro login em **0 cliques de mouse** (autofocus + Tab + Enter), e aterrissagem direta no destino (returnUrl).

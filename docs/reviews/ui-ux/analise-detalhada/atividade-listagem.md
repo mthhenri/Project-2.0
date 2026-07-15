@@ -1,5 +1,7 @@
 # Atividades — listagem + dialog de visualização rápida (/atividade)
 
+> ✅ Sugestões verificadas adversarialmente contra o código e as regras de negócio.
+
 ## Fluxos atuais
 - **Iniciar execução da própria atividade (fluxo mais frequente do dev)** (2 cliques): Localizar a linha → clique no play → dialog abre → digitar a descrição do que vai desenvolver (obrigatória para dev; sem reaproveitamento da anterior) → clique em 'Iniciar'
 - **Encerrar execução em andamento** (2 cliques): Clique no pause → dialog abre com descrição pré-preenchida → revisar → clique em 'Encerrar'
@@ -33,53 +35,56 @@
 - [BAIXA] P17: Play com visibility:hidden mantém o espaço, mas a ausência silenciosa do botão (status Pendente/Desenvolvida) não explica o porquê — um disabled com tooltip 'Mude o status para Planejada ou Desenvolvendo' ensinaria a regra.
 - [BAIXA] P18: Para gestor a tabela tem 8 colunas densas sem estratégia responsiva (sem prioridade de colunas ou colapso) — em notebooks de 13" a coluna Ações espreme as demais.
 
-## Sugestões (VERIFICAR: checar vs regras de negócio)
+## Sugestões aprovadas na verificação
 ### S01 — Defaults inteligentes + chips de duração no Registrar execução [impacto alto]
-Pré-preencher Fim = agora e Início = agora − 1h, e adicionar chips de duração rápida (30min · 1h · 2h · 4h · Hoje 9h-12h) que recalculam o Início a partir do Fim. Datepickers permanecem para ajuste fino. Descrição continua com autofocus.
-_Redução de esforço:_ de ~12 cliques para 3 (calendar-plus → chip de duração → Registrar)
+Pré-preencher Fim = agora e Início = agora − 1h ao abrir (hoje abrirDialogRegistro reseta ambos com null) e adicionar chips de duração rápida (30min · 1h · 2h · 4h · Manhã 9h–12h) que recalculam o Início a partir do Fim, respeitando o validador fimPosteriorAoInicio já existente. Datepickers permanecem para ajuste fino; manter o autofocus na descrição que já existe (focarDescricaoRegistro). Em erro 400 de sobreposição do POST /execucao/registro, manter o dialog aberto com os valores para ajuste.
+_Redução de esforço:_ de ~12 interações (2 datepickers com data+hora) para 3: abrir → chip → Registrar
 
-### S02 — Banner fixo de execução em andamento com cronômetro [impacto alto]
-Faixa acima dos filtros (dados de GET /execucao/ativa + AtividadeResumoDto): 'Em execução: Portal do Cliente · Corrigir cálculo de juros — 01:23:45' com botão 'Encerrar'. Torna visível a regra de execução única, evita o erro do backend e permite encerrar sem procurar a linha em outra página da tabela.
-_Redução de esforço:_ encerrar: de 'paginar + procurar linha + 2 cliques' para 1 clique fixo; evita 1 fluxo de erro inteiro
+### S02 — Banner fixo de execução em andamento com cronômetro e Encerrar em 1 clique [impacto alto]
+Faixa acima dos filtros usando GET /execucao/ativa — o método recuperarExecucaoAtiva() já existe no AtividadeService do frontend e hoje nunca é chamado. CORREÇÃO de fonte de dados: ExecucaoAtivaDto traz só id/atividadeId/descricao/inicioData; os nomes (projeto · atividade) devem vir de GET /execucao?atividadeId=X (ExecucaoItemDto tem nomeProjeto/nomeDemanda/nomeAtividade) ou de extensão do DTO no backend — nunca da AtividadeResumoDto da página atual, pois a atividade pode não estar na página/filtro. Encerrar abre o dialog de encerrar pré-preenchido com a descricao do DTO; descrição opcional = sessao.eGestor() (o dono é o próprio usuário logado, conforme o endpoint). Cronômetro vivo a partir de inicioData; banner atualiza nos gatilhos já existentes (visibilitychange/focus) e após iniciar/encerrar. Torna visível a regra de execução única e elimina o fluxo de erro 400 'execução já em andamento'.
+_Redução de esforço:_ encerrar: de paginar + localizar linha + 2 cliques para 1 clique fixo; evita um fluxo de erro inteiro do backend
 
-### S03 — Update otimista + toast com Desfazer (elimina confirm de exclusão) [impacto alto]
-Trocar status atualiza a p-tag da linha imediatamente (rollback em caso de erro), como já é feito com tags. Excluir remove a linha na hora e mostra toast 'Atividade excluída · Desfazer' por 6s (soft delete já garante reversibilidade). Zero recarregamento de lista, zero perda de scroll.
-_Redução de esforço:_ exclusão de 2 cliques para 1; troca de status deixa de custar um reload completo da tabela
+### S03 — Status otimista com rollback + exclusão sem confirm via DELETE adiado com Desfazer [impacto alto]
+Troca de status atualiza a p-tag imediatamente com rollback em erro — hoje alterarStatus() dispara buscarAtividades() e recarrega a tabela inteira (as tags já são in-place, referência correta da proposta). Se o novo status sair do filtro ativo (ex.: Desenvolvida com o filtro default), remover a linha para manter consistência. CORREÇÃO na exclusão: não existe endpoint de restauração (DELETE /atividade/:id é soft delete sem rota de undo e AtividadeAlterarDto só expõe nome/descricao/status) — o 'Desfazer' deve ser implementado como DELETE adiado no cliente: a linha some na hora, a chamada só dispara quando o toast de 6s expira (ou ao navegar/fechar a página); Desfazer cancela o agendamento. Zero mudança de backend, zero perda de scroll.
+_Redução de esforço:_ exclusão de 2 cliques para 1; troca de status deixa de custar um reload completo da tabela e a perda de scroll/página
 
-### S04 — Reutilizar a última descrição ao iniciar execução [impacto alto]
-No dialog de iniciar, cada item de 'Últimas execuções' (já carregadas) ganha um botão 'Usar esta descrição' que copia o texto para o textarea. Retomar o trabalho de ontem vira 3 cliques sem digitação.
-_Redução de esforço:_ elimina a digitação obrigatória (~50-200 caracteres) nas retomadas — de digitar tudo para 1 clique
+### S04 — Botão 'Usar esta descrição' nas últimas execuções do dialog de iniciar [impacto alto]
+Cada item de execucoesDialogExecucao (já carregado via listarExecucoesPorAtividade; ExecucaoItemDto.descricao disponível) ganha botão fantasma que copia o texto para o textarea. Elimina a digitação hoje obrigatória (Validators.required quando o dono é desenvolvedor). Aplicar no modo iniciar; no encerrar o campo já vem pré-preenchido com execucaoAtivaDescricao.
+_Redução de esforço:_ retomada de trabalho sem digitação: 1 clique substitui os 50–200 caracteres obrigatórios
 
-### S05 — Consolidar ações da linha em 2 botões visíveis + menu kebab [impacto medio]
-Visíveis: Play/Pause (a ação nº 1, agora maior e com estado disabled+tooltip explicativo quando o status não permite) e Visualizar. No kebab (⋮): Atribuir tags, Registrar execução (gestor), Excluir (gestor). O ícone de tags passa a ser pi-tag e vira popover inline (chips + salvar ao fechar), sem dialog.
-_Redução de esforço:_ de 5 alvos pequenos para 2 + menu; tags de 4 cliques para 2-3; leitura da tabela muito mais limpa
+### S05 — Ações da linha: Play/Pause + Visualizar visíveis, resto no kebab, tags em popover [impacto medio]
+Visíveis: Play/Pause maior e Visualizar; no kebab (⋮): Atribuir tags (pi-tag), Registrar execução (gestor) e Excluir (gestor). CORREÇÃO de permissão: 'disabled + tooltip explicando o status' só quando o usuário PODE executar (gestor ou dev dono) e o status não permite; quando não pode executar — caso real: dev filtrando por demanda da qual é membro vê atividades de outros usuários (comportamento do GET /atividade) — play/pause continua oculto e o kebab não renderiza (ficaria vazio). Pause sempre disponível com execução ativa, como o mostrarBotaoExecucao atual. Popover de tags reutiliza o seletor de chips e o update in-place existentes (alterarTags), salvando ao fechar apenas se houver mudança (dirty), para não disparar PUT a cada abertura.
+_Redução de esforço:_ de até 5 alvos pequenos por linha para 2 + menu; tags de 4 cliques (dialog com footer) para 2–3 (popover); leitura da tabela mais limpa
 
-### S06 — Persistir filtros na URL + chip de contexto de demanda + atalho 'Minhas' [impacto alto]
-Serializar busca/status/usuário/período como query params (restaurados ao voltar); exibir chip removível 'Demanda: Tela de extrato ✕' quando houver ?demandaId; para gestor, chip-toggle 'Minhas atividades' que aplica usuarioId = eu em 1 clique. 'Limpar filtros (3)' só aparece com filtros ativos.
-_Redução de esforço:_ de 2-6 cliques de refiltragem por visita para 0; 'Minhas' de 3 cliques para 1
+### S06 — Filtros na URL + chip removível de demanda + chip-toggle 'Minhas atividades' + Limpar condicional [impacto alto]
+Serializar busca/status/usuarioId/período/demandaId como query params (todos existem em AtividadeListarDto; mudança só de frontend), restaurados ao voltar. O ?demandaId hoje é um filtro invisível que nem o 'Limpar' remove — o chip 'Demanda: <nome> ✕' corrige isso; CORREÇÃO: o nome da demanda deve ser buscado via demandaService.recuperar (com o cacheDemandas já existente), pois a lista pode vir vazia e a AtividadeResumoDto pode não estar disponível. Chip-toggle 'Minhas atividades' (gestor) aplica usuarioId = sessao.id() em 1 clique. 'Limpar filtros (N)' só aparece com filtro fora do default e conta apenas os divergentes do padrão (status default = Planejada/Pendente/Desenvolvendo).
+_Redução de esforço:_ refiltragem por visita: de 2–6 cliques para 0; 'Minhas': de 3 cliques (abrir select, filtrar, escolher) para 1
 
-### S07 — Dialog Visualizar acionável e completo [impacto medio]
-Adicionar linha de contexto Projeto · Demanda e o Tempo total executado (dados já presentes no resumo); status vira o mesmo seletor inline da tabela; botão primário Play/Pause no footer; tags editáveis ali mesmo (mesmo popover da S05). Descrição abre em modo leitura com botão 'Editar' (disclosure progressivo) — o Quill só carrega ao editar, e apenas para quem pode.
-_Redução de esforço:_ agir a partir do detalhe: de 'fechar dialog + achar linha + 2 cliques' para 1 clique dentro do próprio dialog
+### S07 — Dialog Visualizar acionável: contexto, tempo total, status inline, tags editáveis e Play/Pause no footer [impacto medio]
+CORREÇÃO estrutural: abrir() passa a receber o AtividadeResumoDto da linha em vez de só o id — AtividadeRecuperadaDto não tem nomeProjeto/nomeDemanda/totalMinutosExecutados/execucaoAtivaId/usuarioTipo, todos necessários. Linha de contexto Projeto · Demanda e Tempo total vêm da linha. Status vira o mesmo seletor inline da tabela respeitando podeTrocarStatus (bloqueado com execução ativa, tooltip explicativo). Tags editáveis com o mesmo popover da S05. Footer com Play/Pause contextual respeitando mostrarBotaoExecucao/podeExecutar. Descrição em modo leitura por padrão com botão 'Editar' — hoje o Quill carrega sempre em modo edição com 'Salvar descrição' para todos; 'Editar' visível conforme a permissão real de alterar (gestor ou dev autor/membro, regra do backend).
+_Redução de esforço:_ agir a partir do detalhe: de fechar dialog + localizar linha + 2 cliques para 1 clique no próprio dialog
 
-### S08 — Autofocus + Enter para submeter em todos os dialogs e atalhos globais [impacto medio]
-Nova Atividade: foco no Nome ao abrir, Enter submete (Ctrl+Enter nos textareas de execução). Atalhos globais: '/' foca a busca, 'N' abre Nova Atividade. Padrão único de foco em todos os 6 dialogs da tela.
-_Redução de esforço:_ criar atividade sem tocar no mouse depois do 1º clique: de 5 cliques para 2 (abrir + selecionar demanda)
+### S08 — Autofocus + Enter para submeter em todos os dialogs e atalhos globais / e N [impacto medio]
+Nova Atividade: autofocus no Nome e Enter submete (hoje não há nenhum dos dois; o form não tem ngSubmit); Ctrl+Enter nos textareas de execução/registro. Replicar o padrão de foco já usado no dialog de registro (focarDescricaoRegistro) e o Enter já funcional na edição de nome do Visualizar. Atalhos globais inéditos (grep de keydown no frontend = zero): '/' foca a busca e 'N' abre Nova Atividade, ignorando eventos originados em inputs/textareas/overlays. Esc já é nativo do p-dialog — apenas garantir nos popovers. Enter não deve conflitar com a seleção dentro dos p-select abertos.
+_Redução de esforço:_ criar atividade quase sem mouse: 2 cliques + Enter, contra 4–5 cliques atuais; busca acessível de qualquer ponto com 1 tecla
 
 ### S09 — Empty state acionável e sensível a filtros [impacto medio]
-Sem registros e sem filtros: ilustração + 'Nenhuma atividade ainda' + botão primário 'Nova Atividade'. Com filtros ativos: 'Nenhuma atividade corresponde aos filtros' + botões 'Limpar filtros' e 'Nova Atividade'.
+Hoje o vazio é só ícone + 'Nenhuma atividade encontrada'. Sem filtros fora do default: mensagem + botão primário 'Nova Atividade' (válido para ambos os perfis — dev também cria atividade em demanda da qual é membro). Com filtros ativos (incluindo ?demandaId e status fora do default): 'Nenhuma atividade corresponde aos filtros' + 'Limpar filtros' (outlined) e 'Nova Atividade' (texto). O cálculo de 'com filtros' reutiliza a mesma lógica do contador do 'Limpar filtros (N)' da S06.
 _Redução de esforço:_ do beco sem saída para a próxima ação em 1 clique
 
-### S10 — Indicador compacto de descrições da demanda e dialog proporcional [impacto baixo]
-Substituir os 3 icon-buttons por linha por um único indicador discreto (ícone pi-file com 1-3 pontos coloridos) que abre um popover com as três opções nomeadas — só as com conteúdo em destaque. O dialog de leitura passa de 95vw×95vh para 56rem com altura automática (máx. 80vh).
-_Redução de esforço:_ mesmo 1-2 cliques, mas -66% de ruído visual na coluna Demanda e leitura sem desorientação
+### S10 — Indicador único de documentos da demanda abrindo dialog com abas + dialog proporcional [impacto baixo]
+REFORMULADA para não adicionar clique: o popover intermediário proposto tornaria o caminho mais comum 2 cliques (hoje o ícone específico abre o conteúdo em 1). Versão final: substituir os 3 icon-buttons por linha por um único indicador (pi-file + até 3 pontos coloridos, só os existentes — flags demandaTemDescricaoCliente/Tecnica/Documentacao já vêm na listagem) que abre DIRETO o dialog de leitura com 3 abas internas (Descrição do cliente · Descrição técnica · Documentação), aterrissando na primeira com conteúdo; abas vazias em muted com '— vazio'. Dialog reduzido de 95vw×95vh para 56rem × máx 80vh, mantendo o Editar no rodapé para técnica/doc conforme podeEditar da demanda (regra já implementada). Mantém 1 clique até o conteúdo e remove 2/3 dos botões da coluna.
+_Redução de esforço:_ mesmo 1 clique até o conteúdo; −66% de botões na coluna Demanda e leitura sem desorientação de tela cheia
 
-### S11 — Seleção múltipla com barra de ações em massa (gestor) [impacto medio]
-Checkbox por linha + barra flutuante 'N selecionadas: Mudar status · Atribuir tags · Excluir'. Usa os endpoints existentes em lote de chamadas (PUT /atividade/:id e /atividade/:id/tag por item).
-_Redução de esforço:_ mudar status de 5 atividades: de 10 cliques para 4
+### S11 — Seleção múltipla com barra de ações em massa (gestor), com merge de tags e skip de execuções ativas [impacto medio]
+Checkbox por linha + barra flutuante 'N selecionadas: Mudar status · Atribuir tags · Excluir', em laço de chamadas sobre os endpoints existentes (sem batch no backend). CORREÇÕES obrigatórias: (1) 'Atribuir tags' deve MESCLAR as tags escolhidas com as existentes de cada linha antes do PUT /atividade/:id/tag, pois o endpoint substitui o conjunto inteiro (sincroniza) — sem merge, apagaria tags; as tags atuais de cada linha já vêm na AtividadeResumoDto. (2) 'Mudar status' pula linhas com execucaoAtivaId (o backend rejeita com BusinessException) e reporta parciais no toast ('4 alteradas, 1 pulada — execução em andamento'). (3) Excluir em massa segue o mesmo padrão de undo da S03 (DELETEs adiados + toast 'Desfazer').
+_Redução de esforço:_ mudar status de 5 atividades: de 10 cliques para 4; tags e exclusão em massa proporcionais
 
 
-## REDESIGN SPEC
+## Ajustes de implementação apontados pelo verificador
+1) §1 Header: o subtítulo '128 atividades · 3 em execução' não tem fonte de dados para 'em execução' — nenhum DTO/endpoint agrega execuções ativas do time (GET /execucao/ativa é só a do usuário logado e execucaoAtivaId cobre apenas a página atual, o que seria enganoso). Manter só o total (totalItens) ou criar campo agregado no backend. 2) §2 Banner: corrigir a fonte dos nomes — ExecucaoAtivaDto não tem nomeProjeto/nomeAtividade e a atividade pode não estar na página atual; enriquecer via GET /execucao?atividadeId=X (ExecucaoItemDto traz nomeProjeto/nomeDemanda/nomeAtividade) ou estender ExecucaoAtivaDto no backend; não referenciar AtividadeResumoDto como fonte. 3) §4 Ações: a regra 'play disabled com tooltip' só vale para quem pode executar (gestor ou dev dono); desenvolvedor VÊ atividades de outros usuários quando filtra por demanda da qual é membro (comportamento real do GET /atividade) — nesses casos play/pause permanece oculto e o kebab não deve renderizar (todos os itens são de gestor/dono). 4) §4.2/callout ⑤: 'soft delete garante reversibilidade' é falso no nível da API — não existe rota de restauração e AtividadeAlterarDto não expõe undelete; especificar o Desfazer como DELETE adiado no cliente (dispara ao expirar o toast ou ao sair da tela; Desfazer cancela) ou incluir a criação do endpoint de restauração no escopo. 5) §4 Status otimista: especificar que ao trocar para status fora do filtro ativo (ex.: Desenvolvida com o filtro default Planejada/Pendente/Desenvolvendo) a linha é removida da lista, senão fica inconsistente com o filtro. 6) §4 Popover de tags 'salvamento ao fechar': salvar somente se houver mudança (dirty), para não disparar PUT a cada abertura/fechamento. 7) §7 Visualizar: o dialog precisa receber o AtividadeResumoDto da linha (hoje abrir(id) recebe só o id) — AtividadeRecuperadaDto não contém nomeProjeto, nomeDemanda, totalMinutosExecutados nem execução ativa; 'Tempo total' usa totalMinutosExecutados da linha. O bloqueio do seletor de status durante execução ativa também depende do execucaoAtivaId da linha. 8) §3 Chip 'Demanda: <nome> ✕': o nome deve ser buscado via GET /demanda/:id (reutilizando o cacheDemandas da página), pois a listagem pode vir vazia; registrar que hoje o ?demandaId é filtro invisível que o botão Limpar não remove — o chip e a serialização na URL corrigem isso. 9) §4.1 Massa: 'Atribuir tags' deve enviar a UNIÃO das tags existentes de cada atividade com as selecionadas (PUT /atividade/:id/tag substitui o conjunto); 'Mudar status' deve pular linhas com execução ativa e reportar parciais. 10) §4 Indicador de documentos: trocar o popover intermediário por abertura direta do dialog de leitura com 3 abas internas (o popover adicionaria 1 clique ao caminho mais comum, contrariando o objetivo). 11) §5 Atalhos: Esc já é comportamento nativo do p-dialog — não listar como novidade; especificar que N e / são ignorados quando o foco está em input/textarea/overlay. 12) §8: confirmar na spec que a descrição opcional segue o TIPO DO DONO da atividade (usuarioTipo, como no código atual), não o tipo de quem está logado — no banner os dois coincidem, na tabela do gestor não.
+
+## Especificação do redesign
 # Redesign — Atividades (listagem + visualização rápida) · rota /atividade
 
 Tema Aura (primário azul), claro/escuro, Tailwind + PrimeNG. Densidade média. Toasts em bottom-center. Perfil de referência do mockup: **GESTOR logado como "Ana Souza"** (mostra tudo; anotar o que some para dev).
