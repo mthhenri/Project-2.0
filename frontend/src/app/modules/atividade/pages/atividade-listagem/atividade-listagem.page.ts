@@ -139,7 +139,6 @@ export class AtividadeListagemPage implements OnInit {
     demandaId: [null as number | null, [Validators.required]],
     usuarioId: [null as number | null],
     status:    [TipoAtividadeStatusEnum.DESENVOLVENDO as TipoAtividadeStatusEnum, [Validators.required]],
-    descricao: [''],
     tagIds:    [[] as number[]],
   });
 
@@ -303,7 +302,6 @@ export class AtividadeListagemPage implements OnInit {
       demandaId: this.demandaId(),
       usuarioId: null,
       status:    TipoAtividadeStatusEnum.DESENVOLVENDO,
-      descricao: '',
       tagIds:    [],
     });
     if (this.demandasAtribuidas().length === 0) this.carregarDemandasAtribuidas();
@@ -324,8 +322,6 @@ export class AtividadeListagemPage implements OnInit {
       nome:          valor.nome!,
       status:        valor.status!,
     };
-    const descricao = valor.descricao?.trim();
-    if (descricao) dto.descricao = descricao;
     if (this.sessao.eGestor() && valor.usuarioId) dto.usuarioId = valor.usuarioId;
     if (valor.tagIds?.length) dto.tagIds = valor.tagIds;
 
@@ -345,10 +341,6 @@ export class AtividadeListagemPage implements OnInit {
           }
         },
       });
-  }
-
-  aceitarDescricaoAssistenteNova(texto: string): void {
-    this.formularioNova.patchValue({ descricao: texto });
   }
 
   campoInvalidoNova(nomeCampo: string): boolean {

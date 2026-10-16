@@ -34,8 +34,8 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
    */
   async inserir(dados: AtividadeInserirDados): Promise<AtividadeCriadaDto> {
     const resultado = await this.executarConsulta<AtividadeCriadaDto>(
-      `INSERT INTO atividade (demanda_id, usuario_id, nome, descricao, tipo_atividade_status_id, created_date, updated_date, is_deleted)
-       SELECT :demandaId, :usuarioId, :nome, :descricao,
+      `INSERT INTO atividade (demanda_id, usuario_id, nome, tipo_atividade_status_id, created_date, updated_date, is_deleted)
+       SELECT :demandaId, :usuarioId, :nome,
          (SELECT tipo_atividade_status.id FROM tipo_atividade_status
             WHERE tipo_atividade_status.codigo = :status AND tipo_atividade_status.is_deleted = false),
          NOW(), NOW(), false
@@ -44,7 +44,6 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
          demanda_id      AS "demandaId",
          usuario_id      AS "usuarioId",
          nome,
-         descricao,
          (SELECT tipo_atividade_status.codigo FROM tipo_atividade_status
             WHERE tipo_atividade_status.id = atividade.tipo_atividade_status_id) AS status,
          created_date    AS "createdDate"`,
@@ -52,7 +51,6 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
         demandaId:     dados.demandaId,
         usuarioId:     dados.usuarioId,
         nome:          dados.nome,
-        descricao:     dados.descricao ?? null,
         status:        dados.status,
       },
     );
@@ -71,7 +69,6 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
          atividade.usuario_id      AS "usuarioId",
          usuario.nome_completo     AS "nomeUsuario",
          atividade.nome,
-         atividade.descricao,
          tipo_atividade_status.codigo AS status,
          (SELECT COUNT(*)::int
             FROM atividade atividade_do_usuario
@@ -240,10 +237,6 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
       setClauses.push('nome = :nome');
       parametros.nome = dto.nome;
     }
-    if (dto.descricao !== undefined) {
-      setClauses.push('descricao = :descricao');
-      parametros.descricao = dto.descricao;
-    }
     if (dto.status !== undefined) {
       setClauses.push(
         'tipo_atividade_status_id = (SELECT tipo_atividade_status.id FROM tipo_atividade_status WHERE tipo_atividade_status.codigo = :status AND tipo_atividade_status.is_deleted = false)',
@@ -261,7 +254,6 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
          demanda_id      AS "demandaId",
          usuario_id      AS "usuarioId",
          nome,
-         descricao,
          (SELECT tipo_atividade_status.codigo FROM tipo_atividade_status
             WHERE tipo_atividade_status.id = atividade.tipo_atividade_status_id) AS status,
          created_date    AS "createdDate"`,

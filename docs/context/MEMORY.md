@@ -53,7 +53,7 @@ Estas são as fontes da verdade. Em conflito entre código e documento, **o docu
 
 O backlog está em `docs/specs/backlog/` **na branch `claude/adotar-kit-base`** (as duas últimas
 branches `claude/*` pendentes foram mergeadas nela em 2026-10-16 e passam a existir na `master`
-quando essa branch for mergeada). Para escolher a próxima task, leia `INDEX-revisao-ux.md`.
+quando essa branch for mergeada). A task 117 (remover a descrição da atividade; era 94) foi concluída em 2026-10-16 e está em `docs/specs/done/`. Para escolher a próxima task, leia `INDEX-revisao-ux.md`.
 
 | Item | Onde |
 |---|---|
@@ -61,4 +61,3 @@ quando essa branch for mergeada). Para escolher a próxima task, leia `INDEX-rev
 | Índice, ordem e dependências das tasks 94–116 | `docs/specs/backlog/INDEX-revisao-ux.md` |
 | Spec guarda-chuva e material da revisão (relatório, mockups HTML, análises) | `docs/specs/backlog/revisao-ui-ux.spec.md` e `docs/specs/backlog/revisao-ui-ux/` |
 | Prints da revisão (PNG, referência canônica) | `docs/assets/revisao-ui-ux/prints/` |
-| Task 117 — remover a descrição da atividade (era 94; fora da revisão) | `docs/specs/backlog/117-remover-descricao-atividade.spec.md` |

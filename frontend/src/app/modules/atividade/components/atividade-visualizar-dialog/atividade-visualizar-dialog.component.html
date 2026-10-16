@@ -110,54 +110,31 @@
       </div>
     }
 
-    <p-tabs value="0" class="atividade-visualizar-dialog__abas">
-      <p-tablist>
-        <p-tab value="0"><i class="pi pi-align-left mr-2"></i>Descrição</p-tab>
-        <p-tab value="1"><i class="pi pi-history mr-2"></i>Últimas execuções</p-tab>
-      </p-tablist>
-      <p-tabpanels>
-        <p-tabpanel value="0">
-          <form [formGroup]="formularioDescricao" class="atividade-visualizar-dialog__descricao-form">
-            <p-editor
-              formControlName="descricao"
-              [style]="{ height: '240px' }"
-            />
-            <div class="atividade-visualizar-dialog__descricao-acoes">
-              <p-button
-                label="Salvar descrição"
-                icon="pi pi-check"
-                [loading]="salvandoDescricao()"
-                (onClick)="salvarDescricao()"
-              />
-            </div>
-          </form>
-        </p-tabpanel>
-        <p-tabpanel value="1">
-          @if (execucoesVisualizar().length) {
-            <div class="atividade-visualizar-dialog__execucoes-lista">
-              @for (execucao of execucoesVisualizar(); track execucao.id) {
-                <div class="atividade-visualizar-dialog__execucao-item">
-                  <span class="atividade-visualizar-dialog__execucao-data">
-                    {{ execucao.inicioData | dataBrasileira }}
-                    @if (execucao.fimData) {
-                      · {{ execucao.duracaoMinutos | minutosParagHoras }}
-                    } @else {
-                      · <span class="text-primary-500">em andamento</span>
-                    }
-                  </span>
-                  <span
-                    class="atividade-visualizar-dialog__execucao-descricao"
-                    [pTooltip]="execucao.descricao"
-                    tooltipPosition="top"
-                  >{{ execucao.descricao }}</span>
-                </div>
+    <h3 class="atividade-visualizar-dialog__secao-titulo">
+      <i class="pi pi-history mr-2"></i>Últimas execuções
+    </h3>
+    @if (execucoesVisualizar().length) {
+      <div class="atividade-visualizar-dialog__execucoes-lista">
+        @for (execucao of execucoesVisualizar(); track execucao.id) {
+          <div class="atividade-visualizar-dialog__execucao-item">
+            <span class="atividade-visualizar-dialog__execucao-data">
+              {{ execucao.inicioData | dataBrasileira }}
+              @if (execucao.fimData) {
+                · {{ execucao.duracaoMinutos | minutosParagHoras }}
+              } @else {
+                · <span class="text-primary-500">em andamento</span>
               }
-            </div>
-          } @else {
-            <p class="text-muted-color">Nenhuma execução registrada.</p>
-          }
-        </p-tabpanel>
-      </p-tabpanels>
-    </p-tabs>
+            </span>
+            <span
+              class="atividade-visualizar-dialog__execucao-descricao"
+              [pTooltip]="execucao.descricao"
+              tooltipPosition="top"
+            >{{ execucao.descricao }}</span>
+          </div>
+        }
+      </div>
+    } @else {
+      <p class="text-muted-color">Nenhuma execução registrada.</p>
+    }
   }
 </p-dialog>

@@ -65,7 +65,6 @@ export class AtividadeService {
       demandaId:     dto.demandaId,
       usuarioId:     executorId,
       nome:          dto.nome,
-      descricao:     dto.descricao ?? null,
       status:        dto.status,
     });
 
@@ -220,7 +219,6 @@ export class AtividadeService {
     const atividadeAlterada = await this.atividadeRepositorio.alterar({
       id:            dto.id,
       nome:          dto.nome,
-      descricao:     dto.descricao,
       status:        dto.status,
     });
 

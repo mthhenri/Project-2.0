@@ -396,24 +396,6 @@
         </div>
       }
     </div>
-
-    <div class="atividade-listagem__dialog-campo">
-      <label for="nova-descricao" class="atividade-listagem__filtro-label">Descrição</label>
-      <textarea
-        id="nova-descricao"
-        pTextarea
-        spellcheck="true"
-        formControlName="descricao"
-        rows="5"
-        placeholder="Descreva a atividade..."
-        class="w-full"
-      ></textarea>
-      <app-assistente-descricao
-        [textoAtual]="formularioNova.value.descricao || ''"
-        tipoEntidade="atividade"
-        (textoAuxiliadoAceito)="aceitarDescricaoAssistenteNova($event)"
-      />
-    </div>
   </form>
 
   <ng-template pTemplate="footer">

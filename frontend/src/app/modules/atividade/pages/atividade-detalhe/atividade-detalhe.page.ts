@@ -27,7 +27,6 @@ import {
 import { AtividadeService } from '../../services/atividade.service';
 import { TagService } from '../../../tag/services/tag.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
-import { AssistenteDescricaoComponent } from '../../../../shared/components/assistente-descricao/assistente-descricao.component';
 import { DataBrasileiraPipe } from '../../../../shared/pipes/data-brasileira.pipe';
 import { ambiente } from '../../../../../environments/environment';
 import {
@@ -48,7 +47,6 @@ import {
     TextareaModule,
     Tag,
     TooltipModule,
-    AssistenteDescricaoComponent,
     DataBrasileiraPipe,
   ],
   templateUrl: './atividade-detalhe.page.html',
@@ -71,8 +69,6 @@ export class AtividadeDetalhePage implements OnInit {
   readonly execucoesRecentes = signal<ExecucaoItemDto[]>([]);
   readonly carregando = signal<boolean>(false);
 
-  readonly mostrarDialogDescricao = signal<boolean>(false);
-  readonly carregandoDescricao = signal<boolean>(false);
   readonly mostrarDialogTags = signal<boolean>(false);
   readonly carregandoTags = signal<boolean>(false);
   readonly mostrarDialogExecucao = signal<boolean>(false);
@@ -86,9 +82,6 @@ export class AtividadeDetalhePage implements OnInit {
     status: [TipoAtividadeStatusEnum.PLANEJADA as TipoAtividadeStatusEnum],
   });
 
-  readonly formularioDescricao = this.formBuilder.group({
-    descricao: [''],
-  });
 
   readonly formularioTags = this.formBuilder.group({
     tagIds: [[] as number[]],
@@ -124,36 +117,6 @@ export class AtividadeDetalhePage implements OnInit {
         }
       },
     });
-  }
-
-  abrirDialogDescricao(): void {
-    this.formularioDescricao.patchValue({ descricao: this.atividade()?.descricao ?? '' });
-    this.mostrarDialogDescricao.set(true);
-  }
-
-  salvarDescricao(): void {
-    const atividade = this.atividade();
-    if (!atividade) return;
-
-    this.carregandoDescricao.set(true);
-    const dto: AtividadeAlterarDto = { descricao: this.formularioDescricao.value.descricao ?? '' };
-    this.atividadeService
-      .alterar(atividade.id, dto)
-      .pipe(finalize(() => this.carregandoDescricao.set(false)))
-      .subscribe({
-        next: (resposta) => {
-          if (resposta.sucesso && resposta.dados) {
-            const alterada = resposta.dados;
-            this.atividade.update((atual) => (atual ? { ...atual, descricao: alterada.descricao } : atual));
-            this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Descrição salva' });
-            this.mostrarDialogDescricao.set(false);
-          }
-        },
-      });
-  }
-
-  aceitarDescricaoAssistente(texto: string): void {
-    this.formularioDescricao.patchValue({ descricao: texto });
   }
 
   abrirDialogTags(): void {

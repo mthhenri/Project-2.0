@@ -8,17 +8,17 @@
 > [`MEMORY.md`](MEMORY.md) (onde fica o quê) · [`IDEAS.md`](IDEAS.md) (o que ainda não é sistema) ·
 > [`HISTORY.md`](HISTORY.md) (o que aconteceu e por quê).
 >
-> **Última revisão:** 2026-10-16 · **Última decisão registrada:** testes com `node:test`
-> (`HISTORY.md`, bloco de 2026-10-16 — testes)
+> **Última revisão:** 2026-10-16 · **Última decisão registrada:** task 117, atividade sem descrição
+> (`HISTORY.md`, bloco de 2026-10-16 — task 117)
 
 ---
 
 ## 1. Próxima Task
 
-Nenhuma task em andamento. O backlog tem 24 specs em `docs/specs/backlog/`: as tasks **94–116**
-(revisão de UI/UX, guarda-chuva `revisao-ui-ux.spec.md`) e a **117** (remover a descrição da
-atividade). Siga a ordem de fases de `INDEX-revisao-ux.md` (começa por 97, 98 e 99, que a maioria
-das demais pressupõe); a 117 é independente e mexe em banco (migration `0028`).
+Nenhuma task em andamento. O backlog tem 23 specs em `docs/specs/backlog/`: as tasks **94–116**
+(revisão de UI/UX, guarda-chuva `revisao-ui-ux.spec.md`). Siga a ordem de fases de
+`INDEX-revisao-ux.md`: comece por 97, 98 e 99, que a maioria das demais pressupõe. A task 117
+(remover a descrição da atividade) foi concluída em 2026-10-16. Próxima migration nova: `0029`.
 
 ## 2. Estado por Área
 
@@ -93,6 +93,11 @@ project-2.0/
 | Conexão configurada | ✅ DatabaseModule com Knex (task 02) |
 
 ## 3. Decisões Vivas
+
+- **[task 117]** A atividade **não tem descrição própria**: é descrita por `nome`, `status`, executor
+  e demanda; a descrição de quem trabalha vive na demanda e na execução. O dialog de visualização
+  (ícone de olho) mostra direto "Últimas execuções", sem `p-tabs`. O assistente de IA aceita só
+  `tipoEntidade` `execucao` e `demanda`.
 
 - **[adoção do kit — UI]** PrimeNG 21 segue como base de UI; a biblioteca própria de componentes
   está só anotada (`IDEAS.md` I-001) e nada muda até o autor abrir esse milestone. Até lá,

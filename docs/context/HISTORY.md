@@ -12,6 +12,34 @@
 
 ---
 
+## 2026-10-16 — Task 117: remover a descrição da atividade
+
+**O que mudou e por quê.** A spec (era a 94, renumerada) tirou `atividade.descricao` do sistema
+inteiro: campo opcional, quase sem uso, duplicado na demanda e na execução e editado por 3 telas
+diferentes. Entregue: migration `0028` (DROP COLUMN; `DOWN` recria `TEXT` nullable); repository,
+service e model do backend; 6 DTOs do `shared`; `tipoEntidade` do assistente reduzido a
+`execucao | demanda` (DTO, componente e service); frontend nas 4 telas da spec (formulário,
+detalhe, dialog do olho sem `p-tabs`, dialog "Nova Atividade"); `SCHEMA.md` e `SYSTEM.SPEC.md`
+(§8.3, §13 e a regra de caracteres proibidos). Fora do que a spec listava: tirei os imports
+`TextareaModule` (formulário) e `AssistenteDescricaoComponent`/`EditorModule`/`TabsModule` que
+ficaram órfãos, e a classe `&__descricao` da listagem, que o `.html` não usava (a spec mandava
+conferir; `-form`/`-rica` são do dialog da demanda e ficaram). Acrescentei a classe
+`__secao-titulo` ao dialog do olho para o título que substituiu a aba.
+
+**Verificado.** Detalhe e evidências em `docs/specs/done/117-remover-descricao-atividade/verificacao.md`.
+Resumo: builds do backend e do frontend sem erro; `npm test` verde (shared 4/4, backend 14/14,
+`repo:test` 12 + 1 pulado); migration aplicada, revertida e reaplicada num Postgres 16 local, com a
+`0028` isolada via `migrate:down`/`migrate:up`; API real: criar e alterar sem `descricao`, e
+`descricao` enviada vira 400; interface real no Chromium em 1920×1080 e 360×800 nas 4 telas e nos
+3 dialogs do assistente (execução, registro manual e descrição da demanda), criando uma atividade
+pela dialog. **Achado na verificação:** a barra de topo gera scroll horizontal de ~1388 px em 360
+px em todas as telas — anterior à task, registrado como `PROBLEMS.md` P-002. **Não coberto:**
+frontend sem testes automatizados, e o assistente só foi conferido por presença no DOM (sem chave
+da Anthropic). **Uma falha minha no caminho:** um `pkill -f` casou com o próprio shell e derrubou o
+comando de limpeza; refiz sem padrão auto-correspondente e nada ficou rodando.
+
+---
+
 ## 2026-10-16 — Merge das últimas branches de backlog e realocação do material da revisão de UX
 
 **O que mudou e por quê.** Com a decisão do autor ("concordo" com a proposta), as duas branches

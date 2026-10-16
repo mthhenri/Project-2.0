@@ -28,7 +28,6 @@ export class AssistenteService {
 
     const tipoEntidadeFormatado = {
       execucao: 'execução de trabalho',
-      atividade: 'atividade de desenvolvimento',
       demanda: 'demanda de projeto',
     }[dto.tipoEntidade];
 

@@ -15,7 +15,7 @@ import { ambiente } from '../../../../environments/environment';
 })
 export class AssistenteDescricaoComponent {
   @Input() textoAtual: string = '';
-  @Input() tipoEntidade: 'execucao' | 'atividade' | 'demanda' = 'execucao';
+  @Input() tipoEntidade: 'execucao' | 'demanda' = 'execucao';
   @Input() contextoEntidade: string = '';
 
   @Output() textoAuxiliadoAceito = new EventEmitter<string>();

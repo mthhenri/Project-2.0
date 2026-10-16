@@ -9,6 +9,5 @@ import { TipoAtividadeStatusEnum } from '../../enums/tipo-atividade-status.enum'
 export class AtividadeInternoAlterarDto {
   id: number;
   nome?: string;
-  descricao?: string;
   status?: TipoAtividadeStatusEnum;
 }

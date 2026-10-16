@@ -17,6 +17,7 @@
 > - `20240023_remover_prioridade_demanda` — remove a coluna `demanda.prioridade` e o índice `ix_demanda_prioridade` (conceito de prioridade descontinuado).
 > - `20240024_adicionar_anotacoes_alteracao_data_usuario` — adiciona `usuario.anotacoes_alteracao_data TIMESTAMPTZ` (nullable, sem `DEFAULT`); carimba a data da última alteração das anotações.
 > - `20240025_enums_para_tabelas_referencia` — converte os 7 enums (`VARCHAR + CHECK`) em **tabelas de referência** `tipo_*` (`codigo` + `descricao`); as 5 tabelas de negócio passam a usar `INTEGER` FK (`tipo_usuario_id`, `tipo_usuario_status_id`, `tipo_projeto_status_id`, `tipo_demanda_status_id`, `tipo_atividade_status_id`, `tipo_dia_nao_util_id`, `tipo_dia_nao_util_duracao_id`). Enums TS de `shared/` renomeados (`TipoUsuarioEnum`, …) e mantidos como contrato; o repositório traduz `codigo ⇄ id` no SQL.
+> - `0028 - Remoção da coluna descricao em atividade` — remove `atividade.descricao` (task 117); o `DOWN` recria a coluna como `TEXT` nullable. (A partir da task 90 os arquivos são `NNNN - Nome.sql` em `backend/src/database/migrations/`; a lista acima mantém os nomes legados `2024xxxx`.)
 
 ---
 
@@ -396,7 +397,6 @@ CREATE TABLE atividade (
   demanda_id      INTEGER      NOT NULL REFERENCES demanda(id),
   usuario_id      INTEGER      NOT NULL REFERENCES usuario(id),
   nome            VARCHAR(255) NOT NULL,
-  descricao       TEXT,
   tipo_atividade_status_id INTEGER NOT NULL
                     CONSTRAINT fk_atividade_tipo_atividade_status REFERENCES tipo_atividade_status(id)
 );

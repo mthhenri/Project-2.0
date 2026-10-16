@@ -895,12 +895,12 @@ frontend/src/app/
 
 ### 8.3 Componente Assistente de Descrição
 
-O componente `assistente-descricao` é reutilizável nos formulários de execução, atividade e demanda:
+O componente `assistente-descricao` é reutilizável nos formulários de execução e demanda:
 
 ```typescript
 // Recebe o texto atual e contexto
 @Input() textoAtual: string = '';
-@Input() tipoEntidade: 'execucao' | 'atividade' | 'demanda' = 'execucao';
+@Input() tipoEntidade: 'execucao' | 'demanda' = 'execucao';
 @Input() contextoEntidade: string = '';
 
 // Emite o texto auxiliado quando o usuário aceita
@@ -1174,7 +1174,7 @@ DTOs de entrada cobertos: `ProjetoCriarDto`/`ProjetoAlterarDto`, `DemandaCriarDt
 `ExecucaoIniciarDto`/`ExecucaoEncerrarDto`/`ExecucaoRegistrarDto`/`ExecucaoAlterarDto` (campo
 `descricao`). DTOs internos (`*InternoAlterarDto`) e de saída não recebem `@Matches`. No frontend,
 `Validators.pattern(REGEX_SEM_CARACTERES_PROIBIDOS)` espelha a regra nos Reactive Forms. Cor, código
-de projeto, descrições de demanda, descrição de atividade, anotações e login/senha estão **fora** do
+de projeto, descrições de demanda, anotações e login/senha estão **fora** do
 escopo desta regra.
 
 ### Camada 2 — Negócio (Service)
@@ -1315,7 +1315,6 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 | `demanda_id` | INTEGER FK | → demanda |
 | `usuario_id` | INTEGER FK | → usuario (executor principal) |
 | `nome` | VARCHAR | |
-| `descricao` | TEXT \| NULL | opcional |
 | `tipo_atividade_status_id` | INTEGER FK | → `tipo_atividade_status` (PLANEJADA, PENDENTE, DESENVOLVENDO, DESENVOLVIDA) |
 
 ### AtividadeTag
