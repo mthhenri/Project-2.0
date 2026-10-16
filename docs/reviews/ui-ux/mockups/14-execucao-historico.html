@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Execuções — histórico otimizado</title>
+<link rel="stylesheet" href="base.css">
+</head>
+<body data-altura="900">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></symbol>
+    <symbol id="i-sitemap" viewBox="0 0 24 24"><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/></symbol>
+    <symbol id="i-check-square" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></symbol>
+    <symbol id="i-tag" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.83z"/><line x1="7" y1="7" x2="7.01" y2="7"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></symbol>
+    <symbol id="i-file-text" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></symbol>
+    <symbol id="i-chevron-down" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></symbol>
+    <symbol id="i-chevron-left" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></symbol>
+    <symbol id="i-chevron-right" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+  </defs>
+</svg>
+
+<div class="mk-app" style="min-height:900px">
+  <header class="mk-topbar">
+    <div class="mk-topbar__logo">P2</div>
+    <nav class="mk-topbar__nav">
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-clock"/></svg> Ponto</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-calendar"/></svg> Calendário</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-folder"/></svg> Projetos</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-sitemap"/></svg> Demandas</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-check-square"/></svg> Atividades</a>
+      <a class="mk-nav-item mk-nav-item--ativo"><svg class="ic"><use href="#i-play"/></svg> Execuções</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-tag"/></svg> Tags</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-users"/></svg> Usuários</a>
+    </nav>
+    <div class="mk-topbar__acoes">
+      <span class="mk-topbar__hora">15:46</span>
+      <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic"><use href="#i-moon"/></svg></button>
+      <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic"><use href="#i-file-text"/></svg></button>
+      <button class="mk-btn mk-btn--texto-neutro mk-btn--sm" style="gap:6px; padding:0 8px"><span class="mk-avatar mk-avatar--sm" style="background:var(--primario-500); color:#fff">CM</span> Carla</button>
+    </div>
+  </header>
+
+  <main class="mk-conteudo">
+    <div class="mk-page-header">
+      <div>
+        <div class="mk-page-header__titulo">Execuções</div>
+        <div class="mk-page-header__subtitulo">Quinta-feira, 10 de julho de 2026 · 5 execuções · <b style="color:var(--primario-600)">12h24 no dia</b></div>
+      </div>
+      <div class="mk-page-header__acoes">
+        <button class="mk-btn mk-btn--sec"><svg class="ic"><use href="#i-file"/></svg> Relatório</button>
+      </div>
+    </div>
+
+    <div class="mk-toolbar">
+      <div class="mk-select" style="width:240px"><span class="u-flex u-centro u-g8"><svg class="ic u-muted"><use href="#i-search"/></svg> <span class="mk-placeholder">Todos os usuários</span></span> <svg class="ic"><use href="#i-chevron-down"/></svg></div>
+      <span class="mk-tag mk-tag--azul" style="padding:6px 12px; cursor:pointer"><svg class="ic ic--sm"><use href="#i-user"/></svg> Minhas</span>
+      <div style="margin-left:auto" class="u-flex u-centro u-g4">
+        <button class="mk-btn mk-btn--sec mk-btn--icone" title="Dia anterior (←)"><svg class="ic"><use href="#i-chevron-left"/></svg></button>
+        <div class="mk-select" style="width:150px; justify-content:center; gap:8px">10/07/2026 <svg class="ic u-muted"><use href="#i-calendar"/></svg></div>
+        <button class="mk-btn mk-btn--sec mk-btn--icone" style="opacity:.45" title="Próximo dia (→)"><svg class="ic"><use href="#i-chevron-right"/></svg></button>
+        <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic"><use href="#i-refresh"/></svg></button>
+      </div>
+    </div>
+
+    <div class="mk-card" style="overflow:hidden">
+      <table class="mk-tabela">
+        <thead><tr><th>Usuário</th><th>Projeto</th><th>Demanda</th><th>Atividade</th><th>Início</th><th>Fim</th><th>Duração</th><th>Descrição</th></tr></thead>
+        <tbody>
+          <tr style="background:var(--primario-50); box-shadow:inset 3px 0 0 var(--verde-600)">
+            <td><span class="u-flex u-centro u-g8"><span class="mk-avatar mk-avatar--sm">AS</span> Ana Souza</span></td>
+            <td>Portal do Cliente</td>
+            <td>Cadastro de clientes</td>
+            <td><a>Implementar validação de CPF</a></td>
+            <td class="u-mono u-forte">13:05</td>
+            <td><span class="mk-tag mk-tag--verde"><span class="mk-ponto" style="background:var(--verde-600); box-shadow:0 0 0 3px rgba(22,163,74,.2)"></span> Em andamento</span></td>
+            <td class="u-mono" style="color:var(--verde-700); font-weight:700">02:41:12</td>
+            <td class="u-sec" style="max-width:260px">Validação de dígitos verificadores e máscara no formulário</td>
+          </tr>
+          <tr>
+            <td><span class="u-flex u-centro u-g8"><span class="mk-avatar mk-avatar--sm" style="background:var(--verde-100); color:var(--verde-700)">BL</span> Bruno Lima</span></td>
+            <td>Portal do Cliente</td>
+            <td>API de autenticação</td>
+            <td><a>Testes de integração OAuth</a></td>
+            <td class="u-mono u-forte">09:02</td>
+            <td class="u-mono u-forte">12:15</td>
+            <td class="u-mono">3h13</td>
+            <td class="u-sec" style="max-width:260px">Cobertura dos fluxos de refresh token e expiração</td>
+          </tr>
+          <tr class="mk-tabela__linha--hover" style="position:relative">
+            <td><span class="u-flex u-centro u-g8"><span class="mk-avatar mk-avatar--sm" style="background:var(--roxo-100); color:var(--roxo-600)">CM</span> Carla Mendes</span></td>
+            <td>App de Vendas</td>
+            <td>Dashboard de métricas</td>
+            <td><a>Ajustar layout responsivo</a></td>
+            <td class="u-mono u-forte">08:30</td>
+            <td class="u-mono u-forte">11:47</td>
+            <td class="u-mono">3h17</td>
+            <td style="max-width:260px; cursor:pointer; color:var(--primario-700)">Grid quebrando em telas menores que 1280px <svg class="ic ic--sm" style="color:var(--superficie-400)"><use href="#i-edit"/></svg></td>
+          </tr>
+          <tr>
+            <td><span class="u-flex u-centro u-g8"><span class="mk-avatar mk-avatar--sm" style="background:var(--ambar-100); color:var(--ambar-700)">DR</span> Diego Rocha</span></td>
+            <td>Integração ERP</td>
+            <td>Sincronização de pedidos</td>
+            <td><a>Mapear campos do pedido</a></td>
+            <td class="u-mono u-forte">10:12</td>
+            <td class="u-mono u-forte">12:00</td>
+            <td class="u-mono">1h48</td>
+            <td class="u-sec" style="max-width:260px">De-para dos campos de item e frete com o ERP</td>
+          </tr>
+          <tr>
+            <td><span class="u-flex u-centro u-g8"><span class="mk-avatar mk-avatar--sm" style="background:var(--verde-100); color:var(--verde-700)">BL</span> Bruno Lima</span></td>
+            <td>Portal do Cliente</td>
+            <td>API de autenticação</td>
+            <td><a>Revisão de código do PR #142</a></td>
+            <td class="u-mono u-forte">14:00</td>
+            <td class="u-mono u-forte">15:25</td>
+            <td class="u-mono">1h25</td>
+            <td class="u-sec" style="max-width:260px">Ajustes de segurança apontados na revisão</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="u-flex u-centro" style="justify-content:flex-end; gap:10px; padding:12px 16px; border-top:1px solid var(--superficie-100)">
+        <span class="u-sm u-sec">Total do dia</span>
+        <span class="u-mono" style="font-weight:800; color:var(--primario-600); font-size:15px">12h24</span>
+      </div>
+    </div>
+  </main>
+
+  <!-- Callouts -->
+  <div class="mk-callout" style="top:100px; left:1216px">1</div>  <!-- relatório aqui -->
+  <div class="mk-callout" style="top:120px; left:560px">2</div>   <!-- subtítulo contexto/total -->
+  <div class="mk-callout" style="top:296px; left:700px">3</div>   <!-- linha ativa + só horas -->
+  <div class="mk-callout" style="top:166px; left:1268px">4</div>  <!-- navegação ←/→ URL -->
+  <div class="mk-callout" style="top:404px; left:1300px">5</div>  <!-- descrição clicável -->
+  <div class="mk-callout" style="top:166px; left:322px">6</div>   <!-- select busca + minhas -->
+</div>
+</body>
+</html>

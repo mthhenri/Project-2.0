@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Detalhe da Demanda — dialog otimizado</title>
+<link rel="stylesheet" href="base.css">
+<style>
+  .metrica { border:1px solid var(--superficie-200); border-radius:10px; padding:10px 14px; flex:1; }
+  .metrica--edit:hover { border-style:dashed; border-color:var(--primario-400); }
+  .dir-circ { width:22px; height:22px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; flex-shrink:0; }
+</style>
+</head>
+<body data-altura="1010">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-x" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></symbol>
+    <symbol id="i-chevron-down" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></symbol>
+    <symbol id="i-chevron-left" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+    <symbol id="i-external" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></symbol>
+    <symbol id="i-file-text" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></symbol>
+    <symbol id="i-code" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></symbol>
+  </defs>
+</svg>
+
+<div class="mk-app" style="min-height:1010px">
+  <!-- página de fundo -->
+  <div style="opacity:.30; filter:saturate(.5); padding:24px; display:flex; flex-direction:column; gap:14px">
+    <div class="mk-page-header">
+      <div class="mk-page-header__titulo">Demandas — Portal do Cliente</div>
+      <button class="mk-btn">Nova Demanda</button>
+    </div>
+    <div class="mk-card" style="height:760px"></div>
+  </div>
+
+  <div class="mk-backdrop" style="align-items:flex-start; padding-top:44px">
+    <div class="mk-dialog" style="width:1100px; max-height:940px">
+      <!-- header -->
+      <div style="padding:16px 24px 0">
+        <div class="u-flex u-centro u-entre">
+          <div class="u-flex u-centro u-g8" style="font-size:12.5px; color:var(--primario-600); font-weight:600">
+            <span class="u-flex u-centro u-g4" style="cursor:pointer"><svg class="ic ic--sm"><use href="#i-chevron-left"/></svg> Voltar</span>
+            <span class="u-muted">·</span>
+            <a style="cursor:pointer">Portal do Cliente</a> <span class="u-muted">›</span> <a style="cursor:pointer">Área Logada</a>
+          </div>
+          <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic"><use href="#i-x"/></svg></button>
+        </div>
+
+        <div class="u-flex u-centro u-entre" style="margin-top:10px">
+          <div class="u-flex u-centro u-g10">
+            <svg class="ic ic--lg" style="color:var(--ambar-700)" title="Demanda estrutural"><use href="#i-folder"/></svg>
+            <span style="font-size:20px; font-weight:700; color:var(--superficie-900)">Autenticação de Usuários</span>
+            <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic ic--sm"><use href="#i-edit"/></svg></button>
+            <span class="mk-tag mk-tag--azul" style="cursor:pointer; padding:5px 11px">Planejada <svg class="ic ic--sm"><use href="#i-chevron-down"/></svg></span>
+          </div>
+          <div class="u-flex u-centro u-g6">
+            <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone" title="Descrição Técnica" style="position:relative"><svg class="ic"><use href="#i-code"/></svg><span class="mk-ponto" style="background:var(--primario-500); position:absolute; top:3px; right:3px"></span></button>
+            <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone" title="Descrição do Cliente" style="position:relative"><svg class="ic"><use href="#i-user"/></svg><span class="mk-ponto" style="background:var(--primario-500); position:absolute; top:3px; right:3px"></span></button>
+            <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone" title="Documentação"><svg class="ic"><use href="#i-book"/></svg></button>
+            <span style="width:1px; height:22px; background:var(--superficie-200); margin:0 4px"></span>
+            <button class="mk-btn mk-btn--sec mk-btn--sm"><svg class="ic ic--sm"><use href="#i-edit"/></svg> Editar tudo</button>
+            <button class="mk-btn mk-btn--perigo-texto mk-btn--sm mk-btn--icone"><svg class="ic"><use href="#i-trash"/></svg></button>
+          </div>
+        </div>
+
+        <!-- tags + membros no cabeçalho -->
+        <div class="u-flex u-centro u-g16" style="margin:12px 0 14px; position:relative">
+          <div class="u-flex u-centro u-g6">
+            <span class="mk-tag mk-tag--azul">Backend</span>
+            <span class="mk-tag mk-tag--verm">Urgente</span>
+            <button class="mk-btn mk-btn--texto mk-btn--sm" style="height:24px; padding:0 8px"><svg class="ic ic--sm"><use href="#i-plus"/></svg> Tag</button>
+          </div>
+          <span style="width:1px; height:20px; background:var(--superficie-200)"></span>
+          <div class="u-flex u-centro u-g6">
+            <span class="mk-avatar-grupo">
+              <span class="mk-avatar">AS</span><span class="mk-avatar" style="background:var(--verde-100); color:var(--verde-700)">BL</span><span class="mk-avatar" style="background:var(--roxo-100); color:var(--roxo-600)">CM</span>
+            </span>
+            <button class="mk-btn mk-btn--texto mk-btn--sm mk-btn--icone" style="border-radius:50%"><svg class="ic ic--sm"><use href="#i-plus"/></svg></button>
+          </div>
+
+          <!-- popover de tags toggle -->
+          <div class="mk-card" style="position:absolute; left:150px; top:34px; padding:12px; box-shadow:var(--sombra-dialog); z-index:30; display:flex; gap:6px; flex-wrap:wrap; width:340px">
+            <span class="mk-tag mk-tag--azul" style="cursor:pointer">✓ Backend</span>
+            <span class="mk-tag mk-tag--verm" style="cursor:pointer">✓ Urgente</span>
+            <span class="mk-tag" style="cursor:pointer">Frontend</span>
+            <span class="mk-tag" style="cursor:pointer">API</span>
+            <span class="mk-tag" style="cursor:pointer">Integração</span>
+            <span class="u-xs u-muted" style="width:100%; padding-top:4px">Clique para alternar — salva na hora</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- métricas -->
+      <div class="u-flex u-g12" style="padding:0 24px 16px">
+        <div class="metrica metrica--edit"><div class="u-xs u-muted" style="font-weight:700; letter-spacing:.05em">ESTIMADO</div><div style="font-size:17px; font-weight:800; color:var(--superficie-800)">24h</div></div>
+        <div class="metrica"><div class="u-xs u-muted" style="font-weight:700; letter-spacing:.05em">EXECUTADO</div><div style="font-size:17px; font-weight:800; color:var(--primario-600)">9h 30min</div></div>
+        <div class="metrica metrica--edit" style="border-style:dashed; border-color:var(--primario-400)"><div class="u-xs u-muted" style="font-weight:700; letter-spacing:.05em">PREVISÃO DE TÉRMINO</div><div style="font-size:17px; font-weight:800; color:var(--superficie-800)">28/08/2026 <svg class="ic ic--sm" style="color:var(--superficie-400)"><use href="#i-edit"/></svg></div></div>
+        <div class="metrica"><div class="u-xs u-muted" style="font-weight:700; letter-spacing:.05em">SUB-DEMANDAS</div><div style="font-size:17px; font-weight:800; color:var(--superficie-800)">3 <span class="u-sm u-sec" style="font-weight:600">(2 concluídas)</span></div></div>
+      </div>
+
+      <!-- abas -->
+      <div style="padding:0 24px">
+        <div class="mk-tabs">
+          <div class="mk-tab">Sub-demandas <span class="mk-badge-num">3</span></div>
+          <div class="mk-tab">Atividades <span class="mk-badge-num">4</span></div>
+          <div class="mk-tab mk-tab--ativa">Conexões <span class="mk-badge-num">3</span></div>
+        </div>
+      </div>
+
+      <!-- conexões -->
+      <div class="u-col u-g10" style="padding:16px 24px 22px">
+        <!-- criação inline -->
+        <div class="u-flex u-centro u-g8" style="padding:10px 12px; border:1.5px dashed var(--superficie-300); border-radius:10px">
+          <div class="mk-busca" style="flex:1"><svg class="ic"><use href="#i-search"/></svg><div class="mk-input mk-input--foco" style="height:34px">emissão<span style="border-left:1.5px solid var(--primario-600); height:15px"></span></div></div>
+          <div class="mk-seg">
+            <div class="mk-seg__item mk-seg__item--ativo">→ Depende de</div>
+            <div class="mk-seg__item">↔ Bidirecional</div>
+          </div>
+          <button class="mk-btn mk-btn--sm"><svg class="ic ic--sm"><use href="#i-plus"/></svg> Adicionar</button>
+        </div>
+
+        <!-- itens -->
+        <div class="u-flex u-centro u-entre" style="padding:10px 12px; border:1px solid var(--superficie-200); border-radius:10px">
+          <div class="u-flex u-centro u-g10">
+            <span class="dir-circ" style="background:var(--primario-100); color:var(--primario-700)" title="Esta demanda depende de…">→</span>
+            <a style="color:var(--primario-600); font-weight:600; cursor:pointer">Cadastro de Clientes</a>
+            <span class="mk-tag mk-tag--verde">Concluída</span>
+          </div>
+          <button class="mk-btn mk-btn--perigo-texto mk-btn--sm mk-btn--icone"><svg class="ic ic--sm"><use href="#i-trash"/></svg></button>
+        </div>
+        <div class="u-flex u-centro u-entre" style="padding:10px 12px; border:1px solid var(--superficie-200); border-radius:10px">
+          <div class="u-flex u-centro u-g10">
+            <span class="dir-circ" style="background:var(--verde-100); color:var(--verde-700)" title="…depende desta demanda">←</span>
+            <a style="color:var(--primario-600); font-weight:600; cursor:pointer">Emissão de Notas</a>
+            <span class="mk-tag mk-tag--azul">Planejada</span>
+          </div>
+          <button class="mk-btn mk-btn--perigo-texto mk-btn--sm mk-btn--icone"><svg class="ic ic--sm"><use href="#i-trash"/></svg></button>
+        </div>
+        <div class="u-flex u-centro u-entre" style="padding:10px 12px; border:1px solid var(--superficie-200); border-radius:10px">
+          <div class="u-flex u-centro u-g10">
+            <span class="dir-circ" style="background:var(--roxo-100); color:var(--roxo-600)" title="Conexão bidirecional">↔</span>
+            <a style="color:var(--primario-600); font-weight:600; cursor:pointer">Perfil do Usuário</a>
+            <span class="mk-tag">Pendente</span>
+          </div>
+          <button class="mk-btn mk-btn--perigo-texto mk-btn--sm mk-btn--icone"><svg class="ic ic--sm"><use href="#i-trash"/></svg></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- toast undo -->
+  <div class="mk-toast">
+    <svg class="ic"><use href="#i-check"/></svg> Conexão removida
+    <button class="mk-btn mk-btn--texto mk-btn--sm">Desfazer</button>
+  </div>
+
+  <!-- Callouts -->
+  <div class="mk-callout" style="top:56px; left:298px">1</div>    <!-- voltar instantâneo -->
+  <div class="mk-callout" style="top:104px; left:560px">2</div>   <!-- status dropdown + lápis -->
+  <div class="mk-callout" style="top:158px; left:660px">3</div>   <!-- tags/membros no cabeçalho -->
+  <div class="mk-callout" style="top:300px; left:930px">4</div>   <!-- previsão click-to-edit -->
+  <div class="mk-callout" style="top:452px; left:1105px">5</div>  <!-- conexão inline com busca -->
+  <div class="mk-callout" style="top:936px; left:874px">6</div>   <!-- undo -->
+</div>
+</body>
+</html>
