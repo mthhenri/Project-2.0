@@ -42,7 +42,6 @@ import { DemandaTagsCabecalhoComponent } from '../demanda-tags-cabecalho/demanda
 import { DemandaMembrosCabecalhoComponent } from '../demanda-membros-cabecalho/demanda-membros-cabecalho.component';
 import { DemandaMetricasComponent } from '../demanda-metricas/demanda-metricas.component';
 import { DemandaConexaoListaComponent } from '../demanda-conexao-lista/demanda-conexao-lista.component';
-import { DemandaEdicaoDialogComponent } from '../demanda-edicao-dialog/demanda-edicao-dialog.component';
 import { DemandaFormularioDialogComponent } from '../demanda-formulario-dialog/demanda-formulario-dialog.component';
 import { AssistenteDescricaoComponent } from '../../../../shared/components/assistente-descricao/assistente-descricao.component';
 import { TempoExibicaoPipe } from '../../../../shared/pipes/tempo-exibicao.pipe';
@@ -81,7 +80,6 @@ interface EstadoDetalhe {
     DemandaTagsCabecalhoComponent,
     DemandaMembrosCabecalhoComponent,
     DemandaMetricasComponent,
-    DemandaEdicaoDialogComponent,
     DemandaFormularioDialogComponent,
     AssistenteDescricaoComponent,
     TempoExibicaoPipe,

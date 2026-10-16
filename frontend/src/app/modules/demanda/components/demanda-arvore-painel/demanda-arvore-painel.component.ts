@@ -22,7 +22,6 @@ import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.s
 import { AssistenteDescricaoComponent } from '../../../../shared/components/assistente-descricao/assistente-descricao.component';
 import { DemandaArvoreItemComponent } from '../demanda-arvore-item/demanda-arvore-item.component';
 import { DemandaDetalheDialogComponent } from '../demanda-detalhe-dialog/demanda-detalhe-dialog.component';
-import { DemandaEdicaoDialogComponent } from '../demanda-edicao-dialog/demanda-edicao-dialog.component';
 import { DemandaFormularioDialogComponent } from '../demanda-formulario-dialog/demanda-formulario-dialog.component';
 import { DemandaMembroListaComponent } from '../demanda-membro-lista/demanda-membro-lista.component';
 import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
@@ -54,7 +53,6 @@ type CampoDescricao = 'descricaoTecnica' | 'descricaoCliente' | 'documentacao';
     AssistenteDescricaoComponent,
     DemandaArvoreItemComponent,
     DemandaDetalheDialogComponent,
-    DemandaEdicaoDialogComponent,
     DemandaFormularioDialogComponent,
     DemandaMembroListaComponent,
   ],

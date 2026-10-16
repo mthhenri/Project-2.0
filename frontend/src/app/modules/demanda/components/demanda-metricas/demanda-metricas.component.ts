@@ -8,6 +8,7 @@ import { DemandaAlterarDto } from '@project20/shared';
 import { DemandaService } from '../../services/demanda.service';
 import { VisualizacaoTempoService } from '../../../../core/services/visualizacao-tempo.service';
 import { HORAS_POR_DIA } from '../../../../core/models/visualizacao-tempo.model';
+import { dataDoAtalho, formatarDataIso, lerDataIso, AtalhoPrevisao } from '../../utils/demanda-datas.util';
 import { DataBrasileiraPipe } from '../../../../shared/pipes/data-brasileira.pipe';
 import { TempoExibicaoPipe } from '../../../../shared/pipes/tempo-exibicao.pipe';
 
@@ -48,7 +49,7 @@ export class DemandaMetricasComponent {
       this.valorHoras = this.unidadeTempo.emDias() ? this.horasEstimadas() / HORAS_POR_DIA : this.horasEstimadas();
     } else {
       const atual = this.previsaoFimData();
-      this.valorData = atual ? new Date(atual.slice(0, 10) + 'T12:00:00') : null;
+      this.valorData = atual ? lerDataIso(atual) : null;
     }
     this.campoEditando.set(campo);
   }
@@ -69,19 +70,14 @@ export class DemandaMetricasComponent {
   salvarData(data: Date | null): void {
     this.campoEditando.set(null);
     if (!data) return;
-    const iso = this.formatarData(data);
+    const iso = formatarDataIso(data);
     if (iso === this.previsaoFimData()) return;
     this.gravar({ previsaoFimData: iso }, { previsaoFimData: this.previsaoFimData() ?? undefined });
   }
 
   /** Atalhos a partir de hoje: +1 semana, +2 semanas e o último dia do mês. */
-  atalho(tipo: 'semana1' | 'semana2' | 'fimMes'): void {
-    const hoje = new Date();
-    const data =
-      tipo === 'fimMes'
-        ? new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0)
-        : new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() + (tipo === 'semana1' ? 7 : 14));
-    this.salvarData(data);
+  atalho(tipo: AtalhoPrevisao): void {
+    this.salvarData(dataDoAtalho(tipo));
   }
 
   aoTeclarHoras(evento: KeyboardEvent): void {
@@ -99,11 +95,5 @@ export class DemandaMetricasComponent {
     this.demandaService.alterar(this.demandaId(), novo).subscribe({
       error: () => this.alterada.emit({ ...anterior, reverter: true }),
     });
-  }
-
-  private formatarData(data: Date): string {
-    const mes = String(data.getMonth() + 1).padStart(2, '0');
-    const dia = String(data.getDate()).padStart(2, '0');
-    return `${data.getFullYear()}-${mes}-${dia}`;
   }
 }

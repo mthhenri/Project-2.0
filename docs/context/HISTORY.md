@@ -12,6 +12,19 @@
 
 ---
 
+## 2026-10-16 — Task 109: formulário único de criar e editar demanda
+
+Relatório em `docs/specs/done/109-demanda-formulario-enxuto/verificacao.md`; verificação em Chromium contra a API
+real (gestor) em 1920×1080, 1366×768 e 1080×1920.
+
+- Criar e editar viraram um só componente (o dialog de edição foi removido e seus usos migrados); caminho curto com
+  "Mais opções" recolhido, estrutural escondendo estimativa/previsão, atalhos de data, footer "Criar e adicionar
+  outra" e Esc com confirmação quando há texto. Tags/Membros na edição para o gestor (grava só o diff).
+- Criação simples: abrir → digitar → Enter (1 POST). **Achado só na verificação:** os botões do footer quebravam em
+  duas linhas (560/600 px) — largura única de 660 px.
+
+---
+
 ## 2026-10-16 — Task 108: detalhe da demanda com edição inline
 
 Relatório em `docs/specs/done/108-demanda-detalhe-edicao-inline/verificacao.md`; verificação em Chromium contra a

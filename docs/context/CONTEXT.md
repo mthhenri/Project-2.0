@@ -8,18 +8,17 @@
 > [`MEMORY.md`](MEMORY.md) (onde fica o quê) · [`IDEAS.md`](IDEAS.md) (o que ainda não é sistema) ·
 > [`HISTORY.md`](HISTORY.md) (o que aconteceu e por quê).
 >
-> **Última revisão:** 2026-10-16 · **Última decisão registrada:** task 108 (detalhe da demanda com edição
-> inline, tags/membros no cabeçalho e conexões inline) — `HISTORY.md`, bloco de 2026-10-16
+> **Última revisão:** 2026-10-16 · **Última decisão registrada:** task 109 (formulário único de criar e editar
+> demanda) — `HISTORY.md`, bloco de 2026-10-16
 
 ---
 
 ## 1. Próxima Task
 
-Nenhuma task em andamento. O backlog tem **6 specs** em `docs/specs/backlog/` (revisão de UI/UX:
-109 e 112–116, guarda-chuva `revisao-ui-ux.spec.md`). As fundações **94–99** , o Ponto (**100–101**)
-e a toolbar, o grafo e o detalhe de Demandas (**106–108**) foram concluídos em 2026-10-16 e estão em `docs/specs/done/`; as seguintes devem **reutilizar** o que
-elas criaram (ver `MEMORY.md` §2). Siga a ordem de fases de `INDEX-revisao-ux.md`: fase 3 (109,
-Demandas) e fase 4 (112–116). As tasks **102, 103, 104, 105, 110 e 111** (que mexem direto nas telas de
+Nenhuma task em andamento. O backlog tem **5 specs** em `docs/specs/backlog/` (revisão de UI/UX:
+112–116, guarda-chuva `revisao-ui-ux.spec.md`). As fundações **94–99** , o Ponto (**100–101**)
+e a toolbar, o grafo, o detalhe e o formulário de Demandas (**106–109**) foram concluídos em 2026-10-16 e estão em `docs/specs/done/`; as seguintes devem **reutilizar** o que
+elas criaram (ver `MEMORY.md` §2). Siga a ordem de fases de `INDEX-revisao-ux.md`: fase 4 (112–116). As tasks **102, 103, 104, 105, 110 e 111** (que mexem direto nas telas de
 Atividades e Execuções) foram **descartadas** em 2026-10-16 e estão em `docs/specs/discarded/`. A task
 117 foi concluída.
 Próxima migration nova: `0029`.
@@ -116,6 +115,9 @@ project-2.0/
   `g`+letra e `n`, e colapsa em 3 degraus: sem relógio até 1499 px, só ícones até 1366 px (acima do 1280
   da spec, porque o chip de execução ocupa espaço), "Mais ▾" para itens de gestor abaixo de 900 px e duas
   linhas abaixo de 720 px. O overlay global só cobre mutações (GET usa esqueleto/loading local).
+- **[task 109]** Criar e editar demanda usam o mesmo `app-demanda-formulario-dialog` (`demandaId` = edição; o
+  `app-demanda-edicao-dialog` deixou de existir). Estrutural não tem estimativa/previsão (criar manda 0; editar não
+  envia). O Esc do formulário pede confirmação quando há o que perder (o `p-dialog` tem `closeOnEscape` desligado).
 - **[task 108]** O detalhe da demanda edita inline (título, status, estimado, previsão, tags, membros) e grava a cada
   ação, com rollback; o estado de tags/membros/conexões/atividades vive no dialog (`model()` nos filhos) e
   alimenta o cache do "← Voltar" (sem chamadas). O erro de ciclo de conexão vem do backend e aparece inline

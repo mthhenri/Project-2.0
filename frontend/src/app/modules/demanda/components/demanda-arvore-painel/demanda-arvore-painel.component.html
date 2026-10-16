@@ -46,7 +46,7 @@
 
 <!-- Dialog de edição -->
 @if (demandaIdParaEditar()) {
-  <app-demanda-edicao-dialog
+  <app-demanda-formulario-dialog
     [demandaId]="demandaIdParaEditar()"
     [visivel]="mostrarDialogEdicao()"
     (visivelChange)="mostrarDialogEdicao.set($event)"

@@ -373,7 +373,7 @@
 
 <!-- Dialog de edição -->
 @if (demanda()) {
-  <app-demanda-edicao-dialog
+  <app-demanda-formulario-dialog
     [demandaId]="demanda()!.id"
     [visivel]="mostrarDialogEditar()"
     (visivelChange)="mostrarDialogEditar.set($event)"
@@ -408,7 +408,7 @@
 
 <!-- Dialog de edição de sub-demanda -->
 @if (demandaIdSubEdicao()) {
-  <app-demanda-edicao-dialog
+  <app-demanda-formulario-dialog
     [demandaId]="demandaIdSubEdicao()"
     [visivel]="mostrarDialogSubEdicao()"
     (visivelChange)="mostrarDialogSubEdicao.set($event)"
