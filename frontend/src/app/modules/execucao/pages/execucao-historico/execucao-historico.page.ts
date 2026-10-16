@@ -27,7 +27,6 @@ import {
   TipoUsuarioStatusEnum,
   REGEX_SEM_CARACTERES_PROIBIDOS,
   MENSAGEM_CARACTERES_PROIBIDOS,
-  MENSAGEM_CARACTERES_PROIBIDOS_DICA,
 } from '@project20/shared';
 import { ExecucaoService } from '../../services/execucao.service';
 import { UsuarioService } from '../../../usuario/services/usuario.service';
@@ -97,7 +96,6 @@ export class ExecucaoHistoricoPage implements OnInit {
   });
 
   readonly mensagemCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS;
-  readonly dicaCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS_DICA;
 
   /** Textarea de descrição; recebe o foco ao abrir o dialog, não o campo de início. */
   @ViewChild('descricaoEdicao') private descricaoEdicao?: ElementRef<HTMLTextAreaElement>;

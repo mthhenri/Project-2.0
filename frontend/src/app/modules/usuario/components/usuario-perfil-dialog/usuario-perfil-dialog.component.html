@@ -79,6 +79,9 @@
 <!-- Dialog de edição -->
 <p-dialog
   header="Editar Perfil"
+  dialogFormulario
+  [dialogBloqueado]="carregandoSalvar()"
+  (dialogEnviar)="salvarEdicao()"
   [(visible)]="mostrarDialogEditar"
   [modal]="true"
   [style]="{ width: '480px' }"
@@ -142,6 +145,7 @@
   </form>
 
   <ng-template pTemplate="footer">
+    <app-dialog-dica-atalhos />
     <p-button
       label="Cancelar"
       severity="secondary"
@@ -160,6 +164,9 @@
 <!-- Dialog de troca de senha -->
 <p-dialog
   header="Alterar Senha"
+  dialogFormulario
+  [dialogBloqueado]="carregandoSalvar()"
+  (dialogEnviar)="salvarSenha()"
   [(visible)]="mostrarDialogSenha"
   [modal]="true"
   [style]="{ width: '420px' }"
@@ -199,6 +206,7 @@
   </form>
 
   <ng-template pTemplate="footer">
+    <app-dialog-dica-atalhos />
     <p-button
       label="Cancelar"
       severity="secondary"

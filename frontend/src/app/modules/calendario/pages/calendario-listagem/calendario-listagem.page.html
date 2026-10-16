@@ -128,6 +128,9 @@
 <!-- Dialog: criação / edição -->
 <p-dialog
   [header]="tituloDialog()"
+  dialogFormulario
+  [dialogBloqueado]="carregandoSalvar()"
+  (dialogEnviar)="salvar()"
   [(visible)]="mostrarDialog"
   [modal]="true"
   [style]="{ width: '460px' }"
@@ -217,12 +220,21 @@
   </form>
 
   <ng-template pTemplate="footer">
+    <app-dialog-dica-atalhos />
     <p-button
       label="Cancelar"
       severity="secondary"
       [outlined]="true"
       (onClick)="mostrarDialog.set(false)"
     />
+    @if (!diaEmEdicao()) {
+      <p-button
+        label="Criar e adicionar outro"
+        severity="secondary"
+        [loading]="carregandoSalvar()"
+        (onClick)="salvar(true)"
+      />
+    }
     <p-button
       label="Salvar"
       icon="pi pi-check"

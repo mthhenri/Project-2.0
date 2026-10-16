@@ -6,13 +6,15 @@
   [style]="{ width: '560px' }"
   [draggable]="false"
   appendTo="body"
+  dialogFormulario
+  [dialogBloqueado]="carregando()"
+  (dialogEnviar)="salvar()"
 >
   <form [formGroup]="formulario" class="demanda-dialog__form">
 
     <div class="demanda-dialog__campo demanda-dialog__campo--full">
       <label class="demanda-dialog__label">Nome <span class="demanda-dialog__obrigatorio">*</span></label>
-      <input pInputText spellcheck="true" appBloquearCaracteresProibidos formControlName="nome" class="w-full" placeholder="Nome da demanda" />
-      <small class="block mt-1 text-muted-color">{{ dicaCaracteresProibidos }}</small>
+      <input #campoNome pInputText spellcheck="true" appBloquearCaracteresProibidos formControlName="nome" class="w-full" placeholder="Nome da demanda" />
       @if (campoInvalido('nome')) {
         <small class="demanda-dialog__erro">
           @if (formulario.controls.nome.hasError('pattern')) {
@@ -142,11 +144,18 @@
   </form>
 
   <ng-template pTemplate="footer">
+    <app-dialog-dica-atalhos />
     <p-button
       label="Cancelar"
       severity="secondary"
       [outlined]="true"
       (onClick)="fechar()"
+    />
+    <p-button
+      label="Criar e adicionar outra"
+      severity="secondary"
+      [loading]="carregando()"
+      (onClick)="salvar(true)"
     />
     <p-button
       label="Criar Demanda"

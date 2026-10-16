@@ -11,11 +11,15 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DemandaConexaoResumoDto, DemandaConexaoCriarDto } from '@project20/shared';
 import { DemandaService } from '../../services/demanda.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
+import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
+import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
 
 @Component({
   selector: 'app-demanda-conexao-lista',
   standalone: true,
   imports: [
+    DialogFormularioDirective,
+    DialogDicaAtalhosComponent,
     ReactiveFormsModule,
     RouterModule,
     ButtonModule,

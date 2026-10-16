@@ -14,7 +14,6 @@ import {
   ExecucaoItemDto,
   REGEX_SEM_CARACTERES_PROIBIDOS,
   MENSAGEM_CARACTERES_PROIBIDOS,
-  MENSAGEM_CARACTERES_PROIBIDOS_DICA,
 } from '@project20/shared';
 import { AtividadeService } from '../../services/atividade.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
@@ -66,7 +65,6 @@ export class AtividadeVisualizarDialogComponent {
   });
 
   readonly mensagemCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS;
-  readonly dicaCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS_DICA;
 
   /** Abre o dialog e carrega atividade, tags e execuções. */
   abrir(atividadeId: number): void {

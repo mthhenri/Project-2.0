@@ -115,6 +115,9 @@
 <!-- Dialog de edição do projeto -->
 <p-dialog
   header="Editar Projeto"
+  dialogFormulario
+  [dialogBloqueado]="carregando()"
+  (dialogEnviar)="salvarEdicao()"
   [(visible)]="mostrarDialogEditar"
   [modal]="true"
   [style]="{ width: '520px' }"
@@ -124,7 +127,6 @@
     <div class="projeto-detalhe__dialog-campo">
       <label class="projeto-detalhe__label">Nome <span class="projeto-detalhe__obrigatorio">*</span></label>
       <input pInputText spellcheck="true" appBloquearCaracteresProibidos formControlName="nome" class="w-full" />
-      <small class="block mt-1 text-muted-color">{{ dicaCaracteresProibidos }}</small>
       @if (campoEditarInvalido('nome')) {
         <small class="projeto-detalhe__erro">
           @if (formularioEditar.controls.nome.hasError('pattern')) {
@@ -181,6 +183,7 @@
   </form>
 
   <ng-template pTemplate="footer">
+    <app-dialog-dica-atalhos />
     <p-button
       label="Cancelar"
       severity="secondary"

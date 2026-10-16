@@ -285,6 +285,9 @@
   [visible]="mostrarDialogNova()"
   (visibleChange)="mostrarDialogNova.set($event)"
   header="Nova Atividade"
+  dialogFormulario
+  [dialogBloqueado]="salvandoNova()"
+  (dialogEnviar)="salvarNova()"
   [modal]="true"
   [style]="{ width: '40rem' }"
   [draggable]="false"
@@ -294,6 +297,7 @@
     <div class="atividade-listagem__dialog-campo">
       <label for="nova-nome" class="atividade-listagem__filtro-label">Nome *</label>
       <input
+        #campoNovoNome
         id="nova-nome"
         type="text"
         pInputText
@@ -303,7 +307,6 @@
         placeholder="Nome da atividade"
         class="w-full"
       />
-      <small class="block mt-1 text-muted-color">{{ dicaCaracteresProibidos }}</small>
       @if (campoInvalidoNova('nome')) {
         <small class="atividade-listagem__erro">
           @if (formularioNova.controls.nome.hasError('pattern')) {
@@ -399,7 +402,14 @@
   </form>
 
   <ng-template pTemplate="footer">
+    <app-dialog-dica-atalhos />
     <p-button label="Cancelar" [text]="true" (onClick)="mostrarDialogNova.set(false)" />
+    <p-button
+      label="Criar e adicionar outra"
+      severity="secondary"
+      [loading]="salvandoNova()"
+      (onClick)="salvarNova(true)"
+    />
     <p-button
       label="Criar"
       icon="pi pi-check"
@@ -416,6 +426,9 @@
   [visible]="mostrarDialogTags()"
   (visibleChange)="mostrarDialogTags.set($event)"
   header="Atribuir tags"
+  dialogFormulario
+  [dialogBloqueado]="salvandoTags()"
+  (dialogEnviar)="salvarTags()"
   [modal]="true"
   [style]="{ width: '32rem' }"
   [draggable]="false"
@@ -456,6 +469,7 @@
   </form>
 
   <ng-template pTemplate="footer">
+    <app-dialog-dica-atalhos />
     <p-button label="Cancelar" [text]="true" (onClick)="mostrarDialogTags.set(false)" />
     <p-button
       label="Salvar"
@@ -524,6 +538,9 @@
   [visible]="mostrarDialogExecucao()"
   (visibleChange)="mostrarDialogExecucao.set($event)"
   [header]="modoExecucao() === 'iniciar' ? 'Iniciar execução' : 'Encerrar execução'"
+  dialogFormulario
+  [dialogBloqueado]="salvandoExecucao()"
+  (dialogEnviar)="confirmarExecucao()"
   [modal]="true"
   [style]="{ width: '42rem' }"
   [draggable]="false"
@@ -554,7 +571,6 @@
         placeholder="Descreva a execução..."
         class="w-full"
       ></textarea>
-      <small class="block mt-1 text-muted-color">{{ dicaCaracteresProibidos }}</small>
       @if (campoInvalidoExecucao('descricao')) {
         <small class="atividade-listagem__erro">
           @if (formularioExecucao.controls.descricao.hasError('pattern')) {
@@ -602,6 +618,7 @@
   </form>
 
   <ng-template pTemplate="footer">
+    <app-dialog-dica-atalhos [comTextarea]="true" />
     <p-button label="Cancelar" [text]="true" (onClick)="mostrarDialogExecucao.set(false)" />
     <p-button
       [label]="modoExecucao() === 'iniciar' ? 'Iniciar' : 'Encerrar'"
@@ -617,6 +634,10 @@
   [visible]="mostrarDialogRegistro()"
   (visibleChange)="mostrarDialogRegistro.set($event)"
   header="Registrar execução"
+  dialogFormulario
+  [dialogBloqueado]="salvandoRegistro()"
+  (dialogEnviar)="salvarRegistro()"
+  [dialogSemAutofocus]="true"
   [modal]="true"
   [style]="{ width: '42rem' }"
   [draggable]="false"
@@ -683,7 +704,6 @@
         placeholder="Descreva a execução..."
         class="w-full"
       ></textarea>
-      <small class="block mt-1 text-muted-color">{{ dicaCaracteresProibidos }}</small>
       @if (campoInvalidoRegistro('descricao')) {
         <small class="atividade-listagem__erro">
           @if (formularioRegistro.controls.descricao.hasError('pattern')) {
@@ -702,6 +722,7 @@
   </form>
 
   <ng-template pTemplate="footer">
+    <app-dialog-dica-atalhos [comTextarea]="true" />
     <p-button label="Cancelar" [text]="true" (onClick)="mostrarDialogRegistro.set(false)" />
     <p-button
       label="Registrar"

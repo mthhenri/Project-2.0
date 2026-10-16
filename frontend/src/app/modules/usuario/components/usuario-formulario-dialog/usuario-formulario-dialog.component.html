@@ -1,5 +1,8 @@
 <p-dialog
   header="Novo Usuário"
+  dialogFormulario
+  [dialogBloqueado]="carregando()"
+  (dialogEnviar)="salvar()"
   [(visible)]="mostrarDialog"
   [modal]="true"
   [style]="{ width: '40rem' }"
@@ -121,6 +124,7 @@
   </form>
 
   <ng-template pTemplate="footer">
+    <app-dialog-dica-atalhos />
     <p-button
       label="Cancelar"
       severity="secondary"

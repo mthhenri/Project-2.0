@@ -71,6 +71,9 @@
 <!-- Dialog adicionar conexão -->
 <p-dialog
   header="Adicionar Conexão"
+  dialogFormulario
+  [dialogBloqueado]="carregandoSalvar()"
+  (dialogEnviar)="criarConexao()"
   [(visible)]="mostrarDialog"
   [modal]="true"
   [style]="{ width: '400px' }"
@@ -96,6 +99,7 @@
   </form>
 
   <ng-template pTemplate="footer">
+    <app-dialog-dica-atalhos />
     <p-button
       label="Cancelar"
       severity="secondary"

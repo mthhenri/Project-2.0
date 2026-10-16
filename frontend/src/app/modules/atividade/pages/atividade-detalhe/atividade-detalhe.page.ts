@@ -34,11 +34,15 @@ import {
   severidadeStatusAtividade,
   rotuloStatusAtividade,
 } from '../../models/atividade.model';
+import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
+import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
 
 @Component({
   selector: 'app-atividade-detalhe',
   standalone: true,
   imports: [
+    DialogFormularioDirective,
+    DialogDicaAtalhosComponent,
     ReactiveFormsModule,
     ButtonModule,
     DialogModule,

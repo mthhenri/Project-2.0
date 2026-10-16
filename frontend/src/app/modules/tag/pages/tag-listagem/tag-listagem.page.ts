@@ -14,16 +14,19 @@ import {
   TagAlterarDto,
   REGEX_SEM_CARACTERES_PROIBIDOS,
   MENSAGEM_CARACTERES_PROIBIDOS,
-  MENSAGEM_CARACTERES_PROIBIDOS_DICA,
 } from '@project20/shared';
 import { TagService } from '../../services/tag.service';
 import { SeletorCorComponent } from '../../../../shared/components/seletor-cor/seletor-cor.component';
 import { BloquearCaracteresProibidosDirective } from '../../../../shared/directives/bloquear-caracteres-proibidos.directive';
+import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
+import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
 
 @Component({
   selector: 'app-tag-listagem',
   standalone: true,
   imports: [
+    DialogFormularioDirective,
+    DialogDicaAtalhosComponent,
     ReactiveFormsModule,
     ButtonModule,
     InputTextModule,
@@ -62,7 +65,6 @@ export class TagListagemPage implements OnInit {
   });
 
   readonly mensagemCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS;
-  readonly dicaCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS_DICA;
 
   ngOnInit(): void {
     this.buscarTags();

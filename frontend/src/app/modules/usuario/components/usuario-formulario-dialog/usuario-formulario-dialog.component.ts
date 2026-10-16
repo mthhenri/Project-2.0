@@ -10,11 +10,13 @@ import { DialogModule } from 'primeng/dialog';
 import { MessageService } from 'primeng/api';
 import { UsuarioCriarDto, TipoUsuarioEnum } from '@project20/shared';
 import { UsuarioService } from '../../services/usuario.service';
+import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
+import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
 
 @Component({
   selector: 'app-usuario-formulario-dialog',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonModule, InputTextModule, PasswordModule, Select, InputNumberModule, DialogModule],
+  imports: [DialogFormularioDirective, DialogDicaAtalhosComponent, ReactiveFormsModule, ButtonModule, InputTextModule, PasswordModule, Select, InputNumberModule, DialogModule],
   templateUrl: './usuario-formulario-dialog.component.html',
   styleUrl: './usuario-formulario-dialog.component.scss',
 })

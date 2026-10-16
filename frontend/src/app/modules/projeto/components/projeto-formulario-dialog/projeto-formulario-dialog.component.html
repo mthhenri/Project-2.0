@@ -1,5 +1,8 @@
 <p-dialog
   header="Novo Projeto"
+  dialogFormulario
+  [dialogBloqueado]="carregando()"
+  (dialogEnviar)="salvar()"
   [(visible)]="mostrarDialog"
   [modal]="true"
   [style]="{ width: '42rem' }"
@@ -21,7 +24,6 @@
           placeholder="ex: Sistema de Gestão"
           class="w-full"
         />
-        <small class="block mt-1 text-muted-color">{{ dicaCaracteresProibidos }}</small>
         @if (campoInvalido('nome')) {
           <small class="projeto-formulario-dialog__erro">
             @if (formulario.controls.nome.hasError('pattern')) {
@@ -119,6 +121,7 @@
   </form>
 
   <ng-template pTemplate="footer">
+    <app-dialog-dica-atalhos />
     <p-button
       label="Cancelar"
       severity="secondary"

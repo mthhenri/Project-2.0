@@ -47,6 +47,9 @@
 <!-- Dialog de tags -->
 <p-dialog
   header="Editar Tags"
+  dialogFormulario
+  [dialogBloqueado]="carregandoSalvarTags()"
+  (dialogEnviar)="salvarTags()"
   [visible]="mostrarDialogTags()"
   (visibleChange)="mostrarDialogTags.set($event)"
   [modal]="true"
@@ -77,6 +80,7 @@
   </form>
 
   <ng-template pTemplate="footer">
+    <app-dialog-dica-atalhos />
     <p-button
       label="Cancelar"
       severity="secondary"

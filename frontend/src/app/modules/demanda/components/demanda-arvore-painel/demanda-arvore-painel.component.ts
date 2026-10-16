@@ -24,6 +24,8 @@ import { DemandaDetalheDialogComponent } from '../demanda-detalhe-dialog/demanda
 import { DemandaEdicaoDialogComponent } from '../demanda-edicao-dialog/demanda-edicao-dialog.component';
 import { DemandaFormularioDialogComponent } from '../demanda-formulario-dialog/demanda-formulario-dialog.component';
 import { DemandaMembroListaComponent } from '../demanda-membro-lista/demanda-membro-lista.component';
+import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
+import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
 
 type CampoDescricao = 'descricaoTecnica' | 'descricaoCliente' | 'documentacao';
 
@@ -41,6 +43,8 @@ type CampoDescricao = 'descricaoTecnica' | 'descricaoCliente' | 'documentacao';
   selector: 'app-demanda-arvore-painel',
   standalone: true,
   imports: [
+    DialogFormularioDirective,
+    DialogDicaAtalhosComponent,
     ReactiveFormsModule,
     ButtonModule,
     DialogModule,

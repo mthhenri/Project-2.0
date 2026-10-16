@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal, OnInit } from '@angular/core';
+import { Component, computed, inject, signal, OnInit, ViewChild } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
 import { ButtonModule } from 'primeng/button';
@@ -31,11 +31,15 @@ import {
   formatarDataIso,
   partesDaData,
 } from '../../models/dia-nao-util.model';
+import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
+import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
 
 @Component({
   selector: 'app-calendario-listagem',
   standalone: true,
   imports: [
+    DialogFormularioDirective,
+    DialogDicaAtalhosComponent,
     ReactiveFormsModule,
     ButtonModule,
     InputTextModule,
@@ -59,6 +63,8 @@ export class CalendarioListagemPage implements OnInit {
   private readonly messageService = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly formBuilder = inject(FormBuilder);
+
+  @ViewChild(DialogFormularioDirective) private dialogFormulario?: DialogFormularioDirective;
 
   readonly tipoOpcoes = DIA_NAO_UTIL_TIPO_OPCOES;
   readonly duracaoOpcoes = DIA_NAO_UTIL_DURACAO_OPCOES;
@@ -258,7 +264,8 @@ export class CalendarioListagemPage implements OnInit {
     this.mostrarDialog.set(true);
   }
 
-  salvar(): void {
+  /** `criarOutro`: mantém o dialog aberto (tipo e duração preservados) para cadastrar vários dias em série. */
+  salvar(criarOutro = false): void {
     if (this.formulario.invalid) {
       this.formulario.markAllAsTouched();
       return;
@@ -268,7 +275,7 @@ export class CalendarioListagemPage implements OnInit {
     if (diaEmEdicao) {
       this.salvarAlteracao(diaEmEdicao);
     } else {
-      this.salvarNovo();
+      this.salvarNovo(criarOutro);
     }
   }
 
@@ -296,7 +303,7 @@ export class CalendarioListagemPage implements OnInit {
     });
   }
 
-  private salvarNovo(): void {
+  private salvarNovo(criarOutro: boolean): void {
     const dto: DiaNaoUtilCriarDto = {
       diaData:    formatarDataIso(this.formulario.value.diaData!),
       descricao:  this.formulario.value.descricao!,
@@ -316,7 +323,13 @@ export class CalendarioListagemPage implements OnInit {
             summary: 'Sucesso',
             detail: `"${dto.descricao}" cadastrado com sucesso`,
           });
-          this.mostrarDialog.set(false);
+          if (criarOutro) {
+            this.formulario.patchValue({ diaData: null, descricao: '', recorrente: false });
+            this.formulario.markAsUntouched();
+            this.dialogFormulario?.focar();
+          } else {
+            this.mostrarDialog.set(false);
+          }
           this.buscarDias();
         },
       });

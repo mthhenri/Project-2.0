@@ -18,7 +18,6 @@ import {
   DemandaGrafoNoDto,
   REGEX_SEM_CARACTERES_PROIBIDOS,
   MENSAGEM_CARACTERES_PROIBIDOS,
-  MENSAGEM_CARACTERES_PROIBIDOS_DICA,
 } from '@project20/shared';
 import { ProjetoService } from '../../services/projeto.service';
 import { DemandaService } from '../../../demanda/services/demanda.service';
@@ -29,11 +28,15 @@ import { DemandaFormularioDialogComponent } from '../../../demanda/components/de
 import { SeletorCorComponent } from '../../../../shared/components/seletor-cor/seletor-cor.component';
 import { BloquearCaracteresProibidosDirective } from '../../../../shared/directives/bloquear-caracteres-proibidos.directive';
 import { RelatorioExecucaoDialogComponent } from '../../../relatorio/components/relatorio-execucao-dialog/relatorio-execucao-dialog.component';
+import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
+import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
 
 @Component({
   selector: 'app-projeto-detalhe',
   standalone: true,
   imports: [
+    DialogFormularioDirective,
+    DialogDicaAtalhosComponent,
     ReactiveFormsModule,
     ButtonModule,
     InputTextModule,
@@ -88,7 +91,6 @@ export class ProjetoDetalhePage implements OnInit {
   ];
 
   readonly mensagemCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS;
-  readonly dicaCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS_DICA;
 
   ngOnInit(): void {
     const identificador = Number(this.route.snapshot.paramMap.get('id'));

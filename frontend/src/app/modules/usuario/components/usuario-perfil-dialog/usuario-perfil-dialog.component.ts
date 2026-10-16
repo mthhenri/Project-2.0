@@ -19,11 +19,13 @@ import {
 import { UsuarioService } from '../../services/usuario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { UsuarioAnotacoesDialogComponent } from '../usuario-anotacoes-dialog/usuario-anotacoes-dialog.component';
+import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
+import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
 
 @Component({
   selector: 'app-usuario-perfil-dialog',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonModule, InputTextModule, PasswordModule, Select, InputNumberModule, Tag, DialogModule, UsuarioAnotacoesDialogComponent],
+  imports: [DialogFormularioDirective, DialogDicaAtalhosComponent, ReactiveFormsModule, ButtonModule, InputTextModule, PasswordModule, Select, InputNumberModule, Tag, DialogModule, UsuarioAnotacoesDialogComponent],
   templateUrl: './usuario-perfil-dialog.component.html',
   styleUrl: './usuario-perfil-dialog.component.scss',
 })

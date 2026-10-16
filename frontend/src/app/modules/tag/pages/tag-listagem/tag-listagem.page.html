@@ -63,6 +63,9 @@
 <!-- Dialog: nova tag -->
 <p-dialog
   header="Nova Tag"
+  dialogFormulario
+  [dialogBloqueado]="carregandoSalvar()"
+  (dialogEnviar)="salvarNova()"
   [(visible)]="mostrarDialogNova"
   [modal]="true"
   [style]="{ width: '420px' }"
@@ -72,7 +75,6 @@
     <div class="tag-listagem__dialog-campo">
       <label class="tag-listagem__label">Nome <span class="tag-listagem__obrigatorio">*</span></label>
       <input pInputText spellcheck="true" appBloquearCaracteresProibidos formControlName="nome" placeholder="ex: Backend" maxlength="100" class="w-full" />
-      <small class="block mt-1 text-muted-color">{{ dicaCaracteresProibidos }}</small>
       @if (campoNovaInvalido('nome')) {
         <small class="tag-listagem__erro">
           @if (formularioNova.controls.nome.hasError('required')) {
@@ -107,6 +109,7 @@
   </form>
 
   <ng-template pTemplate="footer">
+    <app-dialog-dica-atalhos />
     <p-button
       label="Cancelar"
       severity="secondary"
@@ -125,6 +128,9 @@
 <!-- Dialog: editar tag -->
 <p-dialog
   header="Editar Tag"
+  dialogFormulario
+  [dialogBloqueado]="carregandoSalvar()"
+  (dialogEnviar)="salvarEdicao()"
   [(visible)]="mostrarDialogEditar"
   [modal]="true"
   [style]="{ width: '420px' }"
@@ -134,7 +140,6 @@
     <div class="tag-listagem__dialog-campo">
       <label class="tag-listagem__label">Nome <span class="tag-listagem__obrigatorio">*</span></label>
       <input pInputText spellcheck="true" appBloquearCaracteresProibidos formControlName="nome" maxlength="100" class="w-full" />
-      <small class="block mt-1 text-muted-color">{{ dicaCaracteresProibidos }}</small>
       @if (campoEditarInvalido('nome')) {
         <small class="tag-listagem__erro">
           @if (formularioEditar.controls.nome.hasError('required')) {
@@ -169,6 +174,7 @@
   </form>
 
   <ng-template pTemplate="footer">
+    <app-dialog-dica-atalhos />
     <p-button
       label="Cancelar"
       severity="secondary"

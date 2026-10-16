@@ -229,7 +229,6 @@
         lang="pt-BR"
         [class.ng-invalid]="campoInvalidoDescricao()"
       ></textarea>
-      <small class="block mt-1 text-muted-color">{{ dicaCaracteresProibidos }}</small>
       @if (campoInvalidoDescricao()) {
         <small class="execucao-historico__erro">
           @if (formularioEdicao.controls.descricao.hasError('pattern')) {

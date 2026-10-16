@@ -42,6 +42,8 @@ import { AssistenteDescricaoComponent } from '../../../../shared/components/assi
 import { DataBrasileiraPipe } from '../../../../shared/pipes/data-brasileira.pipe';
 import { TempoExibicaoPipe } from '../../../../shared/pipes/tempo-exibicao.pipe';
 import { VisualizacaoTempoService } from '../../../../core/services/visualizacao-tempo.service';
+import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
+import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
 
 type CampoDescricao = 'descricaoTecnica' | 'descricaoCliente' | 'documentacao';
 
@@ -49,6 +51,8 @@ type CampoDescricao = 'descricaoTecnica' | 'descricaoCliente' | 'documentacao';
   selector: 'app-demanda-detalhe-dialog',
   standalone: true,
   imports: [
+    DialogFormularioDirective,
+    DialogDicaAtalhosComponent,
     ReactiveFormsModule,
     ButtonModule,
     DialogModule,

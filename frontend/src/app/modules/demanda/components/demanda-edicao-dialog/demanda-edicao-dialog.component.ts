@@ -15,17 +15,20 @@ import {
   TipoDemandaStatusEnum,
   REGEX_SEM_CARACTERES_PROIBIDOS,
   MENSAGEM_CARACTERES_PROIBIDOS,
-  MENSAGEM_CARACTERES_PROIBIDOS_DICA,
 } from '@project20/shared';
 import { DemandaService } from '../../services/demanda.service';
 import { VisualizacaoTempoService } from '../../../../core/services/visualizacao-tempo.service';
 import { HORAS_POR_DIA } from '../../../../core/models/visualizacao-tempo.model';
 import { BloquearCaracteresProibidosDirective } from '../../../../shared/directives/bloquear-caracteres-proibidos.directive';
+import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
+import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
 
 @Component({
   selector: 'app-demanda-edicao-dialog',
   standalone: true,
   imports: [
+    DialogFormularioDirective,
+    DialogDicaAtalhosComponent,
     ReactiveFormsModule,
     ButtonModule,
     InputTextModule,
@@ -73,7 +76,6 @@ export class DemandaEdicaoDialogComponent implements OnChanges {
   ];
 
   readonly mensagemCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS;
-  readonly dicaCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS_DICA;
 
   ngOnChanges(mudancas: SimpleChanges): void {
     if (mudancas['visivel']?.currentValue === true) {

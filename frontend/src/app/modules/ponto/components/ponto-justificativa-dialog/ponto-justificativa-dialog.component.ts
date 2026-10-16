@@ -14,11 +14,15 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { PontoJustificativaResumoDto } from '@project20/shared';
 import { PontoJustificativaService } from '../../services/ponto-justificativa.service';
 import { UsuarioService } from '../../../usuario/services/usuario.service';
+import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
+import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
 
 @Component({
   selector: 'app-ponto-justificativa-dialog',
   standalone: true,
   imports: [
+    DialogFormularioDirective,
+    DialogDicaAtalhosComponent,
     ReactiveFormsModule,
     DatePipe,
     ButtonModule,

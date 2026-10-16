@@ -13,17 +13,18 @@ import {
   TipoProjetoStatusEnum,
   REGEX_SEM_CARACTERES_PROIBIDOS,
   MENSAGEM_CARACTERES_PROIBIDOS,
-  MENSAGEM_CARACTERES_PROIBIDOS_DICA,
 } from '@project20/shared';
 import { ProjetoService } from '../../services/projeto.service';
 import { gerarCodigoDoNome } from '../../models/projeto.model';
 import { SeletorCorComponent } from '../../../../shared/components/seletor-cor/seletor-cor.component';
 import { BloquearCaracteresProibidosDirective } from '../../../../shared/directives/bloquear-caracteres-proibidos.directive';
+import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
+import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
 
 @Component({
   selector: 'app-projeto-formulario-dialog',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonModule, InputTextModule, Select, SeletorCorComponent, DatePickerModule, DialogModule, BloquearCaracteresProibidosDirective],
+  imports: [DialogFormularioDirective, DialogDicaAtalhosComponent, ReactiveFormsModule, ButtonModule, InputTextModule, Select, SeletorCorComponent, DatePickerModule, DialogModule, BloquearCaracteresProibidosDirective],
   templateUrl: './projeto-formulario-dialog.component.html',
   styleUrl: './projeto-formulario-dialog.component.scss',
 })
@@ -52,7 +53,6 @@ export class ProjetoFormularioDialogComponent {
   readonly mostrarDialog = signal<boolean>(false);
 
   readonly mensagemCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS;
-  readonly dicaCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS_DICA;
 
   /**
    * Enquanto `false`, o código acompanha o nome (slug derivado). Vira `true` no

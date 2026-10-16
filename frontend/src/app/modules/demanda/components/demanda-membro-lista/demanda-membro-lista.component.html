@@ -78,6 +78,9 @@
 <!-- Dialog gerenciar membros -->
 <p-dialog
   header="Gerenciar Membros"
+  dialogFormulario
+  [dialogBloqueado]="carregandoSalvar()"
+  (dialogEnviar)="salvarMembros()"
   [(visible)]="mostrarDialog"
   [modal]="true"
   [style]="{ width: '90vw', maxWidth: '560px' }"
@@ -101,6 +104,7 @@
   </form>
 
   <ng-template pTemplate="footer">
+    <app-dialog-dica-atalhos />
     <p-button
       label="Cancelar"
       severity="secondary"

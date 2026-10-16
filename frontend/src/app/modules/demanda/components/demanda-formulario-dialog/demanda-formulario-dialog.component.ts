@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, inject, signal } from '@angular/core';
+import { Component, ElementRef, Input, Output, EventEmitter, OnChanges, SimpleChanges, ViewChild, inject, signal } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
 import { ButtonModule } from 'primeng/button';
@@ -20,7 +20,6 @@ import {
   TipoUsuarioEnum,
   REGEX_SEM_CARACTERES_PROIBIDOS,
   MENSAGEM_CARACTERES_PROIBIDOS,
-  MENSAGEM_CARACTERES_PROIBIDOS_DICA,
 } from '@project20/shared';
 import { DemandaService } from '../../services/demanda.service';
 import { TagService } from '../../../tag/services/tag.service';
@@ -29,6 +28,8 @@ import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.s
 import { VisualizacaoTempoService } from '../../../../core/services/visualizacao-tempo.service';
 import { HORAS_POR_DIA } from '../../../../core/models/visualizacao-tempo.model';
 import { BloquearCaracteresProibidosDirective } from '../../../../shared/directives/bloquear-caracteres-proibidos.directive';
+import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
+import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
 
 @Component({
   selector: 'app-demanda-formulario-dialog',
@@ -44,6 +45,8 @@ import { BloquearCaracteresProibidosDirective } from '../../../../shared/directi
     DatePickerModule,
     DialogModule,
     BloquearCaracteresProibidosDirective,
+    DialogFormularioDirective,
+    DialogDicaAtalhosComponent,
   ],
   templateUrl: './demanda-formulario-dialog.component.html',
   styleUrl: './demanda-formulario-dialog.component.scss',
@@ -62,6 +65,8 @@ export class DemandaFormularioDialogComponent implements OnChanges {
   private readonly formBuilder = inject(FormBuilder);
   readonly sessao = inject(UsuarioSessaoService);
   readonly unidadeTempo = inject(VisualizacaoTempoService);
+
+  @ViewChild('campoNome') private campoNome?: ElementRef<HTMLInputElement>;
 
   readonly demandasPaiOpcoes = signal<DemandaResumoDto[]>([]);
   readonly carregando = signal<boolean>(false);
@@ -88,7 +93,6 @@ export class DemandaFormularioDialogComponent implements OnChanges {
   ];
 
   readonly mensagemCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS;
-  readonly dicaCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS_DICA;
 
   ngOnChanges(mudancas: SimpleChanges): void {
     if (mudancas['visivel']?.currentValue === true) {
@@ -113,7 +117,8 @@ export class DemandaFormularioDialogComponent implements OnChanges {
     this.visivelChange.emit(false);
   }
 
-  salvar(): void {
+  /** `criarOutra`: mantém o dialog aberto (pai e contexto preservados) para cadastro em série. */
+  salvar(criarOutra = false): void {
     if (this.formulario.invalid) {
       this.formulario.markAllAsTouched();
       return;
@@ -148,15 +153,20 @@ export class DemandaFormularioDialogComponent implements OnChanges {
               detail: 'Demanda criada com sucesso',
             });
             this.demandaCriada.emit(resposta.dados);
-            this.formulario.reset({
-              nome:           '',
-              demandaPaiId:   this.demandaPaiIdInicial ?? null,
-              status:         TipoDemandaStatusEnum.PLANEJADA,
-              isEstrutural:   false,
-              horasEstimadas: 0,
-              tagIds:         [],
-              usuarioIds:     [],
-            });
+            if (criarOutra) {
+              this.formulario.reset({
+                nome:           '',
+                demandaPaiId:   valor.demandaPaiId ?? null,
+                status:         valor.status,
+                isEstrutural:   false,
+                horasEstimadas: 0,
+                tagIds:         valor.tagIds,
+                usuarioIds:     valor.usuarioIds,
+              });
+              this.campoNome?.nativeElement.focus();
+            } else {
+              this.fechar();
+            }
           }
         },
       });

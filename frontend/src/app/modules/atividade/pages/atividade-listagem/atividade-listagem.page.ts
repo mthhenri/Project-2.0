@@ -35,7 +35,6 @@ import {
   TipoUsuarioEnum,
   REGEX_SEM_CARACTERES_PROIBIDOS,
   MENSAGEM_CARACTERES_PROIBIDOS,
-  MENSAGEM_CARACTERES_PROIBIDOS_DICA,
 } from '@project20/shared';
 import { AtividadeService } from '../../services/atividade.service';
 import { ExecucaoService } from '../../../execucao/services/execucao.service';
@@ -58,6 +57,8 @@ import {
   rotuloStatusAtividade,
   SeveridadeTag,
 } from '../../models/atividade.model';
+import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
+import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
 
 type DemandaAtribuidaOpcao = DemandaAtribuidaDto & { rotulo: string };
 
@@ -67,6 +68,8 @@ type CampoDescricaoDemanda = 'descricaoCliente' | 'descricaoTecnica' | 'document
   selector: 'app-atividade-listagem',
   standalone: true,
   imports: [
+    DialogFormularioDirective,
+    DialogDicaAtalhosComponent,
     ReactiveFormsModule,
     TableModule,
     ButtonModule,
@@ -193,6 +196,7 @@ export class AtividadeListagemPage implements OnInit {
   // --- Dialog: registrar execução manual (somente gestor) ---
   /** Textarea de descrição; recebe o foco ao abrir o dialog, não o campo de início. */
   @ViewChild('descricaoRegistro') private descricaoRegistro?: ElementRef<HTMLTextAreaElement>;
+  @ViewChild('campoNovoNome') private campoNovoNome?: ElementRef<HTMLInputElement>;
   readonly mostrarDialogRegistro = signal<boolean>(false);
   readonly salvandoRegistro = signal<boolean>(false);
   readonly atividadeRegistro = signal<AtividadeResumoDto | null>(null);
@@ -207,7 +211,6 @@ export class AtividadeListagemPage implements OnInit {
   );
 
   readonly mensagemCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS;
-  readonly dicaCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS_DICA;
 
   ngOnInit(): void {
     const demandaIdParam = Number(this.rotaAtiva.snapshot.queryParamMap.get('demandaId'));
@@ -309,7 +312,8 @@ export class AtividadeListagemPage implements OnInit {
     this.mostrarDialogNova.set(true);
   }
 
-  salvarNova(): void {
+  /** `criarOutra`: mantém o dialog aberto (demanda, responsável e status preservados) para cadastro em série. */
+  salvarNova(criarOutra = false): void {
     if (this.formularioNova.invalid) {
       this.formularioNova.markAllAsTouched();
       return;
@@ -336,7 +340,18 @@ export class AtividadeListagemPage implements OnInit {
               summary: 'Sucesso',
               detail: 'Atividade criada com sucesso',
             });
-            this.mostrarDialogNova.set(false);
+            if (criarOutra) {
+              this.formularioNova.reset({
+                nome:      '',
+                demandaId: valor.demandaId,
+                usuarioId: valor.usuarioId,
+                status:    valor.status,
+                tagIds:    valor.tagIds,
+              });
+              this.campoNovoNome?.nativeElement.focus();
+            } else {
+              this.mostrarDialogNova.set(false);
+            }
             this.aoMudarFiltro();
           }
         },
