@@ -99,7 +99,7 @@ A varredura deve cobrir **todo** o projeto e classificar cada achado por módulo
 ## Procedimento
 
 1. **Varrer** sistematicamente cada pasta (`shared/`, `backend/src/`, `frontend/src/`, migrations e `docs/`), aplicando o checklist acima.
-2. **Registrar** cada achado em um **relatório de auditoria**: `docs/AUDITORIA.md`, com uma tabela por módulo:
+2. **Registrar** cada achado em um **relatório de auditoria**: `docs/specs/done/44-auditoria-conformidade-padroes/AUDITORIA.md`, com uma tabela por módulo:
 
    | Módulo | Arquivo:Linha | Categoria (A–G) | Violação | Correção sugerida |
    |---|---|---|---|---|
@@ -113,7 +113,7 @@ A varredura deve cobrir **todo** o projeto e classificar cada achado por módulo
    ```
 
    Cada spec gerada deve conter, no mínimo:
-   - **Objetivo** e referência cruzada à task 44 e à linha correspondente em `docs/AUDITORIA.md`.
+   - **Objetivo** e referência cruzada à task 44 e à linha correspondente em `docs/specs/done/44-auditoria-conformidade-padroes/AUDITORIA.md`.
    - **Escopo** — lista exaustiva das violações daquele módulo, cada uma com arquivo, situação atual e correção esperada (no nível de detalhe das tasks 19 e 20).
    - **Atualização de documentação** (obrigatória — ver próxima seção).
    - **Verificação** — comandos de build (`npm run build --workspace=...`) e checagens negativas (ex.: "nenhum repositório contém método `existe*`").
@@ -137,7 +137,7 @@ A documentação é **fonte da verdade**: nenhuma spec de correção é consider
 ## Arquivos afetados (por esta task 44)
 
 ```
-docs/AUDITORIA.md                                   (novo — relatório da varredura)
+docs/specs/done/44-auditoria-conformidade-padroes/AUDITORIA.md                                   (novo — relatório da varredura)
 docs/specs/backlog/<n>-<modulo>-correcao-padroes.spec.md   (novos — uma por módulo com achados)
 docs/CONTEXT.md                                     (registro da auditoria + próximas tasks)
 ```
@@ -148,7 +148,7 @@ docs/CONTEXT.md                                     (registro da auditoria + pr�
 
 ## Verificação
 
-1. `docs/AUDITORIA.md` existe, com sumário por módulo/categoria e tabela detalhada de achados.
+1. `docs/specs/done/44-auditoria-conformidade-padroes/AUDITORIA.md` existe, com sumário por módulo/categoria e tabela detalhada de achados.
 2. Para **todo** módulo com pelo menos um achado no relatório, existe a spec `…-correcao-padroes.spec.md` correspondente no backlog.
 3. Toda spec de correção gerada contém a seção **Atualização de Documentação**.
 4. Nenhum módulo sem achados gerou spec (evitar ruído no backlog).

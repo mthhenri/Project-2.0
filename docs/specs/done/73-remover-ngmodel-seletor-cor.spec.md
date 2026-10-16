@@ -63,7 +63,7 @@ ligado por `[formControl]` (ReactiveFormsModule).
 1. `CONVENTIONS.md` (Estilos/Frontend ou seção Angular) — reforçar: "sem template-driven
    forms / sem `ngModel`"; ao embrulhar um controle de terceiros, usar `ControlValueAccessor`
    + `FormControl` interno (`[formControl]`), nunca `ngModel`.
-2. `docs/AUDITORIA.md` — errata pontual: o achado "0 ngModel" foi posterior ao componente
+2. `docs/specs/done/44-auditoria-conformidade-padroes/AUDITORIA.md` — errata pontual: o achado "0 ngModel" foi posterior ao componente
    `seletor-cor`; corrigido por esta task (cruzar com a errata da task 69/D4).
 
 ---

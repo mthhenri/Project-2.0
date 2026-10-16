@@ -3,11 +3,11 @@
 ## Objetivo
 
 Corrigir o desvio de linguagem identificado pela auditoria da **task 44**
-(`docs/AUDITORIA.md` §4.8): a função/trigger de BaseEntity `fn_atualizar_updated_date()`
+(`docs/specs/done/44-auditoria-conformidade-padroes/AUDITORIA.md` §4.8): a função/trigger de BaseEntity `fn_atualizar_updated_date()`
 nomeia um mecanismo **genérico/arquitetural** com verbo **português**, contrariando o
 §16 #12 ("nunca escrever conceito genérico/arquitetural em português").
 
-> **Referência cruzada:** task 44 · `docs/AUDITORIA.md` §4.8.
+> **Referência cruzada:** task 44 · `docs/specs/done/44-auditoria-conformidade-padroes/AUDITORIA.md` §4.8.
 
 ---
 

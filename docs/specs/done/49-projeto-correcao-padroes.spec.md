@@ -3,10 +3,10 @@
 ## Objetivo
 
 Corrigir o desvio de conformidade do módulo **projeto** identificado pela auditoria
-da **task 44** (`docs/AUDITORIA.md` §4.2): primitivo `id` + `Partial<Projeto>` na
+da **task 44** (`docs/specs/done/44-auditoria-conformidade-padroes/AUDITORIA.md` §4.2): primitivo `id` + `Partial<Projeto>` na
 assinatura de `ProjetoRepository.alterar`. Sem mudança de comportamento.
 
-> **Referência cruzada:** task 44 · `docs/AUDITORIA.md` §4.2.
+> **Referência cruzada:** task 44 · `docs/specs/done/44-auditoria-conformidade-padroes/AUDITORIA.md` §4.2.
 > **Padrão estrutural (param único DTO):** `ExecucaoRepository.alterar(dto)`.
 > **Padrão de nomenclatura (verbo no fim — SPEC §5, linhas 149-155):** complemento
 > `Interno` **antes** do verbo `Alterar` → `ProjetoInternoAlterarDto`. ⚠️ **Não** usar

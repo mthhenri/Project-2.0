@@ -4,11 +4,11 @@
 
 Corrigir, no módulo **execucao**: (1) as **duas violações da regra de nomenclatura do §5**
 (verbo sempre no fim) nos DTOs internos, detectadas na **errata da auditoria 44**
-(`docs/AUDITORIA.md` §8); (2) o **boundary controller→service** com `id` primitivo e (3) o
+(`docs/specs/done/44-auditoria-conformidade-padroes/AUDITORIA.md` §8); (2) o **boundary controller→service** com `id` primitivo e (3) o
 **primitivo de restrição de escopo** em `ExecucaoRepository.listar`, ambos decorrentes da
 decisão **DTO em tudo** (spec 48 §3). Sem mudança de campos nem de comportamento.
 
-> **Referência cruzada:** task 44 · `docs/AUDITORIA.md` §8 (errata).
+> **Referência cruzada:** task 44 · `docs/specs/done/44-auditoria-conformidade-padroes/AUDITORIA.md` §8 (errata).
 > **Regra:** `SYSTEM.SPEC.md` §5, linhas 149-155 — "o complemento inteiro vem antes do
 > verbo, sem exceção; qualificadores como `Interno` fazem parte do complemento".
 > **Exemplares conformes:** `DemandaMembroInternoAtribuirDto`, `DemandaTagInternoRemoverDto`.
@@ -91,7 +91,7 @@ existir, e atualizar a chamada em `ExecucaoService.listar`. SQL inalterado.
 - **`CONVENTIONS.md`** (seção DTOs) — incluir a linha ❌ `ExecucaoAlterarInternoDto` /
   ✅ `ExecucaoInternoAlterarDto` na tabela de proibições/exemplos de nomenclatura.
 - Registrar em `docs/CONTEXT.md` (seção "Decisões Tomadas"/histórico) que execucao
-  deixou de ser "0 achados" (ver `docs/AUDITORIA.md` §8).
+  deixou de ser "0 achados" (ver `docs/specs/done/44-auditoria-conformidade-padroes/AUDITORIA.md` §8).
 
 ---
 

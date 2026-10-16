@@ -3,12 +3,12 @@
 ## Objetivo
 
 Corrigir os desvios de conformidade do módulo **usuario** identificados pela
-auditoria da **task 44** (`docs/AUDITORIA.md` §4.1 e §8 — errata), e — por ser o
+auditoria da **task 44** (`docs/specs/done/44-auditoria-conformidade-padroes/AUDITORIA.md` §4.1 e §8 — errata), e — por ser o
 módulo canônico — **reconciliar a contradição documental §7.2 × §16 #21** registrada
-em `docs/AUDITORIA.md` §5. Nenhuma mudança de comportamento: apenas conformidade de
+em `docs/specs/done/44-auditoria-conformidade-padroes/AUDITORIA.md` §5. Nenhuma mudança de comportamento: apenas conformidade de
 assinatura/nomenclatura + reforço documental.
 
-> **Referência cruzada:** task 44 (auditoria) · `docs/AUDITORIA.md` §4.1, §5 e §8.
+> **Referência cruzada:** task 44 (auditoria) · `docs/specs/done/44-auditoria-conformidade-padroes/AUDITORIA.md` §4.1, §5 e §8.
 > **Padrão estrutural (param único DTO):** `ExecucaoRepository.alterar(dto)`
 > (`backend/src/modules/execucao/repositories/execucao.repository.ts:328`).
 > **Padrão de nomenclatura (verbo no fim — SPEC §5, linhas 149-155):**
@@ -26,7 +26,7 @@ que permaneceu recebendo o **primitivo `id`** e um **objeto anônimo inline**. O
 próprios critérios de verificação #3 e #4 da task 20 permanecem, portanto, não
 atendidos para este método.
 
-Além disso, a errata da auditoria (`docs/AUDITORIA.md` §8) constatou que
+Além disso, a errata da auditoria (`docs/specs/done/44-auditoria-conformidade-padroes/AUDITORIA.md` §8) constatou que
 `UsuarioAlterarSenhaInternoDto` **viola a regra de nomenclatura do §5** (o verbo
 `Alterar` aparece no meio do complemento, antes de `Senha`/`Interno`). O nome correto
 é `UsuarioSenhaInternoAlterarDto` (complemento `SenhaInterno` antes do verbo `Alterar`).
@@ -89,7 +89,7 @@ async alterar(id: number, dados: {
 
 ### 3. Boundary controller→service DTO-only (decisão da reconciliação §7.2 × §16 #21)
 
-**Decisão tomada (cross-cutting — `docs/AUDITORIA.md` §5):** padronizar **DTO em tudo**.
+**Decisão tomada (cross-cutting — `docs/specs/done/44-auditoria-conformidade-padroes/AUDITORIA.md` §5):** padronizar **DTO em tudo**.
 Service e repository **nunca** recebem `id`/`*Id` primitivo; o controller é o único ponto
 autorizado a montar o DTO — ao extrair `@Param('id')` (ou `@Query`), injeta o id no DTO
 antes de repassar. Objetos de contexto (`usuarioAtivo: JwtPayload` de `@ActiveUser()`)

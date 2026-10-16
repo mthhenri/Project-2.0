@@ -93,7 +93,7 @@ erradas. Esta task fecha o débito documental acumulado.
 - **Doc a corrigir:** entradas que citam `AtividadeAtualizadaDto`/`ExecucaoAtualizadaDto` como aliases re-exportados (~linhas 242, 244) não correspondem ao código atual (renomeados; nenhum alias por re-export existe hoje). Anotar como histórico ou remover.
 
 #### D4 — Errata na auditoria
-- **Doc a corrigir:** `docs/AUDITORIA.md` — nota curta de que o relatório é de 2026-06-19 e antecede specs 45/46 e migrations 15/16; os achados C1 (herança de DTO de negócio) e C2 (`ngModel` no seletor-cor) foram identificados depois e endereçados pelas tasks 63 (C1) e 62 (C2).
+- **Doc a corrigir:** `docs/specs/done/44-auditoria-conformidade-padroes/AUDITORIA.md` — nota curta de que o relatório é de 2026-06-19 e antecede specs 45/46 e migrations 15/16; os achados C1 (herança de DTO de negócio) e C2 (`ngModel` no seletor-cor) foram identificados depois e endereçados pelas tasks 63 (C1) e 62 (C2).
 
 ---
 

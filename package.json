@@ -12,7 +12,10 @@
     "frontend:dev": "npm run start --workspace=frontend",
     "dev": "concurrently --kill-others-on-fail --names \"backend,frontend\" --prefix-colors \"cyan,magenta\" \"npm run backend:dev\" \"npm run frontend:dev\"",
     "db:up": "docker-compose up -d",
-    "db:down": "docker-compose down"
+    "db:down": "docker-compose down",
+    "repo:verificar": "node scripts/verificar-organizacao.mjs",
+    "repo:test": "node --test scripts/verificar-organizacao.test.mjs scripts/impacto.test.mjs",
+    "impacto": "node scripts/impacto.mjs"
   },
   "devDependencies": {
     "concurrently": "^10.0.3"
