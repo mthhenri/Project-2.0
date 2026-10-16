@@ -39,6 +39,8 @@
     (visivelChange)="mostrarDialogDetalhe.set($event)"
     (demandaExcluida)="aoDemandaExcluida()"
     (demandaAlterada)="aoDemandaAlterada()"
+    (statusAlterado)="statusAlterado.emit($event)"
+    (tagsAlteradas)="tagsAlteradas.emit($event)"
   />
 }
 

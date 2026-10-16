@@ -1,127 +1,137 @@
-import { Component, Input, OnInit, inject, signal } from '@angular/core';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { RouterModule } from '@angular/router';
-import { finalize } from 'rxjs/operators';
+import { Component, ElementRef, computed, inject, input, model, output, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ButtonModule } from 'primeng/button';
-import { DialogModule } from 'primeng/dialog';
 import { Select } from 'primeng/select';
-import { CheckboxModule } from 'primeng/checkbox';
-import { MessageService } from 'primeng/api';
-import { DemandaConexaoResumoDto, DemandaConexaoCriarDto } from '@project20/shared';
+import { SelectButtonModule } from 'primeng/selectbutton';
+import { TooltipModule } from 'primeng/tooltip';
+import { DemandaConexaoResumoDto } from '@project20/shared';
 import { DemandaService } from '../../services/demanda.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
-import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
-import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
 import { DesfazerService } from '../../../../core/services/desfazer.service';
 
+interface DestinoConexao {
+  demandaConectadaId: number;
+  nomeDemandaConectada: string;
+}
+
+/**
+ * Conexões da demanda (task 108): criação inline (autocomplete com busca + direção + "Adicionar"), erro de
+ * ciclo mostrado na própria linha, tooltip semântico da direção, link que navega dentro do detalhe e lixeira
+ * com "Desfazer". O estado das conexões vive no dialog (cache de navegação) via `model`.
+ */
 @Component({
   selector: 'app-demanda-conexao-lista',
   standalone: true,
-  imports: [
-    DialogFormularioDirective,
-    DialogDicaAtalhosComponent,
-    ReactiveFormsModule,
-    RouterModule,
-    ButtonModule,
-    DialogModule,
-    Select,
-    CheckboxModule,
-  ],
+  imports: [FormsModule, ButtonModule, Select, SelectButtonModule, TooltipModule],
   templateUrl: './demanda-conexao-lista.component.html',
   styleUrl: './demanda-conexao-lista.component.scss',
 })
-export class DemandaConexaoListaComponent implements OnInit {
-  @Input({ required: true }) demandaId!: number;
-  @Input() todasDemandas = signal<Array<{ demandaConectadaId: number; nomeDemandaConectada: string }>>([]);
-
+export class DemandaConexaoListaComponent {
   private readonly demandaService = inject(DemandaService);
-  private readonly messageService = inject(MessageService);
   private readonly desfazerService = inject(DesfazerService);
-  private readonly formBuilder = inject(FormBuilder);
+  private readonly elemento = inject<ElementRef<HTMLElement>>(ElementRef);
   readonly sessao = inject(UsuarioSessaoService);
 
-  readonly conexoes = signal<DemandaConexaoResumoDto[]>([]);
-  readonly carregando = signal<boolean>(false);
-  readonly mostrarDialog = signal<boolean>(false);
-  readonly carregandoSalvar = signal<boolean>(false);
+  readonly demandaId = input.required<number>();
+  readonly nomeDemanda = input<string>('');
+  /** Demandas do projeto que podem ser conectadas (já sem a atual). */
+  readonly todasDemandas = input<DestinoConexao[]>([]);
+  readonly conexoes = model<DemandaConexaoResumoDto[]>([]);
+  /** O link de uma conexão navega para a demanda conectada dentro do próprio dialog. */
+  readonly demandaAbrir = output<number>();
 
-  readonly formularioConexao = this.formBuilder.group({
-    demandaDestinoId: [null as number | null, [Validators.required]],
-    ehBidirecional:   [false],
+  readonly opcoesDirecao = [
+    { rotulo: '→ Depende de', valor: false },
+    { rotulo: '↔ Bidirecional', valor: true },
+  ];
+
+  readonly destinoId = signal<number | null>(null);
+  readonly ehBidirecional = signal<boolean>(false);
+  readonly salvando = signal<boolean>(false);
+  readonly erroInline = signal<string | null>(null);
+
+  /** Candidatos: as demandas do projeto que ainda não estão conectadas a esta. */
+  readonly candidatos = computed(() => {
+    const conectadas = new Set(this.conexoes().map((conexao) => conexao.demandaConectadaId));
+    return this.todasDemandas().filter((demanda) => !conectadas.has(demanda.demandaConectadaId));
   });
 
-  ngOnInit(): void {
-    this.carregarConexoes();
+  tooltipDirecao(conexao: DemandaConexaoResumoDto): string {
+    const outra = `"${conexao.nomeDemandaConectada}"`;
+    switch (conexao.direcao) {
+      case 'saida':
+        return `Esta demanda depende de ${outra}`;
+      case 'entrada':
+        return `${outra} depende desta demanda`;
+      default:
+        return `Dependência mútua com ${outra}`;
+    }
   }
 
-  abrirDialog(): void {
-    this.formularioConexao.reset({ demandaDestinoId: null, ehBidirecional: false });
-    this.mostrarDialog.set(true);
+  /** Escolhido o destino, o foco vai ao "Adicionar": Enter confirma (a lista de opções consome o Enter dela). */
+  aoEscolherDestino(id: number | null): void {
+    this.destinoId.set(id);
+    this.erroInline.set(null);
+    if (id) {
+      setTimeout(() => this.elemento.nativeElement.querySelector<HTMLButtonElement>('.demanda-conexao-lista__adicionar button')?.focus());
+    }
   }
 
-  criarConexao(): void {
-    if (this.formularioConexao.invalid) return;
+  adicionar(): void {
+    const destino = this.destinoId();
+    if (!destino || this.salvando()) return;
 
-    const valor = this.formularioConexao.value;
-    const dto: DemandaConexaoCriarDto = {
-      demandaDestinoId: valor.demandaDestinoId!,
-      ehBidirecional:   valor.ehBidirecional ?? false,
-    };
-
-    this.carregandoSalvar.set(true);
+    this.salvando.set(true);
+    this.erroInline.set(null);
     this.demandaService
-      .criarConexao(this.demandaId, dto)
-      .pipe(finalize(() => this.carregandoSalvar.set(false)))
+      .criarConexao(this.demandaId(), { demandaDestinoId: destino, ehBidirecional: this.ehBidirecional() }, true)
       .subscribe({
         next: () => {
-          this.mostrarDialog.set(false);
-          this.carregarConexoes();
-          this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Conexão criada' });
+          this.salvando.set(false);
+          this.destinoId.set(null);
+          this.ehBidirecional.set(false);
+          this.recarregar();
+        },
+        error: (erro: HttpErrorResponse) => {
+          this.salvando.set(false);
+          this.erroInline.set(erro.error?.mensagem ?? 'Não foi possível criar a conexão.');
         },
       });
   }
 
-  /** Remoção imediata (task 99): a conexão sai na hora e o toast oferece "Desfazer" (re-POST). */
+  /** Remoção imediata: a conexão sai na hora e o toast oferece "Desfazer" (re-POST no sentido original). */
   excluir(conexao: DemandaConexaoResumoDto): void {
-    const listaAnterior = this.conexoes();
-    this.conexoes.set(listaAnterior.filter((item) => item.id !== conexao.id));
+    const anteriores = this.conexoes();
+    this.conexoes.set(anteriores.filter((item) => item.id !== conexao.id));
 
-    this.demandaService.excluirConexao(this.demandaId, conexao.id).subscribe({
+    this.demandaService.excluirConexao(this.demandaId(), conexao.id).subscribe({
       next: () =>
         this.desfazerService.oferecer({
           mensagem: `Conexão com "${conexao.nomeDemandaConectada}" removida`,
           desfazer: () => this.recriarConexao(conexao),
-          aposDesfazer: () => this.carregarConexoes(),
+          aposDesfazer: () => this.recarregar(),
         }),
-      error: () => this.conexoes.set(listaAnterior),
+      error: () => this.conexoes.set(anteriores),
     });
   }
 
-  /** Recria a conexão no sentido original: em "entrada" a origem é a outra demanda. */
   private recriarConexao(conexao: DemandaConexaoResumoDto) {
     if (conexao.direcao === 'entrada') {
       return this.demandaService.criarConexao(conexao.demandaConectadaId, {
-        demandaDestinoId: this.demandaId,
-        ehBidirecional:   false,
+        demandaDestinoId: this.demandaId(),
+        ehBidirecional: false,
       });
     }
-    return this.demandaService.criarConexao(this.demandaId, {
+    return this.demandaService.criarConexao(this.demandaId(), {
       demandaDestinoId: conexao.demandaConectadaId,
-      ehBidirecional:   conexao.direcao === 'bidirecional',
+      ehBidirecional: conexao.direcao === 'bidirecional',
     });
   }
 
-  private carregarConexoes(): void {
-    this.carregando.set(true);
-    this.demandaService
-      .listarConexoes(this.demandaId)
-      .pipe(finalize(() => this.carregando.set(false)))
-      .subscribe({
-        next: (resposta) => {
-          if (resposta.sucesso && resposta.dados) {
-            this.conexoes.set(resposta.dados);
-          }
-        },
-      });
+  private recarregar(): void {
+    this.demandaService.listarConexoes(this.demandaId()).subscribe((resposta) => {
+      if (resposta.sucesso && resposta.dados) this.conexoes.set(resposta.dados);
+    });
   }
 }

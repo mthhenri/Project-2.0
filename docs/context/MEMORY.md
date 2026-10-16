@@ -44,7 +44,7 @@ Estas são as fontes da verdade. Em conflito entre código e documento, **o docu
 | Esqueleto na primeira carga, conteúdo esmaecido + barra na recarga, leitura sem overlay global (task 98) | `shared/components/skeleton-lista/`, `shared/components/barra-recarga/`, `.conteudo-recarregando` em `styles.scss`, `comFeedbackProprio()` em `core/interceptors/loading.interceptor.ts` |
 | Login (estado lembrado, returnUrl seguro) e topbar (chip de execução ativa, perfil, atalhos `g`+letra) — tasks 94–96 | `modules/autenticacao/pages/login/`, `core/utils/url-retorno.ts`, `core/services/execucao-ativa.service.ts`, `core/interceptors/execucao-ativa.interceptor.ts`, `shared/layout/topbar/` |
 | Atalhos de teclado (helpers `focoEmCampo`/`haSobreposicaoAberta`), Ponto mensal inline e equipe (tasks 100–101) | `core/utils/atalhos.ts`, `modules/ponto/` |
-| Demandas: toolbar de filtros, chip de status com popover, árvore com ações no hover e contexto lembrado (tasks 106–107) | `modules/demanda/` (`components/demanda-toolbar`, `demanda-status-chip`, `demanda-grafo`, `utils/demanda-filtro.util.ts`, `constants/demanda-cores.constants.ts`) |
+| Demandas: toolbar de filtros, chip de status com popover, árvore com ações no hover e contexto lembrado (tasks 106–108) | `modules/demanda/` (`components/demanda-toolbar`, `demanda-status-chip`, `demanda-grafo`, `demanda-detalhe-dialog` (+ `demanda-tags-cabecalho`, `demanda-membros-cabecalho`, `demanda-metricas`), `utils/demanda-filtro.util.ts`, `constants/demanda-cores.constants.ts`) |
 | Exclusão com "Desfazer" de 6 s (task 99) | `core/services/desfazer.service.ts`, `shared/components/toast-desfazer/` e `PATCH /<recurso>/:id/restaurar` no backend |
 | Estilos globais, tema e Tailwind | `frontend/src/styles.scss`, `frontend/src/app/shared/styles/`, `frontend/tailwind.config.js` |
 | Testes (`node:test`, ao lado do código em `*.test.ts`; rode com `npm test`) | `shared/src/validators/`, `backend/src/database/`, `backend/src/modules/*/services/` |
@@ -63,7 +63,7 @@ quando essa branch for mergeada). A task 117 (remover a descrição da atividade
 
 | Item | Onde |
 |---|---|
-| Tasks mantidas da revisão de UI/UX ainda pendentes (108, 109, 112–116; 94–101, 106 e 107 concluídas em `docs/specs/done/`) | `docs/specs/backlog/` (`10[89]-*`, `11[2-6]-*`) |
+| Tasks mantidas da revisão de UI/UX ainda pendentes (109, 112–116; 94–101 e 106–108 concluídas em `docs/specs/done/`) | `docs/specs/backlog/` (`109-*`, `11[2-6]-*`) |
 | Tasks descartadas pelo autor (102–105, 110, 111: telas de Atividades e Execuções) | `docs/specs/discarded/` |
 | Índice, ordem e dependências das tasks 94–116 (97–99 concluídas) | `docs/specs/backlog/INDEX-revisao-ux.md` |
 | Spec guarda-chuva e material da revisão (relatório, mockups HTML, análises) | `docs/specs/backlog/revisao-ui-ux.spec.md` e `docs/specs/backlog/revisao-ui-ux/` |

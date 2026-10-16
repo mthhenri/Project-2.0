@@ -32,7 +32,7 @@ Origem: `docs/specs/backlog/revisao-ui-ux/` (relatório, prints com callouts, mo
 |---|---|
 | ~~106~~ | ~~Demandas: busca/filtros, ações visíveis, contexto lembrado~~ — **concluída** (`../done/`) |
 | ~~107~~ | ~~Demandas grafo: tema, hover-card, legenda-filtro~~ — **concluída** (`../done/`) |
-| 108 | Demanda detalhe: edição inline, tags/membros no cabeçalho |
+| ~~108~~ | ~~Demanda detalhe: edição inline, tags/membros no cabeçalho~~ — **concluída** (`../done/`) |
 | 109 | Demanda: formulário unificado e adaptativo |
 | ~~110~~ | ~~Execuções: contexto, linha ativa, teclado/URL~~ — **DESCARTADA** (`../discarded/`) |
 | ~~111~~ | ~~Relatório: auto-preview, chips de período, IA habilitada~~ — **DESCARTADA** (`../discarded/`) |

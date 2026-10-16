@@ -6,112 +6,89 @@
         <span class="demanda-conexao-lista__contador">{{ conexoes().length }}</span>
       }
     </span>
-    @if (sessao.eGestor()) {
-      <p-button
-        icon="pi pi-plus"
-        label="Adicionar"
-        size="small"
-        [outlined]="true"
-        (onClick)="abrirDialog()"
-      />
-    }
   </div>
 
-  @if (carregando()) {
-    <div class="demanda-conexao-lista__carregando">
-      <i class="pi pi-spin pi-spinner"></i>
-    </div>
-  }
-
-  @if (!carregando()) {
-    @if (conexoes().length === 0) {
-      <div class="demanda-conexao-lista__vazio">
-        <i class="pi pi-share-alt"></i>
-        <p>Nenhuma conexão</p>
-      </div>
-    }
-
-    <div class="demanda-conexao-lista__lista">
-      @for (conexao of conexoes(); track conexao.id) {
-        <div class="demanda-conexao-lista__item">
-          <span
-            class="demanda-conexao-lista__direcao"
-            [class.demanda-conexao-lista__direcao--saida]="conexao.direcao === 'saida'"
-            [class.demanda-conexao-lista__direcao--entrada]="conexao.direcao === 'entrada'"
-            [class.demanda-conexao-lista__direcao--bidirecional]="conexao.direcao === 'bidirecional'"
-          >
-            @if (conexao.direcao === 'saida') {
-              <i class="pi pi-arrow-right"></i>
-            }
-            @if (conexao.direcao === 'entrada') {
-              <i class="pi pi-arrow-left"></i>
-            }
-            @if (conexao.direcao === 'bidirecional') {
-              <i class="pi pi-arrows-h"></i>
-            }
-          </span>
-          <a [routerLink]="['/demanda', conexao.demandaConectadaId]" class="demanda-conexao-lista__nome">
-            {{ conexao.nomeDemandaConectada }}
-          </a>
-          @if (sessao.eGestor()) {
-            <p-button
-              icon="pi pi-trash"
-              severity="danger"
-              [text]="true"
-              size="small"
-              (onClick)="excluir(conexao)"
-            />
-          }
-        </div>
-      }
-    </div>
-  }
-</div>
-
-<!-- Dialog adicionar conexão -->
-<p-dialog
-  header="Adicionar Conexão"
-  dialogFormulario
-  [dialogBloqueado]="carregandoSalvar()"
-  (dialogEnviar)="criarConexao()"
-  [(visible)]="mostrarDialog"
-  [modal]="true"
-  [style]="{ width: '400px' }"
-  [draggable]="false"
->
-  <form [formGroup]="formularioConexao" class="demanda-conexao-lista__form">
-    <div class="demanda-conexao-lista__form-campo">
-      <label>Demanda Destino <span class="demanda-conexao-lista__obrigatorio">*</span></label>
+  <!-- Criação inline (gestor): escolher o destino e confirmar com Enter ou "Adicionar" -->
+  @if (sessao.eGestor()) {
+    <div class="demanda-conexao-lista__criacao">
       <p-select
-        formControlName="demandaDestinoId"
-        [options]="todasDemandas()"
+        [options]="candidatos()"
+        [ngModel]="destinoId()"
+        (ngModelChange)="aoEscolherDestino($event)"
         optionLabel="nomeDemandaConectada"
         optionValue="demandaConectadaId"
-        placeholder="Selecione..."
+        [filter]="true"
+        filterPlaceholder="Digite para buscar…"
+        placeholder="Conectar a outra demanda…"
+        emptyFilterMessage="Nenhuma demanda encontrada"
+        [showClear]="true"
         appendTo="body"
-        class="w-full"
+        class="demanda-conexao-lista__destino"
+      />
+      <p-selectbutton
+        [options]="opcoesDirecao"
+        [ngModel]="ehBidirecional()"
+        (ngModelChange)="ehBidirecional.set($event)"
+        optionLabel="rotulo"
+        optionValue="valor"
+        [allowEmpty]="false"
+        size="small"
+      />
+      <p-button
+        label="Adicionar"
+        icon="pi pi-plus"
+        size="small"
+        class="demanda-conexao-lista__adicionar"
+        [disabled]="!destinoId()"
+        [loading]="salvando()"
+        (onClick)="adicionar()"
       />
     </div>
-    <div class="demanda-conexao-lista__form-campo demanda-conexao-lista__form-campo--checkbox">
-      <p-checkbox formControlName="ehBidirecional" [binary]="true" inputId="ehBidirecional" />
-      <label for="ehBidirecional">Bidirecional</label>
+    @if (erroInline()) {
+      <p class="demanda-conexao-lista__erro" role="alert"><i class="pi pi-exclamation-circle"></i> {{ erroInline() }}</p>
+    }
+  }
+
+  @if (conexoes().length === 0) {
+    <div class="demanda-conexao-lista__vazio">
+      <i class="pi pi-share-alt"></i>
+      <p>Nenhuma conexão. {{ sessao.eGestor() ? 'Escolha uma demanda acima para criar a primeira.' : '' }}</p>
     </div>
-  </form>
+  }
 
-  <ng-template pTemplate="footer">
-    <app-dialog-dica-atalhos />
-    <p-button
-      label="Cancelar"
-      severity="secondary"
-      [outlined]="true"
-      (onClick)="mostrarDialog.set(false)"
-    />
-    <p-button
-      label="Adicionar"
-      icon="pi pi-check"
-      [loading]="carregandoSalvar()"
-      (onClick)="criarConexao()"
-    />
-  </ng-template>
-</p-dialog>
-
+  <div class="demanda-conexao-lista__lista">
+    @for (conexao of conexoes(); track conexao.id) {
+      <div class="demanda-conexao-lista__item">
+        <span
+          class="demanda-conexao-lista__direcao"
+          [class.demanda-conexao-lista__direcao--saida]="conexao.direcao === 'saida'"
+          [class.demanda-conexao-lista__direcao--entrada]="conexao.direcao === 'entrada'"
+          [class.demanda-conexao-lista__direcao--bidirecional]="conexao.direcao === 'bidirecional'"
+          [pTooltip]="tooltipDirecao(conexao)"
+          tooltipPosition="top"
+        >
+          @switch (conexao.direcao) {
+            @case ('saida') { <i class="pi pi-arrow-right"></i> }
+            @case ('entrada') { <i class="pi pi-arrow-left"></i> }
+            @default { <i class="pi pi-arrows-h"></i> }
+          }
+        </span>
+        <button type="button" class="demanda-conexao-lista__nome" (click)="demandaAbrir.emit(conexao.demandaConectadaId)">
+          {{ conexao.nomeDemandaConectada }}
+        </button>
+        @if (sessao.eGestor()) {
+          <p-button
+            icon="pi pi-trash"
+            severity="danger"
+            [text]="true"
+            size="small"
+            ariaLabel="Remover conexão"
+            pTooltip="Remover conexão"
+            tooltipPosition="top"
+            (onClick)="excluir(conexao)"
+          />
+        }
+      </div>
+    }
+  </div>
+</div>

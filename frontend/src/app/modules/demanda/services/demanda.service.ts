@@ -27,6 +27,7 @@ import {
 } from '@project20/shared';
 import { ambiente } from '../../../../environments/environment';
 import { comFeedbackProprio } from '../../../core/interceptors/loading.interceptor';
+import { comErroTratadoPelaTela } from '../../../core/interceptors/error-handler.interceptor';
 
 @Injectable({ providedIn: 'root' })
 export class DemandaService {
@@ -86,8 +87,13 @@ export class DemandaService {
     return this.httpClient.get<StandardResponse<DemandaAncestralDto[]>>(`${this.urlBase}/${id}/ancestral`);
   }
 
-  criarConexao(demandaId: number, dto: DemandaConexaoCriarDto): Observable<StandardResponse<DemandaConexaoCriadaDto>> {
-    return this.httpClient.post<StandardResponse<DemandaConexaoCriadaDto>>(`${this.urlBase}/${demandaId}/conexao`, dto);
+  /** Com `erroNaTela`, o erro (ex.: ciclo) não gera toast: a tela o mostra inline. */
+  criarConexao(demandaId: number, dto: DemandaConexaoCriarDto, erroNaTela = false): Observable<StandardResponse<DemandaConexaoCriadaDto>> {
+    return this.httpClient.post<StandardResponse<DemandaConexaoCriadaDto>>(
+      `${this.urlBase}/${demandaId}/conexao`,
+      dto,
+      erroNaTela ? comErroTratadoPelaTela() : {},
+    );
   }
 
   listarConexoes(demandaId: number): Observable<StandardResponse<DemandaConexaoResumoDto[]>> {

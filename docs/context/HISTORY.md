@@ -12,6 +12,22 @@
 
 ---
 
+## 2026-10-16 — Task 108: detalhe da demanda com edição inline
+
+Relatório em `docs/specs/done/108-demanda-detalhe-edicao-inline/verificacao.md`; verificação em Chromium contra a
+API real (gestor e desenvolvedor) em 1920×1080, 1366×768 e 1080×1920.
+
+- Título com lápis, status em 1 chip, métricas click-to-edit, tags (popover em toggle) e membros (autocomplete,
+  remover com "Desfazer", Participar/Sair) no cabeçalho; as abas e dialogs de Tags/Membros do detalhe saíram.
+  Conexões com criação inline e erro de ciclo na linha; "← Voltar" restaura do cache sem chamadas (0 requisições).
+- Três componentes novos (`demanda-tags-cabecalho`, `demanda-membros-cabecalho`, `demanda-metricas`) tiraram do
+  dialog (já com 500+ linhas) as novas responsabilidades; `demanda-conexao-lista` foi reescrito.
+- **Achados só na verificação:** o título não recebia foco (autofocus dentro de `@if`); o Enter após escolher o
+  destino da conexão caía no select; a previsão ISO gerava `NaN/NaN/NaN` no datepicker; mensagem do autocomplete
+  em inglês. Conexão digitando o nome custa 4 teclas (o critério pedia ≤3).
+
+---
+
 ## 2026-10-16 — Task 107: grafo de Demandas no tema, com hover-card e legenda-filtro
 
 Relatório em `docs/specs/done/107-demandas-grafo-tema-filtros/verificacao.md`; verificação em Chromium (claro e
