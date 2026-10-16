@@ -1,27 +1,16 @@
-import { Component, Input } from '@angular/core';
-import { Tag } from 'primeng/tag';
-import { UsuarioResumoDto, TipoUsuarioEnum } from '@project20/shared';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { UsuarioResumoDto } from '@project20/shared';
+import { iniciaisDoNome } from '../../utils/usuario-credenciais.util';
 
+/** Identidade do usuário numa linha: avatar de iniciais + nome + login (task 113). */
 @Component({
   selector: 'app-usuario-cartao',
   standalone: true,
-  imports: [Tag],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './usuario-cartao.component.html',
   styleUrl: './usuario-cartao.component.scss',
 })
 export class UsuarioCartaoComponent {
-  @Input({ required: true }) usuario!: UsuarioResumoDto;
-
-  get iniciais(): string {
-    return (this.usuario?.nomeCompleto ?? '')
-      .split(' ')
-      .slice(0, 2)
-      .map((parte) => parte[0])
-      .join('')
-      .toUpperCase();
-  }
-
-  get ehGestor(): boolean {
-    return this.usuario?.tipo === TipoUsuarioEnum.GESTOR;
-  }
+  readonly usuario = input.required<Pick<UsuarioResumoDto, 'nomeCompleto' | 'login'>>();
+  readonly iniciais = computed(() => iniciaisDoNome(this.usuario().nomeCompleto));
 }

@@ -8,6 +8,12 @@
     margin-bottom: 1.5rem;
   }
 
+  &__titulo-grupo {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+  }
+
   &__titulo {
     font-size: 1.5rem;
     font-weight: 600;
@@ -15,38 +21,95 @@
     margin: 0;
   }
 
-  &__filtros {
+  &__contador {
+    font-size: 0.875rem;
+    color: var(--p-text-muted-color);
+  }
+
+  &__toolbar {
     display: flex;
-    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
     margin-bottom: 1.25rem;
   }
 
-  &__filtro-campo {
-    display: flex;
-    flex-direction: column;
-    gap: 0.375rem;
-    min-width: 200px;
-
-    &--busca {
-      flex: 1;
-    }
+  &__busca {
+    position: relative;
+    flex: 1;
+    min-width: 220px;
+    max-width: 26rem;
   }
 
-  &__filtro-label {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--p-text-color);
+  &__busca-icone {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--p-text-muted-color);
+    pointer-events: none;
+  }
+
+  &__busca-campo {
+    width: 100%;
+    padding-left: 2.25rem;
+  }
+
+  &__coluna-tipo {
+    width: 11rem;
+  }
+
+  &__coluna-status {
+    width: 10rem;
   }
 
   &__coluna-acoes {
-    width: 100px;
+    width: 8rem;
+    text-align: right;
+  }
+
+  &__coluna-anotacoes {
+    width: 5.5rem;
     text-align: center;
+  }
+
+  &__linha {
+    cursor: pointer;
+    transition: opacity 0.15s;
+
+    &--inativa {
+      opacity: 0.6;
+    }
+
+    // As ações aparecem no hover/foco; em touch (sem hover) ficam sempre visíveis (ver fim do arquivo).
+    .usuario-listagem__acoes {
+      opacity: 0;
+      transition: opacity 0.12s;
+    }
+
+    &:hover .usuario-listagem__acoes,
+    &:focus-within .usuario-listagem__acoes {
+      opacity: 1;
+    }
+  }
+
+  &__status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+    cursor: pointer;
+  }
+
+  &__status-rotulo {
+    font-size: 0.8125rem;
+    color: var(--p-text-muted-color);
+    min-width: 3rem;
   }
 
   &__acoes {
     display: flex;
-    gap: 0.25rem;
-    justify-content: center;
+    gap: 0.125rem;
+    justify-content: flex-end;
   }
 
   &__vazio {
@@ -63,4 +126,22 @@
   color: var(--app-icone-anotacao);
   font-weight: 700;
   text-shadow: 0 0 4px color-mix(in srgb, currentColor 45%, transparent);
+}
+
+// Anotações: ícone destacado só quando há anotação; vazio, só aparece no hover da linha.
+:host ::ng-deep .usuario-listagem__btn-anotacao--vazio {
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+
+:host ::ng-deep .usuario-listagem__linha:hover .usuario-listagem__btn-anotacao--vazio,
+:host ::ng-deep .usuario-listagem__btn-anotacao--vazio:focus-visible {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .usuario-listagem__linha .usuario-listagem__acoes,
+  :host ::ng-deep .usuario-listagem__btn-anotacao--vazio {
+    opacity: 1;
+  }
 }

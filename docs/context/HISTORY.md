@@ -12,6 +12,22 @@
 
 ---
 
+## 2026-10-16 — Task 113: Usuários com switch de status, ações diretas e criação com defaults
+
+Relatório em `docs/specs/done/113-usuarios-switch-acoes-diretas/verificacao.md`; verificação em Chromium contra a API
+real (gestor) em 1920×1080, 1366×768 e 1080×1920.
+
+- Status em switch otimista com Desfazer; lápis/cadeado/lixeira no hover abrem Editar, Alterar senha e Excluir direto;
+  clique na linha abre o Perfil (agora só leitura). Toolbar com busca (`/`), Tipo e Status segmentados persistidos e
+  contador no cabeçalho.
+- Dialog único criar/editar: login sugerido do nome (para ao editar à mão), senha gerada com Copiar, Tipo segmentado.
+  Criar usuário = nome + cargo + Enter.
+- **Achados só na verificação:** o estado vazio da tabela nunca aparecia (`pTemplate="empty"` não existe no PrimeNG 21;
+  o certo é `emptymessage` — Atividades ainda tem o antigo) e o ícone de anotações vazio não ficava oculto.
+- Registrado para o backend: inativar o último gestor ativo pelo status é permitido hoje.
+
+---
+
 ## 2026-10-16 — Task 112: Projetos com status inline, busca/filtros e resumo no detalhe
 
 Relatório em `docs/specs/done/112-projetos-status-inline-busca/verificacao.md`; verificação em Chromium contra a API

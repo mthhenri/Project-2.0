@@ -1,0 +1,54 @@
+<p-dialog
+  header="Alterar Senha"
+  dialogFormulario
+  [dialogBloqueado]="carregando()"
+  (dialogEnviar)="salvar()"
+  [(visible)]="mostrarDialog"
+  [modal]="true"
+  [style]="{ width: '28rem' }"
+  [draggable]="false"
+>
+  <form [formGroup]="formulario" class="usuario-senha-dialog__form">
+    <p class="usuario-senha-dialog__texto">Nova senha de <strong>{{ usuarioNome() }}</strong>.</p>
+    <div class="usuario-senha-dialog__campo">
+      <label for="senhaNova" class="usuario-senha-dialog__label">Nova senha <span class="usuario-senha-dialog__obrigatorio">*</span></label>
+      <div class="usuario-senha-dialog__senha">
+        <input
+          id="senhaNova"
+          pInputText
+          formControlName="senhaNova"
+          autocomplete="off"
+          spellcheck="false"
+          class="usuario-senha-dialog__senha-campo"
+        />
+        <p-button
+          icon="pi pi-refresh"
+          [text]="true"
+          severity="secondary"
+          pTooltip="Gerar outra senha"
+          tooltipPosition="top"
+          ariaLabel="Gerar outra senha"
+          (onClick)="gerarNovaSenha()"
+        />
+        <p-button
+          [icon]="senhaCopiada() ? 'pi pi-check' : 'pi pi-copy'"
+          [text]="true"
+          severity="secondary"
+          pTooltip="Copiar senha"
+          tooltipPosition="top"
+          ariaLabel="Copiar senha"
+          (onClick)="copiarSenha()"
+        />
+      </div>
+      @if (campoInvalido()) {
+        <small class="usuario-senha-dialog__erro">Senha é obrigatória (mínimo 8 caracteres)</small>
+      }
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <app-dialog-dica-atalhos />
+    <p-button label="Cancelar" severity="secondary" [outlined]="true" (onClick)="mostrarDialog.set(false)" />
+    <p-button label="Confirmar" icon="pi pi-check" [loading]="carregando()" (onClick)="salvar()" />
+  </ng-template>
+</p-dialog>

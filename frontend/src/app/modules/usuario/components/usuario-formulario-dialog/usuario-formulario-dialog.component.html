@@ -1,7 +1,7 @@
 <p-dialog
-  header="Novo Usuário"
+  [header]="editando() ? 'Editar Usuário' : 'Novo Usuário'"
   dialogFormulario
-  [dialogBloqueado]="carregando()"
+  [dialogBloqueado]="carregando() || carregandoUsuario()"
   (dialogEnviar)="salvar()"
   [(visible)]="mostrarDialog"
   [modal]="true"
@@ -9,48 +9,6 @@
   [draggable]="false"
 >
   <form [formGroup]="formulario" class="usuario-formulario-dialog__form">
-
-    <div class="usuario-formulario-dialog__linha">
-      <div class="usuario-formulario-dialog__campo">
-        <label for="login" class="usuario-formulario-dialog__label">Login <span class="usuario-formulario-dialog__obrigatorio">*</span></label>
-        <input
-          id="login"
-          pInputText
-          formControlName="login"
-          placeholder="ex: joao.silva"
-          class="w-full"
-        />
-        @if (campoInvalido('login')) {
-          @if (formulario.controls['login'].hasError('required')) {
-            <small class="usuario-formulario-dialog__erro">Login é obrigatório</small>
-          }
-          @if (formulario.controls['login'].hasError('minlength')) {
-            <small class="usuario-formulario-dialog__erro">Mínimo de 4 caracteres</small>
-          }
-        }
-      </div>
-
-      <div class="usuario-formulario-dialog__campo">
-        <label for="senhaNaoEncriptada" class="usuario-formulario-dialog__label">Senha <span class="usuario-formulario-dialog__obrigatorio">*</span></label>
-        <p-password
-          inputId="senhaNaoEncriptada"
-          formControlName="senhaNaoEncriptada"
-          [feedback]="false"
-          [toggleMask]="true"
-          placeholder="Mínimo 8 caracteres"
-          styleClass="w-full"
-          inputStyleClass="w-full"
-        />
-        @if (campoInvalido('senhaNaoEncriptada')) {
-          @if (formulario.controls['senhaNaoEncriptada'].hasError('required')) {
-            <small class="usuario-formulario-dialog__erro">Senha é obrigatória</small>
-          }
-          @if (formulario.controls['senhaNaoEncriptada'].hasError('minlength')) {
-            <small class="usuario-formulario-dialog__erro">Mínimo de 8 caracteres</small>
-          }
-        }
-      </div>
-    </div>
 
     <div class="usuario-formulario-dialog__linha">
       <div class="usuario-formulario-dialog__campo">
@@ -89,21 +47,85 @@
       </div>
     </div>
 
+    @if (!editando()) {
+      <div class="usuario-formulario-dialog__linha">
+        <div class="usuario-formulario-dialog__campo">
+          <label for="login" class="usuario-formulario-dialog__label">Login <span class="usuario-formulario-dialog__obrigatorio">*</span></label>
+          <input
+            id="login"
+            pInputText
+            formControlName="login"
+            placeholder="gerado a partir do nome"
+            autocomplete="off"
+            class="w-full"
+            (input)="aoEditarLogin()"
+          />
+          @if (campoInvalido('login')) {
+            @if (formulario.controls['login'].hasError('required')) {
+              <small class="usuario-formulario-dialog__erro">Login é obrigatório</small>
+            }
+            @if (formulario.controls['login'].hasError('minlength')) {
+              <small class="usuario-formulario-dialog__erro">Mínimo de 4 caracteres</small>
+            }
+          }
+        </div>
+
+        <div class="usuario-formulario-dialog__campo">
+          <label for="senhaNaoEncriptada" class="usuario-formulario-dialog__label">Senha <span class="usuario-formulario-dialog__obrigatorio">*</span></label>
+          <div class="usuario-formulario-dialog__senha">
+            <input
+              id="senhaNaoEncriptada"
+              pInputText
+              formControlName="senhaNaoEncriptada"
+              autocomplete="off"
+              spellcheck="false"
+              class="usuario-formulario-dialog__senha-campo"
+            />
+            <p-button
+              icon="pi pi-refresh"
+              [text]="true"
+              severity="secondary"
+              pTooltip="Gerar outra senha"
+              tooltipPosition="top"
+              ariaLabel="Gerar outra senha"
+              (onClick)="gerarNovaSenha()"
+            />
+            <p-button
+              [icon]="senhaCopiada() ? 'pi pi-check' : 'pi pi-copy'"
+              [text]="true"
+              severity="secondary"
+              pTooltip="Copiar senha"
+              tooltipPosition="top"
+              ariaLabel="Copiar senha"
+              (onClick)="copiarSenha()"
+            />
+          </div>
+          @if (campoInvalido('senhaNaoEncriptada')) {
+            @if (formulario.controls['senhaNaoEncriptada'].hasError('required')) {
+              <small class="usuario-formulario-dialog__erro">Senha é obrigatória</small>
+            }
+            @if (formulario.controls['senhaNaoEncriptada'].hasError('minlength')) {
+              <small class="usuario-formulario-dialog__erro">Mínimo de 8 caracteres</small>
+            }
+          }
+        </div>
+      </div>
+    }
+
     <div class="usuario-formulario-dialog__linha">
       <div class="usuario-formulario-dialog__campo">
-        <label for="tipo" class="usuario-formulario-dialog__label">Tipo <span class="usuario-formulario-dialog__obrigatorio">*</span></label>
-        <p-select
-          inputId="tipo"
+        <span class="usuario-formulario-dialog__label" id="rotulo-tipo">Tipo</span>
+        <p-selectbutton
           formControlName="tipo"
           [options]="tiposOpcoes"
           optionLabel="label"
           optionValue="value"
-          placeholder="Selecione o tipo"
-          appendTo="body"
-          class="w-full"
+          [allowEmpty]="false"
+          [disabled]="!podeEditarTipo()"
+          ariaLabelledBy="rotulo-tipo"
         />
-        @if (campoInvalido('tipo')) {
-          <small class="usuario-formulario-dialog__erro">Tipo é obrigatório</small>
+        @if (!podeEditarTipo()) {
+          <small class="usuario-formulario-dialog__dica">O tipo do próprio perfil não pode ser alterado.</small>
         }
       </div>
 
@@ -121,6 +143,13 @@
       </div>
     </div>
 
+    @if (editando() && podeEditarStatus()) {
+      <label class="usuario-formulario-dialog__status">
+        <p-toggleswitch formControlName="ativo" />
+        <span>{{ formulario.controls['ativo'].value ? 'Ativo' : 'Inativo' }}</span>
+      </label>
+    }
+
   </form>
 
   <ng-template pTemplate="footer">
@@ -135,6 +164,7 @@
       label="Salvar"
       icon="pi pi-check"
       [loading]="carregando()"
+      [disabled]="carregandoUsuario()"
       (onClick)="salvar()"
     />
   </ng-template>
