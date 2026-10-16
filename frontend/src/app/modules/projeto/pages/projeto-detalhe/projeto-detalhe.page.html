@@ -22,9 +22,10 @@
           ></span>
           <h1 class="projeto-detalhe__titulo">{{ projeto()!.nome }}</h1>
           <span class="projeto-detalhe__codigo">{{ projeto()!.codigo }}</span>
-          <p-tag
-            [value]="rotuloStatus(projeto()!.status)"
-            [severity]="severidadeStatus(projeto()!.status)"
+          <app-projeto-status-chip
+            [status]="projeto()!.status"
+            [editavel]="sessao.eGestor()"
+            (statusEscolhido)="alterarStatus($event)"
           />
         </div>
       </div>
@@ -54,8 +55,9 @@
       </div>
     </div>
 
-    @if (projeto()!.inicioData || projeto()!.previsaoFimData) {
-      <div class="projeto-detalhe__meta">
+    <!-- Metas: datas com lápis, ou "+ Definir datas" quando não há -->
+    <div class="projeto-detalhe__meta">
+      @if (projeto()!.inicioData || projeto()!.previsaoFimData) {
         @if (projeto()!.inicioData) {
           <span class="projeto-detalhe__meta-item">
             <i class="pi pi-calendar"></i>
@@ -68,18 +70,53 @@
             Término: <strong>{{ projeto()!.previsaoFimData | dataBrasileira }}</strong>
           </span>
         }
-      </div>
-    }
+        @if (sessao.eGestor()) {
+          <button type="button" class="projeto-detalhe__meta-lapis" aria-label="Editar datas" pTooltip="Editar datas" tooltipPosition="top" (click)="abrirDialogEditar(true)">
+            <i class="pi pi-pencil"></i>
+          </button>
+        }
+      } @else if (sessao.eGestor()) {
+        <button type="button" class="projeto-detalhe__definir-datas" (click)="abrirDialogEditar(true)">
+          <i class="pi pi-plus"></i> Definir datas
+        </button>
+      }
+    </div>
+
+    <!-- Faixa de resumo: demandas, executado × estimado e visões -->
+    <div class="projeto-detalhe__resumo">
+      <span class="projeto-detalhe__resumo-total"><strong>{{ resumo().total }}</strong> {{ resumo().total === 1 ? 'demanda' : 'demandas' }}</span>
+
+      <span class="projeto-detalhe__resumo-progresso">
+        <span class="projeto-detalhe__resumo-rotulo">Executado</span>
+        <strong>{{ resumo().minutosExecutados | tempoExibicao: unidadeTempo.emDias() : 'minutos' }}</strong>
+        <span class="projeto-detalhe__resumo-rotulo">de</span>
+        <strong>{{ resumo().horasEstimadas | tempoExibicao: unidadeTempo.emDias() : 'horas' }}</strong>
+        @if (resumo().horasEstimadas > 0) {
+          <span class="projeto-detalhe__barra" [class.projeto-detalhe__barra--estouro]="resumo().estourou">
+            <span class="projeto-detalhe__barra-preenchimento" [style.width.%]="resumo().percentual > 100 ? 100 : resumo().percentual"></span>
+          </span>
+          <span class="projeto-detalhe__resumo-percentual">{{ resumo().percentual }}%</span>
+        }
+      </span>
+
+      <span class="projeto-detalhe__visoes" role="group" aria-label="Abrir demandas em outra visão">
+        <p-button label="Lista" icon="pi pi-list" severity="secondary" [outlined]="true" size="small" (onClick)="abrirVisao('lista')" />
+        <p-button label="Grafo" icon="pi pi-share-alt" severity="secondary" [outlined]="true" size="small" (onClick)="abrirVisao('grafo')" />
+        @if (sessao.eGestor()) {
+          <p-button label="Planejamento" icon="pi pi-chart-bar" severity="secondary" [outlined]="true" size="small" (onClick)="abrirVisao('planejamento')" />
+        }
+      </span>
+    </div>
 
     @if (carregandoDemandas()) {
       <app-skeleton-lista variante="linhas" [quantidade]="6" />
     }
 
     @if (!carregandoDemandas()) {
-      @if (arvoreRaizes().length === 0) {
+      @if (nos().length === 0) {
         <div class="projeto-detalhe__demandas-vazio">
           <i class="pi pi-inbox text-4xl text-muted-color"></i>
-          <p class="text-muted-color mt-2">Nenhuma demanda encontrada</p>
+          <p class="text-muted-color mt-2">Este projeto ainda não tem demandas.</p>
           @if (sessao.eGestor()) {
             <p-button
               label="Criar primeira demanda"
@@ -92,13 +129,35 @@
             />
           }
         </div>
-      }
+      } @else {
+        <app-demanda-toolbar
+          #toolbar
+          class="projeto-detalhe__toolbar"
+          [filtro]="filtro()"
+          [contagem]="contagemPorStatus()"
+          [tagsDisponiveis]="tagsDoProjeto()"
+          [mostrarExpansao]="true"
+          [todosExpandidos]="todosExpandidos"
+          (filtroAlterado)="aoAlterarFiltro($event)"
+          (limpar)="aoAlterarFiltro(filtroVazio)"
+          (expansaoAlternada)="alternarExpansaoGeral()"
+        />
 
-      @if (arvoreRaizes().length > 0) {
-        <div class="projeto-detalhe__demandas-lista">
+        @if (arvoreRaizes().length === 0) {
+          <div class="projeto-detalhe__demandas-vazio">
+            <i class="pi pi-search text-4xl text-muted-color"></i>
+            <p class="text-muted-color mt-2">Nenhuma demanda corresponde aos filtros.</p>
+            <p-button label="Limpar filtros" icon="pi pi-filter-slash" severity="secondary" [outlined]="true" size="small" class="mt-3" (onClick)="aoAlterarFiltro(filtroVazio)" />
+          </div>
+        }
+
+        <div class="projeto-detalhe__demandas-lista" [hidden]="arvoreRaizes().length === 0">
           <app-demanda-arvore-painel
+            #painel
             [raizes]="arvoreRaizes()"
             [projetoId]="projeto()!.id"
+            [termoBusca]="filtro().termo"
+            [expandirIds]="expandirPorFiltro()"
             (alterado)="recarregarDemandas()"
             (tagsAlteradas)="aoTagsAlteradas($event)"
             (statusAlterado)="aoStatusAlterado($event)"
@@ -110,92 +169,8 @@
 
 </div>
 
-<!-- Dialog de edição do projeto -->
-<p-dialog
-  header="Editar Projeto"
-  dialogFormulario
-  [dialogBloqueado]="carregando()"
-  (dialogEnviar)="salvarEdicao()"
-  [(visible)]="mostrarDialogEditar"
-  [modal]="true"
-  [style]="{ width: '520px' }"
-  [draggable]="false"
->
-  <form [formGroup]="formularioEditar" class="projeto-detalhe__dialog-form">
-    <div class="projeto-detalhe__dialog-campo">
-      <label class="projeto-detalhe__label">Nome <span class="projeto-detalhe__obrigatorio">*</span></label>
-      <input pInputText spellcheck="true" appBloquearCaracteresProibidos formControlName="nome" class="w-full" />
-      @if (campoEditarInvalido('nome')) {
-        <small class="projeto-detalhe__erro">
-          @if (formularioEditar.controls.nome.hasError('pattern')) {
-            {{ mensagemCaracteresProibidos }}
-          } @else {
-            Nome é obrigatório
-          }
-        </small>
-      }
-    </div>
-
-    <div class="projeto-detalhe__dialog-campo">
-      <label class="projeto-detalhe__label">Status <span class="projeto-detalhe__obrigatorio">*</span></label>
-      <p-select
-        formControlName="status"
-        [options]="statusOpcoes"
-        optionLabel="label"
-        optionValue="value"
-        appendTo="body"
-        class="w-full"
-      />
-    </div>
-
-    <div class="projeto-detalhe__dialog-campo">
-      <label class="projeto-detalhe__label">Cor <span class="projeto-detalhe__obrigatorio">*</span></label>
-      <app-seletor-cor formControlName="cor" />
-    </div>
-
-    <div class="projeto-detalhe__dialog-linha">
-      <div class="projeto-detalhe__dialog-campo">
-        <label class="projeto-detalhe__label">Data de Início</label>
-        <p-datepicker
-          formControlName="inicioData"
-          dateFormat="dd/mm/yy"
-          [showIcon]="true"
-          appendTo="body"
-          class="w-full"
-        />
-      </div>
-      <div class="projeto-detalhe__dialog-campo">
-        <label class="projeto-detalhe__label">Previsão de Término</label>
-        <p-datepicker
-          formControlName="previsaoFimData"
-          dateFormat="dd/mm/yy"
-          [showIcon]="true"
-          appendTo="body"
-          class="w-full"
-        />
-        @if (previsaoAnteriorAoInicio) {
-          <small class="projeto-detalhe__erro">Deve ser posterior ao início</small>
-        }
-      </div>
-    </div>
-  </form>
-
-  <ng-template pTemplate="footer">
-    <app-dialog-dica-atalhos />
-    <p-button
-      label="Cancelar"
-      severity="secondary"
-      [outlined]="true"
-      (onClick)="mostrarDialogEditar.set(false)"
-    />
-    <p-button
-      label="Salvar"
-      icon="pi pi-check"
-      [loading]="carregandoSalvar()"
-      (onClick)="salvarEdicao()"
-    />
-  </ng-template>
-</p-dialog>
+<!-- Dialog de edição do projeto (o mesmo da listagem; "Definir datas" abre com o foco no período) -->
+<app-projeto-formulario-dialog (aoAlterar)="aoAlterarProjeto($event)" />
 
 <!-- Dialog de nova demanda (raiz) -->
 @if (projeto()) {

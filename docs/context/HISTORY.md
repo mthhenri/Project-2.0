@@ -12,6 +12,20 @@
 
 ---
 
+## 2026-10-16 — Task 112: Projetos com status inline, busca/filtros e resumo no detalhe
+
+Relatório em `docs/specs/done/112-projetos-status-inline-busca/verificacao.md`; verificação em Chromium contra a API
+real (gestor) em 1920×1080, 1366×768 e 1080×1920.
+
+- Listagem: tag de status com popover (otimista), kebab Editar/Excluir (com Desfazer), busca (`/`) e filtro com
+  contadores na URL, formulário único criar/editar com paleta compacta e período recolhido, estados vazios.
+- Detalhe: status interativo, "+ Definir datas", faixa de resumo (N demandas, executado × estimado, visões),
+  toolbar da árvore reaproveitada de Demandas (`/` e `E`) e T·C·D coloridos e clicáveis nas linhas.
+- **Achados só na verificação:** o painel da árvore lia um input required antes de o binding rodar (NG0950, corrigido
+  com valor padrão) e os T·C·D saíam desalinhados (coluna de largura fixa para o chip de status).
+
+---
+
 ## 2026-10-16 — Task 109: formulário único de criar e editar demanda
 
 Relatório em `docs/specs/done/109-demanda-formulario-enxuto/verificacao.md`; verificação em Chromium contra a API

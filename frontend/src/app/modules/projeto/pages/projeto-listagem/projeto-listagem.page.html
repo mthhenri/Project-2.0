@@ -10,83 +10,112 @@
     }
   </div>
 
-  <form [formGroup]="formularioFiltros" class="projeto-listagem__filtros">
-    <div class="projeto-listagem__filtro-campo">
-      <label for="filtro-status" class="projeto-listagem__filtro-label">Status</label>
-      <p-select
-        inputId="filtro-status"
-        formControlName="status"
-        [options]="statusOpcoes"
-        optionLabel="label"
-        optionValue="value"
-        placeholder="Filtrar por status"
-        (onChange)="aoMudarFiltro()"
-        class="w-full"
+  <!-- Toolbar: busca (/) e filtro de status com contadores; estado na URL -->
+  <div class="projeto-listagem__toolbar">
+    <span class="projeto-listagem__busca">
+      <i class="pi pi-search projeto-listagem__busca-icone"></i>
+      <input
+        #campoBusca
+        pInputText
+        type="text"
+        class="projeto-listagem__busca-campo"
+        placeholder="Buscar por nome ou código…  ( / )"
+        aria-label="Buscar projeto"
+        [ngModel]="termoBusca()"
+        (ngModelChange)="aoDigitarBusca($event)"
+        (keydown.escape)="aoEsc($event)"
       />
-    </div>
-  </form>
+    </span>
+
+    <p-selectbutton
+      [options]="opcoesStatus()"
+      [ngModel]="statusFiltro()"
+      (ngModelChange)="aoMudarStatus($event)"
+      optionLabel="rotulo"
+      optionValue="valor"
+      [allowEmpty]="false"
+      size="small"
+      class="projeto-listagem__status"
+    >
+      <ng-template #item let-opcao>
+        {{ opcao.rotulo }} <span class="projeto-listagem__contagem">{{ opcao.contagem }}</span>
+      </ng-template>
+    </p-selectbutton>
+
+    @if (filtroAtivo()) {
+      <p-button label="Limpar" icon="pi pi-filter-slash" [text]="true" severity="secondary" size="small" (onClick)="limparFiltros()" />
+    }
+  </div>
 
   @if (primeiraCarga()) {
     <app-skeleton-lista variante="cartoes" [quantidade]="8" />
   } @else {
     <div class="projeto-listagem__conteudo" [class.conteudo-recarregando]="recarregando()">
       <app-barra-recarga [ativa]="recarregando()" />
+
       @if (projetos().length === 0) {
         <div class="projeto-listagem__vazio">
           <i class="pi pi-folder-open text-5xl text-muted-color"></i>
-          <p class="text-muted-color mt-3">Nenhum projeto encontrado</p>
+          <p class="text-muted-color mt-3">Nenhum projeto ainda.</p>
+          @if (sessao.eGestor()) {
+            <p-button label="Criar o primeiro projeto" icon="pi pi-plus" class="mt-2" (onClick)="formularioDialog.abrir()" />
+          }
+        </div>
+      } @else if (projetosExibidos().length === 0) {
+        <div class="projeto-listagem__vazio">
+          <i class="pi pi-search text-5xl text-muted-color"></i>
+          <p class="text-muted-color mt-3">Nenhum projeto corresponde aos filtros.</p>
+          <p-button label="Limpar filtros" icon="pi pi-filter-slash" severity="secondary" [outlined]="true" class="mt-2" (onClick)="limparFiltros()" />
         </div>
       }
 
       <div class="projeto-listagem__grid">
-        @for (projeto of projetos(); track projeto.id) {
+        @for (projeto of projetosExibidos(); track projeto.id) {
           <div
             class="projeto-listagem__card"
+            tabindex="0"
             (click)="navegarParaDetalhe(projeto)"
+            (keydown.enter)="navegarParaDetalhe(projeto)"
           >
             <div class="projeto-listagem__card-cor" [style.background-color]="projeto.cor"></div>
 
             <div class="projeto-listagem__card-conteudo">
               <div class="projeto-listagem__card-topo">
                 <span class="projeto-listagem__card-codigo">{{ projeto.codigo }}</span>
-                <p-tag
-                  [value]="rotuloStatus(projeto.status)"
-                  [severity]="severidadeStatus(projeto.status)"
-                />
+                <div class="projeto-listagem__card-acoes">
+                  <app-projeto-status-chip
+                    [status]="projeto.status"
+                    [editavel]="sessao.eGestor()"
+                    (statusEscolhido)="alterarStatus(projeto, $event)"
+                  />
+                  @if (sessao.eGestor()) {
+                    <p-button
+                      icon="pi pi-ellipsis-v"
+                      class="projeto-listagem__kebab"
+                      [text]="true"
+                      [rounded]="true"
+                      severity="secondary"
+                      size="small"
+                      ariaLabel="Mais ações"
+                      (onClick)="abrirMenu($event, projeto)"
+                    />
+                  }
+                </div>
               </div>
 
               <h3 class="projeto-listagem__card-nome">{{ projeto.nome }}</h3>
-
-              @if (sessao.eGestor()) {
-                <div class="projeto-listagem__card-rodape">
-                  <p-button
-                    icon="pi pi-trash"
-                    [text]="true"
-                    severity="danger"
-                    size="small"
-                    pTooltip="Excluir projeto"
-                    tooltipPosition="left"
-                    (onClick)="excluir(projeto, $event)"
-                  />
-                </div>
-              }
             </div>
           </div>
         }
       </div>
-
-      @if (totalRegistros() > itensPorPagina()) {
-        <p-paginator
-          [rows]="itensPorPagina()"
-          [totalRecords]="totalRegistros()"
-          [first]="(paginaAtual() - 1) * itensPorPagina()"
-          (onPageChange)="aoMudarPagina($event)"
-          class="projeto-listagem__paginador"
-        />
-      }
-  
     </div>
   }
 </div>
 
-<app-projeto-formulario-dialog #formularioDialog (aoCriar)="aoCriarProjeto($event)" />
+<p-menu #menuAcoes [model]="itensMenu" [popup]="true" appendTo="body" />
+
+<app-projeto-formulario-dialog
+  #formularioDialog
+  (aoCriar)="aoCriarProjeto($event)"
+  (aoAlterar)="aoAlterarProjeto($event)"
+/>

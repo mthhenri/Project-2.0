@@ -65,4 +65,38 @@
       box-shadow: 0 0 0 2px var(--app-surface-0), 0 0 0 4px var(--p-primary-color);
     }
   }
+
+  // Compacto (task 112): amostras menores em uma linha e o seletor completo atrás de "Outra cor…".
+  &--compacto &__paleta {
+    order: -1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.375rem;
+  }
+
+  &--compacto &__amostra {
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+  }
+
+  &__outra {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.6rem;
+    border: 1px dashed var(--app-surface-300);
+    border-radius: 1rem;
+    background: transparent;
+    color: var(--p-text-muted-color);
+    font-family: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+
+    &:hover {
+      border-color: var(--p-primary-color);
+      color: var(--p-primary-color);
+    }
+  }
 }

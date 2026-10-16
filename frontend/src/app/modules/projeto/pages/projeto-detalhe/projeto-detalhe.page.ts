@@ -1,60 +1,54 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
-import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
+import { Component, HostListener, OnInit, computed, inject, signal, viewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { ButtonModule } from 'primeng/button';
-import { InputTextModule } from 'primeng/inputtext';
-import { Select } from 'primeng/select';
-import { DatePickerModule } from 'primeng/datepicker';
-import { DialogModule } from 'primeng/dialog';
-import { Tag } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
-import { MessageService } from 'primeng/api';
 import {
+  ProjetoAlteradoDto,
   ProjetoRecuperadoDto,
-  ProjetoAlterarDto,
   TipoProjetoStatusEnum,
-  DemandaArvoreItemDto,
   TipoDemandaStatusEnum,
   DemandaGrafoNoDto,
   TagResumoDto,
-  REGEX_SEM_CARACTERES_PROIBIDOS,
-  MENSAGEM_CARACTERES_PROIBIDOS,
 } from '@project20/shared';
 import { ProjetoService } from '../../services/projeto.service';
 import { DemandaService } from '../../../demanda/services/demanda.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { DataBrasileiraPipe } from '../../../../shared/pipes/data-brasileira.pipe';
+import { TempoExibicaoPipe } from '../../../../shared/pipes/tempo-exibicao.pipe';
+import { VisualizacaoTempoService } from '../../../../core/services/visualizacao-tempo.service';
 import { DemandaArvorePainelComponent } from '../../../demanda/components/demanda-arvore-painel/demanda-arvore-painel.component';
 import { DemandaFormularioDialogComponent } from '../../../demanda/components/demanda-formulario-dialog/demanda-formulario-dialog.component';
-import { SeletorCorComponent } from '../../../../shared/components/seletor-cor/seletor-cor.component';
-import { BloquearCaracteresProibidosDirective } from '../../../../shared/directives/bloquear-caracteres-proibidos.directive';
+import { DemandaToolbarComponent } from '../../../demanda/components/demanda-toolbar/demanda-toolbar.component';
+import { ProjetoFormularioDialogComponent } from '../../components/projeto-formulario-dialog/projeto-formulario-dialog.component';
+import { ProjetoStatusChipComponent } from '../../components/projeto-status-chip/projeto-status-chip.component';
 import { RelatorioExecucaoDialogComponent } from '../../../relatorio/components/relatorio-execucao-dialog/relatorio-execucao-dialog.component';
-import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
-import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
 import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
+import { construirArvoreDemandas } from '../../../demanda/utils/demanda-arvore.util';
+import {
+  DemandaFiltro,
+  FILTRO_VAZIO,
+  contarPorStatus,
+  filtroAtivo,
+  recortarArvore,
+} from '../../../demanda/utils/demanda-filtro.util';
+import { focoEmCampo, haSobreposicaoAberta } from '../../../../core/utils/atalhos';
 
 @Component({
   selector: 'app-projeto-detalhe',
   standalone: true,
   imports: [
     SkeletonListaComponent,
-    DialogFormularioDirective,
-    DialogDicaAtalhosComponent,
-    ReactiveFormsModule,
     ButtonModule,
-    InputTextModule,
-    Select,
-    DatePickerModule,
-    DialogModule,
-    Tag,
     TooltipModule,
     DataBrasileiraPipe,
+    TempoExibicaoPipe,
     DemandaArvorePainelComponent,
     DemandaFormularioDialogComponent,
-    SeletorCorComponent,
+    DemandaToolbarComponent,
+    ProjetoFormularioDialogComponent,
+    ProjetoStatusChipComponent,
     RelatorioExecucaoDialogComponent,
-    BloquearCaracteresProibidosDirective,
   ],
   templateUrl: './projeto-detalhe.page.html',
   styleUrl: './projeto-detalhe.page.scss',
@@ -64,37 +58,42 @@ export class ProjetoDetalhePage implements OnInit {
   private readonly demandaService = inject(DemandaService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly messageService = inject(MessageService);
-  private readonly formBuilder = inject(FormBuilder);
   readonly sessao = inject(UsuarioSessaoService);
+  readonly unidadeTempo = inject(VisualizacaoTempoService);
+
+  private readonly toolbar = viewChild<DemandaToolbarComponent>('toolbar');
+  private readonly painel = viewChild<DemandaArvorePainelComponent>('painel');
+  private readonly editarDialog = viewChild.required(ProjetoFormularioDialogComponent);
 
   readonly projeto = signal<ProjetoRecuperadoDto | null>(null);
-  readonly arvoreRaizes = signal<DemandaArvoreItemDto[]>([]);
+  /** Nós planos das demandas do projeto: a árvore, o resumo e os filtros saem daqui (cliente). */
+  readonly nos = signal<DemandaGrafoNoDto[]>([]);
   readonly carregando = signal<boolean>(false);
   readonly carregandoDemandas = signal<boolean>(false);
-  readonly mostrarDialogEditar = signal<boolean>(false);
   readonly mostrarDialogNovaDemanda = signal<boolean>(false);
-  readonly carregandoSalvar = signal<boolean>(false);
+  readonly filtro = signal<DemandaFiltro>(FILTRO_VAZIO);
+  readonly filtroVazio = FILTRO_VAZIO;
 
-  readonly formularioEditar = this.formBuilder.group(
-    {
-      nome:            ['', [Validators.required, Validators.maxLength(255), Validators.pattern(REGEX_SEM_CARACTERES_PROIBIDOS)]],
-      cor:             ['#3b82f6', [Validators.required, Validators.pattern(/^#[0-9A-Fa-f]{6}$/)]],
-      status:          [TipoProjetoStatusEnum.ATIVO as TipoProjetoStatusEnum, [Validators.required]],
-      inicioData:      [null as Date | null],
-      previsaoFimData: [null as Date | null],
-    },
-    { validators: this.validarPrevisaoFim },
-  );
+  private readonly recorte = computed(() => recortarArvore(this.nos(), this.filtro()));
+  readonly expandirPorFiltro = computed(() => this.recorte().expandir);
+  readonly arvoreRaizes = computed(() => (this.recorte().nos.length ? construirArvoreDemandas(this.recorte().nos) : []));
+  readonly filtroEstaAtivo = computed(() => filtroAtivo(this.filtro()));
+  readonly contagemPorStatus = computed(() => contarPorStatus(this.nos(), this.filtro()));
 
-  readonly statusOpcoes = [
-    { label: 'Ativo',     value: TipoProjetoStatusEnum.ATIVO },
-    { label: 'Pausado',   value: TipoProjetoStatusEnum.PAUSADO },
-    { label: 'Concluído', value: TipoProjetoStatusEnum.CONCLUIDO },
-    { label: 'Cancelado', value: TipoProjetoStatusEnum.CANCELADO },
-  ];
+  readonly tagsDoProjeto = computed<TagResumoDto[]>(() => {
+    const porId = new Map<number, TagResumoDto>();
+    for (const no of this.nos()) for (const tag of no.tags ?? []) porId.set(tag.id, tag);
+    return [...porId.values()].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+  });
 
-  readonly mensagemCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS;
+  /** Resumo do projeto: executado e estimado somam todas as demandas (as estruturais costumam ter 0 estimado). */
+  readonly resumo = computed(() => {
+    const nos = this.nos();
+    const minutosExecutados = nos.reduce((soma, no) => soma + no.minutosExecutados, 0);
+    const horasEstimadas = nos.reduce((soma, no) => soma + no.horasEstimadas, 0);
+    const percentual = horasEstimadas > 0 ? Math.round((minutosExecutados / (horasEstimadas * 60)) * 100) : 0;
+    return { total: nos.length, minutosExecutados, horasEstimadas, percentual, estourou: percentual >= 100 };
+  });
 
   ngOnInit(): void {
     const identificador = Number(this.route.snapshot.paramMap.get('id'));
@@ -102,55 +101,73 @@ export class ProjetoDetalhePage implements OnInit {
     this.carregarArvore(identificador);
   }
 
-  abrirDialogEditar(): void {
-    const projetoDados = this.projeto();
-    if (!projetoDados) return;
+  // ---------------------------------------------------------------------------
+  // Atalhos: `/` busca, `E` expandir/recolher tudo
+  // ---------------------------------------------------------------------------
 
-    this.formularioEditar.patchValue({
-      nome:   projetoDados.nome,
-      cor:    projetoDados.cor,
-      status: projetoDados.status,
-      inicioData:      projetoDados.inicioData ? new Date(projetoDados.inicioData + 'T12:00:00') : null,
-      previsaoFimData: projetoDados.previsaoFimData ? new Date(projetoDados.previsaoFimData + 'T12:00:00') : null,
-    });
-    this.mostrarDialogEditar.set(true);
-  }
-
-  salvarEdicao(): void {
-    if (this.formularioEditar.invalid) {
-      this.formularioEditar.markAllAsTouched();
-      return;
+  @HostListener('document:keydown', ['$event'])
+  aoTeclar(evento: KeyboardEvent): void {
+    if (evento.defaultPrevented || evento.ctrlKey || evento.metaKey || evento.altKey) return;
+    if (focoEmCampo(evento.target) || haSobreposicaoAberta() || !this.nos().length) return;
+    if (evento.key === '/') {
+      evento.preventDefault();
+      this.toolbar()?.focarBusca();
+    } else if (evento.key.toLowerCase() === 'e') {
+      evento.preventDefault();
+      this.painel()?.alternarExpansaoGeral();
     }
+  }
 
+  get todosExpandidos(): boolean {
+    return this.painel()?.todosExpandidos() ?? false;
+  }
+
+  aoAlterarFiltro(filtro: DemandaFiltro): void {
+    this.filtro.set(filtro);
+  }
+
+  alternarExpansaoGeral(): void {
+    this.painel()?.alternarExpansaoGeral();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Projeto: edição, status e visões
+  // ---------------------------------------------------------------------------
+
+  abrirDialogEditar(focarDatas = false): void {
+    const projetoDados = this.projeto();
+    if (projetoDados) this.editarDialog().abrirEdicao(projetoDados, { focarDatas });
+  }
+
+  /** O DTO retornado traz os campos exibidos: aplica direto, sem novo GET nem spinner. */
+  aoAlterarProjeto(alterado: ProjetoAlteradoDto): void {
+    this.projeto.update((atual) => (atual ? { ...atual, ...alterado } : atual));
+  }
+
+  /** Status pela tag do cabeçalho: otimista, com rollback se a API recusar. */
+  alterarStatus(status: TipoProjetoStatusEnum): void {
     const projetoDados = this.projeto();
     if (!projetoDados) return;
-
-    const valor = this.formularioEditar.value;
-    const dto: ProjetoAlterarDto = {
-      nome:   valor.nome ?? undefined,
-      cor:    valor.cor ?? undefined,
-      status: valor.status ?? undefined,
-      inicioData:      valor.inicioData ? this.formatarData(valor.inicioData) : undefined,
-      previsaoFimData: valor.previsaoFimData ? this.formatarData(valor.previsaoFimData) : undefined,
-    };
-
-    this.carregandoSalvar.set(true);
-    this.projetoService
-      .alterar(projetoDados.id, dto)
-      .pipe(finalize(() => this.carregandoSalvar.set(false)))
-      .subscribe({
-        next: (resposta) => {
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Sucesso',
-            detail: 'Projeto alterado com sucesso',
-          });
-          this.mostrarDialogEditar.set(false);
-          // O DTO retornado tem todos os campos exibidos: aplica direto, sem novo GET nem spinner.
-          if (resposta.dados) this.projeto.set({ ...projetoDados, ...resposta.dados });
-        },
-      });
+    const anterior = projetoDados.status;
+    this.projeto.set({ ...projetoDados, status });
+    this.projetoService.alterar(projetoDados.id, { status }).subscribe({
+      error: () => this.projeto.update((atual) => (atual ? { ...atual, status: anterior } : atual)),
+    });
   }
+
+  /** Abre a visão escolhida (Lista, Grafo ou Planejamento) já com o projeto selecionado. */
+  abrirVisao(modo: 'lista' | 'grafo' | 'planejamento'): void {
+    const projetoDados = this.projeto();
+    if (projetoDados) this.router.navigate(['/demanda'], { queryParams: { projetoId: projetoDados.id, modo } });
+  }
+
+  voltarParaListagem(): void {
+    this.router.navigate(['/projeto']);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Demandas
+  // ---------------------------------------------------------------------------
 
   /** Recarrega a árvore após criação/alteração feita pelo painel ou pela nova demanda raiz. */
   recarregarDemandas(): void {
@@ -158,62 +175,14 @@ export class ProjetoDetalhePage implements OnInit {
     if (projetoDados) this.recarregarArvore(projetoDados.id);
   }
 
-  /** Tags já gravadas pelo painel: troca no nó da árvore, sem recarregá-la (task 98). */
+  /** Tags já gravadas pelo painel: troca no nó, sem recarregar (task 98). */
   aoTagsAlteradas(alteracao: { demandaId: number; tags: TagResumoDto[] }): void {
-    const aplicar = (itens: DemandaArvoreItemDto[]): DemandaArvoreItemDto[] =>
-      itens.map((item) => ({
-        ...item,
-        tags: item.id === alteracao.demandaId ? alteracao.tags : item.tags,
-        filhos: aplicar(item.filhos),
-      }));
-    this.arvoreRaizes.update(aplicar);
+    this.nos.update((lista) => lista.map((no) => (no.id === alteracao.demandaId ? { ...no, tags: alteracao.tags } : no)));
   }
 
   /** Status trocado pelo chip da árvore (otimista, com rollback): aplica no nó sem recarregar. */
   aoStatusAlterado(alteracao: { demandaId: number; status: TipoDemandaStatusEnum }): void {
-    const aplicar = (itens: DemandaArvoreItemDto[]): DemandaArvoreItemDto[] =>
-      itens.map((item) => ({
-        ...item,
-        status: item.id === alteracao.demandaId ? alteracao.status : item.status,
-        filhos: aplicar(item.filhos),
-      }));
-    this.arvoreRaizes.update(aplicar);
-  }
-
-  voltarParaListagem(): void {
-    this.router.navigate(['/projeto']);
-  }
-
-  severidadeStatus(status: TipoProjetoStatusEnum): 'success' | 'warn' | 'info' | 'danger' {
-    const mapa: Record<TipoProjetoStatusEnum, 'success' | 'warn' | 'info' | 'danger'> = {
-      [TipoProjetoStatusEnum.ATIVO]:     'success',
-      [TipoProjetoStatusEnum.PAUSADO]:   'warn',
-      [TipoProjetoStatusEnum.CONCLUIDO]: 'info',
-      [TipoProjetoStatusEnum.CANCELADO]: 'danger',
-    };
-    return mapa[status];
-  }
-
-  rotuloStatus(status: TipoProjetoStatusEnum): string {
-    const mapa: Record<TipoProjetoStatusEnum, string> = {
-      [TipoProjetoStatusEnum.ATIVO]:     'Ativo',
-      [TipoProjetoStatusEnum.PAUSADO]:   'Pausado',
-      [TipoProjetoStatusEnum.CONCLUIDO]: 'Concluído',
-      [TipoProjetoStatusEnum.CANCELADO]: 'Cancelado',
-    };
-    return mapa[status];
-  }
-
-  campoEditarInvalido(nomeCampo: string): boolean {
-    const controle = this.formularioEditar.get(nomeCampo);
-    return !!(controle?.invalid && controle?.touched);
-  }
-
-  get previsaoAnteriorAoInicio(): boolean {
-    return !!(
-      this.formularioEditar.hasError('previsaoAnteriorAoInicio') &&
-      this.formularioEditar.get('previsaoFimData')?.touched
-    );
+    this.nos.update((lista) => lista.map((no) => (no.id === alteracao.demandaId ? { ...no, status: alteracao.status } : no)));
   }
 
   private carregarProjeto(identificador: number): void {
@@ -223,9 +192,7 @@ export class ProjetoDetalhePage implements OnInit {
       .pipe(finalize(() => this.carregando.set(false)))
       .subscribe({
         next: (resposta) => {
-          if (resposta.sucesso && resposta.dados) {
-            this.projeto.set(resposta.dados);
-          }
+          if (resposta.sucesso && resposta.dados) this.projeto.set(resposta.dados);
         },
       });
   }
@@ -237,9 +204,7 @@ export class ProjetoDetalhePage implements OnInit {
       .pipe(finalize(() => this.carregandoDemandas.set(false)))
       .subscribe({
         next: (resposta) => {
-          if (resposta.sucesso && resposta.dados) {
-            this.arvoreRaizes.set(this.construirArvore(resposta.dados.nos));
-          }
+          if (resposta.sucesso && resposta.dados) this.nos.set(resposta.dados.nos);
         },
       });
   }
@@ -247,59 +212,8 @@ export class ProjetoDetalhePage implements OnInit {
   private recarregarArvore(projetoId: number): void {
     this.demandaService.recuperarGrafo(projetoId).subscribe({
       next: (resposta) => {
-        if (resposta.sucesso && resposta.dados) {
-          this.arvoreRaizes.set(this.construirArvore(resposta.dados.nos));
-        }
+        if (resposta.sucesso && resposta.dados) this.nos.set(resposta.dados.nos);
       },
     });
-  }
-
-  private construirArvore(nos: DemandaGrafoNoDto[]): DemandaArvoreItemDto[] {
-    const mapa = new Map<number, DemandaArvoreItemDto>();
-
-    for (const no of nos) {
-      mapa.set(no.id, {
-        id:                  no.id,
-        nome:                no.nome,
-        status:              no.status,
-        isEstrutural:        no.isEstrutural,
-        horasEstimadas:      no.horasEstimadas,
-        minutosExecutados:   no.minutosExecutados,
-        temDescricaoTecnica: no.temDescricaoTecnica,
-        temDescricaoCliente: no.temDescricaoCliente,
-        temDocumentacao:     no.temDocumentacao,
-        tags:                no.tags ?? [],
-        nivel:               0,
-        filhos:              [],
-      });
-    }
-
-    const raizes: DemandaArvoreItemDto[] = [];
-    for (const no of nos) {
-      const item = mapa.get(no.id)!;
-      if (no.demandaPaiId && mapa.has(no.demandaPaiId)) {
-        mapa.get(no.demandaPaiId)!.filhos.push(item);
-      } else {
-        raizes.push(item);
-      }
-    }
-
-    return raizes;
-  }
-
-  private formatarData(data: Date): string {
-    const ano = data.getFullYear();
-    const mes = String(data.getMonth() + 1).padStart(2, '0');
-    const dia = String(data.getDate()).padStart(2, '0');
-    return `${ano}-${mes}-${dia}`;
-  }
-
-  private validarPrevisaoFim(controle: AbstractControl): ValidationErrors | null {
-    const inicioData = controle.get('inicioData')?.value as Date | null;
-    const previsaoFimData = controle.get('previsaoFimData')?.value as Date | null;
-    if (inicioData && previsaoFimData && previsaoFimData <= inicioData) {
-      return { previsaoAnteriorAoInicio: true };
-    }
-    return null;
   }
 }

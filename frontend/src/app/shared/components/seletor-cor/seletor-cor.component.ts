@@ -1,4 +1,4 @@
-import { Component, forwardRef, signal } from '@angular/core';
+import { Component, forwardRef, input, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ControlValueAccessor, FormControl, NG_VALUE_ACCESSOR, ReactiveFormsModule } from '@angular/forms';
 import { ColorPickerModule } from 'primeng/colorpicker';
@@ -24,6 +24,13 @@ const CORES_PREDEFINIDAS: readonly string[] = [
   ],
 })
 export class SeletorCorComponent implements ControlValueAccessor {
+  /**
+   * Modo compacto (task 112): só a paleta em linha; o seletor completo (roda de cor e hex) fica atrás de
+   * "Outra cor…". Sem o input, o componente segue como sempre (Tags e demais usos).
+   */
+  readonly compacto = input<boolean>(false);
+  readonly mostrarOutraCor = signal<boolean>(false);
+
   readonly coresPredefinidas = CORES_PREDEFINIDAS;
   readonly controleCor = new FormControl<string>('#3b82f6', { nonNullable: true });
   readonly cor = signal<string>('#3b82f6');
@@ -61,6 +68,15 @@ export class SeletorCorComponent implements ControlValueAccessor {
     } else {
       this.controleCor.enable({ emitEvent: false });
     }
+  }
+
+  alternarOutraCor(): void {
+    this.mostrarOutraCor.update((aberto) => !aberto);
+  }
+
+  /** Cor atual fora da paleta (ex.: escolhida na roda): "Outra cor…" já aparece aberto. */
+  get corForaDaPaleta(): boolean {
+    return !this.coresPredefinidas.some((predefinida) => this.corSelecionada(predefinida));
   }
 
   corSelecionada(valor: string): boolean {

@@ -1,11 +1,12 @@
 <p-dialog
-  header="Novo Projeto"
+  [header]="eEdicao() ? 'Editar Projeto' : 'Novo Projeto'"
   dialogFormulario
-  [dialogBloqueado]="carregando()"
+  [dialogSemAutofocus]="focarDatas()"
+  [dialogBloqueado]="carregando() || carregandoDados()"
   (dialogEnviar)="salvar()"
   [(visible)]="mostrarDialog"
   [modal]="true"
-  [style]="{ width: '42rem' }"
+  [style]="{ width: '40rem' }"
   [draggable]="false"
 >
   <form [formGroup]="formulario" class="projeto-formulario-dialog__form">
@@ -39,16 +40,23 @@
         <label for="codigo" class="projeto-formulario-dialog__label">
           Código <span class="projeto-formulario-dialog__obrigatorio">*</span>
         </label>
-        <input
-          id="codigo"
-          pInputText
-          formControlName="codigo"
-          placeholder="Gerado a partir do nome"
-          class="w-full projeto-formulario-dialog__input-codigo"
-        />
+        <span
+          class="projeto-formulario-dialog__codigo-envolucro"
+          pTooltip="O código não pode ser alterado depois que o projeto é criado"
+          tooltipPosition="top"
+          [tooltipDisabled]="!eEdicao()"
+        >
+          <input
+            id="codigo"
+            pInputText
+            formControlName="codigo"
+            placeholder="Gerado a partir do nome"
+            class="w-full projeto-formulario-dialog__input-codigo"
+          />
+        </span>
         @if (campoInvalido('codigo')) {
           <small class="projeto-formulario-dialog__erro">Código é obrigatório</small>
-        } @else if (!codigoEditadoManualmente()) {
+        } @else if (!codigoEditadoManualmente() && !eEdicao()) {
           <small class="projeto-formulario-dialog__dica">
             Preenchido automaticamente pelo nome — edite se quiser um código próprio
           </small>
@@ -80,43 +88,55 @@
         <label class="projeto-formulario-dialog__label">
           Cor de identificação <span class="projeto-formulario-dialog__obrigatorio">*</span>
         </label>
-        <app-seletor-cor formControlName="cor" />
+        <app-seletor-cor formControlName="cor" [compacto]="true" />
         @if (campoInvalido('cor')) {
           <small class="projeto-formulario-dialog__erro">Cor é obrigatória (formato hex)</small>
         }
       </div>
     </div>
 
-    <div class="projeto-formulario-dialog__linha">
-      <div class="projeto-formulario-dialog__campo">
-        <label for="inicioData" class="projeto-formulario-dialog__label">Data de Início</label>
-        <p-datepicker
-          inputId="inicioData"
-          formControlName="inicioData"
-          dateFormat="dd/mm/yy"
-          placeholder="dd/mm/aaaa"
-          [showIcon]="true"
-          appendTo="body"
-          class="w-full"
-        />
-      </div>
+    <button
+      type="button"
+      class="projeto-formulario-dialog__periodo-toggle"
+      [attr.aria-expanded]="periodoAberto()"
+      (click)="alternarPeriodo()"
+    >
+      <i class="pi" [class.pi-chevron-down]="!periodoAberto()" [class.pi-chevron-up]="periodoAberto()"></i>
+      Período <span class="projeto-formulario-dialog__periodo-dica">(opcional)</span>
+    </button>
 
-      <div class="projeto-formulario-dialog__campo">
-        <label for="previsaoFimData" class="projeto-formulario-dialog__label">Previsão de Término</label>
-        <p-datepicker
-          inputId="previsaoFimData"
-          formControlName="previsaoFimData"
-          dateFormat="dd/mm/yy"
-          placeholder="dd/mm/aaaa"
-          [showIcon]="true"
-          appendTo="body"
-          class="w-full"
-        />
-        @if (previsaoAnteriorAoInicio) {
-          <small class="projeto-formulario-dialog__erro">Previsão deve ser posterior à data de início</small>
-        }
+    @if (periodoAberto()) {
+      <div class="projeto-formulario-dialog__linha">
+        <div class="projeto-formulario-dialog__campo">
+          <label for="inicioData" class="projeto-formulario-dialog__label">Data de Início</label>
+          <p-datepicker
+            inputId="inicioData"
+            formControlName="inicioData"
+            dateFormat="dd/mm/yy"
+            placeholder="dd/mm/aaaa"
+            [showIcon]="true"
+            appendTo="body"
+            class="w-full"
+          />
+        </div>
+
+        <div class="projeto-formulario-dialog__campo">
+          <label for="previsaoFimData" class="projeto-formulario-dialog__label">Previsão de Término</label>
+          <p-datepicker
+            inputId="previsaoFimData"
+            formControlName="previsaoFimData"
+            dateFormat="dd/mm/yy"
+            placeholder="dd/mm/aaaa"
+            [showIcon]="true"
+            appendTo="body"
+            class="w-full"
+          />
+          @if (previsaoAnteriorAoInicio) {
+            <small class="projeto-formulario-dialog__erro">Previsão deve ser posterior à data de início</small>
+          }
+        </div>
       </div>
-    </div>
+    }
 
   </form>
 
@@ -129,9 +149,10 @@
       (onClick)="mostrarDialog.set(false)"
     />
     <p-button
-      label="Salvar"
+      [label]="eEdicao() ? 'Salvar' : 'Criar Projeto'"
       icon="pi pi-check"
       [loading]="carregando()"
+      [disabled]="carregandoDados()"
       (onClick)="salvar()"
     />
   </ng-template>

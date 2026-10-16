@@ -1,0 +1,32 @@
+@if (editavel()) {
+  <button
+    type="button"
+    class="projeto-status-chip__gatilho"
+    aria-label="Trocar status do projeto"
+    pTooltip="Trocar status"
+    tooltipPosition="top"
+    (click)="abrir($event, popover)"
+  >
+    <p-tag [value]="rotulo(status())" [severity]="severidade(status())" />
+    <i class="pi pi-chevron-down projeto-status-chip__caret"></i>
+  </button>
+  <p-popover #popover>
+    <div class="projeto-status-chip__opcoes">
+      @for (opcao of opcoes; track opcao.value) {
+        <button
+          type="button"
+          class="projeto-status-chip__opcao"
+          [class.projeto-status-chip__opcao--ativo]="opcao.value === status()"
+          (click)="escolher(opcao.value, popover)"
+        >
+          <p-tag [value]="opcao.label" [severity]="severidade(opcao.value)" />
+          @if (opcao.value === status()) {
+            <i class="pi pi-check projeto-status-chip__opcao-check"></i>
+          }
+        </button>
+      }
+    </div>
+  </p-popover>
+} @else {
+  <p-tag [value]="rotulo(status())" [severity]="severidade(status())" />
+}

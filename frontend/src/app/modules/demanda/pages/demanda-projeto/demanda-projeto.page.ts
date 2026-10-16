@@ -11,7 +11,6 @@ import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
 import {
   DemandaGrafoDto,
-  DemandaGrafoNoDto,
   DemandaArvoreItemDto,
   DemandaPlanejamentoDto,
   TipoDemandaStatusEnum,
@@ -27,6 +26,7 @@ import { DemandaFormularioDialogComponent } from '../../components/demanda-formu
 import { DemandaArvorePainelComponent } from '../../components/demanda-arvore-painel/demanda-arvore-painel.component';
 import { DemandaPlanejamentoPainelComponent } from '../../components/demanda-planejamento-painel/demanda-planejamento-painel.component';
 import { ModoVisualizacao } from '../../models/demanda.model';
+import { construirArvoreDemandas } from '../../utils/demanda-arvore.util';
 import { focoEmCampo, haSobreposicaoAberta } from '../../../../core/utils/atalhos';
 import {
   DemandaFiltro,
@@ -127,7 +127,7 @@ export class DemandaProjetoPage implements OnInit, OnDestroy {
 
   readonly arvoreRaizes = computed<DemandaArvoreItemDto[]>(() => {
     const nosVisiveis = this.recorteDaArvore().nos;
-    return nosVisiveis.length ? this.construirArvore(nosVisiveis) : [];
+    return nosVisiveis.length ? construirArvoreDemandas(nosVisiveis) : [];
   });
 
   readonly contagemPorStatus = computed(() => contarPorStatus(this.nosDoProjeto(), this.filtro()));
@@ -385,38 +385,5 @@ export class DemandaProjetoPage implements OnInit, OnDestroy {
           this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Não foi possível carregar as demandas' });
         },
       });
-  }
-
-  private construirArvore(nos: DemandaGrafoNoDto[]): DemandaArvoreItemDto[] {
-    const mapa = new Map<number, DemandaArvoreItemDto>();
-
-    for (const no of nos) {
-      mapa.set(no.id, {
-        id:                  no.id,
-        nome:                no.nome,
-        status:              no.status,
-        isEstrutural:        no.isEstrutural,
-        horasEstimadas:      no.horasEstimadas,
-        minutosExecutados:   no.minutosExecutados,
-        temDescricaoTecnica: no.temDescricaoTecnica,
-        temDescricaoCliente: no.temDescricaoCliente,
-        temDocumentacao:     no.temDocumentacao,
-        tags:                no.tags ?? [],
-        nivel:               0,
-        filhos:              [],
-      });
-    }
-
-    const raizes: DemandaArvoreItemDto[] = [];
-    for (const no of nos) {
-      const item = mapa.get(no.id)!;
-      if (no.demandaPaiId && mapa.has(no.demandaPaiId)) {
-        mapa.get(no.demandaPaiId)!.filhos.push(item);
-      } else {
-        raizes.push(item);
-      }
-    }
-
-    return raizes;
   }
 }

@@ -8,16 +8,16 @@
 > [`MEMORY.md`](MEMORY.md) (onde fica o quê) · [`IDEAS.md`](IDEAS.md) (o que ainda não é sistema) ·
 > [`HISTORY.md`](HISTORY.md) (o que aconteceu e por quê).
 >
-> **Última revisão:** 2026-10-16 · **Última decisão registrada:** task 109 (formulário único de criar e editar
-> demanda) — `HISTORY.md`, bloco de 2026-10-16
+> **Última revisão:** 2026-10-16 · **Última decisão registrada:** task 112 (Projetos: status inline, busca e
+> resumo no detalhe) — `HISTORY.md`, bloco de 2026-10-16
 
 ---
 
 ## 1. Próxima Task
 
-Nenhuma task em andamento. O backlog tem **5 specs** em `docs/specs/backlog/` (revisão de UI/UX:
-112–116, guarda-chuva `revisao-ui-ux.spec.md`). As fundações **94–99** , o Ponto (**100–101**)
-e a toolbar, o grafo, o detalhe e o formulário de Demandas (**106–109**) foram concluídos em 2026-10-16 e estão em `docs/specs/done/`; as seguintes devem **reutilizar** o que
+Nenhuma task em andamento. O backlog tem **4 specs** em `docs/specs/backlog/` (revisão de UI/UX:
+113–116, guarda-chuva `revisao-ui-ux.spec.md`). As fundações **94–99** , o Ponto (**100–101**)
+e a toolbar, o grafo, o detalhe e o formulário de Demandas (**106–109**) e a de Projetos (**112**) foram concluídos em 2026-10-16 e estão em `docs/specs/done/`; as seguintes devem **reutilizar** o que
 elas criaram (ver `MEMORY.md` §2). Siga a ordem de fases de `INDEX-revisao-ux.md`: fase 4 (112–116). As tasks **102, 103, 104, 105, 110 e 111** (que mexem direto nas telas de
 Atividades e Execuções) foram **descartadas** em 2026-10-16 e estão em `docs/specs/discarded/`. A task
 117 foi concluída.
@@ -115,6 +115,10 @@ project-2.0/
   `g`+letra e `n`, e colapsa em 3 degraus: sem relógio até 1499 px, só ícones até 1366 px (acima do 1280
   da spec, porque o chip de execução ocupa espaço), "Mais ▾" para itens de gestor abaixo de 900 px e duas
   linhas abaixo de 720 px. O overlay global só cobre mutações (GET usa esqueleto/loading local).
+- **[task 112]** Projetos: busca e filtro de status são do cliente (carrega até 100, limite do backend) e vão para
+  `?q=`/`?status=`; o status troca pela tag (otimista); criar e editar usam o mesmo dialog (`abrirEdicao`), código
+  desabilitado na edição. O detalhe calcula o resumo dos nós das demandas e reutiliza a toolbar de Demandas; a
+  árvore única (`construirArvoreDemandas`) serve às duas páginas.
 - **[task 109]** Criar e editar demanda usam o mesmo `app-demanda-formulario-dialog` (`demandaId` = edição; o
   `app-demanda-edicao-dialog` deixou de existir). Estrutural não tem estimativa/previsão (criar manda 0; editar não
   envia). O Esc do formulário pede confirmação quando há o que perder (o `p-dialog` tem `closeOnEscape` desligado).

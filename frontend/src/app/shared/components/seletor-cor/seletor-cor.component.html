@@ -1,4 +1,5 @@
-<div class="seletor-cor">
+<div class="seletor-cor" [class.seletor-cor--compacto]="compacto()">
+  @if (!compacto() || mostrarOutraCor() || corForaDaPaleta) {
   <div class="seletor-cor__topo">
     <p-colorpicker
       [inline]="true"
@@ -22,6 +23,7 @@
       />
     </div>
   </div>
+  }
 
   <div class="seletor-cor__paleta">
     @for (corPredefinida of coresPredefinidas; track corPredefinida) {
@@ -34,6 +36,11 @@
         (click)="selecionarPredefinida(corPredefinida)"
         [attr.aria-label]="'Selecionar cor ' + corPredefinida"
       ></button>
+    }
+    @if (compacto() && !corForaDaPaleta) {
+      <button type="button" class="seletor-cor__outra" [attr.aria-expanded]="mostrarOutraCor()" (click)="alternarOutraCor()">
+        <i class="pi pi-palette"></i> {{ mostrarOutraCor() ? 'Menos opções' : 'Outra cor…' }}
+      </button>
     }
   </div>
 </div>

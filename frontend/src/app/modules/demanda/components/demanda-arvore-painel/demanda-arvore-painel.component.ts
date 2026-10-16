@@ -61,7 +61,8 @@ type CampoDescricao = 'descricaoTecnica' | 'descricaoCliente' | 'documentacao';
   styleUrl: './demanda-arvore-painel.component.scss',
 })
 export class DemandaArvorePainelComponent {
-  readonly raizes = input.required<DemandaArvoreItemDto[]>();
+  /** Com valor padrão: o host pode ler `todosExpandidos()` antes de a primeira passada de binding definir as raízes. */
+  readonly raizes = input<DemandaArvoreItemDto[]>([]);
   @Input({ required: true }) projetoId!: number;
   /** Termo da busca da toolbar, destacado nos nomes (task 106). */
   readonly termoBusca = input<string>('');
