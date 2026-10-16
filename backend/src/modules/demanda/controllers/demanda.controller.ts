@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Put,
+  Patch,
   Delete,
   Body,
   Param,
@@ -149,6 +150,18 @@ export class DemandaController {
   @Delete(':id')
   excluir(@Param('id', ParseIntPipe) id: number) {
     return this.demandaService.excluir({ id });
+  }
+
+  @ApiOperation({ summary: 'Restaurar demanda excluída desfazendo o soft delete (somente gestor)' })
+  @ApiResponse({ status: 200, description: 'Demanda restaurada com sucesso' })
+  @ApiResponse({ status: 400, description: 'Conflito com um registro ativo ou dependência excluída', schema: { example: { sucesso: false, dados: null, mensagem: 'Registro ativo em conflito', erros: [] } } })
+  @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+  @ApiResponse({ status: 403, description: 'Acesso restrito a gestores', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+  @ApiResponse({ status: 404, description: 'Demanda não encontrada entre as excluídas', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
+  @GestorOnly()
+  @Patch(':id/restaurar')
+  restaurar(@Param('id', ParseIntPipe) id: number) {
+    return this.demandaService.restaurar({ id });
   }
 
   @ApiOperation({ summary: 'Criar conexão entre demandas com prevenção de ciclos' })

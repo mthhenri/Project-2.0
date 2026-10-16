@@ -23,6 +23,7 @@ import {
   TagResumoDto,
   StandardResponse,
   PaginatedResult,
+  DemandaRestauradaDto,
 } from '@project20/shared';
 import { ambiente } from '../../../../environments/environment';
 import { comFeedbackProprio } from '../../../core/interceptors/loading.interceptor';
@@ -70,6 +71,11 @@ export class DemandaService {
 
   excluir(id: number): Observable<StandardResponse<void>> {
     return this.httpClient.delete<StandardResponse<void>>(`${this.urlBase}/${id}`);
+  }
+
+  /** Desfaz o soft delete ("Desfazer" do toast de exclusão). */
+  restaurar(id: number): Observable<StandardResponse<DemandaRestauradaDto>> {
+    return this.httpClient.patch<StandardResponse<DemandaRestauradaDto>>(`${this.urlBase}/${id}/restaurar`, {});
   }
 
   recuperarArvore(id: number): Observable<StandardResponse<DemandaArvoreItemDto>> {

@@ -11,9 +11,9 @@ Origem: `docs/specs/backlog/revisao-ui-ux/` (relatório, prints com callouts, mo
 | 94 | Login: segurança da credencial + fluxo sem fricção | M |
 | 95 | Topbar: chip global de execução ativa | M |
 | 96 | Topbar: reorganização + atalhos globais | M |
-| 97 | Padrão único de formulário em dialogs | M (mecânica, muitos arquivos) |
-| 98 | Feedback otimista + skeletons | M/G |
-| 99 | Undo de exclusões (endpoint restaurar) — **única com backend relevante** | M |
+| ~~97~~ | ~~Padrão único de formulário em dialogs~~ — **concluída** (`../done/`) | — |
+| ~~98~~ | ~~Feedback otimista + skeletons~~ — **concluída** (`../done/`) | — |
+| ~~99~~ | ~~Undo de exclusões (endpoint restaurar)~~ — **concluída** (`../done/`) | — |
 
 **Fase 2 — Telas de maior frequência de uso:**
 
@@ -57,10 +57,12 @@ depende de uma descartada.
 
 ## Dependências entre tasks
 
-- 97/98/99 são pré-requisitos citados pela maioria das tasks das fases 2–4.
+- 97/98/99 (concluídas em 2026-10-16) eram pré-requisitos citados pela maioria das tasks das fases 2–4: o
+  padrão de dialogs (`dialogFormulario`), o feedback otimista/esqueletos (`app-skeleton-lista`,
+  `app-barra-recarga`) e o "Desfazer" (`DesfazerService`) já existem e devem ser reutilizados.
 - 95 → 96 (layout). (~~95 → 104~~: a 104 foi descartada.)
 - 106 → 107; 96 → 114. (~~110 → 111~~: ambas descartadas.)
-- Única task com mudança de backend estrutural: **99** (endpoints `restaurar`); 104 pede apenas 2 campos a mais num DTO de leitura.
+- Única task com mudança de backend estrutural foi a **99** (endpoints `restaurar`, já feita); 104 pede apenas 2 campos a mais num DTO de leitura.
 
 ## Observações de organização (2026-10-16)
 

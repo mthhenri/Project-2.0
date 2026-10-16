@@ -15,8 +15,7 @@ import { EditorModule } from 'primeng/editor';
 import { Tag } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { PopoverModule, Popover } from 'primeng/popover';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { MessageService } from 'primeng/api';
 import {
   AtividadeResumoDto,
   TipoAtividadeStatusEnum,
@@ -61,6 +60,7 @@ import { DialogFormularioDirective } from '../../../../shared/directives/dialog-
 import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
 import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
 import { BarraRecargaComponent } from '../../../../shared/components/barra-recarga/barra-recarga.component';
+import { DesfazerService } from '../../../../core/services/desfazer.service';
 
 type DemandaAtribuidaOpcao = DemandaAtribuidaDto & { rotulo: string };
 
@@ -87,7 +87,6 @@ type CampoDescricaoDemanda = 'descricaoCliente' | 'descricaoTecnica' | 'document
     Tag,
     TooltipModule,
     PopoverModule,
-    ConfirmDialogModule,
     AssistenteDescricaoComponent,
     AtividadeVisualizarDialogComponent,
     DataBrasileiraPipe,
@@ -97,7 +96,6 @@ type CampoDescricaoDemanda = 'descricaoCliente' | 'descricaoTecnica' | 'document
   ],
   templateUrl: './atividade-listagem.page.html',
   styleUrl: './atividade-listagem.page.scss',
-  providers: [ConfirmationService],
 })
 export class AtividadeListagemPage implements OnInit {
   private readonly atividadeService = inject(AtividadeService);
@@ -106,7 +104,7 @@ export class AtividadeListagemPage implements OnInit {
   private readonly usuarioService = inject(UsuarioService);
   private readonly demandaService = inject(DemandaService);
   private readonly rotaAtiva = inject(ActivatedRoute);
-  private readonly confirmationService = inject(ConfirmationService);
+  private readonly desfazerService = inject(DesfazerService);
   private readonly messageService = inject(MessageService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
@@ -752,15 +750,24 @@ export class AtividadeListagemPage implements OnInit {
       .toUpperCase();
   }
 
-  confirmarExclusao(atividade: AtividadeResumoDto): void {
-    this.confirmationService.confirm({
-      message: `Deseja excluir a atividade "${atividade.nome}"? Esta ação não pode ser desfeita.`,
-      header: 'Confirmar exclusão',
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Excluir',
-      rejectLabel: 'Cancelar',
-      acceptButtonStyleClass: 'p-button-danger',
-      accept: () => this.excluirAtividade(atividade),
+  /** Exclusão imediata (task 99): a linha sai na hora e o toast oferece "Desfazer". */
+  excluir(atividade: AtividadeResumoDto): void {
+    const listaAnterior = this.atividades();
+    const totalAnterior = this.totalRegistros();
+    this.atividades.set(listaAnterior.filter((item) => item.id !== atividade.id));
+    this.totalRegistros.set(Math.max(0, totalAnterior - 1));
+
+    this.atividadeService.excluir(atividade.id).subscribe({
+      next: () =>
+        this.desfazerService.oferecer({
+          mensagem: `Atividade "${atividade.nome}" excluída`,
+          desfazer: () => this.atividadeService.restaurar(atividade.id),
+          aposDesfazer: () => this.buscarAtividades(),
+        }),
+      error: () => {
+        this.atividades.set(listaAnterior);
+        this.totalRegistros.set(totalAnterior);
+      },
     });
   }
 
@@ -829,28 +836,6 @@ export class AtividadeListagemPage implements OnInit {
     this.atividades.update((lista) =>
       lista.map((item) => (item.id === atividadeId ? { ...item, tags } : item)),
     );
-  }
-
-  private excluirAtividade(atividade: AtividadeResumoDto): void {
-    // Otimista: a linha some na hora; se a exclusão falhar (o interceptor já avisou), volta ao lugar.
-    const listaAnterior = this.atividades();
-    const totalAnterior = this.totalRegistros();
-    this.atividades.set(listaAnterior.filter((item) => item.id !== atividade.id));
-    this.totalRegistros.set(Math.max(0, totalAnterior - 1));
-
-    this.atividadeService.excluir(atividade.id).subscribe({
-      next: () => {
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Sucesso',
-          detail: `Atividade "${atividade.nome}" excluída com sucesso`,
-        });
-      },
-      error: () => {
-        this.atividades.set(listaAnterior);
-        this.totalRegistros.set(totalAnterior);
-      },
-    });
   }
 
   private formatarData(data: Date): string {

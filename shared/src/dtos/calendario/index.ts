@@ -10,3 +10,5 @@ export * from './CalendarioExcluirDto';
 export * from './CalendarioVerificarDiaDto';
 export * from './CalendarioMesConsultarDto';
 export * from './CalendarioDiaNaoUtilMesDto';
+export * from './CalendarioRestaurarDto';
+export * from './DiaNaoUtilRestauradoDto';

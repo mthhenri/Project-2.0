@@ -12,3 +12,5 @@ export * from './AtividadeTagsAtribuidasDto';
 export * from './AtividadeExcluirDto';
 export * from './AtividadeTagsListarDto';
 export * from './AtividadeTagsAlterarDto';
+export * from './AtividadeRestaurarDto';
+export * from './AtividadeRestauradaDto';

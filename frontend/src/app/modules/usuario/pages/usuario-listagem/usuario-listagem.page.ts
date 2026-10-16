@@ -8,8 +8,7 @@ import { Select } from 'primeng/select';
 import { InputTextModule } from 'primeng/inputtext';
 import { Tag } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { MessageService } from 'primeng/api';
 import { UsuarioResumoDto, TipoUsuarioEnum, TipoUsuarioStatusEnum, UsuarioListarDto } from '@project20/shared';
 import { UsuarioService } from '../../services/usuario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
@@ -18,19 +17,19 @@ import { UsuarioPerfilDialogComponent } from '../../components/usuario-perfil-di
 import { UsuarioFormularioDialogComponent } from '../../components/usuario-formulario-dialog/usuario-formulario-dialog.component';
 import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
 import { BarraRecargaComponent } from '../../../../shared/components/barra-recarga/barra-recarga.component';
+import { DesfazerService } from '../../../../core/services/desfazer.service';
 
 @Component({
   selector: 'app-usuario-listagem',
   standalone: true,
-  imports: [SkeletonListaComponent, BarraRecargaComponent, ReactiveFormsModule, TableModule, ButtonModule, Select, InputTextModule, Tag, TooltipModule, ConfirmDialogModule, UsuarioAnotacoesDialogComponent, UsuarioPerfilDialogComponent, UsuarioFormularioDialogComponent],
+  imports: [SkeletonListaComponent, BarraRecargaComponent, ReactiveFormsModule, TableModule, ButtonModule, Select, InputTextModule, Tag, TooltipModule, UsuarioAnotacoesDialogComponent, UsuarioPerfilDialogComponent, UsuarioFormularioDialogComponent],
   templateUrl: './usuario-listagem.page.html',
   styleUrl: './usuario-listagem.page.scss',
-  providers: [ConfirmationService],
 })
 export class UsuarioListagemPage implements OnInit {
   private readonly usuarioService = inject(UsuarioService);
   readonly sessao = inject(UsuarioSessaoService);
-  private readonly confirmationService = inject(ConfirmationService);
+  private readonly desfazerService = inject(DesfazerService);
   private readonly messageService = inject(MessageService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
@@ -117,15 +116,24 @@ export class UsuarioListagemPage implements OnInit {
     this.buscarUsuarios();
   }
 
-  confirmarExclusao(usuario: UsuarioResumoDto): void {
-    this.confirmationService.confirm({
-      message: `Deseja excluir o usuário "${usuario.nomeCompleto}"? Esta ação não pode ser desfeita.`,
-      header: 'Confirmar exclusão',
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Excluir',
-      rejectLabel: 'Cancelar',
-      acceptButtonStyleClass: 'p-button-danger',
-      accept: () => this.excluirUsuario(usuario),
+  /** Exclusão imediata (task 99): a linha sai na hora e o toast oferece "Desfazer". */
+  excluir(usuario: UsuarioResumoDto): void {
+    const listaAnterior = this.usuarios();
+    const totalAnterior = this.totalRegistros();
+    this.usuarios.set(listaAnterior.filter((item) => item.id !== usuario.id));
+    this.totalRegistros.set(Math.max(0, totalAnterior - 1));
+
+    this.usuarioService.excluir(usuario.id).subscribe({
+      next: () =>
+        this.desfazerService.oferecer({
+          mensagem: `Usuário "${usuario.nomeCompleto}" excluído`,
+          desfazer: () => this.usuarioService.restaurar(usuario.id),
+          aposDesfazer: () => this.buscarUsuarios(),
+        }),
+      error: () => {
+        this.usuarios.set(listaAnterior);
+        this.totalRegistros.set(totalAnterior);
+      },
     });
   }
 
@@ -135,18 +143,5 @@ export class UsuarioListagemPage implements OnInit {
 
   severidadeStatus(status: TipoUsuarioStatusEnum): 'success' | 'danger' {
     return status === TipoUsuarioStatusEnum.ATIVO ? 'success' : 'danger';
-  }
-
-  private excluirUsuario(usuario: UsuarioResumoDto): void {
-    this.usuarioService.excluir(usuario.id).subscribe({
-      next: () => {
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Sucesso',
-          detail: `Usuário "${usuario.nomeCompleto}" excluído com sucesso`,
-        });
-        this.buscarUsuarios();
-      },
-    });
   }
 }

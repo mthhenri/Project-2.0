@@ -996,7 +996,7 @@ export abstract class BaseEntity {
 8. **Parâmetros nomeados** `:nome` com objeto (Knex) — nunca `?` posicional, nunca interpolação de string
 9. **INSERT sempre com SELECT** — nunca `VALUES`: `INSERT INTO tabela (...) SELECT :campo1, :campo2 RETURNING ...`
 10. **Hierarquias e grafos** via CTEs recursivos do PostgreSQL
-11. **Soft delete** via `executarSoftDelete()` do BaseRepository — nunca DELETE físico
+11. **Soft delete** via `executarSoftDelete()` do BaseRepository — nunca DELETE físico. O caminho de volta é `PATCH /<recurso>/:id/restaurar` (gestor): o repositório faz `UPDATE ... SET is_deleted = false, deleted_date = NULL ... WHERE id = :id AND is_deleted = true RETURNING ...`; a **única leitura com `is_deleted = true`** é `recuperarExcluid[oa]()`, usada pela service para validar unicidade (nome/código/login ativos) e dependências (demanda ou projeto pai ativo) antes de restaurar. Restaurar **não é em cascata** (uma demanda não reativa filhos). Disponível em atividade, projeto, usuário, tag, dia não útil e demanda; o frontend o usa no "Desfazer" do toast de exclusão (6 s)
 12. **Objetos genéricos de banco** (funções/triggers de infraestrutura) em **inglês** — `fn_set_updated_date()`, `trg_usuario_updated_date` ✅; `fn_atualizar_updated_date()` ❌ (idioma misto em mecanismo genérico, §16 #12). Apenas tabelas e colunas de negócio são em português
 13. **Enums sempre como tabela de referência** — toda coluna de domínio fechado é `INTEGER` FK para uma tabela `tipo_<tabela>_<complemento?>` (com `codigo` + `descricao`), **nunca** `VARCHAR + CHECK` nem tipo `ENUM` nativo. O enum TypeScript de `shared/` espelha os `codigo`; o repositório traduz `codigo ⇄ id` no SQL (ver §5.4)
 
@@ -1465,7 +1465,7 @@ Estas regras **jamais** devem ser violadas. São inegociáveis independente do c
 | 1 | **Nunca abreviar** nomes de variáveis, métodos, parâmetros, classes ou arquivos |
 | 2 | **Nunca colocar lógica de negócio** na controller — apenas repasse para service |
 | 3 | **Nunca usar ORM** — apenas SQL bruto via `knex.raw()` |
-| 4 | **Nunca omitir** `is_deleted = false` em qualquer SELECT |
+| 4 | **Nunca omitir** `is_deleted = false` em qualquer SELECT (exceção única: `recuperarExcluid[oa]()` da restauração, §9.2 #11) |
 | 5 | **Nunca usar `?` posicional** em SQL — sempre parâmetros nomeados `:nome` com objeto |
 | 6 | **Nunca usar `VALUES`** em INSERT — sempre `INSERT INTO ... SELECT :campo RETURNING` |
 | 7 | **Nunca usar DEFAULT** em colunas SQL — a aplicação sempre fornece todos os valores |

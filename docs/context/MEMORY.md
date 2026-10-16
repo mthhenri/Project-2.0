@@ -40,12 +40,15 @@ Estas são as fontes da verdade. Em conflito entre código e documento, **o docu
 | Telas e serviços HTTP do frontend | `frontend/src/app/modules/<modulo>/` |
 | Interceptors, guards e estado global | `frontend/src/app/core/` |
 | Componentes, diretivas, pipes e layout reutilizáveis | `frontend/src/app/shared/` |
+| Contrato de dialogs de formulário: autofocus, Enter, Ctrl+Enter, dica de atalhos (task 97) | `shared/directives/dialog-formulario.directive.ts` (`p-dialog[dialogFormulario]`) e `shared/components/dialog-dica-atalhos/` |
+| Esqueleto na primeira carga, conteúdo esmaecido + barra na recarga, leitura sem overlay global (task 98) | `shared/components/skeleton-lista/`, `shared/components/barra-recarga/`, `.conteudo-recarregando` em `styles.scss`, `comFeedbackProprio()` em `core/interceptors/loading.interceptor.ts` |
+| Exclusão com "Desfazer" de 6 s (task 99) | `core/services/desfazer.service.ts`, `shared/components/toast-desfazer/` e `PATCH /<recurso>/:id/restaurar` no backend |
 | Estilos globais, tema e Tailwind | `frontend/src/styles.scss`, `frontend/src/app/shared/styles/`, `frontend/tailwind.config.js` |
-| Testes (`node:test`, ao lado do código em `*.test.ts`; rode com `npm test`) | `shared/src/validators/`, `backend/src/database/`, `backend/src/modules/ponto/services/` |
+| Testes (`node:test`, ao lado do código em `*.test.ts`; rode com `npm test`) | `shared/src/validators/`, `backend/src/database/`, `backend/src/modules/*/services/` |
 | Verificação de organização do repositório (`repo:verificar`) | `scripts/verificar-organizacao.mjs` |
 | Mapa de impacto (`npm run impacto`) | `scripts/impacto.mjs`, `scripts/agentes/hook-impacto.mjs` |
 | Subagentes (`implementador`, `revisor`, `testador`) | `.claude/agents/` |
-| Specs por estado e material da tarefa | `docs/specs/{backlog,active,done}/` |
+| Specs por estado e material da tarefa | `docs/specs/{backlog,active,done,discarded}/` |
 | Mídia versionada de documentação (permitida pelo `repo:verificar`) | `docs/assets/` |
 | Capturas e saídas brutas de verificação (ignorado pelo Git) | `.artifacts/<tarefa>/` |
 
@@ -57,8 +60,8 @@ quando essa branch for mergeada). A task 117 (remover a descrição da atividade
 
 | Item | Onde |
 |---|---|
-| Tasks mantidas da revisão de UI/UX (94–101, 106–109, 112–116) | `docs/specs/backlog/` (`9[4-9]-*`, `10[01]-*`, `10[6-9]-*`, `11[2-6]-*`) |
+| Tasks mantidas da revisão de UI/UX ainda pendentes (94–96, 100–101, 106–109, 112–116; 97–99 concluídas em `docs/specs/done/`) | `docs/specs/backlog/` (`9[4-6]-*`, `10[01]-*`, `10[6-9]-*`, `11[2-6]-*`) |
 | Tasks descartadas pelo autor (102–105, 110, 111: telas de Atividades e Execuções) | `docs/specs/discarded/` |
-| Índice, ordem e dependências das tasks 94–116 | `docs/specs/backlog/INDEX-revisao-ux.md` |
+| Índice, ordem e dependências das tasks 94–116 (97–99 concluídas) | `docs/specs/backlog/INDEX-revisao-ux.md` |
 | Spec guarda-chuva e material da revisão (relatório, mockups HTML, análises) | `docs/specs/backlog/revisao-ui-ux.spec.md` e `docs/specs/backlog/revisao-ui-ux/` |
 | Prints da revisão (PNG, referência canônica) | `docs/assets/revisao-ui-ux/prints/` |

@@ -12,6 +12,34 @@
 
 ---
 
+## 2026-10-16 — Tasks 97, 98 e 99: padrão de dialogs, feedback otimista/esqueletos e "Desfazer"
+
+Três fundações transversais da revisão de UI/UX, implementadas em sequência (um commit por task) e
+verificadas contra a API e o Postgres reais, em Chromium. Relatórios em
+`docs/specs/done/{97,98,99}-*/verificacao.md`.
+
+- **97**: diretiva `p-dialog[dialogFormulario]` (autofocus no primeiro campo vazio, Enter, Ctrl+Enter, Esc
+  nativo, bloqueio durante o envio) e `app-dialog-dica-atalhos`, aplicadas em 21 dialogs; criar demanda agora
+  fecha o dialog; "Criar e adicionar outra" em demanda, atividade e dia não útil. **Achado só na
+  verificação:** o foco nativo do `p-dialog` ia ao primeiro focável (um `p-datepicker`), abria o calendário e o
+  Esc passava a fechar o calendário em vez do dialog; a diretiva desliga o `focusOnShow` e exclui datepickers.
+- **98**: `app-skeleton-lista`, `app-barra-recarga` e `.conteudo-recarregando`; leituras de tela com
+  `comFeedbackProprio()` (sem overlay global); status de atividade, exclusão de atividade/projeto otimistas
+  com rollback; tags de demanda e status do planejamento sem recarregar o grafo; expansão da árvore guardada
+  num signal de IDs; editar projeto aplica o DTO retornado. Criar/registrar/iniciar execução ainda refazem a
+  listagem (silenciosamente): o DTO retornado não monta a linha.
+- **99**: `PATCH /:id/restaurar` (gestor) em 6 módulos, com validação de unicidade e de dependência ativa e
+  sem cascata; `DesfazerService` + `app-toast-desfazer` (6 s); confirms de exclusão substituídos por remoção
+  otimista com "Desfazer"; membro/conexão desfazem por re-POST; demanda mantém o confirm, com texto honesto.
+  **Achado só na verificação:** o `p-toast` com chave não removia a mensagem no `clear()`; trocado por
+  componente próprio.
+- **Testes**: backend foi de 14 para 31 casos (restaurar por módulo, mutação conferida); `npm test` verde.
+  Frontend continua sem testes (P-001).
+- **Decisão**: `recuperarExcluid[oa]()` é a única leitura com `is_deleted = true` permitida
+  (`SYSTEM.SPEC.md` §9.2 #11; `conventions-check` atualizado nos dois espelhos).
+
+---
+
 ## 2026-10-16 — Descarte das tasks que mexem direto em Atividades e Execuções
 
 **O que mudou e por quê.** Decisão do autor: tudo que mexe **diretamente** nas telas de Atividades e

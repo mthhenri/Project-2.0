@@ -6,13 +6,12 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { DialogModule } from 'primeng/dialog';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DatePickerModule } from 'primeng/datepicker';
 import { SelectModule } from 'primeng/select';
 import { CheckboxModule } from 'primeng/checkbox';
 import { MessageModule } from 'primeng/message';
 import { TooltipModule } from 'primeng/tooltip';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { MessageService } from 'primeng/api';
 import {
   DiaNaoUtilResumoDto,
   DiaNaoUtilCriarDto,
@@ -35,6 +34,7 @@ import { DialogFormularioDirective } from '../../../../shared/directives/dialog-
 import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
 import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
 import { BarraRecargaComponent } from '../../../../shared/components/barra-recarga/barra-recarga.component';
+import { DesfazerService } from '../../../../core/services/desfazer.service';
 
 @Component({
   selector: 'app-calendario-listagem',
@@ -50,7 +50,6 @@ import { BarraRecargaComponent } from '../../../../shared/components/barra-recar
     TableModule,
     TagModule,
     DialogModule,
-    ConfirmDialogModule,
     DatePickerModule,
     SelectModule,
     CheckboxModule,
@@ -59,13 +58,12 @@ import { BarraRecargaComponent } from '../../../../shared/components/barra-recar
   ],
   templateUrl: './calendario-listagem.page.html',
   styleUrl: './calendario-listagem.page.scss',
-  providers: [ConfirmationService],
 })
 export class CalendarioListagemPage implements OnInit {
   private readonly calendarioService = inject(CalendarioService);
   private readonly sessao = inject(UsuarioSessaoService);
   private readonly messageService = inject(MessageService);
-  private readonly confirmationService = inject(ConfirmationService);
+  private readonly desfazerService = inject(DesfazerService);
   private readonly formBuilder = inject(FormBuilder);
 
   @ViewChild(DialogFormularioDirective) private dialogFormulario?: DialogFormularioDirective;
@@ -289,15 +287,20 @@ export class CalendarioListagemPage implements OnInit {
     }
   }
 
-  confirmarExclusao(dia: DiaNaoUtilResumoDto): void {
-    this.confirmationService.confirm({
-      message: `Deseja excluir "${dia.descricao}"? Esta ação não pode ser desfeita.`,
-      header: 'Confirmar exclusão',
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Excluir',
-      rejectLabel: 'Cancelar',
-      acceptButtonStyleClass: 'p-button-danger',
-      accept: () => this.excluirDia(dia),
+  /** Exclusão imediata (task 99): a linha sai na hora e o toast oferece "Desfazer". */
+  excluir(dia: DiaNaoUtilResumoDto): void {
+    const listaAnterior = this.diasNaoUteis();
+    this.diasNaoUteis.set(listaAnterior.filter((item) => item.id !== dia.id));
+    if (this.diaDestacadoId() === dia.id) this.diaDestacadoId.set(null);
+
+    this.calendarioService.excluir(dia.id).subscribe({
+      next: () =>
+        this.desfazerService.oferecer({
+          mensagem: `"${dia.descricao}" excluído`,
+          desfazer: () => this.calendarioService.restaurar(dia.id),
+          aposDesfazer: () => this.buscarDias(),
+        }),
+      error: () => this.diasNaoUteis.set(listaAnterior),
     });
   }
 
@@ -368,21 +371,5 @@ export class CalendarioListagemPage implements OnInit {
           this.buscarDias();
         },
       });
-  }
-
-  private excluirDia(dia: DiaNaoUtilResumoDto): void {
-    this.calendarioService.excluir(dia.id).subscribe({
-      next: () => {
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Sucesso',
-          detail: `"${dia.descricao}" excluído com sucesso`,
-        });
-        if (this.diaDestacadoId() === dia.id) {
-          this.diaDestacadoId.set(null);
-        }
-        this.buscarDias();
-      },
-    });
   }
 }

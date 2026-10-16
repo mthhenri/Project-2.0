@@ -13,6 +13,7 @@ import {
   UsuarioSenhaAlteradaDto,
   StandardResponse,
   PaginatedResult,
+  UsuarioRestauradoDto,
 } from '@project20/shared';
 import { ambiente } from '../../../../environments/environment';
 import { comFeedbackProprio } from '../../../core/interceptors/loading.interceptor';
@@ -46,6 +47,11 @@ export class UsuarioService {
 
   excluir(id: number): Observable<StandardResponse<void>> {
     return this.httpClient.delete<StandardResponse<void>>(`${this.urlBase}/${id}`);
+  }
+
+  /** Desfaz o soft delete ("Desfazer" do toast de exclusão). */
+  restaurar(id: number): Observable<StandardResponse<UsuarioRestauradoDto>> {
+    return this.httpClient.patch<StandardResponse<UsuarioRestauradoDto>>(`${this.urlBase}/${id}/restaurar`, {});
   }
 
   alterarSenha(id: number, dto: UsuarioSenhaAlterarDto): Observable<StandardResponse<UsuarioSenhaAlteradaDto>> {

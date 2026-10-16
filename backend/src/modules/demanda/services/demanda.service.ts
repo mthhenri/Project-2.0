@@ -32,6 +32,7 @@ import {
 } from '@project20/shared';
 import { StandardResponse } from '@project20/shared';
 import { PaginatedResult } from '@project20/shared';
+import { DemandaRestaurarDto, DemandaRestauradaDto } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
 import { UnauthorizedAccessException } from '../../../core/exceptions/unauthorized-access.exception';
@@ -571,6 +572,29 @@ export class DemandaService {
       sucesso:  true,
       dados:    null,
       mensagem: 'Demanda excluída com sucesso',
+    };
+  }
+
+  /** Restaura a demanda excluída (soft delete revertido, sem cascata). Restrito a gestores. */
+  async restaurar(dto: DemandaRestaurarDto): Promise<StandardResponse<DemandaRestauradaDto>> {
+    const demandaExcluida = await this.demandaRepositorio.recuperarExcluida({ id: dto.id });
+    if (!demandaExcluida) {
+      throw new ResourceNotFoundException('Demanda');
+    }
+
+    if (!demandaExcluida.projetoAtivo) {
+      throw new BusinessException('O projeto desta demanda foi excluído; restaure o projeto antes de restaurar a demanda');
+    }
+    if (!demandaExcluida.paiAtivo) {
+      throw new BusinessException('A demanda pai foi excluída; restaure-a antes de restaurar esta demanda');
+    }
+
+    const demandaRestaurada = await this.demandaRepositorio.restaurar({ id: dto.id });
+
+    return {
+      sucesso:  true,
+      dados:    demandaRestaurada,
+      mensagem: 'Demanda restaurada com sucesso',
     };
   }
 

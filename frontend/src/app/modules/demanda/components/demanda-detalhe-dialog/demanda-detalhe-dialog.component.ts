@@ -44,6 +44,7 @@ import { TempoExibicaoPipe } from '../../../../shared/pipes/tempo-exibicao.pipe'
 import { VisualizacaoTempoService } from '../../../../core/services/visualizacao-tempo.service';
 import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
 import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
+import { DesfazerService } from '../../../../core/services/desfazer.service';
 
 type CampoDescricao = 'descricaoTecnica' | 'descricaoCliente' | 'documentacao';
 
@@ -89,6 +90,7 @@ export class DemandaDetalheDialogComponent implements OnChanges {
   private readonly router = inject(Router);
   private readonly messageService = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
+  private readonly desfazerService = inject(DesfazerService);
   private readonly formBuilder = inject(FormBuilder);
   readonly sessao = inject(UsuarioSessaoService);
 
@@ -382,7 +384,7 @@ export class DemandaDetalheDialogComponent implements OnChanges {
 
   confirmarExclusao(): void {
     this.confirmationService.confirm({
-      message: 'Excluir esta demanda? Esta ação não pode ser desfeita.',
+      message: 'Excluir esta demanda? As sub-demandas e atividades dela deixarão de ser exibidas. Você poderá desfazer logo após a exclusão.',
       accept: () => this.excluirDemanda(),
     });
   }
@@ -427,9 +429,13 @@ export class DemandaDetalheDialogComponent implements OnChanges {
 
     this.demandaService.excluir(demandaDados.id).subscribe({
       next: () => {
-        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Demanda excluída' });
         this.demandaExcluida.emit();
         this.visivelChange.emit(false);
+        this.desfazerService.oferecer({
+          mensagem: `Demanda "${demandaDados.nome}" excluída`,
+          desfazer: () => this.demandaService.restaurar(demandaDados.id),
+          aposDesfazer: () => this.demandaExcluida.emit(),
+        });
       },
     });
   }

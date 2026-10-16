@@ -17,6 +17,7 @@ import {
   AtividadeTagsAlterarDto,
   DemandaAcessoVerificarDto,
 } from '@project20/shared';
+import { AtividadeRestaurarDto, AtividadeRestauradaDto } from '@project20/shared';
 
 type AtividadeInserirDados = Omit<Atividade, 'id' | 'isDeleted' | 'createdDate' | 'updatedDate' | 'deletedDate'>;
 
@@ -280,6 +281,48 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
   /** Soft delete da atividade. */
   async excluir(dto: AtividadeExcluirDto): Promise<void> {
     await this.executarSoftDelete(dto.id);
+  }
+
+  /**
+   * Recupera a atividade **excluída**. É a única leitura que filtra `is_deleted = true`: a restauração
+   * precisa do registro apagado para validar unicidade e dependências antes de reativá-lo.
+   */
+  async recuperarExcluida(dto: AtividadeRestaurarDto): Promise<(AtividadeRestauradaDto & { demandaAtiva: boolean }) | null> {
+    const resultado = await this.executarConsulta<AtividadeRestauradaDto & { demandaAtiva: boolean }>(
+      `SELECT
+         atividade.id,
+         atividade.demanda_id AS "demandaId",
+         atividade.nome,
+         EXISTS(
+           SELECT 1 FROM demanda
+           WHERE demanda.id = atividade.demanda_id
+             AND demanda.is_deleted = false
+         ) AS "demandaAtiva"
+       FROM atividade
+       WHERE atividade.id = :id
+         AND atividade.is_deleted = true
+       LIMIT 1`,
+      { id: dto.id },
+    );
+    return resultado[0] ?? null;
+  }
+
+  /** Restaura a atividade: desfaz o soft delete (sem DELETE físico e sem cascata). */
+  async restaurar(dto: AtividadeRestaurarDto): Promise<AtividadeRestauradaDto> {
+    const resultado = await this.executarConsulta<AtividadeRestauradaDto>(
+      `UPDATE atividade
+       SET is_deleted = false,
+           deleted_date = NULL,
+           updated_date = NOW()
+       WHERE atividade.id = :id
+         AND atividade.is_deleted = true
+       RETURNING
+         id,
+         demanda_id AS "demandaId",
+         nome`,
+      { id: dto.id },
+    );
+    return resultado[0];
   }
 
   /**

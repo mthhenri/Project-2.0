@@ -15,7 +15,7 @@ Rápido", e `docs/SYSTEM.SPEC.md` §16.
 | 6 | `rg -n "class \w+Dto extends" shared/src` | DTO de negócio nunca herda DTO de negócio; só DTO core (`PaginatedResult`, `StandardResponse`) | um acerto permitido: `ExecucaoResumoDto extends PaginatedResult<...>` |
 | 7 | `rg -n -i "atualizar\|atualizado" backend/src shared/src frontend/src --glob '*.ts'` | o verbo é `alterar`/`alterado` | acertos em comentários e em `atualizarHora` (relógio da topbar) são texto, não método de negócio |
 | 8 | `rg -n "\b\w+_at\b\|\w+_em\b" backend/src --glob '*.ts'` | datas são `_date` (genérica) ou `_data` (negócio) | limpa |
-| 9 | `rg -c "is_deleted" backend/src/modules --glob '*.repository.ts'` | todo repositório com `SELECT` filtra `is_deleted = false` | só indica presença; leia cada `SELECT` novo no diff |
+| 9 | `rg -c "is_deleted" backend/src/modules --glob '*.repository.ts'` | todo repositório com `SELECT` filtra `is_deleted = false` | só indica presença; leia cada `SELECT` novo no diff (exceção: `recuperarExcluid[oa]()` filtra `is_deleted = true` de propósito, para restaurar) |
 | 10 | `rg -n "\?\s*[,)]" backend/src/modules --glob '*.repository.ts'` | parâmetro posicional `?` em SQL | limpa (ternários TS seriam falso positivo; leia o acerto antes de concluir) |
 
 Acrescente uma linha aqui quando uma violação nova escapar do passe e puder ser achada por texto.

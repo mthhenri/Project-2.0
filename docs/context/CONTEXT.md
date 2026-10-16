@@ -8,18 +8,20 @@
 > [`MEMORY.md`](MEMORY.md) (onde fica o quê) · [`IDEAS.md`](IDEAS.md) (o que ainda não é sistema) ·
 > [`HISTORY.md`](HISTORY.md) (o que aconteceu e por quê).
 >
-> **Última revisão:** 2026-10-16 · **Última decisão registrada:** task 117, atividade sem descrição
-> (`HISTORY.md`, bloco de 2026-10-16 — task 117)
+> **Última revisão:** 2026-10-16 · **Última decisão registrada:** tasks 97, 98 e 99 (padrão de dialogs,
+> feedback otimista/esqueletos e "Desfazer" de exclusões) — `HISTORY.md`, bloco de 2026-10-16
 
 ---
 
 ## 1. Próxima Task
 
-Nenhuma task em andamento. O backlog tem **17 specs** em `docs/specs/backlog/` (revisão de UI/UX:
-94–101, 106–109 e 112–116, guarda-chuva `revisao-ui-ux.spec.md`). Siga a ordem de fases de
-`INDEX-revisao-ux.md`: comece por 97, 98 e 99, que a maioria das demais pressupõe. As tasks
-**102, 103, 104, 105, 110 e 111** (que mexem direto nas telas de Atividades e Execuções) foram
-**descartadas** em 2026-10-16 e estão em `docs/specs/discarded/`. A task 117 foi concluída.
+Nenhuma task em andamento. O backlog tem **14 specs** em `docs/specs/backlog/` (revisão de UI/UX:
+94–96, 100, 101, 106–109 e 112–116, guarda-chuva `revisao-ui-ux.spec.md`). As tasks **97, 98 e 99**
+(fundações transversais) foram concluídas em 2026-10-16 e estão em `docs/specs/done/`; as seguintes
+devem **reutilizar** o que elas criaram (ver `MEMORY.md` §2). Siga a ordem de fases de
+`INDEX-revisao-ux.md`: faltam 94, 95 e 96 na fase 1. As tasks **102, 103, 104, 105, 110 e 111** (que
+mexem direto nas telas de Atividades e Execuções) foram **descartadas** em 2026-10-16 e estão em
+`docs/specs/discarded/`. A task 117 foi concluída.
 Próxima migration nova: `0029`.
 
 ## 2. Estado por Área
@@ -99,6 +101,14 @@ project-2.0/
 - **[descarte da revisão de UX]** As telas de **Atividades** e **Execuções** ficam como estão: nenhuma
   task da revisão as redesenha. O que as toca só por tabela (padrão de dialogs 97, otimista 98, undo 99,
   chip global 95) continua e, ao ser implementado, vale para as telas atuais.
+- **[tasks 97–99]** Todo dialog de formulário usa `p-dialog[dialogFormulario]` (autofocus no primeiro campo
+  vazio, Enter envia, Ctrl+Enter envia a partir de textarea, Esc cancela) e a dica
+  `app-dialog-dica-atalhos` no footer; criar fecha o dialog, e "Criar e adicionar outra" mantém o
+  contexto. Leituras de tela usam esqueleto na primeira carga e conteúdo esmaecido + barra nas
+  recargas (`comFeedbackProprio()` tira o overlay global); mutações são otimistas com rollback.
+  Exclusões de atividade, projeto, usuário, tag, dia não útil e demanda chamam `PATCH :id/restaurar` no
+  "Desfazer" do toast (6 s, `DesfazerService`); associações (membro, conexão) desfazem por re-POST.
+  Restaurar não é em cascata e valida unicidade/dependências (`SYSTEM.SPEC.md` §9.2 #11).
 - **[estado `discarded`]** `docs/specs/discarded/` é o quarto estado do ciclo de specs
   (`SYSTEM.SPEC.md` §3.1); o `repo:verificar` o aceita.
 

@@ -11,6 +11,7 @@ import {
   ProjetoAlteradoDto,
   StandardResponse,
   PaginatedResult,
+  ProjetoRestauradoDto,
 } from '@project20/shared';
 import { ambiente } from '../../../../environments/environment';
 import { comFeedbackProprio } from '../../../core/interceptors/loading.interceptor';
@@ -42,5 +43,10 @@ export class ProjetoService {
 
   excluir(id: number): Observable<StandardResponse<void>> {
     return this.httpClient.delete<StandardResponse<void>>(`${this.urlBase}/${id}`);
+  }
+
+  /** Desfaz o soft delete ("Desfazer" do toast de exclusão). */
+  restaurar(id: number): Observable<StandardResponse<ProjetoRestauradoDto>> {
+    return this.httpClient.patch<StandardResponse<ProjetoRestauradoDto>>(`${this.urlBase}/${id}/restaurar`, {});
   }
 }

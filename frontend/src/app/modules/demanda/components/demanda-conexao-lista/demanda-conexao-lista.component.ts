@@ -6,13 +6,13 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { Select } from 'primeng/select';
 import { CheckboxModule } from 'primeng/checkbox';
-import { MessageService, ConfirmationService } from 'primeng/api';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { MessageService } from 'primeng/api';
 import { DemandaConexaoResumoDto, DemandaConexaoCriarDto } from '@project20/shared';
 import { DemandaService } from '../../services/demanda.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
 import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
+import { DesfazerService } from '../../../../core/services/desfazer.service';
 
 @Component({
   selector: 'app-demanda-conexao-lista',
@@ -26,9 +26,7 @@ import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog
     DialogModule,
     Select,
     CheckboxModule,
-    ConfirmDialogModule,
   ],
-  providers: [ConfirmationService],
   templateUrl: './demanda-conexao-lista.component.html',
   styleUrl: './demanda-conexao-lista.component.scss',
 })
@@ -38,7 +36,7 @@ export class DemandaConexaoListaComponent implements OnInit {
 
   private readonly demandaService = inject(DemandaService);
   private readonly messageService = inject(MessageService);
-  private readonly confirmationService = inject(ConfirmationService);
+  private readonly desfazerService = inject(DesfazerService);
   private readonly formBuilder = inject(FormBuilder);
   readonly sessao = inject(UsuarioSessaoService);
 
@@ -83,22 +81,34 @@ export class DemandaConexaoListaComponent implements OnInit {
       });
   }
 
-  confirmarExclusao(conexao: DemandaConexaoResumoDto): void {
-    this.confirmationService.confirm({
-      message: `Excluir conexão com "${conexao.nomeDemandaConectada}"?`,
-      accept: () => this.excluirConexao(conexao.id),
+  /** Remoção imediata (task 99): a conexão sai na hora e o toast oferece "Desfazer" (re-POST). */
+  excluir(conexao: DemandaConexaoResumoDto): void {
+    const listaAnterior = this.conexoes();
+    this.conexoes.set(listaAnterior.filter((item) => item.id !== conexao.id));
+
+    this.demandaService.excluirConexao(this.demandaId, conexao.id).subscribe({
+      next: () =>
+        this.desfazerService.oferecer({
+          mensagem: `Conexão com "${conexao.nomeDemandaConectada}" removida`,
+          desfazer: () => this.recriarConexao(conexao),
+          aposDesfazer: () => this.carregarConexoes(),
+        }),
+      error: () => this.conexoes.set(listaAnterior),
     });
   }
 
-  private excluirConexao(conexaoId: number): void {
-    this.demandaService
-      .excluirConexao(this.demandaId, conexaoId)
-      .subscribe({
-        next: () => {
-          this.carregarConexoes();
-          this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Conexão removida' });
-        },
+  /** Recria a conexão no sentido original: em "entrada" a origem é a outra demanda. */
+  private recriarConexao(conexao: DemandaConexaoResumoDto) {
+    if (conexao.direcao === 'entrada') {
+      return this.demandaService.criarConexao(conexao.demandaConectadaId, {
+        demandaDestinoId: this.demandaId,
+        ehBidirecional:   false,
       });
+    }
+    return this.demandaService.criarConexao(this.demandaId, {
+      demandaDestinoId: conexao.demandaConectadaId,
+      ehBidirecional:   conexao.direcao === 'bidirecional',
+    });
   }
 
   private carregarConexoes(): void {

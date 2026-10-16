@@ -8,6 +8,7 @@ import {
   DiaNaoUtilAlterarDto,
   DiaNaoUtilAlteradoDto,
   StandardResponse,
+  DiaNaoUtilRestauradoDto,
 } from '@project20/shared';
 import { ambiente } from '../../../../environments/environment';
 import { VerificacaoDiaUtil } from '../models/dia-nao-util.model';
@@ -36,6 +37,11 @@ export class CalendarioService {
 
   excluir(id: number): Observable<StandardResponse<void>> {
     return this.httpClient.delete<StandardResponse<void>>(`${this.urlBase}/${id}`);
+  }
+
+  /** Desfaz o soft delete ("Desfazer" do toast de exclusão). */
+  restaurar(id: number): Observable<StandardResponse<DiaNaoUtilRestauradoDto>> {
+    return this.httpClient.patch<StandardResponse<DiaNaoUtilRestauradoDto>>(`${this.urlBase}/${id}/restaurar`, {});
   }
 
   verificarDiaUtil(data: string): Observable<StandardResponse<VerificacaoDiaUtil>> {

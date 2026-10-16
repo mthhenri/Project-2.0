@@ -43,6 +43,7 @@ import {
   DemandaPlanejamentoDto,
   DemandaPlanejamentoListarDto,
 } from '@project20/shared';
+import { DemandaRestaurarDto, DemandaRestauradaDto } from '@project20/shared';
 
 type DemandaCriarDados = Omit<Demanda, 'id' | 'isDeleted' | 'createdDate' | 'updatedDate' | 'deletedDate'>;
 
@@ -592,6 +593,53 @@ export class DemandaRepository extends BaseRepository<Demanda> {
   /** Soft delete da demanda. */
   async excluir(dto: DemandaExcluirDto): Promise<void> {
     await this.executarSoftDelete(dto.id);
+  }
+
+  /**
+   * Recupera a demanda **excluída**. É a única leitura que filtra `is_deleted = true`: a restauração
+   * precisa do registro apagado para validar unicidade e dependências antes de reativá-lo.
+   */
+  async recuperarExcluida(dto: DemandaRestaurarDto): Promise<(DemandaRestauradaDto & { projetoAtivo: boolean; paiAtivo: boolean }) | null> {
+    const resultado = await this.executarConsulta<DemandaRestauradaDto & { projetoAtivo: boolean; paiAtivo: boolean }>(
+      `SELECT
+         demanda.id,
+         demanda.projeto_id AS "projetoId",
+         demanda.nome,
+         EXISTS(
+           SELECT 1 FROM projeto
+           WHERE projeto.id = demanda.projeto_id
+             AND projeto.is_deleted = false
+         ) AS "projetoAtivo",
+         (demanda.demanda_pai_id IS NULL OR EXISTS(
+           SELECT 1 FROM demanda demanda_pai
+           WHERE demanda_pai.id = demanda.demanda_pai_id
+             AND demanda_pai.is_deleted = false
+         )) AS "paiAtivo"
+       FROM demanda
+       WHERE demanda.id = :id
+         AND demanda.is_deleted = true
+       LIMIT 1`,
+      { id: dto.id },
+    );
+    return resultado[0] ?? null;
+  }
+
+  /** Restaura a demanda: desfaz o soft delete (sem DELETE físico e sem cascata). */
+  async restaurar(dto: DemandaRestaurarDto): Promise<DemandaRestauradaDto> {
+    const resultado = await this.executarConsulta<DemandaRestauradaDto>(
+      `UPDATE demanda
+       SET is_deleted = false,
+           deleted_date = NULL,
+           updated_date = NOW()
+       WHERE demanda.id = :id
+         AND demanda.is_deleted = true
+       RETURNING
+         id,
+         projeto_id AS "projetoId",
+         nome`,
+      { id: dto.id },
+    );
+    return resultado[0];
   }
 
   /**

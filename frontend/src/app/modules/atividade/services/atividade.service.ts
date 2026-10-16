@@ -20,6 +20,7 @@ import {
   ExecucaoAtivaDto,
   StandardResponse,
   PaginatedResult,
+  AtividadeRestauradaDto,
 } from '@project20/shared';
 import { ambiente } from '../../../../environments/environment';
 import { comFeedbackProprio } from '../../../core/interceptors/loading.interceptor';
@@ -59,6 +60,11 @@ export class AtividadeService {
 
   excluir(id: number): Observable<StandardResponse<void>> {
     return this.httpClient.delete<StandardResponse<void>>(`${this.urlBase}/${id}`);
+  }
+
+  /** Desfaz o soft delete ("Desfazer" do toast de exclusão). */
+  restaurar(id: number): Observable<StandardResponse<AtividadeRestauradaDto>> {
+    return this.httpClient.patch<StandardResponse<AtividadeRestauradaDto>>(`${this.urlBase}/${id}/restaurar`, {});
   }
 
   alterarTags(id: number, dto: AtividadeTagsAtribuirDto): Observable<StandardResponse<AtividadeTagsAtribuidasDto>> {

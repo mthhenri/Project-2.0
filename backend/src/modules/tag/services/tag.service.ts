@@ -10,6 +10,7 @@ import {
   TagRecuperarDto,
 } from '@project20/shared';
 import { StandardResponse } from '@project20/shared';
+import { TagRestaurarDto, TagRestauradaDto } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
 
@@ -98,6 +99,27 @@ export class TagService {
       sucesso:  true,
       dados:    null,
       mensagem: 'Tag excluída com sucesso',
+    };
+  }
+
+  /** Restaura a tag excluída (soft delete revertido, sem cascata). Restrito a gestores. */
+  async restaurar(dto: TagRestaurarDto): Promise<StandardResponse<TagRestauradaDto>> {
+    const tagExcluida = await this.tagRepositorio.recuperarExcluida({ id: dto.id });
+    if (!tagExcluida) {
+      throw new ResourceNotFoundException('Tag');
+    }
+
+    const nomeJaExiste = await this.tagRepositorio.validarNome({ nome: tagExcluida.nome });
+    if (nomeJaExiste) {
+      throw new BusinessException(`Já existe uma tag ativa chamada "${tagExcluida.nome}"; renomeie-a antes de restaurar`);
+    }
+
+    const tagRestaurada = await this.tagRepositorio.restaurar({ id: dto.id });
+
+    return {
+      sucesso:  true,
+      dados:    tagRestaurada,
+      mensagem: 'Tag restaurada com sucesso',
     };
   }
 }

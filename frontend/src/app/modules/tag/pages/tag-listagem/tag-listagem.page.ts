@@ -5,9 +5,8 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
 import { DialogModule } from 'primeng/dialog';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TooltipModule } from 'primeng/tooltip';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { MessageService } from 'primeng/api';
 import {
   TagResumoDto,
   TagCriarDto,
@@ -22,6 +21,7 @@ import { SeletorCorComponent } from '../../../../shared/components/seletor-cor/s
 import { BloquearCaracteresProibidosDirective } from '../../../../shared/directives/bloquear-caracteres-proibidos.directive';
 import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
 import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
+import { DesfazerService } from '../../../../core/services/desfazer.service';
 
 @Component({
   selector: 'app-tag-listagem',
@@ -34,7 +34,6 @@ import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog
     InputTextModule,
     TableModule,
     DialogModule,
-    ConfirmDialogModule,
     TooltipModule,
     SeletorCorComponent,
     SkeletonListaComponent,
@@ -43,12 +42,11 @@ import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog
   ],
   templateUrl: './tag-listagem.page.html',
   styleUrl: './tag-listagem.page.scss',
-  providers: [ConfirmationService],
 })
 export class TagListagemPage implements OnInit {
   private readonly tagService = inject(TagService);
   private readonly messageService = inject(MessageService);
-  private readonly confirmationService = inject(ConfirmationService);
+  private readonly desfazerService = inject(DesfazerService);
   private readonly formBuilder = inject(FormBuilder);
 
   readonly tags = signal<TagResumoDto[]>([]);
@@ -164,15 +162,19 @@ export class TagListagemPage implements OnInit {
       });
   }
 
-  confirmarExclusao(tag: TagResumoDto): void {
-    this.confirmationService.confirm({
-      message: `Deseja excluir a tag "${tag.nome}"? Esta ação não pode ser desfeita.`,
-      header: 'Confirmar exclusão',
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Excluir',
-      rejectLabel: 'Cancelar',
-      acceptButtonStyleClass: 'p-button-danger',
-      accept: () => this.excluirTag(tag),
+  /** Exclusão imediata (task 99): a tag sai da lista na hora e o toast oferece "Desfazer". */
+  excluir(tag: TagResumoDto): void {
+    const listaAnterior = this.tags();
+    this.tags.update((lista) => lista.filter((item) => item.id !== tag.id));
+
+    this.tagService.excluir(tag.id).subscribe({
+      next: () =>
+        this.desfazerService.oferecer({
+          mensagem: `Tag "${tag.nome}" excluída`,
+          desfazer: () => this.tagService.restaurar(tag.id),
+          aposDesfazer: () => this.inserirTag(tag),
+        }),
+      error: () => this.tags.set(listaAnterior),
     });
   }
 
@@ -184,19 +186,6 @@ export class TagListagemPage implements OnInit {
   campoEditarInvalido(nomeCampo: string): boolean {
     const controle = this.formularioEditar.get(nomeCampo);
     return !!(controle?.invalid && controle?.touched);
-  }
-
-  private excluirTag(tag: TagResumoDto): void {
-    this.tagService.excluir(tag.id).subscribe({
-      next: () => {
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Sucesso',
-          detail: `Tag "${tag.nome}" excluída com sucesso`,
-        });
-        this.tags.update((lista) => lista.filter((item) => item.id !== tag.id));
-      },
-    });
   }
 
   /** A listagem é ordenada por nome no servidor; a inserção local mantém a mesma ordem. */

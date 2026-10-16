@@ -18,6 +18,7 @@ import {
 } from '@project20/shared';
 import { StandardResponse } from '@project20/shared';
 import { PaginatedResult } from '@project20/shared';
+import { AtividadeRestaurarDto, AtividadeRestauradaDto } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
 import { UnauthorizedAccessException } from '../../../core/exceptions/unauthorized-access.exception';
@@ -242,6 +243,26 @@ export class AtividadeService {
       sucesso:  true,
       dados:    null,
       mensagem: 'Atividade excluída com sucesso',
+    };
+  }
+
+  /** Restaura a atividade excluída (soft delete revertido, sem cascata). Restrito a gestores. */
+  async restaurar(dto: AtividadeRestaurarDto): Promise<StandardResponse<AtividadeRestauradaDto>> {
+    const atividadeExcluida = await this.atividadeRepositorio.recuperarExcluida({ id: dto.id });
+    if (!atividadeExcluida) {
+      throw new ResourceNotFoundException('Atividade');
+    }
+
+    if (!atividadeExcluida.demandaAtiva) {
+      throw new BusinessException('A demanda desta atividade foi excluída; restaure a demanda antes de restaurar a atividade');
+    }
+
+    const atividadeRestaurada = await this.atividadeRepositorio.restaurar({ id: dto.id });
+
+    return {
+      sucesso:  true,
+      dados:    atividadeRestaurada,
+      mensagem: 'Atividade restaurada com sucesso',
     };
   }
 
