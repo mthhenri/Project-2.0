@@ -20,6 +20,8 @@
 
   <!-- Actions -->
   <div class="topbar__acoes flex items-center gap-2 flex-shrink-0">
+    <app-chip-execucao-ativa />
+
     <span class="topbar__hora text-sm text-muted-color font-mono tabular-nums">{{ horaAtual() }}</span>
 
     @if (sessao.usuarioAtual()) {

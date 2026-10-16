@@ -1,0 +1,53 @@
+@if (execucaoAtiva.primeiraCarga()) {
+  <span class="chip-execucao chip-execucao--esqueleto" aria-hidden="true"></span>
+} @else if (execucaoAtiva.ativa(); as execucao) {
+  <div class="chip-execucao chip-execucao--ativa">
+    <a
+      routerLink="/execucao"
+      class="chip-execucao__corpo"
+      [pTooltip]="execucao.descricao || 'Execução em andamento'"
+      tooltipPosition="bottom"
+    >
+      <span class="chip-execucao__ponto" aria-hidden="true"></span>
+      <span class="chip-execucao__texto">{{ execucao.descricao || 'Execução em andamento' }}</span>
+      <span class="chip-execucao__tempo" role="timer" aria-label="Tempo de execução">{{ cronometro() }}</span>
+    </a>
+    <p-button
+      icon="pi pi-pause"
+      [text]="true"
+      [rounded]="true"
+      size="small"
+      severity="secondary"
+      aria-label="Pausar execução"
+      (onClick)="abrirPausa($event, pausaPopover)"
+    />
+  </div>
+} @else {
+  <a routerLink="/atividade" class="chip-execucao chip-execucao--vazio">Sem execução ativa</a>
+}
+
+<p-popover #pausaPopover (onShow)="focarDescricao()">
+  <div class="chip-execucao__popover">
+    <label class="chip-execucao__rotulo" for="chip-execucao-descricao">
+      Descrição da execução @if (descricaoObrigatoria()) { <span>*</span> }
+    </label>
+    <textarea
+      id="chip-execucao-descricao"
+      pTextarea
+      spellcheck="true"
+      appBloquearCaracteresProibidos
+      rows="3"
+      class="chip-execucao__descricao w-full"
+      [formControl]="descricao"
+      (keydown.enter)="aoTeclar($event, pausaPopover)"
+      (keydown.escape)="pausaPopover.hide()"
+    ></textarea>
+    @if (descricao.touched && descricao.invalid) {
+      <small class="chip-execucao__erro">Informe a descrição para pausar.</small>
+    }
+    <div class="chip-execucao__acoes">
+      <p-button label="Cancelar" severity="secondary" [outlined]="true" size="small" (onClick)="pausaPopover.hide()" />
+      <p-button label="Pausar" icon="pi pi-pause" size="small" [loading]="pausando()" (onClick)="pausar(pausaPopover)" />
+    </div>
+  </div>
+</p-popover>

@@ -1,4 +1,4 @@
-import { Component, inject, signal, DestroyRef, OnInit, HostListener, ViewChild, ElementRef, computed } from '@angular/core';
+import { Component, inject, signal, DestroyRef, OnInit, HostListener, ViewChild, ElementRef, computed, effect, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -61,6 +61,7 @@ import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog
 import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
 import { BarraRecargaComponent } from '../../../../shared/components/barra-recarga/barra-recarga.component';
 import { DesfazerService } from '../../../../core/services/desfazer.service';
+import { ExecucaoAtivaService } from '../../../../core/services/execucao-ativa.service';
 
 type DemandaAtribuidaOpcao = DemandaAtribuidaDto & { rotulo: string };
 
@@ -105,6 +106,7 @@ export class AtividadeListagemPage implements OnInit {
   private readonly demandaService = inject(DemandaService);
   private readonly rotaAtiva = inject(ActivatedRoute);
   private readonly desfazerService = inject(DesfazerService);
+  private readonly execucaoAtiva = inject(ExecucaoAtivaService);
   private readonly messageService = inject(MessageService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
@@ -218,6 +220,17 @@ export class AtividadeListagemPage implements OnInit {
   );
 
   readonly mensagemCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS;
+
+  constructor() {
+    // Pausar pelo chip da topbar muda a linha da atividade: a lista se atualiza (task 95).
+    let pausasVistas = this.execucaoAtiva.pausasDoChip();
+    effect(() => {
+      const pausas = this.execucaoAtiva.pausasDoChip();
+      if (pausas === pausasVistas) return;
+      pausasVistas = pausas;
+      untracked(() => this.buscarAtividades());
+    });
+  }
 
   ngOnInit(): void {
     const demandaIdParam = Number(this.rotaAtiva.snapshot.queryParamMap.get('demandaId'));
