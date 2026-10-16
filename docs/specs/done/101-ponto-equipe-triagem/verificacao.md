@@ -23,6 +23,11 @@ Data: 2026-10-16. Frontend apenas. Implementada junto com a 100.
 
 ## Limites / pendente
 
-- O tooltip das pausas não foi exibido ao vivo (nenhum usuário tinha intervalo ≥ 15 min no dia).
-- O botão "Gerenciar usuários" não foi clicado (rota conferida por leitura).
 - Frontend sem testes automatizados (P-001).
+
+## Verificações complementares (2026-10-16, após o fecho)
+
+- **Tooltip das pausas:** com duas execuções do gestor no dia (13–14 h e 14:30–15:30 UTC, mais a de 16:42), o card mostra
+  o chip "2" e o tooltip "2 pausas ≥ 15 min".
+- **"Gerenciar usuários":** com `/ponto/todos` interceptado devolvendo lista vazia, o estado vazio mostra
+  "Nenhum usuário ativo encontrado." e o clique no botão navega para `/usuario`.

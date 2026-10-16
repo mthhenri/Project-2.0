@@ -36,7 +36,14 @@ Data: 2026-10-16. Frontend apenas. Implementada junto com a 101 (mesmos arquivos
 
 ## Limites / pendente
 
-- O botão "Hoje" a 360 px quebra para a linha de baixo (ajustado com `flex-wrap`); não reinspecionado depois.
-- O dialog não foi aberto com o usuário sem déficit (sem atalho "Faltante"); caminho coberto só por leitura.
-- Impressão real (`window.print`) não foi exercida: só o DOM da folha.
 - Frontend sem testes automatizados (P-001).
+
+## Verificações complementares (2026-10-16, após o fecho)
+
+- **"Hoje" a 360×800:** quebra limpo para a linha de baixo, sem overflow horizontal (0 px).
+- **Dialog em dia sem déficit:** com justificativa de 8 h cobrindo o dia 01/10 (saldo +0h 0min), o clique no badge abre
+  o dialog em 01/10/2026 com horas vazias e só os atalhos "Dia inteiro · 8 h" e "Meio período · 4 h" (sem "Faltante");
+  a lista mostra as justificativas do mês.
+- **Impressão:** `window.print()` é chamado uma vez ao clicar em Imprimir (stub em headless). Com `@media print` +
+  `page.pdf` (A4) saem 1 página só com o espelho (cabeçalho, 3 totais, tabela dia a dia com a observação da
+  justificativa). Limite: o diálogo nativo de impressão não é observável em headless.
