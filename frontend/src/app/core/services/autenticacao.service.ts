@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { AutenticacaoLoginDto, AutenticacaoTokenDto, StandardResponse } from '@project20/shared';
 import { UsuarioSessaoService } from './usuario-sessao.service';
+import { comErroTratadoPelaTela } from '../interceptors/error-handler.interceptor';
 import { ambiente } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -17,6 +18,7 @@ export class AutenticacaoService {
     return this.http.post<StandardResponse<AutenticacaoTokenDto>>(
       `${ambiente.apiUrl}/autenticacao/login`,
       dto,
+      comErroTratadoPelaTela(),
     ).pipe(
       tap((resposta) => {
         if (resposta.sucesso && resposta.dados) {

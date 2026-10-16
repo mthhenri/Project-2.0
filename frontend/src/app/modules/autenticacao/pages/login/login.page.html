@@ -1,29 +1,53 @@
 <div class="login-pagina">
+  <div class="login-pagina__tema">
+    <p-button
+      [icon]="tema.eEscuro() ? 'pi pi-sun' : 'pi pi-moon'"
+      [text]="true"
+      [rounded]="true"
+      severity="secondary"
+      [attr.aria-label]="tema.eEscuro() ? 'Usar tema claro' : 'Usar tema escuro'"
+      (onClick)="tema.alternarTema()"
+    />
+  </div>
+
   <div class="login-pagina__container">
     <p-card>
       <div class="login-pagina__titulo">
         <h1 class="login-pagina__titulo-nome">Project 2.0</h1>
-        <p class="login-pagina__titulo-descricao">Faça login para continuar</p>
+        <p class="login-pagina__titulo-descricao">
+          {{ modoLembrado() ? 'Bem-vindo de volta' : 'Faça login para continuar' }}
+        </p>
       </div>
 
       <form [formGroup]="formulario" (ngSubmit)="entrar()">
-        <div class="login-pagina__campo">
-          <label for="login-input" class="login-pagina__label">Login</label>
-          <input
-            id="login-input"
-            pInputText
-            formControlName="login"
-            placeholder="seu.login"
-            autocomplete="username"
-            class="w-full"
-          />
-          @if (formulario.controls['login'].touched && formulario.controls['login'].hasError('required')) {
-            <small class="login-pagina__erro-campo">Login é obrigatório</small>
-          }
-          @if (formulario.controls['login'].touched && formulario.controls['login'].hasError('minlength')) {
-            <small class="login-pagina__erro-campo">Mínimo de 4 caracteres</small>
-          }
-        </div>
+        @if (modoLembrado()) {
+          <div class="login-pagina__identidade">
+            <span class="login-pagina__avatar" aria-hidden="true">{{ iniciais() }}</span>
+            <div class="login-pagina__identidade-texto">
+              <strong class="login-pagina__identidade-nome">{{ usuarioLembrado()!.nomeCompleto }}</strong>
+              <span class="login-pagina__identidade-login">&#64;{{ usuarioLembrado()!.login }}</span>
+            </div>
+          </div>
+        } @else {
+          <div class="login-pagina__campo">
+            <label for="login-input" class="login-pagina__label">Login</label>
+            <input
+              id="login-input"
+              pInputText
+              formControlName="login"
+              placeholder="seu.login"
+              autocomplete="username"
+              class="w-full"
+              (blur)="normalizarLogin()"
+            />
+            @if (formulario.controls['login'].touched && formulario.controls['login'].hasError('required')) {
+              <small class="login-pagina__erro-campo">Login é obrigatório</small>
+            }
+            @if (formulario.controls['login'].touched && formulario.controls['login'].hasError('minlength')) {
+              <small class="login-pagina__erro-campo">Mínimo de 4 caracteres</small>
+            }
+          </div>
+        }
 
         <div class="login-pagina__campo">
           <label for="senha-input" class="login-pagina__label">Senha</label>
@@ -36,20 +60,28 @@
             autocomplete="current-password"
             styleClass="w-full"
             inputStyleClass="w-full"
+            (keydown)="atualizarCapsLock($event)"
+            (keyup)="atualizarCapsLock($event)"
           />
+          @if (capsLockAtivo()) {
+            <small class="login-pagina__aviso-caps"><i class="pi pi-exclamation-triangle"></i> Caps Lock ligado</small>
+          }
           @if (formulario.controls['senha'].touched && formulario.controls['senha'].hasError('required')) {
             <small class="login-pagina__erro-campo">Senha é obrigatória</small>
           }
-          @if (formulario.controls['senha'].touched && formulario.controls['senha'].hasError('minlength')) {
-            <small class="login-pagina__erro-campo">Mínimo de 8 caracteres</small>
+        </div>
+
+        <!-- Altura reservada: a mensagem aparece sem deslocar o botão. -->
+        <div class="login-pagina__mensagem" aria-live="polite">
+          @if (erroLogin()) {
+            <p-message severity="error" [text]="erroLogin()" styleClass="w-full" />
           }
         </div>
 
-        @if (erroLogin()) {
-          <div class="login-pagina__erro-login">
-            <p-message severity="error" [text]="erroLogin()" styleClass="w-full" />
-          </div>
-        }
+        <div class="login-pagina__lembrar">
+          <p-checkbox formControlName="lembrar" [binary]="true" inputId="lembrar-usuario" />
+          <label for="lembrar-usuario">Lembrar meu usuário neste computador</label>
+        </div>
 
         <p-button
           type="submit"
@@ -59,20 +91,21 @@
           styleClass="w-full"
         />
 
-        @if (temLoginSalvo()) {
-          <div class="login-pagina__esquecer">
+        @if (modoLembrado()) {
+          <div class="login-pagina__outro">
             <p-button
-              label="Esquecer identificação"
-              icon="pi pi-trash"
+              label="Entrar com outro usuário"
               severity="secondary"
               [text]="true"
               size="small"
               type="button"
-              (onClick)="esquecerLogin()"
+              (onClick)="entrarComOutroUsuario()"
             />
           </div>
         }
       </form>
+
+      <p class="login-pagina__ajuda">Esqueceu a senha? Solicite a redefinição a um gestor.</p>
     </p-card>
   </div>
 </div>

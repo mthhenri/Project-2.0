@@ -1,13 +1,13 @@
-import { CanActivateFn } from '@angular/router';
+import { CanActivateFn, Router } from '@angular/router';
 import { inject } from '@angular/core';
-import { Router } from '@angular/router';
+import { parametrosRetorno } from '../interceptors/error-handler.interceptor';
 
-export const autenticacaoGuard: CanActivateFn = () => {
+export const autenticacaoGuard: CanActivateFn = (_rota, estado) => {
   const token = localStorage.getItem('access_token');
 
   if (token) return true;
 
-  return inject(Router).createUrlTree(['/autenticacao']);
+  return inject(Router).createUrlTree(['/autenticacao'], { queryParams: parametrosRetorno(estado.url) });
 };
 
 export const somentePublicoGuard: CanActivateFn = () => {
