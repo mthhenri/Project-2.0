@@ -15,9 +15,10 @@
 
 ## 1. Próxima Task
 
-Nenhuma task em andamento. O backlog **não está na `master`**: as specs pendentes vivem em duas
-branches `claude/*` ainda não mergeadas (ver `MEMORY.md` §3), e a numeração 94 está duplicada entre
-elas. Resolva o merge e a numeração antes de puxar uma task.
+Nenhuma task em andamento. O backlog tem 24 specs em `docs/specs/backlog/`: as tasks **94–116**
+(revisão de UI/UX, guarda-chuva `revisao-ui-ux.spec.md`) e a **117** (remover a descrição da
+atividade). Siga a ordem de fases de `INDEX-revisao-ux.md` (começa por 97, 98 e 99, que a maioria
+das demais pressupõe); a 117 é independente e mexe em banco (migration `0028`).
 
 ## 2. Estado por Área
 

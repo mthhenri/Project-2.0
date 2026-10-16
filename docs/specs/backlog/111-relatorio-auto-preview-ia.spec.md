@@ -1,6 +1,6 @@
 # 111 — Relatório de execuções: preview automático, chips de período e revisão IA
 
-**Origem:** Revisão de UI/UX — print `prints/15-relatorio-dialog.png`, análise `analise-detalhada/execucao-historico.md`
+**Origem:** Revisão de UI/UX — print `docs/assets/revisao-ui-ux/prints/15-relatorio-dialog.png`, análise `analise-detalhada/execucao-historico.md`
 
 **Depende de:** 110 (ponto de entrada no header de Execuções)
 

@@ -1,6 +1,6 @@
 # 114 — Anotações: drawer lateral com auto-save por mudança e fechar-salvando
 
-**Origem:** Revisão de UI/UX — print `prints/23-anotacoes-drawer.png`, análises `usuario-anotacoes.md` e `layout-topbar.md`
+**Origem:** Revisão de UI/UX — print `docs/assets/revisao-ui-ux/prints/23-anotacoes-drawer.png`, análises `usuario-anotacoes.md` e `layout-topbar.md`
 
 **Depende de:** 96 (botão da topbar)
 

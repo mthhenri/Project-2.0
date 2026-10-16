@@ -2,7 +2,7 @@
 
 > **Objetivo:** revisar todas as telas e dialogs acessíveis do sistema e propor otimizações que reduzam ao máximo o esforço do usuário para realizar qualquer ação — menos cliques, menos digitação, menos navegação, menos espera.
 >
-> **Método:** análise do código real do frontend (templates, componentes, services e DTOs) tela a tela, verificação das sugestões contra as regras de negócio e contra o backend (endpoints/DTOs existentes), e consolidação de padrões transversais. Cada tela ganhou um **mockup navegável em alta fidelidade** do estado otimizado, com **callouts numerados** (círculos âmbar) apontando as principais mudanças. Os prints estão em [`prints/`](./prints), os mockups HTML em [`mockups/`](./mockups) e a análise completa por tela (problemas, fluxos com contagem de cliques e especificação de redesign) em [`analise-detalhada/`](./analise-detalhada).
+> **Método:** análise do código real do frontend (templates, componentes, services e DTOs) tela a tela, verificação das sugestões contra as regras de negócio e contra o backend (endpoints/DTOs existentes), e consolidação de padrões transversais. Cada tela ganhou um **mockup navegável em alta fidelidade** do estado otimizado, com **callouts numerados** (círculos âmbar) apontando as principais mudanças. Os prints estão em [`docs/assets/revisao-ui-ux/prints/`](../../../assets/revisao-ui-ux/prints), os mockups HTML em [`mockups/`](./mockups) e a análise completa por tela (problemas, fluxos com contagem de cliques e especificação de redesign) em [`analise-detalhada/`](./analise-detalhada).
 
 ## Critérios usados (menor esforço do usuário)
 
@@ -69,7 +69,7 @@ Cada seção traz: estado atual (resumo), principais problemas, o print do mocku
 
 **Hoje:** card central com login+senha. Sem autofocus (todo login começa com clique de mira); **a senha é persistida em texto puro no `localStorage`** e re-preenchida; pós-login navega fixo para `/atividade` (a rota padrão é `/ponto`) e o guard descarta a URL pedida (deep links quebram); erro entre a senha e o botão causa layout shift; validação de senha (mín. 8) mais restritiva que o backend bloqueia senhas válidas.
 
-![Login otimizado](./prints/01-login.png)
+![Login otimizado](../../../assets/revisao-ui-ux/prints/01-login.png)
 
 **Callouts:** ① autofocus inteligente (Login vazio → foca Login; usuário lembrado → foca Senha; Enter sempre funciona) · ② estado "Bem-vindo de volta" lembra **apenas o login** — a senha nunca vai ao localStorage · ③ "Entrar com outro usuário" no lugar de "Esquecer identificação" (lixeira) · ④ aviso de Caps Lock + área de mensagem com altura reservada (o botão nunca pula) · ⑤ pós-login → `returnUrl` ou `/ponto` · ⑥ validação alinhada ao backend + normalização do login.
 
@@ -79,7 +79,7 @@ Cada seção traz: estado atual (resumo), principais problemas, o print do mocku
 
 **Hoje:** logo aponta para `/atividade` (≠ rota padrão); execução ativa invisível; tema a 2 cliques dentro do popover; identidade do usuário só via hover; "Sair" exposto colado ao perfil (logout acidental); toast bottom-center cobre footers de dialogs; nenhum atalho de teclado; nav estoura em janelas menores.
 
-![Topbar otimizada](./prints/02-topbar.png)
+![Topbar otimizada](../../../assets/revisao-ui-ux/prints/02-topbar.png)
 
 **Callouts:** ① **chip de execução ativa** — descrição truncada + cronômetro ao vivo + pausar; clique no corpo → `/execucao`; atualiza em `visibilitychange` (o backend auto-encerra às 23:59) · ② popover de pausa com descrição **pré-preenchida** (obrigatória p/ dev, opcional p/ gestor — regra real do DTO) e Enter confirma · ③ tema claro/escuro em 1 clique · ④ anotações só-ícone (consistência + espaço p/ o chip) · ⑤ avatar com iniciais + menu com identidade, switch "Tempos em dias" e **Sair dentro do menu** · ⑥ atalhos de teclado nos tooltips (`g a`, `n`…).
 
@@ -89,7 +89,7 @@ Cada seção traz: estado atual (resumo), principais problemas, o print do mocku
 
 **Hoje:** dev não consegue imprimir o próprio espelho (botão é gestor-only por engano de condição); justificar exige ir ao header e re-selecionar o dia no datepicker (~9 passos); spinner apaga a tela a cada troca de mês e ao voltar à aba; horários com data repetida; saldo sem contexto de meta.
 
-![Ponto mensal otimizado](./prints/03-ponto-mensal.png)
+![Ponto mensal otimizado](../../../assets/revisao-ui-ux/prints/03-ponto-mensal.png)
 
 **Callouts:** ① chip do usuário removível (gestor volta à equipe em 1 clique) · ② **"Justificar" inline na linha do dia** com dia e déficit pré-preenchidos · ③ **"Imprimir" também para o desenvolvedor** (backend já permite; corrigir assinatura do gestor) · ④ badge de justificativa clicável (gestor) abre o dialog naquele dia · ⑤ navegação de mês com "Hoje" + atalhos ←/→/T · ⑥ card **"Saldo até hoje"** (só no mês corrente) + horários `HH:mm` + intervalos ≥ 15 min (valor real da config).
 
@@ -97,7 +97,7 @@ Cada seção traz: estado atual (resumo), principais problemas, o print do mocku
 
 **Hoje:** grid de cards sem triagem: nenhuma contagem, ordenação ou filtro de ativos; nome do usuário não é clicável (abrir o mensal = 3 cliques num select sem busca); contador de pausas sem explicação.
 
-![Ponto equipe otimizado](./prints/04-ponto-equipe.png)
+![Ponto equipe otimizado](../../../assets/revisao-ui-ux/prints/04-ponto-equipe.png)
 
 **Callouts:** ① **nome/avatar clicável** abre o mensal daquele usuário (1 clique) · ② barra de triagem "4 pessoas · 2 trabalhando agora" · ③ toggle "Somente ativos" (filtro client-side) + ativos ordenados primeiro · ④ select de usuário **com busca** · ⑤ header com posições fixas (controles desabilitam em vez de sumir — sem layout shift).
 
@@ -105,7 +105,7 @@ Cada seção traz: estado atual (resumo), principais problemas, o print do mocku
 
 **Hoje:** abre vazio (dia e horas nunca pré-preenchidos), sem autofocus, Enter não salva, botão "Salvar" no corpo e "Fechar" no footer, remoção com confirm modal central longe do cursor.
 
-![Dialog justificar otimizado](./prints/05-ponto-justificar-dialog.png)
+![Dialog justificar otimizado](../../../assets/revisao-ui-ux/prints/05-ponto-justificar-dialog.png)
 
 **Callouts:** ① dia pré-preenchido pela linha que abriu · ② **chips de horas** (Dia inteiro · Meio período · Faltante, em decimal como o campo) · ③ autofocus no Título · ④ remoção com confirm-popup ancorado na lixeira · ⑤ Enter salva; ações agrupadas no footer.
 
@@ -113,19 +113,19 @@ Cada seção traz: estado atual (resumo), principais problemas, o print do mocku
 
 **Hoje:** a tela mais usada. Registrar execução manual parte de 2 datetimes vazios (~12 cliques); nada indica que você tem execução ativa (o erro só vem do backend); filtros somem ao navegar; 5 icon-buttons por linha; toda ação recarrega a lista inteira (perde scroll); 3 ícones de documento por linha geram ruído; exclusão com confirm.
 
-![Atividades otimizada](./prints/06-atividade-listagem.png)
+![Atividades otimizada](../../../assets/revisao-ui-ux/prints/06-atividade-listagem.png)
 
 **Callouts:** ① chip de execução na topbar substitui o "caçar a linha do pause" · ② filtros persistentes na URL + chip-toggle **"Minhas atividades"** + chip de contexto `Demanda: X ✕` + "Limpar filtros (3)" só quando há filtros · ③ ações enxutas: **Play/Pause grande** (disabled com tooltip que ensina a regra de status) + Visualizar + kebab ⋮ · ④ status inline otimista (sem reload) · ⑤ kebab com Tags / Registrar execução / Excluir · ⑥ **indicador único de documentos** da demanda (pontinhos coloridos → popover) no lugar de 3 ícones por linha · ⑦ seleção múltipla com barra de ações em massa (gestor) · ⑧ excluir sem confirm, toast com Desfazer.
 
 ### 3.7 Atividades — dialog "Iniciar execução"
 
-![Iniciar execução otimizado](./prints/07-atividade-iniciar-dialog.png)
+![Iniciar execução otimizado](../../../assets/revisao-ui-ux/prints/07-atividade-iniciar-dialog.png)
 
 **Callouts:** ① contexto (projeto · demanda · dono) no topo · ② autofocus na descrição · ③ **"Usar esta descrição"** nas últimas execuções — retomar o trabalho sem digitar nada · ④ Ctrl+Enter inicia.
 
 ### 3.8 Atividades — dialog "Registrar execução" (gestor)
 
-![Registrar execução otimizado](./prints/08-atividade-registrar-dialog.png)
+![Registrar execução otimizado](../../../assets/revisao-ui-ux/prints/08-atividade-registrar-dialog.png)
 
 **Callouts:** ① **chips de duração rápida** (30min · 1h · 2h · 4h · Manhã) preenchem Início/Fim retroativamente · ② defaults: Início = agora−1h, Fim = agora · ③ autofocus na descrição + assistente IA. **Ganho: ~12 cliques → 3.**
 
@@ -133,7 +133,7 @@ Cada seção traz: estado atual (resumo), principais problemas, o print do mocku
 
 **Hoje:** beco sem saída — não mostra projeto/demanda/tempo total e não permite nenhuma ação além de editar nome/descrição; o Quill abre sempre em modo edição, mesmo para leitura.
 
-![Visualizar atividade otimizado](./prints/09-atividade-visualizar-dialog.png)
+![Visualizar atividade otimizado](../../../assets/revisao-ui-ux/prints/09-atividade-visualizar-dialog.png)
 
 **Callouts:** ① linha de contexto Projeto · Demanda · ② status inline (mesmo popover da tabela) · ③ tempo total executado · ④ tags editáveis ali mesmo · ⑤ descrição em **modo leitura** com botão "Editar" (Quill só carrega ao editar) · ⑥ **Play/Pause no footer** — agir sem fechar o dialog.
 
@@ -141,7 +141,7 @@ Cada seção traz: estado atual (resumo), principais problemas, o print do mocku
 
 **Hoje:** rota órfã e duplicada (o dialog da listagem tem mais recursos e defaults diferentes); sem seletor de demanda (sem `?demandaId` é beco sem saída com toast tardio); não expõe responsável nem tags (o backend aceita `usuarioId` e `tagIds`); status default divergente.
 
-![Nova atividade otimizada](./prints/16-atividade-formulario.png)
+![Nova atividade otimizada](../../../assets/revisao-ui-ux/prints/16-atividade-formulario.png)
 
 **Callouts:** ① breadcrumb de contexto + **demanda como seletor com busca** pré-preenchida pela URL · ② status em botões segmentados, default **Desenvolvendo** (alinhado ao dialog) · ③ **Responsável (gestor) + Tags direto na criação** · ④ teclado de ponta a ponta (Enter salva, Ctrl+Enter da descrição, Esc volta) · ⑤ IA com gate correto (≥10 caracteres, tooltip explica) · ⑥ **"Salvar e criar outra"** mantém demanda/status/responsável/tags. *Recomendação estrutural: unificar num único componente com o dialog da listagem.*
 
@@ -149,7 +149,7 @@ Cada seção traz: estado atual (resumo), principais problemas, o print do mocku
 
 **Hoje:** botão habilita com 1 caractere mas o backend exige 10 (erro 400 silencioso); resultado em 2 painéis que empurram o formulário; texto não é editável antes de aceitar; sem regenerar; substituição destrutiva.
 
-![Assistente IA otimizado](./prints/17-assistente-ia-dialog.png)
+![Assistente IA otimizado](../../../assets/revisao-ui-ux/prints/17-assistente-ia-dialog.png)
 
 **Callouts:** ① sugestão em **textarea editável** antes de usar · ② "Regenerar" · ③ toast com **"Desfazer"** após aceitar.
 
@@ -157,7 +157,7 @@ Cada seção traz: estado atual (resumo), principais problemas, o print do mocku
 
 **Hoje:** sem timer (o componente pronto não é usado); pausar é impossível nesta tela; iniciar **redireciona para /execucao** (expulsa do contexto); botão Iniciar ignora todas as regras (posse, status, execução dupla) e o erro só vem do backend; descrição/tags via dialogs; execuções recentes sem executor e com duração em "135 min".
 
-![Detalhe da atividade otimizado](./prints/18-atividade-detalhe.png)
+![Detalhe da atividade otimizado](../../../assets/revisao-ui-ux/prints/18-atividade-detalhe.png)
 
 **Callouts:** ① breadcrumb correto (Atividades › Projeto · Demanda) · ② registrar tempo (gestor) sem voltar à listagem · ③ **faixa hero com timer ao vivo** — iniciar permanece na página (otimista) · ④ **pausar em 1 clique** e, se já há execução em outra atividade, aviso com **"Pausar lá e iniciar aqui"** (1 clique encadeia encerrar+iniciar) · ⑤ regras visíveis: status bloqueado durante execução (tooltip), play desabilitado com explicação · ⑥ descrição click-to-edit e tags em popover (sem dialogs).
 
@@ -165,7 +165,7 @@ Cada seção traz: estado atual (resumo), principais problemas, o print do mocku
 
 **Hoje:** toda visita começa selecionando projeto (nada é lembrado); **não há busca nem filtro** (o `filtroStatus` existe no código do grafo mas nunca ganhou UI); todas as ações só no botão-direito; clique na linha expande em vez de abrir (inconsistente com o grafo); qualquer alteração colapsa a árvore inteira; trocar status na Lista custa 5 cliques (no Planejamento custa 2).
 
-![Demandas lista otimizada](./prints/10-demanda-lista.png)
+![Demandas lista otimizada](../../../assets/revisao-ui-ux/prints/10-demanda-lista.png)
 
 **Callouts:** ① toolbar com busca instantânea + **chips de status com contadores** + tags + expandir/recolher · ② **chip de status clicável em toda linha** (popover, otimista, com Desfazer) · ③ clique na linha abre o detalhe; chevron expande; ações `+` e `⋮` visíveis no hover · ④ projeto lembrado + modo persistido na URL · ⑤ **"executando agora"** e mini-barra de progresso na própria lista · ⑥ "+" de sub-demanda no hover das estruturais.
 
@@ -173,7 +173,7 @@ Cada seção traz: estado atual (resumo), principais problemas, o print do mocku
 
 **Hoje:** cores dark hardcoded quebram o tema claro; dados do nó só em tooltip nativo `<title>` (delay, sem formatação); legenda em painel fixo de 240px meramente informativo; impossível filtrar.
 
-![Demandas grafo otimizado](./prints/11-demanda-grafo.png)
+![Demandas grafo otimizado](../../../assets/revisao-ui-ux/prints/11-demanda-grafo.png)
 
 **Callouts:** ① os mesmos chips de status/tags/busca **filtram o grafo** · ② hover-card rico (nome, status, progresso, tags; clique abre o detalhe) · ③ legenda vira **popover-filtro** (cada status é clicável) e libera 240px de canvas · ④ tokens do tema (grafo respeita claro/escuro).
 
@@ -181,7 +181,7 @@ Cada seção traz: estado atual (resumo), principais problemas, o print do mocku
 
 **Hoje:** 100% somente leitura (mudar status = 5 cliques via dialog aninhado com GET+spinner); tags e membros enterrados em abas E com dialog extra redundante; conexão nova via select de 200 itens **sem busca**; navegação interna refaz ~8 requests sem "voltar"; "excluir" ameaça "não pode ser desfeita" (falso — é soft delete).
 
-![Detalhe da demanda otimizado](./prints/12-demanda-detalhe-dialog.png)
+![Detalhe da demanda otimizado](../../../assets/revisao-ui-ux/prints/12-demanda-detalhe-dialog.png)
 
 **Callouts:** ① breadcrumb com **"← Voltar" instantâneo** (cache da navegação interna) · ② status-dropdown no tag + título com lápis + métricas click-to-edit (previsão com atalhos +1 sem/+2 sem/fim do mês) · ③ **tags e membros promovidos ao cabeçalho** — popover-toggle salva na hora (eliminam 2 abas e 2 dialogs) · ④ previsão de término click-to-edit · ⑤ **conexão inline com autocomplete + direção** (fim do select de 200 itens sem filtro; erro de ciclo aparece inline) · ⑥ remoções com Desfazer.
 
@@ -189,7 +189,7 @@ Cada seção traz: estado atual (resumo), principais problemas, o print do mocku
 
 **Hoje:** sem autofocus; Enter não cria; **o dialog não fecha após criar** (reseta silenciosamente — parece bug); formulário mostra tudo de uma vez; criar estrutural continua exigindo horas/previsão.
 
-![Nova demanda otimizada](./prints/13-demanda-nova-dialog.png)
+![Nova demanda otimizada](../../../assets/revisao-ui-ux/prints/13-demanda-nova-dialog.png)
 
 **Callouts:** ① autofocus no Nome · ② pai pré-preenchido pelo contexto · ③ atalhos de data · ④ marcar "estrutural" esconde Estimativa/Previsão · ⑤ "Mais opções" colapsado (status/membros/tags) · ⑥ footer com **"Criar Demanda" (fecha)** + **"Criar e adicionar outra"** (explícito) + Enter cria.
 
@@ -197,7 +197,7 @@ Cada seção traz: estado atual (resumo), principais problemas, o print do mocku
 
 **Hoje:** relatório só acessível via Projetos → detalhe → botão (2 telas de distância); colunas repetem a data em toda linha; execução em andamento sem destaque nem duração ao vivo; select de usuário sem busca; edição só pelo lápis minúsculo; empty state morto.
 
-![Execuções otimizada](./prints/14-execucao-historico.png)
+![Execuções otimizada](../../../assets/revisao-ui-ux/prints/14-execucao-historico.png)
 
 **Callouts:** ① **botão "Relatório" no header** (com select de projeto no dialog) · ② subtítulo com contexto e total do dia sem scroll · ③ linha ativa fixada no topo com tag pulsante e **cronômetro ao vivo**; colunas só com `HH:mm` · ④ navegação de dia por teclado (←/→/Home) e estado na URL · ⑤ célula de descrição clicável (alvo ~20× maior) com validação inline no dialog de edição · ⑥ select com busca + chip "Minhas".
 
@@ -205,7 +205,7 @@ Cada seção traz: estado atual (resumo), principais problemas, o print do mocku
 
 **Hoje:** abre vazio mesmo com defaults válidos (preview é clique obrigatório); resultado antigo fica na tela sem marca de obsoleto ao trocar filtros (risco de baixar CSV do período errado); **"Revisar com IA" permanentemente desabilitado** ("Em breve") apesar de endpoint e DTOs prontos no backend.
 
-![Relatório otimizado](./prints/15-relatorio-dialog.png)
+![Relatório otimizado](../../../assets/revisao-ui-ux/prints/15-relatorio-dialog.png)
 
 **Callouts:** ① **chips de período** (Este mês · Mês passado · Este ano · Personalizado) · ② **preview automático** ao abrir e a cada filtro (debounce; resultado esmaece durante refetch); "Baixar CSV" promovido a ação primária · ③ totais como stat-tiles · ④ **"Revisar com IA" habilitado**, com contadores por severidade e achados ordenados ALTA→BAIXA.
 
@@ -213,7 +213,7 @@ Cada seção traz: estado atual (resumo), principais problemas, o print do mocku
 
 **Hoje:** sem busca/filtro; trocar status exige entrar no detalhe e abrir o dialog de edição (~6 cliques); lixeira permanente no card com confirm; edição só pelo detalhe.
 
-![Projetos otimizada](./prints/19-projeto-listagem.png)
+![Projetos otimizada](../../../assets/revisao-ui-ux/prints/19-projeto-listagem.png)
 
 **Callouts:** ① **tag de status clicável no card** (menu, otimista) — 6 cliques → 2 · ② kebab ⋮ com "Editar" na própria listagem · ③ busca instantânea + filtro segmentado com contadores, persistidos na URL · ④ exclusão com Desfazer no toast.
 
@@ -221,7 +221,7 @@ Cada seção traz: estado atual (resumo), principais problemas, o print do mocku
 
 **Hoje:** sem resumo do projeto (progresso/contagens); ações da árvore só no botão-direito; sem busca; sem atalho para Grafo/Planejamento; datas invisíveis quando nulas.
 
-![Detalhe do projeto otimizado](./prints/20-projeto-detalhe.png)
+![Detalhe do projeto otimizado](../../../assets/revisao-ui-ux/prints/20-projeto-detalhe.png)
 
 **Callouts:** ① tag de status interativa no cabeçalho · ② **faixa de resumo** (contadores por status clicáveis + progresso executado/estimado — tudo client-side dos dados já carregados) · ③ toggle Lista | Grafo | Planejamento navega para `/demanda` com o projeto selecionado · ④ **indicadores T·C·D** (técnica/cliente/doc) coloridos quando preenchidos, clique abre direto · ⑤ ações `+` e `⋮` no hover da linha.
 
@@ -229,13 +229,13 @@ Cada seção traz: estado atual (resumo), principais problemas, o print do mocku
 
 **Hoje:** ativar/inativar exige perfil → editar → select → salvar (~5 cliques); toda edição passa pelo pedágio do dialog de perfil; filtros dropdown; exclusão com confirm.
 
-![Usuários otimizada](./prints/21-usuario-listagem.png)
+![Usuários otimizada](../../../assets/revisao-ui-ux/prints/21-usuario-listagem.png)
 
 **Callouts:** ① **status como switch inline** na linha (1 clique, otimista, Desfazer) · ② ações diretas no hover (editar / senha / excluir) sem passar pelo perfil · ③ filtros segmentados de 1 clique (Tipo e Status) · ④ undo no toast · ⑤ anotações do usuário a 1 clique (ícone destacado quando existem).
 
 ### 3.22 Usuários — dialog "Novo Usuário"
 
-![Novo usuário otimizado](./prints/22-usuario-novo-dialog.png)
+![Novo usuário otimizado](../../../assets/revisao-ui-ux/prints/22-usuario-novo-dialog.png)
 
 **Callouts:** ① autofocus no Nome · ② **login auto-gerado** a partir do nome (editável) · ③ **"Gerar senha"** forte + copiar · ④ tipo default "Desenvolvedor" em botões segmentados · ⑤ Enter cria. *(Editar reutiliza o mesmo dialog, sem o campo senha, que tem dialog próprio.)*
 
@@ -243,7 +243,7 @@ Cada seção traz: estado atual (resumo), principais problemas, o print do mocku
 
 **Hoje:** modal de **95vw×95vh** que cobre o app inteiro para uma nota pessoal; Esc e clique-fora desabilitados; fechar com pendências abre confirm "Salvar/Descartar" (um misclick perde texto); auto-save cego a cada 30s **mesmo sem alterações** (PUTs inúteis que ainda forçam reload da listagem ao fechar).
 
-![Anotações drawer otimizado](./prints/23-anotacoes-drawer.png)
+![Anotações drawer otimizado](../../../assets/revisao-ui-ux/prints/23-anotacoes-drawer.png)
 
 **Callouts:** ① toolbar enxuta (9 controles) · ② autofoco no editor — o empty state é o próprio campo · ③ **indicador vivo "Editando… → Salvando… → ✓ Salvo às 14:32"** com auto-save por mudança (debounce 2s), não por relógio · ④ **drawer lateral (~520px)** — anotar olhando os dados da tela · ⑤ Esc/clique-fora fecham **salvando** (flush no fechamento; sem confirm) · ⑥ "Limpar" com Desfazer (7s) em vez de confirm "irreversível".
 
@@ -251,7 +251,7 @@ Cada seção traz: estado atual (resumo), principais problemas, o print do mocku
 
 **Hoje:** o calendário é só visualização (criar exige o botão do header + selecionar a data de novo no dialog); dia marcado não é clicável; navegação para outro ano = até 17 cliques nos chevrons; tabela com colunas "Duração"/"Recorrente" esparsas; sem legenda.
 
-![Calendário otimizado](./prints/24-calendario.png)
+![Calendário otimizado](../../../assets/revisao-ui-ux/prints/24-calendario.png)
 
 **Callouts:** ① **clique num dia vazio cria** (dialog abre com a data preenchida e foco na descrição) · ② **clique num dia marcado abre popover** com editar/excluir e destaca a linha na tabela · ③ botão "Hoje" + stepper de ano · ④ legenda fixa (cores + anel = meio período) · ⑤ badges compactos na linha (tipo + meio período + "todo ano"). *(Dica extra: no editar, link "Excluir e recriar" contorna a data imutável do DTO.)*
 
@@ -259,7 +259,7 @@ Cada seção traz: estado atual (resumo), principais problemas, o print do mocku
 
 **Hoje:** criar tag abre dialog completo com colorpicker gigante; excluir com confirm; sem busca; trocar só a cor exige o dialog inteiro.
 
-![Tags otimizada](./prints/25-tag-listagem.png)
+![Tags otimizada](../../../assets/revisao-ui-ux/prints/25-tag-listagem.png)
 
 **Callouts:** ① busca com `/` · ② **quick-add sempre visível** — nome + Enter cria e mantém o foco (5 tags = 5 nomes + 5 Enters, zero dialogs) · ③ **popover de paleta no dot de cor** — troca de cor inline com PUT imediato · ④ ações no hover do card · ⑤ exclusão com Desfazer.
 
@@ -282,7 +282,7 @@ Durante a verificação contra o código e as regras de negócio, os seguintes a
 
 | Pasta | Conteúdo |
 |---|---|
-| [`prints/`](./prints) | 25 prints dos mockups otimizados (callouts âmbar numerados) |
+| [`prints/`](../../../assets/revisao-ui-ux/prints) | 25 prints dos mockups otimizados (callouts âmbar numerados) |
 | [`mockups/`](./mockups) | Fonte HTML dos mockups (abra no navegador; `base.css` compartilhado) |
 | [`analise-detalhada/`](./analise-detalhada) | Análise completa por tela: fluxos com contagem de cliques, todos os problemas, sugestões com impacto e specs de redesign |
 

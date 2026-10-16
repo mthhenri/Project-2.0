@@ -12,6 +12,35 @@
 
 ---
 
+## 2026-10-16 — Merge das últimas branches de backlog e realocação do material da revisão de UX
+
+**O que mudou e por quê.** Com a decisão do autor ("concordo" com a proposta), as duas branches
+`claude/*` restantes foram mergeadas em `claude/adotar-kit-base`, sem conflito:
+`ui-ux-review-optimization-4da6md` (specs 94–116 e 68 arquivos de revisão) e
+`remove-activity-description-gtew58` (uma spec). Para o repositório passar no `repo:verificar` sob a
+política de §3.1, o material foi reorganizado sem apagar nada:
+
+- `docs/reviews/ui-ux/` → `docs/specs/backlog/revisao-ui-ux/` (README, 16 análises, 25 mockups HTML
+  e CSS), com a nova spec proprietária `revisao-ui-ux.spec.md` ao lado, como a política exige.
+- Os 25 prints (PNG, ~4,5 MB) → `docs/assets/revisao-ui-ux/prints/`. O verificador proíbe qualquer
+  PNG sob `docs/specs/` e só aceita mídia versionada em `docs/assets/`; a primeira tentativa, sob
+  uma pasta `fixtures/` dentro da spec, foi barrada por essa outra regra. Links relativos do
+  README e referências nas specs 94–116 corrigidos; um script conferiu que **todos** os links
+  relativos de `.md` para `.png`, `.html` e `.md` na pasta resolvem (0 quebrados).
+- `INDICE-revisao-ux.md` → `INDEX-revisao-ux.md` (o verificador só aceita o prefixo `INDEX-` como
+  arquivo solto no estado).
+- **Renumeração:** `94-remover-descricao-atividade` → `117-remover-descricao-atividade`, por colisão
+  com a `94-login-seguranca-e-fluxo` da revisão; escolhi mexer na spec isolada (um arquivo, sem
+  referências) em vez de renumerar as 23 interligadas.
+
+**Verificado.** `npm run repo:verificar` limpo; 0 links relativos quebrados na pasta da revisão.
+**Não verificado:** nenhuma das 24 specs foi lida em conteúdo além dos cabeçalhos e das referências
+movidas; o texto de cada uma é do autor da revisão e não foi reavaliado. O conteúdo textual do
+`README.md` da revisão continua mencionando `prints/NN-*.png` em prosa (53 menções), que agora
+vivem em `docs/assets/revisao-ui-ux/prints/` — só os links clicáveis foram corrigidos.
+
+---
+
 ## 2026-10-16 — Primeiros testes automatizados e reconciliação do backlog
 
 **O que mudou e por quê.** O autor pediu os testes que `PROBLEMS.md` P-001 registrava como

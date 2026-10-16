@@ -1,6 +1,6 @@
 # Índice — tasks da Revisão de UI/UX (94–116)
 
-Origem: `docs/reviews/ui-ux/` (relatório, prints com callouts, mockups HTML e análise detalhada por tela).
+Origem: `docs/specs/backlog/revisao-ui-ux/` (relatório, prints com callouts, mockups HTML e análise detalhada por tela).
 
 ## Ordem sugerida de implementação
 
@@ -53,3 +53,10 @@ Origem: `docs/reviews/ui-ux/` (relatório, prints com callouts, mockups HTML e a
 - 95 → 96 (layout) e 95 → 104 (signal compartilhado de execução).
 - 106 → 107; 110 → 111; 96 → 114.
 - Única task com mudança de backend estrutural: **99** (endpoints `restaurar`); 104 pede apenas 2 campos a mais num DTO de leitura.
+
+## Observações de organização (2026-10-16)
+
+- Os arquivos da revisão vivem em `revisao-ui-ux/`, dona: [`revisao-ui-ux.spec.md`](revisao-ui-ux.spec.md).
+  Os prints estão em `docs/assets/revisao-ui-ux/prints/`.
+- A task **117** (remover a descrição da atividade) não pertence à revisão; foi renumerada de 94
+  para 117 por colisão com a 94 desta revisão.

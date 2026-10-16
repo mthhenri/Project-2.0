@@ -71,6 +71,7 @@ project-2.0/
     CONVENTIONS.md        ← referência rápida de convenções
     SCHEMA.md             ← schema SQL completo e comentado
     DEPLOY.md             ← deploy e ambientes
+    assets/               ← mídia versionada de documentação (ex.: prints da revisão de UI/UX)
     context/              ← contexto persistente entre sessões
       CONTEXT.md          ← o que é verdade agora (lido após este arquivo e o CONVENTIONS)
       HISTORY.md          ← o que aconteceu e por quê (acrescenta no topo)

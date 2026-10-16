@@ -1,6 +1,6 @@
 # 112 — Projetos: status inline no card, busca/filtros e resumo no detalhe
 
-**Origem:** Revisão de UI/UX — prints `prints/19-projeto-listagem.png` e `prints/20-projeto-detalhe.png`, análises `projeto-listagem.md` e `projeto-detalhe.md`
+**Origem:** Revisão de UI/UX — prints `docs/assets/revisao-ui-ux/prints/19-projeto-listagem.png` e `docs/assets/revisao-ui-ux/prints/20-projeto-detalhe.png`, análises `projeto-listagem.md` e `projeto-detalhe.md`
 
 **Depende de:** 97, 98, 99 (undo)
 

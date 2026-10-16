@@ -1,6 +1,6 @@
 # 99 — Exclusões com "Desfazer": endpoint de restauração + toasts com undo
 
-**Origem:** Revisão de UI/UX — achado global G4 (`docs/reviews/ui-ux/README.md`, seção 4 "Notas de verificação")
+**Origem:** Revisão de UI/UX — achado global G4 (`docs/specs/backlog/revisao-ui-ux/README.md`, seção 4 "Notas de verificação")
 
 **Depende de:** 98 (remoção otimista)
 

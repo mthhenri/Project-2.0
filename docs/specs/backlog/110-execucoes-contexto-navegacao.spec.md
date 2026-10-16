@@ -1,6 +1,6 @@
 # 110 — Execuções: contexto no header, linha ativa viva e navegação por teclado
 
-**Origem:** Revisão de UI/UX — print `prints/14-execucao-historico.png`, análise `analise-detalhada/execucao-historico.md`
+**Origem:** Revisão de UI/UX — print `docs/assets/revisao-ui-ux/prints/14-execucao-historico.png`, análise `analise-detalhada/execucao-historico.md`
 
 **Depende de:** 97
 

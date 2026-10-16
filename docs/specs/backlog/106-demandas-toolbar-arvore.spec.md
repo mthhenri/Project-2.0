@@ -1,6 +1,6 @@
 # 106 — Demandas: busca/filtros, ações visíveis na árvore e contexto lembrado
 
-**Origem:** Revisão de UI/UX — print `prints/10-demanda-lista.png`, análise `analise-detalhada/demanda-pagina.md`
+**Origem:** Revisão de UI/UX — print `docs/assets/revisao-ui-ux/prints/10-demanda-lista.png`, análise `analise-detalhada/demanda-pagina.md`
 
 **Depende de:** 97, 98 (expansão preservada / otimista)
 

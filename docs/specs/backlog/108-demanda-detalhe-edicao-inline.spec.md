@@ -1,6 +1,6 @@
 # 108 — Demanda detalhe: edição inline, tags/membros no cabeçalho e conexões com busca
 
-**Origem:** Revisão de UI/UX — print `prints/12-demanda-detalhe-dialog.png`, análise `analise-detalhada/demanda-dialogs.md`
+**Origem:** Revisão de UI/UX — print `docs/assets/revisao-ui-ux/prints/12-demanda-detalhe-dialog.png`, análise `analise-detalhada/demanda-dialogs.md`
 
 **Depende de:** 97, 99 (undo de associações)
 

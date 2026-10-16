@@ -1,6 +1,6 @@
 # 107 — Demandas grafo: tokens de tema, hover-card e legenda-filtro
 
-**Origem:** Revisão de UI/UX — print `prints/11-demanda-grafo.png`, análise `analise-detalhada/demanda-pagina.md`
+**Origem:** Revisão de UI/UX — print `docs/assets/revisao-ui-ux/prints/11-demanda-grafo.png`, análise `analise-detalhada/demanda-pagina.md`
 
 **Depende de:** 106 (toolbar de filtros)
 

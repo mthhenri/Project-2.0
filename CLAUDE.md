@@ -86,8 +86,9 @@ preparar os arquivos, `npm run repo:verificar -- --staged`.
 Specs de fase/milestone são divididas em tarefas numeradas antes da implementação. Specs em
 `done/` são registro histórico e não são reescritas.
 
-O backlog **não está na `master`**: vive em branches `claude/*` ainda não mergeadas
-(`docs/context/MEMORY.md` §3). Mergeie a branch da task antes de puxá-la e confira a numeração.
+O backlog está em `docs/specs/backlog/` (tasks 94–117; ordem e dependências em
+`INDEX-revisao-ux.md`, mapa em `docs/context/MEMORY.md` §3). Confira o próximo número livre antes de
+criar uma spec nova: o maior em uso é 117.
 
 ## Gate obrigatório de qualidade e conclusão
 

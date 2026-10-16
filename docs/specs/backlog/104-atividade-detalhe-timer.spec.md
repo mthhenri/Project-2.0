@@ -1,6 +1,6 @@
 # 104 — Atividade detalhe: faixa de execução com timer, pausar e trocar em 1 clique
 
-**Origem:** Revisão de UI/UX — print `prints/18-atividade-detalhe.png`, análise `analise-detalhada/atividade-detalhe.md`
+**Origem:** Revisão de UI/UX — print `docs/assets/revisao-ui-ux/prints/18-atividade-detalhe.png`, análise `analise-detalhada/atividade-detalhe.md`
 
 **Depende de:** 95 (signal compartilhado de execução ativa), 97
 

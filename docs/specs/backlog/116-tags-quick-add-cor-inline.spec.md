@@ -1,6 +1,6 @@
 # 116 — Tags: quick-add com Enter, troca de cor inline e busca
 
-**Origem:** Revisão de UI/UX — print `prints/25-tag-listagem.png`, análise `analise-detalhada/tag.md`
+**Origem:** Revisão de UI/UX — print `docs/assets/revisao-ui-ux/prints/25-tag-listagem.png`, análise `analise-detalhada/tag.md`
 
 **Depende de:** 97, 99 (undo)
 

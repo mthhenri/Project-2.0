@@ -1,6 +1,6 @@
 # 96 — Topbar: reorganização (tema, perfil, sair) + atalhos globais de navegação
 
-**Origem:** Revisão de UI/UX — print `prints/02-topbar.png` (callouts ③④⑤⑥), análise `analise-detalhada/layout-topbar.md`
+**Origem:** Revisão de UI/UX — print `docs/assets/revisao-ui-ux/prints/02-topbar.png` (callouts ③④⑤⑥), análise `analise-detalhada/layout-topbar.md`
 
 **Depende de:** 95 (espaço/layout da topbar)
 

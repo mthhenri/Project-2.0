@@ -1,6 +1,6 @@
 # 101 — Ponto equipe (gestor): triagem, nome clicável e busca no seletor
 
-**Origem:** Revisão de UI/UX — print `prints/04-ponto-equipe.png`, análise `analise-detalhada/ponto.md`
+**Origem:** Revisão de UI/UX — print `docs/assets/revisao-ui-ux/prints/04-ponto-equipe.png`, análise `analise-detalhada/ponto.md`
 
 **Depende de:** —
 

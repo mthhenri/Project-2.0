@@ -1,6 +1,6 @@
 # 103 — Atividades: dialogs de execução sem atrito (iniciar, registrar, visualizar)
 
-**Origem:** Revisão de UI/UX — prints `prints/07..09-*.png`, análise `analise-detalhada/atividade-listagem.md`
+**Origem:** Revisão de UI/UX — prints `docs/assets/revisao-ui-ux/prints/07..09-*.png`, análise `analise-detalhada/atividade-listagem.md`
 
 **Depende de:** 97 (padrão de dialog)
 

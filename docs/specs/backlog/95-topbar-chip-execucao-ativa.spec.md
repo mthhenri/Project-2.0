@@ -1,6 +1,6 @@
 # 95 — Topbar: chip global de execução ativa com timer e pausa inline
 
-**Origem:** Revisão de UI/UX — print `prints/02-topbar.png` (callouts ①②), análise `analise-detalhada/layout-topbar.md`
+**Origem:** Revisão de UI/UX — print `docs/assets/revisao-ui-ux/prints/02-topbar.png` (callouts ①②), análise `analise-detalhada/layout-topbar.md`
 
 **Depende de:** —
 

@@ -1,6 +1,6 @@
 # 109 — Demanda: formulário criar/editar unificado, adaptativo e enxuto
 
-**Origem:** Revisão de UI/UX — print `prints/13-demanda-nova-dialog.png`, análise `analise-detalhada/demanda-dialogs.md`
+**Origem:** Revisão de UI/UX — print `docs/assets/revisao-ui-ux/prints/13-demanda-nova-dialog.png`, análise `analise-detalhada/demanda-dialogs.md`
 
 **Depende de:** 97
 

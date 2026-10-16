@@ -46,15 +46,19 @@ Estas são as fontes da verdade. Em conflito entre código e documento, **o docu
 | Mapa de impacto (`npm run impacto`) | `scripts/impacto.mjs`, `scripts/agentes/hook-impacto.mjs` |
 | Subagentes (`implementador`, `revisor`, `testador`) | `.claude/agents/` |
 | Specs por estado e material da tarefa | `docs/specs/{backlog,active,done}/` |
+| Mídia versionada de documentação (permitida pelo `repo:verificar`) | `docs/assets/` |
 | Capturas e saídas brutas de verificação (ignorado pelo Git) | `.artifacts/<tarefa>/` |
 
-## 3. Onde está o que ainda não chegou à `master`
+## 3. Onde está o backlog
 
-O backlog de specs **não está na `master`**. Em 2026-10-16 restam duas branches `claude/*` não
-mergeadas (as de 83, 86, 89, 90 e 91 já foram mergeadas e removidas). Antes de puxar uma task,
-mergeie a branch dela.
+O backlog está em `docs/specs/backlog/` **na branch `claude/adotar-kit-base`** (as duas últimas
+branches `claude/*` pendentes foram mergeadas nela em 2026-10-16 e passam a existir na `master`
+quando essa branch for mergeada). Para escolher a próxima task, leia `INDEX-revisao-ux.md`.
 
-| Branch | Conteúdo |
+| Item | Onde |
 |---|---|
-| `claude/ui-ux-review-optimization-4da6md` | specs 94–116 (revisão de UX; ver `INDICE-revisao-ux.md`) e `docs/reviews/ui-ux/` (relatório, prints, mockups; fora da política de §3.1, precisa ser realocado) |
-| `claude/remove-activity-description-gtew58` | spec 94 `remover-descricao-atividade` (**colide** com a 94 da revisão de UX) |
+| Tasks 94–116 (revisão de UI/UX) | `docs/specs/backlog/9[4-9]-*.spec.md` e `1[01][0-9]-*.spec.md` |
+| Índice, ordem e dependências das tasks 94–116 | `docs/specs/backlog/INDEX-revisao-ux.md` |
+| Spec guarda-chuva e material da revisão (relatório, mockups HTML, análises) | `docs/specs/backlog/revisao-ui-ux.spec.md` e `docs/specs/backlog/revisao-ui-ux/` |
+| Prints da revisão (PNG, referência canônica) | `docs/assets/revisao-ui-ux/prints/` |
+| Task 117 — remover a descrição da atividade (era 94; fora da revisão) | `docs/specs/backlog/117-remover-descricao-atividade.spec.md` |

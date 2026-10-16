@@ -1,6 +1,6 @@
 # 113 — Usuários: status em switch, ações diretas na linha e criação com defaults
 
-**Origem:** Revisão de UI/UX — prints `prints/21-usuario-listagem.png` e `prints/22-usuario-novo-dialog.png`, análise `analise-detalhada/usuario-listagem.md`
+**Origem:** Revisão de UI/UX — prints `docs/assets/revisao-ui-ux/prints/21-usuario-listagem.png` e `docs/assets/revisao-ui-ux/prints/22-usuario-novo-dialog.png`, análise `analise-detalhada/usuario-listagem.md`
 
 **Depende de:** 97, 99 (undo)
 

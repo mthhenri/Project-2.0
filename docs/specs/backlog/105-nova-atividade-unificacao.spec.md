@@ -1,6 +1,6 @@
 # 105 — Nova Atividade: unificar página e dialog + responsável/tags + IA confiável
 
-**Origem:** Revisão de UI/UX — prints `prints/16-atividade-formulario.png` e `prints/17-assistente-ia-dialog.png`, análises `atividade-formulario.md`
+**Origem:** Revisão de UI/UX — prints `docs/assets/revisao-ui-ux/prints/16-atividade-formulario.png` e `docs/assets/revisao-ui-ux/prints/17-assistente-ia-dialog.png`, análises `atividade-formulario.md`
 
 **Depende de:** 97
 

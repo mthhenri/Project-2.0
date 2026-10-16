@@ -1,6 +1,6 @@
 # 100 — Ponto mensal: justificar inline, imprimir para dev, saldo até hoje
 
-**Origem:** Revisão de UI/UX — prints `prints/03-ponto-mensal.png` e `prints/05-ponto-justificar-dialog.png`, análise `analise-detalhada/ponto.md`
+**Origem:** Revisão de UI/UX — prints `docs/assets/revisao-ui-ux/prints/03-ponto-mensal.png` e `docs/assets/revisao-ui-ux/prints/05-ponto-justificar-dialog.png`, análise `analise-detalhada/ponto.md`
 
 **Depende de:** 97 (padrão de dialog), 98 (skeleton/carga não destrutiva)
 

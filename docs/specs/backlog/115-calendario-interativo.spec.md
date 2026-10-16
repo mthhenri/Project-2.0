@@ -1,6 +1,6 @@
 # 115 — Calendário: criação pelo clique no dia, popover de registro e navegação rápida
 
-**Origem:** Revisão de UI/UX — print `prints/24-calendario.png`, análise `analise-detalhada/calendario.md`
+**Origem:** Revisão de UI/UX — print `docs/assets/revisao-ui-ux/prints/24-calendario.png`, análise `analise-detalhada/calendario.md`
 
 **Depende de:** 97
 

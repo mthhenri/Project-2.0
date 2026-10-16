@@ -1,6 +1,6 @@
 # 102 — Atividades: filtros persistentes, ações enxutas e ações em massa
 
-**Origem:** Revisão de UI/UX — print `prints/06-atividade-listagem.png`, análise `analise-detalhada/atividade-listagem.md`
+**Origem:** Revisão de UI/UX — print `docs/assets/revisao-ui-ux/prints/06-atividade-listagem.png`, análise `analise-detalhada/atividade-listagem.md`
 
 **Depende de:** 98 (update otimista), 99 (excluir com undo), 97 (dialogs)
 
