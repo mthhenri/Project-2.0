@@ -14,14 +14,16 @@
     />
   </span>
 
-  <div class="demanda-toolbar__chips" role="group" aria-label="Filtrar por status">
+  <div class="demanda-toolbar__chips" role="group" aria-label="Status exibidos">
     @for (chip of chips; track chip.status) {
       <button
         type="button"
         class="demanda-toolbar__chip"
-        [class.demanda-toolbar__chip--ativo]="statusAtivo(chip.status)"
+        [class.demanda-toolbar__chip--oculto]="!statusAtivo(chip.status)"
         [style.--cor-chip]="chip.cor"
         [attr.aria-pressed]="statusAtivo(chip.status)"
+        [pTooltip]="statusAtivo(chip.status) ? 'Esconder ' + chip.rotulo : 'Mostrar ' + chip.rotulo"
+        tooltipPosition="top"
         (click)="alternarStatus(chip.status)"
       >
         <span class="demanda-toolbar__chip-cor"></span>

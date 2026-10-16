@@ -3,9 +3,10 @@ import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { MultiSelectModule } from 'primeng/multiselect';
+import { TooltipModule } from 'primeng/tooltip';
 import { TagResumoDto, TipoDemandaStatusEnum } from '@project20/shared';
 import { COR_NO_BORDA } from '../../constants/demanda-cores.constants';
-import { DemandaFiltro, filtroAtivo } from '../../utils/demanda-filtro.util';
+import { DemandaFiltro, alternarStatusVisivel, filtroAtivo, statusVisiveis } from '../../utils/demanda-filtro.util';
 
 /**
  * Toolbar de Demandas (task 106): busca instantânea, chips-contador de status e filtro de tags.
@@ -14,7 +15,7 @@ import { DemandaFiltro, filtroAtivo } from '../../utils/demanda-filtro.util';
 @Component({
   selector: 'app-demanda-toolbar',
   standalone: true,
-  imports: [FormsModule, ButtonModule, InputTextModule, MultiSelectModule],
+  imports: [FormsModule, ButtonModule, InputTextModule, MultiSelectModule, TooltipModule],
   templateUrl: './demanda-toolbar.component.html',
   styleUrl: './demanda-toolbar.component.scss',
 })
@@ -51,10 +52,9 @@ export class DemandaToolbarComponent {
     this.filtroAlterado.emit({ ...this.filtro(), termo });
   }
 
+  /** Chip ligado = status visível; 1 clique esconde (ou volta a mostrar) aquele status. */
   alternarStatus(status: TipoDemandaStatusEnum): void {
-    const atual = this.filtro().status;
-    const proximo = atual.includes(status) ? atual.filter((item) => item !== status) : [...atual, status];
-    this.filtroAlterado.emit({ ...this.filtro(), status: proximo });
+    this.filtroAlterado.emit({ ...this.filtro(), status: alternarStatusVisivel(this.filtro(), status) });
   }
 
   aoMudarTags(tagIds: number[]): void {
@@ -62,7 +62,7 @@ export class DemandaToolbarComponent {
   }
 
   statusAtivo(status: TipoDemandaStatusEnum): boolean {
-    return this.filtro().status.includes(status);
+    return statusVisiveis(this.filtro()).includes(status);
   }
 
   /** Esc limpa a busca; com a busca já vazia, devolve o foco à página. */

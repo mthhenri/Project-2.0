@@ -12,6 +12,19 @@
 
 ---
 
+## 2026-10-16 — Task 107: grafo de Demandas no tema, com hover-card e legenda-filtro
+
+Relatório em `docs/specs/done/107-demandas-grafo-tema-filtros/verificacao.md`; verificação em Chromium (claro e
+escuro) contra a API real, nos viewports 1920×1080, 1366×768 e 1080×1920.
+
+- Cores do grafo e da página em tokens (cores de status incluídas), hover-card no lugar do `<title>`, legenda
+  em popover (ⓘ) com os status clicáveis, painel lateral de 240 px removido, zoom `+ − ⌂`.
+- **Mudança na 106:** para "esconder Concluídas em 1 clique" os chips viraram liga/desliga de visibilidade,
+  sincronizados com a legenda (antes selecionavam "só este status").
+- Limite: o layout de forças não mudou (fora do escopo) e em canvas baixo parte dos nós sai da tela.
+
+---
+
 ## 2026-10-16 — Task 106: Demandas com toolbar de filtros, árvore com ações e contexto lembrado
 
 Relatório em `docs/specs/done/106-demandas-toolbar-arvore/verificacao.md`; verificação em Chromium contra a

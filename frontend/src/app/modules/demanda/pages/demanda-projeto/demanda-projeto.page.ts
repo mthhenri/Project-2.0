@@ -27,15 +27,16 @@ import { DemandaFormularioDialogComponent } from '../../components/demanda-formu
 import { DemandaArvorePainelComponent } from '../../components/demanda-arvore-painel/demanda-arvore-painel.component';
 import { DemandaPlanejamentoPainelComponent } from '../../components/demanda-planejamento-painel/demanda-planejamento-painel.component';
 import { ModoVisualizacao } from '../../models/demanda.model';
-import { COR_NO_BORDA } from '../../constants/demanda-cores.constants';
 import { focoEmCampo, haSobreposicaoAberta } from '../../../../core/utils/atalhos';
 import {
   DemandaFiltro,
   FILTRO_VAZIO,
+  alternarStatusVisivel,
   contarPorStatus,
   filtroAtivo,
   nosCorrespondentes,
   recortarArvore,
+  statusVisiveis,
 } from '../../utils/demanda-filtro.util';
 import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
 
@@ -96,7 +97,6 @@ export class DemandaProjetoPage implements OnInit, OnDestroy {
   readonly carregando = signal<boolean>(false);
   readonly carregandoProjetos = signal<boolean>(false);
   readonly modoVisualizacao = signal<ModoVisualizacao>(this.modoInicial());
-  readonly painelLateralAberto = signal<boolean>(true);
   readonly mostrarDialogNovaDemanda = signal<boolean>(false);
   readonly planejamento = signal<DemandaPlanejamentoDto[]>([]);
   readonly carregandoPlanejamento = signal<boolean>(false);
@@ -110,13 +110,6 @@ export class DemandaProjetoPage implements OnInit, OnDestroy {
   /** Cópia com atraso do filtro: o Grafo refaz o layout a cada mudança, então não acompanha cada tecla. */
   readonly filtroGrafo = signal<DemandaFiltro>(FILTRO_VAZIO);
   private temporizadorFiltroGrafo?: ReturnType<typeof setTimeout>;
-
-  readonly legendaStatus = [
-    { rotulo: 'Pendente',  cor: COR_NO_BORDA[TipoDemandaStatusEnum.PENDENTE] },
-    { rotulo: 'Planejada', cor: COR_NO_BORDA[TipoDemandaStatusEnum.PLANEJADA] },
-    { rotulo: 'Concluída', cor: COR_NO_BORDA[TipoDemandaStatusEnum.CONCLUIDA] },
-    { rotulo: 'Cancelada', cor: COR_NO_BORDA[TipoDemandaStatusEnum.CANCELADA] },
-  ];
 
   readonly opcoesModo = computed(() => [
     { rotulo: 'Lista', valor: 'lista' as ModoVisualizacao, icone: 'pi pi-list' },
@@ -218,6 +211,14 @@ export class DemandaProjetoPage implements OnInit, OnDestroy {
     this.temporizadorFiltroGrafo = setTimeout(() => this.filtroGrafo.set(filtro), 200);
   }
 
+  /** Status exibidos agora (todos, quando não há filtro de status): alimenta a legenda do grafo. */
+  readonly statusDoFiltro = computed(() => statusVisiveis(this.filtro()));
+
+  /** Legenda do grafo: ligar/desligar um status é o mesmo filtro dos chips da toolbar. */
+  alternarStatusVisivel(status: TipoDemandaStatusEnum): void {
+    this.aoAlterarFiltro({ ...this.filtro(), status: alternarStatusVisivel(this.filtro(), status) });
+  }
+
   limparFiltros(): void {
     this.aoAlterarFiltro(FILTRO_VAZIO);
   }
@@ -271,10 +272,6 @@ export class DemandaProjetoPage implements OnInit, OnDestroy {
           this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Não foi possível carregar o planejamento' });
         },
       });
-  }
-
-  alternarPainel(): void {
-    this.painelLateralAberto.update((aberto) => !aberto);
   }
 
   /**

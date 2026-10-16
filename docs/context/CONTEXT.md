@@ -8,17 +8,17 @@
 > [`MEMORY.md`](MEMORY.md) (onde fica o quê) · [`IDEAS.md`](IDEAS.md) (o que ainda não é sistema) ·
 > [`HISTORY.md`](HISTORY.md) (o que aconteceu e por quê).
 >
-> **Última revisão:** 2026-10-16 · **Última decisão registrada:** task 106 (Demandas: toolbar de filtros,
-> árvore com ações e contexto lembrado) — `HISTORY.md`, bloco de 2026-10-16
+> **Última revisão:** 2026-10-16 · **Última decisão registrada:** task 107 (grafo de Demandas no tema, com
+> hover-card e legenda-filtro) — `HISTORY.md`, bloco de 2026-10-16
 
 ---
 
 ## 1. Próxima Task
 
-Nenhuma task em andamento. O backlog tem **8 specs** em `docs/specs/backlog/` (revisão de UI/UX:
-107–109 e 112–116, guarda-chuva `revisao-ui-ux.spec.md`). As fundações **94–99** , o Ponto (**100–101**)
-e a toolbar de Demandas (**106**) foram concluídos em 2026-10-16 e estão em `docs/specs/done/`; as seguintes devem **reutilizar** o que
-elas criaram (ver `MEMORY.md` §2). Siga a ordem de fases de `INDEX-revisao-ux.md`: fase 3 (107–109,
+Nenhuma task em andamento. O backlog tem **7 specs** em `docs/specs/backlog/` (revisão de UI/UX:
+108, 109 e 112–116, guarda-chuva `revisao-ui-ux.spec.md`). As fundações **94–99** , o Ponto (**100–101**)
+e a toolbar e o grafo de Demandas (**106–107**) foram concluídos em 2026-10-16 e estão em `docs/specs/done/`; as seguintes devem **reutilizar** o que
+elas criaram (ver `MEMORY.md` §2). Siga a ordem de fases de `INDEX-revisao-ux.md`: fase 3 (108–109,
 Demandas) e fase 4 (112–116). As tasks **102, 103, 104, 105, 110 e 111** (que mexem direto nas telas de
 Atividades e Execuções) foram **descartadas** em 2026-10-16 e estão em `docs/specs/discarded/`. A task
 117 foi concluída.
@@ -116,6 +116,9 @@ project-2.0/
   `g`+letra e `n`, e colapsa em 3 degraus: sem relógio até 1499 px, só ícones até 1366 px (acima do 1280
   da spec, porque o chip de execução ocupa espaço), "Mais ▾" para itens de gestor abaixo de 900 px e duas
   linhas abaixo de 720 px. O overlay global só cobre mutações (GET usa esqueleto/loading local).
+- **[task 107]** Os chips de status e a legenda do grafo são o mesmo liga/desliga de **visibilidade** (todos
+  ligados por padrão; `alternarStatusVisivel`), o que substitui a seleção "só este status" da 106. As cores
+  de status são tokens (`constants/demanda-cores.constants.ts`); o grafo não tem mais painel lateral.
 - **[task 106]** Em Demandas, a toolbar filtra no cliente (busca sem acento, status, tags) e o filtro vale para
   Lista e Grafo (o grafo recebe só os nós que atendem; a Lista mantém os ancestrais e abre os ramos). O clique
   na linha abre o Detalhe e só o chevron expande; o status troca pelo chip (otimista, gestor). Projeto e modo

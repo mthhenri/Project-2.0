@@ -98,3 +98,21 @@ export function dividirDestaque(nome: string, termo: string): { texto: string; d
   if (pendente) trechos.push({ texto: pendente, destaque: false });
   return trechos;
 }
+
+const TODOS_OS_STATUS = Object.values(TipoDemandaStatusEnum);
+
+/** Status que aparecem: lista vazia significa "todos" (nenhum filtro de status). */
+export function statusVisiveis(filtro: DemandaFiltro): TipoDemandaStatusEnum[] {
+  return filtro.status.length ? filtro.status : TODOS_OS_STATUS;
+}
+
+/**
+ * Liga/desliga a visibilidade de um status (chip da toolbar e legenda do grafo): com tudo visível, 1 clique
+ * esconde aquele status; quando voltam todos, a lista fica vazia (sem filtro). Nunca deixa a lista sem nenhum.
+ */
+export function alternarStatusVisivel(filtro: DemandaFiltro, status: TipoDemandaStatusEnum): TipoDemandaStatusEnum[] {
+  const visiveis = statusVisiveis(filtro);
+  const proximo = visiveis.includes(status) ? visiveis.filter((item) => item !== status) : [...visiveis, status];
+  if (proximo.length === 0) return filtro.status; // esconder o último não faz sentido: mantém
+  return proximo.length === TODOS_OS_STATUS.length ? [] : proximo;
+}

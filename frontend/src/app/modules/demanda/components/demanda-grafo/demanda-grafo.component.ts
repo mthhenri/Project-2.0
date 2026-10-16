@@ -8,33 +8,92 @@ import {
   OnDestroy,
   ElementRef,
   inject,
+  signal,
   SimpleChanges,
 } from '@angular/core';
 import * as d3 from 'd3';
+import { ButtonModule } from 'primeng/button';
+import { Popover, PopoverModule } from 'primeng/popover';
+import { TooltipModule } from 'primeng/tooltip';
 import {
   DemandaGrafoDto,
   DemandaGrafoNoDto,
   DemandaGrafoArestaDto,
   TipoDemandaStatusEnum,
 } from '@project20/shared';
-import { COR_NO_PREENCHIMENTO, COR_NO_BORDA } from '../../constants/demanda-cores.constants';
+import { COR_NO_BORDA, corPreenchimentoNo } from '../../constants/demanda-cores.constants';
 import { VisualizacaoTempoService } from '../../../../core/services/visualizacao-tempo.service';
-import { formatarTempoExibicao } from '../../../../core/models/visualizacao-tempo.model';
+import { TempoExibicaoPipe } from '../../../../shared/pipes/tempo-exibicao.pipe';
+import { DemandaStatusChipComponent } from '../demanda-status-chip/demanda-status-chip.component';
 
+/** Nó sob o mouse: posição do cartão flutuante em coordenadas do componente. */
+interface CartaoNo {
+  no: DemandaGrafoNoDto;
+  esquerda: number;
+  topo: number;
+}
+
+const TODOS_OS_STATUS = Object.values(TipoDemandaStatusEnum);
+
+/**
+ * Grafo de demandas (d3) integrado ao tema (task 107): cores por tokens, cartão no hover, legenda em popover
+ * cujos status filtram o grafo e controles de zoom. Os filtros da toolbar chegam já aplicados em `grafo`.
+ */
 @Component({
   selector: 'app-demanda-grafo',
   standalone: true,
-  template: `<svg #svgContainer class="demanda-grafo__svg"></svg>`,
+  imports: [ButtonModule, PopoverModule, TooltipModule, TempoExibicaoPipe, DemandaStatusChipComponent],
+  templateUrl: './demanda-grafo.component.html',
   styleUrls: ['./demanda-grafo.component.scss'],
 })
 export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
   @Input({ required: true }) grafo!: DemandaGrafoDto;
-  @Input() filtroStatus?: TipoDemandaStatusEnum[];
+  /** Status exibidos (a legenda mostra os demais como desligados). */
+  @Input() statusVisiveis: TipoDemandaStatusEnum[] = TODOS_OS_STATUS;
   @Output() demandaSelecionada = new EventEmitter<number>();
+  /** Um status da legenda foi clicado (liga/desliga): quem hospeda aplica no filtro da toolbar. */
+  @Output() statusAlternado = new EventEmitter<TipoDemandaStatusEnum>();
 
   private readonly elementRef = inject(ElementRef);
-  private readonly unidadeTempo = inject(VisualizacaoTempoService);
+  readonly unidadeTempo = inject(VisualizacaoTempoService);
   private simulacao?: d3.Simulation<DemandaGrafoNoDto & d3.SimulationNodeDatum, undefined>;
+  private svgSelecao?: d3.Selection<SVGSVGElement, unknown, HTMLElement, any>;
+  private comportamentoZoom?: d3.ZoomBehavior<SVGSVGElement, unknown>;
+
+  readonly cartao = signal<CartaoNo | null>(null);
+
+  readonly itensLegenda = [
+    { status: TipoDemandaStatusEnum.PENDENTE,  rotulo: 'Pendente',  cor: COR_NO_BORDA[TipoDemandaStatusEnum.PENDENTE] },
+    { status: TipoDemandaStatusEnum.PLANEJADA, rotulo: 'Planejada', cor: COR_NO_BORDA[TipoDemandaStatusEnum.PLANEJADA] },
+    { status: TipoDemandaStatusEnum.CONCLUIDA, rotulo: 'Concluída', cor: COR_NO_BORDA[TipoDemandaStatusEnum.CONCLUIDA] },
+    { status: TipoDemandaStatusEnum.CANCELADA, rotulo: 'Cancelada', cor: COR_NO_BORDA[TipoDemandaStatusEnum.CANCELADA] },
+  ];
+
+  statusEstaVisivel(status: TipoDemandaStatusEnum): boolean {
+    return this.statusVisiveis.includes(status);
+  }
+
+  /** Fração 0..100 do executado sobre o estimado; a barra do cartão trava em 100. */
+  percentual(no: DemandaGrafoNoDto): number {
+    const minutosEstimados = no.horasEstimadas * 60;
+    return minutosEstimados > 0 ? Math.round((no.minutosExecutados / minutosEstimados) * 100) : 0;
+  }
+
+  alternarLegenda(evento: Event, popover: Popover): void {
+    popover.toggle(evento);
+  }
+
+  aproximar(): void {
+    this.svgSelecao?.transition().duration(200).call(this.comportamentoZoom!.scaleBy, 1.4);
+  }
+
+  afastar(): void {
+    this.svgSelecao?.transition().duration(200).call(this.comportamentoZoom!.scaleBy, 1 / 1.4);
+  }
+
+  centralizar(): void {
+    this.svgSelecao?.transition().duration(250).call(this.comportamentoZoom!.transform, d3.zoomIdentity);
+  }
 
   ngOnInit(): void {
     this.inicializarGrafo();
@@ -52,6 +111,7 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   private destruirGrafo(): void {
+    this.cartao.set(null);
     if (this.simulacao) {
       this.simulacao.stop();
       this.simulacao = undefined;
@@ -69,6 +129,7 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
       .attr('width', largura)
       .attr('height', altura);
 
+    this.svgSelecao = svg;
     const defs = svg.append('defs');
     defs.append('marker')
       .attr('id', 'seta-hierarquia')
@@ -80,20 +141,19 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
       .attr('orient', 'auto')
       .append('path')
       .attr('d', 'M0,-4L8,0L0,4Z')
-      .attr('fill', '#4a9eff')
+      .style('fill', 'var(--p-primary-500)')
       .attr('fill-opacity', '0.7');
 
     const grupoZoom = svg.append('g');
-    svg.call(
-      d3.zoom<SVGSVGElement, unknown>()
-        .scaleExtent([0.1, 4])
-        .on('zoom', (evento) => grupoZoom.attr('transform', evento.transform.toString())),
-    );
+    this.comportamentoZoom = d3.zoom<SVGSVGElement, unknown>()
+      .scaleExtent([0.1, 4])
+      .on('zoom', (evento) => {
+        grupoZoom.attr('transform', evento.transform.toString());
+        this.cartao.set(null);
+      });
+    svg.call(this.comportamentoZoom);
 
-    const nosFiltrados = this.filtroStatus?.length
-      ? this.grafo.nos.filter((no) => this.filtroStatus!.includes(no.status))
-      : this.grafo.nos;
-
+    const nosFiltrados = this.grafo.nos;
     const idsNosFiltrados = new Set(nosFiltrados.map((no) => no.id));
 
     const arestasFiltraras = this.grafo.arestas.filter(
@@ -123,7 +183,7 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
       .data(arestas)
       .enter()
       .append('line')
-      .attr('stroke', (aresta: any) => aresta.tipo === 'hierarquia' ? '#4a9eff' : '#4a5568')
+      .style('stroke', (aresta: any) => aresta.tipo === 'hierarquia' ? 'var(--p-primary-500)' : 'var(--app-surface-400)')
       .attr('stroke-width', (aresta: any) => aresta.tipo === 'hierarquia' ? 2 : 1.5)
       .attr('stroke-opacity', (aresta: any) => aresta.tipo === 'hierarquia' ? 0.6 : 0.5)
       .attr('stroke-dasharray', (aresta: any) => aresta.tipo === 'conexao' ? '5,3' : null)
@@ -156,34 +216,23 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
           }),
       )
       .on('click', (_evento: any, no: DemandaGrafoNoDto) => this.demandaSelecionada.emit(no.id))
-      .on('mouseover', function() {
-        d3.select(this).select('circle')
-          .attr('stroke-width', 5)
-          .style('filter', 'brightness(1.6)');
-        d3.select(this).select('text')
-          .attr('fill', '#e6edf3');
-      })
-      .on('mouseout', function() {
-        d3.select(this).select('circle')
-          .attr('stroke-width', 3)
-          .style('filter', null);
-        d3.select(this).select('text')
-          .attr('fill', '#b0bec5');
-      });
+      .on('mouseover', (evento: MouseEvent, no: DemandaGrafoNoDto) => this.mostrarCartao(evento, no))
+      .on('mousemove', (evento: MouseEvent, no: DemandaGrafoNoDto) => this.mostrarCartao(evento, no))
+      .on('mouseout', () => this.cartao.set(null));
 
     gruposNo.append('circle')
       .attr('r', (no: DemandaGrafoNoDto) => this.calcularRaioNo(no))
-      .attr('fill', (no: DemandaGrafoNoDto) => COR_NO_PREENCHIMENTO[no.status])
-      .attr('stroke', (no: DemandaGrafoNoDto) => COR_NO_BORDA[no.status])
+      .style('fill', (no: DemandaGrafoNoDto) => corPreenchimentoNo(no.status))
+      .style('stroke', (no: DemandaGrafoNoDto) => COR_NO_BORDA[no.status])
       .attr('stroke-width', 3)
       .attr('stroke-dasharray', (no: DemandaGrafoNoDto) => no.isEstrutural ? '6,3' : null);
 
     gruposNo.append('text')
       .attr('dy', (no: DemandaGrafoNoDto) => this.calcularRaioNo(no) + 15)
       .attr('text-anchor', 'middle')
-      .attr('fill', '#b0bec5')
+      .style('fill', 'var(--app-surface-700)')
       .attr('font-size', '11px')
-      .attr('stroke', '#0d1117')
+      .style('stroke', 'var(--app-surface-50)')
       .attr('stroke-width', 4)
       .attr('stroke-linejoin', 'round')
       .attr('paint-order', 'stroke fill')
@@ -192,22 +241,6 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
       .text((no: DemandaGrafoNoDto) =>
         no.nome.length > 24 ? `${no.nome.substring(0, 24)}…` : no.nome,
       );
-
-    const emDias = this.unidadeTempo.emDias();
-    gruposNo.append('title').text((no: DemandaGrafoNoDto) => {
-      // Em dias, o próprio <title> (tooltip nativa) mostra o h/min entre parênteses.
-      const estimadas = emDias
-        ? `${formatarTempoExibicao(no.horasEstimadas, true, 'horas')} (${formatarTempoExibicao(no.horasEstimadas, false, 'horas')})`
-        : formatarTempoExibicao(no.horasEstimadas, false, 'horas');
-      const executadas = emDias
-        ? `${formatarTempoExibicao(no.minutosExecutados, true, 'minutos')} (${formatarTempoExibicao(no.minutosExecutados, false, 'minutos')})`
-        : formatarTempoExibicao(no.minutosExecutados, false, 'minutos');
-      const linhas = [
-        `${no.nome}\n${no.status} • ${estimadas} estimadas • ${executadas} executadas`,
-      ];
-      if (no.tags?.length) linhas.push(no.tags.map((t) => t.nome).join(', '));
-      return linhas.join('\n');
-    });
 
     this.simulacao.on('tick', () => {
       linhasAresta
@@ -230,6 +263,18 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
 
       gruposNo.attr('transform', (no: any) => `translate(${no.x},${no.y})`);
     });
+  }
+
+  /** Posiciona o cartão ao lado do cursor, virando para o outro lado perto das bordas do canvas. */
+  private mostrarCartao(evento: MouseEvent, no: DemandaGrafoNoDto): void {
+    const caixa = (this.elementRef.nativeElement as HTMLElement).getBoundingClientRect();
+    const larguraCartao = 280;
+    const alturaCartao = 150;
+    let esquerda = evento.clientX - caixa.left + 16;
+    let topo = evento.clientY - caixa.top + 16;
+    if (esquerda + larguraCartao > caixa.width) esquerda = evento.clientX - caixa.left - larguraCartao - 16;
+    if (topo + alturaCartao > caixa.height) topo = evento.clientY - caixa.top - alturaCartao - 16;
+    this.cartao.set({ no, esquerda: Math.max(8, esquerda), topo: Math.max(8, topo) });
   }
 
   private calcularRaioNo(no: DemandaGrafoNoDto): number {

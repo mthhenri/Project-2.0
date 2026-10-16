@@ -47,17 +47,6 @@
     </div>
 
     <div class="demanda-projeto__header-direita">
-      @if (projetoId() && modoVisualizacao() === 'grafo') {
-        <p-button
-          icon="pi pi-info-circle"
-          [text]="true"
-          severity="secondary"
-          size="small"
-          ariaLabel="Legenda"
-          pTooltip="Legenda"
-          (onClick)="alternarPainel()"
-        />
-      }
       @if (sessao.eGestor() && projetoId()) {
         <p-button
           label="Nova Demanda"
@@ -85,7 +74,7 @@
   }
 
   <!-- Conteúdo principal -->
-  <div class="demanda-projeto__corpo" [class.demanda-projeto__corpo--com-painel]="painelLateralAberto()">
+  <div class="demanda-projeto__corpo">
 
     <!-- Área do grafo / lista -->
     <div class="demanda-projeto__visualizacao">
@@ -121,6 +110,8 @@
           } @else if (modoVisualizacao() === 'grafo' && grafoExibido()) {
             <app-demanda-grafo
               [grafo]="grafoExibido()!"
+              [statusVisiveis]="statusDoFiltro()"
+              (statusAlternado)="alternarStatusVisivel($event)"
               (demandaSelecionada)="painel.abrirDetalhe($event)"
             />
           }
@@ -157,49 +148,6 @@
         }
       }
     </div>
-
-    <!-- Painel lateral -->
-    @if (painelLateralAberto() && modoVisualizacao() === 'grafo') {
-      <aside class="demanda-projeto__painel">
-        <h3 class="demanda-projeto__painel-titulo">Legenda</h3>
-        <div class="demanda-projeto__legenda">
-          @for (item of legendaStatus; track item.rotulo) {
-            <div class="demanda-projeto__legenda-item">
-              <span class="demanda-projeto__legenda-cor" [style.background-color]="item.cor"></span>
-              <span class="demanda-projeto__legenda-texto">{{ item.rotulo }}</span>
-            </div>
-          }
-        </div>
-
-        <div class="demanda-projeto__separador"></div>
-
-        <h3 class="demanda-projeto__painel-titulo">Nós</h3>
-        <div class="demanda-projeto__legenda">
-          <div class="demanda-projeto__legenda-item">
-            <span class="demanda-projeto__legenda-cor demanda-projeto__legenda-cor--comum"></span>
-            <span class="demanda-projeto__legenda-texto">Demanda comum</span>
-          </div>
-          <div class="demanda-projeto__legenda-item">
-            <span class="demanda-projeto__legenda-cor demanda-projeto__legenda-cor--estrutura"></span>
-            <span class="demanda-projeto__legenda-texto">Demanda de estrutura</span>
-          </div>
-        </div>
-
-        <div class="demanda-projeto__separador"></div>
-
-        <h3 class="demanda-projeto__painel-titulo">Arestas</h3>
-        <div class="demanda-projeto__legenda">
-          <div class="demanda-projeto__legenda-item">
-            <span class="demanda-projeto__legenda-linha demanda-projeto__legenda-linha--hierarquia"></span>
-            <span class="demanda-projeto__legenda-texto">Hierarquia</span>
-          </div>
-          <div class="demanda-projeto__legenda-item">
-            <span class="demanda-projeto__legenda-linha demanda-projeto__legenda-linha--conexao"></span>
-            <span class="demanda-projeto__legenda-texto">Conexão</span>
-          </div>
-        </div>
-      </aside>
-    }
   </div>
 
 </div>

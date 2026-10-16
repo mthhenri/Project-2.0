@@ -48,13 +48,15 @@
     cursor: pointer;
     transition: background-color 0.15s ease, border-color 0.15s ease;
 
-    &:hover {
-      background: var(--app-surface-100);
-    }
+    // Ligado (padrão) = status visível, com a cor do status; desligado = esmaecido.
+    border-color: var(--cor-chip);
+    background: color-mix(in srgb, var(--cor-chip) 14%, transparent);
 
-    &--ativo {
-      border-color: var(--cor-chip);
-      background: color-mix(in srgb, var(--cor-chip) 18%, transparent);
+    &--oculto {
+      border-color: var(--app-surface-300);
+      background: transparent;
+      opacity: 0.55;
+      text-decoration: line-through;
     }
   }
 

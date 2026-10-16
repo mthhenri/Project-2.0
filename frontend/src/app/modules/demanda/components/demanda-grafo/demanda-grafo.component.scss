@@ -1,12 +1,187 @@
+:host {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
 .demanda-grafo {
   &__svg {
     width: 100%;
     height: 100%;
-    background-color: #0d1117;
-    background-image: radial-gradient(circle, #1a2332 1.5px, transparent 1.5px);
+    background-color: var(--app-surface-50);
+    background-image: radial-gradient(circle, var(--app-surface-200) 1.5px, transparent 1.5px);
     background-size: 28px 28px;
     cursor: grab;
 
     &:active { cursor: grabbing; }
+  }
+
+  &__controles {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+  }
+
+  &__zoom {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  &__cartao {
+    position: absolute;
+    z-index: 5;
+    width: 17.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    border: 1px solid var(--app-surface-200);
+    border-radius: 0.625rem;
+    background: var(--app-surface-0);
+    box-shadow: 0 6px 20px color-mix(in srgb, black 18%, transparent);
+    pointer-events: none;
+  }
+
+  &__cartao-nome {
+    font-weight: 600;
+    color: var(--p-text-color);
+    overflow-wrap: anywhere;
+  }
+
+  &__cartao-progresso {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  &__cartao-barra {
+    flex: 1;
+    height: 0.35rem;
+    border-radius: 0.2rem;
+    background: var(--app-surface-200);
+    overflow: hidden;
+  }
+
+  &__cartao-barra-preenchimento {
+    display: block;
+    height: 100%;
+    background: var(--app-realce-primario);
+  }
+
+  &__cartao-barra--estouro &__cartao-barra-preenchimento {
+    background: var(--p-red-400);
+  }
+
+  &__cartao-horas {
+    font-size: 0.8rem;
+    color: var(--p-text-muted-color);
+    white-space: nowrap;
+  }
+
+  &__cartao-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+
+  &__cartao-tag {
+    padding: 0.125rem 0.5rem;
+    border: 1px solid;
+    border-radius: 1rem;
+    font-size: 0.7rem;
+    font-weight: 500;
+  }
+
+  &__legenda {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 14rem;
+  }
+
+  &__legenda-titulo {
+    margin: 0.5rem 0 0.25rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--p-text-muted-color);
+
+    &:first-child { margin-top: 0; }
+  }
+
+  &__legenda-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 0.5rem;
+    border: none;
+    border-radius: 0.5rem;
+    background: transparent;
+    color: var(--p-text-color);
+    cursor: pointer;
+    text-align: left;
+
+    &:hover {
+      background: var(--app-surface-100);
+    }
+
+    &--oculto {
+      opacity: 0.5;
+    }
+  }
+
+  &__legenda-cor {
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  &__legenda-texto {
+    flex: 1;
+  }
+
+  &__legenda-linha-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.125rem 0.5rem;
+    font-size: 0.85rem;
+    color: var(--p-text-color);
+  }
+
+  &__legenda-no {
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    border: 2px solid var(--app-surface-500);
+
+    &--estrutura {
+      border-style: dashed;
+    }
+  }
+
+  &__legenda-aresta {
+    width: 1.5rem;
+    height: 0;
+    border-top: 2px solid;
+
+    &--hierarquia {
+      border-color: var(--p-primary-500);
+    }
+
+    &--conexao {
+      border-color: var(--app-surface-400);
+      border-top-style: dashed;
+    }
   }
 }
