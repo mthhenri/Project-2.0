@@ -164,4 +164,41 @@
       color: var(--p-primary-600);
     }
   }
+
+  // "Justificar" inline: fantasma, só aparece com o mouse (ou foco) na linha.
+  &__justificar {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin-left: 0.5rem;
+    padding: 0.125rem 0.5rem;
+    border: 1px dashed var(--p-primary-color);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--p-primary-color);
+    font-size: 0.75rem;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  &__linha:hover &__justificar,
+  &__justificar:focus-visible {
+    opacity: 1;
+  }
+
+  // Sem hover (toque): fica sempre visível.
+  @media (hover: none) {
+    &__justificar {
+      opacity: 1;
+    }
+  }
+
+  &__badge--acionavel {
+    cursor: pointer;
+
+    &:hover {
+      filter: brightness(0.95);
+    }
+  }
 }

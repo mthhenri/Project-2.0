@@ -17,13 +17,72 @@
     border-right: 1px solid var(--app-surface-200);
   }
 
+  // Nome + avatar: botão que abre o mensal da pessoa.
   &__nome {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
     font-weight: 600;
     font-size: 0.9375rem;
     color: var(--p-text-color);
+    text-align: left;
+    cursor: pointer;
+
+    &:hover .ponto-usuario-card__nome-texto {
+      color: var(--p-primary-color);
+      text-decoration: underline;
+    }
+  }
+
+  &__nome-texto {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  &__avatar {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--p-primary-color) 15%, transparent);
+    color: var(--p-primary-color);
+    font-size: 0.6875rem;
+  }
+
+  &__estado {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.75rem;
+    color: var(--p-text-muted-color);
+
+    &--trabalhando {
+      color: var(--p-green-600);
+      font-weight: 600;
+    }
+
+    &--pausado {
+      color: var(--p-orange-600);
+    }
+  }
+
+  &__ponto {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  &__estado--trabalhando &__ponto {
+    animation: ponto-estado-pulso 1.4s ease-in-out infinite;
   }
 
   &__total {
@@ -123,5 +182,17 @@
     font-size: 0.8125rem;
     color: var(--p-text-muted-color);
     margin: 0;
+  }
+}
+
+@keyframes ponto-estado-pulso {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ponto-usuario-card__estado--trabalhando .ponto-usuario-card__ponto {
+    animation: none;
   }
 }

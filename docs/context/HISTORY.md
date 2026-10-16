@@ -12,6 +12,23 @@
 
 ---
 
+## 2026-10-16 — Tasks 100 e 101: Ponto mensal inline e triagem da equipe
+
+As duas mexem nos mesmos arquivos da página do Ponto, então saíram num único commit. Relatórios em
+`docs/specs/done/{100,101}-*/verificacao.md`; verificação em Chromium contra a API real.
+
+- **100**: "Justificar" direto da linha do dia (e badge clicável), atalhos de horas no dialog, `p-confirmpopup`
+  na remoção, impressão liberada para o dev (assinatura do gestor em branco), 4º card "Saldo até hoje" no
+  mês corrente, tooltip da meta do dia, horários `HH:mm`, "Hoje" e atalhos ← → T, cabeçalho estável.
+- **101**: contagem "N pessoas · M trabalhando agora", "Somente ativos", ativos primeiro, badge de estado no
+  card, nome clicável que abre o mensal, busca no `p-select` e empty states acionáveis.
+- **Achado só na verificação:** minhas edições do template da página não casaram na primeira passada (o
+  trecho mudou de indentação ao embrulhar o conteúdo) e o botão "Justificar" e o 4º card não apareciam; a
+  verificação ao vivo expôs e a correção foi refeita. Também: o botão "Hoje" quebrava o cabeçalho a 360 px.
+- `core/utils/atalhos.ts` agora concentra o filtro de foco/overlay dos atalhos (topbar e Ponto).
+
+---
+
 ## 2026-10-16 — Tasks 94, 95 e 96: login, chip de execução ativa e topbar
 
 Três tasks de frontend da fase 1 da revisão de UX, um commit cada, verificadas em Chromium contra a API

@@ -51,13 +51,13 @@
             <td class="ponto-impressao__celula-dia">
               {{ numero(dia.data) }} <span class="ponto-impressao__dia-semana">{{ abreviacao(dia.data) }}</span>
             </td>
-            <td>{{ dia.primeiroInicioData ? (dia.primeiroInicioData | date: 'dd/MM HH:mm') : '—' }}</td>
-            <td>{{ dia.ultimoFimData ? (dia.ultimoFimData | date: 'dd/MM HH:mm') : '—' }}</td>
+            <td>{{ dia.primeiroInicioData ? (dia.primeiroInicioData | date: 'HH:mm') : '—' }}</td>
+            <td>{{ dia.ultimoFimData ? (dia.ultimoFimData | date: 'HH:mm') : '—' }}</td>
             <td>
               @if (dia.intervalos.length) {
                 <ul class="ponto-impressao__intervalos">
                   @for (intervalo of dia.intervalos; track $index) {
-                    <li>{{ intervalo.inicioData | date: 'dd/MM HH:mm' }}–{{ intervalo.fimData | date: 'dd/MM HH:mm' }}</li>
+                    <li>{{ intervalo.inicioData | date: 'HH:mm' }}–{{ intervalo.fimData | date: 'HH:mm' }}</li>
                   }
                 </ul>
               } @else {
@@ -87,7 +87,7 @@
     <footer class="ponto-impressao__assinaturas">
       <div class="ponto-impressao__assinatura">
         <div class="ponto-impressao__assinatura-linha"></div>
-        <span class="ponto-impressao__assinatura-rotulo">Gestor responsável: {{ nomeGestor }}</span>
+        <span class="ponto-impressao__assinatura-rotulo">Gestor responsável:{{ nomeGestor ? ' ' + nomeGestor : '' }}</span>
       </div>
       <div class="ponto-impressao__assinatura">
         <div class="ponto-impressao__assinatura-linha"></div>

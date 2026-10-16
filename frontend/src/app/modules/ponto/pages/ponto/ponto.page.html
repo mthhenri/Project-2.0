@@ -9,61 +9,75 @@
           [options]="usuarios()"
           optionLabel="nomeCompleto"
           optionValue="id"
-          placeholder="Todos (hoje)"
+          placeholder="Equipe (hoje)"
           [showClear]="true"
+          [filter]="true"
+          filterBy="nomeCompleto"
+          filterPlaceholder="Buscar pessoa..."
           appendTo="body"
           (onChange)="aoMudarUsuario()"
         />
       }
-      @if (modo() === 'mensal') {
-        <div class="ponto__navegacao-mes">
-          <p-button
-            icon="pi pi-chevron-left"
-            severity="secondary"
-            [outlined]="true"
-            pTooltip="Mês anterior"
-            tooltipPosition="top"
-            (onClick)="retornarMes()"
-          />
-          <p-datepicker
-            formControlName="mesAno"
-            view="month"
-            dateFormat="mm/yy"
-            [maxDate]="hoje"
-            [showIcon]="true"
-            appendTo="body"
-            (onSelect)="aoMudarMes()"
-          />
-          <p-button
-            icon="pi pi-chevron-right"
-            severity="secondary"
-            [outlined]="true"
-            [disabled]="visualizandoMesAtual()"
-            pTooltip="Próximo mês"
-            tooltipPosition="top"
-            (onClick)="avancarMes()"
-          />
-        </div>
 
-        @if (sessao.eGestor() && formularioFiltros.value.usuarioId) {
-          <div class="ponto__acoes">
-            <p-button
-              label="Imprimir"
-              icon="pi pi-print"
-              severity="secondary"
-              [outlined]="true"
-              pTooltip="Imprimir espelho do mês"
-              tooltipPosition="top"
-              (onClick)="impressao.imprimir()"
-            />
-            <p-button
-              label="Justificar"
-              icon="pi pi-calendar-plus"
-              (onClick)="justificativaDialog.abrir(formularioFiltros.value.usuarioId!, mesSelecionado())"
-            />
-          </div>
+      <!-- Sempre no DOM: na visão equipe só ficam desabilitados (cabeçalho estável). -->
+      <div class="ponto__navegacao-mes">
+        <p-button
+          icon="pi pi-chevron-left"
+          severity="secondary"
+          [outlined]="true"
+          [disabled]="modo() !== 'mensal'"
+          pTooltip="Mês anterior — ←"
+          tooltipPosition="top"
+          (onClick)="retornarMes()"
+        />
+        <p-datepicker
+          formControlName="mesAno"
+          view="month"
+          dateFormat="mm/yy"
+          [maxDate]="hoje"
+          [showIcon]="true"
+          appendTo="body"
+          (onSelect)="aoMudarMes()"
+        />
+        <p-button
+          icon="pi pi-chevron-right"
+          severity="secondary"
+          [outlined]="true"
+          [disabled]="modo() !== 'mensal' || visualizandoMesAtual()"
+          pTooltip="Próximo mês — →"
+          tooltipPosition="top"
+          (onClick)="avancarMes()"
+        />
+        <p-button
+          label="Hoje"
+          [text]="true"
+          [disabled]="modo() !== 'mensal' || visualizandoMesAtual()"
+          pTooltip="Voltar ao mês atual — T"
+          tooltipPosition="top"
+          (onClick)="irParaHoje()"
+        />
+      </div>
+
+      <div class="ponto__acoes">
+        <p-button
+          label="Imprimir"
+          icon="pi pi-print"
+          severity="secondary"
+          [outlined]="true"
+          [disabled]="modo() !== 'mensal' || !pontoMensal()"
+          pTooltip="Imprimir espelho do mês"
+          tooltipPosition="top"
+          (onClick)="impressao.imprimir()"
+        />
+        @if (sessao.eGestor()) {
+          <p-button
+            label="Justificar"
+            icon="pi pi-calendar-plus"
+            [disabled]="modo() !== 'mensal' || !formularioFiltros.value.usuarioId"
+            (onClick)="justificativaDialog.abrir(formularioFiltros.value.usuarioId!, mesSelecionado())"
+          />
         }
-      }
+      </div>
     </form>
   </div>
 
@@ -80,22 +94,42 @@
     <div class="ponto__conteudo" [class.conteudo-recarregando]="recarregando()">
       <app-barra-recarga [ativa]="recarregando()" />
     @if (modo() === 'todos') {
-      <!-- Visão "todos hoje" (gestor) -->
-      @if (pontosTodos().length) {
-        <div class="ponto__grid">
-          @for (ponto of pontosTodos(); track ponto.usuarioId) {
-            <app-ponto-usuario-card
-              [ponto]="ponto"
-              (atividadeSelecionada)="visualizarDialog.abrir($event)"
-            />
-          }
-        </div>
-      } @else {
-        <div class="ponto__vazio">
-          <i class="pi pi-users ponto__vazio-icone"></i>
-          <p class="ponto__vazio-texto">Nenhum usuário ativo encontrado.</p>
-        </div>
-      }
+      <!-- Visão "Equipe · hoje" (gestor) -->
+    @if (totalPessoas()) {
+      <div class="ponto__triagem">
+        <span class="ponto__triagem-contagem">
+          <strong>{{ totalPessoas() }}</strong> {{ totalPessoas() === 1 ? 'pessoa' : 'pessoas' }} ·
+          <strong>{{ totalTrabalhando() }}</strong> trabalhando agora
+        </span>
+        <label class="ponto__triagem-filtro">
+          <p-toggleswitch [ngModel]="somenteAtivos()" (ngModelChange)="somenteAtivos.set($event)" />
+          Somente ativos
+        </label>
+      </div>
+    }
+    @if (equipeExibida().length) {
+      <div class="ponto__grid">
+        @for (ponto of equipeExibida(); track ponto.usuarioId) {
+          <app-ponto-usuario-card
+            [ponto]="ponto"
+            (atividadeSelecionada)="visualizarDialog.abrir($event)"
+            (usuarioSelecionado)="abrirMensalDe($event)"
+          />
+        }
+      </div>
+    } @else if (totalPessoas()) {
+      <div class="ponto__vazio">
+        <i class="pi pi-moon ponto__vazio-icone"></i>
+        <p class="ponto__vazio-texto">Ninguém está trabalhando agora.</p>
+        <p-button label="Mostrar todos" severity="secondary" [outlined]="true" (onClick)="somenteAtivos.set(false)" />
+      </div>
+    } @else {
+      <div class="ponto__vazio">
+        <i class="pi pi-users ponto__vazio-icone"></i>
+        <p class="ponto__vazio-texto">Nenhum usuário ativo encontrado.</p>
+        <p-button label="Gerenciar usuários" icon="pi pi-users" severity="secondary" [outlined]="true" (onClick)="irParaGerenciarUsuarios()" />
+      </div>
+    }
     } @else if (pontoMensal(); as mensal) {
       <!-- Visão mensal (gestor com filtro ou desenvolvedor) -->
       <div class="ponto__mes-titulo">
@@ -124,6 +158,14 @@
           [cor]="mensal.saldoMinutosMes >= 0 ? 'positivo' : 'negativo'"
           [valor]="formatarSaldo(mensal.saldoMinutosMes)"
         />
+        @if (saldoAteHojeMinutos() !== null) {
+          <app-ponto-resumo-card
+            rotulo="Saldo até hoje"
+            icone="pi pi-history"
+            [cor]="saldoAteHojeMinutos()! >= 0 ? 'positivo' : 'negativo'"
+            [valor]="formatarSaldo(saldoAteHojeMinutos()!)"
+          />
+        }
       </div>
 
       <div class="ponto__lista-dias">
@@ -131,7 +173,9 @@
           <app-ponto-mes-dia
             [dia]="dia"
             [usuarioId]="mensal.usuarioId"
+            [podeJustificar]="sessao.eGestor()"
             (atividadeSelecionada)="visualizarDialog.abrir($event)"
+            (justificarSolicitada)="justificarDia($event, mensal.usuarioId)"
           />
         }
       </div>
@@ -141,5 +185,5 @@
 
   <app-atividade-visualizar-dialog #visualizarDialog />
   <app-ponto-justificativa-dialog #justificativaDialog (aoAlterar)="carregar()" />
-  <app-ponto-impressao #impressao [mensal]="pontoMensal()" [nomeGestor]="sessao.nomeCompleto() ?? ''" />
+  <app-ponto-impressao #impressao [mensal]="pontoMensal()" [nomeGestor]="sessao.eGestor() ? (sessao.nomeCompleto() ?? '') : ''" />
 </div>

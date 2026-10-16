@@ -16,6 +16,7 @@ import { TemaService } from '../../../core/services/tema.service';
 import { TemaPersonalizadoService } from '../../../core/services/tema-personalizado.service';
 import { VisualizacaoTempoService } from '../../../core/services/visualizacao-tempo.service';
 import { CORES_SUGERIDAS, COR_PRIMARIA_PADRAO_HEX } from '../../../core/models/tema-personalizado.model';
+import { focoEmCampo, haSobreposicaoAberta } from '../../../core/utils/atalhos';
 import { ExecucaoAtivaService } from '../../../core/services/execucao-ativa.service';
 import { ChipExecucaoAtivaComponent } from './chip-execucao-ativa/chip-execucao-ativa.component';
 import { UsuarioAnotacoesDialogComponent } from '../../../modules/usuario/components/usuario-anotacoes-dialog/usuario-anotacoes-dialog.component';
@@ -100,7 +101,7 @@ export class TopbarComponent {
   @HostListener('document:keydown', ['$event'])
   aoTeclarGlobal(evento: KeyboardEvent): void {
     if (evento.defaultPrevented || evento.ctrlKey || evento.metaKey || evento.altKey) return;
-    if (this.focoEmCampo(evento.target) || this.haSobreposicaoAberta()) {
+    if (focoEmCampo(evento.target) || haSobreposicaoAberta()) {
       this.cancelarSequencia();
       return;
     }
@@ -129,22 +130,6 @@ export class TopbarComponent {
     this.aguardandoSegundaTecla = false;
     if (this.temporizadorAtalho !== null) clearTimeout(this.temporizadorAtalho);
     this.temporizadorAtalho = null;
-  }
-
-  /** Digitando: input, textarea, select ou editor rico (Quill/contenteditable). */
-  private focoEmCampo(alvo: EventTarget | null): boolean {
-    const elemento = alvo as HTMLElement | null;
-    if (!elemento) return false;
-    return (
-      ['INPUT', 'TEXTAREA', 'SELECT'].includes(elemento.tagName) ||
-      elemento.isContentEditable ||
-      !!elemento.closest('.ql-editor, [contenteditable="true"]')
-    );
-  }
-
-  /** Dialog, popover ou overlay do PrimeNG aberto: os atalhos ficam quietos. */
-  private haSobreposicaoAberta(): boolean {
-    return !!document.querySelector('.p-dialog-mask, .p-popover, .p-select-overlay, .p-multiselect-overlay, .p-datepicker-panel, .p-contextmenu');
   }
 
   constructor() {

@@ -19,8 +19,8 @@ Origem: `docs/specs/backlog/revisao-ui-ux/` (relatório, prints com callouts, mo
 
 | Task | Título |
 |---|---|
-| 100 | Ponto mensal: justificar inline, imprimir dev, saldo até hoje |
-| 101 | Ponto equipe: triagem e nome clicável |
+| ~~100~~ | ~~Ponto mensal: justificar inline, imprimir dev, saldo até hoje~~ — **concluída** (`../done/`) |
+| ~~101~~ | ~~Ponto equipe: triagem e nome clicável~~ — **concluída** (`../done/`) |
 | ~~102~~ | ~~Atividades: filtros persistentes, ações enxutas, massa~~ — **DESCARTADA** (`../discarded/`) |
 | ~~103~~ | ~~Atividades: dialogs de execução sem atrito~~ — **DESCARTADA** (`../discarded/`) |
 | ~~104~~ | ~~Atividade detalhe: timer, pausar/trocar em 1 clique~~ — **DESCARTADA** (`../discarded/`) |

@@ -1,6 +1,18 @@
 <div class="ponto-usuario-card">
   <div class="ponto-usuario-card__resumo">
-    <span class="ponto-usuario-card__nome" [title]="ponto.nomeUsuario">{{ ponto.nomeUsuario }}</span>
+    <button
+      type="button"
+      class="ponto-usuario-card__nome"
+      [pTooltip]="'Ver o mês de ' + ponto.nomeUsuario"
+      tooltipPosition="top"
+      (click)="usuarioSelecionado.emit(ponto.usuarioId)"
+    >
+      <span class="ponto-usuario-card__avatar" aria-hidden="true">{{ iniciais }}</span>
+      <span class="ponto-usuario-card__nome-texto">{{ ponto.nomeUsuario }}</span>
+    </button>
+    <span class="ponto-usuario-card__estado" [class]="'ponto-usuario-card__estado ponto-usuario-card__estado--' + estado">
+      <span class="ponto-usuario-card__ponto" aria-hidden="true"></span>{{ rotuloEstado }}
+    </span>
     <span class="ponto-usuario-card__total">{{ ponto.totalMinutosTrabalhados | minutosParagHoras }}</span>
 
     <div class="ponto-usuario-card__sub">
@@ -16,7 +28,11 @@
         <span class="ponto-usuario-card__badge">{{ ponto.motivoNaoUtil }}</span>
       }
       @if (ponto.intervalos.length) {
-        <span class="ponto-usuario-card__intervalos">
+        <span
+          class="ponto-usuario-card__intervalos"
+          [pTooltip]="ponto.intervalos.length + (ponto.intervalos.length === 1 ? ' pausa' : ' pausas') + ' ≥ ' + intervaloMinimoMinutos + ' min'"
+          tooltipPosition="top"
+        >
           <i class="pi pi-pause-circle"></i> {{ ponto.intervalos.length }}
         </span>
       }
@@ -29,9 +45,9 @@
         @for (execucao of ponto.execucoes; track execucao.id) {
           <li class="ponto-usuario-card__execucao">
             <span class="ponto-usuario-card__horario">
-              {{ execucao.inicioData | date: 'dd/MM HH:mm' }}
+              {{ execucao.inicioData | date: 'HH:mm' }}
               @if (execucao.fimData) {
-                –{{ execucao.fimData | date: 'dd/MM HH:mm' }}
+                –{{ execucao.fimData | date: 'HH:mm' }}
               } @else {
                 <app-execucao-timer [inicioData]="execucao.inicioData" tamanho="compacto" />
               }

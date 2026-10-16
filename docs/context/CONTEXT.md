@@ -8,21 +8,20 @@
 > [`MEMORY.md`](MEMORY.md) (onde fica o quê) · [`IDEAS.md`](IDEAS.md) (o que ainda não é sistema) ·
 > [`HISTORY.md`](HISTORY.md) (o que aconteceu e por quê).
 >
-> **Última revisão:** 2026-10-16 · **Última decisão registrada:** tasks 94, 95 e 96 (login, chip de
-> execução ativa e topbar) — `HISTORY.md`, bloco de 2026-10-16
+> **Última revisão:** 2026-10-16 · **Última decisão registrada:** tasks 100 e 101 (Ponto mensal inline e
+> triagem da equipe) — `HISTORY.md`, bloco de 2026-10-16
 
 ---
 
 ## 1. Próxima Task
 
-Nenhuma task em andamento. O backlog tem **11 specs** em `docs/specs/backlog/` (revisão de UI/UX:
-100, 101, 106–109 e 112–116, guarda-chuva `revisao-ui-ux.spec.md`). As fundações **94–99** (login,
-chip de execução, topbar, padrão de dialogs, feedback otimista e "Desfazer") foram concluídas em
-2026-10-16 e estão em `docs/specs/done/`; as seguintes devem **reutilizar** o que elas criaram (ver
-`MEMORY.md` §2). Siga a ordem de fases de `INDEX-revisao-ux.md`: fase 2 (100 e 101, ponto) e depois
-fase 3 e 4. As tasks **102, 103, 104, 105, 110 e 111** (que mexem direto nas telas de Atividades e
-Execuções) foram **descartadas** em 2026-10-16 e estão em `docs/specs/discarded/`. A task 117 foi
-concluída.
+Nenhuma task em andamento. O backlog tem **9 specs** em `docs/specs/backlog/` (revisão de UI/UX:
+106–109 e 112–116, guarda-chuva `revisao-ui-ux.spec.md`). As fundações **94–99** e o Ponto (**100–101**)
+foram concluídos em 2026-10-16 e estão em `docs/specs/done/`; as seguintes devem **reutilizar** o que
+elas criaram (ver `MEMORY.md` §2). Siga a ordem de fases de `INDEX-revisao-ux.md`: fase 3 (106–109,
+Demandas) e fase 4 (112–116). As tasks **102, 103, 104, 105, 110 e 111** (que mexem direto nas telas de
+Atividades e Execuções) foram **descartadas** em 2026-10-16 e estão em `docs/specs/discarded/`. A task
+117 foi concluída.
 Próxima migration nova: `0029`.
 
 ## 2. Estado por Área
@@ -117,6 +116,11 @@ project-2.0/
   `g`+letra e `n`, e colapsa em 3 degraus: sem relógio até 1499 px, só ícones até 1366 px (acima do 1280
   da spec, porque o chip de execução ocupa espaço), "Mais ▾" para itens de gestor abaixo de 900 px e duas
   linhas abaixo de 720 px. O overlay global só cobre mutações (GET usa esqueleto/loading local).
+- **[tasks 100–101]** No Ponto, o cabeçalho é estável (controles do mês só desabilitam na visão equipe), o
+  gestor justifica direto da linha do dia (déficit sugere as horas, limitadas à jornada), o desenvolvedor
+  imprime o próprio espelho (sem nome de gestor) e a equipe é triada no cliente: "trabalhando" = alguma
+  execução do dia sem `fimData`; não existe estado "Férias" por usuário. Atalhos de página (← → T) usam
+  `core/utils/atalhos.ts`, o mesmo filtro de foco/overlay da topbar.
 - **[estado `discarded`]** `docs/specs/discarded/` é o quarto estado do ciclo de specs
   (`SYSTEM.SPEC.md` §3.1); o `repo:verificar` o aceita.
 
