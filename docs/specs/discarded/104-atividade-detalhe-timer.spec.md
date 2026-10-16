@@ -1,5 +1,9 @@
 # 104 — Atividade detalhe: faixa de execução com timer, pausar e trocar em 1 clique
 
+> **DESCARTADA em 2026-10-16 — decisão do autor.** Esta task mexe diretamente nas telas de Atividades
+> e Execuções, que ficam como estão. Não implementar. O texto abaixo é o registro da revisão de
+> UI/UX e não foi reescrito.
+
 **Origem:** Revisão de UI/UX — print `docs/assets/revisao-ui-ux/prints/18-atividade-detalhe.png`, análise `analise-detalhada/atividade-detalhe.md`
 
 **Depende de:** 95 (signal compartilhado de execução ativa), 97

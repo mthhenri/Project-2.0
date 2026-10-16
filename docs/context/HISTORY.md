@@ -12,6 +12,31 @@
 
 ---
 
+## 2026-10-16 — Descarte das tasks que mexem direto em Atividades e Execuções
+
+**O que mudou e por quê.** Decisão do autor: tudo que mexe **diretamente** nas telas de Atividades e
+Execuções fica como "discarded"; o que mexe só **indiretamente** continua na lista. Classifiquei
+pelo conteúdo das specs, não só pelo título. Descartadas: **102** (listagem de atividades), **103**
+(dialogs de execução), **104** (detalhe com timer), **105** (nova atividade), **110** (tela de
+Execuções) e **111** (relatório de execuções; entrou porque o ponto de entrada dele é o header da
+tela de Execuções e depende da 110). Mantidas por serem indiretas: 95 (chip na topbar), 96, 97, 98,
+99, 108, 116 e as demais. Nenhuma spec que ficou depende de uma descartada (a 104 dependia da 95, não
+o contrário). As colisões que a 103, 104 e 105 tinham com a 117 (aba/campo "Descrição" da atividade)
+desapareceram com o descarte.
+
+**Mecanismo.** O repositório não tinha estado para isso, então criei `docs/specs/discarded/`: as 6
+specs foram movidas com `git mv`, cada uma ganhou no topo uma nota de data e motivo (o corpo não foi
+reescrito), e o `repo:verificar` passou a aceitar o estado (um teste novo cobre spec e anexo em
+`discarded/`, anexo órfão e pasta inventada; `repo:test` 14 casos, 13 passam e 1 pulado, como
+antes). `SYSTEM.SPEC.md` §3.1, `docs/specs/README.md`, `CLAUDE.md`/`AGENTS.md` e a skill
+`task-flow` (espelhada) descrevem o novo estado. `INDEX-revisao-ux.md` marca as 6 linhas e a spec
+guarda-chuva passou a prever 17 tasks. **Não verificado:** as demais specs não foram relidas para
+ajustar trechos que citam as telas descartadas; 97, 98 e 99 têm itens de atividade e execução que
+continuam valendo para as telas atuais. O material da revisão (mockups, prints, análises) dessas
+telas permanece como registro.
+
+---
+
 ## 2026-10-16 — Task 117: remover a descrição da atividade
 
 **O que mudou e por quê.** A spec (era a 94, renumerada) tirou `atividade.descricao` do sistema

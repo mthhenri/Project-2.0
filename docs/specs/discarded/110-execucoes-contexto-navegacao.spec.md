@@ -1,5 +1,9 @@
 # 110 — Execuções: contexto no header, linha ativa viva e navegação por teclado
 
+> **DESCARTADA em 2026-10-16 — decisão do autor.** Esta task mexe diretamente nas telas de Atividades
+> e Execuções, que ficam como estão. Não implementar. O texto abaixo é o registro da revisão de
+> UI/UX e não foi reescrito.
+
 **Origem:** Revisão de UI/UX — print `docs/assets/revisao-ui-ux/prints/14-execucao-historico.png`, análise `analise-detalhada/execucao-historico.md`
 
 **Depende de:** 97

@@ -9,21 +9,25 @@
 ## Objetivo
 
 Reduzir o esforço do usuário nas telas e dialogs do sistema (menos cliques, digitação, navegação
-e espera) implementando, na ordem do índice, as 23 tasks derivadas da revisão.
+e espera) implementando, na ordem do índice, as tasks derivadas da revisão que o autor manteve (17 das 23;
+as 6 que mexem diretamente nas telas de Atividades e de Execuções foram descartadas em 2026-10-16 e
+estão em `docs/specs/discarded/`).
 
 ## Entregáveis
 
-1. As tasks **94–116** implementadas e movidas para `done/`, na ordem de fases de
+1. As tasks **94–101, 106–109 e 112–116** implementadas e movidas para `done/`, na ordem de fases de
    [`INDEX-revisao-ux.md`](INDEX-revisao-ux.md): fundações transversais (94–99), telas de maior
-   uso (100–105), demandas e execuções (106–111) e telas administrativas (112–116).
+   uso (100–101), demandas (106–109) e telas administrativas (112–116). **Descartadas:** 102, 103, 104,
+   105, 110 e 111.
 2. Cada task consulta, para a sua tela, o mockup em `revisao-ui-ux/mockups/`, o print em
    `docs/assets/revisao-ui-ux/prints/` e a análise em `revisao-ui-ux/analise-detalhada/`; onde o
    mockup divergir da spec da task, **a spec da task vence**.
-3. Esta spec vai para `done/` junto com a pasta `revisao-ui-ux/` quando a última task terminar.
+3. Os mockups e análises das telas descartadas (Atividades e Execuções) permanecem como registro.
+4. Esta spec vai para `done/` junto com a pasta `revisao-ui-ux/` quando a última task terminar.
 
 ## Critérios de Aceite
 
-- As 23 specs 94–116 estão em `docs/specs/done/` e `INDEX-revisao-ux.md` não lista pendência.
+- As 17 specs mantidas estão em `docs/specs/done/` e `INDEX-revisao-ux.md` não lista pendência.
 - `npm run repo:verificar` passa com a pasta `revisao-ui-ux/` no estado em que a spec estiver.
 - Cada task cumpriu o processo visual do `CLAUDE.md` ("UI e estilo") e registrou o análogo usado.
 

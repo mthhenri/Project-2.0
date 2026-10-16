@@ -1,12 +1,14 @@
 # Fluxo de Specs
 
-Três pastas, um ciclo de vida por arquivo:
+Quatro pastas, um ciclo de vida por arquivo:
 
 - `backlog/` — tasks a implementar, ainda não iniciadas.
+- `discarded/` — tasks descartadas por decisão do autor, com nota de data e motivo no topo; ficam como registro e não são implementadas.
 - `active/` — a task em andamento nesta sessão. Mover para cá é o primeiro passo antes de tocar
   código; normalmente só há uma spec aqui por vez.
 - `done/` — tasks concluídas. **Registro histórico — nunca reescrever, só ler.** Se algo mudou
   desde então, a mudança vira uma spec nova, não uma edição retroativa.
+- `discarded/` — tasks descartadas por decisão do autor, com nota de data e motivo no topo; ficam como registro e não são implementadas
 
 Specs de escopo grande (uma fase/milestone inteira) são quebradas em tasks numeradas antes da
 implementação — nunca implemente o arquivo guarda-chuva direto.

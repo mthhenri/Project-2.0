@@ -13,7 +13,7 @@ import { fileURLToPath } from "node:url";
 // ---------------------------------------------------------------- CONFIGURAÇÃO
 /** Pastas onde mídia (png, mp4...) é fonte/asset legítimo do produto, não evidência de execução. */
 const RAIZES_MIDIA_PERMITIDAS = /^(?:public\/|src\/assets\/|docs\/(?:assets|design\/assets)\/)/;
-/** Specs fora do ciclo backlog/active/done que são legítimas (modelos, constituição). */
+/** Specs fora do ciclo backlog/active/done/discarded que são legítimas (modelos, constituição). */
 const SPECS_EXCECAO = ["docs/specs/TEMPLATE.spec.md", "docs/SYSTEM.SPEC.md"];
 // ---------------------------------------------------------------------------------
 
@@ -37,9 +37,9 @@ export function verificarCaminhos(caminhos) {
             erros.push(`${caminho}: mídia fora de fonte/asset/fixture canônicos; evidência vai em .artifacts/.`);
         }
         if (/\.spec\.md$/i.test(caminho)
-            && !/^docs\/specs\/(?:backlog|active|done)\/[^/]+\.spec\.md$/.test(caminho)
+            && !/^docs\/specs\/(?:backlog|active|done|discarded)\/[^/]+\.spec\.md$/.test(caminho)
             && !SPECS_EXCECAO.includes(caminho)) {
-            erros.push(`${caminho}: spec fora do fluxo backlog → active → done.`);
+            erros.push(`${caminho}: spec fora do fluxo backlog → active → done (ou discarded).`);
         }
         if (!caminho.startsWith("docs/specs/")) continue;
         if (/\.(?:png|jpe?g|webp|gif|avif|bmp|mp4|webm|zip|pdf|log)$/i.test(caminho)) {
@@ -52,7 +52,7 @@ export function verificarCaminhos(caminhos) {
             }
             continue;
         }
-        if (!["backlog", "active", "done"].includes(partes[2])) {
+        if (!["backlog", "active", "done", "discarded"].includes(partes[2])) {
             erros.push(`${caminho}: pasta paralela ao ciclo de specs.`);
         } else if (partes.length === 4) {
             if (!partes[3].endsWith(".spec.md") && !partes[3].startsWith("INDEX-")

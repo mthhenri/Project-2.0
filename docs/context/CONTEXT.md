@@ -15,10 +15,12 @@
 
 ## 1. Próxima Task
 
-Nenhuma task em andamento. O backlog tem 23 specs em `docs/specs/backlog/`: as tasks **94–116**
-(revisão de UI/UX, guarda-chuva `revisao-ui-ux.spec.md`). Siga a ordem de fases de
-`INDEX-revisao-ux.md`: comece por 97, 98 e 99, que a maioria das demais pressupõe. A task 117
-(remover a descrição da atividade) foi concluída em 2026-10-16. Próxima migration nova: `0029`.
+Nenhuma task em andamento. O backlog tem **17 specs** em `docs/specs/backlog/` (revisão de UI/UX:
+94–101, 106–109 e 112–116, guarda-chuva `revisao-ui-ux.spec.md`). Siga a ordem de fases de
+`INDEX-revisao-ux.md`: comece por 97, 98 e 99, que a maioria das demais pressupõe. As tasks
+**102, 103, 104, 105, 110 e 111** (que mexem direto nas telas de Atividades e Execuções) foram
+**descartadas** em 2026-10-16 e estão em `docs/specs/discarded/`. A task 117 foi concluída.
+Próxima migration nova: `0029`.
 
 ## 2. Estado por Área
 
@@ -93,6 +95,12 @@ project-2.0/
 | Conexão configurada | ✅ DatabaseModule com Knex (task 02) |
 
 ## 3. Decisões Vivas
+
+- **[descarte da revisão de UX]** As telas de **Atividades** e **Execuções** ficam como estão: nenhuma
+  task da revisão as redesenha. O que as toca só por tabela (padrão de dialogs 97, otimista 98, undo 99,
+  chip global 95) continua e, ao ser implementado, vale para as telas atuais.
+- **[estado `discarded`]** `docs/specs/discarded/` é o quarto estado do ciclo de specs
+  (`SYSTEM.SPEC.md` §3.1); o `repo:verificar` o aceita.
 
 - **[task 117]** A atividade **não tem descrição própria**: é descrita por `nome`, `status`, executor
   e demanda; a descrição de quem trabalha vive na demanda e na execução. O dialog de visualização

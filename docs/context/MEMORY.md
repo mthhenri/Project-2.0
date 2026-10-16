@@ -57,7 +57,8 @@ quando essa branch for mergeada). A task 117 (remover a descrição da atividade
 
 | Item | Onde |
 |---|---|
-| Tasks 94–116 (revisão de UI/UX) | `docs/specs/backlog/9[4-9]-*.spec.md` e `1[01][0-9]-*.spec.md` |
+| Tasks mantidas da revisão de UI/UX (94–101, 106–109, 112–116) | `docs/specs/backlog/` (`9[4-9]-*`, `10[01]-*`, `10[6-9]-*`, `11[2-6]-*`) |
+| Tasks descartadas pelo autor (102–105, 110, 111: telas de Atividades e Execuções) | `docs/specs/discarded/` |
 | Índice, ordem e dependências das tasks 94–116 | `docs/specs/backlog/INDEX-revisao-ux.md` |
 | Spec guarda-chuva e material da revisão (relatório, mockups HTML, análises) | `docs/specs/backlog/revisao-ui-ux.spec.md` e `docs/specs/backlog/revisao-ui-ux/` |
 | Prints da revisão (PNG, referência canônica) | `docs/assets/revisao-ui-ux/prints/` |

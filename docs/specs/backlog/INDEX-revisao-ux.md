@@ -21,10 +21,10 @@ Origem: `docs/specs/backlog/revisao-ui-ux/` (relatório, prints com callouts, mo
 |---|---|
 | 100 | Ponto mensal: justificar inline, imprimir dev, saldo até hoje |
 | 101 | Ponto equipe: triagem e nome clicável |
-| 102 | Atividades: filtros persistentes, ações enxutas, massa |
-| 103 | Atividades: dialogs de execução sem atrito |
-| 104 | Atividade detalhe: timer, pausar/trocar em 1 clique |
-| 105 | Nova Atividade: unificação + responsável/tags + IA |
+| ~~102~~ | ~~Atividades: filtros persistentes, ações enxutas, massa~~ — **DESCARTADA** (`../discarded/`) |
+| ~~103~~ | ~~Atividades: dialogs de execução sem atrito~~ — **DESCARTADA** (`../discarded/`) |
+| ~~104~~ | ~~Atividade detalhe: timer, pausar/trocar em 1 clique~~ — **DESCARTADA** (`../discarded/`) |
+| ~~105~~ | ~~Nova Atividade: unificação + responsável/tags + IA~~ — **DESCARTADA** (`../discarded/`) |
 
 **Fase 3 — Demandas e Execuções:**
 
@@ -34,8 +34,8 @@ Origem: `docs/specs/backlog/revisao-ui-ux/` (relatório, prints com callouts, mo
 | 107 | Demandas grafo: tema, hover-card, legenda-filtro |
 | 108 | Demanda detalhe: edição inline, tags/membros no cabeçalho |
 | 109 | Demanda: formulário unificado e adaptativo |
-| 110 | Execuções: contexto, linha ativa, teclado/URL |
-| 111 | Relatório: auto-preview, chips de período, IA habilitada |
+| ~~110~~ | ~~Execuções: contexto, linha ativa, teclado/URL~~ — **DESCARTADA** (`../discarded/`) |
+| ~~111~~ | ~~Relatório: auto-preview, chips de período, IA habilitada~~ — **DESCARTADA** (`../discarded/`) |
 
 **Fase 4 — Telas administrativas:**
 
@@ -47,11 +47,19 @@ Origem: `docs/specs/backlog/revisao-ui-ux/` (relatório, prints com callouts, mo
 | 115 | Calendário: criação pelo clique no dia |
 | 116 | Tags: quick-add e cor inline |
 
+## Descartadas (2026-10-16)
+
+Decisão do autor: tudo que mexe **diretamente** nas telas de Atividades e de Execuções fica de fora —
+**102, 103, 104, 105, 110 e 111**, agora em `docs/specs/discarded/`. O que mexe nelas só
+indiretamente continua na lista (97, 98, 99, 95, 96, 108, 116 e as demais). A 111 entrou porque o
+ponto de entrada dela é o header da tela de Execuções (depende da 110). Nenhuma task restante
+depende de uma descartada.
+
 ## Dependências entre tasks
 
 - 97/98/99 são pré-requisitos citados pela maioria das tasks das fases 2–4.
-- 95 → 96 (layout) e 95 → 104 (signal compartilhado de execução).
-- 106 → 107; 110 → 111; 96 → 114.
+- 95 → 96 (layout). (~~95 → 104~~: a 104 foi descartada.)
+- 106 → 107; 96 → 114. (~~110 → 111~~: ambas descartadas.)
 - Única task com mudança de backend estrutural: **99** (endpoints `restaurar`); 104 pede apenas 2 campos a mais num DTO de leitura.
 
 ## Observações de organização (2026-10-16)

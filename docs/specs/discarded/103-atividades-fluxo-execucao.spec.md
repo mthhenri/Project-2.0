@@ -1,5 +1,9 @@
 # 103 — Atividades: dialogs de execução sem atrito (iniciar, registrar, visualizar)
 
+> **DESCARTADA em 2026-10-16 — decisão do autor.** Esta task mexe diretamente nas telas de Atividades
+> e Execuções, que ficam como estão. Não implementar. O texto abaixo é o registro da revisão de
+> UI/UX e não foi reescrito.
+
 **Origem:** Revisão de UI/UX — prints `docs/assets/revisao-ui-ux/prints/07..09-*.png`, análise `analise-detalhada/atividade-listagem.md`
 
 **Depende de:** 97 (padrão de dialog)

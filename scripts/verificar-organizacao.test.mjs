@@ -30,6 +30,16 @@ test("recusa spec externa e anexo com proprietário em outro estado", () => {
     ]).some(erro => erro.includes("órfão")));
 });
 
+test("aceita o estado discarded e seus anexos, mas não um anexo órfão nele", () => {
+    assert.deepEqual(verificarCaminhos(["docs/specs/discarded/tarefa.spec.md"]), []);
+    assert.deepEqual(verificarCaminhos([
+        "docs/specs/discarded/tarefa.spec.md", "docs/specs/discarded/tarefa/plano.md"
+    ]), []);
+    assert.ok(verificarCaminhos(["docs/specs/discarded/tarefa/plano.md"])
+        .some(erro => erro.includes("órfão")));
+    assert.ok(verificarCaminhos(["docs/specs/arquivadas/tarefa.spec.md"]).length);
+});
+
 test("recusa captura e auditoria dispersas mesmo fora das antigas pastas", () => {
     for (const caminho of ["docs/capturas/verificacao.png", "captura-1920x1080.png",
         "docs/auditoria-2026-10-08.md", "playwright-report/index.html",

@@ -82,6 +82,7 @@ project-2.0/
       backlog/            ← tasks a implementar
       active/             ← task em andamento na sessão atual
       done/               ← tasks concluídas (histórico)
+      discarded/          ← tasks descartadas por decisão do autor (registro; não implementar)
   scripts/                      ← repo:verificar, impacto e hooks de agente
   .claude/                      ← skills, subagentes e settings do Claude Code
   .agents/skills/               ← cópia idêntica de .claude/skills (agentes compatíveis com AGENTS.md)
@@ -94,7 +95,9 @@ project-2.0/
 
 ### 3.1 Documentação de tarefa e artefatos de execução
 
-Todo trabalho executável tem uma única spec em `docs/specs/{backlog,active,done}/<tarefa>.spec.md`.
+Todo trabalho executável tem uma única spec em `docs/specs/{backlog,active,done,discarded}/<tarefa>.spec.md`.
+Uma spec **descartada** (`discarded/`) é decisão do autor de não fazer a task: ela leva no topo uma nota
+com data e motivo, o corpo não é reescrito, e nada mais depende dela.
 Planos, decisões de design da tarefa, propostas, revisões, auditorias e relatórios de verificação
 são **anexos** em `docs/specs/<estado>/<tarefa>/`, com a spec proprietária ao lado. Mova spec e
 anexos juntos ao mudar de estado; corrija os ponteiros de forma mecânica. Não crie ciclos

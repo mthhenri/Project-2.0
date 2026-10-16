@@ -27,6 +27,8 @@ description: >
 - Spec de fase/milestone ou guarda-chuva: **quebrar em tasks numeradas antes de implementar** —
   não implementar o arquivo guarda-chuva direto.
 - Spec em `docs/specs/done/` é registro histórico — nunca reescrever, só ler.
+- Spec em `docs/specs/discarded/` foi descartada pelo autor: **não implementar** nem puxar para `active/`.
+  Para descartar, mova para `discarded/` e acrescente no topo a nota de data e motivo, sem reescrever o corpo.
 - Sem spec ainda para o pedido? Escrever uma nova com `docs/specs/TEMPLATE.spec.md` antes de
   tocar código (seções obrigatórias marcadas no próprio template).
 

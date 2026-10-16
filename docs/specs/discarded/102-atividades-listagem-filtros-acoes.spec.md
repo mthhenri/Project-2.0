@@ -1,5 +1,9 @@
 # 102 — Atividades: filtros persistentes, ações enxutas e ações em massa
 
+> **DESCARTADA em 2026-10-16 — decisão do autor.** Esta task mexe diretamente nas telas de Atividades
+> e Execuções, que ficam como estão. Não implementar. O texto abaixo é o registro da revisão de
+> UI/UX e não foi reescrito.
+
 **Origem:** Revisão de UI/UX — print `docs/assets/revisao-ui-ux/prints/06-atividade-listagem.png`, análise `analise-detalhada/atividade-listagem.md`
 
 **Depende de:** 98 (update otimista), 99 (excluir com undo), 97 (dialogs)
