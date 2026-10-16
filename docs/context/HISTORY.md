@@ -12,6 +12,21 @@
 
 ---
 
+## 2026-10-16 — Task 114: anotações em drawer com auto-save
+
+Relatório em `docs/specs/done/114-anotacoes-drawer-autosave/verificacao.md`; verificação em Chromium contra a API real
+em 1920×1080, 1366×768 e 1080×1920.
+
+- O modal de 95vw×95vh virou drawer de 520 px; salva sozinho 2 s após a última digitação (e nunca sem mudança real),
+  fechar salva sem confirm, Limpar tem Desfazer de 7 s e falha no flush oferece "Reabrir". Supera o confirm da spec 84
+  para este editor (nota na spec 84).
+- `aoAlterar` passou a levar `temAnotacoes`, e o ícone da listagem atualiza sem recarregar. Deep-link redireciona para
+  onde o drawer vive (listagem para gestor, Ponto para o próprio usuário).
+- **Achados só na verificação:** o toast "Desfazer" cobria o rodapé do drawer e o toast de erro genérico se empilhava
+  sobre o "Reabrir".
+
+---
+
 ## 2026-10-16 — Task 113: Usuários com switch de status, ações diretas e criação com defaults
 
 Relatório em `docs/specs/done/113-usuarios-switch-acoes-diretas/verificacao.md`; verificação em Chromium contra a API

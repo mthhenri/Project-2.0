@@ -16,6 +16,7 @@ import {
   UsuarioRestauradoDto,
 } from '@project20/shared';
 import { ambiente } from '../../../../environments/environment';
+import { comErroTratadoPelaTela } from '../../../core/interceptors/error-handler.interceptor';
 import { comFeedbackProprio } from '../../../core/interceptors/loading.interceptor';
 
 @Injectable({ providedIn: 'root' })
@@ -41,8 +42,9 @@ export class UsuarioService {
     return this.httpClient.get<StandardResponse<UsuarioRecuperadoDto>>(`${this.urlBase}/${id}`);
   }
 
-  alterar(id: number, dto: UsuarioAlterarDto): Observable<StandardResponse<UsuarioAlteradoDto>> {
-    return this.httpClient.put<StandardResponse<UsuarioAlteradoDto>>(`${this.urlBase}/${id}`, dto);
+  /** `erroNaTela`: a tela mostra a falha por conta própria (ex.: o drawer de anotações), sem o toast genérico. */
+  alterar(id: number, dto: UsuarioAlterarDto, erroNaTela = false): Observable<StandardResponse<UsuarioAlteradoDto>> {
+    return this.httpClient.put<StandardResponse<UsuarioAlteradoDto>>(`${this.urlBase}/${id}`, dto, erroNaTela ? comErroTratadoPelaTela() : {});
   }
 
   excluir(id: number): Observable<StandardResponse<void>> {

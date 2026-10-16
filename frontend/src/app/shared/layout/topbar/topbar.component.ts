@@ -1,5 +1,5 @@
 import { Component, DestroyRef, HostListener, ViewChild, inject, signal, computed } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { ReactiveFormsModule, FormControl } from '@angular/forms';
@@ -136,6 +136,17 @@ export class TopbarComponent {
     this.execucaoAtiva.carregar();
     this.atualizarHora();
     this.agendarProximaAtualizacao();
+
+    // Deep-link `/ponto?anotacoes=:id` (task 114): o drawer das próprias anotações vive aqui. Na
+    // listagem de Usuários quem abre é a própria página.
+    this.roteador.events.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((evento) => {
+      if (!(evento instanceof NavigationEnd)) return;
+      const arvore = this.roteador.parseUrl(evento.urlAfterRedirects);
+      const usuarioId = Number(arvore.queryParams['anotacoes']);
+      if (!usuarioId || arvore.root.children['primary']?.segments[0]?.path === 'usuario') return;
+      this.anotacoesDialog?.abrir(usuarioId, usuarioId === this.sessao.id() ? this.sessao.nomeCompleto()! : '');
+      this.roteador.navigate([], { queryParams: { anotacoes: null }, queryParamsHandling: 'merge', replaceUrl: true });
+    });
   }
 
   /** Volta para a aba/janela: o backend pode ter encerrado a execução (cron das 23:59:59). */

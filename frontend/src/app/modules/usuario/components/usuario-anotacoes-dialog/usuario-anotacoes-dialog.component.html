@@ -1,74 +1,104 @@
-<p-dialog
+<p-drawer
   [visible]="visivel()"
-  (visibleChange)="aoTentarFechar($event)"
+  (visibleChange)="aoMudarVisibilidade($event)"
+  position="right"
   [modal]="true"
-  [style]="{ width: '95vw', height: '95vh' }"
-  [contentStyle]="{ padding: '1rem', overflow: 'hidden', display: 'flex', flexDirection: 'column' }"
-  [draggable]="false"
-  [resizable]="false"
-  [dismissableMask]="false"
-  [closeOnEscape]="false"
+  [dismissible]="true"
+  [closeOnEscape]="true"
+  [showCloseIcon]="false"
+  styleClass="anotacoes-drawer"
 >
-  <ng-template #header>
-    <div class="anotacoes-dialog__cabecalho">
-      <span class="anotacoes-dialog__titulo-linha">
-        <span class="anotacoes-dialog__titulo">{{ tituloDialog() }}</span>
-        @if (temAlteracoesNaoSalvas()) {
-          <p-tag
-            class="anotacoes-dialog__chip"
-            value="Alterado"
-            icon="pi pi-pencil"
-            severity="warn"
-          />
-        }
-      </span>
-      <span class="anotacoes-dialog__alteracao">
-        <i class="pi pi-history"></i>
-        @if (anotacoesAlteracaoData()) {
-          Última alteração: {{ anotacoesAlteracaoData() | date: 'dd/MM/yyyy HH:mm:ss' }}
-        } @else {
-          Sem alterações registradas
-        }
-      </span>
+  <ng-template #headless>
+    <div
+      class="anotacoes-drawer__conteudo"
+      (keydown.control.s)="$event.preventDefault(); salvar()"
+      (keydown.meta.s)="$event.preventDefault(); salvar()"
+    >
+      <header class="anotacoes-drawer__cabecalho">
+        <div class="anotacoes-drawer__titulos">
+          <h2 class="anotacoes-drawer__titulo">{{ titulo() }}</h2>
+          <span
+            class="anotacoes-drawer__editado"
+            [pTooltip]="alteracaoData() ? (alteracaoData() | date: 'dd/MM/yyyy HH:mm:ss') ?? '' : ''"
+            tooltipPosition="bottom"
+          >
+            <i class="pi pi-history"></i>{{ editadoHa() }}
+          </span>
+        </div>
+        <p-button
+          icon="pi pi-times"
+          [text]="true"
+          severity="secondary"
+          ariaLabel="Fechar anotações"
+          pTooltip="Fechar (Esc) — salva sozinho"
+          tooltipPosition="left"
+          (onClick)="aoMudarVisibilidade(false)"
+        />
+      </header>
+
+      @if (carregando()) {
+        <div class="anotacoes-drawer__esqueleto" aria-busy="true">
+          <p-skeleton height="2rem" />
+          <p-skeleton height="1rem" width="90%" />
+          <p-skeleton height="1rem" width="75%" />
+          <p-skeleton height="1rem" width="85%" />
+          <p-skeleton height="1rem" width="60%" />
+        </div>
+      } @else {
+        <form [formGroup]="formulario" class="anotacoes-drawer__form">
+          <p-editor
+            formControlName="anotacoes"
+            placeholder="Escreva aqui — salva sozinho enquanto você digita."
+            (onInit)="aoIniciarEditor($event)"
+            styleClass="anotacoes-drawer__editor"
+          >
+            <ng-template #header>
+              <span class="ql-formats">
+                <button type="button" class="ql-header" value="2" aria-label="Título"></button>
+                <button type="button" class="ql-bold" aria-label="Negrito"></button>
+                <button type="button" class="ql-italic" aria-label="Itálico"></button>
+                <button type="button" class="ql-underline" aria-label="Sublinhado"></button>
+                <button type="button" class="ql-strike" aria-label="Tachado"></button>
+              </span>
+              <span class="ql-formats">
+                <button type="button" class="ql-list" value="ordered" aria-label="Lista numerada"></button>
+                <button type="button" class="ql-list" value="bullet" aria-label="Lista com marcadores"></button>
+                <button type="button" class="ql-link" aria-label="Link"></button>
+                <button type="button" class="ql-clean" aria-label="Remover formatação"></button>
+              </span>
+            </ng-template>
+          </p-editor>
+        </form>
+      }
+
+      <footer class="anotacoes-drawer__rodape">
+        <p-button
+          label="Limpar"
+          icon="pi pi-trash"
+          severity="danger"
+          [outlined]="true"
+          size="small"
+          [disabled]="carregando()"
+          (onClick)="limpar()"
+        />
+        <span class="anotacoes-drawer__estado" role="status" aria-live="polite" [attr.data-estado]="estado()">
+          @switch (estado()) {
+            @case ('editando') { <i class="pi pi-pencil"></i>Editando… }
+            @case ('salvando') { <i class="pi pi-spin pi-spinner"></i>Salvando… }
+            @case ('salvo') { <i class="pi pi-check"></i>Salvo às {{ salvoEm() | date: 'HH:mm' }} }
+            @case ('erro') { <i class="pi pi-exclamation-triangle"></i>Não salvou — tente de novo }
+          }
+        </span>
+        <p-button
+          label="Salvar"
+          icon="pi pi-save"
+          size="small"
+          pTooltip="Ctrl+S"
+          tooltipPosition="top"
+          [disabled]="carregando() || (estado() !== 'editando' && estado() !== 'erro')"
+          (onClick)="salvar()"
+        />
+      </footer>
     </div>
   </ng-template>
-
-  @if (carregando()) {
-    <div class="anotacoes-dialog__carregando">
-      <i class="pi pi-spin pi-spinner"></i>
-      <span>Carregando anotações...</span>
-    </div>
-  } @else {
-    <form [formGroup]="formulario" class="anotacoes-dialog__form">
-      <p-editor
-        formControlName="anotacoes"
-        [style]="{ height: 'calc(95vh - 10rem)' }"
-      />
-    </form>
-  }
-
-  <ng-template pTemplate="footer">
-    <div class="anotacoes-dialog__rodape">
-      <p-button
-        label="Limpar Anotações"
-        icon="pi pi-trash"
-        severity="danger"
-        [outlined]="true"
-        (onClick)="limpar()"
-      />
-      <span class="anotacoes-dialog__rodape-dica">
-        <i class="pi pi-clock"></i>
-        Salvo automaticamente a cada 30 segundos
-      </span>
-      <p-button
-        label="Salvar Anotações"
-        icon="pi pi-save"
-        [loading]="carregandoSalvar()"
-        (onClick)="salvar()"
-      />
-    </div>
-  </ng-template>
-</p-dialog>
-
-<p-confirmDialog key="anotacoes-limpar" />
-<p-confirmDialog key="anotacoes-fechar" />
+</p-drawer>

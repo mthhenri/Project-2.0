@@ -1,4 +1,5 @@
 import { Component, ElementRef, inject, signal, OnInit, HostListener, DestroyRef, computed, viewChild } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule, ReactiveFormsModule, FormBuilder } from '@angular/forms';
 import { finalize, debounceTime, distinctUntilChanged } from 'rxjs';
@@ -12,7 +13,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { UsuarioResumoDto, TipoUsuarioEnum, TipoUsuarioStatusEnum, UsuarioListarDto } from '@project20/shared';
 import { UsuarioService } from '../../services/usuario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
-import { UsuarioAnotacoesDialogComponent } from '../../components/usuario-anotacoes-dialog/usuario-anotacoes-dialog.component';
+import { AnotacoesAlteradasEvento, UsuarioAnotacoesDialogComponent } from '../../components/usuario-anotacoes-dialog/usuario-anotacoes-dialog.component';
 import { UsuarioPerfilDialogComponent } from '../../components/usuario-perfil-dialog/usuario-perfil-dialog.component';
 import { UsuarioFormularioDialogComponent } from '../../components/usuario-formulario-dialog/usuario-formulario-dialog.component';
 import { UsuarioSenhaDialogComponent } from '../../components/usuario-senha-dialog/usuario-senha-dialog.component';
@@ -59,8 +60,11 @@ export class UsuarioListagemPage implements OnInit {
   private readonly desfazerService = inject(DesfazerService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   private readonly campoBusca = viewChild<ElementRef<HTMLInputElement>>('campoBusca');
+  private readonly anotacoesDialog = viewChild.required(UsuarioAnotacoesDialogComponent);
 
   readonly formularioFiltros = this.formBuilder.group({ busca: [''] });
   readonly tipoFiltro = signal<TipoUsuarioEnum | null>(null);
@@ -102,6 +106,22 @@ export class UsuarioListagemPage implements OnInit {
       });
 
     this.buscarUsuarios();
+    this.abrirAnotacoesDoLink();
+  }
+
+  /** Deep-link `/usuario/:id/anotacoes` → `/usuario?anotacoes=:id`: abre o drawer e limpa o parâmetro. */
+  private abrirAnotacoesDoLink(): void {
+    const usuarioId = Number(this.route.snapshot.queryParamMap.get('anotacoes'));
+    if (!usuarioId) return;
+    this.anotacoesDialog().abrir(usuarioId);
+    this.router.navigate([], { queryParams: { anotacoes: null }, queryParamsHandling: 'merge', replaceUrl: true });
+  }
+
+  /** O drawer salvou: o ícone da linha acompanha sem recarregar a listagem. */
+  aoAnotacoesAlteradas(evento: AnotacoesAlteradasEvento): void {
+    this.usuarios.update((lista) =>
+      lista.map((item) => (item.id === evento.usuarioId ? { ...item, temAnotacoes: evento.temAnotacoes } : item)),
+    );
   }
 
   /** Recarrega a listagem sempre que a aba/janela volta a ficar visível. */

@@ -6,7 +6,7 @@ import { DialogModule } from 'primeng/dialog';
 import { UsuarioRecuperadoDto, TipoUsuarioEnum, TipoUsuarioStatusEnum } from '@project20/shared';
 import { UsuarioService } from '../../services/usuario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
-import { UsuarioAnotacoesDialogComponent } from '../usuario-anotacoes-dialog/usuario-anotacoes-dialog.component';
+import { AnotacoesAlteradasEvento, UsuarioAnotacoesDialogComponent } from '../usuario-anotacoes-dialog/usuario-anotacoes-dialog.component';
 import { iniciaisDoNome } from '../../utils/usuario-credenciais.util';
 
 /**
@@ -26,8 +26,8 @@ export class UsuarioPerfilDialogComponent {
 
   readonly editarSolicitado = output<number>();
   readonly senhaSolicitada = output<{ id: number; nomeCompleto: string }>();
-  /** Emitido quando as anotações mudam, para a listagem recarregar. */
-  readonly aoAlterar = output<void>();
+  /** Emitido quando as anotações são salvas, para a listagem atualizar o ícone. */
+  readonly aoAlterar = output<AnotacoesAlteradasEvento>();
 
   readonly usuario = signal<UsuarioRecuperadoDto | null>(null);
   readonly carregando = signal<boolean>(false);

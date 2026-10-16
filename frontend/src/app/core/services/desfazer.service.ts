@@ -12,6 +12,14 @@ export interface OfertaDesfazer {
   desfazer: () => Observable<unknown>;
   /** Roda quando o desfazer deu certo — a tela devolve o item à lista. */
   aposDesfazer?: () => void;
+  /** Texto do botão (padrão "Desfazer"); a task 114 usa "Reabrir" para um salvamento que falhou. */
+  rotulo?: string;
+  /** Quanto a oferta fica na tela (padrão `VIDA_TOAST_DESFAZER_MS`). */
+  duracaoMs?: number;
+  /** Texto do toast após o desfazer; `''` não mostra nada (padrão "Ação desfeita"). */
+  mensagemAposDesfazer?: string;
+  /** Roda quando a oferta termina sem desfazer (expirou, foi fechada ou substituída): é o momento de confirmar a ação. */
+  aoEncerrar?: () => void;
 }
 
 /**
@@ -27,15 +35,23 @@ export class DesfazerService {
   readonly oferta = signal<OfertaDesfazer | null>(null);
 
   oferecer(oferta: OfertaDesfazer): void {
-    this.cancelarTemporizador();
+    this.dispensar();
     this.oferta.set(oferta);
     this.temporizador = setTimeout(() => {
-      if (this.oferta() === oferta) this.oferta.set(null);
-    }, VIDA_TOAST_DESFAZER_MS);
+      if (this.oferta() === oferta) this.dispensar();
+    }, oferta.duracaoMs ?? VIDA_TOAST_DESFAZER_MS);
   }
 
   /** Botão "Fechar" do toast: dispensa a oferta sem desfazer. */
   dispensar(): void {
+    const ofertaAtual = this.oferta();
+    this.cancelarTemporizador();
+    this.oferta.set(null);
+    ofertaAtual?.aoEncerrar?.();
+  }
+
+  /** Tira a oferta da tela sem acionar `aoEncerrar` (quem a ofereceu já resolveu a ação por conta própria). */
+  dispensarSemEncerrar(): void {
     this.cancelarTemporizador();
     this.oferta.set(null);
   }
@@ -43,13 +59,15 @@ export class DesfazerService {
   /** Botão "Desfazer" do toast. */
   executar(): void {
     const oferta = this.oferta();
-    this.dispensar();
     if (!oferta) return;
+    this.cancelarTemporizador();
+    this.oferta.set(null);
 
     oferta.desfazer().subscribe({
       next: () => {
         oferta.aposDesfazer?.();
-        this.messageService.add({ severity: 'info', summary: 'Desfeito', detail: 'Ação desfeita' });
+        const detalhe = oferta.mensagemAposDesfazer ?? 'Ação desfeita';
+        if (detalhe) this.messageService.add({ severity: 'info', summary: 'Desfeito', detail: detalhe });
       },
     });
   }

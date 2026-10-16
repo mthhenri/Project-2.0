@@ -193,10 +193,10 @@
   </div>
 </div>
 
-<app-usuario-anotacoes-dialog #anotacoesDialog (aoAlterar)="buscarUsuarios()" />
+<app-usuario-anotacoes-dialog #anotacoesDialog (aoAlterar)="aoAnotacoesAlteradas($event)" />
 <app-usuario-perfil-dialog
   #perfilDialog
-  (aoAlterar)="buscarUsuarios()"
+  (aoAlterar)="aoAnotacoesAlteradas($event)"
   (editarSolicitado)="formularioDialog.abrirEdicao($event)"
   (senhaSolicitada)="senhaDialog.abrir($event.id, $event.nomeCompleto)"
 />

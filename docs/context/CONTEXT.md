@@ -8,17 +8,16 @@
 > [`MEMORY.md`](MEMORY.md) (onde fica o quê) · [`IDEAS.md`](IDEAS.md) (o que ainda não é sistema) ·
 > [`HISTORY.md`](HISTORY.md) (o que aconteceu e por quê).
 >
-> **Última revisão:** 2026-10-16 · **Última decisão registrada:** task 113 (Usuários: switch de status, ações
-> diretas e criação com defaults) — `HISTORY.md`, bloco de 2026-10-16
+> **Última revisão:** 2026-10-16 · **Última decisão registrada:** task 114 (Anotações: drawer com auto-save) — `HISTORY.md`, bloco de 2026-10-16
 
 ---
 
 ## 1. Próxima Task
 
-Nenhuma task em andamento. O backlog tem **3 specs** em `docs/specs/backlog/` (revisão de UI/UX:
-114–116, guarda-chuva `revisao-ui-ux.spec.md`). As fundações **94–99** , o Ponto (**100–101**)
-e a toolbar, o grafo, o detalhe e o formulário de Demandas (**106–109**) a de Projetos (**112**) e a de Usuários (**113**) foram concluídos em 2026-10-16 e estão em `docs/specs/done/`; as seguintes devem **reutilizar** o que
-elas criaram (ver `MEMORY.md` §2). Siga a ordem de fases de `INDEX-revisao-ux.md`: fase 4 (114–116). As tasks **102, 103, 104, 105, 110 e 111** (que mexem direto nas telas de
+Nenhuma task em andamento. O backlog tem **2 specs** em `docs/specs/backlog/` (revisão de UI/UX:
+115–116, guarda-chuva `revisao-ui-ux.spec.md`). As fundações **94–99** , o Ponto (**100–101**)
+e a toolbar, o grafo, o detalhe e o formulário de Demandas (**106–109**) a de Projetos (**112**) a de Usuários (**113**) e as Anotações (**114**) foram concluídos em 2026-10-16 e estão em `docs/specs/done/`; as seguintes devem **reutilizar** o que
+elas criaram (ver `MEMORY.md` §2). Siga a ordem de fases de `INDEX-revisao-ux.md`: fase 4 (115–116). As tasks **102, 103, 104, 105, 110 e 111** (que mexem direto nas telas de
 Atividades e Execuções) foram **descartadas** em 2026-10-16 e estão em `docs/specs/discarded/`. A task
 117 foi concluída.
 Próxima migration nova: `0029`.
@@ -115,6 +114,10 @@ project-2.0/
   `g`+letra e `n`, e colapsa em 3 degraus: sem relógio até 1499 px, só ícones até 1366 px (acima do 1280
   da spec, porque o chip de execução ocupa espaço), "Mais ▾" para itens de gestor abaixo de 900 px e duas
   linhas abaixo de 720 px. O overlay global só cobre mutações (GET usa esqueleto/loading local).
+- **[task 114]** Anotações em drawer (520 px, `p-drawer`): auto-save 2 s só com mudança real, fechar salva (sem confirm),
+  Limpar com Desfazer de 7 s (o vazio só é gravado depois), erro no flush → toast "Reabrir". `aoAlterar` emite
+  `{usuarioId, temAnotacoes}`. Deep-link `/usuario/:id/anotacoes` redireciona (gestor → `/usuario?anotacoes=`, próprio →
+  `/ponto?anotacoes=`); a topbar abre o drawer próprio. `DesfazerService` aceita `rotulo/duracaoMs/aoEncerrar`.
 - **[task 113]** Usuários: status em `p-toggleswitch` na linha (otimista, Desfazer, desabilitado na própria linha);
   editar e alterar senha abrem direto da linha (`abrirEdicao(id)` / `app-usuario-senha-dialog`); o perfil só lê. O
   dialog criar/editar é único: login sugerido do nome, senha gerada, Tipo segmentado. Filtros Tipo/Status persistem em

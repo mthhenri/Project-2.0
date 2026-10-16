@@ -226,3 +226,8 @@ html {
 .lista-recarga {
   position: relative;
 }
+
+// Com o drawer de anotações aberto (task 114) o toast "Desfazer" sai do rodapé do drawer.
+body:has(.anotacoes-drawer) .toast-desfazer {
+  right: calc(520px + 1.25rem);
+}
