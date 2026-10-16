@@ -105,7 +105,7 @@ project-2.0/
     SYSTEM.SPEC.md  ← Constituição do projeto (leia antes de qualquer coisa)
     CONVENTIONS.md  ← Referência rápida de convenções de código
     SCHEMA.md       ← Schema SQL completo do banco de dados
-    CONTEXT.md      ← Estado atual do projeto (atualizado após cada sessão)
+    context/        ← CONTEXT (estado atual), HISTORY, PROBLEMS, MEMORY e IDEAS
     specs/
       backlog/      ← Tasks a implementar
       active/       ← Task em andamento
@@ -159,7 +159,7 @@ antes de ser implementada. O Claude Code lê as specs e implementa. O Claude.ai
 3. Abrir o Claude Code na raiz do projeto com o prompt padrão abaixo
 4. Revisar o código gerado
 5. Mover a spec para docs/specs/done/
-6. Confirmar que o CONTEXT.md foi atualizado
+6. Confirmar que o docs/context/ foi atualizado (HISTORY e as seções afetadas do CONTEXT)
 7. Repetir para a próxima task
 ```
 
@@ -169,11 +169,11 @@ antes de ser implementada. O Claude Code lê as specs e implementa. O Claude.ai
 Leia os seguintes arquivos antes de qualquer coisa:
 - docs/SYSTEM.SPEC.md
 - docs/CONVENTIONS.md
-- docs/CONTEXT.md
+- docs/context/CONTEXT.md
 
 Task a implementar: docs/specs/active/[nome-da-task].spec.md
 
-Ao finalizar, atualize docs/CONTEXT.md com o que foi feito
+Ao finalizar, registre a narrativa em docs/context/HISTORY.md e atualize as seções afetadas de docs/context/CONTEXT.md
 e mova a spec de active/ para done/.
 ```
 

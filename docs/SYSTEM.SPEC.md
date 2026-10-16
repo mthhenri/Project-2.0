@@ -70,16 +70,49 @@ project-2.0/
     SYSTEM.SPEC.md        ← este arquivo — lido no início de toda sessão
     CONVENTIONS.md        ← referência rápida de convenções
     SCHEMA.md             ← schema SQL completo e comentado
-    CONTEXT.md            ← estado atual do projeto (atualizado após cada sessão)
+    DEPLOY.md             ← deploy e ambientes
+    context/              ← contexto persistente entre sessões
+      CONTEXT.md          ← o que é verdade agora (lido após este arquivo e o CONVENTIONS)
+      HISTORY.md          ← o que aconteceu e por quê (acrescenta no topo)
+      PROBLEMS.md         ← o que está quebrado agora
+      MEMORY.md           ← onde as coisas vivem (somente ponteiros)
+      IDEAS.md            ← o que ainda não é sistema
     specs/
       backlog/            ← tasks a implementar
       active/             ← task em andamento na sessão atual
       done/               ← tasks concluídas (histórico)
+  scripts/                      ← repo:verificar, impacto e hooks de agente
+  .claude/                      ← skills, subagentes e settings do Claude Code
+  .agents/skills/               ← cópia idêntica de .claude/skills (agentes compatíveis com AGENTS.md)
+  CLAUDE.md, AGENTS.md          ← orientação aos agentes — cópias idênticas
   package.json                  ← workspaces root (npm workspaces)
   docker-compose.yml
   .gitignore
   README.md
 ```
+
+### 3.1 Documentação de tarefa e artefatos de execução
+
+Todo trabalho executável tem uma única spec em `docs/specs/{backlog,active,done}/<tarefa>.spec.md`.
+Planos, decisões de design da tarefa, propostas, revisões, auditorias e relatórios de verificação
+são **anexos** em `docs/specs/<estado>/<tarefa>/`, com a spec proprietária ao lado. Mova spec e
+anexos juntos ao mudar de estado; corrija os ponteiros de forma mecânica. Não crie ciclos
+paralelos por ferramenta ou tipo de atividade (`reviews/`, `auditorias/`, `plans/`, `propostas/`
+ou equivalentes) — essa regra prevalece sobre destinos padrão de plugins e skills externas.
+
+A spec define escopo e aceite; o plano só ordena a execução. Auditoria parcial continua em
+`active/`, mesmo com relatório produzido. Spec concluída preserva requisitos e decisões: numa
+realocação só os ponteiros mudam.
+
+Capturas, vídeos, logs, dumps, cenários temporários e JSONs de resultado bruto ficam em
+`.artifacts/<tarefa>/`, **ignorada pelo Git**. Nunca force sua inclusão. O relatório textual
+versionado registra método, comandos/resultados, estados verificados, achados e limites, e avisa
+quando a evidência é local e não vem no clone. Arquivo gerado só vira fonte versionada quando for
+asset do produto, fonte canônica ou fixture reproduzível definida pela spec.
+
+Rode `npm run repo:verificar` antes do fecho e `npm run repo:verificar -- --staged` depois de
+preparar um commit. O CI confere os caminhos versionados e os espelhos; `.gitignore` sozinho não
+protege contra arquivo já rastreado ou inclusão forçada.
 
 ---
 
