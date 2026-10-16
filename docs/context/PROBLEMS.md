@@ -43,13 +43,3 @@
   testes (Angular/Karma ou Vitest) antes da migração de UI de `IDEAS.md` I-001.
 - **Desde:** origem do projeto.
 
-### P-002 — Barra de navegação do topo não é responsiva e causa scroll horizontal em 360 px · `ABERTO` · frontend
-
-- **Sintoma:** em 360×800 todas as telas têm `scrollWidth` ≈ 1388 px contra `clientWidth` 360: o
-  menu horizontal do topo (Ponto, Calendário, … Usuários, relógio, Minhas Anotações) não quebra
-  nem recolhe. Medido em `/tag`, `/projeto`, `/usuario` e `/atividade/nova`.
-- **Causa:** não investigada além de a largura vir da topbar (`frontend/src/app/shared/layout/topbar`).
-- **Contorno:** nenhum no celular; em desktop não aparece.
-- **Correção:** tratada pela spec 96 (`topbar-reorganizacao-e-atalhos`) da revisão de UX, se cobrir
-  o viewport mobile; confirmar ao implementá-la.
-- **Desde:** anterior à adoção do kit (constatado em 2026-10-16, task 117).

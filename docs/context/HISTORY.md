@@ -12,6 +12,25 @@
 
 ---
 
+## 2026-10-16 — Tasks 94, 95 e 96: login, chip de execução ativa e topbar
+
+Três tasks de frontend da fase 1 da revisão de UX, um commit cada, verificadas em Chromium contra a API
+real. Relatórios em `docs/specs/done/{94,95,96}-*/verificacao.md`.
+
+- **94**: o login deixou de persistir a senha (o formato antigo é apagado no primeiro load), ganhou o estado
+  "Bem-vindo de volta" (só senha + Enter), foco gerenciado, aviso de Caps Lock, erro 400 vs rede, sem toast
+  global (`HttpContext`) e `returnUrl` validado (guard e redirect de 401).
+- **95**: `ExecucaoAtivaService` + `execucaoAtivaInterceptor` + `app-chip-execucao-ativa` (cronômetro, link
+  para `/execucao`, pausa inline otimista com rollback). **Achado só na verificação:** o popover do
+  PrimeNG foca o primeiro botão depois do `onShow`; o foco da descrição precisa de um `setTimeout`.
+- **96**: tema em 1 clique, avatar + menu de perfil (com "Tempos em dias" e "Sair"), logo → `/ponto`,
+  anotações só ícone, toasts em `bottom-right`, atalhos `g`+letra e `n`, "Mais ▾" e layout em duas linhas
+  no celular; overlay global só em mutações. **Achado só na verificação:** com o chip ativo a topbar
+  estourava a 1280–1440 px e a 640 px, então o recolhimento foi antecipado (ver decisão em `CONTEXT.md`).
+  O defeito **P-002** (overflow a 360 px) foi corrigido e removido de `PROBLEMS.md`.
+
+---
+
 ## 2026-10-16 — Tasks 97, 98 e 99: padrão de dialogs, feedback otimista/esqueletos e "Desfazer"
 
 Três fundações transversais da revisão de UI/UX, implementadas em sequência (um commit por task) e

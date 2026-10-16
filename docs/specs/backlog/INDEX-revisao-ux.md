@@ -8,9 +8,9 @@ Origem: `docs/specs/backlog/revisao-ui-ux/` (relatório, prints com callouts, mo
 
 | Task | Título | Esforço estimado |
 |---|---|---|
-| 94 | Login: segurança da credencial + fluxo sem fricção | M |
-| 95 | Topbar: chip global de execução ativa | M |
-| 96 | Topbar: reorganização + atalhos globais | M |
+| ~~94~~ | ~~Login: segurança da credencial + fluxo sem fricção~~ — **concluída** (`../done/`) | — |
+| ~~95~~ | ~~Topbar: chip global de execução ativa~~ — **concluída** (`../done/`) | — |
+| ~~96~~ | ~~Topbar: reorganização + atalhos globais~~ — **concluída** (`../done/`) | — |
 | ~~97~~ | ~~Padrão único de formulário em dialogs~~ — **concluída** (`../done/`) | — |
 | ~~98~~ | ~~Feedback otimista + skeletons~~ — **concluída** (`../done/`) | — |
 | ~~99~~ | ~~Undo de exclusões (endpoint restaurar)~~ — **concluída** (`../done/`) | — |

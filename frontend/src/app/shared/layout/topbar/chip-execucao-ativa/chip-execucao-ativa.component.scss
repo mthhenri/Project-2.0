@@ -111,3 +111,9 @@
     animation: none;
   }
 }
+
+@media (max-width: 1499px) {
+  .chip-execucao__texto {
+    max-width: 7rem;
+  }
+}

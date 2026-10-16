@@ -8,20 +8,21 @@
 > [`MEMORY.md`](MEMORY.md) (onde fica o quê) · [`IDEAS.md`](IDEAS.md) (o que ainda não é sistema) ·
 > [`HISTORY.md`](HISTORY.md) (o que aconteceu e por quê).
 >
-> **Última revisão:** 2026-10-16 · **Última decisão registrada:** tasks 97, 98 e 99 (padrão de dialogs,
-> feedback otimista/esqueletos e "Desfazer" de exclusões) — `HISTORY.md`, bloco de 2026-10-16
+> **Última revisão:** 2026-10-16 · **Última decisão registrada:** tasks 94, 95 e 96 (login, chip de
+> execução ativa e topbar) — `HISTORY.md`, bloco de 2026-10-16
 
 ---
 
 ## 1. Próxima Task
 
-Nenhuma task em andamento. O backlog tem **14 specs** em `docs/specs/backlog/` (revisão de UI/UX:
-94–96, 100, 101, 106–109 e 112–116, guarda-chuva `revisao-ui-ux.spec.md`). As tasks **97, 98 e 99**
-(fundações transversais) foram concluídas em 2026-10-16 e estão em `docs/specs/done/`; as seguintes
-devem **reutilizar** o que elas criaram (ver `MEMORY.md` §2). Siga a ordem de fases de
-`INDEX-revisao-ux.md`: faltam 94, 95 e 96 na fase 1. As tasks **102, 103, 104, 105, 110 e 111** (que
-mexem direto nas telas de Atividades e Execuções) foram **descartadas** em 2026-10-16 e estão em
-`docs/specs/discarded/`. A task 117 foi concluída.
+Nenhuma task em andamento. O backlog tem **11 specs** em `docs/specs/backlog/` (revisão de UI/UX:
+100, 101, 106–109 e 112–116, guarda-chuva `revisao-ui-ux.spec.md`). As fundações **94–99** (login,
+chip de execução, topbar, padrão de dialogs, feedback otimista e "Desfazer") foram concluídas em
+2026-10-16 e estão em `docs/specs/done/`; as seguintes devem **reutilizar** o que elas criaram (ver
+`MEMORY.md` §2). Siga a ordem de fases de `INDEX-revisao-ux.md`: fase 2 (100 e 101, ponto) e depois
+fase 3 e 4. As tasks **102, 103, 104, 105, 110 e 111** (que mexem direto nas telas de Atividades e
+Execuções) foram **descartadas** em 2026-10-16 e estão em `docs/specs/discarded/`. A task 117 foi
+concluída.
 Próxima migration nova: `0029`.
 
 ## 2. Estado por Área
@@ -109,6 +110,13 @@ project-2.0/
   Exclusões de atividade, projeto, usuário, tag, dia não útil e demanda chamam `PATCH :id/restaurar` no
   "Desfazer" do toast (6 s, `DesfazerService`); associações (membro, conexão) desfazem por re-POST.
   Restaurar não é em cascata e valida unicidade/dependências (`SYSTEM.SPEC.md` §9.2 #11).
+- **[tasks 94–96]** O login guarda só `{login, nomeCompleto}` (nunca a senha) e volta ao `returnUrl`
+  (caminho interno validado; padrão `/ponto`). A execução ativa do usuário é um signal global
+  (`ExecucaoAtivaService`), atualizado por interceptor após iniciar/encerrar em qualquer tela e ao refocar
+  a aba. A topbar tem tema em 1 clique, perfil por avatar (menu com "Tempos em dias" e "Sair"), atalhos
+  `g`+letra e `n`, e colapsa em 3 degraus: sem relógio até 1499 px, só ícones até 1366 px (acima do 1280
+  da spec, porque o chip de execução ocupa espaço), "Mais ▾" para itens de gestor abaixo de 900 px e duas
+  linhas abaixo de 720 px. O overlay global só cobre mutações (GET usa esqueleto/loading local).
 - **[estado `discarded`]** `docs/specs/discarded/` é o quarto estado do ciclo de specs
   (`SYSTEM.SPEC.md` §3.1); o `repo:verificar` o aceita.
 

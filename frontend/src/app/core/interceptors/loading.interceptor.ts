@@ -21,7 +21,8 @@ let requisicoesAtivas = 0;
 let temporizador: ReturnType<typeof setTimeout> | null = null;
 
 export const loadingInterceptor: HttpInterceptorFn = (requisicao, proximo) => {
-  if (requisicao.context.get(SEM_OVERLAY_GLOBAL)) return proximo(requisicao);
+  // Leituras usam esqueleto/loading local; o scrim global é só das mutações (task 96).
+  if (requisicao.method === 'GET' || requisicao.context.get(SEM_OVERLAY_GLOBAL)) return proximo(requisicao);
 
   requisicoesAtivas++;
 

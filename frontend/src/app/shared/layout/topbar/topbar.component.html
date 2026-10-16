@@ -1,6 +1,6 @@
 <header class="topbar flex items-center px-6 py-3 border-b-2 gap-6">
   <!-- Logo -->
-  <a routerLink="/atividade" class="topbar__logo flex-shrink-0">
+  <a routerLink="/ponto" class="topbar__logo flex-shrink-0" pTooltip="Ponto" tooltipPosition="bottom">
     <img src="favicon.ico" alt="Logo" class="topbar__logo-imagem" />
   </a>
 
@@ -11,10 +11,44 @@
         [routerLink]="item.rotaLink"
         routerLinkActive="topbar__nav-item--ativo"
         class="topbar__nav-item flex items-center gap-2 px-3 py-2 rounded-lg text-color hover:bg-emphasis transition-colors text-sm font-medium whitespace-nowrap"
+        [class.topbar__nav-item--gestor]="item.somenteGestor"
+        [pTooltip]="item.label + ' — g ' + item.tecla"
+        tooltipPosition="bottom"
+        [attr.aria-label]="item.label"
       >
         <i [class]="item.icone"></i>
-        <span>{{ item.label }}</span>
+        <span class="topbar__nav-rotulo">{{ item.label }}</span>
       </a>
+    }
+
+    @if (itensGestorOcultaveis().length) {
+      <!-- Abaixo de 900px os itens só de gestor saem da barra e entram aqui. -->
+      <button
+        type="button"
+        class="topbar__mais topbar__nav-item flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium"
+        aria-label="Mais páginas"
+        (click)="maisPopover.toggle($event)"
+      >
+        <i class="pi pi-ellipsis-h"></i>
+        <span class="topbar__nav-rotulo">Mais</span>
+        <i class="pi pi-angle-down text-xs"></i>
+      </button>
+      <p-popover #maisPopover>
+        <div class="flex flex-col gap-1 min-w-[180px]">
+          @for (item of itensGestorOcultaveis(); track item.rotaLink) {
+            <a
+              [routerLink]="item.rotaLink"
+              routerLinkActive="topbar__nav-item--ativo"
+              class="topbar__nav-item flex items-center gap-2 px-3 py-2 rounded-lg text-sm"
+              (click)="maisPopover.hide()"
+            >
+              <i [class]="item.icone"></i>
+              <span>{{ item.label }}</span>
+              <kbd class="topbar__tecla">g {{ item.tecla }}</kbd>
+            </a>
+          }
+        </div>
+      </p-popover>
     }
   </nav>
 
@@ -24,72 +58,66 @@
 
     <span class="topbar__hora text-sm text-muted-color font-mono tabular-nums">{{ horaAtual() }}</span>
 
+    <p-button
+      [icon]="tema.eEscuro() ? 'pi pi-sun' : 'pi pi-moon'"
+      severity="secondary"
+      [text]="true"
+      [rounded]="true"
+      size="small"
+      [pTooltip]="tema.eEscuro() ? 'Tema claro' : 'Tema escuro'"
+      tooltipPosition="bottom"
+      [attr.aria-label]="tema.eEscuro() ? 'Usar tema claro' : 'Usar tema escuro'"
+      (onClick)="tema.alternarTema()"
+      (contextmenu)="revelarEnigma($event)"
+    />
+    @if (mostrarEnigma() && !temaPersonalizado.desbloqueado()) {
+      <button type="button" class="topbar__enigma text-sm font-mono" (click)="desbloquearTema()">???</button>
+    }
+
     @if (sessao.usuarioAtual()) {
       <p-button
         icon="pi pi-file-edit"
-        label="Minhas Anotações"
         [text]="true"
+        [rounded]="true"
         size="small"
-        pTooltip="Suas anotações pessoais"
+        pTooltip="Minhas anotações — n"
         tooltipPosition="bottom"
+        aria-label="Minhas anotações"
         (onClick)="anotacoesDialog.abrir(sessao.id()!, sessao.nomeCompleto()!)"
       />
-    }
 
-    <p-button
-      icon="pi pi-user"
-      severity="secondary"
-      [text]="true"
-      size="small"
-      [pTooltip]="sessao.nomeCompleto() ?? ''"
-      tooltipPosition="left"
-      (onClick)="perfilPopover.toggle($event)"
-    />
+      <button
+        type="button"
+        class="topbar__perfil"
+        [attr.aria-label]="'Menu de ' + sessao.nomeCompleto()"
+        (click)="perfilPopover.toggle($event)"
+      >
+        <span class="topbar__avatar" aria-hidden="true">{{ iniciais() }}</span>
+        <span class="topbar__perfil-nome">{{ primeiroNome() }}</span>
+        <i class="pi pi-angle-down text-xs topbar__perfil-seta"></i>
+      </button>
+    }
 
     <p-popover #perfilPopover>
       @if (sessao.usuarioAtual()) {
-        <div class="flex flex-col gap-3 p-1 min-w-[180px]">
+        <div class="flex flex-col gap-3 p-1 min-w-[200px]">
           <div>
             <div class="font-semibold text-color">{{ sessao.nomeCompleto() }}</div>
             <div class="text-sm text-muted-color">&#64;{{ sessao.login() }}</div>
           </div>
-          <p-divider class="my-0" />
           <div class="flex items-center gap-2 text-sm text-muted-color">
             <i class="pi pi-id-card text-xs"></i>
             <span>{{ sessao.eGestor() ? 'Gestor' : 'Desenvolvedor' }}</span>
           </div>
-          <div class="flex items-center gap-2">
-            <button
-              type="button"
-              class="topbar__tema flex items-center gap-2 text-sm"
-              (click)="tema.alternarTema()"
-              (contextmenu)="revelarEnigma($event)"
-            >
-              <i class="text-xs" [class]="tema.eEscuro() ? 'pi pi-sun' : 'pi pi-moon'"></i>
-              <span>{{ tema.eEscuro() ? 'Tema claro' : 'Tema escuro' }}</span>
-            </button>
-
-            @if (mostrarEnigma() && !temaPersonalizado.desbloqueado()) {
-              <button
-                type="button"
-                class="topbar__enigma text-sm font-mono"
-                (click)="desbloquearTema()"
-              >
-                ???
-              </button>
-            }
-          </div>
-
-          <div class="flex items-center gap-2">
-            <button
-              type="button"
-              class="topbar__unidade flex items-center gap-2 text-sm"
-              (click)="unidadeTempo.alternar()"
-            >
-              <i class="text-xs" [class]="unidadeTempo.emDias() ? 'pi pi-clock' : 'pi pi-calendar'"></i>
-              <span>{{ unidadeTempo.emDias() ? 'Ver tempos em horas' : 'Ver tempos em dias' }}</span>
-            </button>
-          </div>
+          <p-divider class="my-0" />
+          <label class="topbar__linha-switch text-sm" for="switch-tempo-dias">
+            <span>Tempos em dias</span>
+            <p-toggleswitch
+              inputId="switch-tempo-dias"
+              [ngModel]="unidadeTempo.emDias()"
+              (onChange)="unidadeTempo.alternar()"
+            />
+          </label>
 
           @if (temaPersonalizado.desbloqueado()) {
             <p-divider class="my-0" />
@@ -126,19 +154,15 @@
               </div>
             </div>
           }
+
+          <p-divider class="my-0" />
+          <button type="button" class="topbar__sair flex items-center gap-2 text-sm" (click)="sair()">
+            <i class="pi pi-sign-out text-xs"></i>
+            <span>Sair</span>
+          </button>
         </div>
       }
     </p-popover>
-
-    <p-button
-      icon="pi pi-sign-out"
-      severity="secondary"
-      [text]="true"
-      size="small"
-      pTooltip="Sair"
-      tooltipPosition="left"
-      (onClick)="sair()"
-    />
   </div>
 </header>
 
