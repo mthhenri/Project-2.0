@@ -17,10 +17,8 @@
     margin: 0;
   }
 
-  &__carregando {
-    display: flex;
-    justify-content: center;
-    padding: 4rem 0;
+  &__conteudo {
+    position: relative;
   }
 
   &__vazio {

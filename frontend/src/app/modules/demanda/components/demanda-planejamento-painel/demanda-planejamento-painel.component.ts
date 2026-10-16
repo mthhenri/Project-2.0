@@ -61,8 +61,11 @@ export class DemandaPlanejamentoPainelComponent {
   readonly demandaTagsSolicitadas = output<number>();
   readonly demandaMembrosSolicitados = output<number>();
   readonly demandaDescricaoSolicitada = output<{ id: number; campo: CampoDescricaoDemanda }>();
-  /** Emitido após a troca de status; a página recarrega planejamento e grafo. */
-  readonly alterado = output<void>();
+  /**
+   * Troca de status otimista: emitida já ao escolher (a página aplica no grafo e no planejamento) e de
+   * novo com o status anterior se a API recusar (rollback). Sem recarregar nada (task 98).
+   */
+  readonly statusAlterado = output<{ demandaId: number; status: TipoDemandaStatusEnum }>();
 
   /** Cores-âncora (RGB) das faixas de execução; interpoladas para dar o "vai ficando". */
   private readonly ancoraAzul: [number, number, number] = [59, 130, 246];
@@ -140,13 +143,16 @@ export class DemandaPlanejamentoPainelComponent {
     popover.hide();
     if (!linha || novoStatus === linha.status) return;
 
+    const statusAnterior = linha.status;
+    this.statusAlterado.emit({ demandaId: linha.demandaId, status: novoStatus });
+
     this.demandaService.alterar(linha.demandaId, { status: novoStatus }).subscribe({
       next: (resposta) => {
         if (resposta.sucesso) {
           this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Status alterado' });
-          this.alterado.emit();
         }
       },
+      error: () => this.statusAlterado.emit({ demandaId: linha.demandaId, status: statusAnterior }),
     });
   }
 

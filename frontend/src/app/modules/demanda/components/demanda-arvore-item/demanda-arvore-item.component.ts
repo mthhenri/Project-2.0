@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, forwardRef, inject, signal, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, forwardRef, inject, OnChanges, SimpleChanges } from '@angular/core';
 import { Tag } from 'primeng/tag';
 import { ContextMenu } from 'primeng/contextmenu';
 import { TooltipModule } from 'primeng/tooltip';
@@ -21,6 +21,9 @@ type CampoDescricao = CampoDescricaoDemanda;
 export class DemandaArvoreItemComponent implements OnChanges {
   @Input({ required: true }) arvoreItem!: DemandaArvoreItemDto;
   @Input() nivel: number = 0;
+  /** IDs expandidos, guardados no painel: sobrevivem a recargas e recriação dos itens (task 98). */
+  @Input() expandidos: ReadonlySet<number> = new Set<number>();
+  @Output() expansaoAlternada = new EventEmitter<number>();
   @Output() demandaSelecionada = new EventEmitter<number>();
   @Output() demandaEditarSolicitada = new EventEmitter<number>();
   @Output() demandaEditarDescricaoSolicitada = new EventEmitter<{ id: number; campo: CampoDescricao }>();
@@ -74,11 +77,13 @@ export class DemandaArvoreItemComponent implements OnChanges {
     }
   }
 
-  readonly expandido = signal(false);
+  get expandido(): boolean {
+    return this.expandidos.has(this.arvoreItem.id);
+  }
 
   alternarExpansao(evento: MouseEvent): void {
     evento.stopPropagation();
-    this.expandido.update((v) => !v);
+    this.expansaoAlternada.emit(this.arvoreItem.id);
   }
 
   severidadeStatus(status: TipoDemandaStatusEnum): 'secondary' | 'info' | 'success' | 'danger' {

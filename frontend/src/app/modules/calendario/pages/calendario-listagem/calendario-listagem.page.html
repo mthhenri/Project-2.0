@@ -44,11 +44,11 @@
     <div class="calendario-listagem__tabela-mes">
       <h2 class="calendario-listagem__tabela-titulo">{{ rotuloMes() }}</h2>
 
-      @if (carregando()) {
-        <div class="calendario-listagem__carregando">
-          <i class="pi pi-spin pi-spinner text-4xl text-muted-color"></i>
-        </div>
+      @if (primeiraCarga()) {
+        <app-skeleton-lista variante="tabela" [quantidade]="5" [colunas]="6" />
       } @else {
+        <div class="lista-recarga" [class.conteudo-recarregando]="recarregando()">
+          <app-barra-recarga [ativa]="recarregando()" />
         <p-table [value]="diasDoMes()" class="p-datatable-sm">
           <ng-template pTemplate="header">
             <tr>
@@ -118,6 +118,7 @@
             </tr>
           </ng-template>
         </p-table>
+        </div>
       }
     </div>
   </div>

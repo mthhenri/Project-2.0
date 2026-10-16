@@ -1,0 +1,35 @@
+<div class="skeleton-lista" role="status" aria-busy="true" aria-live="polite">
+  <span class="skeleton-lista__sr">Carregando…</span>
+
+  @switch (variante) {
+    @case ('tabela') {
+      <div class="skeleton-lista__linha skeleton-lista__linha--cabecalho" [style.grid-template-columns]="colunasCss()">
+        @for (celula of celulas(); track celula) {
+          <p-skeleton height="0.75rem" width="55%" />
+        }
+      </div>
+      @for (item of itens(); track item) {
+        <div class="skeleton-lista__linha" [style.grid-template-columns]="colunasCss()">
+          @for (celula of celulas(); track celula) {
+            <p-skeleton height="1rem" [width]="celula === 0 ? '80%' : '60%'" />
+          }
+        </div>
+      }
+    }
+    @case ('cartoes') {
+      <div class="skeleton-lista__grade">
+        @for (item of itens(); track item) {
+          <p-skeleton height="3.25rem" borderRadius="var(--p-border-radius-md, 6px)" />
+        }
+      </div>
+    }
+    @case ('linhas') {
+      @for (item of itens(); track item) {
+        <div class="skeleton-lista__item">
+          <p-skeleton height="1rem" width="40%" />
+          <p-skeleton height="1.5rem" width="5rem" />
+        </div>
+      }
+    }
+  }
+</div>

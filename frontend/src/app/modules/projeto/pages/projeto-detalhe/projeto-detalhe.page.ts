@@ -16,6 +16,7 @@ import {
   TipoProjetoStatusEnum,
   DemandaArvoreItemDto,
   DemandaGrafoNoDto,
+  TagResumoDto,
   REGEX_SEM_CARACTERES_PROIBIDOS,
   MENSAGEM_CARACTERES_PROIBIDOS,
 } from '@project20/shared';
@@ -30,11 +31,13 @@ import { BloquearCaracteresProibidosDirective } from '../../../../shared/directi
 import { RelatorioExecucaoDialogComponent } from '../../../relatorio/components/relatorio-execucao-dialog/relatorio-execucao-dialog.component';
 import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
 import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
+import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
 
 @Component({
   selector: 'app-projeto-detalhe',
   standalone: true,
   imports: [
+    SkeletonListaComponent,
     DialogFormularioDirective,
     DialogDicaAtalhosComponent,
     ReactiveFormsModule,
@@ -135,14 +138,15 @@ export class ProjetoDetalhePage implements OnInit {
       .alterar(projetoDados.id, dto)
       .pipe(finalize(() => this.carregandoSalvar.set(false)))
       .subscribe({
-        next: () => {
+        next: (resposta) => {
           this.messageService.add({
             severity: 'success',
             summary: 'Sucesso',
             detail: 'Projeto alterado com sucesso',
           });
           this.mostrarDialogEditar.set(false);
-          this.carregarProjeto(projetoDados.id);
+          // O DTO retornado tem todos os campos exibidos: aplica direto, sem novo GET nem spinner.
+          if (resposta.dados) this.projeto.set({ ...projetoDados, ...resposta.dados });
         },
       });
   }
@@ -151,6 +155,17 @@ export class ProjetoDetalhePage implements OnInit {
   recarregarDemandas(): void {
     const projetoDados = this.projeto();
     if (projetoDados) this.recarregarArvore(projetoDados.id);
+  }
+
+  /** Tags já gravadas pelo painel: troca no nó da árvore, sem recarregá-la (task 98). */
+  aoTagsAlteradas(alteracao: { demandaId: number; tags: TagResumoDto[] }): void {
+    const aplicar = (itens: DemandaArvoreItemDto[]): DemandaArvoreItemDto[] =>
+      itens.map((item) => ({
+        ...item,
+        tags: item.id === alteracao.demandaId ? alteracao.tags : item.tags,
+        filhos: aplicar(item.filhos),
+      }));
+    this.arvoreRaizes.update(aplicar);
   }
 
   voltarParaListagem(): void {

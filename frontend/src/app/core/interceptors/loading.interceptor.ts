@@ -1,4 +1,4 @@
-import { HttpInterceptorFn } from '@angular/common/http';
+import { HttpContext, HttpContextToken, HttpInterceptorFn } from '@angular/common/http';
 import { finalize } from 'rxjs';
 import { carregamento } from '../signals/carregamento.signal';
 
@@ -6,10 +6,23 @@ import { carregamento } from '../signals/carregamento.signal';
 // requisição passar deste limite. Isso elimina o "flicker" em chamadas curtas.
 const ATRASO_EXIBICAO_MS = 250;
 
+/**
+ * Marca requisições cuja tela já dá o próprio feedback (esqueleto na primeira carga, conteúdo
+ * esmaecido + barra fina nas recargas — task 98): elas não acionam o overlay global.
+ */
+export const SEM_OVERLAY_GLOBAL = new HttpContextToken<boolean>(() => false);
+
+/** Opções de `HttpClient` para uma leitura com feedback próprio da tela. */
+export const comFeedbackProprio = (): { context: HttpContext } => ({
+  context: new HttpContext().set(SEM_OVERLAY_GLOBAL, true),
+});
+
 let requisicoesAtivas = 0;
 let temporizador: ReturnType<typeof setTimeout> | null = null;
 
 export const loadingInterceptor: HttpInterceptorFn = (requisicao, proximo) => {
+  if (requisicao.context.get(SEM_OVERLAY_GLOBAL)) return proximo(requisicao);
+
   requisicoesAtivas++;
 
   // Agenda a exibição apenas quando a primeira requisição da rajada começa.

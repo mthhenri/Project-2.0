@@ -1,9 +1,7 @@
 <div class="projeto-detalhe">
 
-  @if (carregando()) {
-    <div class="projeto-detalhe__carregando">
-      <i class="pi pi-spin pi-spinner text-4xl text-muted-color"></i>
-    </div>
+  @if (carregando() && !projeto()) {
+    <app-skeleton-lista variante="linhas" [quantidade]="2" />
   }
 
   @if (projeto()) {
@@ -74,9 +72,7 @@
     }
 
     @if (carregandoDemandas()) {
-      <div class="projeto-detalhe__carregando-demandas">
-        <i class="pi pi-spin pi-spinner text-2xl text-muted-color"></i>
-      </div>
+      <app-skeleton-lista variante="linhas" [quantidade]="6" />
     }
 
     @if (!carregandoDemandas()) {
@@ -104,6 +100,7 @@
             [raizes]="arvoreRaizes()"
             [projetoId]="projeto()!.id"
             (alterado)="recarregarDemandas()"
+            (tagsAlteradas)="aoTagsAlteradas($event)"
           />
         </div>
       }

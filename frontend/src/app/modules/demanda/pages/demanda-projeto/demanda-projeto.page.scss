@@ -55,15 +55,7 @@
   }
 
   &__carregando {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-  }
-
-  &__carregando-icone {
-    font-size: 2.25rem;
-    color: #4a9eff;
+    padding: 1rem 1.5rem;
   }
 
   &__vazio {

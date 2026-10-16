@@ -13,7 +13,6 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { Select } from 'primeng/select';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
-import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import {
   PontoDiarioDto,
   PontoMensalDto,
@@ -24,6 +23,8 @@ import {
 import { PontoService } from '../../services/ponto.service';
 import { UsuarioService } from '../../../usuario/services/usuario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
+import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
+import { BarraRecargaComponent } from '../../../../shared/components/barra-recarga/barra-recarga.component';
 import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-horas.pipe';
 import { PontoResumoCardComponent } from '../../components/ponto-resumo-card/ponto-resumo-card.component';
 import { PontoUsuarioCardComponent } from '../../components/ponto-usuario-card/ponto-usuario-card.component';
@@ -45,7 +46,8 @@ type ModoPonto = 'todos' | 'mensal';
     Select,
     ButtonModule,
     TooltipModule,
-    ProgressSpinnerModule,
+    SkeletonListaComponent,
+    BarraRecargaComponent,
     MinutosParaHorasPipe,
     PontoResumoCardComponent,
     PontoUsuarioCardComponent,
@@ -81,9 +83,17 @@ export class PontoPage implements OnInit {
   });
 
   readonly carregando = signal<boolean>(false);
+  private readonly todosCarregado = signal<boolean>(false);
   readonly pontosTodos = signal<PontoDiarioDto[]>([]);
   readonly pontoMensal = signal<PontoMensalDto | null>(null);
   readonly usuarios = signal<UsuarioResumoDto[]>([]);
+
+  /** Sem nada do modo atual para mostrar: a carga vira esqueleto; senão, recarga com o conteúdo esmaecido. */
+  private readonly semDadosDoModo = computed(() =>
+    this.modo() === 'todos' ? !this.todosCarregado() : this.pontoMensal() === null,
+  );
+  readonly primeiraCarga = computed(() => this.carregando() && this.semDadosDoModo());
+  readonly recarregando = computed(() => this.carregando() && !this.semDadosDoModo());
 
   ngOnInit(): void {
     if (this.sessao.eGestor()) this.carregarUsuarios();
@@ -155,7 +165,10 @@ export class PontoPage implements OnInit {
       .pipe(finalize(() => this.carregando.set(false)))
       .subscribe({
         next: (resposta) => {
-          if (resposta.sucesso && resposta.dados) this.pontosTodos.set(resposta.dados);
+          if (resposta.sucesso && resposta.dados) {
+            this.pontosTodos.set(resposta.dados);
+            this.todosCarregado.set(true);
+          }
         },
       });
   }

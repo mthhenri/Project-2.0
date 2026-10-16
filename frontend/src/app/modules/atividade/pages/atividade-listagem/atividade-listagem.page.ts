@@ -1,4 +1,4 @@
-import { Component, inject, signal, DestroyRef, OnInit, HostListener, ViewChild, ElementRef } from '@angular/core';
+import { Component, inject, signal, DestroyRef, OnInit, HostListener, ViewChild, ElementRef, computed } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -59,6 +59,8 @@ import {
 } from '../../models/atividade.model';
 import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
 import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
+import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
+import { BarraRecargaComponent } from '../../../../shared/components/barra-recarga/barra-recarga.component';
 
 type DemandaAtribuidaOpcao = DemandaAtribuidaDto & { rotulo: string };
 
@@ -68,6 +70,8 @@ type CampoDescricaoDemanda = 'descricaoCliente' | 'descricaoTecnica' | 'document
   selector: 'app-atividade-listagem',
   standalone: true,
   imports: [
+    SkeletonListaComponent,
+    BarraRecargaComponent,
     DialogFormularioDirective,
     DialogDicaAtalhosComponent,
     ReactiveFormsModule,
@@ -118,9 +122,14 @@ export class AtividadeListagemPage implements OnInit {
 
   readonly demandaId = signal<number | null>(null);
   readonly atividades = signal<AtividadeResumoDto[]>([]);
+  /** Mantém o DOM das linhas ao atualizar uma atividade in-place (sem remontar nem piscar). */
+  readonly rastrearPorId = (_indice: number, atividade: AtividadeResumoDto): number => atividade.id;
   readonly usuarios = signal<UsuarioResumoDto[]>([]);
   readonly totalRegistros = signal<number>(0);
   readonly carregando = signal<boolean>(false);
+  private readonly jaCarregou = signal<boolean>(false);
+  readonly primeiraCarga = computed(() => this.carregando() && !this.jaCarregou());
+  readonly recarregando = computed(() => this.carregando() && this.jaCarregou());
   readonly paginaAtual = signal<number>(1);
   readonly itensPorPagina = signal<number>(10);
 
@@ -261,7 +270,10 @@ export class AtividadeListagemPage implements OnInit {
 
     this.atividadeService
       .listar(filtros)
-      .pipe(finalize(() => this.carregando.set(false)))
+      .pipe(finalize(() => {
+        this.carregando.set(false);
+        this.jaCarregou.set(true);
+      }))
       .subscribe({
         next: (resposta) => {
           if (resposta.sucesso && resposta.dados) {
@@ -382,15 +394,23 @@ export class AtividadeListagemPage implements OnInit {
 
     if (!atividade || !novoStatus || novoStatus === atividade.status) return;
 
+    // Otimista: a tag da linha muda na hora; se a API recusar (o interceptor já avisou), volta ao status anterior.
+    const statusAnterior = atividade.status;
+    this.definirStatusDaAtividade(atividade.id, novoStatus);
+
     const dto: AtividadeAlterarDto = { status: novoStatus };
     this.atividadeService.alterar(atividade.id, dto).subscribe({
-      next: (resposta) => {
-        if (resposta.sucesso && resposta.dados) {
-          this.buscarAtividades();
-          this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Status alterado' });
-        }
+      next: () => {
+        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Status alterado' });
       },
+      error: () => this.definirStatusDaAtividade(atividade.id, statusAnterior),
     });
+  }
+
+  private definirStatusDaAtividade(atividadeId: number, status: TipoAtividadeStatusEnum): void {
+    this.atividades.update((lista) =>
+      lista.map((item) => (item.id === atividadeId ? { ...item, status } : item)),
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -812,6 +832,12 @@ export class AtividadeListagemPage implements OnInit {
   }
 
   private excluirAtividade(atividade: AtividadeResumoDto): void {
+    // Otimista: a linha some na hora; se a exclusão falhar (o interceptor já avisou), volta ao lugar.
+    const listaAnterior = this.atividades();
+    const totalAnterior = this.totalRegistros();
+    this.atividades.set(listaAnterior.filter((item) => item.id !== atividade.id));
+    this.totalRegistros.set(Math.max(0, totalAnterior - 1));
+
     this.atividadeService.excluir(atividade.id).subscribe({
       next: () => {
         this.messageService.add({
@@ -819,7 +845,10 @@ export class AtividadeListagemPage implements OnInit {
           summary: 'Sucesso',
           detail: `Atividade "${atividade.nome}" excluída com sucesso`,
         });
-        this.buscarAtividades();
+      },
+      error: () => {
+        this.atividades.set(listaAnterior);
+        this.totalRegistros.set(totalAnterior);
       },
     });
   }

@@ -11,6 +11,7 @@ import {
 } from '@project20/shared';
 import { ambiente } from '../../../../environments/environment';
 import { VerificacaoDiaUtil } from '../models/dia-nao-util.model';
+import { comFeedbackProprio } from '../../../core/interceptors/loading.interceptor';
 
 @Injectable({ providedIn: 'root' })
 export class CalendarioService {
@@ -18,7 +19,7 @@ export class CalendarioService {
   private readonly urlBase = `${ambiente.apiUrl}/calendario`;
 
   listar(): Observable<StandardResponse<DiaNaoUtilResumoDto[]>> {
-    return this.httpClient.get<StandardResponse<DiaNaoUtilResumoDto[]>>(this.urlBase);
+    return this.httpClient.get<StandardResponse<DiaNaoUtilResumoDto[]>>(this.urlBase, comFeedbackProprio());
   }
 
   criar(dto: DiaNaoUtilCriarDto): Observable<StandardResponse<DiaNaoUtilCriadoDto>> {

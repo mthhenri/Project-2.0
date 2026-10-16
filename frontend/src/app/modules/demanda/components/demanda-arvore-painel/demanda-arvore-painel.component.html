@@ -3,6 +3,8 @@
   <app-demanda-arvore-item
     [arvoreItem]="item"
     [nivel]="0"
+    [expandidos]="expandidos()"
+    (expansaoAlternada)="alternarExpansao($event)"
     (demandaSelecionada)="abrirDetalhe($event)"
     (demandaEditarSolicitada)="abrirEdicao($event)"
     (demandaEditarDescricaoSolicitada)="abrirDialogDescricaoPorId($event.id, $event.campo)"

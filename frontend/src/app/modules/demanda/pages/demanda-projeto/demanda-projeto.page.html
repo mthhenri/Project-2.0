@@ -85,7 +85,7 @@
 
       @if (carregando()) {
         <div class="demanda-projeto__carregando">
-          <i class="pi pi-spin pi-spinner demanda-projeto__carregando-icone"></i>
+          <app-skeleton-lista variante="linhas" [quantidade]="8" />
         </div>
       }
 
@@ -118,6 +118,7 @@
             [raizes]="arvoreRaizes()"
             [projetoId]="projetoId()"
             (alterado)="aoAlteradoPlanejamento()"
+            (tagsAlteradas)="aoTagsAlteradas($event)"
           />
         </div>
 
@@ -131,7 +132,7 @@
             (demandaTagsSolicitadas)="painel.abrirDialogTagsPorId($event)"
             (demandaMembrosSolicitados)="painel.abrirDialogMembros($event)"
             (demandaDescricaoSolicitada)="painel.abrirDialogDescricaoPorId($event.id, $event.campo)"
-            (alterado)="aoAlteradoPlanejamento()"
+            (statusAlterado)="aoStatusAlterado($event)"
           />
         }
       }

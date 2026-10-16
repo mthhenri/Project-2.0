@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, HostListener, DestroyRef } from '@angular/core';
+import { Component, inject, signal, OnInit, HostListener, DestroyRef, computed } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
 import { finalize, debounceTime, distinctUntilChanged } from 'rxjs';
@@ -16,11 +16,13 @@ import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.s
 import { UsuarioAnotacoesDialogComponent } from '../../components/usuario-anotacoes-dialog/usuario-anotacoes-dialog.component';
 import { UsuarioPerfilDialogComponent } from '../../components/usuario-perfil-dialog/usuario-perfil-dialog.component';
 import { UsuarioFormularioDialogComponent } from '../../components/usuario-formulario-dialog/usuario-formulario-dialog.component';
+import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
+import { BarraRecargaComponent } from '../../../../shared/components/barra-recarga/barra-recarga.component';
 
 @Component({
   selector: 'app-usuario-listagem',
   standalone: true,
-  imports: [ReactiveFormsModule, TableModule, ButtonModule, Select, InputTextModule, Tag, TooltipModule, ConfirmDialogModule, UsuarioAnotacoesDialogComponent, UsuarioPerfilDialogComponent, UsuarioFormularioDialogComponent],
+  imports: [SkeletonListaComponent, BarraRecargaComponent, ReactiveFormsModule, TableModule, ButtonModule, Select, InputTextModule, Tag, TooltipModule, ConfirmDialogModule, UsuarioAnotacoesDialogComponent, UsuarioPerfilDialogComponent, UsuarioFormularioDialogComponent],
   templateUrl: './usuario-listagem.page.html',
   styleUrl: './usuario-listagem.page.scss',
   providers: [ConfirmationService],
@@ -42,6 +44,9 @@ export class UsuarioListagemPage implements OnInit {
   readonly usuarios = signal<UsuarioResumoDto[]>([]);
   readonly totalRegistros = signal<number>(0);
   readonly carregando = signal<boolean>(false);
+  private readonly jaCarregou = signal<boolean>(false);
+  readonly primeiraCarga = computed(() => this.carregando() && !this.jaCarregou());
+  readonly recarregando = computed(() => this.carregando() && this.jaCarregou());
   readonly paginaAtual = signal<number>(1);
   readonly itensPorPagina = signal<number>(10);
 
@@ -85,7 +90,10 @@ export class UsuarioListagemPage implements OnInit {
 
     this.usuarioService
       .listar(filtros)
-      .pipe(finalize(() => this.carregando.set(false)))
+      .pipe(finalize(() => {
+        this.carregando.set(false);
+        this.jaCarregou.set(true);
+      }))
       .subscribe({
         next: (resposta) => {
           if (resposta.sucesso && resposta.dados) {

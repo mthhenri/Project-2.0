@@ -8,53 +8,52 @@
     />
   </div>
 
-  @if (carregando()) {
-    <div class="tag-listagem__carregando">
-      <i class="pi pi-spin pi-spinner text-4xl text-muted-color"></i>
-    </div>
-  }
-
-  @if (!carregando()) {
-    @if (tags().length === 0) {
-      <div class="tag-listagem__vazio">
-        <i class="pi pi-tags text-4xl text-muted-color"></i>
-        <p class="text-muted-color mt-3">Nenhuma tag cadastrada</p>
-      </div>
-    } @else {
-      <div class="tag-listagem__grid">
-        @for (tag of tags(); track tag.id) {
-          <div class="tag-listagem__item">
-            <span
-              class="tag-listagem__tag-preview"
-              [style.background-color]="tag.cor + '22'"
-              [style.color]="tag.cor"
-              [style.border-color]="tag.cor + '55'"
-            >
-              {{ tag.nome }}
-            </span>
-            <div class="tag-listagem__acoes">
-              <p-button
-                icon="pi pi-pencil"
-                [text]="true"
-                size="small"
-                pTooltip="Editar"
-                tooltipPosition="left"
-                (onClick)="abrirDialogEditar(tag)"
-              />
-              <p-button
-                icon="pi pi-trash"
-                [text]="true"
-                severity="danger"
-                size="small"
-                pTooltip="Excluir"
-                tooltipPosition="left"
-                (onClick)="confirmarExclusao(tag)"
-              />
+  @if (primeiraCarga()) {
+    <app-skeleton-lista variante="cartoes" [quantidade]="12" />
+  } @else {
+    <div class="tag-listagem__conteudo" [class.conteudo-recarregando]="recarregando()">
+      <app-barra-recarga [ativa]="recarregando()" />
+      @if (tags().length === 0) {
+        <div class="tag-listagem__vazio">
+          <i class="pi pi-tags text-4xl text-muted-color"></i>
+          <p class="text-muted-color mt-3">Nenhuma tag cadastrada</p>
+        </div>
+      } @else {
+        <div class="tag-listagem__grid">
+          @for (tag of tags(); track tag.id) {
+            <div class="tag-listagem__item">
+              <span
+                class="tag-listagem__tag-preview"
+                [style.background-color]="tag.cor + '22'"
+                [style.color]="tag.cor"
+                [style.border-color]="tag.cor + '55'"
+              >
+                {{ tag.nome }}
+              </span>
+              <div class="tag-listagem__acoes">
+                <p-button
+                  icon="pi pi-pencil"
+                  [text]="true"
+                  size="small"
+                  pTooltip="Editar"
+                  tooltipPosition="left"
+                  (onClick)="abrirDialogEditar(tag)"
+                />
+                <p-button
+                  icon="pi pi-trash"
+                  [text]="true"
+                  severity="danger"
+                  size="small"
+                  pTooltip="Excluir"
+                  tooltipPosition="left"
+                  (onClick)="confirmarExclusao(tag)"
+                />
+              </div>
             </div>
-          </div>
-        }
-      </div>
-    }
+          }
+        </div>
+      }
+    </div>
   }
 </div>
 

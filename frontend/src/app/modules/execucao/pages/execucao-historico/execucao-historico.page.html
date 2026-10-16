@@ -71,97 +71,102 @@
     </div>
   </form>
 
-  <p-table
-    [value]="execucoes()"
-    [lazy]="true"
-    (onLazyLoad)="aoCarregarTabela($event)"
-    [paginator]="true"
-    [rows]="itensPorPagina()"
-    [totalRecords]="totalRegistros()"
-    [loading]="carregando()"
-    [rowsPerPageOptions]="[50, 100, 200]"
-    dataKey="id"
-  >
-    <ng-template #header>
-      <tr>
-        @if (sessao.eGestor()) { <th>Usuário</th> }
-        <th>Projeto</th>
-        <th>Demanda</th>
-        <th>Atividade</th>
-        <th>Início</th>
-        <th>Fim</th>
-        <th>Duração</th>
-        <th>Descrição</th>
-        @if (sessao.eGestor()) { <th class="execucao-historico__coluna-acoes">Ações</th> }
-      </tr>
-    </ng-template>
+  @if (primeiraCarga()) {
+    <app-skeleton-lista variante="tabela" [quantidade]="8" [colunas]="8" />
+  }
+  <div class="lista-recarga" [hidden]="primeiraCarga()" [class.conteudo-recarregando]="recarregando()">
+    <app-barra-recarga [ativa]="recarregando()" />
+    <p-table
+      [value]="execucoes()"
+      [lazy]="true"
+      (onLazyLoad)="aoCarregarTabela($event)"
+      [paginator]="true"
+      [rows]="itensPorPagina()"
+      [totalRecords]="totalRegistros()"
+      [rowsPerPageOptions]="[50, 100, 200]"
+      dataKey="id"
+    >
+      <ng-template #header>
+        <tr>
+          @if (sessao.eGestor()) { <th>Usuário</th> }
+          <th>Projeto</th>
+          <th>Demanda</th>
+          <th>Atividade</th>
+          <th>Início</th>
+          <th>Fim</th>
+          <th>Duração</th>
+          <th>Descrição</th>
+          @if (sessao.eGestor()) { <th class="execucao-historico__coluna-acoes">Ações</th> }
+        </tr>
+      </ng-template>
 
-    <ng-template #body let-execucao>
-      <tr class="execucao-historico__linha">
-        @if (sessao.eGestor()) { <td>{{ execucao.nomeUsuario }}</td> }
-        <td>{{ execucao.nomeProjeto }}</td>
-        <td>{{ execucao.nomeDemanda }}</td>
-        <td>
-          <button
-            type="button"
-            class="execucao-historico__atividade-link"
-            (click)="visualizarDialog.abrir(execucao.atividadeId)"
-          >
-            {{ execucao.nomeAtividade }}
-          </button>
-        </td>
-        <td>
-          <div class="execucao-historico__momento">
-            <span class="execucao-historico__momento-data">{{ execucao.inicioData | date: 'dd/MM/yy' }}</span>
-            <span class="execucao-historico__momento-hora">{{ execucao.inicioData | date: 'HH:mm' }}</span>
-          </div>
-        </td>
-        <td>
-          @if (execucao.fimData) {
-            <div class="execucao-historico__momento">
-              <span class="execucao-historico__momento-data">{{ execucao.fimData | date: 'dd/MM/yy' }}</span>
-              <span class="execucao-historico__momento-hora">{{ execucao.fimData | date: 'HH:mm' }}</span>
-            </div>
-          } @else {
-            <span class="execucao-historico__em-andamento">Em andamento</span>
-          }
-        </td>
-        <td>{{ execucao.duracaoMinutos | minutosParagHoras }}</td>
-        <td class="execucao-historico__descricao">{{ execucao.descricao }}</td>
-        @if (sessao.eGestor()) {
-          <td class="execucao-historico__coluna-acoes">
-            <p-button
-              icon="pi pi-pencil"
-              severity="secondary"
-              [text]="true"
-              [rounded]="true"
-              pTooltip="Editar execução"
-              tooltipPosition="top"
-              (onClick)="abrirEdicao(execucao)"
-            />
+      <ng-template #body let-execucao>
+        <tr class="execucao-historico__linha">
+          @if (sessao.eGestor()) { <td>{{ execucao.nomeUsuario }}</td> }
+          <td>{{ execucao.nomeProjeto }}</td>
+          <td>{{ execucao.nomeDemanda }}</td>
+          <td>
+            <button
+              type="button"
+              class="execucao-historico__atividade-link"
+              (click)="visualizarDialog.abrir(execucao.atividadeId)"
+            >
+              {{ execucao.nomeAtividade }}
+            </button>
           </td>
-        }
-      </tr>
-    </ng-template>
+          <td>
+            <div class="execucao-historico__momento">
+              <span class="execucao-historico__momento-data">{{ execucao.inicioData | date: 'dd/MM/yy' }}</span>
+              <span class="execucao-historico__momento-hora">{{ execucao.inicioData | date: 'HH:mm' }}</span>
+            </div>
+          </td>
+          <td>
+            @if (execucao.fimData) {
+              <div class="execucao-historico__momento">
+                <span class="execucao-historico__momento-data">{{ execucao.fimData | date: 'dd/MM/yy' }}</span>
+                <span class="execucao-historico__momento-hora">{{ execucao.fimData | date: 'HH:mm' }}</span>
+              </div>
+            } @else {
+              <span class="execucao-historico__em-andamento">Em andamento</span>
+            }
+          </td>
+          <td>{{ execucao.duracaoMinutos | minutosParagHoras }}</td>
+          <td class="execucao-historico__descricao">{{ execucao.descricao }}</td>
+          @if (sessao.eGestor()) {
+            <td class="execucao-historico__coluna-acoes">
+              <p-button
+                icon="pi pi-pencil"
+                severity="secondary"
+                [text]="true"
+                [rounded]="true"
+                pTooltip="Editar execução"
+                tooltipPosition="top"
+                (onClick)="abrirEdicao(execucao)"
+              />
+            </td>
+          }
+        </tr>
+      </ng-template>
 
-    <ng-template #footer>
-      <tr class="execucao-historico__rodape">
-        <td [attr.colspan]="sessao.eGestor() ? 6 : 5" class="execucao-historico__rodape-rotulo">
-          Total do dia
-        </td>
-        <td class="execucao-historico__rodape-valor">{{ totalMinutosDia() | minutosParagHoras }}</td>
-        <td [attr.colspan]="sessao.eGestor() ? 2 : 1"></td>
-      </tr>
-    </ng-template>
+      <ng-template #footer>
+        <tr class="execucao-historico__rodape">
+          <td [attr.colspan]="sessao.eGestor() ? 6 : 5" class="execucao-historico__rodape-rotulo">
+            Total do dia
+          </td>
+          <td class="execucao-historico__rodape-valor">{{ totalMinutosDia() | minutosParagHoras }}</td>
+          <td [attr.colspan]="sessao.eGestor() ? 2 : 1"></td>
+        </tr>
+      </ng-template>
 
-    <ng-template #emptymessage>
-      <tr>
-        <td [attr.colspan]="sessao.eGestor() ? 9 : 7" class="execucao-historico__vazio">
-          Nenhuma execução encontrada para este dia.
-        </td>
-      </tr>
-    </ng-template>
-  </p-table>
+      <ng-template #emptymessage>
+        <tr>
+          <td [attr.colspan]="sessao.eGestor() ? 9 : 7" class="execucao-historico__vazio">
+            Nenhuma execução encontrada para este dia.
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
 </div>
 
 <p-dialog

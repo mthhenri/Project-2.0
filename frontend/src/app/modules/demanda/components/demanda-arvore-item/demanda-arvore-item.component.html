@@ -13,7 +13,7 @@
       @if (arvoreItem.filhos.length) {
         <i
           class="pi pi-chevron-right demanda-arvore-item__icone-filhos"
-          [class.demanda-arvore-item__icone-filhos--expandido]="expandido()"
+          [class.demanda-arvore-item__icone-filhos--expandido]="expandido"
           (click)="alternarExpansao($event)"
         ></i>
       }
@@ -55,12 +55,14 @@
     </div>
   </div>
 
-  @if (arvoreItem.filhos.length && expandido()) {
+  @if (arvoreItem.filhos.length && expandido) {
     <div class="demanda-arvore-item__filhos">
       @for (filho of arvoreItem.filhos; track filho.id) {
         <app-demanda-arvore-item
           [arvoreItem]="filho"
           [nivel]="nivel + 1"
+          [expandidos]="expandidos"
+          (expansaoAlternada)="expansaoAlternada.emit($event)"
           (demandaSelecionada)="demandaSelecionada.emit($event)"
           (demandaEditarSolicitada)="demandaEditarSolicitada.emit($event)"
           (demandaEditarDescricaoSolicitada)="demandaEditarDescricaoSolicitada.emit($event)"

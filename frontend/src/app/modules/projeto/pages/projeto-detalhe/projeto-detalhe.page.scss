@@ -3,12 +3,6 @@
 .projeto-detalhe {
   padding: 1.5rem;
 
-  &__carregando {
-    display: flex;
-    justify-content: center;
-    padding: 4rem 0;
-  }
-
   &__cabecalho {
     display: flex;
     align-items: flex-start;
@@ -85,12 +79,6 @@
     i {
       font-size: 0.8rem;
     }
-  }
-
-  &__carregando-demandas {
-    display: flex;
-    justify-content: center;
-    padding: 2rem 0;
   }
 
   &__demandas-vazio {

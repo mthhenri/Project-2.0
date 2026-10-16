@@ -214,3 +214,15 @@ html {
   }
 }
 
+
+/* Recarga com o conteúdo anterior visível (task 98): esmaece e bloqueia cliques até a resposta
+   chegar; a `app-barra-recarga` indica o andamento. Primeira carga usa `app-skeleton-lista`. */
+.conteudo-recarregando {
+  opacity: 0.55;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.lista-recarga {
+  position: relative;
+}

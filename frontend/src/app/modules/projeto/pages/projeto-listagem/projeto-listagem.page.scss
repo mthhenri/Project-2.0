@@ -34,10 +34,8 @@
     color: var(--p-text-color);
   }
 
-  &__carregando {
-    display: flex;
-    justify-content: center;
-    padding: 4rem 0;
+  &__conteudo {
+    position: relative;
   }
 
   &__vazio {

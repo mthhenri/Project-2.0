@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, computed, inject, signal, OnInit } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
 import { ButtonModule } from 'primeng/button';
@@ -16,6 +16,8 @@ import {
   MENSAGEM_CARACTERES_PROIBIDOS,
 } from '@project20/shared';
 import { TagService } from '../../services/tag.service';
+import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
+import { BarraRecargaComponent } from '../../../../shared/components/barra-recarga/barra-recarga.component';
 import { SeletorCorComponent } from '../../../../shared/components/seletor-cor/seletor-cor.component';
 import { BloquearCaracteresProibidosDirective } from '../../../../shared/directives/bloquear-caracteres-proibidos.directive';
 import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
@@ -35,6 +37,8 @@ import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog
     ConfirmDialogModule,
     TooltipModule,
     SeletorCorComponent,
+    SkeletonListaComponent,
+    BarraRecargaComponent,
     BloquearCaracteresProibidosDirective,
   ],
   templateUrl: './tag-listagem.page.html',
@@ -49,6 +53,9 @@ export class TagListagemPage implements OnInit {
 
   readonly tags = signal<TagResumoDto[]>([]);
   readonly carregando = signal<boolean>(false);
+  private readonly jaCarregou = signal<boolean>(false);
+  readonly primeiraCarga = computed(() => this.carregando() && !this.jaCarregou());
+  readonly recarregando = computed(() => this.carregando() && this.jaCarregou());
   readonly mostrarDialogNova = signal<boolean>(false);
   readonly mostrarDialogEditar = signal<boolean>(false);
   readonly carregandoSalvar = signal<boolean>(false);
@@ -74,7 +81,10 @@ export class TagListagemPage implements OnInit {
     this.carregando.set(true);
     this.tagService
       .listar()
-      .pipe(finalize(() => this.carregando.set(false)))
+      .pipe(finalize(() => {
+        this.carregando.set(false);
+        this.jaCarregou.set(true);
+      }))
       .subscribe({
         next: (resposta) => {
           if (resposta.sucesso && resposta.dados) {
@@ -105,14 +115,14 @@ export class TagListagemPage implements OnInit {
       .criar(dto)
       .pipe(finalize(() => this.carregandoSalvar.set(false)))
       .subscribe({
-        next: () => {
+        next: (resposta) => {
           this.messageService.add({
             severity: 'success',
             summary: 'Sucesso',
             detail: `Tag "${dto.nome}" criada com sucesso`,
           });
           this.mostrarDialogNova.set(false);
-          this.buscarTags();
+          if (resposta.dados) this.inserirTag(resposta.dados);
         },
       });
   }
@@ -142,14 +152,14 @@ export class TagListagemPage implements OnInit {
       .alterar(tag.id, dto)
       .pipe(finalize(() => this.carregandoSalvar.set(false)))
       .subscribe({
-        next: () => {
+        next: (resposta) => {
           this.messageService.add({
             severity: 'success',
             summary: 'Sucesso',
             detail: 'Tag alterada com sucesso',
           });
           this.mostrarDialogEditar.set(false);
-          this.buscarTags();
+          if (resposta.dados) this.substituirTag(resposta.dados);
         },
       });
   }
@@ -184,8 +194,23 @@ export class TagListagemPage implements OnInit {
           summary: 'Sucesso',
           detail: `Tag "${tag.nome}" excluída com sucesso`,
         });
-        this.buscarTags();
+        this.tags.update((lista) => lista.filter((item) => item.id !== tag.id));
       },
     });
+  }
+
+  /** A listagem é ordenada por nome no servidor; a inserção local mantém a mesma ordem. */
+  private inserirTag(tag: TagResumoDto): void {
+    this.tags.update((lista) =>
+      [...lista, { id: tag.id, nome: tag.nome, cor: tag.cor }].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')),
+    );
+  }
+
+  private substituirTag(tag: TagResumoDto): void {
+    this.tags.update((lista) =>
+      lista
+        .map((item) => (item.id === tag.id ? { id: tag.id, nome: tag.nome, cor: tag.cor } : item))
+        .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')),
+    );
   }
 }

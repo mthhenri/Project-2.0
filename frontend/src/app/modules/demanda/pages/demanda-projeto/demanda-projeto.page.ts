@@ -14,6 +14,7 @@ import {
   DemandaPlanejamentoDto,
   TipoDemandaStatusEnum,
   ProjetoResumoDto,
+  TagResumoDto,
 } from '@project20/shared';
 import { DemandaService } from '../../services/demanda.service';
 import { ProjetoService } from '../../../projeto/services/projeto.service';
@@ -24,11 +25,12 @@ import { DemandaArvorePainelComponent } from '../../components/demanda-arvore-pa
 import { DemandaPlanejamentoPainelComponent } from '../../components/demanda-planejamento-painel/demanda-planejamento-painel.component';
 import { ModoVisualizacao } from '../../models/demanda.model';
 import { COR_NO_BORDA } from '../../constants/demanda-cores.constants';
+import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
 
 @Component({
   selector: 'app-demanda-projeto',
   standalone: true,
-  imports: [
+  imports: [SkeletonListaComponent, 
     ReactiveFormsModule,
     ButtonModule,
     DialogModule,
@@ -99,7 +101,8 @@ export class DemandaProjetoPage implements OnInit {
   }
 
   private carregarPlanejamento(): void {
-    this.carregandoPlanejamento.set(true);
+    // Recarga com linhas já na tela não pisca a tabela: o mask só aparece na primeira carga.
+    this.carregandoPlanejamento.set(this.planejamento().length === 0);
     this.demandaService
       .listarPlanejamento(this.projetoId())
       .pipe(finalize(() => this.carregandoPlanejamento.set(false)))
@@ -126,6 +129,32 @@ export class DemandaProjetoPage implements OnInit {
     if (this.modoVisualizacao() === 'planejamento' && this.sessao.eGestor()) {
       this.carregarPlanejamento();
     }
+  }
+
+  /**
+   * Status trocado no painel de Planejamento (otimista, com rollback): aplica no nó do grafo e na linha do
+   * planejamento sem refazer nenhuma consulta. Concluída sai do planejamento (ele só lista não-concluídas).
+   */
+  aoStatusAlterado(alteracao: { demandaId: number; status: TipoDemandaStatusEnum }): void {
+    this.grafo.update((grafoAtual) =>
+      grafoAtual
+        ? { ...grafoAtual, nos: grafoAtual.nos.map((no) => (no.id === alteracao.demandaId ? { ...no, status: alteracao.status } : no)) }
+        : grafoAtual,
+    );
+    this.planejamento.update((linhas) =>
+      alteracao.status === TipoDemandaStatusEnum.CONCLUIDA
+        ? linhas.filter((linha) => linha.demandaId !== alteracao.demandaId)
+        : linhas.map((linha) => (linha.demandaId === alteracao.demandaId ? { ...linha, status: alteracao.status } : linha)),
+    );
+  }
+
+  /** Tags já gravadas pelo painel: atualiza o nó do grafo, sem recarregá-lo. */
+  aoTagsAlteradas(alteracao: { demandaId: number; tags: TagResumoDto[] }): void {
+    this.grafo.update((grafoAtual) =>
+      grafoAtual
+        ? { ...grafoAtual, nos: grafoAtual.nos.map((no) => (no.id === alteracao.demandaId ? { ...no, tags: alteracao.tags } : no)) }
+        : grafoAtual,
+    );
   }
 
   /** Recarrega o grafo após qualquer alteração feita pelo painel da árvore. */

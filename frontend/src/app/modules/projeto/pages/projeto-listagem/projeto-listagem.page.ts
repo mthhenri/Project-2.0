@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, computed } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
@@ -13,11 +13,13 @@ import { ProjetoResumoDto, ProjetoListarDto, TipoProjetoStatusEnum } from '@proj
 import { ProjetoService } from '../../services/projeto.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { ProjetoFormularioDialogComponent } from '../../components/projeto-formulario-dialog/projeto-formulario-dialog.component';
+import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
+import { BarraRecargaComponent } from '../../../../shared/components/barra-recarga/barra-recarga.component';
 
 @Component({
   selector: 'app-projeto-listagem',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonModule, Select, Tag, TooltipModule, ConfirmDialogModule, PaginatorModule, ProjetoFormularioDialogComponent],
+  imports: [SkeletonListaComponent, BarraRecargaComponent, ReactiveFormsModule, ButtonModule, Select, Tag, TooltipModule, ConfirmDialogModule, PaginatorModule, ProjetoFormularioDialogComponent],
   templateUrl: './projeto-listagem.page.html',
   styleUrl: './projeto-listagem.page.scss',
   providers: [ConfirmationService],
@@ -37,6 +39,9 @@ export class ProjetoListagemPage implements OnInit {
   readonly projetos = signal<ProjetoResumoDto[]>([]);
   readonly totalRegistros = signal<number>(0);
   readonly carregando = signal<boolean>(false);
+  private readonly jaCarregou = signal<boolean>(false);
+  readonly primeiraCarga = computed(() => this.carregando() && !this.jaCarregou());
+  readonly recarregando = computed(() => this.carregando() && this.jaCarregou());
   readonly paginaAtual = signal<number>(1);
   readonly itensPorPagina = signal<number>(12);
 
@@ -64,7 +69,10 @@ export class ProjetoListagemPage implements OnInit {
 
     this.projetoService
       .listar(filtros)
-      .pipe(finalize(() => this.carregando.set(false)))
+      .pipe(finalize(() => {
+        this.carregando.set(false);
+        this.jaCarregou.set(true);
+      }))
       .subscribe({
         next: (resposta) => {
           if (resposta.sucesso && resposta.dados) {
@@ -130,6 +138,12 @@ export class ProjetoListagemPage implements OnInit {
   }
 
   private excluirProjeto(projeto: ProjetoResumoDto): void {
+    // Otimista: o card some na hora; se a exclusão falhar (o interceptor já avisou), volta ao lugar.
+    const listaAnterior = this.projetos();
+    const totalAnterior = this.totalRegistros();
+    this.projetos.set(listaAnterior.filter((item) => item.id !== projeto.id));
+    this.totalRegistros.set(Math.max(0, totalAnterior - 1));
+
     this.projetoService.excluir(projeto.id).subscribe({
       next: () => {
         this.messageService.add({
@@ -137,7 +151,10 @@ export class ProjetoListagemPage implements OnInit {
           summary: 'Sucesso',
           detail: `Projeto "${projeto.nome}" excluído com sucesso`,
         });
-        this.buscarProjetos();
+      },
+      error: () => {
+        this.projetos.set(listaAnterior);
+        this.totalRegistros.set(totalAnterior);
       },
     });
   }

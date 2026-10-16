@@ -11,6 +11,7 @@ import {
   StandardResponse,
 } from '@project20/shared';
 import { ambiente } from '../../../../environments/environment';
+import { comFeedbackProprio } from '../../../core/interceptors/loading.interceptor';
 
 @Injectable({ providedIn: 'root' })
 export class TagService {
@@ -18,7 +19,7 @@ export class TagService {
   private readonly urlBase = `${ambiente.apiUrl}/tag`;
 
   listar(): Observable<StandardResponse<TagResumoDto[]>> {
-    return this.httpClient.get<StandardResponse<TagResumoDto[]>>(this.urlBase);
+    return this.httpClient.get<StandardResponse<TagResumoDto[]>>(this.urlBase, comFeedbackProprio());
   }
 
   criar(dto: TagCriarDto): Observable<StandardResponse<TagCriadaDto>> {

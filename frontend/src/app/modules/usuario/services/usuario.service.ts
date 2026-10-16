@@ -15,6 +15,7 @@ import {
   PaginatedResult,
 } from '@project20/shared';
 import { ambiente } from '../../../../environments/environment';
+import { comFeedbackProprio } from '../../../core/interceptors/loading.interceptor';
 
 @Injectable({ providedIn: 'root' })
 export class UsuarioService {
@@ -28,7 +29,7 @@ export class UsuarioService {
     if (filtros.busca) params = params.set('busca', filtros.busca);
     if (filtros.pagina) params = params.set('pagina', String(filtros.pagina));
     if (filtros.itensPorPagina) params = params.set('itensPorPagina', String(filtros.itensPorPagina));
-    return this.httpClient.get<StandardResponse<PaginatedResult<UsuarioResumoDto>>>(this.urlBase, { params });
+    return this.httpClient.get<StandardResponse<PaginatedResult<UsuarioResumoDto>>>(this.urlBase, { params, ...comFeedbackProprio() });
   }
 
   criar(dto: UsuarioCriarDto): Observable<StandardResponse<UsuarioCriadoDto>> {

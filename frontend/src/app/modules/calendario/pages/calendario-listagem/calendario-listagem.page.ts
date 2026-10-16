@@ -33,11 +33,15 @@ import {
 } from '../../models/dia-nao-util.model';
 import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
 import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
+import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
+import { BarraRecargaComponent } from '../../../../shared/components/barra-recarga/barra-recarga.component';
 
 @Component({
   selector: 'app-calendario-listagem',
   standalone: true,
   imports: [
+    SkeletonListaComponent,
+    BarraRecargaComponent,
     DialogFormularioDirective,
     DialogDicaAtalhosComponent,
     ReactiveFormsModule,
@@ -73,6 +77,9 @@ export class CalendarioListagemPage implements OnInit {
 
   readonly diasNaoUteis = signal<DiaNaoUtilResumoDto[]>([]);
   readonly carregando = signal<boolean>(false);
+  private readonly jaCarregou = signal<boolean>(false);
+  readonly primeiraCarga = computed(() => this.carregando() && !this.jaCarregou());
+  readonly recarregando = computed(() => this.carregando() && this.jaCarregou());
 
   /** Mês/ano atualmente exibido no calendário (mês de 1 a 12). */
   readonly mesExibido = signal<{ ano: number; mes: number }>({
@@ -155,7 +162,10 @@ export class CalendarioListagemPage implements OnInit {
     this.carregando.set(true);
     this.calendarioService
       .listar()
-      .pipe(finalize(() => this.carregando.set(false)))
+      .pipe(finalize(() => {
+        this.carregando.set(false);
+        this.jaCarregou.set(true);
+      }))
       .subscribe({
         next: (resposta) => {
           if (resposta.sucesso && resposta.dados) {

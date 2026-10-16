@@ -66,6 +66,20 @@ export class DemandaArvorePainelComponent {
   @Input({ required: true }) projetoId!: number;
   /** Emitido sempre que uma ação altera a árvore (tags, edição, criação, exclusão, descrição). */
   @Output() alterado = new EventEmitter<void>();
+  /** Tags já aplicadas no servidor: o pai atualiza o nó sem recarregar o grafo inteiro (task 98). */
+  @Output() tagsAlteradas = new EventEmitter<{ demandaId: number; tags: TagResumoDto[] }>();
+
+  /** Nós expandidos da árvore; guardados aqui para sobreviver a qualquer recarga (task 98). */
+  readonly expandidos = signal<ReadonlySet<number>>(new Set<number>());
+
+  alternarExpansao(demandaId: number): void {
+    this.expandidos.update((atual) => {
+      const proximo = new Set(atual);
+      if (proximo.has(demandaId)) proximo.delete(demandaId);
+      else proximo.add(demandaId);
+      return proximo;
+    });
+  }
 
   private readonly demandaService = inject(DemandaService);
   private readonly tagService = inject(TagService);
@@ -208,7 +222,8 @@ export class DemandaArvorePainelComponent {
         next: () => {
           this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Tags atualizadas' });
           this.mostrarDialogTags.set(false);
-          this.alterado.emit();
+          const tagsAtribuidas = this.tagsDisponiveis().filter((tag) => dto.tagIds.includes(tag.id));
+          this.tagsAlteradas.emit({ demandaId: idEditando, tags: tagsAtribuidas });
         },
       });
   }

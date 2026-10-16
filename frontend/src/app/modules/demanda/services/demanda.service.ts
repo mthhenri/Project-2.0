@@ -25,6 +25,7 @@ import {
   PaginatedResult,
 } from '@project20/shared';
 import { ambiente } from '../../../../environments/environment';
+import { comFeedbackProprio } from '../../../core/interceptors/loading.interceptor';
 
 @Injectable({ providedIn: 'root' })
 export class DemandaService {
@@ -47,7 +48,7 @@ export class DemandaService {
 
   recuperarGrafo(projetoId: number): Observable<StandardResponse<DemandaGrafoDto>> {
     const params = new HttpParams().set('projetoId', String(projetoId));
-    return this.httpClient.get<StandardResponse<DemandaGrafoDto>>(`${this.urlBase}/grafo`, { params });
+    return this.httpClient.get<StandardResponse<DemandaGrafoDto>>(`${this.urlBase}/grafo`, { params, ...comFeedbackProprio() });
   }
 
   listarPlanejamento(projetoId: number): Observable<StandardResponse<DemandaPlanejamentoDto[]>> {
