@@ -29,14 +29,16 @@
 
 ## Ativos
 
-### P-001 — Sem testes automatizados nem lint · `ABERTO` · repositório
+### P-001 — Cobertura de testes mínima, frontend sem testes e sem lint · `CONTORNADO` · repositório
 
-- **Sintoma:** os `package.json` de `backend/` e `frontend/` não têm script de teste nem de lint, e
-  `shared/` não tem script nenhum; não há arquivos `*.spec.ts` de código nem configuração de ESLint
-  ou Prettier. O CI instalado só roda a verificação de organização do repositório.
-- **Causa:** o projeto foi construído verificando por build e execução manual.
-- **Contorno:** `npm run build --workspace=backend` e `--workspace=frontend` mais verificação
-  manual da aplicação (skill `verify`); declarar no fecho de cada task que a cobertura é manual.
-- **Correção:** decidir ferramenta de teste (backend/shared) e de lint, e acrescentar os passos ao
-  `ci.yml` (há um bloco `<adoção>` comentado esperando por eles).
-- **Desde:** origem do projeto (constatado na adoção do kit, 2026-10-16).
+- **Sintoma:** só existem testes para `shared/src/validators`, o `SqlMigrationSource` e as
+  invariantes das migrations, e os helpers puros do `PontoService` (18 casos no total). Services,
+  repositories e todo o frontend não têm teste. Não há ESLint nem Prettier em nenhum workspace.
+- **Causa:** o projeto foi construído verificando por build e execução manual; os primeiros testes
+  só entraram na adoção do kit (2026-10-16).
+- **Contorno:** `npm test` na raiz; build dos workspaces; verificação ao vivo (skill `verify`).
+  Código novo em regra pura ou helper de service leva teste no mesmo commit.
+- **Correção:** (1) testar services com repositórios falsos, começando por permissão e regras de
+  execução; (2) escolher e configurar lint e acrescentar ao CI; (3) decidir se o frontend terá
+  testes (Angular/Karma ou Vitest) antes da migração de UI de `IDEAS.md` I-001.
+- **Desde:** origem do projeto.

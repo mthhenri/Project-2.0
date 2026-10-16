@@ -36,17 +36,22 @@
 - **Origem:** conversa de adoção do kit (2026-10-16); o ContratadosRPG segue esse modelo.
 - **Por quê:** consistência visual, densidade controlada e um ponto único para evoluir o tema; hoje
   a UI depende dos padrões e do tema padrão do PrimeNG.
-- **Custo aparente:** migração tela a tela (17 módulos de frontend), definição de tema e tokens
+- **Decisão do autor (2026-10-16):** manter anotado; **nada muda por ora** — PrimeNG 21 segue como
+  base de UI e telas novas usam os componentes dele com o tema atual. Só ao abrir o milestone
+  desta ideia entram `design-fidelity` e a regra "todo controle usa o primitivo".
+- **Custo aparente:** migração tela a tela (10 módulos de frontend), definição de tema e tokens
   antes de qualquer tela, decisão do autor sobre cada primitivo. Precisa de milestone próprio.
 
-### I-002 — Trazer testes e lint para o monorepo · repositório
+### I-002 — Lint e testes de service · repositório
 
-- **Ideia:** ver `PROBLEMS.md` P-001; vira spec quando a ferramenta for escolhida.
-- **Origem:** adoção do kit (2026-10-16).
-- **Por quê:** o gate de qualidade do `CLAUDE.md` pede testes focados e lint; sem eles só resta
-  verificação manual.
-- **Custo aparente:** configuração por workspace e um passo de CI; escrever os primeiros testes nas
-  regras puras (ponto, intervalos) e nos validadores de `shared/`.
+- **Ideia:** adicionar lint (ESLint/Prettier) aos três workspaces e testes de service com
+  repositórios falsos; ver `PROBLEMS.md` P-001, itens 1 e 2.
+- **Origem:** adoção do kit (2026-10-16). Os primeiros testes (validadores, migrations, helpers de
+  ponto) já existem.
+- **Por quê:** o gate de qualidade do `CLAUDE.md` pede lint e testes focados; hoje a regra de
+  permissão e de execução só é verificada ao vivo.
+- **Custo aparente:** configuração por workspace e um passo de CI; services estendem
+  `BaseRepository` com injeção do Knex, então os falsos precisam de um ponto de injeção.
 
 ## Promovidas
 

@@ -30,10 +30,15 @@ jobs:
           node --test scripts/verificar-organizacao.test.mjs
           node scripts/verificar-organizacao.mjs --staged
 
-      # Sem testes nem lint no projeto ainda (docs/context/PROBLEMS.md P-001). Por ora o build é o
-      # gate de compilação; acrescente lint e testes aqui quando existirem.
+      # Sem lint no projeto ainda (docs/context/PROBLEMS.md P-001).
       - name: Instalar dependências
         run: npm ci
+
+      - name: Testes do shared
+        run: npm run test --workspace=shared
+
+      - name: Testes do backend
+        run: npm run test --workspace=backend
 
       - name: Build do backend
         run: npm run build --workspace=backend

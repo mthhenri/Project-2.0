@@ -6,7 +6,8 @@
     "start:prod": "node --require ts-node/register src/main.ts",
     "build": "nest build",
     "db:migrate": "knex --knexfile src/database/knexfile.ts migrate:latest",
-    "db:rollback": "knex --knexfile src/database/knexfile.ts migrate:rollback"
+    "db:rollback": "knex --knexfile src/database/knexfile.ts migrate:rollback",
+    "test": "node --require ts-node/register --test \"src/**/*.test.ts\""
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.30.0",

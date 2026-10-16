@@ -41,6 +41,7 @@ Estas são as fontes da verdade. Em conflito entre código e documento, **o docu
 | Interceptors, guards e estado global | `frontend/src/app/core/` |
 | Componentes, diretivas, pipes e layout reutilizáveis | `frontend/src/app/shared/` |
 | Estilos globais, tema e Tailwind | `frontend/src/styles.scss`, `frontend/src/app/shared/styles/`, `frontend/tailwind.config.js` |
+| Testes (`node:test`, ao lado do código em `*.test.ts`; rode com `npm test`) | `shared/src/validators/`, `backend/src/database/`, `backend/src/modules/ponto/services/` |
 | Verificação de organização do repositório (`repo:verificar`) | `scripts/verificar-organizacao.mjs` |
 | Mapa de impacto (`npm run impacto`) | `scripts/impacto.mjs`, `scripts/agentes/hook-impacto.mjs` |
 | Subagentes (`implementador`, `revisor`, `testador`) | `.claude/agents/` |
@@ -49,14 +50,11 @@ Estas são as fontes da verdade. Em conflito entre código e documento, **o docu
 
 ## 3. Onde está o que ainda não chegou à `master`
 
-O backlog de specs **não está na `master`**; vive em branches `claude/*` ainda não mergeadas. Mergeie
-a branch antes de puxar a task e confira conflitos de numeração (83, 86, 89, 90, 91 e 94 aparecem
-em mais de uma).
+O backlog de specs **não está na `master`**. Em 2026-10-16 restam duas branches `claude/*` não
+mergeadas (as de 83, 86, 89, 90 e 91 já foram mergeadas e removidas). Antes de puxar uma task,
+mergeie a branch dela.
 
-| Branch | Specs de backlog |
+| Branch | Conteúdo |
 |---|---|
-| `claude/ui-ux-review-optimization-4da6md` | 94–116 (revisão de UX; ver `INDICE-revisao-ux.md`) |
-| `claude/canceled-demand-status-hzedyu` | 83, 86, 89 |
-| `claude/sql-migration-task-doyh0c` | 83, 86, 90 |
-| `claude/timesheet-holiday-labels-30kkvh` | 83, 86, 91 |
-| `claude/remove-activity-description-gtew58` | 94 (remover descrição de atividade) |
+| `claude/ui-ux-review-optimization-4da6md` | specs 94–116 (revisão de UX; ver `INDICE-revisao-ux.md`) e `docs/reviews/ui-ux/` (relatório, prints, mockups; fora da política de §3.1, precisa ser realocado) |
+| `claude/remove-activity-description-gtew58` | spec 94 `remover-descricao-atividade` (**colide** com a 94 da revisão de UX) |

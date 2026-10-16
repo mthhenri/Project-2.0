@@ -46,14 +46,15 @@ nomear um contrato/DTO, use a skill `project20-dto-conventions`.
 
 | Workspace | Teste focado | Suíte completa | Lint / compilação |
 |---|---|---|---|
-| `shared` | — (não existe) | — (não existe) | compila junto com o consumidor (`npm run build --workspace=backend`) |
-| `backend` | — (não existe) | — (não existe) | `npm run build --workspace=backend` |
-| `frontend` | — (não existe) | — (não existe) | `npm run build --workspace=frontend` |
+| `shared` | `cd shared && node --import tsx --test src/<arquivo>.test.ts` | `npm run test --workspace=shared` | compila junto com o consumidor (`npm run build --workspace=backend`) |
+| `backend` | `cd backend && node --require ts-node/register --test src/<arquivo>.test.ts` | `npm run test --workspace=backend` | `npm run build --workspace=backend` |
+| `frontend` | — (não há testes) | — (não há testes) | `npm run build --workspace=frontend` |
 
-> Hoje o projeto **não tem testes automatizados nem lint** (`PROBLEMS.md` P-001): o gate de
-> código é build dos workspaces afetados + verificação ao vivo (skill `verify`). Declare isso no
-> fecho — "sem testes" é uma limitação a relatar, não um item verde. Quando P-001 for resolvido,
-> troque os traços por comandos reais.
+> Raiz: `npm test` roda shared + backend + `repo:test`. Os testes usam `node:test` e ficam em
+> `*.test.ts` ao lado do código; no backend, `import * as assert from 'node:assert/strict'` (o
+> tsconfig dele não tem `esModuleInterop`). Não há **lint** nem testes no frontend (`PROBLEMS.md`
+> P-001): o gate nessas áreas é build + verificação ao vivo (skill `verify`). Declare a lacuna no
+> fecho — "sem testes" é uma limitação a relatar, não um item verde.
 
 - Um comando de raiz que roda tudo de uma vez, para o gate de integração/conclusão — não repita
   build/lint/teste sem mudança relevante desde a última rodada.

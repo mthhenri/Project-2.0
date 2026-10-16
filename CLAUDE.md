@@ -146,9 +146,11 @@ Sem app executável, a tarefa visual permanece **aberta**.
 
 1. Revise o diff completo contra a spec e as convenções (skill `conventions-check`); sem hardcodes
    nem atalhos que contornem a fonte de verdade.
-2. Rode o build dos workspaces afetados e a verificação ao vivo proporcional ao risco. O projeto
-   **não tem testes automatizados nem lint** (`docs/context/PROBLEMS.md` P-001): declare isso no
-   fecho. Relate comandos, resultados e falhas preexistentes **separadamente**.
+2. Rode os testes e o build dos workspaces afetados e a verificação ao vivo proporcional ao risco.
+   `shared` e `backend` têm testes (Node test runner); o `frontend` não tem testes e o projeto
+   **não tem lint** (`docs/context/PROBLEMS.md` P-001): declare essas lacunas no fecho. Regra pura
+   ou helper de service que mudou ganha teste no mesmo commit. Relate comandos, resultados e falhas
+   preexistentes **separadamente**.
 3. Para UI, cumpra o processo visual acima.
 4. No fecho, liste de forma auditável o que foi verificado e o que ficou pendente. Item sem
    verificação obrigatória fica **aberto**, não "concluído".
@@ -248,6 +250,9 @@ npm run db:rollback --workspace=backend    # reverte o último lote
 npm run backend:dev                        # API em http://localhost:3000
 npm run frontend:dev                       # SPA em http://localhost:4200 (proxy /api → :3000)
 npm run dev                                # backend e frontend juntos
+npm test                                   # shared + backend + scripts de repositório
+npm run test --workspace=shared            # só o shared
+npm run test --workspace=backend           # só o backend
 npm run build --workspace=backend          # compilação do backend (usada como gate)
 npm run build --workspace=frontend         # compilação do frontend (usada como gate)
 npm run repo:verificar                     # organização de specs/artefatos e espelhos
@@ -255,7 +260,8 @@ npm run repo:test                          # testes dos scripts de verificação
 npm run impacto -- <arquivo>               # consumidores antes de alterar algo compartilhado
 ```
 
-Não há script de teste nem de lint nos workspaces (`PROBLEMS.md` P-001). Variáveis de ambiente:
+Testes ficam ao lado do código, em `*.test.ts`, com `node:test` e `node:assert/strict` (sem Jest);
+não há script de teste no `frontend` nem lint em nenhum workspace (`PROBLEMS.md` P-001). Variáveis de ambiente:
 `.env.example` e `README.md`. Para verificação manual da aplicação real, consulte
 `.agents/skills/verify/SKILL.md`; build não a substitui quando a tarefa exige observar o app.
 

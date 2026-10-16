@@ -2,5 +2,8 @@
   "name": "@project20/shared",
   "version": "1.0.0",
   "main": "src/index.ts",
-  "types": "src/index.ts"
+  "types": "src/index.ts",
+  "scripts": {
+    "test": "node --import tsx --test \"src/**/*.test.ts\""
+  }
 }

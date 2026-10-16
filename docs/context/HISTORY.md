@@ -12,6 +12,40 @@
 
 ---
 
+## 2026-10-16 — Primeiros testes automatizados e reconciliação do backlog
+
+**O que mudou e por quê.** O autor pediu os testes que `PROBLEMS.md` P-001 registrava como
+ausentes. Optei por `node:test` + `node:assert/strict` (zero dependência nova; `tsx` e `ts-node` já
+eram devDependencies do backend) em vez de Jest. Scripts: `test` em `shared` (via `tsx`) e em
+`backend` (via `ts-node`), e `npm test` na raiz encadeando shared, backend e `repo:test`. O CI
+passou a rodar os dois. Cobertura inicial, escolhida pelo que é lógica pura e de maior custo de
+erro: validadores de caracteres proibidos (4 casos), `SqlMigrationSource` (7 casos: ordenação
+numérica, seções UP/DOWN, CRLF, `-- NO TRANSACTION`, erros) e invariantes das 27 migrations reais
+(nome, numeração contínua, UP/DOWN, sem controle de transação à mão) e os helpers puros do
+`PontoService` (4 casos: motivo de dia não útil, data ISO, ordenação, intervalos).
+
+**Verificado.** `npm ci` limpo e `npm test`: shared 4/4, backend 14/14, `repo:test` 12 passam e 1
+pulado. **Mutação:** troquei `>=` por `>` em `calcularIntervalos`; o teste correspondente falhou e
+o arquivo foi restaurado (`git diff` vazio). Achados na hora de escrever: (a) `tsx` rodando a partir
+de `backend/` não aplica `experimentalDecorators` a arquivos de `shared/` (o tsconfig do backend não
+os inclui), então os DTOs com `class-validator` quebram — por isso o backend usa `ts-node`;
+(b) o tsconfig do backend não tem `esModuleInterop`, então `import assert from` devolve `undefined`
+(usa-se `import * as assert`); (c) minha primeira versão da checagem de transação acusava o
+`BEGIN` indentado de funções PL/pgSQL das migrations 0001 e 0016 — falso positivo, a regra agora
+exige instrução na coluna 0 terminada em `;`. O `nest build` passou a usar `backend/tsconfig.build.json`, que exclui `**/*.test.ts` (sem isso os testes iam para o `dist` de produção). **Não alterei `package-lock.json`**: adicionar
+`tsx` ao `shared` reordenava flags `peer` sem relação e a resolução já funciona pelo içamento do
+workspace raiz.
+
+**Backlog.** Três das cinco branches de backlog (89, 90, 91, e as cópias da 83 e 86) já tinham sido
+mergeadas e removidas do GitHub; sobraram `ui-ux-review-optimization-4da6md` e
+`remove-activity-description-gtew58`. A primeira traz `docs/reviews/ui-ux/` (68 arquivos, ~4,9 MB,
+25 PNG e 25 mockups HTML), que a política de §3.1 proíbe, e as duas numeram uma spec como 94.
+Nada foi mergeado ainda: aguarda decisão do autor sobre onde o material da revisão passa a viver e
+qual spec muda de número. **Sobre o PrimeNG:** o autor confirmou manter apenas anotado; nada muda
+(`IDEAS.md` I-001 e `CONTEXT.md` §3).
+
+---
+
 ## 2026-10-16 — Adoção do kit de processo (generic_base do ContratadosRPG)
 
 **O que mudou e por quê.** O Project 2.0 passou a usar o mesmo processo do ContratadosRPG: contexto

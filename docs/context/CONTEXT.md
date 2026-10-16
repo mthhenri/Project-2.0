@@ -8,17 +8,16 @@
 > [`MEMORY.md`](MEMORY.md) (onde fica o quê) · [`IDEAS.md`](IDEAS.md) (o que ainda não é sistema) ·
 > [`HISTORY.md`](HISTORY.md) (o que aconteceu e por quê).
 >
-> **Última revisão:** 2026-10-16 · **Última decisão registrada:** adoção do kit de processo
-> (`HISTORY.md`, bloco de 2026-10-16)
+> **Última revisão:** 2026-10-16 · **Última decisão registrada:** testes com `node:test`
+> (`HISTORY.md`, bloco de 2026-10-16 — testes)
 
 ---
 
 ## 1. Próxima Task
 
-Nenhuma task em andamento. O backlog **não está na `master`**: as specs pendentes vivem em
-branches `claude/*` ainda não mergeadas (ver `MEMORY.md` §3). Antes de puxar uma task, mergeie a
-branch que a contém e confira o número livre; as tasks 83, 86, 89, 90, 91 e 94 aparecem em mais de
-uma branch.
+Nenhuma task em andamento. O backlog **não está na `master`**: as specs pendentes vivem em duas
+branches `claude/*` ainda não mergeadas (ver `MEMORY.md` §3), e a numeração 94 está duplicada entre
+elas. Resolva o merge e a numeração antes de puxar uma task.
 
 ## 2. Estado por Área
 
@@ -93,6 +92,13 @@ project-2.0/
 | Conexão configurada | ✅ DatabaseModule com Knex (task 02) |
 
 ## 3. Decisões Vivas
+
+- **[adoção do kit — UI]** PrimeNG 21 segue como base de UI; a biblioteca própria de componentes
+  está só anotada (`IDEAS.md` I-001) e nada muda até o autor abrir esse milestone. Até lá,
+  `design-fidelity` e "primitivo obrigatório" não valem.
+- **[adoção do kit — testes]** Testes usam `node:test` (sem Jest), ao lado do código em
+  `*.test.ts`; `shared` roda com `tsx` e `backend` com `ts-node` (o `tsx` não aplica
+  `experimentalDecorators` aos arquivos de `shared/` quando roda a partir do backend).
 
 Decisões conscientes que estão funcionando como desejado — não são bug, não precisam de spec nova
 e não devem ser "redescobertas" como problema. O contexto de cada uma está no registro da task
