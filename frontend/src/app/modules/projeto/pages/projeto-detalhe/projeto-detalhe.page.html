@@ -101,6 +101,7 @@
             [projetoId]="projeto()!.id"
             (alterado)="recarregarDemandas()"
             (tagsAlteradas)="aoTagsAlteradas($event)"
+            (statusAlterado)="aoStatusAlterado($event)"
           />
         </div>
       }

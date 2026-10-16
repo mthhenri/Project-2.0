@@ -12,6 +12,27 @@
 
 ---
 
+## 2026-10-16 — Task 106: Demandas com toolbar de filtros, árvore com ações e contexto lembrado
+
+Relatório em `docs/specs/done/106-demandas-toolbar-arvore/verificacao.md`; verificação em Chromium contra a
+API real (projeto com 3 níveis, tags e os 4 status), como gestor e como desenvolvedor.
+
+- Toolbar (busca com destaque, chips-contador, tags, expandir/recolher), filtro valendo para Lista e Grafo;
+  linha da árvore com clique no nome abrindo o Detalhe, chevron de 32 px, chip de status com popover
+  otimista (novo `app-demanda-status-chip`), `+`/`⋮` no hover, mini-barra de progresso e `●` do executor;
+  projeto/modo lembrados (localStorage + `?modo=`), empty states e navegação por teclado (↑↓→← Enter).
+- **Desvio:** a spec pede `N` para nova demanda, mas o `N` global já abre as Anotações (task 96); a página
+  usa `C`. A decisão fica com o autor (é um `if` em `aoTeclar`).
+- **Achados só na verificação:** o conflito do `N`; o destaque da busca partia a palavra por espaço do
+  template; a 360 px o nome da demanda sumia atrás dos badges e o seletor de modos vazava; o chip pulava de
+  coluna entre linhas com e sem `+`.
+- O autor dispensou a verificação mobile: o padrão passa a ser 1920×1080, 1366×768 e 1080×1920 (`CLAUDE.md`/
+  `AGENTS.md` e skill `verify` atualizados).
+- Não verificado ao vivo: o Detalhe do Projeto e a lista de sub-demandas do dialog (consumidores do mesmo
+  painel/item); toque e leitor de tela.
+
+---
+
 ## 2026-10-16 — Tasks 100 e 101: Ponto mensal inline e triagem da equipe
 
 As duas mexem nos mesmos arquivos da página do Ponto, então saíram num único commit. Relatórios em

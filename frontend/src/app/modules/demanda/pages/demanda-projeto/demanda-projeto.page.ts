@@ -1,10 +1,12 @@
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit, computed, inject, signal, viewChild } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ReactiveFormsModule, FormControl } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { Select } from 'primeng/select';
+import { SelectButtonModule } from 'primeng/selectbutton';
 import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
 import {
@@ -19,19 +21,54 @@ import {
 import { DemandaService } from '../../services/demanda.service';
 import { ProjetoService } from '../../../projeto/services/projeto.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
+import { DemandaToolbarComponent } from '../../components/demanda-toolbar/demanda-toolbar.component';
 import { DemandaGrafoComponent } from '../../components/demanda-grafo/demanda-grafo.component';
 import { DemandaFormularioDialogComponent } from '../../components/demanda-formulario-dialog/demanda-formulario-dialog.component';
 import { DemandaArvorePainelComponent } from '../../components/demanda-arvore-painel/demanda-arvore-painel.component';
 import { DemandaPlanejamentoPainelComponent } from '../../components/demanda-planejamento-painel/demanda-planejamento-painel.component';
 import { ModoVisualizacao } from '../../models/demanda.model';
 import { COR_NO_BORDA } from '../../constants/demanda-cores.constants';
+import { focoEmCampo, haSobreposicaoAberta } from '../../../../core/utils/atalhos';
+import {
+  DemandaFiltro,
+  FILTRO_VAZIO,
+  contarPorStatus,
+  filtroAtivo,
+  nosCorrespondentes,
+  recortarArvore,
+} from '../../utils/demanda-filtro.util';
 import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
+
+/** Último projeto e modo usados, lembrados entre visitas (task 106). */
+const CHAVE_ULTIMO_PROJETO = 'demanda.ultimoProjetoId';
+const CHAVE_ULTIMO_MODO = 'demanda.ultimoModo';
+const MODOS_VALIDOS: ModoVisualizacao[] = ['grafo', 'lista', 'planejamento'];
+
+function lerArmazenado(chave: string): string | null {
+  try {
+    return localStorage.getItem(chave);
+  } catch {
+    return null;
+  }
+}
+
+function gravarArmazenado(chave: string, valor: string): void {
+  try {
+    localStorage.setItem(chave, valor);
+  } catch {
+    /* armazenamento indisponível: o contexto só não é lembrado */
+  }
+}
 
 @Component({
   selector: 'app-demanda-projeto',
   standalone: true,
-  imports: [SkeletonListaComponent, 
+  imports: [SkeletonListaComponent,
+    NgTemplateOutlet,
+    FormsModule,
     ReactiveFormsModule,
+    SelectButtonModule,
+    DemandaToolbarComponent,
     ButtonModule,
     DialogModule,
     Select,
@@ -44,7 +81,7 @@ import { SkeletonListaComponent } from '../../../../shared/components/skeleton-l
   templateUrl: './demanda-projeto.page.html',
   styleUrl: './demanda-projeto.page.scss',
 })
-export class DemandaProjetoPage implements OnInit {
+export class DemandaProjetoPage implements OnInit, OnDestroy {
   private readonly demandaService = inject(DemandaService);
   private readonly projetoService = inject(ProjetoService);
   private readonly messageService = inject(MessageService);
@@ -58,11 +95,21 @@ export class DemandaProjetoPage implements OnInit {
   readonly grafo = signal<DemandaGrafoDto | null>(null);
   readonly carregando = signal<boolean>(false);
   readonly carregandoProjetos = signal<boolean>(false);
-  readonly modoVisualizacao = signal<ModoVisualizacao>('lista');
+  readonly modoVisualizacao = signal<ModoVisualizacao>(this.modoInicial());
   readonly painelLateralAberto = signal<boolean>(true);
   readonly mostrarDialogNovaDemanda = signal<boolean>(false);
   readonly planejamento = signal<DemandaPlanejamentoDto[]>([]);
   readonly carregandoPlanejamento = signal<boolean>(false);
+
+  private readonly seletorProjeto = viewChild<Select>('seletorProjeto');
+  private readonly toolbar = viewChild<DemandaToolbarComponent>('toolbar');
+  private readonly painel = viewChild<DemandaArvorePainelComponent>('painel');
+
+  /** Critérios da toolbar (busca, status, tags): valem para a Lista e para o Grafo. */
+  readonly filtro = signal<DemandaFiltro>(FILTRO_VAZIO);
+  /** Cópia com atraso do filtro: o Grafo refaz o layout a cada mudança, então não acompanha cada tecla. */
+  readonly filtroGrafo = signal<DemandaFiltro>(FILTRO_VAZIO);
+  private temporizadorFiltroGrafo?: ReturnType<typeof setTimeout>;
 
   readonly legendaStatus = [
     { rotulo: 'Pendente',  cor: COR_NO_BORDA[TipoDemandaStatusEnum.PENDENTE] },
@@ -71,11 +118,59 @@ export class DemandaProjetoPage implements OnInit {
     { rotulo: 'Cancelada', cor: COR_NO_BORDA[TipoDemandaStatusEnum.CANCELADA] },
   ];
 
+  readonly opcoesModo = computed(() => [
+    { rotulo: 'Lista', valor: 'lista' as ModoVisualizacao, icone: 'pi pi-list' },
+    { rotulo: 'Grafo', valor: 'grafo' as ModoVisualizacao, icone: 'pi pi-share-alt' },
+    ...(this.sessao.eGestor() ? [{ rotulo: 'Planejamento', valor: 'planejamento' as ModoVisualizacao, icone: 'pi pi-chart-bar' }] : []),
+  ]);
+
+  private readonly nosDoProjeto = computed(() => this.grafo()?.nos ?? []);
+  readonly projetoTemDemandas = computed(() => this.nosDoProjeto().length > 0);
+  readonly filtroEstaAtivo = computed(() => filtroAtivo(this.filtro()));
+
+  /** Árvore já filtrada: nós que correspondem + ancestrais; `expandirPorFiltro` abre os ramos com resultado. */
+  private readonly recorteDaArvore = computed(() => recortarArvore(this.nosDoProjeto(), this.filtro()));
+  readonly expandirPorFiltro = computed(() => this.recorteDaArvore().expandir);
+
   readonly arvoreRaizes = computed<DemandaArvoreItemDto[]>(() => {
-    const grafoAtual = this.grafo();
-    if (!grafoAtual?.nos?.length) return [];
-    return this.construirArvore(grafoAtual.nos);
+    const nosVisiveis = this.recorteDaArvore().nos;
+    return nosVisiveis.length ? this.construirArvore(nosVisiveis) : [];
   });
+
+  readonly contagemPorStatus = computed(() => contarPorStatus(this.nosDoProjeto(), this.filtro()));
+
+  readonly tagsDoProjeto = computed<TagResumoDto[]>(() => {
+    const porId = new Map<number, TagResumoDto>();
+    for (const no of this.nosDoProjeto()) for (const tag of no.tags ?? []) porId.set(tag.id, tag);
+    return [...porId.values()].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+  });
+
+  /** O Grafo recebe só os nós que atendem ao filtro (a busca não traz ancestrais: o grafo não tem hierarquia visual). */
+  readonly grafoExibido = computed<DemandaGrafoDto | null>(() => {
+    const grafoAtual = this.grafo();
+    return grafoAtual ? { ...grafoAtual, nos: nosCorrespondentes(grafoAtual.nos, this.filtroGrafo()) } : null;
+  });
+
+  /** Quem está executando cada demanda, quando o planejamento já foi carregado (só gestor). */
+  readonly executoresPorDemanda = computed(() => {
+    const mapa = new Map<number, string[]>();
+    if (!this.sessao.eGestor()) return mapa;
+    for (const linha of this.planejamento()) {
+      if (linha.executoresAtivos.length) mapa.set(linha.demandaId, linha.executoresAtivos.map((executor) => executor.nomeCompleto));
+    }
+    return mapa;
+  });
+
+  ngOnDestroy(): void {
+    clearTimeout(this.temporizadorFiltroGrafo);
+  }
+
+  /** `?modo=` vence o último modo usado, que vence o padrão (Lista). Planejamento é só do gestor. */
+  private modoInicial(): ModoVisualizacao {
+    const candidato = (this.route.snapshot.queryParamMap.get('modo') ?? lerArmazenado(CHAVE_ULTIMO_MODO)) as ModoVisualizacao | null;
+    if (!candidato || !MODOS_VALIDOS.includes(candidato)) return 'lista';
+    return candidato === 'planejamento' && !this.sessao.eGestor() ? 'lista' : candidato;
+  }
 
   ngOnInit(): void {
     this.carregarProjetos();
@@ -86,7 +181,10 @@ export class DemandaProjetoPage implements OnInit {
 
   selecionarProjeto(projetoId: number): void {
     this.projetoId.set(projetoId);
-    this.router.navigate([], { queryParams: { projetoId }, replaceUrl: true });
+    gravarArmazenado(CHAVE_ULTIMO_PROJETO, String(projetoId));
+    this.limparFiltros();
+    this.planejamento.set([]);
+    this.atualizarUrl();
     this.carregarGrafo();
     if (this.modoVisualizacao() === 'planejamento' && this.sessao.eGestor()) {
       this.carregarPlanejamento();
@@ -94,9 +192,68 @@ export class DemandaProjetoPage implements OnInit {
   }
 
   alternarModo(modo: ModoVisualizacao): void {
+    if (!modo || modo === this.modoVisualizacao()) return;
     this.modoVisualizacao.set(modo);
+    gravarArmazenado(CHAVE_ULTIMO_MODO, modo);
+    this.atualizarUrl();
     if (modo === 'planejamento' && this.sessao.eGestor() && this.projetoId()) {
       this.carregarPlanejamento();
+    }
+  }
+
+  /** Projeto e modo na URL: o link compartilhado/recarregado volta ao mesmo contexto. */
+  private atualizarUrl(): void {
+    const queryParams: Record<string, string | number> = { modo: this.modoVisualizacao() };
+    if (this.projetoId()) queryParams['projetoId'] = this.projetoId();
+    this.router.navigate([], { queryParams, replaceUrl: true });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Toolbar: busca, status e tags
+  // ---------------------------------------------------------------------------
+
+  aoAlterarFiltro(filtro: DemandaFiltro): void {
+    this.filtro.set(filtro);
+    clearTimeout(this.temporizadorFiltroGrafo);
+    this.temporizadorFiltroGrafo = setTimeout(() => this.filtroGrafo.set(filtro), 200);
+  }
+
+  limparFiltros(): void {
+    this.aoAlterarFiltro(FILTRO_VAZIO);
+  }
+
+  abrirSeletorProjeto(): void {
+    this.seletorProjeto()?.show();
+  }
+
+  alternarExpansaoGeral(): void {
+    this.painel()?.alternarExpansaoGeral();
+  }
+
+  get todosExpandidos(): boolean {
+    return this.painel()?.todosExpandidos() ?? false;
+  }
+
+  /**
+   * Atalhos da página (task 106): `/` busca, `C` nova demanda (gestor; o `N` global já abre as Anotações, task 96) e ↑/↓ levam o foco à árvore da Lista.
+   * Ficam quietos com campo em foco, dialog/overlay aberto ou modificador pressionado.
+   */
+  @HostListener('document:keydown', ['$event'])
+  aoTeclar(evento: KeyboardEvent): void {
+    if (!this.projetoId() || evento.defaultPrevented) return;
+    if (evento.ctrlKey || evento.metaKey || evento.altKey) return;
+    if (focoEmCampo(evento.target) || haSobreposicaoAberta()) return;
+
+    const modo = this.modoVisualizacao();
+    if (evento.key === '/' && modo !== 'planejamento') {
+      evento.preventDefault();
+      this.toolbar()?.focarBusca();
+    } else if (evento.key.toLowerCase() === 'c' && this.sessao.eGestor()) {
+      evento.preventDefault();
+      this.mostrarDialogNovaDemanda.set(true);
+    } else if ((evento.key === 'ArrowDown' || evento.key === 'ArrowUp') && modo === 'lista' && !(evento.target as HTMLElement)?.closest?.('[role="tree"]')) {
+      evento.preventDefault();
+      this.painel()?.focar();
     }
   }
 
@@ -190,11 +347,14 @@ export class DemandaProjetoPage implements OnInit {
         next: (resposta) => {
           if (resposta.sucesso && resposta.dados) {
             this.projetos.set(resposta.dados.itens);
-            const projetoIdParam = Number(this.route.snapshot.queryParamMap.get('projetoId'));
-            if (projetoIdParam) {
-              this.projetoControle.setValue(projetoIdParam, { emitEvent: false });
-              this.projetoId.set(projetoIdParam);
+            const projetoInicial = this.projetoInicial(resposta.dados.itens);
+            if (projetoInicial) {
+              this.projetoControle.setValue(projetoInicial, { emitEvent: false });
+              this.projetoId.set(projetoInicial);
+              gravarArmazenado(CHAVE_ULTIMO_PROJETO, String(projetoInicial));
+              this.atualizarUrl();
               this.carregarGrafo();
+              if (this.modoVisualizacao() === 'planejamento' && this.sessao.eGestor()) this.carregarPlanejamento();
             }
           }
         },
@@ -202,6 +362,16 @@ export class DemandaProjetoPage implements OnInit {
           this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Não foi possível carregar os projetos' });
         },
       });
+  }
+
+  /** `?projetoId=` > último projeto usado > o único projeto disponível; id que não existe mais é ignorado. */
+  private projetoInicial(projetos: ProjetoResumoDto[]): number | null {
+    const existe = (id: number) => id > 0 && projetos.some((projeto) => projeto.id === id);
+    const daUrl = Number(this.route.snapshot.queryParamMap.get('projetoId'));
+    if (daUrl > 0) return daUrl;
+    const lembrado = Number(lerArmazenado(CHAVE_ULTIMO_PROJETO));
+    if (existe(lembrado)) return lembrado;
+    return projetos.length === 1 ? projetos[0].id : null;
   }
 
   private carregarGrafo(): void {

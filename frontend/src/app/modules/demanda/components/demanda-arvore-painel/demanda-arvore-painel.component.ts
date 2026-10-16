@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, inject, signal, computed } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, signal, computed, effect, input, untracked, viewChild, ElementRef } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, AbstractControl } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
 import { ButtonModule } from 'primeng/button';
@@ -13,6 +13,7 @@ import {
   TagResumoDto,
   UsuarioResumoDto,
   TipoUsuarioEnum,
+  TipoDemandaStatusEnum,
 } from '@project20/shared';
 import { DemandaService } from '../../services/demanda.service';
 import { TagService } from '../../../tag/services/tag.service';
@@ -62,15 +63,77 @@ type CampoDescricao = 'descricaoTecnica' | 'descricaoCliente' | 'documentacao';
   styleUrl: './demanda-arvore-painel.component.scss',
 })
 export class DemandaArvorePainelComponent {
-  @Input({ required: true }) raizes: DemandaArvoreItemDto[] = [];
+  readonly raizes = input.required<DemandaArvoreItemDto[]>();
   @Input({ required: true }) projetoId!: number;
+  /** Termo da busca da toolbar, destacado nos nomes (task 106). */
+  readonly termoBusca = input<string>('');
+  /** Nós a abrir por causa do filtro ativo (ancestrais dos correspondentes); o usuário pode recolher depois. */
+  readonly expandirIds = input<ReadonlySet<number>>(new Set());
+  /** Executores ativos por demanda, quando o planejamento está carregado (gestor). */
+  readonly executoresPorDemanda = input<ReadonlyMap<number, string[]>>(new Map());
   /** Emitido sempre que uma ação altera a árvore (tags, edição, criação, exclusão, descrição). */
   @Output() alterado = new EventEmitter<void>();
   /** Tags já aplicadas no servidor: o pai atualiza o nó sem recarregar o grafo inteiro (task 98). */
   @Output() tagsAlteradas = new EventEmitter<{ demandaId: number; tags: TagResumoDto[] }>();
 
+  /**
+   * Status trocado pelo chip da linha (otimista, com rollback): emitido já ao escolher e de novo com o
+   * status anterior se a API recusar. O host aplica no seu estado sem recarregar nada.
+   */
+  @Output() statusAlterado = new EventEmitter<{ demandaId: number; status: TipoDemandaStatusEnum }>();
+
   /** Nós expandidos da árvore; guardados aqui para sobreviver a qualquer recarga (task 98). */
   readonly expandidos = signal<ReadonlySet<number>>(new Set<number>());
+
+  private readonly arvoreRef = viewChild<ElementRef<HTMLElement>>('arvore');
+
+  /** Linha com o foco do teclado; só vale com a árvore focada. */
+  readonly focoId = signal<number | null>(null);
+  readonly arvoreFocada = signal<boolean>(false);
+
+  /** Linhas visíveis na ordem da tela (respeita os ramos expandidos): base da navegação por teclado. */
+  private readonly linhasVisiveis = computed(() => {
+    const abertos = this.expandidos();
+    const linhas: { id: number; paiId: number | null; item: DemandaArvoreItemDto }[] = [];
+    const percorrer = (itens: DemandaArvoreItemDto[], paiId: number | null) => {
+      for (const item of itens) {
+        linhas.push({ id: item.id, paiId, item });
+        if (item.filhos.length && abertos.has(item.id)) percorrer(item.filhos, item.id);
+      }
+    };
+    percorrer(this.raizes(), null);
+    return linhas;
+  });
+
+  /** Ids de todas as demandas que têm filhos: o que "expandir tudo" abre. */
+  private readonly idsComFilhos = computed(() => {
+    const ids: number[] = [];
+    const percorrer = (itens: DemandaArvoreItemDto[]) => {
+      for (const item of itens) {
+        if (item.filhos.length) {
+          ids.push(item.id);
+          percorrer(item.filhos);
+        }
+      }
+    };
+    percorrer(this.raizes());
+    return ids;
+  });
+
+  readonly todosExpandidos = computed(() => {
+    const ids = this.idsComFilhos();
+    const abertos = this.expandidos();
+    return ids.length > 0 && ids.every((id) => abertos.has(id));
+  });
+
+  constructor() {
+    // O filtro ativo abre os ramos com correspondência; só soma (o usuário pode recolher depois).
+    effect(() => {
+      const abrir = this.expandirIds();
+      if (!abrir.size) return;
+      untracked(() => this.expandidos.update((atual) => new Set([...atual, ...abrir])));
+    });
+  }
 
   alternarExpansao(demandaId: number): void {
     this.expandidos.update((atual) => {
@@ -78,6 +141,82 @@ export class DemandaArvorePainelComponent {
       if (proximo.has(demandaId)) proximo.delete(demandaId);
       else proximo.add(demandaId);
       return proximo;
+    });
+  }
+
+  expandirTudo(): void {
+    this.expandidos.set(new Set(this.idsComFilhos()));
+  }
+
+  recolherTudo(): void {
+    this.expandidos.set(new Set());
+  }
+
+  alternarExpansaoGeral(): void {
+    if (this.todosExpandidos()) this.recolherTudo();
+    else this.expandirTudo();
+  }
+
+  /** Dá o foco do teclado à árvore (na primeira linha, se nenhuma estiver marcada). */
+  focar(): void {
+    this.arvoreRef()?.nativeElement.focus();
+  }
+
+  aoFocarArvore(): void {
+    this.arvoreFocada.set(true);
+    const linhas = this.linhasVisiveis();
+    if (!linhas.some((linha) => linha.id === this.focoId())) this.focoId.set(linhas[0]?.id ?? null);
+  }
+
+  /** ↑↓ percorrem as linhas, → abre/entra, ← fecha/sobe, Enter abre o detalhe. */
+  aoTeclarArvore(evento: KeyboardEvent): void {
+    if (evento.ctrlKey || evento.metaKey || evento.altKey || evento.shiftKey) return;
+    const linhas = this.linhasVisiveis();
+    const indice = linhas.findIndex((linha) => linha.id === this.focoId());
+    const atual = indice >= 0 ? linhas[indice] : undefined;
+    let destino: number | null | undefined;
+
+    switch (evento.key) {
+      case 'ArrowDown':
+        destino = linhas[Math.min(indice + 1, linhas.length - 1)]?.id;
+        break;
+      case 'ArrowUp':
+        destino = linhas[Math.max(indice - 1, 0)]?.id;
+        break;
+      case 'ArrowRight':
+        if (!atual?.item.filhos.length) return;
+        if (!this.expandidos().has(atual.id)) this.alternarExpansao(atual.id);
+        else destino = atual.item.filhos[0].id;
+        break;
+      case 'ArrowLeft':
+        if (atual?.item.filhos.length && this.expandidos().has(atual.id)) this.alternarExpansao(atual.id);
+        else destino = atual?.paiId;
+        break;
+      case 'Enter':
+        if (!atual) return;
+        this.abrirDetalhe(atual.id);
+        evento.preventDefault();
+        return;
+      default:
+        return;
+    }
+    evento.preventDefault();
+    if (destino) this.marcarFoco(destino);
+  }
+
+  marcarFoco(demandaId: number): void {
+    this.focoId.set(demandaId);
+    setTimeout(() => document.getElementById('demanda-item-' + demandaId)?.scrollIntoView({ block: 'nearest' }));
+  }
+
+  /** Troca de status pelo chip: otimista, com rollback se a API recusar (mesmo padrão do Planejamento). */
+  aoStatusEscolhido(alteracao: { demandaId: number; de: TipoDemandaStatusEnum; para: TipoDemandaStatusEnum }): void {
+    this.statusAlterado.emit({ demandaId: alteracao.demandaId, status: alteracao.para });
+    this.demandaService.alterar(alteracao.demandaId, { status: alteracao.para }).subscribe({
+      next: (resposta) => {
+        if (resposta.sucesso) this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Status alterado' });
+      },
+      error: () => this.statusAlterado.emit({ demandaId: alteracao.demandaId, status: alteracao.de }),
     });
   }
 

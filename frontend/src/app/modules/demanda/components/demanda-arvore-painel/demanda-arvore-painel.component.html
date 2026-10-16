@@ -1,18 +1,35 @@
-<!-- Lista de demandas (árvore) -->
-@for (item of raizes; track item.id) {
-  <app-demanda-arvore-item
-    [arvoreItem]="item"
-    [nivel]="0"
-    [expandidos]="expandidos()"
-    (expansaoAlternada)="alternarExpansao($event)"
-    (demandaSelecionada)="abrirDetalhe($event)"
-    (demandaEditarSolicitada)="abrirEdicao($event)"
-    (demandaEditarDescricaoSolicitada)="abrirDialogDescricaoPorId($event.id, $event.campo)"
-    (demandaNovaFilhaSolicitada)="abrirNovaFilha($event)"
-    (demandaTagsSolicitadas)="abrirDialogTagsPorId($event)"
-    (demandaMembrosSolicitados)="abrirDialogMembros($event)"
-  />
-}
+<!-- Lista de demandas (árvore); focável para a navegação por teclado (↑↓→← e Enter) -->
+<div
+  #arvore
+  class="demanda-arvore-painel__arvore"
+  role="tree"
+  tabindex="0"
+  aria-label="Demandas"
+  (focus)="aoFocarArvore()"
+  (blur)="arvoreFocada.set(false)"
+  (keydown)="aoTeclarArvore($event)"
+>
+  @for (item of raizes(); track item.id) {
+    <app-demanda-arvore-item
+      [arvoreItem]="item"
+      [nivel]="0"
+      [expandidos]="expandidos()"
+      [termoBusca]="termoBusca()"
+      [focoId]="arvoreFocada() ? focoId() : null"
+      [statusEditavel]="true"
+      [executoresPorDemanda]="executoresPorDemanda()"
+      (expansaoAlternada)="alternarExpansao($event)"
+      (focoAlterado)="marcarFoco($event)"
+      (statusAlterado)="aoStatusEscolhido($event)"
+      (demandaSelecionada)="abrirDetalhe($event)"
+      (demandaEditarSolicitada)="abrirEdicao($event)"
+      (demandaEditarDescricaoSolicitada)="abrirDialogDescricaoPorId($event.id, $event.campo)"
+      (demandaNovaFilhaSolicitada)="abrirNovaFilha($event)"
+      (demandaTagsSolicitadas)="abrirDialogTagsPorId($event)"
+      (demandaMembrosSolicitados)="abrirDialogMembros($event)"
+    />
+  }
+</div>
 
 <!-- Dialog de detalhe -->
 @if (demandaIdSelecionada()) {

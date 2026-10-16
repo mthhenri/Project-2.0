@@ -87,7 +87,7 @@ Specs de fase/milestone são divididas em tarefas numeradas antes da implementa�
 `done/` são registro histórico e não são reescritas. Specs em `discarded/` foram descartadas pelo
 autor e não são implementadas (o corpo também não é reescrito).
 
-O backlog está em `docs/specs/backlog/` (tasks 106–109 e 112–116 que restam; ordem e dependências em
+O backlog está em `docs/specs/backlog/` (tasks 107–109 e 112–116 que restam; ordem e dependências em
 `INDEX-revisao-ux.md`, mapa em `docs/context/MEMORY.md` §3). Confira o próximo número livre antes de
 criar uma spec nova: o maior em uso é 117.
 
@@ -137,7 +137,8 @@ componentes (`docs/context/IDEAS.md` I-001). Para qualquer tela nova ou alterada
 
 1. Escolha e registre uma tela já existente e aprovada como análogo (shell, densidade, hierarquia,
    controles, estados) e reaproveite os componentes dela antes de criar variação.
-2. Rode a aplicação real (skill `verify`) e verifique no mínimo `1920×1080` e `360×800`, além do que
+2. Rode a aplicação real (skill `verify`) e verifique no mínimo `1920×1080` (desktop), `1366×768` (notebook) e `1080×1920` (desktop vertical);
+   mobile não é verificado neste projeto. Além do que
    a spec exigir, percorrendo os estados relevantes — vazio, carregando, cheio, erro.
 3. Compare a tela renderizada com o análogo; corrija divergências **antes** de apresentar ao autor.
 

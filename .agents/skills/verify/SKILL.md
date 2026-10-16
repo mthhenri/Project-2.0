@@ -49,11 +49,12 @@ Nunca a janela padrão do navegador. Tamanhos fixos (sugestão mínima; a spec p
 
 | Perfil | Tamanho |
 |---|---|
-| Mobile | `360×800` |
+| Notebook | `1366×768` |
+| Desktop vertical | `1080×1920` |
 | Desktop | `1920×1080` |
 
 ```js
-await browser.newContext({ viewport: { width: 360, height: 800 } });
+await browser.newContext({ viewport: { width: 1366, height: 768 } });
 ```
 
 ## Dirigir a UI

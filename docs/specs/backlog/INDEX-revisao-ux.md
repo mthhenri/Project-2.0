@@ -30,7 +30,7 @@ Origem: `docs/specs/backlog/revisao-ui-ux/` (relatório, prints com callouts, mo
 
 | Task | Título |
 |---|---|
-| 106 | Demandas: busca/filtros, ações visíveis, contexto lembrado |
+| ~~106~~ | ~~Demandas: busca/filtros, ações visíveis, contexto lembrado~~ — **concluída** (`../done/`) |
 | 107 | Demandas grafo: tema, hover-card, legenda-filtro |
 | 108 | Demanda detalhe: edição inline, tags/membros no cabeçalho |
 | 109 | Demanda: formulário unificado e adaptativo |

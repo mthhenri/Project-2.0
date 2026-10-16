@@ -15,6 +15,7 @@ import {
   ProjetoAlterarDto,
   TipoProjetoStatusEnum,
   DemandaArvoreItemDto,
+  TipoDemandaStatusEnum,
   DemandaGrafoNoDto,
   TagResumoDto,
   REGEX_SEM_CARACTERES_PROIBIDOS,
@@ -163,6 +164,17 @@ export class ProjetoDetalhePage implements OnInit {
       itens.map((item) => ({
         ...item,
         tags: item.id === alteracao.demandaId ? alteracao.tags : item.tags,
+        filhos: aplicar(item.filhos),
+      }));
+    this.arvoreRaizes.update(aplicar);
+  }
+
+  /** Status trocado pelo chip da árvore (otimista, com rollback): aplica no nó sem recarregar. */
+  aoStatusAlterado(alteracao: { demandaId: number; status: TipoDemandaStatusEnum }): void {
+    const aplicar = (itens: DemandaArvoreItemDto[]): DemandaArvoreItemDto[] =>
+      itens.map((item) => ({
+        ...item,
+        status: item.id === alteracao.demandaId ? alteracao.status : item.status,
         filhos: aplicar(item.filhos),
       }));
     this.arvoreRaizes.update(aplicar);
