@@ -11,3 +11,4 @@ export * from './tipo-anotacao.enum';
 export * from './tipo-provedor-ia.enum';
 export * from './esforco-ia.enum';
 export * from './nivel-ia.enum';
+export * from './estado-ia.enum';

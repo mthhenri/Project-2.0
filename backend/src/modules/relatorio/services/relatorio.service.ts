@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import Anthropic from '@anthropic-ai/sdk';
 import {
   RelatorioExecucaoConsultarDto,
   RelatorioExecucaoBaixarDto,
@@ -9,11 +8,14 @@ import {
   RelatorioInconsistenciaDto,
   RelatorioPeriodoTipoEnum,
   RelatorioFormatoEnum,
+  NivelIaEnum,
 } from '@project20/shared';
 import { ExecucaoRepository } from '../../execucao/repositories/execucao.repository';
 import { ProjetoRepository } from '../../projeto/repositories/projeto.repository';
 import { ConfigService } from '../../../config/config.service';
 import { BusinessException } from '../../../core/exceptions/business.exception';
+import { traduzirFalhaDeIa } from '../../ia/domain/ia.exception';
+import { IaService } from '../../ia/services/ia.service';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
 import { StandardResponse } from '../../../core/interfaces/standard-response.interface';
 
@@ -45,18 +47,17 @@ const NOMES_MESES = [
 /** Limite simples de linhas enviadas à IA (refinamento de chunking é follow-up). */
 const LIMITE_LINHAS_IA = 200;
 
+/** Teto de tokens da resposta da revisão (era `ANTHROPIC_MAXIMO_TOKENS`, que deixou de valer). */
+const MAXIMO_TOKENS_IA = 1024;
+
 @Injectable()
 export class RelatorioService {
-  private readonly clienteAnthropic: Anthropic | null;
-
   constructor(
     private readonly execucaoRepositorio: ExecucaoRepository,
     private readonly projetoRepositorio: ProjetoRepository,
     private readonly configService: ConfigService,
-  ) {
-    const apiKey = configService.obter().anthropic.apiKey;
-    this.clienteAnthropic = apiKey ? new Anthropic({ apiKey }) : null;
-  }
+    private readonly iaService: IaService,
+  ) {}
 
   /**
    * Gera os dados do relatório de execuções de um projeto no período (preview e base da revisão).
@@ -89,36 +90,27 @@ export class RelatorioService {
   }
 
   /**
-   * Groundwork — revisão do relatório por IA (Anthropic) apontando inconsistências.
+   * Groundwork — revisão do relatório por IA (nível padrão) apontando inconsistências.
    * Monta um prompt a partir das linhas do período e faz parse defensivo do JSON retornado.
    */
   async revisarRelatorio(
     dto: RelatorioRevisaoSolicitarDto & { projetoId: number },
   ): Promise<StandardResponse<RelatorioRevisaoDto>> {
-    if (!this.clienteAnthropic) {
-      throw new BusinessException('Recurso de IA não está configurado neste ambiente');
-    }
-
     const { relatorio } = await this.montarRelatorio(dto);
-    const configuracao = this.configService.obter().anthropic;
     const prompt = this.montarPromptRevisao(relatorio);
 
     try {
-      const resposta = await this.clienteAnthropic.messages.create({
-        model:      configuracao.modelo,
-        max_tokens: configuracao.maximoTokens,
-        messages:   [{ role: 'user', content: prompt }],
+      const resposta = await this.iaService.gerar({
+        nivel: NivelIaEnum.PADRAO,
+        mensagens: [{ papel: 'usuario', conteudo: prompt }],
+        maximoTokens: MAXIMO_TOKENS_IA,
       });
-
-      const textoResposta = resposta.content
-        .filter((bloco) => bloco.type === 'text')
-        .map((bloco) => (bloco as { type: 'text'; text: string }).text)
-        .join('');
+      const textoResposta = resposta.texto;
 
       const revisao = this.parsearRevisao(textoResposta);
       return { sucesso: true, dados: revisao, mensagem: 'Revisão do relatório concluída' };
-    } catch {
-      throw new BusinessException('Serviço de IA temporariamente indisponível');
+    } catch (erro) {
+      throw traduzirFalhaDeIa(erro);
     }
   }
 

@@ -12,6 +12,24 @@
 
 ---
 
+## 2026-10-17 — Task 130: provedor de IA, níveis de modelo e migração dos consumidores
+
+Bloco 4 do rework do chat com IA (2 de 5). Novo módulo `ia`: `IaService` resolve o nível pedido (rápido, padrão, analítico) no modelo da `configuracao_ia` ativa a cada chamada
+(`obterAtiva()`, em cache), com esforço só no analítico, e recusa com `IaException('DESLIGADA')` antes de qualquer requisição quando `ia_desligada`. `IaProvedor` é a interface
+(`gerar`, `transmitir` com `aoTrecho`, `estaDisponivel`), já com ferramentas e blocos de uso/resultado de ferramenta no contrato; `AnthropicProvedor` a implementa sobre o SDK, traduz o esforço neutro
+para `output_config.effort` (`low`/`medium`/`high`), os tokens (entrada, saída, cache lido) e o motivo de parada, e converte erros do SDK pelo **status HTTP** (429 limite; 401/403/404 configuração; o resto
+indisponível; sem chave, "IA indisponível neste ambiente"). Estado em memória (`NO_AR`/`FORA_DO_AR`/`DESLIGADA`, `EstadoIaEnum` no shared). O SDK subiu de `^0.30.0` para `^0.135.0` (cobre streaming, ferramentas e esforço).
+`AssistenteService` e `RelatorioService` deixaram de importar o SDK e passaram a usar o `IaService` no nível padrão, sem mudar o contrato HTTP nem os prompts; `traduzirFalhaDeIa` mantém a
+`BusinessException` de sempre, com a mensagem do motivo. `ANTHROPIC_MODELO`/`ANTHROPIC_MAXIMO_TOKENS` saíram do `ConfigService`, do `README.md` e do `.env.example`.
+
+- **Testes:** `backend` 129/129 (13 novos: níveis, esforço, troca de modelo sem reiniciar, IA desligada sem chamar o provedor, provedor sem suporte, streaming, ferramentas nos dois sentidos, tradução de erros, sem chave,
+  estado); builds ok. Nenhuma chamada real à API nos testes (cliente falso).
+- **Ao vivo (API real):** com a IA desligada o assistente recusa com "A IA está desligada" (400, sem chamada externa); ligada, com a chave do `.env` (que hoje é o valor de exemplo), o SDK real devolveu 401 e a tela
+  recebeu "Configuração da IA inválida" (a tradução por status funcionou com o SDK real). A configuração voltou a "desligada" (nova versão).
+- **Não verificado:** **chamada real bem-sucedida e streaming real**, porque o `.env` não tem chave válida; a revisão do relatório pela IA ao vivo; o `README` do `.env.example` mexe num arquivo que o autor já tinha alterado (a alteração dele
+  ficou fora do commit).
+- **Desvio da spec:** nenhum. Cache de provedor só medido (`tokens.cache`).
+
 ## 2026-10-17 — Task 129: configuração da IA (modelo, API e permissão de administrador)
 
 Bloco 4 do rework do chat com IA (1 de 5). Migration `0033`: `tipo_provedor_ia` (ANTHROPIC, GOOGLE, OPENAI) e `configuracao_ia` (uma linha por versão, `uix` por

@@ -20,9 +20,7 @@ export class ConfigService {
         expiracao: this.obrigatoria('JWT_EXPIRACAO'),
       },
       anthropic: {
-        apiKey:       this.opcional('ANTHROPIC_API_KEY'),
-        modelo:       this.opcional('ANTHROPIC_MODELO') ?? 'claude-sonnet-4-6',
-        maximoTokens: Number(this.opcional('ANTHROPIC_MAXIMO_TOKENS') ?? '1024'),
+        apiKey: this.opcional('ANTHROPIC_API_KEY'),
       },
       aplicacao: {
         porta:       Number(this.opcional('PORT') ?? this.obrigatoria('APP_PORTA')),

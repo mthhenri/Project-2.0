@@ -142,6 +142,10 @@ project-2.0/
   com trecho selecionado; sem consumidor ou sem seleção o menu do navegador segue); o drawer abre um `p-contextmenu` cujos itens são
   propriedade direta (a seção de origem fica `visible = false`), salva as duas seções (`garantirSalva`), chama `POST /anotacao/:id/mover`
   e oferece Desfazer de 7 s (move de volta); 400/409 recarregam as duas seções e avisam.
+- **[task 130]** Módulo `ia` (`backend/src/modules/ia/`): `IaService` (níveis → modelo da configuração ativa, `gerar` e `transmitir` com streaming, estado em memória),
+  interface `IaProvedor` e `AnthropicProvedor` (SDK `@anthropic-ai/sdk` agora em `^0.135`, importado **só** em `ia.module.ts`), `IaException` e `traduzirFalhaDeIa`.
+  `AssistenteService` e `RelatorioService` usam o nível padrão pelo `IaService` (contratos HTTP e prompts iguais; a IA desligada ou sem chave dá `BusinessException` com a mensagem
+  do motivo). `ANTHROPIC_MODELO` e `ANTHROPIC_MAXIMO_TOKENS` deixaram de valer (o modelo vem da configuração; o teto de tokens é parâmetro de cada chamada).
 - **[task 129]** Configuração da IA: migration `0033` (`tipo_provedor_ia`, `configuracao_ia`, versão 1 por seed com a IA **desligada**), módulo `configuracao-ia`
   (ativa em cache, histórico paginado, nova versão com lock consultivo) e permissão de administrador: `@AdministradorOnly()` + `AdministradorGuard` (guard
   global como o do gestor) no backend; `administradorGuard` de rota e `ItemNavegacao.somenteAdministrador` (a sidebar o filtra) no frontend. Ainda não há item de

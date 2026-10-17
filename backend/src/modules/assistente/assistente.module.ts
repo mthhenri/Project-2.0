@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '../../config/config.module';
+import { IaModule } from '../ia/ia.module';
 import { AssistenteController } from './controllers/assistente.controller';
 import { AssistenteService } from './services/assistente.service';
 
 @Module({
-  imports: [ConfigModule],
+  imports: [IaModule],
   controllers: [AssistenteController],
   providers: [AssistenteService],
 })

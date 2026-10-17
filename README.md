@@ -156,8 +156,6 @@ O projeto é um monorepo com três pacotes independentes conectados via npm work
 | `JWT_EXPIRACAO` | Tempo de expiração do token | `8h` |
 | `INTERVALO_MINIMO_MINUTOS` | Gap mínimo entre execuções para ser considerado intervalo | `15` |
 | `ANTHROPIC_API_KEY` | Chave da API Anthropic | `sk-ant-...` |
-| `ANTHROPIC_MODELO` | Modelo Anthropic a usar | `claude-sonnet-4-6` |
-| `ANTHROPIC_MAXIMO_TOKENS` | Máximo de tokens na resposta | `1024` |
 | `APP_PORTA` | Porta do backend | `3000` |
 | `APP_AMBIENTE` | Ambiente de execução | `development` |
 | `APP_TIMEZONE` | Fuso da aplicação — fixa a sessão do banco (colunas `timestamptz`) e determina o horário local (23:59:59) do disparo do auto-stop de execuções na virada do dia; default `America/Sao_Paulo` | `America/Sao_Paulo` |

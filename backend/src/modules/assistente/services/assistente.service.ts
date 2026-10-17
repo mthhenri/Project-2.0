@@ -1,31 +1,22 @@
 import { Injectable } from '@nestjs/common';
-import Anthropic from '@anthropic-ai/sdk';
-import { AssistenteDescricaoAuxiliadaDto, AssistenteDescricaoAuxiliarDto } from '@project20/shared';
-import { ConfigService } from '../../../config/config.service';
-import { BusinessException } from '../../../core/exceptions/business.exception';
+import { AssistenteDescricaoAuxiliadaDto, AssistenteDescricaoAuxiliarDto, NivelIaEnum } from '@project20/shared';
+import { traduzirFalhaDeIa } from '../../ia/domain/ia.exception';
+import { IaService } from '../../ia/services/ia.service';
 import { StandardResponse } from '../../../core/interfaces/standard-response.interface';
+
+/** Teto de tokens da resposta (era `ANTHROPIC_MAXIMO_TOKENS`, que deixou de valer). */
+const MAXIMO_TOKENS = 1024;
 
 @Injectable()
 export class AssistenteService {
-  private readonly clienteAnthropic: Anthropic | null;
-
-  constructor(private readonly configService: ConfigService) {
-    const apiKey = configService.obter().anthropic.apiKey;
-    this.clienteAnthropic = apiKey ? new Anthropic({ apiKey }) : null;
-  }
+  constructor(private readonly iaService: IaService) {}
 
   /**
-   * Refina, clarifica e complementa a descrição fornecida pelo usuário via API Anthropic.
+   * Refina, clarifica e complementa a descrição fornecida pelo usuário pela camada de IA (nível padrão).
    */
   async auxiliarDescricao(
     dto: AssistenteDescricaoAuxiliarDto,
   ): Promise<StandardResponse<AssistenteDescricaoAuxiliadaDto>> {
-    if (!this.clienteAnthropic) {
-      throw new BusinessException('Recurso de IA não está configurado neste ambiente');
-    }
-
-    const configuracao = this.configService.obter().anthropic;
-
     const tipoEntidadeFormatado = {
       execucao: 'execução de trabalho',
       demanda: 'demanda de projeto',
@@ -41,24 +32,20 @@ ${dto.textoOriginal}
 Refine, clarifique e complemente esse texto mantendo a voz e intenção original do usuário. Corrija erros gramaticais, melhore a clareza técnica e adicione detalhes relevantes quando faltarem. Responda apenas com o texto refinado, sem explicações adicionais.`;
 
     try {
-      const resposta = await this.clienteAnthropic!.messages.create({
-        model:      configuracao.modelo,
-        max_tokens: configuracao.maximoTokens,
-        messages:   [{ role: 'user', content: prompt }],
+      const resposta = await this.iaService.gerar({
+        nivel: NivelIaEnum.PADRAO,
+        mensagens: [{ papel: 'usuario', conteudo: prompt }],
+        maximoTokens: MAXIMO_TOKENS,
       });
-
-      const textoAuxiliado = resposta.content
-        .filter((bloco) => bloco.type === 'text')
-        .map((bloco) => (bloco as { type: 'text'; text: string }).text)
-        .join('');
+      const textoAuxiliado = resposta.texto;
 
       return {
         sucesso: true,
         dados: { textoOriginal: dto.textoOriginal, textoAuxiliado },
         mensagem: 'Descrição auxiliada com sucesso',
       };
-    } catch {
-      throw new BusinessException('Serviço de IA temporariamente indisponível');
+    } catch (erro) {
+      throw traduzirFalhaDeIa(erro);
     }
   }
 }

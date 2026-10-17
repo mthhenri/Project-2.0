@@ -14,8 +14,6 @@ export interface ConfiguracaoJwt {
 
 export interface ConfiguracaoAnthropic {
   apiKey: string | undefined;
-  modelo: string;
-  maximoTokens: number;
 }
 
 export interface ConfiguracaoAplicacao {
