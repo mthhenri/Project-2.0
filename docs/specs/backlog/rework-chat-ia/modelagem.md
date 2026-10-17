@@ -58,24 +58,23 @@ anotacao
 ```
 tipo_prompt: CONVERSA, CHECKIN, DESCRICAO_EXECUCAO, PAD, PRIORIDADE,
              ENTREVISTA_DEMANDA, CONEXAO_DEMANDA
-tipo_prompt_status: RASCUNHO, ATIVO, ARQUIVADO
 
 prompt
   BaseEntity
-  tipo_prompt_id         INTEGER NOT NULL → tipo_prompt(id)
-  versao                 INTEGER NOT NULL
-  conteudo               TEXT    NOT NULL
-  tipo_prompt_status_id  INTEGER NOT NULL → tipo_prompt_status(id)
-  usuario_id             INTEGER NOT NULL → usuario(id)   -- autor da versão
+  tipo_prompt_id  INTEGER NOT NULL → tipo_prompt(id)
+  versao          INTEGER NOT NULL
+  conteudo        TEXT    NOT NULL   -- Markdown
+  ativo           BOOLEAN NOT NULL   -- a versão em uso (uma por tipo)
+  rascunho        BOOLEAN NOT NULL   -- no máximo um por tipo
+  usuario_id      INTEGER NOT NULL → usuario(id)   -- autor da versão
 
   uix_prompt_tipo_versao (tipo_prompt_id, versao) WHERE is_deleted = false
-  uix_prompt_tipo_ativo  (tipo_prompt_id) WHERE is_deleted = false AND <status = ATIVO>
 ```
 
 - A versão 1 de cada tipo vem por seed e é o "padrão". Restaurar o padrão é reativar a versão 1.
 - O rascunho é o que permite "testar antes de salvar".
-- O índice da versão ativa usa o id do status ATIVO. Como o predicado de índice não aceita
-  subconsulta, a task define a forma exata.
+- **Uma só ativa e um só rascunho por tipo** é regra da service, dentro de transação (sem índice único, por decisão do autor). Os prompts
+  ativos ficam em cache em memória, renovado ao ativar ou restaurar.
 
 ### Configuração da IA
 
@@ -89,14 +88,14 @@ configuracao_ia
   modelo_rapido                VARCHAR(100) NOT NULL
   modelo_padrao                VARCHAR(100) NOT NULL
   modelo_analitico             VARCHAR(100) NOT NULL
-  esforco_analitico            VARCHAR(20)  NOT NULL   -- ou tabela tipo_*, decidir na task
+  esforco_analitico            VARCHAR(20)  NOT NULL   -- BAIXO/MEDIO/ALTO; enum do shared, sem tabela (cada provedor traduz)
   checkin_minimo_minutos       INTEGER      NOT NULL
   checkin_maximo_minutos       INTEGER      NOT NULL
   duracao_recomendada_minutos  INTEGER      NOT NULL
-  is_checkin_inteligente       BOOLEAN      NOT NULL
-  is_rigor_proporcional        BOOLEAN      NOT NULL
-  is_deteccao_automatica       BOOLEAN      NOT NULL
-  is_ia_desligada              BOOLEAN      NOT NULL
+  checkin_inteligente          BOOLEAN      NOT NULL
+  rigor_proporcional           BOOLEAN      NOT NULL
+  deteccao_automatica          BOOLEAN      NOT NULL
+  ia_desligada                 BOOLEAN      NOT NULL
   usuario_id                   INTEGER      NOT NULL → usuario(id)   -- quem salvou
 
   uix_configuracao_ia_versao (versao) WHERE is_deleted = false
@@ -106,8 +105,8 @@ configuracao_ia
 - Uma linha por versão, e a ativa é a de maior `versao`. Os modelos são `VARCHAR` porque mudam
   de nome com frequência.
 - A chave da API do provedor **não** fica no banco: fica no `.env`, lida via `ConfigService`.
-- O prefixo dos booleanos segue o padrão do projeto, que a task confere em `SCHEMA.md` (hoje há
-  `is_estrutural`, `eh_bidirecional` e `recorrente`).
+- Booleanos sem prefixo (`ativo`, `rascunho`, `ia_desligada`...), por decisão do autor. A configuração ativa fica em cache em
+  memória no backend, renovado a cada versão gravada.
 
 ### Proposta da IA
 
