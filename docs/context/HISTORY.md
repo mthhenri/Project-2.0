@@ -12,6 +12,19 @@
 
 ---
 
+## 2026-10-17 — Task 116: Tags com quick-add, cor inline e busca
+
+Relatório em `docs/specs/done/116-tags-quick-add-cor-inline/verificacao.md`; verificação em Chromium contra a API real
+em 1920×1080, 1366×768 e 1080×1920. Fecha a revisão de UI/UX (tasks 94–117).
+
+- Quick-add com Enter (5 tags = 5 nomes + 5 Enters, zero dialogs), criação otimista reconciliada, hint de duplicado;
+  popover de paleta no dot (2 cliques para trocar a cor, 1 PUT); busca com `/`; seleção múltipla com um único Desfazer;
+  dialog só de edição com prévia permanente.
+- **Achados só na verificação:** a paleta do dialog quebrava com o botão "Outra cor…" no meio, e a caixa de seleção
+  sempre visível poluía a grade.
+
+---
+
 ## 2026-10-17 — Task 115: Calendário com criação pelo clique no dia
 
 Relatório em `docs/specs/done/115-calendario-interativo/verificacao.md`; verificação em Chromium contra a API real

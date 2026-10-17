@@ -1,0 +1,39 @@
+@use '../../../../shared/styles/form' as *;
+
+.tag-edicao-dialog {
+  &__form        { @include form-dialog-form(1.25rem); }
+  &__campo       { @include form-campo; }
+  &__label       { @include form-label; }
+  &__obrigatorio { @include form-obrigatorio; }
+  &__erro        { @include form-erro; }
+
+  // A prévia fica sempre no topo (com placeholder quando o nome está vazio): o efeito da cor aparece ao vivo.
+  &__previa {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 3.5rem;
+    padding: 0.75rem;
+    background: var(--app-surface-50);
+    border: 1px solid var(--app-surface-200);
+    border-radius: 6px;
+  }
+
+  &__pill {
+    display: inline-block;
+    max-width: 100%;
+    padding: 0.2rem 0.75rem;
+    border: 1px solid;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__placeholder {
+    font-size: 0.8125rem;
+    color: var(--p-text-muted-color);
+  }
+}

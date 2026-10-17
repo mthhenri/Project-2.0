@@ -45,7 +45,7 @@ Origem: `docs/specs/backlog/revisao-ui-ux/` (relatório, prints com callouts, mo
 | ~~113~~ | ~~Usuários: switch de status, ações diretas~~ — **concluída** (`../done/`) |
 | ~~114~~ | ~~Anotações: drawer com auto-save (supera o confirm da spec 84)~~ — **concluída** (`../done/`) |
 | ~~115~~ | ~~Calendário: criação pelo clique no dia~~ — **concluída** (`../done/`) |
-| 116 | Tags: quick-add e cor inline |
+| ~~116~~ | ~~Tags: quick-add e cor inline~~ — **concluída** (`../done/`) |
 
 ## Descartadas (2026-10-16)
 

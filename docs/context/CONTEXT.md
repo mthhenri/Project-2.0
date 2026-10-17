@@ -8,16 +8,16 @@
 > [`MEMORY.md`](MEMORY.md) (onde fica o quê) · [`IDEAS.md`](IDEAS.md) (o que ainda não é sistema) ·
 > [`HISTORY.md`](HISTORY.md) (o que aconteceu e por quê).
 >
-> **Última revisão:** 2026-10-16 · **Última decisão registrada:** task 115 (Calendário: criação pelo clique no dia) — `HISTORY.md`, bloco de 2026-10-16
+> **Última revisão:** 2026-10-16 · **Última decisão registrada:** task 116 (Tags: quick-add e cor inline) — `HISTORY.md`, bloco de 2026-10-16
 
 ---
 
 ## 1. Próxima Task
 
-Nenhuma task em andamento. O backlog tem **1 spec** em `docs/specs/backlog/` (revisão de UI/UX:
-116, guarda-chuva `revisao-ui-ux.spec.md`). As fundações **94–99** , o Ponto (**100–101**)
-e a toolbar, o grafo, o detalhe e o formulário de Demandas (**106–109**) a de Projetos (**112**) a de Usuários (**113**) as Anotações (**114**) e o Calendário (**115**) foram concluídos em 2026-10-16 e estão em `docs/specs/done/`; as seguintes devem **reutilizar** o que
-elas criaram (ver `MEMORY.md` §2). Siga a ordem de fases de `INDEX-revisao-ux.md`: fase 4 (116). As tasks **102, 103, 104, 105, 110 e 111** (que mexem direto nas telas de
+Nenhuma task em andamento. O backlog não tem mais tasks numeradas (revisão de UI/UX:
+94–117 concluídas; guarda-chuva `revisao-ui-ux.spec.md`). As fundações **94–99** , o Ponto (**100–101**)
+e a toolbar, o grafo, o detalhe e o formulário de Demandas (**106–109**) a de Projetos (**112**) a de Usuários (**113**) as Anotações (**114**) o Calendário (**115**) e as Tags (**116**) foram concluídos em 2026-10-16 e estão em `docs/specs/done/`; as seguintes devem **reutilizar** o que
+elas criaram (ver `MEMORY.md` §2). Siga a ordem de fases de `INDEX-revisao-ux.md`: fase 4 (concluída). As tasks **102, 103, 104, 105, 110 e 111** (que mexem direto nas telas de
 Atividades e Execuções) foram **descartadas** em 2026-10-16 e estão em `docs/specs/discarded/`. A task
 117 foi concluída.
 Próxima migration nova: `0029`.
@@ -114,6 +114,9 @@ project-2.0/
   `g`+letra e `n`, e colapsa em 3 degraus: sem relógio até 1499 px, só ícones até 1366 px (acima do 1280
   da spec, porque o chip de execução ocupa espaço), "Mais ▾" para itens de gestor abaixo de 900 px e duas
   linhas abaixo de 720 px. O overlay global só cobre mutações (GET usa esqueleto/loading local).
+- **[task 116]** Tags: quick-add com Enter (criação otimista com id temporário, reconciliada; erro do servidor devolve o
+  texto ao campo), dot de cor abre popover de paleta compartilhado (PUT imediato; cor personalizada só ao fechar),
+  busca (`/`), seleção múltipla com um único Desfazer. Criar tag é só pelo quick-add; o dialog só edita.
 - **[task 115]** Calendário: clique em dia vazio abre a criação com a data (gestor); em dia marcado, popover com
   Editar/Excluir. "Hoje", stepper de ano e faixa de meses navegam o datepicker por `[defaultDate]`. "Excluir e recriar" é
   o caminho para corrigir a data (o backend não a aceita no alterar). Tipo/Duração/Recorrente persistem em "Salvar e
