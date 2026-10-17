@@ -107,6 +107,10 @@ Markdown cru).
    (cada `UPDATE` confere o valor lido).
 4. Rodar de novo converte zero linhas (só converte o que parece saída do Quill).
 
+**Ordem em ambiente com dados antigos:** a migration `0031` (task 126) copia `usuario.anotacoes` para a seção "Pessoal" do pad
+e roda sozinha no `db:migrate`. Converta o HTML **antes** de rodar o `db:migrate` da task 126; se a migration já rodou com HTML,
+reverta-a (`db:rollback`), converta e rode de novo (ela só preenche seção vazia, e o `DOWN` só esvazia o que ainda é cópia).
+
 ---
 
 ## Estrutura do Repositório

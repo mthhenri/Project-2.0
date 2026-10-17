@@ -21,7 +21,7 @@ elas criaram (ver `MEMORY.md` §2). Siga a ordem de fases de `INDEX-revisao-ux.m
 2026-10-16 e estão em `docs/specs/discarded/`. As **110 e 111** (tela de Execuções) foram descartadas junto, mas o autor as
 **reativou em 2026-10-17** e elas foram **concluídas** (`docs/specs/done/`). A task 117 foi concluída. Não restam tasks
 numeradas no backlog.
-Próxima migration nova: `0031`.
+Próxima migration nova: `0032`.
 
 ## 2. Estado por Área
 
@@ -129,12 +129,15 @@ project-2.0/
   Limpar com Desfazer de 7 s (o vazio só é gravado depois), erro no flush → toast "Reabrir". `aoAlterar` emite
   `{usuarioId, temAnotacoes}`. Deep-link `/usuario/:id/anotacoes` redireciona (gestor → `/usuario?anotacoes=`, próprio →
   `/ponto?anotacoes=`); a topbar abre o drawer próprio. `DesfazerService` aceita `rotulo/duracaoMs/aoEncerrar`.
-- **[task 125]** Pad estruturado (backend): migration `0030` cria `tipo_anotacao` (com `ordem`) e `anotacao` (5 linhas por usuário,
-  vazias; a cópia de `usuario.anotacoes` para "Pessoal" é a migration da task 126). Módulo `backend/src/modules/anotacao/`
-  (`AnotacaoRepository.modificarSecoes` lê e trava as seções numa transação e grava o que a regra devolver; as regras de texto são
-  funções puras em `domain/anotacao-texto.ts`). Novo `ConflictException` (409) para a concorrência otimista. Usuário novo nasce com as
-  5 seções na mesma transação. A listagem de usuários marca "tem anotações" por qualquer das 5 seções **ou** pela coluna antiga (até
-  a task 128). A tela ainda usa `usuario.anotacoes`.
+- **[tasks 125–126]** Pad estruturado: migration `0030` cria `tipo_anotacao` (com `ordem`) e `anotacao` (5 linhas por usuário);
+  a `0031` copia `usuario.anotacoes` para a seção `PESSOAL` (só onde vazia). Módulo `backend/src/modules/anotacao/`
+  (`AnotacaoRepository.modificarSecoes` lê e trava as seções numa transação e grava o que a regra devolver; regras de texto são
+  funções puras em `domain/anotacao-texto.ts`); `ConflictException` (409) para a concorrência otimista; usuário novo nasce com as
+  5 seções. O drawer (`usuario-anotacoes-dialog`) tem **cinco `p-accordion-panel`** com `app-markdown-editor`, cada seção é uma
+  `SecaoAnotacao` (campo, `versaoLida`, estado, temporizador) que salva sozinha (2 s) com o `updatedDate` lido; 409 recarrega a seção
+  (`AnotacaoService.listar`) e avisa; "Limpar" é por seção (Desfazer de 7 s, uma oferta por vez); input `editavel` (verdadeiro até os
+  blocos 4 e 10) mostra só o visualizador. "Tem anotações" na listagem = alguma das 5 seções com texto. `usuario.anotacoes` já não é
+  lida nem escrita pela tela (some na task 128).
 - **[tasks 121–124]** Markdown no lugar do Quill: `interpretarMarkdown` (`shared/src/markdown/`, sem biblioteca, tempo linear,
   sem HTML embutido) devolve uma árvore de nós; `app-markdown-visualizador` (`shared/components/markdown-visualizador/`) monta
   elementos a partir dela e é a **única** forma de exibir texto rico; `app-markdown-editor` (`shared/components/markdown-editor/`,

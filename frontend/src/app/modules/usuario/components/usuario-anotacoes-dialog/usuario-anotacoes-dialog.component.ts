@@ -1,25 +1,33 @@
-import { Component, DestroyRef, inject, signal, computed, output, viewChild } from '@angular/core';
+import { Component, DestroyRef, inject, signal, computed, input, output, viewChildren } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
-import { of } from 'rxjs';
-import { finalize } from 'rxjs/operators';
+import { HttpErrorResponse } from '@angular/common/http';
+import { ReactiveFormsModule } from '@angular/forms';
+import { forkJoin, of } from 'rxjs';
+import { catchError, finalize } from 'rxjs/operators';
+import { MessageService } from 'primeng/api';
+import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { DrawerModule } from 'primeng/drawer';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TooltipModule } from 'primeng/tooltip';
+import { TipoAnotacaoEnum } from '@project20/shared';
 import { MarkdownEditorComponent } from '../../../../shared/components/markdown-editor/markdown-editor.component';
+import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
+import { AnotacaoService } from '../../services/anotacao.service';
 import { UsuarioService } from '../../services/usuario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { DesfazerService } from '../../../../core/services/desfazer.service';
-import { anotacaoTemTexto, tempoDecorrido } from '../../utils/anotacoes.util';
+import { anotacaoTemTexto, ROTULO_SECAO_ANOTACAO, tempoDecorrido } from '../../utils/anotacoes.util';
+import { EstadoSalvamento, SecaoAnotacao } from './secao-anotacao';
 
 /** Quanto tempo sem digitar até o salvamento automático. */
 const ESPERA_AUTO_SAVE_MS = 2000;
 /** Janela do "Desfazer" do Limpar: o vazio só é gravado depois dela. */
 const JANELA_LIMPAR_MS = 7000;
-
-type EstadoSalvamento = 'ocioso' | 'editando' | 'salvando' | 'salvo' | 'erro';
+/** Seções abertas quando o pad abre. */
+const SECOES_ABERTAS_AO_ABRIR: TipoAnotacaoEnum[] = [TipoAnotacaoEnum.EM_ANDAMENTO];
+/** Pior estado primeiro: é o que o rodapé mostra quando as seções divergem. */
+const PRIORIDADE_ESTADO: EstadoSalvamento[] = ['erro', 'salvando', 'editando', 'salvo', 'ocioso'];
 
 export interface AnotacoesAlteradasEvento {
   usuarioId: number;
@@ -27,46 +35,55 @@ export interface AnotacoesAlteradasEvento {
 }
 
 /**
- * Anotações num drawer lateral (task 114). Salva sozinho: cada mudança agenda um PUT 2 s depois,
- * fechar descarrega na hora e nenhuma requisição sai sem mudança real. Não há confirmação ao
- * fechar — fechar salva. "Limpar" é reversível por 7 s (o vazio só é gravado depois).
+ * Pad do usuário num drawer lateral, em cinco acordeões (tasks 114 e 126). Cada seção salva sozinha:
+ * cada mudança agenda um PUT 2 s depois, fechar descarrega na hora e nenhuma requisição sai sem mudança
+ * real. Não há confirmação ao fechar — fechar salva. "Limpar" é reversível por 7 s (o vazio só é
+ * gravado depois). O PUT leva a versão lida da seção; se ela mudou em outro lugar (IA, outra aba) o
+ * servidor responde 409 e a seção é recarregada com um aviso.
  */
 @Component({
   selector: 'app-usuario-anotacoes-dialog',
   standalone: true,
-  imports: [DatePipe, ReactiveFormsModule, ButtonModule, DrawerModule, MarkdownEditorComponent, SkeletonModule, TooltipModule],
+  imports: [
+    DatePipe,
+    ReactiveFormsModule,
+    AccordionModule,
+    ButtonModule,
+    DrawerModule,
+    MarkdownEditorComponent,
+    MarkdownVisualizadorComponent,
+    SkeletonModule,
+    TooltipModule,
+  ],
   templateUrl: './usuario-anotacoes-dialog.component.html',
   styleUrl: './usuario-anotacoes-dialog.component.scss',
 })
 export class UsuarioAnotacoesDialogComponent {
+  private readonly anotacaoService = inject(AnotacaoService);
   private readonly usuarioService = inject(UsuarioService);
   private readonly sessao = inject(UsuarioSessaoService);
   private readonly desfazerService = inject(DesfazerService);
-  private readonly formBuilder = inject(FormBuilder);
+  private readonly messageService = inject(MessageService);
   private readonly destroyRef = inject(DestroyRef);
+
+  /** Falso mostra cada seção só no visualizador, sem salvar e sem "Limpar" (os blocos 4 e 10 acionam isso). */
+  readonly editavel = input(true);
 
   /** Emitido a cada salvamento bem-sucedido, para a listagem atualizar o ícone sem recarregar. */
   readonly aoAlterar = output<AnotacoesAlteradasEvento>();
 
   readonly visivel = signal(false);
   readonly carregando = signal(false);
-  readonly estado = signal<EstadoSalvamento>('ocioso');
-  readonly salvoEm = signal<Date | null>(null);
+  readonly secoes = signal<SecaoAnotacao[]>([]);
+  readonly secoesAbertas = signal<TipoAnotacaoEnum[]>(SECOES_ABERTAS_AO_ABRIR);
+  readonly rotuloSecao = ROTULO_SECAO_ANOTACAO;
   readonly alteracaoData = signal<Date | string | null>(null);
   private readonly agora = signal(new Date());
   private readonly usuarioId = signal(0);
   private readonly nomeCompleto = signal('');
+  private readonly editores = viewChildren(MarkdownEditorComponent);
 
-  readonly formulario = this.formBuilder.group({ anotacoes: [''] });
-  private readonly editorMarkdown = viewChild<MarkdownEditorComponent>('editorMarkdown');
-
-  private conteudoSalvo = '';
-  private temporizadorSalvar: ReturnType<typeof setTimeout> | null = null;
   private temporizadorRelogio: ReturnType<typeof setInterval> | null = null;
-  private salvandoRequisicao = false;
-  private salvarDeNovo = false;
-  /** Conteúdo que existia antes do "Limpar", enquanto a janela do Desfazer está aberta. */
-  private conteudoAntesDeLimpar: string | null = null;
 
   readonly titulo = computed(() =>
     this.sessao.id() === this.usuarioId() ? 'Minhas anotações' : `Anotações de ${this.nomeCompleto()}`,
@@ -77,23 +94,29 @@ export class UsuarioAnotacoesDialogComponent {
     return data ? `Editado ${tempoDecorrido(data, this.agora())}` : 'Sem alterações registradas';
   });
 
-  constructor() {
-    this.formulario.controls.anotacoes.valueChanges
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((conteudo) => this.aoDigitar(conteudo ?? ''));
+  /** Estado do rodapé: o pior entre as seções. */
+  readonly estadoGeral = computed<EstadoSalvamento>(() => {
+    const estados = this.secoes().map((secao) => secao.estado());
+    return PRIORIDADE_ESTADO.find((estado) => estados.includes(estado)) ?? 'ocioso';
+  });
 
+  readonly salvoEmGeral = computed<Date | null>(() => {
+    const datas = this.secoes().map((secao) => secao.salvoEm()).filter((data): data is Date => data !== null);
+    return datas.length ? new Date(Math.max(...datas.map((data) => data.getTime()))) : null;
+  });
+
+  constructor() {
     this.destroyRef.onDestroy(() => {
       this.pararRelogio();
-      this.cancelarAgendamento();
       // A página saiu de cena: nada digitado ou limpo pode ficar para trás.
-      if (this.conteudoAntesDeLimpar !== null) this.desfazerService.dispensar();
-      else this.salvarAgora();
+      this.descarregar({ dispensarLimpeza: true });
+      this.secoes().forEach((secao) => secao.encerrar());
     });
   }
 
   /** Abre o drawer para o usuário informado; sem `nomeCompleto`, usa o devolvido pela API. */
   abrir(usuarioId: number, nomeCompleto = ''): void {
-    if (this.usuarioId() !== usuarioId) this.encerrarPendencias();
+    if (this.usuarioId() !== usuarioId) this.descarregar({ dispensarLimpeza: true });
     this.usuarioId.set(usuarioId);
     this.nomeCompleto.set(nomeCompleto);
     this.carregar(usuarioId);
@@ -106,158 +129,208 @@ export class UsuarioAnotacoesDialogComponent {
     if (visivel) return;
     this.visivel.set(false);
     this.pararRelogio();
-    if (this.conteudoAntesDeLimpar === null) this.salvarAgora(true);
+    this.descarregar({ aoFechar: true });
   }
 
+  aoMudarSecoesAbertas(valor: unknown): void {
+    this.secoesAbertas.set(Array.isArray(valor) ? (valor as TipoAnotacaoEnum[]) : []);
+  }
+
+  /** Ctrl+S ou o botão: grava agora todas as seções com mudança pendente. */
   salvar(): void {
-    if (this.conteudoAntesDeLimpar !== null) return;
-    this.salvarAgora();
-  }
-
-  /** Esvazia o editor e deixa 7 s para desfazer; só depois o vazio é gravado. */
-  limpar(): void {
-    const anterior = this.formulario.controls.anotacoes.value ?? '';
-    if (!anotacaoTemTexto(anterior) || this.conteudoAntesDeLimpar !== null) return;
-
-    this.cancelarAgendamento();
-    this.conteudoAntesDeLimpar = anterior;
-    this.formulario.controls.anotacoes.setValue('', { emitEvent: false });
-    this.estado.set('editando');
-
-    const usuarioId = this.usuarioId();
-    this.desfazerService.oferecer({
-      mensagem: 'Anotações limpas',
-      duracaoMs: JANELA_LIMPAR_MS,
-      mensagemAposDesfazer: '',
-      desfazer: () => of(null),
-      aposDesfazer: () => this.restaurarAposLimpar(),
-      aoEncerrar: () => this.gravarLimpeza(usuarioId),
+    this.secoes().forEach((secao) => {
+      if (!secao.limpando) this.salvarAgora(secao);
     });
   }
 
-  private aoDigitar(conteudo: string): void {
-    if (this.conteudoAntesDeLimpar !== null) {
+  /** Esvazia a seção e deixa 7 s para desfazer; só depois o vazio é gravado. */
+  limpar(secao: SecaoAnotacao): void {
+    const anterior = secao.textoAtual;
+    if (!this.editavel() || !anotacaoTemTexto(anterior) || secao.limpando) return;
+
+    secao.cancelarAgendamento();
+    secao.conteudoAntesDeLimpar = anterior;
+    secao.controle.setValue('', { emitEvent: false });
+    secao.temTexto.set(false);
+    secao.estado.set('editando');
+
+    this.desfazerService.oferecer({
+      mensagem: `Seção "${ROTULO_SECAO_ANOTACAO[secao.tipo]}" limpa`,
+      duracaoMs: JANELA_LIMPAR_MS,
+      mensagemAposDesfazer: '',
+      desfazer: () => of(null),
+      aposDesfazer: () => this.restaurarAposLimpar(secao),
+      aoEncerrar: () => this.gravarLimpeza(secao),
+    });
+  }
+
+  private aoDigitar(secao: SecaoAnotacao, conteudo: string): void {
+    if (secao.limpando) {
       // Digitar na janela do Desfazer é aceitar a limpeza e continuar escrevendo.
-      this.conteudoAntesDeLimpar = null;
+      secao.conteudoAntesDeLimpar = null;
       this.desfazerService.dispensarSemEncerrar();
     }
-    if (conteudo === this.conteudoSalvo) {
-      this.cancelarAgendamento();
-      this.estado.set(this.salvoEm() ? 'salvo' : 'ocioso');
+    secao.temTexto.set(anotacaoTemTexto(conteudo));
+    secao.cancelarAgendamento();
+    if (conteudo === secao.conteudoSalvo) {
+      secao.estado.set(secao.salvoEm() ? 'salvo' : 'ocioso');
       return;
     }
-    this.estado.set('editando');
-    this.cancelarAgendamento();
-    this.temporizadorSalvar = setTimeout(() => this.salvarAgora(), ESPERA_AUTO_SAVE_MS);
+    secao.estado.set('editando');
+    secao.temporizadorSalvar = setTimeout(() => this.salvarAgora(secao), ESPERA_AUTO_SAVE_MS);
   }
 
   /** PUT imediato do que mudou; sem mudança real, não sai requisição. `aoFechar` oferece "Reabrir" se falhar. */
-  private salvarAgora(aoFechar = false): void {
-    this.cancelarAgendamento();
-    const id = this.usuarioId();
-    const enviado = this.formulario.controls.anotacoes.value ?? '';
-    if (!id || this.carregando() || enviado === this.conteudoSalvo) return;
-    if (this.salvandoRequisicao) {
-      this.salvarDeNovo = true;
+  private salvarAgora(secao: SecaoAnotacao, aoFechar = false): void {
+    secao.cancelarAgendamento();
+    const enviado = secao.textoAtual;
+    if (enviado === secao.conteudoSalvo) return;
+    if (secao.salvandoRequisicao) {
+      secao.salvarDeNovo = true;
       return;
     }
 
-    this.salvandoRequisicao = true;
-    this.estado.set('salvando');
-    this.usuarioService
-      .alterar(id, { anotacoes: enviado }, true)
+    secao.salvandoRequisicao = true;
+    secao.estado.set('salvando');
+    this.anotacaoService
+      .alterar(secao.usuarioId, secao.tipo, { texto: enviado, updatedDateLido: secao.versaoLida as Date })
       .pipe(finalize(() => {
-        this.salvandoRequisicao = false;
-        if (this.salvarDeNovo) {
-          this.salvarDeNovo = false;
-          this.salvarAgora(aoFechar);
+        secao.salvandoRequisicao = false;
+        if (secao.salvarDeNovo) {
+          secao.salvarDeNovo = false;
+          this.salvarAgora(secao, aoFechar);
         }
       }))
       .subscribe({
         next: (resposta) => {
-          this.conteudoSalvo = enviado;
-          this.salvoEm.set(new Date());
+          secao.conteudoSalvo = enviado;
+          secao.versaoLida = resposta.dados?.updatedDate ?? secao.versaoLida;
+          secao.salvoEm.set(new Date());
           this.agora.set(new Date());
-          this.alteracaoData.set(resposta.dados?.anotacoesAlteracaoData ?? this.alteracaoData());
-          this.estado.set((this.formulario.controls.anotacoes.value ?? '') === enviado ? 'salvo' : 'editando');
-          this.aoAlterar.emit({ usuarioId: id, temAnotacoes: anotacaoTemTexto(resposta.dados?.anotacoes ?? enviado) });
+          if (this.usuarioId() === secao.usuarioId) this.alteracaoData.set(secao.versaoLida);
+          secao.estado.set(secao.textoAtual === enviado ? 'salvo' : 'editando');
+          this.avisarAlteracao(secao.usuarioId);
         },
-        error: () => {
-          this.estado.set('erro');
-          if (aoFechar && !this.visivel()) this.oferecerReabrir(id, enviado);
+        error: (erro: HttpErrorResponse) => {
+          secao.salvarDeNovo = false;
+          if (erro.status === 409) {
+            this.recarregarPorConflito(secao);
+            return;
+          }
+          secao.estado.set('erro');
+          if (aoFechar && !this.visivel()) this.oferecerReabrir(secao, enviado);
         },
       });
   }
 
-  private oferecerReabrir(usuarioId: number, conteudo: string): void {
+  /** O servidor tem uma versão mais nova da seção: mostra essa, descarta o texto local e avisa. */
+  private recarregarPorConflito(secao: SecaoAnotacao): void {
+    this.anotacaoService.listar(secao.usuarioId, [secao.tipo]).subscribe({
+      next: (resposta) => {
+        const lida = resposta.dados?.[0];
+        if (!lida) {
+          secao.estado.set('erro');
+          return;
+        }
+        secao.cancelarAgendamento();
+        secao.adotar(lida);
+        secao.estado.set('ocioso');
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Seção atualizada',
+          detail: `"${ROTULO_SECAO_ANOTACAO[secao.tipo]}" mudou em outro lugar. Mostrando a versão mais recente; o que você digitou nela não foi salvo.`,
+          life: 8000,
+        });
+        this.avisarAlteracao(secao.usuarioId);
+      },
+      error: () => secao.estado.set('erro'),
+    });
+  }
+
+  private oferecerReabrir(secao: SecaoAnotacao, conteudo: string): void {
     this.desfazerService.oferecer({
-      mensagem: 'Não foi possível salvar as anotações',
+      mensagem: `Não foi possível salvar "${ROTULO_SECAO_ANOTACAO[secao.tipo]}"`,
       rotulo: 'Reabrir',
       mensagemAposDesfazer: '',
       desfazer: () => of(null),
       aposDesfazer: () => {
-        this.usuarioId.set(usuarioId);
+        // Se o drawer já foi para o pad de outra pessoa, a seção não está mais na tela.
+        if (this.usuarioId() !== secao.usuarioId || !this.secoes().includes(secao)) return;
         this.visivel.set(true);
         this.iniciarRelogio();
-        this.formulario.controls.anotacoes.setValue(conteudo);
+        if (!this.secoesAbertas().includes(secao.tipo)) this.secoesAbertas.update((abertas) => [...abertas, secao.tipo]);
+        secao.controle.setValue(conteudo);
       },
     });
   }
 
-  private restaurarAposLimpar(): void {
-    const anterior = this.conteudoAntesDeLimpar;
-    this.conteudoAntesDeLimpar = null;
+  private restaurarAposLimpar(secao: SecaoAnotacao): void {
+    const anterior = secao.conteudoAntesDeLimpar;
+    secao.conteudoAntesDeLimpar = null;
     if (anterior === null) return;
-    this.formulario.controls.anotacoes.setValue(anterior, { emitEvent: false });
-    this.estado.set(anterior === this.conteudoSalvo ? (this.salvoEm() ? 'salvo' : 'ocioso') : 'editando');
-    if (anterior !== this.conteudoSalvo) this.aoDigitar(anterior);
+    secao.controle.setValue(anterior, { emitEvent: false });
+    this.aoDigitar(secao, anterior);
   }
 
-  /** A janela do Desfazer acabou: grava o vazio (com o id de quando o usuário limpou). */
-  private gravarLimpeza(usuarioId: number): void {
-    if (this.conteudoAntesDeLimpar === null) return;
-    this.conteudoAntesDeLimpar = null;
-    if (this.usuarioId() === usuarioId) {
-      this.formulario.controls.anotacoes.setValue('', { emitEvent: false });
-      this.salvarAgora();
-    } else {
-      this.usuarioService.alterar(usuarioId, { anotacoes: '' }, true).subscribe({
-        next: () => this.aoAlterar.emit({ usuarioId, temAnotacoes: false }),
-      });
-    }
+  /** A janela do Desfazer acabou: grava o vazio (a seção sabe de quem é). */
+  private gravarLimpeza(secao: SecaoAnotacao): void {
+    if (!secao.limpando) return;
+    secao.conteudoAntesDeLimpar = null;
+    secao.controle.setValue('', { emitEvent: false });
+    this.salvarAgora(secao);
   }
 
-  /** Trocar de usuário com algo pendente: grava o que estava em edição antes de carregar o outro. */
-  private encerrarPendencias(): void {
-    if (this.conteudoAntesDeLimpar !== null) this.desfazerService.dispensar();
-    else this.salvarAgora();
+  /**
+   * Grava o que estiver pendente. Fechar o drawer deixa uma limpeza em andamento terminar sozinha (a janela
+   * do Desfazer segue); trocar de pessoa ou destruir o componente a confirma na hora (`dispensarLimpeza`).
+   */
+  private descarregar(opcoes: { aoFechar?: boolean; dispensarLimpeza?: boolean }): void {
+    const secoes = this.secoes();
+    if (opcoes.dispensarLimpeza && secoes.some((secao) => secao.limpando)) this.desfazerService.dispensar();
+    secoes.forEach((secao) => {
+      if (!secao.limpando) this.salvarAgora(secao, opcoes.aoFechar);
+    });
+  }
+
+  /** Avisa a listagem se o pad inteiro tem ou não texto (conforme o que está salvo). */
+  private avisarAlteracao(usuarioId: number): void {
+    if (this.usuarioId() !== usuarioId) return;
+    const temAnotacoes = this.secoes().some((secao) => anotacaoTemTexto(secao.conteudoSalvo));
+    this.aoAlterar.emit({ usuarioId, temAnotacoes });
   }
 
   private carregar(usuarioId: number): void {
     this.carregando.set(true);
-    this.estado.set('ocioso');
-    this.salvoEm.set(null);
-    this.usuarioService
-      .recuperar(usuarioId)
+    this.alteracaoData.set(null);
+    const precisaDoNome = !this.nomeCompleto();
+    forkJoin({
+      secoes: this.anotacaoService.listar(usuarioId),
+      usuario: precisaDoNome ? this.usuarioService.recuperar(usuarioId).pipe(catchError(() => of(null))) : of(null),
+    })
       .pipe(finalize(() => this.carregando.set(false)))
       .subscribe({
-        next: (resposta) => {
-          if (!resposta.sucesso || !resposta.dados || this.usuarioId() !== usuarioId) return;
-          const conteudo = resposta.dados.anotacoes ?? '';
-          if (!this.nomeCompleto()) this.nomeCompleto.set(resposta.dados.nomeCompleto);
-          this.conteudoSalvo = conteudo;
-          this.formulario.controls.anotacoes.setValue(conteudo, { emitEvent: false });
-          this.alteracaoData.set(resposta.dados.anotacoesAlteracaoData ?? null);
-          // O editor só existe depois que o esqueleto some: foca no ciclo seguinte.
-          setTimeout(() => this.editorMarkdown()?.focar());
-        },
-        error: () => this.visivel.set(false),
-      });
-  }
+        next: ({ secoes, usuario }) => {
+          if (!secoes.sucesso || !secoes.dados || this.usuarioId() !== usuarioId) return;
+          if (precisaDoNome && usuario?.dados) this.nomeCompleto.set(usuario.dados.nomeCompleto);
 
-  private cancelarAgendamento(): void {
-    if (this.temporizadorSalvar !== null) clearTimeout(this.temporizadorSalvar);
-    this.temporizadorSalvar = null;
+          this.secoes().forEach((anterior) => anterior.encerrar());
+          const novas = secoes.dados.map((lida) => {
+            const secao = new SecaoAnotacao(usuarioId, lida.tipo, lida);
+            secao.assinatura = secao.controle.valueChanges.subscribe((conteudo) => this.aoDigitar(secao, conteudo));
+            return secao;
+          });
+          this.secoes.set(novas);
+          this.secoesAbertas.set(SECOES_ABERTAS_AO_ABRIR);
+          const comTexto = novas.filter((secao) => anotacaoTemTexto(secao.conteudoSalvo)).map((secao) => secao.versaoLida);
+          this.alteracaoData.set(comTexto.length ? comTexto.reduce((a, b) => (new Date(a) > new Date(b) ? a : b)) : null);
+          // Os editores só existem depois que o esqueleto some: foca no ciclo seguinte.
+          setTimeout(() => this.editores()[0]?.focar());
+        },
+        error: () => {
+          this.visivel.set(false);
+          this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Não foi possível carregar as anotações.' });
+        },
+      });
   }
 
   private iniciarRelogio(): void {

@@ -12,6 +12,33 @@
 
 ---
 
+## 2026-10-17 — Task 126: pad estruturado, tela com cinco acordeões e migração do texto atual
+
+Bloco 8 do rework do chat com IA (2 de 4). Migration `0031`: copia `usuario.anotacoes` para a seção `PESSOAL` só onde ela está vazia e o
+texto tem algo além de espaços; o `DOWN` esvazia `PESSOAL` só onde ainda é idêntica à coluna antiga (o que a pessoa editou depois
+fica). No banco de dev: 3 usuários com texto antigo, 3 cópias; `migrate`, `rollback`, `migrate` e `migrate` de novo ok (a segunda
+passada não altera nada). O drawer virou cinco `p-accordion-panel` (vários abertos, "Em andamento" aberto ao abrir) com
+`app-markdown-editor` e estado próprio por seção; cada seção é uma `SecaoAnotacao` (arquivo à parte, para o componente não crescer
+com o estado de cinco campos) que guarda o `usuarioId` de quando foi lida, então uma seção que ficou para trás ainda grava no dono
+certo. Novo `AnotacaoService` no frontend (`listar`, `alterar`; erros tratados pelo drawer). Decisões 1 e 2 da spec como propostas:
+conflito recarrega a seção e avisa (toast de aviso, o texto local daquela seção se perde); autosave por seção.
+
+- **Backend, "tem anotações":** a listagem de usuários deixou de olhar a coluna antiga (a tela não a escreve mais) e considera só as
+  seções; o desvio provisório da 125 acabou aqui.
+- **README:** a migration `0031` roda no `db:migrate` e copia a coluna antiga; em ambiente com HTML do Quill é preciso converter
+  **antes** (ou reverter, converter e rodar de novo). Procedimento anotado junto da conversão.
+- **Testes:** `backend` 110/110 (sem testes novos: a task só trocou a condição de um SELECT e uma migration de dados); build do
+  frontend e do backend ok. `shared` e `frontend` sem mudança de lógica testável (frontend sem testes e sem lint, P-001).
+- **Ao vivo (gestor administrador e desenvolvedor de teste, excluído depois):** abrir por `n` e pela listagem; editar; autosave de 2 s
+  por seção; Ctrl+S não foi exercitado separadamente (mesmo caminho do botão); fechar com Esc salva (`PESSOAL` gravada com o
+  drawer fechando); conflito forçado (a seção alterada pela API durante a edição) recarrega e avisa; Limpar com Desfazer (voltou)
+  e com a janela expirando (gravou o vazio e o ícone da listagem sumiu); pad de outro usuário com o título "Anotações de Matheus
+  Silva" e o texto migrado em "Pessoal"; `editavel = false` forçado (só visualizador, sem barra, sem Limpar, sem rodapé), valor
+  revertido; claro e escuro em 1366×768 e escuro em 1080×1920 (a emulação de viewport do painel reduz a imagem, então os pixels
+  finos não foram conferidos; layout e quebra conferidos). 1920×1080 só no tema claro, na janela padrão do painel.
+- **Não verificado:** estados de erro de rede (falha de PUT/GET) e o "Reabrir" depois de uma falha ao fechar; a falha de
+  `recuperar` ao buscar o nome do dono.
+
 ## 2026-10-17 — Task 125: pad estruturado, modelo de dados e API das seções
 
 Bloco 8 do rework do chat com IA (1 de 4); a tela segue na coluna antiga até a 126. Migration `0030`: `tipo_anotacao` (seeds com

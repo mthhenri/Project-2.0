@@ -144,9 +144,7 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
             WHERE anotacao.usuario_id = usuario.id
               AND anotacao.is_deleted = false
               AND regexp_replace(anotacao.texto, '[[:space:]]+', '', 'g') <> '')
-          -- Até a task 128 (que remove a coluna), o pad antigo ainda grava aqui.
-          OR (usuario.anotacoes IS NOT NULL
-              AND regexp_replace(usuario.anotacoes, '[[:space:]]+', '', 'g') <> '')) AS "temAnotacoes"
+          ) AS "temAnotacoes"
        FROM usuario
        ${clausulasJoin}
        WHERE ${clausulaWhere}

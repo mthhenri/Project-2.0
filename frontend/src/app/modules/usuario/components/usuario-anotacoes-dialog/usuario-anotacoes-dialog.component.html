@@ -45,46 +45,78 @@
           <p-skeleton height="1rem" width="60%" />
         </div>
       } @else {
-        <form [formGroup]="formulario" class="anotacoes-drawer__form">
-          <app-markdown-editor
-            #editorMarkdown
-            formControlName="anotacoes"
-            [alturaMinima]="0"
-            rotulo="Anotações"
-            placeholder="Escreva aqui — salva sozinho enquanto você digita."
-            class="anotacoes-drawer__editor"
-          />
-        </form>
+        <div class="anotacoes-drawer__secoes">
+          <p-accordion [multiple]="true" [value]="secoesAbertas()" (valueChange)="aoMudarSecoesAbertas($event)">
+            @for (secao of secoes(); track secao.tipo) {
+              <p-accordion-panel [value]="secao.tipo">
+                <p-accordion-header>
+                  <span class="anotacoes-secao__titulo">
+                    {{ rotuloSecao[secao.tipo] }}
+                    @if (secao.temTexto()) {
+                      <i class="pi pi-circle-fill anotacoes-secao__marca" pTooltip="Tem texto" tooltipPosition="top"></i>
+                    }
+                  </span>
+                  <span class="anotacoes-secao__estado" [attr.data-estado]="secao.estado()">
+                    @switch (secao.estado()) {
+                      @case ('editando') { <i class="pi pi-pencil"></i>Editando… }
+                      @case ('salvando') { <i class="pi pi-spin pi-spinner"></i>Salvando… }
+                      @case ('salvo') { <i class="pi pi-check"></i>Salvo }
+                      @case ('erro') { <i class="pi pi-exclamation-triangle"></i>Não salvou }
+                    }
+                  </span>
+                </p-accordion-header>
+                <p-accordion-content>
+                  @if (editavel()) {
+                    <app-markdown-editor
+                      [formControl]="secao.controle"
+                      [alturaMinima]="9"
+                      [rotulo]="rotuloSecao[secao.tipo]"
+                      placeholder="Escreva aqui — salva sozinho enquanto você digita."
+                    />
+                    <div class="anotacoes-secao__acoes">
+                      <p-button
+                        label="Limpar"
+                        icon="pi pi-trash"
+                        severity="danger"
+                        [text]="true"
+                        size="small"
+                        [disabled]="!secao.temTexto()"
+                        (onClick)="limpar(secao)"
+                      />
+                    </div>
+                  } @else if (secao.temTexto()) {
+                    <app-markdown-visualizador [texto]="secao.textoAtual" />
+                  } @else {
+                    <p class="anotacoes-secao__vazia">Nada nesta seção.</p>
+                  }
+                </p-accordion-content>
+              </p-accordion-panel>
+            }
+          </p-accordion>
+        </div>
       }
 
-      <footer class="anotacoes-drawer__rodape">
-        <p-button
-          label="Limpar"
-          icon="pi pi-trash"
-          severity="danger"
-          [outlined]="true"
-          size="small"
-          [disabled]="carregando()"
-          (onClick)="limpar()"
-        />
-        <span class="anotacoes-drawer__estado" role="status" aria-live="polite" [attr.data-estado]="estado()">
-          @switch (estado()) {
-            @case ('editando') { <i class="pi pi-pencil"></i>Editando… }
-            @case ('salvando') { <i class="pi pi-spin pi-spinner"></i>Salvando… }
-            @case ('salvo') { <i class="pi pi-check"></i>Salvo às {{ salvoEm() | date: 'HH:mm' }} }
-            @case ('erro') { <i class="pi pi-exclamation-triangle"></i>Não salvou — tente de novo }
-          }
-        </span>
-        <p-button
-          label="Salvar"
-          icon="pi pi-save"
-          size="small"
-          pTooltip="Ctrl+S"
-          tooltipPosition="top"
-          [disabled]="carregando() || (estado() !== 'editando' && estado() !== 'erro')"
-          (onClick)="salvar()"
-        />
-      </footer>
+      @if (editavel()) {
+        <footer class="anotacoes-drawer__rodape">
+          <span class="anotacoes-drawer__estado" role="status" aria-live="polite" [attr.data-estado]="estadoGeral()">
+            @switch (estadoGeral()) {
+              @case ('editando') { <i class="pi pi-pencil"></i>Editando… }
+              @case ('salvando') { <i class="pi pi-spin pi-spinner"></i>Salvando… }
+              @case ('salvo') { <i class="pi pi-check"></i>Salvo às {{ salvoEmGeral() | date: 'HH:mm' }} }
+              @case ('erro') { <i class="pi pi-exclamation-triangle"></i>Não salvou — tente de novo }
+            }
+          </span>
+          <p-button
+            label="Salvar"
+            icon="pi pi-save"
+            size="small"
+            pTooltip="Ctrl+S"
+            tooltipPosition="top"
+            [disabled]="carregando() || (estadoGeral() !== 'editando' && estadoGeral() !== 'erro')"
+            (onClick)="salvar()"
+          />
+        </footer>
+      }
     </div>
   </ng-template>
 </p-drawer>

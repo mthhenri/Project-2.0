@@ -546,6 +546,8 @@ CREATE TRIGGER trg_dia_nao_util_updated_date
 
 Uma linha por usuário e por seção (`tipo_anotacao`: `EM_ANDAMENTO`, `FEITO`, `PENDENCIA`, `LEMBRETE`, `PESSOAL`).
 Quem já existia ganhou as 5 linhas (vazias) na migration; usuário novo as recebe na mesma transação em que é criado.
+A migration `0031` copiou `usuario.anotacoes` (Markdown) para a seção `PESSOAL` de quem tinha texto (só onde a seção estava vazia); a coluna
+antiga fica como cópia até a task 128.
 O texto é Markdown e seção vazia é `''`. `tipo_anotacao` tem a coluna extra `ordem` (ordem de exibição).
 
 ```sql

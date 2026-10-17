@@ -901,7 +901,7 @@ frontend/src/app/
 - **Standalone components** em todos os componentes e páginas — sem NgModule por feature
 - **Signals** para estado reativo — evitar Subject/BehaviorSubject onde signal resolve
 - **Reactive Forms** para todos os formulários — sem template-driven forms
-- **`app-markdown-editor`** para campos de texto rico (Markdown: `anotacoes`, descrições e documentação da demanda); exibição só por `app-markdown-visualizador`
+- **`app-markdown-editor`** para campos de texto rico (Markdown: as cinco seções do pad, descrições e documentação da demanda); exibição só por `app-markdown-visualizador`
 - **Lazy loading** por módulo via rotas com `loadComponent`
 
 ### 8.3 Componente Assistente de Descrição
@@ -1228,7 +1228,7 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 | Módulo | Responsabilidade Principal |
 |---|---|
 | `autenticacao` | Login e geração de JWT |
-| `usuario` | CRUD de usuários, anotações em Markdown, troca de senha |
+| `usuario` | CRUD de usuários, troca de senha (o pad é do módulo `anotacao`; a coluna `usuario.anotacoes` é cópia legada até a task 128) |
 | `projeto` | CRUD de projetos — apenas gestor cria |
 | `demanda` | CRUD, hierarquia, grafo force-directed (D3), tags, atribuições |
 | `atividade` | CRUD de atividades vinculadas a demandas, tags, controle de status |
