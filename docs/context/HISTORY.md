@@ -12,6 +12,33 @@
 
 ---
 
+## 2026-10-17 — Task 125: pad estruturado, modelo de dados e API das seções
+
+Bloco 8 do rework do chat com IA (1 de 4); a tela segue na coluna antiga até a 126. Migration `0030`: `tipo_anotacao` (seeds com
+`ordem`) e `anotacao` (índice único parcial por usuário e tipo) mais as 5 linhas vazias de cada usuário existente (75 no banco de
+dev, 15 usuários, inclusive excluídos). Módulo `anotacao`: listar (todas ou `?tipos=`), alterar a seção inteira com o `updatedDate`
+lido, trocar trecho, anexar, escrever no "Feito" do dia e mover trecho entre seções. Toda escrita passa por
+`AnotacaoRepository.modificarSecoes`: uma transação que lê as seções com `FOR UPDATE` (sempre na ordem de exibição, para duas
+operações simultâneas não travarem uma à outra), chama uma função da service que devolve os textos novos (ou lança) e grava. A service
+fica sem Knex, e uma falha de regra em qualquer das duas seções de um "mover" desfaz tudo. Novo `ConflictException` (409), a decisão 1
+da spec. Permissão: o dono usa o próprio pad e gestor e administrador, o de qualquer um (decisão 2, como hoje).
+
+- **Desvio da spec, concorrência:** a spec previa comparar `date_trunc('milliseconds', updated_date)` no SQL. Como a leitura e a
+  comparação passam pelo mesmo driver, a service compara os `Date` lidos (`mesmaVersao`), sem depender de SQL e de arredondamento.
+- **Desvio da spec, "tem anotações":** até a task 128 (que remove `usuario.anotacoes`), a listagem de usuários considera a coluna
+  antiga **ou** as seções; trocar de uma vez deixaria o ícone errado entre a 125 e a 126, com o pad antigo ainda gravando na coluna.
+- **Testes:** `backend` 110/110 (26 novos: operações de texto e regras da service com repositório em memória: permissão por tipo,
+  conflito, trecho ausente e ambíguo, anexar, Feito, e "mover" que não altera nada quando uma das duas falha).
+- **Ao vivo (API real, usuário de teste excluído depois):** `db:migrate`, `db:rollback` e novo `db:migrate` ok. Usuário novo com as
+  5 seções; listagem filtrada por `tipos` (vírgula e repetido; `XYZ` dá 400); alterar com a data lida 200 e com a velha 409 sem gravar;
+  trocar trecho (ok, ausente e ambíguo dão 400); anexar em seção vazia e com texto; "Feito" duas vezes no dia com um título só
+  (`## 17/10`); mover (as duas seções mudam, repetir com as versões velhas dá 409, trecho ausente dá 400 e nada muda); desenvolvedor 403
+  no pad de outro, gestor e administrador escrevem; `temAnotacoes` coerente. As rotas `POST` devolvem 201, como as demais.
+- **Achado só na verificação:** `IN (:tipos)` com array não funciona nos parâmetros nomeados do Knex (a consulta voltava vazia); o
+  padrão do projeto é `= ANY(:tipos)`.
+- **Frontend:** o build quebrou porque o frontend lê os DTOs do `shared` com um stub de `class-validator`
+  (`frontend/src/stubs/class-validator.stub.ts`) e faltava `IsDate`; adicionado. Nenhuma tela mudou. Sem testes de frontend e sem lint (P-001).
+
 ## 2026-10-17 — Task 124: troca dos consumidores pelo Markdown e remoção do Quill
 
 Bloco 3 do rework do chat com IA (4 de 4). Os consumidores trocaram `p-editor`/`[innerHTML]` por `app-markdown-editor`/

@@ -13,10 +13,11 @@ import { ExecucaoModule } from './modules/execucao/execucao.module';
 import { CalendarioModule } from './modules/calendario/calendario.module';
 import { PontoModule } from './modules/ponto/ponto.module';
 import { PontoJustificativaModule } from './modules/ponto-justificativa/ponto-justificativa.module';
+import { AnotacaoModule } from './modules/anotacao/anotacao.module';
 import { AssistenteModule } from './modules/assistente/assistente.module';
 import { RelatorioModule } from './modules/relatorio/relatorio.module';
 
 @Module({
-  imports: [ScheduleModule.forRoot(), ConfigModule, DatabaseModule, CoreModule, AutenticacaoModule, UsuarioModule, TagModule, ProjetoModule, DemandaModule, AtividadeModule, ExecucaoModule, CalendarioModule, PontoModule, PontoJustificativaModule, AssistenteModule, RelatorioModule],
+  imports: [ScheduleModule.forRoot(), ConfigModule, DatabaseModule, CoreModule, AutenticacaoModule, UsuarioModule, TagModule, ProjetoModule, DemandaModule, AtividadeModule, ExecucaoModule, CalendarioModule, PontoModule, PontoJustificativaModule, AnotacaoModule, AssistenteModule, RelatorioModule],
 })
 export class AppModule {}

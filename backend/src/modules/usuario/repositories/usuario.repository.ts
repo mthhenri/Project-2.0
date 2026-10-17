@@ -139,8 +139,14 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
          usuario.cargo_titulo  AS "cargoTitulo",
          tipo_usuario.codigo        AS tipo,
          tipo_usuario_status.codigo AS status,
-         (usuario.anotacoes IS NOT NULL
-            AND regexp_replace(usuario.anotacoes, '[[:space:]]+', '', 'g') <> '') AS "temAnotacoes"
+         (EXISTS (
+            SELECT 1 FROM anotacao
+            WHERE anotacao.usuario_id = usuario.id
+              AND anotacao.is_deleted = false
+              AND regexp_replace(anotacao.texto, '[[:space:]]+', '', 'g') <> '')
+          -- Até a task 128 (que remove a coluna), o pad antigo ainda grava aqui.
+          OR (usuario.anotacoes IS NOT NULL
+              AND regexp_replace(usuario.anotacoes, '[[:space:]]+', '', 'g') <> '')) AS "temAnotacoes"
        FROM usuario
        ${clausulasJoin}
        WHERE ${clausulaWhere}
@@ -161,6 +167,32 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
     tipo: TipoUsuarioEnum;
     horasDiariasNecessarias: number;
   }): Promise<UsuarioCriadoDto> {
+    // O usuário e as 5 seções do pad nascem juntos: ou os dois existem, ou nenhum.
+    return this.conexaoBancoDados.transaction(async (transacao) => {
+      const usuarioCriado = await this.inserirUsuario(dados, transacao);
+      await this.executarComando(
+        `INSERT INTO anotacao (usuario_id, tipo_anotacao_id, texto, created_date, updated_date, is_deleted)
+         SELECT :usuarioId, tipo_anotacao.id, '', NOW(), NOW(), false
+         FROM tipo_anotacao
+         WHERE tipo_anotacao.is_deleted = false`,
+        { usuarioId: usuarioCriado.id },
+        transacao,
+      );
+      return usuarioCriado;
+    });
+  }
+
+  private async inserirUsuario(
+    dados: {
+      login: string;
+      senhaEncriptada: string;
+      nomeCompleto: string;
+      cargoTitulo: string;
+      tipo: TipoUsuarioEnum;
+      horasDiariasNecessarias: number;
+    },
+    transacao: Knex.Transaction,
+  ): Promise<UsuarioCriadoDto> {
     const resultado = await this.executarConsulta<UsuarioCriadoDto>(
       `INSERT INTO usuario (
          login, senha_encriptada, nome_completo, cargo_titulo,
@@ -195,6 +227,7 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
         horasDiariasNecessarias: dados.horasDiariasNecessarias,
         status:                  TipoUsuarioStatusEnum.ATIVO,
       },
+      transacao,
     );
     return resultado[0];
   }
