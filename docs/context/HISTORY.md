@@ -12,6 +12,12 @@
 
 ---
 
+## 2026-10-17 — Ajuste na barra lateral: some o selo "g + letra" de cada item
+
+Pedido do autor, fora de spec: a barra lateral deixou de mostrar o selo `g p`, `g c`... ao lado de cada item (e o `— g x` do tooltip da barra
+recolhida). O atalho `g` + letra continua funcionando (lógica do `SidebarComponent` intacta e listado no diálogo de dicas); só a dica visual saiu.
+Build do frontend ok; não conferi a tela no navegador depois do ajuste.
+
 ## 2026-10-17 — Task 127: pad, "Enviar para" outra seção
 
 Bloco 8 do rework do chat com IA (3 de 4). `app-markdown-editor` ganhou o input `emitirMenuContexto` e o output `aoMenuContexto`
