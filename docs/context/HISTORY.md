@@ -32,6 +32,20 @@ Relatórios em `docs/specs/done/110-execucoes-contexto-navegacao/verificacao.md`
 
 ---
 
+## 2026-10-17 — P-004 resolvido nas telas de Execuções e Relatório: dia e horas seguem o fuso do sistema
+
+Novo `shared/src/utils/fuso-horario.ts` (`dataIsoNoFuso`, `horaNoFuso`, `diaMesNoFuso`, `dataHoraNoFuso`, `hojeNoFuso`,
+`instanteParaRelogioLocal`/`relogioLocalParaInstante`) com 6 testes novos (shared: 10 de 10, também sob `TZ=UTC`,
+`Asia/Tokyo` e `America/Sao_Paulo`) e `ambiente.fusoHorario` (espelha `APP_TIMEZONE`). A tela de Execuções e o dialog de
+relatório passaram a usar essas funções para "hoje", dia/hora exibidos, o atalho "Este mês" e o dialog de edição (o
+datepicker mostra o relógio do sistema e converte de volta ao salvar). Conferido ao vivo com o navegador em
+`Pacific/Auckland` (UTC+13) e em `UTC` contra o mesmo banco: ambos mostram 16/10, as mesmas horas (09:00, 14:00, 22:45...), a
+virada 23:00→01:00 com `16/10` e o PUT de edição preserva o instante original (`2026-10-15T15:00:00.000Z` = 12:00 de São
+Paulo). **Não migrado (fora do pedido):** Ponto, Calendário, Atividades e outras telas seguem no fuso do navegador (P-004,
+reescrito como `ACEITO`).
+
+---
+
 ## 2026-10-17 — P-003 resolvido: selects de Projeto (relatório) e Usuário (Execuções) sem teto de 100
 
 `ProjetoService` e `UsuarioService` (HTTP) passaram a repassar `allRows` (o DTO e o backend já o suportavam); o dialog de

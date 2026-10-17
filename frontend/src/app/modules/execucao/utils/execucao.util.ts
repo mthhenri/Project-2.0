@@ -41,8 +41,8 @@ export function horasCompactas(totalMinutos: number): string {
 }
 
 /** "Quinta-feira, 10 de julho · 5 execuções · 12h24". */
-export function resumoDoDia(data: Date, totalExecucoes: number, totalMinutos: number): string {
-  const partes = [rotuloDoDia(data)];
+export function resumoDoDia(data: Date, totalExecucoes: number, totalMinutos: number, hoje: Date = new Date()): string {
+  const partes = [rotuloDoDia(data, hoje)];
   partes.push(
     totalExecucoes === 0 ? 'Nenhuma execução' : `${totalExecucoes} ${totalExecucoes === 1 ? 'execução' : 'execuções'}`,
   );

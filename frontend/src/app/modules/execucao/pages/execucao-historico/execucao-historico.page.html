@@ -146,18 +146,18 @@
           <td>
             <div class="execucao-historico__momento">
               @if (foraDoDiaListado(execucao.inicioData)) {
-                <span class="execucao-historico__momento-data">{{ execucao.inicioData | date: 'dd/MM' }}</span>
+                <span class="execucao-historico__momento-data">{{ diaMes(execucao.inicioData) }}</span>
               }
-              <span class="execucao-historico__momento-hora">{{ execucao.inicioData | date: 'HH:mm' }}</span>
+              <span class="execucao-historico__momento-hora">{{ hora(execucao.inicioData) }}</span>
             </div>
           </td>
           <td>
             @if (execucao.fimData) {
               <div class="execucao-historico__momento">
-                @if (foraDoDiaListado(execucao.fimData) && (execucao.fimData | date: 'dd/MM') !== (execucao.inicioData | date: 'dd/MM')) {
-                  <span class="execucao-historico__momento-data">{{ execucao.fimData | date: 'dd/MM' }}</span>
+                @if (foraDoDiaListado(execucao.fimData) && diaMes(execucao.fimData) !== diaMes(execucao.inicioData)) {
+                  <span class="execucao-historico__momento-data">{{ diaMes(execucao.fimData) }}</span>
                 }
-                <span class="execucao-historico__momento-hora">{{ execucao.fimData | date: 'HH:mm' }}</span>
+                <span class="execucao-historico__momento-hora">{{ hora(execucao.fimData) }}</span>
               </div>
             } @else {
               <span class="execucao-historico__em-andamento"><i class="pi pi-circle-fill"></i> Em andamento</span>

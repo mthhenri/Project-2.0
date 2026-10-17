@@ -1,6 +1,5 @@
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { DatePipe } from '@angular/common';
 import { HttpResponse } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Subject, catchError, finalize, map, of, switchMap, timer } from 'rxjs';
@@ -19,7 +18,10 @@ import {
   RelatorioPeriodoTipoEnum,
   RelatorioFormatoEnum,
   ProjetoResumoDto,
+  dataHoraNoFuso,
+  hojeNoFuso,
 } from '@project20/shared';
+import { ambiente } from '../../../../../environments/environment';
 import { RelatorioService, RelatorioParametros } from '../../services/relatorio.service';
 import { ProjetoService } from '../../../projeto/services/projeto.service';
 import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-horas.pipe';
@@ -47,7 +49,6 @@ const ATRASO_MUDANCA_FILTRO_MS = 400;
     ReactiveFormsModule,
     FormsModule,
     SelectButtonModule,
-    DatePipe,
     ButtonModule,
     Select,
     DatePickerModule,
@@ -91,14 +92,14 @@ export class RelatorioExecucaoDialogComponent implements OnInit {
   private readonly pedidoPreview = new Subject<number>();
 
   readonly TipoPeriodo = RelatorioPeriodoTipoEnum;
-  private readonly anoAtual = new Date().getFullYear();
+  private readonly anoAtual = hojeNoFuso(ambiente.fusoHorario).getFullYear();
 
   readonly formulario = this.formBuilder.group(
     {
       projetoId:   [null as number | null, [Validators.required]],
       periodoTipo: [RelatorioPeriodoTipoEnum.MENSAL as RelatorioPeriodoTipoEnum, [Validators.required]],
       ano:         [this.anoAtual as number, [Validators.required]],
-      mes:         [new Date().getMonth() + 1 as number, [Validators.required]],
+      mes:         [hojeNoFuso(ambiente.fusoHorario).getMonth() + 1 as number, [Validators.required]],
       periodo:     [null as Date[] | null],
     },
     { validators: this.validarPeriodo },
@@ -154,7 +155,7 @@ export class RelatorioExecucaoDialogComponent implements OnInit {
   /** Abre já carregando: `projetoId` do detalhe do projeto, ou o último projeto escolhido nesta máquina. */
   abrir(projetoId?: number): void {
     this.projetoFixo.set(projetoId !== undefined);
-    const atalho = periodoDoAtalho('MES');
+    const atalho = periodoDoAtalho('MES', this.hoje());
     this.relatorio.set(null);
     this.revisao.set(null);
     this.erroPreview.set(false);
@@ -172,14 +173,23 @@ export class RelatorioExecucaoDialogComponent implements OnInit {
     this.pedidoPreview.next(0);
   }
 
+  /** Data e hora no fuso do sistema, como o CSV. */
+  dataHora(valor: Date | string): string {
+    return dataHoraNoFuso(new Date(valor), ambiente.fusoHorario);
+  }
+
+  private hoje(): Date {
+    return hojeNoFuso(ambiente.fusoHorario);
+  }
+
   escolherAtalho(atalho: RelatorioPeriodoAtalho): void {
-    const periodo = periodoDoAtalho(atalho);
+    const periodo = periodoDoAtalho(atalho, this.hoje());
     this.formulario.patchValue({ periodoTipo: periodo.periodoTipo, ano: periodo.ano, mes: periodo.mes });
   }
 
   atalhoAtivo(): RelatorioPeriodoAtalho | null {
     const { periodoTipo, ano, mes } = this.formulario.getRawValue();
-    return atalhoDoPeriodo({ periodoTipo: periodoTipo!, ano: ano!, mes: mes! });
+    return atalhoDoPeriodo({ periodoTipo: periodoTipo!, ano: ano!, mes: mes! }, this.hoje());
   }
 
   get periodoIncompleto(): boolean {

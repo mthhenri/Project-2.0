@@ -11,7 +11,6 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { DatePipe } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { TableModule, TableLazyLoadEvent } from 'primeng/table';
@@ -31,6 +30,15 @@ import {
   REGEX_SEM_CARACTERES_PROIBIDOS,
   MENSAGEM_CARACTERES_PROIBIDOS,
 } from '@project20/shared';
+import {
+  dataIsoNoFuso,
+  diaMesNoFuso,
+  horaNoFuso,
+  hojeNoFuso,
+  instanteParaRelogioLocal,
+  relogioLocalParaInstante,
+} from '@project20/shared';
+import { ambiente } from '../../../../../environments/environment';
 import { ExecucaoService } from '../../services/execucao.service';
 import { UsuarioService } from '../../../usuario/services/usuario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
@@ -59,7 +67,6 @@ function periodoValido(grupo: AbstractControl): ValidationErrors | null {
   imports: [
     SkeletonListaComponent,
     BarraRecargaComponent,
-    DatePipe,
     ReactiveFormsModule,
     TableModule,
     ButtonModule,
@@ -90,7 +97,7 @@ export class ExecucaoHistoricoPage implements OnInit {
   readonly sessao = inject(UsuarioSessaoService);
 
   /** Data máxima navegável: hoje. Não é permitido visualizar dias futuros. */
-  readonly hoje = this.inicioDoDia(new Date());
+  readonly hoje = hojeNoFuso(ambiente.fusoHorario);
   private readonly hojeIso = dataParaIso(this.hoje);
 
   readonly formularioFiltros = this.formBuilder.group({
@@ -117,7 +124,7 @@ export class ExecucaoHistoricoPage implements OnInit {
 
   /** "Quinta-feira, 10 de julho · 5 execuções · 12h24" — contexto do que está na tela. */
   readonly resumo = computed(() =>
-    resumoDoDia(isoParaData(this.dataSelecionada()) ?? this.hoje, this.totalRegistros(), this.totalMinutosDia()),
+    resumoDoDia(isoParaData(this.dataSelecionada()) ?? this.hoje, this.totalRegistros(), this.totalMinutosDia(), this.hoje),
   );
   readonly rotuloDiaVazio = computed(() => (isoParaData(this.dataSelecionada()) ?? this.hoje).toLocaleDateString('pt-BR'));
 
@@ -268,7 +275,16 @@ export class ExecucaoHistoricoPage implements OnInit {
 
   /** Quando o dia cruza a meia-noite a hora sozinha engana: mostra a data pequena. */
   foraDoDiaListado(data: Date | string): boolean {
-    return dataParaIso(new Date(data)) !== this.dataSelecionada();
+    return dataIsoNoFuso(new Date(data), ambiente.fusoHorario) !== this.dataSelecionada();
+  }
+
+  /** Hora e dia/mês do instante no fuso do sistema (não no do navegador). */
+  hora(data: Date | string): string {
+    return horaNoFuso(new Date(data), ambiente.fusoHorario);
+  }
+
+  diaMes(data: Date | string): string {
+    return diaMesNoFuso(new Date(data), ambiente.fusoHorario);
   }
 
   /** Avança um dia. Bloqueado quando já se está no dia de hoje (sem dias futuros). */
@@ -295,11 +311,11 @@ export class ExecucaoHistoricoPage implements OnInit {
   abrirEdicao(execucao: ExecucaoItemDto): void {
     if (!this.sessao.eGestor()) return;
     this.execucaoEmEdicao.set(execucao);
-    this.dataMaximaEdicao.set(new Date());
+    this.dataMaximaEdicao.set(instanteParaRelogioLocal(new Date(), ambiente.fusoHorario));
     this.formularioEdicao.reset({
       descricao:  execucao.descricao,
-      inicioData: new Date(execucao.inicioData),
-      fimData:    execucao.fimData ? new Date(execucao.fimData) : null,
+      inicioData: instanteParaRelogioLocal(new Date(execucao.inicioData), ambiente.fusoHorario),
+      fimData:    execucao.fimData ? instanteParaRelogioLocal(new Date(execucao.fimData), ambiente.fusoHorario) : null,
     });
     this.mostrarDialogEditar.set(true);
   }
@@ -320,8 +336,8 @@ export class ExecucaoHistoricoPage implements OnInit {
     const { descricao, inicioData, fimData } = this.formularioEdicao.value;
     const dto: ExecucaoAlterarDto = {
       descricao:  descricao!.trim(),
-      inicioData: inicioData!.toISOString(),
-      fimData:    fimData ? fimData.toISOString() : null,
+      inicioData: relogioLocalParaInstante(inicioData!, ambiente.fusoHorario).toISOString(),
+      fimData:    fimData ? relogioLocalParaInstante(fimData, ambiente.fusoHorario).toISOString() : null,
     };
     this.salvandoDescricao.set(true);
     this.execucaoService

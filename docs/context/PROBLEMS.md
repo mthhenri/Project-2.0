@@ -44,16 +44,16 @@
 - **Desde:** origem do projeto.
 
 
-### P-004 — Dia de "hoje" da tela de Execuções vem do fuso do navegador · `ACEITO` · frontend
+### P-004 — Outras telas ainda calculam "hoje" e as horas no fuso do navegador · `ACEITO` · frontend
 
-- **Sintoma:** com o navegador num fuso diferente de `APP_TIMEZONE` (America/Sao_Paulo), "hoje" no cabeçalho e o filtro
-  `data` podem ficar um dia à frente/atrás do dia do servidor (observado ao rodar sem `TZ` no ambiente de teste: o app
-  mostrou 17/10 enquanto as execuções estavam em 16/10).
-- **Causa:** `hoje`, o limite "sem dias futuros" e o `data` enviado são calculados com `new Date()` local; o servidor
-  filtra por `DATE(inicio_data)` no fuso configurado.
+- **Sintoma:** com o navegador num fuso diferente de `APP_TIMEZONE` (America/Sao_Paulo), Ponto, Calendário, Atividades e
+  demais telas que usam `new Date()`/`DatePipe` podem mostrar "hoje" ou horas diferentes do servidor. Execuções e o
+  relatório já seguem o fuso do sistema (2026-10-17).
+- **Causa:** só essas duas telas usam `hojeNoFuso`/`horaNoFuso` (`shared/src/utils/fuso-horario.ts`) com
+  `ambiente.fusoHorario`; as demais não foram migradas.
 - **Contorno:** o time usa o fuso do servidor; nada a fazer no uso normal.
-- **Correção:** se um dia houver usuário em outro fuso, o servidor passa a informar "hoje" (ou a tela usa o fuso da API).
-- **Desde:** origem; mais visível desde a task 110 (subtítulo com o dia).
+- **Correção:** migrar as demais telas para as mesmas funções (o `DatePipe` não aceita nome IANA de fuso).
+- **Desde:** origem.
 
 ### P-005 — `subscribe` sem handler de erro deixa `HttpErrorResponse` não tratado no console · `ACEITO` · frontend
 

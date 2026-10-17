@@ -130,8 +130,8 @@
             <td>{{ linha.nomeDemanda }}</td>
             <td>{{ linha.nomeAtividade }}</td>
             <td>{{ linha.nomeUsuario }}</td>
-            <td>{{ linha.inicioData | date: 'dd/MM/yyyy HH:mm' }}</td>
-            <td>{{ linha.fimData ? (linha.fimData | date: 'dd/MM/yyyy HH:mm') : 'Em andamento' }}</td>
+            <td>{{ dataHora(linha.inicioData) }}</td>
+            <td>{{ linha.fimData ? dataHora(linha.fimData) : 'Em andamento' }}</td>
             <td>{{ linha.duracaoMinutos | minutosParagHoras }}</td>
             <td class="relatorio-dialog__descricao-celula">{{ linha.descricao }}</td>
           </tr>
