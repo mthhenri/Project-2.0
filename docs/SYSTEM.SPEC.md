@@ -883,6 +883,8 @@ frontend/src/app/
         loading-spinner.component.ts
       error-message/
         error-message.component.ts
+      markdown-visualizador/
+        markdown-visualizador.component.ts   ← única forma de exibir Markdown (sem HTML cru)
       assistente-descricao/
         assistente-descricao.component.ts   ← componente de IA reutilizável
         assistente-descricao.component.html
@@ -1448,6 +1450,10 @@ POST /assistente/auxiliar-descricao
 5. Retorna texto refinado
 6. Frontend exibe original vs. auxiliado lado a lado
 7. Usuário aceita, edita ou descarta
+
+### Markdown
+
+Texto rico é **Markdown**, interpretado por `interpretarMarkdown` (`shared/src/markdown/`, sem biblioteca) e exibido por `app-markdown-visualizador`. O interpretador devolve uma árvore de nós e o componente monta elementos a partir dela: **HTML cru nunca entra na página** (nenhum `[innerHTML]`, nenhum desvio do sanitizador). Subconjunto: títulos `#` a `####`, parágrafos (quebra de linha vira quebra), **negrito**, *itálico*, ~~tachado~~, `código`, listas com aninhamento e tarefas, citação, bloco de código, régua e links `http`/`https`/`mailto`. `<tag>` e entidades são texto; imagens e tabelas não existem.
 
 ### Componente Reutilizável
 

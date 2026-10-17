@@ -129,6 +129,10 @@ project-2.0/
   Limpar com Desfazer de 7 s (o vazio só é gravado depois), erro no flush → toast "Reabrir". `aoAlterar` emite
   `{usuarioId, temAnotacoes}`. Deep-link `/usuario/:id/anotacoes` redireciona (gestor → `/usuario?anotacoes=`, próprio →
   `/ponto?anotacoes=`); a topbar abre o drawer próprio. `DesfazerService` aceita `rotulo/duracaoMs/aoEncerrar`.
+- **[task 121]** Markdown (base): `interpretarMarkdown(texto)` em `shared/src/markdown/` devolve uma árvore de nós
+  (`MarkdownBlocoNo`/`MarkdownInlineNo`), em tempo linear e sem lançar; `app-markdown-visualizador`
+  (`shared/components/markdown-visualizador/`) monta elementos a partir dela e é a única forma de exibir texto rico. Nada do
+  sistema usa ainda: o editor é a task 122, a conversão do HTML gravado a 123 e a troca das telas (e a saída do Quill) a 124.
 - **[task 120]** Layout: a navegação saiu da topbar para a barra lateral recolhível (`shared/layout/sidebar/`,
   itens em `shared/layout/navegacao.ts`, mesmo filtro `eGestor()`). Expandida = 240 px (ícone, rótulo e `g x`);
   recolhida = 68 px (ícone com tooltip "Atividades — g a"). A escolha vai ao `localStorage` (`sidebar.recolhida`, com

@@ -12,6 +12,31 @@
 
 ---
 
+## 2026-10-17 — Task 121: interpretador de Markdown próprio e visualizador
+
+Bloco 3 do rework do chat com IA (1 de 4); nenhuma tela existente mudou. `interpretarMarkdown` mora em `shared/src/markdown/`
+(testável com `node:test` e reaproveitável pelo backend). Subconjunto: títulos `#`–`####`, parágrafos, **negrito**, *itálico*,
+~~tachado~~, `código`, listas com aninhamento e tarefas, citação, bloco de código, régua e links `http`/`https`/`mailto`.
+`<tag>` e entidades são texto; imagem (`![alt](url)`) fica como texto; tabelas fora (decisão da spec). Quebra de linha dentro do
+parágrafo é quebra. Link com esquema fora da lista, relativo ou imagem mantém o texto como foi escrito. Marcadores sem
+fechamento viram texto. Para ficar linear: busca de crase fechada por pré-varredura, `[` varre só até o próximo `[`, URL só até
+espaço ou `(`, ênfase por pilha por tipo de marcador e montagem sem recursão, com aninhamento limitado (lista e citação 6,
+ênfase 20). `app-markdown-visualizador` usa templates recursivos de `ng-template` e cria só elementos nativos, `rel="noopener
+noreferrer"` nos links, nenhum binding de HTML.
+
+- **Testes:** `shared` 45/45 (31 do interpretador: cada construção, aninhamento, construções não terminadas, 12 vetores de
+  XSS e de esquema, texto sem nó HTML, determinismo, entradas patológicas de 100 mil caracteres em menos de 1,5 s cada). Medição
+  manual: de 50 mil a 400 mil caracteres os piores casos crescem linearmente (listas 27→134 ms).
+- **Ao vivo (SPA real, página temporária já removida):** amostra com todas as construções e o conteúdo hostil
+  (`<script>`, `<img onerror>`, `javascript:`, `data:`, entidades). DOM sem `script`/`img`/`iframe`, sem atributo de evento, com os
+  textos hostis visíveis como texto; só links `https` com `target=_blank` e `rel=noopener noreferrer`. Tema claro e escuro, 1920×1080,
+  1366×768 e 1080×1920; container de 16 rem sem rolagem horizontal (só o bloco de código rola); texto vazio não renderiza nada.
+- **Achado só na verificação:** `let-lista`/`let-trechos` nos `ng-template` recursivos sombreavam as referências dos próprios
+  templates (`*ngTemplateOutlet="trechos"` recebia o array): o render parava no primeiro parágrafo e o console mostrava
+  `createEmbeddedViewImpl is not a function`. Os parâmetros foram renomeados (`modelo*` para os templates, `lista*`/`umaLista`
+  para os dados). O build não acusa isso.
+- **Não verificado:** o visualizador ainda não está em tela real do sistema (entra na task 124). Frontend sem testes e sem lint (P-001).
+
 ## 2026-10-17 — Task 120: layout com barra lateral recolhível e topbar enxuta
 
 Bloco 2 do rework do chat com IA, só frontend. `SidebarComponent` (logo, os 8 itens com o mesmo filtro de gestor, botão de

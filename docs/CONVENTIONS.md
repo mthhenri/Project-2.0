@@ -406,6 +406,8 @@ frontend nunca veem o id.
 - **Reactive Forms** em **todos** os formulários — **sem template-driven forms**, **sem `ngModel`/`FormsModule`**
 - **Lazy loading** por rota via `loadComponent`/`loadChildren`
 
+**Texto rico** é Markdown, exibido só por `app-markdown-visualizador` (`shared/components/`). Proibido `[innerHTML]`, `bypassSecurityTrust*` e qualquer escrita de HTML na página; o interpretador é `interpretarMarkdown` (`@project20/shared`).
+
 **Embrulhar um controle de terceiros (ex.: `p-colorpicker`):** implementar `ControlValueAccessor`
 e dirigir o controle interno por um `FormControl` + `[formControl]` — **nunca** `[ngModel]`/`(ngModelChange)`.
 O `ngModel` é template-driven e está proibido mesmo dentro de um CVA.
