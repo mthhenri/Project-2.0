@@ -215,8 +215,14 @@ Os blocos 1 a 3 não dependem de IA e podem começar primeiro.
 | 8 | 126 | [`126-pad-estruturado-tela-com-acordeoes`](126-pad-estruturado-tela-com-acordeoes.spec.md) | 125 |
 | 8 | 127 | [`127-pad-enviar-trecho-para-outra-secao`](127-pad-enviar-trecho-para-outra-secao.spec.md) | 125, 126 |
 | 8 | 128 | [`128-pad-remover-anotacoes-do-usuario`](128-pad-remover-anotacoes-do-usuario.spec.md) | 125, 126, 127 |
+| 4 | 129 | [`129-ia-configuracao-modelo-e-api`](129-ia-configuracao-modelo-e-api.spec.md) | — |
+| 4 | 130 | [`130-ia-interface-de-provedor-e-niveis-de-modelo`](130-ia-interface-de-provedor-e-niveis-de-modelo.spec.md) | 129 |
+| 4 | 131 | [`131-ia-prompts-versionados-modelo-e-api`](131-ia-prompts-versionados-modelo-e-api.spec.md) | 129 |
+| 4 | 132 | [`132-ia-tela-de-configuracoes-provedor-modelos-e-flags`](132-ia-tela-de-configuracoes-provedor-modelos-e-flags.spec.md) | 129, 130 |
+| 4 | 133 | [`133-ia-tela-de-configuracoes-prompts`](133-ia-tela-de-configuracoes-prompts.spec.md) | 131, 132 |
 
-Os blocos 4 a 7, 9 e 10 são quebrados a partir da **129**. As tasks 125 a 128 saem no mesmo lançamento.
+Os blocos 5 a 7, 9 e 10 são quebrados a partir da **134**. As tasks 125 a 128 saíram no mesmo lançamento. O bloco 5 inclui a task do
+"testar antes de salvar" os prompts (rodar o rascunho contra narrativas reais guardadas), que depende do chat e das mensagens.
 
 ## Critérios de Aceite (da guarda-chuva)
 
