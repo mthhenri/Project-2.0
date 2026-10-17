@@ -18,6 +18,7 @@ import {
   ExecucaoRegistrarDto,
   ExecucaoRegistradaDto,
   TipoUsuarioEnum,
+  temPermissaoDeGestor,
   TipoAtividadeStatusEnum,
 } from '@project20/shared';
 import { StandardResponse } from '@project20/shared';
@@ -388,6 +389,6 @@ export class ExecucaoService implements OnModuleInit {
    */
   private async descricaoObrigatoria(atividadeId: number): Promise<boolean> {
     const tipoDono = await this.execucaoRepositorio.recuperarTipoUsuarioDaAtividade({ atividadeId });
-    return tipoDono !== TipoUsuarioEnum.GESTOR;
+    return !tipoDono || !temPermissaoDeGestor(tipoDono);
   }
 }

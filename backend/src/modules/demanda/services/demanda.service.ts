@@ -29,6 +29,7 @@ import {
   DemandaPlanejamentoListarDto,
   TagResumoDto,
   TipoUsuarioEnum,
+  temPermissaoDeGestor,
 } from '@project20/shared';
 import { StandardResponse } from '@project20/shared';
 import { PaginatedResult } from '@project20/shared';
@@ -119,7 +120,7 @@ export class DemandaService {
       }
     }
 
-    if (dto.tagIds && dto.tagIds.length > 0 && usuarioAtivo.tipo !== TipoUsuarioEnum.GESTOR) {
+    if (dto.tagIds && dto.tagIds.length > 0 && !temPermissaoDeGestor(usuarioAtivo.tipo)) {
       throw new UnauthorizedAccessException('Apenas gestores podem atribuir tags às demandas');
     }
 
@@ -644,7 +645,7 @@ export class DemandaService {
       throw new ResourceNotFoundException('Demanda');
     }
 
-    if (usuarioAtivo.tipo !== TipoUsuarioEnum.GESTOR) {
+    if (!temPermissaoDeGestor(usuarioAtivo.tipo)) {
       throw new UnauthorizedAccessException(
         'Apenas gestores podem atribuir tags às demandas',
       );

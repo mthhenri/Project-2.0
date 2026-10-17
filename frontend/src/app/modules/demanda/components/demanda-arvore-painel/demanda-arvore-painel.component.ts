@@ -12,7 +12,7 @@ import {
   DemandaTagsAtribuirDto,
   TagResumoDto,
   UsuarioResumoDto,
-  TipoUsuarioEnum,
+  temPermissaoDeGestor,
   TipoDemandaStatusEnum,
 } from '@project20/shared';
 import { DemandaService } from '../../services/demanda.service';
@@ -395,7 +395,7 @@ export class DemandaArvorePainelComponent {
             // Gestores não entram no multiselect de membros: têm acesso total a
             // qualquer demanda por serem gestores, sem atribuição em demanda_usuario (task 71).
             this.usuariosDisponiveis.set(
-              resposta.dados.itens.filter((usuario) => usuario.tipo !== TipoUsuarioEnum.GESTOR),
+              resposta.dados.itens.filter((usuario) => !temPermissaoDeGestor(usuario.tipo)),
             );
           }
         },

@@ -325,6 +325,10 @@ async criar(dto: UsuarioCriarDto) {
 }
 ```
 
+**Permissão de gestor** se decide por `temPermissaoDeGestor(tipo)` (`@project20/shared`), nunca por
+`tipo === TipoUsuarioEnum.GESTOR`. Comparar o tipo diretamente só é aceitável para exibir rótulo/cor
+do tipo ou para restringir a "somente desenvolvedor".
+
 ### Repository → só SQL
 Sem lógica de negócio. Apenas executa queries via `executarConsulta()` / `executarComando()`:
 ```typescript

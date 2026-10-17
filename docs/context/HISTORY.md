@@ -12,6 +12,24 @@
 
 ---
 
+## 2026-10-17 — Task 118: permissão de gestor centralizada (refactor sem mudança de comportamento)
+
+Primeira das duas tasks do bloco 1 do rework do chat com IA (`rework-chat-ia.spec.md`). Nova `temPermissaoDeGestor(tipo)`
+em `shared/src/utils/permissao-usuario.ts` (hoje `tipo === GESTOR`), usada no `GestorGuard`, em `AtividadeService`,
+`DemandaService` (2), `ExecucaoService` (descrição obrigatória), `ProjetoService`, `UsuarioService.alterar` (2), em
+`UsuarioSessaoService.eGestor` (nome mantido, 115 usos), em `atividade-listagem` e nos três filtros de membros de demanda.
+Ficaram de fora, por serem rótulo/cor do tipo (task 119): `usuario-listagem`, `usuario-perfil-dialog`,
+`usuario-formulario-dialog`, `demanda-membro-lista`. Ficaram também a guarda de permanência e `listarGestoresAtivos`
+(igualdade exata com `GESTOR` por decisão da spec; a 119 as substitui). Os usos de `=== DESENVOLVEDOR` permanecem:
+significam "somente desenvolvedor".
+
+- **Testes:** `shared` 12/12 (2 novos), `backend` 39/39; builds de backend e frontend passam (aviso preexistente do
+  `quill-delta` no frontend). Frontend sem testes e sem lint (P-001).
+- **Ao vivo (API e SPA reais, com o gestor inicial e um desenvolvedor criado e excluído depois):** `POST /projeto` e
+  `GET /ponto-justificativa` (gestor-only) respondem 403 ao desenvolvedor e passam do guard para o gestor (400 de
+  validação); a topbar mostra 8 itens ao gestor e 4 (sem "Mais") ao desenvolvedor.
+- **Não aplicável:** captura visual (nenhuma tela mudou).
+
 ## 2026-10-17 — Tasks 110 e 111: histórico de Execuções com contexto/URL/teclado e relatório com auto-preview
 
 Reativadas pelo autor em 2026-10-17 (descartadas no dia anterior junto com as de Atividades, que seguem descartadas).

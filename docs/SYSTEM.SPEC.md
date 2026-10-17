@@ -1210,7 +1210,7 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 - **JWT** com Passport.js — token gerado no login, válido por `JWT_EXPIRACAO`
 - **Guard global** `JwtAuthGuard` aplicado em toda a aplicação via `APP_GUARD`
 - **`@Public()`** — decorator para rotas sem autenticação (somente login)
-- **`@GestorOnly()`** — decorator que restringe a rota a usuários do tipo GESTOR
+- **`@GestorOnly()`** — decorator que restringe a rota a quem tem permissão de gestor (`temPermissaoDeGestor`, em `@project20/shared`; hoje, o tipo GESTOR)
 - **`@ActiveUser()`** — injeta o payload do JWT decodificado no parâmetro do método
 
 ---

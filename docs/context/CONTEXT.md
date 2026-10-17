@@ -130,6 +130,10 @@ project-2.0/
   Limpar com Desfazer de 7 s (o vazio só é gravado depois), erro no flush → toast "Reabrir". `aoAlterar` emite
   `{usuarioId, temAnotacoes}`. Deep-link `/usuario/:id/anotacoes` redireciona (gestor → `/usuario?anotacoes=`, próprio →
   `/ponto?anotacoes=`); a topbar abre o drawer próprio. `DesfazerService` aceita `rotulo/duracaoMs/aoEncerrar`.
+- **[task 118]** Permissão de gestor centralizada: `temPermissaoDeGestor(tipo)` em `shared/src/utils/permissao-usuario.ts`
+  é a única regra de "tem poder de gestor" (guard, services do backend, `UsuarioSessaoService.eGestor`, filtros de membros
+  das demandas). Sobraram comparações diretas com `GESTOR` só na guarda de permanência de gestor ativo
+  (`UsuarioService.validarPermanenciaDeGestorAtivo` e `listarGestoresAtivos`), que a task 119 substitui.
 - **[task 113]** Usuários: status em `p-toggleswitch` na linha (otimista, Desfazer, desabilitado na própria linha);
   editar e alterar senha abrem direto da linha (`abrirEdicao(id)` / `app-usuario-senha-dialog`); o perfil só lê. O
   dialog criar/editar é único: login sugerido do nome, senha gerada, Tipo segmentado. Filtros Tipo/Status persistem em

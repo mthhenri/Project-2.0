@@ -29,7 +29,7 @@ import {
   ExecucaoIniciarDto,
   ExecucaoEncerrarDto,
   ExecucaoRegistrarDto,
-  TipoUsuarioEnum,
+  temPermissaoDeGestor,
   REGEX_SEM_CARACTERES_PROIBIDOS,
   MENSAGEM_CARACTERES_PROIBIDOS,
 } from '@project20/shared';
@@ -546,7 +546,7 @@ export class AtividadeListagemPage implements OnInit {
     this.formularioExecucao.reset({ descricao: descricaoInicial });
 
     // Descrição obrigatória apenas quando o dono da atividade é desenvolvedor.
-    const donoEhGestor = atividade.usuarioTipo === TipoUsuarioEnum.GESTOR;
+    const donoEhGestor = !!atividade.usuarioTipo && temPermissaoDeGestor(atividade.usuarioTipo);
     this.descricaoExecucaoOpcional.set(donoEhGestor);
     const controleDescricao = this.formularioExecucao.get('descricao')!;
     controleDescricao.setValidators(

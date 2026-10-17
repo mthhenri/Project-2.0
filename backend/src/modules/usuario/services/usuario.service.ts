@@ -15,6 +15,7 @@ import {
   UsuarioSenhaAlterarDto,
   UsuarioSenhaAlteradaDto,
   TipoUsuarioEnum,
+  temPermissaoDeGestor,
   TipoUsuarioStatusEnum,
 } from '@project20/shared';
 import { StandardResponse, PaginatedResult } from '@project20/shared';
@@ -125,7 +126,7 @@ export class UsuarioService {
     }
 
     const estaRebaixandoGestor =
-      usuarioEncontrado.tipo === TipoUsuarioEnum.GESTOR &&
+      temPermissaoDeGestor(usuarioEncontrado.tipo) &&
       dto.tipo === TipoUsuarioEnum.DESENVOLVEDOR;
 
     if (estaRebaixandoGestor) {
@@ -135,7 +136,7 @@ export class UsuarioService {
 
     }
 
-    const deixaDeSerGestor = dto.tipo !== undefined && dto.tipo !== TipoUsuarioEnum.GESTOR;
+    const deixaDeSerGestor = dto.tipo !== undefined && !temPermissaoDeGestor(dto.tipo);
     const deixaDeSerAtivo = dto.status !== undefined && dto.status !== TipoUsuarioStatusEnum.ATIVO;
     if (deixaDeSerGestor || deixaDeSerAtivo) {
       await this.validarPermanenciaDeGestorAtivo(usuarioEncontrado);

@@ -22,7 +22,7 @@ import {
   MENSAGEM_CARACTERES_PROIBIDOS,
   DemandaAlterarDto,
   UsuarioResumoDto,
-  TipoUsuarioEnum,
+  temPermissaoDeGestor,
   TipoDemandaStatusEnum,
   AtividadeResumoDto,
   AtividadeListarDto,
@@ -598,7 +598,7 @@ export class DemandaDetalheDialogComponent implements OnChanges {
           if (tags && tags.sucesso && tags.dados) this.tagsDisponiveis.set(tags.dados);
           if (usuarios && usuarios.sucesso && usuarios.dados) {
             // Gestores não entram no autocomplete de membros: têm acesso total por serem gestores (task 71).
-            this.todosUsuarios.set(usuarios.dados.itens.filter((usuario) => usuario.tipo !== TipoUsuarioEnum.GESTOR));
+            this.todosUsuarios.set(usuarios.dados.itens.filter((usuario) => !temPermissaoDeGestor(usuario.tipo)));
           }
         },
       });
