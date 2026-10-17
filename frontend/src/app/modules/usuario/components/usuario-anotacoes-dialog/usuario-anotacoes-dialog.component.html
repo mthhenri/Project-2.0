@@ -53,10 +53,14 @@
               <p-accordion-panel [value]="secao.tipo">
                 <p-accordion-header>
                   <span class="anotacoes-secao__titulo">
+                    <i
+                      [class]="iconeSecao[secao.tipo]"
+                      class="anotacoes-secao__icone"
+                      [class.anotacoes-secao__icone--com-texto]="secao.temTexto()"
+                      [pTooltip]="secao.temTexto() ? 'Tem texto' : ''"
+                      tooltipPosition="top"
+                    ></i>
                     {{ rotuloSecao[secao.tipo] }}
-                    @if (secao.temTexto()) {
-                      <i class="pi pi-circle-fill anotacoes-secao__marca" pTooltip="Tem texto" tooltipPosition="top"></i>
-                    }
                   </span>
                   <span class="anotacoes-secao__estado" [attr.data-estado]="secao.estado()">
                     @switch (secao.estado()) {

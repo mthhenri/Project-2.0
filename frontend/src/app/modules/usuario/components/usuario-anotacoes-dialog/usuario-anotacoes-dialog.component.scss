@@ -108,9 +108,17 @@
     font-weight: 600;
   }
 
-  &__marca {
-    font-size: 0.4rem;
-    color: var(--p-primary-color);
+  // Ícone da seção: apagado sem texto; com texto, azul-céu com bold + glow (mesmo tratamento do ícone de anotações da listagem).
+  &__icone {
+    font-size: 0.95rem;
+    color: var(--p-text-muted-color);
+    transition: color 0.15s, text-shadow 0.15s;
+
+    &--com-texto {
+      color: var(--app-icone-anotacao);
+      font-weight: 700;
+      text-shadow: 0 0 4px color-mix(in srgb, currentColor 45%, transparent);
+    }
   }
 
   &__estado {

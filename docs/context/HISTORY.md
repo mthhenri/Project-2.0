@@ -12,6 +12,13 @@
 
 ---
 
+## 2026-10-17 — Ajuste no pad: ícone por seção no lugar da bolinha "tem texto"
+
+Pedido do autor, fora de spec: cada acordeão do pad ganhou o seu ícone à esquerda do título (Em andamento `pi-bolt`, Feito `pi-check-circle`,
+Pendências `pi-flag`, Lembretes `pi-bell`, Pessoal `pi-user`; mapa em `ICONE_SECAO_ANOTACAO`). Sem texto o ícone fica apagado; com texto acende no
+mesmo tratamento do ícone de anotações da listagem de usuários (`--app-icone-anotacao`, bold e glow). A bolinha saiu. Build do frontend ok; visto no
+drawer em tema escuro com texto em duas seções; tema claro e as três resoluções não conferidos.
+
 ## 2026-10-17 — Ajuste no pad: editor sem as abas Editar | Visualizar
 
 Pedido do autor, fora de spec: o `app-markdown-editor` ganhou o input `semAbas` (padrão falso, nada muda nos outros usos) e o pad o liga, ficando só

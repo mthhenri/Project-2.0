@@ -18,7 +18,7 @@ import { AnotacaoService } from '../../services/anotacao.service';
 import { UsuarioService } from '../../services/usuario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { DesfazerService } from '../../../../core/services/desfazer.service';
-import { anotacaoTemTexto, ROTULO_SECAO_ANOTACAO, tempoDecorrido } from '../../utils/anotacoes.util';
+import { anotacaoTemTexto, ICONE_SECAO_ANOTACAO, ROTULO_SECAO_ANOTACAO, tempoDecorrido } from '../../utils/anotacoes.util';
 import { EstadoSalvamento, SecaoAnotacao } from './secao-anotacao';
 
 /** Quanto tempo sem digitar até o salvamento automático. */
@@ -79,6 +79,7 @@ export class UsuarioAnotacoesDialogComponent {
   readonly secoes = signal<SecaoAnotacao[]>([]);
   readonly secoesAbertas = signal<TipoAnotacaoEnum[]>(SECOES_ABERTAS_AO_ABRIR);
   readonly rotuloSecao = ROTULO_SECAO_ANOTACAO;
+  readonly iconeSecao = ICONE_SECAO_ANOTACAO;
   readonly alteracaoData = signal<Date | string | null>(null);
   private readonly agora = signal(new Date());
   private readonly usuarioId = signal(0);
