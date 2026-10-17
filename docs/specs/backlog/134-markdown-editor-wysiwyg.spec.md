@@ -89,7 +89,7 @@ ou item de lista) em vez de falhar (decisão 2).
 
 ## Decisões
 
-Tomadas pelo autor:
+Tomadas pelo autor (as de 5 a 8 em 2026-10-17, na revisão da spec):
 
 1. **O editor é trocado em todos os lugares** de uma vez (pad, descrições de demanda, documentação e prompts).
 2. **Biblioteca externa é aceita** (Milkdown proposto acima).
@@ -98,18 +98,12 @@ Tomadas pelo autor:
 4. **Foco, Tab e Esc** dentro de dialogs e drawers são revalidados em cada consumidor; contrato que conflitar é
    registrado e resolvido caso a caso.
 
-Propostas desta spec, a confirmar na revisão (o autor não as contrariou, mas não as respondeu):
-
-5. **Seleção no "Enviar para":** estender sempre ao **bloco inteiro** (parágrafo, item de lista, título) em vez
-   de tentar o trecho exato. Mais previsível no editor formatado. Alternativa: manter o trecho exato e recusar
-   quando não casar.
-6. **Modo "ver Markdown"** como alternância opcional por editor, **desligada por padrão**, para depurar e
-   colar Markdown. Alternativa: remover o modo texto e apagar o código do `textarea` e de `markdown.edicao.ts`.
-7. **Primeiro teste do frontend:** um `node:test` mínimo só para as funções puras de normalização e ida e volta,
-   sem montar componente. Alternativa: o teste no `shared`, com o `shared` dependendo do Milkdown só para ele.
-8. **Tabelas:** o editor de referência do autor tem um botão de tabela. Esta spec **não** inclui tabelas
-   (o `interpretarMarkdown` não as lê e o pad não precisa); incluí-las pede estender o interpretador e o
-   visualizador numa task própria.
+5. **Seleção no "Enviar para":** estender sempre ao **bloco inteiro** (parágrafo, item de lista, título), em vez de tentar o trecho exato.
+6. **Modo "ver Markdown"** como alternância opcional por editor, **desligada por padrão**: muita gente vai querer ver e editar o Markdown
+   direto, então o modo texto fica (o código do `textarea` e de `markdown.edicao.ts` continua vivo, como modo alternativo do mesmo componente).
+7. **Primeiro teste do frontend:** um `node:test` mínimo só para as funções puras de normalização e ida e volta, sem montar componente.
+8. **Tabelas ficam fora desta task** (o `interpretarMarkdown` não as lê e o pad não precisa); registradas como ideia em
+   [`IDEAS.md`](../../context/IDEAS.md) (I-003).
 
 ## Critérios de Aceite
 

@@ -53,6 +53,14 @@
 - **Custo aparente:** configuração por workspace e um passo de CI; services estendem
   `BaseRepository` com injeção do Knex, então os falsos precisam de um ponto de injeção.
 
+### I-003 — Tabelas no editor e no visualizador de Markdown · frontend/shared
+
+- **Ideia:** aceitar tabelas (GFM) no `interpretarMarkdown`, no `app-markdown-visualizador` e no editor formatado, com botão de tabela na barra.
+- **Origem:** conversa da task 134 (2026-10-17): o editor de outro projeto do autor tem o botão; o autor não precisa por ora.
+- **Por quê:** descrições técnicas e documentação de demanda às vezes pedem comparação em colunas; a IA também escreve tabelas com naturalidade.
+- **Custo aparente:** estender o interpretador (nó de tabela, sem HTML), o visualizador e o esquema do editor (Milkdown tem o preset GFM), mais testes
+  de ida e volta; decidir o que a IA pode gerar.
+
 ## Promovidas
 
 Nenhuma ainda.
