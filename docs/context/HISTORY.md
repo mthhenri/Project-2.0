@@ -32,6 +32,15 @@ Relatórios em `docs/specs/done/110-execucoes-contexto-navegacao/verificacao.md`
 
 ---
 
+## 2026-10-17 — P-005 resolvido: falha HTTP sem handler não polui mais o console
+
+Em vez de varrer todos os `subscribe`, `config.onUnhandledError` do rxjs (`core/config/rxjs-erros-http.ts`, ligado em
+`main.ts`) passou a tratar `HttpErrorResponse` como já tratado (o `errorHandlerInterceptor` avisa o usuário); qualquer outro
+erro não tratado continua sendo relançado. Conferido ao vivo na tela de Execuções com a listagem respondendo 500: antes
+saía `pageerror HttpErrorResponse`, agora nenhum erro de página e o toast "Erro interno. Tente novamente." segue aparecendo.
+
+---
+
 ## 2026-10-17 — P-004 resolvido nas telas de Execuções e Relatório: dia e horas seguem o fuso do sistema
 
 Novo `shared/src/utils/fuso-horario.ts` (`dataIsoNoFuso`, `horaNoFuso`, `diaMesNoFuso`, `dataHoraNoFuso`, `hojeNoFuso`,
