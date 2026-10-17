@@ -176,6 +176,9 @@
     margin: 0;
     padding: 0;
     list-style: none;
+    // Histórico longo rola dentro do cartão em vez de esticar a tela.
+    max-height: 32rem;
+    overflow-y: auto;
 
     li + li {
       border-top: 1px solid var(--app-surface-200);
