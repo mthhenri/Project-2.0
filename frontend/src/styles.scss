@@ -126,27 +126,23 @@ body {
 }
 
 // ---------------------------------------------------------------------------
-// Barra de rolagem global — fina, arredondada e discreta (cinza que acompanha
-// claro/escuro via aliases de superfície). Substitui o scrollbar padrão do
-// navegador em todo o sistema, vertical e horizontal.
+// Barra de rolagem global — fininha, arredondada e cinza clara (acompanha
+// claro/escuro via aliases de superfície), sempre visível. Vale para vertical e
+// horizontal.
 //
-// Firefox: `scrollbar-width`/`scrollbar-color` são herdados, então defini-los no
-// `html` cascateia para todos os contêineres roláveis.
-// WebKit/Chromium: pseudo-elementos sem prefixo de elemento valem globalmente.
-// O thumb usa borda transparente + `background-clip: padding-box` para parecer
-// mais fino e ganhar respiro nas bordas.
+// WebKit/Chromium: pseudo-elementos globais; o thumb tem borda transparente de
+// 2px + `background-clip: padding-box` (4px visíveis num trilho de 8px).
+// Firefox: `scrollbar-width`/`scrollbar-color` (herdados). Ficam dentro de
+// `@supports not selector(::-webkit-scrollbar)` porque, no Chromium recente,
+// defini-los desativaria os pseudo-elementos acima.
 // ---------------------------------------------------------------------------
-html {
-  scrollbar-width: thin;
-  scrollbar-color: var(--app-surface-300) transparent;
-}
-
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
 }
 
-::-webkit-scrollbar-track {
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
   background: transparent;
 }
 
@@ -161,8 +157,11 @@ html {
   }
 }
 
-::-webkit-scrollbar-corner {
-  background: transparent;
+@supports not selector(::-webkit-scrollbar) {
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: var(--app-surface-300) transparent;
+  }
 }
 
 // ---------------------------------------------------------------------------
