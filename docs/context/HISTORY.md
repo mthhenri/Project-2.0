@@ -12,6 +12,31 @@
 
 ---
 
+## 2026-10-17 — Task 134: editor de Markdown formatado ("escreve vendo", guarda Markdown)
+
+O `app-markdown-editor` passou a editar já formatado, com o texto guardado em Markdown, no pad e em todos os usos (descrições, documentação e a futura
+aba de prompts). Biblioteca: **Milkdown** (`@milkdown/kit` 7.22, presets commonmark e gfm, histórico e listener), escolhida por tratar o Markdown como o
+formato de verdade e não trazer UI nem tema próprios (o `crepe` foi descartado). A lógica fica em `markdown-formatado.ts` (sem Angular) e o componente a
+carrega com `import()`: o trecho lazy tem 467 kB (123 kB transferidos). Barra no molde do editor de outro projeto do autor (desfazer, refazer, H1, H2,
+negrito, itálico, tachado, código, lista, numerada, tarefa, citação, link), com botões acesos conforme o cursor; o botão do modo cru virou o ícone `M↓`.
+
+- **Botões são interruptores:** negrito, itálico, tachado e código valem para a palavra do cursor (ou a seleção) e desligam se já aplicados; título e
+  citação saem do bloco; lista tira o item e troca de tipo (lista ↔ numerada); tarefa liga e desliga a caixa e a caixa (`☐`/`☑`, desenhada por CSS)
+  marca ao clique.
+- **Markdown estável:** o editor serializa com `-`, `*`, `**`; a quebra de linha final é removida; o plugin do Milkdown que grava parágrafo vazio como
+  `<br />` foi tirado do esquema (achado ao vivo). O texto abre sem ser tocado: só uma edição real emite mudança, e desfazer tudo devolve o texto original.
+  As regras de criação de tabela e imagem saíram, mas o esquema delas continua (texto que já as tenha abre e volta igual).
+- **HTML:** `<script>`, `<img onerror>` etc. viram nós de texto desenhados com `textContent` (testado: nenhum `<script>`, `<img>` do texto nem `onerror`).
+- **"Enviar para":** entrega o Markdown do bloco inteiro (parágrafo, título, item de lista) da seleção; testado ao vivo movendo `- item2` para Lembretes.
+- **Testes:** 14 de `node:test` + jsdom (ida e volta, normalização, HTML, bloco da seleção, parágrafo vazio e os interruptores); `shared` e `backend` sem mudança.
+- **Orçamento do bundle:** o pad vive na topbar e entra no bundle inicial; o editor somou ~7 kB e passou do limite de erro de 1 MB (já em 993 kB). O autor
+  autorizou subir para 1,1 MB (`angular.json`). Aviso novo: o estilo do editor tem 5,25 kB (limite de aviso 4 kB).
+- **Ao vivo:** pad (digitar com teclas reais, listas, negrito, autosave, abrir/fechar sem requisição, "Enviar para", tarefa), diálogo de Documentação da
+  demanda (abrir, alternar modo cru e voltar, salvar), tema escuro e claro. **Não verificado:** `Ctrl+Enter` em um dialog com `dialogFormulario` (o de
+  Documentação não usa a diretiva; a mudança em `contenteditable` não foi exercitada ao vivo), o Desfazer do "Enviar para" no editor formatado (o toast
+  expirou durante o teste; o caminho é o mesmo da task 127), as telas de painel de demanda e atividades, e as resoluções 1366×768 e 1080×1920.
+- **Desvios da spec:** botões de link usam `window.prompt` para o endereço; o editor formatado não tem alternância de modo por consumidor (é por instância).
+
 ## 2026-10-17 — Ajuste no pad: ícone por seção no lugar da bolinha "tem texto"
 
 Pedido do autor, fora de spec: cada acordeão do pad ganhou o seu ícone à esquerda do título (Em andamento `pi-play-circle`, Feito `pi-check-circle`,

@@ -142,6 +142,11 @@ project-2.0/
   com trecho selecionado; sem consumidor ou sem seleção o menu do navegador segue); o drawer abre um `p-contextmenu` cujos itens são
   propriedade direta (a seção de origem fica `visible = false`), salva as duas seções (`garantirSalva`), chama `POST /anotacao/:id/mover`
   e oferece Desfazer de 7 s (move de volta); 400/409 recarregam as duas seções e avisam.
+- **[task 134]** Editor de Markdown formatado: `app-markdown-editor` escreve já formatado (Milkdown, `@milkdown/kit`, carregado sob demanda por
+  `markdown-formatado.ts`, sem acoplamento a Angular) e guarda Markdown; modo "Markdown" (`M↓`) alterna para o `textarea` cru. Sem abas Editar | Visualizar.
+  Abrir sem editar nunca emite mudança (`base`/`original` no componente). "Enviar para" entrega o **bloco inteiro** da seleção em Markdown
+  (`blocoSelecionadoEmMarkdown`). `DialogFormularioDirective` trata `Ctrl+Enter` também em `contenteditable`. Primeiros testes do frontend:
+  `npm run test --workspace=frontend` (`node:test` + jsdom, só o módulo do editor). Orçamento do bundle inicial subiu de 1 MB para 1,1 MB.
 - **[tasks 121–124]** Markdown no lugar do Quill: `interpretarMarkdown` (`shared/src/markdown/`, sem biblioteca, tempo linear,
   sem HTML embutido) devolve uma árvore de nós; `app-markdown-visualizador` (`shared/components/markdown-visualizador/`) monta
   elementos a partir dela e é a **única** forma de exibir texto rico; `app-markdown-editor` (`shared/components/markdown-editor/`,
