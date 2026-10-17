@@ -84,6 +84,7 @@ export class CalendarioListagemPage implements OnInit {
   /** Data para o `p-datepicker` do calendário navegar (Hoje, ano ‹ ›, mês); a cada uso vira um objeto novo. */
   readonly dataDeReferencia = signal<Date>(new Date());
   readonly anoDeHoje = new Date().getFullYear();
+  readonly mesDeHoje = new Date().getMonth() + 1;
 
   readonly diasNaoUteis = signal<DiaNaoUtilResumoDto[]>([]);
   readonly carregando = signal<boolean>(false);
@@ -96,6 +97,10 @@ export class CalendarioListagemPage implements OnInit {
     ano: new Date().getFullYear(),
     mes: new Date().getMonth() + 1,
   });
+  /** Verdadeiro quando o calendário já está no mês/ano de hoje (o botão "Hoje" fica desativado). */
+  readonly noMesDeHoje = computed(
+    () => this.mesExibido().ano === this.anoDeHoje && this.mesExibido().mes === this.mesDeHoje,
+  );
   /** Id do dia destacado na tabela após clique no calendário. */
   readonly diaDestacadoId = signal<number | null>(null);
 

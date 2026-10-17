@@ -20,12 +20,10 @@ import {
   AtividadeResumoDto,
   TipoAtividadeStatusEnum,
   AtividadeListarDto,
-  AtividadeCriarDto,
   AtividadeAlterarDto,
   TagResumoDto,
   UsuarioResumoDto,
   TipoUsuarioStatusEnum,
-  DemandaAtribuidaDto,
   DemandaRecuperadaDto,
   ExecucaoItemDto,
   ExecucaoIniciarDto,
@@ -58,12 +56,11 @@ import {
 } from '../../models/atividade.model';
 import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
 import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
+import { AtividadeNovaDialogComponent } from '../../components/atividade-nova-dialog/atividade-nova-dialog.component';
 import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
 import { BarraRecargaComponent } from '../../../../shared/components/barra-recarga/barra-recarga.component';
 import { DesfazerService } from '../../../../core/services/desfazer.service';
 import { ExecucaoAtivaService } from '../../../../core/services/execucao-ativa.service';
-
-type DemandaAtribuidaOpcao = DemandaAtribuidaDto & { rotulo: string };
 
 type CampoDescricaoDemanda = 'descricaoCliente' | 'descricaoTecnica' | 'documentacao';
 
@@ -75,6 +72,7 @@ type CampoDescricaoDemanda = 'descricaoCliente' | 'descricaoTecnica' | 'document
     BarraRecargaComponent,
     DialogFormularioDirective,
     DialogDicaAtalhosComponent,
+    AtividadeNovaDialogComponent,
     ReactiveFormsModule,
     TableModule,
     ButtonModule,
@@ -140,20 +138,6 @@ export class AtividadeListagemPage implements OnInit {
   // --- Troca de status inline ---
   readonly atividadeStatusEdicao = signal<AtividadeResumoDto | null>(null);
 
-  // --- Dialog: nova atividade ---
-  readonly mostrarDialogNova = signal<boolean>(false);
-  readonly salvandoNova = signal<boolean>(false);
-  readonly demandasAtribuidas = signal<DemandaAtribuidaOpcao[]>([]);
-  readonly carregandoDemandasAtribuidas = signal<boolean>(false);
-
-  readonly formularioNova = this.formBuilder.group({
-    nome:      ['', [Validators.required, Validators.minLength(3), Validators.maxLength(255), Validators.pattern(REGEX_SEM_CARACTERES_PROIBIDOS)]],
-    demandaId: [null as number | null, [Validators.required]],
-    usuarioId: [null as number | null],
-    status:    [TipoAtividadeStatusEnum.DESENVOLVENDO as TipoAtividadeStatusEnum, [Validators.required]],
-    tagIds:    [[] as number[]],
-  });
-
   // --- Dialog: atribuir tags ---
   readonly mostrarDialogTags = signal<boolean>(false);
   readonly salvandoTags = signal<boolean>(false);
@@ -205,7 +189,6 @@ export class AtividadeListagemPage implements OnInit {
   // --- Dialog: registrar execução manual (somente gestor) ---
   /** Textarea de descrição; recebe o foco ao abrir o dialog, não o campo de início. */
   @ViewChild('descricaoRegistro') private descricaoRegistro?: ElementRef<HTMLTextAreaElement>;
-  @ViewChild('campoNovoNome') private campoNovoNome?: ElementRef<HTMLInputElement>;
   readonly mostrarDialogRegistro = signal<boolean>(false);
   readonly salvandoRegistro = signal<boolean>(false);
   readonly atividadeRegistro = signal<AtividadeResumoDto | null>(null);
@@ -316,74 +299,6 @@ export class AtividadeListagemPage implements OnInit {
       intervalo: null,
     });
     this.aoMudarFiltro();
-  }
-
-  // ---------------------------------------------------------------------------
-  // Nova atividade
-  // ---------------------------------------------------------------------------
-
-  abrirDialogNova(): void {
-    this.formularioNova.reset({
-      nome:      '',
-      demandaId: this.demandaId(),
-      usuarioId: null,
-      status:    TipoAtividadeStatusEnum.DESENVOLVENDO,
-      tagIds:    [],
-    });
-    if (this.demandasAtribuidas().length === 0) this.carregarDemandasAtribuidas();
-    if (this.todasAsTags().length === 0) this.carregarTodasAsTags();
-    this.mostrarDialogNova.set(true);
-  }
-
-  /** `criarOutra`: mantém o dialog aberto (demanda, responsável e status preservados) para cadastro em série. */
-  salvarNova(criarOutra = false): void {
-    if (this.formularioNova.invalid) {
-      this.formularioNova.markAllAsTouched();
-      return;
-    }
-
-    this.salvandoNova.set(true);
-    const valor = this.formularioNova.value;
-    const dto: AtividadeCriarDto = {
-      demandaId:     valor.demandaId!,
-      nome:          valor.nome!,
-      status:        valor.status!,
-    };
-    if (this.sessao.eGestor() && valor.usuarioId) dto.usuarioId = valor.usuarioId;
-    if (valor.tagIds?.length) dto.tagIds = valor.tagIds;
-
-    this.atividadeService
-      .criar(dto)
-      .pipe(finalize(() => this.salvandoNova.set(false)))
-      .subscribe({
-        next: (resposta) => {
-          if (resposta.sucesso) {
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Sucesso',
-              detail: 'Atividade criada com sucesso',
-            });
-            if (criarOutra) {
-              this.formularioNova.reset({
-                nome:      '',
-                demandaId: valor.demandaId,
-                usuarioId: valor.usuarioId,
-                status:    valor.status,
-                tagIds:    valor.tagIds,
-              });
-              this.campoNovoNome?.nativeElement.focus();
-            } else {
-              this.mostrarDialogNova.set(false);
-            }
-            this.aoMudarFiltro();
-          }
-        },
-      });
-  }
-
-  campoInvalidoNova(nomeCampo: string): boolean {
-    const controle = this.formularioNova.get(nomeCampo);
-    return !!(controle?.invalid && controle?.touched);
   }
 
   // ---------------------------------------------------------------------------
@@ -804,22 +719,6 @@ export class AtividadeListagemPage implements OnInit {
       .subscribe({
         next: (resposta) => {
           if (resposta.sucesso && resposta.dados) this.execucoesDialogExecucao.set(resposta.dados.itens);
-        },
-      });
-  }
-
-  private carregarDemandasAtribuidas(): void {
-    this.carregandoDemandasAtribuidas.set(true);
-    this.demandaService
-      .listarAtribuidas()
-      .pipe(finalize(() => this.carregandoDemandasAtribuidas.set(false)))
-      .subscribe({
-        next: (resposta) => {
-          if (resposta.sucesso && resposta.dados) {
-            this.demandasAtribuidas.set(
-              resposta.dados.map((demanda) => ({ ...demanda, rotulo: `${demanda.nomeProjeto} - ${demanda.nome}` })),
-            );
-          }
         },
       });
   }

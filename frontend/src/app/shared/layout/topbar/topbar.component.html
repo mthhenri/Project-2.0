@@ -1,6 +1,6 @@
 <header class="topbar flex items-center px-6 py-3 border-b-2 gap-6">
   <!-- Logo -->
-  <a routerLink="/ponto" class="topbar__logo flex-shrink-0" pTooltip="Ponto" tooltipPosition="bottom">
+  <a routerLink="/ponto" class="topbar__logo flex-shrink-0">
     <img src="favicon.ico" alt="Logo" class="topbar__logo-imagem" />
   </a>
 
@@ -12,8 +12,6 @@
         routerLinkActive="topbar__nav-item--ativo"
         class="topbar__nav-item flex items-center gap-2 px-3 py-2 rounded-lg text-color hover:bg-emphasis transition-colors text-sm font-medium whitespace-nowrap"
         [class.topbar__nav-item--gestor]="item.somenteGestor"
-        [pTooltip]="item.label + ' — g ' + item.tecla"
-        tooltipPosition="bottom"
         [attr.aria-label]="item.label"
       >
         <i [class]="item.icone"></i>
@@ -80,8 +78,6 @@
         [text]="true"
         [rounded]="true"
         size="small"
-        pTooltip="Minhas anotações — n"
-        tooltipPosition="bottom"
         aria-label="Minhas anotações"
         (onClick)="anotacoesDialog.abrir(sessao.id()!, sessao.nomeCompleto()!)"
       />

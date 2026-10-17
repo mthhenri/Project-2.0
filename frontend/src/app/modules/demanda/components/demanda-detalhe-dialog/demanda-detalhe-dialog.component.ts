@@ -1,4 +1,4 @@
-import { Component, ElementRef, Input, Output, EventEmitter, OnChanges, SimpleChanges, ViewChild, inject, signal, computed } from '@angular/core';
+import { Component, ElementRef, Input, Output, EventEmitter, OnChanges, SimpleChanges, ViewChild, viewChild, inject, signal, computed } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
@@ -30,6 +30,7 @@ import {
 import { DemandaService } from '../../services/demanda.service';
 import { TagService } from '../../../tag/services/tag.service';
 import { UsuarioService } from '../../../usuario/services/usuario.service';
+import { AtividadeNovaDialogComponent } from '../../../atividade/components/atividade-nova-dialog/atividade-nova-dialog.component';
 import { AtividadeService } from '../../../atividade/services/atividade.service';
 import {
   severidadeStatusAtividade,
@@ -82,6 +83,7 @@ interface EstadoDetalhe {
     DemandaMetricasComponent,
     DemandaFormularioDialogComponent,
     AssistenteDescricaoComponent,
+    AtividadeNovaDialogComponent,
     TempoExibicaoPipe,
   ],
   providers: [ConfirmationService],
@@ -133,6 +135,8 @@ export class DemandaDetalheDialogComponent implements OnChanges {
 
   // --- Título editável ---
   /** O campo nasce dentro de um @if: o foco (e a seleção do texto) é dado assim que ele aparece. */
+  private readonly novaAtividadeDialog = viewChild(AtividadeNovaDialogComponent);
+
   @ViewChild('campoTitulo') set campoTitulo(referencia: ElementRef<HTMLInputElement> | undefined) {
     if (!referencia) return;
     setTimeout(() => {
@@ -318,10 +322,14 @@ export class DemandaDetalheDialogComponent implements OnChanges {
     this.navegarParaSubDemanda(ancestral.id);
   }
 
-  /** Nova atividade já com a demanda escolhida (vai para o formulário e fecha o detalhe). */
+  /** Nova atividade já com a demanda escolhida: abre o dialog por cima, sem sair do detalhe. */
   criarAtividade(): void {
-    this.router.navigate(['/atividade', 'nova'], { queryParams: { demandaId: this.demandaIdAtual() } });
-    this.fechar();
+    this.novaAtividadeDialog()?.abrir(this.demandaIdAtual());
+  }
+
+  aoAtividadeCriada(): void {
+    const demandaId = this.demandaIdAtual();
+    if (demandaId) this.carregarAtividades(demandaId);
   }
 
   /** "Ver todas": a lista abre em outra aba para o detalhe continuar aberto. */

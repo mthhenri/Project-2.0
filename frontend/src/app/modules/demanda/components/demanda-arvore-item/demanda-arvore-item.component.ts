@@ -45,11 +45,11 @@ export class DemandaArvoreItemComponent implements OnChanges {
 
   private readonly sessao = inject(UsuarioSessaoService);
 
-  /** T·C·D da linha: letra, nome do campo e o tipo que escolhe a cor (tokens de ícone de descrição). */
-  readonly descricoes: Array<{ campo: CampoDescricao; letra: string; rotulo: string; tipo: string }> = [
-    { campo: 'descricaoTecnica', letra: 'T', rotulo: 'Descrição técnica',   tipo: 'tecnica' },
-    { campo: 'descricaoCliente', letra: 'C', rotulo: 'Descrição do cliente', tipo: 'cliente' },
-    { campo: 'documentacao',     letra: 'D', rotulo: 'Documentação',        tipo: 'doc' },
+  /** Ícones de descrição da linha: ícone, nome do campo e o tipo que escolhe a cor (tokens de ícone de descrição). */
+  readonly descricoes: Array<{ campo: CampoDescricao; icone: string; rotulo: string; tipo: string }> = [
+    { campo: 'descricaoTecnica', icone: 'pi pi-code', rotulo: 'Descrição técnica',   tipo: 'tecnica' },
+    { campo: 'descricaoCliente', icone: 'pi pi-user', rotulo: 'Descrição do cliente', tipo: 'cliente' },
+    { campo: 'documentacao',     icone: 'pi pi-book', rotulo: 'Documentação',        tipo: 'doc' },
   ];
 
   descricaoPreenchida(campo: CampoDescricao): boolean {

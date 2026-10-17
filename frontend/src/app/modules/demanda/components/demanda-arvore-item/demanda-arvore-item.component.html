@@ -81,7 +81,7 @@
         (statusEscolhido)="aoEscolherStatus($event)"
       />
       </span>
-      <!-- T·C·D: técnica, cliente e documentação; coloridos quando preenchidos (clique abre a descrição) -->
+      <!-- Ícones de técnica, cliente e documentação; brilham quando preenchidos (clique abre a descrição) -->
       <span class="demanda-arvore-item__descricoes" role="group" aria-label="Descrições da demanda">
         @for (descricao of descricoes; track descricao.campo) {
           <button
@@ -93,7 +93,7 @@
             [pTooltip]="descricao.rotulo + (descricaoPreenchida(descricao.campo) ? ' — preenchida' : ' — vazia')"
             tooltipPosition="top"
             (click)="abrirDescricao($event, descricao.campo)"
-          >{{ descricao.letra }}</button>
+          ><i [class]="descricao.icone"></i></button>
         }
       </span>
 

@@ -9,13 +9,6 @@ export const atividadeRotas: Routes = [
       ),
   },
   {
-    path: 'nova',
-    loadComponent: () =>
-      import('./pages/atividade-formulario/atividade-formulario.page').then(
-        (modulo) => modulo.AtividadeFormularioPage,
-      ),
-  },
-  {
     path: ':id',
     loadComponent: () =>
       import('./pages/atividade-detalhe/atividade-detalhe.page').then(

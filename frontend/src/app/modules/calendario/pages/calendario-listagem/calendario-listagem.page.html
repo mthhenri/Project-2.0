@@ -15,10 +15,17 @@
   <div class="calendario-listagem__principal">
     <div class="calendario-listagem__calendario-bloco">
       <div class="calendario-listagem__navegacao">
-        <p-button label="Hoje" size="small" severity="secondary" [outlined]="true" (onClick)="irParaHoje()" />
+        <p-button
+          label="Hoje"
+          size="small"
+          [severity]="noMesDeHoje() ? 'secondary' : 'primary'"
+          [outlined]="noMesDeHoje()"
+          [disabled]="noMesDeHoje()"
+          (onClick)="irParaHoje()"
+        />
         <div class="calendario-listagem__ano" role="group" aria-label="Ano">
           <p-button icon="pi pi-chevron-left" size="small" [text]="true" severity="secondary" ariaLabel="Ano anterior" (onClick)="mudarAno(-1)" />
-          <span class="calendario-listagem__ano-valor">{{ mesExibido().ano }}</span>
+          <span class="calendario-listagem__ano-valor" [class.calendario-listagem__ano-valor--hoje]="mesExibido().ano === anoDeHoje">{{ mesExibido().ano }}</span>
           <p-button icon="pi pi-chevron-right" size="small" [text]="true" severity="secondary" ariaLabel="Próximo ano" (onClick)="mudarAno(1)" />
         </div>
         <div class="calendario-listagem__meses" role="group" aria-label="Mês">
@@ -27,6 +34,8 @@
               type="button"
               class="calendario-listagem__mes"
               [class.calendario-listagem__mes--ativo]="mesExibido().mes === $index + 1"
+              [class.calendario-listagem__mes--hoje]="mesExibido().ano === anoDeHoje && mesDeHoje === $index + 1"
+              [attr.aria-current]="mesExibido().ano === anoDeHoje && mesDeHoje === $index + 1 ? 'date' : null"
               (click)="irParaMes(mesExibido().ano, $index + 1)"
             >{{ rotulo }}</button>
           }
