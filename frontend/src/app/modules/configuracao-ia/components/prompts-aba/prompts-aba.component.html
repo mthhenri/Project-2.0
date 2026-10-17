@@ -50,13 +50,68 @@
           <div class="prompts-aba__colunas">
             <div class="prompts-aba__cartao">
               <header class="prompts-aba__cartao-cabecalho">
-                <h2 class="prompts-aba__cartao-titulo">Versão ativa</h2>
-                <p-tag [value]="'Versão ' + tipo.ativa.versao" severity="success" [rounded]="true" />
+                <h2 class="prompts-aba__cartao-titulo">{{ exibindoAtiva() ? 'Versão ativa' : 'Versão antiga' }}</h2>
+                @if (versaoExibida(); as exibida) {
+                  <div class="prompts-aba__navegador" role="group" aria-label="Navegar pelas versões">
+                    <p-button
+                      icon="pi pi-chevron-left"
+                      size="small"
+                      [text]="true"
+                      [rounded]="true"
+                      [disabled]="!temAntiga()"
+                      ariaLabel="Versão anterior"
+                      pTooltip="Versão anterior"
+                      tooltipPosition="top"
+                      (onClick)="navegar(1)"
+                    />
+                    <p-tag [value]="'Versão ' + exibida.versao" [severity]="exibindoAtiva() ? 'success' : 'secondary'" [rounded]="true" />
+                    <p-button
+                      icon="pi pi-chevron-right"
+                      size="small"
+                      [text]="true"
+                      [rounded]="true"
+                      [disabled]="!temNova()"
+                      ariaLabel="Versão seguinte"
+                      pTooltip="Versão seguinte"
+                      tooltipPosition="top"
+                      (onClick)="navegar(-1)"
+                    />
+                    <p-button
+                      icon="pi pi-history"
+                      size="small"
+                      [text]="true"
+                      [rounded]="true"
+                      [disabled]="versoesNavegaveis().length < 2"
+                      ariaLabel="Histórico de versões"
+                      pTooltip="Histórico de versões"
+                      tooltipPosition="top"
+                      (onClick)="abrirMenuHistorico($event)"
+                    />
+                    <p-menu #menuHistorico [model]="itensHistorico()" [popup]="true" appendTo="body" styleClass="prompts-aba__menu" />
+                  </div>
+                }
               </header>
-              <p class="prompts-aba__meta">{{ tipo.ativa.usuarioNome }} · {{ tipo.ativa.createdDate | date: 'dd/MM/yyyy HH:mm' }}</p>
-              <div class="prompts-aba__texto">
-                <app-markdown-visualizador [texto]="tipo.ativa.conteudo" />
-              </div>
+              @if (versaoExibida(); as exibida) {
+                <p class="prompts-aba__meta">{{ exibida.usuarioNome }} · {{ exibida.createdDate | date: 'dd/MM/yyyy HH:mm' }}</p>
+                <div class="prompts-aba__texto">
+                  <app-markdown-visualizador [texto]="exibida.conteudo" />
+                </div>
+                <div class="prompts-aba__acoes">
+                  @if (!exibindoAtiva()) {
+                    <p-button label="Voltar à ativa" size="small" [text]="true" (onClick)="versaoVista.set(null)" />
+                    <p-button label="Usar como base" icon="pi pi-copy" size="small" [outlined]="true" (onClick)="usarComoBase(exibida)" />
+                  }
+                  <p-button
+                    label="Restaurar padrão"
+                    icon="pi pi-undo"
+                    severity="secondary"
+                    size="small"
+                    [text]="true"
+                    [disabled]="tipo.ativa.versao === 1 || operando()"
+                    (onClick)="restaurarPadrao()"
+                  />
+                </div>
+              }
             </div>
 
             <div class="prompts-aba__cartao">
@@ -99,49 +154,6 @@
                 <p-button label="Ativar rascunho" icon="pi pi-check" [disabled]="!podeAtivar() || operando()" (onClick)="ativarRascunho()" />
               </div>
             </div>
-          </div>
-
-          <div class="prompts-aba__cartao">
-            <header class="prompts-aba__cartao-cabecalho">
-              <h2 class="prompts-aba__cartao-titulo">Histórico</h2>
-              <p-button
-                label="Restaurar padrão"
-                icon="pi pi-history"
-                severity="secondary"
-                size="small"
-                [outlined]="true"
-                [disabled]="tipo.ativa.versao === 1 || operando()"
-                (onClick)="restaurarPadrao()"
-              />
-            </header>
-            @if (carregandoTipo()) {
-              <p-skeleton height="3rem" />
-            } @else if (historico().length === 0) {
-              <p class="prompts-aba__meta">Ainda não há versões antigas deste prompt.</p>
-            } @else {
-              <ul class="prompts-aba__versoes">
-                @for (versao of historico(); track versao.id) {
-                  <li>
-                    <div class="prompts-aba__versao">
-                      <span class="prompts-aba__versao-numero">Versão {{ versao.versao }}</span>
-                      <span class="prompts-aba__versao-meta">{{ versao.usuarioNome }} · {{ versao.createdDate | date: 'dd/MM/yyyy HH:mm' }}</span>
-                      <p-button
-                        [label]="versaoVista()?.id === versao.id ? 'Ocultar' : 'Ver'"
-                        size="small"
-                        [text]="true"
-                        (onClick)="verVersao(versao)"
-                      />
-                      <p-button label="Usar como base" icon="pi pi-copy" size="small" [text]="true" (onClick)="usarComoBase(versao)" />
-                    </div>
-                    @if (versaoVista()?.id === versao.id) {
-                      <div class="prompts-aba__texto prompts-aba__texto--versao">
-                        <app-markdown-visualizador [texto]="versao.conteudo" />
-                      </div>
-                    }
-                  </li>
-                }
-              </ul>
-            }
           </div>
         </section>
       }

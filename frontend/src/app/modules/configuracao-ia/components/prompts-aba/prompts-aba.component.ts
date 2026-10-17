@@ -1,9 +1,10 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal, viewChild } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmationService, MenuItem, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { Menu, MenuModule } from 'primeng/menu';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
@@ -26,6 +27,7 @@ import { PromptService } from '../../services/prompt.service';
     ReactiveFormsModule,
     ButtonModule,
     ConfirmDialogModule,
+    MenuModule,
     SkeletonModule,
     TagModule,
     TooltipModule,
@@ -62,8 +64,27 @@ export class PromptsAbaComponent implements OnInit {
   /** Há rascunho gravado e o editor está igual a ele. */
   readonly podeAtivar = computed(() => !!this.tipoAtual()?.rascunho && !this.mudancaPendente());
   readonly podeSalvar = computed(() => this.mudancaPendente() && this.textoEditado().trim() !== '');
-  /** Versões antigas: nem a ativa nem o rascunho. */
-  readonly historico = computed(() => this.versoes().filter((versao) => !versao.ativo && !versao.rascunho));
+  /** Ativa e antigas, do maior número para o menor (o rascunho não entra: ele tem o próprio editor). */
+  readonly versoesNavegaveis = computed(() => {
+    const lista = this.versoes().filter((versao) => !versao.rascunho);
+    const ativa = this.tipoAtual()?.ativa;
+    return lista.length > 0 || !ativa ? lista : [ativa];
+  });
+  /** Versão exibida no cartão: a escolhida no histórico ou, sem escolha, a ativa. */
+  readonly versaoExibida = computed(() => this.versaoVista() ?? this.tipoAtual()?.ativa ?? null);
+  readonly indiceExibido = computed(() => this.versoesNavegaveis().findIndex((versao) => versao.id === this.versaoExibida()?.id));
+  readonly temAntiga = computed(() => this.indiceExibido() >= 0 && this.indiceExibido() < this.versoesNavegaveis().length - 1);
+  readonly temNova = computed(() => this.indiceExibido() > 0);
+  readonly exibindoAtiva = computed(() => !this.versaoVista());
+  private readonly menuHistorico = viewChild<Menu>('menuHistorico');
+  /** Itens do menu "Histórico": uma linha por versão, a exibida marcada. */
+  readonly itensHistorico = computed<MenuItem[]>(() =>
+    this.versoesNavegaveis().map((versao) => ({
+      label: `Versão ${versao.versao}${versao.ativo ? ' (ativa)' : ''} · ${versao.usuarioNome}`,
+      icon: versao.id === this.versaoExibida()?.id ? 'pi pi-check' : 'pi pi-fw',
+      command: () => this.exibirVersao(versao),
+    })),
+  );
 
   ngOnInit(): void {
     this.controleRascunho.valueChanges.subscribe((valor) => this.textoEditado.set(valor));
@@ -229,8 +250,19 @@ export class PromptsAbaComponent implements OnInit {
     this.preencherEditor(this.textoBase());
   }
 
-  verVersao(versao: PromptResumoDto): void {
-    this.versaoVista.set(this.versaoVista()?.id === versao.id ? null : versao);
+  /** Mostra a versão no cartão; a ativa volta ao estado sem escolha. */
+  exibirVersao(versao: PromptResumoDto): void {
+    this.versaoVista.set(versao.ativo ? null : versao);
+  }
+
+  /** Setas do cartão: `+1` vai para a versão de número menor, `-1` para a de número maior. */
+  navegar(passo: 1 | -1): void {
+    const alvo = this.versoesNavegaveis()[this.indiceExibido() + passo];
+    if (alvo) this.exibirVersao(alvo);
+  }
+
+  abrirMenuHistorico(evento: Event): void {
+    this.menuHistorico()?.toggle(evento);
   }
 
   /** Coloca o texto da versão no editor; nada é gravado até "Salvar rascunho". */

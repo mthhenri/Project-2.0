@@ -180,36 +180,9 @@
     font-size: 0.8125rem;
   }
 
-  &__versoes {
+  &__navegador {
     display: flex;
-    flex-direction: column;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    // Histórico longo rola dentro do cartão em vez de esticar a tela.
-    max-height: 20rem;
-    overflow-y: auto;
-
-    li + li {
-      border-top: 1px solid var(--app-surface-200);
-    }
-  }
-
-  &__versao {
-    display: flex;
-    flex-wrap: wrap;
     align-items: center;
-    gap: 0.25rem 0.75rem;
-    padding: 0.5rem 0.25rem;
-  }
-
-  &__versao-numero {
-    font-weight: 600;
-  }
-
-  &__versao-meta {
-    margin-right: auto;
-    color: var(--p-text-muted-color);
-    font-size: 0.75rem;
+    gap: 0.25rem;
   }
 }
