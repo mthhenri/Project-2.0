@@ -12,6 +12,18 @@
 
 ---
 
+## 2026-10-17 — P-006 resolvido: só gestor ou administrador troca a senha de outro usuário
+
+`PATCH /usuario/:id/senha` não era `@GestorOnly` e não conferia quem estava logado: um desenvolvedor trocava a senha de
+qualquer conta (verificado ao vivo na task 119). Agora a rota é `@GestorOnly()`; a regra da 119 continua impedindo o gestor de
+trocar a senha de administrador. A tela de Usuários (única chamadora) já era só de gestor, então nenhuma tela mudou. O desenvolvedor
+não troca nem a própria senha por esta rota (decisão do autor: só gestor e administrador gerenciam usuários).
+
+- **Ao vivo (API real):** desenvolvedor → outro dev, a si mesmo e administrador: 403; gestor → dev: 200; gestor → administrador: 403;
+  administrador → dev: 200. Usuários de teste excluídos. `backend` 47/47 e build ok.
+- **Aberto, fora desta correção:** `PUT /usuario/:id` ainda deixa o desenvolvedor editar o **próprio** perfil (nome e cargo; o
+  tipo não, task 39). O autor descreveu que só gestor/administrador alteram usuários: se for para fechar isso, é decisão à parte.
+
 ## 2026-10-17 — Task 119: usuário administrador (tipo, migration `0029` e regra de permanência)
 
 Segunda do bloco 1 do rework do chat com IA. `TipoUsuarioEnum.ADMINISTRADOR`; `temPermissaoDeGestor` passa a incluir o
@@ -34,7 +46,7 @@ receber o usuário logado. Frontend: opção e filtro "Administrador", rótulos 
   senha, excluir e restaurar administrador dão 403; criar gestor e desenvolvedor e acessar rota gestor-only seguem ok.
   Usuários de teste foram excluídos (soft delete).
 - **Achado só na verificação:** o `db:migrate` aplicou junto a `0028` (task 117), que ainda estava pendente no banco de
-  dev. E `PATCH /usuario/:id/senha` aceita qualquer usuário logado (registrado como P-006, fora do escopo da 119).
+  dev. E `PATCH /usuario/:id/senha` aceita qualquer usuário logado (registrado como P-006 e resolvido logo depois).
 - **Visual (Chromium do app, API real):** tela de Usuários em 1920×1080, 1366×768 e 1080×1920 (tema escuro; claro em
   1366×768): tag "Administrador" (contraste) distinta de Gestor e Desenvolvedor, filtro "Administradores" e dialog com a
   terceira opção. Como gestor, as linhas de administrador perdem editar, excluir e o switch de status, e o formulário não

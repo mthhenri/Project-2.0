@@ -44,17 +44,6 @@
 - **Desde:** origem do projeto.
 
 
-### P-006 — Qualquer usuário autenticado troca a senha de qualquer outro · `ABERTO` · backend
-
-- **Sintoma:** um desenvolvedor autenticado faz `PATCH /usuario/:id/senha` na conta de outro usuário (gestor ou
-  administrador) e recebe 200. Verificado ao vivo em 2026-10-17 (dev trocou a senha de outro desenvolvedor).
-- **Causa:** a rota não é `@GestorOnly` e `UsuarioService.alterarSenha` não confere quem está logado. A task 119 só
-  impede que **gestor** troque a senha de administrador; o desenvolvedor continua passando.
-- **Contorno:** nenhum; a equipe é pequena e confiável.
-- **Correção:** `alterarSenha` aceita o próprio usuário ou quem tem `temPermissaoDeGestor`, e o administrador
-  continua protegido pela regra da 119. Exige decidir se o próprio usuário precisa informar a senha atual.
-- **Desde:** origem do projeto.
-
 ### P-004 — Outras telas ainda calculam "hoje" e as horas no fuso do navegador · `ACEITO` · frontend
 
 - **Sintoma:** com o navegador num fuso diferente de `APP_TIMEZONE` (America/Sao_Paulo), Ponto, Calendário, Atividades e

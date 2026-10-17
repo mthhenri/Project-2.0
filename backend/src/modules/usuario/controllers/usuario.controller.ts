@@ -185,7 +185,7 @@ export class UsuarioController {
     return this.usuarioService.restaurar({ id }, usuarioAtivo);
   }
 
-  @ApiOperation({ summary: 'Alterar senha do usuário' })
+  @ApiOperation({ summary: 'Alterar senha do usuário (somente gestor; administrador só por administrador)' })
   @ApiResponse({
     status: 200,
     description: 'Senha alterada com sucesso',
@@ -199,7 +199,9 @@ export class UsuarioController {
   })
   @ApiResponse({ status: 400, description: 'Senha atual incorreta ou dados inválidos', schema: { example: { sucesso: false, dados: null, mensagem: 'Senha atual incorreta', erros: ['Senha atual incorreta'] } } })
   @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+  @ApiResponse({ status: 403, description: 'Acesso restrito a gestores', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
   @ApiResponse({ status: 404, description: 'Usuário não encontrado', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
+  @GestorOnly()
   @Patch(':id/senha')
   alterarSenha(
     @Param('id', ParseIntPipe) id: number,
