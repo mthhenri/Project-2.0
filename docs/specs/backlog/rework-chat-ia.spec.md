@@ -220,8 +220,9 @@ Os blocos 1 a 3 não dependem de IA e podem começar primeiro.
 | 4 | 131 | [`131-ia-prompts-versionados-modelo-e-api`](131-ia-prompts-versionados-modelo-e-api.spec.md) | 129 |
 | 4 | 132 | [`132-ia-tela-de-configuracoes-provedor-modelos-e-flags`](132-ia-tela-de-configuracoes-provedor-modelos-e-flags.spec.md) | 129, 130 |
 | 4 | 133 | [`133-ia-tela-de-configuracoes-prompts`](133-ia-tela-de-configuracoes-prompts.spec.md) | 131, 132 |
+| 3 | 134 | [`134-markdown-editor-wysiwyg`](134-markdown-editor-wysiwyg.spec.md) | 122, 124 (recomendada antes da 133) |
 
-Os blocos 5 a 7, 9 e 10 são quebrados a partir da **134**. As tasks 125 a 128 saíram no mesmo lançamento. O bloco 5 inclui a task do
+Os blocos 5 a 7, 9 e 10 são quebrados a partir da **135**. As tasks 125 a 128 saíram no mesmo lançamento. O bloco 5 inclui a task do
 "testar antes de salvar" os prompts (rodar o rascunho contra narrativas reais guardadas), que depende do chat e das mensagens.
 
 ## Critérios de Aceite (da guarda-chuva)
