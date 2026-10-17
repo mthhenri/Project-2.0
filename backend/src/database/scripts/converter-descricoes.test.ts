@@ -25,6 +25,6 @@ test('rodar de novo sobre o resultado não converte nada (idempotência)', () =>
 test('os alvos são os campos de texto rico e nenhum campo de texto puro', () => {
   assert.deepEqual(
     ALVOS.map((alvo) => `${alvo.tabela}.${alvo.coluna}`),
-    ['demanda.descricao_cliente', 'demanda.descricao_tecnica', 'demanda.documentacao', 'usuario.anotacoes'],
+    ['demanda.descricao_cliente', 'demanda.descricao_tecnica', 'demanda.documentacao', 'anotacao.texto'],
   );
 });

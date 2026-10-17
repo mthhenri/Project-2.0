@@ -12,6 +12,145 @@
 
 ---
 
+## 2026-10-17 — Ajuste no pad: editor sem as abas Editar | Visualizar
+
+Pedido do autor, fora de spec: o `app-markdown-editor` ganhou o input `semAbas` (padrão falso, nada muda nos outros usos) e o pad o liga, ficando só
+com a barra de formatação e o campo. As abas continuam nas descrições e na documentação. O modo só leitura do pad segue sendo o input `editavel` do
+drawer (ligado à IA nos blocos 4 e 10), independente disso. Build do frontend ok; visto no drawer em tema escuro, janela padrão.
+
+## 2026-10-17 — Task 128: remoção de `usuario.anotacoes` e fecho do bloco 8 (pad estruturado)
+
+
+
+Migration `0032`: antes de apagar, um bloco `DO` confere que nenhum usuário tem texto em `usuario.anotacoes` com a seção `PESSOAL` vazia (se
+
+houver, `RAISE EXCEPTION` com mensagem clara e nada é alterado); depois `DROP COLUMN` de `anotacoes` e `anotacoes_alteracao_data`. O `DOWN`
+
+recria as colunas (nullable, sem `DEFAULT`) e devolve o texto de `PESSOAL` (e o `updated_date` da seção como data da alteração). Backend e
+
+shared: saem `anotacoes`/`anotacoesAlteracaoData` dos DTOs, do model, dos `SELECT`/`UPDATE` do `UsuarioRepository`, do mapeamento e do exemplo
+
+do controller; `validarSomenteAnotacoesDoProprio` foi removida e quem não é gestor/administrador leva 403 em qualquer `PUT /usuario/:id`
+
+(nem o próprio perfil). O script de conversão do Quill trocou o alvo `usuario.anotacoes` por `anotacao.texto` (a spec só pedia tirar o antigo; sem o novo, o HTML copiado para Pessoal em um ambiente não convertido ficaria sem como ser convertido). Frontend: `UsuarioService.alterar` voltou a ter
+
+só `(id, dto)` (o parâmetro `erroNaTela` existia só para o pad).
+
+
+
+- **Testes:** `backend` 109/109 (o teste "desenvolvedor altera só as próprias anotações" saiu; o de negação foi reescrito sem o campo) e `shared`
+
+  68/68; builds de backend e frontend ok. Frontend sem testes e sem lint (P-001).
+
+- **Migration no banco de dev:** `0032` aplicada; rollback devolveu o texto de Pessoal para a coluna (4 usuários) e novo migrate ok. Com um
+
+  usuário de teste com texto antigo e `PESSOAL` vazia, a migration **falhou com a mensagem clara e as duas colunas permaneceram**; depois de
+
+  limpar, aplicou. (Na primeira tentativa de forçar a falha escolhi um usuário que já tinha `PESSOAL` preenchida, a conferência passou, e
+
+  reverti pelo `DOWN` sem perda: o texto antigo voltou de `PESSOAL`.)
+
+- **Ao vivo (API real):** desenvolvedor de teste (excluído depois) leva 403 ao alterar o próprio perfil e outro usuário, e grava o próprio pad
+
+  pela rota do pad; o usuário recuperado e o alterado já não trazem os campos; gestor/administrador altera normalmente; "tem anotações" da
+
+  listagem reflete o pad gravado. Na tela, como gestor, listagem de usuários e drawer do pad de outro usuário carregando o texto migrado.
+
+  O fluxo completo do drawer (abrir, editar, "Enviar para", fechar) foi exercitado nas tasks 126 e 127 e não repeti inteiro aqui nem com o
+
+  desenvolvedor na interface.
+
+- **Busca:** `anotacoes`/`anotacoesAlteracaoData` só restam no módulo do pad, nos nomes das seções, em migrations já aplicadas e nos
+
+  deep-links (`?anotacoes=`).
+
+- **Bloco 8 concluído (125–128).** Ao publicar, o HTML do Quill ainda precisa ser convertido (README). Os blocos 4–7, 9 e 10 seguem sem
+
+  specs (a partir da 129).
+
+
+
+## 2026-10-17 — Ajuste na barra lateral: some o selo "g + letra" de cada item
+
+Pedido do autor, fora de spec: a barra lateral deixou de mostrar o selo `g p`, `g c`... ao lado de cada item (e o `— g x` do tooltip da barra
+recolhida). O atalho `g` + letra continua funcionando (lógica do `SidebarComponent` intacta e listado no diálogo de dicas); só a dica visual saiu.
+Build do frontend ok; não conferi a tela no navegador depois do ajuste.
+
+## 2026-10-17 — Task 127: pad, "Enviar para" outra seção
+
+Bloco 8 do rework do chat com IA (3 de 4). `app-markdown-editor` ganhou o input `emitirMenuContexto` e o output `aoMenuContexto`
+(`{inicio, fim, texto, evento}`): só com o input ligado, não desabilitado e com trecho selecionado o botão direito deixa de abrir o menu
+do navegador e vira o evento; nos demais casos nada muda. No drawer, um `p-contextmenu` (`appendTo="body"`) com o item "Enviar para" e
+as cinco seções como submenu, em **propriedades diretas** (a seção de origem é escondida por `visible` antes de abrir). Escolher o
+destino: `garantirSalva` nas duas seções (espera o PUT em andamento, via `SecaoAnotacao.salvamentoAtual`, e salva o que estiver pendente;
+uma limpeza em andamento é confirmada antes), `POST /anotacao/:id/mover` com o trecho e as duas versões lidas, as duas seções são
+adotadas da resposta, o destino abre e um Desfazer de 7 s move de volta (o trecho volta ao **fim** da origem). 400 (ausente/repetido) e
+409 recarregam as duas seções e avisam; nada move pela metade.
+
+- **Ao vivo (gestor administrador):** selecionar "mover esta" em Em andamento, botão direito, Enviar para, Pendências: sumiu de A, entrou
+  em B e o banco refletiu; o submenu lista só as outras quatro; o Desfazer devolveu (conferido no banco e nos campos); trecho repetido
+  ("rep" duas vezes) recusou e avisou sem alterar nada; seção alterada pela API durante a edição recarregou as duas e avisou; botão direito
+  sem seleção não abriu o menu próprio. Dados de teste do pad limpos depois. Tema escuro, janela padrão do painel.
+- **Observação:** mover para fora e desfazer deixa um `\n` final na origem (o backend remove a linha do trecho e a quebra anterior, mas a
+  linha em branco que separava ficou). Cosmético; não alterei a regra da 125.
+- **Não verificado:** 1366×768 e 1080×1920 e tema claro com o menu aberto; menu/submenu junto à borda da tela (só vi o
+  submenu abrir à direita, sem corte, na largura padrão); modo só leitura é coberto por construção (o editor nem é
+  renderizado). Sem testes de frontend e sem lint (P-001); sem testes novos no backend (nada mudou nele).
+
+## 2026-10-17 — Task 126: pad estruturado, tela com cinco acordeões e migração do texto atual
+
+Bloco 8 do rework do chat com IA (2 de 4). Migration `0031`: copia `usuario.anotacoes` para a seção `PESSOAL` só onde ela está vazia e o
+texto tem algo além de espaços; o `DOWN` esvazia `PESSOAL` só onde ainda é idêntica à coluna antiga (o que a pessoa editou depois
+fica). No banco de dev: 3 usuários com texto antigo, 3 cópias; `migrate`, `rollback`, `migrate` e `migrate` de novo ok (a segunda
+passada não altera nada). O drawer virou cinco `p-accordion-panel` (vários abertos, "Em andamento" aberto ao abrir) com
+`app-markdown-editor` e estado próprio por seção; cada seção é uma `SecaoAnotacao` (arquivo à parte, para o componente não crescer
+com o estado de cinco campos) que guarda o `usuarioId` de quando foi lida, então uma seção que ficou para trás ainda grava no dono
+certo. Novo `AnotacaoService` no frontend (`listar`, `alterar`; erros tratados pelo drawer). Decisões 1 e 2 da spec como propostas:
+conflito recarrega a seção e avisa (toast de aviso, o texto local daquela seção se perde); autosave por seção.
+
+- **Backend, "tem anotações":** a listagem de usuários deixou de olhar a coluna antiga (a tela não a escreve mais) e considera só as
+  seções; o desvio provisório da 125 acabou aqui.
+- **README:** a migration `0031` roda no `db:migrate` e copia a coluna antiga; em ambiente com HTML do Quill é preciso converter
+  **antes** (ou reverter, converter e rodar de novo). Procedimento anotado junto da conversão.
+- **Testes:** `backend` 110/110 (sem testes novos: a task só trocou a condição de um SELECT e uma migration de dados); build do
+  frontend e do backend ok. `shared` e `frontend` sem mudança de lógica testável (frontend sem testes e sem lint, P-001).
+- **Ao vivo (gestor administrador e desenvolvedor de teste, excluído depois):** abrir por `n` e pela listagem; editar; autosave de 2 s
+  por seção; Ctrl+S não foi exercitado separadamente (mesmo caminho do botão); fechar com Esc salva (`PESSOAL` gravada com o
+  drawer fechando); conflito forçado (a seção alterada pela API durante a edição) recarrega e avisa; Limpar com Desfazer (voltou)
+  e com a janela expirando (gravou o vazio e o ícone da listagem sumiu); pad de outro usuário com o título "Anotações de Matheus
+  Silva" e o texto migrado em "Pessoal"; `editavel = false` forçado (só visualizador, sem barra, sem Limpar, sem rodapé), valor
+  revertido; claro e escuro em 1366×768 e escuro em 1080×1920 (a emulação de viewport do painel reduz a imagem, então os pixels
+  finos não foram conferidos; layout e quebra conferidos). 1920×1080 só no tema claro, na janela padrão do painel.
+- **Não verificado:** estados de erro de rede (falha de PUT/GET) e o "Reabrir" depois de uma falha ao fechar; a falha de
+  `recuperar` ao buscar o nome do dono.
+
+## 2026-10-17 — Task 125: pad estruturado, modelo de dados e API das seções
+
+Bloco 8 do rework do chat com IA (1 de 4); a tela segue na coluna antiga até a 126. Migration `0030`: `tipo_anotacao` (seeds com
+`ordem`) e `anotacao` (índice único parcial por usuário e tipo) mais as 5 linhas vazias de cada usuário existente (75 no banco de
+dev, 15 usuários, inclusive excluídos). Módulo `anotacao`: listar (todas ou `?tipos=`), alterar a seção inteira com o `updatedDate`
+lido, trocar trecho, anexar, escrever no "Feito" do dia e mover trecho entre seções. Toda escrita passa por
+`AnotacaoRepository.modificarSecoes`: uma transação que lê as seções com `FOR UPDATE` (sempre na ordem de exibição, para duas
+operações simultâneas não travarem uma à outra), chama uma função da service que devolve os textos novos (ou lança) e grava. A service
+fica sem Knex, e uma falha de regra em qualquer das duas seções de um "mover" desfaz tudo. Novo `ConflictException` (409), a decisão 1
+da spec. Permissão: o dono usa o próprio pad e gestor e administrador, o de qualquer um (decisão 2, como hoje).
+
+- **Desvio da spec, concorrência:** a spec previa comparar `date_trunc('milliseconds', updated_date)` no SQL. Como a leitura e a
+  comparação passam pelo mesmo driver, a service compara os `Date` lidos (`mesmaVersao`), sem depender de SQL e de arredondamento.
+- **Desvio da spec, "tem anotações":** até a task 128 (que remove `usuario.anotacoes`), a listagem de usuários considera a coluna
+  antiga **ou** as seções; trocar de uma vez deixaria o ícone errado entre a 125 e a 126, com o pad antigo ainda gravando na coluna.
+- **Testes:** `backend` 110/110 (26 novos: operações de texto e regras da service com repositório em memória: permissão por tipo,
+  conflito, trecho ausente e ambíguo, anexar, Feito, e "mover" que não altera nada quando uma das duas falha).
+- **Ao vivo (API real, usuário de teste excluído depois):** `db:migrate`, `db:rollback` e novo `db:migrate` ok. Usuário novo com as
+  5 seções; listagem filtrada por `tipos` (vírgula e repetido; `XYZ` dá 400); alterar com a data lida 200 e com a velha 409 sem gravar;
+  trocar trecho (ok, ausente e ambíguo dão 400); anexar em seção vazia e com texto; "Feito" duas vezes no dia com um título só
+  (`## 17/10`); mover (as duas seções mudam, repetir com as versões velhas dá 409, trecho ausente dá 400 e nada muda); desenvolvedor 403
+  no pad de outro, gestor e administrador escrevem; `temAnotacoes` coerente. As rotas `POST` devolvem 201, como as demais.
+- **Achado só na verificação:** `IN (:tipos)` com array não funciona nos parâmetros nomeados do Knex (a consulta voltava vazia); o
+  padrão do projeto é `= ANY(:tipos)`.
+- **Frontend:** o build quebrou porque o frontend lê os DTOs do `shared` com um stub de `class-validator`
+  (`frontend/src/stubs/class-validator.stub.ts`) e faltava `IsDate`; adicionado. Nenhuma tela mudou. Sem testes de frontend e sem lint (P-001).
+
 ## 2026-10-17 — Task 124: troca dos consumidores pelo Markdown e remoção do Quill
 
 Bloco 3 do rework do chat com IA (4 de 4). Os consumidores trocaram `p-editor`/`[innerHTML]` por `app-markdown-editor`/

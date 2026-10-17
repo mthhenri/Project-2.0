@@ -5,7 +5,6 @@ export class UsuarioInternoAlterarDto {
   id: number;
   nomeCompleto?: string;
   cargoTitulo?: string;
-  anotacoes?: string;
   horasDiariasNecessarias?: number;
   status?: TipoUsuarioStatusEnum;
   tipo?: TipoUsuarioEnum;

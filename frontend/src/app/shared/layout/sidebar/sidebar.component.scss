@@ -59,16 +59,6 @@
     padding-right: 0;
   }
 
-  &__tecla {
-    margin-left: auto;
-    padding: 0 0.375rem;
-    border: 1px solid var(--app-surface-200);
-    border-radius: 4px;
-    color: var(--p-text-muted-color);
-    font-family: var(--font-mono, monospace);
-    font-size: 0.7rem;
-  }
-
   &__rodape {
     border-top: 1px solid var(--app-surface-200);
   }

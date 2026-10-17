@@ -23,7 +23,7 @@ export const ALVOS: readonly AlvoDeConversao[] = [
   { tabela: 'demanda', coluna: 'descricao_cliente' },
   { tabela: 'demanda', coluna: 'descricao_tecnica' },
   { tabela: 'demanda', coluna: 'documentacao' },
-  { tabela: 'usuario', coluna: 'anotacoes' },
+  { tabela: 'anotacao', coluna: 'texto' },
 ];
 
 export interface ConversaoPlanejada {
@@ -94,7 +94,7 @@ async function principal(): Promise<void> {
           total.imagens += plano.perdas.imagens;
           total.linksRemovidos += plano.perdas.linksRemovidos;
           if (!aplicar) continue;
-          // O trigger de updated_date roda; `usuario.anotacoes_alteracao_data` (última edição do dono) não é tocada.
+          // O trigger de updated_date roda.
           const afetadas = await transacao.raw(
             'UPDATE :tabela: SET :coluna: = :novo WHERE id = :id AND :coluna: = :antigo',
             { tabela: alvo.tabela, coluna: alvo.coluna, novo: plano.novo, id: plano.id, antigo: plano.antigo },

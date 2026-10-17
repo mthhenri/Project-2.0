@@ -16,10 +16,8 @@ export class UsuarioRecuperadoDto {
   cargoTitulo: string;
 
   @ApiProperty({ example: 'Responsável pelo módulo de autenticação.', nullable: true })
-  anotacoes: string | null;
 
   @ApiProperty({ example: '2026-06-25T14:30:00.000Z', nullable: true })
-  anotacoesAlteracaoData: Date | null;
 
   @ApiProperty({ enum: TipoUsuarioEnum, example: TipoUsuarioEnum.DESENVOLVEDOR })
   tipo: TipoUsuarioEnum;

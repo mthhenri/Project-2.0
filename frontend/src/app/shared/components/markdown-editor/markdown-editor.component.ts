@@ -1,4 +1,4 @@
-import { Component, ElementRef, forwardRef, input, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, forwardRef, input, output, signal, viewChild } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { TooltipModule } from 'primeng/tooltip';
 import {
@@ -27,6 +27,14 @@ interface BotaoDaBarra {
   /** Texto do botão (glifo curto): a barra não depende de um conjunto de ícones. */
   glifo: string;
   classe: string;
+}
+
+export interface MenuContextoEditorEvento {
+  inicio: number;
+  fim: number;
+  /** Trecho selecionado, exatamente como está no campo. */
+  texto: string;
+  evento: MouseEvent;
 }
 
 /**
@@ -61,6 +69,13 @@ export class MarkdownEditorComponent implements ControlValueAccessor {
   readonly maxlength = input<number | null>(null);
   /** Rótulo acessível do campo (quando não há `<label for>` por perto). */
   readonly rotulo = input<string>('Texto em Markdown');
+  /** Liga o evento `aoMenuContexto`: com seleção, o botão direito vira esse evento em vez do menu do navegador. */
+  /** Esconde as abas Editar | Visualizar e deixa só o campo com a barra (o pad, onde a prévia não faz falta). */
+  readonly semAbas = input<boolean>(false);
+  readonly emitirMenuContexto = input<boolean>(false);
+
+  /** Botão direito sobre um trecho selecionado (só com `emitirMenuContexto`); o consumidor abre o seu menu. */
+  readonly aoMenuContexto = output<MenuContextoEditorEvento>();
 
   readonly valor = signal<string>('');
   readonly desabilitado = signal<boolean>(false);
@@ -108,6 +123,16 @@ export class MarkdownEditorComponent implements ControlValueAccessor {
   focar(): void {
     this.aba.set('editar');
     setTimeout(() => this.campo()?.nativeElement.focus());
+  }
+
+  /** Menu de contexto do campo: só intercepta quando há trecho selecionado e o consumidor pediu. */
+  aoAbrirMenuContexto(evento: MouseEvent): void {
+    if (!this.emitirMenuContexto() || this.desabilitado()) return;
+    this.atualizarSelecao();
+    const texto = this.textoSelecionado();
+    if (texto.trim() === '') return;
+    evento.preventDefault();
+    this.aoMenuContexto.emit({ ...this.selecao(), texto, evento });
   }
 
   textoSelecionado(): string {

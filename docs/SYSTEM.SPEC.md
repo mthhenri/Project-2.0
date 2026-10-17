@@ -886,7 +886,7 @@ frontend/src/app/
       markdown-visualizador/
         markdown-visualizador.component.ts   ← única forma de exibir Markdown (sem HTML cru)
       markdown-editor/
-        markdown-editor.component.ts         ← editor de Markdown (CVA), barra, abas Editar | Visualizar
+        markdown-editor.component.ts         ← editor de Markdown (CVA), barra, abas Editar | Visualizar; `emitirMenuContexto` + `aoMenuContexto` (botão direito sobre seleção)
       assistente-descricao/
         assistente-descricao.component.ts   ← componente de IA reutilizável
         assistente-descricao.component.html
@@ -901,7 +901,7 @@ frontend/src/app/
 - **Standalone components** em todos os componentes e páginas — sem NgModule por feature
 - **Signals** para estado reativo — evitar Subject/BehaviorSubject onde signal resolve
 - **Reactive Forms** para todos os formulários — sem template-driven forms
-- **`app-markdown-editor`** para campos de texto rico (Markdown: `anotacoes`, descrições e documentação da demanda); exibição só por `app-markdown-visualizador`
+- **`app-markdown-editor`** para campos de texto rico (Markdown: as cinco seções do pad, descrições e documentação da demanda); exibição só por `app-markdown-visualizador`
 - **Lazy loading** por módulo via rotas com `loadComponent`
 
 ### 8.3 Componente Assistente de Descrição
@@ -1228,13 +1228,14 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 | Módulo | Responsabilidade Principal |
 |---|---|
 | `autenticacao` | Login e geração de JWT |
-| `usuario` | CRUD de usuários, anotações em Markdown, troca de senha |
+| `usuario` | CRUD de usuários, troca de senha (o pad é do módulo `anotacao`; `PUT /usuario/:id` é só de gestor e administrador, nem o desenvolvedor altera o próprio perfil) |
 | `projeto` | CRUD de projetos — apenas gestor cria |
 | `demanda` | CRUD, hierarquia, grafo force-directed (D3), tags, atribuições |
 | `atividade` | CRUD de atividades vinculadas a demandas, tags, controle de status |
 | `execucao` | Iniciar e encerrar execuções, histórico por atividade. O **gestor** também pode **registrar manualmente** uma execução já encerrada (`@GestorOnly POST /execucao/registro`), informando início e fim para o dono da atividade (valida datas e sobreposição). A **edição** de execução (`PUT /execucao/:id`) altera `descricao`, `inicio_data` e `fim_data`. Um **job interno de auto-stop** (cron às 23:59:59 no fuso `APP_TIMEZONE`) encerra automaticamente todas as execuções abertas na virada do dia |
 | `ponto` | Resumo de ponto em três modos: **diário** (`GET /ponto/diario`), **mensal** (`GET /ponto/mensal`) e **todos hoje** (`GET /ponto/todos`, `@GestorOnly`). Calcula horas trabalhadas, intervalos e comparativo com meta; a meta é ponderada por **fração de dia** (1 dia útil, 0.5 meio período, 0 não útil/fim de semana) |
 | `calendario` | Gestão de dias não úteis (feriados, recessos) |
+| `anotacao` | Pad do usuário em **cinco seções** de Markdown (`GET /anotacao`, `PUT /anotacao/:usuarioId/:tipo`, `PATCH .../trecho`, `POST .../anexo`, `POST /anotacao/:usuarioId/feito`, `POST /anotacao/:usuarioId/mover`). Alterar a seção inteira exige o `updatedDate` lido (senão 409 `ConflictException`); trocar trecho e mover exigem que o trecho apareça **uma vez** (senão 400). Mover é atômico (as duas seções ou nenhuma); na tela do pad, botão direito sobre um trecho selecionado → "Enviar para" outra seção (Desfazer de 7 s). "Feito" escreve debaixo de `## dd/MM` do dia (fuso `APP_TIMEZONE`). O dono usa o próprio pad; gestor e administrador, o de qualquer um |
 | `tag` | CRUD de tags — apenas gestor cria e atribui |
 | `assistente` | Auxílio de IA para refinamento de descrições já escritas pelo usuário |
 
@@ -1252,8 +1253,6 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 | `senha_encriptada` | VARCHAR | bcrypt |
 | `nome_completo` | VARCHAR | |
 | `cargo_titulo` | VARCHAR | ex: "Desenvolvedor Sênior" |
-| `anotacoes` | TEXT \| NULL | Markdown (escrito no `app-markdown-editor`) |
-| `anotacoes_alteracao_data` | TIMESTAMPTZ \| NULL | data da última alteração das anotações (`NULL` = nunca alteradas). `timestamptz` desde já (escrita por `NOW()`); demais colunas de `usuario` seguem `timestamp` até a spec 75 |
 | `horas_diarias_necessarias` | INTEGER | em horas (ex: 8) |
 | `tipo_usuario_id` | INTEGER FK | → `tipo_usuario` (DESENVOLVEDOR, GESTOR, ADMINISTRADOR) |
 | `tipo_usuario_status_id` | INTEGER FK | → `tipo_usuario_status` (ATIVO, INATIVO) |

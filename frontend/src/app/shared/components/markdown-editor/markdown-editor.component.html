@@ -3,6 +3,7 @@
 } @else {
   <div class="markdown-editor" [class.markdown-editor--desabilitado]="desabilitado()">
     <div class="markdown-editor__cabecalho">
+      @if (!semAbas()) {
       <div class="markdown-editor__abas" role="tablist" aria-label="Modo do editor">
         <button
           type="button"
@@ -25,6 +26,7 @@
           Visualizar
         </button>
       </div>
+      }
 
       @if (aba() === 'editar') {
         <div class="markdown-editor__barra" role="toolbar" aria-label="Formatação">
@@ -62,6 +64,7 @@
         (keyup)="atualizarSelecao()"
         (mouseup)="atualizarSelecao()"
         (select)="atualizarSelecao()"
+        (contextmenu)="aoAbrirMenuContexto($event)"
         (blur)="aoSair()"
       ></textarea>
     } @else {

@@ -27,7 +27,6 @@ const USUARIO_EXEMPLO = {
   login: 'joao.silva',
   nomeCompleto: 'João Silva',
   cargoTitulo: 'Desenvolvedor Sênior',
-  anotacoes: null,
   tipo: 'DESENVOLVEDOR',
   status: 'ATIVO',
   horasDiariasNecessarias: 8,
@@ -61,7 +60,7 @@ export class UsuarioController {
     schema: {
       example: {
         sucesso: true,
-        dados: { ...USUARIO_EXEMPLO, anotacoes: undefined },
+        dados: USUARIO_EXEMPLO,
         mensagem: 'Usuário criado com sucesso',
       },
     },

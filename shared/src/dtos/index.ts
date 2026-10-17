@@ -10,3 +10,4 @@ export * from './calendario/index';
 export * from './tag/index';
 export * from './assistente/index';
 export * from './relatorio/index';
+export * from './anotacao/index';

@@ -13,13 +13,12 @@
         routerLinkActive="sidebar__item--ativo"
         class="sidebar__item flex items-center gap-3 px-3 py-2 rounded-lg text-color hover:bg-emphasis transition-colors text-sm font-medium whitespace-nowrap"
         [attr.aria-label]="item.label"
-        [pTooltip]="recolhida() ? item.label + ' — g ' + item.tecla : ''"
+        [pTooltip]="recolhida() ? item.label : ''"
         tooltipPosition="right"
       >
         <i [class]="item.icone"></i>
         @if (!recolhida()) {
           <span class="sidebar__rotulo">{{ item.label }}</span>
-          <kbd class="sidebar__tecla">g {{ item.tecla }}</kbd>
         }
       </a>
     }

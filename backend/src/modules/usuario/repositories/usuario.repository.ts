@@ -65,8 +65,6 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
          usuario.senha_encriptada          AS "senhaEncriptada",
          usuario.nome_completo             AS "nomeCompleto",
          usuario.cargo_titulo              AS "cargoTitulo",
-         usuario.anotacoes,
-         usuario.anotacoes_alteracao_data  AS "anotacoesAlteracaoData",
          usuario.horas_diarias_necessarias AS "horasDiariasNecessarias",
          tipo_usuario.codigo               AS tipo,
          tipo_usuario_status.codigo        AS status,
@@ -139,8 +137,12 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
          usuario.cargo_titulo  AS "cargoTitulo",
          tipo_usuario.codigo        AS tipo,
          tipo_usuario_status.codigo AS status,
-         (usuario.anotacoes IS NOT NULL
-            AND regexp_replace(usuario.anotacoes, '[[:space:]]+', '', 'g') <> '') AS "temAnotacoes"
+         (EXISTS (
+            SELECT 1 FROM anotacao
+            WHERE anotacao.usuario_id = usuario.id
+              AND anotacao.is_deleted = false
+              AND regexp_replace(anotacao.texto, '[[:space:]]+', '', 'g') <> '')
+          ) AS "temAnotacoes"
        FROM usuario
        ${clausulasJoin}
        WHERE ${clausulaWhere}
@@ -161,6 +163,32 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
     tipo: TipoUsuarioEnum;
     horasDiariasNecessarias: number;
   }): Promise<UsuarioCriadoDto> {
+    // O usuário e as 5 seções do pad nascem juntos: ou os dois existem, ou nenhum.
+    return this.conexaoBancoDados.transaction(async (transacao) => {
+      const usuarioCriado = await this.inserirUsuario(dados, transacao);
+      await this.executarComando(
+        `INSERT INTO anotacao (usuario_id, tipo_anotacao_id, texto, created_date, updated_date, is_deleted)
+         SELECT :usuarioId, tipo_anotacao.id, '', NOW(), NOW(), false
+         FROM tipo_anotacao
+         WHERE tipo_anotacao.is_deleted = false`,
+        { usuarioId: usuarioCriado.id },
+        transacao,
+      );
+      return usuarioCriado;
+    });
+  }
+
+  private async inserirUsuario(
+    dados: {
+      login: string;
+      senhaEncriptada: string;
+      nomeCompleto: string;
+      cargoTitulo: string;
+      tipo: TipoUsuarioEnum;
+      horasDiariasNecessarias: number;
+    },
+    transacao: Knex.Transaction,
+  ): Promise<UsuarioCriadoDto> {
     const resultado = await this.executarConsulta<UsuarioCriadoDto>(
       `INSERT INTO usuario (
          login, senha_encriptada, nome_completo, cargo_titulo,
@@ -195,6 +223,7 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
         horasDiariasNecessarias: dados.horasDiariasNecessarias,
         status:                  TipoUsuarioStatusEnum.ATIVO,
       },
+      transacao,
     );
     return resultado[0];
   }
@@ -211,13 +240,6 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
     if (dto.cargoTitulo !== undefined) {
       setClauses.push('cargo_titulo = :cargoTitulo');
       parametros.cargoTitulo = dto.cargoTitulo;
-    }
-    if (dto.anotacoes !== undefined) {
-      setClauses.push('anotacoes = :anotacoes');
-      setClauses.push(
-        'anotacoes_alteracao_data = CASE WHEN anotacoes IS DISTINCT FROM :anotacoes THEN NOW() ELSE anotacoes_alteracao_data END',
-      );
-      parametros.anotacoes = dto.anotacoes;
     }
     if (dto.horasDiariasNecessarias !== undefined) {
       setClauses.push('horas_diarias_necessarias = :horasDiariasNecessarias');
@@ -246,8 +268,6 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
          login,
          nome_completo             AS "nomeCompleto",
          cargo_titulo              AS "cargoTitulo",
-         anotacoes,
-         anotacoes_alteracao_data  AS "anotacoesAlteracaoData",
          (SELECT tipo_usuario.codigo FROM tipo_usuario
             WHERE tipo_usuario.id = usuario.tipo_usuario_id)               AS tipo,
          (SELECT tipo_usuario_status.codigo FROM tipo_usuario_status

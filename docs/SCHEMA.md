@@ -80,6 +80,7 @@ As tabelas devem ser criadas nessa ordem para respeitar as dependências de FK:
 9.  atividade_tag
 10. execucao
 11. dia_nao_util
+12. tipo_anotacao, anotacao (migration `0030`)
 ```
 
 ---
@@ -140,8 +141,6 @@ CREATE TABLE usuario (
   senha_encriptada          VARCHAR(255) NOT NULL,
   nome_completo             VARCHAR(255) NOT NULL,
   cargo_titulo              VARCHAR(150) NOT NULL,
-  anotacoes                 TEXT,           -- Markdown
-  anotacoes_alteracao_data  TIMESTAMPTZ,
   horas_diarias_necessarias INTEGER      NOT NULL,
   tipo_usuario_id           INTEGER      NOT NULL
                               CONSTRAINT fk_usuario_tipo_usuario REFERENCES tipo_usuario(id),
@@ -541,6 +540,34 @@ CREATE TRIGGER trg_dia_nao_util_updated_date
 
 ---
 
+### anotacao — pad do usuário em cinco seções (migration `0030`)
+
+Uma linha por usuário e por seção (`tipo_anotacao`: `EM_ANDAMENTO`, `FEITO`, `PENDENCIA`, `LEMBRETE`, `PESSOAL`).
+Quem já existia ganhou as 5 linhas (vazias) na migration; usuário novo as recebe na mesma transação em que é criado.
+A migration `0031` copiou `usuario.anotacoes` (Markdown) para a seção `PESSOAL` de quem tinha texto (só onde a seção estava vazia) e a `0032`
+removeu `usuario.anotacoes` e `usuario.anotacoes_alteracao_data` (ela confere a cópia antes e para com erro se algum texto ficaria sem destino).
+O texto é Markdown e seção vazia é `''`. `tipo_anotacao` tem a coluna extra `ordem` (ordem de exibição).
+
+```sql
+CREATE TABLE anotacao (
+  id                SERIAL      PRIMARY KEY,
+  created_date      TIMESTAMPTZ NOT NULL,
+  updated_date      TIMESTAMPTZ NOT NULL,   -- também é a "versão" da seção (concorrência otimista)
+  is_deleted        BOOLEAN     NOT NULL,
+  deleted_date      TIMESTAMPTZ,
+
+  usuario_id        INTEGER NOT NULL CONSTRAINT fk_anotacao_usuario REFERENCES usuario(id),
+  tipo_anotacao_id  INTEGER NOT NULL CONSTRAINT fk_anotacao_tipo_anotacao REFERENCES tipo_anotacao(id),
+  texto             TEXT    NOT NULL
+);
+
+CREATE UNIQUE INDEX uix_anotacao_usuario_tipo_ativa
+  ON anotacao(usuario_id, tipo_anotacao_id)
+  WHERE is_deleted = false;
+```
+
+---
+
 ### Tabelas de referência (enums) — migration `20240025`
 
 Todo enum de domínio fechado é uma **tabela de referência** `tipo_<tabela>_<complemento?>`
@@ -585,6 +612,7 @@ Seeds (`codigo` → `descricao`):
 | `tipo_atividade_status` | PLANEJADA→"Planejada", PENDENTE→"Pendente", DESENVOLVENDO→"Desenvolvendo", DESENVOLVIDA→"Desenvolvida" |
 | `tipo_dia_nao_util` | FERIADO→"Feriado", RECESSO→"Recesso", PONTO_FACULTATIVO→"Ponto facultativo" |
 | `tipo_dia_nao_util_duracao` | INTEGRAL→"Integral", MEIO_PERIODO→"Meio período" |
+| `tipo_anotacao` | EM_ANDAMENTO→"Em andamento", FEITO→"Feito", PENDENCIA→"Pendências", LEMBRETE→"Lembretes", PESSOAL→"Pessoal" (migration `0030`, com `ordem` 1 a 5) |
 
 ---
 
