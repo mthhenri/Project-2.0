@@ -21,7 +21,8 @@ elas criaram (ver `MEMORY.md` §2). Siga a ordem de fases de `INDEX-revisao-ux.m
 2026-10-16 e estão em `docs/specs/discarded/`. As **110 e 111** (tela de Execuções) foram descartadas junto, mas o autor as
 **reativou em 2026-10-17** e elas foram **concluídas** (`docs/specs/done/`). A task 117 foi concluída. Não restam tasks
 numeradas no backlog.
-Próxima migration nova: `0035`.
+Próxima migration nova: `0035`. **Próximas tasks do rework do chat com IA:** o bloco 5 está especificado em `docs/specs/backlog/` (**135 a 140**: OpenSearch e
+repository de mensagens, proposta da IA, ferramentas, conversa do dia com streaming, tela do chat e teste de prompts); a ordem natural é 135 e 136 (independentes), 137, 138, 139 e 140.
 
 ## 2. Estado por Área
 

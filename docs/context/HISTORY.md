@@ -12,6 +12,17 @@
 
 ---
 
+## 2026-10-17 — Bloco 5 do rework do chat com IA quebrado em specs (135 a 140)
+
+Sem código: seis specs novas em `docs/specs/backlog/` e a tabela da guarda-chuva atualizada. **135** OpenSearch no `docker-compose` e `ChatMensagemRepository` (único arquivo que importa o cliente);
+**136** migration `0035` e módulo `proposta-ia` (confirmação atômica, ajustar, recusar, desfazer, executores registrados por tipo, sem tipo de exclusão); **137** contrato e registro de ferramentas
+(leitura e proposta, executadas com o usuário do token, teste de "sem exclusão", primeira ferramenta `consultar_data_e_hora`); **138** conversa do dia: laço da IA com ferramentas, streaming por SSE sobre
+`POST`, mensagens no OpenSearch; **139** tela do chat com cartões de proposta e a rota `GET /ia/disponibilidade` para qualquer usuário; **140** "testar antes de salvar" os prompts, comparando ativo e rascunho.
+
+Decisões assumidas por mim e **abertas à revisão do autor** (registradas nas próprias specs): SSE sobre `POST` (a 138), janela de 40 mensagens do dia e prompt `CONVERSA` mantido como o seed curto (a 138),
+nível rápido no chat até as ferramentas pesadas existirem (a 138), e **narrativas coladas pelo administrador** no teste de prompts em vez de ler o chat de outros usuários (a 140, por privacidade).
+A 140 não depende do chat; as demais seguem 135/136 → 137 → 138 → 139. O `docker-compose.yml` e o `scripts/db-up.mjs` têm alterações locais do autor ainda não commitadas, e a 135 avisa para editar por cima delas.
+
 ## 2026-10-17 — Task 133: aba Prompts das Configurações da IA
 
 Bloco 4 do rework do chat com IA (5 de 5, fecha o bloco). Frontend: `PromptService` (as 6 rotas da 131) e o componente `prompts-aba` dentro do `p-tabpanel` "Prompts" da tela da 132 (a aba deixou

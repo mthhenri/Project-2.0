@@ -221,9 +221,16 @@ Os blocos 1 a 3 não dependem de IA e podem começar primeiro.
 | 4 | 132 | [`132-ia-tela-de-configuracoes-provedor-modelos-e-flags`](132-ia-tela-de-configuracoes-provedor-modelos-e-flags.spec.md) | 129, 130 |
 | 4 | 133 | [`133-ia-tela-de-configuracoes-prompts`](133-ia-tela-de-configuracoes-prompts.spec.md) | 131, 132 |
 | 3 | 134 | [`134-markdown-editor-wysiwyg`](134-markdown-editor-wysiwyg.spec.md) | 122, 124 (recomendada antes da 133) |
+| 5 | 135 | [`135-chat-opensearch-e-repository-de-mensagens`](135-chat-opensearch-e-repository-de-mensagens.spec.md) | — |
+| 5 | 136 | [`136-chat-proposta-da-ia-modelo-e-api`](136-chat-proposta-da-ia-modelo-e-api.spec.md) | — |
+| 5 | 137 | [`137-chat-ferramentas-da-ia-sobre-a-api`](137-chat-ferramentas-da-ia-sobre-a-api.spec.md) | 136 |
+| 5 | 138 | [`138-chat-conversa-do-dia-e-streaming`](138-chat-conversa-do-dia-e-streaming.spec.md) | 135, 136, 137 |
+| 5 | 139 | [`139-chat-tela-do-chat`](139-chat-tela-do-chat.spec.md) | 136, 138 |
+| 5 | 140 | [`140-chat-testar-prompt-antes-de-salvar`](140-chat-testar-prompt-antes-de-salvar.spec.md) | 133 |
 
-Os blocos 5 a 7, 9 e 10 são quebrados a partir da **135**. As tasks 125 a 128 saíram no mesmo lançamento. O bloco 5 inclui a task do
-"testar antes de salvar" os prompts (rodar o rascunho contra narrativas reais guardadas), que depende do chat e das mensagens.
+O bloco 5 (chat) está quebrado em **135 a 140**; os blocos 6, 7, 9 e 10 são quebrados a partir da **141**. As tasks 125 a 128 saíram no
+mesmo lançamento. A 140 ("testar antes de salvar" os prompts) usa narrativas coladas pelo administrador, não o chat dos usuários
+(decisão de privacidade registrada na spec): por isso depende só da 133.
 
 ## Critérios de Aceite (da guarda-chuva)
 
