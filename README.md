@@ -152,13 +152,17 @@ O projeto é um monorepo com três pacotes independentes conectados via npm work
 | `DB_NOME` | Nome do banco | `project20` |
 | `DB_USUARIO` | Usuário do banco | `postgres` |
 | `DB_SENHA` | Senha do banco | `postgres` |
+| `DB_SSL` | Opcional: `true` liga SSL na conexão (bancos gerenciados); omitido = sem SSL | `false` |
 | `JWT_SECRETO` | Secret do JWT (troque em produção) | `sua-chave-segura` |
 | `JWT_EXPIRACAO` | Tempo de expiração do token | `8h` |
 | `INTERVALO_MINIMO_MINUTOS` | Gap mínimo entre execuções para ser considerado intervalo | `15` |
-| `ANTHROPIC_API_KEY` | Chave da API Anthropic | `sk-ant-...` |
+| `ANTHROPIC_API_KEY` | Chave da API Anthropic (opcional: sem ela a IA fica "fora do ar"). O modelo de cada nível e o resto da configuração da IA ficam na tela Configurações da IA, não no `.env` | `sk-ant-...` |
+| `PORT` | Opcional: porta injetada pela plataforma de hospedagem; tem prioridade sobre `APP_PORTA` | `10000` |
 | `APP_PORTA` | Porta do backend | `3000` |
 | `APP_AMBIENTE` | Ambiente de execução | `development` |
 | `APP_TIMEZONE` | Fuso da aplicação — fixa a sessão do banco (colunas `timestamptz`) e determina o horário local (23:59:59) do disparo do auto-stop de execuções na virada do dia; default `America/Sao_Paulo` | `America/Sao_Paulo` |
+| `TZ` | Opcional: fuso do processo Node (logs e exibição local); a correção de fuso do banco depende de `APP_TIMEZONE`, não dela | `America/Sao_Paulo` |
+| `APP_CORS_ORIGEM` | Opcional: origem permitida no CORS (URL do frontend); vazio libera qualquer origem (só em dev) | `https://seu-front.pages.dev` |
 
 ---
 

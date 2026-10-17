@@ -59,7 +59,11 @@ indisponível; sem chave, "IA indisponível neste ambiente"). Estado em memória
   estado); builds ok. Nenhuma chamada real à API nos testes (cliente falso).
 - **Ao vivo (API real):** com a IA desligada o assistente recusa com "A IA está desligada" (400, sem chamada externa); ligada, com a chave do `.env` (que hoje é o valor de exemplo), o SDK real devolveu 401 e a tela
   recebeu "Configuração da IA inválida" (a tradução por status funcionou com o SDK real). A configuração voltou a "desligada" (nova versão).
-- **Não verificado:** **chamada real bem-sucedida e streaming real**, porque o `.env` não tem chave válida; a revisão do relatório pela IA ao vivo; o `README` do `.env.example` mexe num arquivo que o autor já tinha alterado (a alteração dele
+- **Verificação real posterior (chave do autor no `.env`, fora do backend em execução, com o `AnthropicProvedor` e o SDK reais):** `gerar` no nível rápido respondeu "pronto" (23/5 tokens);
+  `transmitir` entregou **6 trechos** em ~110 ms e a concatenação igual ao texto final; o contrato de ferramentas devolveu `uso_ferramenta` (`soma`, `{a:2,b:3}`) com parada `uso_ferramenta`; o
+  nível analítico (Opus) aceitou o esforço médio (`output_config.effort`); um modelo inexistente virou `IaException('CONFIGURACAO')`. O backend em execução ainda lia a chave antiga (o `nest --watch`
+  não recarrega o `.env`: precisa reiniciar), então o assistente pela API HTTP ainda respondia "Configuração da IA inválida" naquele momento.
+- **Não verificado (substituído pela verificação acima, exceto o assistente e o relatório pela API depois de reiniciar o backend):** chamada real bem-sucedida e streaming real, porque o `.env` não tinha chave válida; a revisão do relatório pela IA ao vivo; o `README` do `.env.example` mexe num arquivo que o autor já tinha alterado (a alteração dele
   ficou fora do commit).
 - **Desvio da spec:** nenhum. Cache de provedor só medido (`tokens.cache`).
 
