@@ -32,6 +32,15 @@ Relatórios em `docs/specs/done/110-execucoes-contexto-navegacao/verificacao.md`
 
 ---
 
+## 2026-10-17 — Tasks 110/111: verificação da visão do desenvolvedor e problemas registrados
+
+Usuário `dev.teste110` criado pela API no ambiente de teste; a tela de Execuções foi percorrida com ele (resultado em
+`docs/specs/done/110-execucoes-contexto-navegacao/verificacao.md`, seção "Complemento"): só as próprias execuções, sem os
+controles de gestor, `?usuario=` ignorado. Registrados em `PROBLEMS.md`: P-002 (último gestor inativável pelo status),
+P-003 (selects limitados a 100 itens), P-004 (dia vem do fuso do navegador) e P-005 (`subscribe` sem handler de erro).
+
+---
+
 ## 2026-10-17 — Task 116: Tags com quick-add, cor inline e busca
 
 Relatório em `docs/specs/done/116-tags-quick-add-cor-inline/verificacao.md`; verificação em Chromium contra a API real

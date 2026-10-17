@@ -55,6 +55,15 @@ estado vazio; o padrão de dialogs da 97 (`dialogFormulario`).
 
 ## Limites / pendente
 
-- Visão do desenvolvedor (sem filtro de usuário, sem "Minhas", descrição sem botão) não foi percorrida ao vivo — não há
-  credencial de desenvolvedor no ambiente local; o código é o mesmo ramo `@if (sessao.eGestor())` já usado nas outras telas.
 - Frontend sem testes automatizados (P-001); `execucao.util.ts` ficou sem teste por falta de runner.
+
+## Complemento — visão do desenvolvedor (2026-10-17)
+
+Usuário criado no ambiente de teste pelo `POST /usuario` como gestor (`dev.teste110`, tipo DESENVOLVEDOR), com uma atividade
+própria e 3 execuções (2 encerradas e 1 em andamento). Logado por ele no Chromium (1920×1080 e 1366×768):
+
+- Cai em `/ponto`; em `/execucao` vê só as próprias execuções: "3 execuções · 4h10", sem coluna Usuário, sem select de
+  usuário, sem "Minhas", sem "Relatório", sem lápis e sem botão de descrição (texto simples com tooltip).
+- Execução ativa fixada no topo com `● Em andamento` e cronômetro `00:40:05`; total do dia soma a ativa.
+- `?usuario=1` na URL é ignorado (a requisição sai só com `data`, `pagina` e `itensPorPagina`).
+- ← vai a 15/10 ("Nenhuma execução", botões "Ver dia anterior" e "Voltar para hoje", sem "Limpar filtro"); sem overflow.
