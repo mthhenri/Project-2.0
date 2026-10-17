@@ -19,7 +19,8 @@ Nenhuma task em andamento. O backlog não tem mais tasks numeradas (revisão de 
 e a toolbar, o grafo, o detalhe e o formulário de Demandas (**106–109**) a de Projetos (**112**) a de Usuários (**113**) as Anotações (**114**) o Calendário (**115**) e as Tags (**116**) foram concluídos em 2026-10-16 e estão em `docs/specs/done/`; as seguintes devem **reutilizar** o que
 elas criaram (ver `MEMORY.md` §2). Siga a ordem de fases de `INDEX-revisao-ux.md`: fase 4 (concluída). As tasks **102, 103, 104 e 105** (que mexem direto na tela de Atividades) foram **descartadas** em
 2026-10-16 e estão em `docs/specs/discarded/`. As **110 e 111** (tela de Execuções) foram descartadas junto, mas o autor as
-**reativou em 2026-10-17**: voltaram a `docs/specs/backlog/` e são a próxima frente. A task 117 foi concluída.
+**reativou em 2026-10-17** e elas foram **concluídas** (`docs/specs/done/`). A task 117 foi concluída. Não restam tasks
+numeradas no backlog.
 Próxima migration nova: `0029`.
 
 ## 2. Estado por Área
@@ -96,9 +97,13 @@ project-2.0/
 
 ## 3. Decisões Vivas
 
-- **[descarte da revisão de UX]** As telas de **Atividades** e **Execuções** ficam como estão: nenhuma
-  task da revisão as redesenha. O que as toca só por tabela (padrão de dialogs 97, otimista 98, undo 99,
+- **[descarte da revisão de UX]** A tela de **Atividades** fica como está (102–105 descartadas); a de
+  **Execuções** foi reativada e redesenhada (110/111, ver abaixo). O que as toca só por tabela (padrão de dialogs 97, otimista 98, undo 99,
   chip global 95) continua e, ao ser implementado, vale para as telas atuais.
+- **[tasks 110–111]** O histórico de Execuções guarda dia e usuário na URL (`?data=&usuario=`, `replaceUrl`): a URL é a
+  fonte do estado e cada mudança recarrega; atalhos ←/→/Home reutilizam os guardas de `core/utils/atalhos.ts`. O dialog de
+  relatório abre carregado, recarrega a cada filtro (debounce 400 ms) e só exporta/revisa os parâmetros do relatório
+  exibido; `abrir(id)` fixa o projeto (detalhe do projeto), `abrir()` lembra o último em `localStorage` `relatorio.projeto`.
 - **[tasks 97–99]** Todo dialog de formulário usa `p-dialog[dialogFormulario]` (autofocus no primeiro campo
   vazio, Enter envia, Ctrl+Enter envia a partir de textarea, Esc cancela) e a dica
   `app-dialog-dica-atalhos` no footer; criar fecha o dialog, e "Criar e adicionar outra" mantém o

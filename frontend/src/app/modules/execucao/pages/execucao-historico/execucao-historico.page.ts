@@ -7,9 +7,12 @@ import {
   HostListener,
   ViewChild,
   ElementRef,
+  DestroyRef,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router } from '@angular/router';
 import { DatePipe } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { TableModule, TableLazyLoadEvent } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
@@ -36,6 +39,19 @@ import { BloquearCaracteresProibidosDirective } from '../../../../shared/directi
 import { AtividadeVisualizarDialogComponent } from '../../../atividade/components/atividade-visualizar-dialog/atividade-visualizar-dialog.component';
 import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
 import { BarraRecargaComponent } from '../../../../shared/components/barra-recarga/barra-recarga.component';
+import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
+import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
+import { focoEmCampo, haSobreposicaoAberta } from '../../../../core/utils/atalhos';
+import { RelatorioExecucaoDialogComponent } from '../../../relatorio/components/relatorio-execucao-dialog/relatorio-execucao-dialog.component';
+import { ExecucaoTimerComponent } from '../../components/execucao-timer/execucao-timer.component';
+import { dataParaIso, isoParaData, mesmoDia, resumoDoDia } from '../../utils/execucao.util';
+
+/** O fim, quando informado, precisa ser posterior ao início (mensagem inline, sem toast). */
+function periodoValido(grupo: AbstractControl): ValidationErrors | null {
+  const inicio = grupo.get('inicioData')?.value as Date | null;
+  const fim = grupo.get('fimData')?.value as Date | null;
+  return inicio && fim && fim <= inicio ? { periodo: true } : null;
+}
 
 @Component({
   selector: 'app-execucao-historico',
@@ -55,6 +71,10 @@ import { BarraRecargaComponent } from '../../../../shared/components/barra-recar
     MinutosParaHorasPipe,
     AtividadeVisualizarDialogComponent,
     BloquearCaracteresProibidosDirective,
+    DialogFormularioDirective,
+    DialogDicaAtalhosComponent,
+    RelatorioExecucaoDialogComponent,
+    ExecucaoTimerComponent,
   ],
   templateUrl: './execucao-historico.page.html',
   styleUrl: './execucao-historico.page.scss',
@@ -64,11 +84,14 @@ export class ExecucaoHistoricoPage implements OnInit {
   private readonly usuarioService = inject(UsuarioService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly messageService = inject(MessageService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
   readonly sessao = inject(UsuarioSessaoService);
 
   /** Data máxima navegável: hoje. Não é permitido visualizar dias futuros. */
   readonly hoje = this.inicioDoDia(new Date());
-  private readonly hojeIso = this.formatarData(this.hoje);
+  private readonly hojeIso = dataParaIso(this.hoje);
 
   readonly formularioFiltros = this.formBuilder.group({
     data:      [this.hoje as Date],
@@ -89,6 +112,20 @@ export class ExecucaoHistoricoPage implements OnInit {
   /** Data atualmente em exibição (yyyy-mm-dd), espelhada para reatividade. */
   readonly dataSelecionada = signal<string>(this.hojeIso);
   readonly visualizandoHoje = computed(() => this.dataSelecionada() === this.hojeIso);
+  readonly usuarioFiltradoId = signal<number | null>(null);
+  readonly filtrandoMinhas = computed(() => !!this.sessao.id() && this.usuarioFiltradoId() === this.sessao.id());
+
+  /** "Quinta-feira, 10 de julho · 5 execuções · 12h24" — contexto do que está na tela. */
+  readonly resumo = computed(() =>
+    resumoDoDia(isoParaData(this.dataSelecionada()) ?? this.hoje, this.totalRegistros(), this.totalMinutosDia()),
+  );
+  readonly rotuloDiaVazio = computed(() => (isoParaData(this.dataSelecionada()) ?? this.hoje).toLocaleDateString('pt-BR'));
+
+  /** A execução em andamento fica fixada no topo da página corrente. */
+  readonly linhas = computed(() => {
+    const lista = this.execucoes();
+    return [...lista.filter((item) => !item.fimData), ...lista.filter((item) => !!item.fimData)];
+  });
 
   // --- Dialog: editar execução (gestor) ---
   readonly mostrarDialogEditar = signal<boolean>(false);
@@ -96,19 +133,48 @@ export class ExecucaoHistoricoPage implements OnInit {
   readonly execucaoEmEdicao = signal<ExecucaoItemDto | null>(null);
   /** Limite máximo (momento atual) para os campos de data/hora da edição. */
   readonly dataMaximaEdicao = signal<Date>(new Date());
-  readonly formularioEdicao = this.formBuilder.group({
-    descricao:  ['', [Validators.required, Validators.pattern(REGEX_SEM_CARACTERES_PROIBIDOS)]],
-    inicioData: [null as Date | null, [Validators.required]],
-    fimData:    [null as Date | null],
-  });
+  readonly formularioEdicao = this.formBuilder.group(
+    {
+      descricao:  ['', [Validators.required, Validators.pattern(REGEX_SEM_CARACTERES_PROIBIDOS)]],
+      inicioData: [null as Date | null, [Validators.required]],
+      fimData:    [null as Date | null],
+    },
+    { validators: periodoValido },
+  );
 
   readonly mensagemCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS;
 
   /** Textarea de descrição; recebe o foco ao abrir o dialog, não o campo de início. */
   @ViewChild('descricaoEdicao') private descricaoEdicao?: ElementRef<HTMLTextAreaElement>;
 
+  /** Dia e usuário vêm da URL (`?data=&usuario=`), que é a fonte do estado; cada mudança de URL recarrega. */
   ngOnInit(): void {
     if (this.sessao.eGestor()) this.carregarUsuarios();
+    this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((parametros) => {
+      const dia = isoParaData(parametros.get('data'));
+      const data = dia && dia <= this.hoje ? dia : this.hoje;
+      const usuario = Number(parametros.get('usuario'));
+      this.formularioFiltros.patchValue(
+        { data, usuarioId: this.sessao.eGestor() && usuario > 0 ? usuario : null },
+        { emitEvent: false },
+      );
+      this.dataSelecionada.set(dataParaIso(data));
+      this.usuarioFiltradoId.set(this.formularioFiltros.value.usuarioId ?? null);
+      this.paginaAtual.set(1);
+      this.buscarExecucoes();
+    });
+  }
+
+  /** ←/→ trocam o dia, Home volta a hoje. Quietos em campo de texto e com dialog/popover aberto. */
+  @HostListener('document:keydown', ['$event'])
+  aoTeclar(evento: KeyboardEvent): void {
+    if (evento.defaultPrevented || evento.ctrlKey || evento.metaKey || evento.altKey || evento.shiftKey) return;
+    if (focoEmCampo(evento.target) || haSobreposicaoAberta()) return;
+    if (evento.key === 'ArrowLeft') this.retornarDia();
+    else if (evento.key === 'ArrowRight') this.avancarDia();
+    else if (evento.key === 'Home') this.voltarParaHoje();
+    else return;
+    evento.preventDefault();
   }
 
   /**
@@ -132,8 +198,8 @@ export class ExecucaoHistoricoPage implements OnInit {
       itensPorPagina: this.itensPorPagina(),
     };
 
-    const { data, usuarioId } = this.formularioFiltros.value;
-    if (data instanceof Date) filtros.data = this.formatarData(data);
+    filtros.data = this.dataSelecionada();
+    const usuarioId = this.usuarioFiltradoId();
     if (this.sessao.eGestor() && usuarioId) filtros.usuarioId = usuarioId;
 
     this.execucaoService
@@ -145,7 +211,13 @@ export class ExecucaoHistoricoPage implements OnInit {
       .subscribe({
         next: (resposta) => {
           if (resposta.sucesso && resposta.dados) {
-            this.execucoes.set(resposta.dados.itens);
+            this.execucoes.set(
+              resposta.dados.itens.map((item) => ({
+                ...item,
+                inicioData: new Date(item.inicioData),
+                fimData: item.fimData ? new Date(item.fimData) : null,
+              })),
+            );
             this.totalRegistros.set(resposta.dados.totalItens);
             this.totalMinutosDia.set(resposta.dados.totalMinutosDia);
           }
@@ -153,25 +225,50 @@ export class ExecucaoHistoricoPage implements OnInit {
       });
   }
 
+  /** O carregamento inicial é da URL; aqui só entra a mudança real de página/tamanho. */
   aoCarregarTabela(evento: TableLazyLoadEvent): void {
     const primeira = evento.first ?? 0;
     const linhas = evento.rows ?? this.itensPorPagina();
-    this.paginaAtual.set(Math.floor(primeira / linhas) + 1);
+    const pagina = Math.floor(primeira / linhas) + 1;
+    if (pagina === this.paginaAtual() && linhas === this.itensPorPagina()) return;
+    this.paginaAtual.set(pagina);
     this.itensPorPagina.set(linhas);
     this.buscarExecucoes();
   }
 
+  /** Datepicker ou select mudaram: o novo estado vai para a URL, que dispara a busca. */
   aoMudarFiltro(): void {
-    const data = this.formularioFiltros.value.data;
-    this.dataSelecionada.set(data instanceof Date ? this.formatarData(data) : this.hojeIso);
-    this.paginaAtual.set(1);
-    this.buscarExecucoes();
+    const { data, usuarioId } = this.formularioFiltros.value;
+    this.atualizarUrl(data instanceof Date ? data : this.hoje, usuarioId ?? null);
   }
 
   voltarParaHoje(): void {
     if (this.visualizandoHoje()) return;
-    this.formularioFiltros.patchValue({ data: this.hoje });
-    this.aoMudarFiltro();
+    this.atualizarUrl(this.hoje, this.usuarioFiltradoId());
+  }
+
+  alternarMinhas(): void {
+    this.atualizarUrl(isoParaData(this.dataSelecionada()) ?? this.hoje, this.filtrandoMinhas() ? null : this.sessao.id() ?? null);
+  }
+
+  limparUsuario(): void {
+    this.atualizarUrl(isoParaData(this.dataSelecionada()) ?? this.hoje, null);
+  }
+
+  private atualizarUrl(data: Date, usuarioId: number | null): void {
+    this.router.navigate([], {
+      queryParams: {
+        data: mesmoDia(data, this.hoje) ? null : dataParaIso(data),
+        usuario: this.sessao.eGestor() && usuarioId ? usuarioId : null,
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  /** Quando o dia cruza a meia-noite a hora sozinha engana: mostra a data pequena. */
+  foraDoDiaListado(data: Date | string): boolean {
+    return dataParaIso(new Date(data)) !== this.dataSelecionada();
   }
 
   /** Avança um dia. Bloqueado quando já se está no dia de hoje (sem dias futuros). */
@@ -186,11 +283,9 @@ export class ExecucaoHistoricoPage implements OnInit {
   }
 
   private deslocarDia(dias: number): void {
-    const atual = this.formularioFiltros.value.data ?? this.hoje;
+    const atual = isoParaData(this.dataSelecionada()) ?? this.hoje;
     const nova = new Date(atual.getFullYear(), atual.getMonth(), atual.getDate() + dias);
-    const limitada = nova > this.hoje ? this.hoje : nova;
-    this.formularioFiltros.patchValue({ data: limitada });
-    this.aoMudarFiltro();
+    this.atualizarUrl(nova > this.hoje ? this.hoje : nova, this.usuarioFiltradoId());
   }
 
   // ---------------------------------------------------------------------------
@@ -223,15 +318,6 @@ export class ExecucaoHistoricoPage implements OnInit {
     }
 
     const { descricao, inicioData, fimData } = this.formularioEdicao.value;
-    if (fimData && inicioData && fimData <= inicioData) {
-      this.messageService.add({
-        severity: 'warn',
-        summary:  'Período inválido',
-        detail:   'A data de fim deve ser posterior à data de início',
-      });
-      return;
-    }
-
     const dto: ExecucaoAlterarDto = {
       descricao:  descricao!.trim(),
       inicioData: inicioData!.toISOString(),
@@ -251,8 +337,8 @@ export class ExecucaoHistoricoPage implements OnInit {
                   ? {
                       ...item,
                       descricao:      alterada.descricao,
-                      inicioData:     alterada.inicioData,
-                      fimData:        alterada.fimData,
+                      inicioData:     new Date(alterada.inicioData),
+                      fimData:        alterada.fimData ? new Date(alterada.fimData) : null,
                       duracaoMinutos: alterada.duracaoMinutos,
                     }
                   : item,
@@ -285,12 +371,5 @@ export class ExecucaoHistoricoPage implements OnInit {
 
   private inicioDoDia(data: Date): Date {
     return new Date(data.getFullYear(), data.getMonth(), data.getDate());
-  }
-
-  private formatarData(data: Date): string {
-    const ano = data.getFullYear();
-    const mes = String(data.getMonth() + 1).padStart(2, '0');
-    const dia = String(data.getDate()).padStart(2, '0');
-    return `${ano}-${mes}-${dia}`;
   }
 }

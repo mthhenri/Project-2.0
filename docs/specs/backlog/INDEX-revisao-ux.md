@@ -34,8 +34,8 @@ Origem: `docs/specs/backlog/revisao-ui-ux/` (relatório, prints com callouts, mo
 | ~~107~~ | ~~Demandas grafo: tema, hover-card, legenda-filtro~~ — **concluída** (`../done/`) |
 | ~~108~~ | ~~Demanda detalhe: edição inline, tags/membros no cabeçalho~~ — **concluída** (`../done/`) |
 | ~~109~~ | ~~Demanda: formulário unificado e adaptativo~~ — **concluída** (`../done/`) |
-| 110 | Execuções: contexto, linha ativa, teclado/URL — **reativada** (`110-execucoes-contexto-navegacao.spec.md`) |
-| 111 | Relatório: auto-preview, chips de período, IA habilitada — **reativada** (`111-relatorio-auto-preview-ia.spec.md`) |
+| ~~110~~ | ~~Execuções: contexto, linha ativa, teclado/URL~~ — **concluída** (`../done/`, reativada em 2026-10-17) |
+| ~~111~~ | ~~Relatório: auto-preview, chips de período, IA habilitada~~ — **concluída** (`../done/`, reativada em 2026-10-17) |
 
 **Fase 4 — Telas administrativas:**
 
@@ -51,7 +51,7 @@ Origem: `docs/specs/backlog/revisao-ui-ux/` (relatório, prints com callouts, mo
 
 Decisão do autor: tudo que mexe **diretamente** nas telas de Atividades fica de fora —
 **102, 103, 104 e 105**, em `docs/specs/discarded/`. **Em 2026-10-17 o autor reativou as tasks da tela de
-Execuções (110 e 111)**, de volta ao backlog. O que mexe nelas só
+Execuções (110 e 111)**, que foram implementadas. O que mexe nelas só
 indiretamente continua na lista (97, 98, 99, 95, 96, 108, 116 e as demais). Nenhuma task restante depende de uma descartada.
 
 ## Dependências entre tasks
@@ -60,7 +60,7 @@ indiretamente continua na lista (97, 98, 99, 95, 96, 108, 116 e as demais). Nenh
   padrão de dialogs (`dialogFormulario`), o feedback otimista/esqueletos (`app-skeleton-lista`,
   `app-barra-recarga`) e o "Desfazer" (`DesfazerService`) já existem e devem ser reutilizados.
 - 95 → 96 (layout). (~~95 → 104~~: a 104 foi descartada.)
-- 106 → 107; 96 → 114. 110 → 111 (reativadas).
+- 106 → 107; 96 → 114. 110 → 111 (ambas concluídas).
 - Única task com mudança de backend estrutural foi a **99** (endpoints `restaurar`, já feita); 104 pede apenas 2 campos a mais num DTO de leitura.
 
 ## Observações de organização (2026-10-16)

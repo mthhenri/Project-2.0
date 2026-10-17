@@ -12,6 +12,26 @@
 
 ---
 
+## 2026-10-17 — Tasks 110 e 111: histórico de Execuções com contexto/URL/teclado e relatório com auto-preview
+
+Reativadas pelo autor em 2026-10-17 (descartadas no dia anterior junto com as de Atividades, que seguem descartadas).
+Relatórios em `docs/specs/done/110-execucoes-contexto-navegacao/verificacao.md` e
+`docs/specs/done/111-relatorio-auto-preview-ia/verificacao.md`; verificação em Chromium contra a API real em 1920×1080,
+1366×768 e 1080×1920.
+
+- **110:** subtítulo de contexto (dia · total · horas), linha ativa fixada no topo com cronômetro, colunas só `HH:mm`
+  (data pequena só ao cruzar a meia-noite), descrição clicável com line-clamp, filtros em `?data=&usuario=` (URL como fonte
+  do estado), ←/→/Home, select de usuário com busca + chip "Minhas", estado vazio acionável, edição com `dialogFormulario` e
+  erro "fim > início" inline. 7×← = 7 dias, F5 preserva; PUT de edição por Ctrl+Enter confirmado.
+- **111:** o dialog abre carregado (projeto lembrado), atalhos de período em um clique, recarga automática com debounce de
+  400 ms e resultado antigo esmaecido; CSV e IA só usam os parâmetros do que está exibido e ficam desabilitados enquanto
+  desatualizado; "Revisar com IA" habilitado com contadores por severidade e cards ALTA→BAIXA.
+- **Achados só na verificação:** chip "Minhas" desalinhado, rodapé "Total do dia" no estado vazio, `HttpErrorResponse` não
+  tratado nos `subscribe` de CSV/IA e "1 execuções" no singular.
+- **Limites:** visão do desenvolvedor da tela de Execuções e a IA contra o provedor real não foram exercitadas ao vivo.
+
+---
+
 ## 2026-10-17 — Task 116: Tags com quick-add, cor inline e busca
 
 Relatório em `docs/specs/done/116-tags-quick-add-cor-inline/verificacao.md`; verificação em Chromium contra a API real
