@@ -3,52 +3,51 @@
 } @else {
   <div class="markdown-editor" [class.markdown-editor--desabilitado]="desabilitado()">
     <div class="markdown-editor__cabecalho">
-      @if (!semAbas()) {
-      <div class="markdown-editor__abas" role="tablist" aria-label="Modo do editor">
-        <button
-          type="button"
-          role="tab"
-          class="markdown-editor__aba"
-          [class.markdown-editor__aba--ativa]="aba() === 'editar'"
-          [attr.aria-selected]="aba() === 'editar'"
-          (click)="mostrarAba('editar')"
-        >
-          Editar
-        </button>
-        <button
-          type="button"
-          role="tab"
-          class="markdown-editor__aba"
-          [class.markdown-editor__aba--ativa]="aba() === 'visualizar'"
-          [attr.aria-selected]="aba() === 'visualizar'"
-          (click)="mostrarAba('visualizar')"
-        >
-          Visualizar
-        </button>
+      <div class="markdown-editor__barra" role="toolbar" aria-label="Formatação">
+        @for (botao of modo() === 'formatado' ? botoesFormatado : botoes; track botao.acao) {
+          <button
+            type="button"
+            class="markdown-editor__botao"
+            [class.markdown-editor__botao--ativo]="ativos().has(botao.acao)"
+            [attr.aria-label]="botao.rotulo"
+            [attr.aria-pressed]="modo() === 'formatado' ? ativos().has(botao.acao) : null"
+            [pTooltip]="botao.dica"
+            tooltipPosition="top"
+            [disabled]="desabilitado()"
+            (mousedown)="$event.preventDefault()"
+            (click)="executarBotao(botao.acao)"
+          >
+            <span [class]="botao.classe">{{ botao.glifo }}</span>
+          </button>
+        }
       </div>
-      }
 
-      @if (aba() === 'editar') {
-        <div class="markdown-editor__barra" role="toolbar" aria-label="Formatação">
-          @for (botao of botoes; track botao.acao) {
-            <button
-              type="button"
-              class="markdown-editor__botao"
-              [attr.aria-label]="botao.rotulo"
-              [pTooltip]="botao.dica"
-              tooltipPosition="top"
-              [disabled]="desabilitado()"
-              (mousedown)="$event.preventDefault()"
-              (click)="executar(botao.acao)"
-            >
-              <span [class]="botao.classe">{{ botao.glifo }}</span>
-            </button>
-          }
-        </div>
-      }
+      <button
+        type="button"
+        class="markdown-editor__modo"
+        [class.markdown-editor__modo--ativo]="modo() === 'texto'"
+        [attr.aria-pressed]="modo() === 'texto'"
+        [attr.aria-label]="modo() === 'texto' ? 'Voltar à edição formatada' : 'Ver e editar o Markdown cru'"
+        [pTooltip]="modo() === 'texto' ? 'Voltar à edição formatada' : 'Ver e editar o Markdown cru'"
+        tooltipPosition="top"
+        (click)="alternarModo()"
+      >
+        <span class="markdown-editor__glifo--codigo" aria-hidden="true">M↓</span>
+      </button>
     </div>
 
-    @if (aba() === 'editar') {
+    @if (modo() === 'formatado') {
+      <div
+        #hospedeFormatado
+        class="markdown-editor__formatado"
+        [class.markdown-editor__formatado--vazio]="valor().trim() === ''"
+        [attr.data-placeholder]="placeholder()"
+        [attr.aria-label]="rotulo()"
+        [style.min-height.rem]="alturaMinima()"
+        (keydown)="aoTeclarFormatado($event)"
+        (contextmenu)="aoAbrirMenuContextoFormatado($event)"
+      ></div>
+    } @else {
       <textarea
         #campo
         class="markdown-editor__campo"
@@ -67,14 +66,6 @@
         (contextmenu)="aoAbrirMenuContexto($event)"
         (blur)="aoSair()"
       ></textarea>
-    } @else {
-      <div class="markdown-editor__previa" [style.min-height.rem]="alturaMinima()">
-        @if (valor().trim().length > 0) {
-          <app-markdown-visualizador [texto]="valor()" />
-        } @else {
-          <span class="markdown-editor__previa-vazia">Nada para visualizar.</span>
-        }
-      </div>
     }
   </div>
 }

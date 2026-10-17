@@ -95,7 +95,7 @@ export class DialogFormularioDirective implements OnInit, OnDestroy {
     const alvo = evento.target as HTMLElement | null;
     if (!alvo) return;
     const comControle = evento.ctrlKey || evento.metaKey;
-    const eTextarea = alvo.tagName === 'TEXTAREA';
+    const eTextarea = alvo.tagName === 'TEXTAREA' || alvo.isContentEditable; // inclui o editor formatado (task 134)
     const eInput = alvo.tagName === 'INPUT' && !['button', 'submit', 'checkbox', 'radio'].includes((alvo as HTMLInputElement).type);
     if (!(eInput || (eTextarea && comControle))) return;
     evento.preventDefault();
