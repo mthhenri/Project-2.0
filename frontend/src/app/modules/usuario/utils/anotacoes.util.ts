@@ -17,6 +17,15 @@ export function tempoDecorrido(data: Date | string, agora: Date): string {
   return dias === 1 ? 'há 1 dia' : `há ${dias} dias`;
 }
 
+/** Ícone de cada seção do pad (PrimeIcons); acende quando a seção tem texto. */
+export const ICONE_SECAO_ANOTACAO: Record<TipoAnotacaoEnum, string> = {
+  [TipoAnotacaoEnum.EM_ANDAMENTO]: 'pi pi-play-circle',
+  [TipoAnotacaoEnum.FEITO]: 'pi pi-check-circle',
+  [TipoAnotacaoEnum.PENDENCIA]: 'pi pi-flag',
+  [TipoAnotacaoEnum.LEMBRETE]: 'pi pi-bell',
+  [TipoAnotacaoEnum.PESSOAL]: 'pi pi-user',
+};
+
 /** Título de cada seção do pad, na ordem de exibição (a ordem vem de `TIPOS_ANOTACAO_ORDENADOS`). */
 export const ROTULO_SECAO_ANOTACAO: Record<TipoAnotacaoEnum, string> = {
   [TipoAnotacaoEnum.EM_ANDAMENTO]: 'Em andamento',
