@@ -70,6 +70,8 @@ export class MarkdownEditorComponent implements ControlValueAccessor {
   /** Rótulo acessível do campo (quando não há `<label for>` por perto). */
   readonly rotulo = input<string>('Texto em Markdown');
   /** Liga o evento `aoMenuContexto`: com seleção, o botão direito vira esse evento em vez do menu do navegador. */
+  /** Esconde as abas Editar | Visualizar e deixa só o campo com a barra (o pad, onde a prévia não faz falta). */
+  readonly semAbas = input<boolean>(false);
   readonly emitirMenuContexto = input<boolean>(false);
 
   /** Botão direito sobre um trecho selecionado (só com `emitirMenuContexto`); o consumidor abre o seu menu. */

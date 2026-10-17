@@ -12,6 +12,12 @@
 
 ---
 
+## 2026-10-17 — Ajuste no pad: editor sem as abas Editar | Visualizar
+
+Pedido do autor, fora de spec: o `app-markdown-editor` ganhou o input `semAbas` (padrão falso, nada muda nos outros usos) e o pad o liga, ficando só
+com a barra de formatação e o campo. As abas continuam nas descrições e na documentação. O modo só leitura do pad segue sendo o input `editavel` do
+drawer (ligado à IA nos blocos 4 e 10), independente disso. Build do frontend ok; visto no drawer em tema escuro, janela padrão.
+
 ## 2026-10-17 — Task 128: remoção de `usuario.anotacoes` e fecho do bloco 8 (pad estruturado)
 
 
