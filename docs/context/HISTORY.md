@@ -28,6 +28,8 @@ com borda e título).
 - **Achados na verificação:** (1) o `<strong>` do aviso virava item solto do flex e espalhava o texto: envolvi a frase num `span`; (2) em 1080×1920 a lista de tipos virava sete linhas altas:
   agora é uma fileira que quebra linha; (3) no tema escuro o tipo aberto ficava com fundo claro e texto ilegível (`--p-content-hover-background`): troquei por `--app-surface-100`, e corrigi o mesmo
   token no histórico da aba "Provedor e modelos" (task 132), que tinha o mesmo defeito.
+- **Ajuste pedido pelo autor depois:** o cartão "Histórico" de baixo saiu; o cartão da versão ganhou setas (versão anterior/seguinte, por número) e um botão de menu com a lista de versões; numa versão
+  antiga aparecem "Voltar à ativa" e "Usar como base". Na tela inteira, as seções Provedor e Check-in ficam lado a lado a partir de 1500 px e o histórico das versões da configuração rola alinhado ao formulário.
 - **Banco depois da verificação:** o prompt "Conversa do dia" tem a versão 2 (texto de teste) só no histórico e a versão 1 ativa; sem rascunho.
 - **Não verificado:** estado de erro de rede da aba (só o bloco com "Tentar de novo" existe, não forçado); as demais tipos além de "Conversa do dia" só foram abertas, não editadas.
 - **Testes:** sem teste de frontend (P-001) e sem lint; build do frontend ok (avisos de budget de `.scss` preexistentes).
