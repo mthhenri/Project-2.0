@@ -90,8 +90,8 @@ autor e não são implementadas (o corpo também não é reescrito).
 O backlog está em `docs/specs/backlog/` (a revisão de UI/UX 94–117 foi concluída, inclusive 110 e 111 reativadas em 2026-10-17;
 restam o guarda-chuva e o `INDEX-revisao-ux.md`, mapa em `docs/context/MEMORY.md` §3). A guarda-chuva
 `rework-chat-ia.spec.md` (chat com IA, 2026-10-17) já tem as tasks dos blocos 1 a 3 especificadas (**118–124**: permissão de gestor
-centralizada, administrador, layout, Markdown); os blocos 4 a 10 ainda serão quebrados a partir da 125. Confira o próximo número livre
-antes de criar uma spec nova: o maior em uso é 124.
+centralizada, administrador, layout, Markdown) e do bloco 8 (**125–128**, pad estruturado); os blocos 4 a 7, 9 e 10 ainda serão
+quebrados a partir da 129. Confira o próximo número livre antes de criar uma spec nova: o maior em uso é 128.
 
 ## Gate obrigatório de qualidade e conclusão
 

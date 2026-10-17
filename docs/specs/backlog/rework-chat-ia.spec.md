@@ -211,8 +211,12 @@ Os blocos 1 a 3 não dependem de IA e podem começar primeiro.
 | 3 | 122 | [`122-markdown-editor`](122-markdown-editor.spec.md) | 121 |
 | 3 | 123 | [`123-markdown-conversao-do-html-gravado`](123-markdown-conversao-do-html-gravado.spec.md) | aplicada com a 124 |
 | 3 | 124 | [`124-markdown-troca-dos-consumidores-e-remocao-do-quill`](124-markdown-troca-dos-consumidores-e-remocao-do-quill.spec.md) | 121, 122, 123 |
+| 8 | 125 | [`125-pad-estruturado-modelo-e-api`](125-pad-estruturado-modelo-e-api.spec.md) | — |
+| 8 | 126 | [`126-pad-estruturado-tela-com-acordeoes`](126-pad-estruturado-tela-com-acordeoes.spec.md) | 125 |
+| 8 | 127 | [`127-pad-enviar-trecho-para-outra-secao`](127-pad-enviar-trecho-para-outra-secao.spec.md) | 125, 126 |
+| 8 | 128 | [`128-pad-remover-anotacoes-do-usuario`](128-pad-remover-anotacoes-do-usuario.spec.md) | 125, 126, 127 |
 
-Os blocos 4 a 10 são quebrados a partir da **125**, depois da conclusão destes.
+Os blocos 4 a 7, 9 e 10 são quebrados a partir da **129**. As tasks 125 a 128 saem no mesmo lançamento.
 
 ## Critérios de Aceite (da guarda-chuva)
 
