@@ -1,5 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { ConfiguracaoIaResumoDto, EstadoIaEnum, NivelIaEnum, TipoProvedorIaEnum } from '@project20/shared';
+import {
+  ConfiguracaoIaResumoDto,
+  EstadoIaEnum,
+  IaEstadoRecuperadoDto,
+  NivelIaEnum,
+  StandardResponse,
+  TipoProvedorIaEnum,
+} from '@project20/shared';
 import { ConfiguracaoIaService } from '../../configuracao-ia/services/configuracao-ia.service';
 import { IaException } from '../domain/ia.exception';
 import { IaProvedor } from '../domain/ia-provedor';
@@ -42,6 +49,11 @@ export class IaService {
     const provedor = this.provedores[configuracao.provedor];
     if (!provedor || !provedor.estaDisponivel()) return EstadoIaEnum.FORA_DO_AR;
     return this.ultimoResultado;
+  }
+
+  /** Para a rota de leitura do estado (administrador). */
+  async recuperarEstado(): Promise<StandardResponse<IaEstadoRecuperadoDto>> {
+    return { sucesso: true, dados: { estado: await this.obterEstado() }, mensagem: 'Estado da IA recuperado com sucesso' };
   }
 
   /** Lê a configuração, recusa se a IA está desligada (antes de qualquer requisição externa) e resolve nível → modelo. */

@@ -142,6 +142,10 @@ project-2.0/
   com trecho selecionado; sem consumidor ou sem seleção o menu do navegador segue); o drawer abre um `p-contextmenu` cujos itens são
   propriedade direta (a seção de origem fica `visible = false`), salva as duas seções (`garantirSalva`), chama `POST /anotacao/:id/mover`
   e oferece Desfazer de 7 s (move de volta); 400/409 recarregam as duas seções e avisam.
+- **[task 132]** Tela **Configurações da IA** (`/configuracao-ia`, `modules/configuracao-ia/`, exclusiva de administrador: item "IA" na sidebar com `somenteAdministrador` e tecla `g`+`i`,
+  rota com `administradorGuard`): aba "Provedor e modelos" (formulário reativo com provedor, três modelos com sugestões, esforço, intervalo do check-in, duração e quatro interruptores,
+  incluindo "IA desligada"; Google e OpenAI listados e desabilitados), salvar cria a **versão seguinte**, histórico com "Usar como base" (só preenche o formulário), estado da IA em leitura
+  (`GET /ia/estado`). A aba "Prompts" existe desabilitada até a task 133. Análogo visual: a tela de Tags.
 - **[task 131]** Prompts da IA versionados: migration `0034` (`tipo_prompt` com 7 tipos, `prompt` com `ativo` e `rascunho` booleanos, versão 1 de cada tipo por seed) e módulo `prompt`
   exclusivo de administrador (listar tipos e versões, salvar/ativar/descartar rascunho, restaurar padrão), com `PromptService.obterAtivo(tipo)` em cache. Regra de uma ativa e um rascunho por tipo na
   service (transação que trava a linha do tipo). Os textos-base dos seeds são curtos; os blocos 5 a 9 os refinam. Ainda sem tela (tasks 132 e 133).

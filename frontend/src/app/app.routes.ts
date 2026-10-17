@@ -24,6 +24,7 @@ export const rotas: Routes = [
       { path: 'ponto',      loadChildren: () => import('./modules/ponto/ponto.routes').then((m) => m.pontoRotas) },
       { path: 'calendario', loadChildren: () => import('./modules/calendario/calendario.routes').then((m) => m.calendarioRotas) },
       { path: 'tag',        loadChildren: () => import('./modules/tag/tag.routes').then((m) => m.tagRotas) },
+      { path: 'configuracao-ia', loadChildren: () => import('./modules/configuracao-ia/configuracao-ia.routes').then((m) => m.configuracaoIaRotas) },
       { path: '', redirectTo: 'ponto', pathMatch: 'full' },
     ],
   },

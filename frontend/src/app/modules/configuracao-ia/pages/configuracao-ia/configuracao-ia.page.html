@@ -1,0 +1,236 @@
+<div class="configuracao-ia">
+  <div class="configuracao-ia__cabecalho">
+    <div class="configuracao-ia__titulo-grupo">
+      <h1 class="configuracao-ia__titulo">Configurações da IA</h1>
+      @if (ativa(); as versaoAtiva) {
+        <span class="configuracao-ia__contador">versão {{ versaoAtiva.versao }} ativa</span>
+      }
+    </div>
+    @if (estado(); as estadoAtual) {
+      <p-tag
+        [value]="'IA ' + (rotuloEstado[estadoAtual] | lowercase)"
+        [severity]="severidadeEstado[estadoAtual]"
+        [rounded]="true"
+        class="configuracao-ia__estado"
+      />
+    }
+  </div>
+
+  @if (erro()) {
+    <div class="configuracao-ia__erro" role="alert">
+      <i class="pi pi-exclamation-triangle"></i>
+      <span>Não foi possível carregar a configuração da IA.</span>
+      <p-button label="Tentar de novo" icon="pi pi-refresh" size="small" [outlined]="true" (onClick)="carregar()" />
+    </div>
+  } @else {
+    <p-tabs value="provedor">
+      <p-tablist>
+        <p-tab value="provedor"><i class="pi pi-sliders-h mr-2"></i>Provedor e modelos</p-tab>
+        <p-tab value="prompts" [disabled]="true"><i class="pi pi-file-edit mr-2"></i>Prompts</p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <p-tabpanel value="provedor">
+          @if (!jaCarregou()) {
+            <div class="configuracao-ia__esqueleto" aria-busy="true">
+              <p-skeleton height="2.5rem" />
+              <p-skeleton height="2.5rem" />
+              <p-skeleton height="2.5rem" />
+              <p-skeleton height="2.5rem" width="60%" />
+            </div>
+          } @else {
+            <div class="configuracao-ia__grade" [class.configuracao-ia__grade--recarregando]="carregando()">
+              <form [formGroup]="formulario" class="configuracao-ia__formulario" (ngSubmit)="salvar()">
+                <section class="configuracao-ia__secao">
+                  <h2 class="configuracao-ia__secao-titulo">Provedor e modelos</h2>
+
+                  <div class="configuracao-ia__campo">
+                    <label class="configuracao-ia__label" for="ia-provedor">Provedor</label>
+                    <p-select
+                      inputId="ia-provedor"
+                      formControlName="provedor"
+                      [options]="opcoesProvedor"
+                      optionLabel="rotulo"
+                      optionValue="valor"
+                      optionDisabled="desabilitada"
+                      class="w-full"
+                    />
+                  </div>
+
+                  <div class="configuracao-ia__linha">
+                    <div class="configuracao-ia__campo">
+                      <label class="configuracao-ia__label" for="ia-modelo-rapido">Modelo rápido</label>
+                      <input id="ia-modelo-rapido" pInputText list="ia-sugestoes-modelos" formControlName="modeloRapido" maxlength="100" class="w-full" />
+                      <small class="configuracao-ia__ajuda">Conversa, listar, iniciar e pausar.</small>
+                      @if (campoInvalido('modeloRapido')) {
+                        <small class="configuracao-ia__erro-campo">Informe o modelo (até 100 caracteres)</small>
+                      }
+                    </div>
+                    <div class="configuracao-ia__campo">
+                      <label class="configuracao-ia__label" for="ia-modelo-padrao">Modelo padrão</label>
+                      <input id="ia-modelo-padrao" pInputText list="ia-sugestoes-modelos" formControlName="modeloPadrao" maxlength="100" class="w-full" />
+                      <small class="configuracao-ia__ajuda">Descrições, rigor, pad e prioridade.</small>
+                      @if (campoInvalido('modeloPadrao')) {
+                        <small class="configuracao-ia__erro-campo">Informe o modelo (até 100 caracteres)</small>
+                      }
+                    </div>
+                    <div class="configuracao-ia__campo">
+                      <label class="configuracao-ia__label" for="ia-modelo-analitico">Modelo analítico</label>
+                      <input id="ia-modelo-analitico" pInputText list="ia-sugestoes-modelos" formControlName="modeloAnalitico" maxlength="100" class="w-full" />
+                      <small class="configuracao-ia__ajuda">Analisar demanda, quebrar em atividades, sugerir conexões.</small>
+                      @if (campoInvalido('modeloAnalitico')) {
+                        <small class="configuracao-ia__erro-campo">Informe o modelo (até 100 caracteres)</small>
+                      }
+                    </div>
+                  </div>
+                  <datalist id="ia-sugestoes-modelos">
+                    @for (sugestao of sugestoesModelos; track sugestao) {
+                      <option [value]="sugestao"></option>
+                    }
+                  </datalist>
+
+                  <div class="configuracao-ia__campo configuracao-ia__campo--estreito">
+                    <label class="configuracao-ia__label" for="ia-esforco">Esforço do nível analítico</label>
+                    <p-select
+                      inputId="ia-esforco"
+                      formControlName="esforcoAnalitico"
+                      [options]="opcoesEsforco"
+                      optionLabel="rotulo"
+                      optionValue="valor"
+                      class="w-full"
+                    />
+                  </div>
+                </section>
+
+                <section class="configuracao-ia__secao">
+                  <h2 class="configuracao-ia__secao-titulo">Check-in e rigor</h2>
+                  <div class="configuracao-ia__linha">
+                    <div class="configuracao-ia__campo">
+                      <label class="configuracao-ia__label" for="ia-checkin-minimo">Check-in, mínimo</label>
+                      <p-inputnumber inputId="ia-checkin-minimo" formControlName="checkinMinimoMinutos" suffix=" min" [min]="1" [useGrouping]="false" class="w-full" />
+                      @if (campoInvalido('checkinMinimoMinutos')) {
+                        <small class="configuracao-ia__erro-campo">Informe um valor de 1 minuto ou mais</small>
+                      }
+                    </div>
+                    <div class="configuracao-ia__campo">
+                      <label class="configuracao-ia__label" for="ia-checkin-maximo">Check-in, máximo</label>
+                      <p-inputnumber inputId="ia-checkin-maximo" formControlName="checkinMaximoMinutos" suffix=" min" [min]="1" [useGrouping]="false" class="w-full" />
+                      @if (campoInvalido('checkinMaximoMinutos')) {
+                        <small class="configuracao-ia__erro-campo">Informe um valor de 1 minuto ou mais</small>
+                      }
+                    </div>
+                    <div class="configuracao-ia__campo">
+                      <label class="configuracao-ia__label" for="ia-duracao">Duração recomendada</label>
+                      <p-inputnumber inputId="ia-duracao" formControlName="duracaoRecomendadaMinutos" suffix=" min" [min]="1" [useGrouping]="false" class="w-full" />
+                      @if (campoInvalido('duracaoRecomendadaMinutos')) {
+                        <small class="configuracao-ia__erro-campo">Informe um valor de 1 minuto ou mais</small>
+                      }
+                    </div>
+                  </div>
+                  @if (intervaloInvalido()) {
+                    <small class="configuracao-ia__erro-campo">O mínimo do check-in deve ser menor que o máximo</small>
+                  }
+
+                  <label class="configuracao-ia__interruptor">
+                    <p-toggleswitch formControlName="checkinInteligente" />
+                    <span>
+                      <strong>Check-in inteligente</strong>
+                      <small>Suspende os check-ins quando o desenvolvedor avisa que vai entrar numa reunião.</small>
+                    </span>
+                  </label>
+                  <label class="configuracao-ia__interruptor">
+                    <p-toggleswitch formControlName="rigorProporcional" />
+                    <span>
+                      <strong>Rigor proporcional ao tempo</strong>
+                      <small>Pede mais detalhe quando a execução passa da duração recomendada.</small>
+                    </span>
+                  </label>
+                  <label class="configuracao-ia__interruptor">
+                    <p-toggleswitch formControlName="deteccaoAutomatica" />
+                    <span>
+                      <strong>Detecção automática de queda</strong>
+                      <small>Quando a IA cai, o sistema volta sozinho às telas convencionais.</small>
+                    </span>
+                  </label>
+                </section>
+
+                <section class="configuracao-ia__secao configuracao-ia__secao--alerta">
+                  <h2 class="configuracao-ia__secao-titulo">Desligar a IA</h2>
+                  <label class="configuracao-ia__interruptor">
+                    <p-toggleswitch formControlName="iaDesligada" />
+                    <span>
+                      <strong>IA desligada</strong>
+                      <small>
+                        Nenhuma chamada à IA é feita e o sistema usa as telas convencionais para todos. Ligar sem a chave da API no
+                        ambiente deixa a IA "fora do ar" (a chave fica no <code>.env</code>, não nesta tela).
+                      </small>
+                    </span>
+                  </label>
+                </section>
+
+                <div class="configuracao-ia__acoes">
+                  <span class="configuracao-ia__dica">
+                    @if (semAlteracoes()) {
+                      Nada a salvar: o formulário é igual à versão {{ ativa()?.versao }}.
+                    } @else {
+                      Salvar cria a versão {{ proximaVersao() }}; a versão {{ ativa()?.versao }} continua no histórico.
+                    }
+                  </span>
+                  <p-button label="Descartar alterações" severity="secondary" [outlined]="true" [disabled]="semAlteracoes() || salvando()" (onClick)="descartarAlteracoes()" />
+                  <p-button
+                    type="submit"
+                    label="Salvar nova versão"
+                    icon="pi pi-save"
+                    [disabled]="semAlteracoes() || salvando()"
+                    [loading]="salvando()"
+                  />
+                </div>
+              </form>
+
+              <aside class="configuracao-ia__historico" aria-label="Histórico de versões">
+                <h2 class="configuracao-ia__secao-titulo">Histórico</h2>
+                <ul class="configuracao-ia__versoes">
+                  @for (versao of versoes(); track versao.id) {
+                    <li>
+                      <button
+                        type="button"
+                        class="configuracao-ia__versao"
+                        [class.configuracao-ia__versao--aberta]="selecionada()?.id === versao.id"
+                        [attr.aria-expanded]="selecionada()?.id === versao.id"
+                        (click)="selecionarVersao(versao)"
+                      >
+                        <span class="configuracao-ia__versao-numero">Versão {{ versao.versao }}</span>
+                        @if (versao.id === ativa()?.id) {
+                          <p-tag value="Ativa" severity="success" [rounded]="true" />
+                        }
+                        <span class="configuracao-ia__versao-meta">{{ versao.usuarioNome }} · {{ versao.createdDate | date: 'dd/MM/yyyy HH:mm' }}</span>
+                      </button>
+
+                      @if (selecionada()?.id === versao.id) {
+                        <div class="configuracao-ia__detalhe">
+                          <dl class="configuracao-ia__valores">
+                            <dt>Provedor</dt><dd>{{ rotuloDoProvedor(versao.provedor) }}</dd>
+                            <dt>Rápido</dt><dd>{{ versao.modeloRapido }}</dd>
+                            <dt>Padrão</dt><dd>{{ versao.modeloPadrao }}</dd>
+                            <dt>Analítico</dt><dd>{{ versao.modeloAnalitico }} · esforço {{ rotuloDoEsforco(versao.esforcoAnalitico) | lowercase }}</dd>
+                            <dt>Check-in</dt><dd>{{ versao.checkinMinimoMinutos }} a {{ versao.checkinMaximoMinutos }} min</dd>
+                            <dt>Duração</dt><dd>{{ versao.duracaoRecomendadaMinutos }} min</dd>
+                            <dt>Inteligente</dt><dd>{{ versao.checkinInteligente ? 'Sim' : 'Não' }}</dd>
+                            <dt>Rigor</dt><dd>{{ versao.rigorProporcional ? 'Sim' : 'Não' }}</dd>
+                            <dt>Detecção</dt><dd>{{ versao.deteccaoAutomatica ? 'Sim' : 'Não' }}</dd>
+                            <dt>IA</dt><dd>{{ versao.iaDesligada ? 'Desligada' : 'Ligada' }}</dd>
+                          </dl>
+                          <p-button label="Usar como base" icon="pi pi-copy" size="small" [outlined]="true" (onClick)="usarComoBase(versao)" />
+                        </div>
+                      }
+                    </li>
+                  }
+                </ul>
+              </aside>
+            </div>
+          }
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  }
+</div>

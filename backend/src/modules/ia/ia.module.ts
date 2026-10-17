@@ -4,12 +4,14 @@ import { TipoProvedorIaEnum } from '@project20/shared';
 import { ConfigModule } from '../../config/config.module';
 import { ConfigService } from '../../config/config.service';
 import { ConfiguracaoIaModule } from '../configuracao-ia/configuracao-ia.module';
+import { IaController } from './controllers/ia.controller';
 import { AnthropicProvedor, ClienteAnthropic } from './provedores/anthropic.provedor';
 import { IA_PROVEDORES, IaProvedores, IaService } from './services/ia.service';
 
 /** Único módulo que importa o SDK de um provedor de IA. */
 @Module({
   imports: [ConfigModule, ConfiguracaoIaModule],
+  controllers: [IaController],
   providers: [
     {
       provide: IA_PROVEDORES,

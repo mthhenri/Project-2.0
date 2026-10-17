@@ -12,6 +12,24 @@
 
 ---
 
+## 2026-10-17 — Task 132: tela de Configurações da IA (provedor, modelos e flags)
+
+Bloco 4 do rework do chat com IA (4 de 5). Backend: `GET /ia/estado` (`IaController`, `@AdministradorOnly`) devolve o `EstadoIaEnum` em memória. Frontend: módulo `configuracao-ia` (rota
+`/configuracao-ia` com `administradorGuard`, serviço, utilitários e página). Item na sidebar: label **"IA"**, ícone `pi-sparkles`, `somenteGestor` e `somenteAdministrador`, atalho `g` + `i`.
+A página tem título, tag do estado ("IA desligada"/"no ar"/"fora do ar") e `p-tabs` com "Provedor e modelos" e "Prompts" (desabilitada até a 133). Formulário em três cartões (provedor e modelos;
+check-in e rigor; desligar a IA) e histórico ao lado (uma coluna abaixo de 1100 px). Validação no cliente (campos obrigatórios, mínimo 1, mínimo < máximo do check-in) e dica do que salvar faz
+("Salvar cria a versão N; a versão N-1 continua no histórico"). O botão só habilita quando o formulário difere da ativa. Análogo escolhido e registrado: tela de Tags (padding, título `--p-primary-600`).
+
+- **Ao vivo:** abri a tela como administrador; troquei o modelo padrão e salvei (versão 19 no banco com o valor novo e a tela voltou a "nada a salvar"); no histórico abri a versão 18 e "Usar como base"
+  preencheu o formulário **sem gravar** (banco continuou na 19, dica "Salvar cria a versão 20"); salvei de novo (versão 20, valores do seed e IA desligada, que é o estado em que deixei o banco).
+  Um gestor de teste (excluído depois) **não vê o item** e `/configuracao-ia` o devolve para `/ponto`. Vista em **1366×768** e **1920×1080** (duas colunas) e **1080×1920** (empilhada), claro e escuro.
+  O interruptor aparecia achatado quando o texto era longo (corrigido com `flex: none`).
+- **Não verificado:** estado de erro de rede da tela (só o `erro()` com "Tentar de novo" existe e não foi forçado); tema escuro em 1366×768 e 1080×1920 (só o claro em ambos e o escuro em 1920×1080);
+  ligar a IA de verdade pela tela com chave válida (o `.env` ainda tem a chave de exemplo).
+- **Observação:** o `ng serve` da porta 4200 do autor ficou desatualizado depois de eu atualizar dependências (o bundle não trazia o item novo); verifiquei num servidor temporário na 4201 (encerrado).
+  Se o item "IA" não aparecer na 4200, reiniciar o `npm run dev`.
+- **Testes:** sem teste de frontend (P-001) e sem lint; `backend` 136/136, `shared` 68/68, build do backend e do frontend ok.
+
 ## 2026-10-17 — Task 131: prompts da IA versionados (modelo de dados e API)
 
 Bloco 4 do rework do chat com IA (3 de 5). Migration `0034`: `tipo_prompt` (CONVERSA, CHECKIN, DESCRICAO_EXECUCAO, PAD, PRIORIDADE, ENTREVISTA_DEMANDA, CONEXAO_DEMANDA) e `prompt`
