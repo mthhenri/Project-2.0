@@ -12,6 +12,25 @@
 
 ---
 
+## 2026-10-17 — Task 120: layout com barra lateral recolhível e topbar enxuta
+
+Bloco 2 do rework do chat com IA, só frontend. `SidebarComponent` (logo, os 8 itens com o mesmo filtro de gestor, botão de
+recolher no rodapé), `navegacao.ts` com a lista única de itens, `LayoutComponent` em duas colunas. A topbar perdeu logo,
+navegação e "Mais ▾" e ganhou o ponto de extensão `[slotCheckin]` para o bloco 7, sem renderizar nada hoje. O atalho
+`g`+letra foi para a barra lateral e o `n` ficou na topbar, cada um dono do que abre. Sem disputar espaço com a navegação, o
+relógio e o nome do perfil passaram a aparecer em qualquer largura, e os degraus de largura da topbar foram removidos.
+Análogo: a topbar anterior (tokens `--app-surface-*`, realce do item ativo, densidade); a barra lateral não tem análogo.
+
+- **Build:** frontend ok (aviso preexistente do `quill-delta`). Sem testes no frontend e sem lint (P-001).
+- **Ao vivo (API e SPA reais):** 1366×768 expandida e recolhida, 1920×1080 e 1080×1920, temas claro (todos) e escuro
+  (1366×768); estados sem execução ativa e com execução ativa (chip com descrição truncada e cronômetro). Nas 8 rotas, com a
+  barra expandida a 1366 px, nenhuma teve rolagem horizontal. Recolher grava `sidebar.recolhida` e sobrevive ao reload;
+  `g e` e `g u` navegam, e `g p` dentro de um `input` não faz nada. Desenvolvedor vê 4 itens, `g u` não navega e `g a`
+  navega. Impressão do ponto não depende da estrutura (a regra de `@media print` esconde `body *`); não imprimi.
+- **Achado só na verificação:** `focoEmCampo` assume um `Element` como alvo; eventos sintéticos disparados no `document`
+  quebram nele, mas teclas reais têm o `body` como alvo. Sem impacto no uso.
+- **Não verificado:** mobile (fora do escopo do projeto) e a impressão em si.
+
 ## 2026-10-17 — Só gestor e administrador alteram usuários (fecha o que ficou aberto no P-006)
 
 Decisão do autor depois do P-006: `PUT /usuario/:id` deixa de aceitar o desenvolvedor, inclusive no próprio perfil. A única exceção

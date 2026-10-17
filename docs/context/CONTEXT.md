@@ -115,10 +115,9 @@ project-2.0/
 - **[tasks 94–96]** O login guarda só `{login, nomeCompleto}` (nunca a senha) e volta ao `returnUrl`
   (caminho interno validado; padrão `/ponto`). A execução ativa do usuário é um signal global
   (`ExecucaoAtivaService`), atualizado por interceptor após iniciar/encerrar em qualquer tela e ao refocar
-  a aba. A topbar tem tema em 1 clique, perfil por avatar (menu com "Tempos em dias" e "Sair"), atalhos
-  `g`+letra e `n`, e colapsa em 3 degraus: sem relógio até 1499 px, só ícones até 1366 px (acima do 1280
-  da spec, porque o chip de execução ocupa espaço), "Mais ▾" para itens de gestor abaixo de 900 px e duas
-  linhas abaixo de 720 px. O overlay global só cobre mutações (GET usa esqueleto/loading local).
+  a aba. A topbar tem tema em 1 clique, perfil por avatar (menu com "Tempos em dias" e "Sair") e o atalho `n`;
+  a navegação e o atalho `g`+letra moraram na topbar até a task 120 (hoje na barra lateral). O overlay global só
+  cobre mutações (GET usa esqueleto/loading local).
 - **[task 116]** Tags: quick-add com Enter (criação otimista com id temporário, reconciliada; erro do servidor devolve o
   texto ao campo), dot de cor abre popover de paleta compartilhado (PUT imediato; cor personalizada só ao fechar),
   busca (`/`), seleção múltipla com um único Desfazer. Criar tag é só pelo quick-add; o dialog só edita.
@@ -130,6 +129,13 @@ project-2.0/
   Limpar com Desfazer de 7 s (o vazio só é gravado depois), erro no flush → toast "Reabrir". `aoAlterar` emite
   `{usuarioId, temAnotacoes}`. Deep-link `/usuario/:id/anotacoes` redireciona (gestor → `/usuario?anotacoes=`, próprio →
   `/ponto?anotacoes=`); a topbar abre o drawer próprio. `DesfazerService` aceita `rotulo/duracaoMs/aoEncerrar`.
+- **[task 120]** Layout: a navegação saiu da topbar para a barra lateral recolhível (`shared/layout/sidebar/`,
+  itens em `shared/layout/navegacao.ts`, mesmo filtro `eGestor()`). Expandida = 240 px (ícone, rótulo e `g x`);
+  recolhida = 68 px (ícone com tooltip "Atividades — g a"). A escolha vai ao `localStorage` (`sidebar.recolhida`, com
+  `try/catch`); sem escolha salva, entra recolhida abaixo de 1280 px. O `g`+letra vive na barra lateral e o `n`
+  (anotações) segue na topbar, ambos ignorados em campo de texto ou com overlay aberto. A topbar ficou só com execução
+  ativa, relógio, tema, anotações e perfil, com o ponto de extensão `[slotCheckin]` (sem conteúdo ainda) para o bloco 7.
+  O "Mais ▾" e os degraus de largura da topbar deixaram de existir.
 - **[task 119]** Administrador: `TipoUsuarioEnum.ADMINISTRADOR` (migration `0029` semeia o tipo e converte o `gestor.inicial`). `temPermissaoDeGestor` inclui o administrador; `temPermissaoDeAdministrador` é exclusiva dele. O backend recusa rebaixar, inativar ou excluir o último administrador ativo (substituiu a guarda de gestor, P-002); gestor não cria/promove nem altera, exclui, restaura ou troca a senha de administrador. Tela de Usuários: opção e filtro "Administrador" (`core/utils/tipo-usuario.ts` centraliza rótulo e cor da tag); ações sobre administrador ficam ocultas ao gestor. O JWT carrega o tipo: quem já estava logado como `gestor.inicial` precisa entrar de novo para ser administrador.
 - **[task 118]** Permissão de gestor centralizada: `temPermissaoDeGestor(tipo)` em `shared/src/utils/permissao-usuario.ts`
   é a única regra de "tem poder de gestor" (guard, services do backend, `UsuarioSessaoService.eGestor`, filtros de membros

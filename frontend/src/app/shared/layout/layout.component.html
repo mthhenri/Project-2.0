@@ -1,8 +1,11 @@
-<div class="layout flex flex-col h-screen">
-  <app-topbar />
-  <main class="layout__conteudo flex-1 overflow-auto p-6 bg-surface-50 dark:bg-surface-950">
-    <router-outlet />
-  </main>
+<div class="layout flex h-screen">
+  <app-sidebar />
+  <div class="layout__coluna flex flex-col flex-1 min-w-0">
+    <app-topbar />
+    <main class="layout__conteudo flex-1 overflow-auto p-6 bg-surface-50 dark:bg-surface-950">
+      <router-outlet />
+    </main>
+  </div>
   <app-loading-spinner />
   <p-toast position="bottom-right" />
   <app-toast-desfazer />

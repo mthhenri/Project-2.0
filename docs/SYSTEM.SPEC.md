@@ -870,9 +870,12 @@ frontend/src/app/
       usuario-autenticado.signal.ts
   shared/
     layout/
-      layout.component.ts           ← shell: topbar + router-outlet + toast
+      layout.component.ts           ← shell: barra lateral + topbar + router-outlet + toast
+      navegacao.ts                  ← itens da navegação (rota, ícone, tecla do atalho, só gestor)
+      sidebar/
+        sidebar.component.ts        ← navegação vertical recolhível, atalho g + letra
       topbar/
-        topbar.component.ts         ← navegação horizontal, relógio, perfil, logout
+        topbar.component.ts         ← execução ativa, relógio, tema, anotações, perfil, logout
         topbar.component.html
         topbar.component.scss
     components/

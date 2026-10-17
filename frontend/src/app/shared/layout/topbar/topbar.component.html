@@ -1,58 +1,10 @@
-<header class="topbar flex items-center px-6 py-3 border-b-2 gap-6">
-  <!-- Logo -->
-  <a routerLink="/ponto" class="topbar__logo flex-shrink-0">
-    <img src="favicon.ico" alt="Logo" class="topbar__logo-imagem" />
-  </a>
-
-  <!-- Navigation -->
-  <nav class="topbar__nav flex items-center gap-1 flex-1">
-    @for (item of itensNavegacao(); track item.rotaLink) {
-      <a
-        [routerLink]="item.rotaLink"
-        routerLinkActive="topbar__nav-item--ativo"
-        class="topbar__nav-item flex items-center gap-2 px-3 py-2 rounded-lg text-color hover:bg-emphasis transition-colors text-sm font-medium whitespace-nowrap"
-        [class.topbar__nav-item--gestor]="item.somenteGestor"
-        [attr.aria-label]="item.label"
-      >
-        <i [class]="item.icone"></i>
-        <span class="topbar__nav-rotulo">{{ item.label }}</span>
-      </a>
-    }
-
-    @if (itensGestorOcultaveis().length) {
-      <!-- Abaixo de 900px os itens só de gestor saem da barra e entram aqui. -->
-      <button
-        type="button"
-        class="topbar__mais topbar__nav-item flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium"
-        aria-label="Mais páginas"
-        (click)="maisPopover.toggle($event)"
-      >
-        <i class="pi pi-ellipsis-h"></i>
-        <span class="topbar__nav-rotulo">Mais</span>
-        <i class="pi pi-angle-down text-xs"></i>
-      </button>
-      <p-popover #maisPopover>
-        <div class="flex flex-col gap-1 min-w-[180px]">
-          @for (item of itensGestorOcultaveis(); track item.rotaLink) {
-            <a
-              [routerLink]="item.rotaLink"
-              routerLinkActive="topbar__nav-item--ativo"
-              class="topbar__nav-item flex items-center gap-2 px-3 py-2 rounded-lg text-sm"
-              (click)="maisPopover.hide()"
-            >
-              <i [class]="item.icone"></i>
-              <span>{{ item.label }}</span>
-              <kbd class="topbar__tecla">g {{ item.tecla }}</kbd>
-            </a>
-          }
-        </div>
-      </p-popover>
-    }
-  </nav>
-
+<header class="topbar flex items-center justify-end px-6 py-3 border-b-2 gap-6">
   <!-- Actions -->
   <div class="topbar__acoes flex items-center gap-2 flex-shrink-0">
     <app-chip-execucao-ativa />
+
+    <!-- Ponto de extensão do próximo check-in (bloco 7): sem conteúdo projetado, nada é renderizado. -->
+    <ng-content select="[slotCheckin]" />
 
     <span class="topbar__hora text-sm text-muted-color font-mono tabular-nums">{{ horaAtual() }}</span>
 
