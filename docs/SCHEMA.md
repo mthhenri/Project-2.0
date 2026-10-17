@@ -83,6 +83,7 @@ As tabelas devem ser criadas nessa ordem para respeitar as dependências de FK:
 12. tipo_anotacao, anotacao (migration `0030`)
 13. tipo_provedor_ia, configuracao_ia (migration `0033`)
 14. tipo_prompt, prompt (migration `0034`)
+15. tipo_proposta_ia, tipo_proposta_ia_status, proposta_ia (migration `0035`)
 ```
 
 ---
@@ -633,6 +634,33 @@ CREATE UNIQUE INDEX uix_prompt_tipo_versao ON prompt(tipo_prompt_id, versao) WHE
 
 ---
 
+### proposta_ia — ações que a IA propôs ao usuário (migration `0035`)
+
+Uma linha por proposta. A IA só **propõe**; a ação roda quando o usuário confirma (uma vez), pela service do domínio. A troca de situação é um `UPDATE` condicional
+(só `PENDENTE` passa), o que impede duas confirmações simultâneas de executar duas vezes. `resultado` guarda o que a ação criou ou alterou (base do "desfazer").
+Não existe tipo de exclusão: a IA não exclui dados.
+
+```sql
+CREATE TABLE proposta_ia (
+  id                          SERIAL      PRIMARY KEY,
+  created_date                TIMESTAMPTZ NOT NULL,
+  updated_date                TIMESTAMPTZ NOT NULL,
+  is_deleted                  BOOLEAN     NOT NULL,
+  deleted_date                TIMESTAMPTZ,
+
+  usuario_id                  INTEGER NOT NULL CONSTRAINT fk_proposta_ia_usuario REFERENCES usuario(id),
+  tipo_proposta_ia_id         INTEGER NOT NULL CONSTRAINT fk_proposta_ia_tipo_proposta_ia REFERENCES tipo_proposta_ia(id),
+  tipo_proposta_ia_status_id  INTEGER NOT NULL CONSTRAINT fk_proposta_ia_tipo_proposta_ia_status REFERENCES tipo_proposta_ia_status(id),
+  dados                       JSONB   NOT NULL,   -- argumentos da ação, validados pelo executor do tipo
+  resolucao_data              TIMESTAMPTZ,
+  resultado                   JSONB               -- ids do que foi criado ou alterado
+);
+
+CREATE INDEX ix_proposta_ia_usuario ON proposta_ia(usuario_id) WHERE is_deleted = false;
+```
+
+---
+
 ### Tabelas de referência (enums) — migration `20240025`
 
 Todo enum de domínio fechado é uma **tabela de referência** `tipo_<tabela>_<complemento?>`
@@ -677,6 +705,8 @@ Seeds (`codigo` → `descricao`):
 | `tipo_atividade_status` | PLANEJADA→"Planejada", PENDENTE→"Pendente", DESENVOLVENDO→"Desenvolvendo", DESENVOLVIDA→"Desenvolvida" |
 | `tipo_dia_nao_util` | FERIADO→"Feriado", RECESSO→"Recesso", PONTO_FACULTATIVO→"Ponto facultativo" |
 | `tipo_dia_nao_util_duracao` | INTEGRAL→"Integral", MEIO_PERIODO→"Meio período" |
+| `tipo_proposta_ia` | INICIAR_EXECUCAO, PAUSAR_EXECUCAO, CRIAR_ATIVIDADE, DESCREVER_EXECUCAO, SUSPENDER_CHECKIN, ANOTAR_PAD, CRIAR_DEMANDA, DESCREVER_DEMANDA, CONECTAR_DEMANDA (migration `0035`; sem tipo de exclusão) |
+| `tipo_proposta_ia_status` | PENDENTE, CONFIRMADA, AJUSTADA, EXPIRADA (também a recusada), DESFEITA (migration `0035`) |
 | `tipo_prompt` | CONVERSA, CHECKIN, DESCRICAO_EXECUCAO, PAD, PRIORIDADE, ENTREVISTA_DEMANDA, CONEXAO_DEMANDA (migration `0034`; a lista cresce por migration) |
 | `tipo_provedor_ia` | ANTHROPIC→"Anthropic", GOOGLE→"Google", OPENAI→"OpenAI" (migration `0033`; só ANTHROPIC terá implementação) |
 | `tipo_anotacao` | EM_ANDAMENTO→"Em andamento", FEITO→"Feito", PENDENCIA→"Pendências", LEMBRETE→"Lembretes", PESSOAL→"Pessoal" (migration `0030`, com `ordem` 1 a 5) |

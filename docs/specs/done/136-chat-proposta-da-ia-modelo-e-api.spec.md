@@ -37,7 +37,7 @@ executores concretos de cada tipo chegam nos blocos 6, 8 e 9.
   status `DESFEITA`).
 - **Confirmação atômica:** `UPDATE ... SET status = CONFIRMADA WHERE id = :id AND status = PENDENTE RETURNING ...`; quem não
   recebe linha de volta devolve 409. Duas confirmações simultâneas executam a ação **uma vez**. Se o executor falhar, a proposta
-  volta a `PENDENTE` (transação), o usuário vê o motivo e pode ajustar.
+  volta a `PENDENTE` (compensação: a troca vem antes do executor, que usa as próprias transações), o usuário vê o motivo e pode ajustar.
 - **Expiração:** proposta `PENDENTE` de um dia anterior vira `EXPIRADA` ao ser lida ou resolvida (sem job).
 - Testes (node:test, repositório em memória e executor falso): confirmar executa uma vez, confirmação concorrente, executor que
   falha devolve a `PENDENTE`, ajustar usa os dados novos, recusar não executa, desfazer só depois de confirmar, 403 de dono,
@@ -66,7 +66,8 @@ Nenhuma (independente de 135). Bloqueia a 137.
 
 ## Riscos e Mitigação
 
-- **Executor que grava e depois falha**: cada executor roda dentro da mesma transação da troca de status, para a proposta nunca ficar
-  `CONFIRMADA` sem efeito, nem com efeito pela metade.
+- **Executor que grava e depois falha**: as services de domínio têm transação própria, então a proposta é reivindicada antes e devolvida a
+  `PENDENTE` se o executor falhar. Fica a janela de uma queda do processo no meio (proposta `CONFIRMADA` sem `resultado`), tratada como
+  "em andamento" pelo desfazer.
 - **Desfazer** de ação que já mudou de novo (ex.: execução já pausada pelo usuário): o executor decide se ainda é seguro e, se não,
   responde 400 com o motivo; a proposta continua `CONFIRMADA`.

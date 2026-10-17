@@ -17,10 +17,11 @@ import { AnotacaoModule } from './modules/anotacao/anotacao.module';
 import { ConfiguracaoIaModule } from './modules/configuracao-ia/configuracao-ia.module';
 import { PromptModule } from './modules/prompt/prompt.module';
 import { ChatModule } from './modules/chat/chat.module';
+import { PropostaIaModule } from './modules/proposta-ia/proposta-ia.module';
 import { AssistenteModule } from './modules/assistente/assistente.module';
 import { RelatorioModule } from './modules/relatorio/relatorio.module';
 
 @Module({
-  imports: [ScheduleModule.forRoot(), ConfigModule, DatabaseModule, CoreModule, AutenticacaoModule, UsuarioModule, TagModule, ProjetoModule, DemandaModule, AtividadeModule, ExecucaoModule, CalendarioModule, PontoModule, PontoJustificativaModule, AnotacaoModule, ConfiguracaoIaModule, PromptModule, ChatModule, AssistenteModule, RelatorioModule],
+  imports: [ScheduleModule.forRoot(), ConfigModule, DatabaseModule, CoreModule, AutenticacaoModule, UsuarioModule, TagModule, ProjetoModule, DemandaModule, AtividadeModule, ExecucaoModule, CalendarioModule, PontoModule, PontoJustificativaModule, AnotacaoModule, ConfiguracaoIaModule, PromptModule, ChatModule, PropostaIaModule, AssistenteModule, RelatorioModule],
 })
 export class AppModule {}

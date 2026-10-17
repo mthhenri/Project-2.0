@@ -12,6 +12,21 @@
 
 ---
 
+## 2026-10-17 — Task 136: proposta da IA (modelo de dados, confirmação atômica e API)
+
+Bloco 5 do rework (2 de 6). Migration `0035` com `tipo_proposta_ia` (9 tipos, nenhum de exclusão), `tipo_proposta_ia_status` (5) e `proposta_ia` (`dados` e `resultado` em JSONB). Shared: enums, `PropostaIaResumoDto`, `PropostaIaCriarDto` (interno),
+`PropostaIaAjustarDto` e as saídas por ação. Backend: módulo `proposta-ia` (controller fino com 5 rotas, service, repository com `transitar` e `registrarResultado`, `ExecutorPropostaIa` e o registro de executores).
+
+- **Desvio da spec, registrado:** a spec previa o executor rodando **na mesma transação** da troca de situação. As services de domínio já abrem as próprias transações e não recebem uma de fora, então a garantia ficou assim: a troca
+  (`UPDATE ... WHERE status = PENDENTE`) acontece **antes** do executor e, se ele falha, uma **compensação** devolve a proposta a `PENDENTE`. O que isso não cobre: queda do processo entre a troca e o fim do executor deixa a proposta
+  `CONFIRMADA` sem `resultado` (o desfazer recusa uma proposta assim, com "ainda em andamento"). Aceitável para o volume; revisar se algum executor precisar de atomicidade total.
+- **Decisões de projeto:** `criar` exige executor registrado e valida os dados nele (não nasce proposta que nunca poderá rodar); `validar` também roda **antes** de tirar a proposta de `PENDENTE`; recusar usa `EXPIRADA` (como a spec);
+  desfazer volta o status anterior (`CONFIRMADA` ou `AJUSTADA`) se o executor recusar; um ajuste que falha deixa os dados ajustados na proposta `PENDENTE`.
+- **Verificação real (Postgres do `.env`):** `db:migrate`, `db:rollback` e `db:migrate` de novo sem erro (9 tipos e 5 status); com um executor de teste, **duas confirmações simultâneas** deram `200` e `409` com **uma** execução; resultado e
+  `resolucao_data` gravados; desfazer; executor que falha devolveu a `PENDENTE` com `resolucao_data` nula; ajuste persistiu o JSONB novo; recusar; outro usuário (administrador) recebeu 403. Linhas de teste removidas.
+- **Não verificado:** as rotas HTTP com um usuário real (o controller só repassa; a service é coberta por teste e pelo script) e o comportamento sob queda do processo (acima).
+- **Testes:** 14 novos na service (confirmar, corrida, falha do executor, ajustar, recusar, desfazer, 403 inclusive do administrador, expiração por dia, tipo sem executor, registro duplicado, 404); `backend` e `shared` verdes, build do backend ok.
+
 ## 2026-10-17 — Task 135: OpenSearch e repository das mensagens do chat
 
 Bloco 5 do rework (1 de 6). `docker-compose.yml` ganhou o `opensearch` (imagem `opensearchproject/opensearch:2`, nó único, segurança desligada, heap de 512 MB, volume e healthcheck). `ConfigService` lê

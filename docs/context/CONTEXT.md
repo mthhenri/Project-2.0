@@ -21,7 +21,7 @@ elas criaram (ver `MEMORY.md` §2). Siga a ordem de fases de `INDEX-revisao-ux.m
 2026-10-16 e estão em `docs/specs/discarded/`. As **110 e 111** (tela de Execuções) foram descartadas junto, mas o autor as
 **reativou em 2026-10-17** e elas foram **concluídas** (`docs/specs/done/`). A task 117 foi concluída. Não restam tasks
 numeradas no backlog.
-Próxima migration nova: `0035`. **Próximas tasks do rework do chat com IA:** o bloco 5 está especificado em `docs/specs/backlog/` (**135 a 140**: OpenSearch e
+Próxima migration nova: `0036`. **Próximas tasks do rework do chat com IA:** o bloco 5 está especificado em `docs/specs/backlog/` (**135 a 140**; a 135 e a 136 estão feitas: OpenSearch e
 repository de mensagens, proposta da IA, ferramentas, conversa do dia com streaming, tela do chat e teste de prompts); a ordem natural é 135 e 136 (independentes), 137, 138, 139 e 140.
 
 ## 2. Estado por Área
@@ -143,6 +143,8 @@ project-2.0/
   com trecho selecionado; sem consumidor ou sem seleção o menu do navegador segue); o drawer abre um `p-contextmenu` cujos itens são
   propriedade direta (a seção de origem fica `visible = false`), salva as duas seções (`garantirSalva`), chama `POST /anotacao/:id/mover`
   e oferece Desfazer de 7 s (move de volta); 400/409 recarregam as duas seções e avisam.
+- **[task 136]** Propostas da IA: migration `0035` (`tipo_proposta_ia`, `tipo_proposta_ia_status`, `proposta_ia`; sem tipo de exclusão) e módulo `proposta-ia` (confirmar, ajustar, recusar, desfazer, só do dono; confirmação por
+  comparar-e-trocar no SQL; executores registrados por tipo, nenhum ainda: chegam nos blocos 6, 8 e 9). Criar é interno, para as ferramentas da task 137.
 - **[task 135]** Armazenamento do chat: serviço `opensearch` no `docker-compose` (nó único, sem segurança, só dev; `npm run db:up` sobe os dois), módulo `chat` com o `ChatMensagemRepository` (único arquivo que importa
   o cliente), enums `AutorChatEnum`/`ContextoChatEnum` e `ChatMensagemResumoDto`. `OPENSEARCH_URL` é variável **obrigatória** do backend. Ainda sem rotas: a conversa vem na 138.
 - **[task 133]** Aba **"Prompts"** das Configurações da IA (`modules/configuracao-ia/components/prompts-aba/`, `PromptService` no frontend): lista dos 7 tipos (versão ativa e etiqueta "Rascunho"),

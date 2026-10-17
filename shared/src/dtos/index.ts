@@ -14,3 +14,4 @@ export * from './anotacao/index';
 export * from './configuracao-ia/index';
 export * from './prompt/index';
 export * from './chat/index';
+export * from './proposta-ia/index';

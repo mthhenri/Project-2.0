@@ -1,0 +1,12 @@
+/** Ações que a IA pode propor ao usuário (tabela `tipo_proposta_ia`). Nenhuma exclui dados. */
+export enum TipoPropostaIaEnum {
+  INICIAR_EXECUCAO   = 'INICIAR_EXECUCAO',
+  PAUSAR_EXECUCAO    = 'PAUSAR_EXECUCAO',
+  CRIAR_ATIVIDADE    = 'CRIAR_ATIVIDADE',
+  DESCREVER_EXECUCAO = 'DESCREVER_EXECUCAO',
+  SUSPENDER_CHECKIN  = 'SUSPENDER_CHECKIN',
+  ANOTAR_PAD         = 'ANOTAR_PAD',
+  CRIAR_DEMANDA      = 'CRIAR_DEMANDA',
+  DESCREVER_DEMANDA  = 'DESCREVER_DEMANDA',
+  CONECTAR_DEMANDA   = 'CONECTAR_DEMANDA',
+}
