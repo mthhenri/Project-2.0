@@ -82,3 +82,14 @@ export function partesDaData(valor: string): { ano: number; mes: number; dia: nu
     : new Date(valor);
   return { ano: data.getFullYear(), mes: data.getMonth() + 1, dia: data.getDate() };
 }
+
+const DIAS_SEMANA_CURTOS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
+export const MESES_CURTOS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+/** `qui, 24/12` — dia da semana curto + dia/mês, no ano informado (recorrentes valem para o ano exibido). */
+export function dataComDiaDaSemana(valor: string, anoReferencia?: number): string {
+  const { ano, mes, dia } = partesDaData(valor);
+  const anoExibido = anoReferencia ?? ano;
+  const semana = DIAS_SEMANA_CURTOS[new Date(anoExibido, mes - 1, dia).getDay()];
+  return `${semana}, ${String(dia).padStart(2, '0')}/${String(mes).padStart(2, '0')}`;
+}

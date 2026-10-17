@@ -12,6 +12,19 @@
 
 ---
 
+## 2026-10-17 — Task 115: Calendário com criação pelo clique no dia
+
+Relatório em `docs/specs/done/115-calendario-interativo/verificacao.md`; verificação em Chromium contra a API real
+em 1920×1080, 1366×768 e 1080×1920.
+
+- Clique em dia vazio cria com a data preenchida (foco na Descrição); em dia marcado abre popover com Editar/Excluir e
+  destaca a linha. Navegação com "Hoje", stepper de ano e faixa de meses; legenda; badges de Meio período/Todo ano na
+  tabela; "Salvar e adicionar outro" preserva Tipo/Duração/Recorrente; "Excluir e recriar" corrige a data sem redigitar.
+- **Achados só na verificação:** a legenda herdava o tamanho da célula, o rodapé do dialog quebrava o botão novo e a data
+  da tabela quebrava a 1366 px.
+
+---
+
 ## 2026-10-16 — Task 114: anotações em drawer com auto-save
 
 Relatório em `docs/specs/done/114-anotacoes-drawer-autosave/verificacao.md`; verificação em Chromium contra a API real
