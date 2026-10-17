@@ -12,6 +12,19 @@
 
 ---
 
+## 2026-10-17 — Task 137: ferramentas da IA sobre a API
+
+Bloco 5 do rework (3 de 6). Módulo `ferramenta-ia` (sem rotas): `FerramentaIa` (contrato), `FerramentaIaRegistro`, `gerarEsquemaDeClasse` + `@DescricaoCampoIa`, `FerramentaPropostaIa` (base) e `ConsultarDataEHoraFerramenta`. Shared: `DataHoraConsultarDto` e `DataHoraConsultadaDto`.
+
+- **Esquema sem duplicar:** o JSON enviado ao modelo sai dos metadados do `class-validator` (`isString`, `isInt`, `isNumber`, `isBoolean`, `isEnum`, `isIn`, `isArray` com `each`, `minLength`, `maxLength`, `min`, `max`, `isOptional`). Decorador que o gerador não conhece continua
+  valendo na validação e só não aparece no esquema. A validação roda com `whitelist` e `forbidNonWhitelisted`, e `forbidUnknownValues: false` (sem isto, uma classe de entrada vazia recusava até `{}`).
+- **Garantia do "sem exclusão" no registro, não só em teste:** `registrar` lança se o nome sugerir exclusão (excluir, apagar, remover, deletar, eliminar, descartar), então uma ferramenta de qualquer módulo futuro é barrada na subida do backend. O teste confere os seis nomes e que nenhum
+  `TipoPropostaIaEnum` sugere exclusão.
+- **Decisão de projeto:** as ferramentas se **registram** (como os executores da 136) em vez de o registro receber a lista por injeção, para cada módulo de negócio declarar as suas sem o registro conhecer todos.
+- **Verificação real:** o contexto Nest sobe com os novos módulos (DI resolvida); o desenvolvedor vê só `consultar_data_e_hora`; o esquema gerado foi **aceito pela API da Anthropic** (Haiku pediu a ferramenta, o registro a executou com o usuário e o modelo respondeu "20:44 de sábado, 17 de outubro de 2026" no fuso de São Paulo).
+- **Não verificado:** ferramentas de negócio (não existem ainda) e o corte de resultado grande contra o modelo real (só teste unitário).
+- **Testes:** 14 novos (filtro por tipo de usuário, esquema, execução com o usuário do token, os três erros sem lançar, erro interno sem vazar, corte, nome duplicado, sem exclusão, ferramenta de proposta com e sem falha, entrada vazia, data e hora no fuso e na virada de dia).
+
 ## 2026-10-17 — Task 136: proposta da IA (modelo de dados, confirmação atômica e API)
 
 Bloco 5 do rework (2 de 6). Migration `0035` com `tipo_proposta_ia` (9 tipos, nenhum de exclusão), `tipo_proposta_ia_status` (5) e `proposta_ia` (`dados` e `resultado` em JSONB). Shared: enums, `PropostaIaResumoDto`, `PropostaIaCriarDto` (interno),

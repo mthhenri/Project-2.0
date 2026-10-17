@@ -15,3 +15,4 @@ export * from './configuracao-ia/index';
 export * from './prompt/index';
 export * from './chat/index';
 export * from './proposta-ia/index';
+export * from './ferramenta-ia/index';
