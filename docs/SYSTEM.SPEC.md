@@ -885,6 +885,8 @@ frontend/src/app/
         error-message.component.ts
       markdown-visualizador/
         markdown-visualizador.component.ts   ← única forma de exibir Markdown (sem HTML cru)
+      markdown-editor/
+        markdown-editor.component.ts         ← editor de Markdown (CVA), barra, abas Editar | Visualizar
       assistente-descricao/
         assistente-descricao.component.ts   ← componente de IA reutilizável
         assistente-descricao.component.html
@@ -1454,6 +1456,8 @@ POST /assistente/auxiliar-descricao
 ### Markdown
 
 Texto rico é **Markdown**, interpretado por `interpretarMarkdown` (`shared/src/markdown/`, sem biblioteca) e exibido por `app-markdown-visualizador`. O interpretador devolve uma árvore de nós e o componente monta elementos a partir dela: **HTML cru nunca entra na página** (nenhum `[innerHTML]`, nenhum desvio do sanitizador). Subconjunto: títulos `#` a `####`, parágrafos (quebra de linha vira quebra), **negrito**, *itálico*, ~~tachado~~, `código`, listas com aninhamento e tarefas, citação, bloco de código, régua e links `http`/`https`/`mailto`. `<tag>` e entidades são texto; imagens e tabelas não existem.
+
+O editor é `app-markdown-editor` (Reactive Forms; o valor é a string Markdown, `''` quando vazio). **`Enter` insere linha; quem confirma um dialog de formulário é o `Ctrl+Enter`** (contrato de `dialogFormulario`). `Enter` no fim de um item continua a lista, `Tab`/`Shift+Tab` aninham itens, `Ctrl+B`/`Ctrl+I`/`Ctrl+K` formatam. As edições da barra são funções puras em `shared/src/markdown/markdown.edicao.ts`.
 
 ### Componente Reutilizável
 

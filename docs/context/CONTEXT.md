@@ -129,6 +129,12 @@ project-2.0/
   Limpar com Desfazer de 7 s (o vazio só é gravado depois), erro no flush → toast "Reabrir". `aoAlterar` emite
   `{usuarioId, temAnotacoes}`. Deep-link `/usuario/:id/anotacoes` redireciona (gestor → `/usuario?anotacoes=`, próprio →
   `/ponto?anotacoes=`); a topbar abre o drawer próprio. `DesfazerService` aceita `rotulo/duracaoMs/aoEncerrar`.
+- **[task 122]** Editor de Markdown: `app-markdown-editor` (`shared/components/markdown-editor/`, `ControlValueAccessor`) com
+  `<textarea>` nativo, barra (negrito, itálico, tachado, título, lista, numerada, tarefa, citação, código, link), abas
+  Editar | Visualizar e modo `somenteLeitura` (só o visualizador). As edições são funções puras testadas em
+  `shared/src/markdown/markdown.edicao.ts` e entram por `insertText`, então o desfazer do navegador vale. **`Enter` é nova
+  linha; o `Ctrl+Enter` confirma o dialog.** Expõe `selecao()`/`textoSelecionado()` para o "Enviar para" do bloco 8. Ainda sem
+  uso em tela: a troca dos consumidores é a task 124.
 - **[task 121]** Markdown (base): `interpretarMarkdown(texto)` em `shared/src/markdown/` devolve uma árvore de nós
   (`MarkdownBlocoNo`/`MarkdownInlineNo`), em tempo linear e sem lançar; `app-markdown-visualizador`
   (`shared/components/markdown-visualizador/`) monta elementos a partir dela e é a única forma de exibir texto rico. Nada do

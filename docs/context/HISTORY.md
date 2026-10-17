@@ -12,6 +12,28 @@
 
 ---
 
+## 2026-10-17 — Task 122: editor de Markdown próprio
+
+Bloco 3 do rework do chat com IA (2 de 4); nenhuma tela existente passou a usá-lo. `app-markdown-editor`
+(`ControlValueAccessor`, valor sempre string) com `<textarea>`, barra de 10 botões, abas Editar | Visualizar (usa o visualizador da
+121) e `somenteLeitura`. A lógica de edição ficou em `shared/src/markdown/markdown.edicao.ts` (`alternarEnvolvimento`,
+`alternarPrefixo`, `inserirLink`, `continuarLista`, `ajustarRecuoDeItens`), puras e testadas; o componente só aplica o resultado,
+trocando o trecho que mudou por `insertText` (cai em atribuição do valor se o navegador não suportar). `Enter` é nova linha
+(continua lista no fim de um item e sai dela em item vazio); `Ctrl+Enter` não é tratado pelo editor e chega ao
+`dialogFormulario`. `Tab` só é interceptado em item de lista, então não prende o foco no resto do texto.
+
+- **Testes:** `shared` 68/68 (23 de edição: envolver e desfazer, prefixos e troca de tipo, link, Enter e Tab em lista).
+- **Ao vivo (SPA real, página temporária já removida, teclado e mouse reais):** Enter continua lista, Tab aninha e Enter duplo sai;
+  `Ctrl+B` formata mantendo a seleção e o `Ctrl+Z` nativo desfaz, com o `FormControl` acompanhando; botão da barra aplica sem tirar o
+  foco do campo; aba Visualizar renderiza. Dentro de `p-dialog` com `dialogFormulario`: foco inicial no campo, `Enter` insere linha
+  sem enviar, `Ctrl+Enter` envia, `Esc` fecha. Dentro de `p-drawer` funciona. HTML colado (`<b onclick>`, `<script>`) aparece como texto
+  na prévia, sem nó novo. Desabilitar o controle desabilita campo e botões; `somenteLeitura` mostra só o visualizador. Tema escuro no
+  dialog em 1366×768.
+- **Achado só na verificação:** ler `#enviados` logo depois do `Ctrl+Enter` mostrava o contador antigo (a tela atualiza no ciclo
+  seguinte); a leitura seguinte confirmou o envio. Não é defeito do editor.
+- **Não verificado:** captura nítida em 1920×1080 e 1080×1920 (o painel do navegador reduz a página nesses tamanhos; o layout do
+  editor é fluido e foi visto sem quebra em 1366×768 e no tamanho padrão do painel). Frontend sem testes e sem lint (P-001).
+
 ## 2026-10-17 — Task 121: interpretador de Markdown próprio e visualizador
 
 Bloco 3 do rework do chat com IA (1 de 4); nenhuma tela existente mudou. `interpretarMarkdown` mora em `shared/src/markdown/`
