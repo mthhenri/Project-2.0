@@ -16,6 +16,12 @@ export interface ConfiguracaoAnthropic {
   apiKey: string | undefined;
 }
 
+export interface ConfiguracaoOpenSearch {
+  url: string;
+  usuario: string | undefined;
+  senha: string | undefined;
+}
+
 export interface ConfiguracaoAplicacao {
   porta: number;
   ambiente: string;
@@ -31,6 +37,7 @@ export interface Configuracao {
   bancoDados:  ConfiguracaoBancoDados;
   jwt:         ConfiguracaoJwt;
   anthropic:   ConfiguracaoAnthropic;
+  openSearch:  ConfiguracaoOpenSearch;
   aplicacao:   ConfiguracaoAplicacao;
   negocio:     ConfiguracaoNegocio;
 }

@@ -143,6 +143,8 @@ project-2.0/
   com trecho selecionado; sem consumidor ou sem seleção o menu do navegador segue); o drawer abre um `p-contextmenu` cujos itens são
   propriedade direta (a seção de origem fica `visible = false`), salva as duas seções (`garantirSalva`), chama `POST /anotacao/:id/mover`
   e oferece Desfazer de 7 s (move de volta); 400/409 recarregam as duas seções e avisam.
+- **[task 135]** Armazenamento do chat: serviço `opensearch` no `docker-compose` (nó único, sem segurança, só dev; `npm run db:up` sobe os dois), módulo `chat` com o `ChatMensagemRepository` (único arquivo que importa
+  o cliente), enums `AutorChatEnum`/`ContextoChatEnum` e `ChatMensagemResumoDto`. `OPENSEARCH_URL` é variável **obrigatória** do backend. Ainda sem rotas: a conversa vem na 138.
 - **[task 133]** Aba **"Prompts"** das Configurações da IA (`modules/configuracao-ia/components/prompts-aba/`, `PromptService` no frontend): lista dos 7 tipos (versão ativa e etiqueta "Rascunho"),
   painel com a versão ativa em `app-markdown-visualizador`, rascunho em `app-markdown-editor`, "Salvar rascunho" (botão; trocar de tipo ou sair da tela com mudança pendente pergunta, via
   `canDeactivate` da rota), "Ativar rascunho" (confirmação, só com o rascunho salvo e sem mudança pendente), descartar rascunho com Desfazer (regrava o mesmo texto), histórico no próprio cartão da versão (setas anterior/seguinte e menu de

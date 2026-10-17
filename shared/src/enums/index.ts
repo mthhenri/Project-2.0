@@ -13,3 +13,5 @@ export * from './esforco-ia.enum';
 export * from './nivel-ia.enum';
 export * from './estado-ia.enum';
 export * from './tipo-prompt.enum';
+export * from './autor-chat.enum';
+export * from './contexto-chat.enum';

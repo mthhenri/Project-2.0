@@ -12,6 +12,20 @@
 
 ---
 
+## 2026-10-17 — Task 135: OpenSearch e repository das mensagens do chat
+
+Bloco 5 do rework (1 de 6). `docker-compose.yml` ganhou o `opensearch` (imagem `opensearchproject/opensearch:2`, nó único, segurança desligada, heap de 512 MB, volume e healthcheck). `ConfigService` lê
+`OPENSEARCH_URL` (obrigatória) e `OPENSEARCH_USUARIO`/`OPENSEARCH_SENHA` (opcionais); `.env.example` e README atualizados. Shared: `AutorChatEnum`, `ContextoChatEnum` e `ChatMensagemResumoDto` (sem o conteúdo bruto).
+Backend: `modules/chat/` com funções puras (`montarConversaId`, documento ↔ resumo, mapeamento e consultas) e o `ChatMensagemRepository`, com o cliente injetado por token (os testes passam um falso).
+
+- **Decisão de projeto:** o analisador do `texto` é `brazilian` **mais `asciifolding`** (analisador `texto_pt`), porque o `brazilian` sozinho não tira acento e o critério pedia que "descricao" achasse "descrição".
+- **Verificação real (container):** índice criado duas vezes sem erro; gravei duas mensagens e a conversa voltou na ordem, com o `conteudo_bruto` intacto (campo não indexado); outro usuário vê 0 mensagens da conversa;
+  "descricao" sem acento achou as 2, "revisando" achou "revisar" (radical), outro usuário e período no futuro acharam 0. Com o container **parado**, o backend subiu normalmente (aviso no log e as demais rotas
+  respondendo, 401 sem token); o repository falha com a mensagem clara quando chamado. Documentos de teste removidos ao fim (por consulta, direto no cliente: o repository não exclui).
+- **Atenção:** o backend em execução precisa de `OPENSEARCH_URL` no `.env` (acrescentei a linha no `.env` local do autor) e de `npm run db:up` para o OpenSearch existir; sem a variável, o backend não sobe.
+- **Não verificado:** OpenSearch com segurança ligada (usuário e senha) e o comportamento do índice entre várias instâncias do backend (só a corrida do `create` coberta por teste).
+- **Testes:** 14 novos no chat (conversa e virada de dia, consultas, documento, repository com cliente falso); `backend` 150/150, `shared` 68/68, build do backend ok; frontend sem alteração.
+
 ## 2026-10-17 — Bloco 5 do rework do chat com IA quebrado em specs (135 a 140)
 
 Sem código: seis specs novas em `docs/specs/backlog/` e a tabela da guarda-chuva atualizada. **135** OpenSearch no `docker-compose` e `ChatMensagemRepository` (único arquivo que importa o cliente);

@@ -157,6 +157,8 @@ O projeto é um monorepo com três pacotes independentes conectados via npm work
 | `JWT_EXPIRACAO` | Tempo de expiração do token | `8h` |
 | `INTERVALO_MINIMO_MINUTOS` | Gap mínimo entre execuções para ser considerado intervalo | `15` |
 | `ANTHROPIC_API_KEY` | Chave da API Anthropic (opcional: sem ela a IA fica "fora do ar"). O modelo de cada nível e o resto da configuração da IA ficam na tela Configurações da IA, não no `.env` | `sk-ant-...` |
+| `OPENSEARCH_URL` | Endereço do OpenSearch, onde ficam as mensagens do chat (sobe com `npm run db:up`) | `http://localhost:9200` |
+| `OPENSEARCH_USUARIO` / `OPENSEARCH_SENHA` | Opcionais: só se o servidor tiver segurança ligada | — |
 | `PORT` | Opcional: porta injetada pela plataforma de hospedagem; tem prioridade sobre `APP_PORTA` | `10000` |
 | `APP_PORTA` | Porta do backend | `3000` |
 | `APP_AMBIENTE` | Ambiente de execução | `development` |

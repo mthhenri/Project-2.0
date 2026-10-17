@@ -13,3 +13,4 @@ export * from './relatorio/index';
 export * from './anotacao/index';
 export * from './configuracao-ia/index';
 export * from './prompt/index';
+export * from './chat/index';

@@ -22,6 +22,11 @@ export class ConfigService {
       anthropic: {
         apiKey: this.opcional('ANTHROPIC_API_KEY'),
       },
+      openSearch: {
+        url:     this.obrigatoria('OPENSEARCH_URL'),
+        usuario: this.opcional('OPENSEARCH_USUARIO'),
+        senha:   this.opcional('OPENSEARCH_SENHA'),
+      },
       aplicacao: {
         porta:       Number(this.opcional('PORT') ?? this.obrigatoria('APP_PORTA')),
         ambiente:    this.obrigatoria('APP_AMBIENTE'),
