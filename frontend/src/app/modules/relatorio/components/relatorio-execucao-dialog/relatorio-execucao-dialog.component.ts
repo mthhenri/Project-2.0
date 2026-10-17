@@ -277,7 +277,7 @@ export class RelatorioExecucaoDialogComponent implements OnInit {
 
   private carregarProjetos(): void {
     if (this.projetos().length > 0) return;
-    this.projetoService.listar({ itensPorPagina: 100 }).subscribe({
+    this.projetoService.listar({ allRows: true }).subscribe({
       next: (resposta) => {
         if (resposta.sucesso && resposta.dados) this.projetos.set(resposta.dados.itens);
       },

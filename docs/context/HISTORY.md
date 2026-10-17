@@ -32,6 +32,16 @@ Relatórios em `docs/specs/done/110-execucoes-contexto-navegacao/verificacao.md`
 
 ---
 
+## 2026-10-17 — P-003 resolvido: selects de Projeto (relatório) e Usuário (Execuções) sem teto de 100
+
+`ProjetoService` e `UsuarioService` (HTTP) passaram a repassar `allRows` (o DTO e o backend já o suportavam); o dialog de
+relatório e o filtro de usuário de Execuções o usam. Conferido ao vivo com 116 projetos e 119 usuários ativos no banco de
+teste: os selects listam todos e a busca acha "Lote P003 110" e "Lote Usuario 109" (as requisições saem com `allRows=true`).
+Os dados de teste foram removidos. **Não alterado (fora do pedido):** outros selects de usuário seguem em 100 itens —
+atividades, ponto, formulário/detalhe/árvore de demandas.
+
+---
+
 ## 2026-10-17 — P-002 resolvido: o sistema sempre mantém ao menos um gestor ativo
 
 `UsuarioService` ganhou `validarPermanenciaDeGestorAtivo`, usada por `alterar` (quando o gestor ativo deixa de ser gestor

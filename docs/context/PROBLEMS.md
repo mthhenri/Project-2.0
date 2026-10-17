@@ -44,15 +44,6 @@
 - **Desde:** origem do projeto.
 
 
-### P-003 — Selects de Projeto (relatório) e Usuário (Execuções) listam no máximo 100 itens · `ABERTO` · frontend
-
-- **Sintoma:** com mais de 100 projetos (dialog de relatório, task 111) ou 100 usuários ativos (filtro de Execuções, task
-  110) os excedentes simplesmente não aparecem no select, sem aviso; a busca do select só filtra o que foi carregado.
-- **Causa:** `ProjetoService.listar`/`UsuarioService.listar` paginam em 100 (`@Max(100)`) e as telas pegam só a primeira página.
-- **Contorno:** nenhum hoje (o volume atual é muito menor).
-- **Correção:** usar `allRows` (o DTO já existe, o service HTTP não repassa) ou busca no servidor no select.
-- **Desde:** tasks 110/111 (2026-10-17); o select de usuário já existia assim.
-
 ### P-004 — Dia de "hoje" da tela de Execuções vem do fuso do navegador · `ACEITO` · frontend
 
 - **Sintoma:** com o navegador num fuso diferente de `APP_TIMEZONE` (America/Sao_Paulo), "hoje" no cabeçalho e o filtro

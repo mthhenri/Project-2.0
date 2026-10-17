@@ -362,7 +362,7 @@ export class ExecucaoHistoricoPage implements OnInit {
   }
 
   private carregarUsuarios(): void {
-    this.usuarioService.listar({ status: TipoUsuarioStatusEnum.ATIVO, itensPorPagina: 100 }).subscribe({
+    this.usuarioService.listar({ status: TipoUsuarioStatusEnum.ATIVO, allRows: true }).subscribe({
       next: (resposta) => {
         if (resposta.sucesso && resposta.dados) this.usuarios.set(resposta.dados.itens);
       },

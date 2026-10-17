@@ -31,6 +31,7 @@ export class UsuarioService {
     if (filtros.busca) params = params.set('busca', filtros.busca);
     if (filtros.pagina) params = params.set('pagina', String(filtros.pagina));
     if (filtros.itensPorPagina) params = params.set('itensPorPagina', String(filtros.itensPorPagina));
+    if (filtros.allRows) params = params.set('allRows', 'true');
     return this.httpClient.get<StandardResponse<PaginatedResult<UsuarioResumoDto>>>(this.urlBase, { params, ...comFeedbackProprio() });
   }
 

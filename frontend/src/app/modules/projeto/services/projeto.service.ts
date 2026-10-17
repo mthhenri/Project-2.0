@@ -26,6 +26,7 @@ export class ProjetoService {
     if (filtros.status) params = params.set('status', filtros.status);
     if (filtros.pagina) params = params.set('pagina', String(filtros.pagina));
     if (filtros.itensPorPagina) params = params.set('itensPorPagina', String(filtros.itensPorPagina));
+    if (filtros.allRows) params = params.set('allRows', 'true');
     return this.httpClient.get<StandardResponse<PaginatedResult<ProjetoResumoDto>>>(this.urlBase, { params, ...comFeedbackProprio() });
   }
 
