@@ -1,15 +1,10 @@
-import { Component, inject, signal } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpResponse } from '@angular/common/http';
-import {
-  ReactiveFormsModule,
-  FormBuilder,
-  Validators,
-  AbstractControl,
-  ValidationErrors,
-} from '@angular/forms';
-import { finalize } from 'rxjs/operators';
+import { FormsModule, ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
+import { Subject, catchError, finalize, map, of, switchMap, timer } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
+import { SelectButtonModule } from 'primeng/selectbutton';
 import { Select } from 'primeng/select';
 import { DatePickerModule } from 'primeng/datepicker';
 import { DialogModule } from 'primeng/dialog';
@@ -18,19 +13,42 @@ import { Tag } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import {
   RelatorioExecucaoDto,
+  RelatorioInconsistenciaDto,
   RelatorioRevisaoDto,
   RelatorioPeriodoTipoEnum,
   RelatorioFormatoEnum,
+  ProjetoResumoDto,
+  dataHoraNoFuso,
+  hojeNoFuso,
 } from '@project20/shared';
+import { ambiente } from '../../../../../environments/environment';
 import { RelatorioService, RelatorioParametros } from '../../services/relatorio.service';
+import { ProjetoService } from '../../../projeto/services/projeto.service';
 import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-horas.pipe';
+import { BarraRecargaComponent } from '../../../../shared/components/barra-recarga/barra-recarga.component';
+import {
+  RelatorioPeriodoAtalho,
+  atalhoDoPeriodo,
+  normalizarSeveridade,
+  ordemSeveridade,
+  periodoDoAtalho,
+} from '../../utils/relatorio.util';
 
+const CHAVE_PROJETO_LEMBRADO = 'relatorio.projeto';
+const ATRASO_MUDANCA_FILTRO_MS = 400;
+
+/**
+ * Relatório de execuções de um projeto (tasks 111/110). Abre já carregado: os padrões (Este mês) são
+ * sempre válidos, então cada mudança de filtro recarrega sozinha; o resultado antigo fica esmaecido
+ * enquanto o novo não chega e o CSV/IA só usam os parâmetros do que está na tela.
+ */
 @Component({
   selector: 'app-relatorio-execucao-dialog',
   standalone: true,
   imports: [
     ReactiveFormsModule,
-    DatePipe,
+    FormsModule,
+    SelectButtonModule,
     ButtonModule,
     Select,
     DatePickerModule,
@@ -39,44 +57,59 @@ import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-hora
     Tag,
     TooltipModule,
     MinutosParaHorasPipe,
+    BarraRecargaComponent,
   ],
   templateUrl: './relatorio-execucao-dialog.component.html',
   styleUrl: './relatorio-execucao-dialog.component.scss',
 })
-export class RelatorioExecucaoDialogComponent {
+export class RelatorioExecucaoDialogComponent implements OnInit {
   private readonly relatorioService = inject(RelatorioService);
+  private readonly projetoService = inject(ProjetoService);
   private readonly formBuilder = inject(FormBuilder);
-
-  /** Exposto ao template para os `@if` de campos condicionais por tipo de período. */
-  readonly TipoPeriodo = RelatorioPeriodoTipoEnum;
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly mostrarDialog = signal<boolean>(false);
-  readonly projetoId = signal<number | null>(null);
+  readonly projetos = signal<ProjetoResumoDto[]>([]);
+  /** Aberto a partir do detalhe de um projeto: o projeto vem definido e não se troca. */
+  readonly projetoFixo = signal<boolean>(false);
 
   readonly carregandoPreview = signal<boolean>(false);
   readonly carregandoRevisao = signal<boolean>(false);
   readonly baixando = signal<boolean>(false);
+  readonly erroPreview = signal<boolean>(false);
 
   readonly relatorio = signal<RelatorioExecucaoDto | null>(null);
   readonly revisao = signal<RelatorioRevisaoDto | null>(null);
+  /** Parâmetros do relatório que está na tela — o que o CSV e a IA realmente usam. */
+  private readonly parametrosExibidos = signal<RelatorioParametros | null>(null);
+  /** `false` entre a mudança de um filtro e a chegada do novo resultado. */
+  readonly sincronizado = signal<boolean>(false);
+  readonly esmaecido = computed(() => this.carregandoPreview() || (!this.sincronizado() && !!this.relatorio()));
+  readonly podeExportar = computed(
+    () => this.sincronizado() && !!this.relatorio() && (this.relatorio()?.totalExecucoes ?? 0) > 0,
+  );
 
-  private readonly anoAtual = new Date().getFullYear();
-  private readonly mesAtual = new Date().getMonth() + 1;
+  private readonly pedidoPreview = new Subject<number>();
+
+  readonly TipoPeriodo = RelatorioPeriodoTipoEnum;
+  private readonly anoAtual = hojeNoFuso(ambiente.fusoHorario).getFullYear();
 
   readonly formulario = this.formBuilder.group(
     {
+      projetoId:   [null as number | null, [Validators.required]],
       periodoTipo: [RelatorioPeriodoTipoEnum.MENSAL as RelatorioPeriodoTipoEnum, [Validators.required]],
       ano:         [this.anoAtual as number, [Validators.required]],
-      mes:         [this.mesAtual as number, [Validators.required]],
+      mes:         [hojeNoFuso(ambiente.fusoHorario).getMonth() + 1 as number, [Validators.required]],
       periodo:     [null as Date[] | null],
     },
     { validators: this.validarPeriodo },
   );
 
-  readonly periodoOpcoes = [
-    { label: 'Anual',         value: RelatorioPeriodoTipoEnum.ANUAL },
-    { label: 'Mensal',        value: RelatorioPeriodoTipoEnum.MENSAL },
-    { label: 'Personalizado', value: RelatorioPeriodoTipoEnum.CUSTOM },
+  readonly atalhos: { valor: RelatorioPeriodoAtalho; rotulo: string }[] = [
+    { valor: 'MES',     rotulo: 'Este mês' },
+    { valor: 'PASSADO', rotulo: 'Mês passado' },
+    { valor: 'ANO',     rotulo: 'Este ano' },
+    { valor: 'CUSTOM',  rotulo: 'Personalizado…' },
   ];
 
   readonly anoOpcoes = Array.from({ length: 6 }, (_, indice) => {
@@ -85,53 +118,91 @@ export class RelatorioExecucaoDialogComponent {
   });
 
   readonly mesOpcoes = [
-    { label: 'Janeiro',   value: 1 },
-    { label: 'Fevereiro', value: 2 },
-    { label: 'Março',     value: 3 },
-    { label: 'Abril',     value: 4 },
-    { label: 'Maio',      value: 5 },
-    { label: 'Junho',     value: 6 },
-    { label: 'Julho',     value: 7 },
-    { label: 'Agosto',    value: 8 },
-    { label: 'Setembro',  value: 9 },
-    { label: 'Outubro',   value: 10 },
-    { label: 'Novembro',  value: 11 },
-    { label: 'Dezembro',  value: 12 },
-  ];
+    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+  ].map((label, indice) => ({ label, value: indice + 1 }));
 
-  /** Abre o dialog para um projeto, com o formulário no padrão mensal do mês corrente. */
-  abrir(projetoId: number): void {
-    this.projetoId.set(projetoId);
-    this.formulario.reset({
-      periodoTipo: RelatorioPeriodoTipoEnum.MENSAL,
-      ano:         this.anoAtual,
-      mes:         this.mesAtual,
-      periodo:     null,
+  /** Achados ordenados ALTA → MÉDIA → BAIXA. */
+  readonly achados = computed<RelatorioInconsistenciaDto[]>(() =>
+    [...(this.revisao()?.inconsistencias ?? [])].sort((a, b) => ordemSeveridade(a.severidade) - ordemSeveridade(b.severidade)),
+  );
+  readonly contadores = computed(() =>
+    (['ALTA', 'MEDIA', 'BAIXA'] as const)
+      .map((severidade) => ({
+        severidade,
+        rotulo: severidade === 'MEDIA' ? 'MÉDIA' : severidade,
+        total: this.achados().filter((item) => normalizarSeveridade(item.severidade) === severidade).length,
+      }))
+      .filter((contador) => contador.total > 0),
+  );
+
+  ngOnInit(): void {
+    this.formulario.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.sincronizado.set(false);
+      this.revisao.set(null);
+      this.pedidoPreview.next(ATRASO_MUDANCA_FILTRO_MS);
     });
-    this.relatorio.set(null);
-    this.revisao.set(null);
-    this.mostrarDialog.set(true);
+
+    this.pedidoPreview
+      .pipe(
+        switchMap((atraso) => timer(atraso)),
+        switchMap(() => this.buscarPreview()),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe();
   }
 
-  preVisualizar(): void {
-    const params = this.montarParametros();
-    if (!params) return;
-
-    this.carregandoPreview.set(true);
+  /** Abre já carregando: `projetoId` do detalhe do projeto, ou o último projeto escolhido nesta máquina. */
+  abrir(projetoId?: number): void {
+    this.projetoFixo.set(projetoId !== undefined);
+    const atalho = periodoDoAtalho('MES', this.hoje());
+    this.relatorio.set(null);
     this.revisao.set(null);
-    this.relatorioService
-      .gerarRelatorio(params)
-      .pipe(finalize(() => this.carregandoPreview.set(false)))
-      .subscribe({
-        next: (resposta) => {
-          if (resposta.sucesso && resposta.dados) this.relatorio.set(resposta.dados);
-        },
-      });
+    this.erroPreview.set(false);
+    this.sincronizado.set(false);
+    this.formulario.controls.projetoId[projetoId !== undefined ? 'disable' : 'enable']({ emitEvent: false });
+    this.formulario.reset({
+      projetoId: projetoId ?? this.projetoLembrado(),
+      periodoTipo: atalho.periodoTipo,
+      ano: atalho.ano,
+      mes: atalho.mes,
+      periodo: null,
+    }, { emitEvent: false });
+    this.mostrarDialog.set(true);
+    this.carregarProjetos();
+    this.pedidoPreview.next(0);
+  }
+
+  /** Data e hora no fuso do sistema, como o CSV. */
+  dataHora(valor: Date | string): string {
+    return dataHoraNoFuso(new Date(valor), ambiente.fusoHorario);
+  }
+
+  private hoje(): Date {
+    return hojeNoFuso(ambiente.fusoHorario);
+  }
+
+  escolherAtalho(atalho: RelatorioPeriodoAtalho): void {
+    const periodo = periodoDoAtalho(atalho, this.hoje());
+    this.formulario.patchValue({ periodoTipo: periodo.periodoTipo, ano: periodo.ano, mes: periodo.mes });
+  }
+
+  atalhoAtivo(): RelatorioPeriodoAtalho | null {
+    const { periodoTipo, ano, mes } = this.formulario.getRawValue();
+    return atalhoDoPeriodo({ periodoTipo: periodoTipo!, ano: ano!, mes: mes! }, this.hoje());
+  }
+
+  get periodoIncompleto(): boolean {
+    return this.formulario.hasError('periodoIncompleto');
+  }
+
+  tentarNovamente(): void {
+    this.pedidoPreview.next(0);
   }
 
   baixarCsv(): void {
-    const params = this.montarParametros();
-    if (!params) return;
+    const params = this.parametrosExibidos();
+    if (!params || !this.podeExportar()) return;
 
     this.baixando.set(true);
     this.relatorioService
@@ -139,12 +210,13 @@ export class RelatorioExecucaoDialogComponent {
       .pipe(finalize(() => this.baixando.set(false)))
       .subscribe({
         next: (resposta) => this.dispararDownload(resposta),
+        error: () => undefined, // o interceptor já avisou o motivo
       });
   }
 
   revisarComIa(): void {
-    const params = this.montarParametros();
-    if (!params) return;
+    const params = this.parametrosExibidos();
+    if (!params || !this.podeExportar()) return;
 
     this.carregandoRevisao.set(true);
     this.relatorioService
@@ -154,35 +226,50 @@ export class RelatorioExecucaoDialogComponent {
         next: (resposta) => {
           if (resposta.sucesso && resposta.dados) this.revisao.set(resposta.dados);
         },
+        error: () => undefined, // o interceptor já avisou o motivo
       });
   }
 
-  campoObrigatorioInvalido(nomeCampo: string): boolean {
-    const controle = this.formulario.get(nomeCampo);
-    return !!(controle?.invalid && controle?.touched);
-  }
-
-  get periodoIncompleto(): boolean {
-    return !!(this.formulario.hasError('periodoIncompleto') && this.formulario.get('periodo')?.touched);
-  }
-
   severidadeInconsistencia(severidade: string): 'danger' | 'warn' | 'secondary' {
-    const normalizada = (severidade ?? '').toUpperCase();
+    const normalizada = normalizarSeveridade(severidade);
     if (normalizada === 'ALTA') return 'danger';
     if (normalizada === 'MEDIA') return 'warn';
     return 'secondary';
   }
 
-  private montarParametros(): RelatorioParametros | null {
-    const projetoId = this.projetoId();
-    if (projetoId === null || this.formulario.invalid) {
-      this.formulario.markAllAsTouched();
-      return null;
+  private buscarPreview() {
+    const params = this.montarParametros();
+    if (!params) {
+      this.carregandoPreview.set(false);
+      return of(null);
     }
+    this.lembrarProjeto(params.projetoId);
+    this.carregandoPreview.set(true);
+    this.erroPreview.set(false);
+    return this.relatorioService.gerarRelatorio(params).pipe(
+      map((resposta) => {
+        if (resposta.sucesso && resposta.dados) {
+          this.relatorio.set(resposta.dados);
+          this.parametrosExibidos.set(params);
+          this.sincronizado.set(true);
+        }
+        return null;
+      }),
+      catchError(() => {
+        this.erroPreview.set(true);
+        return of(null);
+      }),
+      finalize(() => this.carregandoPreview.set(false)),
+    );
+  }
 
-    const valor = this.formulario.value;
+  /** Parâmetros dos filtros atuais, ou `null` enquanto faltar projeto ou o intervalo personalizado. */
+  private montarParametros(): RelatorioParametros | null {
+    if (this.formulario.invalid) return null;
+
+    const valor = this.formulario.getRawValue();
     const periodoTipo = valor.periodoTipo!;
-    const params: RelatorioParametros = { projetoId, periodoTipo };
+    const params: RelatorioParametros = { projetoId: valor.projetoId!, periodoTipo };
 
     if (periodoTipo === RelatorioPeriodoTipoEnum.ANUAL) {
       params.ano = valor.ano ?? undefined;
@@ -190,12 +277,39 @@ export class RelatorioExecucaoDialogComponent {
       params.ano = valor.ano ?? undefined;
       params.mes = valor.mes ?? undefined;
     } else {
-      const periodo = this.formulario.controls.periodo.value as Date[] | null;
+      const periodo = valor.periodo as Date[] | null;
       params.dataInicio = periodo?.[0] ? this.formatarData(periodo[0]) : undefined;
       params.dataFim = periodo?.[1] ? this.formatarData(periodo[1]) : undefined;
     }
 
     return params;
+  }
+
+  private carregarProjetos(): void {
+    if (this.projetos().length > 0) return;
+    this.projetoService.listar({ allRows: true }).subscribe({
+      next: (resposta) => {
+        if (resposta.sucesso && resposta.dados) this.projetos.set(resposta.dados.itens);
+      },
+    });
+  }
+
+  private projetoLembrado(): number | null {
+    try {
+      const salvo = Number(localStorage.getItem(CHAVE_PROJETO_LEMBRADO));
+      return salvo > 0 ? salvo : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private lembrarProjeto(projetoId: number): void {
+    if (this.projetoFixo()) return;
+    try {
+      localStorage.setItem(CHAVE_PROJETO_LEMBRADO, String(projetoId));
+    } catch {
+      /* armazenamento indisponível: só não lembra */
+    }
   }
 
   private dispararDownload(resposta: HttpResponse<Blob>): void {

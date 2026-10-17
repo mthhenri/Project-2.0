@@ -87,7 +87,7 @@ Specs de fase/milestone são divididas em tarefas numeradas antes da implementa�
 `done/` são registro histórico e não são reescritas. Specs em `discarded/` foram descartadas pelo
 autor e não são implementadas (o corpo também não é reescrito).
 
-O backlog está em `docs/specs/backlog/` (sem tasks numeradas pendentes: a revisão de UI/UX 94–117 foi concluída;
+O backlog está em `docs/specs/backlog/` (sem tasks numeradas pendentes: a revisão de UI/UX 94–117 foi concluída, inclusive 110 e 111 reativadas em 2026-10-17;
 restam o guarda-chuva e o `INDEX-revisao-ux.md`, mapa em `docs/context/MEMORY.md` §3). Confira o próximo número livre antes de
 criar uma spec nova: o maior em uso é 117.
 

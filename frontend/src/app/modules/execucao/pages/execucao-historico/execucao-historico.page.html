@@ -1,6 +1,18 @@
 <div class="execucao-historico">
   <div class="execucao-historico__cabecalho">
-    <h1 class="execucao-historico__titulo">Execuções</h1>
+    <div>
+      <h1 class="execucao-historico__titulo">Execuções</h1>
+      <p class="execucao-historico__resumo" aria-live="polite">{{ resumo() }}</p>
+    </div>
+    @if (sessao.eGestor()) {
+      <p-button
+        label="Relatório"
+        icon="pi pi-file-export"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="relatorioDialog.abrir()"
+      />
+    }
   </div>
 
   <form [formGroup]="formularioFiltros" class="execucao-historico__filtros">
@@ -14,59 +26,76 @@
           optionLabel="nomeCompleto"
           optionValue="id"
           placeholder="Todos"
+          [filter]="true"
+          filterPlaceholder="Buscar usuário"
           [showClear]="true"
           appendTo="body"
           (onChange)="aoMudarFiltro()"
           (onClear)="aoMudarFiltro()"
         />
       </div>
+      <p-button
+        label="Minhas"
+        icon="pi pi-user"
+        severity="secondary"
+        [outlined]="!filtrandoMinhas()"
+        [ariaLabel]="filtrandoMinhas() ? 'Minhas execuções (filtro ativo)' : 'Minhas execuções'"
+        pTooltip="Só as minhas execuções"
+        tooltipPosition="top"
+        (onClick)="alternarMinhas()"
+      />
     }
 
     <div class="execucao-historico__navegacao">
-      <p-button
-        label="Hoje"
-        icon="pi pi-calendar"
-        severity="secondary"
-        [outlined]="true"
-        [disabled]="visualizandoHoje()"
-        pTooltip="Voltar para hoje"
-        tooltipPosition="top"
-        (onClick)="voltarParaHoje()"
-      />
+      @if (!visualizandoHoje()) {
+        <p-button
+          label="Hoje"
+          severity="secondary"
+          [outlined]="true"
+          pTooltip="Voltar para hoje (Home)"
+          tooltipPosition="top"
+          (onClick)="voltarParaHoje()"
+        />
+      }
+      <div class="execucao-historico__dia" role="group" aria-label="Dia">
+        <p-button
+          icon="pi pi-chevron-left"
+          severity="secondary"
+          [outlined]="true"
+          ariaLabel="Dia anterior"
+          pTooltip="Dia anterior (←)"
+          tooltipPosition="top"
+          (onClick)="retornarDia()"
+        />
+        <p-datepicker
+          inputId="filtro-data"
+          formControlName="data"
+          dateFormat="dd/mm/yy"
+          [maxDate]="hoje"
+          [readonlyInput]="true"
+          appendTo="body"
+          (onSelect)="aoMudarFiltro()"
+        />
+        <p-button
+          icon="pi pi-chevron-right"
+          severity="secondary"
+          [outlined]="true"
+          [disabled]="visualizandoHoje()"
+          ariaLabel="Próximo dia"
+          pTooltip="Próximo dia (→)"
+          tooltipPosition="top"
+          (onClick)="avancarDia()"
+        />
+      </div>
       <p-button
         icon="pi pi-refresh"
         severity="secondary"
-        [outlined]="true"
+        [text]="true"
         [loading]="carregando()"
+        ariaLabel="Atualizar"
         pTooltip="Atualizar"
         tooltipPosition="top"
         (onClick)="buscarExecucoes()"
-      />
-      <p-button
-        icon="pi pi-chevron-left"
-        severity="secondary"
-        [outlined]="true"
-        pTooltip="Dia anterior"
-        tooltipPosition="top"
-        (onClick)="retornarDia()"
-      />
-      <p-datepicker
-        inputId="filtro-data"
-        formControlName="data"
-        dateFormat="dd/mm/yy"
-        [maxDate]="hoje"
-        [readonlyInput]="true"
-        appendTo="body"
-        (onSelect)="aoMudarFiltro()"
-      />
-      <p-button
-        icon="pi pi-chevron-right"
-        severity="secondary"
-        [outlined]="true"
-        [disabled]="visualizandoHoje()"
-        pTooltip="Próximo dia"
-        tooltipPosition="top"
-        (onClick)="avancarDia()"
       />
     </div>
   </form>
@@ -77,10 +106,10 @@
   <div class="lista-recarga" [hidden]="primeiraCarga()" [class.conteudo-recarregando]="recarregando()">
     <app-barra-recarga [ativa]="recarregando()" />
     <p-table
-      [value]="execucoes()"
+      [value]="linhas()"
       [lazy]="true"
       (onLazyLoad)="aoCarregarTabela($event)"
-      [paginator]="true"
+      [paginator]="totalRegistros() > itensPorPagina()"
       [rows]="itensPorPagina()"
       [totalRecords]="totalRegistros()"
       [rowsPerPageOptions]="[50, 100, 200]"
@@ -101,7 +130,7 @@
       </ng-template>
 
       <ng-template #body let-execucao>
-        <tr class="execucao-historico__linha">
+        <tr class="execucao-historico__linha" [class.execucao-historico__linha--ativa]="!execucao.fimData">
           @if (sessao.eGestor()) { <td>{{ execucao.nomeUsuario }}</td> }
           <td>{{ execucao.nomeProjeto }}</td>
           <td>{{ execucao.nomeDemanda }}</td>
@@ -116,22 +145,52 @@
           </td>
           <td>
             <div class="execucao-historico__momento">
-              <span class="execucao-historico__momento-data">{{ execucao.inicioData | date: 'dd/MM/yy' }}</span>
-              <span class="execucao-historico__momento-hora">{{ execucao.inicioData | date: 'HH:mm' }}</span>
+              @if (foraDoDiaListado(execucao.inicioData)) {
+                <span class="execucao-historico__momento-data">{{ diaMes(execucao.inicioData) }}</span>
+              }
+              <span class="execucao-historico__momento-hora">{{ hora(execucao.inicioData) }}</span>
             </div>
           </td>
           <td>
             @if (execucao.fimData) {
               <div class="execucao-historico__momento">
-                <span class="execucao-historico__momento-data">{{ execucao.fimData | date: 'dd/MM/yy' }}</span>
-                <span class="execucao-historico__momento-hora">{{ execucao.fimData | date: 'HH:mm' }}</span>
+                @if (foraDoDiaListado(execucao.fimData) && diaMes(execucao.fimData) !== diaMes(execucao.inicioData)) {
+                  <span class="execucao-historico__momento-data">{{ diaMes(execucao.fimData) }}</span>
+                }
+                <span class="execucao-historico__momento-hora">{{ hora(execucao.fimData) }}</span>
               </div>
             } @else {
-              <span class="execucao-historico__em-andamento">Em andamento</span>
+              <span class="execucao-historico__em-andamento"><i class="pi pi-circle-fill"></i> Em andamento</span>
             }
           </td>
-          <td>{{ execucao.duracaoMinutos | minutosParagHoras }}</td>
-          <td class="execucao-historico__descricao">{{ execucao.descricao }}</td>
+          <td>
+            @if (execucao.fimData) {
+              {{ execucao.duracaoMinutos | minutosParagHoras }}
+            } @else {
+              <app-execucao-timer [inicioData]="execucao.inicioData" tamanho="compacto" />
+            }
+          </td>
+          <td class="execucao-historico__descricao">
+            @if (sessao.eGestor()) {
+              <button
+                type="button"
+                class="execucao-historico__descricao-botao"
+                [pTooltip]="execucao.descricao"
+                tooltipPosition="top"
+                [showDelay]="400"
+                (click)="abrirEdicao(execucao)"
+              >
+                <span class="execucao-historico__descricao-texto">{{ execucao.descricao }}</span>
+              </button>
+            } @else {
+              <span
+                class="execucao-historico__descricao-texto"
+                [pTooltip]="execucao.descricao"
+                tooltipPosition="top"
+                [showDelay]="400"
+              >{{ execucao.descricao }}</span>
+            }
+          </td>
           @if (sessao.eGestor()) {
             <td class="execucao-historico__coluna-acoes">
               <p-button
@@ -139,6 +198,7 @@
                 severity="secondary"
                 [text]="true"
                 [rounded]="true"
+                ariaLabel="Editar execução"
                 pTooltip="Editar execução"
                 tooltipPosition="top"
                 (onClick)="abrirEdicao(execucao)"
@@ -149,19 +209,31 @@
       </ng-template>
 
       <ng-template #footer>
-        <tr class="execucao-historico__rodape">
-          <td [attr.colspan]="sessao.eGestor() ? 6 : 5" class="execucao-historico__rodape-rotulo">
-            Total do dia
-          </td>
-          <td class="execucao-historico__rodape-valor">{{ totalMinutosDia() | minutosParagHoras }}</td>
-          <td [attr.colspan]="sessao.eGestor() ? 2 : 1"></td>
-        </tr>
+        @if (totalRegistros() > 0) {
+          <tr class="execucao-historico__rodape">
+            <td [attr.colspan]="sessao.eGestor() ? 6 : 5" class="execucao-historico__rodape-rotulo">
+              Total do dia
+            </td>
+            <td class="execucao-historico__rodape-valor">{{ totalMinutosDia() | minutosParagHoras }}</td>
+            <td [attr.colspan]="sessao.eGestor() ? 2 : 1"></td>
+          </tr>
+        }
       </ng-template>
 
       <ng-template #emptymessage>
         <tr>
           <td [attr.colspan]="sessao.eGestor() ? 9 : 7" class="execucao-historico__vazio">
-            Nenhuma execução encontrada para este dia.
+            <i class="pi pi-clock text-3xl"></i>
+            <p class="execucao-historico__vazio-titulo">Nenhuma execução em {{ rotuloDiaVazio() }}</p>
+            <div class="execucao-historico__vazio-acoes">
+              <p-button label="Ver dia anterior" icon="pi pi-chevron-left" size="small" severity="secondary" [outlined]="true" (onClick)="retornarDia()" />
+              @if (!visualizandoHoje()) {
+                <p-button label="Voltar para hoje" size="small" severity="secondary" [outlined]="true" (onClick)="voltarParaHoje()" />
+              }
+              @if (usuarioFiltradoId()) {
+                <p-button label="Limpar filtro de usuário" icon="pi pi-filter-slash" size="small" severity="secondary" [text]="true" (onClick)="limparUsuario()" />
+              }
+            </div>
           </td>
         </tr>
       </ng-template>
@@ -171,6 +243,10 @@
 
 <p-dialog
   header="Editar execução"
+  dialogFormulario
+  [dialogSemAutofocus]="true"
+  [dialogBloqueado]="salvandoDescricao()"
+  (dialogEnviar)="salvarEdicao()"
   [visible]="mostrarDialogEditar()"
   (visibleChange)="mostrarDialogEditar.set($event)"
   [modal]="true"
@@ -217,7 +293,11 @@
           [maxDate]="dataMaximaEdicao()"
           [showClear]="true"
           appendTo="body"
+          [class.ng-invalid]="formularioEdicao.hasError('periodo')"
         />
+        @if (formularioEdicao.hasError('periodo')) {
+          <small class="execucao-historico__erro">O fim precisa ser depois do início.</small>
+        }
       </div>
     </div>
 
@@ -246,10 +326,18 @@
     </div>
 
     <div class="execucao-historico__dialog-acoes">
+      <app-dialog-dica-atalhos />
       <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="mostrarDialogEditar.set(false)" />
-      <p-button type="submit" label="Salvar" icon="pi pi-check" [loading]="salvandoDescricao()" />
+      <p-button
+        type="submit"
+        label="Salvar"
+        icon="pi pi-check"
+        [loading]="salvandoDescricao()"
+        [disabled]="formularioEdicao.hasError('periodo')"
+      />
     </div>
   </form>
 </p-dialog>
 
 <app-atividade-visualizar-dialog #visualizarDialog />
+<app-relatorio-execucao-dialog #relatorioDialog />

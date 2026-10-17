@@ -8,10 +8,25 @@
     padding-top: 0.25rem;
   }
 
-  &__filtros {
+  &__periodo {
     display: flex;
     flex-wrap: wrap;
-    gap: 1rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  &__atalhos,
+  &__ajuste {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__dica {
+    font-size: 0.75rem;
+    color: var(--p-text-muted-color);
   }
 
   &__campo {
@@ -23,22 +38,85 @@
   &__label { @include form-label; }
   &__erro  { @include form-erro; }
 
-  &__acoes {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-
   &__resultado {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
     margin-top: 1.25rem;
+    transition: opacity 0.15s ease;
+
+    &--esmaecido {
+      opacity: 0.5;
+    }
   }
+
+  &__vazio-estado {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 2.5rem 1rem;
+    color: var(--p-text-muted-color);
+
+    .pi {
+      font-size: 1.75rem;
+    }
+
+    p {
+      margin: 0;
+    }
+  }
+
+  &__titulo-resumo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+
+  &__totais {
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  &__total {
+    display: flex;
+    flex-direction: column;
+    min-width: 7rem;
+    padding: 0.5rem 0.875rem;
+    border: 1px solid var(--app-surface-200);
+    border-radius: 8px;
+    background: var(--app-realce-sutil);
+  }
+
+  &__total-valor {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--app-realce-primario);
+    white-space: nowrap;
+  }
+
+  &__total-rotulo {
+    font-size: 0.75rem;
+    color: var(--p-text-muted-color);
+  }
+
+  &__contadores {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  &__contador--alta  { color: var(--p-red-500); }
+  &__contador--media { color: var(--p-orange-500); }
+  &__contador--baixa { color: var(--p-text-muted-color); }
 
   &__resumo {
     display: flex;
-    align-items: baseline;
+    align-items: center;
+    justify-content: space-between;
     gap: 0.75rem;
 
     &-projeto {
@@ -62,14 +140,6 @@
     text-align: center;
     padding: 1.5rem;
     color: var(--p-text-muted-color);
-  }
-
-  &__rodape {
-    display: flex;
-    justify-content: flex-end;
-    gap: 1.5rem;
-    font-size: 0.875rem;
-    color: var(--app-surface-700);
   }
 
   &__revisao {

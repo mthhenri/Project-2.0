@@ -12,6 +12,79 @@
 
 ---
 
+## 2026-10-17 — Tasks 110 e 111: histórico de Execuções com contexto/URL/teclado e relatório com auto-preview
+
+Reativadas pelo autor em 2026-10-17 (descartadas no dia anterior junto com as de Atividades, que seguem descartadas).
+Relatórios em `docs/specs/done/110-execucoes-contexto-navegacao/verificacao.md` e
+`docs/specs/done/111-relatorio-auto-preview-ia/verificacao.md`; verificação em Chromium contra a API real em 1920×1080,
+1366×768 e 1080×1920.
+
+- **110:** subtítulo de contexto (dia · total · horas), linha ativa fixada no topo com cronômetro, colunas só `HH:mm`
+  (data pequena só ao cruzar a meia-noite), descrição clicável com line-clamp, filtros em `?data=&usuario=` (URL como fonte
+  do estado), ←/→/Home, select de usuário com busca + chip "Minhas", estado vazio acionável, edição com `dialogFormulario` e
+  erro "fim > início" inline. 7×← = 7 dias, F5 preserva; PUT de edição por Ctrl+Enter confirmado.
+- **111:** o dialog abre carregado (projeto lembrado), atalhos de período em um clique, recarga automática com debounce de
+  400 ms e resultado antigo esmaecido; CSV e IA só usam os parâmetros do que está exibido e ficam desabilitados enquanto
+  desatualizado; "Revisar com IA" habilitado com contadores por severidade e cards ALTA→BAIXA.
+- **Achados só na verificação:** chip "Minhas" desalinhado, rodapé "Total do dia" no estado vazio, `HttpErrorResponse` não
+  tratado nos `subscribe` de CSV/IA e "1 execuções" no singular.
+- **Limites:** visão do desenvolvedor da tela de Execuções e a IA contra o provedor real não foram exercitadas ao vivo.
+
+---
+
+## 2026-10-17 — P-005 resolvido: falha HTTP sem handler não polui mais o console
+
+Em vez de varrer todos os `subscribe`, `config.onUnhandledError` do rxjs (`core/config/rxjs-erros-http.ts`, ligado em
+`main.ts`) passou a tratar `HttpErrorResponse` como já tratado (o `errorHandlerInterceptor` avisa o usuário); qualquer outro
+erro não tratado continua sendo relançado. Conferido ao vivo na tela de Execuções com a listagem respondendo 500: antes
+saía `pageerror HttpErrorResponse`, agora nenhum erro de página e o toast "Erro interno. Tente novamente." segue aparecendo.
+
+---
+
+## 2026-10-17 — P-004 resolvido nas telas de Execuções e Relatório: dia e horas seguem o fuso do sistema
+
+Novo `shared/src/utils/fuso-horario.ts` (`dataIsoNoFuso`, `horaNoFuso`, `diaMesNoFuso`, `dataHoraNoFuso`, `hojeNoFuso`,
+`instanteParaRelogioLocal`/`relogioLocalParaInstante`) com 6 testes novos (shared: 10 de 10, também sob `TZ=UTC`,
+`Asia/Tokyo` e `America/Sao_Paulo`) e `ambiente.fusoHorario` (espelha `APP_TIMEZONE`). A tela de Execuções e o dialog de
+relatório passaram a usar essas funções para "hoje", dia/hora exibidos, o atalho "Este mês" e o dialog de edição (o
+datepicker mostra o relógio do sistema e converte de volta ao salvar). Conferido ao vivo com o navegador em
+`Pacific/Auckland` (UTC+13) e em `UTC` contra o mesmo banco: ambos mostram 16/10, as mesmas horas (09:00, 14:00, 22:45...), a
+virada 23:00→01:00 com `16/10` e o PUT de edição preserva o instante original (`2026-10-15T15:00:00.000Z` = 12:00 de São
+Paulo). **Não migrado (fora do pedido):** Ponto, Calendário, Atividades e outras telas seguem no fuso do navegador (P-004,
+reescrito como `ACEITO`).
+
+---
+
+## 2026-10-17 — P-003 resolvido: selects de Projeto (relatório) e Usuário (Execuções) sem teto de 100
+
+`ProjetoService` e `UsuarioService` (HTTP) passaram a repassar `allRows` (o DTO e o backend já o suportavam); o dialog de
+relatório e o filtro de usuário de Execuções o usam. Conferido ao vivo com 116 projetos e 119 usuários ativos no banco de
+teste: os selects listam todos e a busca acha "Lote P003 110" e "Lote Usuario 109" (as requisições saem com `allRows=true`).
+Os dados de teste foram removidos. **Não alterado (fora do pedido):** outros selects de usuário seguem em 100 itens —
+atividades, ponto, formulário/detalhe/árvore de demandas.
+
+---
+
+## 2026-10-17 — P-002 resolvido: o sistema sempre mantém ao menos um gestor ativo
+
+`UsuarioService` ganhou `validarPermanenciaDeGestorAtivo`, usada por `alterar` (quando o gestor ativo deixa de ser gestor
+**ou** deixa de estar ativo) e por `excluir`. A guarda que só existia no rebaixamento de tipo passou a valer também para
+inativação por status e para a exclusão; gestor já inativo e desenvolvedor não acionam a guarda. 8 testes novos na
+service (backend: 39 de 39) e conferência na API real: `PUT /usuario/1 {status: INATIVO}` e `DELETE /usuario/1` com um
+único gestor devolvem "O sistema deve ter ao menos um gestor ativo" e o registro fica intacto. Na tela de Usuários o
+switch do próprio usuário já é desabilitado, então a guarda protege API e corridas entre dois gestores.
+
+---
+
+## 2026-10-17 — Tasks 110/111: verificação da visão do desenvolvedor e problemas registrados
+
+Usuário `dev.teste110` criado pela API no ambiente de teste; a tela de Execuções foi percorrida com ele (resultado em
+`docs/specs/done/110-execucoes-contexto-navegacao/verificacao.md`, seção "Complemento"): só as próprias execuções, sem os
+controles de gestor, `?usuario=` ignorado. Registrados em `PROBLEMS.md`: P-002 (último gestor inativável pelo status),
+P-003 (selects limitados a 100 itens), P-004 (dia vem do fuso do navegador) e P-005 (`subscribe` sem handler de erro).
+
+---
+
 ## 2026-10-17 — Task 116: Tags com quick-add, cor inline e busca
 
 Relatório em `docs/specs/done/116-tags-quick-add-cor-inline/verificacao.md`; verificação em Chromium contra a API real

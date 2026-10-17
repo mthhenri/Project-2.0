@@ -1,4 +1,4 @@
-# Índice — tasks da Revisão de UI/UX (94–116)
+# Índice — tasks da Revisão de UI/UX (94–117)
 
 Origem: `docs/specs/backlog/revisao-ui-ux/` (relatório, prints com callouts, mockups HTML e análise detalhada por tela).
 
@@ -34,8 +34,8 @@ Origem: `docs/specs/backlog/revisao-ui-ux/` (relatório, prints com callouts, mo
 | ~~107~~ | ~~Demandas grafo: tema, hover-card, legenda-filtro~~ — **concluída** (`../done/`) |
 | ~~108~~ | ~~Demanda detalhe: edição inline, tags/membros no cabeçalho~~ — **concluída** (`../done/`) |
 | ~~109~~ | ~~Demanda: formulário unificado e adaptativo~~ — **concluída** (`../done/`) |
-| ~~110~~ | ~~Execuções: contexto, linha ativa, teclado/URL~~ — **DESCARTADA** (`../discarded/`) |
-| ~~111~~ | ~~Relatório: auto-preview, chips de período, IA habilitada~~ — **DESCARTADA** (`../discarded/`) |
+| ~~110~~ | ~~Execuções: contexto, linha ativa, teclado/URL~~ — **concluída** (`../done/`, reativada em 2026-10-17) |
+| ~~111~~ | ~~Relatório: auto-preview, chips de período, IA habilitada~~ — **concluída** (`../done/`, reativada em 2026-10-17) |
 
 **Fase 4 — Telas administrativas:**
 
@@ -49,11 +49,10 @@ Origem: `docs/specs/backlog/revisao-ui-ux/` (relatório, prints com callouts, mo
 
 ## Descartadas (2026-10-16)
 
-Decisão do autor: tudo que mexe **diretamente** nas telas de Atividades e de Execuções fica de fora —
-**102, 103, 104, 105, 110 e 111**, agora em `docs/specs/discarded/`. O que mexe nelas só
-indiretamente continua na lista (97, 98, 99, 95, 96, 108, 116 e as demais). A 111 entrou porque o
-ponto de entrada dela é o header da tela de Execuções (depende da 110). Nenhuma task restante
-depende de uma descartada.
+Decisão do autor: tudo que mexe **diretamente** nas telas de Atividades fica de fora —
+**102, 103, 104 e 105**, em `docs/specs/discarded/`. **Em 2026-10-17 o autor reativou as tasks da tela de
+Execuções (110 e 111)**, que foram implementadas. O que mexe nelas só
+indiretamente continua na lista (97, 98, 99, 95, 96, 108, 116 e as demais). Nenhuma task restante depende de uma descartada.
 
 ## Dependências entre tasks
 
@@ -61,7 +60,7 @@ depende de uma descartada.
   padrão de dialogs (`dialogFormulario`), o feedback otimista/esqueletos (`app-skeleton-lista`,
   `app-barra-recarga`) e o "Desfazer" (`DesfazerService`) já existem e devem ser reutilizados.
 - 95 → 96 (layout). (~~95 → 104~~: a 104 foi descartada.)
-- 106 → 107; 96 → 114. (~~110 → 111~~: ambas descartadas.)
+- 106 → 107; 96 → 114. 110 → 111 (ambas concluídas).
 - Única task com mudança de backend estrutural foi a **99** (endpoints `restaurar`, já feita); 104 pede apenas 2 campos a mais num DTO de leitura.
 
 ## Observações de organização (2026-10-16)

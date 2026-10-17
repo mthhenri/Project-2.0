@@ -44,6 +44,8 @@ Estas são as fontes da verdade. Em conflito entre código e documento, **o docu
 | Esqueleto na primeira carga, conteúdo esmaecido + barra na recarga, leitura sem overlay global (task 98) | `shared/components/skeleton-lista/`, `shared/components/barra-recarga/`, `.conteudo-recarregando` em `styles.scss`, `comFeedbackProprio()` em `core/interceptors/loading.interceptor.ts` |
 | Login (estado lembrado, returnUrl seguro) e topbar (chip de execução ativa, perfil, atalhos `g`+letra) — tasks 94–96 | `modules/autenticacao/pages/login/`, `core/utils/url-retorno.ts`, `core/services/execucao-ativa.service.ts`, `core/interceptors/execucao-ativa.interceptor.ts`, `shared/layout/topbar/` |
 | Atalhos de teclado (helpers `focoEmCampo`/`haSobreposicaoAberta`), Ponto mensal inline e equipe (tasks 100–101) | `core/utils/atalhos.ts`, `modules/ponto/` |
+| Datas no fuso do sistema (`APP_TIMEZONE`): hoje, dia, hora, relógio local do datepicker | `shared/src/utils/fuso-horario.ts` + `ambiente.fusoHorario` (`frontend/src/environments/`) |
+| Execuções: contexto, linha ativa, URL e teclado (110) e relatório com auto-preview/IA (111) | `modules/execucao/pages/execucao-historico/`, `modules/execucao/utils/execucao.util.ts`, `modules/relatorio/components/relatorio-execucao-dialog/`, `modules/relatorio/utils/relatorio.util.ts` |
 | Tags: quick-add, popover de paleta, seleção em lote (task 116) | `modules/tag/` (`pages/tag-listagem`, `components/tag-edicao-dialog`, `utils/tag.util.ts`), `shared/components/seletor-cor/` |
 | Calendário: clique no dia, popover, navegação e legenda (task 115) | `modules/calendario/pages/calendario-listagem/`, `modules/calendario/models/dia-nao-util.model.ts` |
 | Anotações em drawer com auto-save (task 114) | `modules/usuario/components/usuario-anotacoes-dialog/`, `modules/usuario/utils/anotacoes.util.ts`, `pages/usuario-anotacoes/` (deep-link), `core/services/desfazer.service.ts` |
@@ -69,7 +71,7 @@ quando essa branch for mergeada). A task 117 (remover a descrição da atividade
 | Item | Onde |
 |---|---|
 | Tasks da revisão de UI/UX: todas concluídas (94–101, 106–109, 112–116 em `docs/specs/done/`) | `docs/specs/backlog/` guarda só o índice e o guarda-chuva |
-| Tasks descartadas pelo autor (102–105, 110, 111: telas de Atividades e Execuções) | `docs/specs/discarded/` |
+| Tasks descartadas pelo autor (102–105: tela de Atividades) | `docs/specs/discarded/` |
 | Índice, ordem e dependências das tasks 94–116 (97–99 concluídas) | `docs/specs/backlog/INDEX-revisao-ux.md` |
 | Spec guarda-chuva e material da revisão (relatório, mockups HTML, análises) | `docs/specs/backlog/revisao-ui-ux.spec.md` e `docs/specs/backlog/revisao-ui-ux/` |
 | Prints da revisão (PNG, referência canônica) | `docs/assets/revisao-ui-ux/prints/` |

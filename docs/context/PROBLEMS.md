@@ -43,3 +43,14 @@
   testes (Angular/Karma ou Vitest) antes da migração de UI de `IDEAS.md` I-001.
 - **Desde:** origem do projeto.
 
+
+### P-004 — Outras telas ainda calculam "hoje" e as horas no fuso do navegador · `ACEITO` · frontend
+
+- **Sintoma:** com o navegador num fuso diferente de `APP_TIMEZONE` (America/Sao_Paulo), Ponto, Calendário, Atividades e
+  demais telas que usam `new Date()`/`DatePipe` podem mostrar "hoje" ou horas diferentes do servidor. Execuções e o
+  relatório já seguem o fuso do sistema (2026-10-17).
+- **Causa:** só essas duas telas usam `hojeNoFuso`/`horaNoFuso` (`shared/src/utils/fuso-horario.ts`) com
+  `ambiente.fusoHorario`; as demais não foram migradas.
+- **Contorno:** o time usa o fuso do servidor; nada a fazer no uso normal.
+- **Correção:** migrar as demais telas para as mesmas funções (o `DatePipe` não aceita nome IANA de fuso).
+- **Desde:** origem.
