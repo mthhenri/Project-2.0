@@ -23,6 +23,8 @@ export class SecaoAnotacao {
   conteudoSalvo: string;
   temporizadorSalvar: ReturnType<typeof setTimeout> | null = null;
   salvandoRequisicao = false;
+  /** Resolve quando o PUT em andamento termina (quem precisa da seção salva espera por ele). */
+  salvamentoAtual: Promise<void> | null = null;
   salvarDeNovo = false;
   /** Conteúdo que existia antes do "Limpar", enquanto a janela do Desfazer está aberta. */
   conteudoAntesDeLimpar: string | null = null;

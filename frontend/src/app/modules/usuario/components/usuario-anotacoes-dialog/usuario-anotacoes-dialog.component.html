@@ -36,6 +36,8 @@
         />
       </header>
 
+      <p-contextmenu #menuContexto [model]="itensMenu" appendTo="body" />
+
       @if (carregando()) {
         <div class="anotacoes-drawer__esqueleto" aria-busy="true">
           <p-skeleton height="2rem" />
@@ -72,6 +74,8 @@
                       [alturaMinima]="9"
                       [rotulo]="rotuloSecao[secao.tipo]"
                       placeholder="Escreva aqui — salva sozinho enquanto você digita."
+                      [emitirMenuContexto]="true"
+                      (aoMenuContexto)="abrirMenuDoTrecho(secao, $event)"
                     />
                     <div class="anotacoes-secao__acoes">
                       <p-button

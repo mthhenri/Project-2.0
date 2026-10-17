@@ -5,6 +5,8 @@ import {
   AnotacaoAlteradaDto,
   AnotacaoAlterarDto,
   AnotacaoResumoDto,
+  AnotacaoTrechoMoverDto,
+  AnotacaoTrechoMovidoDto,
   StandardResponse,
   TipoAnotacaoEnum,
 } from '@project20/shared';
@@ -22,6 +24,11 @@ export class AnotacaoService {
     let params = new HttpParams().set('usuarioId', String(usuarioId));
     if (tipos?.length) params = params.set('tipos', tipos.join(','));
     return this.httpClient.get<StandardResponse<AnotacaoResumoDto[]>>(this.urlBase, { params, ...comErroTratadoPelaTela() });
+  }
+
+  /** Tira o trecho de uma seção e o põe no fim de outra, atomicamente (400 se ausente/ambíguo, 409 se alguma mudou). */
+  moverTrecho(usuarioId: number, dto: AnotacaoTrechoMoverDto): Observable<StandardResponse<AnotacaoTrechoMovidoDto>> {
+    return this.httpClient.post<StandardResponse<AnotacaoTrechoMovidoDto>>(`${this.urlBase}/${usuarioId}/mover`, dto, comErroTratadoPelaTela());
   }
 
   /** Substitui a seção inteira; 409 se ela mudou desde que `updatedDateLido` foi lido. */

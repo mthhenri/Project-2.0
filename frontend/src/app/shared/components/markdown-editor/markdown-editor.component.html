@@ -62,6 +62,7 @@
         (keyup)="atualizarSelecao()"
         (mouseup)="atualizarSelecao()"
         (select)="atualizarSelecao()"
+        (contextmenu)="aoAbrirMenuContexto($event)"
         (blur)="aoSair()"
       ></textarea>
     } @else {

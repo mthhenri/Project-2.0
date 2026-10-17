@@ -1,17 +1,18 @@
-import { Component, DestroyRef, inject, signal, computed, input, output, viewChildren } from '@angular/core';
+import { Component, DestroyRef, inject, signal, computed, input, output, viewChild, viewChildren } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ReactiveFormsModule } from '@angular/forms';
-import { forkJoin, of } from 'rxjs';
-import { catchError, finalize } from 'rxjs/operators';
-import { MessageService } from 'primeng/api';
+import { forkJoin, from, Observable, of } from 'rxjs';
+import { catchError, finalize, map, switchMap } from 'rxjs/operators';
+import { MenuItem, MessageService } from 'primeng/api';
+import { ContextMenu, ContextMenuModule } from 'primeng/contextmenu';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { DrawerModule } from 'primeng/drawer';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TooltipModule } from 'primeng/tooltip';
-import { TipoAnotacaoEnum } from '@project20/shared';
-import { MarkdownEditorComponent } from '../../../../shared/components/markdown-editor/markdown-editor.component';
+import { AnotacaoResumoDto, AnotacaoTrechoMovidoDto, TIPOS_ANOTACAO_ORDENADOS, TipoAnotacaoEnum } from '@project20/shared';
+import { MarkdownEditorComponent, MenuContextoEditorEvento } from '../../../../shared/components/markdown-editor/markdown-editor.component';
 import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
 import { AnotacaoService } from '../../services/anotacao.service';
 import { UsuarioService } from '../../services/usuario.service';
@@ -49,6 +50,7 @@ export interface AnotacoesAlteradasEvento {
     ReactiveFormsModule,
     AccordionModule,
     ButtonModule,
+    ContextMenuModule,
     DrawerModule,
     MarkdownEditorComponent,
     MarkdownVisualizadorComponent,
@@ -82,6 +84,25 @@ export class UsuarioAnotacoesDialogComponent {
   private readonly usuarioId = signal(0);
   private readonly nomeCompleto = signal('');
   private readonly editores = viewChildren(MarkdownEditorComponent);
+  private readonly menuContexto = viewChild<ContextMenu>('menuContexto');
+
+  /**
+   * Menu do botão direito sobre um trecho selecionado: "Enviar para" com as cinco seções (a de origem fica
+   * oculta ao abrir). Itens são propriedades diretas (um getter reconstruiria o menu a cada ciclo e ele fecharia).
+   */
+  readonly itensMenu: MenuItem[] = [
+    {
+      label: 'Enviar para',
+      icon: 'pi pi-send',
+      items: TIPOS_ANOTACAO_ORDENADOS.map((tipo): MenuItem => ({
+        id: tipo,
+        label: ROTULO_SECAO_ANOTACAO[tipo],
+        command: () => this.enviarTrecho(tipo),
+      })),
+    },
+  ];
+  /** Seção e trecho do menu aberto (lidos quando um destino é escolhido). */
+  private trechoDoMenu: { secao: SecaoAnotacao; texto: string } | null = null;
 
   private temporizadorRelogio: ReturnType<typeof setInterval> | null = null;
 
@@ -143,6 +164,14 @@ export class UsuarioAnotacoesDialogComponent {
     });
   }
 
+  /** Botão direito sobre um trecho selecionado: mostra "Enviar para" sem a própria seção. */
+  abrirMenuDoTrecho(secao: SecaoAnotacao, selecao: MenuContextoEditorEvento): void {
+    if (!this.editavel()) return;
+    this.trechoDoMenu = { secao, texto: selecao.texto };
+    this.itensMenu[0].items?.forEach((item) => (item.visible = item.id !== secao.tipo));
+    this.menuContexto()?.show(selecao.evento);
+  }
+
   /** Esvazia a seção e deixa 7 s para desfazer; só depois o vazio é gravado. */
   limpar(secao: SecaoAnotacao): void {
     const anterior = secao.textoAtual;
@@ -162,6 +191,105 @@ export class UsuarioAnotacoesDialogComponent {
       aposDesfazer: () => this.restaurarAposLimpar(secao),
       aoEncerrar: () => this.gravarLimpeza(secao),
     });
+  }
+
+  /** Move o trecho do menu para o fim de `destino`; salva as duas seções antes, para enviar o que o usuário vê. */
+  private enviarTrecho(destino: TipoAnotacaoEnum): void {
+    const alvo = this.trechoDoMenu;
+    const secaoDestino = this.secoes().find((secao) => secao.tipo === destino);
+    if (!alvo || !secaoDestino || alvo.secao === secaoDestino) return;
+    const { secao: secaoOrigem, texto } = alvo;
+
+    this.executarMover(secaoOrigem, secaoDestino, texto).subscribe((movido) => {
+      if (!movido) return;
+      if (!this.secoesAbertas().includes(destino)) this.secoesAbertas.update((abertas) => [...abertas, destino]);
+      this.desfazerService.oferecer({
+        mensagem: `Enviado para ${ROTULO_SECAO_ANOTACAO[destino]}`,
+        duracaoMs: JANELA_LIMPAR_MS,
+        mensagemAposDesfazer: '',
+        desfazer: () => this.executarMover(secaoDestino, secaoOrigem, texto),
+      });
+    });
+  }
+
+  /** Salva as duas seções, move o trecho e atualiza as duas na tela. `null` se não moveu (já avisou o usuário). */
+  private executarMover(origem: SecaoAnotacao, destino: SecaoAnotacao, trecho: string): Observable<AnotacaoTrechoMovidoDto | null> {
+    if (origem.limpando || destino.limpando) this.desfazerService.dispensar();
+    return from(Promise.all([this.garantirSalva(origem), this.garantirSalva(destino)])).pipe(
+      switchMap(([origemSalva, destinoSalva]) => {
+        if (!origemSalva || !destinoSalva) {
+          this.avisar('warn', 'Não enviado', 'Não foi possível salvar as seções antes de enviar o trecho.');
+          return of(null);
+        }
+        return this.anotacaoService
+          .moverTrecho(origem.usuarioId, {
+            tipoOrigem: origem.tipo,
+            tipoDestino: destino.tipo,
+            trecho,
+            updatedDateOrigemLido: origem.versaoLida as Date,
+            updatedDateDestinoLido: destino.versaoLida as Date,
+          })
+          .pipe(
+            map((resposta) => resposta.dados ?? null),
+            catchError((erro: HttpErrorResponse) => {
+              this.recarregarPorFalhaAoMover(origem, destino, erro);
+              return of(null);
+            }),
+          );
+      }),
+      map((movido) => {
+        if (movido) this.aplicarMovimento(origem, destino, movido);
+        return movido;
+      }),
+    );
+  }
+
+  private aplicarMovimento(origem: SecaoAnotacao, destino: SecaoAnotacao, movido: AnotacaoTrechoMovidoDto): void {
+    const pares: [SecaoAnotacao, AnotacaoResumoDto][] = [[origem, movido.origem], [destino, movido.destino]];
+    for (const [secao, lida] of pares) {
+      secao.adotar(lida);
+      secao.estado.set('salvo');
+      secao.salvoEm.set(new Date());
+    }
+    this.agora.set(new Date());
+    if (this.usuarioId() === origem.usuarioId) this.alteracaoData.set(movido.destino.updatedDate);
+    this.avisarAlteracao(origem.usuarioId);
+  }
+
+  /** Trecho ausente ou repetido (400) ou seção alterada em outro lugar (409): nada foi movido; recarrega as duas. */
+  private recarregarPorFalhaAoMover(origem: SecaoAnotacao, destino: SecaoAnotacao, erro: HttpErrorResponse): void {
+    if (erro.status !== 400 && erro.status !== 409) {
+      this.avisar('error', 'Erro', 'Não foi possível enviar o trecho.');
+      return;
+    }
+    this.anotacaoService.listar(origem.usuarioId, [origem.tipo, destino.tipo]).subscribe({
+      next: (resposta) => {
+        resposta.dados?.forEach((lida) => [origem, destino].find((secao) => secao.tipo === lida.tipo)?.adotar(lida));
+        this.avisarAlteracao(origem.usuarioId);
+      },
+    });
+    this.avisar(
+      'warn',
+      'Trecho não enviado',
+      erro.status === 409
+        ? 'As seções mudaram em outro lugar. Mostrando as versões mais recentes; nada foi movido.'
+        : 'O trecho não foi encontrado ou aparece mais de uma vez na seção. Nada foi movido.',
+    );
+  }
+
+  /** Espera o PUT em andamento e salva o que ainda estiver pendente; `true` se a seção ficou igual ao servidor. */
+  private async garantirSalva(secao: SecaoAnotacao): Promise<boolean> {
+    secao.cancelarAgendamento();
+    while (secao.salvamentoAtual) await secao.salvamentoAtual;
+    if (secao.textoAtual !== secao.conteudoSalvo) {
+      this.salvarAgora(secao);
+      while (secao.salvamentoAtual) await secao.salvamentoAtual;
+    }
+    return secao.textoAtual === secao.conteudoSalvo;
+  }
+
+  private avisar(severidade: 'warn' | 'error', titulo: string, detalhe: string): void {
+    this.messageService.add({ severity: severidade, summary: titulo, detail: detalhe, life: 8000 });
   }
 
   private aoDigitar(secao: SecaoAnotacao, conteudo: string): void {
@@ -191,11 +319,15 @@ export class UsuarioAnotacoesDialogComponent {
     }
 
     secao.salvandoRequisicao = true;
+    let concluir: () => void = () => {};
+    secao.salvamentoAtual = new Promise<void>((resolve) => (concluir = resolve));
     secao.estado.set('salvando');
     this.anotacaoService
       .alterar(secao.usuarioId, secao.tipo, { texto: enviado, updatedDateLido: secao.versaoLida as Date })
       .pipe(finalize(() => {
         secao.salvandoRequisicao = false;
+        secao.salvamentoAtual = null;
+        concluir();
         if (secao.salvarDeNovo) {
           secao.salvarDeNovo = false;
           this.salvarAgora(secao, aoFechar);

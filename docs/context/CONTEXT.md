@@ -129,7 +129,7 @@ project-2.0/
   Limpar com Desfazer de 7 s (o vazio só é gravado depois), erro no flush → toast "Reabrir". `aoAlterar` emite
   `{usuarioId, temAnotacoes}`. Deep-link `/usuario/:id/anotacoes` redireciona (gestor → `/usuario?anotacoes=`, próprio →
   `/ponto?anotacoes=`); a topbar abre o drawer próprio. `DesfazerService` aceita `rotulo/duracaoMs/aoEncerrar`.
-- **[tasks 125–126]** Pad estruturado: migration `0030` cria `tipo_anotacao` (com `ordem`) e `anotacao` (5 linhas por usuário);
+- **[tasks 125–127]** Pad estruturado: migration `0030` cria `tipo_anotacao` (com `ordem`) e `anotacao` (5 linhas por usuário);
   a `0031` copia `usuario.anotacoes` para a seção `PESSOAL` (só onde vazia). Módulo `backend/src/modules/anotacao/`
   (`AnotacaoRepository.modificarSecoes` lê e trava as seções numa transação e grava o que a regra devolver; regras de texto são
   funções puras em `domain/anotacao-texto.ts`); `ConflictException` (409) para a concorrência otimista; usuário novo nasce com as
@@ -137,7 +137,10 @@ project-2.0/
   `SecaoAnotacao` (campo, `versaoLida`, estado, temporizador) que salva sozinha (2 s) com o `updatedDate` lido; 409 recarrega a seção
   (`AnotacaoService.listar`) e avisa; "Limpar" é por seção (Desfazer de 7 s, uma oferta por vez); input `editavel` (verdadeiro até os
   blocos 4 e 10) mostra só o visualizador. "Tem anotações" na listagem = alguma das 5 seções com texto. `usuario.anotacoes` já não é
-  lida nem escrita pela tela (some na task 128).
+  lida nem escrita pela tela (some na task 128). **"Enviar para" (127):** o editor tem `emitirMenuContexto`/`aoMenuContexto` (só
+  com trecho selecionado; sem consumidor ou sem seleção o menu do navegador segue); o drawer abre um `p-contextmenu` cujos itens são
+  propriedade direta (a seção de origem fica `visible = false`), salva as duas seções (`garantirSalva`), chama `POST /anotacao/:id/mover`
+  e oferece Desfazer de 7 s (move de volta); 400/409 recarregam as duas seções e avisam.
 - **[tasks 121–124]** Markdown no lugar do Quill: `interpretarMarkdown` (`shared/src/markdown/`, sem biblioteca, tempo linear,
   sem HTML embutido) devolve uma árvore de nós; `app-markdown-visualizador` (`shared/components/markdown-visualizador/`) monta
   elementos a partir dela e é a **única** forma de exibir texto rico; `app-markdown-editor` (`shared/components/markdown-editor/`,

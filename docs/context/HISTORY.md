@@ -12,6 +12,27 @@
 
 ---
 
+## 2026-10-17 — Task 127: pad, "Enviar para" outra seção
+
+Bloco 8 do rework do chat com IA (3 de 4). `app-markdown-editor` ganhou o input `emitirMenuContexto` e o output `aoMenuContexto`
+(`{inicio, fim, texto, evento}`): só com o input ligado, não desabilitado e com trecho selecionado o botão direito deixa de abrir o menu
+do navegador e vira o evento; nos demais casos nada muda. No drawer, um `p-contextmenu` (`appendTo="body"`) com o item "Enviar para" e
+as cinco seções como submenu, em **propriedades diretas** (a seção de origem é escondida por `visible` antes de abrir). Escolher o
+destino: `garantirSalva` nas duas seções (espera o PUT em andamento, via `SecaoAnotacao.salvamentoAtual`, e salva o que estiver pendente;
+uma limpeza em andamento é confirmada antes), `POST /anotacao/:id/mover` com o trecho e as duas versões lidas, as duas seções são
+adotadas da resposta, o destino abre e um Desfazer de 7 s move de volta (o trecho volta ao **fim** da origem). 400 (ausente/repetido) e
+409 recarregam as duas seções e avisam; nada move pela metade.
+
+- **Ao vivo (gestor administrador):** selecionar "mover esta" em Em andamento, botão direito, Enviar para, Pendências: sumiu de A, entrou
+  em B e o banco refletiu; o submenu lista só as outras quatro; o Desfazer devolveu (conferido no banco e nos campos); trecho repetido
+  ("rep" duas vezes) recusou e avisou sem alterar nada; seção alterada pela API durante a edição recarregou as duas e avisou; botão direito
+  sem seleção não abriu o menu próprio. Dados de teste do pad limpos depois. Tema escuro, janela padrão do painel.
+- **Observação:** mover para fora e desfazer deixa um `\n` final na origem (o backend remove a linha do trecho e a quebra anterior, mas a
+  linha em branco que separava ficou). Cosmético; não alterei a regra da 125.
+- **Não verificado:** 1366×768 e 1080×1920 e tema claro com o menu aberto; menu/submenu junto à borda da tela (só vi o
+  submenu abrir à direita, sem corte, na largura padrão); modo só leitura é coberto por construção (o editor nem é
+  renderizado). Sem testes de frontend e sem lint (P-001); sem testes novos no backend (nada mudou nele).
+
 ## 2026-10-17 — Task 126: pad estruturado, tela com cinco acordeões e migração do texto atual
 
 Bloco 8 do rework do chat com IA (2 de 4). Migration `0031`: copia `usuario.anotacoes` para a seção `PESSOAL` só onde ela está vazia e o

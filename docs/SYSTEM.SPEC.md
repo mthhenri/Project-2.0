@@ -886,7 +886,7 @@ frontend/src/app/
       markdown-visualizador/
         markdown-visualizador.component.ts   ← única forma de exibir Markdown (sem HTML cru)
       markdown-editor/
-        markdown-editor.component.ts         ← editor de Markdown (CVA), barra, abas Editar | Visualizar
+        markdown-editor.component.ts         ← editor de Markdown (CVA), barra, abas Editar | Visualizar; `emitirMenuContexto` + `aoMenuContexto` (botão direito sobre seleção)
       assistente-descricao/
         assistente-descricao.component.ts   ← componente de IA reutilizável
         assistente-descricao.component.html
@@ -1235,7 +1235,7 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 | `execucao` | Iniciar e encerrar execuções, histórico por atividade. O **gestor** também pode **registrar manualmente** uma execução já encerrada (`@GestorOnly POST /execucao/registro`), informando início e fim para o dono da atividade (valida datas e sobreposição). A **edição** de execução (`PUT /execucao/:id`) altera `descricao`, `inicio_data` e `fim_data`. Um **job interno de auto-stop** (cron às 23:59:59 no fuso `APP_TIMEZONE`) encerra automaticamente todas as execuções abertas na virada do dia |
 | `ponto` | Resumo de ponto em três modos: **diário** (`GET /ponto/diario`), **mensal** (`GET /ponto/mensal`) e **todos hoje** (`GET /ponto/todos`, `@GestorOnly`). Calcula horas trabalhadas, intervalos e comparativo com meta; a meta é ponderada por **fração de dia** (1 dia útil, 0.5 meio período, 0 não útil/fim de semana) |
 | `calendario` | Gestão de dias não úteis (feriados, recessos) |
-| `anotacao` | Pad do usuário em **cinco seções** de Markdown (`GET /anotacao`, `PUT /anotacao/:usuarioId/:tipo`, `PATCH .../trecho`, `POST .../anexo`, `POST /anotacao/:usuarioId/feito`, `POST /anotacao/:usuarioId/mover`). Alterar a seção inteira exige o `updatedDate` lido (senão 409 `ConflictException`); trocar trecho e mover exigem que o trecho apareça **uma vez** (senão 400). Mover é atômico (as duas seções ou nenhuma). "Feito" escreve debaixo de `## dd/MM` do dia (fuso `APP_TIMEZONE`). O dono usa o próprio pad; gestor e administrador, o de qualquer um |
+| `anotacao` | Pad do usuário em **cinco seções** de Markdown (`GET /anotacao`, `PUT /anotacao/:usuarioId/:tipo`, `PATCH .../trecho`, `POST .../anexo`, `POST /anotacao/:usuarioId/feito`, `POST /anotacao/:usuarioId/mover`). Alterar a seção inteira exige o `updatedDate` lido (senão 409 `ConflictException`); trocar trecho e mover exigem que o trecho apareça **uma vez** (senão 400). Mover é atômico (as duas seções ou nenhuma); na tela do pad, botão direito sobre um trecho selecionado → "Enviar para" outra seção (Desfazer de 7 s). "Feito" escreve debaixo de `## dd/MM` do dia (fuso `APP_TIMEZONE`). O dono usa o próprio pad; gestor e administrador, o de qualquer um |
 | `tag` | CRUD de tags — apenas gestor cria e atribui |
 | `assistente` | Auxílio de IA para refinamento de descrições já escritas pelo usuário |
 
