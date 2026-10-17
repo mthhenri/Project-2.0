@@ -1,5 +1,5 @@
-import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, inject, signal, computed } from '@angular/core';
-import { ReactiveFormsModule, FormBuilder, AbstractControl } from '@angular/forms';
+import { Component, ElementRef, Input, Output, EventEmitter, OnChanges, SimpleChanges, ViewChild, inject, signal, computed } from '@angular/core';
+import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { forkJoin, of } from 'rxjs';
@@ -16,7 +16,10 @@ import {
   DemandaAncestralDto,
   DemandaArvoreItemDto,
   TagResumoDto,
-  DemandaTagsAtribuirDto,
+  DemandaMembroDto,
+  DemandaConexaoResumoDto,
+  REGEX_SEM_CARACTERES_PROIBIDOS,
+  MENSAGEM_CARACTERES_PROIBIDOS,
   DemandaAlterarDto,
   UsuarioResumoDto,
   TipoUsuarioEnum,
@@ -34,16 +37,30 @@ import {
 } from '../../../atividade/models/atividade.model';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { DemandaArvoreItemComponent } from '../demanda-arvore-item/demanda-arvore-item.component';
+import { DemandaStatusChipComponent } from '../demanda-status-chip/demanda-status-chip.component';
+import { DemandaTagsCabecalhoComponent } from '../demanda-tags-cabecalho/demanda-tags-cabecalho.component';
+import { DemandaMembrosCabecalhoComponent } from '../demanda-membros-cabecalho/demanda-membros-cabecalho.component';
+import { DemandaMetricasComponent } from '../demanda-metricas/demanda-metricas.component';
 import { DemandaConexaoListaComponent } from '../demanda-conexao-lista/demanda-conexao-lista.component';
-import { DemandaMembroListaComponent } from '../demanda-membro-lista/demanda-membro-lista.component';
-import { DemandaEdicaoDialogComponent } from '../demanda-edicao-dialog/demanda-edicao-dialog.component';
 import { DemandaFormularioDialogComponent } from '../demanda-formulario-dialog/demanda-formulario-dialog.component';
 import { AssistenteDescricaoComponent } from '../../../../shared/components/assistente-descricao/assistente-descricao.component';
-import { DataBrasileiraPipe } from '../../../../shared/pipes/data-brasileira.pipe';
 import { TempoExibicaoPipe } from '../../../../shared/pipes/tempo-exibicao.pipe';
 import { VisualizacaoTempoService } from '../../../../core/services/visualizacao-tempo.service';
+import { DesfazerService } from '../../../../core/services/desfazer.service';
 
 type CampoDescricao = 'descricaoTecnica' | 'descricaoCliente' | 'documentacao';
+
+/** Tudo o que o detalhe mostra de uma demanda: guardado ao navegar para "← Voltar" restaurar sem nova chamada. */
+interface EstadoDetalhe {
+  demandaId: number;
+  demanda: DemandaRecuperadaDto;
+  ancestrais: DemandaAncestralDto[];
+  subDemandas: DemandaArvoreItemDto[];
+  tags: TagResumoDto[];
+  membros: DemandaMembroDto[];
+  conexoes: DemandaConexaoResumoDto[];
+  atividades: AtividadeResumoDto[];
+}
 
 @Component({
   selector: 'app-demanda-detalhe-dialog',
@@ -59,11 +76,12 @@ type CampoDescricao = 'descricaoTecnica' | 'descricaoCliente' | 'documentacao';
     ConfirmDialogModule,
     DemandaArvoreItemComponent,
     DemandaConexaoListaComponent,
-    DemandaMembroListaComponent,
-    DemandaEdicaoDialogComponent,
+    DemandaStatusChipComponent,
+    DemandaTagsCabecalhoComponent,
+    DemandaMembrosCabecalhoComponent,
+    DemandaMetricasComponent,
     DemandaFormularioDialogComponent,
     AssistenteDescricaoComponent,
-    DataBrasileiraPipe,
     TempoExibicaoPipe,
   ],
   providers: [ConfirmationService],
@@ -76,6 +94,9 @@ export class DemandaDetalheDialogComponent implements OnChanges {
   @Output() visivelChange = new EventEmitter<boolean>();
   @Output() demandaExcluida = new EventEmitter<void>();
   @Output() demandaAlterada = new EventEmitter<void>();
+  /** Status trocado pelo chip (já aplicado): o painel atualiza o nó sem recarregar o grafo. */
+  @Output() statusAlterado = new EventEmitter<{ demandaId: number; status: TipoDemandaStatusEnum }>();
+  @Output() tagsAlteradas = new EventEmitter<{ demandaId: number; tags: TagResumoDto[] }>();
 
   private readonly demandaService = inject(DemandaService);
   readonly unidadeTempo = inject(VisualizacaoTempoService);
@@ -85,6 +106,7 @@ export class DemandaDetalheDialogComponent implements OnChanges {
   private readonly router = inject(Router);
   private readonly messageService = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
+  private readonly desfazerService = inject(DesfazerService);
   private readonly formBuilder = inject(FormBuilder);
   readonly sessao = inject(UsuarioSessaoService);
 
@@ -96,6 +118,38 @@ export class DemandaDetalheDialogComponent implements OnChanges {
   readonly tagsDaDemanda = signal<TagResumoDto[]>([]);
   readonly todosUsuarios = signal<UsuarioResumoDto[]>([]);
   readonly todasDemandas = signal<Array<{ demandaConectadaId: number; nomeDemandaConectada: string }>>([]);
+  readonly membros = signal<DemandaMembroDto[]>([]);
+  readonly conexoes = signal<DemandaConexaoResumoDto[]>([]);
+  /** Demandas visitadas antes da atual (pilha): "← Voltar" restaura a última sem refazer as chamadas. */
+  readonly historico = signal<EstadoDetalhe[]>([]);
+  private projetoDasDemandas = 0;
+
+  readonly nomeAnterior = computed(() => this.historico().at(-1)?.demanda.nome ?? '');
+
+  /** Destinos possíveis de uma conexão: demandas do projeto, menos a atual. */
+  readonly destinosConexao = computed(() =>
+    this.todasDemandas().filter((demanda) => demanda.demandaConectadaId !== this.demandaIdAtual()),
+  );
+
+  // --- Título editável ---
+  /** O campo nasce dentro de um @if: o foco (e a seleção do texto) é dado assim que ele aparece. */
+  @ViewChild('campoTitulo') set campoTitulo(referencia: ElementRef<HTMLInputElement> | undefined) {
+    if (!referencia) return;
+    setTimeout(() => {
+      referencia.nativeElement.focus();
+      referencia.nativeElement.select();
+    });
+  }
+
+  readonly editandoTitulo = signal<boolean>(false);
+  readonly tituloEdicao = signal<string>('');
+  readonly erroTitulo = signal<string | null>(null);
+
+  readonly descricoes: Array<{ campo: CampoDescricao; rotulo: string; icone: string; classe: string }> = [
+    { campo: 'descricaoTecnica', rotulo: 'Descrição técnica',  icone: 'pi pi-code', classe: 'btn-desc--tecnica' },
+    { campo: 'descricaoCliente', rotulo: 'Descrição do cliente', icone: 'pi pi-user', classe: 'btn-desc--cliente' },
+    { campo: 'documentacao',     rotulo: 'Documentação',       icone: 'pi pi-book', classe: 'btn-desc--doc' },
+  ];
   readonly atividades = signal<AtividadeResumoDto[]>([]);
   readonly carregandoAtividades = signal<boolean>(false);
   readonly carregando = signal<boolean>(false);
@@ -103,13 +157,11 @@ export class DemandaDetalheDialogComponent implements OnChanges {
   readonly severidadeStatusAtividade = severidadeStatusAtividade;
   readonly rotuloStatusAtividade = rotuloStatusAtividade;
   readonly mostrarDialogEditar = signal<boolean>(false);
-  readonly mostrarDialogTags = signal<boolean>(false);
   readonly mostrarDialogNovaSubDemanda = signal<boolean>(false);
   readonly mostrarDialogSubEdicao = signal<boolean>(false);
   readonly demandaIdSubEdicao = signal<number>(0);
   readonly mostrarDialogNovaFilha = signal<boolean>(false);
   readonly demandaPaiIdNovaFilha = signal<number>(0);
-  readonly carregandoSalvar = signal<boolean>(false);
 
   readonly campoDescricaoEditando = signal<CampoDescricao | null>(null);
   readonly mostrarDialogDescricao = signal<boolean>(false);
@@ -130,9 +182,16 @@ export class DemandaDetalheDialogComponent implements OnChanges {
    */
   readonly abaInicial = computed(() => (this.eMembro() ? '1' : '2'));
 
-  readonly formularioTags = this.formBuilder.group({
-    tagIds: [[] as number[]],
-  });
+  descricaoPreenchida(campo: CampoDescricao): boolean {
+    return !!this.demanda()?.[campo];
+  }
+
+  tooltipDescricao(campo: CampoDescricao): string {
+    const rotulo = this.descricoes.find((descricao) => descricao.campo === campo)!.rotulo;
+    const preenchida = this.descricaoPreenchida(campo);
+    const podeEditar = campo === 'descricaoCliente' ? this.sessao.eGestor() : this.eMembro();
+    return `${rotulo} — ${preenchida ? 'preenchida' : 'vazia'} (clique para ${podeEditar ? 'editar' : 'ver'})`;
+  }
 
   readonly formularioDescricao = this.formBuilder.group({
     valor: ['' as string | null],
@@ -169,9 +228,11 @@ export class DemandaDetalheDialogComponent implements OnChanges {
 
   ngOnChanges(mudancas: SimpleChanges): void {
     if (mudancas['visivel']?.currentValue === true) {
+      this.historico.set([]);
       this.demandaIdAtual.set(this.demandaId);
       this.carregarTudo(this.demandaId);
     } else if (mudancas['demandaId'] && !mudancas['demandaId'].firstChange && this.visivel) {
+      this.historico.set([]);
       this.demandaIdAtual.set(this.demandaId);
       this.carregarTudo(this.demandaId);
     }
@@ -200,9 +261,47 @@ export class DemandaDetalheDialogComponent implements OnChanges {
     }
   }
 
+  /** Abre outra demanda dentro do próprio dialog, guardando a atual para o "← Voltar" (sem nova chamada). */
   navegarParaSubDemanda(id: number): void {
+    if (id === this.demandaIdAtual()) return;
+    this.guardarEstadoAtual();
     this.demandaIdAtual.set(id);
     this.carregarTudo(id);
+  }
+
+  private guardarEstadoAtual(): void {
+    const demandaAtual = this.demanda();
+    if (!demandaAtual) return;
+    this.historico.update((pilha) => [
+      ...pilha,
+      {
+        demandaId: demandaAtual.id,
+        demanda: demandaAtual,
+        ancestrais: this.ancestrais(),
+        subDemandas: this.subDemandas(),
+        tags: this.tagsDaDemanda(),
+        membros: this.membros(),
+        conexoes: this.conexoes(),
+        atividades: this.atividades(),
+      },
+    ]);
+  }
+
+  /** Volta à demanda anterior restaurando o que estava na tela, sem nenhuma chamada à API. */
+  voltar(): void {
+    const pilha = this.historico();
+    const anterior = pilha.at(-1);
+    if (!anterior) return;
+    this.historico.set(pilha.slice(0, -1));
+    this.demandaIdAtual.set(anterior.demandaId);
+    this.demanda.set(anterior.demanda);
+    this.ancestrais.set(anterior.ancestrais);
+    this.subDemandas.set(anterior.subDemandas);
+    this.tagsDaDemanda.set(anterior.tags);
+    this.membros.set(anterior.membros);
+    this.conexoes.set(anterior.conexoes);
+    this.atividades.set(anterior.atividades);
+    this.editandoTitulo.set(false);
   }
 
   abrirSubEdicao(demandaId: number): void {
@@ -216,13 +315,88 @@ export class DemandaDetalheDialogComponent implements OnChanges {
   }
 
   navegarParaAncestral(ancestral: DemandaAncestralDto): void {
-    this.demandaIdAtual.set(ancestral.id);
-    this.carregarTudo(ancestral.id);
+    this.navegarParaSubDemanda(ancestral.id);
   }
 
-  navegarParaAtividades(): void {
-    this.router.navigate(['/atividade'], { queryParams: { demandaId: this.demandaIdAtual() } });
+  /** Nova atividade já com a demanda escolhida (vai para o formulário e fecha o detalhe). */
+  criarAtividade(): void {
+    this.router.navigate(['/atividade', 'nova'], { queryParams: { demandaId: this.demandaIdAtual() } });
     this.fechar();
+  }
+
+  /** "Ver todas": a lista abre em outra aba para o detalhe continuar aberto. */
+  verTodasAtividades(): void {
+    const url = this.router.serializeUrl(
+      this.router.createUrlTree(['/atividade'], { queryParams: { demandaId: this.demandaIdAtual() } }),
+    );
+    window.open(url, '_blank');
+  }
+
+  // --- Título, status e métricas inline ---
+
+  iniciarEdicaoTitulo(): void {
+    this.tituloEdicao.set(this.demanda()?.nome ?? '');
+    this.erroTitulo.set(null);
+    this.editandoTitulo.set(true);
+  }
+
+  cancelarTitulo(evento?: Event): void {
+    evento?.stopPropagation();
+    this.editandoTitulo.set(false);
+  }
+
+  salvarTitulo(): void {
+    if (!this.editandoTitulo()) return;
+    const demandaAtual = this.demanda();
+    const novoNome = this.tituloEdicao().trim();
+    if (!demandaAtual || novoNome === demandaAtual.nome) {
+      this.editandoTitulo.set(false);
+      return;
+    }
+    if (!novoNome) {
+      this.erroTitulo.set('O título não pode ficar vazio');
+      return;
+    }
+    if (!REGEX_SEM_CARACTERES_PROIBIDOS.test(novoNome)) {
+      this.erroTitulo.set(MENSAGEM_CARACTERES_PROIBIDOS);
+      return;
+    }
+
+    this.editandoTitulo.set(false);
+    this.demanda.set({ ...demandaAtual, nome: novoNome });
+    this.demandaService.alterar(demandaAtual.id, { nome: novoNome }).subscribe({
+      next: () => this.demandaAlterada.emit(),
+      error: () => this.demanda.update((atual) => (atual ? { ...atual, nome: demandaAtual.nome } : atual)),
+    });
+  }
+
+  /** Troca de status pelo chip: otimista, com rollback; o painel recebe o novo status sem recarregar. */
+  aoStatusEscolhido(para: TipoDemandaStatusEnum): void {
+    const demandaAtual = this.demanda();
+    if (!demandaAtual) return;
+    const de = demandaAtual.status;
+    this.demanda.set({ ...demandaAtual, status: para });
+    this.statusAlterado.emit({ demandaId: demandaAtual.id, status: para });
+    this.demandaService.alterar(demandaAtual.id, { status: para }).subscribe({
+      error: () => {
+        this.demanda.update((atual) => (atual ? { ...atual, status: de } : atual));
+        this.statusAlterado.emit({ demandaId: demandaAtual.id, status: de });
+      },
+    });
+  }
+
+  /** Estimado/previsão gravados pelo `app-demanda-metricas` (ou revertidos por ele se a API recusou). */
+  aoMetricaAlterada(alteracao: { horasEstimadas?: number; previsaoFimData?: string; reverter?: boolean }): void {
+    const { reverter, ...campos } = alteracao;
+    this.demanda.update((atual) =>
+      atual ? { ...atual, ...campos, previsaoFimData: campos.previsaoFimData ?? (reverter && 'previsaoFimData' in campos ? null : atual.previsaoFimData) } : atual,
+    );
+    if (!reverter) this.demandaAlterada.emit();
+  }
+
+  aoTagsAlteradas(tags: TagResumoDto[]): void {
+    const demandaAtual = this.demanda();
+    if (demandaAtual) this.tagsAlteradas.emit({ demandaId: demandaAtual.id, tags });
   }
 
   iniciaisUsuario(nome: string): string {
@@ -351,70 +525,13 @@ export class DemandaDetalheDialogComponent implements OnChanges {
     this.formularioDescricao.patchValue({ valor: texto });
   }
 
-  abrirDialogTags(): void {
-    const tagIdsAtuais = this.tagsDaDemanda().map((tag) => tag.id);
-    this.formularioTags.patchValue({ tagIds: tagIdsAtuais });
-    this.mostrarDialogTags.set(true);
-  }
-
-  salvarTags(): void {
-    const demandaDados = this.demanda();
-    if (!demandaDados) return;
-
-    const dto: DemandaTagsAtribuirDto = { tagIds: this.formularioTags.value.tagIds ?? [] };
-
-    this.carregandoSalvar.set(true);
-    this.demandaService
-      .alterarTags(demandaDados.id, dto)
-      .pipe(finalize(() => this.carregandoSalvar.set(false)))
-      .subscribe({
-        next: () => {
-          this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Tags atualizadas' });
-          this.mostrarDialogTags.set(false);
-          this.carregarTagsDaDemanda(demandaDados.id);
-        },
-      });
-  }
-
   confirmarExclusao(): void {
     this.confirmationService.confirm({
-      message: 'Excluir esta demanda? Esta ação não pode ser desfeita.',
+      header: 'Excluir demanda',
+      acceptLabel: 'Excluir',
+      message: 'Excluir esta demanda? As sub-demandas e atividades dela deixarão de ser exibidas. Você poderá desfazer logo após a exclusão.',
       accept: () => this.excluirDemanda(),
     });
-  }
-
-  /** Alterna a seleção de uma tag no controle informado (seletor de chips). */
-  alternarTagSelecao(controle: AbstractControl, tagId: number): void {
-    const selecionadas = (controle.value as number[] | null) ?? [];
-    const novas = selecionadas.includes(tagId)
-      ? selecionadas.filter((id) => id !== tagId)
-      : [...selecionadas, tagId];
-    controle.setValue(novas);
-    controle.markAsDirty();
-  }
-
-  tagEstaSelecionada(controle: AbstractControl, tagId: number): boolean {
-    return ((controle.value as number[] | null) ?? []).includes(tagId);
-  }
-
-  severidadeStatus(status: TipoDemandaStatusEnum): 'secondary' | 'info' | 'success' | 'danger' {
-    const mapa: Record<TipoDemandaStatusEnum, 'secondary' | 'info' | 'success' | 'danger'> = {
-      [TipoDemandaStatusEnum.PENDENTE]:  'secondary',
-      [TipoDemandaStatusEnum.PLANEJADA]: 'info',
-      [TipoDemandaStatusEnum.CONCLUIDA]: 'success',
-      [TipoDemandaStatusEnum.CANCELADA]: 'danger',
-    };
-    return mapa[status];
-  }
-
-  rotuloStatus(status: TipoDemandaStatusEnum): string {
-    const mapa: Record<TipoDemandaStatusEnum, string> = {
-      [TipoDemandaStatusEnum.PENDENTE]:  'Pendente',
-      [TipoDemandaStatusEnum.PLANEJADA]: 'Planejada',
-      [TipoDemandaStatusEnum.CONCLUIDA]:          'Concluída',
-      [TipoDemandaStatusEnum.CANCELADA]:          'Cancelada',
-    };
-    return mapa[status];
   }
 
   private excluirDemanda(): void {
@@ -423,9 +540,13 @@ export class DemandaDetalheDialogComponent implements OnChanges {
 
     this.demandaService.excluir(demandaDados.id).subscribe({
       next: () => {
-        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Demanda excluída' });
         this.demandaExcluida.emit();
         this.visivelChange.emit(false);
+        this.desfazerService.oferecer({
+          mensagem: `Demanda "${demandaDados.nome}" excluída`,
+          desfazer: () => this.demandaService.restaurar(demandaDados.id),
+          aposDesfazer: () => this.demandaExcluida.emit(),
+        });
       },
     });
   }
@@ -433,45 +554,43 @@ export class DemandaDetalheDialogComponent implements OnChanges {
   private carregarTudo(identificador: number): void {
     this.carregando.set(true);
     this.demanda.set(null);
+    this.editandoTitulo.set(false);
     this.mostrarDialogEditar.set(false);
     this.mostrarDialogNovaSubDemanda.set(false);
 
-    // A lista completa de usuários (GET /usuario) é gestor-only e só alimenta o
-    // multiselect "Adicionar" do gestor; o desenvolvedor usa "Participar"/"Sair".
-    // Sem este guard, o forkJoin falharia inteiro com 403 para o desenvolvedor.
+    // A lista completa de usuários (GET /usuario) é gestor-only e só alimenta o autocomplete de membros do
+    // gestor; sem este guard o forkJoin falharia inteiro com 403 para o desenvolvedor. Tags e usuários do
+    // catálogo só são buscados uma vez por abertura (a navegação interna reaproveita).
     forkJoin({
       demanda:    this.demandaService.recuperar(identificador),
       ancestrais: this.demandaService.recuperarAncestral(identificador),
       arvore:     this.demandaService.recuperarArvore(identificador),
-      tags:       this.tagService.listar(),
-      usuarios:   this.sessao.eGestor()
+      tagsDaDemanda: this.demandaService.listarTags(identificador),
+      membros:    this.demandaService.listarMembros(identificador),
+      conexoes:   this.demandaService.listarConexoes(identificador),
+      tags:       this.tagsDisponiveis().length ? of(null) : this.tagService.listar(),
+      usuarios:   this.sessao.eGestor() && this.todosUsuarios().length === 0
         ? this.usuarioService.listar({ itensPorPagina: 100 })
         : of(null),
     })
       .pipe(finalize(() => this.carregando.set(false)))
       .subscribe({
-        next: ({ demanda, ancestrais, arvore, tags, usuarios }) => {
+        next: ({ demanda, ancestrais, arvore, tagsDaDemanda, membros, conexoes, tags, usuarios }) => {
           if (demanda.sucesso && demanda.dados) {
             this.demanda.set(demanda.dados);
-            this.carregarTagsDaDemanda(identificador);
-            this.carregarDemandasParaConexao(demanda.dados.projetoId, identificador);
+            this.carregarDemandasParaConexao(demanda.dados.projetoId);
             if (this.eMembro()) this.carregarAtividades(identificador);
+            else this.atividades.set([]);
           }
-          if (ancestrais.sucesso && ancestrais.dados) {
-            this.ancestrais.set(ancestrais.dados);
-          }
-          if (arvore.sucesso && arvore.dados) {
-            this.subDemandas.set(arvore.dados.filhos ?? []);
-          }
-          if (tags.sucesso && tags.dados) {
-            this.tagsDisponiveis.set(tags.dados);
-          }
+          if (ancestrais.sucesso && ancestrais.dados) this.ancestrais.set(ancestrais.dados);
+          if (arvore.sucesso && arvore.dados) this.subDemandas.set(arvore.dados.filhos ?? []);
+          if (tagsDaDemanda.sucesso && tagsDaDemanda.dados) this.tagsDaDemanda.set(tagsDaDemanda.dados);
+          if (membros.sucesso && membros.dados) this.membros.set(membros.dados);
+          if (conexoes.sucesso && conexoes.dados) this.conexoes.set(conexoes.dados);
+          if (tags && tags.sucesso && tags.dados) this.tagsDisponiveis.set(tags.dados);
           if (usuarios && usuarios.sucesso && usuarios.dados) {
-            // Gestores não entram no multiselect de membros: têm acesso total a
-            // qualquer demanda por serem gestores, sem atribuição em demanda_usuario (task 71).
-            this.todosUsuarios.set(
-              usuarios.dados.itens.filter((usuario) => usuario.tipo !== TipoUsuarioEnum.GESTOR),
-            );
+            // Gestores não entram no autocomplete de membros: têm acesso total por serem gestores (task 71).
+            this.todosUsuarios.set(usuarios.dados.itens.filter((usuario) => usuario.tipo !== TipoUsuarioEnum.GESTOR));
           }
         },
       });
@@ -487,22 +606,14 @@ export class DemandaDetalheDialogComponent implements OnChanges {
     });
   }
 
-  private carregarTagsDaDemanda(demandaId: number): void {
-    this.demandaService.listarTags(demandaId).subscribe({
-      next: (resposta) => {
-        if (resposta.sucesso && resposta.dados) {
-          this.tagsDaDemanda.set(resposta.dados);
-        }
-      },
-    });
-  }
-
-  private carregarDemandasParaConexao(projetoId: number, demandaIdAtual: number): void {
+  /** Demandas do projeto para o destino de uma conexão: só recarrega quando o projeto muda. */
+  private carregarDemandasParaConexao(projetoId: number): void {
+    if (projetoId === this.projetoDasDemandas) return;
     this.demandaService.listar({ projetoId, itensPorPagina: 200 }).subscribe({
       next: (resposta) => {
         if (resposta.sucesso && resposta.dados) {
+          this.projetoDasDemandas = projetoId;
           const demandasConexao = resposta.dados.itens
-            .filter((demanda) => demanda.id !== demandaIdAtual)
             .map((demanda) => ({
               demandaConectadaId:   demanda.id,
               nomeDemandaConectada: demanda.nome,

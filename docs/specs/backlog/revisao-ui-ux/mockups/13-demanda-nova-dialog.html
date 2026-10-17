@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Nova Demanda — dialog otimizado</title>
+<link rel="stylesheet" href="base.css">
+<style>
+  .atalho-data { border:1px solid var(--superficie-300); background:var(--superficie-0); color:var(--superficie-600); border-radius:999px; padding:3px 10px; font-size:11.5px; font-weight:700; cursor:pointer; }
+</style>
+</head>
+<body data-altura="880">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-x" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></symbol>
+    <symbol id="i-chevron-down" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+  </defs>
+</svg>
+
+<div class="mk-app" style="min-height:880px">
+  <div style="opacity:.30; filter:saturate(.5); padding:24px; display:flex; flex-direction:column; gap:14px">
+    <div class="mk-page-header">
+      <div class="mk-page-header__titulo">Demandas — Portal do Cliente</div>
+      <button class="mk-btn">Nova Demanda</button>
+    </div>
+    <div class="mk-card" style="height:640px"></div>
+  </div>
+
+  <div class="mk-backdrop">
+    <div class="mk-dialog mk-dialog--lg" style="width:620px">
+      <div class="mk-dialog__header">
+        <div class="mk-dialog__titulo">Nova Demanda — Portal do Cliente</div>
+        <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic"><use href="#i-x"/></svg></button>
+      </div>
+
+      <div class="mk-dialog__corpo">
+        <div class="mk-campo">
+          <label class="mk-label">Nome <span class="req">*</span></label>
+          <div class="mk-input mk-input--foco">Recuperação de senha por e-mail<span style="border-left:1.5px solid var(--primario-600); height:16px"></span></div>
+        </div>
+
+        <div class="mk-campo">
+          <label class="mk-label">Demanda pai</label>
+          <div class="mk-select"><span><span class="u-muted">Portal do Cliente ›</span> Autenticação e Acesso</span> <svg class="ic"><use href="#i-chevron-down"/></svg></div>
+          <div class="mk-ajuda">Pré-preenchida — dialog aberto pelo “+” da demanda estrutural</div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1.4fr; gap:14px">
+          <div class="mk-campo">
+            <label class="mk-label">Estimativa <span class="req">*</span></label>
+            <div class="mk-input">16 h</div>
+          </div>
+          <div class="mk-campo">
+            <label class="mk-label">Previsão de término</label>
+            <div class="mk-input u-entre"><span class="mk-placeholder">dd/mm/aaaa</span> <svg class="ic u-muted"><use href="#i-calendar"/></svg></div>
+            <div class="u-flex u-g4" style="margin-top:2px">
+              <span class="atalho-data">+1 sem</span><span class="atalho-data">+2 sem</span><span class="atalho-data">fim do mês</span>
+            </div>
+          </div>
+        </div>
+
+        <label class="u-flex u-centro u-g8" style="cursor:pointer">
+          <span class="mk-check"></span>
+          <span style="font-size:13px">Demanda estrutural (agrupa sub-demandas) <span class="u-muted">— ao marcar, esconde Estimativa e Previsão</span></span>
+        </label>
+
+        <hr class="mk-divisor">
+
+        <div class="u-flex u-centro u-entre" style="cursor:pointer">
+          <span style="font-size:13px; font-weight:700; color:var(--superficie-600)">Mais opções</span>
+          <svg class="ic u-muted"><use href="#i-chevron-down"/></svg>
+        </div>
+        <div class="u-col u-g12" style="padding:2px 0 0">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px">
+            <div class="mk-campo">
+              <label class="mk-label">Status</label>
+              <div class="mk-select">Planejada <svg class="ic"><use href="#i-chevron-down"/></svg></div>
+            </div>
+            <div class="mk-campo">
+              <label class="mk-label">Membros</label>
+              <div class="mk-select"><span class="u-flex u-g4"><span class="mk-tag mk-tag--azul">Ana Souza ×</span><span class="mk-tag mk-tag--azul">Bruno Lima ×</span></span> <svg class="ic"><use href="#i-chevron-down"/></svg></div>
+            </div>
+          </div>
+          <div class="mk-campo">
+            <label class="mk-label">Tags</label>
+            <div class="u-flex u-g6 u-wrap">
+              <span class="mk-tag mk-tag--azul" style="cursor:pointer">✓ Backend</span>
+              <span class="mk-tag" style="cursor:pointer">Frontend</span>
+              <span class="mk-tag" style="cursor:pointer">Urgente</span>
+              <span class="mk-tag" style="cursor:pointer">API</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mk-dialog__footer">
+        <span class="mk-esq u-xs u-muted"><span class="mk-kbd">Enter</span> cria · <span class="mk-kbd">Esc</span> cancela</span>
+        <button class="mk-btn mk-btn--sec">Cancelar</button>
+        <button class="mk-btn mk-btn--texto">Criar e adicionar outra</button>
+        <button class="mk-btn"><svg class="ic"><use href="#i-check"/></svg> Criar Demanda</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Callouts -->
+  <div class="mk-callout" style="top:158px; left:1030px">1</div>  <!-- autofocus -->
+  <div class="mk-callout" style="top:238px; left:1030px">2</div>  <!-- pai pré-preenchido -->
+  <div class="mk-callout" style="top:352px; left:1030px">3</div>  <!-- atalhos de data -->
+  <div class="mk-callout" style="top:426px; left:408px">4</div>   <!-- estrutural adaptativo -->
+  <div class="mk-callout" style="top:500px; left:1030px">5</div>  <!-- mais opções colapsável -->
+  <div class="mk-callout" style="top:775px; left:830px">6</div>   <!-- criar e adicionar outra / enter -->
+</div>
+</body>
+</html>

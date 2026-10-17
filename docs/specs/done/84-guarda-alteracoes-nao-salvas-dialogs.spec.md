@@ -83,3 +83,9 @@ Sem backend, sem shared, sem migration.
 - Manter o editor **aberto** atrás do confirm (exigiria desabilitar o close nativo e, com ele, o ESC — fora do trade-off escolhido).
 - Estender a guarda a **outros** diálogos/formulários (edição de demanda, formulários de criação etc.) — só os três editores de texto rico pedidos.
 - Qualquer mudança em **backend/shared/migration**.
+
+---
+
+> **Nota (task 114, 2026-10-16):** para o editor de **anotações** do usuário, esta guarda foi superada: o dialog virou
+> drawer com auto-save e "fechar salva", e o confirm "Salvar/Descartar" deixou de existir
+> (`../done/114-anotacoes-drawer-autosave/verificacao.md`). Os outros dois editores seguem como aqui definido.

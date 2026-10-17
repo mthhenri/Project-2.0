@@ -6,8 +6,8 @@ export class AssistenteDescricaoAuxiliarDto {
   @MinLength(10)
   textoOriginal: string;
 
-  @IsIn(['execucao', 'atividade', 'demanda'])
-  tipoEntidade: 'execucao' | 'atividade' | 'demanda';
+  @IsIn(['execucao', 'demanda'])
+  tipoEntidade: 'execucao' | 'demanda';
 
   @IsString()
   @IsNotEmpty()

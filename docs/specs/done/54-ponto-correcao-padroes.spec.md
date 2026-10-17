@@ -3,11 +3,11 @@
 ## Objetivo
 
 Resolver a ambiguidade de nomenclatura dos DTOs de **saída** do módulo **ponto**
-identificada pela auditoria da **task 44** (`docs/AUDITORIA.md` §4.7): DTOs de
+identificada pela auditoria da **task 44** (`docs/specs/done/44-auditoria-conformidade-padroes/AUDITORIA.md` §4.7): DTOs de
 relatório/value-object fora do padrão `Entidade + Complemento? + Verbo + Dto`, num
 ponto em que o SPEC **não documenta** a convenção para esse tipo de DTO.
 
-> **Referência cruzada:** task 44 · `docs/AUDITORIA.md` §4.7.
+> **Referência cruzada:** task 44 · `docs/specs/done/44-auditoria-conformidade-padroes/AUDITORIA.md` §4.7.
 
 ---
 

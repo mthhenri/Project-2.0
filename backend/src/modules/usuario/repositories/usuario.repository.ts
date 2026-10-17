@@ -16,6 +16,7 @@ import {
   UsuarioExcluirDto,
 } from '@project20/shared';
 import { TipoUsuarioEnum, TipoUsuarioStatusEnum } from '@project20/shared';
+import { UsuarioRestaurarDto, UsuarioRestauradoDto } from '@project20/shared';
 
 @Injectable()
 export class UsuarioRepository extends BaseRepository<Usuario> {
@@ -273,6 +274,43 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
   /** Soft delete do usuário. */
   async excluir(dto: UsuarioExcluirDto): Promise<void> {
     await this.executarSoftDelete(dto.id);
+  }
+
+  /**
+   * Recupera o usuário **excluído**. É a única leitura que filtra `is_deleted = true`: a restauração
+   * precisa do registro apagado para validar unicidade e dependências antes de reativá-lo.
+   */
+  async recuperarExcluido(dto: UsuarioRestaurarDto): Promise<(UsuarioRestauradoDto) | null> {
+    const resultado = await this.executarConsulta<UsuarioRestauradoDto>(
+      `SELECT
+         usuario.id,
+         usuario.login,
+         usuario.nome_completo AS "nomeCompleto"
+       FROM usuario
+       WHERE usuario.id = :id
+         AND usuario.is_deleted = true
+       LIMIT 1`,
+      { id: dto.id },
+    );
+    return resultado[0] ?? null;
+  }
+
+  /** Restaura o usuário: desfaz o soft delete (sem DELETE físico e sem cascata). */
+  async restaurar(dto: UsuarioRestaurarDto): Promise<UsuarioRestauradoDto> {
+    const resultado = await this.executarConsulta<UsuarioRestauradoDto>(
+      `UPDATE usuario
+       SET is_deleted = false,
+           deleted_date = NULL,
+           updated_date = NOW()
+       WHERE usuario.id = :id
+         AND usuario.is_deleted = true
+       RETURNING
+         id,
+         login,
+         nome_completo AS "nomeCompleto"`,
+      { id: dto.id },
+    );
+    return resultado[0];
   }
 
   /**

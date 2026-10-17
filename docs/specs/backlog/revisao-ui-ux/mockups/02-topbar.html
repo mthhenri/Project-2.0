@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Topbar global — otimizada</title>
+<link rel="stylesheet" href="base.css">
+<style>
+  .pulso { width:9px; height:9px; border-radius:50%; background:var(--verde-600); box-shadow:0 0 0 3px rgba(22,163,74,.25); }
+  .chip-exec {
+    display:flex; align-items:center; gap:9px;
+    background:var(--primario-50); border:1px solid var(--primario-200);
+    border-radius:999px; padding:5px 6px 5px 12px; cursor:pointer;
+  }
+  .menu-item { display:flex; align-items:center; gap:10px; padding:9px 14px; font-size:13.5px; color:var(--superficie-700); border-radius:8px; }
+  .menu-item:hover { background:var(--superficie-100); }
+</style>
+</head>
+<body data-altura="660">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></symbol>
+    <symbol id="i-sitemap" viewBox="0 0 24 24"><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/></symbol>
+    <symbol id="i-check-square" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></symbol>
+    <symbol id="i-tag" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.83z"/><line x1="7" y1="7" x2="7.01" y2="7"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></symbol>
+    <symbol id="i-file-text" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></symbol>
+    <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></symbol>
+    <symbol id="i-chevron-down" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></symbol>
+  </defs>
+</svg>
+
+<div class="mk-app" style="min-height:660px">
+
+  <!-- TOPBAR otimizada -->
+  <header class="mk-topbar" style="gap:14px">
+    <div class="mk-topbar__logo" style="flex-shrink:0">P2</div>
+    <nav class="mk-topbar__nav" style="gap:0">
+      <a class="mk-nav-item" style="padding:8px 9px"><svg class="ic"><use href="#i-clock"/></svg> Ponto</a>
+      <a class="mk-nav-item" style="padding:8px 9px"><svg class="ic"><use href="#i-calendar"/></svg> Calendário</a>
+      <a class="mk-nav-item" style="padding:8px 9px"><svg class="ic"><use href="#i-folder"/></svg> Projetos</a>
+      <a class="mk-nav-item" style="padding:8px 9px"><svg class="ic"><use href="#i-sitemap"/></svg> Demandas</a>
+      <a class="mk-nav-item mk-nav-item--ativo" style="padding:8px 9px"><svg class="ic"><use href="#i-check-square"/></svg> Atividades</a>
+      <a class="mk-nav-item" style="padding:8px 9px"><svg class="ic"><use href="#i-play"/></svg> Execuções</a>
+      <a class="mk-nav-item" style="padding:8px 9px"><svg class="ic"><use href="#i-tag"/></svg> Tags</a>
+      <a class="mk-nav-item" style="padding:8px 9px"><svg class="ic"><use href="#i-users"/></svg> Usuários</a>
+    </nav>
+
+    <!-- CHIP DE EXECUÇÃO ATIVA (novo) -->
+    <div class="chip-exec" style="flex-shrink:0">
+      <span class="pulso"></span>
+      <span style="font-size:12.5px; font-weight:600; color:var(--primario-800); max-width:190px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">Checkout do carrinho</span>
+      <span class="mk-timer" style="font-size:13px; color:var(--primario-700)">01:47:32</span>
+      <button class="mk-btn mk-btn--sm mk-btn--icone" style="border-radius:999px; background:var(--primario-600)"><svg class="ic ic--sm"><use href="#i-pause"/></svg></button>
+    </div>
+
+    <div class="mk-topbar__acoes" style="gap:4px">
+      <span class="mk-topbar__hora">14:32</span>
+      <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic"><use href="#i-moon"/></svg></button>
+      <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic"><use href="#i-file-text"/></svg></button>
+      <button class="mk-btn mk-btn--texto-neutro mk-btn--sm" style="gap:6px; padding:0 8px">
+        <span class="mk-avatar mk-avatar--sm" style="background:var(--primario-500); color:#fff">AS</span>
+        Ana <svg class="ic ic--sm"><use href="#i-chevron-down"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Conteúdo de fundo (esmaecido, qualquer tela) -->
+  <main class="mk-conteudo" style="opacity:.35; filter:saturate(.6)">
+    <div class="mk-page-header">
+      <div>
+        <div class="mk-page-header__titulo">Atividades</div>
+        <div class="mk-page-header__subtitulo">28 atividades · 6 em execução</div>
+      </div>
+      <div class="mk-page-header__acoes"><button class="mk-btn">Nova Atividade</button></div>
+    </div>
+    <div class="mk-card" style="height:120px"></div>
+    <div class="mk-card" style="height:120px"></div>
+  </main>
+
+  <!-- Tooltip com atalho de teclado sob o item ativo -->
+  <div class="mk-tooltip" style="top:64px; left:475px">Atividades — <span style="opacity:.75">g a</span></div>
+
+  <!-- POPOVER: Pausar execução (ancorado no chip) -->
+  <div class="mk-card" style="position:absolute; top:62px; right:300px; width:360px; padding:16px 18px; box-shadow:var(--sombra-dialog); z-index:55">
+    <div class="u-forte" style="font-size:14px; margin-bottom:10px">Pausar execução</div>
+    <div class="mk-campo">
+      <label class="mk-label">Descrição do trabalho <span class="req">*</span></label>
+      <div class="mk-textarea mk-input--foco" style="min-height:58px">Checkout do carrinho — ajuste no cálculo de frete<span style="border-left:1.5px solid var(--primario-600); margin-left:1px; height:15px; display:inline-block; vertical-align:-2px"></span></div>
+      <div class="mk-ajuda">Pré-preenchida com a descrição atual · obrigatória para desenvolvedor</div>
+    </div>
+    <div class="u-flex u-centro u-entre" style="margin-top:12px">
+      <span class="u-xs u-muted"><span class="mk-kbd">Enter</span> confirma · <span class="mk-kbd">Esc</span> cancela</span>
+      <button class="mk-btn mk-btn--sm"><svg class="ic ic--sm"><use href="#i-pause"/></svg> Pausar</button>
+    </div>
+  </div>
+
+  <!-- MENU DE PERFIL (ancorado no avatar) -->
+  <div class="mk-card" style="position:absolute; top:62px; right:14px; width:250px; padding:8px; box-shadow:var(--sombra-dialog); z-index:55">
+    <div style="padding:10px 14px 8px">
+      <div class="u-forte" style="font-size:14px">Ana Souza</div>
+      <div class="u-sm u-muted">@ana.souza · Gestora</div>
+    </div>
+    <hr class="mk-divisor" style="margin:4px 0">
+    <div class="menu-item u-entre">Tempos em dias <span class="mk-switch"></span></div>
+    <hr class="mk-divisor" style="margin:4px 0">
+    <div class="menu-item" style="color:var(--verm-600)"><svg class="ic"><use href="#i-logout"/></svg> Sair</div>
+  </div>
+
+  <!-- Callouts -->
+  <div class="mk-callout" style="top:46px; left:880px">1</div>
+  <div class="mk-callout" style="top:214px; left:790px">2</div>
+  <div class="mk-callout" style="top:8px; left:1160px">3</div>
+  <div class="mk-callout" style="top:8px; left:1198px">4</div>
+  <div class="mk-callout" style="top:64px; left:1300px">5</div>
+  <div class="mk-callout" style="top:96px; left:440px">6</div>
+</div>
+</body>
+</html>

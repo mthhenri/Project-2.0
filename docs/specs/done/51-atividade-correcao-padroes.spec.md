@@ -3,10 +3,10 @@
 ## Objetivo
 
 Corrigir o desvio de conformidade do módulo **atividade** identificado pela auditoria
-da **task 44** (`docs/AUDITORIA.md` §4.4): primitivo `id` + `Partial<Atividade>` na
+da **task 44** (`docs/specs/done/44-auditoria-conformidade-padroes/AUDITORIA.md` §4.4): primitivo `id` + `Partial<Atividade>` na
 assinatura de `AtividadeRepository.alterar`. Sem mudança de comportamento.
 
-> **Referência cruzada:** task 44 · `docs/AUDITORIA.md` §4.4.
+> **Referência cruzada:** task 44 · `docs/specs/done/44-auditoria-conformidade-padroes/AUDITORIA.md` §4.4.
 > **Padrão estrutural (param único DTO):** `ExecucaoRepository.alterar(dto)`.
 > **Padrão de nomenclatura (verbo no fim — SPEC §5, L149-155):** complemento `Interno` antes do verbo `Alterar` → `AtividadeInternoAlterarDto`. ⚠️ Não usar `AtividadeAlterarInternoDto` (é o erro que `ExecucaoAlterarInternoDto` comete — corrigido na spec 56).
 > **Reconciliação documental §7.2 × §16 #21:** decidida na spec `48-usuario-correcao-padroes` (não reabrir).

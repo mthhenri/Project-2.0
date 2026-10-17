@@ -5,7 +5,6 @@ export class AtividadeCriadaDto {
   demandaId: number;
   usuarioId: number;
   nome: string;
-  descricao: string | null;
   status: TipoAtividadeStatusEnum;
   createdDate: Date;
 }

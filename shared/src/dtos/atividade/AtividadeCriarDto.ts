@@ -24,10 +24,6 @@ export class AtividadeCriarDto {
   @Matches(REGEX_SEM_CARACTERES_PROIBIDOS, { message: MENSAGEM_CARACTERES_PROIBIDOS })
   nome: string;
 
-  @IsOptional()
-  @IsString()
-  descricao?: string;
-
   @IsEnum(TipoAtividadeStatusEnum)
   status: TipoAtividadeStatusEnum;
 

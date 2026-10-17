@@ -1,0 +1,50 @@
+<div class="demanda-membros-cabecalho">
+  <div class="demanda-membros-cabecalho__pilha">
+    @for (membro of membros(); track membro.usuarioId) {
+      <span class="demanda-membros-cabecalho__membro" [pTooltip]="membro.nomeCompleto + ' · ' + membro.cargoTitulo" tooltipPosition="bottom">
+        <span class="demanda-membros-cabecalho__avatar">{{ iniciais(membro.nomeCompleto) }}</span>
+        @if (sessao.eGestor()) {
+          <button
+            type="button"
+            class="demanda-membros-cabecalho__remover"
+            [attr.aria-label]="'Remover ' + membro.nomeCompleto"
+            (click)="remover(membro)"
+          ><i class="pi pi-times"></i></button>
+        }
+      </span>
+    } @empty {
+      <span class="demanda-membros-cabecalho__vazio">Sem membros</span>
+    }
+  </div>
+
+  @if (sessao.eGestor()) {
+    @if (adicionando()) {
+      <p-autocomplete
+        [(ngModel)]="termoBusca"
+        [suggestions]="sugestoes()"
+        (completeMethod)="buscar($event)"
+        (onSelect)="aoEscolher($event.value)"
+        (onHide)="fecharBusca()"
+        field="nomeCompleto"
+        [dropdown]="true"
+        [autoOptionFocus]="true"
+        [autofocus]="true"
+        placeholder="Adicionar membro…"
+        emptyMessage="Nenhum usuário encontrado"
+        appendTo="body"
+        size="small"
+        class="demanda-membros-cabecalho__busca"
+      />
+    } @else {
+      <button type="button" class="demanda-membros-cabecalho__adicionar" aria-label="Adicionar membro" pTooltip="Adicionar membro" (click)="abrirBusca()">
+        <i class="pi pi-plus"></i>
+      </button>
+    }
+  } @else {
+    @if (souMembro()) {
+      <button type="button" class="demanda-membros-cabecalho__participacao" (click)="sair()"><i class="pi pi-sign-out"></i> Sair</button>
+    } @else {
+      <button type="button" class="demanda-membros-cabecalho__participacao" (click)="participar()"><i class="pi pi-user-plus"></i> Participar</button>
+    }
+  }
+</div>

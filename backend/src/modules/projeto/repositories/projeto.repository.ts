@@ -15,6 +15,7 @@ import {
   ProjetoExcluirDto,
   ProjetoUsuarioListarDto,
 } from '@project20/shared';
+import { ProjetoRestaurarDto, ProjetoRestauradoDto } from '@project20/shared';
 
 type ProjetoCriarDados = Omit<Projeto, 'id' | 'isDeleted' | 'createdDate' | 'updatedDate' | 'deletedDate'>;
 
@@ -260,5 +261,44 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
   /** Soft delete do projeto. */
   async excluir(dto: ProjetoExcluirDto): Promise<void> {
     await this.executarSoftDelete(dto.id);
+  }
+
+  /**
+   * Recupera o projeto **excluído**. É a única leitura que filtra `is_deleted = true`: a restauração
+   * precisa do registro apagado para validar unicidade e dependências antes de reativá-lo.
+   */
+  async recuperarExcluido(dto: ProjetoRestaurarDto): Promise<(ProjetoRestauradoDto) | null> {
+    const resultado = await this.executarConsulta<ProjetoRestauradoDto>(
+      `SELECT
+         projeto.id,
+         projeto.nome,
+         projeto.codigo,
+         projeto.cor
+       FROM projeto
+       WHERE projeto.id = :id
+         AND projeto.is_deleted = true
+       LIMIT 1`,
+      { id: dto.id },
+    );
+    return resultado[0] ?? null;
+  }
+
+  /** Restaura o projeto: desfaz o soft delete (sem DELETE físico e sem cascata). */
+  async restaurar(dto: ProjetoRestaurarDto): Promise<ProjetoRestauradoDto> {
+    const resultado = await this.executarConsulta<ProjetoRestauradoDto>(
+      `UPDATE projeto
+       SET is_deleted = false,
+           deleted_date = NULL,
+           updated_date = NOW()
+       WHERE projeto.id = :id
+         AND projeto.is_deleted = true
+       RETURNING
+         id,
+         nome,
+         codigo,
+         cor`,
+      { id: dto.id },
+    );
+    return resultado[0];
   }
 }

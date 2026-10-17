@@ -12,3 +12,5 @@ export * from './UsuarioSenhaAlterarDto';
 export * from './UsuarioSenhaAlteradaDto';
 export * from './UsuarioSenhaInternoAlterarDto';
 export * from './UsuarioExcluirDto';
+export * from './UsuarioRestaurarDto';
+export * from './UsuarioRestauradoDto';

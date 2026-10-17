@@ -13,3 +13,30 @@
   &__obrigatorio { @include form-obrigatorio; }
   &__erro        { @include form-erro; }
 }
+
+.usuario-formulario-dialog {
+  &__senha {
+    display: flex;
+    align-items: center;
+    gap: 0.125rem;
+  }
+
+  &__senha-campo {
+    flex: 1;
+    min-width: 0;
+    font-family: var(--font-mono, monospace);
+  }
+
+  &__dica {
+    font-size: 0.75rem;
+    color: var(--p-text-muted-color);
+  }
+
+  &__status {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+  }
+}

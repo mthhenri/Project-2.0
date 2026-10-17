@@ -6,24 +6,26 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { MultiSelect } from 'primeng/multiselect';
 import { Tag } from 'primeng/tag';
-import { MessageService, ConfirmationService } from 'primeng/api';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { MessageService } from 'primeng/api';
 import { DemandaMembroDto, DemandaUsuarioAtribuirDto, UsuarioResumoDto, TipoUsuarioEnum } from '@project20/shared';
 import { DemandaService } from '../../services/demanda.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
+import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
+import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
+import { DesfazerService } from '../../../../core/services/desfazer.service';
 
 @Component({
   selector: 'app-demanda-membro-lista',
   standalone: true,
   imports: [
+    DialogFormularioDirective,
+    DialogDicaAtalhosComponent,
     ReactiveFormsModule,
     ButtonModule,
     DialogModule,
     MultiSelect,
     Tag,
-    ConfirmDialogModule,
   ],
-  providers: [ConfirmationService],
   templateUrl: './demanda-membro-lista.component.html',
   styleUrl: './demanda-membro-lista.component.scss',
 })
@@ -33,7 +35,7 @@ export class DemandaMembroListaComponent implements OnInit {
 
   private readonly demandaService = inject(DemandaService);
   private readonly messageService = inject(MessageService);
-  private readonly confirmationService = inject(ConfirmationService);
+  private readonly desfazerService = inject(DesfazerService);
   private readonly formBuilder = inject(FormBuilder);
   readonly sessao = inject(UsuarioSessaoService);
 
@@ -97,11 +99,9 @@ export class DemandaMembroListaComponent implements OnInit {
       });
   }
 
-  confirmarRemocao(membro: DemandaMembroDto): void {
-    this.confirmationService.confirm({
-      message: `Remover ${membro.nomeCompleto} da demanda?`,
-      accept: () => this.removerMembro(membro.usuarioId),
-    });
+  /** Remoção imediata (task 99): o membro sai na hora e o toast oferece "Desfazer" (re-POST). */
+  removerMembro(membro: DemandaMembroDto): void {
+    this.retirarMembro(membro);
   }
 
   /** Desenvolvedor inclui a si mesmo como membro da demanda. */
@@ -118,15 +118,11 @@ export class DemandaMembroListaComponent implements OnInit {
     });
   }
 
-  /** Desenvolvedor remove a si mesmo da demanda, com confirmação. */
-  confirmarSaida(): void {
-    this.confirmationService.confirm({
-      message: 'Sair desta demanda?',
-      accept: () => {
-        const usuarioId = this.sessao.id();
-        if (usuarioId !== undefined) this.removerMembro(usuarioId);
-      },
-    });
+  /** Desenvolvedor sai da demanda: imediato, com "Desfazer" no toast (task 99). */
+  sair(): void {
+    const usuarioId = this.sessao.id();
+    const membro = this.membros().find((item) => item.usuarioId === usuarioId);
+    if (membro) this.retirarMembro(membro);
   }
 
   iniciais(nomeCompleto: string): string {
@@ -142,15 +138,19 @@ export class DemandaMembroListaComponent implements OnInit {
     return tipo === TipoUsuarioEnum.GESTOR ? 'Gestor' : 'Dev';
   }
 
-  private removerMembro(usuarioId: number): void {
-    this.demandaService
-      .removerMembro(this.demandaId, usuarioId)
-      .subscribe({
-        next: () => {
-          this.carregarMembros();
-          this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Membro removido' });
-        },
-      });
+  private retirarMembro(membro: DemandaMembroDto): void {
+    const listaAnterior = this.membros();
+    this.membros.set(listaAnterior.filter((item) => item.usuarioId !== membro.usuarioId));
+
+    this.demandaService.removerMembro(this.demandaId, membro.usuarioId).subscribe({
+      next: () =>
+        this.desfazerService.oferecer({
+          mensagem: `${membro.nomeCompleto} removido da demanda`,
+          desfazer: () => this.demandaService.atribuirMembro(this.demandaId, { usuarioId: membro.usuarioId }),
+          aposDesfazer: () => this.carregarMembros(),
+        }),
+      error: () => this.membros.set(listaAnterior),
+    });
   }
 
   private carregarMembros(): void {

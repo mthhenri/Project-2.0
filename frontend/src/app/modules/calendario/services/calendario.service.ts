@@ -8,9 +8,11 @@ import {
   DiaNaoUtilAlterarDto,
   DiaNaoUtilAlteradoDto,
   StandardResponse,
+  DiaNaoUtilRestauradoDto,
 } from '@project20/shared';
 import { ambiente } from '../../../../environments/environment';
 import { VerificacaoDiaUtil } from '../models/dia-nao-util.model';
+import { comFeedbackProprio } from '../../../core/interceptors/loading.interceptor';
 
 @Injectable({ providedIn: 'root' })
 export class CalendarioService {
@@ -18,7 +20,7 @@ export class CalendarioService {
   private readonly urlBase = `${ambiente.apiUrl}/calendario`;
 
   listar(): Observable<StandardResponse<DiaNaoUtilResumoDto[]>> {
-    return this.httpClient.get<StandardResponse<DiaNaoUtilResumoDto[]>>(this.urlBase);
+    return this.httpClient.get<StandardResponse<DiaNaoUtilResumoDto[]>>(this.urlBase, comFeedbackProprio());
   }
 
   criar(dto: DiaNaoUtilCriarDto): Observable<StandardResponse<DiaNaoUtilCriadoDto>> {
@@ -35,6 +37,11 @@ export class CalendarioService {
 
   excluir(id: number): Observable<StandardResponse<void>> {
     return this.httpClient.delete<StandardResponse<void>>(`${this.urlBase}/${id}`);
+  }
+
+  /** Desfaz o soft delete ("Desfazer" do toast de exclusão). */
+  restaurar(id: number): Observable<StandardResponse<DiaNaoUtilRestauradoDto>> {
+    return this.httpClient.patch<StandardResponse<DiaNaoUtilRestauradoDto>>(`${this.urlBase}/${id}/restaurar`, {});
   }
 
   verificarDiaUtil(data: string): Observable<StandardResponse<VerificacaoDiaUtil>> {

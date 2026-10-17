@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Novo Usuário — dialog otimizado</title>
+<link rel="stylesheet" href="base.css">
+<style>
+  .seg2 { display:flex; border:1px solid var(--superficie-300); border-radius:9px; overflow:hidden; }
+  .seg2 > div { flex:1; text-align:center; padding:9px 0; font-size:13px; font-weight:700; color:var(--superficie-500); background:var(--superficie-0); cursor:pointer; }
+  .seg2 > .on { background:var(--primario-500); color:#fff; }
+</style>
+</head>
+<body data-altura="800">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-x" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+    <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M12 3l1.9 5.8a2 2 0 0 0 1.3 1.3L21 12l-5.8 1.9a2 2 0 0 0-1.3 1.3L12 21l-1.9-5.8a2 2 0 0 0-1.3-1.3L3 12l5.8-1.9a2 2 0 0 0 1.3-1.3z"/></symbol>
+  </defs>
+</svg>
+
+<div class="mk-app" style="min-height:800px">
+  <div style="opacity:.30; filter:saturate(.5); padding:24px; display:flex; flex-direction:column; gap:14px">
+    <div class="mk-page-header">
+      <div class="mk-page-header__titulo">Usuários</div>
+      <button class="mk-btn">Novo Usuário</button>
+    </div>
+    <div class="mk-card" style="height:560px"></div>
+  </div>
+
+  <div class="mk-backdrop">
+    <div class="mk-dialog" style="width:580px">
+      <div class="mk-dialog__header">
+        <div class="mk-dialog__titulo">Novo Usuário</div>
+        <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic"><use href="#i-x"/></svg></button>
+      </div>
+
+      <div class="mk-dialog__corpo">
+        <div class="mk-campo">
+          <label class="mk-label">Nome completo <span class="req">*</span></label>
+          <div class="mk-input mk-input--foco">Helena Prado<span style="border-left:1.5px solid var(--primario-600); height:16px"></span></div>
+        </div>
+
+        <div class="mk-campo">
+          <label class="mk-label">Login <span class="req">*</span></label>
+          <div class="mk-input" style="color:var(--superficie-600)">helena.prado</div>
+          <div class="mk-ajuda">Gerado a partir do nome — pode editar</div>
+        </div>
+
+        <div class="mk-campo">
+          <label class="mk-label">Senha <span class="req">*</span></label>
+          <div class="u-flex u-g8">
+            <div class="mk-input u-entre u-1"><span class="u-mono">xX9#mQ2v!Rp4</span> <svg class="ic u-muted"><use href="#i-eye"/></svg></div>
+            <button class="mk-btn mk-btn--sec"><svg class="ic ic--sm"><use href="#i-sparkles"/></svg> Gerar</button>
+            <button class="mk-btn mk-btn--sec mk-btn--icone" title="Copiar"><svg class="ic"><use href="#i-copy"/></svg></button>
+          </div>
+          <div class="mk-ajuda">Mínimo 8 caracteres</div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1.4fr 1fr; gap:14px">
+          <div class="mk-campo">
+            <label class="mk-label">Cargo <span class="req">*</span></label>
+            <div class="mk-input">Desenvolvedora Pleno</div>
+          </div>
+          <div class="mk-campo">
+            <label class="mk-label">Horas diárias</label>
+            <div class="mk-input u-entre">8 h/dia <span class="u-col" style="gap:1px"><svg class="ic ic--sm u-muted" style="transform:rotate(180deg)"><use href="#i-x"/></svg></span></div>
+          </div>
+        </div>
+
+        <div class="mk-campo">
+          <label class="mk-label">Tipo <span class="req">*</span></label>
+          <div class="seg2" style="width:320px">
+            <div class="on">Desenvolvedor</div>
+            <div>Gestor</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mk-dialog__footer">
+        <span class="mk-esq u-xs u-muted"><span class="mk-kbd">Enter</span> cria · <span class="mk-kbd">Esc</span> fecha</span>
+        <button class="mk-btn mk-btn--sec">Cancelar</button>
+        <button class="mk-btn"><svg class="ic"><use href="#i-check"/></svg> Criar Usuário</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Callouts -->
+  <div class="mk-callout" style="top:168px; left:1010px">1</div>  <!-- autofocus nome -->
+  <div class="mk-callout" style="top:252px; left:1010px">2</div>  <!-- login auto-gerado -->
+  <div class="mk-callout" style="top:342px; left:1010px">3</div>  <!-- gerar senha + copiar -->
+  <div class="mk-callout" style="top:530px; left:760px">4</div>   <!-- tipo default dev -->
+  <div class="mk-callout" style="top:648px; left:640px">5</div>   <!-- enter cria -->
+</div>
+</body>
+</html>

@@ -4,7 +4,6 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
-import { TextareaModule } from 'primeng/textarea';
 import { Select } from 'primeng/select';
 import { MessageService } from 'primeng/api';
 import {
@@ -16,7 +15,6 @@ import {
 } from '@project20/shared';
 import { AtividadeService } from '../../services/atividade.service';
 import { DemandaService } from '../../../demanda/services/demanda.service';
-import { AssistenteDescricaoComponent } from '../../../../shared/components/assistente-descricao/assistente-descricao.component';
 import { BloquearCaracteresProibidosDirective } from '../../../../shared/directives/bloquear-caracteres-proibidos.directive';
 import { ATIVIDADE_STATUS_OPCOES } from '../../models/atividade.model';
 
@@ -27,9 +25,7 @@ import { ATIVIDADE_STATUS_OPCOES } from '../../models/atividade.model';
     ReactiveFormsModule,
     ButtonModule,
     InputTextModule,
-    TextareaModule,
     Select,
-    AssistenteDescricaoComponent,
     BloquearCaracteresProibidosDirective,
   ],
   templateUrl: './atividade-formulario.page.html',
@@ -45,7 +41,6 @@ export class AtividadeFormularioPage implements OnInit {
 
   readonly formulario = this.formBuilder.group({
     nome:          ['', [Validators.required, Validators.minLength(3), Validators.maxLength(255), Validators.pattern(REGEX_SEM_CARACTERES_PROIBIDOS)]],
-    descricao:     [''],
     status:        [TipoAtividadeStatusEnum.PLANEJADA as TipoAtividadeStatusEnum, [Validators.required]],
   });
 
@@ -89,8 +84,6 @@ export class AtividadeFormularioPage implements OnInit {
       nome:          valor.nome!,
       status:        valor.status!,
     };
-    const descricao = valor.descricao?.trim();
-    if (descricao) dto.descricao = descricao;
 
     this.atividadeService
       .criar(dto)
@@ -109,10 +102,6 @@ export class AtividadeFormularioPage implements OnInit {
 
   cancelar(): void {
     this.router.navigate(['/atividade'], { queryParams: { demandaId: this.demandaId() } });
-  }
-
-  aceitarDescricaoAssistente(texto: string): void {
-    this.formulario.patchValue({ descricao: texto });
   }
 
   campoInvalido(nomeCampo: string): boolean {

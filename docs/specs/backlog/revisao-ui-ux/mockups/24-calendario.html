@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Calendário — dias não úteis otimizado</title>
+<link rel="stylesheet" href="base.css">
+<style>
+  .cal { display:grid; grid-template-columns:repeat(7, 1fr); gap:4px; }
+  .cal__dia { height:44px; display:flex; align-items:center; justify-content:center; font-size:13px; color:var(--superficie-700); border-radius:8px; position:relative; cursor:pointer; }
+  .cal__dia:hover { background:var(--superficie-100); }
+  .cal__wd { height:26px; font-size:10.5px; font-weight:800; color:var(--superficie-400); text-transform:uppercase; display:flex; align-items:center; justify-content:center; }
+  .cal__off { color:var(--superficie-300); }
+  .dia-cheio { background:var(--primario-500); color:#fff; font-weight:700; }
+  .dia-cheio:hover { background:var(--primario-600); }
+  .dia-anel { box-shadow:inset 0 0 0 2.5px var(--primario-500); color:var(--primario-700); font-weight:700; }
+  .dia-facult { background:var(--ciano-100); color:var(--ciano-700); font-weight:700; }
+</style>
+</head>
+<body data-altura="880">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></symbol>
+    <symbol id="i-sitemap" viewBox="0 0 24 24"><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/></symbol>
+    <symbol id="i-check-square" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></symbol>
+    <symbol id="i-tag" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.83z"/><line x1="7" y1="7" x2="7.01" y2="7"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></symbol>
+    <symbol id="i-file-text" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></symbol>
+    <symbol id="i-chevron-down" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></symbol>
+    <symbol id="i-chevron-left" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></symbol>
+    <symbol id="i-chevron-right" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></symbol>
+  </defs>
+</svg>
+
+<div class="mk-app" style="min-height:880px">
+  <header class="mk-topbar">
+    <div class="mk-topbar__logo">P2</div>
+    <nav class="mk-topbar__nav">
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-clock"/></svg> Ponto</a>
+      <a class="mk-nav-item mk-nav-item--ativo"><svg class="ic"><use href="#i-calendar"/></svg> Calendário</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-folder"/></svg> Projetos</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-sitemap"/></svg> Demandas</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-check-square"/></svg> Atividades</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-play"/></svg> Execuções</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-tag"/></svg> Tags</a>
+      <a class="mk-nav-item"><svg class="ic"><use href="#i-users"/></svg> Usuários</a>
+    </nav>
+    <div class="mk-topbar__acoes">
+      <span class="mk-topbar__hora">14:32</span>
+      <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic"><use href="#i-moon"/></svg></button>
+      <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic"><use href="#i-file-text"/></svg></button>
+      <button class="mk-btn mk-btn--texto-neutro mk-btn--sm" style="gap:6px; padding:0 8px"><span class="mk-avatar mk-avatar--sm" style="background:var(--primario-500); color:#fff">AS</span> Ana</button>
+    </div>
+  </header>
+
+  <main class="mk-conteudo">
+    <div class="mk-page-header">
+      <div>
+        <div class="mk-page-header__titulo">Dias Não Úteis</div>
+        <div class="mk-page-header__subtitulo">Feriados, recessos e pontos facultativos que ajustam a meta do ponto</div>
+      </div>
+      <div class="mk-page-header__acoes">
+        <button class="mk-btn" title="Atalho: N"><svg class="ic"><use href="#i-plus"/></svg> Novo Dia Não Útil</button>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:430px 1fr; gap:18px">
+      <!-- coluna calendário -->
+      <div class="u-col u-g10">
+        <div class="u-flex u-centro u-g8">
+          <button class="mk-btn mk-btn--sec mk-btn--sm">Hoje</button>
+          <div class="u-flex u-centro u-g4" style="margin-left:auto">
+            <button class="mk-btn mk-btn--sec mk-btn--sm mk-btn--icone"><svg class="ic ic--sm"><use href="#i-chevron-left"/></svg></button>
+            <span style="font-weight:800; font-size:14px; padding:0 6px">2026</span>
+            <button class="mk-btn mk-btn--sec mk-btn--sm mk-btn--icone"><svg class="ic ic--sm"><use href="#i-chevron-right"/></svg></button>
+          </div>
+        </div>
+
+        <div class="mk-card" style="padding:16px 18px; position:relative">
+          <div class="u-centro-t" style="font-weight:700; font-size:14.5px; margin-bottom:12px">Dezembro de 2026 <svg class="ic ic--sm u-muted"><use href="#i-chevron-down"/></svg></div>
+          <div class="cal">
+            <div class="cal__wd">D</div><div class="cal__wd">S</div><div class="cal__wd">T</div><div class="cal__wd">Q</div><div class="cal__wd">Q</div><div class="cal__wd">S</div><div class="cal__wd">S</div>
+            <div class="cal__dia cal__off">29</div><div class="cal__dia cal__off">30</div><div class="cal__dia">1</div><div class="cal__dia">2</div><div class="cal__dia">3</div><div class="cal__dia">4</div><div class="cal__dia">5</div>
+            <div class="cal__dia">6</div><div class="cal__dia">7</div><div class="cal__dia">8</div><div class="cal__dia">9</div><div class="cal__dia">10</div><div class="cal__dia">11</div><div class="cal__dia">12</div>
+            <div class="cal__dia">13</div><div class="cal__dia">14</div><div class="cal__dia" style="background:var(--superficie-100)">15<span style="position:absolute; top:3px; right:5px; color:var(--superficie-400); font-size:11px">+</span></div><div class="cal__dia">16</div><div class="cal__dia">17</div><div class="cal__dia">18</div><div class="cal__dia">19</div>
+            <div class="cal__dia">20</div><div class="cal__dia">21</div><div class="cal__dia">22</div><div class="cal__dia">23</div><div class="cal__dia dia-anel">24</div><div class="cal__dia dia-cheio">25</div><div class="cal__dia">26</div>
+            <div class="cal__dia">27</div><div class="cal__dia">28</div><div class="cal__dia">29</div><div class="cal__dia">30</div><div class="cal__dia dia-anel">31</div><div class="cal__dia cal__off">1</div><div class="cal__dia cal__off">2</div>
+          </div>
+
+          <!-- popover do dia 25 -->
+          <div class="mk-card" style="position:absolute; left:190px; top:250px; width:270px; padding:14px 16px; box-shadow:var(--sombra-dialog); z-index:20">
+            <div class="u-flex u-centro u-entre" style="margin-bottom:6px">
+              <span class="u-forte" style="font-size:14px">Natal</span>
+              <span class="u-sm u-muted">sex, 25/12/2026</span>
+            </div>
+            <div class="u-flex u-g6" style="margin-bottom:10px">
+              <span class="mk-tag mk-tag--azul">Feriado</span>
+              <span class="mk-tag"><svg class="ic ic--sm"><use href="#i-refresh"/></svg> Todo ano</span>
+            </div>
+            <div class="u-flex u-g6" style="justify-content:flex-end">
+              <button class="mk-btn mk-btn--texto mk-btn--sm"><svg class="ic ic--sm"><use href="#i-edit"/></svg> Editar</button>
+              <button class="mk-btn mk-btn--perigo-texto mk-btn--sm"><svg class="ic ic--sm"><use href="#i-trash"/></svg> Excluir</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="u-flex u-centro u-g12 u-sm u-sec" style="flex-wrap:wrap">
+          <span class="u-flex u-centro u-g6"><span class="mk-ponto" style="background:var(--primario-500)"></span> Feriado</span>
+          <span class="u-flex u-centro u-g6"><span class="mk-ponto" style="background:var(--primario-800)"></span> Recesso</span>
+          <span class="u-flex u-centro u-g6"><span class="mk-ponto" style="background:var(--ciano-700)"></span> Ponto Facultativo</span>
+          <span class="u-flex u-centro u-g6"><span style="width:10px; height:10px; border-radius:50%; border:2px solid var(--primario-500)"></span> anel = meio período</span>
+        </div>
+      </div>
+
+      <!-- coluna tabela -->
+      <div class="mk-card" style="align-self:start">
+        <div class="u-flex u-centro u-entre" style="padding:14px 18px 8px">
+          <span class="u-forte" style="font-size:14.5px">Dezembro de 2026 <svg class="ic ic--sm u-muted"><use href="#i-chevron-down"/></svg></span>
+          <span class="u-sm u-sec">3 registros</span>
+        </div>
+        <table class="mk-tabela">
+          <thead><tr><th>Data</th><th>Descrição</th><th>Tipo</th><th style="text-align:right">Ações</th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="u-forte">qui, 24/12</td>
+              <td>Véspera de Natal</td>
+              <td><span class="u-flex u-g4 u-wrap"><span class="mk-tag mk-tag--azul">Recesso</span><span class="mk-tag">Meio período</span><span class="mk-tag"><svg class="ic ic--sm"><use href="#i-refresh"/></svg> Todo ano</span></span></td>
+              <td><div class="mk-tabela__acoes">
+                <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic"><use href="#i-edit"/></svg></button>
+                <button class="mk-btn mk-btn--perigo-texto mk-btn--sm mk-btn--icone"><svg class="ic"><use href="#i-trash"/></svg></button>
+              </div></td>
+            </tr>
+            <tr style="background:var(--primario-50)">
+              <td class="u-forte">sex, 25/12</td>
+              <td>Natal</td>
+              <td><span class="u-flex u-g4"><span class="mk-tag mk-tag--azul">Feriado</span><span class="mk-tag"><svg class="ic ic--sm"><use href="#i-refresh"/></svg> Todo ano</span></span></td>
+              <td><div class="mk-tabela__acoes">
+                <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic"><use href="#i-edit"/></svg></button>
+                <button class="mk-btn mk-btn--perigo-texto mk-btn--sm mk-btn--icone"><svg class="ic"><use href="#i-trash"/></svg></button>
+              </div></td>
+            </tr>
+            <tr>
+              <td class="u-forte">qui, 31/12</td>
+              <td>Véspera de Ano Novo</td>
+              <td><span class="u-flex u-g4"><span class="mk-tag mk-tag--azul">Recesso</span><span class="mk-tag">Meio período</span></span></td>
+              <td><div class="mk-tabela__acoes">
+                <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic"><use href="#i-edit"/></svg></button>
+                <button class="mk-btn mk-btn--perigo-texto mk-btn--sm mk-btn--icone"><svg class="ic"><use href="#i-trash"/></svg></button>
+              </div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- Callouts -->
+  <div class="mk-callout" style="top:334px; left:250px">1</div>   <!-- clique no dia vazio cria -->
+  <div class="mk-callout" style="top:490px; left:470px">2</div>   <!-- popover dia marcado -->
+  <div class="mk-callout" style="top:174px; left:105px">3</div>   <!-- hoje + stepper ano -->
+  <div class="mk-callout" style="top:646px; left:390px">4</div>   <!-- legenda -->
+  <div class="mk-callout" style="top:296px; left:1150px">5</div>  <!-- badges na linha -->
+</div>
+</body>
+</html>

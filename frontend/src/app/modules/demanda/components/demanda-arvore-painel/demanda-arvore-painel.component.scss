@@ -1,4 +1,9 @@
 .demanda-arvore-painel {
+  // A marca de foco fica na linha (demanda-arvore-item__linha--foco), não no contêiner.
+  &__arvore:focus {
+    outline: none;
+  }
+
   &__dialog-tags-form {
     display: flex;
     flex-direction: column;

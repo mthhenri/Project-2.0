@@ -21,7 +21,7 @@
         severity="danger"
         size="small"
         [outlined]="true"
-        (onClick)="confirmarSaida()"
+        (onClick)="sair()"
       />
     } @else {
       <p-button
@@ -66,7 +66,7 @@
               severity="danger"
               [text]="true"
               size="small"
-              (onClick)="confirmarRemocao(membro)"
+              (onClick)="removerMembro(membro)"
             />
           }
         </div>
@@ -78,6 +78,9 @@
 <!-- Dialog gerenciar membros -->
 <p-dialog
   header="Gerenciar Membros"
+  dialogFormulario
+  [dialogBloqueado]="carregandoSalvar()"
+  (dialogEnviar)="salvarMembros()"
   [(visible)]="mostrarDialog"
   [modal]="true"
   [style]="{ width: '90vw', maxWidth: '560px' }"
@@ -101,6 +104,7 @@
   </form>
 
   <ng-template pTemplate="footer">
+    <app-dialog-dica-atalhos />
     <p-button
       label="Cancelar"
       severity="secondary"
@@ -116,4 +120,3 @@
   </ng-template>
 </p-dialog>
 
-<p-confirmDialog />

@@ -7,6 +7,9 @@
   [draggable]="false"
   [dismissableMask]="true"
   appendTo="body"
+  dialogFormulario
+  [dialogBloqueado]="salvando()"
+  (dialogEnviar)="salvar()"
 >
   <form [formGroup]="formulario" class="ponto-justificativa-dialog__form">
     <div class="ponto-justificativa-dialog__linha">
@@ -38,6 +41,13 @@
           suffix=" h"
           class="w-full"
         />
+        <div class="ponto-justificativa-dialog__atalhos">
+          @for (atalho of atalhosHoras(); track atalho.rotulo) {
+            <button type="button" class="ponto-justificativa-dialog__atalho" (click)="aplicarHoras(atalho.horas)">
+              {{ atalho.rotulo }}
+            </button>
+          }
+        </div>
         <small class="ponto-justificativa-dialog__dica">
           Máximo: {{ maximoHoras() }} h (jornada diária do usuário)
         </small>
@@ -77,14 +87,6 @@
       }
     </div>
 
-    <div class="ponto-justificativa-dialog__acoes">
-      <p-button
-        label="Salvar justificativa"
-        icon="pi pi-check"
-        [loading]="salvando()"
-        (onClick)="salvar()"
-      />
-    </div>
   </form>
 
   <div class="ponto-justificativa-dialog__lista">
@@ -115,7 +117,7 @@
               [rounded]="true"
               pTooltip="Remover"
               tooltipPosition="top"
-              (onClick)="confirmarRemocao(justificativa)"
+              (onClick)="confirmarRemocao(justificativa, $event)"
             />
           </li>
         }
@@ -126,13 +128,20 @@
   </div>
 
   <ng-template pTemplate="footer">
+    <app-dialog-dica-atalhos [comTextarea]="true" />
     <p-button
       label="Fechar"
       severity="secondary"
       [outlined]="true"
       (onClick)="mostrarDialog.set(false)"
     />
+    <p-button
+      label="Salvar justificativa"
+      icon="pi pi-check"
+      [loading]="salvando()"
+      (onClick)="salvar()"
+    />
   </ng-template>
 </p-dialog>
 
-<p-confirmDialog key="ponto-justificativa-remover" />
+<p-confirmpopup />

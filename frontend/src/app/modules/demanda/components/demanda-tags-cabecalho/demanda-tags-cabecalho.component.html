@@ -1,0 +1,46 @@
+<div class="demanda-tags-cabecalho">
+  @for (tag of tags(); track tag.id) {
+    <span
+      class="demanda-tags-cabecalho__chip"
+      [style.background-color]="tag.cor + '22'"
+      [style.border-color]="tag.cor + '55'"
+      [style.color]="tag.cor"
+    >
+      <span class="demanda-tags-cabecalho__bolinha" [style.background-color]="tag.cor"></span>
+      {{ tag.nome }}
+    </span>
+  } @empty {
+    @if (!editavel()) {
+      <span class="demanda-tags-cabecalho__vazio">Sem tags</span>
+    }
+  }
+
+  @if (editavel()) {
+    <button type="button" class="demanda-tags-cabecalho__adicionar" (click)="popover.toggle($event)">
+      <i class="pi pi-plus"></i> {{ tags().length ? 'Tag' : 'Adicionar tag' }}
+    </button>
+    <p-popover #popover>
+      <div class="demanda-tags-cabecalho__seletor">
+        @for (tag of tagsDisponiveis(); track tag.id) {
+          <button
+            type="button"
+            class="demanda-tags-cabecalho__opcao"
+            [class.demanda-tags-cabecalho__opcao--ativa]="selecionada(tag)"
+            [style.--cor-tag]="tag.cor"
+            [attr.aria-pressed]="selecionada(tag)"
+            (click)="alternar(tag)"
+          >
+            @if (selecionada(tag)) {
+              <i class="pi pi-check demanda-tags-cabecalho__check"></i>
+            } @else {
+              <span class="demanda-tags-cabecalho__bolinha" [style.background-color]="tag.cor"></span>
+            }
+            {{ tag.nome }}
+          </button>
+        } @empty {
+          <span class="demanda-tags-cabecalho__vazio">Nenhuma tag cadastrada</span>
+        }
+      </div>
+    </p-popover>
+  }
+</div>

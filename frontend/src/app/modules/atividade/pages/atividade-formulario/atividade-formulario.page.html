@@ -64,25 +64,6 @@
         />
       </div>
 
-      <div class="atividade-formulario__campo">
-        <label for="descricao" class="atividade-formulario__label">Descrição</label>
-        <textarea
-          id="descricao"
-          pTextarea
-          spellcheck="true"
-          formControlName="descricao"
-          rows="5"
-          placeholder="Descreva a atividade..."
-          class="w-full"
-        ></textarea>
-        <app-assistente-descricao
-          [textoAtual]="formulario.value.descricao || ''"
-          tipoEntidade="atividade"
-          [contextoEntidade]="nomeDemanda()"
-          (textoAuxiliadoAceito)="aceitarDescricaoAssistente($event)"
-        />
-      </div>
-
       <div class="atividade-formulario__acoes">
         <p-button
           type="button"

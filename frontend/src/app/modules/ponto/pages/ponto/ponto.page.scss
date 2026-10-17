@@ -30,6 +30,7 @@
 
   &__navegacao-mes {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 0.5rem;
 
@@ -48,11 +49,12 @@
     gap: 0.5rem;
   }
 
-  &__carregando {
+  &__esqueleto,
+  &__conteudo {
+    position: relative;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 3rem;
+    flex-direction: column;
+    gap: 1.5rem;
   }
 
   &__grid {
@@ -79,12 +81,25 @@
 
   &__cards {
     display: grid;
-    grid-template-columns: repeat(1, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
     gap: 1rem;
+  }
 
-    @media (min-width: 640px) {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
+  &__triagem {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    font-size: 0.9375rem;
+    color: var(--p-text-muted-color);
+  }
+
+  &__triagem-filtro {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
   }
 
   &__lista-dias {

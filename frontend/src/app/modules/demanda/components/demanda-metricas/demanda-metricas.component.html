@@ -1,0 +1,55 @@
+<div class="demanda-metricas">
+  <!-- Estimado -->
+  <div class="demanda-metricas__campo">
+    <span class="demanda-metricas__rotulo">Estimado</span>
+    @if (campoEditando() === 'horasEstimadas') {
+      <p-inputnumber
+        [(ngModel)]="valorHoras"
+        [suffix]="sufixoHoras()"
+        [min]="0"
+        [maxFractionDigits]="unidadeTempo.emDias() ? 2 : 0"
+        [autofocus]="true"
+        size="small"
+        (keydown)="aoTeclarHoras($event)"
+        (onBlur)="salvarHoras()"
+      />
+    } @else if (editavel()) {
+      <button type="button" class="demanda-metricas__valor demanda-metricas__valor--editavel" pTooltip="Clique para editar" tooltipPosition="top" (click)="editar('horasEstimadas')">
+        {{ horasEstimadas() | tempoExibicao: unidadeTempo.emDias() : 'horas' }} <i class="pi pi-pencil"></i>
+      </button>
+    } @else {
+      <span class="demanda-metricas__valor">{{ horasEstimadas() | tempoExibicao: unidadeTempo.emDias() : 'horas' }}</span>
+    }
+  </div>
+
+  <!-- Previsão de término -->
+  <div class="demanda-metricas__campo">
+    <span class="demanda-metricas__rotulo">Previsão de término</span>
+    @if (campoEditando() === 'previsaoFimData') {
+      <p-datepicker
+        [(ngModel)]="valorData"
+        dateFormat="dd/mm/yy"
+        [autofocus]="true"
+        [showOnFocus]="true"
+        appendTo="body"
+        size="small"
+        (onSelect)="salvarData($event)"
+        (onClose)="cancelar()"
+      >
+        <ng-template pTemplate="footer">
+          <div class="demanda-metricas__atalhos">
+            <p-button label="+1 sem" size="small" [text]="true" (onClick)="atalho('semana1')" />
+            <p-button label="+2 sem" size="small" [text]="true" (onClick)="atalho('semana2')" />
+            <p-button label="Fim do mês" size="small" [text]="true" (onClick)="atalho('fimMes')" />
+          </div>
+        </ng-template>
+      </p-datepicker>
+    } @else if (editavel()) {
+      <button type="button" class="demanda-metricas__valor demanda-metricas__valor--editavel" pTooltip="Clique para editar" tooltipPosition="top" (click)="editar('previsaoFimData')">
+        @if (previsaoFimData()) { {{ previsaoFimData() | dataBrasileira }} } @else { <span class="demanda-metricas__definir">— definir</span> } <i class="pi pi-pencil"></i>
+      </button>
+    } @else {
+      <span class="demanda-metricas__valor">@if (previsaoFimData()) { {{ previsaoFimData() | dataBrasileira }} } @else { — }</span>
+    }
+  </div>
+</div>

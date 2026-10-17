@@ -3,10 +3,10 @@
 ## Objetivo
 
 Corrigir os desvios de conformidade do módulo **demanda** identificados pela auditoria
-da **task 44** (`docs/AUDITORIA.md` §4.3): primitivos em assinaturas de
+da **task 44** (`docs/specs/done/44-auditoria-conformidade-padroes/AUDITORIA.md` §4.3): primitivos em assinaturas de
 `DemandaRepository`. Sem mudança de comportamento.
 
-> **Referência cruzada:** task 44 · `docs/AUDITORIA.md` §4.3.
+> **Referência cruzada:** task 44 · `docs/specs/done/44-auditoria-conformidade-padroes/AUDITORIA.md` §4.3.
 > **Padrão estrutural (param único DTO):** `ExecucaoRepository.alterar(dto)`.
 > **Padrão de nomenclatura (verbo no fim — SPEC §5, linhas 149-155):** complemento
 > `Interno` **antes** do verbo `Alterar` → `DemandaInternoAlterarDto` (como os já

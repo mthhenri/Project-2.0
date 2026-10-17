@@ -13,8 +13,11 @@ import {
   UsuarioSenhaAlteradaDto,
   StandardResponse,
   PaginatedResult,
+  UsuarioRestauradoDto,
 } from '@project20/shared';
 import { ambiente } from '../../../../environments/environment';
+import { comErroTratadoPelaTela } from '../../../core/interceptors/error-handler.interceptor';
+import { comFeedbackProprio } from '../../../core/interceptors/loading.interceptor';
 
 @Injectable({ providedIn: 'root' })
 export class UsuarioService {
@@ -28,7 +31,7 @@ export class UsuarioService {
     if (filtros.busca) params = params.set('busca', filtros.busca);
     if (filtros.pagina) params = params.set('pagina', String(filtros.pagina));
     if (filtros.itensPorPagina) params = params.set('itensPorPagina', String(filtros.itensPorPagina));
-    return this.httpClient.get<StandardResponse<PaginatedResult<UsuarioResumoDto>>>(this.urlBase, { params });
+    return this.httpClient.get<StandardResponse<PaginatedResult<UsuarioResumoDto>>>(this.urlBase, { params, ...comFeedbackProprio() });
   }
 
   criar(dto: UsuarioCriarDto): Observable<StandardResponse<UsuarioCriadoDto>> {
@@ -39,12 +42,18 @@ export class UsuarioService {
     return this.httpClient.get<StandardResponse<UsuarioRecuperadoDto>>(`${this.urlBase}/${id}`);
   }
 
-  alterar(id: number, dto: UsuarioAlterarDto): Observable<StandardResponse<UsuarioAlteradoDto>> {
-    return this.httpClient.put<StandardResponse<UsuarioAlteradoDto>>(`${this.urlBase}/${id}`, dto);
+  /** `erroNaTela`: a tela mostra a falha por conta própria (ex.: o drawer de anotações), sem o toast genérico. */
+  alterar(id: number, dto: UsuarioAlterarDto, erroNaTela = false): Observable<StandardResponse<UsuarioAlteradoDto>> {
+    return this.httpClient.put<StandardResponse<UsuarioAlteradoDto>>(`${this.urlBase}/${id}`, dto, erroNaTela ? comErroTratadoPelaTela() : {});
   }
 
   excluir(id: number): Observable<StandardResponse<void>> {
     return this.httpClient.delete<StandardResponse<void>>(`${this.urlBase}/${id}`);
+  }
+
+  /** Desfaz o soft delete ("Desfazer" do toast de exclusão). */
+  restaurar(id: number): Observable<StandardResponse<UsuarioRestauradoDto>> {
+    return this.httpClient.patch<StandardResponse<UsuarioRestauradoDto>>(`${this.urlBase}/${id}/restaurar`, {});
   }
 
   alterarSenha(id: number, dto: UsuarioSenhaAlterarDto): Observable<StandardResponse<UsuarioSenhaAlteradaDto>> {

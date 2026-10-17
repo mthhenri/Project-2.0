@@ -19,14 +19,14 @@
           icon="pi pi-pencil"
           severity="secondary"
           [outlined]="true"
-          (onClick)="abrirDialogEditar()"
+          (onClick)="pedirEdicao(usuario)"
         />
         <p-button
           label="Alterar Senha"
           icon="pi pi-lock"
           severity="secondary"
           [outlined]="true"
-          (onClick)="abrirDialogSenha()"
+          (onClick)="pedirSenha(usuario)"
         />
         <p-button
           label="Anotações"
@@ -39,7 +39,7 @@
 
     <div class="usuario-perfil-dialog__card">
       <div class="usuario-perfil-dialog__avatar">
-        {{ usuario.nomeCompleto.split(' ').slice(0, 2).map(p => p[0]).join('').toUpperCase() }}
+        {{ iniciais(usuario.nomeCompleto) }}
       </div>
 
       <div class="usuario-perfil-dialog__info">
@@ -74,142 +74,4 @@
   }
 </p-dialog>
 
-<app-usuario-anotacoes-dialog #anotacoesDialog />
-
-<!-- Dialog de edição -->
-<p-dialog
-  header="Editar Perfil"
-  [(visible)]="mostrarDialogEditar"
-  [modal]="true"
-  [style]="{ width: '480px' }"
-  [draggable]="false"
->
-  <form [formGroup]="formularioEditar" class="usuario-perfil-dialog__dialog-form">
-    <div class="usuario-perfil-dialog__dialog-campo">
-      <label class="usuario-perfil-dialog__label">Nome Completo <span class="usuario-perfil-dialog__obrigatorio">*</span></label>
-      <input pInputText spellcheck="true" formControlName="nomeCompleto" class="w-full" />
-      @if (campoEditarInvalido('nomeCompleto')) {
-        <small class="usuario-perfil-dialog__erro">Nome é obrigatório (mínimo 3 caracteres)</small>
-      }
-    </div>
-
-    <div class="usuario-perfil-dialog__dialog-campo">
-      <label class="usuario-perfil-dialog__label">Cargo <span class="usuario-perfil-dialog__obrigatorio">*</span></label>
-      <input pInputText spellcheck="true" formControlName="cargoTitulo" class="w-full" />
-      @if (campoEditarInvalido('cargoTitulo')) {
-        <small class="usuario-perfil-dialog__erro">Cargo é obrigatório</small>
-      }
-    </div>
-
-    <div class="usuario-perfil-dialog__dialog-linha">
-      <div class="usuario-perfil-dialog__dialog-campo">
-        <label class="usuario-perfil-dialog__label">Horas Diárias</label>
-        <p-inputnumber
-          formControlName="horasDiariasNecessarias"
-          [min]="1"
-          [max]="24"
-          [showButtons]="true"
-          class="w-full"
-          inputStyleClass="w-full"
-        />
-      </div>
-      <div class="usuario-perfil-dialog__dialog-campo">
-        <label class="usuario-perfil-dialog__label">Status</label>
-        <p-select
-          formControlName="status"
-          [options]="statusOpcoes"
-          optionLabel="label"
-          optionValue="value"
-          appendTo="body"
-          class="w-full"
-        />
-      </div>
-    </div>
-
-    @if (podeEditarTipo()) {
-      <div class="usuario-perfil-dialog__dialog-campo">
-        <label class="usuario-perfil-dialog__label">Tipo <span class="usuario-perfil-dialog__obrigatorio">*</span></label>
-        <p-select
-          formControlName="tipo"
-          [options]="tiposOpcoes"
-          optionLabel="label"
-          optionValue="value"
-          appendTo="body"
-          class="w-full"
-        />
-      </div>
-    }
-  </form>
-
-  <ng-template pTemplate="footer">
-    <p-button
-      label="Cancelar"
-      severity="secondary"
-      [outlined]="true"
-      (onClick)="mostrarDialogEditar.set(false)"
-    />
-    <p-button
-      label="Salvar"
-      icon="pi pi-check"
-      [loading]="carregandoSalvar()"
-      (onClick)="salvarEdicao()"
-    />
-  </ng-template>
-</p-dialog>
-
-<!-- Dialog de troca de senha -->
-<p-dialog
-  header="Alterar Senha"
-  [(visible)]="mostrarDialogSenha"
-  [modal]="true"
-  [style]="{ width: '420px' }"
-  [draggable]="false"
->
-  <form [formGroup]="formularioSenha" class="usuario-perfil-dialog__dialog-form">
-    <div class="usuario-perfil-dialog__dialog-campo">
-      <label class="usuario-perfil-dialog__label">Nova Senha <span class="usuario-perfil-dialog__obrigatorio">*</span></label>
-      <p-password
-        formControlName="senhaNova"
-        [feedback]="false"
-        [toggleMask]="true"
-        styleClass="w-full"
-        inputStyleClass="w-full"
-      />
-      @if (campoSenhaInvalido('senhaNova')) {
-        <small class="usuario-perfil-dialog__erro">Nova senha é obrigatória (mínimo 8 caracteres)</small>
-      }
-    </div>
-
-    <div class="usuario-perfil-dialog__dialog-campo">
-      <label class="usuario-perfil-dialog__label">Confirmar Nova Senha <span class="usuario-perfil-dialog__obrigatorio">*</span></label>
-      <p-password
-        formControlName="confirmarSenhaNova"
-        [feedback]="false"
-        [toggleMask]="true"
-        styleClass="w-full"
-        inputStyleClass="w-full"
-      />
-      @if (campoSenhaInvalido('confirmarSenhaNova')) {
-        <small class="usuario-perfil-dialog__erro">Confirmação é obrigatória</small>
-      }
-      @if (senhasNaoConferem) {
-        <small class="usuario-perfil-dialog__erro">As senhas não conferem</small>
-      }
-    </div>
-  </form>
-
-  <ng-template pTemplate="footer">
-    <p-button
-      label="Cancelar"
-      severity="secondary"
-      [outlined]="true"
-      (onClick)="mostrarDialogSenha.set(false)"
-    />
-    <p-button
-      label="Confirmar"
-      icon="pi pi-check"
-      [loading]="carregandoSalvar()"
-      (onClick)="salvarSenha()"
-    />
-  </ng-template>
-</p-dialog>
+<app-usuario-anotacoes-dialog #anotacoesDialog (aoAlterar)="aoAlterar.emit($event)" />

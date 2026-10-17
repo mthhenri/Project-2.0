@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, inject, signal } from '@angular/core';
+import { Component, EventEmitter, Output, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
@@ -8,17 +8,21 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ConfirmPopupModule } from 'primeng/confirmpopup';
 import { TooltipModule } from 'primeng/tooltip';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { PontoJustificativaResumoDto } from '@project20/shared';
 import { PontoJustificativaService } from '../../services/ponto-justificativa.service';
 import { UsuarioService } from '../../../usuario/services/usuario.service';
+import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
+import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
 
 @Component({
   selector: 'app-ponto-justificativa-dialog',
   standalone: true,
   imports: [
+    DialogFormularioDirective,
+    DialogDicaAtalhosComponent,
     ReactiveFormsModule,
     DatePipe,
     ButtonModule,
@@ -27,7 +31,7 @@ import { UsuarioService } from '../../../usuario/services/usuario.service';
     InputNumberModule,
     InputTextModule,
     TextareaModule,
-    ConfirmDialogModule,
+    ConfirmPopupModule,
     TooltipModule,
   ],
   templateUrl: './ponto-justificativa-dialog.component.html',
@@ -56,6 +60,26 @@ export class PontoJustificativaDialogComponent {
   /** Teto de `horasCobertas` = jornada diária do usuário (também validado no servidor). */
   readonly maximoHoras = signal<number>(24);
 
+  /** Horas faltantes do dia quando o dialog abre a partir da linha (déficit do dia). */
+  readonly horasFaltantes = signal<number | null>(null);
+
+  /** Atalhos de preenchimento das horas (task 100): dia inteiro, meio período e o déficit do dia. */
+  readonly atalhosHoras = computed(() => {
+    const maximo = this.maximoHoras();
+    const atalhos = [
+      { rotulo: `Dia inteiro · ${this.formatarHoras(maximo)} h`, horas: maximo },
+      { rotulo: `Meio período · ${this.formatarHoras(maximo / 2)} h`, horas: maximo / 2 },
+    ];
+    const faltantes = this.horasFaltantes();
+    if (faltantes !== null && faltantes > 0) {
+      atalhos.push({
+        rotulo: `Faltante · ${faltantes.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} h`,
+        horas: Math.min(faltantes, maximo),
+      });
+    }
+    return atalhos;
+  });
+
   readonly justificativas = signal<PontoJustificativaResumoDto[]>([]);
   readonly carregandoLista = signal<boolean>(false);
   readonly salvando = signal<boolean>(false);
@@ -67,8 +91,11 @@ export class PontoJustificativaDialogComponent {
     horasCobertas: [null as number | null, [Validators.required, Validators.min(0)]],
   });
 
-  /** Abre a dialog para um usuário no mês visível (`mesAno` — qualquer data do mês). */
-  abrir(usuarioId: number, mesAno: Date): void {
+  /**
+   * Abre a dialog para um usuário no mês visível (`mesAno` — qualquer data do mês). Vindo da linha de um
+   * dia, `preenchimento` traz a data (`YYYY-MM-DD`) e as horas faltantes do dia como sugestão.
+   */
+  abrir(usuarioId: number, mesAno: Date, preenchimento?: { data: string; horasFaltantes: number }): void {
     const ano = mesAno.getFullYear();
     const mes = mesAno.getMonth() + 1;
     const diasNoMes = new Date(ano, mes, 0).getDate();
@@ -79,13 +106,31 @@ export class PontoJustificativaDialogComponent {
     this.dataMinima.set(new Date(ano, mes - 1, 1));
     this.dataMaxima.set(new Date(ano, mes - 1, diasNoMes));
 
-    this.formulario.reset({ diaData: null, nome: '', descricao: '', horasCobertas: null });
+    const dia = preenchimento ? new Date(`${preenchimento.data}T12:00:00`) : null;
+    const faltantes = preenchimento ? Math.round(preenchimento.horasFaltantes * 100) / 100 : null;
+    this.horasFaltantes.set(faltantes);
+    this.formulario.reset({
+      diaData: dia,
+      nome: '',
+      descricao: '',
+      horasCobertas: faltantes !== null && faltantes > 0 ? faltantes : null,
+    });
     this.justificativas.set([]);
     this.maximoHoras.set(24);
 
     this.mostrarDialog.set(true);
     this.carregarJornadaUsuario(usuarioId);
     this.carregarJustificativas();
+  }
+
+  /** Preenche as horas com um dos atalhos (o teto da jornada vale para todos). */
+  aplicarHoras(horas: number): void {
+    this.formulario.controls.horasCobertas.setValue(Math.min(horas, this.maximoHoras()));
+    this.formulario.controls.horasCobertas.markAsDirty();
+  }
+
+  formatarHoras(horas: number): string {
+    return horas.toLocaleString('pt-BR', { maximumFractionDigits: 2 });
   }
 
   campoInvalido(nomeCampo: string): boolean {
@@ -126,11 +171,11 @@ export class PontoJustificativaDialogComponent {
       });
   }
 
-  confirmarRemocao(justificativa: PontoJustificativaResumoDto): void {
+  /** Confirmação ancorada na lixeira da própria linha (sem dialog por cima do dialog). */
+  confirmarRemocao(justificativa: PontoJustificativaResumoDto, evento: Event): void {
     this.confirmationService.confirm({
-      key:        'ponto-justificativa-remover',
-      header:     'Remover justificativa',
-      message:    `Remover a justificativa "${justificativa.nome}" de ${justificativa.diaData}?`,
+      target:     evento.currentTarget ?? evento.target ?? undefined,
+      message:    `Remover a justificativa "${justificativa.nome}"?`,
       icon:       'pi pi-exclamation-triangle',
       acceptLabel: 'Remover',
       rejectLabel: 'Cancelar',
@@ -157,7 +202,11 @@ export class PontoJustificativaDialogComponent {
     this.usuarioService.recuperar(usuarioId).subscribe({
       next: (resposta) => {
         if (resposta.sucesso && resposta.dados) {
-          this.maximoHoras.set(resposta.dados.horasDiariasNecessarias);
+          const maximo = resposta.dados.horasDiariasNecessarias;
+          this.maximoHoras.set(maximo);
+          // A sugestão nunca passa da jornada do usuário.
+          const atual = this.formulario.controls.horasCobertas.value;
+          if (atual !== null && atual > maximo) this.formulario.controls.horasCobertas.setValue(maximo);
         }
       },
     });

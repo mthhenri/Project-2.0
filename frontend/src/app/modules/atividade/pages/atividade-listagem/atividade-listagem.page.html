@@ -84,200 +84,207 @@
     </div>
   </form>
 
-  <p-table
-    [value]="atividades()"
-    [lazy]="true"
-    [paginator]="true"
-    [rows]="itensPorPagina()"
-    [totalRecords]="totalRegistros()"
-    [loading]="carregando()"
-    (onLazyLoad)="aoCarregarTabela($event)"
-    [rowsPerPageOptions]="[10, 25, 50]"
-    [showCurrentPageReport]="true"
-    currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} atividades"
-    class="p-datatable-sm"
-  >
-    <ng-template pTemplate="header">
-      <tr>
-        <th>Projeto</th>
-        <th>Demanda</th>
-        <th>Atividade</th>
-        @if (sessao.eGestor()) {
-          <th>Usuário</th>
-        }
-        <th>Status</th>
-        <th>Tempo executado</th>
-        <th>Tags</th>
-        <th class="atividade-listagem__coluna-acoes">Ações</th>
-      </tr>
-    </ng-template>
+  @if (primeiraCarga()) {
+    <app-skeleton-lista variante="tabela" [quantidade]="8" [colunas]="7" />
+  }
+  <div class="lista-recarga" [hidden]="primeiraCarga()" [class.conteudo-recarregando]="recarregando()">
+    <app-barra-recarga [ativa]="recarregando()" />
+    <p-table
+      [value]="atividades()"
+      [lazy]="true"
+      dataKey="id"
+      [rowTrackBy]="rastrearPorId"
+      [paginator]="true"
+      [rows]="itensPorPagina()"
+      [totalRecords]="totalRegistros()"
+      (onLazyLoad)="aoCarregarTabela($event)"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} atividades"
+      class="p-datatable-sm"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Projeto</th>
+          <th>Demanda</th>
+          <th>Atividade</th>
+          @if (sessao.eGestor()) {
+            <th>Usuário</th>
+          }
+          <th>Status</th>
+          <th>Tempo executado</th>
+          <th>Tags</th>
+          <th class="atividade-listagem__coluna-acoes">Ações</th>
+        </tr>
+      </ng-template>
 
-    <ng-template pTemplate="body" let-atividade>
-      <tr>
-        <td>{{ atividade.nomeProjeto }}</td>
-        <td>
-          <div class="atividade-listagem__demanda">
-            <div class="atividade-listagem__demanda-acoes">
-              <p-button
-                icon="pi pi-user"
-                [text]="true"
-                [rounded]="true"
-                size="small"
-                severity="secondary"
-                [styleClass]="classeIconeDescricao(atividade, 'descricaoCliente', 'cliente')"
-                pTooltip="Descrição do cliente"
-                tooltipPosition="top"
-                (onClick)="abrirDescricaoDemanda(atividade, 'descricaoCliente')"
-              />
-              <p-button
-                icon="pi pi-code"
-                [text]="true"
-                [rounded]="true"
-                size="small"
-                severity="secondary"
-                [styleClass]="classeIconeDescricao(atividade, 'descricaoTecnica', 'tecnica')"
-                pTooltip="Descrição técnica"
-                tooltipPosition="top"
-                (onClick)="abrirDescricaoDemanda(atividade, 'descricaoTecnica')"
-              />
-              <p-button
-                icon="pi pi-book"
-                [text]="true"
-                [rounded]="true"
-                size="small"
-                severity="secondary"
-                [styleClass]="classeIconeDescricao(atividade, 'documentacao', 'doc')"
-                pTooltip="Documentação"
-                tooltipPosition="top"
-                (onClick)="abrirDescricaoDemanda(atividade, 'documentacao')"
-              />
-            </div>
-            <span class="atividade-listagem__demanda-nome">{{ atividade.nomeDemanda }}</span>
-          </div>
-        </td>
-        <td>{{ atividade.nome }}</td>
-        @if (sessao.eGestor()) {
+      <ng-template pTemplate="body" let-atividade>
+        <tr>
+          <td>{{ atividade.nomeProjeto }}</td>
           <td>
-            <div class="atividade-listagem__executor">
-              <span class="atividade-listagem__avatar">{{ iniciais(atividade.nomeUsuario) }}</span>
-              <span class="text-color">{{ atividade.nomeUsuario }}</span>
+            <div class="atividade-listagem__demanda">
+              <div class="atividade-listagem__demanda-acoes">
+                <p-button
+                  icon="pi pi-user"
+                  [text]="true"
+                  [rounded]="true"
+                  size="small"
+                  severity="secondary"
+                  [styleClass]="classeIconeDescricao(atividade, 'descricaoCliente', 'cliente')"
+                  pTooltip="Descrição do cliente"
+                  tooltipPosition="top"
+                  (onClick)="abrirDescricaoDemanda(atividade, 'descricaoCliente')"
+                />
+                <p-button
+                  icon="pi pi-code"
+                  [text]="true"
+                  [rounded]="true"
+                  size="small"
+                  severity="secondary"
+                  [styleClass]="classeIconeDescricao(atividade, 'descricaoTecnica', 'tecnica')"
+                  pTooltip="Descrição técnica"
+                  tooltipPosition="top"
+                  (onClick)="abrirDescricaoDemanda(atividade, 'descricaoTecnica')"
+                />
+                <p-button
+                  icon="pi pi-book"
+                  [text]="true"
+                  [rounded]="true"
+                  size="small"
+                  severity="secondary"
+                  [styleClass]="classeIconeDescricao(atividade, 'documentacao', 'doc')"
+                  pTooltip="Documentação"
+                  tooltipPosition="top"
+                  (onClick)="abrirDescricaoDemanda(atividade, 'documentacao')"
+                />
+              </div>
+              <span class="atividade-listagem__demanda-nome">{{ atividade.nomeDemanda }}</span>
             </div>
           </td>
-        }
-        <td>
-          @if (podeTrocarStatus(atividade)) {
-            <button
-              type="button"
-              class="atividade-listagem__status-gatilho"
-              pTooltip="Trocar status"
-              tooltipPosition="top"
-              (click)="abrirSeletorStatus($event, atividade, statusPopover)"
-            >
+          <td>{{ atividade.nome }}</td>
+          @if (sessao.eGestor()) {
+            <td>
+              <div class="atividade-listagem__executor">
+                <span class="atividade-listagem__avatar">{{ iniciais(atividade.nomeUsuario) }}</span>
+                <span class="text-color">{{ atividade.nomeUsuario }}</span>
+              </div>
+            </td>
+          }
+          <td>
+            @if (podeTrocarStatus(atividade)) {
+              <button
+                type="button"
+                class="atividade-listagem__status-gatilho"
+                pTooltip="Trocar status"
+                tooltipPosition="top"
+                (click)="abrirSeletorStatus($event, atividade, statusPopover)"
+              >
+                <p-tag
+                  [value]="rotuloStatus(atividade.status)"
+                  [severity]="severidadeStatus(atividade.status)"
+                />
+                <i class="pi pi-chevron-down atividade-listagem__status-seta"></i>
+              </button>
+            } @else {
               <p-tag
                 [value]="rotuloStatus(atividade.status)"
                 [severity]="severidadeStatus(atividade.status)"
-              />
-              <i class="pi pi-chevron-down atividade-listagem__status-seta"></i>
-            </button>
-          } @else {
-            <p-tag
-              [value]="rotuloStatus(atividade.status)"
-              [severity]="severidadeStatus(atividade.status)"
-              [pTooltip]="atividadeEmExecucao(atividade) ? 'Status bloqueado durante execução em andamento' : ''"
-              tooltipPosition="top"
-            />
-          }
-        </td>
-        <td>
-          <span
-            class="text-color"
-            [pTooltip]="unidadeTempo.emDias() ? (atividade.totalMinutosExecutados | tempoExibicao: false : 'minutos') : ''"
-          >{{ atividade.totalMinutosExecutados | tempoExibicao: unidadeTempo.emDias() : 'minutos' }}</span>
-        </td>
-        <td>
-          <div class="atividade-listagem__tags">
-            @for (tag of atividade.tags; track tag.id) {
-              <span
-                class="atividade-listagem__chip"
-                [style.background-color]="tag.cor + '22'"
-                [style.color]="tag.cor"
-                [style.border-color]="tag.cor + '55'"
-              >{{ tag.nome }}</span>
-            } @empty {
-              <span class="text-muted-color">—</span>
-            }
-          </div>
-        </td>
-        <td>
-          <div class="atividade-listagem__acoes">
-            <p-button
-              styleClass="atividade-listagem__botao-execucao"
-              [icon]="atividadeEmExecucao(atividade) ? 'pi pi-pause' : 'pi pi-play'"
-              [text]="true"
-              size="small"
-              [severity]="atividadeEmExecucao(atividade) ? 'warn' : 'success'"
-              [pTooltip]="atividadeEmExecucao(atividade) ? 'Encerrar execução' : 'Iniciar execução'"
-              tooltipPosition="left"
-              (onClick)="alternarExecucao(atividade)"
-              [style.visibility]="mostrarBotaoExecucao(atividade) ? 'visible' : 'hidden'"
-            />
-            <p-button
-              styleClass="atividade-listagem__botao-visualizar"
-              icon="pi pi-eye"
-              [text]="true"
-              size="small"
-              pTooltip="Visualizar"
-              tooltipPosition="left"
-              (onClick)="visualizarDialog.abrir(atividade.id)"
-            />
-            @if (podeEditar(atividade)) {
-              <p-button
-                icon="pi pi-plus-circle"
-                [text]="true"
-                severity="secondary"
-                size="small"
-                pTooltip="Atribuir tags"
-                tooltipPosition="left"
-                (onClick)="abrirDialogTags(atividade)"
+                [pTooltip]="atividadeEmExecucao(atividade) ? 'Status bloqueado durante execução em andamento' : ''"
+                tooltipPosition="top"
               />
             }
-            @if (sessao.eGestor()) {
+          </td>
+          <td>
+            <span
+              class="text-color"
+              [pTooltip]="unidadeTempo.emDias() ? (atividade.totalMinutosExecutados | tempoExibicao: false : 'minutos') : ''"
+            >{{ atividade.totalMinutosExecutados | tempoExibicao: unidadeTempo.emDias() : 'minutos' }}</span>
+          </td>
+          <td>
+            <div class="atividade-listagem__tags">
+              @for (tag of atividade.tags; track tag.id) {
+                <span
+                  class="atividade-listagem__chip"
+                  [style.background-color]="tag.cor + '22'"
+                  [style.color]="tag.cor"
+                  [style.border-color]="tag.cor + '55'"
+                >{{ tag.nome }}</span>
+              } @empty {
+                <span class="text-muted-color">—</span>
+              }
+            </div>
+          </td>
+          <td>
+            <div class="atividade-listagem__acoes">
               <p-button
-                styleClass="atividade-listagem__botao-registrar"
-                icon="pi pi-calendar-plus"
+                styleClass="atividade-listagem__botao-execucao"
+                [icon]="atividadeEmExecucao(atividade) ? 'pi pi-pause' : 'pi pi-play'"
                 [text]="true"
-                severity="secondary"
                 size="small"
-                pTooltip="Registrar execução"
+                [severity]="atividadeEmExecucao(atividade) ? 'warn' : 'success'"
+                [pTooltip]="atividadeEmExecucao(atividade) ? 'Encerrar execução' : 'Iniciar execução'"
                 tooltipPosition="left"
-                (onClick)="abrirDialogRegistro(atividade)"
+                (onClick)="alternarExecucao(atividade)"
+                [style.visibility]="mostrarBotaoExecucao(atividade) ? 'visible' : 'hidden'"
               />
               <p-button
-                icon="pi pi-trash"
+                styleClass="atividade-listagem__botao-visualizar"
+                icon="pi pi-eye"
                 [text]="true"
-                severity="danger"
                 size="small"
-                pTooltip="Excluir"
+                pTooltip="Visualizar"
                 tooltipPosition="left"
-                (onClick)="confirmarExclusao(atividade)"
+                (onClick)="visualizarDialog.abrir(atividade.id)"
               />
-            }
-          </div>
-        </td>
-      </tr>
-    </ng-template>
+              @if (podeEditar(atividade)) {
+                <p-button
+                  icon="pi pi-plus-circle"
+                  [text]="true"
+                  severity="secondary"
+                  size="small"
+                  pTooltip="Atribuir tags"
+                  tooltipPosition="left"
+                  (onClick)="abrirDialogTags(atividade)"
+                />
+              }
+              @if (sessao.eGestor()) {
+                <p-button
+                  styleClass="atividade-listagem__botao-registrar"
+                  icon="pi pi-calendar-plus"
+                  [text]="true"
+                  severity="secondary"
+                  size="small"
+                  pTooltip="Registrar execução"
+                  tooltipPosition="left"
+                  (onClick)="abrirDialogRegistro(atividade)"
+                />
+                <p-button
+                  icon="pi pi-trash"
+                  [text]="true"
+                  severity="danger"
+                  size="small"
+                  pTooltip="Excluir"
+                  tooltipPosition="left"
+                  (onClick)="excluir(atividade)"
+                />
+              }
+            </div>
+          </td>
+        </tr>
+      </ng-template>
 
-    <ng-template pTemplate="empty">
-      <tr>
-        <td [attr.colspan]="sessao.eGestor() ? 8 : 7">
-          <div class="atividade-listagem__vazio">
-            <i class="pi pi-list text-4xl text-muted-color"></i>
-            <p class="text-muted-color mt-3">Nenhuma atividade encontrada</p>
-          </div>
-        </td>
-      </tr>
-    </ng-template>
-  </p-table>
+      <ng-template pTemplate="empty">
+        <tr>
+          <td [attr.colspan]="sessao.eGestor() ? 8 : 7">
+            <div class="atividade-listagem__vazio">
+              <i class="pi pi-list text-4xl text-muted-color"></i>
+              <p class="text-muted-color mt-3">Nenhuma atividade encontrada</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
 </div>
 
 <!-- Dialog: nova atividade -->
@@ -285,6 +292,9 @@
   [visible]="mostrarDialogNova()"
   (visibleChange)="mostrarDialogNova.set($event)"
   header="Nova Atividade"
+  dialogFormulario
+  [dialogBloqueado]="salvandoNova()"
+  (dialogEnviar)="salvarNova()"
   [modal]="true"
   [style]="{ width: '40rem' }"
   [draggable]="false"
@@ -294,6 +304,7 @@
     <div class="atividade-listagem__dialog-campo">
       <label for="nova-nome" class="atividade-listagem__filtro-label">Nome *</label>
       <input
+        #campoNovoNome
         id="nova-nome"
         type="text"
         pInputText
@@ -303,7 +314,6 @@
         placeholder="Nome da atividade"
         class="w-full"
       />
-      <small class="block mt-1 text-muted-color">{{ dicaCaracteresProibidos }}</small>
       @if (campoInvalidoNova('nome')) {
         <small class="atividade-listagem__erro">
           @if (formularioNova.controls.nome.hasError('pattern')) {
@@ -396,28 +406,17 @@
         </div>
       }
     </div>
-
-    <div class="atividade-listagem__dialog-campo">
-      <label for="nova-descricao" class="atividade-listagem__filtro-label">Descrição</label>
-      <textarea
-        id="nova-descricao"
-        pTextarea
-        spellcheck="true"
-        formControlName="descricao"
-        rows="5"
-        placeholder="Descreva a atividade..."
-        class="w-full"
-      ></textarea>
-      <app-assistente-descricao
-        [textoAtual]="formularioNova.value.descricao || ''"
-        tipoEntidade="atividade"
-        (textoAuxiliadoAceito)="aceitarDescricaoAssistenteNova($event)"
-      />
-    </div>
   </form>
 
   <ng-template pTemplate="footer">
+    <app-dialog-dica-atalhos />
     <p-button label="Cancelar" [text]="true" (onClick)="mostrarDialogNova.set(false)" />
+    <p-button
+      label="Criar e adicionar outra"
+      severity="secondary"
+      [loading]="salvandoNova()"
+      (onClick)="salvarNova(true)"
+    />
     <p-button
       label="Criar"
       icon="pi pi-check"
@@ -434,6 +433,9 @@
   [visible]="mostrarDialogTags()"
   (visibleChange)="mostrarDialogTags.set($event)"
   header="Atribuir tags"
+  dialogFormulario
+  [dialogBloqueado]="salvandoTags()"
+  (dialogEnviar)="salvarTags()"
   [modal]="true"
   [style]="{ width: '32rem' }"
   [draggable]="false"
@@ -474,6 +476,7 @@
   </form>
 
   <ng-template pTemplate="footer">
+    <app-dialog-dica-atalhos />
     <p-button label="Cancelar" [text]="true" (onClick)="mostrarDialogTags.set(false)" />
     <p-button
       label="Salvar"
@@ -542,6 +545,9 @@
   [visible]="mostrarDialogExecucao()"
   (visibleChange)="mostrarDialogExecucao.set($event)"
   [header]="modoExecucao() === 'iniciar' ? 'Iniciar execução' : 'Encerrar execução'"
+  dialogFormulario
+  [dialogBloqueado]="salvandoExecucao()"
+  (dialogEnviar)="confirmarExecucao()"
   [modal]="true"
   [style]="{ width: '42rem' }"
   [draggable]="false"
@@ -572,7 +578,6 @@
         placeholder="Descreva a execução..."
         class="w-full"
       ></textarea>
-      <small class="block mt-1 text-muted-color">{{ dicaCaracteresProibidos }}</small>
       @if (campoInvalidoExecucao('descricao')) {
         <small class="atividade-listagem__erro">
           @if (formularioExecucao.controls.descricao.hasError('pattern')) {
@@ -620,6 +625,7 @@
   </form>
 
   <ng-template pTemplate="footer">
+    <app-dialog-dica-atalhos [comTextarea]="true" />
     <p-button label="Cancelar" [text]="true" (onClick)="mostrarDialogExecucao.set(false)" />
     <p-button
       [label]="modoExecucao() === 'iniciar' ? 'Iniciar' : 'Encerrar'"
@@ -635,6 +641,10 @@
   [visible]="mostrarDialogRegistro()"
   (visibleChange)="mostrarDialogRegistro.set($event)"
   header="Registrar execução"
+  dialogFormulario
+  [dialogBloqueado]="salvandoRegistro()"
+  (dialogEnviar)="salvarRegistro()"
+  [dialogSemAutofocus]="true"
   [modal]="true"
   [style]="{ width: '42rem' }"
   [draggable]="false"
@@ -701,7 +711,6 @@
         placeholder="Descreva a execução..."
         class="w-full"
       ></textarea>
-      <small class="block mt-1 text-muted-color">{{ dicaCaracteresProibidos }}</small>
       @if (campoInvalidoRegistro('descricao')) {
         <small class="atividade-listagem__erro">
           @if (formularioRegistro.controls.descricao.hasError('pattern')) {
@@ -720,6 +729,7 @@
   </form>
 
   <ng-template pTemplate="footer">
+    <app-dialog-dica-atalhos [comTextarea]="true" />
     <p-button label="Cancelar" [text]="true" (onClick)="mostrarDialogRegistro.set(false)" />
     <p-button
       label="Registrar"
@@ -749,4 +759,3 @@
   </div>
 </p-popover>
 
-<p-confirmDialog />

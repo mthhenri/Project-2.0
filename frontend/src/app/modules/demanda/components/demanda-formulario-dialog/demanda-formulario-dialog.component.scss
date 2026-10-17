@@ -115,3 +115,69 @@
     flex-shrink: 0;
   }
 }
+
+.demanda-dialog {
+  &__cabecalho {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 1rem;
+  }
+
+  &__titulo {
+    font-size: 1.15rem;
+    font-weight: 600;
+  }
+
+  &__carregando {
+    display: flex;
+    justify-content: center;
+    padding: 2rem;
+  }
+
+  &__dica {
+    margin-top: -0.5rem;
+    color: var(--p-text-muted-color);
+    font-size: 0.8rem;
+  }
+
+  &__atalhos-data {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 0.25rem;
+  }
+
+  // "Mais opções": Status, Membros e Tags ficam recolhidos para o caminho curto ser curto.
+  &__mais-opcoes {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0;
+    border: none;
+    border-top: 1px solid var(--app-surface-200);
+    background: transparent;
+    color: var(--p-text-color);
+    font-family: inherit;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+
+    i {
+      font-size: 0.75rem;
+    }
+  }
+
+  &__mais-opcoes-resumo {
+    color: var(--p-text-muted-color);
+    font-size: 0.8rem;
+    font-weight: 400;
+  }
+
+  &__mais-opcoes-corpo {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+}

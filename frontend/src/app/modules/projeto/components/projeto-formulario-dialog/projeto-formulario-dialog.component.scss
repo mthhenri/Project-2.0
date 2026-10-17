@@ -22,3 +22,34 @@
     text-transform: uppercase;
   }
 }
+
+.projeto-formulario-dialog {
+  &__codigo-envolucro {
+    display: block;
+  }
+
+  &__periodo-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0;
+    border: none;
+    border-top: 1px solid var(--app-surface-200);
+    background: transparent;
+    color: var(--p-text-color);
+    font-family: inherit;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+
+    i {
+      font-size: 0.75rem;
+    }
+  }
+
+  &__periodo-dica {
+    color: var(--p-text-muted-color);
+    font-weight: 400;
+  }
+}

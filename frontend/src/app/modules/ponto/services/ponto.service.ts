@@ -9,6 +9,7 @@ import {
   StandardResponse,
 } from '@project20/shared';
 import { ambiente } from '../../../../environments/environment';
+import { comFeedbackProprio } from '../../../core/interceptors/loading.interceptor';
 
 @Injectable({ providedIn: 'root' })
 export class PontoService {
@@ -18,12 +19,12 @@ export class PontoService {
   consultarDiario(filtros: PontoConsultarDto): Observable<StandardResponse<PontoDiarioDto>> {
     let params = new HttpParams().set('data', filtros.data);
     if (filtros.usuarioId) params = params.set('usuarioId', String(filtros.usuarioId));
-    return this.httpClient.get<StandardResponse<PontoDiarioDto>>(`${this.urlBase}/diario`, { params });
+    return this.httpClient.get<StandardResponse<PontoDiarioDto>>(`${this.urlBase}/diario`, { params, ...comFeedbackProprio() });
   }
 
   consultarTodos(data: string): Observable<StandardResponse<PontoDiarioDto[]>> {
     const params = new HttpParams().set('data', data);
-    return this.httpClient.get<StandardResponse<PontoDiarioDto[]>>(`${this.urlBase}/todos`, { params });
+    return this.httpClient.get<StandardResponse<PontoDiarioDto[]>>(`${this.urlBase}/todos`, { params, ...comFeedbackProprio() });
   }
 
   consultarMensal(filtros: PontoMensalConsultarDto): Observable<StandardResponse<PontoMensalDto>> {
@@ -31,6 +32,6 @@ export class PontoService {
       .set('ano', String(filtros.ano))
       .set('mes', String(filtros.mes));
     if (filtros.usuarioId) params = params.set('usuarioId', String(filtros.usuarioId));
-    return this.httpClient.get<StandardResponse<PontoMensalDto>>(`${this.urlBase}/mensal`, { params });
+    return this.httpClient.get<StandardResponse<PontoMensalDto>>(`${this.urlBase}/mensal`, { params, ...comFeedbackProprio() });
   }
 }

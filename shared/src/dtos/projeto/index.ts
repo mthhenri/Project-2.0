@@ -10,3 +10,5 @@ export * from './ProjetoInternoAlterarDto';
 export * from './ProjetoAlteradoDto';
 export * from './ProjetoValidarCodigoDto';
 export * from './ProjetoExcluirDto';
+export * from './ProjetoRestaurarDto';
+export * from './ProjetoRestauradoDto';

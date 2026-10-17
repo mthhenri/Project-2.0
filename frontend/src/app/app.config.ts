@@ -13,6 +13,7 @@ import { TRADUCAO_PT_BR } from './core/config/primeng-traducao-pt-br';
 import { authTokenInterceptor } from './core/interceptors/auth-token.interceptor';
 import { errorHandlerInterceptor } from './core/interceptors/error-handler.interceptor';
 import { loadingInterceptor } from './core/interceptors/loading.interceptor';
+import { execucaoAtivaInterceptor } from './core/interceptors/execucao-ativa.interceptor';
 
 const TemaAzul = definePreset(Aura, {
   semantic: {
@@ -41,6 +42,7 @@ export const appConfig: ApplicationConfig = {
         authTokenInterceptor,
         errorHandlerInterceptor,
         loadingInterceptor,
+        execucaoAtivaInterceptor,
       ]),
     ),
     provideAnimationsAsync(),

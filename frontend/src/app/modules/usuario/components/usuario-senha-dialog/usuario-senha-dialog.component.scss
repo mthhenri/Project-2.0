@@ -1,0 +1,30 @@
+@use '../../../../shared/styles/form' as *;
+
+.usuario-senha-dialog {
+  &__form {
+    @include form-dialog-form(1rem);
+  }
+
+  &__texto {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--p-text-muted-color);
+  }
+
+  &__campo       { @include form-campo; }
+  &__label       { @include form-label; }
+  &__obrigatorio { @include form-obrigatorio; }
+  &__erro        { @include form-erro; }
+
+  &__senha {
+    display: flex;
+    align-items: center;
+    gap: 0.125rem;
+  }
+
+  &__senha-campo {
+    flex: 1;
+    min-width: 0;
+    font-family: var(--font-mono, monospace);
+  }
+}

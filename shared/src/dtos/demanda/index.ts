@@ -45,3 +45,5 @@ export * from './DemandaMembroRemoverDto';
 export * from './DemandaPlanejamentoDto';
 export * from './ExecutorAtivoDto';
 export * from './DemandaPlanejamentoListarDto';
+export * from './DemandaRestaurarDto';
+export * from './DemandaRestauradaDto';

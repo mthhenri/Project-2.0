@@ -41,24 +41,6 @@
     <div class="atividade-detalhe__conteudo">
       <section class="atividade-detalhe__bloco">
         <div class="atividade-detalhe__bloco-cabecalho">
-          <h2 class="atividade-detalhe__bloco-titulo">Descrição</h2>
-          <p-button
-            icon="pi pi-pencil"
-            [text]="true"
-            size="small"
-            label="Editar"
-            (onClick)="abrirDialogDescricao()"
-          />
-        </div>
-        @if (atividade.descricao) {
-          <p class="atividade-detalhe__descricao whitespace-pre-wrap">{{ atividade.descricao }}</p>
-        } @else {
-          <p class="text-muted-color">Sem descrição.</p>
-        }
-      </section>
-
-      <section class="atividade-detalhe__bloco">
-        <div class="atividade-detalhe__bloco-cabecalho">
           <h2 class="atividade-detalhe__bloco-titulo">Tags</h2>
           @if (sessao.eGestor()) {
             <p-button
@@ -138,42 +120,14 @@
   }
 </div>
 
-<!-- Dialog: editar descrição -->
-<p-dialog
-  [visible]="mostrarDialogDescricao()"
-  (visibleChange)="mostrarDialogDescricao.set($event)"
-  header="Editar descrição"
-  [modal]="true"
-  [style]="{ width: '40rem' }"
-  [draggable]="false"
->
-  <form [formGroup]="formularioDescricao" class="atividade-detalhe__dialog-form">
-    <textarea
-      pTextarea
-      spellcheck="true"
-      formControlName="descricao"
-      rows="6"
-      placeholder="Descreva a atividade..."
-      class="w-full"
-    ></textarea>
-    <app-assistente-descricao
-      [textoAtual]="formularioDescricao.value.descricao || ''"
-      tipoEntidade="atividade"
-      [contextoEntidade]="atividade()?.nome || ''"
-      (textoAuxiliadoAceito)="aceitarDescricaoAssistente($event)"
-    />
-  </form>
-  <ng-template pTemplate="footer">
-    <p-button label="Cancelar" severity="secondary" [outlined]="true" (onClick)="mostrarDialogDescricao.set(false)" />
-    <p-button label="Salvar" icon="pi pi-check" [loading]="carregandoDescricao()" (onClick)="salvarDescricao()" />
-  </ng-template>
-</p-dialog>
-
 <!-- Dialog: editar tags -->
 <p-dialog
   [visible]="mostrarDialogTags()"
   (visibleChange)="mostrarDialogTags.set($event)"
   header="Editar tags"
+  dialogFormulario
+  [dialogBloqueado]="carregandoTags()"
+  (dialogEnviar)="salvarTags()"
   [modal]="true"
   [style]="{ width: '32rem' }"
   [draggable]="false"
@@ -190,6 +144,7 @@
     />
   </form>
   <ng-template pTemplate="footer">
+    <app-dialog-dica-atalhos />
     <p-button label="Cancelar" severity="secondary" [outlined]="true" (onClick)="mostrarDialogTags.set(false)" />
     <p-button label="Salvar" icon="pi pi-check" [loading]="carregandoTags()" (onClick)="salvarTags()" />
   </ng-template>
@@ -200,6 +155,9 @@
   [visible]="mostrarDialogExecucao()"
   (visibleChange)="mostrarDialogExecucao.set($event)"
   header="Iniciar execução"
+  dialogFormulario
+  [dialogBloqueado]="carregandoExecucao()"
+  (dialogEnviar)="iniciarExecucao()"
   [modal]="true"
   [style]="{ width: '36rem' }"
   [draggable]="false"
@@ -222,6 +180,7 @@
     }
   </form>
   <ng-template pTemplate="footer">
+    <app-dialog-dica-atalhos [comTextarea]="true" />
     <p-button label="Cancelar" severity="secondary" [outlined]="true" (onClick)="mostrarDialogExecucao.set(false)" />
     <p-button label="Iniciar" icon="pi pi-play" [loading]="carregandoExecucao()" (onClick)="iniciarExecucao()" />
   </ng-template>

@@ -11,8 +11,10 @@ import {
   ProjetoAlteradoDto,
   StandardResponse,
   PaginatedResult,
+  ProjetoRestauradoDto,
 } from '@project20/shared';
 import { ambiente } from '../../../../environments/environment';
+import { comFeedbackProprio } from '../../../core/interceptors/loading.interceptor';
 
 @Injectable({ providedIn: 'root' })
 export class ProjetoService {
@@ -24,7 +26,7 @@ export class ProjetoService {
     if (filtros.status) params = params.set('status', filtros.status);
     if (filtros.pagina) params = params.set('pagina', String(filtros.pagina));
     if (filtros.itensPorPagina) params = params.set('itensPorPagina', String(filtros.itensPorPagina));
-    return this.httpClient.get<StandardResponse<PaginatedResult<ProjetoResumoDto>>>(this.urlBase, { params });
+    return this.httpClient.get<StandardResponse<PaginatedResult<ProjetoResumoDto>>>(this.urlBase, { params, ...comFeedbackProprio() });
   }
 
   criar(dto: ProjetoCriarDto): Observable<StandardResponse<ProjetoCriadoDto>> {
@@ -41,5 +43,10 @@ export class ProjetoService {
 
   excluir(id: number): Observable<StandardResponse<void>> {
     return this.httpClient.delete<StandardResponse<void>>(`${this.urlBase}/${id}`);
+  }
+
+  /** Desfaz o soft delete ("Desfazer" do toast de exclusão). */
+  restaurar(id: number): Observable<StandardResponse<ProjetoRestauradoDto>> {
+    return this.httpClient.patch<StandardResponse<ProjetoRestauradoDto>>(`${this.urlBase}/${id}/restaurar`, {});
   }
 }

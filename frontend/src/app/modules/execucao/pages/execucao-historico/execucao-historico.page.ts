@@ -27,7 +27,6 @@ import {
   TipoUsuarioStatusEnum,
   REGEX_SEM_CARACTERES_PROIBIDOS,
   MENSAGEM_CARACTERES_PROIBIDOS,
-  MENSAGEM_CARACTERES_PROIBIDOS_DICA,
 } from '@project20/shared';
 import { ExecucaoService } from '../../services/execucao.service';
 import { UsuarioService } from '../../../usuario/services/usuario.service';
@@ -35,11 +34,15 @@ import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.s
 import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-horas.pipe';
 import { BloquearCaracteresProibidosDirective } from '../../../../shared/directives/bloquear-caracteres-proibidos.directive';
 import { AtividadeVisualizarDialogComponent } from '../../../atividade/components/atividade-visualizar-dialog/atividade-visualizar-dialog.component';
+import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
+import { BarraRecargaComponent } from '../../../../shared/components/barra-recarga/barra-recarga.component';
 
 @Component({
   selector: 'app-execucao-historico',
   standalone: true,
   imports: [
+    SkeletonListaComponent,
+    BarraRecargaComponent,
     DatePipe,
     ReactiveFormsModule,
     TableModule,
@@ -77,6 +80,9 @@ export class ExecucaoHistoricoPage implements OnInit {
   readonly totalRegistros = signal<number>(0);
   readonly totalMinutosDia = signal<number>(0);
   readonly carregando = signal<boolean>(false);
+  private readonly jaCarregou = signal<boolean>(false);
+  readonly primeiraCarga = computed(() => this.carregando() && !this.jaCarregou());
+  readonly recarregando = computed(() => this.carregando() && this.jaCarregou());
   readonly paginaAtual = signal<number>(1);
   readonly itensPorPagina = signal<number>(50);
 
@@ -97,7 +103,6 @@ export class ExecucaoHistoricoPage implements OnInit {
   });
 
   readonly mensagemCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS;
-  readonly dicaCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS_DICA;
 
   /** Textarea de descrição; recebe o foco ao abrir o dialog, não o campo de início. */
   @ViewChild('descricaoEdicao') private descricaoEdicao?: ElementRef<HTMLTextAreaElement>;
@@ -133,7 +138,10 @@ export class ExecucaoHistoricoPage implements OnInit {
 
     this.execucaoService
       .listar(filtros)
-      .pipe(finalize(() => this.carregando.set(false)))
+      .pipe(finalize(() => {
+        this.carregando.set(false);
+        this.jaCarregou.set(true);
+      }))
       .subscribe({
         next: (resposta) => {
           if (resposta.sucesso && resposta.dados) {

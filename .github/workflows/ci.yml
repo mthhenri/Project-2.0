@@ -1,0 +1,47 @@
+name: CI
+
+# Integração contínua: organização do repositório + build em todo Pull Request.
+# O passo "Organização" é genérico e só exige Node 22+ (o script usa apenas a biblioteca padrão).
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verificar:
+    name: Organização e build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Espelhos CLAUDE.md = AGENTS.md, .claude/skills = .agents/skills e destinos de spec/artefato.
+      - name: Organização do repositório e espelhos de agentes
+        run: |
+          node --test scripts/verificar-organizacao.test.mjs
+          node scripts/verificar-organizacao.mjs --staged
+
+      # Sem lint no projeto ainda (docs/context/PROBLEMS.md P-001).
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Testes do shared
+        run: npm run test --workspace=shared
+
+      - name: Testes do backend
+        run: npm run test --workspace=backend
+
+      - name: Build do backend
+        run: npm run build --workspace=backend
+
+      - name: Build do frontend
+        run: npm run build --workspace=frontend

@@ -3,9 +3,7 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { finalize, forkJoin } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
-import { EditorModule } from 'primeng/editor';
 import { InputTextModule } from 'primeng/inputtext';
-import { TabsModule } from 'primeng/tabs';
 import { Tag } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
@@ -16,7 +14,6 @@ import {
   ExecucaoItemDto,
   REGEX_SEM_CARACTERES_PROIBIDOS,
   MENSAGEM_CARACTERES_PROIBIDOS,
-  MENSAGEM_CARACTERES_PROIBIDOS_DICA,
 } from '@project20/shared';
 import { AtividadeService } from '../../services/atividade.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
@@ -32,9 +29,7 @@ import { severidadeStatusAtividade, rotuloStatusAtividade } from '../../models/a
     ReactiveFormsModule,
     ButtonModule,
     DialogModule,
-    EditorModule,
     InputTextModule,
-    TabsModule,
     Tag,
     TooltipModule,
     DataBrasileiraPipe,
@@ -55,7 +50,6 @@ export class AtividadeVisualizarDialogComponent {
   readonly atividadeVisualizada = signal<AtividadeRecuperadaDto | null>(null);
   readonly tagsVisualizar = signal<TagResumoDto[]>([]);
   readonly execucoesVisualizar = signal<ExecucaoItemDto[]>([]);
-  readonly salvandoDescricao = signal<boolean>(false);
   readonly editandoNome = signal<boolean>(false);
   readonly salvandoNome = signal<boolean>(false);
 
@@ -66,16 +60,11 @@ export class AtividadeVisualizarDialogComponent {
 
   private readonly campoNome = viewChild<ElementRef<HTMLInputElement>>('campoNome');
 
-  readonly formularioDescricao = this.formBuilder.group({
-    descricao: [''],
-  });
-
   readonly formularioNome = this.formBuilder.group({
     nome: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(255), Validators.pattern(REGEX_SEM_CARACTERES_PROIBIDOS)]],
   });
 
   readonly mensagemCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS;
-  readonly dicaCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS_DICA;
 
   /** Abre o dialog e carrega atividade, tags e execuções. */
   abrir(atividadeId: number): void {
@@ -83,7 +72,6 @@ export class AtividadeVisualizarDialogComponent {
     this.atividadeVisualizada.set(null);
     this.tagsVisualizar.set([]);
     this.execucoesVisualizar.set([]);
-    this.formularioDescricao.reset({ descricao: '' });
     this.editandoNome.set(false);
     this.mostrarDialog.set(true);
 
@@ -97,30 +85,9 @@ export class AtividadeVisualizarDialogComponent {
         next: ({ atividade, tags, execucoes }) => {
           if (atividade.sucesso && atividade.dados) {
             this.atividadeVisualizada.set(atividade.dados);
-            this.formularioDescricao.patchValue({ descricao: atividade.dados.descricao ?? '' });
           }
           if (tags.sucesso && tags.dados)           this.tagsVisualizar.set(tags.dados);
           if (execucoes.sucesso && execucoes.dados) this.execucoesVisualizar.set(execucoes.dados.itens);
-        },
-      });
-  }
-
-  salvarDescricao(): void {
-    const atividade = this.atividadeVisualizada();
-    if (!atividade) return;
-
-    this.salvandoDescricao.set(true);
-    const dto: AtividadeAlterarDto = { descricao: this.formularioDescricao.value.descricao ?? '' };
-    this.atividadeService
-      .alterar(atividade.id, dto)
-      .pipe(finalize(() => this.salvandoDescricao.set(false)))
-      .subscribe({
-        next: (resposta) => {
-          if (resposta.sucesso && resposta.dados) {
-            const alterada = resposta.dados;
-            this.atividadeVisualizada.update((atual) => (atual ? { ...atual, descricao: alterada.descricao } : atual));
-            this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Descrição salva' });
-          }
         },
       });
   }

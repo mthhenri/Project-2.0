@@ -8,3 +8,5 @@ export * from './TagResumoDto';
 export * from './TagRecuperadaDto';
 export * from './TagRecuperarDto';
 export * from './TagExcluirDto';
+export * from './TagRestaurarDto';
+export * from './TagRestauradaDto';

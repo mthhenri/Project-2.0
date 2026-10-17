@@ -17,6 +17,7 @@ import {
   AtividadeTagsAlterarDto,
   DemandaAcessoVerificarDto,
 } from '@project20/shared';
+import { AtividadeRestaurarDto, AtividadeRestauradaDto } from '@project20/shared';
 
 type AtividadeInserirDados = Omit<Atividade, 'id' | 'isDeleted' | 'createdDate' | 'updatedDate' | 'deletedDate'>;
 
@@ -34,8 +35,8 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
    */
   async inserir(dados: AtividadeInserirDados): Promise<AtividadeCriadaDto> {
     const resultado = await this.executarConsulta<AtividadeCriadaDto>(
-      `INSERT INTO atividade (demanda_id, usuario_id, nome, descricao, tipo_atividade_status_id, created_date, updated_date, is_deleted)
-       SELECT :demandaId, :usuarioId, :nome, :descricao,
+      `INSERT INTO atividade (demanda_id, usuario_id, nome, tipo_atividade_status_id, created_date, updated_date, is_deleted)
+       SELECT :demandaId, :usuarioId, :nome,
          (SELECT tipo_atividade_status.id FROM tipo_atividade_status
             WHERE tipo_atividade_status.codigo = :status AND tipo_atividade_status.is_deleted = false),
          NOW(), NOW(), false
@@ -44,7 +45,6 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
          demanda_id      AS "demandaId",
          usuario_id      AS "usuarioId",
          nome,
-         descricao,
          (SELECT tipo_atividade_status.codigo FROM tipo_atividade_status
             WHERE tipo_atividade_status.id = atividade.tipo_atividade_status_id) AS status,
          created_date    AS "createdDate"`,
@@ -52,7 +52,6 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
         demandaId:     dados.demandaId,
         usuarioId:     dados.usuarioId,
         nome:          dados.nome,
-        descricao:     dados.descricao ?? null,
         status:        dados.status,
       },
     );
@@ -71,7 +70,6 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
          atividade.usuario_id      AS "usuarioId",
          usuario.nome_completo     AS "nomeUsuario",
          atividade.nome,
-         atividade.descricao,
          tipo_atividade_status.codigo AS status,
          (SELECT COUNT(*)::int
             FROM atividade atividade_do_usuario
@@ -240,10 +238,6 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
       setClauses.push('nome = :nome');
       parametros.nome = dto.nome;
     }
-    if (dto.descricao !== undefined) {
-      setClauses.push('descricao = :descricao');
-      parametros.descricao = dto.descricao;
-    }
     if (dto.status !== undefined) {
       setClauses.push(
         'tipo_atividade_status_id = (SELECT tipo_atividade_status.id FROM tipo_atividade_status WHERE tipo_atividade_status.codigo = :status AND tipo_atividade_status.is_deleted = false)',
@@ -261,7 +255,6 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
          demanda_id      AS "demandaId",
          usuario_id      AS "usuarioId",
          nome,
-         descricao,
          (SELECT tipo_atividade_status.codigo FROM tipo_atividade_status
             WHERE tipo_atividade_status.id = atividade.tipo_atividade_status_id) AS status,
          created_date    AS "createdDate"`,
@@ -288,6 +281,48 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
   /** Soft delete da atividade. */
   async excluir(dto: AtividadeExcluirDto): Promise<void> {
     await this.executarSoftDelete(dto.id);
+  }
+
+  /**
+   * Recupera a atividade **excluída**. É a única leitura que filtra `is_deleted = true`: a restauração
+   * precisa do registro apagado para validar unicidade e dependências antes de reativá-lo.
+   */
+  async recuperarExcluida(dto: AtividadeRestaurarDto): Promise<(AtividadeRestauradaDto & { demandaAtiva: boolean }) | null> {
+    const resultado = await this.executarConsulta<AtividadeRestauradaDto & { demandaAtiva: boolean }>(
+      `SELECT
+         atividade.id,
+         atividade.demanda_id AS "demandaId",
+         atividade.nome,
+         EXISTS(
+           SELECT 1 FROM demanda
+           WHERE demanda.id = atividade.demanda_id
+             AND demanda.is_deleted = false
+         ) AS "demandaAtiva"
+       FROM atividade
+       WHERE atividade.id = :id
+         AND atividade.is_deleted = true
+       LIMIT 1`,
+      { id: dto.id },
+    );
+    return resultado[0] ?? null;
+  }
+
+  /** Restaura a atividade: desfaz o soft delete (sem DELETE físico e sem cascata). */
+  async restaurar(dto: AtividadeRestaurarDto): Promise<AtividadeRestauradaDto> {
+    const resultado = await this.executarConsulta<AtividadeRestauradaDto>(
+      `UPDATE atividade
+       SET is_deleted = false,
+           deleted_date = NULL,
+           updated_date = NOW()
+       WHERE atividade.id = :id
+         AND atividade.is_deleted = true
+       RETURNING
+         id,
+         demanda_id AS "demandaId",
+         nome`,
+      { id: dto.id },
+    );
+    return resultado[0];
   }
 
   /**

@@ -5,18 +5,22 @@ import {
   computed,
   OnInit,
   HostListener,
+  ViewChild,
+  effect,
 } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { finalize } from 'rxjs';
 import { DatePickerModule } from 'primeng/datepicker';
 import { Select } from 'primeng/select';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
-import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import {
   PontoDiarioDto,
   PontoMensalDto,
+  PontoDiaResumoDto,
   PontoMensalConsultarDto,
   UsuarioResumoDto,
   TipoUsuarioStatusEnum,
@@ -24,6 +28,8 @@ import {
 import { PontoService } from '../../services/ponto.service';
 import { UsuarioService } from '../../../usuario/services/usuario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
+import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
+import { BarraRecargaComponent } from '../../../../shared/components/barra-recarga/barra-recarga.component';
 import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-horas.pipe';
 import { PontoResumoCardComponent } from '../../components/ponto-resumo-card/ponto-resumo-card.component';
 import { PontoUsuarioCardComponent } from '../../components/ponto-usuario-card/ponto-usuario-card.component';
@@ -32,6 +38,7 @@ import { PontoJustificativaDialogComponent } from '../../components/ponto-justif
 import { PontoImpressaoComponent } from '../../components/ponto-impressao/ponto-impressao.component';
 import { AtividadeVisualizarDialogComponent } from '../../../atividade/components/atividade-visualizar-dialog/atividade-visualizar-dialog.component';
 import { formatarSaldoMinutos } from '../../models/ponto.model';
+import { focoEmCampo, haSobreposicaoAberta } from '../../../../core/utils/atalhos';
 
 type ModoPonto = 'todos' | 'mensal';
 
@@ -41,11 +48,14 @@ type ModoPonto = 'todos' | 'mensal';
   imports: [
     RouterModule,
     ReactiveFormsModule,
+    FormsModule,
+    ToggleSwitchModule,
     DatePickerModule,
     Select,
     ButtonModule,
     TooltipModule,
-    ProgressSpinnerModule,
+    SkeletonListaComponent,
+    BarraRecargaComponent,
     MinutosParaHorasPipe,
     PontoResumoCardComponent,
     PontoUsuarioCardComponent,
@@ -62,6 +72,7 @@ export class PontoPage implements OnInit {
   private readonly usuarioService = inject(UsuarioService);
   private readonly formBuilder = inject(FormBuilder);
   readonly sessao = inject(UsuarioSessaoService);
+  private readonly roteador = inject(Router);
 
   readonly hoje = this.inicioDoDia(new Date());
 
@@ -80,10 +91,56 @@ export class PontoPage implements OnInit {
     return mes.getFullYear() === this.hoje.getFullYear() && mes.getMonth() === this.hoje.getMonth();
   });
 
+  /** Visão "Equipe · hoje": só quem tem execução em andamento (filtro no cliente). */
+  readonly somenteAtivos = signal<boolean>(false);
+
   readonly carregando = signal<boolean>(false);
+  private readonly todosCarregado = signal<boolean>(false);
   readonly pontosTodos = signal<PontoDiarioDto[]>([]);
   readonly pontoMensal = signal<PontoMensalDto | null>(null);
   readonly usuarios = signal<UsuarioResumoDto[]>([]);
+
+  /** Sem nada do modo atual para mostrar: a carga vira esqueleto; senão, recarga com o conteúdo esmaecido. */
+  private readonly semDadosDoModo = computed(() =>
+    this.modo() === 'todos' ? !this.todosCarregado() : this.pontoMensal() === null,
+  );
+  readonly primeiraCarga = computed(() => this.carregando() && this.semDadosDoModo());
+  readonly recarregando = computed(() => this.carregando() && !this.semDadosDoModo());
+
+  /** Equipe ordenada com quem está trabalhando agora primeiro (ordem estável entre os demais). */
+  readonly equipeExibida = computed(() => {
+    const pontos = this.pontosTodos();
+    const ordenados = [...pontos].sort(
+      (a, b) => Number(this.trabalhandoAgora(b)) - Number(this.trabalhandoAgora(a)),
+    );
+    return this.somenteAtivos() ? ordenados.filter((ponto) => this.trabalhandoAgora(ponto)) : ordenados;
+  });
+  readonly totalPessoas = computed(() => this.pontosTodos().length);
+  readonly totalTrabalhando = computed(() => this.pontosTodos().filter((ponto) => this.trabalhandoAgora(ponto)).length);
+
+  /** Execução em andamento = alguma execução do dia sem `fimData`. */
+  trabalhandoAgora(ponto: PontoDiarioDto): boolean {
+    return ponto.execucoes.some((execucao) => execucao.fimData === null);
+  }
+
+  /** "Saldo até hoje": soma dos saldos dos dias até hoje — só faz sentido no mês corrente. */
+  readonly saldoAteHojeMinutos = computed(() => {
+    const mensal = this.pontoMensal();
+    if (!mensal || !this.visualizandoMesAtual()) return null;
+    const hojeIso = this.formatarData(this.hoje);
+    return mensal.dias
+      .filter((dia) => dia.data.slice(0, 10) <= hojeIso)
+      .reduce((soma, dia) => soma + dia.saldoMinutos, 0);
+  });
+
+  constructor() {
+    // Controles do mês não somem na visão equipe: só ficam desabilitados (cabeçalho estável).
+    effect(() => {
+      const controle = this.formularioFiltros.controls.mesAno;
+      if (this.modo() === 'mensal') controle.enable({ emitEvent: false });
+      else controle.disable({ emitEvent: false });
+    });
+  }
 
   ngOnInit(): void {
     if (this.sessao.eGestor()) this.carregarUsuarios();
@@ -109,6 +166,45 @@ export class PontoPage implements OnInit {
     const usuarioId = this.formularioFiltros.value.usuarioId ?? null;
     this.modo.set(usuarioId ? 'mensal' : 'todos');
     this.carregar();
+  }
+
+  /** Volta ao mês corrente. */
+  irParaHoje(): void {
+    this.formularioFiltros.patchValue({ mesAno: this.hoje });
+    this.aoMudarMes();
+  }
+
+  /** Abre o mensal de um usuário a partir do card da equipe (100% no cliente). */
+  abrirMensalDe(usuarioId: number): void {
+    this.formularioFiltros.patchValue({ usuarioId });
+    this.aoMudarUsuario();
+  }
+
+  /** Dialog de justificativa direto da linha do dia (ou do badge de uma justificativa existente). */
+  justificarDia(dia: PontoDiaResumoDto, usuarioId: number): void {
+    this.justificativaDialog?.abrir(usuarioId, this.mesSelecionado(), {
+      data: dia.data.slice(0, 10),
+      horasFaltantes: Math.max(0, -dia.saldoMinutos) / 60,
+    });
+  }
+
+  /** Atalhos do mês (task 100): ← mês anterior, → próximo, T volta a hoje. Só no modo mensal. */
+  @HostListener('document:keydown', ['$event'])
+  aoTeclar(evento: KeyboardEvent): void {
+    if (this.modo() !== 'mensal' || evento.defaultPrevented) return;
+    if (evento.ctrlKey || evento.metaKey || evento.altKey || evento.shiftKey) return;
+    if (focoEmCampo(evento.target) || haSobreposicaoAberta()) return;
+
+    const tecla = evento.key.toLowerCase();
+    if (tecla === 'arrowleft') this.retornarMes();
+    else if (tecla === 'arrowright') this.avancarMes();
+    else if (tecla === 't') this.irParaHoje();
+    else return;
+    evento.preventDefault();
+  }
+
+  irParaGerenciarUsuarios(): void {
+    this.roteador.navigate(['/usuario']);
   }
 
   aoMudarMes(): void {
@@ -155,7 +251,10 @@ export class PontoPage implements OnInit {
       .pipe(finalize(() => this.carregando.set(false)))
       .subscribe({
         next: (resposta) => {
-          if (resposta.sucesso && resposta.dados) this.pontosTodos.set(resposta.dados);
+          if (resposta.sucesso && resposta.dados) {
+            this.pontosTodos.set(resposta.dados);
+            this.todosCarregado.set(true);
+          }
         },
       });
   }
@@ -188,6 +287,8 @@ export class PontoPage implements OnInit {
       },
     });
   }
+
+  @ViewChild('justificativaDialog') private justificativaDialog?: PontoJustificativaDialogComponent;
 
   private inicioDoDia(data: Date): Date {
     return new Date(data.getFullYear(), data.getMonth(), data.getDate());

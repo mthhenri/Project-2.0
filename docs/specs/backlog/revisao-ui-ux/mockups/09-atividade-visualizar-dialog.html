@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Visualizar atividade — dialog otimizado</title>
+<link rel="stylesheet" href="base.css">
+</head>
+<body data-altura="860">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-play" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+    <symbol id="i-chevron-down" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+  </defs>
+</svg>
+
+<div class="mk-app" style="min-height:860px">
+  <div style="opacity:.32; filter:saturate(.5); padding:24px; display:flex; flex-direction:column; gap:14px">
+    <div class="mk-page-header">
+      <div><div class="mk-page-header__titulo">Atividades</div><div class="mk-page-header__subtitulo">128 atividades · 3 em execução</div></div>
+      <button class="mk-btn">Nova Atividade</button>
+    </div>
+    <div class="mk-card" style="height:600px"></div>
+  </div>
+
+  <div class="mk-backdrop">
+    <div class="mk-dialog mk-dialog--lg" style="width:720px">
+      <div class="mk-dialog__header">
+        <div class="u-flex u-centro u-g8">
+          <div class="mk-dialog__titulo">Corrigir cálculo de juros do extrato</div>
+          <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic ic--sm"><use href="#i-edit"/></svg></button>
+        </div>
+        <button class="mk-btn mk-btn--texto-neutro mk-btn--sm mk-btn--icone"><svg class="ic"><use href="#i-x"/></svg></button>
+      </div>
+
+      <div class="mk-dialog__corpo">
+        <!-- contexto -->
+        <div class="u-flex u-centro u-g8 u-sec" style="font-size:13px">
+          <svg class="ic"><use href="#i-folder"/></svg> Portal do Cliente · Tela de extrato
+        </div>
+
+        <!-- linha de infos -->
+        <div class="u-flex u-centro u-g16 u-wrap">
+          <span class="u-flex u-centro u-g8"><span class="mk-avatar mk-avatar--sm">BL</span> Bruno Lima</span>
+          <span class="u-sm u-sec">3ª atividade</span>
+          <span class="mk-tag mk-tag--ambar" style="cursor:pointer">Pendente <svg class="ic ic--sm"><use href="#i-chevron-down"/></svg></span>
+          <span class="u-flex u-centro u-g6 u-sec" style="font-size:13px"><svg class="ic"><use href="#i-clock"/></svg> Tempo total: <b style="color:var(--superficie-800)">12h 30min</b></span>
+        </div>
+
+        <!-- tags -->
+        <div class="u-flex u-centro u-g6">
+          <span class="mk-tag mk-tag--verm">Urgente</span>
+          <span class="mk-tag mk-tag--azul">Backend</span>
+          <button class="mk-btn mk-btn--texto mk-btn--sm"><svg class="ic ic--sm"><use href="#i-plus"/></svg> editar</button>
+        </div>
+
+        <!-- abas -->
+        <div class="mk-tabs">
+          <div class="mk-tab mk-tab--ativa">Descrição</div>
+          <div class="mk-tab">Últimas execuções <span class="mk-badge-num">4</span></div>
+        </div>
+
+        <!-- descrição em modo leitura -->
+        <div style="position:relative; padding:4px 0 8px">
+          <div style="font-size:13.5px; line-height:1.65; color:var(--superficie-700)">
+            O cálculo de juros do extrato apresenta divergência para contratos legados (anteriores a 2024).
+            A fórmula deve considerar capitalização composta com carência.<br><br>
+            <b>Critérios de aceite:</b> valores idênticos aos do relatório contábil para a base de homologação.
+          </div>
+          <button class="mk-btn mk-btn--sec mk-btn--sm" style="position:absolute; top:0; right:0"><svg class="ic ic--sm"><use href="#i-edit"/></svg> Editar</button>
+        </div>
+      </div>
+
+      <div class="mk-dialog__footer">
+        <span class="mk-esq u-xs u-muted">Criada em 02/07/2026</span>
+        <button class="mk-btn mk-btn--sec">Fechar</button>
+        <button class="mk-btn mk-btn--verde"><svg class="ic"><use href="#i-play"/></svg> Iniciar execução</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Callouts -->
+  <div class="mk-callout" style="top:222px; left:1058px">1</div>  <!-- contexto projeto·demanda -->
+  <div class="mk-callout" style="top:288px; left:585px">2</div>   <!-- status inline -->
+  <div class="mk-callout" style="top:288px; left:800px">3</div>   <!-- tempo total -->
+  <div class="mk-callout" style="top:338px; left:585px">4</div>   <!-- tags editáveis -->
+  <div class="mk-callout" style="top:452px; left:1058px">5</div>  <!-- leitura + editar -->
+  <div class="mk-callout" style="top:660px; left:1058px">6</div>  <!-- play no footer -->
+</div>
+</body>
+</html>

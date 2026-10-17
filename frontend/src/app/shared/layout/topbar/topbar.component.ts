@@ -1,5 +1,7 @@
-import { Component, DestroyRef, inject, signal, computed } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { Component, DestroyRef, HostListener, ViewChild, inject, signal, computed } from '@angular/core';
+import { NavigationEnd, Router, RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { ReactiveFormsModule, FormControl } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { PopoverModule } from 'primeng/popover';
@@ -14,6 +16,9 @@ import { TemaService } from '../../../core/services/tema.service';
 import { TemaPersonalizadoService } from '../../../core/services/tema-personalizado.service';
 import { VisualizacaoTempoService } from '../../../core/services/visualizacao-tempo.service';
 import { CORES_SUGERIDAS, COR_PRIMARIA_PADRAO_HEX } from '../../../core/models/tema-personalizado.model';
+import { focoEmCampo, haSobreposicaoAberta } from '../../../core/utils/atalhos';
+import { ExecucaoAtivaService } from '../../../core/services/execucao-ativa.service';
+import { ChipExecucaoAtivaComponent } from './chip-execucao-ativa/chip-execucao-ativa.component';
 import { UsuarioAnotacoesDialogComponent } from '../../../modules/usuario/components/usuario-anotacoes-dialog/usuario-anotacoes-dialog.component';
 
 @Component({
@@ -22,12 +27,15 @@ import { UsuarioAnotacoesDialogComponent } from '../../../modules/usuario/compon
   imports: [
     RouterModule,
     ReactiveFormsModule,
+    FormsModule,
+    ToggleSwitchModule,
     ButtonModule,
     PopoverModule,
     TooltipModule,
     DividerModule,
     ColorPickerModule,
     UsuarioAnotacoesDialogComponent,
+    ChipExecucaoAtivaComponent,
   ],
   templateUrl: './topbar.component.html',
   styleUrl: './topbar.component.scss',
@@ -39,6 +47,9 @@ export class TopbarComponent {
   readonly temaPersonalizado = inject(TemaPersonalizadoService);
   readonly unidadeTempo = inject(VisualizacaoTempoService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly execucaoAtiva = inject(ExecucaoAtivaService);
+  private readonly roteador = inject(Router);
+  @ViewChild('anotacoesDialog') private anotacoesDialog?: UsuarioAnotacoesDialogComponent;
   readonly horaAtual = signal<string>('');
 
   readonly coresSugeridas = CORES_SUGERIDAS;
@@ -53,23 +64,96 @@ export class TopbarComponent {
   );
 
   private readonly todosItensNavegacao = [
-    { label: 'Ponto',      icone: 'pi pi-clock',        rotaLink: '/ponto',      somenteGestor: false },
-    { label: 'Calendário', icone: 'pi pi-calendar',     rotaLink: '/calendario', somenteGestor: true  },
-    { label: 'Projetos',   icone: 'pi pi-folder',       rotaLink: '/projeto',    somenteGestor: true  },
-    { label: 'Demandas',   icone: 'pi pi-sitemap',      rotaLink: '/demanda',    somenteGestor: false },
-    { label: 'Atividades', icone: 'pi pi-check-square', rotaLink: '/atividade',  somenteGestor: false },
-    { label: 'Execuções',  icone: 'pi pi-play',         rotaLink: '/execucao',   somenteGestor: false },
-    { label: 'Tags',       icone: 'pi pi-tag',          rotaLink: '/tag',        somenteGestor: true  },
-    { label: 'Usuários',   icone: 'pi pi-users',        rotaLink: '/usuario',    somenteGestor: true  },
+    { label: 'Ponto',      icone: 'pi pi-clock',        rotaLink: '/ponto',      tecla: 'p', somenteGestor: false },
+    { label: 'Calendário', icone: 'pi pi-calendar',     rotaLink: '/calendario', tecla: 'c', somenteGestor: true  },
+    { label: 'Projetos',   icone: 'pi pi-folder',       rotaLink: '/projeto',    tecla: 'j', somenteGestor: true  },
+    { label: 'Demandas',   icone: 'pi pi-sitemap',      rotaLink: '/demanda',    tecla: 'd', somenteGestor: false },
+    { label: 'Atividades', icone: 'pi pi-check-square', rotaLink: '/atividade',  tecla: 'a', somenteGestor: false },
+    { label: 'Execuções',  icone: 'pi pi-play',         rotaLink: '/execucao',   tecla: 'e', somenteGestor: false },
+    { label: 'Tags',       icone: 'pi pi-tag',          rotaLink: '/tag',        tecla: 't', somenteGestor: true  },
+    { label: 'Usuários',   icone: 'pi pi-users',        rotaLink: '/usuario',    tecla: 'u', somenteGestor: true  },
   ];
 
   readonly itensNavegacao = computed(() =>
     this.todosItensNavegacao.filter((item) => !item.somenteGestor || this.sessao.eGestor()),
   );
 
+  /** Itens só de gestor: abaixo de 900px saem da barra e entram em "Mais ▾" (dev não vê o "Mais"). */
+  readonly itensGestorOcultaveis = computed(() =>
+    this.itensNavegacao().filter((item) => item.somenteGestor),
+  );
+
+  readonly iniciais = computed(() =>
+    (this.sessao.nomeCompleto() ?? '')
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((parte) => parte[0])
+      .join('')
+      .toUpperCase(),
+  );
+  readonly primeiroNome = computed(() => (this.sessao.nomeCompleto() ?? '').split(' ')[0]);
+
+  // --- Atalhos globais: `g` + letra navega; `n` abre as anotações (task 96) ---
+  private aguardandoSegundaTecla = false;
+  private temporizadorAtalho: ReturnType<typeof setTimeout> | null = null;
+
+  @HostListener('document:keydown', ['$event'])
+  aoTeclarGlobal(evento: KeyboardEvent): void {
+    if (evento.defaultPrevented || evento.ctrlKey || evento.metaKey || evento.altKey) return;
+    if (focoEmCampo(evento.target) || haSobreposicaoAberta()) {
+      this.cancelarSequencia();
+      return;
+    }
+
+    const tecla = evento.key.toLowerCase();
+    if (this.aguardandoSegundaTecla) {
+      this.cancelarSequencia();
+      const destino = this.itensNavegacao().find((item) => item.tecla === tecla);
+      if (destino) {
+        evento.preventDefault();
+        this.roteador.navigateByUrl(destino.rotaLink);
+      }
+      return;
+    }
+
+    if (tecla === 'g') {
+      this.aguardandoSegundaTecla = true;
+      this.temporizadorAtalho = setTimeout(() => this.cancelarSequencia(), 1500);
+    } else if (tecla === 'n' && this.sessao.usuarioAtual()) {
+      evento.preventDefault();
+      this.anotacoesDialog?.abrir(this.sessao.id()!, this.sessao.nomeCompleto()!);
+    }
+  }
+
+  private cancelarSequencia(): void {
+    this.aguardandoSegundaTecla = false;
+    if (this.temporizadorAtalho !== null) clearTimeout(this.temporizadorAtalho);
+    this.temporizadorAtalho = null;
+  }
+
   constructor() {
+    this.execucaoAtiva.carregar();
     this.atualizarHora();
     this.agendarProximaAtualizacao();
+
+    // Deep-link `/ponto?anotacoes=:id` (task 114): o drawer das próprias anotações vive aqui. Na
+    // listagem de Usuários quem abre é a própria página.
+    this.roteador.events.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((evento) => {
+      if (!(evento instanceof NavigationEnd)) return;
+      const arvore = this.roteador.parseUrl(evento.urlAfterRedirects);
+      const usuarioId = Number(arvore.queryParams['anotacoes']);
+      if (!usuarioId || arvore.root.children['primary']?.segments[0]?.path === 'usuario') return;
+      this.anotacoesDialog?.abrir(usuarioId, usuarioId === this.sessao.id() ? this.sessao.nomeCompleto()! : '');
+      this.roteador.navigate([], { queryParams: { anotacoes: null }, queryParamsHandling: 'merge', replaceUrl: true });
+    });
+  }
+
+  /** Volta para a aba/janela: o backend pode ter encerrado a execução (cron das 23:59:59). */
+  @HostListener('document:visibilitychange')
+  @HostListener('window:focus')
+  ressincronizarExecucao(): void {
+    if (document.visibilityState === 'visible') this.execucaoAtiva.carregar();
   }
 
   private agendarProximaAtualizacao(): void {

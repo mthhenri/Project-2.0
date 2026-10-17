@@ -1,0 +1,67 @@
+<div class="demanda-toolbar">
+  <span class="demanda-toolbar__busca">
+    <i class="pi pi-search demanda-toolbar__busca-icone"></i>
+    <input
+      #campoBusca
+      pInputText
+      type="text"
+      class="demanda-toolbar__busca-campo"
+      placeholder="Buscar demanda…  ( / )"
+      aria-label="Buscar demanda"
+      [ngModel]="filtro().termo"
+      (ngModelChange)="aoDigitar($event)"
+      (keydown)="aoTeclarBusca($event)"
+    />
+  </span>
+
+  <div class="demanda-toolbar__chips" role="group" aria-label="Status exibidos">
+    @for (chip of chips; track chip.status) {
+      <button
+        type="button"
+        class="demanda-toolbar__chip"
+        [class.demanda-toolbar__chip--oculto]="!statusAtivo(chip.status)"
+        [style.--cor-chip]="chip.cor"
+        [attr.aria-pressed]="statusAtivo(chip.status)"
+        [pTooltip]="statusAtivo(chip.status) ? 'Esconder ' + chip.rotulo : 'Mostrar ' + chip.rotulo"
+        tooltipPosition="top"
+        (click)="alternarStatus(chip.status)"
+      >
+        <span class="demanda-toolbar__chip-cor"></span>
+        {{ chip.rotulo }}
+        <span class="demanda-toolbar__chip-contagem">{{ contagem()[chip.status] }}</span>
+      </button>
+    }
+  </div>
+
+  @if (tagsDisponiveis().length) {
+    <p-multiselect
+      [options]="tagsDisponiveis()"
+      [ngModel]="filtro().tagIds"
+      (ngModelChange)="aoMudarTags($event)"
+      optionLabel="nome"
+      optionValue="id"
+      placeholder="Tags"
+      selectedItemsLabel="{0} tags"
+      [maxSelectedLabels]="1"
+      [showToggleAll]="false"
+      appendTo="body"
+      class="demanda-toolbar__tags"
+    />
+  }
+
+  <div class="demanda-toolbar__acoes">
+    @if (ativo()) {
+      <p-button label="Limpar" icon="pi pi-filter-slash" [text]="true" severity="secondary" size="small" (onClick)="limpar.emit()" />
+    }
+    @if (mostrarExpansao()) {
+      <p-button
+        [label]="todosExpandidos() ? 'Recolher tudo' : 'Expandir tudo'"
+        [icon]="todosExpandidos() ? 'pi pi-angle-double-up' : 'pi pi-angle-double-down'"
+        [outlined]="true"
+        severity="secondary"
+        size="small"
+        (onClick)="expansaoAlternada.emit()"
+      />
+    }
+  </div>
+</div>

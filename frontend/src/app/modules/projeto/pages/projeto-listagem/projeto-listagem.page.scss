@@ -15,29 +15,43 @@
     margin: 0;
   }
 
-  &__filtros {
+  &__toolbar {
     display: flex;
-    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1rem;
     margin-bottom: 1.5rem;
   }
 
-  &__filtro-campo {
-    display: flex;
-    flex-direction: column;
-    gap: 0.375rem;
-    min-width: 200px;
+  &__busca {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    flex: 1 1 16rem;
+    max-width: 24rem;
   }
 
-  &__filtro-label {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--p-text-color);
+  &__busca-icone {
+    position: absolute;
+    left: 0.75rem;
+    color: var(--p-text-muted-color);
+    pointer-events: none;
   }
 
-  &__carregando {
-    display: flex;
-    justify-content: center;
-    padding: 4rem 0;
+  &__busca-campo {
+    width: 100%;
+    padding-left: 2.25rem;
+  }
+
+  &__contagem {
+    margin-left: 0.25rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--p-text-muted-color);
+  }
+
+  &__conteudo {
+    position: relative;
   }
 
   &__vazio {
@@ -62,9 +76,33 @@
     cursor: pointer;
     transition: box-shadow 0.2s, transform 0.15s;
 
-    &:hover {
+    &:hover,
+    &:focus-visible {
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.10);
       transform: translateY(-2px);
+    }
+  }
+
+  &__card-acoes {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  // Kebab: aparece no hover/foco do card e sempre em telas sem hover.
+  &__kebab {
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+
+  &__card:hover &__kebab,
+  &__card:focus-within &__kebab {
+    opacity: 1;
+  }
+
+  @media (hover: none) {
+    &__kebab {
+      opacity: 1;
     }
   }
 
@@ -100,15 +138,5 @@
     color: var(--p-text-color);
     margin: 0;
     line-height: 1.4;
-  }
-
-  &__card-rodape {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 0.25rem;
-  }
-
-  &__paginador {
-    margin-top: 1.5rem;
   }
 }

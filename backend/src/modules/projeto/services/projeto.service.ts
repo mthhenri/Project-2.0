@@ -13,6 +13,7 @@ import {
 } from '@project20/shared';
 import { StandardResponse } from '@project20/shared';
 import { PaginatedResult } from '@project20/shared';
+import { ProjetoRestaurarDto, ProjetoRestauradoDto } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
@@ -173,6 +174,27 @@ export class ProjetoService {
       sucesso:  true,
       dados:    null,
       mensagem: 'Projeto excluído com sucesso',
+    };
+  }
+
+  /** Restaura o projeto excluído (soft delete revertido, sem cascata). Restrito a gestores. */
+  async restaurar(dto: ProjetoRestaurarDto): Promise<StandardResponse<ProjetoRestauradoDto>> {
+    const projetoExcluido = await this.projetoRepositorio.recuperarExcluido({ id: dto.id });
+    if (!projetoExcluido) {
+      throw new ResourceNotFoundException('Projeto');
+    }
+
+    const codigoJaExiste = await this.projetoRepositorio.validarCodigo({ codigo: projetoExcluido.codigo });
+    if (codigoJaExiste) {
+      throw new BusinessException(`Já existe um projeto ativo com o código "${projetoExcluido.codigo}"`);
+    }
+
+    const projetoRestaurado = await this.projetoRepositorio.restaurar({ id: dto.id });
+
+    return {
+      sucesso:  true,
+      dados:    projetoRestaurado,
+      mensagem: 'Projeto restaurado com sucesso',
     };
   }
 }

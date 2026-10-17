@@ -17,6 +17,7 @@ import {
   TipoUsuarioEnum,
 } from '@project20/shared';
 import { StandardResponse, PaginatedResult } from '@project20/shared';
+import { UsuarioRestaurarDto, UsuarioRestauradoDto } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
 import { UnauthorizedAccessException } from '../../../core/exceptions/unauthorized-access.exception';
@@ -161,6 +162,27 @@ export class UsuarioService {
       sucesso:  true,
       dados:    null,
       mensagem: 'Usuário excluído com sucesso',
+    };
+  }
+
+  /** Restaura o usuário excluído (soft delete revertido, sem cascata). Restrito a gestores. */
+  async restaurar(dto: UsuarioRestaurarDto): Promise<StandardResponse<UsuarioRestauradoDto>> {
+    const usuarioExcluido = await this.usuarioRepositorio.recuperarExcluido({ id: dto.id });
+    if (!usuarioExcluido) {
+      throw new ResourceNotFoundException('Usuário');
+    }
+
+    const loginJaExiste = await this.usuarioRepositorio.validarLogin({ login: usuarioExcluido.login });
+    if (loginJaExiste) {
+      throw new BusinessException(`Já existe um usuário ativo com o login "${usuarioExcluido.login}"`);
+    }
+
+    const usuarioRestaurado = await this.usuarioRepositorio.restaurar({ id: dto.id });
+
+    return {
+      sucesso:  true,
+      dados:    usuarioRestaurado,
+      mensagem: 'Usuário restaurado com sucesso',
     };
   }
 

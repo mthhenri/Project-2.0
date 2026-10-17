@@ -3,10 +3,10 @@
 ## Objetivo
 
 Corrigir o desvio de conformidade do módulo **calendario** identificado pela auditoria
-da **task 44** (`docs/AUDITORIA.md` §4.5): primitivo `id` + `Partial<DiaNaoUtil>` na
+da **task 44** (`docs/specs/done/44-auditoria-conformidade-padroes/AUDITORIA.md` §4.5): primitivo `id` + `Partial<DiaNaoUtil>` na
 assinatura de `CalendarioRepository.alterar`. Sem mudança de comportamento.
 
-> **Referência cruzada:** task 44 · `docs/AUDITORIA.md` §4.5.
+> **Referência cruzada:** task 44 · `docs/specs/done/44-auditoria-conformidade-padroes/AUDITORIA.md` §4.5.
 > **Padrão estrutural (param único DTO):** `ExecucaoRepository.alterar(dto)`.
 > **Padrão de nomenclatura (verbo no fim — SPEC §5, L149-155):** complemento `Interno` antes do verbo `Alterar` → `CalendarioInternoAlterarDto`. ⚠️ Não usar `CalendarioAlterarInternoDto` (é o erro que `ExecucaoAlterarInternoDto` comete — corrigido na spec 56).
 > **Reconciliação documental §7.2 × §16 #21:** decidida na spec `48-usuario-correcao-padroes` (não reabrir).

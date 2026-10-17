@@ -1,4 +1,4 @@
-import { Component, inject, signal, output, DestroyRef } from '@angular/core';
+import { Component, computed, inject, signal, output, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
@@ -7,23 +7,29 @@ import { InputTextModule } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 import { DatePickerModule } from 'primeng/datepicker';
 import { DialogModule } from 'primeng/dialog';
+import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
 import {
   ProjetoCriarDto,
+  ProjetoAlterarDto,
+  ProjetoAlteradoDto,
+  ProjetoRecuperadoDto,
   TipoProjetoStatusEnum,
   REGEX_SEM_CARACTERES_PROIBIDOS,
   MENSAGEM_CARACTERES_PROIBIDOS,
-  MENSAGEM_CARACTERES_PROIBIDOS_DICA,
 } from '@project20/shared';
 import { ProjetoService } from '../../services/projeto.service';
+import { formatarDataIso, lerDataIso } from '../../../demanda/utils/demanda-datas.util';
 import { gerarCodigoDoNome } from '../../models/projeto.model';
 import { SeletorCorComponent } from '../../../../shared/components/seletor-cor/seletor-cor.component';
 import { BloquearCaracteresProibidosDirective } from '../../../../shared/directives/bloquear-caracteres-proibidos.directive';
+import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
+import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
 
 @Component({
   selector: 'app-projeto-formulario-dialog',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonModule, InputTextModule, Select, SeletorCorComponent, DatePickerModule, DialogModule, BloquearCaracteresProibidosDirective],
+  imports: [DialogFormularioDirective, DialogDicaAtalhosComponent, ReactiveFormsModule, ButtonModule, InputTextModule, Select, SeletorCorComponent, DatePickerModule, DialogModule, BloquearCaracteresProibidosDirective, TooltipModule],
   templateUrl: './projeto-formulario-dialog.component.html',
   styleUrl: './projeto-formulario-dialog.component.scss',
 })
@@ -35,6 +41,16 @@ export class ProjetoFormularioDialogComponent {
 
   /** Emitido com o id do projeto criado, para a listagem navegar até o detalhe. */
   readonly aoCriar = output<number>();
+  /** Emitido com o projeto alterado (modo edição), já aplicável na tela sem novo GET. */
+  readonly aoAlterar = output<ProjetoAlteradoDto>();
+
+  /** Id do projeto em edição; `null` = criação. */
+  readonly projetoIdEdicao = signal<number | null>(null);
+  readonly eEdicao = computed(() => this.projetoIdEdicao() !== null);
+  /** "Período (opcional)": recolhido na criação; aberto na edição quando já há datas (ou se pediram o foco nelas). */
+  readonly periodoAberto = signal<boolean>(false);
+  readonly focarDatas = signal<boolean>(false);
+  readonly carregandoDados = signal<boolean>(false);
 
   readonly formulario = this.formBuilder.group(
     {
@@ -52,7 +68,6 @@ export class ProjetoFormularioDialogComponent {
   readonly mostrarDialog = signal<boolean>(false);
 
   readonly mensagemCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS;
-  readonly dicaCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS_DICA;
 
   /**
    * Enquanto `false`, o código acompanha o nome (slug derivado). Vira `true` no
@@ -89,11 +104,58 @@ export class ProjetoFormularioDialogComponent {
       });
   }
 
-  /** Abre o dialog com o formulário limpo. */
+  /** Abre o dialog de criação com o formulário limpo. */
   abrir(): void {
+    this.projetoIdEdicao.set(null);
+    this.focarDatas.set(false);
+    this.periodoAberto.set(false);
+    this.formulario.controls.codigo.enable({ emitEvent: false });
     this.formulario.reset({ cor: '#3b82f6', status: TipoProjetoStatusEnum.ATIVO });
     this.codigoEditadoManualmente.set(false);
     this.mostrarDialog.set(true);
+  }
+
+  /**
+   * Abre o dialog de edição. Com o projeto completo em mãos (detalhe) preenche direto; da listagem
+   * (só o resumo) busca o projeto para trazer as datas. `focarDatas` leva o foco ao início do período.
+   */
+  abrirEdicao(projeto: { id: number } & Partial<ProjetoRecuperadoDto>, opcoes: { focarDatas?: boolean } = {}): void {
+    this.projetoIdEdicao.set(projeto.id);
+    this.focarDatas.set(!!opcoes.focarDatas);
+    this.formulario.controls.codigo.disable({ emitEvent: false });
+    this.codigoEditadoManualmente.set(true);
+    this.mostrarDialog.set(true);
+
+    if (projeto.inicioData !== undefined && projeto.previsaoFimData !== undefined) {
+      this.preencher(projeto as ProjetoRecuperadoDto);
+      return;
+    }
+    this.carregandoDados.set(true);
+    this.projetoService
+      .recuperar(projeto.id)
+      .pipe(finalize(() => this.carregandoDados.set(false)))
+      .subscribe({
+        next: (resposta) => {
+          if (resposta.sucesso && resposta.dados) this.preencher(resposta.dados);
+        },
+      });
+  }
+
+  private preencher(projeto: ProjetoRecuperadoDto): void {
+    this.formulario.reset({
+      nome:            projeto.nome,
+      codigo:          projeto.codigo,
+      cor:             projeto.cor,
+      status:          projeto.status,
+      inicioData:      projeto.inicioData ? lerDataIso(projeto.inicioData) : null,
+      previsaoFimData: projeto.previsaoFimData ? lerDataIso(projeto.previsaoFimData) : null,
+    });
+    this.periodoAberto.set(!!(projeto.inicioData || projeto.previsaoFimData) || this.focarDatas());
+    if (this.focarDatas()) setTimeout(() => document.getElementById('inicioData')?.focus(), 100);
+  }
+
+  alternarPeriodo(): void {
+    this.periodoAberto.update((aberto) => !aberto);
   }
 
   salvar(): void {
@@ -101,7 +163,13 @@ export class ProjetoFormularioDialogComponent {
       this.formulario.markAllAsTouched();
       return;
     }
+    if (this.carregando() || this.carregandoDados()) return;
+    const identificador = this.projetoIdEdicao();
+    if (identificador !== null) this.salvarEdicao(identificador);
+    else this.salvarCriacao();
+  }
 
+  private salvarCriacao(): void {
     this.carregando.set(true);
 
     const valor = this.formulario.value;
@@ -110,8 +178,8 @@ export class ProjetoFormularioDialogComponent {
       codigo: valor.codigo!.toUpperCase(),
       cor:    valor.cor!,
       status: valor.status!,
-      inicioData:      valor.inicioData ? this.formatarData(valor.inicioData) : undefined,
-      previsaoFimData: valor.previsaoFimData ? this.formatarData(valor.previsaoFimData) : undefined,
+      inicioData:      valor.inicioData ? formatarDataIso(valor.inicioData) : undefined,
+      previsaoFimData: valor.previsaoFimData ? formatarDataIso(valor.previsaoFimData) : undefined,
     };
 
     this.projetoService
@@ -132,6 +200,30 @@ export class ProjetoFormularioDialogComponent {
       });
   }
 
+  private salvarEdicao(identificador: number): void {
+    this.carregando.set(true);
+    const valor = this.formulario.getRawValue();
+    // O código não entra: o ProjetoAlterarDto não o aceita.
+    const dto: ProjetoAlterarDto = {
+      nome:            valor.nome ?? undefined,
+      cor:             valor.cor ?? undefined,
+      status:          valor.status ?? undefined,
+      inicioData:      valor.inicioData ? formatarDataIso(valor.inicioData) : undefined,
+      previsaoFimData: valor.previsaoFimData ? formatarDataIso(valor.previsaoFimData) : undefined,
+    };
+
+    this.projetoService
+      .alterar(identificador, dto)
+      .pipe(finalize(() => this.carregando.set(false)))
+      .subscribe({
+        next: (resposta) => {
+          this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Projeto alterado com sucesso' });
+          this.mostrarDialog.set(false);
+          if (resposta.dados) this.aoAlterar.emit(resposta.dados);
+        },
+      });
+  }
+
   campoInvalido(nomeCampo: string): boolean {
     const controle = this.formulario.get(nomeCampo);
     return !!(controle?.invalid && controle?.touched);
@@ -142,13 +234,6 @@ export class ProjetoFormularioDialogComponent {
       this.formulario.hasError('previsaoAnteriorAoInicio') &&
       this.formulario.get('previsaoFimData')?.touched
     );
-  }
-
-  private formatarData(data: Date): string {
-    const ano = data.getFullYear();
-    const mes = String(data.getMonth() + 1).padStart(2, '0');
-    const dia = String(data.getDate()).padStart(2, '0');
-    return `${ano}-${mes}-${dia}`;
   }
 
   private validarPrevisaoFim(controle: AbstractControl): ValidationErrors | null {

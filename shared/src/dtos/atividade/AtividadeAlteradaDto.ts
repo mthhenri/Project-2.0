@@ -6,7 +6,6 @@ export class AtividadeAlteradaDto {
   usuarioId: number;
   nomeUsuario: string;
   nome: string;
-  descricao: string | null;
   status: TipoAtividadeStatusEnum;
   createdDate: Date;
 }

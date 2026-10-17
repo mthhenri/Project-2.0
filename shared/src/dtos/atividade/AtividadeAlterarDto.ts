@@ -14,10 +14,6 @@ export class AtividadeAlterarDto {
   nome?: string;
 
   @IsOptional()
-  @IsString()
-  descricao?: string;
-
-  @IsOptional()
   @IsEnum(TipoAtividadeStatusEnum)
   status?: TipoAtividadeStatusEnum;
 }

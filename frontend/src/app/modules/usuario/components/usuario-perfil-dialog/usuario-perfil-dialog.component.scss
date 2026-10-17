@@ -1,5 +1,3 @@
-@use '../../../../shared/styles/form' as *;
-
 .usuario-perfil-dialog {
   &__carregando {
     display: flex;
@@ -62,16 +60,9 @@
     color: var(--p-text-color);
   }
 
-  &__dialog-form {
-    @include form-dialog-form(1.25rem);
-    padding: 0.5rem 0;
-  }
+}
 
-  &__dialog-campo { @include form-campo; }
-
-  &__dialog-linha { @include form-dialog-linha; }
-
-  &__label        { @include form-label; }
-  &__obrigatorio  { @include form-obrigatorio; }
-  &__erro         { @include form-erro; }
+// Tags do perfil seguem a largura do texto, não a da coluna.
+:host ::ng-deep .usuario-perfil-dialog__campo .p-tag {
+  align-self: flex-start;
 }

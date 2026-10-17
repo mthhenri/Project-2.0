@@ -34,7 +34,11 @@ import { ambiente } from '../../../../../environments/environment';
 export class PontoMesDiaComponent {
   @Input({ required: true }) dia!: PontoDiaResumoDto;
   @Input({ required: true }) usuarioId!: number;
+  /** Gestor vê o botão "Justificar" na linha e o badge de justificativa clicável. */
+  @Input() podeJustificar = false;
   @Output() atividadeSelecionada = new EventEmitter<number>();
+  /** Pede ao pai para abrir o dialog de justificativa naquele dia (a linha não expande). */
+  @Output() justificarSolicitada = new EventEmitter<PontoDiaResumoDto>();
 
   private readonly pontoService = inject(PontoService);
   readonly intervaloMinimoMinutos = ambiente.intervaloMinimoMinutos;
@@ -71,6 +75,34 @@ export class PontoMesDiaComponent {
   /** Texto do tooltip do badge de justificativa (título + horas descontadas da meta). */
   get justificativaTooltip(): string {
     return `${this.dia.justificativaNome} · ${this.justificativaCobertura} descontadas da meta do dia`;
+  }
+
+  /** Dia útil já encerrado ou em curso, com déficit e sem justificativa: oferece "Justificar" inline. */
+  get oferecerJustificar(): boolean {
+    return (
+      this.podeJustificar &&
+      this.dia.ehDiaUtil &&
+      this.dia.saldoMinutos < 0 &&
+      !this.dia.justificativaNome &&
+      this.dia.data.slice(0, 10) <= this.hojeIso()
+    );
+  }
+
+  justificar(evento: Event): void {
+    evento.stopPropagation();
+    this.justificarSolicitada.emit(this.dia);
+  }
+
+  /** Tooltip do saldo: a meta efetiva do dia (já descontada a justificativa). */
+  get metaTooltip(): string {
+    const horas = Math.floor(this.dia.metaMinutos / 60);
+    const minutos = this.dia.metaMinutos % 60;
+    return `Meta do dia: ${horas}h ${minutos}min`;
+  }
+
+  private hojeIso(): string {
+    const agora = new Date();
+    return `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}-${String(agora.getDate()).padStart(2, '0')}`;
   }
 
   abreviacao(): string {

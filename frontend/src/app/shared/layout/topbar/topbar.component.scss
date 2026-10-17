@@ -94,4 +94,123 @@
       }
     }
   }
+
+  &__perfil {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.5rem 0.25rem 0.25rem;
+    border-radius: 999px;
+    color: var(--p-text-color);
+    cursor: pointer;
+
+    &:hover {
+      background: var(--p-content-hover-background);
+    }
+  }
+
+  &__avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: var(--p-primary-color);
+    color: var(--p-primary-contrast-color);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  &__perfil-nome {
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  &__linha-switch {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    cursor: pointer;
+  }
+
+  &__sair {
+    color: var(--p-red-500);
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__tecla {
+    margin-left: auto;
+    padding: 0 0.375rem;
+    border: 1px solid var(--app-surface-200);
+    border-radius: 4px;
+    color: var(--p-text-muted-color);
+    font-family: var(--font-mono, monospace);
+    font-size: 0.7rem;
+  }
+
+  // "Mais" só existe abaixo de 900px.
+  &__mais {
+    display: none;
+    color: var(--p-text-color);
+    cursor: pointer;
+  }
+}
+
+// Até 1499px o relógio sai e a descrição do chip encurta, para a nav + chip + ações caberem.
+@media (max-width: 1499px) {
+  .topbar__hora {
+    display: none;
+  }
+}
+
+// Até 1366px: só ícones (rótulo no tooltip) e o perfil vira só o avatar.
+@media (max-width: 1366px) {
+  .topbar__nav-rotulo,
+  .topbar__perfil-nome,
+  .topbar__perfil-seta {
+    display: none;
+  }
+
+  .topbar {
+    gap: 1rem;
+  }
+}
+
+// Abaixo de 900px os itens só de gestor viram o menu "Mais".
+@media (max-width: 899px) {
+  .topbar__nav-item--gestor {
+    display: none;
+  }
+
+  .topbar__mais {
+    display: inline-flex;
+  }
+}
+
+// Celular: duas linhas — logo, chip e ações em cima; navegação embaixo, sem rolagem horizontal.
+@media (max-width: 719px) {
+  .topbar {
+    flex-wrap: wrap;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    gap: 0.5rem;
+
+    &__nav {
+      order: 3;
+      flex: 1 1 100%;
+      justify-content: space-around;
+    }
+
+    &__acoes {
+      flex: 1;
+      justify-content: flex-end;
+      min-width: 0;
+      gap: 0.25rem;
+    }
+  }
 }

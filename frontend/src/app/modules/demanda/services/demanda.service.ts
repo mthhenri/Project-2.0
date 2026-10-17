@@ -23,8 +23,11 @@ import {
   TagResumoDto,
   StandardResponse,
   PaginatedResult,
+  DemandaRestauradaDto,
 } from '@project20/shared';
 import { ambiente } from '../../../../environments/environment';
+import { comFeedbackProprio } from '../../../core/interceptors/loading.interceptor';
+import { comErroTratadoPelaTela } from '../../../core/interceptors/error-handler.interceptor';
 
 @Injectable({ providedIn: 'root' })
 export class DemandaService {
@@ -47,7 +50,7 @@ export class DemandaService {
 
   recuperarGrafo(projetoId: number): Observable<StandardResponse<DemandaGrafoDto>> {
     const params = new HttpParams().set('projetoId', String(projetoId));
-    return this.httpClient.get<StandardResponse<DemandaGrafoDto>>(`${this.urlBase}/grafo`, { params });
+    return this.httpClient.get<StandardResponse<DemandaGrafoDto>>(`${this.urlBase}/grafo`, { params, ...comFeedbackProprio() });
   }
 
   listarPlanejamento(projetoId: number): Observable<StandardResponse<DemandaPlanejamentoDto[]>> {
@@ -71,6 +74,11 @@ export class DemandaService {
     return this.httpClient.delete<StandardResponse<void>>(`${this.urlBase}/${id}`);
   }
 
+  /** Desfaz o soft delete ("Desfazer" do toast de exclusão). */
+  restaurar(id: number): Observable<StandardResponse<DemandaRestauradaDto>> {
+    return this.httpClient.patch<StandardResponse<DemandaRestauradaDto>>(`${this.urlBase}/${id}/restaurar`, {});
+  }
+
   recuperarArvore(id: number): Observable<StandardResponse<DemandaArvoreItemDto>> {
     return this.httpClient.get<StandardResponse<DemandaArvoreItemDto>>(`${this.urlBase}/${id}/arvore`);
   }
@@ -79,8 +87,13 @@ export class DemandaService {
     return this.httpClient.get<StandardResponse<DemandaAncestralDto[]>>(`${this.urlBase}/${id}/ancestral`);
   }
 
-  criarConexao(demandaId: number, dto: DemandaConexaoCriarDto): Observable<StandardResponse<DemandaConexaoCriadaDto>> {
-    return this.httpClient.post<StandardResponse<DemandaConexaoCriadaDto>>(`${this.urlBase}/${demandaId}/conexao`, dto);
+  /** Com `erroNaTela`, o erro (ex.: ciclo) não gera toast: a tela o mostra inline. */
+  criarConexao(demandaId: number, dto: DemandaConexaoCriarDto, erroNaTela = false): Observable<StandardResponse<DemandaConexaoCriadaDto>> {
+    return this.httpClient.post<StandardResponse<DemandaConexaoCriadaDto>>(
+      `${this.urlBase}/${demandaId}/conexao`,
+      dto,
+      erroNaTela ? comErroTratadoPelaTela() : {},
+    );
   }
 
   listarConexoes(demandaId: number): Observable<StandardResponse<DemandaConexaoResumoDto[]>> {

@@ -1,16 +1,35 @@
-<!-- Lista de demandas (árvore) -->
-@for (item of raizes; track item.id) {
-  <app-demanda-arvore-item
-    [arvoreItem]="item"
-    [nivel]="0"
-    (demandaSelecionada)="abrirDetalhe($event)"
-    (demandaEditarSolicitada)="abrirEdicao($event)"
-    (demandaEditarDescricaoSolicitada)="abrirDialogDescricaoPorId($event.id, $event.campo)"
-    (demandaNovaFilhaSolicitada)="abrirNovaFilha($event)"
-    (demandaTagsSolicitadas)="abrirDialogTagsPorId($event)"
-    (demandaMembrosSolicitados)="abrirDialogMembros($event)"
-  />
-}
+<!-- Lista de demandas (árvore); focável para a navegação por teclado (↑↓→← e Enter) -->
+<div
+  #arvore
+  class="demanda-arvore-painel__arvore"
+  role="tree"
+  tabindex="0"
+  aria-label="Demandas"
+  (focus)="aoFocarArvore()"
+  (blur)="arvoreFocada.set(false)"
+  (keydown)="aoTeclarArvore($event)"
+>
+  @for (item of raizes(); track item.id) {
+    <app-demanda-arvore-item
+      [arvoreItem]="item"
+      [nivel]="0"
+      [expandidos]="expandidos()"
+      [termoBusca]="termoBusca()"
+      [focoId]="arvoreFocada() ? focoId() : null"
+      [statusEditavel]="true"
+      [executoresPorDemanda]="executoresPorDemanda()"
+      (expansaoAlternada)="alternarExpansao($event)"
+      (focoAlterado)="marcarFoco($event)"
+      (statusAlterado)="aoStatusEscolhido($event)"
+      (demandaSelecionada)="abrirDetalhe($event)"
+      (demandaEditarSolicitada)="abrirEdicao($event)"
+      (demandaEditarDescricaoSolicitada)="abrirDialogDescricaoPorId($event.id, $event.campo)"
+      (demandaNovaFilhaSolicitada)="abrirNovaFilha($event)"
+      (demandaTagsSolicitadas)="abrirDialogTagsPorId($event)"
+      (demandaMembrosSolicitados)="abrirDialogMembros($event)"
+    />
+  }
+</div>
 
 <!-- Dialog de detalhe -->
 @if (demandaIdSelecionada()) {
@@ -20,12 +39,14 @@
     (visivelChange)="mostrarDialogDetalhe.set($event)"
     (demandaExcluida)="aoDemandaExcluida()"
     (demandaAlterada)="aoDemandaAlterada()"
+    (statusAlterado)="statusAlterado.emit($event)"
+    (tagsAlteradas)="tagsAlteradas.emit($event)"
   />
 }
 
 <!-- Dialog de edição -->
 @if (demandaIdParaEditar()) {
-  <app-demanda-edicao-dialog
+  <app-demanda-formulario-dialog
     [demandaId]="demandaIdParaEditar()"
     [visivel]="mostrarDialogEdicao()"
     (visivelChange)="mostrarDialogEdicao.set($event)"
@@ -47,6 +68,9 @@
 <!-- Dialog de tags -->
 <p-dialog
   header="Editar Tags"
+  dialogFormulario
+  [dialogBloqueado]="carregandoSalvarTags()"
+  (dialogEnviar)="salvarTags()"
   [visible]="mostrarDialogTags()"
   (visibleChange)="mostrarDialogTags.set($event)"
   [modal]="true"
@@ -77,6 +101,7 @@
   </form>
 
   <ng-template pTemplate="footer">
+    <app-dialog-dica-atalhos />
     <p-button
       label="Cancelar"
       severity="secondary"

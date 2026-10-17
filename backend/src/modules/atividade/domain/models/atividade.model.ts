@@ -5,6 +5,5 @@ export class Atividade extends BaseEntity {
   demandaId: number;
   usuarioId: number;
   nome: string;
-  descricao: string | null;
   status: TipoAtividadeStatusEnum;
 }

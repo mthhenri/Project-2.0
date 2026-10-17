@@ -3,182 +3,151 @@
   <!-- Topbar da página -->
   <div class="demanda-projeto__header">
     <div class="demanda-projeto__header-esquerda">
-      <p-button
-        icon="pi pi-arrow-left"
-        [text]="true"
-        severity="secondary"
-        size="small"
-        pTooltip="Abrir projeto"
-        [disabled]="!projetoId()"
-        (onClick)="navegarParaProjeto()"
-      />
-
       <p-select
+        #seletorProjeto
         [options]="projetos()"
         [formControl]="projetoControle"
         optionLabel="nome"
         optionValue="id"
         placeholder="Selecionar projeto..."
         [loading]="carregandoProjetos()"
+        [filter]="projetos().length > 8"
         appendTo="body"
         class="demanda-projeto__seletor-projeto"
       />
 
+      <p-button
+        icon="pi pi-external-link"
+        [text]="true"
+        severity="secondary"
+        size="small"
+        ariaLabel="Abrir projeto"
+        pTooltip="Abrir projeto"
+        [disabled]="!projetoId()"
+        (onClick)="navegarParaProjeto()"
+      />
+
       @if (projetoId()) {
-        <div class="demanda-projeto__toggle">
-          <p-button
-            label="Grafo"
-            icon="pi pi-share-alt"
-            [outlined]="modoVisualizacao() !== 'grafo'"
-            [text]="modoVisualizacao() !== 'grafo'"
-            size="small"
-            (onClick)="alternarModo('grafo')"
-          />
-          <p-button
-            label="Lista"
-            icon="pi pi-list"
-            [outlined]="modoVisualizacao() !== 'lista'"
-            [text]="modoVisualizacao() !== 'lista'"
-            size="small"
-            (onClick)="alternarModo('lista')"
-          />
-          @if (sessao.eGestor()) {
-            <p-button
-              label="Planejamento"
-              icon="pi pi-chart-bar"
-              [outlined]="modoVisualizacao() !== 'planejamento'"
-              [text]="modoVisualizacao() !== 'planejamento'"
-              size="small"
-              (onClick)="alternarModo('planejamento')"
-            />
-          }
-        </div>
+        <p-selectbutton
+          [options]="opcoesModo()"
+          [ngModel]="modoVisualizacao()"
+          (ngModelChange)="alternarModo($event)"
+          optionLabel="rotulo"
+          optionValue="valor"
+          [allowEmpty]="false"
+          size="small"
+          class="demanda-projeto__modos"
+        >
+          <ng-template #item let-opcao>
+            <i [class]="opcao.icone"></i>
+            <span class="demanda-projeto__modo-rotulo">{{ opcao.rotulo }}</span>
+          </ng-template>
+        </p-selectbutton>
       }
     </div>
 
     <div class="demanda-projeto__header-direita">
-      @if (projetoId() && modoVisualizacao() === 'grafo') {
-        <p-button
-          icon="pi pi-info-circle"
-          [text]="true"
-          severity="secondary"
-          size="small"
-          pTooltip="Legenda"
-          (onClick)="alternarPainel()"
-        />
-      }
       @if (sessao.eGestor() && projetoId()) {
         <p-button
           label="Nova Demanda"
           icon="pi pi-plus"
+          pTooltip="Nova demanda (C)"
+          tooltipPosition="bottom"
           (onClick)="mostrarDialogNovaDemanda.set(true)"
         />
       }
     </div>
   </div>
 
+  @if (projetoId() && !carregando() && projetoTemDemandas() && modoVisualizacao() !== 'planejamento') {
+    <app-demanda-toolbar
+      #toolbar
+      [filtro]="filtro()"
+      [contagem]="contagemPorStatus()"
+      [tagsDisponiveis]="tagsDoProjeto()"
+      [mostrarExpansao]="modoVisualizacao() === 'lista'"
+      [todosExpandidos]="todosExpandidos"
+      (filtroAlterado)="aoAlterarFiltro($event)"
+      (limpar)="limparFiltros()"
+      (expansaoAlternada)="alternarExpansaoGeral()"
+    />
+  }
+
   <!-- Conteúdo principal -->
-  <div class="demanda-projeto__corpo" [class.demanda-projeto__corpo--com-painel]="painelLateralAberto()">
+  <div class="demanda-projeto__corpo">
 
     <!-- Área do grafo / lista -->
     <div class="demanda-projeto__visualizacao">
 
-      @if (carregando()) {
-        <div class="demanda-projeto__carregando">
-          <i class="pi pi-spin pi-spinner demanda-projeto__carregando-icone"></i>
+      @if (!projetoId()) {
+        <div class="demanda-projeto__vazio">
+          <i class="pi pi-folder-open demanda-projeto__vazio-icone"></i>
+          <p class="demanda-projeto__vazio-texto">
+            {{ carregandoProjetos() ? 'Carregando projetos…' : 'Selecione um projeto para ver as demandas.' }}
+          </p>
+          @if (!carregandoProjetos()) {
+            <p-button label="Escolher projeto" icon="pi pi-chevron-down" iconPos="right" severity="secondary" [outlined]="true" (onClick)="abrirSeletorProjeto()" />
+          }
         </div>
-      }
-
-      @if (!carregando()) {
-        @if (modoVisualizacao() === 'grafo') {
-          @if (grafo()) {
+      } @else {
+        @if (carregando()) {
+          <div class="demanda-projeto__carregando">
+            <app-skeleton-lista variante="linhas" [quantidade]="8" />
+          </div>
+        } @else {
+          @if (!projetoTemDemandas() && modoVisualizacao() !== 'planejamento') {
+            <div class="demanda-projeto__vazio demanda-projeto__vazio--lista">
+              <i class="pi pi-inbox demanda-projeto__vazio-icone"></i>
+              <p class="demanda-projeto__vazio-texto">Este projeto ainda não tem demandas.</p>
+              @if (sessao.eGestor()) {
+                <p-button label="Nova Demanda" icon="pi pi-plus" (onClick)="mostrarDialogNovaDemanda.set(true)" />
+              }
+            </div>
+          } @else if (filtroEstaAtivo() && modoVisualizacao() === 'lista' && arvoreRaizes().length === 0) {
+            <ng-container *ngTemplateOutlet="semResultado" />
+          } @else if (filtroEstaAtivo() && modoVisualizacao() === 'grafo' && grafoExibido()!.nos.length === 0 && filtroGrafo() === filtro()) {
+            <ng-container *ngTemplateOutlet="semResultado" />
+          } @else if (modoVisualizacao() === 'grafo' && grafoExibido()) {
             <app-demanda-grafo
-              [grafo]="grafo()!"
+              [grafo]="grafoExibido()!"
+              [statusVisiveis]="statusDoFiltro()"
+              (statusAlternado)="alternarStatusVisivel($event)"
               (demandaSelecionada)="painel.abrirDetalhe($event)"
             />
-          } @else {
-            <div class="demanda-projeto__vazio">
-              <i class="pi pi-share-alt demanda-projeto__vazio-icone"></i>
-              <p class="demanda-projeto__vazio-texto">Nenhuma demanda encontrada</p>
-            </div>
           }
-        }
 
-        <!-- O painel é renderizado sempre (hospeda os diálogos e expõe abrirDetalhe
-             para o grafo); o container da lista fica oculto no modo grafo. -->
-        <div class="demanda-projeto__lista" [hidden]="modoVisualizacao() !== 'lista'">
-          @if (modoVisualizacao() === 'lista' && arvoreRaizes().length === 0) {
-            <div class="demanda-projeto__vazio demanda-projeto__vazio--lista">
-              <i class="pi pi-inbox text-4xl text-muted-color"></i>
-              <p class="text-muted-color mt-2">Nenhuma demanda encontrada</p>
-            </div>
+          <!-- O painel é renderizado sempre (hospeda os diálogos e expõe abrirDetalhe
+               para o grafo); o container da lista fica oculto fora do modo lista. -->
+          <div class="demanda-projeto__lista" [hidden]="modoVisualizacao() !== 'lista' || !arvoreRaizes().length">
+            <app-demanda-arvore-painel
+              #painel
+              [raizes]="arvoreRaizes()"
+              [projetoId]="projetoId()"
+              [termoBusca]="filtro().termo"
+              [expandirIds]="expandirPorFiltro()"
+              [executoresPorDemanda]="executoresPorDemanda()"
+              (alterado)="aoAlteradoPlanejamento()"
+              (tagsAlteradas)="aoTagsAlteradas($event)"
+              (statusAlterado)="aoStatusAlterado($event)"
+            />
+          </div>
+
+          @if (modoVisualizacao() === 'planejamento') {
+            <app-demanda-planejamento-painel
+              [itens]="planejamento()"
+              [carregando]="carregandoPlanejamento()"
+              (demandaVisualizarSolicitada)="painel.abrirDetalhe($event)"
+              (demandaEditarSolicitada)="painel.abrirEdicao($event)"
+              (demandaNovaFilhaSolicitada)="painel.abrirNovaFilha($event)"
+              (demandaTagsSolicitadas)="painel.abrirDialogTagsPorId($event)"
+              (demandaMembrosSolicitados)="painel.abrirDialogMembros($event)"
+              (demandaDescricaoSolicitada)="painel.abrirDialogDescricaoPorId($event.id, $event.campo)"
+              (statusAlterado)="aoStatusAlterado($event)"
+            />
           }
-          <app-demanda-arvore-painel
-            #painel
-            [raizes]="arvoreRaizes()"
-            [projetoId]="projetoId()"
-            (alterado)="aoAlteradoPlanejamento()"
-          />
-        </div>
-
-        @if (modoVisualizacao() === 'planejamento') {
-          <app-demanda-planejamento-painel
-            [itens]="planejamento()"
-            [carregando]="carregandoPlanejamento()"
-            (demandaVisualizarSolicitada)="painel.abrirDetalhe($event)"
-            (demandaEditarSolicitada)="painel.abrirEdicao($event)"
-            (demandaNovaFilhaSolicitada)="painel.abrirNovaFilha($event)"
-            (demandaTagsSolicitadas)="painel.abrirDialogTagsPorId($event)"
-            (demandaMembrosSolicitados)="painel.abrirDialogMembros($event)"
-            (demandaDescricaoSolicitada)="painel.abrirDialogDescricaoPorId($event.id, $event.campo)"
-            (alterado)="aoAlteradoPlanejamento()"
-          />
         }
       }
     </div>
-
-    <!-- Painel lateral -->
-    @if (painelLateralAberto() && modoVisualizacao() === 'grafo') {
-      <aside class="demanda-projeto__painel">
-        <h3 class="demanda-projeto__painel-titulo">Legenda</h3>
-        <div class="demanda-projeto__legenda">
-          @for (item of legendaStatus; track item.rotulo) {
-            <div class="demanda-projeto__legenda-item">
-              <span class="demanda-projeto__legenda-cor" [style.background-color]="item.cor"></span>
-              <span class="demanda-projeto__legenda-texto">{{ item.rotulo }}</span>
-            </div>
-          }
-        </div>
-
-        <div class="demanda-projeto__separador"></div>
-
-        <h3 class="demanda-projeto__painel-titulo">Nós</h3>
-        <div class="demanda-projeto__legenda">
-          <div class="demanda-projeto__legenda-item">
-            <span class="demanda-projeto__legenda-cor demanda-projeto__legenda-cor--comum"></span>
-            <span class="demanda-projeto__legenda-texto">Demanda comum</span>
-          </div>
-          <div class="demanda-projeto__legenda-item">
-            <span class="demanda-projeto__legenda-cor demanda-projeto__legenda-cor--estrutura"></span>
-            <span class="demanda-projeto__legenda-texto">Demanda de estrutura</span>
-          </div>
-        </div>
-
-        <div class="demanda-projeto__separador"></div>
-
-        <h3 class="demanda-projeto__painel-titulo">Arestas</h3>
-        <div class="demanda-projeto__legenda">
-          <div class="demanda-projeto__legenda-item">
-            <span class="demanda-projeto__legenda-linha demanda-projeto__legenda-linha--hierarquia"></span>
-            <span class="demanda-projeto__legenda-texto">Hierarquia</span>
-          </div>
-          <div class="demanda-projeto__legenda-item">
-            <span class="demanda-projeto__legenda-linha demanda-projeto__legenda-linha--conexao"></span>
-            <span class="demanda-projeto__legenda-texto">Conexão</span>
-          </div>
-        </div>
-      </aside>
-    }
   </div>
 
 </div>
@@ -192,3 +161,11 @@
     (demandaCriada)="recarregarGrafo()"
   />
 }
+
+<ng-template #semResultado>
+  <div class="demanda-projeto__vazio demanda-projeto__vazio--lista">
+    <i class="pi pi-search demanda-projeto__vazio-icone"></i>
+    <p class="demanda-projeto__vazio-texto">Nenhuma demanda corresponde aos filtros.</p>
+    <p-button label="Limpar filtros" icon="pi pi-filter-slash" severity="secondary" [outlined]="true" (onClick)="limparFiltros()" />
+  </div>
+</ng-template>

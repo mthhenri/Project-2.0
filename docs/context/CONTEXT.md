@@ -1,0 +1,296 @@
+# CONTEXT.md — Painel do Projeto
+
+> Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de ~400
+> linhas; ao ultrapassar, resuma o histórico velho em vez de deixar crescer. O relato de *como se
+> chegou aqui* está em [`HISTORY.md`](HISTORY.md).
+>
+> Vizinhos: [`PROBLEMS.md`](PROBLEMS.md) (o que está quebrado) ·
+> [`MEMORY.md`](MEMORY.md) (onde fica o quê) · [`IDEAS.md`](IDEAS.md) (o que ainda não é sistema) ·
+> [`HISTORY.md`](HISTORY.md) (o que aconteceu e por quê).
+>
+> **Última revisão:** 2026-10-16 · **Última decisão registrada:** task 116 (Tags: quick-add e cor inline) — `HISTORY.md`, bloco de 2026-10-16
+
+---
+
+## 1. Próxima Task
+
+Nenhuma task em andamento. O backlog não tem mais tasks numeradas (revisão de UI/UX:
+94–117 concluídas; guarda-chuva `revisao-ui-ux.spec.md`). As fundações **94–99** , o Ponto (**100–101**)
+e a toolbar, o grafo, o detalhe e o formulário de Demandas (**106–109**) a de Projetos (**112**) a de Usuários (**113**) as Anotações (**114**) o Calendário (**115**) e as Tags (**116**) foram concluídos em 2026-10-16 e estão em `docs/specs/done/`; as seguintes devem **reutilizar** o que
+elas criaram (ver `MEMORY.md` §2). Siga a ordem de fases de `INDEX-revisao-ux.md`: fase 4 (concluída). As tasks **102, 103, 104, 105, 110 e 111** (que mexem direto nas telas de
+Atividades e Execuções) foram **descartadas** em 2026-10-16 e estão em `docs/specs/discarded/`. A task
+117 foi concluída.
+Próxima migration nova: `0029`.
+
+## 2. Estado por Área
+
+### Stack em uso
+
+| Camada | Tecnologia | Versão |
+|---|---|---|
+| Backend | NestJS + TypeScript | — |
+| Frontend | Angular | 21 |
+| UI | PrimeNG | 21 |
+| Banco | PostgreSQL | 16 |
+| Query layer | Knex.js | — |
+| Monorepo | npm workspaces | — |
+| Container | Docker + Docker Compose | — |
+
+### Estrutura de pastas
+
+```
+project-2.0/
+  shared/             pacote @project20/shared (DTOs, enums, interfaces, validadores)
+  backend/            API NestJS (módulos em src/modules, migrations .sql em src/database)
+  frontend/           SPA Angular 21 + PrimeNG + Tailwind
+  docs/               SYSTEM.SPEC, CONVENTIONS, SCHEMA, DEPLOY, context/, specs/
+  scripts/            repo:verificar, impacto e hook de agente
+  .claude/ .agents/   skills (espelhadas), subagentes e settings
+  docker-compose.yml  PostgreSQL 16
+```
+
+### Módulos do backend
+
+| Módulo | Status |
+|---|---|
+| core (base, exceptions, filters, interceptors) | ✅ implementado (task 04) |
+| config | ✅ implementado (task 05) |
+| database (DatabaseModule + Knex) | ✅ implementado (task 02) |
+| autenticacao | ✅ implementado (task 07) |
+| usuario | ✅ implementado (task 06) |
+| projeto | ✅ implementado (task 09) |
+| demanda | ✅ implementado (task 10) — `listar()` devolve `caminho` (árvore de nomes) via CTE recursivo (task 88) |
+| atividade | ✅ implementado (task 14) |
+| execucao | ✅ implementado (task 15) |
+| ponto | ✅ implementado (task 17) — desconta justificativas de ponto na meta (task 82) |
+| ponto-justificativa | ✅ implementado (task 82) — CRUD só-gestor de justificativa por usuário+dia; repositório exportado e consumido pelo `ponto` |
+| calendario | ✅ implementado (task 16) |
+| tag | ✅ implementado (task 08) |
+| assistente | ✅ implementado (task 18) |
+| relatorio | ✅ implementado (task 80) — sem repositório próprio (consome execucao/projeto) |
+
+### Módulos do frontend
+
+| Módulo | Status |
+|---|---|
+| core (interceptors, guards, signals) | ✅ implementado (task 22) |
+| shared (components, pipes) | ✅ implementado (task 22) |
+| autenticacao | ✅ implementado (task 23) |
+| usuario | ✅ implementado (task 24) |
+| projeto | ✅ implementado (task 25) |
+| demanda | ✅ implementado (task 26) — seletor de Demanda Pai (criação/edição) lista só demandas estruturais (task 87) e exibe o caminho da árvore `Pai › Filho` (task 88) |
+| atividade | ✅ implementado (task 27) |
+| execucao | ✅ implementado (task 28) |
+| ponto | ✅ implementado (task 29) — + Imprimir/Justificar quando gestor filtra usuário (task 82) |
+| calendario | ✅ implementado (task 30) |
+| tag | ✅ implementado (task 25) |
+| relatorio | ✅ implementado (task 80) — dialog de relatório de execuções na tela de projeto |
+
+### Banco de dados
+
+| Item | Status |
+|---|---|
+| Migrations criadas | ✅ `20240001`–`20240025`: 12 de criação (task 03) + `20240013` (status demanda) + `20240014` (duração dia não útil, task 38) + `20240015` (seed gestor inicial) + `20240016` (rename `fn_set_updated_date`) + `20240017`/`20240018` (seed tags padrão) + `20240019` (remover `ordem_exibicao`) + `20240020` (padronização de nomes de constraints — `chk_demanda_status`, `chk_dia_nao_util_duracao`, task 70) + `20240021` (seed dos 9 feriados nacionais de data fixa em `dia_nao_util`, task 74) + `20240022` (colunas de data/hora → `timestamptz`, correção de fuso, task 75) + `20240023` (remover coluna `demanda.prioridade` + índice `ix_demanda_prioridade`, task 76) + `20240024` (adicionar `usuario.anotacoes_alteracao_data TIMESTAMPTZ` nullable, task 77) + `20240025` (7 enums `VARCHAR + CHECK` → tabelas de referência `tipo_*` + colunas FK, task 79) + `20240026` (criar `ponto_justificativa` — justificativa de ponto por usuário+dia, task 82). |
+| Tabelas no banco | ✅ 12 tabelas de negócio + 7 de referência (`tipo_*`, task 79) + trigger fn (task 03); `dia_nao_util.duracao` adicionado (task 38); colunas de data/hora (`*_date` de auditoria + `execucao.inicio_data/fim_data`) em `timestamptz` com sessão fixada em `APP_TIMEZONE` (task 75); colunas de enum agora `INTEGER` FK para as tabelas de referência (task 79); nova `ponto_justificativa` (`dia_data DATE`, `horas_cobertas NUMERIC(4,2)`, FKs p/ `usuario`, `chk_`/índice parcial/trigger, task 82) |
+| Conexão configurada | ✅ DatabaseModule com Knex (task 02) |
+
+## 3. Decisões Vivas
+
+- **[descarte da revisão de UX]** As telas de **Atividades** e **Execuções** ficam como estão: nenhuma
+  task da revisão as redesenha. O que as toca só por tabela (padrão de dialogs 97, otimista 98, undo 99,
+  chip global 95) continua e, ao ser implementado, vale para as telas atuais.
+- **[tasks 97–99]** Todo dialog de formulário usa `p-dialog[dialogFormulario]` (autofocus no primeiro campo
+  vazio, Enter envia, Ctrl+Enter envia a partir de textarea, Esc cancela) e a dica
+  `app-dialog-dica-atalhos` no footer; criar fecha o dialog, e "Criar e adicionar outra" mantém o
+  contexto. Leituras de tela usam esqueleto na primeira carga e conteúdo esmaecido + barra nas
+  recargas (`comFeedbackProprio()` tira o overlay global); mutações são otimistas com rollback.
+  Exclusões de atividade, projeto, usuário, tag, dia não útil e demanda chamam `PATCH :id/restaurar` no
+  "Desfazer" do toast (6 s, `DesfazerService`); associações (membro, conexão) desfazem por re-POST.
+  Restaurar não é em cascata e valida unicidade/dependências (`SYSTEM.SPEC.md` §9.2 #11).
+- **[tasks 94–96]** O login guarda só `{login, nomeCompleto}` (nunca a senha) e volta ao `returnUrl`
+  (caminho interno validado; padrão `/ponto`). A execução ativa do usuário é um signal global
+  (`ExecucaoAtivaService`), atualizado por interceptor após iniciar/encerrar em qualquer tela e ao refocar
+  a aba. A topbar tem tema em 1 clique, perfil por avatar (menu com "Tempos em dias" e "Sair"), atalhos
+  `g`+letra e `n`, e colapsa em 3 degraus: sem relógio até 1499 px, só ícones até 1366 px (acima do 1280
+  da spec, porque o chip de execução ocupa espaço), "Mais ▾" para itens de gestor abaixo de 900 px e duas
+  linhas abaixo de 720 px. O overlay global só cobre mutações (GET usa esqueleto/loading local).
+- **[task 116]** Tags: quick-add com Enter (criação otimista com id temporário, reconciliada; erro do servidor devolve o
+  texto ao campo), dot de cor abre popover de paleta compartilhado (PUT imediato; cor personalizada só ao fechar),
+  busca (`/`), seleção múltipla com um único Desfazer. Criar tag é só pelo quick-add; o dialog só edita.
+- **[task 115]** Calendário: clique em dia vazio abre a criação com a data (gestor); em dia marcado, popover com
+  Editar/Excluir. "Hoje", stepper de ano e faixa de meses navegam o datepicker por `[defaultDate]`. "Excluir e recriar" é
+  o caminho para corrigir a data (o backend não a aceita no alterar). Tipo/Duração/Recorrente persistem em "Salvar e
+  adicionar outro".
+- **[task 114]** Anotações em drawer (520 px, `p-drawer`): auto-save 2 s só com mudança real, fechar salva (sem confirm),
+  Limpar com Desfazer de 7 s (o vazio só é gravado depois), erro no flush → toast "Reabrir". `aoAlterar` emite
+  `{usuarioId, temAnotacoes}`. Deep-link `/usuario/:id/anotacoes` redireciona (gestor → `/usuario?anotacoes=`, próprio →
+  `/ponto?anotacoes=`); a topbar abre o drawer próprio. `DesfazerService` aceita `rotulo/duracaoMs/aoEncerrar`.
+- **[task 113]** Usuários: status em `p-toggleswitch` na linha (otimista, Desfazer, desabilitado na própria linha);
+  editar e alterar senha abrem direto da linha (`abrirEdicao(id)` / `app-usuario-senha-dialog`); o perfil só lê. O
+  dialog criar/editar é único: login sugerido do nome, senha gerada, Tipo segmentado. Filtros Tipo/Status persistem em
+  `localStorage` (`usuario.filtros`). Gap do backend: dá para inativar o último gestor ativo pelo status.
+- **[task 112]** Projetos: busca e filtro de status são do cliente (carrega até 100, limite do backend) e vão para
+  `?q=`/`?status=`; o status troca pela tag (otimista); criar e editar usam o mesmo dialog (`abrirEdicao`), código
+  desabilitado na edição. O detalhe calcula o resumo dos nós das demandas e reutiliza a toolbar de Demandas; a
+  árvore única (`construirArvoreDemandas`) serve às duas páginas.
+- **[task 109]** Criar e editar demanda usam o mesmo `app-demanda-formulario-dialog` (`demandaId` = edição; o
+  `app-demanda-edicao-dialog` deixou de existir). Estrutural não tem estimativa/previsão (criar manda 0; editar não
+  envia). O Esc do formulário pede confirmação quando há o que perder (o `p-dialog` tem `closeOnEscape` desligado).
+- **[task 108]** O detalhe da demanda edita inline (título, status, estimado, previsão, tags, membros) e grava a cada
+  ação, com rollback; o estado de tags/membros/conexões/atividades vive no dialog (`model()` nos filhos) e
+  alimenta o cache do "← Voltar" (sem chamadas). O erro de ciclo de conexão vem do backend e aparece inline
+  (`criarConexao(..., erroNaTela = true)`). O backend só lista a conexão unidirecional na demanda de origem.
+- **[task 107]** Os chips de status e a legenda do grafo são o mesmo liga/desliga de **visibilidade** (todos
+  ligados por padrão; `alternarStatusVisivel`), o que substitui a seleção "só este status" da 106. As cores
+  de status são tokens (`constants/demanda-cores.constants.ts`); o grafo não tem mais painel lateral.
+- **[task 106]** Em Demandas, a toolbar filtra no cliente (busca sem acento, status, tags) e o filtro vale para
+  Lista e Grafo (o grafo recebe só os nós que atendem; a Lista mantém os ancestrais e abre os ramos). O clique
+  na linha abre o Detalhe e só o chevron expande; o status troca pelo chip (otimista, gestor). Projeto e modo
+  ficam em `localStorage` (`demanda.ultimoProjetoId`/`demanda.ultimoModo`) e na URL. `C` cria demanda: o `N`
+  global é das Anotações (task 96).
+- **[tasks 100–101]** No Ponto, o cabeçalho é estável (controles do mês só desabilitam na visão equipe), o
+  gestor justifica direto da linha do dia (déficit sugere as horas, limitadas à jornada), o desenvolvedor
+  imprime o próprio espelho (sem nome de gestor) e a equipe é triada no cliente: "trabalhando" = alguma
+  execução do dia sem `fimData`; não existe estado "Férias" por usuário. Atalhos de página (← → T) usam
+  `core/utils/atalhos.ts`, o mesmo filtro de foco/overlay da topbar.
+- **[estado `discarded`]** `docs/specs/discarded/` é o quarto estado do ciclo de specs
+  (`SYSTEM.SPEC.md` §3.1); o `repo:verificar` o aceita.
+
+- **[task 117]** A atividade **não tem descrição própria**: é descrita por `nome`, `status`, executor
+  e demanda; a descrição de quem trabalha vive na demanda e na execução. O dialog de visualização
+  (ícone de olho) mostra direto "Últimas execuções", sem `p-tabs`. O assistente de IA aceita só
+  `tipoEntidade` `execucao` e `demanda`.
+
+- **[adoção do kit — UI]** PrimeNG 21 segue como base de UI; a biblioteca própria de componentes
+  está só anotada (`IDEAS.md` I-001) e nada muda até o autor abrir esse milestone. Até lá,
+  `design-fidelity` e "primitivo obrigatório" não valem.
+- **[adoção do kit — testes]** Testes usam `node:test` (sem Jest), ao lado do código em
+  `*.test.ts`; `shared` roda com `tsx` e `backend` com `ts-node` (o `tsx` não aplica
+  `experimentalDecorators` aos arquivos de `shared/` quando roda a partir do backend).
+
+Decisões conscientes que estão funcionando como desejado — não são bug, não precisam de spec nova
+e não devem ser "redescobertas" como problema. O contexto de cada uma está no registro da task
+em `HISTORY.md`.
+
+
+- **[task 86 — primeira infra de scheduler]** Introduzidas as deps `@nestjs/schedule` (agendamento) e `cron` (motor de cron) — primeiras do projeto. O `cron` é **fixado na versão exata `3.2.1`** (não `^3.1.0`): o `@nestjs/schedule@4.1.2` fixa `cron@3.2.1`, e um range `^` resolvia `cron@3.5.0` no root, gerando **dois** `cron` com tipos `CronJob`/`CronTime` incompatíveis (o `SchedulerRegistry.addCronJob` espera o `cron` do schedule) e quebrando o `nest build`. Pinar a versão exata deduplica e compila. Ao subir `@nestjs/schedule`, revalidar o pin do `cron` contra a versão que ele fixa.
+- **[task 86]** Cron com fuso dinâmico do `ConfigService` **precisa** ser registrado em `onModuleInit()` via `SchedulerRegistry.addCronJob(...)`, não com o decorator `@Cron(expr, { timeZone })` — o decorator é avaliado na definição da classe, **antes** da injeção de dependência, então não teria acesso ao `ConfigService`. Padrão a reusar para qualquer job cujo agendamento dependa de config/DI.
+- **[task 82 — reconciliação spec × constituição]** O SQL inline da spec 82 usava `TIMESTAMP` para os campos da BaseEntity e `ck_` no CHECK; ambos foram **corrigidos** na migration `20240026` para seguir o SYSTEM.SPEC/CONVENTIONS (precedência sobre a spec): BaseEntity em **`timestamptz`** (padrão de toda tabela pós-`20240022` e das tabelas novas de `20240025`) e prefixo de check **`chk_`** (o `ck_` é explicitamente proibido em CONVENTIONS §"prefixo por tipo"). PK segue `id SERIAL PRIMARY KEY` (auto-nome `_pkey`), como todas as tabelas do projeto.
+- **[task 82]** Colunas `NUMERIC`/`DATE` no repositório sempre com cast explícito no SELECT/RETURNING: `horas_cobertas::double precision` (o driver `pg` devolve `NUMERIC` como **string** — sem o cast, `horasCobertas*60` produziria concatenação/`NaN`) e `dia_data::text` (para o DTO `diaData: string` em `YYYY-MM-DD`, como `agruparPorDia` já fazia).
+- **[task 82]** Intervalos por dia na visão **mensal** obtidos reusando `ExecucaoRepository.listar` por dia-com-agregado (consome o repositório do módulo correto, §16 #25) + helper novo `PontoService.ordenarPorInicio` + `calcularIntervalos` compartilhado — sem duplicar a lógica de gaps e sem novo método/DTO no módulo `execucao`.
+- **[revisão pós-18]** Junction tables (`demanda_tag`, `atividade_tag`, `demanda_usuario`) ficam no módulo pai — sem módulo NestJS próprio
+- **[revisão pós-18]** `atualizar`/`atualizado` renomeado para `alterar`/`alterado` em toda nomenclatura de DTOs e métodos de negócio
+- **[revisão pós-18]** Métodos de existência (`existe*`) renomeados para `validar*` — método é sempre verbo de ação
+- **[revisão pós-18]** Zero primitivos em qualquer assinatura de método de service ou repository — sempre DTO mesmo para um único campo
+- **[revisão pós-18]** Nenhum DTO pode ser alias/re-export de outro — campos próprios obrigatórios em cada DTO
+- **[revisão pós-18]** Recuperação individual de entidade sempre via `EntidadeRecuperarDto { id: number }` e método `recuperar()`
+- **[task 48 — reconciliação §7.2 × §16 #21]** **DTO em tudo** — service e repository **nunca** recebem `id`/`*Id` primitivo; o **controller** é o único ponto autorizado a montar o DTO: ao extrair `@Param('id')` (ou `@Query`), injeta o `id` no DTO antes de repassar (`recuperar({ id }, …)`, `alterar({ ...dto, id }, …)`). Objetos de contexto (`usuarioAtivo: JwtPayload` via `@ActiveUser()`) não são primitivos e permanecem como parâmetro próprio. Aplicada ao módulo canônico `usuario`; as specs 49–53 e 56 replicam o padrão sem reabrir a discussão. SPEC §7.2/§7.4/§16 #21 e CONVENTIONS já reescritos.
+- **[task 48]** Padrão de nomenclatura **verbo-no-fim** para DTO interno: o qualificador `Interno` faz parte do complemento → `UsuarioInternoAlterarDto`/`UsuarioSenhaInternoAlterarDto` ✅ (nunca `UsuarioAlterarInternoDto`/`UsuarioAlterarSenhaInternoDto` ❌, com o verbo no meio).
+- **[task 70]** **Convenção de nomes de objetos de banco** formalizada: padrão `<prefixo>_<tabela>_<proposito>`, prefixo por tipo — `pk_` (primary key), `fk_` (foreign key), `uix_` (unique index), `ix_` (index), `chk_` (check constraint), `trg_` (trigger), `fn_` (function); nomes genéricos em inglês, nunca deixar o PostgreSQL auto-gerar. Constraints de check usam **`chk_`** (não `ck_`). Documentada em `SCHEMA.md` e `CONVENTIONS.md`; as duas exceções (`demanda_status_check`, `ck_dia_nao_util_duracao`) foram alinhadas via migration `20240020` (`RENAME CONSTRAINT`, sem editar as migrations já aplicadas).
+- **[task 79]** **Enums como tabelas de referência — FK por id + enum TS mantido.** Os 7 enums de domínio fechado deixaram de ser `VARCHAR + CHECK` e viraram tabelas `tipo_<tabela>_<complemento?>` (BaseEntity + `codigo` + `descricao`); a coluna de negócio é `INTEGER` FK para o `id` da referência. O enum TypeScript de `shared/` permanece como **contrato tipado** (`@IsEnum`, DTOs, frontend) e foi **renomeado** para casar com a tabela (`UsuarioTipoEnum` → `TipoUsuarioEnum`, etc.). A tradução `codigo ⇄ id` é encapsulada **só no repositório** (subselect no INSERT/UPDATE, JOIN expondo `codigo AS <campo>` no SELECT/RETURNING) — DTOs, services, models e frontend continuam usando o **valor do enum**, nunca o id. **Reconciliação spec×banco:** a spec listava `tipo_demanda_status` com `EM_DESENVOLVIMENTO`, mas o estado real (pós-`20240013`) é `PENDENTE/PLANEJADA/CONCLUIDA` — seedado com os valores reais (senão o `UPDATE ... SET ... NOT NULL` falharia). **Fora da lista da spec (necessário):** `execucao.repository.recuperarTipoUsuarioDaAtividade` também lia `usuario.tipo` (cross-module) e ganhou o JOIN em `tipo_usuario`; idem `demanda.repository.listarMembrosDemanda` e `atividade.repository.listar` (`usuario.tipo`/`usuarioTipo`).
+- **[task 72]** O `id`/`*Id` injetado pela controller (campo `@IsOptional` no DTO de `@Body`, para o `whitelist` não rejeitar o corpo sem ele) é tipado como **obrigatório no boundary do service** via interseção `& { id: number }` / `& { demandaId: number }` / `& { demandaOrigemId: number }` — eliminando o `!` (non-null assertion) na leitura. Mesmo padrão já aceito no `ExecucaoService.encerrar(dto: ExecucaoEncerrarDto & { id: number }, …)` (exceção C3). `!` de **invariante real** (não injetados pela controller — ex.: `ponto.service` `diaNaoUtil!`, `demanda.service` `raiz!`/`mapa.get()!`) ficam **fora** deste escopo.
+- **[task 48 — desvio da letra da spec, registrado]** No `UsuarioService`, `excluir` usa `UsuarioExcluirDto` (DTO dedicado, `id` obrigatório) em vez do `UsuarioRecuperarDto` sugerido (id opcional → atrito de tipo com `repositorio.excluir`); e `alterarSenha` recebe o DTO do corpo com `id` injetado (`UsuarioSenhaAlterarDto & { id }`), **não** `UsuarioSenhaInternoAlterarDto` — este tem `senhaEncriptada` e é input do **repositório**, pois a encriptação (bcrypt) acontece no service. Ambos preservam o boundary "service nunca recebe primitivo".
+- **[task 78 — herança de DTO esclarecida]** A proibição #23 foi reescrita: um DTO de **negócio** nunca herda outro DTO de **negócio** (nem subclasse vazia `extends X {}`) — declara os próprios campos explicitamente, mesmo idênticos; mas **herdar um DTO core** (genérico/arquitetural, teste de linguagem §4 — `PaginatedResult<TItem>`, `StandardResponse<TData>`) é **esperado** e evita duplicar os campos genéricos. Por isso `PaginatedResult` virou **classe** (não interface; retornos por object-literal seguem válidos por tipagem estrutural); `StandardResponse` segue interface (nenhum DTO a herda). Aplicada: 6 subclasses vazias de DTO de negócio (`UsuarioAlteradoDto`, `ProjetoRecuperadoDto`, `ProjetoAlteradoDto`, `TagRecuperadaDto`, `TagAlteradaDto`, `DemandaAlteradaDto`) ganharam campos explícitos espelhando o pai (mirror do estado **atual** — `DemandaAlteradaDto` sem `prioridade`/com `podeEditar`, `UsuarioAlteradoDto` com `anotacoesAlteracaoData`, divergindo da lista da spec que era anterior às tasks 76/77). Documentada em SPEC §5.1/§16 #23 e CONVENTIONS.
+- **[task 78 — rename do par item/wrapper de execução]** A listagem de execução foi remodelada no padrão item/wrapper: o **item** (13 campos) passou de `ExecucaoResumoDto` → **`ExecucaoItemDto`** (DTO de negócio, campos explícitos); o **wrapper** de listagem deixou de duplicar `PaginatedResult` — `ExecucaoListaDto` foi **removido** e o novo **`ExecucaoResumoDto extends PaginatedResult<ExecucaoItemDto> { totalMinutosDia }`** ocupa o papel de retorno de `listar`. Importadores atualizados (backend: `execucao.repository`/`execucao.service`/`ponto.service` + `PontoDiarioDto`; frontend: `execucao.service`, `atividade.service`, `execucao-historico`, `atividade-listagem`/`atividade-detalhe`/`atividade-visualizar-dialog`). Sem mudança de SQL/campos — só nomes, tipos de retorno e a herança; a forma do JSON de `GET /execucao` (`{ itens, totalItens, …, totalMinutosDia }`) é preservada.
+- Todas as decisões de arquitetura estão documentadas em `docs/SYSTEM.SPEC.md`
+- Schema completo em `docs/SCHEMA.md`
+- Convenções de código em `docs/CONVENTIONS.md`
+- `knexfile.ts` usa `path.resolve(__dirname, '../../../.env')` para carregar o `.env` da raiz corretamente; o path relativo `'../.env'` não funcionava porque o Knex muda o cwd para o diretório do knexfile
+- Os arquivos em `core/` (base, exceptions, filters, interceptors) foram criados já com implementação conforme `SYSTEM.SPEC.md`, antecipando a task 04
+- Os 9 DTO index files em `shared/src/dtos/*/index.ts` estavam vazios (placeholders da task 01), causando erro de build assim que o primeiro import de `@project20/shared` foi adicionado; corrigidos com `export {};` mínimo — serão substituídos com os DTOs reais nas tasks futuras
+- Subpath imports (`@project20/shared/dtos/usuario`) não funcionam com o setup atual (sem `exports` field no package.json nem `paths` no tsconfig); todos os imports do shared usam `@project20/shared` diretamente, que resolve para `src/index.ts` via campo `"main"`
+- `UsuarioRepository` tem método `buscarComSenha(id)` além do especificado: necessário para o fluxo `alterarSenha` que precisa comparar a senha atual via bcrypt
+- Guards globais (`JwtAuthGuard` e `GestorGuard`) registrados via `APP_GUARD` no próprio `AutenticacaoModule` — padrão NestJS que mantém a lógica de auth coesa no módulo correto; `AutenticacaoModule` importado no `AppModule`
+- `UsuarioModule` permanece importado diretamente no `AppModule` além de ser importado transitivamente via `AutenticacaoModule`; NestJS deduplica o módulo no grafo, sem duplicação de providers/controllers
+- No `ProjetoService.recuperar`, quando o usuário é DESENVOLVEDOR, a verificação de acesso reutiliza `listarPorUsuario` para checar se o projeto aparece na lista do usuário; isso é semanticamente correto mas realiza uma query extra — aceito pois é consistente com a regra de negócio e evita query SQL inline duplicada
+- `BaseRepository.executarConsulta` e `executarComando` passaram a aceitar `Knex.Transaction` como terceiro parâmetro opcional; quando fornecido, usa o executor da transação em vez de `conexaoBancoDados` diretamente
+- `DemandaRepository.inserirComAtribuicao` centraliza a transação no repositório, mantendo o serviço limpo e sem injeção de Knex; recebe `{ usuarioIds }` e insere uma linha em `demanda_usuario` por usuário atomicamente (task 71: gestor não é mais atribuído — apenas o criador-dev e membros selecionados; lista pode ser vazia)
+- `DemandaRepository.buscarIdentificador` e `listar` aceitam `usuarioId` opcional: quando fornecido, fazem JOIN com `demanda_usuario` para filtrar acesso de desenvolvedor — evita método duplicado e mantém o controle de acesso no SQL
+- Rota `GET /demanda/grafo` declarada antes de `GET /demanda/:id` no controller para evitar conflito de rotas no NestJS (ParseIntPipe rejeitaria "grafo" mas a ordem garante a rota correta)
+- `DemandaGrafoDto` retornava `arestas: []` até a task 11; a task 12 atualizou `recuperarGrafo` para incluir arestas reais via JOIN com `demanda_conexao` (filtrado por projeto nas duas pontas)
+- `DemandaArvoreItemDto.filhos` usa `@ApiProperty({ type: () => DemandaArvoreItemDto, isArray: true })` com lazy getter para suporte a tipos recursivos no Swagger
+- A construção da árvore na service usa um `Map<number, DemandaArvoreItemDto>` para O(n) em vez de busca recursiva; o nó raiz é identificado quando `demandaPaiId` é null ou não está no mapa (CTE inicia em demandaId, então seu pai nunca estará no resultado)
+- `DemandaRepository.existeConexao` não está listada na spec mas é necessária para implementar a validação de duplicata (#4 de `criarConexao`) com mensagem amigável antes de atingir a constraint do banco
+- `listarConexoes` usa `:demandaId` 4 vezes no SQL; Knex com named bindings substitui cada ocorrência pelo valor do objeto — comportamento correto com pg driver
+- Arestas do grafo são filtradas com INNER JOIN nas duas pontas (origem e destino no mesmo projeto) — conexões cross-projeto não aparecem no grafo do projeto
+- `DemandaService` passa a injetar `TagRepository` e `UsuarioRepository` via `DemandaModule` que importa `TagModule` e `UsuarioModule`; essa dependência entre módulos é necessária para validar existência de tags e usuários antes das operações de atribuição, sem duplicar SQL no repositório de demanda
+- `atribuirTagsDemanda` do repositório implementa sync: lista tags atuais, faz soft delete das que saíram, insere apenas as novas — tags que permanecem na lista não são tocadas e não violam a UNIQUE INDEX filtrada por `is_deleted = false`
+- `contarMembrosDemanda` não estava na spec mas é necessário para implementar a regra "não remover o último membro" sem trazer toda a lista de membros para a service
+- `AtividadeRepository.atualizar` executa dois SELECTs: o UPDATE ... RETURNING não inclui `nome_completo` do usuário (que está em outra tabela), então uma segunda query busca o nome após o UPDATE; alternativa seria um UPDATE com JOIN mas PostgreSQL não suporta JOIN diretamente em UPDATE ... RETURNING sem CTE
+- ~~`AtividadeAtualizadaDto` é re-exportado como alias de `AtividadeRecuperadaDto`~~ **(histórico/obsoleto)** — não corresponde ao código atual: o DTO foi renomeado (`Alterar`/`Alterado`, §16 #24) e **nenhum alias por re-export existe hoje** (cada DTO define seus próprios campos, §16 #23)
+- `AtividadeModule` importa `DemandaModule` (para `DemandaRepository` verificar existência da demanda) e `TagModule` (para `TagRepository` validar tags antes do sync)
+- ~~`ExecucaoAtualizadaDto` é re-exportado como alias de `ExecucaoEncerradaDto`~~ **(histórico/obsoleto)** — não corresponde ao código atual: o DTO foi renomeado (`Alterar`/`Alterado`, §16 #24) e **nenhum alias por re-export existe hoje** (cada DTO define seus próprios campos, §16 #23)
+- `ExecucaoRepository.buscarExecucaoAtiva` faz JOIN com atividade para checar `atividade.usuario_id = :usuarioId`, garantindo que apenas execuções do próprio usuário sejam consideradas ativas — sem coluna `usuario_id` na tabela `execucao`
+- `ExecucaoRepository.buscarUsuarioExecucao` centraliza a busca do dono da execução via JOIN com atividade, usada nas três operações que exigem verificação de propriedade (encerrar, recuperar, atualizar)
+- `duracaoMinutos` é calculado em SQL via `EXTRACT(EPOCH FROM (fim_data - inicio_data))::int / 60` no RETURNING do UPDATE e no SELECT do buscarIdentificador; quando `fim_data IS NULL` retorna NULL
+- `ExecucaoService.listar` passa `{ usuarioId: usuarioAtivo.sub }` como `restricao` (DTO `ExecucaoAcessoFiltrarDto`, spec 56 — antes era o primitivo `usuarioIdRestricao`) quando o tipo é DESENVOLVEDOR, sobrescrevendo qualquer `usuarioId` que o desenvolvedor tente passar nos filtros
+- `ExecucaoModule` importa apenas `AtividadeModule` — usa `AtividadeRepository.buscarIdentificador` e `usuarioTemAcessoDemanda` para validar existência e acesso na operação de iniciar
+- `CalendarioRepository` expõe tanto `ehDiaNaoUtil(data)` (bool, para uso futuro pelo módulo ponto) quanto `buscarTipoPorData(data)` (retorna o tipo, para `verificarDiaUtil` da service que precisa do motivo); rota `GET /calendario/verificar` declarada antes de `GET /calendario/:id` para evitar que "verificar" seja interpretado como ID pelo ParseIntPipe; `verificarDiaUtil` usa `getUTCDay()` (não `getDay()`) para evitar variações de fuso horário ao detectar fim de semana
+- `PontoService` cria `filtrosListagem: ExecucaoListarDto` como objeto literal com `itensPorPagina: 500` para buscar todas as execuções do dia (o repositório usa o valor passado, não aplica validação do class-validator); execuções chegam em DESC do repositório e são reordenadas ASC in-memory para o cálculo de intervalos — volume diário não justifica query adicional
+- `motivoNaoUtil` usa `buscarTipoPorData` (que já existia desde task 16) mapeado via `mapearTipoParaMotivo` para strings legíveis em português ('Feriado', 'Recesso', 'Ponto facultativo') — sem query nova; fim de semana retorna fixo 'Fim de semana'
+- `PontoDiarioDto` importa `ExecucaoResumoDto` por import relativo direto (`../execucao/ExecucaoResumoDto`) em vez do barrel `@project20/shared` para evitar dependência circular dentro do pacote shared
+- **[task 20]** `DemandaRecuperarDto` aceita apenas `{ id: number }` — o filtro de acesso por usuário é separado em `DemandaFiltroAcessoDto`, passado como segundo parâmetro opcional em `recuperar(dto, filtro?)`; isso mantém o padrão `recuperar({ id })` uniforme sem carregar o dto com semântica de autorização
+- **[task 20]** `DemandaInserirAtribuicaoDto` contém apenas `{ criadorId, gestorIds }` — o `dados` da demanda é mantido como parâmetro separado pois é um tipo backend-only (`DemandaCriarDados`) que não pode ser colocado no shared
+- **[task 20]** `DemandaExcluirDto` criado após revisão — `excluir(id: number)` no repositório de demanda era o único método sem DTO; criado para manter consistência com todos os outros módulos
+- **[pós-task 20]** Regra de complemento multi-palavra: o complemento inteiro — mesmo com duas palavras — vem antes do verbo sem exceção. Ex: `membro interno` = complemento composto → `DemandaMembroInternoAtribuirDto` ✅, não `DemandaMembroAtribuirInternoDto` ❌. Documentado em `SYSTEM.SPEC.md` e `CONVENTIONS.md`
+- **[task 22]** Signal `carregamento` (renomeado de `carregamentoAtivo` que estava no scaffold) — todos os arquivos que referenciam o signal foram atualizados
+- **[task 22]** Signal `usuarioAutenticado` usa `UsuarioRecuperadoDto | null` mas o `login()` do service faz `set(resposta.dados.usuario as any)` pois o token retorna apenas `{ id, login, nomeCompleto, tipo }`, não o DTO completo — casting intencional conforme spec
+- **[task 22]** `MessageService` do PrimeNG adicionado como provider no `app.config.ts`; `<p-toast>` adicionado ao `LayoutComponent` — necessário para o `errorHandlerInterceptor` exibir mensagens via `MessageService.add()`
+- **[task 22]** `TopbarComponent` atualizado para usar `AutenticacaoService.logout()` em vez de `localStorage.removeItem('token')` direto — necessário para consistência com chave `access_token`
+- **[task 22]** `AssistenteDescricaoComponent` usa `templateUrl` com arquivo HTML separado criado nesta task; scaffold da task 21 tinha `template: ''` inline
+- **[task 23]** `somentePublicoGuard` exportado do mesmo arquivo `autenticacao.guard.ts` — mantém a lógica de guarda pública/privada coesa no mesmo arquivo; aplicado na rota `/autenticacao` em `app.routes.ts`
+- **[task 23]** Redirecionamento pós-login vai para `/ponto` (não `/`) — a rota raiz `''` já redireciona para `ponto`, mas ir direto evita uma navegação dupla
+- **[task 24]** `UsuarioFormularioPage` é usada apenas para criação (`/usuario/novo`); edição é feita via `p-dialog` dentro da `UsuarioPerfilPage` — as rotas da spec não definem rota de edição separada
+- **[task 24]** `ConfirmationService` fornecido localmente via `providers: [ConfirmationService]` na `UsuarioListagemPage` — não está no `app.config.ts` global
+- **[task 24]** `UsuarioAnotacoesPage` redireciona para `/usuario/:id` se o usuário da sessão não for o dono — proteção client-side; o backend também bloqueia via autorização
+- **[task 24]** `p-select` (PrimeNG 21) em vez de `p-dropdown` (deprecated) para todos os dropdowns; `styleClass` deprecated substituído por `class` nos elementos de seleção
+- **[task 24]** Validador customizado `validarSenhasIguais` declarado como método privado e passado ao segundo argumento de `FormBuilder.group()` para validação cross-field sem classe separada
+- **[task 25]** `ProjetoListagemPage` usa grid de cards com `p-paginator` (em vez de `p-table` com paginação integrada) — cards são mais adequados para projetos com cor e código visual; `p-table` reservado para dados tabulares como usuários e tags
+- **[task 25]** `ProjetoDetalhePage` faz chamada HTTP direta a `/demanda?projetoId=X` via `HttpClient` injetado — o módulo demanda do frontend ainda não existe; evita criar dependência prematura em serviço de outro módulo
+- **[task 25]** `p-colorpicker` usa `format="hex"` para garantir retorno no formato `#RRGGBB` compatível com a validação do backend (`Matches(/^#[0-9A-Fa-f]{6}$/)`)
+- **[task 25]** Validação cross-field `previsaoFimData > inicioData` implementada como validador privado no grupo do form, padrão idêntico ao `validarSenhasIguais` da task 24
+- **[task 25]** `TagListagemPage` usa dialogs para criação e edição (não edição inline em linha de tabela) — mais simples e evita complexidade de estado de edição por linha; spec dizia "Edição inline ou via dialog"
+- **[task 25]** Preview de tag no dialog usa `cor + '22'` e `cor + '55'` (opacidade em hex) para simular aspecto de badge colorido sem variáveis CSS adicionais
+- **[task 26]** `DemandaGrafoComponent` usa D3 v7 force simulation; nós importados do backend já incluem `demandaPaiId` e `horasEstimadas` no `DemandaGrafoNoDto`, evitando segunda chamada HTTP para construção do grafo e da árvore
+- **[task 26]** `DemandaRepository.recuperarGrafo` usa UNION ALL para combinar dois tipos de aresta: `demanda_conexao` (tipo `conexao`) e relações hierárquicas pai→filho via `demanda_pai_id` (tipo `hierarquia`); o campo `tipo` é literal SQL string na mesma query
+- **[task 26]** `DemandaProjetoPage.construirArvore()` constrói a árvore client-side a partir do grafo já carregado via `DemandaGrafoNoDto.demandaPaiId` — elimina chamada extra a `recuperarArvore()` na listagem do projeto
+- **[task 26]** `DemandaArvoreItemComponent` usa `forwardRef(() => DemandaArvoreItemComponent)` no array `imports` para permitir recursão sem erro de referência circular no Angular
+- **[task 26]** `UsuarioListarDto.itensPorPagina` tem `@Max(100)` — a carga de usuários na `DemandaDetalhePage` usa `{ itensPorPagina: 100 }`, não 200
+- **[task 26]** `DemandaDetalhePage` usa `forkJoin` para carregar demanda, ancestrais, arvore, tags disponíveis e usuários em paralelo; tags da demanda (`listarTags`) são carregadas separadamente após o forkJoin pois dependem do `demandaId` confirmado
+- **[task 27]** `AtividadeResumoDto` não carrega tags; para honrar a coluna "tags (chips)" da listagem, `AtividadeListagemPage` busca as tags por atividade via `listarTags` após o `listar` (N+1 chamadas), armazenadas num `Record<atividadeId, TagResumoDto[]>` — aceitável pois a listagem é escopada a uma única demanda (N pequeno) e evita alterar o contrato do backend
+- **[task 27]** `AtividadeFormularioPage` injeta `DemandaService` (do módulo demanda, `providedIn: 'root'`) apenas para exibir o nome da demanda pré-selecionada; o `demandaId` vem por query param e o executor é definido pelo backend
+- **[task 27]** Início de execução e listagem de execuções recentes usam `HttpClient` direto para `/execucao` (módulo execução do frontend ainda é esqueleto), seguindo o mesmo padrão da task 25 — evita dependência prematura em serviço inexistente; `ExecucaoIniciarDto` exige `descricao`, então o detalhe abre um dialog para capturá-la antes do POST
+- **[task 27]** Dialogs do `AtividadeDetalhePage` usam `[visible]="signal()" (visibleChange)="signal.set($event)"` (não `[(visible)]`) pois o estado é signal — padrão consistente com `ProjetoDetalhePage`
+- **[ajuste pós-27]** A listagem de atividades deixou de ser escopada a uma única demanda e passou a ser uma listagem global por usuário (ajuste implementado direto, sem nova spec): (1) `AtividadeListarDto` teve `demandaId` tornado opcional e ganhou `usuarioId?`, `status?: AtividadeStatusEnum[]` (multi), `busca?`, `dataInicio?`/`dataFim?` (ISO date); `AtividadeResumoDto` ganhou `nomeDemanda`, `projetoId`, `nomeProjeto` e `createdDate`; (2) `AtividadeService.listar` (backend) define o controle de acesso por tipo — gestor vê todas (e pode filtrar por um executor via `usuarioId`), desenvolvedor é forçado a `usuarioId = sub` (apenas as próprias); deixou de exigir/validar acesso à demanda na listagem; (3) `AtividadeRepository.listar` reescrito com JOINs `demanda`/`projeto`, filtros dinâmicos por `usuarioId`, `status = ANY(:status)`, busca `ILIKE` em nome de atividade/demanda/projeto, intervalo por `created_date::date`, ordenado por `created_date DESC`; (4) front: filtro de status virou `p-multiSelect` com default "não desenvolvidas" (`ATIVIDADE_STATUS_NAO_DESENVOLVIDA`), `p-select` de executor (somente gestor, carregado via `UsuarioService.listar`), busca textual com `debounceTime(400)`, intervalo de criação via `p-datepicker selectionMode="range"`, colunas Projeto/Demanda/Criada em adicionadas; o `demandaId` por query param continua suportado como filtro opcional (botão "Nova Atividade" só aparece nesse modo escopado)
+- **[ajuste pós-27 fase 3]** Refinamentos na tela de atividades, mantendo tudo no módulo de atividade (a **task 28 — frontend-execucao** continua no backlog, intocada): (1) **criação** simplificada — a dialog passou a ter um único `p-select` de demanda (abaixo do Nome) listando as demandas atribuídas ao usuário no formato "Projeto - Demanda"; novo `DemandaAtribuidaDto` + endpoint `GET /demanda/atribuidas` (service/repo `listarAtribuidas`, JOIN `demanda_usuario`+`projeto`); status default `DESENVOLVENDO`; o campo "ordem de exibição" foi removido da UI (era inócuo — a lista ordena por `created_date`/`nome`) e o front envia `ordemExibicao: 0` fixo; (2) **listagem** reordenada para Projeto/Demanda/Atividade, coluna "Usuário" só para gestor, coluna "Criada em" removida; (3) **visualizar** deixou de navegar para `/atividade/:id` e virou dialog com `p-tabs` (Descrição / Últimas execuções), cabeçalho com usuário, **total de atividades do usuário** (`AtividadeRecuperadaDto.totalAtividadesUsuario`, subconsulta `COUNT` no `recuperar`), status em chip (`p-tag`) e tags; (4) **execução play/pause** por linha (só nas atividades do próprio usuário): novo `ExecucaoAtivaDto` + endpoint `GET /execucao/ativa` (`recuperarAtiva` agora retorna `descricao`); play abre dialog pedindo descrição + histórico de execuções (scroll, sem limite) + `AssistenteDescricaoComponent`; com execução ativa o botão vira pause e reabre a dialog com a descrição preenchida para revisão, encerrando o segmento (`PATCH /execucao/:id/encerrar` — modelo iniciar/encerrar; sem pausa retomável). As chamadas HTTP de execução foram adicionadas ao `AtividadeService` (frontend) para não criar o `modules/execucao/services` (reservado à task 28)
+- **[task 28]** `ExecucaoService.buscarAtiva()` retorna `StandardResponse<ExecucaoAtivaDto | null>` (não `ExecucaoIniciadaDto | null` como sugeria a spec) — o endpoint `GET /execucao/ativa` já existia desde os ajustes pós-27 e retorna `ExecucaoAtivaDto` (`id`, `atividadeId`, `descricao`, `inicioData`); seguiu-se o contrato real do backend em vez do exemplo da spec
+- **[task 28]** `ExecucaoService.recuperar` e `alterar` tipam o retorno como `ExecucaoEncerradaDto`/`ExecucaoAlteradaDto` respectivamente, espelhando os tipos reais dos métodos do `ExecucaoService` do backend (não há `ExecucaoRecuperadaDto` no shared)
+- **[task 28]** O `execucao.model.ts` recebeu helpers puros (`segundosDecorridos`, `formatarRelogio`) reaproveitados pelo `ExecucaoTimerComponent`, mantendo o componente enxuto — segue o padrão de co-localizar helpers no `*.model.ts` do módulo (como `atividade.model.ts`)
+- **[task 28]** Os templates do módulo execução usam apenas utilitários Tailwind + classes BEM em `.scss` próprio das páginas (sem `.scss` para o timer, que usa só utilitários Tailwind) — respeita a lista de "Arquivos a Criar" da spec (que não lista `.scss`) sem violar a proibição de `style=""` inline nem `.css`
+- **[task 28]** `ExecucaoAtivaPage` exibe nome/links de atividade e demanda da execução ativa encadeando `AtividadeService.recuperar(atividadeId)` → `DemandaService.recuperar(demandaId)`, pois `ExecucaoAtivaDto` carrega apenas `atividadeId`; necessário para reconstruir o contexto após recarregar a página com execução já em andamento — **NOTA: `ExecucaoAtivaPage` e a rota `/execucao/ativa` foram removidas no ajuste pós-68 (ver topo); o fluxo iniciar/encerrar vive na tela de Atividades. `ExecucaoAtivaDto`/service/controller permanecem.**
+- **[task 28]** O autocomplete de atividades (início de execução e filtro do histórico) usa `AtividadeService.listar({ busca })` — o backend já força `usuarioId = sub` para desenvolvedor, satisfazendo "filtra por demandas do usuário" sem lógica adicional no frontend
+- **[task 28]** A edição de descrição no histórico é restrita a gestor no frontend (`abrirEdicao` retorna cedo se `!eGestor`, linha só clicável via classe condicional) — alinhado à regra "Editar execuções de outros: só gestor"; o backend também valida a permissão
+- **[task 26]** `subDemandas` na `DemandaDetalhePage` é extraído de `arvore.dados[0]?.filhos` — `recuperarArvore` retorna árvore com a própria demanda como raiz (nivel=0) e seus filhos diretos dentro do nó raiz
+- **[task 29 — redesenho]** A tela de ponto foi redesenhada (após alinhamento) em **dois modos** que substituem a visão de um único dia: **(a) "todos hoje"** — gestor sem filtro de usuário vê o grid de todos os ativos, fixo em hoje, sem seletor de data; **(b) "mensal"** — gestor com usuário filtrado, ou desenvolvedor sempre (próprio), vê lista de dias do mês com totais/saldo no topo e seletor de mês/ano (`maxDate`=mês atual). A spec foi reescrita para refletir isso (a original dizia "não implementar resumo mensal"). Desenvolvedor nunca acessa a visão "todos"
+- **[task 29 — redesenho]** Saldo do mês conforme decisão do usuário: `metaMinutosMes = horasDiariasNecessarias × diasUteisMes`, contando os dias úteis do **mês inteiro** (não só os decorridos) — `diaUtil` = dia de semana que **não** está em `dia_nao_util` (feriado/recesso/ponto facultativo, exato do ano/mês ou recorrente do mês). `saldoMinutosMes = totalMinutosTrabalhadosMes − metaMinutosMes`
+- **[task 29 — redesenho]** `consultarTodos` reaproveita o núcleo de `consultarDiario` extraído em `montarPontoDiario`; `resolverInfoDia(hoje)` é chamado **uma vez** e reutilizado para todos os usuários (a utilidade da data independe do usuário) — para um time pequeno (5–10) o custo de ~1 query de execuções por usuário é aceitável, sem otimização prematura
+- **[task 29 — redesenho]** No mensal, o detalhe de um dia (timeline + intervalos) é carregado **sob demanda** ao expandir, reusando `GET /ponto/diario` — mantém a query mensal enxuta (1 agregação de execuções + 1 de dias não úteis), e só dias com registro são expansíveis
+- **[task 29 — redesenho]** `PontoMensalConsultarDto` usa `@IsNumber` (não `@IsInt`): o `class-validator` resolvido pelo **frontend** não exporta `IsInt` (embora o backend exporte) — `@IsNumber` está disponível nos dois e segue o padrão do `PontoConsultarDto`
+- **[task 29 — redesenho]** Helpers puros em `ponto.model.ts` (frontend): `formatarSaldoMinutos` (sinal explícito `+/-` com valor absoluto, evitando `-2h -30min` do pipe), `abreviacaoDiaSemana`/`numeroDoDia` (via `getUTCDay`/`getUTCDate` sobre a data ISO, sem depender de locale registrado no Angular)
+- **[task 29 — redesenho]** `intervaloMinimoMinutos: 15` em `environment.ts`/`environment.production.ts` (usado por `PontoIntervaloListaComponent` e `PontoMesDiaComponent`) espelha `INTERVALO_MINIMO_MINUTOS` do `.env` do backend — `PontoDiarioDto` não carrega o mínimo e o frontend não acessa `ConfigService`; manter em sincronia manual
+- **[task 29 — redesenho]** Atualização automática ao voltar à aba via `@HostListener('document:visibilitychange')` na `PontoPage` (mesmo padrão da `ExecucaoHistoricoPage`), recarregando o modo atual
+- **[task 30]** Task foi exclusivamente frontend — o backend do calendário (controller/service/repository) já existia desde a task 16; nenhum arquivo backend ou shared foi alterado
+- **[task 30]** O retorno de `GET /calendario/verificar` (`{ data, ehDiaUtil, motivo }`) não tem DTO no shared; modelado como interface local `VerificacaoDiaUtil` em `models/dia-nao-util.model.ts` — é mapeamento de resposta de endpoint, não DTO de negócio (a proibição de redefinir DTO/enum no frontend não se aplica)
+- **[task 30]** Na edição (`DiaNaoUtilAlterarDto`) o backend não expõe `diaData`; o campo de data é exibido mas desabilitado no dialog de edição (`formulario.get('diaData')!.disable()`), evitando enviar um campo que o backend ignoraria — só descrição/tipo/recorrente são alteráveis
+- **[task 30]** Datas tratadas com helpers puros para evitar deslocamento de fuso: `formatarDataIso` usa componentes locais do `Date` (não `toISOString`) ao montar `YYYY-MM-DD`, e `partesDaData` interpreta strings date-only como meio-dia local — mesma estratégia já adotada no `data-brasileira.pipe`
+- **[task 30]** Marcação do calendário (`p-datepicker [inline]` + `pTemplate="date"`) usa dois `Map` computados a partir da lista: `mapaExatos` chaveado por `ano-mes-dia` (não recorrentes) e `mapaRecorrentes` por `mes-dia` (recorrentes, válidos em qualquer ano) — espelha a lógica de recorrência do backend (`EXTRACT(MONTH/DAY)`) sem chamada adicional; clique num dia marcado preenche um painel de detalhe lateral (em vez de tooltip-only)
+- **[task 30]** Toggle tabela/calendário implementado com dois `p-button` + signal `visualizacao` (padrão da `DemandaProjetoPage`), evitando `[(ngModel)]` de `p-selectButton` — coerente com a regra de não usar template-driven forms
+- **[pós-auditoria 44]** **DTO em tudo (reconciliação §7.2 × §16 #21):** decidido padronizar todo boundary para DTO único. Service e repository **nunca** recebem `id`/`*Id` primitivo; a controller é o único ponto autorizado a montá-lo — ao extrair `@Param('id')`/`@Query`, injeta o id no DTO (`service.recuperar({ id })`, `service.alterar({ ...dto, id })`). Essa "microinteligência" não é exceção ao §16 #21 — é onde o DTO nasce. Objetos de contexto (`usuarioAtivo: JwtPayload` via `@ActiveUser()`) permanecem como parâmetro próprio por não serem primitivos. O carve-out para primitivo de restrição de escopo (`listar(filtros, usuarioId?)`) foi **descartado** — vira DTO (`DemandaAcessoFiltrarDto`/`ExecucaoAcessoFiltrarDto`). Documentado em `SYSTEM.SPEC.md` §7.2/§7.4/§16 #21 e `CONVENTIONS.md`; aplicado no código pelas specs 48–56
+- **[pós-auditoria 44]** **DTOs de relatório e value-objects (lacuna do §5.1):** relatórios/consultas computadas usam `Entidade + Recorte + Dto` **sem verbo** (`PontoDiarioDto`, `PontoMensalDto`); value-objects sem ciclo de vida usam o nome do conceito sem entidade nem verbo (`IntervaloDto`). Documentado em `SYSTEM.SPEC.md` §5.1 e `CONVENTIONS.md`
+- **[pós-auditoria 44]** **Função de trigger renomeada:** `fn_atualizar_updated_date` → `fn_set_updated_date` (mecanismo genérico de BaseEntity → inglês, §16 #12). `SCHEMA.md` já atualizado; a migration de renomeação é a spec 55
+- **[pós-auditoria 44]** **Erratas de documentação corrigidas:** `SYSTEM.SPEC.md` §13 (`createdAt`/`updatedAt`/`deletedAt` → `createdDate`/`updatedDate`/`deletedDate`) e §14 (`finalizado_em` → `fim_data`); `CONVENTIONS.md` (coluna BaseEntity `created_at`/`updated_at` → `created_date`/`updated_date`/`deleted_date`)
+
+
+## 4. Débitos Aceitos
+
+Nenhum. Ver [`PROBLEMS.md`](PROBLEMS.md).

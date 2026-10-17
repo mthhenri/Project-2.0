@@ -16,6 +16,7 @@ import {
   StandardResponse,
 } from '@project20/shared';
 import { ambiente } from '../../../../environments/environment';
+import { comFeedbackProprio } from '../../../core/interceptors/loading.interceptor';
 
 @Injectable({ providedIn: 'root' })
 export class ExecucaoService {
@@ -41,7 +42,7 @@ export class ExecucaoService {
     if (filtros.data)           params = params.set('data', filtros.data);
     if (filtros.pagina)         params = params.set('pagina', String(filtros.pagina));
     if (filtros.itensPorPagina) params = params.set('itensPorPagina', String(filtros.itensPorPagina));
-    return this.httpClient.get<StandardResponse<ExecucaoResumoDto>>(this.urlBase, { params });
+    return this.httpClient.get<StandardResponse<ExecucaoResumoDto>>(this.urlBase, { params, ...comFeedbackProprio() });
   }
 
   recuperar(id: number): Observable<StandardResponse<ExecucaoEncerradaDto>> {

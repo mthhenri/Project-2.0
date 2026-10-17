@@ -1,5 +1,4 @@
 <p-dialog
-  [header]="demanda()?.nome || 'Demanda'"
   [visible]="visivel"
   (visibleChange)="fechar()"
   [modal]="true"
@@ -9,6 +8,41 @@
   [resizable]="false"
   appendTo="body"
 >
+  <!-- Título editável (lápis; Enter salva, Esc cancela) -->
+  <ng-template pTemplate="header">
+    <div class="demanda-detalhe-dialog__titulo-area">
+      @if (demanda(); as dadosDemanda) {
+        @if (dadosDemanda.isEstrutural) {
+          <i class="pi pi-folder demanda-detalhe-dialog__icone-estrutural" pTooltip="Demanda estrutural" tooltipPosition="bottom"></i>
+        }
+        @if (editandoTitulo()) {
+          <input
+            #campoTitulo
+            class="demanda-detalhe-dialog__titulo-campo"
+            [value]="tituloEdicao()"
+            maxlength="255"
+            aria-label="Título da demanda"
+            (input)="tituloEdicao.set(campoTitulo.value)"
+            (keydown.enter)="salvarTitulo()"
+            (keydown.escape)="cancelarTitulo($event)"
+            (blur)="salvarTitulo()"
+          />
+          @if (erroTitulo()) {
+            <span class="demanda-detalhe-dialog__titulo-erro">{{ erroTitulo() }}</span>
+          }
+        } @else {
+          <h2 class="demanda-detalhe-dialog__titulo">{{ dadosDemanda.nome }}</h2>
+          @if (sessao.eGestor()) {
+            <button type="button" class="demanda-detalhe-dialog__titulo-lapis" aria-label="Editar título" pTooltip="Editar título" tooltipPosition="bottom" (click)="iniciarEdicaoTitulo()">
+              <i class="pi pi-pencil"></i>
+            </button>
+          }
+        }
+      } @else {
+        <h2 class="demanda-detalhe-dialog__titulo">Demanda</h2>
+      }
+    </div>
+  </ng-template>
 
   @if (carregando()) {
     <div class="demanda-detalhe-dialog__carregando">
@@ -18,70 +52,55 @@
 
   @if (!carregando() && demanda()) {
 
-    <!-- Breadcrumb + ações -->
+    <!-- Breadcrumb + Voltar + ações -->
     <div class="demanda-detalhe-dialog__cabecalho">
       <div class="demanda-detalhe-dialog__cabecalho-esquerda">
+        @if (historico().length > 0) {
+          <p-button
+            label="Voltar"
+            icon="pi pi-arrow-left"
+            severity="secondary"
+            [text]="true"
+            size="small"
+            pTooltip="Voltar para {{ nomeAnterior() }}"
+            tooltipPosition="bottom"
+            (onClick)="voltar()"
+          />
+        }
         @if (ancestrais().length > 0) {
-          <div class="demanda-detalhe-dialog__breadcrumb">
+          <nav class="demanda-detalhe-dialog__breadcrumb" aria-label="Caminho da demanda">
             @for (ancestral of ancestrais(); track ancestral.id) {
-              <span
-                class="demanda-detalhe-dialog__breadcrumb-item"
-                (click)="navegarParaAncestral(ancestral)"
-              >{{ ancestral.nome }}</span>
+              <button type="button" class="demanda-detalhe-dialog__breadcrumb-item" (click)="navegarParaAncestral(ancestral)">{{ ancestral.nome }}</button>
               <i class="pi pi-chevron-right demanda-detalhe-dialog__breadcrumb-sep"></i>
             }
-          </div>
+          </nav>
         }
-
-        <div class="demanda-detalhe-dialog__identidade">
-          @if (demanda()!.isEstrutural) {
-            <i class="pi pi-folder demanda-detalhe-dialog__icone-estrutural"></i>
-          }
-          <p-tag
-            [value]="rotuloStatus(demanda()!.status)"
-            [severity]="severidadeStatus(demanda()!.status)"
-          />
-        </div>
       </div>
 
       <div class="demanda-detalhe-dialog__cabecalho-acoes">
-        <p-button
-          label="Desc. Técnica"
-          icon="pi pi-code"
-          severity="secondary"
-          class="btn-desc--tecnica"
-          [class.btn-desc--ativo]="!!demanda()!.descricaoTecnica"
-          [text]="true"
-          size="small"
-          (onClick)="abrirDialogDescricao('descricaoTecnica')"
-        />
-        <p-button
-          label="Desc. Cliente"
-          icon="pi pi-user"
-          severity="secondary"
-          class="btn-desc--cliente"
-          [class.btn-desc--ativo]="!!demanda()!.descricaoCliente"
-          [text]="true"
-          size="small"
-          (onClick)="abrirDialogDescricao('descricaoCliente')"
-        />
-        <p-button
-          label="Documentação"
-          icon="pi pi-book"
-          severity="secondary"
-          class="btn-desc--doc"
-          [class.btn-desc--ativo]="!!demanda()!.documentacao"
-          [text]="true"
-          size="small"
-          (onClick)="abrirDialogDescricao('documentacao')"
-        />
+        @for (descricao of descricoes; track descricao.campo) {
+          <p-button
+            [icon]="descricao.icone"
+            severity="secondary"
+            [class]="descricao.classe"
+            [class.btn-desc--ativo]="descricaoPreenchida(descricao.campo)"
+            [text]="true"
+            size="small"
+            [ariaLabel]="descricao.rotulo"
+            [pTooltip]="tooltipDescricao(descricao.campo)"
+            tooltipPosition="bottom"
+            (onClick)="abrirDialogDescricao(descricao.campo)"
+          />
+        }
         @if (sessao.eGestor()) {
           <p-button
-            label="Editar"
+            label="Editar tudo"
             icon="pi pi-pencil"
             severity="secondary"
             [outlined]="true"
             size="small"
+            pTooltip="Abre o formulário completo"
+            tooltipPosition="bottom"
             (onClick)="mostrarDialogEditar.set(true)"
           />
           <p-button
@@ -89,39 +108,46 @@
             severity="danger"
             [outlined]="true"
             size="small"
+            ariaLabel="Excluir demanda"
+            pTooltip="Excluir demanda"
+            tooltipPosition="bottom"
             (onClick)="confirmarExclusao()"
           />
         }
       </div>
     </div>
 
-    <!-- Metadados e descrições sempre visíveis -->
-    <div class="demanda-detalhe-dialog__info-grid">
-      <div class="demanda-detalhe-dialog__info-campo">
-        <span class="demanda-detalhe-dialog__info-label">Status</span>
-        <p-tag
-          [value]="rotuloStatus(demanda()!.status)"
-          [severity]="severidadeStatus(demanda()!.status)"
-        />
-      </div>
-      <div class="demanda-detalhe-dialog__info-campo">
-        <span class="demanda-detalhe-dialog__info-label">Estimado</span>
-        <span
-          class="demanda-detalhe-dialog__info-valor"
-          [pTooltip]="unidadeTempo.emDias() ? (demanda()!.horasEstimadas | tempoExibicao: false : 'horas') : ''"
-        >{{ demanda()!.horasEstimadas | tempoExibicao: unidadeTempo.emDias() : 'horas' }}</span>
-      </div>
-      @if (demanda()!.previsaoFimData) {
-        <div class="demanda-detalhe-dialog__info-campo">
-          <span class="demanda-detalhe-dialog__info-label">Previsão de Término</span>
-          <span class="demanda-detalhe-dialog__info-valor">{{ demanda()!.previsaoFimData | dataBrasileira }}</span>
-        </div>
-      }
-      <div class="demanda-detalhe-dialog__info-campo">
-        <span class="demanda-detalhe-dialog__info-label">Estrutural</span>
-        <span class="demanda-detalhe-dialog__info-valor">{{ demanda()!.isEstrutural ? 'Sim' : 'Não' }}</span>
-      </div>
+    <!-- Status, tags e membros -->
+    <div class="demanda-detalhe-dialog__meta">
+      <app-demanda-status-chip
+        [status]="demanda()!.status"
+        [editavel]="sessao.eGestor()"
+        (statusEscolhido)="aoStatusEscolhido($event)"
+      />
+      <app-demanda-tags-cabecalho
+        [demandaId]="demanda()!.id"
+        [tagsDisponiveis]="tagsDisponiveis()"
+        [editavel]="sessao.eGestor()"
+        [(tags)]="tagsDaDemanda"
+        (tagsAlteradas)="aoTagsAlteradas($event)"
+      />
+      <app-demanda-membros-cabecalho
+        [demandaId]="demanda()!.id"
+        [usuariosDisponiveis]="todosUsuarios()"
+        [(membros)]="membros"
+        (membrosAlterados)="demandaAlterada.emit()"
+      />
     </div>
+
+    <!-- Métricas (click-to-edit) -->
+    <app-demanda-metricas
+      class="demanda-detalhe-dialog__metricas"
+      [demandaId]="demanda()!.id"
+      [horasEstimadas]="demanda()!.horasEstimadas"
+      [previsaoFimData]="demanda()!.previsaoFimData"
+      [editavel]="sessao.eGestor()"
+      (alterada)="aoMetricaAlterada($event)"
+    />
 
     <!-- Abas -->
     <p-tabs [value]="abaInicial()" class="demanda-detalhe-dialog__abas">
@@ -133,8 +159,6 @@
           <p-tab value="1"><i class="pi pi-check-square mr-2"></i>Atividades</p-tab>
         }
         <p-tab value="2"><i class="pi pi-share-alt mr-2"></i>Conexões</p-tab>
-        <p-tab value="3"><i class="pi pi-tag mr-2"></i>Tags</p-tab>
-        <p-tab value="4"><i class="pi pi-users mr-2"></i>Membros</p-tab>
       </p-tablist>
 
       <p-tabpanels>
@@ -147,15 +171,17 @@
               <div class="demanda-detalhe-dialog__vazio">
                 <i class="pi pi-inbox text-3xl text-muted-color"></i>
                 <p class="text-muted-color mt-2">Nenhuma sub-demanda</p>
-                <p-button
-                  label="Nova Sub-demanda"
-                  icon="pi pi-plus"
-                  severity="secondary"
-                  [outlined]="true"
-                  size="small"
-                  class="mt-2"
-                  (onClick)="mostrarDialogNovaSubDemanda.set(true)"
-                />
+                @if (sessao.eGestor()) {
+                  <p-button
+                    label="Nova Sub-demanda"
+                    icon="pi pi-plus"
+                    severity="secondary"
+                    [outlined]="true"
+                    size="small"
+                    class="mt-2"
+                    (onClick)="mostrarDialogNovaSubDemanda.set(true)"
+                  />
+                }
               </div>
             }
 
@@ -171,7 +197,7 @@
             }
           </div>
 
-          @if (subDemandas().length > 0) {
+          @if (subDemandas().length > 0 && sessao.eGestor()) {
             <div class="demanda-detalhe-dialog__subdemandas-acao">
               <p-button
                 label="Nova Sub-demanda"
@@ -197,12 +223,21 @@
                 </span>
               }
               <p-button
-                label="Ver Atividades"
+                label="Nova Atividade"
+                icon="pi pi-plus"
+                size="small"
+                (onClick)="criarAtividade()"
+              />
+              <p-button
+                label="Ver todas"
                 icon="pi pi-external-link"
+                iconPos="right"
                 severity="secondary"
                 [outlined]="true"
                 size="small"
-                (onClick)="navegarParaAtividades()"
+                pTooltip="Abre a lista de atividades em outra aba"
+                tooltipPosition="top"
+                (onClick)="verTodasAtividades()"
               />
             </div>
 
@@ -214,6 +249,7 @@
               <div class="demanda-detalhe-dialog__atividades-vazio">
                 <i class="pi pi-check-square"></i>
                 <p>Nenhuma atividade nesta demanda</p>
+                <p-button label="Criar a primeira atividade" icon="pi pi-plus" severity="secondary" [outlined]="true" size="small" (onClick)="criarAtividade()" />
               </div>
             } @else {
               <div class="demanda-detalhe-dialog__atividades-lista">
@@ -251,62 +287,9 @@
         <p-tabpanel value="2">
           <app-demanda-conexao-lista
             [demandaId]="demanda()!.id"
-            [todasDemandas]="todasDemandas"
-          />
-        </p-tabpanel>
-
-        <!-- Tags -->
-        <p-tabpanel value="3">
-          <div class="demanda-detalhe-dialog__tags">
-            <div class="demanda-detalhe-dialog__tags-header">
-              <span class="demanda-detalhe-dialog__tags-titulo">
-                Tags
-                @if (tagsDaDemanda().length > 0) {
-                  <span class="demanda-detalhe-dialog__tags-contador">{{ tagsDaDemanda().length }}</span>
-                }
-              </span>
-              @if (sessao.eGestor()) {
-                <p-button
-                  label="Editar"
-                  icon="pi pi-pencil"
-                  severity="secondary"
-                  [outlined]="true"
-                  size="small"
-                  (onClick)="abrirDialogTags()"
-                />
-              }
-            </div>
-
-            @if (tagsDaDemanda().length === 0) {
-              <div class="demanda-detalhe-dialog__tags-vazio">
-                <i class="pi pi-tag"></i>
-                <p>Nenhuma tag atribuída</p>
-              </div>
-            }
-
-            @if (tagsDaDemanda().length > 0) {
-              <div class="demanda-detalhe-dialog__tags-chips">
-                @for (tag of tagsDaDemanda(); track tag.id) {
-                  <span
-                    class="demanda-detalhe-dialog__tag-chip"
-                    [style.background-color]="tag.cor + '22'"
-                    [style.border-color]="tag.cor + '55'"
-                    [style.color]="tag.cor"
-                  >
-                    <span class="demanda-detalhe-dialog__tag-bolinha" [style.background-color]="tag.cor"></span>
-                    {{ tag.nome }}
-                  </span>
-                }
-              </div>
-            }
-          </div>
-        </p-tabpanel>
-
-        <!-- Membros -->
-        <p-tabpanel value="4">
-          <app-demanda-membro-lista
-            [demandaId]="demanda()!.id"
-            [usuariosDisponiveis]="todosUsuarios"
+            [todasDemandas]="destinosConexao()"
+            [(conexoes)]="conexoes"
+            (demandaAbrir)="navegarParaSubDemanda($event)"
           />
         </p-tabpanel>
 
@@ -390,61 +373,13 @@
 
 <!-- Dialog de edição -->
 @if (demanda()) {
-  <app-demanda-edicao-dialog
+  <app-demanda-formulario-dialog
     [demandaId]="demanda()!.id"
     [visivel]="mostrarDialogEditar()"
     (visivelChange)="mostrarDialogEditar.set($event)"
     (demandaAlterada)="aoDemandaAlterada()"
   />
 }
-
-<!-- Dialog de tags -->
-<p-dialog
-  header="Editar Tags"
-  [(visible)]="mostrarDialogTags"
-  [modal]="true"
-  [style]="{ width: '420px' }"
-  [draggable]="false"
-  appendTo="body"
->
-  <form [formGroup]="formularioTags" class="demanda-detalhe-dialog__dialog-form">
-    <div class="demanda-detalhe-dialog__tags-seletor">
-      @for (tag of tagsDisponiveis(); track tag.id) {
-        <button
-          type="button"
-          class="demanda-detalhe-dialog__tag-seletor-chip"
-          [class.demanda-detalhe-dialog__tag-seletor-chip--ativo]="tagEstaSelecionada(formularioTags.controls.tagIds, tag.id)"
-          [style.--cor-tag]="tag.cor"
-          (click)="alternarTagSelecao(formularioTags.controls.tagIds, tag.id)"
-        >
-          @if (tagEstaSelecionada(formularioTags.controls.tagIds, tag.id)) {
-            <i class="pi pi-check demanda-detalhe-dialog__tag-seletor-check"></i>
-          } @else {
-            <span class="demanda-detalhe-dialog__tag-bolinha" [style.background-color]="tag.cor"></span>
-          }
-          {{ tag.nome }}
-        </button>
-      } @empty {
-        <span class="text-muted-color">Nenhuma tag cadastrada</span>
-      }
-    </div>
-  </form>
-
-  <ng-template pTemplate="footer">
-    <p-button
-      label="Cancelar"
-      severity="secondary"
-      [outlined]="true"
-      (onClick)="mostrarDialogTags.set(false)"
-    />
-    <p-button
-      label="Salvar"
-      icon="pi pi-check"
-      [loading]="carregandoSalvar()"
-      (onClick)="salvarTags()"
-    />
-  </ng-template>
-</p-dialog>
 
 <p-confirmDialog />
 <p-confirmDialog key="descricao-fechar" />
@@ -473,7 +408,7 @@
 
 <!-- Dialog de edição de sub-demanda -->
 @if (demandaIdSubEdicao()) {
-  <app-demanda-edicao-dialog
+  <app-demanda-formulario-dialog
     [demandaId]="demandaIdSubEdicao()"
     [visivel]="mostrarDialogSubEdicao()"
     (visivelChange)="mostrarDialogSubEdicao.set($event)"

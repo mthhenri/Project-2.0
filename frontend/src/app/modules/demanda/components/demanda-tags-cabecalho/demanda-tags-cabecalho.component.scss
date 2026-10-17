@@ -1,0 +1,79 @@
+.demanda-tags-cabecalho {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+
+  &__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.15rem 0.6rem;
+    border: 1px solid;
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  &__bolinha {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  &__vazio {
+    color: var(--p-text-muted-color);
+    font-size: 0.85rem;
+  }
+
+  &__adicionar {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.15rem 0.6rem;
+    border: 1px dashed var(--app-surface-300);
+    border-radius: 1rem;
+    background: transparent;
+    color: var(--p-text-muted-color);
+    font-size: 0.75rem;
+    cursor: pointer;
+
+    &:hover {
+      border-color: var(--p-primary-color);
+      color: var(--p-primary-color);
+    }
+  }
+
+  &__seletor {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    max-width: 22rem;
+  }
+
+  &__opcao {
+    --cor-tag: var(--app-surface-400);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.7rem;
+    border: 1px solid var(--app-surface-300);
+    border-radius: 1rem;
+    background: transparent;
+    color: var(--p-text-color);
+    font-size: 0.8rem;
+    cursor: pointer;
+
+    &--ativa {
+      border-color: var(--cor-tag);
+      background: color-mix(in srgb, var(--cor-tag) 18%, transparent);
+    }
+  }
+
+  &__check {
+    font-size: 0.7rem;
+    color: var(--cor-tag);
+  }
+}

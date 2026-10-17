@@ -1,158 +1,196 @@
 <p-dialog
-  header="Nova Demanda"
   [visible]="visivel"
-  (visibleChange)="fechar()"
+  [closable]="false"
+  [closeOnEscape]="false"
   [modal]="true"
-  [style]="{ width: '560px' }"
+  [style]="{ width: '660px' }"
   [draggable]="false"
+  [resizable]="false"
   appendTo="body"
+  dialogFormulario
+  [dialogBloqueado]="carregando() || carregandoDados()"
+  (dialogEnviar)="salvar()"
 >
-  <form [formGroup]="formulario" class="demanda-dialog__form">
-
-    <div class="demanda-dialog__campo demanda-dialog__campo--full">
-      <label class="demanda-dialog__label">Nome <span class="demanda-dialog__obrigatorio">*</span></label>
-      <input pInputText spellcheck="true" appBloquearCaracteresProibidos formControlName="nome" class="w-full" placeholder="Nome da demanda" />
-      <small class="block mt-1 text-muted-color">{{ dicaCaracteresProibidos }}</small>
-      @if (campoInvalido('nome')) {
-        <small class="demanda-dialog__erro">
-          @if (formulario.controls.nome.hasError('pattern')) {
-            {{ mensagemCaracteresProibidos }}
-          } @else {
-            Nome é obrigatório
-          }
-        </small>
-      }
+  <ng-template pTemplate="header">
+    <div class="demanda-dialog__cabecalho">
+      <span class="demanda-dialog__titulo">{{ eEdicao() ? 'Editar Demanda' : 'Nova Demanda' }}</span>
+      <p-button icon="pi pi-times" [text]="true" [rounded]="true" severity="secondary" ariaLabel="Fechar" (onClick)="fechar()" />
     </div>
+  </ng-template>
 
-    <div class="demanda-dialog__campo demanda-dialog__campo--full">
-      <label class="demanda-dialog__label">Demanda Pai</label>
-      <p-select
-        formControlName="demandaPaiId"
-        [options]="demandasPaiOpcoes()"
-        optionLabel="caminho"
-        optionValue="id"
-        placeholder="Nenhuma (raiz)"
-        [showClear]="true"
-        appendTo="body"
-        class="w-full"
-      />
-    </div>
+  @if (carregandoDados()) {
+    <div class="demanda-dialog__carregando"><i class="pi pi-spin pi-spinner text-2xl text-muted-color"></i></div>
+  } @else {
+    <form [formGroup]="formulario" class="demanda-dialog__form">
 
-    <div class="demanda-dialog__linha">
-      <div class="demanda-dialog__campo">
-        <label class="demanda-dialog__label">Status <span class="demanda-dialog__obrigatorio">*</span></label>
-        <p-select
-          formControlName="status"
-          [options]="statusOpcoes"
-          optionLabel="label"
-          optionValue="value"
-          appendTo="body"
-          class="w-full"
-        />
-      </div>
-
-      <div class="demanda-dialog__campo demanda-dialog__campo--previsao">
-        <label class="demanda-dialog__label">Previsão de Término</label>
-        <p-datepicker
-          formControlName="previsaoFimData"
-          dateFormat="dd/mm/yy"
-          [showIcon]="true"
-          appendTo="body"
-          class="w-full"
-        />
-      </div>
-
-      <div class="demanda-dialog__campo demanda-dialog__campo--horas">
-        <label class="demanda-dialog__label">
-          {{ unidadeTempo.emDias() ? 'Dias Estimados' : 'Horas Estimadas' }}
-          <span class="demanda-dialog__obrigatorio">*</span>
-        </label>
-        <p-inputnumber
-          formControlName="horasEstimadas"
-          [min]="0"
-          [step]="unidadeTempo.emDias() ? 0.5 : 1"
-          [minFractionDigits]="0"
-          [maxFractionDigits]="unidadeTempo.emDias() ? 2 : 0"
-          [suffix]="unidadeTempo.emDias() ? ' dia(s)' : 'h'"
-          locale="pt-BR"
-          class="w-full"
-          [inputStyle]="{ width: '100%' }"
-        />
-      </div>
-    </div>
-
-    @if (sessao.eGestor()) {
       <div class="demanda-dialog__campo demanda-dialog__campo--full">
-        <label class="demanda-dialog__label">Membros</label>
-        <p-multiselect
-          formControlName="usuarioIds"
-          [options]="usuariosDisponiveis()"
-          optionLabel="nomeCompleto"
-          optionValue="id"
-          placeholder="Selecione os membros..."
-          appendTo="body"
-          [filter]="true"
-          filterPlaceholder="Buscar..."
-          class="w-full"
-        />
-      </div>
-    }
-
-    @if (sessao.eGestor()) {
-      <div class="demanda-dialog__campo demanda-dialog__campo--full">
-        <label class="demanda-dialog__label">Tags</label>
-        @if (carregandoTags()) {
-          <i class="pi pi-spin pi-spinner text-muted-color"></i>
-        } @else {
-          <div class="demanda-dialog__tags-seletor">
-            @for (tag of todasAsTags(); track tag.id) {
-              <button
-                type="button"
-                class="demanda-dialog__tag-chip"
-                [class.demanda-dialog__tag-chip--ativo]="tagEstaSelecionada(formulario.controls.tagIds, tag.id)"
-                [style.--cor-tag]="tag.cor"
-                (click)="alternarTagSelecao(formulario.controls.tagIds, tag.id)"
-              >
-                @if (tagEstaSelecionada(formulario.controls.tagIds, tag.id)) {
-                  <i class="pi pi-check demanda-dialog__tag-chip-check"></i>
-                } @else {
-                  <span class="demanda-dialog__tag-bolinha" [style.background-color]="tag.cor"></span>
-                }
-                {{ tag.nome }}
-              </button>
-            } @empty {
-              <span class="text-muted-color">Nenhuma tag cadastrada</span>
+        <label class="demanda-dialog__label" for="demanda-nome">Nome <span class="demanda-dialog__obrigatorio">*</span></label>
+        <input id="demanda-nome" #campoNome pInputText spellcheck="true" appBloquearCaracteresProibidos formControlName="nome" class="w-full" placeholder="Nome da demanda" />
+        @if (campoInvalido('nome')) {
+          <small class="demanda-dialog__erro">
+            @if (formulario.controls.nome.hasError('pattern')) {
+              {{ mensagemCaracteresProibidos }}
+            } @else {
+              Nome é obrigatório
             }
-          </div>
+          </small>
         }
       </div>
-    }
 
-    <div class="demanda-dialog__campo demanda-dialog__campo--checkbox">
-      <p-checkbox
-        formControlName="isEstrutural"
-        [binary]="true"
-        inputId="isEstruturalDialog"
-      />
-      <label for="isEstruturalDialog" class="demanda-dialog__label--checkbox">
-        Demanda estrutural (agrupa sub-demandas)
-      </label>
-    </div>
+      <div class="demanda-dialog__campo demanda-dialog__campo--full">
+        <label class="demanda-dialog__label">Demanda pai</label>
+        <p-select
+          formControlName="demandaPaiId"
+          [options]="demandasPaiOpcoes()"
+          optionLabel="caminho"
+          optionValue="id"
+          placeholder="Nenhuma (raiz do projeto)"
+          [filter]="true"
+          filterBy="caminho"
+          filterPlaceholder="Buscar pelo caminho…"
+          emptyFilterMessage="Nenhuma demanda estrutural encontrada"
+          [showClear]="true"
+          appendTo="body"
+          class="w-full"
+        />
+      </div>
 
-  </form>
+      @if (!ocultaEstimativa) {
+        <div class="demanda-dialog__linha">
+          <div class="demanda-dialog__campo demanda-dialog__campo--horas">
+            <label class="demanda-dialog__label">
+              {{ unidadeTempo.emDias() ? 'Estimativa (dias)' : 'Estimativa (horas)' }}
+              <span class="demanda-dialog__obrigatorio">*</span>
+            </label>
+            <p-inputnumber
+              formControlName="horasEstimadas"
+              [min]="0"
+              [step]="unidadeTempo.emDias() ? 0.5 : 1"
+              [minFractionDigits]="0"
+              [maxFractionDigits]="unidadeTempo.emDias() ? 2 : 0"
+              [suffix]="unidadeTempo.emDias() ? ' dia(s)' : ' h'"
+              locale="pt-BR"
+              class="w-full"
+              [inputStyle]="{ width: '100%' }"
+            />
+          </div>
+
+          <div class="demanda-dialog__campo demanda-dialog__campo--previsao">
+            <label class="demanda-dialog__label">Previsão de término</label>
+            <p-datepicker
+              formControlName="previsaoFimData"
+              dateFormat="dd/mm/yy"
+              [showIcon]="true"
+              appendTo="body"
+              class="w-full"
+            >
+              <ng-template pTemplate="footer">
+                <div class="demanda-dialog__atalhos-data">
+                  <p-button label="+1 sem" size="small" [text]="true" (onClick)="aplicarAtalhoPrevisao('semana1')" />
+                  <p-button label="+2 sem" size="small" [text]="true" (onClick)="aplicarAtalhoPrevisao('semana2')" />
+                  <p-button label="Fim do mês" size="small" [text]="true" (onClick)="aplicarAtalhoPrevisao('fimMes')" />
+                </div>
+              </ng-template>
+            </p-datepicker>
+          </div>
+        </div>
+      }
+
+      <div class="demanda-dialog__campo demanda-dialog__campo--checkbox">
+        <p-checkbox formControlName="isEstrutural" [binary]="true" inputId="demanda-estrutural" />
+        <label for="demanda-estrutural" class="demanda-dialog__label--checkbox">
+          Demanda estrutural (agrupa sub-demandas)
+        </label>
+      </div>
+      @if (ocultaEstimativa) {
+        <small class="demanda-dialog__dica">Estimativa e previsão de uma demanda estrutural vêm das sub-demandas.</small>
+      }
+
+      <button
+        type="button"
+        class="demanda-dialog__mais-opcoes"
+        [attr.aria-expanded]="maisOpcoesAbertas()"
+        (click)="alternarMaisOpcoes()"
+      >
+        <i class="pi" [class.pi-chevron-down]="!maisOpcoesAbertas()" [class.pi-chevron-up]="maisOpcoesAbertas()"></i>
+        Mais opções
+        <span class="demanda-dialog__mais-opcoes-resumo">Status{{ sessao.eGestor() ? ', membros e tags' : '' }}</span>
+      </button>
+
+      @if (maisOpcoesAbertas()) {
+        <div class="demanda-dialog__mais-opcoes-corpo">
+          <div class="demanda-dialog__campo demanda-dialog__campo--full">
+            <label class="demanda-dialog__label">Status <span class="demanda-dialog__obrigatorio">*</span></label>
+            <p-select
+              formControlName="status"
+              [options]="statusOpcoes"
+              optionLabel="label"
+              optionValue="value"
+              appendTo="body"
+              class="w-full"
+            />
+          </div>
+
+          @if (sessao.eGestor()) {
+            <div class="demanda-dialog__campo demanda-dialog__campo--full">
+              <label class="demanda-dialog__label">Membros</label>
+              <p-multiselect
+                formControlName="usuarioIds"
+                [options]="usuariosDisponiveis()"
+                optionLabel="nomeCompleto"
+                optionValue="id"
+                placeholder="Selecione os membros..."
+                appendTo="body"
+                [filter]="true"
+                filterPlaceholder="Buscar..."
+                class="w-full"
+              />
+            </div>
+
+            <div class="demanda-dialog__campo demanda-dialog__campo--full">
+              <label class="demanda-dialog__label">Tags</label>
+              @if (carregandoTags()) {
+                <i class="pi pi-spin pi-spinner text-muted-color"></i>
+              } @else {
+                <div class="demanda-dialog__tags-seletor">
+                  @for (tag of todasAsTags(); track tag.id) {
+                    <button
+                      type="button"
+                      class="demanda-dialog__tag-chip"
+                      [class.demanda-dialog__tag-chip--ativo]="tagEstaSelecionada(formulario.controls.tagIds, tag.id)"
+                      [style.--cor-tag]="tag.cor"
+                      (click)="alternarTagSelecao(formulario.controls.tagIds, tag.id)"
+                    >
+                      @if (tagEstaSelecionada(formulario.controls.tagIds, tag.id)) {
+                        <i class="pi pi-check demanda-dialog__tag-chip-check"></i>
+                      } @else {
+                        <span class="demanda-dialog__tag-bolinha" [style.background-color]="tag.cor"></span>
+                      }
+                      {{ tag.nome }}
+                    </button>
+                  } @empty {
+                    <span class="text-muted-color">Nenhuma tag cadastrada</span>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
+    </form>
+  }
 
   <ng-template pTemplate="footer">
-    <p-button
-      label="Cancelar"
-      severity="secondary"
-      [outlined]="true"
-      (onClick)="fechar()"
-    />
-    <p-button
-      label="Criar Demanda"
-      icon="pi pi-check"
-      [loading]="carregando()"
-      (onClick)="salvar()"
-    />
+    <app-dialog-dica-atalhos />
+    <p-button label="Cancelar" severity="secondary" [outlined]="true" styleClass="whitespace-nowrap" (onClick)="fechar()" />
+    @if (eEdicao()) {
+      <p-button label="Salvar" icon="pi pi-check" styleClass="whitespace-nowrap" [loading]="carregando()" [disabled]="carregandoDados()" (onClick)="salvar()" />
+    } @else {
+      <p-button label="Criar e adicionar outra" severity="secondary" styleClass="whitespace-nowrap" [loading]="carregando()" (onClick)="salvar(true)" />
+      <p-button label="Criar Demanda" icon="pi pi-check" styleClass="whitespace-nowrap" [loading]="carregando()" (onClick)="salvar()" />
+    }
   </ng-template>
 </p-dialog>
+
+<p-confirmDialog key="demanda-formulario-fechar" />

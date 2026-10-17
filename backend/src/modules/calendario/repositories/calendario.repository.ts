@@ -16,6 +16,7 @@ import {
   CalendarioMesConsultarDto,
   CalendarioDiaNaoUtilMesDto,
 } from '@project20/shared';
+import { CalendarioRestaurarDto, DiaNaoUtilRestauradoDto } from '@project20/shared';
 
 interface DiaNaoUtilInserirDados {
   diaData: string;
@@ -169,6 +170,43 @@ export class CalendarioRepository extends BaseRepository<DiaNaoUtil> {
   /** Soft delete do dia não útil. */
   async excluir(dto: CalendarioExcluirDto): Promise<void> {
     await this.executarSoftDelete(dto.id);
+  }
+
+  /**
+   * Recupera o dia não útil **excluído**. É a única leitura que filtra `is_deleted = true`: a restauração
+   * precisa do registro apagado para validar unicidade e dependências antes de reativá-lo.
+   */
+  async recuperarExcluido(dto: CalendarioRestaurarDto): Promise<(DiaNaoUtilRestauradoDto) | null> {
+    const resultado = await this.executarConsulta<DiaNaoUtilRestauradoDto>(
+      `SELECT
+         dia_nao_util.id,
+         dia_nao_util.dia_data AS "diaData",
+         dia_nao_util.descricao
+       FROM dia_nao_util
+       WHERE dia_nao_util.id = :id
+         AND dia_nao_util.is_deleted = true
+       LIMIT 1`,
+      { id: dto.id },
+    );
+    return resultado[0] ?? null;
+  }
+
+  /** Restaura o dia não útil: desfaz o soft delete (sem DELETE físico e sem cascata). */
+  async restaurar(dto: CalendarioRestaurarDto): Promise<DiaNaoUtilRestauradoDto> {
+    const resultado = await this.executarConsulta<DiaNaoUtilRestauradoDto>(
+      `UPDATE dia_nao_util
+       SET is_deleted = false,
+           deleted_date = NULL,
+           updated_date = NOW()
+       WHERE dia_nao_util.id = :id
+         AND dia_nao_util.is_deleted = true
+       RETURNING
+         id,
+         dia_data AS "diaData",
+         descricao`,
+      { id: dto.id },
+    );
+    return resultado[0];
   }
 
   /**

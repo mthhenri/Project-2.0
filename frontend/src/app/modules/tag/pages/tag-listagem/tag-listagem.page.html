@@ -1,185 +1,156 @@
 <div class="tag-listagem">
   <div class="tag-listagem__cabecalho">
-    <h1 class="tag-listagem__titulo">Gerenciar Tags</h1>
-    <p-button
-      label="Nova Tag"
-      icon="pi pi-plus"
-      (onClick)="abrirDialogNova()"
-    />
+    <div class="tag-listagem__titulo-grupo">
+      <h1 class="tag-listagem__titulo">Gerenciar Tags</h1>
+      @if (jaCarregou()) {
+        <span class="tag-listagem__contador">{{ tags().length }} {{ tags().length === 1 ? 'tag' : 'tags' }}</span>
+      }
+    </div>
+
+    <span class="tag-listagem__busca">
+      <i class="pi pi-search tag-listagem__busca-icone"></i>
+      <input
+        #campoBusca
+        pInputText
+        type="text"
+        class="tag-listagem__busca-campo"
+        placeholder="Buscar tag…  ( / )"
+        aria-label="Buscar tag"
+        [formControl]="campoBuscaControle"
+        (keydown.escape)="aoEscBusca($event)"
+      />
+    </span>
   </div>
 
-  @if (carregando()) {
-    <div class="tag-listagem__carregando">
-      <i class="pi pi-spin pi-spinner text-4xl text-muted-color"></i>
+  <!-- Quick-add: swatch da próxima cor + nome + Enter; o foco continua no campo -->
+  <div class="tag-listagem__rapido">
+    <div class="tag-listagem__rapido-linha">
+      <button
+        #swatchNova
+        type="button"
+        class="tag-listagem__swatch"
+        [style.background-color]="corNova()"
+        pTooltip="Cor da nova tag"
+        tooltipPosition="bottom"
+        aria-label="Escolher a cor da nova tag"
+        (click)="abrirPaleta($event, { tipo: 'nova' }, swatchNova)"
+      ></button>
+      <input
+        #campoRapido
+        pInputText
+        spellcheck="true"
+        appBloquearCaracteresProibidos
+        maxlength="100"
+        class="tag-listagem__rapido-campo"
+        placeholder="Nova tag… (Enter para adicionar)"
+        aria-label="Nome da nova tag"
+        [formControl]="campoRapidoControle"
+        (input)="aoDigitarRapido()"
+        (keydown.enter)="adicionar()"
+      />
+      <p-button label="Adicionar" icon="pi pi-plus" [disabled]="!campoRapidoControle.value.trim() || nomeDuplicado()" (onClick)="adicionar()" />
+    </div>
+    @if (nomeDuplicado()) {
+      <small class="tag-listagem__hint tag-listagem__hint--erro">Já existe uma tag com esse nome.</small>
+    } @else if (erroRapido(); as erro) {
+      <small class="tag-listagem__hint tag-listagem__hint--erro">{{ erro }}</small>
+    }
+  </div>
+
+  @if (selecionadas().size > 0) {
+    <div class="tag-listagem__selecao" role="status">
+      <span>{{ selecionadas().size }} {{ selecionadas().size === 1 ? 'selecionada' : 'selecionadas' }}</span>
+      <p-button label="Excluir" icon="pi pi-trash" size="small" severity="danger" (onClick)="excluirSelecionadas()" />
+      <p-button label="Limpar seleção" size="small" [text]="true" severity="secondary" (onClick)="limparSelecao()" />
     </div>
   }
 
-  @if (!carregando()) {
-    @if (tags().length === 0) {
-      <div class="tag-listagem__vazio">
-        <i class="pi pi-tags text-4xl text-muted-color"></i>
-        <p class="text-muted-color mt-3">Nenhuma tag cadastrada</p>
-      </div>
-    } @else {
-      <div class="tag-listagem__grid">
-        @for (tag of tags(); track tag.id) {
-          <div class="tag-listagem__item">
-            <span
-              class="tag-listagem__tag-preview"
-              [style.background-color]="tag.cor + '22'"
-              [style.color]="tag.cor"
-              [style.border-color]="tag.cor + '55'"
+  @if (primeiraCarga()) {
+    <app-skeleton-lista variante="cartoes" [quantidade]="12" />
+  } @else {
+    <div class="tag-listagem__conteudo" [class.conteudo-recarregando]="recarregando()">
+      <app-barra-recarga [ativa]="recarregando()" />
+      @if (tags().length === 0) {
+        <div class="tag-listagem__vazio">
+          <i class="pi pi-tags text-4xl text-muted-color"></i>
+          <p class="text-muted-color mt-3">Nenhuma tag ainda — digite um nome acima e aperte Enter.</p>
+        </div>
+      } @else if (tagsExibidas().length === 0) {
+        <div class="tag-listagem__vazio">
+          <i class="pi pi-search text-4xl text-muted-color"></i>
+          <p class="text-muted-color mt-3">Nenhuma tag corresponde a "{{ termo() }}".</p>
+          <p-button [label]="'Criar tag &quot;' + termo() + '&quot;'" icon="pi pi-plus" class="mt-2" (onClick)="criarDoTermo()" />
+        </div>
+      } @else {
+        <div class="tag-listagem__grid" [class.tag-listagem__grid--em-selecao]="selecionadas().size > 0">
+          @for (tag of tagsExibidas(); track tag.id) {
+            <div
+              class="tag-listagem__item"
+              [class.tag-listagem__item--temporaria]="eTemporaria(tag)"
+              [class.tag-listagem__item--selecionada]="selecionadas().has(tag.id)"
             >
-              {{ tag.nome }}
-            </span>
-            <div class="tag-listagem__acoes">
-              <p-button
-                icon="pi pi-pencil"
-                [text]="true"
-                size="small"
-                pTooltip="Editar"
-                tooltipPosition="left"
-                (onClick)="abrirDialogEditar(tag)"
+              <p-checkbox
+                class="tag-listagem__selecionar"
+                [binary]="true"
+                [ngModel]="selecionadas().has(tag.id)"
+                (ngModelChange)="alternarSelecao(tag, $event)"
+                [disabled]="eTemporaria(tag)"
+                [attr.aria-label]="'Selecionar ' + tag.nome"
               />
-              <p-button
-                icon="pi pi-trash"
-                [text]="true"
-                severity="danger"
-                size="small"
-                pTooltip="Excluir"
-                tooltipPosition="left"
-                (onClick)="confirmarExclusao(tag)"
-              />
+              <button
+                #ponto
+                type="button"
+                class="tag-listagem__ponto"
+                [style.background-color]="tag.cor"
+                [disabled]="eTemporaria(tag)"
+                pTooltip="Trocar a cor"
+                tooltipPosition="top"
+                [attr.aria-label]="'Trocar a cor de ' + tag.nome"
+                (click)="abrirPaleta($event, { tipo: 'tag', tag }, ponto)"
+              ></button>
+              <button
+                type="button"
+                class="tag-listagem__tag-preview"
+                [style]="estiloPillTag(tag.cor)"
+                [disabled]="eTemporaria(tag)"
+                [attr.aria-label]="'Editar ' + tag.nome"
+                (click)="abrirEdicao(tag)"
+              >{{ tag.nome }}</button>
+              <div class="tag-listagem__acoes">
+                <p-button
+                  icon="pi pi-pencil"
+                  [text]="true"
+                  severity="secondary"
+                  size="small"
+                  [disabled]="eTemporaria(tag)"
+                  pTooltip="Editar"
+                  tooltipPosition="top"
+                  ariaLabel="Editar tag"
+                  (onClick)="abrirEdicao(tag)"
+                />
+                <p-button
+                  icon="pi pi-trash"
+                  [text]="true"
+                  severity="danger"
+                  size="small"
+                  [disabled]="eTemporaria(tag)"
+                  pTooltip="Excluir"
+                  tooltipPosition="top"
+                  ariaLabel="Excluir tag"
+                  (onClick)="excluir(tag)"
+                />
+              </div>
             </div>
-          </div>
-        }
-      </div>
-    }
+          }
+        </div>
+      }
+    </div>
   }
 </div>
 
-<p-confirmDialog />
+<!-- Paleta compartilhada: ancorada no dot de uma tag ou no swatch do quick-add -->
+<p-popover #popoverCor (onHide)="aoFecharPaleta()">
+  <app-seletor-cor [compacto]="true" [ngModel]="corDoPopover()" (ngModelChange)="aoEscolherCor($event)" />
+</p-popover>
 
-<!-- Dialog: nova tag -->
-<p-dialog
-  header="Nova Tag"
-  [(visible)]="mostrarDialogNova"
-  [modal]="true"
-  [style]="{ width: '420px' }"
-  [draggable]="false"
->
-  <form [formGroup]="formularioNova" class="tag-listagem__dialog-form">
-    <div class="tag-listagem__dialog-campo">
-      <label class="tag-listagem__label">Nome <span class="tag-listagem__obrigatorio">*</span></label>
-      <input pInputText spellcheck="true" appBloquearCaracteresProibidos formControlName="nome" placeholder="ex: Backend" maxlength="100" class="w-full" />
-      <small class="block mt-1 text-muted-color">{{ dicaCaracteresProibidos }}</small>
-      @if (campoNovaInvalido('nome')) {
-        <small class="tag-listagem__erro">
-          @if (formularioNova.controls.nome.hasError('required')) {
-            Nome é obrigatório
-          } @else if (formularioNova.controls.nome.hasError('maxlength')) {
-            Nome deve ter no máximo 100 caracteres
-          } @else if (formularioNova.controls.nome.hasError('pattern')) {
-            {{ mensagemCaracteresProibidos }}
-          }
-        </small>
-      }
-    </div>
-
-    <div class="tag-listagem__dialog-campo">
-      <label class="tag-listagem__label">Cor <span class="tag-listagem__obrigatorio">*</span></label>
-      <app-seletor-cor formControlName="cor" />
-    </div>
-
-    @if (formularioNova.value.nome && formularioNova.value.cor) {
-      <div class="tag-listagem__preview-bloco">
-        <span class="tag-listagem__label">Prévia:</span>
-        <span
-          class="tag-listagem__tag-preview"
-          [style.background-color]="formularioNova.value.cor + '22'"
-          [style.color]="formularioNova.value.cor"
-          [style.border-color]="formularioNova.value.cor + '55'"
-        >
-          {{ formularioNova.value.nome }}
-        </span>
-      </div>
-    }
-  </form>
-
-  <ng-template pTemplate="footer">
-    <p-button
-      label="Cancelar"
-      severity="secondary"
-      [outlined]="true"
-      (onClick)="mostrarDialogNova.set(false)"
-    />
-    <p-button
-      label="Criar"
-      icon="pi pi-check"
-      [loading]="carregandoSalvar()"
-      (onClick)="salvarNova()"
-    />
-  </ng-template>
-</p-dialog>
-
-<!-- Dialog: editar tag -->
-<p-dialog
-  header="Editar Tag"
-  [(visible)]="mostrarDialogEditar"
-  [modal]="true"
-  [style]="{ width: '420px' }"
-  [draggable]="false"
->
-  <form [formGroup]="formularioEditar" class="tag-listagem__dialog-form">
-    <div class="tag-listagem__dialog-campo">
-      <label class="tag-listagem__label">Nome <span class="tag-listagem__obrigatorio">*</span></label>
-      <input pInputText spellcheck="true" appBloquearCaracteresProibidos formControlName="nome" maxlength="100" class="w-full" />
-      <small class="block mt-1 text-muted-color">{{ dicaCaracteresProibidos }}</small>
-      @if (campoEditarInvalido('nome')) {
-        <small class="tag-listagem__erro">
-          @if (formularioEditar.controls.nome.hasError('required')) {
-            Nome é obrigatório
-          } @else if (formularioEditar.controls.nome.hasError('maxlength')) {
-            Nome deve ter no máximo 100 caracteres
-          } @else if (formularioEditar.controls.nome.hasError('pattern')) {
-            {{ mensagemCaracteresProibidos }}
-          }
-        </small>
-      }
-    </div>
-
-    <div class="tag-listagem__dialog-campo">
-      <label class="tag-listagem__label">Cor <span class="tag-listagem__obrigatorio">*</span></label>
-      <app-seletor-cor formControlName="cor" />
-    </div>
-
-    @if (formularioEditar.value.nome && formularioEditar.value.cor) {
-      <div class="tag-listagem__preview-bloco">
-        <span class="tag-listagem__label">Prévia:</span>
-        <span
-          class="tag-listagem__tag-preview"
-          [style.background-color]="formularioEditar.value.cor + '22'"
-          [style.color]="formularioEditar.value.cor"
-          [style.border-color]="formularioEditar.value.cor + '55'"
-        >
-          {{ formularioEditar.value.nome }}
-        </span>
-      </div>
-    }
-  </form>
-
-  <ng-template pTemplate="footer">
-    <p-button
-      label="Cancelar"
-      severity="secondary"
-      [outlined]="true"
-      (onClick)="mostrarDialogEditar.set(false)"
-    />
-    <p-button
-      label="Salvar"
-      icon="pi pi-check"
-      [loading]="carregandoSalvar()"
-      (onClick)="salvarEdicao()"
-    />
-  </ng-template>
-</p-dialog>
+<app-tag-edicao-dialog (aoSalvar)="aoSalvarEdicao($event)" />

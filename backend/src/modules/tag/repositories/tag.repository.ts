@@ -13,6 +13,7 @@ import {
   TagRecuperarDto,
   TagExcluirDto,
 } from '@project20/shared';
+import { TagRestaurarDto, TagRestauradaDto } from '@project20/shared';
 
 @Injectable()
 export class TagRepository extends BaseRepository<Tag> {
@@ -118,5 +119,42 @@ export class TagRepository extends BaseRepository<Tag> {
   /** Soft delete da tag. */
   async excluir(dto: TagExcluirDto): Promise<void> {
     await this.executarSoftDelete(dto.id);
+  }
+
+  /**
+   * Recupera a tag **excluída**. É a única leitura que filtra `is_deleted = true`: a restauração
+   * precisa do registro apagado para validar unicidade e dependências antes de reativá-lo.
+   */
+  async recuperarExcluida(dto: TagRestaurarDto): Promise<(TagRestauradaDto) | null> {
+    const resultado = await this.executarConsulta<TagRestauradaDto>(
+      `SELECT
+         tag.id,
+         tag.nome,
+         tag.cor
+       FROM tag
+       WHERE tag.id = :id
+         AND tag.is_deleted = true
+       LIMIT 1`,
+      { id: dto.id },
+    );
+    return resultado[0] ?? null;
+  }
+
+  /** Restaura a tag: desfaz o soft delete (sem DELETE físico e sem cascata). */
+  async restaurar(dto: TagRestaurarDto): Promise<TagRestauradaDto> {
+    const resultado = await this.executarConsulta<TagRestauradaDto>(
+      `UPDATE tag
+       SET is_deleted = false,
+           deleted_date = NULL,
+           updated_date = NOW()
+       WHERE tag.id = :id
+         AND tag.is_deleted = true
+       RETURNING
+         id,
+         nome,
+         cor`,
+      { id: dto.id },
+    );
+    return resultado[0];
   }
 }

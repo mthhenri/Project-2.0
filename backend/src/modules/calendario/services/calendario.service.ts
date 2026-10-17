@@ -10,6 +10,7 @@ import {
   CalendarioInternoAlterarDto,
 } from '@project20/shared';
 import { StandardResponse } from '@project20/shared';
+import { CalendarioRestaurarDto, DiaNaoUtilRestauradoDto } from '@project20/shared';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
 
 @Injectable()
@@ -96,6 +97,22 @@ export class CalendarioService {
       sucesso:  true,
       dados:    null,
       mensagem: 'Dia não útil excluído com sucesso',
+    };
+  }
+
+  /** Restaura o dia não útil excluído (soft delete revertido, sem cascata). Restrito a gestores. */
+  async restaurar(dto: CalendarioRestaurarDto): Promise<StandardResponse<DiaNaoUtilRestauradoDto>> {
+    const diaNaoUtilExcluido = await this.calendarioRepositorio.recuperarExcluido({ id: dto.id });
+    if (!diaNaoUtilExcluido) {
+      throw new ResourceNotFoundException('Dia não útil');
+    }
+
+    const diaNaoUtilRestaurado = await this.calendarioRepositorio.restaurar({ id: dto.id });
+
+    return {
+      sucesso:  true,
+      dados:    diaNaoUtilRestaurado,
+      mensagem: 'Dia não útil restaurado com sucesso',
     };
   }
 

@@ -3,21 +3,31 @@
 
   <div
     class="demanda-arvore-item__linha"
-    (click)="alternarExpansao($event)"
+    [class.demanda-arvore-item__linha--foco]="focoId === arvoreItem.id"
+    [attr.id]="'demanda-item-' + arvoreItem.id"
+    role="treeitem"
+    [attr.aria-expanded]="arvoreItem.filhos.length ? expandido : null"
+    [attr.aria-selected]="focoId === arvoreItem.id"
+    (click)="selecionar()"
     (contextmenu)="abrirMenuContexto($event, menuContexto)"
   >
     <div class="demanda-arvore-item__info">
+      @if (arvoreItem.filhos.length) {
+        <button
+          type="button"
+          class="demanda-arvore-item__chevron"
+          [attr.aria-label]="expandido ? 'Recolher' : 'Expandir'"
+          (click)="alternarExpansao($event)"
+        >
+          <i class="pi pi-chevron-right demanda-arvore-item__icone-filhos" [class.demanda-arvore-item__icone-filhos--expandido]="expandido"></i>
+        </button>
+      } @else {
+        <span class="demanda-arvore-item__chevron-vazio"></span>
+      }
       @if (arvoreItem.isEstrutural) {
         <i class="pi pi-folder demanda-arvore-item__icone-estrutural"></i>
       }
-      @if (arvoreItem.filhos.length) {
-        <i
-          class="pi pi-chevron-right demanda-arvore-item__icone-filhos"
-          [class.demanda-arvore-item__icone-filhos--expandido]="expandido()"
-          (click)="alternarExpansao($event)"
-        ></i>
-      }
-      <span class="demanda-arvore-item__nome">{{ arvoreItem.nome }}</span>
+      <span class="demanda-arvore-item__nome">@for (parte of nomeEmPartes; track $index) {@if (parte.destaque) {<mark class="demanda-arvore-item__destaque">{{ parte.texto }}</mark>} @else {{{ parte.texto }}}}</span>
     </div>
 
     <div class="demanda-arvore-item__badges">
@@ -36,31 +46,101 @@
           }
         </div>
       }
-      <p-tag
-        [value]="rotuloStatus(arvoreItem.status)"
-        [severity]="severidadeStatus(arvoreItem.status)"
-      />
-      @if (arvoreItem.horasEstimadas > 0) {
-        <span
-          class="demanda-arvore-item__horas"
-          [pTooltip]="unidadeTempo.emDias() ? (arvoreItem.horasEstimadas | tempoExibicao: false : 'horas') : ''"
-        >{{ arvoreItem.horasEstimadas | tempoExibicao: unidadeTempo.emDias() : 'horas' }} est.</span>
+
+      @if (executores.length) {
+        <i
+          class="pi pi-circle-fill demanda-arvore-item__executor"
+          [pTooltip]="'Em execução: ' + executores.join(', ')"
+          tooltipPosition="top"
+        ></i>
       }
-      @if (arvoreItem.minutosExecutados > 0) {
+
+      @if (arvoreItem.horasEstimadas > 0) {
+        <span class="demanda-arvore-item__progresso">
+          <span class="demanda-arvore-item__progresso-barra" [class.demanda-arvore-item__progresso-barra--estouro]="estourou">
+            <span class="demanda-arvore-item__progresso-preenchimento" [style.width.%]="percentualExecutado"></span>
+          </span>
+          <span
+            class="demanda-arvore-item__horas"
+            [class.demanda-arvore-item__horas--estouro]="estourou"
+            [pTooltip]="unidadeTempo.emDias() ? (arvoreItem.minutosExecutados | tempoExibicao: false : 'minutos') + ' / ' + (arvoreItem.horasEstimadas | tempoExibicao: false : 'horas') : 'Executado / estimado'"
+            tooltipPosition="top"
+          >{{ arvoreItem.minutosExecutados | tempoExibicao: unidadeTempo.emDias() : 'minutos' }}/{{ arvoreItem.horasEstimadas | tempoExibicao: unidadeTempo.emDias() : 'horas' }}</span>
+        </span>
+      } @else if (arvoreItem.minutosExecutados > 0) {
         <span
           class="demanda-arvore-item__horas demanda-arvore-item__horas--exec"
           [pTooltip]="unidadeTempo.emDias() ? (arvoreItem.minutosExecutados | tempoExibicao: false : 'minutos') : ''"
         >{{ arvoreItem.minutosExecutados | tempoExibicao: unidadeTempo.emDias() : 'minutos' }} exec.</span>
       }
+
+      <span class="demanda-arvore-item__coluna-status">
+        <app-demanda-status-chip
+        [status]="arvoreItem.status"
+        [editavel]="statusEditavel && eGestor"
+        (statusEscolhido)="aoEscolherStatus($event)"
+      />
+      </span>
+      <!-- T·C·D: técnica, cliente e documentação; coloridos quando preenchidos (clique abre a descrição) -->
+      <span class="demanda-arvore-item__descricoes" role="group" aria-label="Descrições da demanda">
+        @for (descricao of descricoes; track descricao.campo) {
+          <button
+            type="button"
+            class="demanda-arvore-item__descricao"
+            [class.demanda-arvore-item__descricao--preenchida]="descricaoPreenchida(descricao.campo)"
+            [class]="'demanda-arvore-item__descricao--' + descricao.tipo"
+            [attr.aria-label]="descricao.rotulo + (descricaoPreenchida(descricao.campo) ? ' (preenchida)' : ' (vazia)')"
+            [pTooltip]="descricao.rotulo + (descricaoPreenchida(descricao.campo) ? ' — preenchida' : ' — vazia')"
+            tooltipPosition="top"
+            (click)="abrirDescricao($event, descricao.campo)"
+          >{{ descricao.letra }}</button>
+        }
+      </span>
+
+
+      <span class="demanda-arvore-item__acoes">
+        @if (eGestor && arvoreItem.isEstrutural) {
+          <p-button
+            icon="pi pi-plus"
+            [text]="true"
+            [rounded]="true"
+            severity="secondary"
+            size="small"
+            ariaLabel="Nova sub-demanda"
+            pTooltip="Nova sub-demanda"
+            tooltipPosition="top"
+            (onClick)="novaFilha($event)"
+          />
+        }
+        <p-button
+          icon="pi pi-ellipsis-v"
+          [text]="true"
+          [rounded]="true"
+          severity="secondary"
+          size="small"
+          ariaLabel="Mais ações"
+          pTooltip="Mais ações"
+          tooltipPosition="top"
+          (onClick)="abrirMenuPelaLinha($event, menuContexto)"
+        />
+      </span>
     </div>
   </div>
 
-  @if (arvoreItem.filhos.length && expandido()) {
-    <div class="demanda-arvore-item__filhos">
+  @if (arvoreItem.filhos.length && expandido) {
+    <div class="demanda-arvore-item__filhos" role="group">
       @for (filho of arvoreItem.filhos; track filho.id) {
         <app-demanda-arvore-item
           [arvoreItem]="filho"
           [nivel]="nivel + 1"
+          [expandidos]="expandidos"
+          [termoBusca]="termoBusca"
+          [focoId]="focoId"
+          [statusEditavel]="statusEditavel"
+          [executoresPorDemanda]="executoresPorDemanda"
+          (expansaoAlternada)="expansaoAlternada.emit($event)"
+          (focoAlterado)="focoAlterado.emit($event)"
+          (statusAlterado)="statusAlterado.emit($event)"
           (demandaSelecionada)="demandaSelecionada.emit($event)"
           (demandaEditarSolicitada)="demandaEditarSolicitada.emit($event)"
           (demandaEditarDescricaoSolicitada)="demandaEditarDescricaoSolicitada.emit($event)"

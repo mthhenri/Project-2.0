@@ -1,0 +1,10 @@
+@if (desfazer.oferta(); as oferta) {
+  <div class="toast-desfazer" role="status" aria-live="polite">
+    <i class="pi pi-check-circle toast-desfazer__icone"></i>
+    <span class="toast-desfazer__texto">{{ oferta.mensagem }}</span>
+    <p-button [label]="oferta.rotulo ?? 'Desfazer'" [text]="true" size="small" (onClick)="desfazer.executar()" />
+    <button type="button" class="toast-desfazer__fechar" aria-label="Fechar" (click)="desfazer.dispensar()">
+      <i class="pi pi-times"></i>
+    </button>
+  </div>
+}

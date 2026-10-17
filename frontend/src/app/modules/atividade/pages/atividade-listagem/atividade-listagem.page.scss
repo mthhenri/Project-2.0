@@ -323,13 +323,6 @@
     padding: 2rem;
   }
 
-  &__descricao {
-    margin: 0;
-    white-space: pre-wrap;
-    line-height: 1.5;
-    color: var(--p-text-color);
-  }
-
   &__descricao-form {
     display: flex;
     flex-direction: column;

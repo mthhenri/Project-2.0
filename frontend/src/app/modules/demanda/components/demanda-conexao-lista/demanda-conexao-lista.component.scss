@@ -132,6 +132,11 @@
     font-weight: 500;
     color: var(--p-primary-600);
     text-decoration: none;
+    background: none;
+    border: none;
+    padding: 0;
+    text-align: left;
+    cursor: pointer;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -142,36 +147,25 @@
     }
   }
 
-  &__form {
+  &__criacao {
     display: flex;
-    flex-direction: column;
-    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
   }
 
-  &__form-campo {
-    display: flex;
-    flex-direction: column;
-    gap: 0.375rem;
-
-    label {
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: var(--app-surface-700);
-    }
-
-    &--checkbox {
-      flex-direction: row;
-      align-items: center;
-
-      label {
-        font-weight: normal;
-        cursor: pointer;
-      }
-    }
+  &__destino {
+    flex: 1 1 16rem;
+    min-width: 14rem;
   }
 
-  &__obrigatorio {
+  &__erro {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0 0 0.75rem;
     color: var(--p-red-500);
-    margin-left: 0.125rem;
+    font-size: 0.85rem;
   }
 }

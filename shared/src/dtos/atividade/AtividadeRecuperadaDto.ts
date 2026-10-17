@@ -6,7 +6,6 @@ export class AtividadeRecuperadaDto {
   usuarioId: number;
   nomeUsuario: string;
   nome: string;
-  descricao: string | null;
   status: TipoAtividadeStatusEnum;
   posicaoAtividadeUsuario: number;
   createdDate: Date;

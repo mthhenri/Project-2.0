@@ -1,0 +1,101 @@
+.demanda-membros-cabecalho {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  &__pilha {
+    display: flex;
+    align-items: center;
+  }
+
+  &__membro {
+    position: relative;
+    margin-left: -0.35rem;
+
+    &:first-child {
+      margin-left: 0;
+    }
+  }
+
+  &__avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.9rem;
+    height: 1.9rem;
+    border: 2px solid var(--app-surface-0);
+    border-radius: 50%;
+    background: var(--app-avatar-fundo);
+    color: var(--app-avatar-cor);
+    font-size: 0.7rem;
+    font-weight: 600;
+  }
+
+  // O "x" de remover só aparece com o mouse (ou o foco do teclado) sobre o avatar.
+  &__remover {
+    position: absolute;
+    top: -0.3rem;
+    right: -0.3rem;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 1rem;
+    height: 1rem;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: var(--p-red-500);
+    color: white;
+    font-size: 0.5rem;
+    cursor: pointer;
+  }
+
+  &__membro:hover &__remover,
+  &__remover:focus-visible {
+    display: inline-flex;
+  }
+
+  &__vazio {
+    color: var(--p-text-muted-color);
+    font-size: 0.85rem;
+  }
+
+  &__adicionar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.9rem;
+    height: 1.9rem;
+    border: 1px dashed var(--app-surface-300);
+    border-radius: 50%;
+    background: transparent;
+    color: var(--p-text-muted-color);
+    cursor: pointer;
+
+    &:hover {
+      border-color: var(--p-primary-color);
+      color: var(--p-primary-color);
+    }
+  }
+
+  &__participacao {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.65rem;
+    border: 1px solid var(--app-surface-300);
+    border-radius: 1rem;
+    background: transparent;
+    color: var(--p-text-color);
+    font-size: 0.8rem;
+    cursor: pointer;
+
+    &:hover {
+      border-color: var(--p-primary-color);
+    }
+  }
+
+  &__busca {
+    min-width: 14rem;
+  }
+}

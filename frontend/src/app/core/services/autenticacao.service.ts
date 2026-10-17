@@ -5,6 +5,8 @@ import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { AutenticacaoLoginDto, AutenticacaoTokenDto, StandardResponse } from '@project20/shared';
 import { UsuarioSessaoService } from './usuario-sessao.service';
+import { ExecucaoAtivaService } from './execucao-ativa.service';
+import { comErroTratadoPelaTela } from '../interceptors/error-handler.interceptor';
 import { ambiente } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -12,11 +14,13 @@ export class AutenticacaoService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly sessao = inject(UsuarioSessaoService);
+  private readonly execucaoAtiva = inject(ExecucaoAtivaService);
 
   login(dto: AutenticacaoLoginDto): Observable<StandardResponse<AutenticacaoTokenDto>> {
     return this.http.post<StandardResponse<AutenticacaoTokenDto>>(
       `${ambiente.apiUrl}/autenticacao/login`,
       dto,
+      comErroTratadoPelaTela(),
     ).pipe(
       tap((resposta) => {
         if (resposta.sucesso && resposta.dados) {
@@ -30,6 +34,7 @@ export class AutenticacaoService {
   logout(): void {
     localStorage.removeItem('access_token');
     this.sessao.limpar();
+    this.execucaoAtiva.limpar();
     this.router.navigate(['/autenticacao']);
   }
 

@@ -70,16 +70,53 @@ project-2.0/
     SYSTEM.SPEC.md        ← este arquivo — lido no início de toda sessão
     CONVENTIONS.md        ← referência rápida de convenções
     SCHEMA.md             ← schema SQL completo e comentado
-    CONTEXT.md            ← estado atual do projeto (atualizado após cada sessão)
+    DEPLOY.md             ← deploy e ambientes
+    assets/               ← mídia versionada de documentação (ex.: prints da revisão de UI/UX)
+    context/              ← contexto persistente entre sessões
+      CONTEXT.md          ← o que é verdade agora (lido após este arquivo e o CONVENTIONS)
+      HISTORY.md          ← o que aconteceu e por quê (acrescenta no topo)
+      PROBLEMS.md         ← o que está quebrado agora
+      MEMORY.md           ← onde as coisas vivem (somente ponteiros)
+      IDEAS.md            ← o que ainda não é sistema
     specs/
       backlog/            ← tasks a implementar
       active/             ← task em andamento na sessão atual
       done/               ← tasks concluídas (histórico)
+      discarded/          ← tasks descartadas por decisão do autor (registro; não implementar)
+  scripts/                      ← repo:verificar, impacto e hooks de agente
+  .claude/                      ← skills, subagentes e settings do Claude Code
+  .agents/skills/               ← cópia idêntica de .claude/skills (agentes compatíveis com AGENTS.md)
+  CLAUDE.md, AGENTS.md          ← orientação aos agentes — cópias idênticas
   package.json                  ← workspaces root (npm workspaces)
   docker-compose.yml
   .gitignore
   README.md
 ```
+
+### 3.1 Documentação de tarefa e artefatos de execução
+
+Todo trabalho executável tem uma única spec em `docs/specs/{backlog,active,done,discarded}/<tarefa>.spec.md`.
+Uma spec **descartada** (`discarded/`) é decisão do autor de não fazer a task: ela leva no topo uma nota
+com data e motivo, o corpo não é reescrito, e nada mais depende dela.
+Planos, decisões de design da tarefa, propostas, revisões, auditorias e relatórios de verificação
+são **anexos** em `docs/specs/<estado>/<tarefa>/`, com a spec proprietária ao lado. Mova spec e
+anexos juntos ao mudar de estado; corrija os ponteiros de forma mecânica. Não crie ciclos
+paralelos por ferramenta ou tipo de atividade (`reviews/`, `auditorias/`, `plans/`, `propostas/`
+ou equivalentes) — essa regra prevalece sobre destinos padrão de plugins e skills externas.
+
+A spec define escopo e aceite; o plano só ordena a execução. Auditoria parcial continua em
+`active/`, mesmo com relatório produzido. Spec concluída preserva requisitos e decisões: numa
+realocação só os ponteiros mudam.
+
+Capturas, vídeos, logs, dumps, cenários temporários e JSONs de resultado bruto ficam em
+`.artifacts/<tarefa>/`, **ignorada pelo Git**. Nunca force sua inclusão. O relatório textual
+versionado registra método, comandos/resultados, estados verificados, achados e limites, e avisa
+quando a evidência é local e não vem no clone. Arquivo gerado só vira fonte versionada quando for
+asset do produto, fonte canônica ou fixture reproduzível definida pela spec.
+
+Rode `npm run repo:verificar` antes do fecho e `npm run repo:verificar -- --staged` depois de
+preparar um commit. O CI confere os caminhos versionados e os espelhos; `.gitignore` sozinho não
+protege contra arquivo já rastreado ou inclusão forçada.
 
 ---
 
@@ -861,12 +898,12 @@ frontend/src/app/
 
 ### 8.3 Componente Assistente de Descrição
 
-O componente `assistente-descricao` é reutilizável nos formulários de execução, atividade e demanda:
+O componente `assistente-descricao` é reutilizável nos formulários de execução e demanda:
 
 ```typescript
 // Recebe o texto atual e contexto
 @Input() textoAtual: string = '';
-@Input() tipoEntidade: 'execucao' | 'atividade' | 'demanda' = 'execucao';
+@Input() tipoEntidade: 'execucao' | 'demanda' = 'execucao';
 @Input() contextoEntidade: string = '';
 
 // Emite o texto auxiliado quando o usuário aceita
@@ -959,7 +996,7 @@ export abstract class BaseEntity {
 8. **Parâmetros nomeados** `:nome` com objeto (Knex) — nunca `?` posicional, nunca interpolação de string
 9. **INSERT sempre com SELECT** — nunca `VALUES`: `INSERT INTO tabela (...) SELECT :campo1, :campo2 RETURNING ...`
 10. **Hierarquias e grafos** via CTEs recursivos do PostgreSQL
-11. **Soft delete** via `executarSoftDelete()` do BaseRepository — nunca DELETE físico
+11. **Soft delete** via `executarSoftDelete()` do BaseRepository — nunca DELETE físico. O caminho de volta é `PATCH /<recurso>/:id/restaurar` (gestor): o repositório faz `UPDATE ... SET is_deleted = false, deleted_date = NULL ... WHERE id = :id AND is_deleted = true RETURNING ...`; a **única leitura com `is_deleted = true`** é `recuperarExcluid[oa]()`, usada pela service para validar unicidade (nome/código/login ativos) e dependências (demanda ou projeto pai ativo) antes de restaurar. Restaurar **não é em cascata** (uma demanda não reativa filhos). Disponível em atividade, projeto, usuário, tag, dia não útil e demanda; o frontend o usa no "Desfazer" do toast de exclusão (6 s)
 12. **Objetos genéricos de banco** (funções/triggers de infraestrutura) em **inglês** — `fn_set_updated_date()`, `trg_usuario_updated_date` ✅; `fn_atualizar_updated_date()` ❌ (idioma misto em mecanismo genérico, §16 #12). Apenas tabelas e colunas de negócio são em português
 13. **Enums sempre como tabela de referência** — toda coluna de domínio fechado é `INTEGER` FK para uma tabela `tipo_<tabela>_<complemento?>` (com `codigo` + `descricao`), **nunca** `VARCHAR + CHECK` nem tipo `ENUM` nativo. O enum TypeScript de `shared/` espelha os `codigo`; o repositório traduz `codigo ⇄ id` no SQL (ver §5.4)
 
@@ -1140,7 +1177,7 @@ DTOs de entrada cobertos: `ProjetoCriarDto`/`ProjetoAlterarDto`, `DemandaCriarDt
 `ExecucaoIniciarDto`/`ExecucaoEncerrarDto`/`ExecucaoRegistrarDto`/`ExecucaoAlterarDto` (campo
 `descricao`). DTOs internos (`*InternoAlterarDto`) e de saída não recebem `@Matches`. No frontend,
 `Validators.pattern(REGEX_SEM_CARACTERES_PROIBIDOS)` espelha a regra nos Reactive Forms. Cor, código
-de projeto, descrições de demanda, descrição de atividade, anotações e login/senha estão **fora** do
+de projeto, descrições de demanda, anotações e login/senha estão **fora** do
 escopo desta regra.
 
 ### Camada 2 — Negócio (Service)
@@ -1281,7 +1318,6 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 | `demanda_id` | INTEGER FK | → demanda |
 | `usuario_id` | INTEGER FK | → usuario (executor principal) |
 | `nome` | VARCHAR | |
-| `descricao` | TEXT \| NULL | opcional |
 | `tipo_atividade_status_id` | INTEGER FK | → `tipo_atividade_status` (PLANEJADA, PENDENTE, DESENVOLVENDO, DESENVOLVIDA) |
 
 ### AtividadeTag
@@ -1429,7 +1465,7 @@ Estas regras **jamais** devem ser violadas. São inegociáveis independente do c
 | 1 | **Nunca abreviar** nomes de variáveis, métodos, parâmetros, classes ou arquivos |
 | 2 | **Nunca colocar lógica de negócio** na controller — apenas repasse para service |
 | 3 | **Nunca usar ORM** — apenas SQL bruto via `knex.raw()` |
-| 4 | **Nunca omitir** `is_deleted = false` em qualquer SELECT |
+| 4 | **Nunca omitir** `is_deleted = false` em qualquer SELECT (exceção única: `recuperarExcluid[oa]()` da restauração, §9.2 #11) |
 | 5 | **Nunca usar `?` posicional** em SQL — sempre parâmetros nomeados `:nome` com objeto |
 | 6 | **Nunca usar `VALUES`** em INSERT — sempre `INSERT INTO ... SELECT :campo RETURNING` |
 | 7 | **Nunca usar DEFAULT** em colunas SQL — a aplicação sempre fornece todos os valores |

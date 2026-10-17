@@ -1,4 +1,4 @@
-import { Component, inject, signal, DestroyRef, OnInit, HostListener, ViewChild, ElementRef } from '@angular/core';
+import { Component, inject, signal, DestroyRef, OnInit, HostListener, ViewChild, ElementRef, computed, effect, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -15,8 +15,7 @@ import { EditorModule } from 'primeng/editor';
 import { Tag } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { PopoverModule, Popover } from 'primeng/popover';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { MessageService } from 'primeng/api';
 import {
   AtividadeResumoDto,
   TipoAtividadeStatusEnum,
@@ -35,7 +34,6 @@ import {
   TipoUsuarioEnum,
   REGEX_SEM_CARACTERES_PROIBIDOS,
   MENSAGEM_CARACTERES_PROIBIDOS,
-  MENSAGEM_CARACTERES_PROIBIDOS_DICA,
 } from '@project20/shared';
 import { AtividadeService } from '../../services/atividade.service';
 import { ExecucaoService } from '../../../execucao/services/execucao.service';
@@ -58,6 +56,12 @@ import {
   rotuloStatusAtividade,
   SeveridadeTag,
 } from '../../models/atividade.model';
+import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
+import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
+import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
+import { BarraRecargaComponent } from '../../../../shared/components/barra-recarga/barra-recarga.component';
+import { DesfazerService } from '../../../../core/services/desfazer.service';
+import { ExecucaoAtivaService } from '../../../../core/services/execucao-ativa.service';
 
 type DemandaAtribuidaOpcao = DemandaAtribuidaDto & { rotulo: string };
 
@@ -67,6 +71,10 @@ type CampoDescricaoDemanda = 'descricaoCliente' | 'descricaoTecnica' | 'document
   selector: 'app-atividade-listagem',
   standalone: true,
   imports: [
+    SkeletonListaComponent,
+    BarraRecargaComponent,
+    DialogFormularioDirective,
+    DialogDicaAtalhosComponent,
     ReactiveFormsModule,
     TableModule,
     ButtonModule,
@@ -80,7 +88,6 @@ type CampoDescricaoDemanda = 'descricaoCliente' | 'descricaoTecnica' | 'document
     Tag,
     TooltipModule,
     PopoverModule,
-    ConfirmDialogModule,
     AssistenteDescricaoComponent,
     AtividadeVisualizarDialogComponent,
     DataBrasileiraPipe,
@@ -90,7 +97,6 @@ type CampoDescricaoDemanda = 'descricaoCliente' | 'descricaoTecnica' | 'document
   ],
   templateUrl: './atividade-listagem.page.html',
   styleUrl: './atividade-listagem.page.scss',
-  providers: [ConfirmationService],
 })
 export class AtividadeListagemPage implements OnInit {
   private readonly atividadeService = inject(AtividadeService);
@@ -99,7 +105,8 @@ export class AtividadeListagemPage implements OnInit {
   private readonly usuarioService = inject(UsuarioService);
   private readonly demandaService = inject(DemandaService);
   private readonly rotaAtiva = inject(ActivatedRoute);
-  private readonly confirmationService = inject(ConfirmationService);
+  private readonly desfazerService = inject(DesfazerService);
+  private readonly execucaoAtiva = inject(ExecucaoAtivaService);
   private readonly messageService = inject(MessageService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
@@ -115,9 +122,14 @@ export class AtividadeListagemPage implements OnInit {
 
   readonly demandaId = signal<number | null>(null);
   readonly atividades = signal<AtividadeResumoDto[]>([]);
+  /** Mantém o DOM das linhas ao atualizar uma atividade in-place (sem remontar nem piscar). */
+  readonly rastrearPorId = (_indice: number, atividade: AtividadeResumoDto): number => atividade.id;
   readonly usuarios = signal<UsuarioResumoDto[]>([]);
   readonly totalRegistros = signal<number>(0);
   readonly carregando = signal<boolean>(false);
+  private readonly jaCarregou = signal<boolean>(false);
+  readonly primeiraCarga = computed(() => this.carregando() && !this.jaCarregou());
+  readonly recarregando = computed(() => this.carregando() && this.jaCarregou());
   readonly paginaAtual = signal<number>(1);
   readonly itensPorPagina = signal<number>(10);
 
@@ -139,7 +151,6 @@ export class AtividadeListagemPage implements OnInit {
     demandaId: [null as number | null, [Validators.required]],
     usuarioId: [null as number | null],
     status:    [TipoAtividadeStatusEnum.DESENVOLVENDO as TipoAtividadeStatusEnum, [Validators.required]],
-    descricao: [''],
     tagIds:    [[] as number[]],
   });
 
@@ -194,6 +205,7 @@ export class AtividadeListagemPage implements OnInit {
   // --- Dialog: registrar execução manual (somente gestor) ---
   /** Textarea de descrição; recebe o foco ao abrir o dialog, não o campo de início. */
   @ViewChild('descricaoRegistro') private descricaoRegistro?: ElementRef<HTMLTextAreaElement>;
+  @ViewChild('campoNovoNome') private campoNovoNome?: ElementRef<HTMLInputElement>;
   readonly mostrarDialogRegistro = signal<boolean>(false);
   readonly salvandoRegistro = signal<boolean>(false);
   readonly atividadeRegistro = signal<AtividadeResumoDto | null>(null);
@@ -208,7 +220,17 @@ export class AtividadeListagemPage implements OnInit {
   );
 
   readonly mensagemCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS;
-  readonly dicaCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS_DICA;
+
+  constructor() {
+    // Pausar pelo chip da topbar muda a linha da atividade: a lista se atualiza (task 95).
+    let pausasVistas = this.execucaoAtiva.pausasDoChip();
+    effect(() => {
+      const pausas = this.execucaoAtiva.pausasDoChip();
+      if (pausas === pausasVistas) return;
+      pausasVistas = pausas;
+      untracked(() => this.buscarAtividades());
+    });
+  }
 
   ngOnInit(): void {
     const demandaIdParam = Number(this.rotaAtiva.snapshot.queryParamMap.get('demandaId'));
@@ -259,7 +281,10 @@ export class AtividadeListagemPage implements OnInit {
 
     this.atividadeService
       .listar(filtros)
-      .pipe(finalize(() => this.carregando.set(false)))
+      .pipe(finalize(() => {
+        this.carregando.set(false);
+        this.jaCarregou.set(true);
+      }))
       .subscribe({
         next: (resposta) => {
           if (resposta.sucesso && resposta.dados) {
@@ -303,7 +328,6 @@ export class AtividadeListagemPage implements OnInit {
       demandaId: this.demandaId(),
       usuarioId: null,
       status:    TipoAtividadeStatusEnum.DESENVOLVENDO,
-      descricao: '',
       tagIds:    [],
     });
     if (this.demandasAtribuidas().length === 0) this.carregarDemandasAtribuidas();
@@ -311,7 +335,8 @@ export class AtividadeListagemPage implements OnInit {
     this.mostrarDialogNova.set(true);
   }
 
-  salvarNova(): void {
+  /** `criarOutra`: mantém o dialog aberto (demanda, responsável e status preservados) para cadastro em série. */
+  salvarNova(criarOutra = false): void {
     if (this.formularioNova.invalid) {
       this.formularioNova.markAllAsTouched();
       return;
@@ -324,8 +349,6 @@ export class AtividadeListagemPage implements OnInit {
       nome:          valor.nome!,
       status:        valor.status!,
     };
-    const descricao = valor.descricao?.trim();
-    if (descricao) dto.descricao = descricao;
     if (this.sessao.eGestor() && valor.usuarioId) dto.usuarioId = valor.usuarioId;
     if (valor.tagIds?.length) dto.tagIds = valor.tagIds;
 
@@ -340,15 +363,22 @@ export class AtividadeListagemPage implements OnInit {
               summary: 'Sucesso',
               detail: 'Atividade criada com sucesso',
             });
-            this.mostrarDialogNova.set(false);
+            if (criarOutra) {
+              this.formularioNova.reset({
+                nome:      '',
+                demandaId: valor.demandaId,
+                usuarioId: valor.usuarioId,
+                status:    valor.status,
+                tagIds:    valor.tagIds,
+              });
+              this.campoNovoNome?.nativeElement.focus();
+            } else {
+              this.mostrarDialogNova.set(false);
+            }
             this.aoMudarFiltro();
           }
         },
       });
-  }
-
-  aceitarDescricaoAssistenteNova(texto: string): void {
-    this.formularioNova.patchValue({ descricao: texto });
   }
 
   campoInvalidoNova(nomeCampo: string): boolean {
@@ -375,15 +405,23 @@ export class AtividadeListagemPage implements OnInit {
 
     if (!atividade || !novoStatus || novoStatus === atividade.status) return;
 
+    // Otimista: a tag da linha muda na hora; se a API recusar (o interceptor já avisou), volta ao status anterior.
+    const statusAnterior = atividade.status;
+    this.definirStatusDaAtividade(atividade.id, novoStatus);
+
     const dto: AtividadeAlterarDto = { status: novoStatus };
     this.atividadeService.alterar(atividade.id, dto).subscribe({
-      next: (resposta) => {
-        if (resposta.sucesso && resposta.dados) {
-          this.buscarAtividades();
-          this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Status alterado' });
-        }
+      next: () => {
+        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Status alterado' });
       },
+      error: () => this.definirStatusDaAtividade(atividade.id, statusAnterior),
     });
+  }
+
+  private definirStatusDaAtividade(atividadeId: number, status: TipoAtividadeStatusEnum): void {
+    this.atividades.update((lista) =>
+      lista.map((item) => (item.id === atividadeId ? { ...item, status } : item)),
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -725,15 +763,24 @@ export class AtividadeListagemPage implements OnInit {
       .toUpperCase();
   }
 
-  confirmarExclusao(atividade: AtividadeResumoDto): void {
-    this.confirmationService.confirm({
-      message: `Deseja excluir a atividade "${atividade.nome}"? Esta ação não pode ser desfeita.`,
-      header: 'Confirmar exclusão',
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Excluir',
-      rejectLabel: 'Cancelar',
-      acceptButtonStyleClass: 'p-button-danger',
-      accept: () => this.excluirAtividade(atividade),
+  /** Exclusão imediata (task 99): a linha sai na hora e o toast oferece "Desfazer". */
+  excluir(atividade: AtividadeResumoDto): void {
+    const listaAnterior = this.atividades();
+    const totalAnterior = this.totalRegistros();
+    this.atividades.set(listaAnterior.filter((item) => item.id !== atividade.id));
+    this.totalRegistros.set(Math.max(0, totalAnterior - 1));
+
+    this.atividadeService.excluir(atividade.id).subscribe({
+      next: () =>
+        this.desfazerService.oferecer({
+          mensagem: `Atividade "${atividade.nome}" excluída`,
+          desfazer: () => this.atividadeService.restaurar(atividade.id),
+          aposDesfazer: () => this.buscarAtividades(),
+        }),
+      error: () => {
+        this.atividades.set(listaAnterior);
+        this.totalRegistros.set(totalAnterior);
+      },
     });
   }
 
@@ -802,19 +849,6 @@ export class AtividadeListagemPage implements OnInit {
     this.atividades.update((lista) =>
       lista.map((item) => (item.id === atividadeId ? { ...item, tags } : item)),
     );
-  }
-
-  private excluirAtividade(atividade: AtividadeResumoDto): void {
-    this.atividadeService.excluir(atividade.id).subscribe({
-      next: () => {
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Sucesso',
-          detail: `Atividade "${atividade.nome}" excluída com sucesso`,
-        });
-        this.buscarAtividades();
-      },
-    });
   }
 
   private formatarData(data: Date): string {
