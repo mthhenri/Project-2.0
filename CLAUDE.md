@@ -252,6 +252,7 @@ npm install
 npm run db:up                              # PostgreSQL 16 via Docker Compose
 npm run db:migrate --workspace=backend     # aplica migrations pendentes
 npm run db:rollback --workspace=backend    # reverte o último lote
+npm run db:converter-descricoes --workspace=backend  # HTML do Quill → Markdown (dry-run; ver README)
 npm run backend:dev                        # API em http://localhost:3000
 npm run frontend:dev                       # SPA em http://localhost:4200 (proxy /api → :3000)
 npm run dev                                # backend e frontend juntos

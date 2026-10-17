@@ -129,6 +129,11 @@ project-2.0/
   Limpar com Desfazer de 7 s (o vazio só é gravado depois), erro no flush → toast "Reabrir". `aoAlterar` emite
   `{usuarioId, temAnotacoes}`. Deep-link `/usuario/:id/anotacoes` redireciona (gestor → `/usuario?anotacoes=`, próprio →
   `/ponto?anotacoes=`); a topbar abre o drawer próprio. `DesfazerService` aceita `rotulo/duracaoMs/aoEncerrar`.
+- **[task 123]** Conversão do HTML do Quill: `backend/src/database/scripts/` (`html-para-markdown.ts` com o conversor próprio e
+  `converter-descricoes.ts`, comando `npm run db:converter-descricoes --workspace=backend`). Dry-run por padrão;
+  `--aplicar --confirmo-backup` converte numa transação, só o que parece saída do Quill (idempotente). Campos:
+  `demanda.descricao_cliente|descricao_tecnica|documentacao` e `usuario.anotacoes`. **Ainda não aplicado no banco de
+  dev**: aplica-se junto com a publicação da task 124 (procedimento no README).
 - **[task 122]** Editor de Markdown: `app-markdown-editor` (`shared/components/markdown-editor/`, `ControlValueAccessor`) com
   `<textarea>` nativo, barra (negrito, itálico, tachado, título, lista, numerada, tarefa, citação, código, link), abas
   Editar | Visualizar e modo `somenteLeitura` (só o visualizador). As edições são funções puras testadas em

@@ -91,6 +91,21 @@ O backend sobe em `http://localhost:3000` e o frontend em `http://localhost:4200
 | `npm run frontend:dev` | Inicia o frontend com proxy para o backend |
 | `npm run db:migrate --workspace=backend` | Executa todas as migrations pendentes |
 | `npm run db:rollback --workspace=backend` | Desfaz a última migration |
+| `npm run db:converter-descricoes --workspace=backend` | Conversão única do HTML do Quill para Markdown (task 123): dry-run por padrão; veja o procedimento abaixo |
+
+### Conversão do HTML do Quill para Markdown (uma vez por ambiente)
+
+Os campos de texto rico (`demanda.descricao_cliente`, `descricao_tecnica`, `documentacao` e `usuario.anotacoes`) eram HTML
+do Quill e passam a ser Markdown. A conversão **não é reversível** e deve ser aplicada **junto com a publicação da task 124**
+(com o código novo no ar e dados em HTML, o HTML aparece como texto; com os dados convertidos e o código antigo, o Quill mostra
+Markdown cru).
+
+1. `npm run db:converter-descricoes --workspace=backend` — dry-run: conta, mostra antes/depois e lista as perdas
+   (sublinhado, imagens e links com esquema fora de `http`/`https`/`mailto`). Não altera nada.
+2. Backup: `pg_dump` do banco.
+3. `npm run db:converter-descricoes --workspace=backend -- --aplicar --confirmo-backup` — converte numa transação
+   (cada `UPDATE` confere o valor lido).
+4. Rodar de novo converte zero linhas (só converte o que parece saída do Quill).
 
 ---
 

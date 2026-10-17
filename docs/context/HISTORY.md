@@ -12,6 +12,29 @@
 
 ---
 
+## 2026-10-17 — Task 123: conversor do HTML do Quill para Markdown (escrito e validado; ainda não aplicado)
+
+Bloco 3 do rework do chat com IA (3 de 4). Conversor próprio, sem dependência nova (decisão aprovada pelo autor), em
+`backend/src/database/scripts/html-para-markdown.ts`: parser de HTML linear e tolerante, e render para o Markdown que o interpretador
+da task 121 lê. Cobre `p`/`br`, `strong`/`em`/`s`/`code`, `a`, `h1`–`h6` (`h5`/`h6` viram nível 4), `blockquote` (uma por linha vira
+uma citação), `pre`, `hr` e as listas do Quill 2 (`<ol><li data-list="bullet|ordered|checked|unchecked" class="ql-indent-N">`, com o
+`span.ql-ui` ignorado) e as clássicas `ul`/`ol` aninhadas. Parágrafos seguidos viram linhas seguidas e o parágrafo vazio vira linha
+em branco, como o Quill mostra. Perdas contadas: sublinhado (fica o texto), imagem (some), link fora de `http`/`https`/`mailto`
+(fica o texto). O texto é escapado (`*`, `_` entre não alfanuméricos, crase, `[`, `<`, início de linha que seria bloco), o que também
+torna a conversão idempotente: `pareceHtmlDoQuill` não casa com o resultado. `converter-descricoes.ts` roda fora do runner de
+migrations: dry-run por padrão, `--aplicar` exige `--confirmo-backup`, uma transação, cada `UPDATE` confere o valor lido, inclui linhas
+excluídas e preserva `anotacoes_alteracao_data` (o trigger só mexe em `updated_date`).
+
+- **Testes:** `backend` 84/84 (35 novos: conversor com amostra real do banco, listas do Quill 2, escape, HTML malformado, entrada de
+  20 mil parágrafos em tempo curto, idempotência e a seleção dos alvos). Texto visível conferido pelo interpretador da 121.
+- **Dados reais (dev):** 4 campos de texto rico têm HTML; `execucao.descricao` e `ponto_justificativa.descricao` são texto puro e
+  ficam de fora. Dry-run: 6 valores a converter (1 `descricao_tecnica`, 1 `documentacao`, 4 `anotacoes`), 0 perdas. Numa **cópia** do
+  banco: `--aplicar` sem `--confirmo-backup` recusa; com ele converte 6; a segunda execução converte 0; o banco original ficou
+  intacto (cópia descartada). Dois dos valores eram `<p></p>`, que viram texto vazio, e "tem anotações" passa a refletir isso.
+- **Amostra para o autor:** `demanda.descricao_tecnica #1` e `documentacao #1` (parágrafos curtos com muitos `&nbsp;`) viraram
+  linhas com espaços simples; os `&nbsp;` em sequência perdem o espaçamento largo.
+- **Pendente (deliberado):** a conversão **não foi aplicada** ao banco de dev. Aplica-se com a publicação da task 124 (README).
+
 ## 2026-10-17 — Task 122: editor de Markdown próprio
 
 Bloco 3 do rework do chat com IA (2 de 4); nenhuma tela existente passou a usá-lo. `app-markdown-editor`
