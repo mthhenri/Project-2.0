@@ -65,6 +65,18 @@
     }
   }
 
+  // Provedor e Check-in lado a lado quando há largura; empilham abaixo disso.
+  &__secoes-lado {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+
+    @media (min-width: 1500px) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
   &__formulario {
     display: flex;
     flex-direction: column;
@@ -95,6 +107,24 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
     gap: 1rem;
+
+    &--dupla {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    &--tripla {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    // O campo numérico tem largura mínima própria; sem isto ele vaza da coluna estreita.
+    p-inputnumber {
+      min-width: 0;
+
+      ::ng-deep input {
+        width: 100%;
+        min-width: 0;
+      }
+    }
   }
 
   &__campo {
@@ -164,10 +194,18 @@
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+    // Lado a lado, o histórico tem a altura do formulário e rola por dentro; empilhado, tem teto próprio.
+    align-self: stretch;
+    contain: size;
     padding: 1.25rem;
     border: 1px solid var(--app-surface-200);
     border-radius: 8px;
     background: var(--app-surface-0);
+
+    @media (max-width: 1100px) {
+      contain: none;
+      max-height: 28rem;
+    }
   }
 
   &__versoes {
@@ -177,7 +215,8 @@
     padding: 0;
     list-style: none;
     // Histórico longo rola dentro do cartão em vez de esticar a tela.
-    max-height: 32rem;
+    flex: 1;
+    min-height: 0;
     overflow-y: auto;
 
     li + li {

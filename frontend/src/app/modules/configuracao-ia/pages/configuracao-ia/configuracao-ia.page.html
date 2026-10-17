@@ -41,6 +41,7 @@
           } @else {
             <div class="configuracao-ia__grade" [class.configuracao-ia__grade--recarregando]="carregando()">
               <form [formGroup]="formulario" class="configuracao-ia__formulario" (ngSubmit)="salvar()">
+                <div class="configuracao-ia__secoes-lado">
                 <section class="configuracao-ia__secao">
                   <h2 class="configuracao-ia__secao-titulo">Provedor e modelos</h2>
 
@@ -57,7 +58,7 @@
                     />
                   </div>
 
-                  <div class="configuracao-ia__linha">
+                  <div class="configuracao-ia__linha configuracao-ia__linha--dupla">
                     <div class="configuracao-ia__campo">
                       <label class="configuracao-ia__label" for="ia-modelo-rapido">Modelo rápido</label>
                       <input id="ia-modelo-rapido" pInputText list="ia-sugestoes-modelos" formControlName="modeloRapido" maxlength="100" class="w-full" />
@@ -82,29 +83,28 @@
                         <small class="configuracao-ia__erro-campo">Informe o modelo (até 100 caracteres)</small>
                       }
                     </div>
+                    <div class="configuracao-ia__campo">
+                      <label class="configuracao-ia__label" for="ia-esforco">Esforço do nível analítico</label>
+                      <p-select
+                        inputId="ia-esforco"
+                        formControlName="esforcoAnalitico"
+                        [options]="opcoesEsforco"
+                        optionLabel="rotulo"
+                        optionValue="valor"
+                        class="w-full"
+                      />
+                    </div>
                   </div>
                   <datalist id="ia-sugestoes-modelos">
                     @for (sugestao of sugestoesModelos; track sugestao) {
                       <option [value]="sugestao"></option>
                     }
                   </datalist>
-
-                  <div class="configuracao-ia__campo configuracao-ia__campo--estreito">
-                    <label class="configuracao-ia__label" for="ia-esforco">Esforço do nível analítico</label>
-                    <p-select
-                      inputId="ia-esforco"
-                      formControlName="esforcoAnalitico"
-                      [options]="opcoesEsforco"
-                      optionLabel="rotulo"
-                      optionValue="valor"
-                      class="w-full"
-                    />
-                  </div>
                 </section>
 
                 <section class="configuracao-ia__secao">
                   <h2 class="configuracao-ia__secao-titulo">Check-in e rigor</h2>
-                  <div class="configuracao-ia__linha">
+                  <div class="configuracao-ia__linha configuracao-ia__linha--tripla">
                     <div class="configuracao-ia__campo">
                       <label class="configuracao-ia__label" for="ia-checkin-minimo">Check-in, mínimo</label>
                       <p-inputnumber inputId="ia-checkin-minimo" formControlName="checkinMinimoMinutos" suffix=" min" [min]="1" [useGrouping]="false" class="w-full" />
@@ -153,6 +153,8 @@
                     </span>
                   </label>
                 </section>
+
+                </div>
 
                 <section class="configuracao-ia__secao configuracao-ia__secao--alerta">
                   <h2 class="configuracao-ia__secao-titulo">Desligar a IA</h2>
