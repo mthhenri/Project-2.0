@@ -1228,7 +1228,7 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 | Módulo | Responsabilidade Principal |
 |---|---|
 | `autenticacao` | Login e geração de JWT |
-| `usuario` | CRUD de usuários, troca de senha (o pad é do módulo `anotacao`; a coluna `usuario.anotacoes` é cópia legada até a task 128) |
+| `usuario` | CRUD de usuários, troca de senha (o pad é do módulo `anotacao`; `PUT /usuario/:id` é só de gestor e administrador, nem o desenvolvedor altera o próprio perfil) |
 | `projeto` | CRUD de projetos — apenas gestor cria |
 | `demanda` | CRUD, hierarquia, grafo force-directed (D3), tags, atribuições |
 | `atividade` | CRUD de atividades vinculadas a demandas, tags, controle de status |
@@ -1253,8 +1253,6 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 | `senha_encriptada` | VARCHAR | bcrypt |
 | `nome_completo` | VARCHAR | |
 | `cargo_titulo` | VARCHAR | ex: "Desenvolvedor Sênior" |
-| `anotacoes` | TEXT \| NULL | Markdown (escrito no `app-markdown-editor`) |
-| `anotacoes_alteracao_data` | TIMESTAMPTZ \| NULL | data da última alteração das anotações (`NULL` = nunca alteradas). `timestamptz` desde já (escrita por `NOW()`); demais colunas de `usuario` seguem `timestamp` até a spec 75 |
 | `horas_diarias_necessarias` | INTEGER | em horas (ex: 8) |
 | `tipo_usuario_id` | INTEGER FK | → `tipo_usuario` (DESENVOLVEDOR, GESTOR, ADMINISTRADOR) |
 | `tipo_usuario_status_id` | INTEGER FK | → `tipo_usuario_status` (ATIVO, INATIVO) |

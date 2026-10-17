@@ -18,7 +18,6 @@ export class UsuarioAlterarDto {
   @ApiPropertyOptional({ example: 'Responsável pelo módulo de autenticação.' })
   @IsOptional()
   @IsString()
-  anotacoes?: string;
 
   @ApiPropertyOptional({ example: 8 })
   @IsOptional()

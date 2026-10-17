@@ -95,7 +95,7 @@ O backend sobe em `http://localhost:3000` e o frontend em `http://localhost:4200
 
 ### Conversão do HTML do Quill para Markdown (uma vez por ambiente)
 
-Os campos de texto rico (`demanda.descricao_cliente`, `descricao_tecnica`, `documentacao` e `usuario.anotacoes`) eram HTML
+Os campos de texto rico (`demanda.descricao_cliente`, `descricao_tecnica`, `documentacao` e o pad, `anotacao.texto`) eram HTML
 do Quill e passam a ser Markdown. A conversão **não é reversível** e deve ser aplicada **junto com a publicação da task 124**
 (com o código novo no ar e dados em HTML, o HTML aparece como texto; com os dados convertidos e o código antigo, o Quill mostra
 Markdown cru).
@@ -107,9 +107,9 @@ Markdown cru).
    (cada `UPDATE` confere o valor lido).
 4. Rodar de novo converte zero linhas (só converte o que parece saída do Quill).
 
-**Ordem em ambiente com dados antigos:** a migration `0031` (task 126) copia `usuario.anotacoes` para a seção "Pessoal" do pad
-e roda sozinha no `db:migrate`. Converta o HTML **antes** de rodar o `db:migrate` da task 126; se a migration já rodou com HTML,
-reverta-a (`db:rollback`), converta e rode de novo (ela só preenche seção vazia, e o `DOWN` só esvazia o que ainda é cópia).
+**Ordem em ambiente com dados antigos:** a migration `0031` (task 126) copia `usuario.anotacoes` para a seção "Pessoal" do pad e a `0032`
+(task 128) remove a coluna, **parando com erro** se algum texto ficaria sem cópia. Ambas rodam no `db:migrate`. O pad que veio em HTML é
+convertido pelo mesmo script (alvo `anotacao.texto`), antes ou depois das migrations; a coluna antiga deixou de ser alvo.
 
 ---
 

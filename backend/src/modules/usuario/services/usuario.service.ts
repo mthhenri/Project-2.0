@@ -114,13 +114,10 @@ export class UsuarioService {
     };
   }
 
-  /**
-   * Altera campos do usuário. Só gestor e administrador alteram usuários; o desenvolvedor só envia as
-   * próprias `anotacoes` (o pad), e nenhum outro campo, nem do próprio perfil.
-   */
+  /** Altera campos do usuário. Só gestor e administrador alteram usuários (o desenvolvedor nem o próprio perfil; o pad tem rota própria). */
   async alterar(dto: UsuarioInternoAlterarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<UsuarioAlteradoDto>> {
     if (!temPermissaoDeGestor(usuarioAtivo.tipo)) {
-      this.validarSomenteAnotacoesDoProprio(dto, usuarioAtivo);
+      throw new UnauthorizedAccessException('Apenas gestores podem alterar usuários');
     }
 
     const usuarioEncontrado = await this.usuarioRepositorio.recuperar({ id: dto.id });
@@ -172,16 +169,6 @@ export class UsuarioService {
     const outrosAdministradoresAtivos = administradoresAtivos.filter((administrador) => administrador.id !== usuario.id);
     if (outrosAdministradoresAtivos.length === 0) {
       throw new BusinessException('O sistema deve ter ao menos um administrador ativo');
-    }
-  }
-
-  /** Quem não é gestor altera apenas o campo `anotacoes` e apenas do próprio usuário. */
-  private validarSomenteAnotacoesDoProprio(dto: UsuarioInternoAlterarDto, usuarioAtivo: JwtPayload): void {
-    const camposNegados = Object.entries(dto).filter(
-      ([campo, valor]) => campo !== 'id' && campo !== 'anotacoes' && valor !== undefined,
-    );
-    if (usuarioAtivo.sub !== dto.id || camposNegados.length > 0) {
-      throw new UnauthorizedAccessException('Apenas gestores podem alterar usuários; o desenvolvedor altera só as próprias anotações');
     }
   }
 
@@ -267,8 +254,6 @@ export class UsuarioService {
       login:                   usuario.login,
       nomeCompleto:            usuario.nomeCompleto,
       cargoTitulo:             usuario.cargoTitulo,
-      anotacoes:               usuario.anotacoes,
-      anotacoesAlteracaoData:  usuario.anotacoesAlteracaoData,
       tipo:                    usuario.tipo,
       status:                  usuario.status,
       horasDiariasNecessarias: usuario.horasDiariasNecessarias,

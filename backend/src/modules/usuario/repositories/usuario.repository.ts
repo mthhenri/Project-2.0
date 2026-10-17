@@ -65,8 +65,6 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
          usuario.senha_encriptada          AS "senhaEncriptada",
          usuario.nome_completo             AS "nomeCompleto",
          usuario.cargo_titulo              AS "cargoTitulo",
-         usuario.anotacoes,
-         usuario.anotacoes_alteracao_data  AS "anotacoesAlteracaoData",
          usuario.horas_diarias_necessarias AS "horasDiariasNecessarias",
          tipo_usuario.codigo               AS tipo,
          tipo_usuario_status.codigo        AS status,
@@ -243,13 +241,6 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
       setClauses.push('cargo_titulo = :cargoTitulo');
       parametros.cargoTitulo = dto.cargoTitulo;
     }
-    if (dto.anotacoes !== undefined) {
-      setClauses.push('anotacoes = :anotacoes');
-      setClauses.push(
-        'anotacoes_alteracao_data = CASE WHEN anotacoes IS DISTINCT FROM :anotacoes THEN NOW() ELSE anotacoes_alteracao_data END',
-      );
-      parametros.anotacoes = dto.anotacoes;
-    }
     if (dto.horasDiariasNecessarias !== undefined) {
       setClauses.push('horas_diarias_necessarias = :horasDiariasNecessarias');
       parametros.horasDiariasNecessarias = dto.horasDiariasNecessarias;
@@ -277,8 +268,6 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
          login,
          nome_completo             AS "nomeCompleto",
          cargo_titulo              AS "cargoTitulo",
-         anotacoes,
-         anotacoes_alteracao_data  AS "anotacoesAlteracaoData",
          (SELECT tipo_usuario.codigo FROM tipo_usuario
             WHERE tipo_usuario.id = usuario.tipo_usuario_id)               AS tipo,
          (SELECT tipo_usuario_status.codigo FROM tipo_usuario_status

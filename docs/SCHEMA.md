@@ -141,8 +141,6 @@ CREATE TABLE usuario (
   senha_encriptada          VARCHAR(255) NOT NULL,
   nome_completo             VARCHAR(255) NOT NULL,
   cargo_titulo              VARCHAR(150) NOT NULL,
-  anotacoes                 TEXT,           -- Markdown
-  anotacoes_alteracao_data  TIMESTAMPTZ,
   horas_diarias_necessarias INTEGER      NOT NULL,
   tipo_usuario_id           INTEGER      NOT NULL
                               CONSTRAINT fk_usuario_tipo_usuario REFERENCES tipo_usuario(id),
@@ -546,8 +544,8 @@ CREATE TRIGGER trg_dia_nao_util_updated_date
 
 Uma linha por usuário e por seção (`tipo_anotacao`: `EM_ANDAMENTO`, `FEITO`, `PENDENCIA`, `LEMBRETE`, `PESSOAL`).
 Quem já existia ganhou as 5 linhas (vazias) na migration; usuário novo as recebe na mesma transação em que é criado.
-A migration `0031` copiou `usuario.anotacoes` (Markdown) para a seção `PESSOAL` de quem tinha texto (só onde a seção estava vazia); a coluna
-antiga fica como cópia até a task 128.
+A migration `0031` copiou `usuario.anotacoes` (Markdown) para a seção `PESSOAL` de quem tinha texto (só onde a seção estava vazia) e a `0032`
+removeu `usuario.anotacoes` e `usuario.anotacoes_alteracao_data` (ela confere a cópia antes e para com erro se algum texto ficaria sem destino).
 O texto é Markdown e seção vazia é `''`. `tipo_anotacao` tem a coluna extra `ordem` (ordem de exibição).
 
 ```sql

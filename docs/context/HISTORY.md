@@ -12,6 +12,58 @@
 
 ---
 
+## 2026-10-17 — Task 128: remoção de `usuario.anotacoes` e fecho do bloco 8 (pad estruturado)
+
+
+
+Migration `0032`: antes de apagar, um bloco `DO` confere que nenhum usuário tem texto em `usuario.anotacoes` com a seção `PESSOAL` vazia (se
+
+houver, `RAISE EXCEPTION` com mensagem clara e nada é alterado); depois `DROP COLUMN` de `anotacoes` e `anotacoes_alteracao_data`. O `DOWN`
+
+recria as colunas (nullable, sem `DEFAULT`) e devolve o texto de `PESSOAL` (e o `updated_date` da seção como data da alteração). Backend e
+
+shared: saem `anotacoes`/`anotacoesAlteracaoData` dos DTOs, do model, dos `SELECT`/`UPDATE` do `UsuarioRepository`, do mapeamento e do exemplo
+
+do controller; `validarSomenteAnotacoesDoProprio` foi removida e quem não é gestor/administrador leva 403 em qualquer `PUT /usuario/:id`
+
+(nem o próprio perfil). O script de conversão do Quill trocou o alvo `usuario.anotacoes` por `anotacao.texto` (a spec só pedia tirar o antigo; sem o novo, o HTML copiado para Pessoal em um ambiente não convertido ficaria sem como ser convertido). Frontend: `UsuarioService.alterar` voltou a ter
+
+só `(id, dto)` (o parâmetro `erroNaTela` existia só para o pad).
+
+
+
+- **Testes:** `backend` 109/109 (o teste "desenvolvedor altera só as próprias anotações" saiu; o de negação foi reescrito sem o campo) e `shared`
+
+  68/68; builds de backend e frontend ok. Frontend sem testes e sem lint (P-001).
+
+- **Migration no banco de dev:** `0032` aplicada; rollback devolveu o texto de Pessoal para a coluna (4 usuários) e novo migrate ok. Com um
+
+  usuário de teste com texto antigo e `PESSOAL` vazia, a migration **falhou com a mensagem clara e as duas colunas permaneceram**; depois de
+
+  limpar, aplicou. (Na primeira tentativa de forçar a falha escolhi um usuário que já tinha `PESSOAL` preenchida, a conferência passou, e
+
+  reverti pelo `DOWN` sem perda: o texto antigo voltou de `PESSOAL`.)
+
+- **Ao vivo (API real):** desenvolvedor de teste (excluído depois) leva 403 ao alterar o próprio perfil e outro usuário, e grava o próprio pad
+
+  pela rota do pad; o usuário recuperado e o alterado já não trazem os campos; gestor/administrador altera normalmente; "tem anotações" da
+
+  listagem reflete o pad gravado. Na tela, como gestor, listagem de usuários e drawer do pad de outro usuário carregando o texto migrado.
+
+  O fluxo completo do drawer (abrir, editar, "Enviar para", fechar) foi exercitado nas tasks 126 e 127 e não repeti inteiro aqui nem com o
+
+  desenvolvedor na interface.
+
+- **Busca:** `anotacoes`/`anotacoesAlteracaoData` só restam no módulo do pad, nos nomes das seções, em migrations já aplicadas e nos
+
+  deep-links (`?anotacoes=`).
+
+- **Bloco 8 concluído (125–128).** Ao publicar, o HTML do Quill ainda precisa ser convertido (README). Os blocos 4–7, 9 e 10 seguem sem
+
+  specs (a partir da 129).
+
+
+
 ## 2026-10-17 — Ajuste na barra lateral: some o selo "g + letra" de cada item
 
 Pedido do autor, fora de spec: a barra lateral deixou de mostrar o selo `g p`, `g c`... ao lado de cada item (e o `— g x` do tooltip da barra

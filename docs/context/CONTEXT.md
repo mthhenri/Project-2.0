@@ -21,7 +21,7 @@ elas criaram (ver `MEMORY.md` §2). Siga a ordem de fases de `INDEX-revisao-ux.m
 2026-10-16 e estão em `docs/specs/discarded/`. As **110 e 111** (tela de Execuções) foram descartadas junto, mas o autor as
 **reativou em 2026-10-17** e elas foram **concluídas** (`docs/specs/done/`). A task 117 foi concluída. Não restam tasks
 numeradas no backlog.
-Próxima migration nova: `0032`.
+Próxima migration nova: `0033`.
 
 ## 2. Estado por Área
 
@@ -129,15 +129,16 @@ project-2.0/
   Limpar com Desfazer de 7 s (o vazio só é gravado depois), erro no flush → toast "Reabrir". `aoAlterar` emite
   `{usuarioId, temAnotacoes}`. Deep-link `/usuario/:id/anotacoes` redireciona (gestor → `/usuario?anotacoes=`, próprio →
   `/ponto?anotacoes=`); a topbar abre o drawer próprio. `DesfazerService` aceita `rotulo/duracaoMs/aoEncerrar`.
-- **[tasks 125–127]** Pad estruturado: migration `0030` cria `tipo_anotacao` (com `ordem`) e `anotacao` (5 linhas por usuário);
+- **[tasks 125–128]** Pad estruturado (bloco 8 do rework do chat, concluído): migration `0030` cria `tipo_anotacao` (com `ordem`) e `anotacao` (5 linhas por usuário);
   a `0031` copia `usuario.anotacoes` para a seção `PESSOAL` (só onde vazia). Módulo `backend/src/modules/anotacao/`
   (`AnotacaoRepository.modificarSecoes` lê e trava as seções numa transação e grava o que a regra devolver; regras de texto são
   funções puras em `domain/anotacao-texto.ts`); `ConflictException` (409) para a concorrência otimista; usuário novo nasce com as
   5 seções. O drawer (`usuario-anotacoes-dialog`) tem **cinco `p-accordion-panel`** com `app-markdown-editor`, cada seção é uma
   `SecaoAnotacao` (campo, `versaoLida`, estado, temporizador) que salva sozinha (2 s) com o `updatedDate` lido; 409 recarrega a seção
   (`AnotacaoService.listar`) e avisa; "Limpar" é por seção (Desfazer de 7 s, uma oferta por vez); input `editavel` (verdadeiro até os
-  blocos 4 e 10) mostra só o visualizador. "Tem anotações" na listagem = alguma das 5 seções com texto. `usuario.anotacoes` já não é
-  lida nem escrita pela tela (some na task 128). **"Enviar para" (127):** o editor tem `emitirMenuContexto`/`aoMenuContexto` (só
+  blocos 4 e 10) mostra só o visualizador. "Tem anotações" na listagem = alguma das 5 seções com texto. A `0032` removeu `usuario.anotacoes` e
+  `usuario.anotacoes_alteracao_data` (com conferência da cópia); `PUT /usuario/:id` é só de gestor/administrador (a exceção do
+  desenvolvedor saiu), o pad usa só a rota `/anotacao`. **"Enviar para" (127):** o editor tem `emitirMenuContexto`/`aoMenuContexto` (só
   com trecho selecionado; sem consumidor ou sem seleção o menu do navegador segue); o drawer abre um `p-contextmenu` cujos itens são
   propriedade direta (a seção de origem fica `visible = false`), salva as duas seções (`garantirSalva`), chama `POST /anotacao/:id/mover`
   e oferece Desfazer de 7 s (move de volta); 400/409 recarregam as duas seções e avisam.
@@ -146,11 +147,11 @@ project-2.0/
   elementos a partir dela e é a **única** forma de exibir texto rico; `app-markdown-editor` (`shared/components/markdown-editor/`,
   `ControlValueAccessor`, funções de edição puras em `markdown.edicao.ts`) é a única de editar. **No editor `Enter` é nova linha
   e `Ctrl+Enter` confirma o dialog.** Campos em Markdown: `demanda.descricao_cliente|descricao_tecnica|documentacao` e
-  `usuario.anotacoes` (o pad). O Quill saiu do projeto (dependência, CSS, seletor de atalho). O HTML antigo foi convertido uma vez
+  as seções do pad. O Quill saiu do projeto (dependência, CSS, seletor de atalho). O HTML antigo foi convertido uma vez
   por `npm run db:converter-descricoes --workspace=backend` (`backend/src/database/scripts/`; dry-run por padrão,
   `--aplicar --confirmo-backup`; idempotente), aplicado no banco de dev em 2026-10-17; **cada outro ambiente aplica o mesmo
   procedimento (README) junto com a publicação desta versão**. "Tem anotações" na listagem de usuários é "algum texto além de
-  espaços". `PUT /usuario/:id` do desenvolvedor só aceita as próprias `anotacoes` (o pad).
+  espaços".
 - **[task 120]** Layout: a navegação saiu da topbar para a barra lateral recolhível (`shared/layout/sidebar/`,
   itens em `shared/layout/navegacao.ts`, mesmo filtro `eGestor()`). Expandida = 240 px (ícone, rótulo e `g x`);
   recolhida = 68 px (ícone com tooltip "Atividades — g a"). A escolha vai ao `localStorage` (`sidebar.recolhida`, com
