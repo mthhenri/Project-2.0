@@ -71,8 +71,8 @@ export class UsuarioController {
   @ApiResponse({ status: 403, description: 'Acesso restrito a gestores', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
   @GestorOnly()
   @Post()
-  criar(@Body() dto: UsuarioCriarDto) {
-    return this.usuarioService.criar(dto);
+  criar(@Body() dto: UsuarioCriarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
+    return this.usuarioService.criar(dto, usuarioAtivo);
   }
 
   @ApiOperation({ summary: 'Listar usuários com filtros e paginação (somente gestor)' })
@@ -169,8 +169,8 @@ export class UsuarioController {
   @ApiResponse({ status: 404, description: 'Usuário não encontrado', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
   @GestorOnly()
   @Delete(':id')
-  excluir(@Param('id', ParseIntPipe) id: number) {
-    return this.usuarioService.excluir({ id });
+  excluir(@Param('id', ParseIntPipe) id: number, @ActiveUser() usuarioAtivo: JwtPayload) {
+    return this.usuarioService.excluir({ id }, usuarioAtivo);
   }
 
   @ApiOperation({ summary: 'Restaurar usuário excluído desfazendo o soft delete (somente gestor)' })
@@ -181,8 +181,8 @@ export class UsuarioController {
   @ApiResponse({ status: 404, description: 'Usuário não encontrado entre as excluídos', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
   @GestorOnly()
   @Patch(':id/restaurar')
-  restaurar(@Param('id', ParseIntPipe) id: number) {
-    return this.usuarioService.restaurar({ id });
+  restaurar(@Param('id', ParseIntPipe) id: number, @ActiveUser() usuarioAtivo: JwtPayload) {
+    return this.usuarioService.restaurar({ id }, usuarioAtivo);
   }
 
   @ApiOperation({ summary: 'Alterar senha do usuário' })
@@ -201,7 +201,11 @@ export class UsuarioController {
   @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
   @ApiResponse({ status: 404, description: 'Usuário não encontrado', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
   @Patch(':id/senha')
-  alterarSenha(@Param('id', ParseIntPipe) id: number, @Body() dto: UsuarioSenhaAlterarDto) {
-    return this.usuarioService.alterarSenha({ ...dto, id });
+  alterarSenha(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UsuarioSenhaAlterarDto,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ) {
+    return this.usuarioService.alterarSenha({ ...dto, id }, usuarioAtivo);
   }
 }

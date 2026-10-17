@@ -6,6 +6,7 @@ import { DialogModule } from 'primeng/dialog';
 import { UsuarioRecuperadoDto, TipoUsuarioEnum, TipoUsuarioStatusEnum } from '@project20/shared';
 import { UsuarioService } from '../../services/usuario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
+import { rotuloTipoUsuario, severidadeTipoUsuario } from '../../../../core/utils/tipo-usuario';
 import { AnotacoesAlteradasEvento, UsuarioAnotacoesDialogComponent } from '../usuario-anotacoes-dialog/usuario-anotacoes-dialog.component';
 import { iniciaisDoNome } from '../../utils/usuario-credenciais.util';
 
@@ -70,11 +71,11 @@ export class UsuarioPerfilDialogComponent {
   }
 
   rotulaTipo(tipo: TipoUsuarioEnum): string {
-    return tipo === TipoUsuarioEnum.GESTOR ? 'Gestor' : 'Desenvolvedor';
+    return rotuloTipoUsuario(tipo);
   }
 
-  severidadeTipo(tipo: TipoUsuarioEnum): 'info' | 'warn' {
-    return tipo === TipoUsuarioEnum.GESTOR ? 'warn' : 'info';
+  severidadeTipo(tipo: TipoUsuarioEnum): 'info' | 'warn' | 'contrast' {
+    return severidadeTipoUsuario(tipo);
   }
 
   severidadeStatus(status: TipoUsuarioStatusEnum): 'success' | 'danger' {

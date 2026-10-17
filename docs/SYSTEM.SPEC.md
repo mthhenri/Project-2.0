@@ -346,6 +346,7 @@ da tabela em kebab-case + `.enum.ts`.
 export enum TipoUsuarioEnum {
   DESENVOLVEDOR = 'DESENVOLVEDOR',
   GESTOR        = 'GESTOR',
+  ADMINISTRADOR = 'ADMINISTRADOR',
 }
 
 // tipo-demanda-status.enum.ts     ← tabela tipo_demanda_status
@@ -1247,7 +1248,7 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 | `anotacoes` | TEXT \| NULL | HTML gerado pelo p-editor |
 | `anotacoes_alteracao_data` | TIMESTAMPTZ \| NULL | data da última alteração das anotações (`NULL` = nunca alteradas). `timestamptz` desde já (escrita por `NOW()`); demais colunas de `usuario` seguem `timestamp` até a spec 75 |
 | `horas_diarias_necessarias` | INTEGER | em horas (ex: 8) |
-| `tipo_usuario_id` | INTEGER FK | → `tipo_usuario` (DESENVOLVEDOR, GESTOR) |
+| `tipo_usuario_id` | INTEGER FK | → `tipo_usuario` (DESENVOLVEDOR, GESTOR, ADMINISTRADOR) |
 | `tipo_usuario_status_id` | INTEGER FK | → `tipo_usuario_status` (ATIVO, INATIVO) |
 
 ### Projeto
@@ -1370,6 +1371,8 @@ correspondente é um `INTEGER` FK para o `id` dela; o repositório traduz `codig
 ## 14. Regras de Negócio Fundamentais
 
 ### Acesso e Permissões
+
+O **administrador** é um gestor com mais permissões: tem tudo o que a coluna "Gestor" abaixo concede e, além disso, é o único que cria, promove, altera, inativa, exclui, restaura e troca a senha de outros administradores. **Sempre existe ao menos um administrador ativo e não excluído** (`UsuarioService.validarPermanenciaDeAdministradorAtivo`): rebaixar, inativar ou excluir o último é recusado. Gestor deixou de ser obrigatório. Decisões de permissão usam `temPermissaoDeGestor`/`temPermissaoDeAdministrador` (`@project20/shared`).
 
 | Regra | Gestor | Desenvolvedor |
 |---|---|---|

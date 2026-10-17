@@ -12,6 +12,35 @@
 
 ---
 
+## 2026-10-17 — Task 119: usuário administrador (tipo, migration `0029` e regra de permanência)
+
+Segunda do bloco 1 do rework do chat com IA. `TipoUsuarioEnum.ADMINISTRADOR`; `temPermissaoDeGestor` passa a incluir o
+administrador e `temPermissaoDeAdministrador` é nova. A migration `0029` semeia `ADMINISTRADOR` em `tipo_usuario` e converte
+o `gestor.inicial` (o `DOWN` devolve todo administrador a `GESTOR` antes de remover o tipo). A regra "ao menos um
+administrador ativo" substitui `validarPermanenciaDeGestorAtivo` (P-002) em `alterar` e `excluir`; gestor deixou de ser
+obrigatório. Decisões do autor aplicadas: gestor continua criando gestor e desenvolvedor, mas não cria nem promove
+administrador, nem altera, exclui, restaura ou troca a senha de um (403); o gestor segue sem poder rebaixar a si mesmo; o
+administrador pode se rebaixar havendo outro. Controller: `criar`, `excluir`, `restaurar` e `alterarSenha` passaram a
+receber o usuário logado. Frontend: opção e filtro "Administrador", rótulos e cores centralizados em
+`core/utils/tipo-usuario.ts`, `UsuarioSessaoService.eAdministrador`, ações sobre administrador ocultas ao gestor.
+
+- **Correção de premissa da spec:** a spec mandava recriar o `CHECK` de `usuario.tipo`, mas a coluna legada já tinha sido
+  removida pela `0025` (hoje só existe `tipo_usuario_id`); a migration ficou só com o seed e a conversão.
+- **Testes:** `shared` 14/14, `backend` 47/47 (18 de `UsuarioService`, entre eles último administrador, gestor sem
+  poder sobre administrador e gestor opcional); builds de backend e frontend passam. Frontend sem testes e sem lint (P-001).
+- **Ao vivo (API real, dev local):** `db:migrate` → `gestor.inicial` vira `ADMINISTRADOR`; `db:rollback` → volta a `GESTOR` e
+  o tipo some; novo `db:migrate` ok. O token do administrador traz `tipo: ADMINISTRADOR`. Com um só administrador, inativar,
+  rebaixar e excluir dão 400; com dois, inativar o primeiro dá 200. Gestor: criar administrador, promover, alterar, trocar
+  senha, excluir e restaurar administrador dão 403; criar gestor e desenvolvedor e acessar rota gestor-only seguem ok.
+  Usuários de teste foram excluídos (soft delete).
+- **Achado só na verificação:** o `db:migrate` aplicou junto a `0028` (task 117), que ainda estava pendente no banco de
+  dev. E `PATCH /usuario/:id/senha` aceita qualquer usuário logado (registrado como P-006, fora do escopo da 119).
+- **Visual (Chromium do app, API real):** tela de Usuários em 1920×1080, 1366×768 e 1080×1920 (tema escuro; claro em
+  1366×768): tag "Administrador" (contraste) distinta de Gestor e Desenvolvedor, filtro "Administradores" e dialog com a
+  terceira opção. Como gestor, as linhas de administrador perdem editar, excluir e o switch de status, e o formulário não
+  oferece "Administrador". Análogo: a própria tela de Usuários anterior. **Não verificado:** menu do perfil da topbar com o
+  rótulo "Administrador" (só o texto mudou); mobile fora do escopo do projeto.
+
 ## 2026-10-17 — Task 118: permissão de gestor centralizada (refactor sem mudança de comportamento)
 
 Primeira das duas tasks do bloco 1 do rework do chat com IA (`rework-chat-ia.spec.md`). Nova `temPermissaoDeGestor(tipo)`

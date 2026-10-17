@@ -280,12 +280,14 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
    * Recupera o usuário **excluído**. É a única leitura que filtra `is_deleted = true`: a restauração
    * precisa do registro apagado para validar unicidade e dependências antes de reativá-lo.
    */
-  async recuperarExcluido(dto: UsuarioRestaurarDto): Promise<(UsuarioRestauradoDto) | null> {
-    const resultado = await this.executarConsulta<UsuarioRestauradoDto>(
+  async recuperarExcluido(dto: UsuarioRestaurarDto): Promise<(UsuarioRestauradoDto & { tipo: TipoUsuarioEnum }) | null> {
+    const resultado = await this.executarConsulta<UsuarioRestauradoDto & { tipo: TipoUsuarioEnum }>(
       `SELECT
          usuario.id,
          usuario.login,
-         usuario.nome_completo AS "nomeCompleto"
+         usuario.nome_completo AS "nomeCompleto",
+         (SELECT tipo_usuario.codigo FROM tipo_usuario
+          WHERE tipo_usuario.id = usuario.tipo_usuario_id)  AS tipo
        FROM usuario
        WHERE usuario.id = :id
          AND usuario.is_deleted = true
@@ -340,8 +342,8 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
     );
   }
 
-  /** Lista todos os gestores ativos (usado na auto-atribuição de demandas). */
-  async listarGestoresAtivos(): Promise<{ id: number }[]> {
+  /** Lista os administradores ativos (a guarda de permanência exige ao menos um). */
+  async listarAdministradoresAtivos(): Promise<{ id: number }[]> {
     return this.executarConsulta<{ id: number }>(
       `SELECT usuario.id
        FROM usuario
@@ -354,7 +356,7 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
                WHERE tipo_usuario_status.codigo = :status AND tipo_usuario_status.is_deleted = false
              )
          AND usuario.is_deleted = false`,
-      { tipo: TipoUsuarioEnum.GESTOR, status: TipoUsuarioStatusEnum.ATIVO },
+      { tipo: TipoUsuarioEnum.ADMINISTRADOR, status: TipoUsuarioStatusEnum.ATIVO },
     );
   }
 }

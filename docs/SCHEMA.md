@@ -578,7 +578,7 @@ Seeds (`codigo` → `descricao`):
 
 | Tabela | Seeds |
 |---|---|
-| `tipo_usuario` | DESENVOLVEDOR→"Desenvolvedor", GESTOR→"Gestor" |
+| `tipo_usuario` | DESENVOLVEDOR→"Desenvolvedor", GESTOR→"Gestor", ADMINISTRADOR→"Administrador" (migration `0029`) |
 | `tipo_usuario_status` | ATIVO→"Ativo", INATIVO→"Inativo" |
 | `tipo_projeto_status` | ATIVO→"Ativo", PAUSADO→"Pausado", CONCLUIDO→"Concluído", CANCELADO→"Cancelado" |
 | `tipo_demanda_status` | PENDENTE→"Pendente", PLANEJADA→"Planejada", CONCLUIDA→"Concluída" |

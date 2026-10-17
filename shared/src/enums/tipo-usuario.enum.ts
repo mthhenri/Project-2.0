@@ -1,4 +1,5 @@
 export enum TipoUsuarioEnum {
   DESENVOLVEDOR = 'DESENVOLVEDOR',
   GESTOR        = 'GESTOR',
+  ADMINISTRADOR = 'ADMINISTRADOR',
 }

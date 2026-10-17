@@ -13,6 +13,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { UsuarioResumoDto, TipoUsuarioEnum, TipoUsuarioStatusEnum, UsuarioListarDto } from '@project20/shared';
 import { UsuarioService } from '../../services/usuario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
+import { rotuloTipoUsuario, severidadeTipoUsuario } from '../../../../core/utils/tipo-usuario';
 import { AnotacoesAlteradasEvento, UsuarioAnotacoesDialogComponent } from '../../components/usuario-anotacoes-dialog/usuario-anotacoes-dialog.component';
 import { UsuarioPerfilDialogComponent } from '../../components/usuario-perfil-dialog/usuario-perfil-dialog.component';
 import { UsuarioFormularioDialogComponent } from '../../components/usuario-formulario-dialog/usuario-formulario-dialog.component';
@@ -85,6 +86,7 @@ export class UsuarioListagemPage implements OnInit {
     { label: 'Todos', value: null },
     { label: 'Desenvolvedores', value: TipoUsuarioEnum.DESENVOLVEDOR },
     { label: 'Gestores', value: TipoUsuarioEnum.GESTOR },
+    { label: 'Administradores', value: TipoUsuarioEnum.ADMINISTRADOR },
   ];
 
   readonly statusOpcoes = [
@@ -217,7 +219,12 @@ export class UsuarioListagemPage implements OnInit {
 
   /** Quem pode alterar o cadastro de `usuario`: gestor, ou a própria pessoa. */
   podeEditar(usuario: UsuarioResumoDto): boolean {
-    return this.sessao.eGestor() || this.sessao.usuarioAtual()?.id === usuario.id;
+    return this.podeGerenciar(usuario) || this.sessao.usuarioAtual()?.id === usuario.id;
+  }
+
+  /** Gestor gerencia todos, menos administradores: estes só o administrador gerencia. */
+  podeGerenciar(usuario: UsuarioResumoDto): boolean {
+    return this.sessao.eGestor() && (usuario.tipo !== TipoUsuarioEnum.ADMINISTRADOR || this.sessao.eAdministrador());
   }
 
   /** Inativar/excluir a si mesmo derrubaria a própria sessão: o gestor faz isso por outro gestor. */
@@ -267,8 +274,10 @@ export class UsuarioListagemPage implements OnInit {
     });
   }
 
-  severidadeTipo(tipo: TipoUsuarioEnum): 'info' | 'warn' {
-    return tipo === TipoUsuarioEnum.GESTOR ? 'warn' : 'info';
+  readonly rotuloTipo = rotuloTipoUsuario;
+
+  severidadeTipo(tipo: TipoUsuarioEnum): 'info' | 'warn' | 'contrast' {
+    return severidadeTipoUsuario(tipo);
   }
 
   private definirStatusLocal(usuarioId: number, status: TipoUsuarioStatusEnum): void {

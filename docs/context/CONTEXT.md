@@ -21,7 +21,7 @@ elas criaram (ver `MEMORY.md` §2). Siga a ordem de fases de `INDEX-revisao-ux.m
 2026-10-16 e estão em `docs/specs/discarded/`. As **110 e 111** (tela de Execuções) foram descartadas junto, mas o autor as
 **reativou em 2026-10-17** e elas foram **concluídas** (`docs/specs/done/`). A task 117 foi concluída. Não restam tasks
 numeradas no backlog.
-Próxima migration nova: `0029`.
+Próxima migration nova: `0030`.
 
 ## 2. Estado por Área
 
@@ -130,10 +130,11 @@ project-2.0/
   Limpar com Desfazer de 7 s (o vazio só é gravado depois), erro no flush → toast "Reabrir". `aoAlterar` emite
   `{usuarioId, temAnotacoes}`. Deep-link `/usuario/:id/anotacoes` redireciona (gestor → `/usuario?anotacoes=`, próprio →
   `/ponto?anotacoes=`); a topbar abre o drawer próprio. `DesfazerService` aceita `rotulo/duracaoMs/aoEncerrar`.
+- **[task 119]** Administrador: `TipoUsuarioEnum.ADMINISTRADOR` (migration `0029` semeia o tipo e converte o `gestor.inicial`). `temPermissaoDeGestor` inclui o administrador; `temPermissaoDeAdministrador` é exclusiva dele. O backend recusa rebaixar, inativar ou excluir o último administrador ativo (substituiu a guarda de gestor, P-002); gestor não cria/promove nem altera, exclui, restaura ou troca a senha de administrador. Tela de Usuários: opção e filtro "Administrador" (`core/utils/tipo-usuario.ts` centraliza rótulo e cor da tag); ações sobre administrador ficam ocultas ao gestor. O JWT carrega o tipo: quem já estava logado como `gestor.inicial` precisa entrar de novo para ser administrador.
 - **[task 118]** Permissão de gestor centralizada: `temPermissaoDeGestor(tipo)` em `shared/src/utils/permissao-usuario.ts`
   é a única regra de "tem poder de gestor" (guard, services do backend, `UsuarioSessaoService.eGestor`, filtros de membros
-  das demandas). Sobraram comparações diretas com `GESTOR` só na guarda de permanência de gestor ativo
-  (`UsuarioService.validarPermanenciaDeGestorAtivo` e `listarGestoresAtivos`), que a task 119 substitui.
+  das demandas). A comparação direta com `GESTOR` que sobrou é só a regra "gestor não rebaixa a si mesmo"
+  (`UsuarioService.alterar`).
 - **[task 113]** Usuários: status em `p-toggleswitch` na linha (otimista, Desfazer, desabilitado na própria linha);
   editar e alterar senha abrem direto da linha (`abrirEdicao(id)` / `app-usuario-senha-dialog`); o perfil só lê. O
   dialog criar/editar é único: login sugerido do nome, senha gerada, Tipo segmentado. Filtros Tipo/Status persistem em

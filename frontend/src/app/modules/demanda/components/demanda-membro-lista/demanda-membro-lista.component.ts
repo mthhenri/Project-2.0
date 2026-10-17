@@ -10,6 +10,7 @@ import { MessageService } from 'primeng/api';
 import { DemandaMembroDto, DemandaUsuarioAtribuirDto, UsuarioResumoDto, TipoUsuarioEnum } from '@project20/shared';
 import { DemandaService } from '../../services/demanda.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
+import { rotuloTipoUsuario, severidadeTipoUsuario } from '../../../../core/utils/tipo-usuario';
 import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
 import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
 import { DesfazerService } from '../../../../core/services/desfazer.service';
@@ -44,6 +45,7 @@ export class DemandaMembroListaComponent implements OnInit {
   readonly mostrarDialog = signal<boolean>(false);
   readonly carregandoSalvar = signal<boolean>(false);
   readonly tipoEnum = TipoUsuarioEnum;
+  readonly severidadeTipo = severidadeTipoUsuario;
 
   /** Indica se o usuário logado já é membro desta demanda (auto-inclusão/saída do dev). */
   readonly souMembro = computed(() =>
@@ -135,7 +137,7 @@ export class DemandaMembroListaComponent implements OnInit {
   }
 
   rotuloTipo(tipo: TipoUsuarioEnum): string {
-    return tipo === TipoUsuarioEnum.GESTOR ? 'Gestor' : 'Dev';
+    return rotuloTipoUsuario(tipo, true);
   }
 
   private retirarMembro(membro: DemandaMembroDto): void {

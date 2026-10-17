@@ -3,7 +3,11 @@ import * as assert from 'node:assert/strict';
 import { UsuarioService } from './usuario.service';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { TipoUsuarioEnum, TipoUsuarioStatusEnum } from '@project20/shared';
+import { UnauthorizedAccessException } from '../../../core/exceptions/unauthorized-access.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
+
+const ADMINISTRADOR_LOGADO = { sub: 1, tipo: TipoUsuarioEnum.ADMINISTRADOR } as never;
+const GESTOR_LOGADO = { sub: 9, tipo: TipoUsuarioEnum.GESTOR } as never;
 
 // restaurar(): regras do desfazer exclusão, sem banco — o repositório é um dublê que registra as chamadas.
 function criarServico(repositorio: Record<string, unknown>): UsuarioService {
@@ -14,7 +18,7 @@ function criarServico(repositorio: Record<string, unknown>): UsuarioService {
 
 test('restaurar: usuário inexistente entre os excluídos lança ResourceNotFoundException', async () => {
   const servico = criarServico({ recuperarExcluido: async () => null });
-  await assert.rejects(() => servico.restaurar({ id: 1 }), ResourceNotFoundException);
+  await assert.rejects(() => servico.restaurar({ id: 1 }, ADMINISTRADOR_LOGADO), ResourceNotFoundException);
 });
 
 test('restaurar: recusa quando o login foi reutilizado por um usuário ativo', async () => {
@@ -24,90 +28,172 @@ test('restaurar: recusa quando o login foi reutilizado por um usuário ativo', a
     validarLogin: async () => true,
     restaurar: async () => { restaurou = true; },
   });
-  await assert.rejects(() => servico.restaurar({ id: 1 }), BusinessException);
+  await assert.rejects(() => servico.restaurar({ id: 1 }, ADMINISTRADOR_LOGADO), BusinessException);
   assert.equal(restaurou, false);
 });
 
-// Permanência do último gestor ativo (P-002): rebaixar, inativar e excluir passam pela mesma guarda.
-const GESTOR_LOGADO = { sub: 1, tipo: TipoUsuarioEnum.GESTOR } as never;
-
-function criarRepositorioDeGestores(alvo: { id: number; tipo: TipoUsuarioEnum; status: TipoUsuarioStatusEnum }, gestoresAtivos: number[]) {
+// Permanência do último administrador ativo (substitui a guarda de gestor, P-002): rebaixar, inativar e
+// excluir passam pela mesma guarda.
+function criarRepositorioDeUsuarios(alvo: { id: number; tipo: TipoUsuarioEnum; status: TipoUsuarioStatusEnum }, administradoresAtivos: number[]) {
   const chamadas: string[] = [];
   return {
     chamadas,
     recuperar: async () => alvo,
-    listarGestoresAtivos: async () => gestoresAtivos.map((id) => ({ id })),
+    recuperarExcluido: async () => alvo,
+    validarLogin: async () => false,
+    listarAdministradoresAtivos: async () => administradoresAtivos.map((id) => ({ id })),
     alterar: async () => { chamadas.push('alterar'); return {}; },
     excluir: async () => { chamadas.push('excluir'); },
+    restaurar: async () => { chamadas.push('restaurar'); return {}; },
+    alterarSenha: async () => { chamadas.push('alterarSenha'); },
+    inserir: async () => { chamadas.push('inserir'); return {}; },
   };
 }
 
-const GESTOR_ATIVO = { id: 2, tipo: TipoUsuarioEnum.GESTOR, status: TipoUsuarioStatusEnum.ATIVO };
+const ADMINISTRADOR_ATIVO = { id: 2, tipo: TipoUsuarioEnum.ADMINISTRADOR, status: TipoUsuarioStatusEnum.ATIVO };
+const GESTOR_ATIVO = { id: 4, tipo: TipoUsuarioEnum.GESTOR, status: TipoUsuarioStatusEnum.ATIVO };
+const DESENVOLVEDOR_ATIVO = { id: 3, tipo: TipoUsuarioEnum.DESENVOLVEDOR, status: TipoUsuarioStatusEnum.ATIVO };
 
-test('alterar: inativar o único gestor ativo é recusado', async () => {
-  const repositorio = criarRepositorioDeGestores(GESTOR_ATIVO, [2]);
+test('alterar: inativar o único administrador ativo é recusado', async () => {
+  const repositorio = criarRepositorioDeUsuarios(ADMINISTRADOR_ATIVO, [2]);
   const servico = criarServico(repositorio);
   await assert.rejects(
-    () => servico.alterar({ id: 2, status: TipoUsuarioStatusEnum.INATIVO }, GESTOR_LOGADO),
+    () => servico.alterar({ id: 2, status: TipoUsuarioStatusEnum.INATIVO }, ADMINISTRADOR_LOGADO),
     BusinessException,
   );
   assert.deepEqual(repositorio.chamadas, []);
 });
 
-test('alterar: inativar um gestor quando há outro gestor ativo é permitido', async () => {
-  const repositorio = criarRepositorioDeGestores(GESTOR_ATIVO, [1, 2]);
+test('alterar: inativar um administrador quando há outro administrador ativo é permitido', async () => {
+  const repositorio = criarRepositorioDeUsuarios(ADMINISTRADOR_ATIVO, [1, 2]);
   const servico = criarServico(repositorio);
-  await servico.alterar({ id: 2, status: TipoUsuarioStatusEnum.INATIVO }, GESTOR_LOGADO);
+  await servico.alterar({ id: 2, status: TipoUsuarioStatusEnum.INATIVO }, ADMINISTRADOR_LOGADO);
   assert.deepEqual(repositorio.chamadas, ['alterar']);
 });
 
-test('alterar: rebaixar o único gestor ativo continua recusado', async () => {
-  const repositorio = criarRepositorioDeGestores(GESTOR_ATIVO, [2]);
+test('alterar: rebaixar o único administrador ativo é recusado', async () => {
+  const repositorio = criarRepositorioDeUsuarios(ADMINISTRADOR_ATIVO, [2]);
   const servico = criarServico(repositorio);
   await assert.rejects(
-    () => servico.alterar({ id: 2, tipo: TipoUsuarioEnum.DESENVOLVEDOR }, GESTOR_LOGADO),
+    () => servico.alterar({ id: 2, tipo: TipoUsuarioEnum.GESTOR }, ADMINISTRADOR_LOGADO),
     BusinessException,
   );
 });
 
-test('alterar: gestor já inativo pode ser alterado mesmo sem outro gestor ativo', async () => {
-  const repositorio = criarRepositorioDeGestores({ ...GESTOR_ATIVO, status: TipoUsuarioStatusEnum.INATIVO }, []);
-  const servico = criarServico(repositorio);
-  await servico.alterar({ id: 2, status: TipoUsuarioStatusEnum.INATIVO }, GESTOR_LOGADO);
+test('alterar: administrador pode se rebaixar havendo outro administrador ativo', async () => {
+  const repositorio = criarRepositorioDeUsuarios(ADMINISTRADOR_ATIVO, [1, 2]);
+  const servico = criarServico({ ...repositorio });
+  await servico.alterar({ id: 2, tipo: TipoUsuarioEnum.GESTOR }, { sub: 2, tipo: TipoUsuarioEnum.ADMINISTRADOR } as never);
   assert.deepEqual(repositorio.chamadas, ['alterar']);
 });
 
-test('alterar: reativar ou editar o nome do único gestor não aciona a guarda', async () => {
-  const repositorio = criarRepositorioDeGestores(GESTOR_ATIVO, [2]);
+test('alterar: administrador já inativo pode ser alterado mesmo sem outro administrador ativo', async () => {
+  const repositorio = criarRepositorioDeUsuarios({ ...ADMINISTRADOR_ATIVO, status: TipoUsuarioStatusEnum.INATIVO }, []);
   const servico = criarServico(repositorio);
-  await servico.alterar({ id: 2, nomeCompleto: 'Novo Nome', status: TipoUsuarioStatusEnum.ATIVO }, GESTOR_LOGADO);
+  await servico.alterar({ id: 2, status: TipoUsuarioStatusEnum.INATIVO }, ADMINISTRADOR_LOGADO);
   assert.deepEqual(repositorio.chamadas, ['alterar']);
 });
 
-test('alterar: inativar um desenvolvedor nunca depende de gestores', async () => {
-  const repositorio = criarRepositorioDeGestores(
-    { id: 3, tipo: TipoUsuarioEnum.DESENVOLVEDOR, status: TipoUsuarioStatusEnum.ATIVO }, [],
+test('alterar: editar o nome do único administrador não aciona a guarda', async () => {
+  const repositorio = criarRepositorioDeUsuarios(ADMINISTRADOR_ATIVO, [2]);
+  const servico = criarServico(repositorio);
+  await servico.alterar({ id: 2, nomeCompleto: 'Novo Nome', status: TipoUsuarioStatusEnum.ATIVO }, ADMINISTRADOR_LOGADO);
+  assert.deepEqual(repositorio.chamadas, ['alterar']);
+});
+
+test('alterar: gestor deixa de ser obrigatório — inativar o único gestor ativo é permitido', async () => {
+  const repositorio = criarRepositorioDeUsuarios(GESTOR_ATIVO, [1]);
+  const servico = criarServico(repositorio);
+  await servico.alterar({ id: 4, status: TipoUsuarioStatusEnum.INATIVO }, GESTOR_LOGADO);
+  assert.deepEqual(repositorio.chamadas, ['alterar']);
+});
+
+test('alterar: gestor não pode rebaixar a si mesmo', async () => {
+  const repositorio = criarRepositorioDeUsuarios({ ...GESTOR_ATIVO, id: 9 }, [1]);
+  const servico = criarServico(repositorio);
+  await assert.rejects(
+    () => servico.alterar({ id: 9, tipo: TipoUsuarioEnum.DESENVOLVEDOR }, GESTOR_LOGADO),
+    BusinessException,
   );
+});
+
+test('alterar: inativar um desenvolvedor nunca depende de administradores', async () => {
+  const repositorio = criarRepositorioDeUsuarios(DESENVOLVEDOR_ATIVO, []);
   const servico = criarServico(repositorio);
   await servico.alterar({ id: 3, status: TipoUsuarioStatusEnum.INATIVO }, GESTOR_LOGADO);
   assert.deepEqual(repositorio.chamadas, ['alterar']);
 });
 
-test('excluir: o único gestor ativo não pode ser excluído', async () => {
-  const repositorio = criarRepositorioDeGestores(GESTOR_ATIVO, [2]);
+test('excluir: o único administrador ativo não pode ser excluído', async () => {
+  const repositorio = criarRepositorioDeUsuarios(ADMINISTRADOR_ATIVO, [2]);
   const servico = criarServico(repositorio);
-  await assert.rejects(() => servico.excluir({ id: 2 }), BusinessException);
+  await assert.rejects(() => servico.excluir({ id: 2 }, ADMINISTRADOR_LOGADO), BusinessException);
   assert.deepEqual(repositorio.chamadas, []);
 });
 
-test('excluir: gestor com outro gestor ativo e desenvolvedor são excluídos normalmente', async () => {
-  const comOutro = criarRepositorioDeGestores(GESTOR_ATIVO, [1, 2]);
-  await criarServico(comOutro).excluir({ id: 2 });
+test('excluir: administrador com outro administrador ativo, gestor e desenvolvedor são excluídos normalmente', async () => {
+  const comOutro = criarRepositorioDeUsuarios(ADMINISTRADOR_ATIVO, [1, 2]);
+  await criarServico(comOutro).excluir({ id: 2 }, ADMINISTRADOR_LOGADO);
   assert.deepEqual(comOutro.chamadas, ['excluir']);
 
-  const desenvolvedor = criarRepositorioDeGestores(
-    { id: 3, tipo: TipoUsuarioEnum.DESENVOLVEDOR, status: TipoUsuarioStatusEnum.ATIVO }, [],
-  );
-  await criarServico(desenvolvedor).excluir({ id: 3 });
+  const gestor = criarRepositorioDeUsuarios(GESTOR_ATIVO, [1]);
+  await criarServico(gestor).excluir({ id: 4 }, GESTOR_LOGADO);
+  assert.deepEqual(gestor.chamadas, ['excluir']);
+
+  const desenvolvedor = criarRepositorioDeUsuarios(DESENVOLVEDOR_ATIVO, []);
+  await criarServico(desenvolvedor).excluir({ id: 3 }, GESTOR_LOGADO);
   assert.deepEqual(desenvolvedor.chamadas, ['excluir']);
+});
+
+// Gestor não gerencia administrador (criar, promover, alterar, excluir, restaurar, trocar senha).
+test('gestor não cria administrador, mas administrador cria', async () => {
+  const dto = {
+    login: 'novo.admin', senhaNaoEncriptada: 'Senha#12345', nomeCompleto: 'Novo Admin',
+    cargoTitulo: 'Admin', tipo: TipoUsuarioEnum.ADMINISTRADOR, horasDiariasNecessarias: 8,
+  };
+  const negado = criarRepositorioDeUsuarios(DESENVOLVEDOR_ATIVO, []);
+  await assert.rejects(() => criarServico(negado).criar(dto, GESTOR_LOGADO), UnauthorizedAccessException);
+  assert.deepEqual(negado.chamadas, []);
+
+  const permitido = criarRepositorioDeUsuarios(DESENVOLVEDOR_ATIVO, []);
+  await criarServico(permitido).criar(dto, ADMINISTRADOR_LOGADO);
+  assert.deepEqual(permitido.chamadas, ['inserir']);
+});
+
+test('gestor continua criando gestor e desenvolvedor', async () => {
+  const repositorio = criarRepositorioDeUsuarios(DESENVOLVEDOR_ATIVO, []);
+  const base = { login: 'x.y', senhaNaoEncriptada: 'Senha#12345', nomeCompleto: 'X Y', cargoTitulo: 'Cargo', horasDiariasNecessarias: 8 };
+  await criarServico(repositorio).criar({ ...base, tipo: TipoUsuarioEnum.GESTOR }, GESTOR_LOGADO);
+  await criarServico(repositorio).criar({ ...base, tipo: TipoUsuarioEnum.DESENVOLVEDOR }, GESTOR_LOGADO);
+  assert.deepEqual(repositorio.chamadas, ['inserir', 'inserir']);
+});
+
+test('gestor não promove ninguém a administrador', async () => {
+  const repositorio = criarRepositorioDeUsuarios(GESTOR_ATIVO, [1]);
+  await assert.rejects(
+    () => criarServico(repositorio).alterar({ id: 4, tipo: TipoUsuarioEnum.ADMINISTRADOR }, GESTOR_LOGADO),
+    UnauthorizedAccessException,
+  );
+  assert.deepEqual(repositorio.chamadas, []);
+});
+
+test('gestor não altera, exclui, restaura nem troca a senha de um administrador', async () => {
+  const repositorio = criarRepositorioDeUsuarios(ADMINISTRADOR_ATIVO, [1, 2]);
+  const servico = criarServico(repositorio);
+  await assert.rejects(() => servico.alterar({ id: 2, nomeCompleto: 'Outro Nome' }, GESTOR_LOGADO), UnauthorizedAccessException);
+  await assert.rejects(() => servico.excluir({ id: 2 }, GESTOR_LOGADO), UnauthorizedAccessException);
+  await assert.rejects(() => servico.restaurar({ id: 2 }, GESTOR_LOGADO), UnauthorizedAccessException);
+  await assert.rejects(
+    () => servico.alterarSenha({ id: 2, senhaNova: 'Senha#12345' } as never, GESTOR_LOGADO),
+    UnauthorizedAccessException,
+  );
+  assert.deepEqual(repositorio.chamadas, []);
+});
+
+test('administrador altera a senha e restaura outro administrador', async () => {
+  const repositorio = criarRepositorioDeUsuarios(ADMINISTRADOR_ATIVO, [1, 2]);
+  const servico = criarServico(repositorio);
+  await servico.alterarSenha({ id: 2, senhaNova: 'Senha#12345' } as never, ADMINISTRADOR_LOGADO);
+  await servico.restaurar({ id: 2 }, ADMINISTRADOR_LOGADO);
+  assert.deepEqual(repositorio.chamadas, ['alterarSenha', 'restaurar']);
 });

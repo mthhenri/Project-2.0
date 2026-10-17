@@ -103,7 +103,7 @@
           </div>
           <div class="flex items-center gap-2 text-sm text-muted-color">
             <i class="pi pi-id-card text-xs"></i>
-            <span>{{ sessao.eGestor() ? 'Gestor' : 'Desenvolvedor' }}</span>
+            <span>{{ rotuloTipo(sessao.usuarioAtual()!.tipo) }}</span>
           </div>
           <p-divider class="my-0" />
           <label class="topbar__linha-switch text-sm" for="switch-tempo-dias">

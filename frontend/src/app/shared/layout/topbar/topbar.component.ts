@@ -12,6 +12,7 @@ import { timer } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AutenticacaoService } from '../../../core/services/autenticacao.service';
 import { UsuarioSessaoService } from '../../../core/services/usuario-sessao.service';
+import { rotuloTipoUsuario } from '../../../core/utils/tipo-usuario';
 import { TemaService } from '../../../core/services/tema.service';
 import { TemaPersonalizadoService } from '../../../core/services/tema-personalizado.service';
 import { VisualizacaoTempoService } from '../../../core/services/visualizacao-tempo.service';
@@ -50,6 +51,7 @@ export class TopbarComponent {
   private readonly execucaoAtiva = inject(ExecucaoAtivaService);
   private readonly roteador = inject(Router);
   @ViewChild('anotacoesDialog') private anotacoesDialog?: UsuarioAnotacoesDialogComponent;
+  readonly rotuloTipo = rotuloTipoUsuario;
   readonly horaAtual = signal<string>('');
 
   readonly coresSugeridas = CORES_SUGERIDAS;

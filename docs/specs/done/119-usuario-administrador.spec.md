@@ -27,11 +27,9 @@ tipo, a regra e o que o usuário vê dele.
 Seguir a skill `sql-migrations` (seções `-- UP`/`-- DOWN`, sem `DEFAULT`, `INSERT ... SELECT`):
 
 - `INSERT` de `ADMINISTRADOR` em `tipo_usuario` (`descricao` "Administrador").
-- A coluna legada `usuario.tipo VARCHAR(20)` convive com `tipo_usuario_id` e tem a constraint
-  `usuario_tipo_check CHECK (tipo IN ('DESENVOLVEDOR','GESTOR'))` (migration `0025`): recriá-la
-  incluindo `ADMINISTRADOR`. Confirmar, antes, o que ainda lê essa coluna.
-- Converter o `gestor.inicial` (seed da `0015`) em `ADMINISTRADOR`, nas duas representações
-  (`tipo` e `tipo_usuario_id`).
+- ~~Recriar a constraint de `usuario.tipo`~~: a coluna legada `tipo` já foi removida pela `0025`; só existe
+  `tipo_usuario_id` (correção feita na implementação).
+- Converter o `gestor.inicial` (seed da `0015`) em `ADMINISTRADOR` pelo `tipo_usuario_id`.
 - `DOWN`: reconverter administradores em `GESTOR`, restaurar a constraint e remover o seed
   (migration já aplicada nunca é editada: só esta é nova).
 
@@ -64,7 +62,7 @@ Seguir a skill `sql-migrations` (seções `-- UP`/`-- DOWN`, sem `DEFAULT`, `INS
   a nova regra de permanência), `docs/context/PROBLEMS.md` (P-002 resolvida/substituída) e o
   `HISTORY.md`, conforme `task-flow`.
 
-## Decisões em aberto (precisam do autor)
+## Decisões (aprovadas pelo autor com as propostas abaixo)
 
 1. **Quem cria o quê.** A guarda-chuva diz que o administrador cria administradores, gestores e
    desenvolvedores. Proposta: o **gestor continua criando gestores e desenvolvedores como hoje**, mas

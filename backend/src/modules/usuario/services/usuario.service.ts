@@ -15,7 +15,7 @@ import {
   UsuarioSenhaAlterarDto,
   UsuarioSenhaAlteradaDto,
   TipoUsuarioEnum,
-  temPermissaoDeGestor,
+  temPermissaoDeAdministrador,
   TipoUsuarioStatusEnum,
 } from '@project20/shared';
 import { StandardResponse, PaginatedResult } from '@project20/shared';
@@ -30,7 +30,11 @@ export class UsuarioService {
   constructor(private readonly usuarioRepositorio: UsuarioRepository) {}
 
   /** Cria novo usuário validando unicidade do login e encriptando a senha. */
-  async criar(dto: UsuarioCriarDto): Promise<StandardResponse<UsuarioCriadoDto>> {
+  async criar(dto: UsuarioCriarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<UsuarioCriadoDto>> {
+    if (dto.tipo === TipoUsuarioEnum.ADMINISTRADOR) {
+      this.validarPermissaoDeAdministrador(usuarioAtivo);
+    }
+
     const loginJaExiste = await this.usuarioRepositorio.validarLogin({ login: dto.login });
 
     if (loginJaExiste) {
@@ -125,8 +129,13 @@ export class UsuarioService {
       throw new ResourceNotFoundException('Usuário');
     }
 
+    this.validarPermissaoSobreAdministrador(usuarioEncontrado, usuarioAtivo);
+    if (dto.tipo === TipoUsuarioEnum.ADMINISTRADOR) {
+      this.validarPermissaoDeAdministrador(usuarioAtivo);
+    }
+
     const estaRebaixandoGestor =
-      temPermissaoDeGestor(usuarioEncontrado.tipo) &&
+      usuarioEncontrado.tipo === TipoUsuarioEnum.GESTOR &&
       dto.tipo === TipoUsuarioEnum.DESENVOLVEDOR;
 
     if (estaRebaixandoGestor) {
@@ -136,10 +145,10 @@ export class UsuarioService {
 
     }
 
-    const deixaDeSerGestor = dto.tipo !== undefined && !temPermissaoDeGestor(dto.tipo);
+    const deixaDeSerAdministrador = dto.tipo !== undefined && !temPermissaoDeAdministrador(dto.tipo);
     const deixaDeSerAtivo = dto.status !== undefined && dto.status !== TipoUsuarioStatusEnum.ATIVO;
-    if (deixaDeSerGestor || deixaDeSerAtivo) {
-      await this.validarPermanenciaDeGestorAtivo(usuarioEncontrado);
+    if (deixaDeSerAdministrador || deixaDeSerAtivo) {
+      await this.validarPermanenciaDeAdministradorAtivo(usuarioEncontrado);
     }
 
     const usuarioAlterado = await this.usuarioRepositorio.alterar(dto);
@@ -152,28 +161,44 @@ export class UsuarioService {
   }
 
   /**
-   * O sistema precisa de ao menos um gestor ativo: quem tira um gestor ativo de cena (rebaixar, inativar ou
-   * excluir) só pode fazê-lo se existir outro. Usuário que não é gestor ativo não muda esse número.
+   * O sistema precisa de ao menos um administrador ativo: quem tira um administrador ativo de cena
+   * (rebaixar, inativar ou excluir) só pode fazê-lo se existir outro. Usuário que não é administrador
+   * ativo não muda esse número; gestor deixa de ser obrigatório, porque o administrador já é um gestor.
    */
-  private async validarPermanenciaDeGestorAtivo(usuario: Usuario): Promise<void> {
-    if (usuario.tipo !== TipoUsuarioEnum.GESTOR || usuario.status !== TipoUsuarioStatusEnum.ATIVO) return;
+  private async validarPermanenciaDeAdministradorAtivo(usuario: Usuario): Promise<void> {
+    if (!temPermissaoDeAdministrador(usuario.tipo) || usuario.status !== TipoUsuarioStatusEnum.ATIVO) return;
 
-    const gestoresAtivos = await this.usuarioRepositorio.listarGestoresAtivos();
-    const outrosGestoresAtivos = gestoresAtivos.filter((gestor) => gestor.id !== usuario.id);
-    if (outrosGestoresAtivos.length === 0) {
-      throw new BusinessException('O sistema deve ter ao menos um gestor ativo');
+    const administradoresAtivos = await this.usuarioRepositorio.listarAdministradoresAtivos();
+    const outrosAdministradoresAtivos = administradoresAtivos.filter((administrador) => administrador.id !== usuario.id);
+    if (outrosAdministradoresAtivos.length === 0) {
+      throw new BusinessException('O sistema deve ter ao menos um administrador ativo');
+    }
+  }
+
+  /** Criar ou promover administrador é exclusivo de administrador. */
+  private validarPermissaoDeAdministrador(usuarioAtivo: JwtPayload): void {
+    if (!temPermissaoDeAdministrador(usuarioAtivo.tipo)) {
+      throw new UnauthorizedAccessException('Apenas administradores podem criar ou promover administradores');
+    }
+  }
+
+  /** Gestor não altera, inativa, exclui, restaura nem troca a senha de um administrador. */
+  private validarPermissaoSobreAdministrador(alvo: { tipo: TipoUsuarioEnum }, usuarioAtivo: JwtPayload): void {
+    if (temPermissaoDeAdministrador(alvo.tipo) && !temPermissaoDeAdministrador(usuarioAtivo.tipo)) {
+      throw new UnauthorizedAccessException('Apenas administradores podem gerenciar administradores');
     }
   }
 
   /** Realiza soft delete do usuário. Lança exceção se não encontrado. */
-  async excluir(dto: UsuarioExcluirDto): Promise<StandardResponse<void>> {
+  async excluir(dto: UsuarioExcluirDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<void>> {
     const usuarioEncontrado = await this.usuarioRepositorio.recuperar({ id: dto.id });
 
     if (!usuarioEncontrado) {
       throw new ResourceNotFoundException('Usuário');
     }
 
-    await this.validarPermanenciaDeGestorAtivo(usuarioEncontrado);
+    this.validarPermissaoSobreAdministrador(usuarioEncontrado, usuarioAtivo);
+    await this.validarPermanenciaDeAdministradorAtivo(usuarioEncontrado);
 
     await this.usuarioRepositorio.excluir({ id: dto.id });
 
@@ -185,11 +210,13 @@ export class UsuarioService {
   }
 
   /** Restaura o usuário excluído (soft delete revertido, sem cascata). Restrito a gestores. */
-  async restaurar(dto: UsuarioRestaurarDto): Promise<StandardResponse<UsuarioRestauradoDto>> {
+  async restaurar(dto: UsuarioRestaurarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<UsuarioRestauradoDto>> {
     const usuarioExcluido = await this.usuarioRepositorio.recuperarExcluido({ id: dto.id });
     if (!usuarioExcluido) {
       throw new ResourceNotFoundException('Usuário');
     }
+
+    this.validarPermissaoSobreAdministrador(usuarioExcluido, usuarioAtivo);
 
     const loginJaExiste = await this.usuarioRepositorio.validarLogin({ login: usuarioExcluido.login });
     if (loginJaExiste) {
@@ -205,12 +232,14 @@ export class UsuarioService {
     };
   }
 
-  async alterarSenha(dto: UsuarioSenhaAlterarDto & { id: number }): Promise<StandardResponse<UsuarioSenhaAlteradaDto>> {
+  async alterarSenha(dto: UsuarioSenhaAlterarDto & { id: number }, usuarioAtivo: JwtPayload): Promise<StandardResponse<UsuarioSenhaAlteradaDto>> {
     const usuarioEncontrado = await this.usuarioRepositorio.recuperar({ id: dto.id });
 
     if (!usuarioEncontrado) {
       throw new ResourceNotFoundException('Usuário');
     }
+
+    this.validarPermissaoSobreAdministrador(usuarioEncontrado, usuarioAtivo);
 
     const novaSenhaEncriptada = await bcrypt.hash(dto.senhaNova, 10);
     await this.usuarioRepositorio.alterarSenha({ id: dto.id, senhaEncriptada: novaSenhaEncriptada });
