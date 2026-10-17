@@ -8,3 +8,6 @@ export * from './tipo-dia-nao-util-duracao.enum';
 export * from './relatorio-periodo-tipo.enum';
 export * from './relatorio-formato.enum';
 export * from './tipo-anotacao.enum';
+export * from './tipo-provedor-ia.enum';
+export * from './esforco-ia.enum';
+export * from './nivel-ia.enum';

@@ -9,6 +9,7 @@ import { AutenticacaoService } from './services/autenticacao.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { GestorGuard } from './guards/gestor.guard';
+import { AdministradorGuard } from './guards/administrador.guard';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { GestorGuard } from './guards/gestor.guard';
     JwtStrategy,
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: GestorGuard },
+    { provide: APP_GUARD, useClass: AdministradorGuard },
   ],
 })
 export class AutenticacaoModule {}

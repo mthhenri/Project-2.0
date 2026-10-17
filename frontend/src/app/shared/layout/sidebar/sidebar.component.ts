@@ -23,7 +23,11 @@ export class SidebarComponent {
   readonly recolhida = signal<boolean>(this.lerEstadoInicial());
 
   readonly itensNavegacao = computed(() =>
-    ITENS_NAVEGACAO.filter((item) => !item.somenteGestor || this.sessao.eGestor()),
+    ITENS_NAVEGACAO.filter(
+      (item) =>
+        (!item.somenteGestor || this.sessao.eGestor()) &&
+        (!item.somenteAdministrador || this.sessao.eAdministrador()),
+    ),
   );
 
   alternar(): void {

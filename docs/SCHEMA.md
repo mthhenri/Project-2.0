@@ -81,6 +81,7 @@ As tabelas devem ser criadas nessa ordem para respeitar as dependências de FK:
 10. execucao
 11. dia_nao_util
 12. tipo_anotacao, anotacao (migration `0030`)
+13. tipo_provedor_ia, configuracao_ia (migration `0033`)
 ```
 
 ---
@@ -568,6 +569,42 @@ CREATE UNIQUE INDEX uix_anotacao_usuario_tipo_ativa
 
 ---
 
+### configuracao_ia — configuração da IA, uma linha por versão (migration `0033`)
+
+A versão ativa é a de maior `versao`; versão antiga nunca é alterada (editar é gravar a seguinte). A chave de API do provedor **não** fica no banco
+(`.env`). A versão 1 vem por seed (Anthropic, IA **desligada**, check-in entre 30 e 80 minutos, duração recomendada de 90).
+
+```sql
+CREATE TABLE configuracao_ia (
+  id                           SERIAL      PRIMARY KEY,
+  created_date                 TIMESTAMPTZ NOT NULL,
+  updated_date                 TIMESTAMPTZ NOT NULL,
+  is_deleted                   BOOLEAN     NOT NULL,
+  deleted_date                 TIMESTAMPTZ,
+
+  versao                       INTEGER      NOT NULL,
+  tipo_provedor_ia_id          INTEGER      NOT NULL CONSTRAINT fk_configuracao_ia_tipo_provedor_ia REFERENCES tipo_provedor_ia(id),
+  modelo_rapido                VARCHAR(100) NOT NULL,
+  modelo_padrao                VARCHAR(100) NOT NULL,
+  modelo_analitico             VARCHAR(100) NOT NULL,
+  esforco_analitico            VARCHAR(20)  NOT NULL,   -- BAIXO/MEDIO/ALTO (EsforcoIaEnum do shared; sem tabela nem CHECK)
+  checkin_minimo_minutos       INTEGER      NOT NULL,
+  checkin_maximo_minutos       INTEGER      NOT NULL,
+  duracao_recomendada_minutos  INTEGER      NOT NULL,
+  checkin_inteligente          BOOLEAN      NOT NULL,
+  rigor_proporcional           BOOLEAN      NOT NULL,
+  deteccao_automatica          BOOLEAN      NOT NULL,
+  ia_desligada                 BOOLEAN      NOT NULL,
+  usuario_id                   INTEGER      NOT NULL CONSTRAINT fk_configuracao_ia_usuario REFERENCES usuario(id),  -- quem salvou
+
+  CONSTRAINT chk_configuracao_ia_intervalo_checkin CHECK (checkin_minimo_minutos < checkin_maximo_minutos)
+);
+
+CREATE UNIQUE INDEX uix_configuracao_ia_versao ON configuracao_ia(versao) WHERE is_deleted = false;
+```
+
+---
+
 ### Tabelas de referência (enums) — migration `20240025`
 
 Todo enum de domínio fechado é uma **tabela de referência** `tipo_<tabela>_<complemento?>`
@@ -612,6 +649,7 @@ Seeds (`codigo` → `descricao`):
 | `tipo_atividade_status` | PLANEJADA→"Planejada", PENDENTE→"Pendente", DESENVOLVENDO→"Desenvolvendo", DESENVOLVIDA→"Desenvolvida" |
 | `tipo_dia_nao_util` | FERIADO→"Feriado", RECESSO→"Recesso", PONTO_FACULTATIVO→"Ponto facultativo" |
 | `tipo_dia_nao_util_duracao` | INTEGRAL→"Integral", MEIO_PERIODO→"Meio período" |
+| `tipo_provedor_ia` | ANTHROPIC→"Anthropic", GOOGLE→"Google", OPENAI→"OpenAI" (migration `0033`; só ANTHROPIC terá implementação) |
 | `tipo_anotacao` | EM_ANDAMENTO→"Em andamento", FEITO→"Feito", PENDENCIA→"Pendências", LEMBRETE→"Lembretes", PESSOAL→"Pessoal" (migration `0030`, com `ordem` 1 a 5) |
 
 ---

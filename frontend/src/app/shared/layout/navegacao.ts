@@ -5,6 +5,8 @@ export interface ItemNavegacao {
   rotaLink: string;
   tecla: string;
   somenteGestor: boolean;
+  /** Só administrador vê o item (a rota correspondente usa `administradorGuard`). */
+  somenteAdministrador?: boolean;
 }
 
 export const ITENS_NAVEGACAO: readonly ItemNavegacao[] = [

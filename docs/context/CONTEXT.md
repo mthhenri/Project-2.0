@@ -21,7 +21,7 @@ elas criaram (ver `MEMORY.md` §2). Siga a ordem de fases de `INDEX-revisao-ux.m
 2026-10-16 e estão em `docs/specs/discarded/`. As **110 e 111** (tela de Execuções) foram descartadas junto, mas o autor as
 **reativou em 2026-10-17** e elas foram **concluídas** (`docs/specs/done/`). A task 117 foi concluída. Não restam tasks
 numeradas no backlog.
-Próxima migration nova: `0033`.
+Próxima migration nova: `0034`.
 
 ## 2. Estado por Área
 
@@ -142,6 +142,10 @@ project-2.0/
   com trecho selecionado; sem consumidor ou sem seleção o menu do navegador segue); o drawer abre um `p-contextmenu` cujos itens são
   propriedade direta (a seção de origem fica `visible = false`), salva as duas seções (`garantirSalva`), chama `POST /anotacao/:id/mover`
   e oferece Desfazer de 7 s (move de volta); 400/409 recarregam as duas seções e avisam.
+- **[task 129]** Configuração da IA: migration `0033` (`tipo_provedor_ia`, `configuracao_ia`, versão 1 por seed com a IA **desligada**), módulo `configuracao-ia`
+  (ativa em cache, histórico paginado, nova versão com lock consultivo) e permissão de administrador: `@AdministradorOnly()` + `AdministradorGuard` (guard
+  global como o do gestor) no backend; `administradorGuard` de rota e `ItemNavegacao.somenteAdministrador` (a sidebar o filtra) no frontend. Ainda não há item de
+  navegação nem tela (task 132). Esforço do analítico é texto validado por `EsforcoIaEnum`, sem tabela.
 - **[task 134]** Editor de Markdown formatado: `app-markdown-editor` escreve já formatado (Milkdown, `@milkdown/kit`, carregado sob demanda por
   `markdown-formatado.ts`, sem acoplamento a Angular) e guarda Markdown; modo "Markdown" (`M↓`) alterna para o `textarea` cru. Sem abas Editar | Visualizar.
   Abrir sem editar nunca emite mudança (`base`/`original` no componente). "Enviar para" entrega o **bloco inteiro** da seleção em Markdown

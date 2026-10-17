@@ -12,6 +12,26 @@
 
 ---
 
+## 2026-10-17 — Task 129: configuração da IA (modelo, API e permissão de administrador)
+
+Bloco 4 do rework do chat com IA (1 de 5). Migration `0033`: `tipo_provedor_ia` (ANTHROPIC, GOOGLE, OPENAI) e `configuracao_ia` (uma linha por versão, `uix` por
+`versao`, `chk_configuracao_ia_intervalo_checkin`), com a versão 1 por seed atribuída ao `gestor.inicial` (Anthropic, `claude-haiku-5-5`, `claude-sonnet-5-5`,
+`claude-opus-5-5`, esforço `MEDIO`, check-in entre 30 e 80 minutos, duração recomendada de 90, flags ligadas, **IA desligada**). Módulo `configuracao-ia`: `GET /configuracao-ia`,
+`GET /configuracao-ia/versoes` e `POST /configuracao-ia`, todos exclusivos de administrador. O `POST` grava `maior + 1` dentro de uma transação com
+`pg_advisory_xact_lock` (o índice único é a rede de segurança) e renova o cache em memória da ativa; `obterAtiva()` lê o banco uma vez. Novo `@AdministradorOnly()` +
+`AdministradorGuard` (global, no molde do `GestorGuard`); a service confere a permissão também (defesa em profundidade). Frontend: `administradorGuard` e
+`ItemNavegacao.somenteAdministrador` filtrado pela sidebar, sem item novo ainda.
+
+- **Esforço sem tabela:** `esforco_analitico VARCHAR(20)` validado por `EsforcoIaEnum` (decisão do autor); modelos de IA são texto livre e os do seed são os mais recentes
+  conhecidos (a 130 confere).
+- **Testes:** `backend` 116/116 (7 novos: versionamento sem alterar a anterior, cache, intervalo recusado, só administrador, paginação, e o guard); build do backend e do frontend ok.
+- **Ao vivo (API real, usuários de teste excluídos depois):** `db:migrate`, `db:rollback` e novo `db:migrate`; gestor e desenvolvedor levam 403 em `GET`, `GET /versoes` e
+  `POST`; administrador lê a ativa; intervalo invertido, esforço fora do enum e modelo vazio dão 400; criar versão nova é refletido na leitura seguinte; **5 gravações
+  simultâneas geraram 5 versões distintas e seguidas**; histórico paginado mais nova primeiro. A verificação rodou duas vezes (a primeira sem eu ver a saída), então a
+  configuração no banco de dev tem versões de teste (até a 15), e a última repõe os valores do seed.
+- **Não verificado:** `administradorGuard` e o filtro `somenteAdministrador` da sidebar ao vivo (não há item nem rota que os use ainda; só compilam). Constraint `chk` conferida por
+  `INSERT` direto no banco. Sem lint e sem teste de frontend para essa parte.
+
 ## 2026-10-17 — Task 134: editor de Markdown formatado ("escreve vendo", guarda Markdown)
 
 O `app-markdown-editor` passou a editar já formatado, com o texto guardado em Markdown, no pad e em todos os usos (descrições, documentação e a futura
