@@ -12,6 +12,21 @@
 
 ---
 
+## 2026-10-17 — Task 131: prompts da IA versionados (modelo de dados e API)
+
+Bloco 4 do rework do chat com IA (3 de 5). Migration `0034`: `tipo_prompt` (CONVERSA, CHECKIN, DESCRICAO_EXECUCAO, PAD, PRIORIDADE, ENTREVISTA_DEMANDA, CONEXAO_DEMANDA) e `prompt`
+(`versao`, `conteudo`, `ativo`, `rascunho`, autor; `uix_prompt_tipo_versao`; sem tabela de status nem índice de "uma ativa", por decisão do autor), com a versão 1 de cada tipo ativa por seed
+(texto-base curto em português, autoria do `gestor.inicial`). Módulo `prompt`, todo exclusivo de administrador: `GET /prompt`, `GET /prompt/:tipo/versoes`, `POST /prompt/:tipo/rascunho`
+(cria ou substitui o texto do rascunho), `POST .../rascunho/ativar`, `POST .../restaurar-padrao` e `DELETE .../rascunho`. Cada operação roda numa transação que trava a linha do tipo
+(`SELECT ... FOR UPDATE` em `tipo_prompt`), então as operações do mesmo tipo passam uma de cada vez e a regra "uma ativa, um rascunho" fica na service/repositório. `obterAtivo(tipo)` serve os
+outros módulos, do cache em memória (renovado ao ativar e ao restaurar).
+
+- **Testes:** `backend` 136/136 (7 novos, repositório em memória: ativar troca a ativa e mantém o histórico, um só rascunho, restaurar padrão, recusas, cache, 403); builds ok.
+- **Ao vivo (API real, usuários de teste excluídos):** `db:migrate`, `rollback` e `migrate` de novo (7 prompts); gestor e desenvolvedor levam 403; os 7 tipos com versão 1 ativa; rascunho vazio e tipo inválido dão 400;
+  criar o rascunho (versão 2), substituí-lo (mesma versão e id), ativar, histórico com a versão 1, restaurar o padrão e descartar (e descartar de novo dá 404); **12 operações simultâneas
+  (ativar, restaurar e salvar) deixaram exatamente uma ativa no banco** (11 deram 201 e uma deu 400, "ativar sem rascunho"). O banco voltou ao estado do seed.
+- **Não verificado:** o cache em mais de uma instância do backend (fora de escopo); nenhuma tela ainda.
+
 ## 2026-10-17 — Task 130: provedor de IA, níveis de modelo e migração dos consumidores
 
 Bloco 4 do rework do chat com IA (2 de 5). Novo módulo `ia`: `IaService` resolve o nível pedido (rápido, padrão, analítico) no modelo da `configuracao_ia` ativa a cada chamada

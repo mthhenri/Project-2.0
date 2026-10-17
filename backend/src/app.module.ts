@@ -15,10 +15,11 @@ import { PontoModule } from './modules/ponto/ponto.module';
 import { PontoJustificativaModule } from './modules/ponto-justificativa/ponto-justificativa.module';
 import { AnotacaoModule } from './modules/anotacao/anotacao.module';
 import { ConfiguracaoIaModule } from './modules/configuracao-ia/configuracao-ia.module';
+import { PromptModule } from './modules/prompt/prompt.module';
 import { AssistenteModule } from './modules/assistente/assistente.module';
 import { RelatorioModule } from './modules/relatorio/relatorio.module';
 
 @Module({
-  imports: [ScheduleModule.forRoot(), ConfigModule, DatabaseModule, CoreModule, AutenticacaoModule, UsuarioModule, TagModule, ProjetoModule, DemandaModule, AtividadeModule, ExecucaoModule, CalendarioModule, PontoModule, PontoJustificativaModule, AnotacaoModule, ConfiguracaoIaModule, AssistenteModule, RelatorioModule],
+  imports: [ScheduleModule.forRoot(), ConfigModule, DatabaseModule, CoreModule, AutenticacaoModule, UsuarioModule, TagModule, ProjetoModule, DemandaModule, AtividadeModule, ExecucaoModule, CalendarioModule, PontoModule, PontoJustificativaModule, AnotacaoModule, ConfiguracaoIaModule, PromptModule, AssistenteModule, RelatorioModule],
 })
 export class AppModule {}

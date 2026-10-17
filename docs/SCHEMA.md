@@ -82,6 +82,7 @@ As tabelas devem ser criadas nessa ordem para respeitar as dependências de FK:
 11. dia_nao_util
 12. tipo_anotacao, anotacao (migration `0030`)
 13. tipo_provedor_ia, configuracao_ia (migration `0033`)
+14. tipo_prompt, prompt (migration `0034`)
 ```
 
 ---
@@ -605,6 +606,33 @@ CREATE UNIQUE INDEX uix_configuracao_ia_versao ON configuracao_ia(versao) WHERE 
 
 ---
 
+### prompt — prompts da IA versionados (migration `0034`)
+
+Uma linha por versão de cada tipo. A versão é **rascunho** (`rascunho = true`), **ativa** (`ativo = true`) ou **antiga** (as duas falsas: o histórico). O texto de uma
+versão publicada nunca é reescrito: editar é salvar o rascunho, ativar é trocar quem é a ativa. Uma só ativa e um só rascunho por tipo é regra da **service**, dentro de
+transação que trava a linha do tipo (sem índice único, por decisão do autor). A versão 1 de cada tipo vem por seed e é o "padrão".
+
+```sql
+CREATE TABLE prompt (
+  id              SERIAL      PRIMARY KEY,
+  created_date    TIMESTAMPTZ NOT NULL,
+  updated_date    TIMESTAMPTZ NOT NULL,
+  is_deleted      BOOLEAN     NOT NULL,
+  deleted_date    TIMESTAMPTZ,
+
+  tipo_prompt_id  INTEGER NOT NULL CONSTRAINT fk_prompt_tipo_prompt REFERENCES tipo_prompt(id),
+  versao          INTEGER NOT NULL,
+  conteudo        TEXT    NOT NULL,   -- Markdown
+  ativo           BOOLEAN NOT NULL,
+  rascunho        BOOLEAN NOT NULL,
+  usuario_id      INTEGER NOT NULL CONSTRAINT fk_prompt_usuario REFERENCES usuario(id)   -- autor da versão
+);
+
+CREATE UNIQUE INDEX uix_prompt_tipo_versao ON prompt(tipo_prompt_id, versao) WHERE is_deleted = false;
+```
+
+---
+
 ### Tabelas de referência (enums) — migration `20240025`
 
 Todo enum de domínio fechado é uma **tabela de referência** `tipo_<tabela>_<complemento?>`
@@ -649,6 +677,7 @@ Seeds (`codigo` → `descricao`):
 | `tipo_atividade_status` | PLANEJADA→"Planejada", PENDENTE→"Pendente", DESENVOLVENDO→"Desenvolvendo", DESENVOLVIDA→"Desenvolvida" |
 | `tipo_dia_nao_util` | FERIADO→"Feriado", RECESSO→"Recesso", PONTO_FACULTATIVO→"Ponto facultativo" |
 | `tipo_dia_nao_util_duracao` | INTEGRAL→"Integral", MEIO_PERIODO→"Meio período" |
+| `tipo_prompt` | CONVERSA, CHECKIN, DESCRICAO_EXECUCAO, PAD, PRIORIDADE, ENTREVISTA_DEMANDA, CONEXAO_DEMANDA (migration `0034`; a lista cresce por migration) |
 | `tipo_provedor_ia` | ANTHROPIC→"Anthropic", GOOGLE→"Google", OPENAI→"OpenAI" (migration `0033`; só ANTHROPIC terá implementação) |
 | `tipo_anotacao` | EM_ANDAMENTO→"Em andamento", FEITO→"Feito", PENDENCIA→"Pendências", LEMBRETE→"Lembretes", PESSOAL→"Pessoal" (migration `0030`, com `ordem` 1 a 5) |
 

@@ -21,7 +21,7 @@ elas criaram (ver `MEMORY.md` §2). Siga a ordem de fases de `INDEX-revisao-ux.m
 2026-10-16 e estão em `docs/specs/discarded/`. As **110 e 111** (tela de Execuções) foram descartadas junto, mas o autor as
 **reativou em 2026-10-17** e elas foram **concluídas** (`docs/specs/done/`). A task 117 foi concluída. Não restam tasks
 numeradas no backlog.
-Próxima migration nova: `0034`.
+Próxima migration nova: `0035`.
 
 ## 2. Estado por Área
 
@@ -142,6 +142,9 @@ project-2.0/
   com trecho selecionado; sem consumidor ou sem seleção o menu do navegador segue); o drawer abre um `p-contextmenu` cujos itens são
   propriedade direta (a seção de origem fica `visible = false`), salva as duas seções (`garantirSalva`), chama `POST /anotacao/:id/mover`
   e oferece Desfazer de 7 s (move de volta); 400/409 recarregam as duas seções e avisam.
+- **[task 131]** Prompts da IA versionados: migration `0034` (`tipo_prompt` com 7 tipos, `prompt` com `ativo` e `rascunho` booleanos, versão 1 de cada tipo por seed) e módulo `prompt`
+  exclusivo de administrador (listar tipos e versões, salvar/ativar/descartar rascunho, restaurar padrão), com `PromptService.obterAtivo(tipo)` em cache. Regra de uma ativa e um rascunho por tipo na
+  service (transação que trava a linha do tipo). Os textos-base dos seeds são curtos; os blocos 5 a 9 os refinam. Ainda sem tela (tasks 132 e 133).
 - **[task 130]** Módulo `ia` (`backend/src/modules/ia/`): `IaService` (níveis → modelo da configuração ativa, `gerar` e `transmitir` com streaming, estado em memória),
   interface `IaProvedor` e `AnthropicProvedor` (SDK `@anthropic-ai/sdk` agora em `^0.135`, importado **só** em `ia.module.ts`), `IaException` e `traduzirFalhaDeIa`.
   `AssistenteService` e `RelatorioService` usam o nível padrão pelo `IaService` (contratos HTTP e prompts iguais; a IA desligada ou sem chave dá `BusinessException` com a mensagem
