@@ -200,6 +200,20 @@ Cada bloco tem valor próprio e vira uma ou mais tasks numeradas a partir da 118
 
 Os blocos 1 a 3 não dependem de IA e podem começar primeiro.
 
+### Tasks já especificadas
+
+| Bloco | Task | Spec | Depende de |
+|---|---|---|---|
+| 1 | 118 | [`118-permissao-de-gestor-centralizada`](118-permissao-de-gestor-centralizada.spec.md) | — |
+| 1 | 119 | [`119-usuario-administrador`](119-usuario-administrador.spec.md) | 118 |
+| 2 | 120 | [`120-layout-barra-lateral-e-topbar`](120-layout-barra-lateral-e-topbar.spec.md) | — |
+| 3 | 121 | [`121-markdown-interpretador-e-visualizador`](121-markdown-interpretador-e-visualizador.spec.md) | — |
+| 3 | 122 | [`122-markdown-editor`](122-markdown-editor.spec.md) | 121 |
+| 3 | 123 | [`123-markdown-conversao-do-html-gravado`](123-markdown-conversao-do-html-gravado.spec.md) | aplicada com a 124 |
+| 3 | 124 | [`124-markdown-troca-dos-consumidores-e-remocao-do-quill`](124-markdown-troca-dos-consumidores-e-remocao-do-quill.spec.md) | 121, 122, 123 |
+
+Os blocos 4 a 10 são quebrados a partir da **125**, depois da conclusão destes.
+
 ## Critérios de Aceite (da guarda-chuva)
 
 - Cada bloco virou tasks numeradas com spec própria, todas em `docs/specs/done/`.

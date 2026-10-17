@@ -98,7 +98,7 @@
           <td class="text-muted-color">{{ usuario.cargoTitulo }}</td>
           <td class="usuario-listagem__coluna-tipo">
             <p-tag
-              [value]="usuario.tipo === 'GESTOR' ? 'Gestor' : 'Desenvolvedor'"
+              [value]="rotuloTipo(usuario.tipo)"
               [severity]="severidadeTipo(usuario.tipo)"
             />
           </td>
@@ -107,7 +107,7 @@
               <p-toggleswitch
                 [ngModel]="usuario.status === 'ATIVO'"
                 (ngModelChange)="alternarStatus(usuario, $event)"
-                [disabled]="!sessao.eGestor() || !eOutraPessoa(usuario)"
+                [disabled]="!podeGerenciar(usuario) || !eOutraPessoa(usuario)"
                 [pTooltip]="eOutraPessoa(usuario) ? '' : 'Você não pode inativar o próprio usuário'"
                 tooltipPosition="top"
                 [attr.aria-label]="'Status de ' + usuario.nomeCompleto"
@@ -153,7 +153,7 @@
                   (onClick)="senhaDialog.abrir(usuario.id, usuario.nomeCompleto)"
                 />
               }
-              @if (sessao.eGestor() && eOutraPessoa(usuario)) {
+              @if (podeGerenciar(usuario) && eOutraPessoa(usuario)) {
                 <p-button
                   icon="pi pi-trash"
                   [text]="true"

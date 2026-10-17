@@ -15,6 +15,7 @@ import {
   AtividadeTagsAtribuidasDto,
   TagResumoDto,
   TipoUsuarioEnum,
+  temPermissaoDeGestor,
 } from '@project20/shared';
 import { StandardResponse } from '@project20/shared';
 import { PaginatedResult } from '@project20/shared';
@@ -48,7 +49,7 @@ export class AtividadeService {
     }
 
     const executorId =
-      usuarioAtivo.tipo === TipoUsuarioEnum.GESTOR
+      temPermissaoDeGestor(usuarioAtivo.tipo)
         ? (dto.usuarioId ?? usuarioAtivo.sub)
         : usuarioAtivo.sub;
 

@@ -10,6 +10,7 @@ import {
   ProjetoInternoAlterarDto,
   ProjetoAlteradoDto,
   TipoUsuarioEnum,
+  temPermissaoDeGestor,
 } from '@project20/shared';
 import { StandardResponse } from '@project20/shared';
 import { PaginatedResult } from '@project20/shared';
@@ -63,7 +64,7 @@ export class ProjetoService {
     const itensPorPagina = filtros.itensPorPagina ?? 20;
 
     const { itens, total } =
-      usuarioAtivo.tipo === TipoUsuarioEnum.GESTOR
+      temPermissaoDeGestor(usuarioAtivo.tipo)
         ? await this.projetoRepositorio.listarTodos(filtros)
         : await this.projetoRepositorio.listarPorUsuario({ usuarioId: usuarioAtivo.sub, filtros });
 

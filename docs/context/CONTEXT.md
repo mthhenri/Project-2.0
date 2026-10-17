@@ -21,7 +21,7 @@ elas criaram (ver `MEMORY.md` §2). Siga a ordem de fases de `INDEX-revisao-ux.m
 2026-10-16 e estão em `docs/specs/discarded/`. As **110 e 111** (tela de Execuções) foram descartadas junto, mas o autor as
 **reativou em 2026-10-17** e elas foram **concluídas** (`docs/specs/done/`). A task 117 foi concluída. Não restam tasks
 numeradas no backlog.
-Próxima migration nova: `0029`.
+Próxima migration nova: `0030`.
 
 ## 2. Estado por Área
 
@@ -115,10 +115,9 @@ project-2.0/
 - **[tasks 94–96]** O login guarda só `{login, nomeCompleto}` (nunca a senha) e volta ao `returnUrl`
   (caminho interno validado; padrão `/ponto`). A execução ativa do usuário é um signal global
   (`ExecucaoAtivaService`), atualizado por interceptor após iniciar/encerrar em qualquer tela e ao refocar
-  a aba. A topbar tem tema em 1 clique, perfil por avatar (menu com "Tempos em dias" e "Sair"), atalhos
-  `g`+letra e `n`, e colapsa em 3 degraus: sem relógio até 1499 px, só ícones até 1366 px (acima do 1280
-  da spec, porque o chip de execução ocupa espaço), "Mais ▾" para itens de gestor abaixo de 900 px e duas
-  linhas abaixo de 720 px. O overlay global só cobre mutações (GET usa esqueleto/loading local).
+  a aba. A topbar tem tema em 1 clique, perfil por avatar (menu com "Tempos em dias" e "Sair") e o atalho `n`;
+  a navegação e o atalho `g`+letra moraram na topbar até a task 120 (hoje na barra lateral). O overlay global só
+  cobre mutações (GET usa esqueleto/loading local).
 - **[task 116]** Tags: quick-add com Enter (criação otimista com id temporário, reconciliada; erro do servidor devolve o
   texto ao campo), dot de cor abre popover de paleta compartilhado (PUT imediato; cor personalizada só ao fechar),
   busca (`/`), seleção múltipla com um único Desfazer. Criar tag é só pelo quick-add; o dialog só edita.
@@ -130,6 +129,28 @@ project-2.0/
   Limpar com Desfazer de 7 s (o vazio só é gravado depois), erro no flush → toast "Reabrir". `aoAlterar` emite
   `{usuarioId, temAnotacoes}`. Deep-link `/usuario/:id/anotacoes` redireciona (gestor → `/usuario?anotacoes=`, próprio →
   `/ponto?anotacoes=`); a topbar abre o drawer próprio. `DesfazerService` aceita `rotulo/duracaoMs/aoEncerrar`.
+- **[tasks 121–124]** Markdown no lugar do Quill: `interpretarMarkdown` (`shared/src/markdown/`, sem biblioteca, tempo linear,
+  sem HTML embutido) devolve uma árvore de nós; `app-markdown-visualizador` (`shared/components/markdown-visualizador/`) monta
+  elementos a partir dela e é a **única** forma de exibir texto rico; `app-markdown-editor` (`shared/components/markdown-editor/`,
+  `ControlValueAccessor`, funções de edição puras em `markdown.edicao.ts`) é a única de editar. **No editor `Enter` é nova linha
+  e `Ctrl+Enter` confirma o dialog.** Campos em Markdown: `demanda.descricao_cliente|descricao_tecnica|documentacao` e
+  `usuario.anotacoes` (o pad). O Quill saiu do projeto (dependência, CSS, seletor de atalho). O HTML antigo foi convertido uma vez
+  por `npm run db:converter-descricoes --workspace=backend` (`backend/src/database/scripts/`; dry-run por padrão,
+  `--aplicar --confirmo-backup`; idempotente), aplicado no banco de dev em 2026-10-17; **cada outro ambiente aplica o mesmo
+  procedimento (README) junto com a publicação desta versão**. "Tem anotações" na listagem de usuários é "algum texto além de
+  espaços". `PUT /usuario/:id` do desenvolvedor só aceita as próprias `anotacoes` (o pad).
+- **[task 120]** Layout: a navegação saiu da topbar para a barra lateral recolhível (`shared/layout/sidebar/`,
+  itens em `shared/layout/navegacao.ts`, mesmo filtro `eGestor()`). Expandida = 240 px (ícone, rótulo e `g x`);
+  recolhida = 68 px (ícone com tooltip "Atividades — g a"). A escolha vai ao `localStorage` (`sidebar.recolhida`, com
+  `try/catch`); sem escolha salva, entra recolhida abaixo de 1280 px. O `g`+letra vive na barra lateral e o `n`
+  (anotações) segue na topbar, ambos ignorados em campo de texto ou com overlay aberto. A topbar ficou só com execução
+  ativa, relógio, tema, anotações e perfil, com o ponto de extensão `[slotCheckin]` (sem conteúdo ainda) para o bloco 7.
+  O "Mais ▾" e os degraus de largura da topbar deixaram de existir.
+- **[task 119]** Administrador: `TipoUsuarioEnum.ADMINISTRADOR` (migration `0029` semeia o tipo e converte o `gestor.inicial`). `temPermissaoDeGestor` inclui o administrador; `temPermissaoDeAdministrador` é exclusiva dele. O backend recusa rebaixar, inativar ou excluir o último administrador ativo (substituiu a guarda de gestor, P-002); gestor não cria/promove nem altera, exclui, restaura ou troca a senha de administrador. Tela de Usuários: opção e filtro "Administrador" (`core/utils/tipo-usuario.ts` centraliza rótulo e cor da tag); ações sobre administrador ficam ocultas ao gestor. O JWT carrega o tipo: quem já estava logado como `gestor.inicial` precisa entrar de novo para ser administrador.
+- **[task 118]** Permissão de gestor centralizada: `temPermissaoDeGestor(tipo)` em `shared/src/utils/permissao-usuario.ts`
+  é a única regra de "tem poder de gestor" (guard, services do backend, `UsuarioSessaoService.eGestor`, filtros de membros
+  das demandas). A comparação direta com `GESTOR` que sobrou é só a regra "gestor não rebaixa a si mesmo"
+  (`UsuarioService.alterar`).
 - **[task 113]** Usuários: status em `p-toggleswitch` na linha (otimista, Desfazer, desabilitado na própria linha);
   editar e alterar senha abrem direto da linha (`abrirEdicao(id)` / `app-usuario-senha-dialog`); o perfil só lê. O
   dialog criar/editar é único: login sugerido do nome, senha gerada, Tipo segmentado. Filtros Tipo/Status persistem em

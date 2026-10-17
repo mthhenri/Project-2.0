@@ -261,7 +261,7 @@ CHECK (status IN (...))                              -- gera demanda_status_chec
 
 Arquivo `.sql` puro em `backend/src/database/migrations/`, nome `NNNN - Nome descritivo.sql`
 (4 dígitos + `" - "` + frase em português). Duas seções por marcador sozinho na linha: `-- UP`
-(obrigatória) e `-- DOWN` (obrigatória, salvo justificativa no arquivo). Próxima migration: `0028`.
+(obrigatória) e `-- DOWN` (obrigatória, salvo justificativa no arquivo). Próxima migration: `0030`.
 Detalhes completos no `SYSTEM.SPEC.md` §9.5.
 
 ```sql
@@ -325,6 +325,10 @@ async criar(dto: UsuarioCriarDto) {
 }
 ```
 
+**Permissão de gestor** se decide por `temPermissaoDeGestor(tipo)` (`@project20/shared`), nunca por
+`tipo === TipoUsuarioEnum.GESTOR`. Comparar o tipo diretamente só é aceitável para exibir rótulo/cor
+do tipo ou para restringir a "somente desenvolvedor".
+
 ### Repository → só SQL
 Sem lógica de negócio. Apenas executa queries via `executarConsulta()` / `executarComando()`:
 ```typescript
@@ -370,6 +374,7 @@ DTOs e enums **nunca** são redefinidos dentro de `backend/` ou `frontend/`.
 export enum TipoUsuarioEnum {
   DESENVOLVEDOR = 'DESENVOLVEDOR',
   GESTOR        = 'GESTOR',
+  ADMINISTRADOR = 'ADMINISTRADOR',
 }
 ```
 
@@ -400,6 +405,8 @@ frontend nunca veem o id.
 - **Signals** (`signal`/`computed`/`effect`) para estado reativo — evitar `Subject`/`BehaviorSubject`
 - **Reactive Forms** em **todos** os formulários — **sem template-driven forms**, **sem `ngModel`/`FormsModule`**
 - **Lazy loading** por rota via `loadComponent`/`loadChildren`
+
+**Texto rico** é Markdown: editado por `app-markdown-editor` (no editor `Enter` é nova linha e o `Ctrl+Enter` confirma o dialog) e exibido só por `app-markdown-visualizador` (`shared/components/`). Proibido `[innerHTML]`, `bypassSecurityTrust*` e qualquer escrita de HTML na página; o interpretador é `interpretarMarkdown` (`@project20/shared`).
 
 **Embrulhar um controle de terceiros (ex.: `p-colorpicker`):** implementar `ControlValueAccessor`
 e dirigir o controle interno por um `FormControl` + `[formControl]` — **nunca** `[ngModel]`/`(ngModelChange)`.

@@ -32,7 +32,7 @@
 - **Estado:** Angular Signals (signal, computed, effect)
 - **Formulários:** Reactive Forms
 - **HTTP:** Angular HttpClient com interceptores
-- **Editor rico:** p-editor do PrimeNG (campos HTML)
+- **Editor rico:** `app-markdown-editor` próprio (campos Markdown; ver §8.2)
 - **Estilos**: SCSS + Tailwind CSS + BEM
 - **Visualização de grafo**: D3.js (force simulation)
 
@@ -346,6 +346,7 @@ da tabela em kebab-case + `.enum.ts`.
 export enum TipoUsuarioEnum {
   DESENVOLVEDOR = 'DESENVOLVEDOR',
   GESTOR        = 'GESTOR',
+  ADMINISTRADOR = 'ADMINISTRADOR',
 }
 
 // tipo-demanda-status.enum.ts     ← tabela tipo_demanda_status
@@ -869,9 +870,12 @@ frontend/src/app/
       usuario-autenticado.signal.ts
   shared/
     layout/
-      layout.component.ts           ← shell: topbar + router-outlet + toast
+      layout.component.ts           ← shell: barra lateral + topbar + router-outlet + toast
+      navegacao.ts                  ← itens da navegação (rota, ícone, tecla do atalho, só gestor)
+      sidebar/
+        sidebar.component.ts        ← navegação vertical recolhível, atalho g + letra
       topbar/
-        topbar.component.ts         ← navegação horizontal, relógio, perfil, logout
+        topbar.component.ts         ← execução ativa, relógio, tema, anotações, perfil, logout
         topbar.component.html
         topbar.component.scss
     components/
@@ -879,6 +883,10 @@ frontend/src/app/
         loading-spinner.component.ts
       error-message/
         error-message.component.ts
+      markdown-visualizador/
+        markdown-visualizador.component.ts   ← única forma de exibir Markdown (sem HTML cru)
+      markdown-editor/
+        markdown-editor.component.ts         ← editor de Markdown (CVA), barra, abas Editar | Visualizar
       assistente-descricao/
         assistente-descricao.component.ts   ← componente de IA reutilizável
         assistente-descricao.component.html
@@ -893,7 +901,7 @@ frontend/src/app/
 - **Standalone components** em todos os componentes e páginas — sem NgModule por feature
 - **Signals** para estado reativo — evitar Subject/BehaviorSubject onde signal resolve
 - **Reactive Forms** para todos os formulários — sem template-driven forms
-- **p-editor** do PrimeNG para campos que salvam HTML (ex: `anotacoes`)
+- **`app-markdown-editor`** para campos de texto rico (Markdown: `anotacoes`, descrições e documentação da demanda); exibição só por `app-markdown-visualizador`
 - **Lazy loading** por módulo via rotas com `loadComponent`
 
 ### 8.3 Componente Assistente de Descrição
@@ -1210,7 +1218,7 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 - **JWT** com Passport.js — token gerado no login, válido por `JWT_EXPIRACAO`
 - **Guard global** `JwtAuthGuard` aplicado em toda a aplicação via `APP_GUARD`
 - **`@Public()`** — decorator para rotas sem autenticação (somente login)
-- **`@GestorOnly()`** — decorator que restringe a rota a usuários do tipo GESTOR
+- **`@GestorOnly()`** — decorator que restringe a rota a quem tem permissão de gestor (`temPermissaoDeGestor`, em `@project20/shared`; hoje, o tipo GESTOR)
 - **`@ActiveUser()`** — injeta o payload do JWT decodificado no parâmetro do método
 
 ---
@@ -1220,7 +1228,7 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 | Módulo | Responsabilidade Principal |
 |---|---|
 | `autenticacao` | Login e geração de JWT |
-| `usuario` | CRUD de usuários, anotações em HTML, troca de senha |
+| `usuario` | CRUD de usuários, anotações em Markdown, troca de senha |
 | `projeto` | CRUD de projetos — apenas gestor cria |
 | `demanda` | CRUD, hierarquia, grafo force-directed (D3), tags, atribuições |
 | `atividade` | CRUD de atividades vinculadas a demandas, tags, controle de status |
@@ -1244,10 +1252,10 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 | `senha_encriptada` | VARCHAR | bcrypt |
 | `nome_completo` | VARCHAR | |
 | `cargo_titulo` | VARCHAR | ex: "Desenvolvedor Sênior" |
-| `anotacoes` | TEXT \| NULL | HTML gerado pelo p-editor |
+| `anotacoes` | TEXT \| NULL | Markdown (escrito no `app-markdown-editor`) |
 | `anotacoes_alteracao_data` | TIMESTAMPTZ \| NULL | data da última alteração das anotações (`NULL` = nunca alteradas). `timestamptz` desde já (escrita por `NOW()`); demais colunas de `usuario` seguem `timestamp` até a spec 75 |
 | `horas_diarias_necessarias` | INTEGER | em horas (ex: 8) |
-| `tipo_usuario_id` | INTEGER FK | → `tipo_usuario` (DESENVOLVEDOR, GESTOR) |
+| `tipo_usuario_id` | INTEGER FK | → `tipo_usuario` (DESENVOLVEDOR, GESTOR, ADMINISTRADOR) |
 | `tipo_usuario_status_id` | INTEGER FK | → `tipo_usuario_status` (ATIVO, INATIVO) |
 
 ### Projeto
@@ -1270,9 +1278,9 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 | `projeto_id` | INTEGER FK | → projeto |
 | `demanda_pai_id` | INTEGER FK \| NULL | → demanda (hierarquia recursiva) |
 | `nome` | VARCHAR | |
-| `descricao_tecnica` | TEXT \| NULL | |
-| `descricao_cliente` | TEXT \| NULL | |
-| `documentacao` | TEXT \| NULL | markdown |
+| `descricao_tecnica` | TEXT \| NULL | Markdown |
+| `descricao_cliente` | TEXT \| NULL | Markdown |
+| `documentacao` | TEXT \| NULL | Markdown |
 | `horas_estimadas` | INTEGER | |
 | `tipo_demanda_status_id` | INTEGER FK | → `tipo_demanda_status` (PENDENTE, PLANEJADA, CONCLUIDA, CANCELADA) |
 | `is_estrutural` | BOOLEAN | demanda-container que agrupa sub-demandas |
@@ -1371,6 +1379,8 @@ correspondente é um `INTEGER` FK para o `id` dela; o repositório traduz `codig
 
 ### Acesso e Permissões
 
+O **administrador** é um gestor com mais permissões: tem tudo o que a coluna "Gestor" abaixo concede e, além disso, é o único que cria, promove, altera, inativa, exclui, restaura e troca a senha de outros administradores. **Sempre existe ao menos um administrador ativo e não excluído** (`UsuarioService.validarPermanenciaDeAdministradorAtivo`): rebaixar, inativar ou excluir o último é recusado. Gestor deixou de ser obrigatório. Decisões de permissão usam `temPermissaoDeGestor`/`temPermissaoDeAdministrador` (`@project20/shared`).
+
 | Regra | Gestor | Desenvolvedor |
 |---|---|---|
 | Criar projeto | ✅ | ❌ |
@@ -1442,6 +1452,12 @@ POST /assistente/auxiliar-descricao
 5. Retorna texto refinado
 6. Frontend exibe original vs. auxiliado lado a lado
 7. Usuário aceita, edita ou descarta
+
+### Markdown
+
+Texto rico é **Markdown**, interpretado por `interpretarMarkdown` (`shared/src/markdown/`, sem biblioteca) e exibido por `app-markdown-visualizador`. O interpretador devolve uma árvore de nós e o componente monta elementos a partir dela: **HTML cru nunca entra na página** (nenhum `[innerHTML]`, nenhum desvio do sanitizador). Subconjunto: títulos `#` a `####`, parágrafos (quebra de linha vira quebra), **negrito**, *itálico*, ~~tachado~~, `código`, listas com aninhamento e tarefas, citação, bloco de código, régua e links `http`/`https`/`mailto`. `<tag>` e entidades são texto; imagens e tabelas não existem.
+
+O editor é `app-markdown-editor` (Reactive Forms; o valor é a string Markdown, `''` quando vazio). **`Enter` insere linha; quem confirma um dialog de formulário é o `Ctrl+Enter`** (contrato de `dialogFormulario`). `Enter` no fim de um item continua a lista, `Tab`/`Shift+Tab` aninham itens, `Ctrl+B`/`Ctrl+I`/`Ctrl+K` formatam. As edições da barra são funções puras em `shared/src/markdown/markdown.edicao.ts`.
 
 ### Componente Reutilizável
 

@@ -71,8 +71,8 @@ export class UsuarioController {
   @ApiResponse({ status: 403, description: 'Acesso restrito a gestores', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
   @GestorOnly()
   @Post()
-  criar(@Body() dto: UsuarioCriarDto) {
-    return this.usuarioService.criar(dto);
+  criar(@Body() dto: UsuarioCriarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
+    return this.usuarioService.criar(dto, usuarioAtivo);
   }
 
   @ApiOperation({ summary: 'Listar usuários com filtros e paginação (somente gestor)' })
@@ -127,7 +127,7 @@ export class UsuarioController {
     return this.usuarioService.recuperar({ id }, usuarioAtivo);
   }
 
-  @ApiOperation({ summary: 'Alterar dados do usuário (desenvolvedor altera apenas o próprio perfil)' })
+  @ApiOperation({ summary: 'Alterar dados do usuário (somente gestor; desenvolvedor altera só as próprias anotações)' })
   @ApiResponse({
     status: 200,
     description: 'Usuário alterado com sucesso',
@@ -141,7 +141,7 @@ export class UsuarioController {
   })
   @ApiResponse({ status: 400, description: 'Dados inválidos', schema: { example: { sucesso: false, dados: null, mensagem: 'Validation failed', erros: ['nomeCompleto must be longer than or equal to 3 characters'] } } })
   @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
-  @ApiResponse({ status: 403, description: 'Desenvolvedor tentando alterar perfil de outro usuário', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+  @ApiResponse({ status: 403, description: 'Desenvolvedor tentando alterar outro usuário ou qualquer campo além das próprias anotações', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
   @ApiResponse({ status: 404, description: 'Usuário não encontrado', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
   @Put(':id')
   alterar(
@@ -169,8 +169,8 @@ export class UsuarioController {
   @ApiResponse({ status: 404, description: 'Usuário não encontrado', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
   @GestorOnly()
   @Delete(':id')
-  excluir(@Param('id', ParseIntPipe) id: number) {
-    return this.usuarioService.excluir({ id });
+  excluir(@Param('id', ParseIntPipe) id: number, @ActiveUser() usuarioAtivo: JwtPayload) {
+    return this.usuarioService.excluir({ id }, usuarioAtivo);
   }
 
   @ApiOperation({ summary: 'Restaurar usuário excluído desfazendo o soft delete (somente gestor)' })
@@ -181,11 +181,11 @@ export class UsuarioController {
   @ApiResponse({ status: 404, description: 'Usuário não encontrado entre as excluídos', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
   @GestorOnly()
   @Patch(':id/restaurar')
-  restaurar(@Param('id', ParseIntPipe) id: number) {
-    return this.usuarioService.restaurar({ id });
+  restaurar(@Param('id', ParseIntPipe) id: number, @ActiveUser() usuarioAtivo: JwtPayload) {
+    return this.usuarioService.restaurar({ id }, usuarioAtivo);
   }
 
-  @ApiOperation({ summary: 'Alterar senha do usuário' })
+  @ApiOperation({ summary: 'Alterar senha do usuário (somente gestor; administrador só por administrador)' })
   @ApiResponse({
     status: 200,
     description: 'Senha alterada com sucesso',
@@ -199,9 +199,15 @@ export class UsuarioController {
   })
   @ApiResponse({ status: 400, description: 'Senha atual incorreta ou dados inválidos', schema: { example: { sucesso: false, dados: null, mensagem: 'Senha atual incorreta', erros: ['Senha atual incorreta'] } } })
   @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+  @ApiResponse({ status: 403, description: 'Acesso restrito a gestores', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
   @ApiResponse({ status: 404, description: 'Usuário não encontrado', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
+  @GestorOnly()
   @Patch(':id/senha')
-  alterarSenha(@Param('id', ParseIntPipe) id: number, @Body() dto: UsuarioSenhaAlterarDto) {
-    return this.usuarioService.alterarSenha({ ...dto, id });
+  alterarSenha(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UsuarioSenhaAlterarDto,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ) {
+    return this.usuarioService.alterarSenha({ ...dto, id }, usuarioAtivo);
   }
 }

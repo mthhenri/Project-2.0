@@ -1,0 +1,77 @@
+@if (somenteLeitura()) {
+  <app-markdown-visualizador [texto]="valor()" />
+} @else {
+  <div class="markdown-editor" [class.markdown-editor--desabilitado]="desabilitado()">
+    <div class="markdown-editor__cabecalho">
+      <div class="markdown-editor__abas" role="tablist" aria-label="Modo do editor">
+        <button
+          type="button"
+          role="tab"
+          class="markdown-editor__aba"
+          [class.markdown-editor__aba--ativa]="aba() === 'editar'"
+          [attr.aria-selected]="aba() === 'editar'"
+          (click)="mostrarAba('editar')"
+        >
+          Editar
+        </button>
+        <button
+          type="button"
+          role="tab"
+          class="markdown-editor__aba"
+          [class.markdown-editor__aba--ativa]="aba() === 'visualizar'"
+          [attr.aria-selected]="aba() === 'visualizar'"
+          (click)="mostrarAba('visualizar')"
+        >
+          Visualizar
+        </button>
+      </div>
+
+      @if (aba() === 'editar') {
+        <div class="markdown-editor__barra" role="toolbar" aria-label="Formatação">
+          @for (botao of botoes; track botao.acao) {
+            <button
+              type="button"
+              class="markdown-editor__botao"
+              [attr.aria-label]="botao.rotulo"
+              [pTooltip]="botao.dica"
+              tooltipPosition="top"
+              [disabled]="desabilitado()"
+              (mousedown)="$event.preventDefault()"
+              (click)="executar(botao.acao)"
+            >
+              <span [class]="botao.classe">{{ botao.glifo }}</span>
+            </button>
+          }
+        </div>
+      }
+    </div>
+
+    @if (aba() === 'editar') {
+      <textarea
+        #campo
+        class="markdown-editor__campo"
+        [value]="valor()"
+        [placeholder]="placeholder()"
+        [disabled]="desabilitado()"
+        [attr.maxlength]="maxlength()"
+        [attr.aria-label]="rotulo()"
+        [style.min-height.rem]="alturaMinima()"
+        spellcheck="true"
+        (input)="aoDigitar($event)"
+        (keydown)="aoTeclar($event)"
+        (keyup)="atualizarSelecao()"
+        (mouseup)="atualizarSelecao()"
+        (select)="atualizarSelecao()"
+        (blur)="aoSair()"
+      ></textarea>
+    } @else {
+      <div class="markdown-editor__previa" [style.min-height.rem]="alturaMinima()">
+        @if (valor().trim().length > 0) {
+          <app-markdown-visualizador [texto]="valor()" />
+        } @else {
+          <span class="markdown-editor__previa-vazia">Nada para visualizar.</span>
+        }
+      </div>
+    }
+  </div>
+}

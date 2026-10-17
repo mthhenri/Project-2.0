@@ -1,0 +1,44 @@
+<aside class="sidebar flex flex-col h-full flex-shrink-0 border-r-2" [class.sidebar--recolhida]="recolhida()">
+  <a routerLink="/ponto" class="sidebar__logo flex items-center gap-3 px-4 py-3" aria-label="Início">
+    <img src="favicon.ico" alt="" class="sidebar__logo-imagem" />
+    @if (!recolhida()) {
+      <span class="sidebar__titulo">Project 2.0</span>
+    }
+  </a>
+
+  <nav class="sidebar__nav flex flex-col gap-1 flex-1 px-2 py-2" aria-label="Navegação principal">
+    @for (item of itensNavegacao(); track item.rotaLink) {
+      <a
+        [routerLink]="item.rotaLink"
+        routerLinkActive="sidebar__item--ativo"
+        class="sidebar__item flex items-center gap-3 px-3 py-2 rounded-lg text-color hover:bg-emphasis transition-colors text-sm font-medium whitespace-nowrap"
+        [attr.aria-label]="item.label"
+        [pTooltip]="recolhida() ? item.label + ' — g ' + item.tecla : ''"
+        tooltipPosition="right"
+      >
+        <i [class]="item.icone"></i>
+        @if (!recolhida()) {
+          <span class="sidebar__rotulo">{{ item.label }}</span>
+          <kbd class="sidebar__tecla">g {{ item.tecla }}</kbd>
+        }
+      </a>
+    }
+  </nav>
+
+  <div class="sidebar__rodape px-2 py-2">
+    <button
+      type="button"
+      class="sidebar__alternar flex items-center gap-3 px-3 py-2 rounded-lg text-sm w-full"
+      [attr.aria-label]="recolhida() ? 'Expandir barra lateral' : 'Recolher barra lateral'"
+      [attr.aria-expanded]="!recolhida()"
+      [pTooltip]="recolhida() ? 'Expandir barra lateral' : ''"
+      tooltipPosition="right"
+      (click)="alternar()"
+    >
+      <i [class]="recolhida() ? 'pi pi-angle-double-right' : 'pi pi-angle-double-left'"></i>
+      @if (!recolhida()) {
+        <span>Recolher</span>
+      }
+    </button>
+  </div>
+</aside>

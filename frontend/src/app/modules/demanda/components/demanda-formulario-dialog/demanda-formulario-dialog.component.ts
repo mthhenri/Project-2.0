@@ -20,7 +20,7 @@ import {
   TipoDemandaStatusEnum,
   TagResumoDto,
   UsuarioResumoDto,
-  TipoUsuarioEnum,
+  temPermissaoDeGestor,
   REGEX_SEM_CARACTERES_PROIBIDOS,
   MENSAGEM_CARACTERES_PROIBIDOS,
 } from '@project20/shared';
@@ -383,7 +383,7 @@ export class DemandaFormularioDialogComponent implements OnChanges {
       next: (resposta) => {
         if (resposta.sucesso && resposta.dados) {
           this.usuariosDisponiveis.set(
-            resposta.dados.itens.filter((usuario) => usuario.tipo !== TipoUsuarioEnum.GESTOR),
+            resposta.dados.itens.filter((usuario) => !temPermissaoDeGestor(usuario.tipo)),
           );
         }
       },

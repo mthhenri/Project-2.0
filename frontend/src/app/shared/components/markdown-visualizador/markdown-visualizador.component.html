@@ -1,0 +1,117 @@
+@if (blocos().length > 0) {
+  <div class="markdown">
+    <ng-container *ngTemplateOutlet="modeloBlocos; context: { $implicit: blocos() }" />
+  </div>
+}
+
+<ng-template #modeloBlocos let-listaBlocos>
+  @for (bloco of listaBlocos; track $index) {
+    @switch (bloco.tipo) {
+      @case ('titulo') {
+        @switch (bloco.nivel) {
+          @case (1) {
+            <h1 class="markdown__titulo markdown__titulo--1">
+              <ng-container *ngTemplateOutlet="modeloTrechos; context: { $implicit: bloco.filhos }" />
+            </h1>
+          }
+          @case (2) {
+            <h2 class="markdown__titulo markdown__titulo--2">
+              <ng-container *ngTemplateOutlet="modeloTrechos; context: { $implicit: bloco.filhos }" />
+            </h2>
+          }
+          @case (3) {
+            <h3 class="markdown__titulo markdown__titulo--3">
+              <ng-container *ngTemplateOutlet="modeloTrechos; context: { $implicit: bloco.filhos }" />
+            </h3>
+          }
+          @default {
+            <h4 class="markdown__titulo markdown__titulo--4">
+              <ng-container *ngTemplateOutlet="modeloTrechos; context: { $implicit: bloco.filhos }" />
+            </h4>
+          }
+        }
+      }
+      @case ('paragrafo') {
+        <p class="markdown__paragrafo">
+          <ng-container *ngTemplateOutlet="modeloTrechos; context: { $implicit: bloco.filhos }" />
+        </p>
+      }
+      @case ('lista') {
+        <ng-container *ngTemplateOutlet="modeloLista; context: { $implicit: bloco }" />
+      }
+      @case ('citacao') {
+        <blockquote class="markdown__citacao">
+          <ng-container *ngTemplateOutlet="modeloBlocos; context: { $implicit: bloco.filhos }" />
+        </blockquote>
+      }
+      @case ('bloco-codigo') {
+        <pre class="markdown__bloco-codigo"><code>{{ bloco.valor }}</code></pre>
+      }
+      @case ('regua') {
+        <hr class="markdown__regua" />
+      }
+    }
+  }
+</ng-template>
+
+<ng-template #modeloLista let-umaLista>
+  @if (umaLista.ordenada) {
+    <ol class="markdown__lista markdown__lista--ordenada" [attr.start]="umaLista.inicio === 1 ? null : umaLista.inicio">
+      <ng-container *ngTemplateOutlet="modeloItens; context: { $implicit: umaLista.itens }" />
+    </ol>
+  } @else {
+    <ul class="markdown__lista">
+      <ng-container *ngTemplateOutlet="modeloItens; context: { $implicit: umaLista.itens }" />
+    </ul>
+  }
+</ng-template>
+
+<ng-template #modeloItens let-listaItens>
+  @for (item of listaItens; track $index) {
+    <li class="markdown__item" [class.markdown__item--tarefa]="item.tarefa !== null">
+      @if (item.tarefa !== null) {
+        <input
+          type="checkbox"
+          class="markdown__caixa"
+          disabled
+          [checked]="item.tarefa === 'marcada'"
+          [attr.aria-label]="item.tarefa === 'marcada' ? 'Tarefa concluída' : 'Tarefa pendente'"
+        />
+      }
+      <ng-container *ngTemplateOutlet="modeloTrechos; context: { $implicit: item.filhos }" />
+      @for (sublista of item.sublistas; track $index) {
+        <ng-container *ngTemplateOutlet="modeloLista; context: { $implicit: sublista }" />
+      }
+    </li>
+  }
+</ng-template>
+
+<ng-template #modeloTrechos let-listaTrechos>
+  @for (trecho of listaTrechos; track $index) {
+    @switch (trecho.tipo) {
+      @case ('texto') {
+        <ng-container>{{ trecho.valor }}</ng-container>
+      }
+      @case ('quebra') {
+        <br />
+      }
+      @case ('negrito') {
+        <strong><ng-container *ngTemplateOutlet="modeloTrechos; context: { $implicit: trecho.filhos }" /></strong>
+      }
+      @case ('italico') {
+        <em><ng-container *ngTemplateOutlet="modeloTrechos; context: { $implicit: trecho.filhos }" /></em>
+      }
+      @case ('tachado') {
+        <del><ng-container *ngTemplateOutlet="modeloTrechos; context: { $implicit: trecho.filhos }" /></del>
+      }
+      @case ('codigo') {
+        <code class="markdown__codigo">{{ trecho.valor }}</code>
+      }
+      @case ('link') {
+        <a class="markdown__link" [href]="trecho.url" target="_blank" rel="noopener noreferrer">
+          <ng-container *ngTemplateOutlet="modeloTrechos; context: { $implicit: trecho.filhos }" />
+        </a>
+      }
+    }
+  }
+</ng-template>

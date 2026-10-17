@@ -6,7 +6,8 @@ import { forkJoin, of } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { TabsModule } from 'primeng/tabs';
-import { EditorModule } from 'primeng/editor';
+import { MarkdownEditorComponent } from '../../../../shared/components/markdown-editor/markdown-editor.component';
+import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
 import { Tag } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { MessageService, ConfirmationService } from 'primeng/api';
@@ -22,7 +23,7 @@ import {
   MENSAGEM_CARACTERES_PROIBIDOS,
   DemandaAlterarDto,
   UsuarioResumoDto,
-  TipoUsuarioEnum,
+  temPermissaoDeGestor,
   TipoDemandaStatusEnum,
   AtividadeResumoDto,
   AtividadeListarDto,
@@ -71,7 +72,8 @@ interface EstadoDetalhe {
     ButtonModule,
     DialogModule,
     TabsModule,
-    EditorModule,
+    MarkdownEditorComponent,
+    MarkdownVisualizadorComponent,
     Tag,
     TooltipModule,
     ConfirmDialogModule,
@@ -598,7 +600,7 @@ export class DemandaDetalheDialogComponent implements OnChanges {
           if (tags && tags.sucesso && tags.dados) this.tagsDisponiveis.set(tags.dados);
           if (usuarios && usuarios.sucesso && usuarios.dados) {
             // Gestores não entram no autocomplete de membros: têm acesso total por serem gestores (task 71).
-            this.todosUsuarios.set(usuarios.dados.itens.filter((usuario) => usuario.tipo !== TipoUsuarioEnum.GESTOR));
+            this.todosUsuarios.set(usuarios.dados.itens.filter((usuario) => !temPermissaoDeGestor(usuario.tipo)));
           }
         },
       });

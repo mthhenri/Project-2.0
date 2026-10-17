@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, signal, computed, output } from '@angular/core';
+import { Component, DestroyRef, inject, signal, computed, output, viewChild } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
@@ -6,9 +6,9 @@ import { of } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { ButtonModule } from 'primeng/button';
 import { DrawerModule } from 'primeng/drawer';
-import { EditorModule } from 'primeng/editor';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TooltipModule } from 'primeng/tooltip';
+import { MarkdownEditorComponent } from '../../../../shared/components/markdown-editor/markdown-editor.component';
 import { UsuarioService } from '../../services/usuario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { DesfazerService } from '../../../../core/services/desfazer.service';
@@ -34,7 +34,7 @@ export interface AnotacoesAlteradasEvento {
 @Component({
   selector: 'app-usuario-anotacoes-dialog',
   standalone: true,
-  imports: [DatePipe, ReactiveFormsModule, ButtonModule, DrawerModule, EditorModule, SkeletonModule, TooltipModule],
+  imports: [DatePipe, ReactiveFormsModule, ButtonModule, DrawerModule, MarkdownEditorComponent, SkeletonModule, TooltipModule],
   templateUrl: './usuario-anotacoes-dialog.component.html',
   styleUrl: './usuario-anotacoes-dialog.component.scss',
 })
@@ -58,6 +58,7 @@ export class UsuarioAnotacoesDialogComponent {
   private readonly nomeCompleto = signal('');
 
   readonly formulario = this.formBuilder.group({ anotacoes: [''] });
+  private readonly editorMarkdown = viewChild<MarkdownEditorComponent>('editorMarkdown');
 
   private conteudoSalvo = '';
   private temporizadorSalvar: ReturnType<typeof setTimeout> | null = null;
@@ -106,11 +107,6 @@ export class UsuarioAnotacoesDialogComponent {
     this.visivel.set(false);
     this.pararRelogio();
     if (this.conteudoAntesDeLimpar === null) this.salvarAgora(true);
-  }
-
-  /** Foca o editor assim que o Quill existe. */
-  aoIniciarEditor(evento: { editor: { focus: () => void } }): void {
-    setTimeout(() => evento.editor.focus());
   }
 
   salvar(): void {
@@ -252,6 +248,8 @@ export class UsuarioAnotacoesDialogComponent {
           this.conteudoSalvo = conteudo;
           this.formulario.controls.anotacoes.setValue(conteudo, { emitEvent: false });
           this.alteracaoData.set(resposta.dados.anotacoesAlteracaoData ?? null);
+          // O editor só existe depois que o esqueleto some: foca no ciclo seguinte.
+          setTimeout(() => this.editorMarkdown()?.focar());
         },
         error: () => this.visivel.set(false),
       });

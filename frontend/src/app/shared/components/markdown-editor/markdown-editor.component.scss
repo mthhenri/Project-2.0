@@ -1,0 +1,143 @@
+// O host é uma coluna flexível: sem altura própria o editor cresce pelo conteúdo (min-height do campo); dentro de um
+// dialog ou drawer com `flex: 1` (alturaMinima = 0) ele preenche o espaço que sobra.
+:host {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.markdown-editor {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid var(--app-surface-300, var(--app-surface-200));
+  border-radius: 6px;
+  background: var(--app-surface-0);
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:focus-within {
+    border-color: var(--p-primary-color);
+    box-shadow: 0 0 0 1px var(--p-primary-color);
+  }
+
+  &--desabilitado {
+    opacity: 0.6;
+  }
+
+  &__cabecalho {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.25rem 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-bottom: 1px solid var(--app-surface-200);
+  }
+
+  &__abas {
+    display: inline-flex;
+    gap: 0.25rem;
+  }
+
+  &__aba {
+    padding: 0.25rem 0.625rem;
+    border-radius: 4px;
+    color: var(--p-text-muted-color);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: color 0.15s, background-color 0.15s;
+
+    &:hover {
+      color: var(--p-text-color);
+    }
+
+    &--ativa {
+      background: var(--p-highlight-background);
+      color: var(--app-realce-primario);
+      font-weight: 600;
+    }
+  }
+
+  &__barra {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.125rem;
+  }
+
+  &__botao {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.75rem;
+    height: 1.75rem;
+    padding: 0 0.375rem;
+    border-radius: 4px;
+    color: var(--p-text-color);
+    font-size: 0.8125rem;
+    cursor: pointer;
+    transition: background-color 0.15s;
+
+    &:hover:not(:disabled) {
+      background: var(--p-content-hover-background);
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+  }
+
+  &__glifo {
+    &--negrito {
+      font-weight: 700;
+    }
+
+    &--italico {
+      font-style: italic;
+    }
+
+    &--tachado {
+      text-decoration: line-through;
+    }
+
+    &--codigo {
+      font-family: var(--font-mono, monospace);
+      font-size: 0.75rem;
+    }
+  }
+
+  &__campo {
+    display: block;
+    flex: 1 1 auto;
+    width: 100%;
+    padding: 0.625rem 0.75rem;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--p-text-color);
+    font: inherit;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    resize: vertical;
+    tab-size: 2;
+
+    &::placeholder {
+      color: var(--p-text-muted-color);
+    }
+  }
+
+  &__previa {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 0.625rem 0.75rem;
+    overflow: auto;
+  }
+
+  &__previa-vazia {
+    color: var(--p-text-muted-color);
+    font-style: italic;
+    font-size: 0.875rem;
+  }
+}

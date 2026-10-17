@@ -58,7 +58,7 @@
           </div>
           <p-tag
             [value]="rotuloTipo(membro.tipo)"
-            [severity]="membro.tipo === tipoEnum.GESTOR ? 'warn' : 'info'"
+            [severity]="severidadeTipo(membro.tipo)"
           />
           @if (sessao.eGestor()) {
             <p-button

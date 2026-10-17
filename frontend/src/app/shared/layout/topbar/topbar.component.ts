@@ -1,5 +1,5 @@
 import { Component, DestroyRef, HostListener, ViewChild, inject, signal, computed } from '@angular/core';
-import { NavigationEnd, Router, RouterModule } from '@angular/router';
+import { NavigationEnd, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { ReactiveFormsModule, FormControl } from '@angular/forms';
@@ -12,6 +12,7 @@ import { timer } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AutenticacaoService } from '../../../core/services/autenticacao.service';
 import { UsuarioSessaoService } from '../../../core/services/usuario-sessao.service';
+import { rotuloTipoUsuario } from '../../../core/utils/tipo-usuario';
 import { TemaService } from '../../../core/services/tema.service';
 import { TemaPersonalizadoService } from '../../../core/services/tema-personalizado.service';
 import { VisualizacaoTempoService } from '../../../core/services/visualizacao-tempo.service';
@@ -25,7 +26,6 @@ import { UsuarioAnotacoesDialogComponent } from '../../../modules/usuario/compon
   selector: 'app-topbar',
   standalone: true,
   imports: [
-    RouterModule,
     ReactiveFormsModule,
     FormsModule,
     ToggleSwitchModule,
@@ -50,6 +50,7 @@ export class TopbarComponent {
   private readonly execucaoAtiva = inject(ExecucaoAtivaService);
   private readonly roteador = inject(Router);
   @ViewChild('anotacoesDialog') private anotacoesDialog?: UsuarioAnotacoesDialogComponent;
+  readonly rotuloTipo = rotuloTipoUsuario;
   readonly horaAtual = signal<string>('');
 
   readonly coresSugeridas = CORES_SUGERIDAS;
@@ -63,26 +64,6 @@ export class TopbarComponent {
     { nonNullable: true },
   );
 
-  private readonly todosItensNavegacao = [
-    { label: 'Ponto',      icone: 'pi pi-clock',        rotaLink: '/ponto',      tecla: 'p', somenteGestor: false },
-    { label: 'Calendário', icone: 'pi pi-calendar',     rotaLink: '/calendario', tecla: 'c', somenteGestor: true  },
-    { label: 'Projetos',   icone: 'pi pi-folder',       rotaLink: '/projeto',    tecla: 'j', somenteGestor: true  },
-    { label: 'Demandas',   icone: 'pi pi-sitemap',      rotaLink: '/demanda',    tecla: 'd', somenteGestor: false },
-    { label: 'Atividades', icone: 'pi pi-check-square', rotaLink: '/atividade',  tecla: 'a', somenteGestor: false },
-    { label: 'Execuções',  icone: 'pi pi-play',         rotaLink: '/execucao',   tecla: 'e', somenteGestor: false },
-    { label: 'Tags',       icone: 'pi pi-tag',          rotaLink: '/tag',        tecla: 't', somenteGestor: true  },
-    { label: 'Usuários',   icone: 'pi pi-users',        rotaLink: '/usuario',    tecla: 'u', somenteGestor: true  },
-  ];
-
-  readonly itensNavegacao = computed(() =>
-    this.todosItensNavegacao.filter((item) => !item.somenteGestor || this.sessao.eGestor()),
-  );
-
-  /** Itens só de gestor: abaixo de 900px saem da barra e entram em "Mais ▾" (dev não vê o "Mais"). */
-  readonly itensGestorOcultaveis = computed(() =>
-    this.itensNavegacao().filter((item) => item.somenteGestor),
-  );
-
   readonly iniciais = computed(() =>
     (this.sessao.nomeCompleto() ?? '')
       .split(' ')
@@ -94,42 +75,16 @@ export class TopbarComponent {
   );
   readonly primeiroNome = computed(() => (this.sessao.nomeCompleto() ?? '').split(' ')[0]);
 
-  // --- Atalhos globais: `g` + letra navega; `n` abre as anotações (task 96) ---
-  private aguardandoSegundaTecla = false;
-  private temporizadorAtalho: ReturnType<typeof setTimeout> | null = null;
-
+  // --- Atalho global: `n` abre as anotações (task 96); `g` + letra vive na barra lateral ---
   @HostListener('document:keydown', ['$event'])
   aoTeclarGlobal(evento: KeyboardEvent): void {
     if (evento.defaultPrevented || evento.ctrlKey || evento.metaKey || evento.altKey) return;
-    if (focoEmCampo(evento.target) || haSobreposicaoAberta()) {
-      this.cancelarSequencia();
-      return;
-    }
+    if (focoEmCampo(evento.target) || haSobreposicaoAberta()) return;
 
-    const tecla = evento.key.toLowerCase();
-    if (this.aguardandoSegundaTecla) {
-      this.cancelarSequencia();
-      const destino = this.itensNavegacao().find((item) => item.tecla === tecla);
-      if (destino) {
-        evento.preventDefault();
-        this.roteador.navigateByUrl(destino.rotaLink);
-      }
-      return;
-    }
-
-    if (tecla === 'g') {
-      this.aguardandoSegundaTecla = true;
-      this.temporizadorAtalho = setTimeout(() => this.cancelarSequencia(), 1500);
-    } else if (tecla === 'n' && this.sessao.usuarioAtual()) {
+    if (evento.key.toLowerCase() === 'n' && this.sessao.usuarioAtual()) {
       evento.preventDefault();
       this.anotacoesDialog?.abrir(this.sessao.id()!, this.sessao.nomeCompleto()!);
     }
-  }
-
-  private cancelarSequencia(): void {
-    this.aguardandoSegundaTecla = false;
-    if (this.temporizadorAtalho !== null) clearTimeout(this.temporizadorAtalho);
-    this.temporizadorAtalho = null;
   }
 
   constructor() {

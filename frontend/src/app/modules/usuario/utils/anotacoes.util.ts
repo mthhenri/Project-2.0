@@ -1,6 +1,6 @@
-/** Mesma regra de "vazio efetivo" do backend (`temAnotacoes`): HTML sem texto, `&nbsp;` e espaços não contam. */
-export function anotacaoTemTexto(html: string | null | undefined): boolean {
-  return (html ?? '').replace(/<[^>]*>|&nbsp;|&#160;|\s+/gi, '') !== '';
+/** Mesma regra de "vazio efetivo" do backend (`temAnotacoes`): o Markdown só com espaços e quebras de linha não conta. */
+export function anotacaoTemTexto(texto: string | null | undefined): boolean {
+  return (texto ?? '').trim() !== '';
 }
 
 /** `Editado há 3 min` a partir de um instante e do "agora". */

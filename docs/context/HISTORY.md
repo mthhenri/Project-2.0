@@ -12,6 +12,192 @@
 
 ---
 
+## 2026-10-17 — Task 124: troca dos consumidores pelo Markdown e remoção do Quill
+
+Bloco 3 do rework do chat com IA (4 de 4). Os consumidores trocaram `p-editor`/`[innerHTML]` por `app-markdown-editor`/
+`app-markdown-visualizador`: pad (`usuario-anotacoes-dialog`, o drawer), `demanda-detalhe-dialog`, `demanda-arvore-painel` e
+`atividade-listagem` (dialog de descrição da demanda). A barra do Quill do pad (sublinhado, "remover formatação") saiu com ele. O
+editor ganhou o encaixe no flex dos dialogs de 95vh (`alturaMinima = 0`). O Quill saiu: dependência `quill` e 67 linhas do
+`package-lock.json`, `@import` do CSS em `styles.scss`, e o seletor `.ql-editor` de `focoEmCampo`. `anotacaoTemTexto` (frontend) e o SQL
+de `temAnotacoes` (`UsuarioRepository.listar`) passaram a tratar Markdown: "tem texto" é algo além de espaços e quebras. A tabela da
+spec listava `usuario-anotacoes.page` como consumidor, mas ela só redireciona (`template: ''`): os `.html`/`.scss` dela eram
+resquício morto com um `p-editor` e foram apagados. A spec também pedia checar o backend: não há saneamento nem validação de HTML nesses
+campos (só `@IsString`), e o assistente de descrição não gera tags (o prompt é texto).
+
+- **Banco de dev:** backup `pg_dump` em `.artifacts/124-markdown-troca-dos-consumidores/` (ignorada pelo Git), `--aplicar
+  --confirmo-backup` converteu 6 valores (1 `descricao_tecnica`, 1 `documentacao`, 4 `anotacoes`, 0 perdas); a segunda execução
+  converteu 0; nenhum valor começa mais por tag.
+- **Ao vivo (SPA e API reais, gestor):** descrição técnica pelo painel da árvore e documentação pelo diálogo de detalhe: o editor
+  preenche o dialog, mostra o texto convertido, salva Markdown puro (conferido na API; nunca HTML; `<script>x</script>` digitado
+  ficou como texto). Dialog de descrição da listagem de atividades: título, negrito, lista e o `<script>` como texto, "Sem
+  conteúdo" no campo vazio e botão Editar. Pad: `n` abre o drawer já com o editor focado e preenchendo a altura, autossalvamento
+  em 2 s gravou Markdown, "Limpar" esvaziou e o banco ficou `''` depois da janela do Desfazer, e `temAnotacoes` foi de `true` para
+  `false`. Valor da demanda de teste restaurado. Builds de backend e frontend passam; `grep` por `quill`, `ql-`, `p-editor`,
+  `EditorModule` e `innerHTML` no frontend: vazio.
+- **Não verificado:** os ramos somente leitura dos diálogos de detalhe e do painel (desenvolvedor sem permissão de edição) usam o
+  mesmo visualizador já visto na listagem de atividades; faltou testá-los com um desenvolvedor. Tema escuro e 1920×1080/1080×1920
+  só foram vistos nos componentes (tasks 121 e 122), não nestas telas. Frontend sem testes e sem lint (P-001).
+
+## 2026-10-17 — Task 123: conversor do HTML do Quill para Markdown (escrito e validado; ainda não aplicado)
+
+Bloco 3 do rework do chat com IA (3 de 4). Conversor próprio, sem dependência nova (decisão aprovada pelo autor), em
+`backend/src/database/scripts/html-para-markdown.ts`: parser de HTML linear e tolerante, e render para o Markdown que o interpretador
+da task 121 lê. Cobre `p`/`br`, `strong`/`em`/`s`/`code`, `a`, `h1`–`h6` (`h5`/`h6` viram nível 4), `blockquote` (uma por linha vira
+uma citação), `pre`, `hr` e as listas do Quill 2 (`<ol><li data-list="bullet|ordered|checked|unchecked" class="ql-indent-N">`, com o
+`span.ql-ui` ignorado) e as clássicas `ul`/`ol` aninhadas. Parágrafos seguidos viram linhas seguidas e o parágrafo vazio vira linha
+em branco, como o Quill mostra. Perdas contadas: sublinhado (fica o texto), imagem (some), link fora de `http`/`https`/`mailto`
+(fica o texto). O texto é escapado (`*`, `_` entre não alfanuméricos, crase, `[`, `<`, início de linha que seria bloco), o que também
+torna a conversão idempotente: `pareceHtmlDoQuill` não casa com o resultado. `converter-descricoes.ts` roda fora do runner de
+migrations: dry-run por padrão, `--aplicar` exige `--confirmo-backup`, uma transação, cada `UPDATE` confere o valor lido, inclui linhas
+excluídas e preserva `anotacoes_alteracao_data` (o trigger só mexe em `updated_date`).
+
+- **Testes:** `backend` 84/84 (35 novos: conversor com amostra real do banco, listas do Quill 2, escape, HTML malformado, entrada de
+  20 mil parágrafos em tempo curto, idempotência e a seleção dos alvos). Texto visível conferido pelo interpretador da 121.
+- **Dados reais (dev):** 4 campos de texto rico têm HTML; `execucao.descricao` e `ponto_justificativa.descricao` são texto puro e
+  ficam de fora. Dry-run: 6 valores a converter (1 `descricao_tecnica`, 1 `documentacao`, 4 `anotacoes`), 0 perdas. Numa **cópia** do
+  banco: `--aplicar` sem `--confirmo-backup` recusa; com ele converte 6; a segunda execução converte 0; o banco original ficou
+  intacto (cópia descartada). Dois dos valores eram `<p></p>`, que viram texto vazio, e "tem anotações" passa a refletir isso.
+- **Amostra para o autor:** `demanda.descricao_tecnica #1` e `documentacao #1` (parágrafos curtos com muitos `&nbsp;`) viraram
+  linhas com espaços simples; os `&nbsp;` em sequência perdem o espaçamento largo.
+- **Pendente (deliberado):** a conversão **não foi aplicada** ao banco de dev. Aplica-se com a publicação da task 124 (README).
+
+## 2026-10-17 — Task 122: editor de Markdown próprio
+
+Bloco 3 do rework do chat com IA (2 de 4); nenhuma tela existente passou a usá-lo. `app-markdown-editor`
+(`ControlValueAccessor`, valor sempre string) com `<textarea>`, barra de 10 botões, abas Editar | Visualizar (usa o visualizador da
+121) e `somenteLeitura`. A lógica de edição ficou em `shared/src/markdown/markdown.edicao.ts` (`alternarEnvolvimento`,
+`alternarPrefixo`, `inserirLink`, `continuarLista`, `ajustarRecuoDeItens`), puras e testadas; o componente só aplica o resultado,
+trocando o trecho que mudou por `insertText` (cai em atribuição do valor se o navegador não suportar). `Enter` é nova linha
+(continua lista no fim de um item e sai dela em item vazio); `Ctrl+Enter` não é tratado pelo editor e chega ao
+`dialogFormulario`. `Tab` só é interceptado em item de lista, então não prende o foco no resto do texto.
+
+- **Testes:** `shared` 68/68 (23 de edição: envolver e desfazer, prefixos e troca de tipo, link, Enter e Tab em lista).
+- **Ao vivo (SPA real, página temporária já removida, teclado e mouse reais):** Enter continua lista, Tab aninha e Enter duplo sai;
+  `Ctrl+B` formata mantendo a seleção e o `Ctrl+Z` nativo desfaz, com o `FormControl` acompanhando; botão da barra aplica sem tirar o
+  foco do campo; aba Visualizar renderiza. Dentro de `p-dialog` com `dialogFormulario`: foco inicial no campo, `Enter` insere linha
+  sem enviar, `Ctrl+Enter` envia, `Esc` fecha. Dentro de `p-drawer` funciona. HTML colado (`<b onclick>`, `<script>`) aparece como texto
+  na prévia, sem nó novo. Desabilitar o controle desabilita campo e botões; `somenteLeitura` mostra só o visualizador. Tema escuro no
+  dialog em 1366×768.
+- **Achado só na verificação:** ler `#enviados` logo depois do `Ctrl+Enter` mostrava o contador antigo (a tela atualiza no ciclo
+  seguinte); a leitura seguinte confirmou o envio. Não é defeito do editor.
+- **Não verificado:** captura nítida em 1920×1080 e 1080×1920 (o painel do navegador reduz a página nesses tamanhos; o layout do
+  editor é fluido e foi visto sem quebra em 1366×768 e no tamanho padrão do painel). Frontend sem testes e sem lint (P-001).
+
+## 2026-10-17 — Task 121: interpretador de Markdown próprio e visualizador
+
+Bloco 3 do rework do chat com IA (1 de 4); nenhuma tela existente mudou. `interpretarMarkdown` mora em `shared/src/markdown/`
+(testável com `node:test` e reaproveitável pelo backend). Subconjunto: títulos `#`–`####`, parágrafos, **negrito**, *itálico*,
+~~tachado~~, `código`, listas com aninhamento e tarefas, citação, bloco de código, régua e links `http`/`https`/`mailto`.
+`<tag>` e entidades são texto; imagem (`![alt](url)`) fica como texto; tabelas fora (decisão da spec). Quebra de linha dentro do
+parágrafo é quebra. Link com esquema fora da lista, relativo ou imagem mantém o texto como foi escrito. Marcadores sem
+fechamento viram texto. Para ficar linear: busca de crase fechada por pré-varredura, `[` varre só até o próximo `[`, URL só até
+espaço ou `(`, ênfase por pilha por tipo de marcador e montagem sem recursão, com aninhamento limitado (lista e citação 6,
+ênfase 20). `app-markdown-visualizador` usa templates recursivos de `ng-template` e cria só elementos nativos, `rel="noopener
+noreferrer"` nos links, nenhum binding de HTML.
+
+- **Testes:** `shared` 45/45 (31 do interpretador: cada construção, aninhamento, construções não terminadas, 12 vetores de
+  XSS e de esquema, texto sem nó HTML, determinismo, entradas patológicas de 100 mil caracteres em menos de 1,5 s cada). Medição
+  manual: de 50 mil a 400 mil caracteres os piores casos crescem linearmente (listas 27→134 ms).
+- **Ao vivo (SPA real, página temporária já removida):** amostra com todas as construções e o conteúdo hostil
+  (`<script>`, `<img onerror>`, `javascript:`, `data:`, entidades). DOM sem `script`/`img`/`iframe`, sem atributo de evento, com os
+  textos hostis visíveis como texto; só links `https` com `target=_blank` e `rel=noopener noreferrer`. Tema claro e escuro, 1920×1080,
+  1366×768 e 1080×1920; container de 16 rem sem rolagem horizontal (só o bloco de código rola); texto vazio não renderiza nada.
+- **Achado só na verificação:** `let-lista`/`let-trechos` nos `ng-template` recursivos sombreavam as referências dos próprios
+  templates (`*ngTemplateOutlet="trechos"` recebia o array): o render parava no primeiro parágrafo e o console mostrava
+  `createEmbeddedViewImpl is not a function`. Os parâmetros foram renomeados (`modelo*` para os templates, `lista*`/`umaLista`
+  para os dados). O build não acusa isso.
+- **Não verificado:** o visualizador ainda não está em tela real do sistema (entra na task 124). Frontend sem testes e sem lint (P-001).
+
+## 2026-10-17 — Task 120: layout com barra lateral recolhível e topbar enxuta
+
+Bloco 2 do rework do chat com IA, só frontend. `SidebarComponent` (logo, os 8 itens com o mesmo filtro de gestor, botão de
+recolher no rodapé), `navegacao.ts` com a lista única de itens, `LayoutComponent` em duas colunas. A topbar perdeu logo,
+navegação e "Mais ▾" e ganhou o ponto de extensão `[slotCheckin]` para o bloco 7, sem renderizar nada hoje. O atalho
+`g`+letra foi para a barra lateral e o `n` ficou na topbar, cada um dono do que abre. Sem disputar espaço com a navegação, o
+relógio e o nome do perfil passaram a aparecer em qualquer largura, e os degraus de largura da topbar foram removidos.
+Análogo: a topbar anterior (tokens `--app-surface-*`, realce do item ativo, densidade); a barra lateral não tem análogo.
+
+- **Build:** frontend ok (aviso preexistente do `quill-delta`). Sem testes no frontend e sem lint (P-001).
+- **Ao vivo (API e SPA reais):** 1366×768 expandida e recolhida, 1920×1080 e 1080×1920, temas claro (todos) e escuro
+  (1366×768); estados sem execução ativa e com execução ativa (chip com descrição truncada e cronômetro). Nas 8 rotas, com a
+  barra expandida a 1366 px, nenhuma teve rolagem horizontal. Recolher grava `sidebar.recolhida` e sobrevive ao reload;
+  `g e` e `g u` navegam, e `g p` dentro de um `input` não faz nada. Desenvolvedor vê 4 itens, `g u` não navega e `g a`
+  navega. Impressão do ponto não depende da estrutura (a regra de `@media print` esconde `body *`); não imprimi.
+- **Achado só na verificação:** `focoEmCampo` assume um `Element` como alvo; eventos sintéticos disparados no `document`
+  quebram nele, mas teclas reais têm o `body` como alvo. Sem impacto no uso.
+- **Não verificado:** mobile (fora do escopo do projeto) e a impressão em si.
+
+## 2026-10-17 — Só gestor e administrador alteram usuários (fecha o que ficou aberto no P-006)
+
+Decisão do autor depois do P-006: `PUT /usuario/:id` deixa de aceitar o desenvolvedor, inclusive no próprio perfil. A única exceção
+é o campo `anotacoes` do próprio usuário, porque o pad (`usuario-anotacoes-dialog`) o salva por esse mesmo PUT; qualquer outro
+campo dá 403 (`UsuarioService.validarSomenteAnotacoesDoProprio`). Isso substitui a regra antiga "desenvolvedor altera o próprio
+perfil" e a trava de `tipo` da task 39 para esse caso. Nenhuma tela do desenvolvedor mudou (só gestor edita pela tela de Usuários).
+
+- **Testes:** `backend` 49/49 (2 novos: só as próprias anotações; nome, cargo, tipo e outro usuário negados); build ok.
+- **Ao vivo (API real):** dev → próprias anotações 200; próprio nome, próprio tipo e anotações de outro usuário 403;
+  gestor/administrador → dev 200. Usuário de teste excluído.
+- **Para o bloco 8 (pad estruturado):** preservar essa exceção ou mover o pad para uma rota própria só do dono.
+
+## 2026-10-17 — P-006 resolvido: só gestor ou administrador troca a senha de outro usuário
+
+`PATCH /usuario/:id/senha` não era `@GestorOnly` e não conferia quem estava logado: um desenvolvedor trocava a senha de
+qualquer conta (verificado ao vivo na task 119). Agora a rota é `@GestorOnly()`; a regra da 119 continua impedindo o gestor de
+trocar a senha de administrador. A tela de Usuários (única chamadora) já era só de gestor, então nenhuma tela mudou. O desenvolvedor
+não troca nem a própria senha por esta rota (decisão do autor: só gestor e administrador gerenciam usuários).
+
+- **Ao vivo (API real):** desenvolvedor → outro dev, a si mesmo e administrador: 403; gestor → dev: 200; gestor → administrador: 403;
+  administrador → dev: 200. Usuários de teste excluídos. `backend` 47/47 e build ok.
+- **Aberto, fora desta correção:** `PUT /usuario/:id` ainda deixa o desenvolvedor editar o **próprio** perfil (nome e cargo; o
+  tipo não, task 39). O autor descreveu que só gestor/administrador alteram usuários: se for para fechar isso, é decisão à parte.
+
+## 2026-10-17 — Task 119: usuário administrador (tipo, migration `0029` e regra de permanência)
+
+Segunda do bloco 1 do rework do chat com IA. `TipoUsuarioEnum.ADMINISTRADOR`; `temPermissaoDeGestor` passa a incluir o
+administrador e `temPermissaoDeAdministrador` é nova. A migration `0029` semeia `ADMINISTRADOR` em `tipo_usuario` e converte
+o `gestor.inicial` (o `DOWN` devolve todo administrador a `GESTOR` antes de remover o tipo). A regra "ao menos um
+administrador ativo" substitui `validarPermanenciaDeGestorAtivo` (P-002) em `alterar` e `excluir`; gestor deixou de ser
+obrigatório. Decisões do autor aplicadas: gestor continua criando gestor e desenvolvedor, mas não cria nem promove
+administrador, nem altera, exclui, restaura ou troca a senha de um (403); o gestor segue sem poder rebaixar a si mesmo; o
+administrador pode se rebaixar havendo outro. Controller: `criar`, `excluir`, `restaurar` e `alterarSenha` passaram a
+receber o usuário logado. Frontend: opção e filtro "Administrador", rótulos e cores centralizados em
+`core/utils/tipo-usuario.ts`, `UsuarioSessaoService.eAdministrador`, ações sobre administrador ocultas ao gestor.
+
+- **Correção de premissa da spec:** a spec mandava recriar o `CHECK` de `usuario.tipo`, mas a coluna legada já tinha sido
+  removida pela `0025` (hoje só existe `tipo_usuario_id`); a migration ficou só com o seed e a conversão.
+- **Testes:** `shared` 14/14, `backend` 47/47 (18 de `UsuarioService`, entre eles último administrador, gestor sem
+  poder sobre administrador e gestor opcional); builds de backend e frontend passam. Frontend sem testes e sem lint (P-001).
+- **Ao vivo (API real, dev local):** `db:migrate` → `gestor.inicial` vira `ADMINISTRADOR`; `db:rollback` → volta a `GESTOR` e
+  o tipo some; novo `db:migrate` ok. O token do administrador traz `tipo: ADMINISTRADOR`. Com um só administrador, inativar,
+  rebaixar e excluir dão 400; com dois, inativar o primeiro dá 200. Gestor: criar administrador, promover, alterar, trocar
+  senha, excluir e restaurar administrador dão 403; criar gestor e desenvolvedor e acessar rota gestor-only seguem ok.
+  Usuários de teste foram excluídos (soft delete).
+- **Achado só na verificação:** o `db:migrate` aplicou junto a `0028` (task 117), que ainda estava pendente no banco de
+  dev. E `PATCH /usuario/:id/senha` aceita qualquer usuário logado (registrado como P-006 e resolvido logo depois).
+- **Visual (Chromium do app, API real):** tela de Usuários em 1920×1080, 1366×768 e 1080×1920 (tema escuro; claro em
+  1366×768): tag "Administrador" (contraste) distinta de Gestor e Desenvolvedor, filtro "Administradores" e dialog com a
+  terceira opção. Como gestor, as linhas de administrador perdem editar, excluir e o switch de status, e o formulário não
+  oferece "Administrador". Análogo: a própria tela de Usuários anterior. **Não verificado:** menu do perfil da topbar com o
+  rótulo "Administrador" (só o texto mudou); mobile fora do escopo do projeto.
+
+## 2026-10-17 — Task 118: permissão de gestor centralizada (refactor sem mudança de comportamento)
+
+Primeira das duas tasks do bloco 1 do rework do chat com IA (`rework-chat-ia.spec.md`). Nova `temPermissaoDeGestor(tipo)`
+em `shared/src/utils/permissao-usuario.ts` (hoje `tipo === GESTOR`), usada no `GestorGuard`, em `AtividadeService`,
+`DemandaService` (2), `ExecucaoService` (descrição obrigatória), `ProjetoService`, `UsuarioService.alterar` (2), em
+`UsuarioSessaoService.eGestor` (nome mantido, 115 usos), em `atividade-listagem` e nos três filtros de membros de demanda.
+Ficaram de fora, por serem rótulo/cor do tipo (task 119): `usuario-listagem`, `usuario-perfil-dialog`,
+`usuario-formulario-dialog`, `demanda-membro-lista`. Ficaram também a guarda de permanência e `listarGestoresAtivos`
+(igualdade exata com `GESTOR` por decisão da spec; a 119 as substitui). Os usos de `=== DESENVOLVEDOR` permanecem:
+significam "somente desenvolvedor".
+
+- **Testes:** `shared` 12/12 (2 novos), `backend` 39/39; builds de backend e frontend passam (aviso preexistente do
+  `quill-delta` no frontend). Frontend sem testes e sem lint (P-001).
+- **Ao vivo (API e SPA reais, com o gestor inicial e um desenvolvedor criado e excluído depois):** `POST /projeto` e
+  `GET /ponto-justificativa` (gestor-only) respondem 403 ao desenvolvedor e passam do guard para o gestor (400 de
+  validação); a topbar mostra 8 itens ao gestor e 4 (sem "Mais") ao desenvolvedor.
+- **Não aplicável:** captura visual (nenhuma tela mudou).
+
 ## 2026-10-17 — Tasks 110 e 111: histórico de Execuções com contexto/URL/teclado e relatório com auto-preview
 
 Reativadas pelo autor em 2026-10-17 (descartadas no dia anterior junto com as de Atividades, que seguem descartadas).

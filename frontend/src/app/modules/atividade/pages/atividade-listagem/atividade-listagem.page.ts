@@ -11,7 +11,8 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { DialogModule } from 'primeng/dialog';
 import { DatePickerModule } from 'primeng/datepicker';
-import { EditorModule } from 'primeng/editor';
+import { MarkdownEditorComponent } from '../../../../shared/components/markdown-editor/markdown-editor.component';
+import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
 import { Tag } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { PopoverModule, Popover } from 'primeng/popover';
@@ -29,7 +30,7 @@ import {
   ExecucaoIniciarDto,
   ExecucaoEncerrarDto,
   ExecucaoRegistrarDto,
-  TipoUsuarioEnum,
+  temPermissaoDeGestor,
   REGEX_SEM_CARACTERES_PROIBIDOS,
   MENSAGEM_CARACTERES_PROIBIDOS,
 } from '@project20/shared';
@@ -82,7 +83,8 @@ type CampoDescricaoDemanda = 'descricaoCliente' | 'descricaoTecnica' | 'document
     TextareaModule,
     DialogModule,
     DatePickerModule,
-    EditorModule,
+    MarkdownEditorComponent,
+    MarkdownVisualizadorComponent,
     Tag,
     TooltipModule,
     PopoverModule,
@@ -546,7 +548,7 @@ export class AtividadeListagemPage implements OnInit {
     this.formularioExecucao.reset({ descricao: descricaoInicial });
 
     // Descrição obrigatória apenas quando o dono da atividade é desenvolvedor.
-    const donoEhGestor = atividade.usuarioTipo === TipoUsuarioEnum.GESTOR;
+    const donoEhGestor = !!atividade.usuarioTipo && temPermissaoDeGestor(atividade.usuarioTipo);
     this.descricaoExecucaoOpcional.set(donoEhGestor);
     const controleDescricao = this.formularioExecucao.get('descricao')!;
     controleDescricao.setValidators(

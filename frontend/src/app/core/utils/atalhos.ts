@@ -1,11 +1,11 @@
-/** Digitando: input, textarea, select ou editor rico (Quill/contenteditable). */
+/** Digitando: input, textarea (inclui o editor de Markdown), select ou campo contenteditable. */
 export function focoEmCampo(alvo: EventTarget | null): boolean {
   const elemento = alvo as HTMLElement | null;
   if (!elemento) return false;
   return (
     ['INPUT', 'TEXTAREA', 'SELECT'].includes(elemento.tagName) ||
     elemento.isContentEditable ||
-    !!elemento.closest('.ql-editor, [contenteditable="true"]')
+    !!elemento.closest('[contenteditable="true"]')
   );
 }
 

@@ -66,10 +66,17 @@ export class UsuarioFormularioDialogComponent {
   });
   readonly podeEditarStatus = computed(() => this.sessao.eGestor() && this.sessao.usuarioAtual()?.id !== this.usuarioEmEdicao()?.id);
 
-  readonly tiposOpcoes = [
-    { label: 'Desenvolvedor', value: TipoUsuarioEnum.DESENVOLVEDOR },
-    { label: 'Gestor', value: TipoUsuarioEnum.GESTOR },
-  ];
+  /** Só o administrador cria ou promove administradores; ao editar um, a opção aparece para mostrar o valor atual. */
+  readonly tiposOpcoes = computed(() => {
+    const opcoes = [
+      { label: 'Desenvolvedor', value: TipoUsuarioEnum.DESENVOLVEDOR },
+      { label: 'Gestor', value: TipoUsuarioEnum.GESTOR },
+    ];
+    if (this.sessao.eAdministrador() || this.usuarioEmEdicao()?.tipo === TipoUsuarioEnum.ADMINISTRADOR) {
+      opcoes.push({ label: 'Administrador', value: TipoUsuarioEnum.ADMINISTRADOR });
+    }
+    return opcoes;
+  });
 
   constructor() {
     this.formulario.controls.nomeCompleto.valueChanges.pipe(takeUntilDestroyed()).subscribe((nome) => {

@@ -367,8 +367,10 @@
     </div>
   } @else if (editandoDescricao()) {
     <form [formGroup]="formularioDescricaoDemanda" class="atividade-listagem__descricao-form atividade-listagem__descricao-form--cheio">
-      <p-editor
+      <app-markdown-editor
         formControlName="valor"
+        [alturaMinima]="0"
+        [rotulo]="cabecalhoDescricao()"
         class="atividade-listagem__editor"
       />
       <app-assistente-descricao
@@ -379,8 +381,8 @@
       />
     </form>
   } @else if (conteudoDescricao(); as conteudo) {
-    <div class="atividade-listagem__descricao-rica ql-snow">
-      <div class="ql-editor" [innerHTML]="conteudo"></div>
+    <div class="atividade-listagem__descricao-rica">
+      <app-markdown-visualizador [texto]="conteudo" />
     </div>
   } @else {
     <p class="text-muted-color">Sem conteúdo</p>

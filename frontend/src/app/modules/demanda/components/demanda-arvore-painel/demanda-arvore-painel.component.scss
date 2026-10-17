@@ -83,9 +83,7 @@
     border: 1px solid var(--app-surface-200);
     border-radius: 6px;
 
-    .ql-editor {
-      word-break: break-word;
-    }
+    padding: 0.75rem 1rem;
   }
 
   &__descricao-vazia {
@@ -100,19 +98,5 @@
   &__editor {
     flex: 1 1 auto;
     min-height: 0;
-    display: flex;
-    flex-direction: column;
-
-    ::ng-deep .p-editor-container {
-      flex: 1 1 auto;
-      min-height: 0;
-      display: flex;
-      flex-direction: column;
-    }
-
-    ::ng-deep .p-editor-content {
-      flex: 1 1 auto;
-      min-height: 0;
-    }
   }
 }

@@ -323,20 +323,6 @@
   &__editor {
     flex: 1 1 auto;
     min-height: 0;
-    display: flex;
-    flex-direction: column;
-
-    ::ng-deep .p-editor-container {
-      flex: 1 1 auto;
-      min-height: 0;
-      display: flex;
-      flex-direction: column;
-    }
-
-    ::ng-deep .p-editor-content {
-      flex: 1 1 auto;
-      min-height: 0;
-    }
   }
 
   &__descricao-leitura {
@@ -347,10 +333,7 @@
     border: 1px solid var(--app-surface-200);
     border-radius: 6px;
 
-    // O conteúdo é HTML do Quill; a classe .ql-editor cuida da tipografia/espaçamento.
-    .ql-editor {
-      word-break: break-word;
-    }
+    padding: 0.75rem 1rem;
   }
 
   &__descricao-vazia {

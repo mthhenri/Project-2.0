@@ -140,7 +140,7 @@ CREATE TABLE usuario (
   senha_encriptada          VARCHAR(255) NOT NULL,
   nome_completo             VARCHAR(255) NOT NULL,
   cargo_titulo              VARCHAR(150) NOT NULL,
-  anotacoes                 TEXT,
+  anotacoes                 TEXT,           -- Markdown
   anotacoes_alteracao_data  TIMESTAMPTZ,
   horas_diarias_necessarias INTEGER      NOT NULL,
   tipo_usuario_id           INTEGER      NOT NULL
@@ -245,9 +245,9 @@ CREATE TABLE demanda (
   projeto_id        INTEGER      NOT NULL REFERENCES projeto(id),
   demanda_pai_id    INTEGER               REFERENCES demanda(id),
   nome              VARCHAR(255) NOT NULL,
-  descricao_tecnica TEXT,
-  descricao_cliente TEXT,
-  documentacao      TEXT,
+  descricao_tecnica TEXT,          -- Markdown
+  descricao_cliente TEXT,          -- Markdown
+  documentacao      TEXT,          -- Markdown
   horas_estimadas   INTEGER      NOT NULL,
   tipo_demanda_status_id INTEGER NOT NULL
                       CONSTRAINT fk_demanda_tipo_demanda_status REFERENCES tipo_demanda_status(id),
@@ -578,7 +578,7 @@ Seeds (`codigo` → `descricao`):
 
 | Tabela | Seeds |
 |---|---|
-| `tipo_usuario` | DESENVOLVEDOR→"Desenvolvedor", GESTOR→"Gestor" |
+| `tipo_usuario` | DESENVOLVEDOR→"Desenvolvedor", GESTOR→"Gestor", ADMINISTRADOR→"Administrador" (migration `0029`) |
 | `tipo_usuario_status` | ATIVO→"Ativo", INATIVO→"Inativo" |
 | `tipo_projeto_status` | ATIVO→"Ativo", PAUSADO→"Pausado", CONCLUIDO→"Concluído", CANCELADO→"Cancelado" |
 | `tipo_demanda_status` | PENDENTE→"Pendente", PLANEJADA→"Planejada", CONCLUIDA→"Concluída" |
