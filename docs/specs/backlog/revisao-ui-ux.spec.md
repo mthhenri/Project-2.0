@@ -9,9 +9,9 @@
 ## Objetivo
 
 Reduzir o esforço do usuário nas telas e dialogs do sistema (menos cliques, digitação, navegação
-e espera) implementando, na ordem do índice, as tasks derivadas da revisão que o autor manteve (17 das 23;
-as 6 que mexem diretamente nas telas de Atividades e de Execuções foram descartadas em 2026-10-16 e
-estão em `docs/specs/discarded/`).
+e espera) implementando, na ordem do índice, as tasks derivadas da revisão que o autor manteve (19 das 23;
+as 4 que mexem diretamente na tela de Atividades (102–105) foram descartadas em 2026-10-16 e
+estão em `docs/specs/discarded/`; as 2 da tela de Execuções (110 e 111) foram descartadas e reativadas em 2026-10-17).
 
 ## Entregáveis
 

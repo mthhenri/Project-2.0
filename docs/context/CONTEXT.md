@@ -17,9 +17,9 @@
 Nenhuma task em andamento. O backlog não tem mais tasks numeradas (revisão de UI/UX:
 94–117 concluídas; guarda-chuva `revisao-ui-ux.spec.md`). As fundações **94–99** , o Ponto (**100–101**)
 e a toolbar, o grafo, o detalhe e o formulário de Demandas (**106–109**) a de Projetos (**112**) a de Usuários (**113**) as Anotações (**114**) o Calendário (**115**) e as Tags (**116**) foram concluídos em 2026-10-16 e estão em `docs/specs/done/`; as seguintes devem **reutilizar** o que
-elas criaram (ver `MEMORY.md` §2). Siga a ordem de fases de `INDEX-revisao-ux.md`: fase 4 (concluída). As tasks **102, 103, 104, 105, 110 e 111** (que mexem direto nas telas de
-Atividades e Execuções) foram **descartadas** em 2026-10-16 e estão em `docs/specs/discarded/`. A task
-117 foi concluída.
+elas criaram (ver `MEMORY.md` §2). Siga a ordem de fases de `INDEX-revisao-ux.md`: fase 4 (concluída). As tasks **102, 103, 104 e 105** (que mexem direto na tela de Atividades) foram **descartadas** em
+2026-10-16 e estão em `docs/specs/discarded/`. As **110 e 111** (tela de Execuções) foram descartadas junto, mas o autor as
+**reativou em 2026-10-17**: voltaram a `docs/specs/backlog/` e são a próxima frente. A task 117 foi concluída.
 Próxima migration nova: `0029`.
 
 ## 2. Estado por Área
