@@ -886,7 +886,7 @@ frontend/src/app/
       markdown-visualizador/
         markdown-visualizador.component.ts   ← única forma de exibir Markdown (sem HTML cru)
       markdown-editor/
-        markdown-editor.component.ts         ← editor de Markdown (CVA), barra, abas Editar | Visualizar; `emitirMenuContexto` + `aoMenuContexto` (botão direito sobre seleção)
+        markdown-editor.component.ts         ← editor de Markdown (CVA): edição **formatada** (Milkdown, carregado sob demanda via `markdown-formatado.ts`) e modo Markdown cru alternável; `emitirMenuContexto` + `aoMenuContexto` (botão direito sobre seleção)
       assistente-descricao/
         assistente-descricao.component.ts   ← componente de IA reutilizável
         assistente-descricao.component.html
@@ -1456,7 +1456,7 @@ POST /assistente/auxiliar-descricao
 
 Texto rico é **Markdown**, interpretado por `interpretarMarkdown` (`shared/src/markdown/`, sem biblioteca) e exibido por `app-markdown-visualizador`. O interpretador devolve uma árvore de nós e o componente monta elementos a partir dela: **HTML cru nunca entra na página** (nenhum `[innerHTML]`, nenhum desvio do sanitizador). Subconjunto: títulos `#` a `####`, parágrafos (quebra de linha vira quebra), **negrito**, *itálico*, ~~tachado~~, `código`, listas com aninhamento e tarefas, citação, bloco de código, régua e links `http`/`https`/`mailto`. `<tag>` e entidades são texto; imagens e tabelas não existem.
 
-O editor é `app-markdown-editor` (Reactive Forms; o valor é a string Markdown, `''` quando vazio). **`Enter` insere linha; quem confirma um dialog de formulário é o `Ctrl+Enter`** (contrato de `dialogFormulario`). `Enter` no fim de um item continua a lista, `Tab`/`Shift+Tab` aninham itens, `Ctrl+B`/`Ctrl+I`/`Ctrl+K` formatam. As edições da barra são funções puras em `shared/src/markdown/markdown.edicao.ts`.
+O editor é `app-markdown-editor` (Reactive Forms; o valor é a string Markdown, `''` quando vazio). **`Enter` insere linha; quem confirma um dialog de formulário é o `Ctrl+Enter`** (contrato de `dialogFormulario`). `Enter` no fim de um item continua a lista, `Tab`/`Shift+Tab` aninham itens, `Ctrl+B`/`Ctrl+I`/`Ctrl+K` formatam. As edições da barra do modo Markdown cru são funções puras em `shared/src/markdown/markdown.edicao.ts`. **No modo formatado (padrão, task 134)** o usuário vê o texto já formatado e o valor continua sendo Markdown: os botões são interruptores (negrito, itálico, tachado e código agem na palavra do cursor; título, citação e lista saem do bloco; lista troca de tipo; tarefa é caixa clicável) e a forma gravada é estável (`normalizarMarkdown`: ida e volta idempotente, sem `<br />`, sem HTML na página). Tabelas e imagens não são criadas pelo editor.
 
 ### Componente Reutilizável
 
