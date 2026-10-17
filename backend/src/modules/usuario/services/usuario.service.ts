@@ -15,6 +15,7 @@ import {
   UsuarioSenhaAlterarDto,
   UsuarioSenhaAlteradaDto,
   TipoUsuarioEnum,
+  TipoUsuarioStatusEnum,
 } from '@project20/shared';
 import { StandardResponse, PaginatedResult } from '@project20/shared';
 import { UsuarioRestaurarDto, UsuarioRestauradoDto } from '@project20/shared';
@@ -132,11 +133,12 @@ export class UsuarioService {
         throw new BusinessException('Um gestor não pode rebaixar a si mesmo');
       }
 
-      const gestoresAtivos = await this.usuarioRepositorio.listarGestoresAtivos();
-      const outrosGestoresAtivos = gestoresAtivos.filter((gestor) => gestor.id !== dto.id);
-      if (outrosGestoresAtivos.length === 0) {
-        throw new BusinessException('O sistema deve ter ao menos um gestor ativo');
-      }
+    }
+
+    const deixaDeSerGestor = dto.tipo !== undefined && dto.tipo !== TipoUsuarioEnum.GESTOR;
+    const deixaDeSerAtivo = dto.status !== undefined && dto.status !== TipoUsuarioStatusEnum.ATIVO;
+    if (deixaDeSerGestor || deixaDeSerAtivo) {
+      await this.validarPermanenciaDeGestorAtivo(usuarioEncontrado);
     }
 
     const usuarioAlterado = await this.usuarioRepositorio.alterar(dto);
@@ -148,6 +150,20 @@ export class UsuarioService {
     };
   }
 
+  /**
+   * O sistema precisa de ao menos um gestor ativo: quem tira um gestor ativo de cena (rebaixar, inativar ou
+   * excluir) só pode fazê-lo se existir outro. Usuário que não é gestor ativo não muda esse número.
+   */
+  private async validarPermanenciaDeGestorAtivo(usuario: Usuario): Promise<void> {
+    if (usuario.tipo !== TipoUsuarioEnum.GESTOR || usuario.status !== TipoUsuarioStatusEnum.ATIVO) return;
+
+    const gestoresAtivos = await this.usuarioRepositorio.listarGestoresAtivos();
+    const outrosGestoresAtivos = gestoresAtivos.filter((gestor) => gestor.id !== usuario.id);
+    if (outrosGestoresAtivos.length === 0) {
+      throw new BusinessException('O sistema deve ter ao menos um gestor ativo');
+    }
+  }
+
   /** Realiza soft delete do usuário. Lança exceção se não encontrado. */
   async excluir(dto: UsuarioExcluirDto): Promise<StandardResponse<void>> {
     const usuarioEncontrado = await this.usuarioRepositorio.recuperar({ id: dto.id });
@@ -155,6 +171,8 @@ export class UsuarioService {
     if (!usuarioEncontrado) {
       throw new ResourceNotFoundException('Usuário');
     }
+
+    await this.validarPermanenciaDeGestorAtivo(usuarioEncontrado);
 
     await this.usuarioRepositorio.excluir({ id: dto.id });
 

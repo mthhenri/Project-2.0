@@ -133,7 +133,7 @@ project-2.0/
 - **[task 113]** Usuários: status em `p-toggleswitch` na linha (otimista, Desfazer, desabilitado na própria linha);
   editar e alterar senha abrem direto da linha (`abrirEdicao(id)` / `app-usuario-senha-dialog`); o perfil só lê. O
   dialog criar/editar é único: login sugerido do nome, senha gerada, Tipo segmentado. Filtros Tipo/Status persistem em
-  `localStorage` (`usuario.filtros`). Gap do backend: dá para inativar o último gestor ativo pelo status.
+  `localStorage` (`usuario.filtros`). O backend recusa inativar, rebaixar ou excluir o último gestor ativo (P-002 resolvido).
 - **[task 112]** Projetos: busca e filtro de status são do cliente (carrega até 100, limite do backend) e vão para
   `?q=`/`?status=`; o status troca pela tag (otimista); criar e editar usam o mesmo dialog (`abrirEdicao`), código
   desabilitado na edição. O detalhe calcula o resumo dos nós das demandas e reutiliza a toolbar de Demandas; a

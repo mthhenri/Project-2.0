@@ -44,16 +44,6 @@
 - **Desde:** origem do projeto.
 
 
-### P-002 — Dá para inativar o último gestor ativo pelo status · `ABERTO` · backend (usuário)
-
-- **Sintoma:** o `PUT /usuario/:id` com `status: INATIVO` aceita inativar o único gestor ativo; só a troca de
-  `tipo` tem a guarda "ao menos um gestor ativo". O switch de status da tela de Usuários (task 113) expõe isso em um clique.
-- **Causa:** a guarda foi escrita só no caminho de rebaixamento de tipo; o caminho de status nunca teve.
-- **Contorno:** nenhum no sistema; reativar exige outro gestor ou acesso ao banco.
-- **Correção:** aplicar a mesma validação (`listarGestoresAtivos` sem o próprio id) ao status → INATIVO e inativação
-  em lote, com teste na service.
-- **Desde:** origem (tornou-se acessível na task 113, 2026-10-16).
-
 ### P-003 — Selects de Projeto (relatório) e Usuário (Execuções) listam no máximo 100 itens · `ABERTO` · frontend
 
 - **Sintoma:** com mais de 100 projetos (dialog de relatório, task 111) ou 100 usuários ativos (filtro de Execuções, task

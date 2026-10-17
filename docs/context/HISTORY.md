@@ -32,6 +32,17 @@ Relatórios em `docs/specs/done/110-execucoes-contexto-navegacao/verificacao.md`
 
 ---
 
+## 2026-10-17 — P-002 resolvido: o sistema sempre mantém ao menos um gestor ativo
+
+`UsuarioService` ganhou `validarPermanenciaDeGestorAtivo`, usada por `alterar` (quando o gestor ativo deixa de ser gestor
+**ou** deixa de estar ativo) e por `excluir`. A guarda que só existia no rebaixamento de tipo passou a valer também para
+inativação por status e para a exclusão; gestor já inativo e desenvolvedor não acionam a guarda. 8 testes novos na
+service (backend: 39 de 39) e conferência na API real: `PUT /usuario/1 {status: INATIVO}` e `DELETE /usuario/1` com um
+único gestor devolvem "O sistema deve ter ao menos um gestor ativo" e o registro fica intacto. Na tela de Usuários o
+switch do próprio usuário já é desabilitado, então a guarda protege API e corridas entre dois gestores.
+
+---
+
 ## 2026-10-17 — Tasks 110/111: verificação da visão do desenvolvedor e problemas registrados
 
 Usuário `dev.teste110` criado pela API no ambiente de teste; a tela de Execuções foi percorrida com ele (resultado em
