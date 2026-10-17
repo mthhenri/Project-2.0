@@ -1,11 +1,16 @@
+// O host é uma coluna flexível: sem altura própria o editor cresce pelo conteúdo (min-height do campo); dentro de um
+// dialog ou drawer com `flex: 1` (alturaMinima = 0) ele preenche o espaço que sobra.
 :host {
-  display: block;
+  display: flex;
+  flex-direction: column;
   min-width: 0;
 }
 
 .markdown-editor {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
+  min-height: 0;
   border: 1px solid var(--app-surface-300, var(--app-surface-200));
   border-radius: 6px;
   background: var(--app-surface-0);
@@ -105,6 +110,7 @@
 
   &__campo {
     display: block;
+    flex: 1 1 auto;
     width: 100%;
     padding: 0.625rem 0.75rem;
     border: 0;
@@ -123,6 +129,8 @@
   }
 
   &__previa {
+    flex: 1 1 auto;
+    min-height: 0;
     padding: 0.625rem 0.75rem;
     overflow: auto;
   }

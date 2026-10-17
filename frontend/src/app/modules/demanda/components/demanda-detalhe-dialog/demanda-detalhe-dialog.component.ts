@@ -6,7 +6,8 @@ import { forkJoin, of } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { TabsModule } from 'primeng/tabs';
-import { EditorModule } from 'primeng/editor';
+import { MarkdownEditorComponent } from '../../../../shared/components/markdown-editor/markdown-editor.component';
+import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
 import { Tag } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { MessageService, ConfirmationService } from 'primeng/api';
@@ -71,7 +72,8 @@ interface EstadoDetalhe {
     ButtonModule,
     DialogModule,
     TabsModule,
-    EditorModule,
+    MarkdownEditorComponent,
+    MarkdownVisualizadorComponent,
     Tag,
     TooltipModule,
     ConfirmDialogModule,

@@ -95,23 +95,8 @@
   }
 }
 
-// O Quill ocupa toda a altura disponível do drawer.
+// O editor de Markdown ocupa toda a altura disponível do drawer.
 :host ::ng-deep .anotacoes-drawer__editor {
   flex: 1;
-  display: flex;
-  flex-direction: column;
   min-height: 0;
-
-  .p-editor-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-  }
-
-  .ql-container {
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-  }
 }

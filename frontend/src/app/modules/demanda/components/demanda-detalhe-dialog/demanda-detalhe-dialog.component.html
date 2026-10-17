@@ -324,8 +324,10 @@
   >
     @if (podeEditarDescricaoAtual()) {
       <form [formGroup]="formularioDescricao" class="demanda-detalhe-dialog__descricao-dialog-form">
-        <p-editor
+        <app-markdown-editor
           formControlName="valor"
+          [alturaMinima]="0"
+          [rotulo]="tituloDialogDescricao()"
           class="demanda-detalhe-dialog__editor"
         />
         <app-assistente-descricao
@@ -337,8 +339,8 @@
       </form>
     } @else {
       @if (formularioDescricao.value.valor) {
-        <div class="demanda-detalhe-dialog__descricao-leitura ql-snow">
-          <div class="ql-editor" [innerHTML]="formularioDescricao.value.valor"></div>
+        <div class="demanda-detalhe-dialog__descricao-leitura">
+          <app-markdown-visualizador [texto]="formularioDescricao.value.valor" />
         </div>
       } @else {
         <div class="demanda-detalhe-dialog__descricao-vazia">Sem conteúdo</div>

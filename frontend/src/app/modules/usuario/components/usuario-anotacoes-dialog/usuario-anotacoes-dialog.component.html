@@ -46,28 +46,14 @@
         </div>
       } @else {
         <form [formGroup]="formulario" class="anotacoes-drawer__form">
-          <p-editor
+          <app-markdown-editor
+            #editorMarkdown
             formControlName="anotacoes"
+            [alturaMinima]="0"
+            rotulo="Anotações"
             placeholder="Escreva aqui — salva sozinho enquanto você digita."
-            (onInit)="aoIniciarEditor($event)"
-            styleClass="anotacoes-drawer__editor"
-          >
-            <ng-template #header>
-              <span class="ql-formats">
-                <button type="button" class="ql-header" value="2" aria-label="Título"></button>
-                <button type="button" class="ql-bold" aria-label="Negrito"></button>
-                <button type="button" class="ql-italic" aria-label="Itálico"></button>
-                <button type="button" class="ql-underline" aria-label="Sublinhado"></button>
-                <button type="button" class="ql-strike" aria-label="Tachado"></button>
-              </span>
-              <span class="ql-formats">
-                <button type="button" class="ql-list" value="ordered" aria-label="Lista numerada"></button>
-                <button type="button" class="ql-list" value="bullet" aria-label="Lista com marcadores"></button>
-                <button type="button" class="ql-link" aria-label="Link"></button>
-                <button type="button" class="ql-clean" aria-label="Remover formatação"></button>
-              </span>
-            </ng-template>
-          </p-editor>
+            class="anotacoes-drawer__editor"
+          />
         </form>
       }
 

@@ -3,7 +3,8 @@ import { ReactiveFormsModule, FormBuilder, AbstractControl } from '@angular/form
 import { finalize } from 'rxjs/operators';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
-import { EditorModule } from 'primeng/editor';
+import { MarkdownEditorComponent } from '../../../../shared/components/markdown-editor/markdown-editor.component';
+import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import {
@@ -48,7 +49,8 @@ type CampoDescricao = 'descricaoTecnica' | 'descricaoCliente' | 'documentacao';
     ReactiveFormsModule,
     ButtonModule,
     DialogModule,
-    EditorModule,
+    MarkdownEditorComponent,
+    MarkdownVisualizadorComponent,
     ConfirmDialogModule,
     AssistenteDescricaoComponent,
     DemandaArvoreItemComponent,

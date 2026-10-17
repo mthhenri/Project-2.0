@@ -12,6 +12,32 @@
 
 ---
 
+## 2026-10-17 — Task 124: troca dos consumidores pelo Markdown e remoção do Quill
+
+Bloco 3 do rework do chat com IA (4 de 4). Os consumidores trocaram `p-editor`/`[innerHTML]` por `app-markdown-editor`/
+`app-markdown-visualizador`: pad (`usuario-anotacoes-dialog`, o drawer), `demanda-detalhe-dialog`, `demanda-arvore-painel` e
+`atividade-listagem` (dialog de descrição da demanda). A barra do Quill do pad (sublinhado, "remover formatação") saiu com ele. O
+editor ganhou o encaixe no flex dos dialogs de 95vh (`alturaMinima = 0`). O Quill saiu: dependência `quill` e 67 linhas do
+`package-lock.json`, `@import` do CSS em `styles.scss`, e o seletor `.ql-editor` de `focoEmCampo`. `anotacaoTemTexto` (frontend) e o SQL
+de `temAnotacoes` (`UsuarioRepository.listar`) passaram a tratar Markdown: "tem texto" é algo além de espaços e quebras. A tabela da
+spec listava `usuario-anotacoes.page` como consumidor, mas ela só redireciona (`template: ''`): os `.html`/`.scss` dela eram
+resquício morto com um `p-editor` e foram apagados. A spec também pedia checar o backend: não há saneamento nem validação de HTML nesses
+campos (só `@IsString`), e o assistente de descrição não gera tags (o prompt é texto).
+
+- **Banco de dev:** backup `pg_dump` em `.artifacts/124-markdown-troca-dos-consumidores/` (ignorada pelo Git), `--aplicar
+  --confirmo-backup` converteu 6 valores (1 `descricao_tecnica`, 1 `documentacao`, 4 `anotacoes`, 0 perdas); a segunda execução
+  converteu 0; nenhum valor começa mais por tag.
+- **Ao vivo (SPA e API reais, gestor):** descrição técnica pelo painel da árvore e documentação pelo diálogo de detalhe: o editor
+  preenche o dialog, mostra o texto convertido, salva Markdown puro (conferido na API; nunca HTML; `<script>x</script>` digitado
+  ficou como texto). Dialog de descrição da listagem de atividades: título, negrito, lista e o `<script>` como texto, "Sem
+  conteúdo" no campo vazio e botão Editar. Pad: `n` abre o drawer já com o editor focado e preenchendo a altura, autossalvamento
+  em 2 s gravou Markdown, "Limpar" esvaziou e o banco ficou `''` depois da janela do Desfazer, e `temAnotacoes` foi de `true` para
+  `false`. Valor da demanda de teste restaurado. Builds de backend e frontend passam; `grep` por `quill`, `ql-`, `p-editor`,
+  `EditorModule` e `innerHTML` no frontend: vazio.
+- **Não verificado:** os ramos somente leitura dos diálogos de detalhe e do painel (desenvolvedor sem permissão de edição) usam o
+  mesmo visualizador já visto na listagem de atividades; faltou testá-los com um desenvolvedor. Tema escuro e 1920×1080/1080×1920
+  só foram vistos nos componentes (tasks 121 e 122), não nestas telas. Frontend sem testes e sem lint (P-001).
+
 ## 2026-10-17 — Task 123: conversor do HTML do Quill para Markdown (escrito e validado; ainda não aplicado)
 
 Bloco 3 do rework do chat com IA (3 de 4). Conversor próprio, sem dependência nova (decisão aprovada pelo autor), em

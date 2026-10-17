@@ -140,7 +140,7 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
          tipo_usuario.codigo        AS tipo,
          tipo_usuario_status.codigo AS status,
          (usuario.anotacoes IS NOT NULL
-            AND regexp_replace(usuario.anotacoes, '<[^>]*>|&nbsp;|&#160;|[[:space:]]+', '', 'gi') <> '') AS "temAnotacoes"
+            AND regexp_replace(usuario.anotacoes, '[[:space:]]+', '', 'g') <> '') AS "temAnotacoes"
        FROM usuario
        ${clausulasJoin}
        WHERE ${clausulaWhere}

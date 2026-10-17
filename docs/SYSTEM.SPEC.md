@@ -32,7 +32,7 @@
 - **Estado:** Angular Signals (signal, computed, effect)
 - **Formulários:** Reactive Forms
 - **HTTP:** Angular HttpClient com interceptores
-- **Editor rico:** p-editor do PrimeNG (campos HTML)
+- **Editor rico:** `app-markdown-editor` próprio (campos Markdown; ver §8.2)
 - **Estilos**: SCSS + Tailwind CSS + BEM
 - **Visualização de grafo**: D3.js (force simulation)
 
@@ -901,7 +901,7 @@ frontend/src/app/
 - **Standalone components** em todos os componentes e páginas — sem NgModule por feature
 - **Signals** para estado reativo — evitar Subject/BehaviorSubject onde signal resolve
 - **Reactive Forms** para todos os formulários — sem template-driven forms
-- **p-editor** do PrimeNG para campos que salvam HTML (ex: `anotacoes`)
+- **`app-markdown-editor`** para campos de texto rico (Markdown: `anotacoes`, descrições e documentação da demanda); exibição só por `app-markdown-visualizador`
 - **Lazy loading** por módulo via rotas com `loadComponent`
 
 ### 8.3 Componente Assistente de Descrição
@@ -1228,7 +1228,7 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 | Módulo | Responsabilidade Principal |
 |---|---|
 | `autenticacao` | Login e geração de JWT |
-| `usuario` | CRUD de usuários, anotações em HTML, troca de senha |
+| `usuario` | CRUD de usuários, anotações em Markdown, troca de senha |
 | `projeto` | CRUD de projetos — apenas gestor cria |
 | `demanda` | CRUD, hierarquia, grafo force-directed (D3), tags, atribuições |
 | `atividade` | CRUD de atividades vinculadas a demandas, tags, controle de status |
@@ -1252,7 +1252,7 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 | `senha_encriptada` | VARCHAR | bcrypt |
 | `nome_completo` | VARCHAR | |
 | `cargo_titulo` | VARCHAR | ex: "Desenvolvedor Sênior" |
-| `anotacoes` | TEXT \| NULL | HTML gerado pelo p-editor |
+| `anotacoes` | TEXT \| NULL | Markdown (escrito no `app-markdown-editor`) |
 | `anotacoes_alteracao_data` | TIMESTAMPTZ \| NULL | data da última alteração das anotações (`NULL` = nunca alteradas). `timestamptz` desde já (escrita por `NOW()`); demais colunas de `usuario` seguem `timestamp` até a spec 75 |
 | `horas_diarias_necessarias` | INTEGER | em horas (ex: 8) |
 | `tipo_usuario_id` | INTEGER FK | → `tipo_usuario` (DESENVOLVEDOR, GESTOR, ADMINISTRADOR) |
@@ -1278,9 +1278,9 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 | `projeto_id` | INTEGER FK | → projeto |
 | `demanda_pai_id` | INTEGER FK \| NULL | → demanda (hierarquia recursiva) |
 | `nome` | VARCHAR | |
-| `descricao_tecnica` | TEXT \| NULL | |
-| `descricao_cliente` | TEXT \| NULL | |
-| `documentacao` | TEXT \| NULL | markdown |
+| `descricao_tecnica` | TEXT \| NULL | Markdown |
+| `descricao_cliente` | TEXT \| NULL | Markdown |
+| `documentacao` | TEXT \| NULL | Markdown |
 | `horas_estimadas` | INTEGER | |
 | `tipo_demanda_status_id` | INTEGER FK | → `tipo_demanda_status` (PENDENTE, PLANEJADA, CONCLUIDA, CANCELADA) |
 | `is_estrutural` | BOOLEAN | demanda-container que agrupa sub-demandas |
