@@ -16,6 +16,7 @@ import {
   UsuarioSenhaAlteradaDto,
   TipoUsuarioEnum,
   temPermissaoDeAdministrador,
+  temPermissaoDeGestor,
   TipoUsuarioStatusEnum,
 } from '@project20/shared';
 import { StandardResponse, PaginatedResult } from '@project20/shared';
@@ -113,14 +114,13 @@ export class UsuarioService {
     };
   }
 
-  /** Altera campos do usuário. Desenvolvedor só pode alterar o próprio perfil. */
+  /**
+   * Altera campos do usuário. Só gestor e administrador alteram usuários; o desenvolvedor só envia as
+   * próprias `anotacoes` (o pad), e nenhum outro campo, nem do próprio perfil.
+   */
   async alterar(dto: UsuarioInternoAlterarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<UsuarioAlteradoDto>> {
-    if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR && usuarioAtivo.sub !== dto.id) {
-      throw new UnauthorizedAccessException('Desenvolvedor pode alterar apenas o próprio perfil');
-    }
-
-    if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR && dto.tipo !== undefined) {
-      throw new UnauthorizedAccessException('Apenas gestores podem alterar o tipo de usuário');
+    if (!temPermissaoDeGestor(usuarioAtivo.tipo)) {
+      this.validarSomenteAnotacoesDoProprio(dto, usuarioAtivo);
     }
 
     const usuarioEncontrado = await this.usuarioRepositorio.recuperar({ id: dto.id });
@@ -172,6 +172,16 @@ export class UsuarioService {
     const outrosAdministradoresAtivos = administradoresAtivos.filter((administrador) => administrador.id !== usuario.id);
     if (outrosAdministradoresAtivos.length === 0) {
       throw new BusinessException('O sistema deve ter ao menos um administrador ativo');
+    }
+  }
+
+  /** Quem não é gestor altera apenas o campo `anotacoes` e apenas do próprio usuário. */
+  private validarSomenteAnotacoesDoProprio(dto: UsuarioInternoAlterarDto, usuarioAtivo: JwtPayload): void {
+    const camposNegados = Object.entries(dto).filter(
+      ([campo, valor]) => campo !== 'id' && campo !== 'anotacoes' && valor !== undefined,
+    );
+    if (usuarioAtivo.sub !== dto.id || camposNegados.length > 0) {
+      throw new UnauthorizedAccessException('Apenas gestores podem alterar usuários; o desenvolvedor altera só as próprias anotações');
     }
   }
 

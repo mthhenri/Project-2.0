@@ -127,7 +127,7 @@ export class UsuarioController {
     return this.usuarioService.recuperar({ id }, usuarioAtivo);
   }
 
-  @ApiOperation({ summary: 'Alterar dados do usuário (desenvolvedor altera apenas o próprio perfil)' })
+  @ApiOperation({ summary: 'Alterar dados do usuário (somente gestor; desenvolvedor altera só as próprias anotações)' })
   @ApiResponse({
     status: 200,
     description: 'Usuário alterado com sucesso',
@@ -141,7 +141,7 @@ export class UsuarioController {
   })
   @ApiResponse({ status: 400, description: 'Dados inválidos', schema: { example: { sucesso: false, dados: null, mensagem: 'Validation failed', erros: ['nomeCompleto must be longer than or equal to 3 characters'] } } })
   @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
-  @ApiResponse({ status: 403, description: 'Desenvolvedor tentando alterar perfil de outro usuário', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+  @ApiResponse({ status: 403, description: 'Desenvolvedor tentando alterar outro usuário ou qualquer campo além das próprias anotações', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
   @ApiResponse({ status: 404, description: 'Usuário não encontrado', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
   @Put(':id')
   alterar(

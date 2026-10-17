@@ -168,6 +168,25 @@ test('gestor continua criando gestor e desenvolvedor', async () => {
   assert.deepEqual(repositorio.chamadas, ['inserir', 'inserir']);
 });
 
+// Só gestor e administrador alteram usuários; o desenvolvedor altera apenas as próprias anotações.
+test('desenvolvedor altera só as próprias anotações', async () => {
+  const repositorio = criarRepositorioDeUsuarios({ ...DESENVOLVEDOR_ATIVO, id: 3 }, [1]);
+  const desenvolvedorLogado = { sub: 3, tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
+  await criarServico(repositorio).alterar({ id: 3, anotacoes: 'meu pad' }, desenvolvedorLogado);
+  assert.deepEqual(repositorio.chamadas, ['alterar']);
+});
+
+test('desenvolvedor não altera outro campo do próprio perfil nem usuário nenhum', async () => {
+  const repositorio = criarRepositorioDeUsuarios({ ...DESENVOLVEDOR_ATIVO, id: 3 }, [1]);
+  const servico = criarServico(repositorio);
+  const desenvolvedorLogado = { sub: 3, tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
+  await assert.rejects(() => servico.alterar({ id: 3, nomeCompleto: 'Outro Nome' }, desenvolvedorLogado), UnauthorizedAccessException);
+  await assert.rejects(() => servico.alterar({ id: 3, cargoTitulo: 'Outro Cargo', anotacoes: 'x' }, desenvolvedorLogado), UnauthorizedAccessException);
+  await assert.rejects(() => servico.alterar({ id: 3, tipo: TipoUsuarioEnum.GESTOR }, desenvolvedorLogado), UnauthorizedAccessException);
+  await assert.rejects(() => servico.alterar({ id: 4, anotacoes: 'x' }, desenvolvedorLogado), UnauthorizedAccessException);
+  assert.deepEqual(repositorio.chamadas, []);
+});
+
 test('gestor não promove ninguém a administrador', async () => {
   const repositorio = criarRepositorioDeUsuarios(GESTOR_ATIVO, [1]);
   await assert.rejects(

@@ -12,6 +12,18 @@
 
 ---
 
+## 2026-10-17 — Só gestor e administrador alteram usuários (fecha o que ficou aberto no P-006)
+
+Decisão do autor depois do P-006: `PUT /usuario/:id` deixa de aceitar o desenvolvedor, inclusive no próprio perfil. A única exceção
+é o campo `anotacoes` do próprio usuário, porque o pad (`usuario-anotacoes-dialog`) o salva por esse mesmo PUT; qualquer outro
+campo dá 403 (`UsuarioService.validarSomenteAnotacoesDoProprio`). Isso substitui a regra antiga "desenvolvedor altera o próprio
+perfil" e a trava de `tipo` da task 39 para esse caso. Nenhuma tela do desenvolvedor mudou (só gestor edita pela tela de Usuários).
+
+- **Testes:** `backend` 49/49 (2 novos: só as próprias anotações; nome, cargo, tipo e outro usuário negados); build ok.
+- **Ao vivo (API real):** dev → próprias anotações 200; próprio nome, próprio tipo e anotações de outro usuário 403;
+  gestor/administrador → dev 200. Usuário de teste excluído.
+- **Para o bloco 8 (pad estruturado):** preservar essa exceção ou mover o pad para uma rota própria só do dono.
+
 ## 2026-10-17 — P-006 resolvido: só gestor ou administrador troca a senha de outro usuário
 
 `PATCH /usuario/:id/senha` não era `@GestorOnly` e não conferia quem estava logado: um desenvolvedor trocava a senha de
