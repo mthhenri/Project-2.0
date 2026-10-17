@@ -211,6 +211,11 @@ export class MarkdownEditorComponent implements ControlValueAccessor {
     this.aoMenuContexto.emit({ inicio: 0, fim: texto.length, texto, evento });
   }
 
+  /** Clique na caixa de uma tarefa marca ou desmarca. */
+  aoClicarFormatado(evento: MouseEvent): void {
+    if (this.editorFormatado?.alternarMarcacaoNoClique(evento.target, evento.clientX)) evento.preventDefault();
+  }
+
   aoTeclarFormatado(evento: KeyboardEvent): void {
     if (evento.isComposing || this.desabilitado()) return;
     const comControle = evento.ctrlKey || evento.metaKey;

@@ -45,6 +45,7 @@
         [attr.aria-label]="rotulo()"
         [style.min-height.rem]="alturaMinima()"
         (keydown)="aoTeclarFormatado($event)"
+        (click)="aoClicarFormatado($event)"
         (contextmenu)="aoAbrirMenuContextoFormatado($event)"
       ></div>
     } @else {

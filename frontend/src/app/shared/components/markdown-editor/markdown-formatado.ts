@@ -353,6 +353,27 @@ export class EditorFormatado {
     });
   }
 
+  /**
+   * Clique na caixa de uma tarefa (a faixa à esquerda do item): marca ou desmarca. Devolve `true` se tratou o clique.
+   * A caixa é desenhada por CSS (`::before`), então o clique chega no `<li>`.
+   */
+  alternarMarcacaoNoClique(alvo: EventTarget | null, clienteX: number): boolean {
+    const item = (alvo as HTMLElement | null)?.closest?.('li[data-item-type="task"]') as HTMLElement | null;
+    if (!item || clienteX - item.getBoundingClientRect().left > 4) return false;
+    return this.editor.action((contexto) => {
+      const view = contexto.get(editorViewCtx);
+      const posicao = view.posAtDOM(item, 0);
+      const $posicao = view.state.doc.resolve(posicao);
+      for (let profundidade = $posicao.depth; profundidade > 0; profundidade--) {
+        const no = $posicao.node(profundidade);
+        if (no.type.name !== 'list_item') continue;
+        view.dispatch(view.state.tr.setNodeMarkup($posicao.before(profundidade), undefined, { ...no.attrs, checked: !no.attrs['checked'] }));
+        return true;
+      }
+      return false;
+    });
+  }
+
   focar(): void {
     this.editor.action((contexto) => contexto.get(editorViewCtx).focus());
   }
