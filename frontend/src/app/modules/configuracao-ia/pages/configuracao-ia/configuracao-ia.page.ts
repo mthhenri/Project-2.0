@@ -1,4 +1,4 @@
-import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal, viewChild } from '@angular/core';
 import { DatePipe, LowerCasePipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -14,6 +14,7 @@ import { TabsModule } from 'primeng/tabs';
 import { TagModule } from 'primeng/tag';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { ConfiguracaoIaResumoDto, EsforcoIaEnum, EstadoIaEnum, TipoProvedorIaEnum } from '@project20/shared';
+import { PromptsAbaComponent } from '../../components/prompts-aba/prompts-aba.component';
 import { ConfiguracaoIaService } from '../../services/configuracao-ia.service';
 import {
   OPCOES_ESFORCO,
@@ -49,6 +50,7 @@ import {
     TabsModule,
     TagModule,
     ToggleSwitchModule,
+    PromptsAbaComponent,
   ],
   templateUrl: './configuracao-ia.page.html',
   styleUrl: './configuracao-ia.page.scss',
@@ -66,6 +68,8 @@ export class ConfiguracaoIaPage implements OnInit {
   readonly rotuloDoProvedor = rotuloDoProvedor;
   readonly rotuloEstado = ROTULO_ESTADO_IA;
   readonly severidadeEstado = SEVERIDADE_ESTADO_IA;
+
+  private readonly abaPrompts = viewChild(PromptsAbaComponent);
 
   readonly carregando = signal(true);
   readonly jaCarregou = signal(false);
@@ -114,6 +118,11 @@ export class ConfiguracaoIaPage implements OnInit {
 
   ngOnInit(): void {
     this.carregar();
+  }
+
+  /** Usado pela rota: sair da tela com rascunho de prompt pendente pergunta antes. */
+  podeSair(): Promise<boolean> {
+    return this.abaPrompts()?.podeSair() ?? Promise.resolve(true);
   }
 
   carregar(): void {

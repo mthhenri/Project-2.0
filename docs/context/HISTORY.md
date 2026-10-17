@@ -12,6 +12,26 @@
 
 ---
 
+## 2026-10-17 — Task 133: aba Prompts das Configurações da IA
+
+Bloco 4 do rework do chat com IA (5 de 5, fecha o bloco). Frontend: `PromptService` (as 6 rotas da 131) e o componente `prompts-aba` dentro do `p-tabpanel` "Prompts" da tela da 132 (a aba deixou
+de ser desabilitada). Grade de duas colunas (lista de tipos + painel); no painel, "Versão ativa" e "Rascunho" lado a lado (empilhados abaixo de 1500 px) e o histórico embaixo. O editor parte do
+rascunho salvo ou, sem rascunho, da versão ativa. "Ativar rascunho" só habilita com rascunho salvo e sem mudança pendente (senão o administrador ativaria um texto diferente do que vê).
+Sair com mudança pendente pergunta: trocar de tipo (`p-confirmdialog` `prompts-pendente`) e sair da tela (`canDeactivate` da rota, que delega à aba). Descartar o rascunho oferece o Desfazer
+padrão, que regrava o mesmo texto como rascunho (o descarte é soft delete, mas o rascunho voltaria com outro id; o texto é o que importa). Análogo registrado: a aba "Provedor e modelos" (cartões
+com borda e título).
+
+- **Ao vivo (servidor temporário na 4201, administrador `gestor.inicial`):** editei o rascunho de "Conversa do dia", salvei (etiqueta "Rascunho" na lista e "Salvo"), ativei com confirmação (versão 2
+  ativa, versão 1 no histórico), "Ver" abriu o texto da versão, "Usar como base" preencheu o editor sem gravar, trocar de tipo com mudança pendente abriu a confirmação (continuar editando manteve
+  o tipo; descartar e sair trocou), "Restaurar padrão" voltou à versão 1 ativa com a 2 no histórico, e descartar rascunho + Desfazer devolveu o rascunho. Vistas em 1920×1080, 1366×768 e
+  1080×1920, claro e escuro.
+- **Achados na verificação:** (1) o `<strong>` do aviso virava item solto do flex e espalhava o texto: envolvi a frase num `span`; (2) em 1080×1920 a lista de tipos virava sete linhas altas:
+  agora é uma fileira que quebra linha; (3) no tema escuro o tipo aberto ficava com fundo claro e texto ilegível (`--p-content-hover-background`): troquei por `--app-surface-100`, e corrigi o mesmo
+  token no histórico da aba "Provedor e modelos" (task 132), que tinha o mesmo defeito.
+- **Banco depois da verificação:** o prompt "Conversa do dia" tem a versão 2 (texto de teste) só no histórico e a versão 1 ativa; sem rascunho.
+- **Não verificado:** estado de erro de rede da aba (só o bloco com "Tentar de novo" existe, não forçado); as demais tipos além de "Conversa do dia" só foram abertas, não editadas.
+- **Testes:** sem teste de frontend (P-001) e sem lint; build do frontend ok (avisos de budget de `.scss` preexistentes).
+
 ## 2026-10-17 — Task 132: tela de Configurações da IA (provedor, modelos e flags)
 
 Bloco 4 do rework do chat com IA (4 de 5). Backend: `GET /ia/estado` (`IaController`, `@AdministradorOnly`) devolve o `EstadoIaEnum` em memória. Frontend: módulo `configuracao-ia` (rota

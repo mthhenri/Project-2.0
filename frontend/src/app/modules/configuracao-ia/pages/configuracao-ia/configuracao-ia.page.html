@@ -26,7 +26,7 @@
     <p-tabs value="provedor">
       <p-tablist>
         <p-tab value="provedor"><i class="pi pi-sliders-h mr-2"></i>Provedor e modelos</p-tab>
-        <p-tab value="prompts" [disabled]="true"><i class="pi pi-file-edit mr-2"></i>Prompts</p-tab>
+        <p-tab value="prompts"><i class="pi pi-file-edit mr-2"></i>Prompts</p-tab>
       </p-tablist>
 
       <p-tabpanels>
@@ -229,6 +229,10 @@
               </aside>
             </div>
           }
+        </p-tabpanel>
+
+        <p-tabpanel value="prompts">
+          <app-prompts-aba />
         </p-tabpanel>
       </p-tabpanels>
     </p-tabs>

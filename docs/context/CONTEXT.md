@@ -142,13 +142,17 @@ project-2.0/
   com trecho selecionado; sem consumidor ou sem seleção o menu do navegador segue); o drawer abre um `p-contextmenu` cujos itens são
   propriedade direta (a seção de origem fica `visible = false`), salva as duas seções (`garantirSalva`), chama `POST /anotacao/:id/mover`
   e oferece Desfazer de 7 s (move de volta); 400/409 recarregam as duas seções e avisam.
+- **[task 133]** Aba **"Prompts"** das Configurações da IA (`modules/configuracao-ia/components/prompts-aba/`, `PromptService` no frontend): lista dos 7 tipos (versão ativa e etiqueta "Rascunho"),
+  painel com a versão ativa em `app-markdown-visualizador`, rascunho em `app-markdown-editor`, "Salvar rascunho" (botão; trocar de tipo ou sair da tela com mudança pendente pergunta, via
+  `canDeactivate` da rota), "Ativar rascunho" (confirmação, só com o rascunho salvo e sem mudança pendente), descartar rascunho com Desfazer (regrava o mesmo texto), histórico com "Ver" e
+  "Usar como base" (só preenche o editor) e "Restaurar padrão" (confirmação; reativa a versão 1). "Testar antes de salvar" fica desabilitado até o chat (bloco 5). Fecha o bloco 4.
 - **[task 132]** Tela **Configurações da IA** (`/configuracao-ia`, `modules/configuracao-ia/`, exclusiva de administrador: item "IA" na sidebar com `somenteAdministrador` e tecla `g`+`i`,
   rota com `administradorGuard`): aba "Provedor e modelos" (formulário reativo com provedor, três modelos com sugestões, esforço, intervalo do check-in, duração e quatro interruptores,
   incluindo "IA desligada"; Google e OpenAI listados e desabilitados), salvar cria a **versão seguinte**, histórico com "Usar como base" (só preenche o formulário), estado da IA em leitura
-  (`GET /ia/estado`). A aba "Prompts" existe desabilitada até a task 133. Análogo visual: a tela de Tags.
+  (`GET /ia/estado`). Análogo visual: a tela de Tags.
 - **[task 131]** Prompts da IA versionados: migration `0034` (`tipo_prompt` com 7 tipos, `prompt` com `ativo` e `rascunho` booleanos, versão 1 de cada tipo por seed) e módulo `prompt`
   exclusivo de administrador (listar tipos e versões, salvar/ativar/descartar rascunho, restaurar padrão), com `PromptService.obterAtivo(tipo)` em cache. Regra de uma ativa e um rascunho por tipo na
-  service (transação que trava a linha do tipo). Os textos-base dos seeds são curtos; os blocos 5 a 9 os refinam. Ainda sem tela (tasks 132 e 133).
+  service (transação que trava a linha do tipo). Os textos-base dos seeds são curtos; os blocos 5 a 9 os refinam. A tela é a aba "Prompts" (task 133).
 - **[task 130]** Módulo `ia` (`backend/src/modules/ia/`): `IaService` (níveis → modelo da configuração ativa, `gerar` e `transmitir` com streaming, estado em memória),
   interface `IaProvedor` e `AnthropicProvedor` (SDK `@anthropic-ai/sdk` agora em `^0.135`, importado **só** em `ia.module.ts`), `IaException` e `traduzirFalhaDeIa`.
   `AssistenteService` e `RelatorioService` usam o nível padrão pelo `IaService` (contratos HTTP e prompts iguais; a IA desligada ou sem chave dá `BusinessException` com a mensagem
