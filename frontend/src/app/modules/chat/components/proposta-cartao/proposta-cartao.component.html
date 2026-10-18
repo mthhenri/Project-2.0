@@ -5,17 +5,94 @@
       <p-tag [value]="rotuloStatus[propostaAtual.status]" [severity]="severidade[propostaAtual.status]" [rounded]="true" />
     </header>
 
-    <dl class="proposta-cartao__dados">
-      @for (par of paresDosDados(propostaAtual.dados); track par.chave) {
-        <dt>{{ par.chave }}</dt>
-        <dd>{{ par.valor }}</dd>
+    @switch (propostaAtual.tipo) {
+      @case (Tipo.CRIAR_ATIVIDADE) {
+        <div class="proposta-cartao__resumo">
+          <strong class="proposta-cartao__destaque">{{ texto('nome') }}</strong>
+          <span class="proposta-cartao__linha">
+            @if (texto('demandaNome')) {
+              <span>Demanda: {{ texto('demandaNome') }}</span>
+            }
+            <app-prioridade-selo [prioridade]="prioridadeDe(texto('prioridade') || 'INDEFINIDA')" />
+          </span>
+        </div>
       }
-    </dl>
+      @case (Tipo.INICIAR_EXECUCAO) {
+        <div class="proposta-cartao__resumo">
+          <strong class="proposta-cartao__destaque">{{ texto('atividadeNome') || 'Atividade ' + propostaAtual.dados['atividadeId'] }}</strong>
+          @if (texto('demandaNome')) {
+            <span class="proposta-cartao__linha">Demanda: {{ texto('demandaNome') }}</span>
+          }
+          <span class="proposta-cartao__linha">Descrição provisória: {{ texto('descricao') }}</span>
+          @if (texto('pausaraAtividadeNome')) {
+            <span class="proposta-cartao__aviso"><i class="pi pi-pause"></i>Pausa antes a execução em andamento: {{ texto('pausaraAtividadeNome') }}</span>
+          }
+        </div>
+      }
+      @case (Tipo.PAUSAR_EXECUCAO) {
+        <div class="proposta-cartao__resumo">
+          <strong class="proposta-cartao__destaque">{{ texto('atividadeNome') || 'Execução em andamento' }}</strong>
+          @if (texto('demandaNome')) {
+            <span class="proposta-cartao__linha">Demanda: {{ texto('demandaNome') }}</span>
+          }
+          <span class="proposta-cartao__linha">
+            {{ texto('descricao') ? 'Descrição do que foi feito: ' + texto('descricao') : 'Vale a descrição provisória da execução.' }}
+          </span>
+        </div>
+      }
+      @default {
+        <dl class="proposta-cartao__dados">
+          @for (par of paresDosDados(propostaAtual.dados); track par.chave) {
+            <dt>{{ par.chave }}</dt>
+            <dd>{{ par.valor }}</dd>
+          }
+        </dl>
+      }
+    }
 
-    @if (propostaAtual.status === Status.PENDENTE) {
+    @if (ajustando()) {
+      <form class="proposta-cartao__ajuste" [formGroup]="formularioAjuste" (ngSubmit)="confirmarAjuste()">
+        @if (propostaAtual.tipo === Tipo.CRIAR_ATIVIDADE) {
+          <label class="proposta-cartao__rotulo" for="ajuste-nome-{{ propostaAtual.id }}">Nome da atividade</label>
+          <input pInputText id="ajuste-nome-{{ propostaAtual.id }}" formControlName="nome" maxlength="255" class="w-full" />
+          @if (formularioAjuste.controls.nome.touched && formularioAjuste.controls.nome.invalid) {
+            <small class="proposta-cartao__erro-campo">Informe um nome com ao menos 3 caracteres</small>
+          }
+          <label class="proposta-cartao__rotulo" for="ajuste-prioridade-{{ propostaAtual.id }}">Prioridade</label>
+          <p-select
+            [inputId]="'ajuste-prioridade-' + propostaAtual.id"
+            formControlName="prioridade"
+            [options]="prioridadeService.prioridades()"
+            optionLabel="descricao"
+            optionValue="codigo"
+            appendTo="body"
+            class="w-full"
+          >
+            <ng-template #selectedItem let-prioridade>
+              <app-prioridade-selo [prioridade]="prioridade" />
+            </ng-template>
+            <ng-template #item let-prioridade>
+              <app-prioridade-selo [prioridade]="prioridade" />
+            </ng-template>
+          </p-select>
+        } @else {
+          <label class="proposta-cartao__rotulo" for="ajuste-descricao-{{ propostaAtual.id }}">
+            {{ propostaAtual.tipo === Tipo.INICIAR_EXECUCAO ? 'Descrição provisória' : 'Descrição do que foi feito' }}
+          </label>
+          <textarea pTextarea id="ajuste-descricao-{{ propostaAtual.id }}" formControlName="descricao" rows="3" [autoResize]="true" maxlength="1000" class="w-full"></textarea>
+        }
+        <div class="proposta-cartao__acoes">
+          <p-button type="submit" label="Confirmar com o ajuste" icon="pi pi-check" size="small" [loading]="operando()" />
+          <p-button label="Cancelar" severity="secondary" size="small" [text]="true" [disabled]="operando()" (onClick)="cancelarAjuste()" />
+        </div>
+      </form>
+    } @else if (propostaAtual.status === Status.PENDENTE) {
       <div class="proposta-cartao__acoes">
         <p-button label="Confirmar" icon="pi pi-check" size="small" [loading]="operando()" (onClick)="confirmar()" />
-        <p-button label="Recusar" severity="secondary" size="small" [outlined]="true" [disabled]="operando()" (onClick)="recusar()" />
+        @if (podeAjustar()) {
+          <p-button label="Ajustar" icon="pi pi-pencil" severity="secondary" size="small" [outlined]="true" [disabled]="operando()" (onClick)="abrirAjuste()" />
+        }
+        <p-button label="Recusar" severity="secondary" size="small" [text]="true" [disabled]="operando()" (onClick)="recusar()" />
       </div>
     } @else if (propostaAtual.status === Status.CONFIRMADA || propostaAtual.status === Status.AJUSTADA) {
       <div class="proposta-cartao__acoes">

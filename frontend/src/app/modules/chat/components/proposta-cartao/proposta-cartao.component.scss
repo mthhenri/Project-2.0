@@ -31,6 +31,51 @@
     color: var(--p-primary-600);
   }
 
+  &__resumo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.875rem;
+  }
+
+  &__destaque {
+    font-size: 0.9375rem;
+    overflow-wrap: anywhere;
+  }
+
+  &__linha {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--p-text-muted-color);
+    overflow-wrap: anywhere;
+  }
+
+  &__aviso {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    color: var(--p-orange-600);
+    font-size: 0.8125rem;
+  }
+
+  &__ajuste {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+  }
+
+  &__rotulo {
+    margin-top: 0.25rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+  }
+
+  &__erro-campo {
+    color: var(--p-red-500);
+  }
+
   &__dados {
     display: grid;
     grid-template-columns: max-content minmax(0, 1fr);

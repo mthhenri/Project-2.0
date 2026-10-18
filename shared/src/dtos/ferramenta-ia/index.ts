@@ -6,3 +6,8 @@ export * from './ExecucaoAtivaConsultarDto';
 export * from './ExecucaoAtivaConsultadaDto';
 export * from './MinhasExecucoesDoDiaListarDto';
 export * from './MinhasExecucoesDoDiaListadasDto';
+export * from './MinhasDemandasListarDto';
+export * from './MinhasDemandasListadasDto';
+export * from './ProporCriarAtividadeDto';
+export * from './ProporIniciarExecucaoDto';
+export * from './ProporPausarExecucaoDto';

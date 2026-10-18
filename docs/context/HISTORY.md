@@ -12,6 +12,19 @@
 
 ---
 
+## 2026-10-18 — Task 145: propostas de atividade e de execução pelo chat
+
+Spec em `docs/specs/done/145-chat-propostas-de-atividade-e-execucao.spec.md`.
+
+- **Executores** (registrados em `ExecutorPropostaIaRegistro` na subida dos módulos; chamam as services de hoje com o usuário do token): `CRIAR_ATIVIDADE` (nasce planejada; prioridade da proposta ou INDEFINIDA; desfazer exclui só se a atividade não tem nenhuma execução, via `AtividadeRepository.possuiExecucao`), `INICIAR_EXECUCAO` (pausa antes a ativa com a provisória dela ou "Pausada para iniciar outra atividade"; recusa iniciar a que já está ativa; se iniciar falhar depois da pausa, **reabre a anterior**; desfazer exclui a recém-iniciada enquanto ativa e reabre a pausada) e `PAUSAR_EXECUCAO` (a execução ativa na hora de confirmar; descrição da proposta ou provisória; sem nenhuma, recusa; desfazer reabre se não há outra ativa). Validação dos dados pelas classes do `shared` via `validarDadosDaProposta` (campo desconhecido recusado: o "Ajustar" não grava o que o executor não conhece).
+- **Ferramentas de proposta** (`FerramentaPropostaIa`; `montarDados` agora é assíncrono e recebe o usuário, para trazer nomes ao cartão): `propor_criar_atividade`, `propor_iniciar_execucao` (confere o acesso à atividade e avisa qual execução será pausada) e `propor_pausar_execucao` (recusa se não há execução ativa; a descrição é o "vou almoçar": só trabalho, nunca o almoço). Classes de entrada e de dados no `shared` (`Propor*Dto` e `Proposta*DadosDto`, estas com campos só de exibição).
+- **Leitura que faltou para o fluxo (decisão minha, fora da lista da spec):** `listar_minhas_demandas` (demandas atribuídas, as do seletor da tela) e `demandaId` em `listar_minhas_atividades`: sem isso a IA não achava o id da demanda e perguntava ao usuário em "na demanda X tenho que fazer Y". Achado só na verificação com a IA real.
+- **Cartão:** resumo por tipo (nome em destaque, demanda, selo de prioridade, descrição, aviso laranja de pausa) e **Ajustar** (formulário por tipo; "Confirmar com o ajuste" chama `ajustar` e oferece o Desfazer padrão). Os outros tipos continuam com pares chave/valor e sem Ajustar.
+- **Testes:** backend 243 verdes (executores: pausa antes, mesma atividade, falha depois da pausa reabre, desfazer seguro e inseguro, almoço; ferramentas só criam proposta e levam nomes; demandas).
+- **Verificado ao vivo** (IA real, administrador, dados de teste revertidos): "Bora fazer a atividade Teste ABC…" gerou o cartão de iniciar; **Ajustar** trocou a descrição e confirmar iniciou a execução com ela; "Vou almoçar agora" gerou a proposta de pausa com descrição; confirmar pausou e desfazer reabriu; "quero começar a AAA" gerou proposta que avisava a pausa da Teste ABC, confirmar pausou e iniciou a AAA e desfazer excluiu a nova e reabriu a anterior; "na demanda IA tenho que fazer duas coisas…" gerou duas propostas com prioridades ALTA e BAIXA, confirmar criou a atividade planejada ALTA e desfazer a excluiu; a outra foi recusada. A execução de teste foi excluída no fim (soft delete) e não ficou execução ativa.
+- **Efeito colateral:** a conversa de hoje do usuário de teste ganhou várias mensagens e propostas desses testes (histórico do chat não se apaga por desenho).
+- **Não verificado:** o botão Confirmar pelo clique na tela (os cliques foram por API, exceto o Ajustar, feito na tela); desenvolvedor (a conta é administrador); gate visual em 1366×768, 1080×1920 e tema escuro para o cartão novo; erro de ciclo/permissão na confirmação mostrado no cartão; Desfazer pelo toast padrão.
+
 ## 2026-10-18 — Task 144: ferramentas de leitura do desenvolvedor
 
 Spec em `docs/specs/done/144-chat-ferramentas-de-leitura-do-desenvolvedor.spec.md`.

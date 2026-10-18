@@ -17,7 +17,7 @@ export abstract class FerramentaPropostaIa<TEntrada extends object = object> ext
   }
 
   /** Os dados guardados na proposta; por padrão, a própria entrada validada. */
-  protected montarDados(entrada: TEntrada): Record<string, unknown> {
+  protected montarDados(entrada: TEntrada, _usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> | Record<string, unknown> {
     return { ...entrada } as Record<string, unknown>;
   }
 
@@ -25,7 +25,7 @@ export abstract class FerramentaPropostaIa<TEntrada extends object = object> ext
     const proposta = await this.propostaIaService.criar({
       usuarioId: usuarioAtivo.sub,
       tipo: this.tipoProposta,
-      dados: this.montarDados(entrada),
+      dados: await this.montarDados(entrada, usuarioAtivo),
     });
     return {
       propostaId: proposta.id,

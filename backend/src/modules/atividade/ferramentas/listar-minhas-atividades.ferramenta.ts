@@ -44,6 +44,7 @@ export class ListarMinhasAtividadesFerramenta extends FerramentaIa<MinhasAtivida
         nome: atividade.nome,
         status: atividade.status,
         prioridade: atividade.prioridade.descricao,
+        demandaId: atividade.demandaId,
         demanda: atividade.nomeDemanda,
         projeto: atividade.nomeProjeto,
         emExecucao: atividade.execucaoAtivaId !== null,

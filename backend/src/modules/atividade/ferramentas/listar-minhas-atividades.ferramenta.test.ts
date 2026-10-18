@@ -12,6 +12,7 @@ function atividade(id: number, parcial: Record<string, unknown> = {}) {
     nome: `Atividade ${id}`,
     status: TipoAtividadeStatusEnum.DESENVOLVENDO,
     prioridade: { codigo: 'ALTA', descricao: 'Alta', ordem: 2, cor: '#f97316' },
+    demandaId: 3,
     nomeDemanda: 'Autenticação',
     nomeProjeto: 'Loja',
     execucaoAtivaId: null,
@@ -54,6 +55,7 @@ test('resume cada atividade e mantém a ordem que a service devolve (prioridade)
   const resultado = await ferramenta.executar({}, USUARIO);
   assert.deepEqual(resultado.atividades.map((item) => [item.id, item.prioridade, item.emExecucao]), [[1, 'Urgente', true], [2, 'Alta', false]]);
   assert.equal(resultado.atividades[0].demanda, 'Autenticação');
+  assert.equal(resultado.atividades[0].demandaId, 3);
   assert.equal(resultado.haMais, false);
 });
 

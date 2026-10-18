@@ -368,6 +368,20 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
     return resultado[0].existe;
   }
 
+  /** Indica se a atividade tem alguma execução (em andamento ou encerrada); desfazer a criação por proposta só vale sem nenhuma. */
+  async possuiExecucao(dto: AtividadeRecuperarDto): Promise<boolean> {
+    const resultado = await this.executarConsulta<{ existe: boolean }>(
+      `SELECT EXISTS(
+         SELECT 1
+         FROM execucao
+         WHERE execucao.atividade_id = :atividadeId
+           AND execucao.is_deleted = false
+       ) AS existe`,
+      { atividadeId: dto.id },
+    );
+    return resultado[0].existe;
+  }
+
   /**
    * Verifica se o usuário está atribuído à demanda via demanda_usuario.
    * Usado para controle de acesso na criação e atualização de atividades.

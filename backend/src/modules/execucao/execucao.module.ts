@@ -5,13 +5,29 @@ import { ExecucaoRepository } from './repositories/execucao.repository';
 import { AtividadeModule } from '../atividade/atividade.module';
 import { FerramentaIaModule } from '../ferramenta-ia/ferramenta-ia.module';
 import { FerramentaIaRegistro } from '../ferramenta-ia/services/ferramenta-ia.registro';
+import { ExecutorPropostaIaRegistro } from '../proposta-ia/domain/executor-proposta-ia';
+import { PropostaIaModule } from '../proposta-ia/proposta-ia.module';
+import { DemandaModule } from '../demanda/demanda.module';
+import { IniciarExecucaoExecutor } from './executores/iniciar-execucao.executor';
+import { PausarExecucaoExecutor } from './executores/pausar-execucao.executor';
+import { ProporIniciarExecucaoFerramenta } from './ferramentas/propor-iniciar-execucao.ferramenta';
+import { ProporPausarExecucaoFerramenta } from './ferramentas/propor-pausar-execucao.ferramenta';
 import { ConsultarExecucaoAtivaFerramenta } from './ferramentas/consultar-execucao-ativa.ferramenta';
 import { ListarMinhasExecucoesDoDiaFerramenta } from './ferramentas/listar-minhas-execucoes-do-dia.ferramenta';
 
 @Module({
-  imports:     [AtividadeModule, FerramentaIaModule],
+  imports:     [AtividadeModule, DemandaModule, FerramentaIaModule, PropostaIaModule],
   controllers: [ExecucaoController],
-  providers:   [ExecucaoService, ExecucaoRepository, ConsultarExecucaoAtivaFerramenta, ListarMinhasExecucoesDoDiaFerramenta],
+  providers:   [
+    ExecucaoService,
+    ExecucaoRepository,
+    ConsultarExecucaoAtivaFerramenta,
+    ListarMinhasExecucoesDoDiaFerramenta,
+    ProporIniciarExecucaoFerramenta,
+    ProporPausarExecucaoFerramenta,
+    IniciarExecucaoExecutor,
+    PausarExecucaoExecutor,
+  ],
   exports:     [ExecucaoService, ExecucaoRepository],
 })
 export class ExecucaoModule implements OnModuleInit {
@@ -19,11 +35,20 @@ export class ExecucaoModule implements OnModuleInit {
     private readonly registroDeFerramentas: FerramentaIaRegistro,
     private readonly consultarExecucaoAtiva: ConsultarExecucaoAtivaFerramenta,
     private readonly listarMinhasExecucoesDoDia: ListarMinhasExecucoesDoDiaFerramenta,
+    private readonly proporIniciarExecucao: ProporIniciarExecucaoFerramenta,
+    private readonly proporPausarExecucao: ProporPausarExecucaoFerramenta,
+    private readonly registroDeExecutores: ExecutorPropostaIaRegistro,
+    private readonly iniciarExecucaoExecutor: IniciarExecucaoExecutor,
+    private readonly pausarExecucaoExecutor: PausarExecucaoExecutor,
   ) {}
 
   /** As ferramentas de IA do domínio de execução se registram aqui. */
   onModuleInit(): void {
     this.registroDeFerramentas.registrar(this.consultarExecucaoAtiva);
     this.registroDeFerramentas.registrar(this.listarMinhasExecucoesDoDia);
+    this.registroDeFerramentas.registrar(this.proporIniciarExecucao);
+    this.registroDeFerramentas.registrar(this.proporPausarExecucao);
+    this.registroDeExecutores.registrar(this.iniciarExecucaoExecutor);
+    this.registroDeExecutores.registrar(this.pausarExecucaoExecutor);
   }
 }
