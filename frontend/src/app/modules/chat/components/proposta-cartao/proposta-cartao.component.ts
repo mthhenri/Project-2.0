@@ -11,6 +11,7 @@ import { TagModule } from 'primeng/tag';
 import { TextareaModule } from 'primeng/textarea';
 import { PropostaIaResumoDto, StandardResponse, StatusPropostaIaEnum, TipoAtividadePrioridadeEnum, TipoAtividadeStatusEnum, TipoPropostaIaEnum } from '@project20/shared';
 import { AtividadeService } from '../../../atividade/services/atividade.service';
+import { ATIVIDADE_STATUS_OPCOES } from '../../../atividade/models/atividade.model';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { AtividadePrioridadeService } from '../../../../core/services/atividade-prioridade.service';
 import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
@@ -125,6 +126,12 @@ export class PropostaCartaoComponent {
   texto(chave: string): string {
     const valor = this.proposta()?.dados[chave];
     return typeof valor === 'string' ? valor : '';
+  }
+
+  /** Rótulo de um status de atividade guardado na proposta (vazio se não houver). */
+  rotuloDoStatus(chave: string): string {
+    const codigo = this.texto(chave);
+    return ATIVIDADE_STATUS_OPCOES.find((opcao) => opcao.value === codigo)?.label ?? '';
   }
 
   /** Um dado numérico da proposta (0 se não houver). */

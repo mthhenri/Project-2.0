@@ -68,6 +68,19 @@ test('propor iniciar numa atividade que não é planejada nem em desenvolvimento
   assert.equal(propostas.length, 0);
 });
 
+test('propor iniciar com novoStatus numa atividade pendente cria a proposta e guarda o status anterior', async () => {
+  const { iniciar, propostas } = montar();
+  await iniciar.executar({ atividadeId: 8, descricao: 'Revisar', novoStatus: 'DESENVOLVENDO' } as never, USUARIO);
+  assert.equal(propostas[0].dados['novoStatus'], 'DESENVOLVENDO');
+  assert.equal(propostas[0].dados['statusAnterior'], 'PENDENTE');
+});
+
+test('propor iniciar com novoStatus igual ao atual não registra mudança', async () => {
+  const { iniciar, propostas } = montar();
+  await iniciar.executar({ atividadeId: 5, descricao: 'Layout', novoStatus: 'PLANEJADA' } as never, USUARIO);
+  assert.equal(propostas[0].dados['statusAnterior'], undefined);
+});
+
 test('propor pausar sem execução em andamento não cria proposta', async () => {
   const { pausar, propostas } = montar({ ativa: null });
   await assert.rejects(pausar.executar({}, USUARIO), BusinessException);

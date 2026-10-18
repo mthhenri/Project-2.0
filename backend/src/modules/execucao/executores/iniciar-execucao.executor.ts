@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { PropostaIniciarExecucaoDadosDto, TipoPropostaIaEnum } from '@project20/shared';
+import { PropostaIniciarExecucaoDadosDto, TipoAtividadeStatusEnum, TipoPropostaIaEnum } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
+import { AtividadeService } from '../../atividade/services/atividade.service';
 import { ExecutorPropostaIa } from '../../proposta-ia/domain/executor-proposta-ia';
 import { validarDadosDaProposta } from '../../proposta-ia/domain/validar-dados-da-proposta';
 import { ExecucaoService } from '../services/execucao.service';
@@ -12,14 +13,18 @@ export const DESCRICAO_PAUSA_PARA_INICIAR_OUTRA = 'Pausada para iniciar outra at
 /**
  * Executor da proposta `INICIAR_EXECUCAO`: **pausa antes** a execução ativa do usuário (se houver) e inicia a nova, tudo pela
  * `ExecucaoService` com o usuário do token (valem o dono da atividade, o status executável e a regra de uma execução ativa). Se
- * iniciar falhar depois da pausa, reabre a anterior. Desfazer exclui a execução recém-iniciada (só enquanto está em andamento) e
- * reabre a que foi pausada.
+ * iniciar falhar depois da pausa, reabre a anterior. Quando o usuário escolheu mudar o status da atividade (`novoStatus`), muda-o
+ * antes de iniciar e o devolve se iniciar falhar. Desfazer exclui a execução recém-iniciada (só enquanto está em andamento), reabre a
+ * que foi pausada e devolve o status.
  */
 @Injectable()
 export class IniciarExecucaoExecutor implements ExecutorPropostaIa {
   readonly tipo = TipoPropostaIaEnum.INICIAR_EXECUCAO;
 
-  constructor(private readonly execucaoService: ExecucaoService) {}
+  constructor(
+    private readonly execucaoService: ExecucaoService,
+    private readonly atividadeService: AtividadeService,
+  ) {}
 
   validar(dados: Record<string, unknown>): void {
     validarDadosDaProposta(PropostaIniciarExecucaoDadosDto, dados);
@@ -34,14 +39,18 @@ export class IniciarExecucaoExecutor implements ExecutorPropostaIa {
       await this.execucaoService.encerrar({ id: anterior.id, descricao: anterior.descricao.trim() || DESCRICAO_PAUSA_PARA_INICIAR_OUTRA }, usuarioAtivo);
     }
 
+    const statusAnterior = entrada.novoStatus ? entrada.statusAnterior : undefined;
     try {
+      if (entrada.novoStatus && statusAnterior) await this.atividadeService.alterar({ id: entrada.atividadeId, status: entrada.novoStatus }, usuarioAtivo);
       const iniciada = (await this.execucaoService.iniciar({ atividadeId: entrada.atividadeId, descricao: entrada.descricao }, usuarioAtivo)).dados;
       return {
         execucaoId: iniciada?.id,
         atividadeId: entrada.atividadeId,
+        ...(statusAnterior ? { statusAnterior } : {}),
         ...(anterior ? { pausouExecucaoId: anterior.id, pausouDescricao: anterior.descricao.trim() || DESCRICAO_PAUSA_PARA_INICIAR_OUTRA } : {}),
       };
     } catch (erro) {
+      if (statusAnterior) await this.restaurarStatus(entrada.atividadeId, statusAnterior, usuarioAtivo).catch(() => undefined);
       if (anterior) await this.reabrir(anterior.id, anterior.descricao.trim() || DESCRICAO_PAUSA_PARA_INICIAR_OUTRA, usuarioAtivo).catch(() => undefined);
       throw erro;
     }
@@ -60,10 +69,17 @@ export class IniciarExecucaoExecutor implements ExecutorPropostaIa {
     if (iniciada?.fimData) throw new BusinessException('A execução já foi encerrada: não dá para desfazer o início');
 
     await this.execucaoService.excluir({ id: execucaoId }, usuarioAtivo);
+    const statusAnterior = resultado['statusAnterior'] as TipoAtividadeStatusEnum | undefined;
+    const atividadeId = Number(resultado['atividadeId']);
+    if (statusAnterior && Number.isInteger(atividadeId)) await this.restaurarStatus(atividadeId, statusAnterior, usuarioAtivo);
     const pausadaId = Number(resultado['pausouExecucaoId']);
     if (Number.isInteger(pausadaId)) {
       await this.reabrir(pausadaId, String(resultado['pausouDescricao'] ?? DESCRICAO_PAUSA_PARA_INICIAR_OUTRA), usuarioAtivo);
     }
+  }
+
+  private async restaurarStatus(atividadeId: number, status: TipoAtividadeStatusEnum, usuarioAtivo: JwtPayload): Promise<void> {
+    await this.atividadeService.alterar({ id: atividadeId, status }, usuarioAtivo);
   }
 
   /** Reabre uma execução encerrada (fim nulo), desde que o usuário não tenha outra em andamento. */

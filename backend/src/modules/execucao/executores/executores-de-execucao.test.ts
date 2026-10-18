@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
 import { TipoUsuarioEnum } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
+import { AtividadeService } from '../../atividade/services/atividade.service';
 import { ExecucaoService } from '../services/execucao.service';
 import { DESCRICAO_PAUSA_PARA_INICIAR_OUTRA, IniciarExecucaoExecutor } from './iniciar-execucao.executor';
 import { DescreverExecucaoExecutor } from './descrever-execucao.executor';
@@ -60,9 +61,38 @@ function criarServico(inicial: Execucao[] = [], opcoes: { falharAoIniciar?: bool
 
 // ------------------------------------------------------------------ iniciar
 
+/** `AtividadeService` que só registra as mudanças de status pedidas. */
+function atividadesEmMemoria(chamadas: string[]) {
+  return { alterar: async (dto: { id: number; status: string }) => { chamadas.push(`status:${dto.id}:${dto.status}`); return { dados: {} }; } } as unknown as AtividadeService;
+}
+
+test('iniciar: com novoStatus muda o status antes de iniciar e devolve o anterior no resultado', async () => {
+  const { servico, chamadas } = criarServico();
+  const resultado = await new IniciarExecucaoExecutor(servico, atividadesEmMemoria(chamadas)).executar(
+    { atividadeId: 9, descricao: 'Validar e-mail', novoStatus: 'DESENVOLVENDO', statusAnterior: 'PLANEJADA' }, USUARIO);
+  assert.deepEqual(chamadas, ['status:9:DESENVOLVENDO', 'iniciar:9:Validar e-mail']);
+  assert.equal(resultado['statusAnterior'], 'PLANEJADA');
+});
+
+test('iniciar: se iniciar falha depois de mudar o status, o status volta', async () => {
+  const { servico, chamadas } = criarServico([], { falharAoIniciar: true });
+  await assert.rejects(new IniciarExecucaoExecutor(servico, atividadesEmMemoria(chamadas)).executar(
+    { atividadeId: 9, descricao: 'Validar e-mail', novoStatus: 'DESENVOLVENDO', statusAnterior: 'PENDENTE' }, USUARIO), BusinessException);
+  assert.deepEqual(chamadas, ['status:9:DESENVOLVENDO', 'iniciar:9:Validar e-mail', 'status:9:PENDENTE']);
+});
+
+test('iniciar: desfazer devolve o status anterior da atividade', async () => {
+  const { servico, chamadas } = criarServico();
+  const executor = new IniciarExecucaoExecutor(servico, atividadesEmMemoria(chamadas));
+  const resultado = await executor.executar({ atividadeId: 9, descricao: 'Validar e-mail', novoStatus: 'DESENVOLVENDO', statusAnterior: 'PENDENTE' }, USUARIO);
+  chamadas.length = 0;
+  await executor.desfazer(resultado, USUARIO);
+  assert.deepEqual(chamadas, ['excluir:100', 'status:9:PENDENTE']);
+});
+
 test('iniciar: sem outra ativa, só inicia', async () => {
   const { servico, chamadas } = criarServico();
-  const resultado = await new IniciarExecucaoExecutor(servico).executar({ atividadeId: 9, descricao: 'Validar e-mail' }, USUARIO);
+  const resultado = await new IniciarExecucaoExecutor(servico, atividadesEmMemoria(chamadas)).executar({ atividadeId: 9, descricao: 'Validar e-mail' }, USUARIO);
   assert.deepEqual(chamadas, ['iniciar:9:Validar e-mail']);
   assert.equal(resultado['atividadeId'], 9);
   assert.equal(resultado['pausouExecucaoId'], undefined);
@@ -70,33 +100,33 @@ test('iniciar: sem outra ativa, só inicia', async () => {
 
 test('iniciar: com outra ativa, pausa antes com a descrição provisória e inicia a nova', async () => {
   const { servico, chamadas } = criarServico([{ id: 1, atividadeId: 5, descricao: 'Layout do carrinho', fimData: null }]);
-  const resultado = await new IniciarExecucaoExecutor(servico).executar({ atividadeId: 9, descricao: 'Validar e-mail' }, USUARIO);
+  const resultado = await new IniciarExecucaoExecutor(servico, atividadesEmMemoria(chamadas)).executar({ atividadeId: 9, descricao: 'Validar e-mail' }, USUARIO);
   assert.deepEqual(chamadas, ['encerrar:1:Layout do carrinho', 'iniciar:9:Validar e-mail']);
   assert.equal(resultado['pausouExecucaoId'], 1);
 });
 
 test('iniciar: a execução pausada sem descrição recebe a descrição padrão de pausa', async () => {
   const { servico, chamadas } = criarServico([{ id: 1, atividadeId: 5, descricao: '  ', fimData: null }]);
-  await new IniciarExecucaoExecutor(servico).executar({ atividadeId: 9, descricao: 'Validar e-mail' }, USUARIO);
+  await new IniciarExecucaoExecutor(servico, atividadesEmMemoria(chamadas)).executar({ atividadeId: 9, descricao: 'Validar e-mail' }, USUARIO);
   assert.equal(chamadas[0], `encerrar:1:${DESCRICAO_PAUSA_PARA_INICIAR_OUTRA}`);
 });
 
 test('iniciar: a mesma atividade já em execução é recusada sem pausar nada', async () => {
   const { servico, chamadas } = criarServico([{ id: 1, atividadeId: 9, descricao: 'x', fimData: null }]);
-  await assert.rejects(new IniciarExecucaoExecutor(servico).executar({ atividadeId: 9, descricao: 'Validar e-mail' }, USUARIO), BusinessException);
+  await assert.rejects(new IniciarExecucaoExecutor(servico, atividadesEmMemoria(chamadas)).executar({ atividadeId: 9, descricao: 'Validar e-mail' }, USUARIO), BusinessException);
   assert.deepEqual(chamadas, []);
 });
 
 test('iniciar: se iniciar falha depois da pausa, a anterior é reaberta e o erro segue', async () => {
   const { servico, chamadas, execucoes } = criarServico([{ id: 1, atividadeId: 5, descricao: 'Layout do carrinho', fimData: null }], { falharAoIniciar: true });
-  await assert.rejects(new IniciarExecucaoExecutor(servico).executar({ atividadeId: 9, descricao: 'Validar e-mail' }, USUARIO), BusinessException);
+  await assert.rejects(new IniciarExecucaoExecutor(servico, atividadesEmMemoria(chamadas)).executar({ atividadeId: 9, descricao: 'Validar e-mail' }, USUARIO), BusinessException);
   assert.deepEqual(chamadas, ['encerrar:1:Layout do carrinho', 'iniciar:9:Validar e-mail', 'reabrir:1:Layout do carrinho']);
   assert.equal(execucoes[0].fimData, null);
 });
 
 test('iniciar: desfazer exclui a nova (se ainda em andamento) e reabre a que foi pausada', async () => {
   const { servico, chamadas, execucoes } = criarServico([{ id: 1, atividadeId: 5, descricao: 'Layout do carrinho', fimData: null }]);
-  const executor = new IniciarExecucaoExecutor(servico);
+  const executor = new IniciarExecucaoExecutor(servico, atividadesEmMemoria(chamadas));
   const resultado = await executor.executar({ atividadeId: 9, descricao: 'Validar e-mail' }, USUARIO);
   chamadas.length = 0;
   await executor.desfazer(resultado, USUARIO);
@@ -106,7 +136,7 @@ test('iniciar: desfazer exclui a nova (se ainda em andamento) e reabre a que foi
 
 test('iniciar: desfazer é recusado se a execução já foi encerrada', async () => {
   const { servico, chamadas } = criarServico();
-  const executor = new IniciarExecucaoExecutor(servico);
+  const executor = new IniciarExecucaoExecutor(servico, atividadesEmMemoria(chamadas));
   const resultado = await executor.executar({ atividadeId: 9, descricao: 'Validar e-mail' }, USUARIO);
   await servico.encerrar({ id: Number(resultado['execucaoId']), descricao: 'Feito' }, USUARIO);
   chamadas.length = 0;
@@ -115,7 +145,7 @@ test('iniciar: desfazer é recusado se a execução já foi encerrada', async ()
 });
 
 test('iniciar: os dados são validados (descrição curta, campo desconhecido)', () => {
-  const executor = new IniciarExecucaoExecutor(criarServico().servico);
+  const executor = new IniciarExecucaoExecutor(criarServico().servico, atividadesEmMemoria([]));
   assert.doesNotThrow(() => executor.validar({ atividadeId: 9, descricao: 'Validar e-mail', atividadeNome: 'Login' }));
   assert.throws(() => executor.validar({ atividadeId: 9, descricao: 'ab' }), BusinessException);
   assert.throws(() => executor.validar({ atividadeId: 0, descricao: 'Validar e-mail' }), BusinessException);
@@ -163,11 +193,11 @@ test('pausar: desfazer reabre a execução; recusa se já há outra em andamento
 test('proposta de iniciar fica obsoleta quando a atividade já está em execução (iniciada à mão)', async () => {
   const dados = { atividadeId: 9, descricao: 'Validar e-mail' };
   const emExecucao = criarServico([{ id: 1, atividadeId: 9, descricao: 'x', fimData: null }]);
-  assert.equal(await new IniciarExecucaoExecutor(emExecucao.servico).estaObsoleta(dados, USUARIO), true);
+  assert.equal(await new IniciarExecucaoExecutor(emExecucao.servico, atividadesEmMemoria([])).estaObsoleta(dados, USUARIO), true);
   const outraAtividade = criarServico([{ id: 1, atividadeId: 5, descricao: 'x', fimData: null }]);
-  assert.equal(await new IniciarExecucaoExecutor(outraAtividade.servico).estaObsoleta(dados, USUARIO), false);
+  assert.equal(await new IniciarExecucaoExecutor(outraAtividade.servico, atividadesEmMemoria([])).estaObsoleta(dados, USUARIO), false);
   const semExecucao = criarServico();
-  assert.equal(await new IniciarExecucaoExecutor(semExecucao.servico).estaObsoleta(dados, USUARIO), false);
+  assert.equal(await new IniciarExecucaoExecutor(semExecucao.servico, atividadesEmMemoria([])).estaObsoleta(dados, USUARIO), false);
 });
 
 test('proposta de pausar fica obsoleta quando já não há execução em andamento (pausada à mão)', async () => {

@@ -89,6 +89,9 @@
             <span class="proposta-cartao__linha">Demanda: {{ texto('demandaNome') }}</span>
           }
           <span class="proposta-cartao__linha">Descrição provisória: {{ texto('descricao') }}</span>
+          @if (texto('statusAnterior')) {
+            <span class="proposta-cartao__linha">Status: {{ rotuloDoStatus('statusAnterior') }} → {{ rotuloDoStatus('novoStatus') }}</span>
+          }
           @if (texto('pausaraAtividadeNome')) {
             <span class="proposta-cartao__aviso"><i class="pi pi-pause"></i>Pausa antes a execução em andamento: {{ texto('pausaraAtividadeNome') }}</span>
           }

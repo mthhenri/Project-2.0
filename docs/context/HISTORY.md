@@ -12,6 +12,16 @@
 
 ---
 
+## 2026-10-18 — IA pergunta o status antes de iniciar execução
+
+Pedido do autor, na sequência do bloco anterior: em vez de só recusar, a IA percebe o status da atividade e pergunta (PENDENTE: deixar PLANEJADA ou em DESENVOLVENDO; PLANEJADA: passar para DESENVOLVENDO ou iniciar como planejada).
+
+- **Contrato:** `ProporIniciarExecucaoDto` ganha `novoStatus?` (só PLANEJADA/DESENVOLVENDO) e os dados da proposta ganham `statusAnterior?` (preenchido pela ferramenta só quando o status muda). Sem migration nem tipo novo de proposta: a mudança de status viaja dentro de `INICIAR_EXECUCAO`.
+- **Ferramenta:** a descrição manda a IA conferir o status em `listar_minhas_atividades` e perguntar antes de propor; PENDENTE/DESENVOLVIDA sem `novoStatus` seguem recusadas (o erro orienta a perguntar). A pergunta em si é por instrução do modelo (não há como forçá-la no código para PLANEJADA, onde iniciar sem `novoStatus` é válido).
+- **Executor:** pausa a anterior → muda o status (`AtividadeService.alterar`, que já recusa atividade com execução ativa) → inicia; se iniciar falha, devolve o status e reabre a anterior; desfazer exclui a execução e devolve o status.
+- **Cartão do chat:** linha "Status: Pendente → Desenvolvendo".
+- **Testes:** backend 410 (+3 do executor, +2 da ferramenta); builds de shared/backend/frontend passam. **Não verificado:** conversa real com o modelo (se ele de fato pergunta antes) e o cartão renderizado no navegador.
+
 ## 2026-10-18 — IA: proposta de iniciar execução confere o status da atividade
 
 Achado do autor num teste: a IA propôs iniciar execução numa atividade fora de PLANEJADA/DESENVOLVENDO (ex.: PENDENTE); o cartão nasceu e só falhou ao Confirmar ("Só é possível iniciar execução em atividades planejadas ou em desenvolvimento").

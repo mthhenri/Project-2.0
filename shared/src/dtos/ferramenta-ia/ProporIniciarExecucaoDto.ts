@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
-import { IsInt, IsOptional, IsString, Matches, MaxLength, Min, MinLength } from 'class-validator';
+import { IsEnum, IsIn, IsInt, IsOptional, IsString, Matches, MaxLength, Min, MinLength } from 'class-validator';
+import { TipoAtividadeStatusEnum } from '../../enums/tipo-atividade-status.enum';
 import { MENSAGEM_CARACTERES_PROIBIDOS, REGEX_SEM_CARACTERES_PROIBIDOS } from '../../validators/caracteres-proibidos.validator';
 
 /**
@@ -17,6 +18,14 @@ export class ProporIniciarExecucaoDto {
   @MaxLength(1000)
   @Matches(REGEX_SEM_CARACTERES_PROIBIDOS, { message: MENSAGEM_CARACTERES_PROIBIDOS })
   descricao: string;
+
+  /**
+   * Status em que a atividade passa a ficar ao iniciar, quando o usuário escolheu mudá-lo (ex.: de PENDENTE ou PLANEJADA para
+   * DESENVOLVENDO). Sem ele, o status não muda: só vale para atividade já PLANEJADA ou DESENVOLVENDO.
+   */
+  @IsOptional()
+  @IsIn([TipoAtividadeStatusEnum.PLANEJADA, TipoAtividadeStatusEnum.DESENVOLVENDO])
+  novoStatus?: TipoAtividadeStatusEnum;
 }
 
 /** Os dados guardados na proposta: a entrada mais nomes, só para o cartão mostrar. */
@@ -33,4 +42,9 @@ export class PropostaIniciarExecucaoDadosDto extends ProporIniciarExecucaoDto {
   @IsOptional()
   @IsString()
   pausaraAtividadeNome?: string;
+
+  /** Status da atividade antes de a proposta mudá-lo (só presente quando muda); serve ao cartão e ao desfazer. */
+  @IsOptional()
+  @IsEnum(TipoAtividadeStatusEnum)
+  statusAnterior?: TipoAtividadeStatusEnum;
 }
