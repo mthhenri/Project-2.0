@@ -48,8 +48,11 @@
   }
 
   &__titulo {
+    max-width: 10rem;
+    overflow: hidden;
     font-size: 0.9375rem;
     white-space: nowrap;
+    transition: max-width 0.15s ease, margin-right 0.15s ease, opacity 0.15s ease;
   }
 
   &__conteudo {
@@ -168,6 +171,13 @@
     visibility: hidden;
   }
 
+  // Recolhido o título cede o lugar ao botão, que é o que sobra visível na faixa.
+  &__titulo {
+    max-width: 0;
+    margin-right: -0.5rem;
+    opacity: 0;
+  }
+
   &__rotulo-vertical {
     opacity: 1;
   }
@@ -175,6 +185,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   :host,
+  .chat-historico__titulo,
   .chat-historico__conteudo,
   .chat-historico__rotulo-vertical {
     transition: none;

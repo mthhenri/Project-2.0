@@ -12,6 +12,10 @@
 
 ---
 
+## 2026-10-17 — Correção: botão do histórico sumia recolhido
+
+Na animação do histórico o título (sem quebra de linha) empurrava o botão para fora da faixa recolhida e o `overflow: hidden` o cortava. O título agora encolhe a zero (largura, margem e opacidade, com transição) quando recolhido; conferido pelas posições no DOM (botão centralizado na faixa de 60 px, aberto e recolhido) e por captura de tela. Lição: a verificação da entrada anterior olhou só largura e opacidade, não se o botão continuava visível.
+
 ## 2026-10-17 — Chat: animação do histórico e do copiar; nota "Substituída pelo chat" no menu
 
 - **Histórico:** abrir e recolher animam a largura (0,15 s, como a barra lateral); o conteúdo fica sempre no DOM com a largura aberta e some por opacidade/visibilidade (com `inert` recolhido), então não reflui durante o movimento; o rótulo vertical aparece por opacidade. Sem movimento com `prefers-reduced-motion`.
