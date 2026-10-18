@@ -26,6 +26,7 @@ import { PromptService } from '../../prompt/services/prompt.service';
 import { PropostaIaService } from '../../proposta-ia/services/proposta-ia.service';
 import { limparTitulo } from '../domain/chat-consultas';
 import { montarAberturaDoDia } from '../domain/abertura-do-dia';
+import { INSTRUCOES_DE_SUGESTOES, interpretarSugestoes } from '../domain/sugestoes';
 import { instanteDoDiaUtilAnterior, montarConversaId } from '../domain/chat-conversa';
 import { ChatMensagemLida, paraResumo } from '../domain/chat-mensagem.documento';
 import { ChatMensagemRepository } from '../repositories/chat-mensagem.repository';
@@ -146,7 +147,8 @@ export class ChatService {
         texto: dto.texto,
       });
       await this.responder(usuarioAtivo, conversaId, propostasDoTurno, emitir, opcoes);
-      if (opcoes.contexto === ContextoChatEnum.CHAT) await this.nomearConversa(usuarioAtivo, conversaId);
+      // O nome da conversa e as sugestões não dependem um do outro: saem juntos, para o campo voltar logo.
+      if (opcoes.contexto === ContextoChatEnum.CHAT) await Promise.all([this.nomearConversa(usuarioAtivo, conversaId), this.sugerirProximasMensagens(usuarioAtivo, conversaId, emitir)]);
     } catch (erro) {
       await this.registrarFalha(usuarioAtivo, conversaId, propostasDoTurno, erro, emitir, true, opcoes.contexto);
     } finally {
@@ -174,6 +176,7 @@ export class ChatService {
     try {
       if (await jaDeuBomDia()) return;
       await this.responder(usuarioAtivo, conversaId, propostasDoTurno, emitir, { contexto: ContextoChatEnum.CHAT, abertura: this.abertura() });
+      await this.sugerirProximasMensagens(usuarioAtivo, conversaId, emitir);
     } catch (erro) {
       await this.registrarFalha(usuarioAtivo, conversaId, propostasDoTurno, erro, emitir, false);
     } finally {
@@ -258,6 +261,34 @@ export class ChatService {
       conteudoBruto,
     });
     emitir({ tipo: 'fim', mensagem: paraResumo(gravada) });
+  }
+
+  /**
+   * Depois de cada resposta do chat, sugere de 2 a 4 mensagens curtas que o usuário pode mandar (uma chamada rápida, sem ferramentas) e as
+   * emite no evento `sugestoes`. Não é gravado e falhar aqui nunca atrapalha o chat: sem o evento, a tela mostra as sugestões iniciais.
+   */
+  private async sugerirProximasMensagens(usuarioAtivo: JwtPayload, conversaId: string, emitir: (evento: ChatEventoDto) => void): Promise<void> {
+    try {
+      const conversa = await this.listarDoContexto(conversaId, usuarioAtivo.sub, ContextoChatEnum.CHAT);
+      const ultimaDaIa = [...conversa].reverse().find((mensagem) => mensagem.autor === AutorChatEnum.IA);
+      if (!ultimaDaIa) return;
+      const ultimaDoUsuario = [...conversa].reverse().find((mensagem) => mensagem.autor === AutorChatEnum.USUARIO);
+      const resposta = await this.iaService.gerar({
+        nivel: NivelIaEnum.RAPIDO,
+        instrucoes: INSTRUCOES_DE_SUGESTOES,
+        mensagens: [
+          {
+            papel: 'usuario',
+            conteudo: `${ultimaDoUsuario ? `Última mensagem do usuário: ${ultimaDoUsuario.texto}\n\n` : ''}Resposta da IA: ${ultimaDaIa.texto.slice(0, 2000)}`,
+          },
+        ],
+        maximoTokens: 150,
+      });
+      const itens = interpretarSugestoes(resposta.texto);
+      if (itens.length > 0) emitir({ tipo: 'sugestoes', itens });
+    } catch (erro) {
+      this.logger.warn(`Não foi possível sugerir as próximas mensagens: ${erro instanceof Error ? erro.message : String(erro)}`);
+    }
   }
 
   /**

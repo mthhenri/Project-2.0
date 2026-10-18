@@ -12,6 +12,17 @@
 
 ---
 
+## 2026-10-18 — Chat: ações rápidas úteis e sugestões da IA depois de cada resposta
+
+Pedido do autor ao ver "Que dia e hora são agora?" e "O que eu posso fazer por aqui?" como únicos botões.
+
+- **Botões iniciais:** por tipo de usuário. Desenvolvedor: "O que eu tenho pra fazer hoje?", "Quero começar uma atividade", "Criar uma atividade", "Anotar algo no pad". Gestor e administrador: "O que eu tenho pra fazer hoje?", "Criar uma demanda", "Criar um projeto", "Anotar algo no pad".
+- **Sugestões da IA:** novo evento `sugestoes` no fluxo do chat (`ChatEventoDto`), emitido depois do `fim`. O `ChatService.sugerirProximasMensagens` faz uma chamada rápida (`INSTRUCOES_DE_SUGESTOES`, 150 tokens, sem ferramentas) com a última mensagem do usuário e a resposta da IA, e `interpretarSugestoes` aceita só um array JSON de textos únicos de 2 a 60 caracteres, até 4, sem aspas. Roda em paralelo com o nome da conversa (o campo volta junto) e também depois do bom dia. **Não** roda no check-in (a janela tem as próprias sugestões). Falhar ou devolver lixo não atrapalha: sem o evento, a tela cai nos botões iniciais. Nada é gravado.
+- **Tela:** os botões mostram as sugestões da última resposta e voltam aos iniciais enquanto a IA não trouxe nenhuma; somem ao enviar outra mensagem. O custo é uma chamada rápida extra por resposta.
+- **Testes:** backend e frontend verdes (interpretação das sugestões, evento depois da resposta, nenhuma no check-in, falha silenciosa).
+- **Verificado ao vivo** (IA real): a tela do gestor mostrou os quatro botões iniciais; clicar em "O que eu tenho pra fazer hoje?" respondeu e trouxe "Começar pela AAAA", "Mostrar só as em desenvolvimento" e "Definir prioridades para elas".
+- **Não verificado:** a aparência dos botões em 1366×768, 1080×1920 e tema escuro (mesma classe dos botões que já existiam).
+
 ## 2026-10-18 — Task 151: tela da janela de check-in
 
 Spec em `docs/specs/done/151-checkin-tela-da-janela.spec.md`.

@@ -11,7 +11,7 @@ import { PromptService } from '../../prompt/services/prompt.service';
 import { PropostaIaService } from '../../proposta-ia/services/proposta-ia.service';
 import { ChatMensagemLida, ChatMensagemNova, deFonte, paraFonte } from '../domain/chat-mensagem.documento';
 import { ChatMensagemRepository } from '../repositories/chat-mensagem.repository';
-import { ChatService, JANELA_DE_MENSAGENS, MAXIMO_DE_VOLTAS } from './chat.service';
+import { ChatService, INSTRUCOES_TITULO, JANELA_DE_MENSAGENS, MAXIMO_DE_VOLTAS } from './chat.service';
 
 const USUARIO = { sub: 7, login: 'dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
 
@@ -331,14 +331,15 @@ test('recuperarHoje devolve a conversa do dia no fuso configurado, sem o conteú
 });
 
 test('dá nome à conversa depois da primeira resposta, só uma vez, e limpa o que a IA devolve', async () => {
-  const { servico, titulos, geradas } = montar({ chamadas: [async () => resposta({ texto: 'oi' })] });
+  const { servico, titulos, geradas: todasAsGeradas } = montar({ chamadas: [async () => resposta({ texto: 'oi' })] });
+  const geradas = () => todasAsGeradas.filter((solicitacao) => solicitacao.instrucoes === INSTRUCOES_TITULO);
   await enviar(servico);
-  assert.equal(geradas.length, 1);
-  assert.equal(geradas[0].nivel, NivelIaEnum.RAPIDO);
-  assert.match(String(geradas[0].mensagens[0].conteudo), /Usuário: Oi/);
+  assert.equal(geradas().length, 1);
+  assert.equal(geradas()[0].nivel, NivelIaEnum.RAPIDO);
+  assert.match(String(geradas()[0].mensagens[0].conteudo), /Usuário: Oi/);
   assert.deepEqual(Object.values(titulos), ['Revisão do webhook']);
   await enviar(servico, 'de novo');
-  assert.equal(geradas.length, 1);
+  assert.equal(geradas().length, 1);
 });
 
 test('falha ao nomear a conversa não atrapalha a resposta', async () => {
@@ -468,4 +469,19 @@ test('check-in: uma resposta do check-in não conta como o bom dia do chat', asy
   await enviarCheckin(servico);
   const eventos = await bomDia(servico);
   assert.equal(eventos.at(-1)?.tipo, 'fim');
+});
+
+test('sugestões: depois de cada resposta do chat sai o evento com as sugestões da IA; o check-in não pede sugestões', async () => {
+  const { servico } = montar({ chamadas: [async () => resposta({ texto: 'Posso criar a atividade.' }), async () => resposta({ texto: 'ok' })], titulo: () => '["Criar a atividade", "Ver as atividades"]' });
+  const eventos = await enviar(servico);
+  assert.deepEqual(eventos.find((evento) => evento.tipo === 'sugestoes'), { tipo: 'sugestoes', itens: ['Criar a atividade', 'Ver as atividades'] });
+  const noCheckin = await enviarCheckin(servico);
+  assert.equal(noCheckin.some((evento) => evento.tipo === 'sugestoes'), false);
+});
+
+test('sugestões: falha ou resposta inútil do modelo não atrapalha o chat nem emite o evento', async () => {
+  const { servico } = montar({ chamadas: [async () => resposta({ texto: 'oi' })], titulo: () => 'não sei sugerir' });
+  const eventos = await enviar(servico);
+  assert.equal(eventos.at(-1)?.tipo, 'fim');
+  assert.equal(eventos.some((evento) => evento.tipo === 'sugestoes'), false);
 });

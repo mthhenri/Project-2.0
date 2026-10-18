@@ -42,7 +42,7 @@
                   <small>Conte o que vai fazer ou pergunte o que precisar; a IA sempre pede confirmação antes de gravar algo.</small>
                   @if (podeSugerir()) {
                     <div class="chat__sugestoes chat__sugestoes--centro" role="group" aria-label="Sugestões de mensagem">
-                      @for (sugestao of sugestoes; track sugestao) {
+                      @for (sugestao of sugestoes(); track sugestao) {
                         <button type="button" class="chat__sugestao" (click)="enviar(sugestao)">{{ sugestao }}</button>
                       }
                     </div>
@@ -142,7 +142,7 @@
         <div class="chat__rodape">
           @if (podeSugerir() && mensagens().length > 0) {
             <div class="chat__sugestoes" role="group" aria-label="Sugestões de mensagem">
-              @for (sugestao of sugestoes; track sugestao) {
+              @for (sugestao of sugestoes(); track sugestao) {
                 <button type="button" class="chat__sugestao" (click)="enviar(sugestao)">{{ sugestao }}</button>
               }
             </div>

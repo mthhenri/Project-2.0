@@ -9,6 +9,7 @@ import { TextareaModule } from 'primeng/textarea';
 import { TooltipModule } from 'primeng/tooltip';
 import { AutorChatEnum, ChatEventoDto, ChatMensagemResumoDto, EstadoIaEnum, NivelIaEnum } from '@project20/shared';
 import { IaDisponibilidadeService } from '../../../../core/services/ia-disponibilidade.service';
+import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
 import { HistoricoComponent, MensagemDoHistorico } from '../../components/historico/historico.component';
 import { PropostaCartaoComponent } from '../../components/proposta-cartao/proposta-cartao.component';
@@ -96,7 +97,16 @@ export class ChatPage implements OnInit {
   readonly iaForaDoAr = computed(() => this.disponibilidade() === EstadoIaEnum.FORA_DO_AR);
   readonly podeEnviar = computed(() => !this.enviando() && !this.somenteLeitura() && !this.iaDesligada() && this.textoDigitado().trim() !== '');
   /** Atalhos acima do campo: só com o campo vazio e a IA livre para receber. */
-  readonly sugestoes = ['Que dia e hora são agora?', 'O que eu posso fazer por aqui?'];
+  private readonly sessao = inject(UsuarioSessaoService);
+  /** As sugestões de quando a conversa ainda não tem nenhuma da IA: o que mais se faz por aqui (o gestor também cria demandas e projetos). */
+  readonly sugestoesIniciais = computed(() =>
+    this.sessao.eGestor()
+      ? ['O que eu tenho pra fazer hoje?', 'Criar uma demanda', 'Criar um projeto', 'Anotar algo no pad']
+      : ['O que eu tenho pra fazer hoje?', 'Quero começar uma atividade', 'Criar uma atividade', 'Anotar algo no pad'],
+  );
+  /** As sugestões que a IA trouxe junto da última resposta; somem quando o usuário manda outra mensagem. */
+  readonly sugestoesDaIa = signal<string[]>([]);
+  readonly sugestoes = computed(() => (this.sugestoesDaIa().length > 0 ? this.sugestoesDaIa() : this.sugestoesIniciais()));
   readonly podeSugerir = computed(() => !this.enviando() && !this.iaDesligada() && !this.somenteLeitura() && this.textoDigitado().trim() === '');
   /** A última mensagem é a do sistema (falha): oferece "Tentar de novo". */
   readonly ultimaFoiFalha = computed(() => this.mensagens().at(-1)?.autor === AutorChatEnum.SISTEMA && !this.enviando());
@@ -173,6 +183,7 @@ export class ChatPage implements OnInit {
 
     this.enviando.set(true);
     this.longeDoFim.set(false);
+    this.sugestoesDaIa.set([]);
     const idLocal = `local-${++this.contadorLocal}`;
     this.mensagens.update((lista) => [
       ...lista,
@@ -334,6 +345,9 @@ export class ChatPage implements OnInit {
         this.atualizarDisponibilidade();
         break;
       }
+      case 'sugestoes':
+        this.sugestoesDaIa.set(evento.itens);
+        break;
       case 'erro':
         this.aoVivo.set(null);
         this.mostrarFalhaLocal(evento.mensagem);

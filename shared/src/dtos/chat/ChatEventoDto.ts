@@ -12,4 +12,6 @@ export type ChatEventoDto =
   | { tipo: 'ferramenta'; nome: string; situacao: ChatFerramentaSituacao }
   | { tipo: 'proposta'; propostaId: number }
   | { tipo: 'fim'; mensagem: ChatMensagemResumoDto }
+  /** Depois do `fim`: de 2 a 4 sugestões curtas do que o usuário pode responder (botões acima do campo). Nunca é gravado. */
+  | { tipo: 'sugestoes'; itens: string[] }
   | { tipo: 'erro'; mensagem: string };
