@@ -129,7 +129,7 @@ sem arrastar nem redimensionar, e só minimiza: fechar e Alt+F4 minimizam e a ú
 com confirmação. O desligamento do sistema operacional nunca é impedido. Uma única instância, sem iniciar com o Windows. A lógica de
 decisão (fechar ou minimizar, janela fora do lugar, destino de um link, URL, texto do tempo) mora em funções puras com `node:test`
 (`desktop/src/politica-da-janela.ts`); o executável portátil sai de `npm run pack --workspace=desktop` e não tem atualização
-automática. O check-in no desktop vem nas tasks 160 e 161.
+automática. Com o Project minimizado e o check-in disparado pelo backend, o desktop abre a **janelinha do check-in** (480 × 560, sem moldura, sempre por cima, arrastável, sem fechar nem minimizar; `src/politica-do-checkin.ts` decide quando abrir e fechar); com o Project à tela, o check-in é o diálogo dentro dele (task 161). O desktop lê a situação em `GET /checkin/situacao` com o token que a página guarda, e a página `/checkin` avisa o fim por `window.projectDesktop.encerrarCheckin()` (`src/preload.ts`) (task 160).
 
 ## 4. Regras de Linguagem
 

@@ -30,6 +30,13 @@ export function janelaForaDoLugar(janela: AreaDeTrabalho, area: AreaDeTrabalho, 
   return janela.x !== area.x || janela.y !== area.y || janela.width !== area.width || janela.height !== area.height;
 }
 
+/** Mantém uma janela solta inteira dentro da área de trabalho do monitor (a janelinha do check-in arrasta, mas não sai da tela). */
+export function limitarAoMonitor(janela: AreaDeTrabalho, area: AreaDeTrabalho): AreaDeTrabalho {
+  const x = Math.min(Math.max(janela.x, area.x), Math.max(area.x, area.x + area.width - janela.width));
+  const y = Math.min(Math.max(janela.y, area.y), Math.max(area.y, area.y + area.height - janela.height));
+  return { x, y, width: janela.width, height: janela.height };
+}
+
 export type DestinoDaNavegacao = 'dentro' | 'navegador';
 
 /** Links do próprio Project abrem na janela; qualquer outro endereço vai para o navegador do sistema. */

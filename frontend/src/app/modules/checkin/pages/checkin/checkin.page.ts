@@ -25,6 +25,14 @@ const ESPERA_PARA_FECHAR_MS = 5000;
 /** Dentro do Project, depois de registrar, quanto a janelinha espera antes de sumir sozinha. */
 const ESPERA_PARA_SUMIR_REGISTRADO_MS = 2500;
 const CAMINHO_DA_CONVERSA = '/checkin/mensagem';
+
+/** A ponte que o Project Desktop expõe à página (`desktop/src/preload.ts`); no navegador comum não existe. */
+interface PonteDoDesktop {
+  encerrarCheckin(): void;
+}
+function ponteDoDesktop(): PonteDoDesktop | null {
+  return (window as unknown as { projectDesktop?: PonteDoDesktop }).projectDesktop ?? null;
+}
 const SUGESTOES = ['Terminei o que estava fazendo', 'Vou trocar de atividade', 'Vou entrar numa reunião'];
 
 interface MensagemDoCheckin {
@@ -47,7 +55,8 @@ interface RespostaAoVivo {
  * Chat (task 139), de onde vêm os balões, o campo de entrada e o cartão de proposta.
  *
  * Também é a janelinha do check-in **dentro do Project** (task 161): com `embutido` ela preenche o espaço do diálogo central, não leva
- * os toasts (o layout já tem os dele) e avisa `encerrado` em vez de fechar a janela.
+ * os toasts (o layout já tem os dele) e avisa `encerrado` em vez de fechar a janela. No Project Desktop (task 160) é a janelinha sem
+ * moldura: o cabeçalho arrasta a janela e, ao terminar, a página avisa o desktop para fechá-la.
  */
 @Component({
   selector: 'app-checkin-page',
@@ -55,7 +64,7 @@ interface RespostaAoVivo {
   imports: [ReactiveFormsModule, ButtonModule, SkeletonModule, TextareaModule, ToastModule, TooltipModule, MarkdownVisualizadorComponent, PropostaCartaoComponent, ToastDesfazerComponent],
   templateUrl: './checkin.page.html',
   styleUrl: './checkin.page.scss',
-  host: { '[class.checkin-embutido]': 'embutido()' },
+  host: { '[class.checkin-embutido]': 'embutido()', '[class.checkin-no-desktop]': 'noDesktop' },
 })
 export class CheckinPage implements OnInit {
   private readonly checkinService = inject(CheckinService);
@@ -74,6 +83,8 @@ export class CheckinPage implements OnInit {
   readonly embutido = input(false);
   /** Embutida: a descrição foi registrada, os check-ins foram suspensos ou não havia o que fazer. O diálogo pode sumir. */
   readonly encerrado = output<void>();
+  /** Aberta pela janelinha do Project Desktop (sem moldura, que o desktop fecha quando a página avisa). */
+  readonly noDesktop = ponteDoDesktop() !== null;
 
   readonly situacao = signal<CheckinSituacaoConsultadaDto | null>(null);
   readonly erroDeCarga = signal(false);
@@ -125,7 +136,7 @@ export class CheckinPage implements OnInit {
     });
     // Dentro do Project, o check-in registrado some sozinho depois de uma pausa para o usuário ver a confirmação.
     effect((aoLimpar) => {
-      if (!this.embutido() || this.estado() !== 'REGISTRADO') return;
+      if (!(this.embutido() || this.noDesktop) || this.estado() !== 'REGISTRADO') return;
       const temporizador = setTimeout(() => this.fechar(), ESPERA_PARA_SUMIR_REGISTRADO_MS);
       aoLimpar(() => clearTimeout(temporizador));
     });
@@ -207,6 +218,11 @@ export class CheckinPage implements OnInit {
     this.pararDeConferir();
     if (this.embutido()) {
       this.encerrado.emit();
+      return;
+    }
+    const desktop = ponteDoDesktop();
+    if (desktop) {
+      desktop.encerrarCheckin();
       return;
     }
     window.close();

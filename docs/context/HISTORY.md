@@ -12,6 +12,17 @@
 
 ---
 
+## 2026-10-18 — Task 160: janelinha do check-in no Project Desktop
+
+Spec em `docs/specs/done/160-desktop-janelinha-do-checkin.spec.md`. Fecha o Electron (152, 161 e 160).
+
+- **Desktop:** `politica-do-checkin.ts` (puro, 9 testes) lê a situação e decide abrir/fechar; `main.ts` confere a situação a cada 15 s (3 s com a janelinha aberta) com o token do `localStorage` da página (`executeJavaScript`), `fetch` na mesma origem do front (`/api/v1/...`). Abre a janelinha só com o principal minimizado, check-in exigido e IA **no ar** (uma janela que não fecha, sem IA, prenderia o usuário); fecha quando deixa de ser exigido ou o Project volta à tela. Janela 480 × 560, sem moldura, `alwaysOnTop` em nível `screen-saver`, não minimizável, `close` recusado enquanto não liberada, `moved` limita ao monitor (`limitarAoMonitor`). Preload com a ponte `encerrarCheckin`. O menu da bandeja passou a ser montado em cada clique direito (`popUpContextMenu`) para o tempo estar sempre atual, e o tooltip leva o tempo.
+- **Página `/checkin`:** detecta a ponte (`noDesktop`): o cabeçalho vira área de arrastar (`-webkit-app-region: drag`), tem borda própria, o registrado some sozinho em 2,5 s e `fechar()` avisa o desktop em vez de `window.close()`.
+- **Testes:** desktop 15 (+9), frontend 32, builds de desktop e frontend passam; backend não mudou.
+- **Verificado com o Electron real (Windows 11, dev):** com a sessão de um token de teste assinado com o segredo local (no `localStorage` do Electron, apagado depois), execução de 3 h em andamento e o Project minimizado, em até 15 s abriu uma janela 480 × 560 centralizada, visível e topmost; `WM_CLOSE` não a fechou; a página dentro dela tem a ponte, a classe `checkin-no-desktop` e `-webkit-app-region: drag`, e a captura mostra a tela do check-in (cabeçalho com selo "acima do recomendado", abertura da IA, sugestões e campo). Ao pausar a execução, a janelinha fechou sozinha na conferência seguinte. A execução de teste foi excluída e a pasta de dados do Electron removida.
+- **Não verificado:** o arrastar com o mouse e o limite do monitor ao vivo (só a função pura), voltar o Project à tela com a janelinha aberta, o menu e o tooltip da bandeja com o tempo (não dá para clicar na bandeja daqui), a conversa completa dentro da janelinha do desktop, várias áreas de trabalho, vários monitores e o executável empacotado com a janelinha (só rodado em dev).
+- **Achado:** o executável usa a mesma URL do Project, então em produção o token e a API precisam estar na mesma origem do front (`/api` repassado ao backend), como já é no desenvolvimento; se o front e a API ficarem em origens diferentes, `enderecoDaApi` precisa de uma constante própria.
+
 ## 2026-10-18 — Task 161: horário do check-in no backend e janelinha dentro do Project
 
 Spec em `docs/specs/done/161-checkin-horario-no-backend-e-no-project.spec.md`. Muda a premissa do V1, em que o timer vivia no Electron.

@@ -1,14 +1,24 @@
 import * as path from 'node:path';
-import { app, BrowserWindow, dialog, Menu, nativeImage, screen, shell, Tray } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, screen, shell, Tray } from 'electron';
 import { NOME_DO_APP, URL_DO_PROJECT } from './config';
-import { decidirFechamento, destinoDaNavegacao, EstadoDeEncerramento, janelaForaDoLugar, resolverUrlDoProject, textoDoProximoCheckin } from './politica-da-janela';
+import { decidirFechamento, destinoDaNavegacao, EstadoDeEncerramento, janelaForaDoLugar, limitarAoMonitor, resolverUrlDoProject, textoDoProximoCheckin } from './politica-da-janela';
+import { deveAbrirJanelinha, deveFecharJanelinha, enderecoDaApi, lerEstadoDaIa, lerSituacao, segundosAteOCheckin, SituacaoDoCheckin } from './politica-do-checkin';
 
 const urlDoProject = resolverUrlDoProject(URL_DO_PROJECT, process.env);
 const caminhoDoIcone = path.join(__dirname, '..', 'assets', 'icone.png');
 
 const encerramento: EstadoDeEncerramento = { saidaConfirmada: false, encerramentoDoSistema: false };
-/** Segundos até o próximo check-in; o backend passa a informar na task 161 (até lá, a bandeja mostra "indisponível"). */
-let proximoCheckinEmSegundos: number | null = null;
+/** Os tempos da conferência do check-in (a leitura da situação no backend): mais rápida enquanto a janelinha está aberta. */
+const CONFERENCIA_OCIOSA_MS = 15_000;
+const CONFERENCIA_COM_JANELINHA_MS = 3_000;
+const LIMITE_DA_REDE_MS = 8_000;
+
+/** A última situação lida do backend: o menu da bandeja calcula o tempo até o próximo check-in a partir dela. */
+let ultimaSituacao: SituacaoDoCheckin | null = null;
+let janelinha: BrowserWindow | null = null;
+/** Só quando o check-in terminou (ou deixou de ser exigido) a janelinha pode fechar; antes, fechar é recusado. */
+let janelinhaLiberada = false;
+let conferencia: NodeJS.Timeout | null = null;
 
 let janela: BrowserWindow | null = null;
 let bandeja: Tray | null = null;
@@ -103,7 +113,11 @@ function criarJanela(): void {
   janela.on('resize', conferirLugar);
   janela.on('move', conferirLugar);
   janela.on('unmaximize', conferirLugar);
-  janela.on('restore', reajustarJanela);
+  janela.on('restore', () => {
+    reajustarJanela();
+    // O Project voltou à tela: o check-in passa a ser o diálogo dentro dele, a janelinha separada sai.
+    fecharJanelinha();
+  });
   screen.on('display-metrics-changed', reajustarJanela);
 
   // Links externos abrem no navegador do sistema; o Project em si fica na janela.
@@ -136,7 +150,7 @@ function criarJanela(): void {
 function montarMenuDaBandeja(): Menu {
   return Menu.buildFromTemplate([
     { label: 'Abrir o Project', click: trazerParaAFrente },
-    { label: textoDoProximoCheckin(proximoCheckinEmSegundos), enabled: false },
+    { label: textoDoProximoCheckin(segundosAteOCheckin(ultimaSituacao, Date.now())), enabled: false },
     { type: 'separator' },
     { label: 'Fechar completamente', click: () => void pedirSaida() },
   ]);
@@ -163,9 +177,120 @@ async function pedirSaida(): Promise<void> {
 function criarBandeja(): void {
   bandeja = new Tray(nativeImage.createFromPath(caminhoDoIcone).resize({ width: 16, height: 16 }));
   bandeja.setToolTip(NOME_DO_APP);
-  bandeja.setContextMenu(montarMenuDaBandeja());
   bandeja.on('click', trazerParaAFrente);
+  // O menu é montado na hora de abrir, para o tempo até o check-in estar sempre atual.
+  bandeja.on('right-click', () => bandeja?.popUpContextMenu(montarMenuDaBandeja()));
 }
+
+/** O Project principal está minimizado ou escondido: o usuário está em outro programa. */
+function principalMinimizada(): boolean {
+  return !janela || janela.isDestroyed() || janela.isMinimized() || !janela.isVisible();
+}
+
+/** O token do login vive no `localStorage` da página do Project; o desktop o lê dali para consultar a API como o próprio usuário. */
+async function lerTokenDoLogin(): Promise<string | null> {
+  if (!janela || janela.isDestroyed()) return null;
+  try {
+    const token = await janela.webContents.executeJavaScript("localStorage.getItem('access_token')");
+    return typeof token === 'string' && token !== '' ? token : null;
+  } catch {
+    return null;
+  }
+}
+
+async function chamarApi(rota: string, token: string): Promise<unknown> {
+  try {
+    const resposta = await fetch(enderecoDaApi(urlDoProject, rota), { headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(LIMITE_DA_REDE_MS) });
+    return resposta.ok ? await resposta.json() : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Abre a janelinha do check-in: pequena, sem moldura, sempre por cima, arrastável, que só fecha quando o check-in termina. */
+function abrirJanelinha(): void {
+  janelinhaLiberada = false;
+  janelinha = new BrowserWindow({
+    width: 480,
+    height: 560,
+    title: 'Hora do check-in',
+    icon: caminhoDoIcone,
+    show: false,
+    frame: false,
+    alwaysOnTop: true,
+    resizable: false,
+    movable: true,
+    minimizable: false,
+    maximizable: false,
+    fullscreenable: false,
+    closable: true,
+    autoHideMenuBar: true,
+    webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true, devTools: !app.isPackaged },
+  });
+  // Acima de qualquer outra janela, inclusive de programas em tela cheia.
+  janelinha.setAlwaysOnTop(true, 'screen-saver');
+  janelinha.center();
+  janelinha.once('ready-to-show', () => {
+    janelinha?.show();
+    janelinha?.focus();
+  });
+  janelinha.on('close', (evento) => {
+    if (!janelinhaLiberada) evento.preventDefault();
+  });
+  // Arrasta à vontade, mas sem sair do monitor.
+  janelinha.on('moved', () => {
+    if (!janelinha || janelinha.isDestroyed()) return;
+    const atual = janelinha.getBounds();
+    const area = screen.getDisplayMatching(atual).workArea;
+    const dentro = limitarAoMonitor(atual, area);
+    if (dentro.x !== atual.x || dentro.y !== atual.y) janelinha.setBounds(dentro);
+  });
+  janelinha.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  janelinha.on('closed', () => {
+    janelinha = null;
+    janelinhaLiberada = false;
+    agendarConferencia();
+  });
+  void janelinha.loadURL(new URL('checkin', urlDoProject).toString());
+}
+
+/** Libera e fecha a janelinha (o check-in terminou, ou o Project voltou à tela). */
+function fecharJanelinha(): void {
+  if (!janelinha || janelinha.isDestroyed()) return;
+  janelinhaLiberada = true;
+  janelinha.close();
+}
+
+/** Lê a situação do check-in no backend: atualiza a bandeja e abre ou fecha a janelinha conforme a regra pura. */
+async function conferirCheckin(): Promise<void> {
+  const token = await lerTokenDoLogin();
+  if (!token) return;
+  const situacao = lerSituacao(await chamarApi('checkin/situacao', token));
+  if (situacao) {
+    ultimaSituacao = situacao;
+    bandeja?.setToolTip(`${NOME_DO_APP}\n${textoDoProximoCheckin(segundosAteOCheckin(situacao, Date.now()))}`);
+  }
+  const aberta = janelinha !== null && !janelinha.isDestroyed();
+  if (aberta) {
+    if (deveFecharJanelinha(principalMinimizada(), situacao)) fecharJanelinha();
+    return;
+  }
+  if (!situacao || !principalMinimizada() || !situacao.disparado) return;
+  const estadoDaIa = lerEstadoDaIa(await chamarApi('ia/disponibilidade', token));
+  if (deveAbrirJanelinha({ principalMinimizada: principalMinimizada(), situacao, estadoDaIa, janelinhaAberta: false })) abrirJanelinha();
+}
+
+function agendarConferencia(): void {
+  if (conferencia) clearTimeout(conferencia);
+  const espera = janelinha && !janelinha.isDestroyed() ? CONFERENCIA_COM_JANELINHA_MS : CONFERENCIA_OCIOSA_MS;
+  conferencia = setTimeout(() => {
+    void conferirCheckin().finally(agendarConferencia);
+  }, espera);
+}
+
+ipcMain.on('checkin:encerrar', (evento) => {
+  if (janelinha && !janelinha.isDestroyed() && evento.sender === janelinha.webContents) fecharJanelinha();
+});
 
 app.on('second-instance', trazerParaAFrente);
 
@@ -173,6 +298,7 @@ app.whenReady().then(() => {
   Menu.setApplicationMenu(null);
   criarJanela();
   criarBandeja();
+  agendarConferencia();
 });
 
 // Fechar a janela não encerra o app: ele fica na bandeja até "Fechar completamente".

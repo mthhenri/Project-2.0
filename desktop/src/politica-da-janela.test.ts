@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { decidirFechamento, destinoDaNavegacao, janelaForaDoLugar, resolverUrlDoProject, textoDoProximoCheckin } from './politica-da-janela';
+import { decidirFechamento, destinoDaNavegacao, janelaForaDoLugar, limitarAoMonitor, resolverUrlDoProject, textoDoProximoCheckin } from './politica-da-janela';
 
 test('fechar, Alt+F4 e afins só minimizam', () => {
   assert.equal(decidirFechamento({ saidaConfirmada: false, encerramentoDoSistema: false }), 'minimizar');
@@ -40,4 +40,13 @@ test('o tempo até o check-in aparece em mm:ss, com horas quando passa de uma, o
   assert.equal(textoDoProximoCheckin(752), 'Próximo check-in em 12:32');
   assert.equal(textoDoProximoCheckin(3725), 'Próximo check-in em 1:02:05');
   assert.equal(textoDoProximoCheckin(-4), 'Próximo check-in em 00:00');
+});
+
+test('a janela solta fica inteira dentro do monitor', () => {
+  const area = { x: 0, y: 0, width: 1920, height: 1040 };
+  const janela = { x: 0, y: 0, width: 480, height: 560 };
+  assert.deepEqual(limitarAoMonitor({ ...janela, x: 300, y: 200 }, area), { ...janela, x: 300, y: 200 });
+  assert.deepEqual(limitarAoMonitor({ ...janela, x: -100, y: -50 }, area), janela);
+  assert.deepEqual(limitarAoMonitor({ ...janela, x: 1800, y: 900 }, area), { ...janela, x: 1440, y: 480 });
+  assert.deepEqual(limitarAoMonitor({ x: 5, y: 5, width: 3000, height: 2000 }, area), { x: 0, y: 0, width: 3000, height: 2000 });
 });

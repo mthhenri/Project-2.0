@@ -7,6 +7,16 @@
   &.checkin-embutido {
     height: 100%;
   }
+
+  // Janelinha do Project Desktop (sem moldura): borda própria e o cabeçalho arrasta a janela.
+  &.checkin-no-desktop {
+    border: 1px solid var(--app-surface-300);
+
+    .checkin__cabecalho {
+      -webkit-app-region: drag;
+      user-select: none;
+    }
+  }
 }
 
 .checkin {
