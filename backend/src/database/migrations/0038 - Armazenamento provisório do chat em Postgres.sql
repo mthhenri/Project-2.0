@@ -3,14 +3,22 @@
 -- PROVISÓRIO (task 162): estas duas tabelas NÃO fazem parte do modelo definitivo. Elas guardam as mensagens do chat no Postgres só
 -- para o ambiente de teste (CHAT_ARMAZENAMENTO=postgres) funcionar sem um serviço de busca. Na produção de verdade o histórico das
 -- conversas fica no Elasticsearch e estas tabelas são removidas por uma migration nova (drop de chat_mensagem, chat_conversa e
--- fn_chat_texto_busca) junto com ChatMensagemPostgresRepository. Ver docs/SCHEMA.md, "Tabelas provisórias".
+-- fn_chat_texto_busca e fn_chat_texto_consulta) junto com ChatMensagemPostgresRepository. Ver docs/SCHEMA.md, "Tabelas provisórias".
 
 CREATE EXTENSION IF NOT EXISTS unaccent;
+
+-- No Supabase (e em outros Postgres gerenciados) as extensões ficam no schema `extensions`, que a conexão da aplicação não enxerga por
+-- padrão: por isso as duas funções abaixo fixam o `search_path` delas, e nenhum SQL da aplicação chama `unaccent` diretamente.
 
 -- Busca em português sem acento (`descricao` acha `descrição`), como o analisador do OpenSearch. IMMUTABLE para poder indexar.
 CREATE FUNCTION fn_chat_texto_busca(texto TEXT) RETURNS tsvector AS $$
   SELECT to_tsvector('portuguese', unaccent('unaccent', texto))
-$$ LANGUAGE sql IMMUTABLE PARALLEL SAFE;
+$$ LANGUAGE sql IMMUTABLE PARALLEL SAFE SET search_path = public, extensions, pg_catalog;
+
+-- O texto digitado na busca, normalizado do mesmo jeito: todas as palavras (AND), sem acento.
+CREATE FUNCTION fn_chat_texto_consulta(texto TEXT) RETURNS tsquery AS $$
+  SELECT plainto_tsquery('portuguese', unaccent('unaccent', texto))
+$$ LANGUAGE sql IMMUTABLE PARALLEL SAFE SET search_path = public, extensions, pg_catalog;
 
 CREATE TABLE chat_mensagem (
   id             SERIAL      PRIMARY KEY,
@@ -66,4 +74,5 @@ COMMENT ON TABLE chat_conversa IS 'PROVISÓRIA (task 162): não existe na produ�
 
 DROP TABLE chat_conversa;
 DROP TABLE chat_mensagem;
+DROP FUNCTION fn_chat_texto_consulta(TEXT);
 DROP FUNCTION fn_chat_texto_busca(TEXT);

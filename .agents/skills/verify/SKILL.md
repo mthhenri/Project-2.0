@@ -74,4 +74,9 @@ await browser.newContext({ viewport: { width: 1366, height: 768 } });
 
 ## Armadilhas já pagas
 
-Nenhuma registrada ainda. Entra aqui na hora em que morder: sintoma → causa → como evitar.
+- **Migration que usa extensão do Postgres falha só no Supabase** (`function unaccent(unknown, text) does not exist`, task 162): lá as extensões ficam no schema
+  `extensions`, fora do `search_path` da conexão, e o banco local (extensão em `public`) esconde o problema. Função criada pela migration que chama
+  extensão ganha `SET search_path = public, extensions, pg_catalog`, e o SQL da aplicação chama a função, nunca a extensão. Para provar antes de enviar:
+  banco de teste com `CREATE SCHEMA extensions; CREATE EXTENSION <ext> WITH SCHEMA extensions;` e a migration rodada nele.
+
+Entra aqui na hora em que morder: sintoma → causa → como evitar.

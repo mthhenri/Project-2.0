@@ -12,6 +12,15 @@
 
 ---
 
+## 2026-10-18 — Correção da migration 0038 no Supabase (primeiro deploy do rework)
+
+O primeiro deploy do rework no Render falhou no `db:migrate`: `function unaccent(unknown, text) does not exist` na `0038`. Causa: no Supabase as extensões ficam no schema `extensions`, que a conexão da aplicação não enxerga por padrão, e o `CREATE FUNCTION fn_chat_texto_busca` referenciava `unaccent` sem schema. O banco local, com a extensão em `public`, escondia o problema (a tarefa 162 declarou o `unaccent` no Supabase como não verificado, e era exatamente aí que falharia).
+
+- **Migration editada** (a `0038` falhou em produção, então nada tinha sido aplicado lá; o banco de desenvolvimento foi realinhado à mão com o mesmo SQL): `fn_chat_texto_busca` e a nova `fn_chat_texto_consulta` (`plainto_tsquery` com `unaccent`) fixam `SET search_path = public, extensions, pg_catalog`. O repositório Postgres passou a chamar `fn_chat_texto_consulta(:texto)` em vez de `unaccent` direto, para o SQL da aplicação também não depender do `search_path`.
+- **Verificado:** banco de teste imitando o Supabase (`CREATE EXTENSION unaccent WITH SCHEMA extensions`, sem a extensão em `public`): a migration `UP` roda, a busca "descricao cadastro" acha "A descrição do cadastro de parceiros", palavra inexistente não acha, e o `DOWN` limpa. Contrato do Postgres (6 cenários) passa de novo no banco de desenvolvimento; backend 508 testes passando e build ok.
+- **Armadilha registrada** na skill `verify` (as duas cópias): migration que usa extensão deve ser provada num banco com a extensão em `extensions` antes do envio.
+- **Não verificado:** o Supabase real (só o deploy dirá).
+
 ## 2026-10-18 — Revisão independente das tasks 164 a 170: 7 correções
 
 Subagente `revisor` (somente leitura, sem receber as conclusões, só problema, requisitos e o `git diff 1c55b8f..HEAD`). Achados e destino:

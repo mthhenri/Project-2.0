@@ -719,12 +719,12 @@ Seeds (`codigo` → `descricao`):
 
 > **Não fazem parte do modelo definitivo.** Existem só para o ambiente de teste (`CHAT_ARMAZENAMENTO=postgres`) guardar as mensagens do
 > chat sem um serviço de busca. Na produção de verdade o histórico fica no Elasticsearch. **Remoção:** uma migration nova derruba
-> `chat_conversa`, `chat_mensagem` e a função `fn_chat_texto_busca`; junto saem `ChatMensagemPostgresRepository` e o ramo `postgres` do
+> `chat_conversa`, `chat_mensagem` e as funções `fn_chat_texto_busca` e `fn_chat_texto_consulta`; junto saem `ChatMensagemPostgresRepository` e o ramo `postgres` do
 > provider em `armazenamento-de-chat.ts`. As tabelas trazem `COMMENT ON TABLE` com o aviso.
 
 #### `chat_mensagem`
 Uma linha por mensagem do chat, gravada uma vez e nunca reescrita (sem exclusão nem alteração pela aplicação). Colunas de `BaseEntity` mais:
-`mensagem_id` (UUID, único), `conversa_id` (`<usuarioId>-<yyyy-mm-dd>`), `usuario_id`, `contexto` (`CHAT`/`CHECKIN`), `autor` (`USUARIO`/`IA`/`SISTEMA`), `texto`, `nivel`, `modelo`, `tokens_entrada`, `tokens_saida`, `tokens_cache`, `proposta_id`, `execucao_id`, `atividade_id`, `demanda_id` (referências opcionais, sem FK) e `conteudo_bruto` (JSONB). `created_date` é a data da mensagem. Índices: (`usuario_id`, `conversa_id`, `created_date`) e GIN em `fn_chat_texto_busca(texto)`, que é `to_tsvector('portuguese', unaccent(texto))` (busca sem acento; exige a extensão `unaccent`).
+`mensagem_id` (UUID, único), `conversa_id` (`<usuarioId>-<yyyy-mm-dd>`), `usuario_id`, `contexto` (`CHAT`/`CHECKIN`), `autor` (`USUARIO`/`IA`/`SISTEMA`), `texto`, `nivel`, `modelo`, `tokens_entrada`, `tokens_saida`, `tokens_cache`, `proposta_id`, `execucao_id`, `atividade_id`, `demanda_id` (referências opcionais, sem FK) e `conteudo_bruto` (JSONB). `created_date` é a data da mensagem. Índices: (`usuario_id`, `conversa_id`, `created_date`) e GIN em `fn_chat_texto_busca(texto)`, que é `to_tsvector('portuguese', unaccent(texto))` (busca sem acento; exige a extensão `unaccent`). `fn_chat_texto_consulta(texto)` normaliza o texto digitado do mesmo jeito (`plainto_tsquery`). As duas fixam `search_path = public, extensions, pg_catalog`: no Supabase as extensões vivem no schema `extensions`, que a conexão da aplicação não enxerga por padrão, e o SQL da aplicação nunca chama `unaccent` diretamente.
 
 #### `chat_conversa`
 O título que a IA deu à conversa: `conversa_id` (único), `usuario_id`, `titulo`, mais as colunas de `BaseEntity`.

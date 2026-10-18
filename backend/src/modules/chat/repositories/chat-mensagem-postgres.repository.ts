@@ -156,10 +156,10 @@ export class ChatMensagemPostgresRepository extends BaseRepository<ChatMensagemF
         `SELECT ${COLUNAS_DA_MENSAGEM}
          FROM chat_mensagem
          WHERE usuario_id = :usuarioId AND is_deleted = false
-           AND fn_chat_texto_busca(texto) @@ plainto_tsquery('portuguese', unaccent('unaccent', :texto))
+           AND fn_chat_texto_busca(texto) @@ fn_chat_texto_consulta(:texto)
            AND (CAST(:inicio AS timestamptz) IS NULL OR created_date >= CAST(:inicio AS timestamptz))
            AND (CAST(:fim AS timestamptz) IS NULL OR created_date <= CAST(:fim AS timestamptz))
-         ORDER BY ts_rank(fn_chat_texto_busca(texto), plainto_tsquery('portuguese', unaccent('unaccent', :texto))) DESC, created_date DESC
+         ORDER BY ts_rank(fn_chat_texto_busca(texto), fn_chat_texto_consulta(:texto)) DESC, created_date DESC
          LIMIT :limite`,
         {
           usuarioId: consulta.usuarioId,
