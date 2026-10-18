@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { dataNoFuso, montarConversaId } from './chat-conversa';
+import { dataNoFuso, instanteDoDiaUtilAnterior, montarConversaId } from './chat-conversa';
 
 describe('conversa do dia', () => {
   it('usa o dia do fuso configurado, não o do servidor', () => {
@@ -18,5 +18,14 @@ describe('conversa do dia', () => {
   it('separa usuários', () => {
     const instante = new Date('2026-10-17T15:00:00Z');
     assert.notEqual(montarConversaId(1, instante, 'UTC'), montarConversaId(2, instante, 'UTC'));
+  });
+});
+
+describe('dia útil anterior', () => {
+  it('terça olha para segunda; segunda e domingo olham para sexta', () => {
+    const fuso = 'America/Sao_Paulo';
+    assert.equal(dataNoFuso(instanteDoDiaUtilAnterior(new Date('2026-10-20T15:00:00Z'), fuso), fuso), '2026-10-19'); // terça
+    assert.equal(dataNoFuso(instanteDoDiaUtilAnterior(new Date('2026-10-19T15:00:00Z'), fuso), fuso), '2026-10-16'); // segunda
+    assert.equal(dataNoFuso(instanteDoDiaUtilAnterior(new Date('2026-10-18T15:00:00Z'), fuso), fuso), '2026-10-16'); // domingo
   });
 });

@@ -101,6 +101,8 @@ export class ChatPage implements OnInit {
   /** A última mensagem é a do sistema (falha): oferece "Tentar de novo". */
   readonly ultimaFoiFalha = computed(() => this.mensagens().at(-1)?.autor === AutorChatEnum.SISTEMA && !this.enviando());
   private contadorLocal = 0;
+  /** O bom dia é tentado uma vez por abertura da tela (o servidor garante uma vez por dia). */
+  private bomDiaTentado = false;
 
   constructor() {
     this.controleTexto.valueChanges.pipe(takeUntilDestroyed()).subscribe((valor) => this.textoDigitado.set(valor));
@@ -113,6 +115,14 @@ export class ChatPage implements OnInit {
       });
     });
     // Cartões e respostas crescem depois de renderizados: acompanha o tamanho do conteúdo, não só as mensagens.
+    // Com a conversa de hoje carregada e a IA no ar, mas ainda sem resposta da IA, a IA dá o bom dia sozinha.
+    effect(() => {
+      const pronto = this.jaCarregou();
+      const estado = this.disponibilidade();
+      untracked(() => {
+        if (pronto && estado === EstadoIaEnum.NO_AR) void this.darBomDia();
+      });
+    });
     effect((aoLimpar) => {
       const alvo = this.fluxo()?.nativeElement;
       if (!alvo) return;
@@ -197,7 +207,44 @@ export class ChatPage implements OnInit {
 
   tentarDeNovo(): void {
     const ultimaDoUsuario = [...this.mensagens()].reverse().find((mensagem) => mensagem.autor === AutorChatEnum.USUARIO);
-    if (ultimaDoUsuario) void this.enviar(ultimaDoUsuario.texto);
+    if (ultimaDoUsuario) {
+      void this.enviar(ultimaDoUsuario.texto);
+      return;
+    }
+    // Sem mensagem do usuário, a falha foi a do bom dia: tira o aviso e tenta de novo.
+    this.mensagens.update((lista) => lista.filter((mensagem) => mensagem.autor !== AutorChatEnum.SISTEMA));
+    this.bomDiaTentado = false;
+    void this.darBomDia();
+  }
+
+  /** Pede o bom dia: só em hoje, sem resposta da IA ainda e sem nada em andamento. O servidor decide se ainda vale (409 não é erro). */
+  private async darBomDia(): Promise<void> {
+    if (this.bomDiaTentado || this.enviando() || this.diaAberto() !== null) return;
+    if (this.mensagens().some((mensagem) => mensagem.autor === AutorChatEnum.IA)) return;
+    this.bomDiaTentado = true;
+
+    this.enviando.set(true);
+    this.longeDoFim.set(false);
+    this.aoVivo.set({ texto: '', ferramenta: null, propostaIds: [] });
+    let terminou = false;
+    try {
+      await this.chatService.iniciarBomDia((evento) => {
+        if (evento.tipo === 'fim' || evento.tipo === 'erro') terminou = true;
+        this.tratarEvento(evento);
+      });
+      if (!terminou) this.aoVivo.set(null);
+    } catch (erro) {
+      const falha = erro as ErroDoChat;
+      // 409: alguém (outra aba) já deu o bom dia, ou a IA foi desligada. Só relê a conversa; os outros erros ficam no aviso do estado.
+      if (falha.status === 409) {
+        this.carregar();
+        this.atualizarDisponibilidade();
+      }
+    } finally {
+      this.aoVivo.set(null);
+      this.enviando.set(false);
+      this.historico()?.recarregar();
+    }
   }
 
   aoTeclar(evento: KeyboardEvent): void {

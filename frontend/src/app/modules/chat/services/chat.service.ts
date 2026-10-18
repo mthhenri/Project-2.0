@@ -64,6 +64,28 @@ export class ChatService {
       throw new ErroDoChat('Sem conexão com o servidor. Tente de novo.', 0);
     }
 
+    await this.lerFluxo(resposta, aoEvento);
+  }
+
+  /**
+   * O "bom dia" proativo: abre o fluxo de eventos da saudação do dia (só vale se a conversa de hoje ainda não tem resposta da IA).
+   * Termina como `enviarMensagem`; lança `ErroDoChat` com 409 quando o bom dia de hoje já foi dado ou a IA está desligada.
+   */
+  async iniciarBomDia(aoEvento: (evento: ChatEventoDto) => void): Promise<void> {
+    const token = localStorage.getItem('access_token');
+    let resposta: Response;
+    try {
+      resposta = await fetch(`${this.urlBase}/bom-dia`, {
+        method: 'POST',
+        headers: { Accept: 'text/event-stream', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      });
+    } catch {
+      throw new ErroDoChat('Sem conexão com o servidor. Tente de novo.', 0);
+    }
+    await this.lerFluxo(resposta, aoEvento);
+  }
+
+  private async lerFluxo(resposta: Response, aoEvento: (evento: ChatEventoDto) => void): Promise<void> {
     if (!resposta.ok || !resposta.body) {
       const corpo = await resposta.json().catch(() => null);
       throw new ErroDoChat(corpo?.mensagem ?? 'Não foi possível enviar a mensagem.', resposta.status);

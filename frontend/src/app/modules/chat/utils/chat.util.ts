@@ -87,3 +87,12 @@ export function rotuloDoDia(data: string, hoje: string): string {
   const [ano, mes, dia] = data.split('-');
   return `${diaDaSemana}, ${dia}/${mes}/${ano}`;
 }
+
+/** O texto sem a marcação do Markdown (`*`, `#`, crases, citação) e numa linha só, para trechos curtos como o item do histórico. */
+export function semMarcacaoMarkdown(texto: string): string {
+  return texto
+    .replace(/^\s*(?:[-*+]|\d+\.)\s+/gm, '')
+    .replace(/[*_`#>]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}

@@ -75,7 +75,7 @@
                 [attr.aria-current]="conversa.data === diaAtual() ? 'true' : null"
                 (click)="diaEscolhido.emit(conversa.data)"
               >
-                <span class="chat-historico__item-titulo">{{ conversa.titulo ?? conversa.primeiraMensagem }}</span>
+                <span class="chat-historico__item-titulo">{{ conversa.titulo ?? semMarcacao(conversa.primeiraMensagem) }}</span>
                 <span class="chat-historico__item-meta">{{ rotuloDoDia(conversa.data, hoje()) }} · {{ conversa.quantidadeDeMensagens }} msg</span>
               </button>
             </li>

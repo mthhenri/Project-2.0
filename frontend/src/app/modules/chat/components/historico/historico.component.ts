@@ -6,7 +6,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { SkeletonModule } from 'primeng/skeleton';
 import { AutorChatEnum, ChatConversaResumoDto, ChatMensagemResumoDto } from '@project20/shared';
 import { ChatService } from '../../services/chat.service';
-import { dataDaConversa, rotuloDoDia } from '../../utils/chat.util';
+import { dataDaConversa, rotuloDoDia, semMarcacaoMarkdown } from '../../utils/chat.util';
 
 const CHAVE_ABERTO = 'chat.historico.aberto';
 
@@ -40,6 +40,7 @@ export class HistoricoComponent {
 
   readonly Autor = AutorChatEnum;
   readonly rotuloDoDia = rotuloDoDia;
+  readonly semMarcacao = semMarcacaoMarkdown;
   readonly aberto = signal(this.lerAberto());
   readonly conversas = signal<ChatConversaResumoDto[]>([]);
   readonly carregando = signal(true);

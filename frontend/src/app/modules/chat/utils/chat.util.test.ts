@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { dataDaConversa, extrairEventos, paresDosDados, rotuloDoDia } from './chat.util';
+import { dataDaConversa, extrairEventos, paresDosDados, rotuloDoDia, semMarcacaoMarkdown } from './chat.util';
 
 test('lê vários eventos de uma vez', () => {
   const texto = 'data: {"tipo":"trecho","texto":"Bom "}\n\ndata: {"tipo":"trecho","texto":"dia"}\n\n';
@@ -53,4 +53,10 @@ test('rotula hoje, ontem e os outros dias, inclusive na virada de mês', () => {
   assert.equal(rotuloDoDia('2026-10-16', '2026-10-17'), 'Ontem');
   assert.equal(rotuloDoDia('2026-09-30', '2026-10-01'), 'Ontem');
   assert.match(rotuloDoDia('2026-10-10', '2026-10-17'), /^sáb\.?, 10\/10\/2026$/);
+});
+
+test('tira a marcação do Markdown e junta tudo numa linha', () => {
+  const comMarcacao = ['Boa noite! **Plano do dia**', '', '1. **AAAA**: Integrações', '- Item'].join(String.fromCharCode(10));
+  assert.equal(semMarcacaoMarkdown(comMarcacao), 'Boa noite! Plano do dia AAAA: Integrações Item');
+  assert.equal(semMarcacaoMarkdown('  `código` e > citação  '), 'código e citação');
 });

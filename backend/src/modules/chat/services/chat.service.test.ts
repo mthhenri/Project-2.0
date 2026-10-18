@@ -371,3 +371,58 @@ test('buscar repassa o usuário do token e o período', async () => {
   assert.match(ordem[0], /"texto":"descricao"/);
   assert.match(ordem[0], /2026-10-01/);
 });
+
+// ------------------------------------------------------------------ bom dia proativo (task 147)
+
+async function bomDia(servico: ChatService) {
+  const eventos: ChatEventoDto[] = [];
+  await servico.iniciarBomDia(USUARIO, (evento) => eventos.push(evento));
+  return eventos;
+}
+
+test('bom dia: grava só a mensagem da IA e a instrução de abertura vai ao modelo sem virar mensagem do chat', async () => {
+  const { servico, gravadas, solicitacoes } = montar({ chamadas: [async () => resposta({ texto: 'Bom dia! Hoje você tem 2 atividades.' })] });
+  const eventos = await bomDia(servico);
+  assert.equal(eventos.at(-1)?.tipo, 'fim');
+  assert.deepEqual(gravadas.map((mensagem) => mensagem.autor), [AutorChatEnum.IA]);
+  assert.match(String(solicitacoes[0].mensagens[0].conteudo), /Abertura do dia/);
+  assert.equal(solicitacoes[0].mensagens[0].papel, 'usuario');
+});
+
+test('bom dia: só uma vez por dia (a segunda chamada é 409 e não chama o modelo)', async () => {
+  const { servico, solicitacoes } = montar({ chamadas: [async () => resposta({ texto: 'Bom dia!' })] });
+  await bomDia(servico);
+  await assert.rejects(bomDia(servico), ConflictException);
+  assert.equal(solicitacoes.length, 1);
+});
+
+test('bom dia: com a IA desligada é 409; com uma resposta da IA já na conversa também', async () => {
+  const desligada = montar({ chamadas: [], estado: EstadoIaEnum.DESLIGADA });
+  await assert.rejects(bomDia(desligada.servico), ConflictException);
+  const jaConversou = montar({ chamadas: [async () => resposta({ texto: 'oi' })] });
+  await enviar(jaConversou.servico);
+  await assert.rejects(bomDia(jaConversou.servico), ConflictException);
+});
+
+test('bom dia: a mensagem seguinte do usuário já leva a abertura e a saudação no contexto', async () => {
+  const { servico, solicitacoes } = montar({ chamadas: [async () => resposta({ texto: 'Bom dia!' }), async () => resposta({ texto: 'Certo.' })] });
+  await bomDia(servico);
+  await enviar(servico, 'Quero começar pelo login');
+  const contexto = solicitacoes[1].mensagens;
+  assert.match(String(contexto[0].conteudo), /Abertura do dia/);
+  assert.equal(contexto[1].papel, 'ia');
+  assert.equal(contexto.at(-1)?.conteudo, 'Quero começar pelo login');
+});
+
+test('bom dia: falha avisa pelo evento, mas não grava mensagem do sistema (F5 com a IA fora do ar não empilha erros)', async () => {
+  const { servico, gravadas } = montar({
+    chamadas: [
+      async () => {
+        throw new IaException('INDISPONIVEL', 'A IA está fora do ar no momento');
+      },
+    ],
+  });
+  const eventos = await bomDia(servico);
+  assert.equal(eventos.at(-1)?.tipo, 'erro');
+  assert.deepEqual(gravadas, []);
+});

@@ -12,6 +12,18 @@
 
 ---
 
+## 2026-10-18 — Task 147: bom dia proativo
+
+Spec em `docs/specs/done/147-chat-bom-dia-proativo.spec.md`.
+
+- **Backend:** `ChatService.iniciarBomDia` e `POST /chat/bom-dia` (SSE, mesmo formato do envio). Recusa com 409 se a IA está desligada ou se a conversa de hoje já tem mensagem da IA; o bloqueio de "uma por vez" é o mesmo do envio, e uma segunda checagem dentro dele evita duplicar numa corrida. A instrução de abertura (`montarAberturaDoDia`: hora, dia da semana, hoje e o **dia útil anterior**, que pula sábado e domingo, para a segunda olhar a sexta) entra como a primeira mensagem do usuário **sem virar mensagem do chat** e fica no conteúdo bruto da resposta, então as mensagens seguintes do dia têm o mesmo contexto (o `montarMensagens` começa por um texto do usuário e ela cumpre isso). Falha no meio emite o evento `erro` mas **não grava** mensagem do sistema (com a IA fora do ar, cada F5 empilharia um erro).
+- **Frontend:** a tela chama o bom dia quando a conversa de hoje carregou, a IA está no ar e não há resposta da IA (uma tentativa por abertura; 409 só relê a conversa); a resposta chega aos poucos como qualquer outra; "Tentar de novo" na falha do bom dia refaz o bom dia. `ChatService.iniciarBomDia` compartilha a leitura do fluxo com o envio.
+- **Prompt:** a instrução do bom dia mora no código (a abertura), não no prompt `CONVERSA` — mesmo motivo das 144 e 146 (não trocar a versão ativa do administrador).
+- **Extra:** o item do histórico, sem título, mostrava a saudação com `**`; agora usa `semMarcacaoMarkdown`.
+- **Testes:** backend 262 e frontend 23 verdes (bom dia grava só a mensagem da IA e manda a abertura ao modelo, só uma vez, IA desligada, contexto da mensagem seguinte com a abertura e a saudação, falha sem mensagem do sistema, dia útil anterior, texto da abertura).
+- **Verificado ao vivo** (IA real, administrador): apaguei do OpenSearch as mensagens de teste de hoje do usuário (só as minhas, `3-2026-10-18`, mais o título) para ter uma conversa vazia; ao abrir `/chat` a IA deu "Boa noite! Hoje é domingo, 18/10", com as 3 atividades em aberto por prioridade, o pad (em andamento, pendências, lembretes, Feito do dia útil anterior 16/10) e "por onde quer começar?"; F5 não gerou outra e uma segunda chamada à rota devolveu 409 "O bom dia de hoje já foi dado".
+- **Não verificado:** o bom dia com a IA fora do ar (só no teste unitário), a corrida de duas abas, 1366×768, 1080×1920 e tema escuro, e o desenvolvedor.
+
 ## 2026-10-18 — Task 146: pad pela IA
 
 Spec em `docs/specs/done/146-chat-pad-pela-ia.spec.md`.

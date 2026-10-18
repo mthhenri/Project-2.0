@@ -22,6 +22,17 @@ export class ChatController {
     }
   }
 
+  /** O bom dia proativo (mesmo formato de `POST /chat/mensagem`): só age se a conversa de hoje ainda não tem mensagem da IA; senão, 409. */
+  @Post('bom-dia')
+  async iniciarBomDia(@ActiveUser() usuarioAtivo: JwtPayload, @Res() resposta: Response) {
+    const fluxo = new EventStreamResponse(resposta);
+    try {
+      await this.chatService.iniciarBomDia(usuarioAtivo, (evento) => fluxo.enviar(evento));
+    } finally {
+      fluxo.encerrar();
+    }
+  }
+
   @Get('hoje')
   recuperarHoje(@ActiveUser() usuarioAtivo: JwtPayload) {
     return this.chatService.recuperarHoje(usuarioAtivo);

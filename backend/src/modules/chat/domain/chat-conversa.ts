@@ -8,6 +8,16 @@ export function dataNoFuso(instante: Date, fusoHorario: string): string {
   }).format(instante);
 }
 
+/** O instante do dia útil anterior (pula sábado e domingo no fuso): a segunda-feira olha para a sexta. */
+export function instanteDoDiaUtilAnterior(instante: Date, fusoHorario: string): Date {
+  const formatoDoDiaDaSemana = new Intl.DateTimeFormat('en-US', { timeZone: fusoHorario, weekday: 'short' });
+  let atual = new Date(instante.getTime());
+  do {
+    atual = new Date(atual.getTime() - 86_400_000);
+  } while (['Sat', 'Sun'].includes(formatoDoDiaDaSemana.format(atual)));
+  return atual;
+}
+
 /** Uma conversa por usuário por dia: `<usuarioId>-<yyyy-mm-dd>`. */
 export function montarConversaId(usuarioId: number, instante: Date, fusoHorario: string): string {
   return `${usuarioId}-${dataNoFuso(instante, fusoHorario)}`;
