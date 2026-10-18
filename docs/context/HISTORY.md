@@ -12,6 +12,17 @@
 
 ---
 
+## 2026-10-18 — Task 144: ferramentas de leitura do desenvolvedor
+
+Spec em `docs/specs/done/144-chat-ferramentas-de-leitura-do-desenvolvedor.spec.md`.
+
+- **Ferramentas** (`FerramentaIa` `LEITURA`, permissão `QUALQUER`, entrada validada por classes do `shared`): `listar_minhas_atividades` (`AtividadeService.listar` com `usuarioId` do token; em aberto por padrão, `incluirDesenvolvidas` opcional; no máximo 30, com `total` e `haMais`; resume prioridade, demanda, projeto, se há execução e minutos), `consultar_execucao_ativa` (`ExecucaoService.recuperarAtiva` mais os nomes pela listagem da atividade; minutos até agora) e `listar_minhas_execucoes_do_dia` (`ExecucaoService.listar` com o dia do `APP_TIMEZONE` e `totalMinutosDia`). Nenhuma lança: o registro já traduz erros.
+- **Onde moram:** em `atividade/ferramentas/` e `execucao/ferramentas/`, registradas no `onModuleInit` dos módulos (que passaram a importar `FerramentaIaModule`), como a 137 previa para os módulos de negócio; sem dependência circular.
+- **Desvio da spec (prompt `CONVERSA`):** não criei uma versão nova do prompt. A IA lê a `descricao` de cada ferramenta (escrita para dizer quando usar), e uma versão nova de seed trocaria a ativa do administrador sem ele pedir (o "padrão" é a versão 1, intocável). Se o autor quiser orientação extra no prompt, edita pela aba Prompts.
+- **Testes:** backend 219 verdes (dono do token, filtro de status, limite e `haMais`, ordem de prioridade preservada, sem execução, com execução e minutos, dia pelo fuso).
+- **Verificado ao vivo** (IA real, usuário administrador): "O que eu tenho pra fazer? E estou com alguma execução rodando?" chamou `listar_minhas_atividades` e `consultar_execucao_ativa` e respondeu com as 3 atividades em aberto (prioridade indefinida) e "nenhuma execução rodando"; "O que eu já executei hoje?" chamou `listar_minhas_execucoes_do_dia` e respondeu 0 minutos. As mensagens ficaram na conversa do dia do usuário.
+- **Não verificado ao vivo:** o caminho "com execução ativa" (só no teste unitário), outro usuário não enxergar atividade alheia (o filtro é o `usuarioId` do token, coberto no teste) e o desenvolvedor (a conta de teste é administrador).
+
 ## 2026-10-18 — Task 143: prioridade da atividade nas telas e cor pelo administrador
 
 Spec em `docs/specs/done/143-atividade-prioridade-nas-telas.spec.md`. Só frontend (a API é da 142).
