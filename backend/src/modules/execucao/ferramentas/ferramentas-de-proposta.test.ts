@@ -21,9 +21,10 @@ function montar(opcoes: { ativa?: { id: number; atividadeId: number; descricao: 
       return { id: 77, status: 'PENDENTE' };
     },
   };
-  const nomesDasAtividades: Record<number, { nome: string; demandaId: number }> = {
-    9: { nome: 'Ajustar login', demandaId: 3 },
-    5: { nome: 'Layout do carrinho', demandaId: 4 },
+  const nomesDasAtividades: Record<number, { nome: string; demandaId: number; status: string }> = {
+    9: { nome: 'Ajustar login', demandaId: 3, status: 'DESENVOLVENDO' },
+    5: { nome: 'Layout do carrinho', demandaId: 4, status: 'PLANEJADA' },
+    8: { nome: 'Revisar textos', demandaId: 3, status: 'PENDENTE' },
   };
   const atividadeService = { recuperar: async ({ id }: { id: number }) => ({ dados: { id, ...nomesDasAtividades[id] } }) };
   const demandaRepositorio = {
@@ -59,6 +60,12 @@ test('propor iniciar na atividade que já está em execução não avisa pausa',
   const { iniciar, propostas } = montar({ ativa: { id: 1, atividadeId: 9, descricao: 'x' } });
   await iniciar.executar({ atividadeId: 9, descricao: 'Validar e-mail' }, USUARIO);
   assert.equal(propostas[0].dados['pausaraAtividadeNome'], undefined);
+});
+
+test('propor iniciar numa atividade que não é planejada nem em desenvolvimento não cria proposta', async () => {
+  const { iniciar, propostas } = montar();
+  await assert.rejects(iniciar.executar({ atividadeId: 8, descricao: 'Revisar' }, USUARIO), BusinessException);
+  assert.equal(propostas.length, 0);
 });
 
 test('propor pausar sem execução em andamento não cria proposta', async () => {

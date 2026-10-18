@@ -12,6 +12,13 @@
 
 ---
 
+## 2026-10-18 — IA: proposta de iniciar execução confere o status da atividade
+
+Achado do autor num teste: a IA propôs iniciar execução numa atividade fora de PLANEJADA/DESENVOLVENDO (ex.: PENDENTE); o cartão nasceu e só falhou ao Confirmar ("Só é possível iniciar execução em atividades planejadas ou em desenvolvimento").
+
+- `propor_iniciar_execucao` agora aplica a mesma regra do `ExecucaoService.iniciar` (`STATUS_EXECUTAVEL`, antes privada, agora `static readonly`) já na proposta: atividade não executável lança `BusinessException` com o status e a orientação de avisar o usuário; nenhuma proposta nasce e o erro volta ao modelo. A descrição da ferramenta também diz a regra.
+- **Testes:** backend 405 (+1: atividade PENDENTE não cria proposta); build do backend passa. **Não verificado:** conversa real com a IA (depende do modelo reagir ao erro da ferramenta).
+
 ## 2026-10-18 — Seed de desenvolvimento: projeto e desenvolvedor de teste
 
 Pedido do autor, fora de spec: subir o ambiente dev sem criar projeto e demandas à mão.

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ProporIniciarExecucaoDto, PropostaIniciarExecucaoDadosDto, TipoPropostaIaEnum } from '@project20/shared';
+import { BusinessException } from '../../../core/exceptions/business.exception';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { AtividadeService } from '../../atividade/services/atividade.service';
 import { DemandaRepository } from '../../demanda/repositories/demanda.repository';
@@ -17,7 +18,8 @@ export class ProporIniciarExecucaoFerramenta extends FerramentaPropostaIa<Propor
   readonly descricao =
     'Propõe iniciar uma execução numa atividade do usuário, com uma descrição provisória curta do que ele vai fazer. Se já houver uma execução em andamento, ' +
     'ela é pausada antes (o cartão avisa). Nada começa até o usuário confirmar. Use o atividadeId de listar_minhas_atividades; ' +
-    'se o usuário não deixar claro qual atividade, pergunte antes de propor.';
+    'se o usuário não deixar claro qual atividade, pergunte antes de propor. Só atividades PLANEJADA ou DESENVOLVENDO podem ser iniciadas: numa PENDENTE ou DESENVOLVIDA ' +
+    'a proposta é recusada; avise o usuário em vez de tentar de novo.';
   readonly permissao = 'QUALQUER' as const;
   readonly classeDeEntrada = ProporIniciarExecucaoDto;
   readonly tipoProposta = TipoPropostaIaEnum.INICIAR_EXECUCAO;
@@ -35,6 +37,12 @@ export class ProporIniciarExecucaoFerramenta extends FerramentaPropostaIa<Propor
     // `recuperar` confere a existência e o acesso do usuário à atividade: erro aqui volta ao modelo, e nenhuma proposta nasce.
     const atividade = (await this.atividadeService.recuperar({ id: entrada.atividadeId }, usuarioAtivo)).dados;
     const demanda = atividade ? await this.demandaRepositorio.recuperar({ id: atividade.demandaId }) : null;
+    // Mesma regra do `ExecucaoService.iniciar`, conferida já na proposta: sem isso o cartão nasce e só falha no Confirmar.
+    if (atividade && !ExecucaoService.STATUS_EXECUTAVEL.includes(atividade.status)) {
+      throw new BusinessException(
+        `A atividade "${atividade.nome}" está ${atividade.status} e não pode ser iniciada: só atividades PLANEJADA ou DESENVOLVENDO. Avise o usuário.`,
+      );
+    }
     const ativa = (await this.execucaoService.recuperarAtiva(usuarioAtivo)).dados;
     const aPausar = ativa && ativa.atividadeId !== entrada.atividadeId ? (await this.atividadeService.recuperar({ id: ativa.atividadeId }, usuarioAtivo)).dados : null;
 

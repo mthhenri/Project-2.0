@@ -32,7 +32,7 @@ import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.int
 @Injectable()
 export class ExecucaoService implements OnModuleInit {
   /** Status em que uma execução pode ser iniciada. */
-  private static readonly STATUS_EXECUTAVEL: TipoAtividadeStatusEnum[] = [
+  static readonly STATUS_EXECUTAVEL: TipoAtividadeStatusEnum[] = [
     TipoAtividadeStatusEnum.PLANEJADA,
     TipoAtividadeStatusEnum.DESENVOLVENDO,
   ];
