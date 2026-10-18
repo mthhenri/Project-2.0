@@ -146,6 +146,7 @@
     color: var(--p-text-muted-color);
     cursor: pointer;
     opacity: 0;
+    transition: opacity 0.2s ease, background-color 0.15s ease, color 0.15s ease;
 
     &:hover {
       background: var(--app-surface-100);
@@ -369,5 +370,9 @@
   .chat__pontos i {
     animation: none;
     opacity: 0.6;
+  }
+
+  .chat__copiar {
+    transition: none;
   }
 }

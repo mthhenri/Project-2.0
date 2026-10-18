@@ -14,12 +14,15 @@
           role="link"
           aria-disabled="true"
           [attr.aria-label]="item.label + ' (substituída pelo chat enquanto a IA está no ar)'"
-          [pTooltip]="'Substituída pelo chat enquanto a IA está no ar'"
+          [pTooltip]="recolhida() ? item.label + ': substituída pelo chat' : ''"
           tooltipPosition="right"
         >
           <i [class]="item.icone"></i>
           @if (!recolhida()) {
-            <span class="sidebar__rotulo">{{ item.label }}</span>
+            <span class="sidebar__rotulo sidebar__rotulo--com-nota">
+              {{ item.label }}
+              <small class="sidebar__nota">Substituída pelo chat</small>
+            </span>
           }
         </span>
       } @else {

@@ -1,8 +1,6 @@
 <aside class="chat-historico" aria-label="Histórico de conversas">
   <header class="chat-historico__cabecalho">
-    @if (aberto()) {
-      <strong class="chat-historico__titulo">Histórico</strong>
-    }
+    <strong class="chat-historico__titulo">Histórico</strong>
     <p-button
       [icon]="aberto() ? 'pi pi-angle-double-right' : 'pi pi-history'"
       [text]="true"
@@ -14,9 +12,9 @@
     />
   </header>
 
-  @if (!aberto()) {
-    <span class="chat-historico__rotulo-vertical" aria-hidden="true">Histórico</span>
-  } @else {
+  <span class="chat-historico__rotulo-vertical" aria-hidden="true">Histórico</span>
+
+  <div class="chat-historico__conteudo" [attr.inert]="aberto() ? null : ''">
     <span class="chat-historico__busca">
       <i class="pi pi-search chat-historico__busca-icone"></i>
       <input
@@ -85,5 +83,5 @@
         </ul>
       }
     </div>
-  }
+  </div>
 </aside>

@@ -12,6 +12,13 @@
 
 ---
 
+## 2026-10-17 — Chat: animação do histórico e do copiar; nota "Substituída pelo chat" no menu
+
+- **Histórico:** abrir e recolher animam a largura (0,15 s, como a barra lateral); o conteúdo fica sempre no DOM com a largura aberta e some por opacidade/visibilidade (com `inert` recolhido), então não reflui durante o movimento; o rótulo vertical aparece por opacidade. Sem movimento com `prefers-reduced-motion`.
+- **Copiar:** o botão aparece com transição de opacidade (0,2 s) em vez de surgir de uma vez.
+- **Menu:** Atividades e Execuções desabilitadas mostram, embaixo do nome, a nota cinza "Substituída pelo chat" (no lugar do tooltip); com a barra recolhida (sem espaço para a nota) o tooltip continua, só então.
+- **Verificado:** build; nota do menu vista ao vivo (1366×768); estados finais do histórico aberto/recolhido conferidos pelo DOM. **Não verificado visualmente: o movimento em si** — o painel embutido do navegador não avança transições (as animações ficaram em `running` sem progredir; ao forçar `finish()` os estados finais estavam certos), então a suavidade fica para o autor conferir.
+
 ## 2026-10-17 — Chat: nome da conversa dado pela IA, data e hora, copiar nas duas pontas, tooltip e pontinhos
 
 Pedidos do autor depois do ajuste do painel (extensão da task 141):

@@ -3,15 +3,18 @@
   flex-shrink: 0;
   width: 20rem;
   min-height: 0;
+  // Abrir e fechar animam a largura, como a barra lateral; o conteúdo mantém a largura aberta e só some por baixo (sem reflow).
+  transition: width 0.15s ease;
 }
 
 :host(.chat-historico--recolhido) {
-  width: 3rem;
+  width: 3.75rem;
 }
 
 .chat-historico {
   display: flex;
   flex-direction: column;
+  position: relative;
   gap: 0.75rem;
   height: 100%;
   min-height: 0;
@@ -19,6 +22,7 @@
   border: 1px solid var(--app-surface-200);
   border-radius: 12px;
   background: var(--app-surface-0);
+  overflow: hidden;
 
   &__cabecalho {
     display: flex;
@@ -29,7 +33,13 @@
 
   // Recolhido: o nome na vertical, para a faixa dizer o que é sem precisar abrir.
   &__rotulo-vertical {
-    margin-top: 0.5rem;
+    position: absolute;
+    top: 4rem;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
     color: var(--p-text-muted-color);
     font-size: 0.8125rem;
     font-weight: 600;
@@ -39,6 +49,17 @@
 
   &__titulo {
     font-size: 0.9375rem;
+    white-space: nowrap;
+  }
+
+  &__conteudo {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 0.75rem;
+    min-height: 0;
+    min-width: 18.25rem;
+    transition: opacity 0.15s ease, visibility 0.15s;
   }
 
   &__busca {
@@ -141,8 +162,21 @@
   }
 }
 
-// Recolhido: só o botão de abrir fica, centralizado na faixa.
 :host(.chat-historico--recolhido) .chat-historico {
-  align-items: center;
-  padding: 0.75rem 0.25rem;
+  &__conteudo {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  &__rotulo-vertical {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host,
+  .chat-historico__conteudo,
+  .chat-historico__rotulo-vertical {
+    transition: none;
+  }
 }

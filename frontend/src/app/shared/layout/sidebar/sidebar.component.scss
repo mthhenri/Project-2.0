@@ -33,6 +33,18 @@
     color: var(--p-text-muted-color);
   }
 
+  &__rotulo--com-nota {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+  }
+
+  &__nota {
+    font-size: 0.6875rem;
+    font-weight: 400;
+    color: var(--p-text-muted-color);
+  }
+
   &__nav {
     overflow-y: auto;
   }
