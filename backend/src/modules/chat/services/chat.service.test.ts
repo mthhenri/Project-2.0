@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { AutorChatEnum, ChatEventoDto, ContextoChatEnum, EstadoIaEnum, NivelIaEnum, TipoUsuarioEnum } from '@project20/shared';
+import { AutorChatEnum, ChatEventoDto, ContextoChatEnum, EstadoIaEnum, NivelIaEnum, TipoPromptEnum, TipoUsuarioEnum } from '@project20/shared';
 import { ConfigService } from '../../../config/config.service';
 import { ConflictException } from '../../../core/exceptions/conflict.exception';
 import { FerramentaIaRegistro } from '../../ferramenta-ia/services/ferramenta-ia.registro';
@@ -103,10 +103,16 @@ function montar(cenario: Cenario) {
     },
   };
   const recusadas: number[] = [];
+  const tiposDePrompt: TipoPromptEnum[] = [];
   const servico = new ChatService(
     repositorio as unknown as ChatMensagemRepository,
     iaService as unknown as IaService,
-    { obterAtivo: async () => ({ conteudo: 'Você é o assistente.' }) } as unknown as PromptService,
+    {
+      obterAtivo: async (tipo: TipoPromptEnum) => {
+        tiposDePrompt.push(tipo);
+        return { conteudo: 'Você é o assistente.' };
+      },
+    } as unknown as PromptService,
     {
       listarParaUsuario: () => [{ nome: 'consultar_data_e_hora', descricao: 'd', esquemaEntrada: {} }],
       executar: async (nome: string) => (cenario.ferramenta ? cenario.ferramenta(nome) : { conteudo: '{"data":"2026-10-17"}', erro: false }),
@@ -119,7 +125,7 @@ function montar(cenario: Cenario) {
     } as unknown as PropostaIaService,
     { obter: () => ({ aplicacao: { fusoHorario: 'America/Sao_Paulo' } }) } as unknown as ConfigService,
   );
-  return { servico, gravadas, ordem, solicitacoes, recusadas, titulos, geradas };
+  return { servico, gravadas, ordem, solicitacoes, recusadas, titulos, geradas, tiposDePrompt };
 }
 
 async function enviar(servico: ChatService, texto = 'Oi') {
@@ -425,4 +431,41 @@ test('bom dia: falha avisa pelo evento, mas não grava mensagem do sistema (F5 c
   const eventos = await bomDia(servico);
   assert.equal(eventos.at(-1)?.tipo, 'erro');
   assert.deepEqual(gravadas, []);
+});
+
+// ------------------------------------------------------------------ contexto do check-in (task 149)
+
+async function enviarCheckin(servico: ChatService, texto = 'Mexi na validação do e-mail') {
+  const eventos: ChatEventoDto[] = [];
+  await servico.enviarMensagem(USUARIO, { texto }, (evento) => eventos.push(evento), { contexto: ContextoChatEnum.CHECKIN, instrucoesExtras: '[Contexto do check-in] rigor X' });
+  return eventos;
+}
+
+test('check-in: grava as mensagens com o contexto CHECKIN, usa o prompt CHECKIN e soma o contexto às instruções', async () => {
+  const { servico, gravadas, solicitacoes, tiposDePrompt, geradas } = montar({ chamadas: [async () => resposta({ texto: 'Entendi. O que mais?' })] });
+  const eventos = await enviarCheckin(servico);
+  assert.equal(eventos.at(-1)?.tipo, 'fim');
+  assert.deepEqual(gravadas.map((mensagem) => [mensagem.autor, mensagem.contexto]), [[AutorChatEnum.USUARIO, ContextoChatEnum.CHECKIN], [AutorChatEnum.IA, ContextoChatEnum.CHECKIN]]);
+  assert.deepEqual(tiposDePrompt, [TipoPromptEnum.CHECKIN]);
+  assert.match(String(solicitacoes[0].instrucoes), /Você é o assistente\.[\s\S]*\[Contexto do check-in\] rigor X/);
+  assert.equal(geradas.length, 0, 'o check-in não dá nome à conversa do chat');
+});
+
+test('check-in e chat não se leem: a tela do chat não mostra o check-in e o check-in não vê o chat', async () => {
+  const { servico, solicitacoes } = montar({ chamadas: [async () => resposta({ texto: 'resposta do chat' }), async () => resposta({ texto: 'resposta do check-in' })] });
+  await enviar(servico, 'Pergunta do chat');
+  await enviarCheckin(servico, 'Resposta do check-in');
+
+  const checkin = solicitacoes[1].mensagens.map((mensagem) => (typeof mensagem.conteudo === 'string' ? mensagem.conteudo : ''));
+  assert.deepEqual(checkin, ['Resposta do check-in']);
+
+  const hoje = await servico.recuperarHoje(USUARIO);
+  assert.deepEqual(hoje.dados.mensagens.map((mensagem) => mensagem.texto), ['Pergunta do chat', 'resposta do chat']);
+});
+
+test('check-in: uma resposta do check-in não conta como o bom dia do chat', async () => {
+  const { servico } = montar({ chamadas: [async () => resposta({ texto: 'ok' }), async () => resposta({ texto: 'Bom dia!' })] });
+  await enviarCheckin(servico);
+  const eventos = await bomDia(servico);
+  assert.equal(eventos.at(-1)?.tipo, 'fim');
 });

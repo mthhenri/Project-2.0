@@ -11,6 +11,6 @@ import { ChatService } from './services/chat.service';
   imports:     [IaModule, PromptModule, FerramentaIaModule, PropostaIaModule],
   controllers: [ChatController],
   providers:   [clienteOpenSearchChatProvider, ChatMensagemRepository, ChatService],
-  exports:     [ChatMensagemRepository],
+  exports:     [ChatMensagemRepository, ChatService],
 })
 export class ChatModule {}

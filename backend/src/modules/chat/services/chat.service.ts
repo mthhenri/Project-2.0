@@ -43,6 +43,17 @@ export const INSTRUCOES_TITULO =
 
 const MENSAGEM_GENERICA = 'Serviço de IA temporariamente indisponível';
 
+/**
+ * Em que conversa do dia a mensagem acontece: o chat ou o check-in (`CHECKIN`, task 149). Os dois moram na mesma conversa do dia, mas
+ * cada um só lê as mensagens do próprio contexto; `instrucoesExtras` entra depois do prompt do tipo (o contexto do check-in).
+ */
+export interface OpcoesDeConversa {
+  contexto: ContextoChatEnum;
+  /** A instrução de abertura do dia (o bom dia): vai ao modelo como a primeira mensagem do usuário, sem ser gravada. */
+  abertura?: string;
+  instrucoesExtras?: string;
+}
+
 /** O que fica guardado em `conteudo_bruto` da mensagem da IA: as trocas do turno, para remontar a conversa depois. */
 interface ConteudoBrutoDoTurno {
   mensagens: IaMensagem[];
@@ -70,7 +81,7 @@ export class ChatService {
 
   async recuperarHoje(usuarioAtivo: JwtPayload): Promise<StandardResponse<ChatHojeRecuperadoDto>> {
     const conversaId = this.conversaDeHoje(usuarioAtivo);
-    const mensagens = await this.chatMensagemRepositorio.listarConversa({ conversaId, usuarioId: usuarioAtivo.sub });
+    const mensagens = await this.listarDoContexto(conversaId, usuarioAtivo.sub, ContextoChatEnum.CHAT);
     return { sucesso: true, dados: { conversaId, mensagens: mensagens.map(paraResumo) }, mensagem: 'Conversa recuperada com sucesso' };
   }
 
@@ -95,7 +106,7 @@ export class ChatService {
   /** A conversa de um dia do próprio usuário; o dono vem do token, então um dia sem mensagens devolve a lista vazia. */
   async recuperarConversa(dto: ChatConversaRecuperarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<ChatHojeRecuperadoDto>> {
     const conversaId = `${usuarioAtivo.sub}-${dto.data}`;
-    const mensagens = await this.chatMensagemRepositorio.listarConversa({ conversaId, usuarioId: usuarioAtivo.sub });
+    const mensagens = await this.listarDoContexto(conversaId, usuarioAtivo.sub, ContextoChatEnum.CHAT);
     return { sucesso: true, dados: { conversaId, mensagens: mensagens.map(paraResumo) }, mensagem: 'Conversa recuperada com sucesso' };
   }
 
@@ -113,7 +124,12 @@ export class ChatService {
    * Envia a mensagem e emite os eventos da resposta. Lança (antes de qualquer evento) se a IA está desligada ou se já há uma mensagem
    * em andamento; depois disso, toda falha vira o evento `erro`, e o método termina sem lançar.
    */
-  async enviarMensagem(usuarioAtivo: JwtPayload, dto: ChatMensagemEnviarDto, emitir: (evento: ChatEventoDto) => void): Promise<void> {
+  async enviarMensagem(
+    usuarioAtivo: JwtPayload,
+    dto: ChatMensagemEnviarDto,
+    emitir: (evento: ChatEventoDto) => void,
+    opcoes: OpcoesDeConversa = { contexto: ContextoChatEnum.CHAT },
+  ): Promise<void> {
     if ((await this.iaService.obterEstado()) === EstadoIaEnum.DESLIGADA) throw new ConflictException('A IA está desligada');
 
     const conversaId = this.conversaDeHoje(usuarioAtivo);
@@ -125,14 +141,14 @@ export class ChatService {
       await this.chatMensagemRepositorio.gravar({
         conversaId,
         usuarioId: usuarioAtivo.sub,
-        contexto: ContextoChatEnum.CHAT,
+        contexto: opcoes.contexto,
         autor: AutorChatEnum.USUARIO,
         texto: dto.texto,
       });
-      await this.responder(usuarioAtivo, conversaId, propostasDoTurno, emitir);
-      await this.nomearConversa(usuarioAtivo, conversaId);
+      await this.responder(usuarioAtivo, conversaId, propostasDoTurno, emitir, opcoes);
+      if (opcoes.contexto === ContextoChatEnum.CHAT) await this.nomearConversa(usuarioAtivo, conversaId);
     } catch (erro) {
-      await this.registrarFalha(usuarioAtivo, conversaId, propostasDoTurno, erro, emitir);
+      await this.registrarFalha(usuarioAtivo, conversaId, propostasDoTurno, erro, emitir, true, opcoes.contexto);
     } finally {
       this.emAndamento.delete(conversaId);
     }
@@ -149,7 +165,7 @@ export class ChatService {
 
     const conversaId = this.conversaDeHoje(usuarioAtivo);
     const jaDeuBomDia = async (): Promise<boolean> =>
-      (await this.chatMensagemRepositorio.listarConversa({ conversaId, usuarioId: usuarioAtivo.sub })).some((mensagem) => mensagem.autor === AutorChatEnum.IA);
+      (await this.listarDoContexto(conversaId, usuarioAtivo.sub, ContextoChatEnum.CHAT)).some((mensagem) => mensagem.autor === AutorChatEnum.IA);
     if (await jaDeuBomDia()) throw new ConflictException('O bom dia de hoje já foi dado');
     if (this.emAndamento.has(conversaId)) throw new ConflictException('A IA ainda está respondendo à mensagem anterior');
     this.emAndamento.add(conversaId);
@@ -157,7 +173,7 @@ export class ChatService {
     const propostasDoTurno: number[] = [];
     try {
       if (await jaDeuBomDia()) return;
-      await this.responder(usuarioAtivo, conversaId, propostasDoTurno, emitir, this.abertura());
+      await this.responder(usuarioAtivo, conversaId, propostasDoTurno, emitir, { contexto: ContextoChatEnum.CHAT, abertura: this.abertura() });
     } catch (erro) {
       await this.registrarFalha(usuarioAtivo, conversaId, propostasDoTurno, erro, emitir, false);
     } finally {
@@ -186,10 +202,12 @@ export class ChatService {
     conversaId: string,
     propostasDoTurno: number[],
     emitir: (evento: ChatEventoDto) => void,
-    abertura?: string,
+    opcoes: OpcoesDeConversa,
   ): Promise<void> {
-    const historico = await this.chatMensagemRepositorio.listarConversa({ conversaId, usuarioId: usuarioAtivo.sub });
-    const prompt = await this.promptService.obterAtivo(TipoPromptEnum.CONVERSA);
+    const { abertura, contexto } = opcoes;
+    const historico = await this.listarDoContexto(conversaId, usuarioAtivo.sub, contexto);
+    const prompt = await this.promptService.obterAtivo(contexto === ContextoChatEnum.CHECKIN ? TipoPromptEnum.CHECKIN : TipoPromptEnum.CONVERSA);
+    const instrucoes = opcoes.instrucoesExtras ? `${prompt.conteudo}\n\n${opcoes.instrucoesExtras}` : prompt.conteudo;
     const ferramentas = this.ferramentaIaRegistro.listarParaUsuario(usuarioAtivo);
 
     // Na abertura do dia não há mensagem do usuário: a instrução entra como a primeira mensagem e fica no conteúdo bruto da resposta.
@@ -202,7 +220,7 @@ export class ChatService {
 
     for (let volta = 1; volta <= MAXIMO_DE_VOLTAS; volta++) {
       const resposta = await this.iaService.transmitir(
-        { nivel: NivelIaEnum.RAPIDO, instrucoes: prompt.conteudo, mensagens, ferramentas, maximoTokens: MAXIMO_TOKENS_DO_CHAT },
+        { nivel: NivelIaEnum.RAPIDO, instrucoes, mensagens, ferramentas, maximoTokens: MAXIMO_TOKENS_DO_CHAT },
         (trecho) => emitir({ tipo: 'trecho', texto: trecho }),
       );
       ultima = resposta;
@@ -228,7 +246,7 @@ export class ChatService {
     const gravada = await this.chatMensagemRepositorio.gravar({
       conversaId,
       usuarioId: usuarioAtivo.sub,
-      contexto: ContextoChatEnum.CHAT,
+      contexto,
       autor: AutorChatEnum.IA,
       texto,
       nivel: NivelIaEnum.RAPIDO,
@@ -250,7 +268,7 @@ export class ChatService {
     try {
       const existentes = await this.chatMensagemRepositorio.listarTitulos({ usuarioId: usuarioAtivo.sub, conversaIds: [conversaId] });
       if (existentes[conversaId]) return;
-      const conversa = await this.chatMensagemRepositorio.listarConversa({ conversaId, usuarioId: usuarioAtivo.sub });
+      const conversa = await this.listarDoContexto(conversaId, usuarioAtivo.sub, ContextoChatEnum.CHAT);
       const primeiraDoUsuario = conversa.find((mensagem) => mensagem.autor === AutorChatEnum.USUARIO);
       const primeiraDaIa = conversa.find((mensagem) => mensagem.autor === AutorChatEnum.IA);
       if (!primeiraDoUsuario || !primeiraDaIa) return;
@@ -300,6 +318,7 @@ export class ChatService {
     erro: unknown,
     emitir: (evento: ChatEventoDto) => void,
     gravarMensagemDoSistema = true,
+    contexto: ContextoChatEnum = ContextoChatEnum.CHAT,
   ): Promise<void> {
     const mensagem = erro instanceof IaException ? erro.mensagem : MENSAGEM_GENERICA;
     if (!(erro instanceof IaException)) {
@@ -310,7 +329,7 @@ export class ChatService {
     }
     if (gravarMensagemDoSistema) {
       await this.chatMensagemRepositorio
-        .gravar({ conversaId, usuarioId: usuarioAtivo.sub, contexto: ContextoChatEnum.CHAT, autor: AutorChatEnum.SISTEMA, texto: mensagem })
+        .gravar({ conversaId, usuarioId: usuarioAtivo.sub, contexto, autor: AutorChatEnum.SISTEMA, texto: mensagem })
         .catch(() => undefined);
     }
     emitir({ tipo: 'erro', mensagem });
@@ -335,6 +354,12 @@ export class ChatService {
     // Um resultado de ferramenta sem a chamada que o originou seria recusado pelo provedor: começa pela primeira mensagem de texto do usuário.
     while (mensagens.length > 0 && !(mensagens[0].papel === 'usuario' && typeof mensagens[0].conteudo === 'string')) mensagens.shift();
     return mensagens;
+  }
+
+  /** As mensagens da conversa do dia que são de um contexto (o chat e o check-in não se leem). */
+  private async listarDoContexto(conversaId: string, usuarioId: number, contexto: ContextoChatEnum): Promise<ChatMensagemLida[]> {
+    const todas = await this.chatMensagemRepositorio.listarConversa({ conversaId, usuarioId });
+    return todas.filter((mensagem) => mensagem.contexto === contexto);
   }
 
   private conversaDeHoje(usuarioAtivo: JwtPayload): string {

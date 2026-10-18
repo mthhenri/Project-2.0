@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ExecucaoAtivaConsultadaDto, ExecucaoAtivaConsultarDto } from '@project20/shared';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { FerramentaIa } from '../../ferramenta-ia/domain/ferramenta-ia';
+import { recuperarExecucaoAtivaDetalhada } from '../domain/execucao-ativa-detalhada';
 import { ExecucaoService } from '../services/execucao.service';
 
 /** A execução em andamento do **próprio** usuário (no máximo uma), com a atividade, a demanda e o tempo até agora. */
@@ -20,21 +21,16 @@ export class ConsultarExecucaoAtivaFerramenta extends FerramentaIa<ExecucaoAtiva
   }
 
   async executar(_entrada: ExecucaoAtivaConsultarDto, usuarioAtivo: JwtPayload): Promise<ExecucaoAtivaConsultadaDto> {
-    const ativa = (await this.execucaoService.recuperarAtiva(usuarioAtivo)).dados;
+    const ativa = await recuperarExecucaoAtivaDetalhada(this.execucaoService, usuarioAtivo);
     if (!ativa) return { ativa: false };
 
-    // A execução ativa não traz os nomes: eles vêm da listagem da própria atividade (a mesma da tela de Execuções).
-    const daAtividade = (
-      await this.execucaoService.listar({ usuarioId: usuarioAtivo.sub, atividadeId: ativa.atividadeId, allRows: true }, usuarioAtivo)
-    ).dados;
-    const detalhada = daAtividade?.itens.find((item) => item.id === ativa.id);
-    const inicio = new Date(ativa.inicioData);
+    const inicio = ativa.inicioData;
     return {
       ativa: true,
       execucaoId: ativa.id,
-      atividade: detalhada?.nomeAtividade,
-      demanda: detalhada?.nomeDemanda,
-      projeto: detalhada?.nomeProjeto,
+      atividade: ativa.nomeAtividade,
+      demanda: ativa.nomeDemanda,
+      projeto: ativa.nomeProjeto,
       descricao: ativa.descricao,
       inicio: inicio.toISOString(),
       minutosAteAgora: Math.max(0, Math.round((this.agora().getTime() - inicio.getTime()) / 60_000)),

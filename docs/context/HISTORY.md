@@ -12,6 +12,19 @@
 
 ---
 
+## 2026-10-18 — Task 149: check-in no backend e rigor proporcional
+
+Spec em `docs/specs/done/149-checkin-backend-e-rigor-proporcional.spec.md`.
+
+- **Situação:** `GET /checkin/situacao` (`CheckinService.consultarSituacao`): execução ativa com atividade, demanda, projeto, descrição provisória, início e minutos (do relógio do servidor); a suspensão (148); e, da configuração ativa, os intervalos, a duração recomendada, o rigor e `acimaDoRecomendado`. Sem execução, `haCheckin: false`.
+- **Conversa do check-in:** `POST /checkin/mensagem` (SSE no formato do chat; 409 sem execução ativa antes de qualquer evento) chama `ChatService.enviarMensagem` com `OpcoesDeConversa { contexto: CHECKIN, instrucoesExtras }`. O `ChatService` passou a **separar os contextos**: grava com o contexto, usa o prompt `CHECKIN` (nível rápido), soma as instruções extras às do prompt e só lê, do dia, as mensagens do próprio contexto; a tela do chat (`/hoje`, dia antigo), o bom dia e o nome da conversa só consideram `CHAT` (a lista de conversas já filtrava `CHAT`). O check-in não dá nome à conversa do chat.
+- **Rigor proporcional:** `montarContextoDoCheckin` (calculado no backend, não gravado): execução, tempo (`2h40`), duração recomendada; com a flag ligada, acima do recomendado manda pedir mais detalhe ("foram 2h40, teve mais alguma coisa?") e, abaixo, ir direto à descrição; com a flag desligada não há instrução de rigor; nunca é trava. Também instrui a regra da narrativa crua (fica na conversa) e a "**Descrição proposta:**" formal (a proposta de verdade é a 150).
+- **Desvio da spec (prompt):** não criei versão de seed do `CHECKIN`: o "padrão" é a versão 1 (restaurar padrão a reativa) e trocá-la mudaria a ativa do administrador. O tom continua no prompt editável (a v1 já diz "descrição formal, terceira pessoa, sem gírias") e o que é regra do sistema (tempo, rigor, narrativa crua) vem no contexto calculado. Mesma decisão das tasks 144, 146 e 147.
+- **Refatoração pequena:** `recuperarExecucaoAtivaDetalhada` (execução ativa com nomes) saiu da ferramenta `consultar_execucao_ativa` para uma função compartilhada com o `CheckinService`.
+- **Testes:** backend 284 verdes (situação com e sem execução, suspensão, selo de rigor; mensagem com contexto `CHECKIN` e rigor; sem execução 409; flag desligada sem rigor; chat com contexto `CHECKIN`, prompt `CHECKIN`, instruções extras, check-in e chat sem se ler, check-in não vira bom dia; formatação e texto do contexto).
+- **Verificado ao vivo** (IA real, administrador): sem execução, `situacao` com `haCheckin: false` e `mensagem` 409 "Não há execução em andamento: não há check-in"; iniciei uma execução de teste e voltei o início para 2h40 atrás (`PUT /execucao/:id` com `inicioData`): `situacao` deu 160 minutos e `acimaDoRecomendado: true`, e a IA, ao receber a narrativa, respondeu "foram 2h40, mais que o recomendado de 1h30. Teve mais alguma coisa?"; com o início a 25 min atrás ela foi direto à "**Descrição proposta:**" formal; `/chat/hoje` só mostrou mensagens `CHAT`. A execução de teste foi excluída (soft delete) e as 4 mensagens `CHECKIN` de teste, apagadas do OpenSearch.
+- **Não verificado:** a flag de rigor desligada ao vivo (só unitário), a mensagem do check-in com a IA fora do ar, a tela (é da 151) e o desenvolvedor.
+
 ## 2026-10-18 — Task 148: reunião e suspensão dos check-ins
 
 Spec em `docs/specs/done/148-chat-reuniao-suspender-checkins.spec.md`.
