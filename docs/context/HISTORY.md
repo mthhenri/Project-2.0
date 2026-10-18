@@ -12,6 +12,19 @@
 
 ---
 
+## 2026-10-18 — Task 148: reunião e suspensão dos check-ins
+
+Spec em `docs/specs/done/148-chat-reuniao-suspender-checkins.spec.md`.
+
+- **Módulo novo `checkin`:** `CheckinSuspensaoService` (estado em memória por usuário: `suspender`, `retomar` que devolve o que acabou, `consultar`; acaba sozinho quando o dia do fuso muda; o relógio é injetável nos testes), `GET /checkin/suspensao` (o próprio usuário, qualquer tipo) com `CheckinSuspensaoConsultadaDto`, `SuspenderCheckinExecutor` e as ferramentas `propor_suspender_checkin` e `propor_retomar_checkin`.
+- **Uma proposta para as duas ações:** o tipo `SUSPENDER_CHECKIN` já existia e não há tipo de "retomar"; os dados levam `acao` (`SUSPENDER` ou `RETOMAR`) e `motivo`. Desfazer faz o inverso (desfazer a retomada suspende de novo com o motivo de antes). Propor suspender com os check-ins já suspensos, ou retomar sem estarem, volta como erro ao modelo e nenhum cartão nasce.
+- **Flag "check-in inteligente":** novo `FerramentaIa.habilitada()` opcional; o registro tira a ferramenta da lista do modelo e recusa a chamada se a flag está desligada (lida do cache da configuração: `ConfiguracaoIaService.obterAtivaEmCache()`; sem configuração carregada ainda, vale como ligada).
+- **Cartão do chat:** "Suspender os check-ins até você voltar" / "Retomar os check-ins", com o motivo.
+- **Prompt:** nada novo no `CONVERSA` (a descrição das ferramentas ensina reunião e "voltei"; mesmo motivo das tasks anteriores).
+- **Testes:** backend 270 verdes (estado por usuário, retomar, virada de dia no fuso, executor nas duas ações e desfazer, recusas, ferramentas e a flag escondendo e recusando).
+- **Verificado ao vivo** (IA real): "Vou entrar numa reunião de planejamento" gerou a proposta com o motivo; confirmar marcou `suspenso: true` na rota; "Voltei da reunião" gerou a proposta de retomar, confirmar tirou a suspensão, desfazer a retomada suspendeu de novo e desfazer a suspensão a tirou; a rota terminou com `suspenso: false`. Reiniciar o backend apaga a suspensão (comportamento documentado, não testado ao vivo).
+- **Não verificado:** a flag desligada ao vivo (não mexi na configuração do autor; só no teste unitário), o cartão no navegador (o texto vem do mesmo caminho dos outros), o gate visual e o desenvolvedor.
+
 ## 2026-10-18 — Task 147: bom dia proativo
 
 Spec em `docs/specs/done/147-chat-bom-dia-proativo.spec.md`.

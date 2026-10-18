@@ -42,6 +42,11 @@ export class ConfiguracaoIaService implements OnModuleInit {
     return ativa;
   }
 
+  /** A configuração ativa só se já estiver no cache (leitura síncrona, para quem decide na hora, como as ferramentas); `null` antes da primeira. */
+  obterAtivaEmCache(): ConfiguracaoIaResumoDto | null {
+    return this.ativaEmCache;
+  }
+
   async recuperarAtiva(usuarioAtivo: JwtPayload): Promise<StandardResponse<ConfiguracaoIaRecuperadaDto>> {
     this.validarAdministrador(usuarioAtivo);
     return { sucesso: true, dados: await this.obterAtiva(), mensagem: 'Configuração da IA recuperada com sucesso' };

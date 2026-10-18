@@ -39,7 +39,7 @@ export class FerramentaIaRegistro {
   /** As ferramentas que o usuário pode usar, no formato do contrato do provedor (task 130). */
   listarParaUsuario(usuarioAtivo: JwtPayload): IaFerramenta[] {
     return this.listarTodas()
-      .filter((ferramenta) => usuarioPodeUsar(ferramenta.permissao, usuarioAtivo.tipo))
+      .filter((ferramenta) => usuarioPodeUsar(ferramenta.permissao, usuarioAtivo.tipo) && (ferramenta.habilitada?.() ?? true))
       .map((ferramenta) => ({
         nome: ferramenta.nome,
         descricao: ferramenta.descricao,
@@ -53,6 +53,8 @@ export class FerramentaIaRegistro {
     if (!usuarioPodeUsar(ferramenta.permissao, usuarioAtivo.tipo as TipoUsuarioEnum)) {
       return this.erro(`Você não tem permissão para usar a ferramenta "${nome}".`);
     }
+
+    if (ferramenta.habilitada && !ferramenta.habilitada()) return this.erro(`A ferramenta "${nome}" está desabilitada na configuração da IA.`);
 
     const entrada = plainToInstance(ferramenta.classeDeEntrada, entradaBruta ?? {});
     const problemas = await validate(entrada, { whitelist: true, forbidNonWhitelisted: true, forbidUnknownValues: false });

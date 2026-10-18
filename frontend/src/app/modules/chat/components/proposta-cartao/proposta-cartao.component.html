@@ -40,6 +40,17 @@
           </span>
         </div>
       }
+      @case (Tipo.SUSPENDER_CHECKIN) {
+        <div class="proposta-cartao__resumo">
+          <strong class="proposta-cartao__destaque">{{ texto('acao') === 'RETOMAR' ? 'Retomar os check-ins' : 'Suspender os check-ins até você voltar' }}</strong>
+          @if (texto('motivo')) {
+            <span class="proposta-cartao__linha">Motivo: {{ texto('motivo') }}</span>
+          }
+          <span class="proposta-cartao__linha">
+            {{ texto('acao') === 'RETOMAR' ? 'Os check-ins voltam a aparecer no intervalo normal.' : 'Vale até você voltar ou até o fim do dia.' }}
+          </span>
+        </div>
+      }
       @case (Tipo.ANOTAR_PAD) {
         <div class="proposta-cartao__resumo">
           <strong class="proposta-cartao__destaque">Pad · {{ rotuloSecao(texto('secao')) }}</strong>

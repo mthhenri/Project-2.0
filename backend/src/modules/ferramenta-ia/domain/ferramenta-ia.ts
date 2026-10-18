@@ -29,6 +29,12 @@ export abstract class FerramentaIa<TEntrada extends object = object> {
   abstract readonly permissao: PermissaoFerramentaIa;
   abstract readonly classeDeEntrada: ClasseDeEntrada<TEntrada>;
 
+  /**
+   * Ferramenta que depende de uma configuração (flag da IA): quando devolve `false` ela some da lista do modelo e, se for chamada
+   * mesmo assim, é recusada. Sem este método, a ferramenta está sempre habilitada.
+   */
+  habilitada?(): boolean;
+
   /** Devolve algo serializável em JSON; limitar o tamanho do que devolve é responsabilidade de cada ferramenta. */
   abstract executar(entrada: TEntrada, usuarioAtivo: JwtPayload): Promise<unknown>;
 }
