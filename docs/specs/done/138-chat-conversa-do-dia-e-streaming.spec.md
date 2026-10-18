@@ -34,7 +34,7 @@ aparelho). Sem tela (task 139).
 - Rotas (usuário autenticado, qualquer tipo): `POST /chat/mensagem` (resposta `text/event-stream`), `GET /chat/hoje` (mensagens da
   conversa do dia) e `GET /chat/busca?texto=&inicio=&fim=` (só as mensagens do próprio usuário). Como o `@Sse` do Nest é só GET, o
   controller usa a resposta direta com um helper de fluxo (`EventStreamResponse`), mantendo o controller fino.
-- **A IA desligada ou fora do ar** responde 409 com a mensagem da `IaException`, sem gravar mensagem de IA.
+- **A IA desligada** responde 409 antes de gravar qualquer coisa. **Fora do ar** (sem chave ou falha anterior) segue para a chamada e vira o evento `erro` (o estado só se recupera com uma chamada bem-sucedida).
 - **Concorrência:** uma mensagem por conversa por vez; um segundo envio com o anterior em andamento responde 409.
 - Testes (node:test, IA e repository falsos): ordem das gravações, laço com ferramenta, limite de 8 voltas, limite de 40 mensagens,
   falha no meio do streaming, proposta emitida e referenciada, 409 de concorrência, conversa do dia na virada de dia e fuso.
@@ -57,7 +57,7 @@ aparelho). Sem tela (task 139).
 
 - Mandar uma mensagem recebe os trechos aos poucos (vários eventos `trecho` antes do `fim`) e o texto concatenado é o da mensagem gravada.
 - Recarregar (`GET /chat/hoje`) devolve a conversa inteira, na ordem, inclusive depois de uma chamada de ferramenta.
-- Com a IA desligada, `POST /chat/mensagem` responde 409 e nenhuma mensagem de IA é gravada.
+- Com a IA desligada, `POST /chat/mensagem` responde 409 e nenhuma mensagem é gravada.
 - Um usuário nunca lê nem busca mensagens de outro.
 - Testes de `shared` e `backend` e builds passam; frontend sem alteração.
 

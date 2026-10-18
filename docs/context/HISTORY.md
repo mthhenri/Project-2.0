@@ -12,6 +12,22 @@
 
 ---
 
+## 2026-10-17 — Task 138: conversa do dia com a IA e streaming
+
+Bloco 5 do rework (4 de 6). Shared: `ChatMensagemEnviarDto`, `ChatEventoDto` (união tipada dos eventos), `ChatHojeRecuperadoDto`, `ChatBuscarDto` e `ChatBuscadoDto`. Backend: `ChatService`, `ChatController` e `EventStreamResponse` (cabeçalhos do `text/event-stream` só no primeiro evento,
+para uma falha antes dele ainda responder com o status HTTP de sempre). `ChatModule` agora importa `IaModule`, `PromptModule`, `FerramentaIaModule` e `PropostaIaModule`.
+
+- **Decisões de projeto (as assumidas na spec, mantidas):** SSE sobre `POST`; janela de 40 mensagens; prompt `CONVERSA` ainda o seed curto; nível rápido. Em `conteudo_bruto` guardo as **trocas do turno** inteiras (`{ mensagens: [...] }`: pedido de ferramenta, resultado e resposta final) em vez de só os
+  blocos da última resposta, para a conversa remontada depois manter as chamadas de ferramenta; ao montar o contexto, mensagens do sistema não vão ao modelo e a janela sempre começa por um texto do usuário (um resultado de ferramenta sem a chamada seria recusado pelo provedor).
+- **Desvio da spec:** a spec dizia que IA "desligada ou fora do ar" responde 409. Só **desligada** responde 409 (e antes de gravar qualquer coisa). **Fora do ar** (sem chave ou falha anterior) segue para a chamada e vira o evento `erro` com a mensagem de `IaException`: o estado `FORA_DO_AR` por falha só volta a `NO_AR` depois
+  de uma chamada bem-sucedida, então barrar na entrada impediria a recuperação.
+- **Limitação conhecida:** `proposta_id` é um campo só (modelagem), então, se a IA criar mais de uma proposta no mesmo turno, só a primeira fica ligada à mensagem (todas aparecem no fluxo ao vivo). Os blocos 6 e 9 devem preferir uma proposta por turno ou ampliar o campo.
+- **Verificação real (backend em outra porta, Anthropic e OpenSearch reais):** com a IA desligada, `POST /chat/mensagem` respondeu 409 e nada foi gravado; com ela ligada, a IA pediu `consultar_data_e_hora`, o resultado voltou ao modelo e a resposta chegou em 8 trechos
+  (primeiro aos 4,7 s, últimos em 120 ms), terminando em `fim`; o texto transmitido é igual ao gravado; nível rápido, modelo `claude-haiku-5-5`; a segunda mensagem foi respondida com o contexto da primeira ("Sábado"); `GET /chat/hoje` devolveu a conversa em ordem sem `conteudoBruto`;
+  a busca por "horas" achou a mensagem; sem token, 401. Documentos de teste removidos do índice e a IA desligada de novo ao fim.
+- **Não verificado:** cliente fechando a conexão no meio (só pelo desenho: a escrita depois de fechar é ignorada), streaming através do proxy do Angular (`proxy.conf.json`; conferir na 139) e mais de uma proposta no turno.
+- **Testes:** 15 novos na service (ordem das gravações, prompt, ferramentas e nível, laço, erro de ferramenta, proposta, limite de voltas, falha no meio, erro desconhecido, 409 desligada e concorrência, trava liberada, janela de 40, montagem do contexto, conversa do dia, busca); `backend` e `shared` verdes, builds do backend e do frontend ok.
+
 ## 2026-10-17 — Task 137: ferramentas da IA sobre a API
 
 Bloco 5 do rework (3 de 6). Módulo `ferramenta-ia` (sem rotas): `FerramentaIa` (contrato), `FerramentaIaRegistro`, `gerarEsquemaDeClasse` + `@DescricaoCampoIa`, `FerramentaPropostaIa` (base) e `ConsultarDataEHoraFerramenta`. Shared: `DataHoraConsultarDto` e `DataHoraConsultadaDto`.

@@ -21,7 +21,7 @@ elas criaram (ver `MEMORY.md` §2). Siga a ordem de fases de `INDEX-revisao-ux.m
 2026-10-16 e estão em `docs/specs/discarded/`. As **110 e 111** (tela de Execuções) foram descartadas junto, mas o autor as
 **reativou em 2026-10-17** e elas foram **concluídas** (`docs/specs/done/`). A task 117 foi concluída. Não restam tasks
 numeradas no backlog.
-Próxima migration nova: `0036`. **Próximas tasks do rework do chat com IA:** o bloco 5 está especificado em `docs/specs/backlog/` (**135 a 140**; a 135, a 136 e a 137 estão feitas: OpenSearch e
+Próxima migration nova: `0036`. **Próximas tasks do rework do chat com IA:** o bloco 5 está especificado em `docs/specs/backlog/` (**135 a 140**; a 135 a 138 estão feitas: OpenSearch e
 repository de mensagens, proposta da IA, ferramentas, conversa do dia com streaming, tela do chat e teste de prompts); a ordem natural é 135 e 136 (independentes), 137, 138, 139 e 140.
 
 ## 2. Estado por Área
@@ -143,6 +143,8 @@ project-2.0/
   com trecho selecionado; sem consumidor ou sem seleção o menu do navegador segue); o drawer abre um `p-contextmenu` cujos itens são
   propriedade direta (a seção de origem fica `visible = false`), salva as duas seções (`garantirSalva`), chama `POST /anotacao/:id/mover`
   e oferece Desfazer de 7 s (move de volta); 400/409 recarregam as duas seções e avisam.
+- **[task 138]** Conversa do dia: `ChatService` (laço da IA no nível rápido com ferramentas, no máximo 8 voltas, janela de 40 mensagens, uma mensagem por conversa por vez) e rotas `POST /chat/mensagem` (SSE), `GET /chat/hoje` e `GET /chat/busca`.
+  Mensagens no OpenSearch (task 135). Ainda sem tela (139) e sem ferramentas de negócio (blocos 6 e 9).
 - **[task 137]** Ferramentas da IA (`modules/ferramenta-ia/`): contrato `FerramentaIa`, registro por módulo, esquema JSON gerado da classe de entrada validada, execução em nome do usuário que nunca lança (erro volta ao modelo),
   `FerramentaPropostaIa` (cria proposta, nunca executa), recusa de nomes de exclusão no registro e a ferramenta `consultar_data_e_hora`. As ferramentas de negócio chegam nos blocos 6 e 9.
 - **[task 136]** Propostas da IA: migration `0035` (`tipo_proposta_ia`, `tipo_proposta_ia_status`, `proposta_ia`; sem tipo de exclusão) e módulo `proposta-ia` (confirmar, ajustar, recusar, desfazer, só do dono; confirmação por
