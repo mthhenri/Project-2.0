@@ -12,6 +12,17 @@
 
 ---
 
+## 2026-10-17 — Chat: nome da conversa dado pela IA, data e hora, copiar nas duas pontas, tooltip e pontinhos
+
+Pedidos do autor depois do ajuste do painel (extensão da task 141):
+
+- **Nome da conversa pela IA:** novo índice `chat-conversa` (um documento por conversa, `ChatMensagemRepository.gravarTitulo/listarTitulos`, `garantirIndice` agora cria os dois índices). Depois da primeira resposta do dia a `ChatService.nomearConversa` faz uma chamada curta (`gerar`, nível rápido, 40 tokens) com `INSTRUCOES_TITULO`; `limparTitulo` tira aspas, marcação, ponto final e corta em 60. Falha ali é engolida (log de aviso) e a lista cai no trecho da primeira mensagem. `ChatConversaResumoDto.titulo` (`string | null`); a lista mostra o título em destaque e, embaixo, "Hoje · N msg".
+  **Desvio:** a instrução do título é uma constante do código, não um prompt versionado (criar um `TipoPromptEnum` pediria migration e tela só para uma frase de uma linha); se o autor quiser editá-la pela aba de Prompts, vira task.
+- **Frontend:** hora virou `dd/MM/yyyy HH:mm`; copiar também na mensagem do usuário; dicas com `pTooltip` do PrimeNG no lugar de `title`; "pensando" são três pontinhos que pulsam (respeita `prefers-reduced-motion`; "consultando" leva os pontos e a palavra); o painel Histórico ficou mais colado ao canto (respiro de 0,5rem em vez de 1,5rem) e recarrega ao fim do envio, quando o nome já existe.
+- **Testes:** backend 201 (títulos do dono, `limparTitulo`, nomear só uma vez, falha ao nomear não atrapalha, lista com título, dois índices criados).
+- **Verificado ao vivo** (IA real, usuário 3): mensagem enviada, pontinhos pulsando, resposta, e a conversa na lista como "Criação de nova demanda" (nome gerado pela IA); tamanho 800×450 da janela embutida.
+- **Não verificado:** o tooltip em si (só compilou), 1920×1080/1080×1920/tema escuro depois destes ajustes e conversas antigas sem título (aparecem com o trecho da primeira mensagem).
+
 ## 2026-10-17 — Painel Histórico do chat passa a ser um cartão
 
 Ajuste da task 141 a pedido do autor: a faixa recolhida parecia solta (fundo branco colado na borda, só um ícone). O painel agora é um cartão arredondado com a mesma margem da conversa (`.chat` com respiro à direita, em cima e embaixo) e, recolhido, mostra o ícone e o nome "Histórico" na vertical. Só `historico.component.{html,scss}` e `chat.page.scss`. Verificado ao vivo (painel aberto e recolhido, janela estreita do navegador embutido); 1920×1080, 1080×1920 e tema escuro não revistos depois deste ajuste.

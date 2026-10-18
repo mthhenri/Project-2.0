@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import * as assert from 'node:assert/strict';
 import { AutorChatEnum, ContextoChatEnum, NivelIaEnum } from '@project20/shared';
-import { MAPEAMENTO_CHAT_MENSAGEM, montarConsultaBusca, montarConsultaConversa, montarConsultaConversas } from './chat-consultas';
+import { MAPEAMENTO_CHAT_MENSAGEM, montarConsultaBusca, montarConsultaConversa, montarConsultaConversas, limparTitulo, montarConsultaTitulos } from './chat-consultas';
 import { ChatMensagemNova, deFonte, paraFonte, paraResumo } from './chat-mensagem.documento';
 
 describe('consultas do chat', () => {
@@ -25,6 +25,18 @@ describe('consultas do chat', () => {
     assert.equal(consulta.size, 0);
     assert.deepEqual(consulta.aggs.conversas.terms.order, { _key: 'desc' });
     assert.equal(consulta.aggs.conversas.terms.field, 'conversa_id');
+  });
+
+  it('os títulos são sempre os do dono', () => {
+    const consulta = montarConsultaTitulos({ usuarioId: 7, conversaIds: ['7-2026-10-17'] });
+    assert.deepEqual(consulta.query.bool.filter, [{ term: { usuario_id: 7 } }, { terms: { conversa_id: ['7-2026-10-17'] } }]);
+  });
+
+  it('o título sai sem aspas, ponto final, marcação e quebra de linha, e dentro do limite', () => {
+    assert.equal(limparTitulo('"Revisão do webhook."'), 'Revisão do webhook');
+    assert.equal(limparTitulo('**Cadastro de login**\nOutra linha'), 'Cadastro de login');
+    assert.equal(limparTitulo('   '), '');
+    assert.equal(limparTitulo('x'.repeat(100)).length, 60);
   });
 
   it('o mapeamento tira acento e não indexa o conteúdo bruto', () => {

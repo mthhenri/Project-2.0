@@ -123,6 +123,14 @@
     color: var(--p-text-muted-color);
   }
 
+  &__item-titulo {
+    overflow: hidden;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   &__item-texto {
     display: -webkit-box;
     overflow: hidden;

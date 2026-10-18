@@ -6,6 +6,7 @@ import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TextareaModule } from 'primeng/textarea';
+import { TooltipModule } from 'primeng/tooltip';
 import { AutorChatEnum, ChatEventoDto, ChatMensagemResumoDto, EstadoIaEnum, NivelIaEnum } from '@project20/shared';
 import { IaDisponibilidadeService } from '../../../../core/services/ia-disponibilidade.service';
 import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
@@ -49,6 +50,7 @@ const MARGEM_DO_FIM_PX = 80;
     ButtonModule,
     SkeletonModule,
     TextareaModule,
+    TooltipModule,
     MarkdownVisualizadorComponent,
     PropostaCartaoComponent,
     HistoricoComponent,
@@ -186,6 +188,8 @@ export class ChatPage implements OnInit {
     } finally {
       this.aoVivo.set(null);
       this.enviando.set(false);
+      // A conversa pode ter ganhado nome (dado pela IA ao fim da primeira resposta do dia) e ela entra na lista se era a primeira.
+      this.historico()?.recarregar();
       // O campo volta a ser habilitado na próxima detecção de mudanças; só então recebe o foco.
       setTimeout(() => this.campoDeTexto()?.nativeElement.focus(), 50);
     }
@@ -280,7 +284,6 @@ export class ChatPage implements OnInit {
         mensagem.propostaIds = [...new Set([...propostasDoFluxo, ...mensagem.propostaIds])];
         this.aoVivo.set(null);
         this.mensagens.update((lista) => [...lista, mensagem]);
-        this.historico()?.recarregar();
         this.atualizarDisponibilidade();
         break;
       }

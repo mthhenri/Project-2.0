@@ -23,6 +23,7 @@ import { IaBloco, IaMensagem, IaResposta, IaTokens } from '../../ia/domain/ia.ti
 import { IaService } from '../../ia/services/ia.service';
 import { PromptService } from '../../prompt/services/prompt.service';
 import { PropostaIaService } from '../../proposta-ia/services/proposta-ia.service';
+import { limparTitulo } from '../domain/chat-consultas';
 import { montarConversaId } from '../domain/chat-conversa';
 import { ChatMensagemLida, paraResumo } from '../domain/chat-mensagem.documento';
 import { ChatMensagemRepository } from '../repositories/chat-mensagem.repository';
@@ -33,6 +34,10 @@ export const JANELA_DE_MENSAGENS = 40;
 export const MAXIMO_DE_VOLTAS = 8;
 /** Teto de tokens de cada chamada do chat. */
 export const MAXIMO_TOKENS_DO_CHAT = 2048;
+
+/** Instrução interna (não editável) para dar nome à conversa: só o nome, curto, sem enfeite. */
+export const INSTRUCOES_TITULO =
+  'Dê um nome curto (de 3 a 6 palavras, em português, sem aspas nem ponto final) para a conversa a seguir. Responda só com o nome.';
 
 const MENSAGEM_GENERICA = 'Serviço de IA temporariamente indisponível';
 
@@ -70,9 +75,14 @@ export class ChatService {
   /** A lista do histórico: uma entrada por dia com conversa, da mais recente à mais antiga. */
   async listarConversas(usuarioAtivo: JwtPayload): Promise<StandardResponse<ChatConversasListadasDto>> {
     const baldes = await this.chatMensagemRepositorio.listarConversas({ usuarioId: usuarioAtivo.sub });
+    const titulos = await this.chatMensagemRepositorio.listarTitulos({
+      usuarioId: usuarioAtivo.sub,
+      conversaIds: baldes.map((balde) => balde.key),
+    });
     const conversas = baldes.map((balde) => ({
       conversaId: balde.key,
       data: balde.key.slice(-10),
+      titulo: titulos[balde.key] ?? null,
       primeiraMensagem: balde.primeira.hits.hits[0]?._source.texto ?? '',
       quantidadeDeMensagens: balde.doc_count,
       ultimaMensagemDate: new Date(balde.ultima.value),
@@ -118,6 +128,7 @@ export class ChatService {
         texto: dto.texto,
       });
       await this.responder(usuarioAtivo, conversaId, propostasDoTurno, emitir);
+      await this.nomearConversa(usuarioAtivo, conversaId);
     } catch (erro) {
       await this.registrarFalha(usuarioAtivo, conversaId, propostasDoTurno, erro, emitir);
     } finally {
@@ -181,6 +192,31 @@ export class ChatService {
       conteudoBruto,
     });
     emitir({ tipo: 'fim', mensagem: paraResumo(gravada) });
+  }
+
+  /**
+   * Dá nome à conversa do dia depois da primeira resposta (uma chamada curta no nível rápido). Falhar aqui nunca atrapalha o chat: a
+   * lista do histórico cai no trecho da primeira mensagem.
+   */
+  private async nomearConversa(usuarioAtivo: JwtPayload, conversaId: string): Promise<void> {
+    try {
+      const existentes = await this.chatMensagemRepositorio.listarTitulos({ usuarioId: usuarioAtivo.sub, conversaIds: [conversaId] });
+      if (existentes[conversaId]) return;
+      const conversa = await this.chatMensagemRepositorio.listarConversa({ conversaId, usuarioId: usuarioAtivo.sub });
+      const primeiraDoUsuario = conversa.find((mensagem) => mensagem.autor === AutorChatEnum.USUARIO);
+      const primeiraDaIa = conversa.find((mensagem) => mensagem.autor === AutorChatEnum.IA);
+      if (!primeiraDoUsuario || !primeiraDaIa) return;
+      const resposta = await this.iaService.gerar({
+        nivel: NivelIaEnum.RAPIDO,
+        instrucoes: INSTRUCOES_TITULO,
+        mensagens: [{ papel: 'usuario', conteudo: `Usuário: ${primeiraDoUsuario.texto}\n\nIA: ${primeiraDaIa.texto}` }],
+        maximoTokens: 40,
+      });
+      const titulo = limparTitulo(resposta.texto);
+      if (titulo) await this.chatMensagemRepositorio.gravarTitulo(conversaId, usuarioAtivo.sub, titulo);
+    } catch (erro) {
+      this.logger.warn(`Não foi possível nomear a conversa ${conversaId}: ${erro instanceof Error ? erro.message : String(erro)}`);
+    }
   }
 
   /** Executa os pedidos de ferramenta de uma volta, em ordem, e devolve os resultados no formato do contrato do provedor. */

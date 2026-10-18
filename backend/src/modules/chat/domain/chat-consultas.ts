@@ -1,4 +1,6 @@
 export const INDICE_CHAT_MENSAGEM = 'chat-mensagem';
+/** Um documento por conversa (id = `conversaId`) com o título que a IA deu a ela; separado das mensagens, que nunca são reescritas. */
+export const INDICE_CHAT_CONVERSA = 'chat-conversa';
 
 /** Limite de uma conversa do dia lida de uma vez (uma conversa por dia nunca chega perto). */
 export const LIMITE_CONVERSA = 1000;
@@ -117,4 +119,40 @@ export function montarConsultaConversas(consulta: ConsultaConversas) {
       },
     },
   };
+}
+
+export const MAPEAMENTO_CHAT_CONVERSA = {
+  mappings: {
+    properties: {
+      conversa_id: { type: 'keyword' },
+      usuario_id: { type: 'integer' },
+      titulo: { type: 'text', index: false },
+      created_date: { type: 'date' },
+    },
+  },
+};
+
+export interface ConsultaTitulos {
+  usuarioId: number;
+  conversaIds: string[];
+}
+
+/** Os títulos das conversas pedidas, só as do dono. */
+export function montarConsultaTitulos(consulta: ConsultaTitulos) {
+  return {
+    size: LIMITE_CONVERSAS,
+    query: { bool: { filter: [{ term: { usuario_id: consulta.usuarioId } }, { terms: { conversa_id: consulta.conversaIds } }] } },
+  };
+}
+
+/** Tamanho máximo do título de uma conversa. */
+export const LIMITE_TITULO = 60;
+
+/** Deixa só o título: sem aspas, ponto final nem quebra de linha, no limite de tamanho; vazio se não sobrar nada. */
+export function limparTitulo(bruto: string): string {
+  const semDecoracao = bruto
+    .split(String.fromCharCode(10))[0]
+    .replace(/^["'“”‘’«»\s*#-]+|["'“”‘’«»\s.*#]+$/g, '')
+    .replace(/\s+/g, ' ');
+  return semDecoracao.length > LIMITE_TITULO ? `${semDecoracao.slice(0, LIMITE_TITULO - 1).trimEnd()}…` : semDecoracao;
 }

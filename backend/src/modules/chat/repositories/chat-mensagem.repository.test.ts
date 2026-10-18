@@ -45,8 +45,8 @@ describe('ChatMensagemRepository', () => {
     const repositorio = new ChatMensagemRepository(cliente);
     await repositorio.gravar(nova);
     await repositorio.gravar(nova);
-    assert.equal(chamadas.create, 1);
-    assert.equal(chamadas.exists, 1);
+    assert.equal(chamadas.create, 2);
+    assert.equal(chamadas.exists, 2);
   });
 
   it('não recria um índice que já existe', async () => {

@@ -44,10 +44,15 @@ interface Cenario {
   ferramenta?: (nome: string) => { conteudo: string; erro: boolean; propostaId?: number };
   estado?: EstadoIaEnum;
   historicoInicial?: ChatMensagemNova[];
+  titulosIniciais?: Record<string, string>;
+  /** O que a IA devolve ao pedir o nome da conversa (ou lança). */
+  titulo?: () => string;
 }
 
 function montar(cenario: Cenario) {
   const gravadas: ChatMensagemLida[] = [];
+  const titulos: Record<string, string> = { ...(cenario.titulosIniciais ?? {}) };
+  const geradas: IaSolicitacao[] = [];
   const ordem: string[] = [];
   const repositorio = {
     async gravar(mensagem: ChatMensagemNova) {
@@ -58,6 +63,12 @@ function montar(cenario: Cenario) {
     },
     async listarConversa() {
       return [...gravadas];
+    },
+    async listarTitulos() {
+      return { ...titulos };
+    },
+    async gravarTitulo(conversaId: string, _usuarioId: number, titulo: string) {
+      titulos[conversaId] = titulo;
     },
     async listarConversas(consulta: unknown) {
       ordem.push(`conversas:${JSON.stringify(consulta)}`);
@@ -79,6 +90,10 @@ function montar(cenario: Cenario) {
   const iaService = {
     async obterEstado() {
       return cenario.estado ?? EstadoIaEnum.NO_AR;
+    },
+    async gerar(solicitacao: IaSolicitacao) {
+      geradas.push(solicitacao);
+      return resposta({ texto: cenario.titulo ? cenario.titulo() : '"Revisão do webhook."' });
     },
     async transmitir(solicitacao: IaSolicitacao, aoTrecho: (trecho: string) => void) {
       ordem.push('ia');
@@ -104,7 +119,7 @@ function montar(cenario: Cenario) {
     } as unknown as PropostaIaService,
     { obter: () => ({ aplicacao: { fusoHorario: 'America/Sao_Paulo' } }) } as unknown as ConfigService,
   );
-  return { servico, gravadas, ordem, solicitacoes, recusadas };
+  return { servico, gravadas, ordem, solicitacoes, recusadas, titulos, geradas };
 }
 
 async function enviar(servico: ChatService, texto = 'Oi') {
@@ -309,13 +324,36 @@ test('recuperarHoje devolve a conversa do dia no fuso configurado, sem o conteú
   assert.equal(hoje.dados.mensagens.some((mensagem) => 'conteudoBruto' in mensagem), false);
 });
 
+test('dá nome à conversa depois da primeira resposta, só uma vez, e limpa o que a IA devolve', async () => {
+  const { servico, titulos, geradas } = montar({ chamadas: [async () => resposta({ texto: 'oi' })] });
+  await enviar(servico);
+  assert.equal(geradas.length, 1);
+  assert.equal(geradas[0].nivel, NivelIaEnum.RAPIDO);
+  assert.match(String(geradas[0].mensagens[0].conteudo), /Usuário: Oi/);
+  assert.deepEqual(Object.values(titulos), ['Revisão do webhook']);
+  await enviar(servico, 'de novo');
+  assert.equal(geradas.length, 1);
+});
+
+test('falha ao nomear a conversa não atrapalha a resposta', async () => {
+  const { servico, titulos } = montar({
+    chamadas: [async () => resposta({ texto: 'oi' })],
+    titulo: () => {
+      throw new Error('IA caiu');
+    },
+  });
+  const eventos = await enviar(servico);
+  assert.equal(eventos.at(-1)?.tipo, 'fim');
+  assert.deepEqual(titulos, {});
+});
+
 test('listarConversas devolve o dia, o trecho inicial e a contagem de cada conversa do dono', async () => {
-  const { servico, ordem } = montar({ chamadas: [] });
+  const { servico, ordem } = montar({ chamadas: [], titulosIniciais: { '7-2026-10-17': 'Bom dia no projeto' } });
   const resposta = await servico.listarConversas(USUARIO);
   assert.match(ordem[0], /"usuarioId":7/);
   assert.deepEqual(
-    resposta.dados.conversas.map((conversa) => [conversa.data, conversa.primeiraMensagem, conversa.quantidadeDeMensagens]),
-    [['2026-10-17', 'bom dia', 4], ['2026-10-16', '', 2]],
+    resposta.dados.conversas.map((conversa) => [conversa.data, conversa.titulo, conversa.primeiraMensagem, conversa.quantidadeDeMensagens]),
+    [['2026-10-17', 'Bom dia no projeto', 'bom dia', 4], ['2026-10-16', null, '', 2]],
   );
   assert.equal(resposta.dados.conversas[0].ultimaMensagemDate.toISOString(), '2026-10-17T15:00:00.000Z');
 });

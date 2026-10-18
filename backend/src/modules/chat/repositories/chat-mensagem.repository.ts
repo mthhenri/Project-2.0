@@ -8,11 +8,15 @@ import {
   ConsultaBusca,
   ConsultaConversa,
   ConsultaConversas,
+  ConsultaTitulos,
+  INDICE_CHAT_CONVERSA,
   INDICE_CHAT_MENSAGEM,
+  MAPEAMENTO_CHAT_CONVERSA,
   MAPEAMENTO_CHAT_MENSAGEM,
   montarConsultaBusca,
   montarConsultaConversa,
   montarConsultaConversas,
+  montarConsultaTitulos,
 } from '../domain/chat-consultas';
 import { ChatMensagemFonte, ChatMensagemLida, ChatMensagemNova, deFonte, paraFonte } from '../domain/chat-mensagem.documento';
 
@@ -24,8 +28,14 @@ export interface ClienteOpenSearchChat {
   };
   index(parametros: { index: string; id: string; body: unknown; refresh: 'wait_for' }): Promise<unknown>;
   search(parametros: { index: string; body: unknown }): Promise<{
-    body: { hits: { hits: { _source: ChatMensagemFonte }[] }; aggregations?: { conversas?: { buckets: BaldeConversa[] } } };
+    body: { hits: { hits: { _source: ChatMensagemFonte & Partial<ChatConversaFonte> }[] }; aggregations?: { conversas?: { buckets: BaldeConversa[] } } };
   }>;
+}
+
+/** Forma do documento de título (índice `chat-conversa`). */
+export interface ChatConversaFonte {
+  conversa_id: string;
+  titulo: string;
 }
 
 export const CLIENTE_OPENSEARCH_CHAT = 'CLIENTE_OPENSEARCH_CHAT';
@@ -87,6 +97,25 @@ export class ChatMensagemRepository implements OnModuleInit {
     });
   }
 
+  /** Guarda (ou troca) o título da conversa. */
+  async gravarTitulo(conversaId: string, usuarioId: number, titulo: string): Promise<void> {
+    await this.proteger(async () => {
+      await this.garantirIndice();
+      const corpo = { conversa_id: conversaId, usuario_id: usuarioId, titulo, created_date: new Date().toISOString() };
+      await this.cliente.index({ index: INDICE_CHAT_CONVERSA, id: conversaId, body: corpo, refresh: 'wait_for' });
+    });
+  }
+
+  /** Os títulos das conversas pedidas do usuário, por `conversaId` (quem ainda não tem título não aparece). */
+  async listarTitulos(consulta: ConsultaTitulos): Promise<Record<string, string>> {
+    if (consulta.conversaIds.length === 0) return {};
+    return this.proteger(async () => {
+      await this.garantirIndice();
+      const resposta = await this.cliente.search({ index: INDICE_CHAT_CONVERSA, body: montarConsultaTitulos(consulta) });
+      return Object.fromEntries(resposta.body.hits.hits.map((acerto) => [acerto._source.conversa_id, acerto._source.titulo ?? '']));
+    });
+  }
+
   async buscar(consulta: ConsultaBusca): Promise<ChatMensagemLida[]> {
     return this.proteger(async () => {
       await this.garantirIndice();
@@ -98,16 +127,20 @@ export class ChatMensagemRepository implements OnModuleInit {
   /** Cria o índice se não existir. Idempotente: subir de novo não falha nem duplica. */
   private async garantirIndice(): Promise<void> {
     if (this.indiceGarantido) return;
-    const existe = await this.cliente.indices.exists({ index: INDICE_CHAT_MENSAGEM });
-    if (!existe.body) {
-      try {
-        await this.cliente.indices.create({ index: INDICE_CHAT_MENSAGEM, body: MAPEAMENTO_CHAT_MENSAGEM });
-      } catch (erro) {
-        // Outra instância criou entre o exists e o create.
-        if (!JSON.stringify(erro).includes('resource_already_exists_exception')) throw erro;
-      }
-    }
+    await this.criarIndiceSeNaoExiste(INDICE_CHAT_MENSAGEM, MAPEAMENTO_CHAT_MENSAGEM);
+    await this.criarIndiceSeNaoExiste(INDICE_CHAT_CONVERSA, MAPEAMENTO_CHAT_CONVERSA);
     this.indiceGarantido = true;
+  }
+
+  private async criarIndiceSeNaoExiste(indice: string, mapeamento: unknown): Promise<void> {
+    const existe = await this.cliente.indices.exists({ index: indice });
+    if (existe.body) return;
+    try {
+      await this.cliente.indices.create({ index: indice, body: mapeamento });
+    } catch (erro) {
+      // Outra instância criou entre o exists e o create.
+      if (!JSON.stringify(erro).includes('resource_already_exists_exception')) throw erro;
+    }
   }
 
   private async proteger<T>(operacao: () => Promise<T>): Promise<T> {

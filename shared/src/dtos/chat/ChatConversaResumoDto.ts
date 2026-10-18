@@ -4,7 +4,9 @@ export interface ChatConversaResumoDto {
   conversaId: string;
   /** Dia da conversa, `yyyy-mm-dd`. */
   data: string;
-  /** Texto da primeira mensagem do dia (o que dá nome à conversa na lista). */
+  /** Nome que a IA deu à conversa; `null` enquanto não deu (a lista cai no trecho da primeira mensagem). */
+  titulo: string | null;
+  /** Texto da primeira mensagem do dia. */
   primeiraMensagem: string;
   quantidadeDeMensagens: number;
   ultimaMensagemDate: Date;
