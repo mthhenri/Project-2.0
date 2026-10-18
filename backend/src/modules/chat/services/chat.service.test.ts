@@ -10,7 +10,7 @@ import { IaService } from '../../ia/services/ia.service';
 import { PromptService } from '../../prompt/services/prompt.service';
 import { PropostaIaService } from '../../proposta-ia/services/proposta-ia.service';
 import { ChatMensagemLida, ChatMensagemNova, deFonte, paraFonte } from '../domain/chat-mensagem.documento';
-import { ChatMensagemRepository } from '../repositories/chat-mensagem.repository';
+import { ArmazenamentoDeChat } from '../repositories/armazenamento-de-chat';
 import { ChatService, INSTRUCOES_TITULO, JANELA_DE_MENSAGENS, MAXIMO_DE_VOLTAS } from './chat.service';
 
 const USUARIO = { sub: 7, login: 'dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
@@ -107,7 +107,7 @@ function montar(cenario: Cenario) {
   const recusadas: number[] = [];
   const tiposDePrompt: TipoPromptEnum[] = [];
   const servico = new ChatService(
-    repositorio as unknown as ChatMensagemRepository,
+    repositorio as unknown as ArmazenamentoDeChat,
     iaService as unknown as IaService,
     {
       obterAtivo: async (tipo: TipoPromptEnum) => {

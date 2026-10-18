@@ -12,6 +12,19 @@
 
 ---
 
+## 2026-10-18 — Task 162: armazenamento do chat trocável e tabelas provisórias no Postgres
+
+Spec em `docs/specs/done/162-chat-armazenamento-trocavel-e-postgres-provisorio.spec.md`. Pedido do autor ao pensar no deploy de teste (Render + Cloudflare Pages + Supabase, sem custo mensal extra): a stack final tem Elasticsearch para o histórico das conversas, o desenvolvimento usa OpenSearch e o teste em produção usa o Postgres, só para manter a feature, com tabelas marcadas como removíveis.
+
+- **Contrato:** `ArmazenamentoDeChat` (`gravar`, `listarConversa`, `listarConversas`, `gravarTitulo`, `listarTitulos`, `buscar`) com o token `ARMAZENAMENTO_DE_CHAT`; o `ChatService` só conhece o contrato. O `ChatMensagemRepository` virou `ChatMensagemOpenSearchRepository` (renomeado, comportamento igual; o cliente real nasce em `criarClienteOpenSearchChat`). O provider instancia **só** o escolhido, então com `postgres` o OpenSearch nem é tocado (nem aviso de "indisponível" na subida).
+- **Configuração:** `CHAT_ARMAZENAMENTO` (`opensearch` padrão, `postgres`); `lerArmazenamentoDoChat` derruba a subida com mensagem clara para `elasticsearch` (reservado, sem implementação) e qualquer valor desconhecido. `OPENSEARCH_URL` só é obrigatória com `opensearch`.
+- **Migration `0038`** (provisória, marcada no topo do arquivo, em `COMMENT ON TABLE` e numa seção "Tabelas provisórias" do `SCHEMA.md` com o procedimento de remoção): `chat_mensagem`, `chat_conversa`, extensão `unaccent` e a função `IMMUTABLE` `fn_chat_texto_busca` (`to_tsvector('portuguese', unaccent(...))`) com índice GIN.
+- **`ChatMensagemPostgresRepository`:** SQL puro com parâmetros nomeados; mesma forma de retorno do OpenSearch (o balde de conversa é montado no formato esperado pela service), busca com todas as palavras (`plainto_tsquery`), sem acento, relevância e depois a mais recente, filtro de período e os mesmos limites. Falha de banco vira a mesma mensagem de chat indisponível.
+- **Testes:** backend 415 (+13); a suíte de contrato (`armazenamento-de-chat.contrato.ts`, 6 cenários: ordem e campos opcionais, isolamento por usuário, busca sem acento e com todas as palavras, período, conversas por dia sem o check-in, título trocado) roda contra as **duas** implementações reais quando `CHAT_INTEGRACAO=1` (passou nas duas) e fica desligada por padrão, para `npm test` não depender de Postgres nem OpenSearch no ar. Builds do backend passam.
+- **Verificado ao vivo:** backend em outra porta com `CHAT_ARMAZENAMENTO=postgres` e `OPENSEARCH_URL` vazia: subiu sem citar o OpenSearch; uma conversa real com a IA gravou as 4 mensagens em `chat_mensagem` e **nenhuma** no OpenSearch; `GET /chat/hoje`, `/chat/conversas` (com o título automático gerado, em `chat_conversa`) e `/chat/busca` (`descricao` e `descrição cadastro` acham, palavra inexistente não) funcionaram; `elasticsearch` falhou na subida com a mensagem clara; `db:rollback` removeu tabelas e função sem rastro e `db:migrate` as recriou; o backend de desenvolvimento (padrão `opensearch`) segue respondendo. As mensagens de teste foram apagadas pelo rollback.
+- **Não verificado:** a tela do chat contra o backend em `postgres` (só a API), relevância fina da busca (radical e ordem entre mensagens parecidas podem diferir do OpenSearch), o `CREATE EXTENSION unaccent` no Supabase de verdade (a migration falha alto se a extensão faltar) e o deploy em si.
+- **Fora de escopo, registrado:** o armazenamento Elasticsearch (cliente `@elastic/elasticsearch`, spec própria na hora da produção de verdade).
+
 ## 2026-10-18 — IA pergunta o status antes de iniciar execução
 
 Pedido do autor, na sequência do bloco anterior: em vez de só recusar, a IA percebe o status da atividade e pergunta (PENDENTE: deixar PLANEJADA ou em DESENVOLVENDO; PLANEJADA: passar para DESENVOLVENDO ou iniciar como planejada).

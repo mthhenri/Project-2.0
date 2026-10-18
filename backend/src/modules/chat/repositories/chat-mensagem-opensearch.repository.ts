@@ -1,7 +1,7 @@
-import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Client } from '@opensearch-project/opensearch';
 import { randomUUID } from 'node:crypto';
-import { ConfigService } from '../../../config/config.service';
+import { ConfiguracaoOpenSearch } from '../../../config/config.interface';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import {
   BaldeConversa,
@@ -19,6 +19,7 @@ import {
   montarConsultaTitulos,
 } from '../domain/chat-consultas';
 import { ChatMensagemFonte, ChatMensagemLida, ChatMensagemNova, deFonte, paraFonte } from '../domain/chat-mensagem.documento';
+import { ArmazenamentoDeChat } from './armazenamento-de-chat';
 
 /** O pedaço do cliente do OpenSearch que o chat usa (o cliente real o satisfaz; os testes passam um falso). */
 export interface ClienteOpenSearchChat {
@@ -38,28 +39,22 @@ export interface ChatConversaFonte {
   titulo: string;
 }
 
-export const CLIENTE_OPENSEARCH_CHAT = 'CLIENTE_OPENSEARCH_CHAT';
-
-/** Cria o cliente real a partir do `ConfigService`. Este arquivo é o único que importa o pacote do OpenSearch. */
-export const clienteOpenSearchChatProvider = {
-  provide: CLIENTE_OPENSEARCH_CHAT,
-  inject: [ConfigService],
-  useFactory: (configService: ConfigService): ClienteOpenSearchChat => {
-    const { url, usuario, senha } = configService.obter().openSearch;
-    return new Client({ node: url, ...(usuario && senha ? { auth: { username: usuario, password: senha } } : {}) }) as unknown as ClienteOpenSearchChat;
-  },
-};
+/** Cria o cliente real a partir da configuração. Este arquivo é o único que importa o pacote do OpenSearch. */
+export function criarClienteOpenSearchChat({ url, usuario, senha }: ConfiguracaoOpenSearch): ClienteOpenSearchChat {
+  return new Client({ node: url, ...(usuario && senha ? { auth: { username: usuario, password: senha } } : {}) }) as unknown as ClienteOpenSearchChat;
+}
 
 /**
  * Mensagens do chat no OpenSearch (task 135): um documento por mensagem, gravado uma vez e nunca reescrito (não há método de exclusão
- * nem de alteração). Trocar por Elasticsearch é mexer só aqui.
+ * nem de alteração). É o armazenamento do desenvolvimento (`CHAT_ARMAZENAMENTO=opensearch`); o Elasticsearch da produção de verdade
+ * será outra implementação do mesmo contrato `ArmazenamentoDeChat`.
  */
 @Injectable()
-export class ChatMensagemRepository implements OnModuleInit {
-  private readonly logger = new Logger(ChatMensagemRepository.name);
+export class ChatMensagemOpenSearchRepository implements ArmazenamentoDeChat, OnModuleInit {
+  private readonly logger = new Logger(ChatMensagemOpenSearchRepository.name);
   private indiceGarantido = false;
 
-  constructor(@Inject(CLIENTE_OPENSEARCH_CHAT) private readonly cliente: ClienteOpenSearchChat) {}
+  constructor(private readonly cliente: ClienteOpenSearchChat) {}
 
   /** O OpenSearch fora do ar na subida não derruba o backend: o chat fica indisponível e o índice é criado na primeira chamada. */
   async onModuleInit(): Promise<void> {

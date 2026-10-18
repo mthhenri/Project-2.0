@@ -1,3 +1,4 @@
+import { ArmazenamentoDoChat } from './armazenamento-do-chat';
 export interface ConfiguracaoBancoDados {
   host: string;
   porta: number;
@@ -16,8 +17,13 @@ export interface ConfiguracaoAnthropic {
   apiKey: string | undefined;
 }
 
+export interface ConfiguracaoChat {
+  armazenamento: ArmazenamentoDoChat;
+}
+
 export interface ConfiguracaoOpenSearch {
-  url: string;
+  /** Obrigatória só com `CHAT_ARMAZENAMENTO=opensearch`. */
+  url: string | undefined;
   usuario: string | undefined;
   senha: string | undefined;
 }
@@ -37,6 +43,7 @@ export interface Configuracao {
   bancoDados:  ConfiguracaoBancoDados;
   jwt:         ConfiguracaoJwt;
   anthropic:   ConfiguracaoAnthropic;
+  chat:        ConfiguracaoChat;
   openSearch:  ConfiguracaoOpenSearch;
   aplicacao:   ConfiguracaoAplicacao;
   negocio:     ConfiguracaoNegocio;

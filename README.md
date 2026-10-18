@@ -164,7 +164,8 @@ O projeto é um monorepo com quatro pacotes independentes conectados via npm wor
 | `JWT_EXPIRACAO` | Tempo de expiração do token | `8h` |
 | `INTERVALO_MINIMO_MINUTOS` | Gap mínimo entre execuções para ser considerado intervalo | `15` |
 | `ANTHROPIC_API_KEY` | Chave da API Anthropic (opcional: sem ela a IA fica "fora do ar"). O modelo de cada nível e o resto da configuração da IA ficam na tela Configurações da IA, não no `.env` | `sk-ant-...` |
-| `OPENSEARCH_URL` | Endereço do OpenSearch, onde ficam as mensagens do chat (sobe com `npm run db:up`) | `http://localhost:9200` |
+| `CHAT_ARMAZENAMENTO` | Onde ficam as mensagens do chat: `opensearch` (desenvolvimento, padrão) ou `postgres` (tabelas **provisórias** para a produção de teste, sem serviço de busca). Elasticsearch é o destino da produção de verdade e ainda não tem implementação | `opensearch` |
+| `OPENSEARCH_URL` | Endereço do OpenSearch (sobe com `npm run db:up`); obrigatório só com `CHAT_ARMAZENAMENTO=opensearch` | `http://localhost:9200` |
 | `OPENSEARCH_USUARIO` / `OPENSEARCH_SENHA` | Opcionais: só se o servidor tiver segurança ligada | — |
 | `PORT` | Opcional: porta injetada pela plataforma de hospedagem; tem prioridade sobre `APP_PORTA` | `10000` |
 | `APP_PORTA` | Porta do backend | `3000` |

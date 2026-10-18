@@ -3,7 +3,8 @@ import * as assert from 'node:assert/strict';
 import { AutorChatEnum, ContextoChatEnum } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { ChatMensagemFonte, ChatMensagemNova } from '../domain/chat-mensagem.documento';
-import { ChatMensagemRepository, ClienteOpenSearchChat } from './chat-mensagem.repository';
+import { registrarContratoDeArmazenamento } from './armazenamento-de-chat.contrato';
+import { ChatMensagemOpenSearchRepository, ClienteOpenSearchChat, criarClienteOpenSearchChat } from './chat-mensagem-opensearch.repository';
 
 const nova: ChatMensagemNova = {
   conversaId: '7-2026-10-17',
@@ -39,10 +40,30 @@ function criarClienteFalso(opcoes: { indiceExiste?: boolean; falhar?: boolean; c
   return { cliente, chamadas };
 }
 
-describe('ChatMensagemRepository', () => {
+const urlDoOpenSearch = process.env.OPENSEARCH_URL ?? 'http://localhost:9200';
+
+registrarContratoDeArmazenamento(
+  'OpenSearch',
+  async () => {
+    const repositorio = new ChatMensagemOpenSearchRepository(criarClienteOpenSearchChat({ url: urlDoOpenSearch, usuario: undefined, senha: undefined }));
+    await repositorio.onModuleInit();
+    return repositorio;
+  },
+  async (usuarioIds) => {
+    for (const indice of ['chat-mensagem', 'chat-conversa']) {
+      await fetch(`${urlDoOpenSearch}/${indice}/_delete_by_query?refresh=true`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: { terms: { usuario_id: usuarioIds } } }),
+      });
+    }
+  },
+);
+
+describe('ChatMensagemOpenSearchRepository', () => {
   it('cria o índice uma única vez, mesmo com várias chamadas', async () => {
     const { cliente, chamadas } = criarClienteFalso();
-    const repositorio = new ChatMensagemRepository(cliente);
+    const repositorio = new ChatMensagemOpenSearchRepository(cliente);
     await repositorio.gravar(nova);
     await repositorio.gravar(nova);
     assert.equal(chamadas.create, 2);
@@ -51,18 +72,18 @@ describe('ChatMensagemRepository', () => {
 
   it('não recria um índice que já existe', async () => {
     const { cliente, chamadas } = criarClienteFalso({ indiceExiste: true });
-    await new ChatMensagemRepository(cliente).gravar(nova);
+    await new ChatMensagemOpenSearchRepository(cliente).gravar(nova);
     assert.equal(chamadas.create, 0);
   });
 
   it('tolera outra instância criando o índice ao mesmo tempo', async () => {
     const { cliente } = criarClienteFalso({ corridaNoCreate: true });
-    await assert.doesNotReject(new ChatMensagemRepository(cliente).gravar(nova));
+    await assert.doesNotReject(new ChatMensagemOpenSearchRepository(cliente).gravar(nova));
   });
 
   it('grava com identificador próprio e espera o índice atualizar (a leitura seguinte já vê a mensagem)', async () => {
     const { cliente, chamadas } = criarClienteFalso({ indiceExiste: true });
-    const repositorio = new ChatMensagemRepository(cliente);
+    const repositorio = new ChatMensagemOpenSearchRepository(cliente);
     const gravada = await repositorio.gravar(nova);
     assert.equal(chamadas.index.length, 1);
     assert.equal(chamadas.index[0].id, gravada.id);
@@ -74,7 +95,7 @@ describe('ChatMensagemRepository', () => {
 
   it('OpenSearch fora do ar vira mensagem clara e não derruba a subida', async () => {
     const { cliente } = criarClienteFalso({ falhar: true });
-    const repositorio = new ChatMensagemRepository(cliente);
+    const repositorio = new ChatMensagemOpenSearchRepository(cliente);
     await assert.doesNotReject(repositorio.onModuleInit());
     await assert.rejects(repositorio.gravar(nova), (erro) => erro instanceof BusinessException);
     await assert.rejects(repositorio.listarConversa({ conversaId: 'x', usuarioId: 1 }), (erro) => erro instanceof BusinessException);
@@ -82,7 +103,7 @@ describe('ChatMensagemRepository', () => {
   });
 
   it('não expõe exclusão nem alteração de documento', () => {
-    const metodos = Object.getOwnPropertyNames(ChatMensagemRepository.prototype);
+    const metodos = Object.getOwnPropertyNames(ChatMensagemOpenSearchRepository.prototype);
     assert.deepEqual(
       metodos.filter((nome) => /exclu|delet|remov|apag|alter|atualiz|update/i.test(nome)),
       [],

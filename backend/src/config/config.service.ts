@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { lerArmazenamentoDoChat } from './armazenamento-do-chat';
 import { Configuracao } from './config.interface';
 
 @Injectable()
@@ -6,6 +7,7 @@ export class ConfigService {
   private readonly configuracao: Configuracao;
 
   constructor() {
+    const armazenamentoDoChat = lerArmazenamentoDoChat(this.opcional('CHAT_ARMAZENAMENTO'));
     this.configuracao = {
       bancoDados: {
         host:    this.obrigatoria('DB_HOST'),
@@ -22,8 +24,9 @@ export class ConfigService {
       anthropic: {
         apiKey: this.opcional('ANTHROPIC_API_KEY'),
       },
+      chat: { armazenamento: armazenamentoDoChat },
       openSearch: {
-        url:     this.obrigatoria('OPENSEARCH_URL'),
+        url:     armazenamentoDoChat === 'opensearch' ? this.obrigatoria('OPENSEARCH_URL') : this.opcional('OPENSEARCH_URL'),
         usuario: this.opcional('OPENSEARCH_USUARIO'),
         senha:   this.opcional('OPENSEARCH_SENHA'),
       },

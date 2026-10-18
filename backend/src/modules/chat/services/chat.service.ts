@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import {
   AutorChatEnum,
   ChatBuscadoDto,
@@ -30,7 +30,7 @@ import { montarRetomadaAposQueda } from '../domain/retomada-apos-queda';
 import { INSTRUCOES_DE_SUGESTOES, interpretarSugestoes } from '../domain/sugestoes';
 import { instanteDoDiaUtilAnterior, montarConversaId } from '../domain/chat-conversa';
 import { ChatMensagemLida, paraResumo } from '../domain/chat-mensagem.documento';
-import { ChatMensagemRepository } from '../repositories/chat-mensagem.repository';
+import { ARMAZENAMENTO_DE_CHAT, ArmazenamentoDeChat } from '../repositories/armazenamento-de-chat';
 
 /** Mensagens do dia que viram contexto para o modelo (a memória de longo prazo está nos dados, não no chat). */
 export const JANELA_DE_MENSAGENS = 40;
@@ -75,7 +75,7 @@ export class ChatService {
   private readonly emAndamento = new Set<string>();
 
   constructor(
-    private readonly chatMensagemRepositorio: ChatMensagemRepository,
+    @Inject(ARMAZENAMENTO_DE_CHAT) private readonly chatMensagemRepositorio: ArmazenamentoDeChat,
     private readonly iaService: IaService,
     private readonly promptService: PromptService,
     private readonly ferramentaIaRegistro: FerramentaIaRegistro,
