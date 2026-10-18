@@ -151,7 +151,7 @@ O projeto é um monorepo com quatro pacotes independentes conectados via npm wor
 | Variável | Descrição | Exemplo |
 |---|---|---|
 | `DB_HOST` | Host do PostgreSQL | `localhost` |
-| `DB_PORT` | Porta do PostgreSQL | `5432` |
+| `DB_PORT` | Porta do PostgreSQL | `5433` |
 | `DB_NOME` | Nome do banco | `project20` |
 | `DB_USUARIO` | Usuário do banco | `postgres` |
 | `DB_SENHA` | Senha do banco | `postgres` |

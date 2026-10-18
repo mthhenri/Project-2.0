@@ -1060,7 +1060,7 @@ permanece idêntico à paginação normal.
 ```env
 # Banco de dados
 DB_HOST=localhost
-DB_PORT=5432
+DB_PORT=5433
 DB_NOME=project20
 DB_USUARIO=postgres
 DB_SENHA=postgres
