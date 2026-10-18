@@ -12,6 +12,15 @@
 
 ---
 
+## 2026-10-18 — Chip "Sem execução ativa" e Execuções abertas ao desenvolvedor
+
+Pedido do autor: o chip levava às Atividades, que ficam desabilitadas com a IA no ar.
+
+- **Chip** (`chip-execucao-ativa`): o destino de "Sem execução ativa" é `destinoSemExecucao()`: **Execuções** com a IA no ar (`IaDisponibilidadeService.estado() === NO_AR`) e Atividades sem ela (onde se inicia uma execução). O chip **com** execução em andamento já levava às Execuções.
+- **Execuções liberada ao desenvolvedor:** removido `substituidoPelaIa: 'SOMENTE_DESENVOLVEDOR'` de `ITENS_NAVEGACAO`. A tela já tratava o desenvolvedor (só as próprias, sem filtro de usuário nem ações). Decisão de 2026-10-17 (desabilitar Execuções para o desenvolvedor) revertida a pedido do autor; a opção `'SOMENTE_DESENVOLVEDOR'` do tipo segue existindo, sem uso.
+- **Verificado ao vivo** (gestor, IA no ar): o chip aponta e leva a `/execucao`; Atividades segue desabilitada; Execuções aberta. **Não verificado:** a sessão de desenvolvedor (a conta aberta no navegador é do gestor).
+- Build do frontend passa; sem teste novo (mudança de rota e de configuração de menu).
+
 ## 2026-10-18 — Chat: botões de sugestão que conhecem o que a IA faz
 
 Pedido do autor, ao ver os botões depois de confirmar um cartão ("não trazem sugestões novas; poderia ter 'registrar horário'"). Três causas, três correções:
