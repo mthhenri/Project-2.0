@@ -11,12 +11,13 @@ test('a saída confirmada na bandeja e o desligamento do sistema fecham de verda
   assert.equal(decidirFechamento({ saidaConfirmada: false, encerramentoDoSistema: true }), 'fechar');
 });
 
-test('a janela precisa voltar quando deixa de estar maximizada ou muda de lugar ou tamanho', () => {
+test('maximizada ou no tamanho de abertura a janela está no lugar; só arrasto ou borda a tira dele', () => {
   const area = { x: 0, y: 0, width: 1920, height: 1040 };
   assert.equal(janelaForaDoLugar(area, area, true), false);
-  assert.equal(janelaForaDoLugar(area, area, false), true);
-  assert.equal(janelaForaDoLugar({ ...area, x: 40 }, area, true), true);
-  assert.equal(janelaForaDoLugar({ ...area, height: 1000 }, area, true), true);
+  assert.equal(janelaForaDoLugar({ ...area, x: -8, width: 1936 }, area, true), false);
+  assert.equal(janelaForaDoLugar(area, area, false), false);
+  assert.equal(janelaForaDoLugar({ ...area, x: 40 }, area, false), true);
+  assert.equal(janelaForaDoLugar({ ...area, height: 1000 }, area, false), true);
 });
 
 test('links do próprio Project ficam na janela e os demais vão para o navegador', () => {

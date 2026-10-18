@@ -124,9 +124,9 @@ protege contra arquivo já rastreado ou inclusão forçada.
 ### 3.2 Project Desktop (`desktop/`)
 
 Aplicativo Electron (TypeScript, `desktop/src/main.ts`) que abre o front do Project numa janela própria; o front continua sendo o
-centro e o desktop só aponta para a URL fixa (`desktop/src/config.ts`). A janela fica maximizada no monitor principal, sempre por cima,
-sem arrastar nem redimensionar, e só minimiza: fechar e Alt+F4 minimizam e a única saída é "Fechar completamente" no ícone da bandeja,
-com confirmação. O desligamento do sistema operacional nunca é impedido. Uma única instância, sem iniciar com o Windows. A lógica de
+centro e o desktop só aponta para a URL fixa (`desktop/src/config.ts`). A janela abre cobrindo o monitor principal, sempre por cima, sem arrastar
+nem redimensionar pela borda; pode maximizar (e restaurar volta ao tamanho de abertura) e minimizar: fechar e Alt+F4 minimizam e a única saída é "Fechar completamente" no ícone da bandeja,
+com confirmação numa janelinha própria, no tema do sistema. O desligamento do sistema operacional nunca é impedido. Uma única instância, sem iniciar com o Windows. A lógica de
 decisão (fechar ou minimizar, janela fora do lugar, destino de um link, URL, texto do tempo) mora em funções puras com `node:test`
 (`desktop/src/politica-da-janela.ts`); o executável portátil sai de `npm run pack --workspace=desktop` e não tem atualização
 automática. Com o Project minimizado e o check-in disparado pelo backend, o desktop abre a **janelinha do check-in** (480 × 560, sem moldura, sempre por cima, arrastável, sem fechar nem minimizar; `src/politica-do-checkin.ts` decide quando abrir e fechar); com o Project à tela, o check-in é o diálogo dentro dele (task 161). O desktop lê a situação em `GET /checkin/situacao` com o token que a página guarda, e a página `/checkin` avisa o fim por `window.projectDesktop.encerrarCheckin()` (`src/preload.ts`) (task 160).

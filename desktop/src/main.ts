@@ -1,6 +1,7 @@
 import * as path from 'node:path';
-import { app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, screen, shell, Tray } from 'electron';
+import { app, BrowserWindow, ipcMain, Menu, nativeImage, nativeTheme, screen, shell, Tray } from 'electron';
 import { NOME_DO_APP, URL_DO_PROJECT } from './config';
+import { montarPaginaDoDialogoDeSaida, RespostaDaSaida, respostaDaNavegacao } from './dialogo-de-saida';
 import { decidirFechamento, destinoDaNavegacao, EstadoDeEncerramento, janelaForaDoLugar, limitarAoMonitor, resolverUrlDoProject, textoDoProximoCheckin } from './politica-da-janela';
 import { deveAbrirJanelinha, deveFecharJanelinha, enderecoDaApi, lerEstadoDaIa, lerSituacao, segundosAteOCheckin, SituacaoDoCheckin } from './politica-do-checkin';
 
@@ -21,6 +22,7 @@ let janelinhaLiberada = false;
 let conferencia: NodeJS.Timeout | null = null;
 
 let janela: BrowserWindow | null = null;
+let dialogoDeSaida: BrowserWindow | null = null;
 let bandeja: Tray | null = null;
 let reajustando = false;
 let tentativaDeReabrir: NodeJS.Timeout | null = null;
@@ -34,15 +36,13 @@ function areaDoMonitorPrincipal() {
   return screen.getPrimaryDisplay().workArea;
 }
 
-/** Devolve a janela ao monitor principal inteiro, maximizada e sem mover. */
+/** Devolve a janela ao monitor principal inteiro (o tamanho de abertura); maximizada, ela já ocupa a área e fica como está. */
 function reajustarJanela(): void {
   if (!janela || janela.isDestroyed() || reajustando) return;
   reajustando = true;
   try {
-    const area = areaDoMonitorPrincipal();
-    if (janela.isMinimized()) return;
-    janela.setBounds(area);
-    if (!janela.isMaximized()) janela.maximize();
+    if (janela.isMinimized() || janela.isMaximized()) return;
+    janela.setBounds(areaDoMonitorPrincipal());
   } finally {
     reajustando = false;
   }
@@ -77,9 +77,10 @@ function criarJanela(): void {
     icon: caminhoDoIcone,
     show: false,
     alwaysOnTop: true,
-    resizable: false,
+    // No Windows o botão de maximizar só vale com a janela redimensionável; o tamanho continua preso à área (`conferirLugar`).
+    resizable: true,
     movable: false,
-    maximizable: false,
+    maximizable: true,
     fullscreenable: false,
     minimizable: true,
     closable: true,
@@ -103,9 +104,8 @@ function criarJanela(): void {
     encerramento.encerramentoDoSistema = true;
   });
 
-  // Trava física: não arrasta, não encolhe, e voltar do minimizado devolve o tamanho cheio.
+  // Trava: não arrasta nem encolhe pela borda; maximizar e restaurar valem, e restaurar ou voltar do minimizado devolve o tamanho de abertura.
   janela.on('will-move', (evento) => evento.preventDefault());
-  janela.on('will-resize', (evento) => evento.preventDefault());
   const conferirLugar = () => {
     if (!janela || janela.isDestroyed() || janela.isMinimized() || reajustando) return;
     if (janelaForaDoLugar(janela.getBounds(), areaDoMonitorPrincipal(), janela.isMaximized())) reajustarJanela();
@@ -158,20 +158,68 @@ function montarMenuDaBandeja(): Menu {
 
 /** Única saída do app: confirma que isso desativa o check-in e só então encerra. */
 async function pedirSaida(): Promise<void> {
-  const opcoes = {
-    type: 'warning' as const,
-    title: 'Fechar o Project Desktop?',
-    message: 'Fechar o Project Desktop?',
-    detail: 'Isso desativa o check-in. Ele só volta quando você abrir o aplicativo de novo.',
-    buttons: ['Fechar completamente', 'Continuar usando'],
-    defaultId: 1,
-    cancelId: 1,
-    noLink: true,
-  };
-  const resposta = janela && !janela.isDestroyed() && janela.isVisible() ? await dialog.showMessageBox(janela, opcoes) : await dialog.showMessageBox(opcoes);
-  if (resposta.response !== 0) return;
+  if (dialogoDeSaida && !dialogoDeSaida.isDestroyed()) {
+    dialogoDeSaida.focus();
+    return;
+  }
+  const resposta = await perguntarSaida();
+  if (resposta !== 'sair') return;
   encerramento.saidaConfirmada = true;
   app.quit();
+}
+
+/** O aviso de saída: uma janelinha própria no estilo do Project (modal sobre o Project quando ele está na tela), e fechá-la é "continuar". */
+function perguntarSaida(): Promise<RespostaDaSaida> {
+  const pai = janela && !janela.isDestroyed() && janela.isVisible() && !janela.isMinimized() ? janela : undefined;
+  const aviso = new BrowserWindow({
+    width: 460,
+    height: 190,
+    parent: pai,
+    modal: pai !== undefined,
+    title: NOME_DO_APP,
+    icon: caminhoDoIcone,
+    frame: false,
+    resizable: false,
+    minimizable: false,
+    maximizable: false,
+    fullscreenable: false,
+    alwaysOnTop: true,
+    skipTaskbar: pai !== undefined,
+    autoHideMenuBar: true,
+    show: false,
+    backgroundColor: nativeTheme.shouldUseDarkColors ? '#18181b' : '#ffffff',
+    webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true, devTools: false },
+  });
+  dialogoDeSaida = aviso;
+  aviso.setAlwaysOnTop(true, 'screen-saver');
+  return new Promise<RespostaDaSaida>((resolver) => {
+    let resposta: RespostaDaSaida = 'continuar';
+    const responder = (valor: RespostaDaSaida) => {
+      resposta = valor;
+      if (!aviso.isDestroyed()) aviso.close();
+    };
+    aviso.webContents.on('will-navigate', (evento, endereco) => {
+      evento.preventDefault();
+      const escolhida = respostaDaNavegacao(endereco);
+      if (escolhida) responder(escolhida);
+    });
+    aviso.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+    aviso.webContents.on('before-input-event', (evento, entrada) => {
+      if (entrada.type === 'keyDown' && entrada.key === 'Escape') {
+        evento.preventDefault();
+        responder('continuar');
+      }
+    });
+    aviso.once('ready-to-show', () => {
+      aviso.show();
+      aviso.focus();
+    });
+    aviso.on('closed', () => {
+      dialogoDeSaida = null;
+      resolver(resposta);
+    });
+    void aviso.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(montarPaginaDoDialogoDeSaida(NOME_DO_APP))}`);
+  });
 }
 
 function criarBandeja(): void {

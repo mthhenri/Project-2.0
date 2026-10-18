@@ -137,8 +137,9 @@
     width: 1.875rem;
     height: 1.875rem;
     border-radius: 8px;
-    background: var(--p-surface-900);
-    color: #fff;
+    // O selo inverte com o tema: escuro com texto claro no claro, claro com texto escuro no escuro.
+    background: var(--p-text-color);
+    color: var(--p-content-background);
     font-size: 0.6875rem;
     font-weight: 700;
   }

@@ -12,6 +12,17 @@
 
 ---
 
+## 2026-10-18 — Ajustes do Project Desktop e do selo da IA
+
+Pedido do autor depois de usar o desktop; fora de spec (ajuste das tasks 152 e do chat).
+
+- **Maximizar:** a janela deixou de ser fixa maximizada. Abre cobrindo o monitor principal (área de trabalho), agora com o botão de maximizar habilitado (no Windows ele só vale com `resizable: true`); maximizar funciona e restaurar volta ao tamanho de abertura. Continua sem arrastar, sempre por cima, e a borda não redimensiona (`conferirLugar` devolve a janela à área). `janelaForaDoLugar` mudou: maximizada está sempre no lugar; restaurada, só estar fora da área conta.
+- **Aviso "Fechar completamente":** o diálogo nativo do Windows virou uma janelinha própria (`desktop/src/dialogo-de-saida.ts`, página HTML em `data:` que segue o tema claro/escuro do sistema, ícone de alerta, "Fechar completamente" em vermelho contornado e "Continuar usando" como destaque, foco no continuar). Modal sobre o Project quando ele está na tela; Esc, fechar a janelinha e Alt+F4 contam como "continuar". Os botões navegam para `project-desktop://sair|continuar`, que o app intercepta (sem preload nem acesso ao sistema).
+- **Selo "IA" do chat:** fundo e texto agora são `--p-text-color` e `--p-content-background`: escuro com letra clara no tema claro, claro com letra escura no escuro.
+- **Testes:** desktop 17 (+2, e o de `janelaForaDoLugar` reescrito); builds de desktop e frontend passam.
+- **Verificado ao vivo:** o Electron real (dev, `--user-data-dir` separado para não colidir com outra instância) abriu 1920×1032 com o botão de maximizar habilitado; maximizar foi para a tela cheia e restaurar voltou ao 1920×1032 de abertura. A página do aviso foi vista no navegador do app nos dois temas. O selo da IA no chat: claro com fundo escuro e letra branca, escuro com fundo branco e letra escura (estilo computado nos dois temas).
+- **Não verificado:** o aviso aberto de verdade pelo menu da bandeja (clique no ícone não automatizado) e sobre o Project modal, e restaurar depois de arrastar a borda.
+
 ## 2026-10-18 — Passe de verificação visual do rework do chat com IA
 
 Sem mudança de código: percorri a aplicação real (backend e frontend de dev, gestor do seed, navegador do app) para fechar os portões visuais que as tasks 142–161 deixaram abertos.

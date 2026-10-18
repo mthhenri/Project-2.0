@@ -24,9 +24,12 @@ export interface AreaDeTrabalho {
   height: number;
 }
 
-/** A janela está fora da área do monitor principal (foi arrastada, redimensionada ou saiu do estado maximizado)? Então precisa voltar. */
+/**
+ * A janela está fora da área do monitor principal (foi arrastada ou redimensionada)? Então precisa voltar. Maximizada está sempre
+ * no lugar; restaurada, ela volta ao tamanho de abertura (a área inteira), então só um arrasto de borda a desloca.
+ */
 export function janelaForaDoLugar(janela: AreaDeTrabalho, area: AreaDeTrabalho, maximizada: boolean): boolean {
-  if (!maximizada) return true;
+  if (maximizada) return false;
   return janela.x !== area.x || janela.y !== area.y || janela.width !== area.width || janela.height !== area.height;
 }
 

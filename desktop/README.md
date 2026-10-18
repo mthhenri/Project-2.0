@@ -6,8 +6,8 @@ sistema: o desktop só aponta para a URL do front e todo mundo o usa no dia a di
 ## Comportamento
 
 - Abre o front (`URL_DO_PROJECT` em `src/config.ts`; no desenvolvimento, a variável `PROJECT_DESKTOP_URL` sobrepõe). Login e rotas são as do navegador.
-- Janela maximizada no monitor principal, **sempre por cima**, sem arrastar nem redimensionar. O usuário pode **minimizar**.
-- **Não fecha**: fechar e Alt+F4 só minimizam. A única saída é "Fechar completamente" no menu do ícone da bandeja, com confirmação ("Isso desativa o check-in"). O desligamento do Windows nunca é impedido.
+- Janela que abre cobrindo o monitor principal, **sempre por cima**, sem arrastar nem redimensionar pela borda. O usuário pode **maximizar** (restaurar volta ao tamanho de abertura) e **minimizar**.
+- **Não fecha**: fechar e Alt+F4 só minimizam. A única saída é "Fechar completamente" no menu do ícone da bandeja, com confirmação numa janelinha própria, no tema claro ou escuro do sistema ("Isso desativa o check-in"). O desligamento do Windows nunca é impedido.
 - Bandeja: Abrir o Project, tempo até o próximo check-in (lido do backend; o menu é montado na hora de abrir) e Fechar completamente.
 - **Janelinha do check-in** (task 160): com o Project **minimizado** e o check-in disparado pelo backend, abre uma janela pequena (480 × 560), sem moldura, sempre por cima, que arrasta pelo cabeçalho (sem sair do monitor) e **não fecha nem minimiza**; ela carrega a rota `/checkin`. Some quando a descrição é registrada, os check-ins são suspensos ("Estou em reunião") ou a execução acaba, ou quando o Project volta à tela (aí o check-in é o diálogo dentro do Project, task 161). Com a IA desligada ou fora do ar ela não abre. O app lê a situação em `GET /checkin/situacao` com o token do login que a página do Project guarda (a cada 15 s; 3 s com a janelinha aberta) e a página avisa que terminou por uma ponte mínima (`window.projectDesktop.encerrarCheckin`, em `src/preload.ts`).
 - Uma única instância (abrir de novo traz a janela para a frente, na área de trabalho atual). Não inicia com o Windows.
