@@ -47,6 +47,29 @@
     border-color: var(--app-surface-200);
   }
 
+  // Embaixo, no lugar do campo: o texto no meio e o "Voltar para hoje" no canto direito.
+  &__aviso--leitura {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(max-content, 1fr);
+    gap: 0.5rem;
+  }
+
+  &__aviso-texto {
+    grid-column: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__aviso-acao {
+    grid-column: 3;
+    justify-self: end;
+
+    ::ng-deep .p-button {
+      white-space: nowrap;
+    }
+  }
+
   // A conversa é uma coluna centralizada, sem moldura: só ela rola; o rodapé (sugestões, campo, legenda) fica sempre à vista.
   &__conversa {
     position: relative;

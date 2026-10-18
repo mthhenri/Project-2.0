@@ -8,11 +8,7 @@
       </div>
     } @else {
       @if (somenteLeitura()) {
-        <p class="chat__aviso chat__aviso--neutro" role="status">
-          <i class="pi pi-calendar"></i>
-          <span>Conversa de {{ diaFormatado() }}, só para leitura.</span>
-          <p-button label="Voltar para hoje" icon="pi pi-arrow-right" size="small" [text]="true" (onClick)="voltarParaHoje()" />
-        </p>
+        <!-- O aviso de leitura fica embaixo, onde estaria o campo de mensagem. -->
       } @else if (iaDesligada()) {
         <p class="chat__aviso" role="status">
           <i class="pi pi-power-off"></i>
@@ -166,6 +162,13 @@
             </button>
           </form>
           <span class="chat__legenda">A IA sempre pede confirmação antes de criar, iniciar, pausar ou anotar. Enter envia, Shift+Enter quebra a linha.</span>
+        </div>
+      } @else {
+        <div class="chat__rodape">
+          <p class="chat__aviso chat__aviso--neutro chat__aviso--leitura" role="status">
+            <span class="chat__aviso-texto"><i class="pi pi-calendar"></i>Conversa de {{ diaFormatado() }}, só para leitura.</span>
+            <p-button class="chat__aviso-acao" label="Voltar para hoje" icon="pi pi-arrow-right" size="small" [text]="true" (onClick)="voltarParaHoje()" />
+          </p>
         </div>
       }
     }

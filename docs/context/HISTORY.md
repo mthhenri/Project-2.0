@@ -12,6 +12,10 @@
 
 ---
 
+## 2026-10-18 — Chat: aviso de conversa só para leitura vai para o rodapé
+
+Pedido do autor: a barra "Conversa de dd/mm/aaaa, só para leitura" saiu do topo e ocupa o lugar do campo de mensagem, com o texto no meio e "Voltar para hoje" no canto direito. Só `chat.page` (html e scss). Verificado em 800×600 claro com a conversa de ontem; 1920×1080, 1080×1920 e tema escuro não verificados.
+
 ## 2026-10-18 — Project Desktop: specs 152, 160 e 161 reescritas
 
 Conversa com o autor sobre o Electron (o app V1 vivia na empresa e não está disponível); nada foi implementado. Um protótipo de comportamento foi validado: janelinha arrastável com o desktop minimizado, diálogo escurecido com o Project aberto e menu da bandeja com confirmação.
