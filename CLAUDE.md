@@ -181,13 +181,15 @@ arquitetura, sintetiza e responde pelo resultado. Os subagentes ficam em `.claud
 
 ## Estrutura e arquitetura
 
-Monorepo com três workspaces npm:
+Monorepo com quatro workspaces npm:
 
 - `shared/` (`@project20/shared`): DTOs, enums, interfaces e validadores usados por backend e
   frontend. DTOs e enums nunca são redefinidos em `backend/` ou `frontend/`.
 - `backend/`: API NestJS. Fluxo: `controller (fino) → service (regra de negócio) → repository
   (SQL puro)`. Módulos em `backend/src/modules/`.
 - `frontend/`: SPA Angular 21 com componentes standalone e Signals.
+- `desktop/`: Project Desktop, app Electron que abre o front numa janela própria, fixa e com ícone na bandeja
+  (`desktop/README.md`; a lógica de decisão fica em funções puras testáveis).
 
 Detalhes e árvore completa: `docs/SYSTEM.SPEC.md` §3, §6–§8.
 
@@ -264,6 +266,8 @@ npm run test --workspace=shared            # só o shared
 npm run test --workspace=backend           # só o backend
 npm run build --workspace=backend          # compilação do backend (usada como gate)
 npm run build --workspace=frontend         # compilação do frontend (usada como gate)
+npm run test --workspace=desktop           # funções puras do Project Desktop
+npm run pack --workspace=desktop           # executável portátil do Project Desktop (Windows)
 npm run repo:verificar                     # organização de specs/artefatos e espelhos
 npm run repo:test                          # testes dos scripts de verificação e impacto
 npm run impacto -- <arquivo>               # consumidores antes de alterar algo compartilhado

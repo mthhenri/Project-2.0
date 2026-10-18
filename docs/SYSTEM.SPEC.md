@@ -83,6 +83,7 @@ project-2.0/
       active/             ← task em andamento na sessão atual
       done/               ← tasks concluídas (histórico)
       discarded/          ← tasks descartadas por decisão do autor (registro; não implementar)
+  desktop/                      ← Project Desktop (Electron): abre o front numa janela própria (task 152)
   scripts/                      ← repo:verificar, impacto e hooks de agente
   .claude/                      ← skills, subagentes e settings do Claude Code
   .agents/skills/               ← cópia idêntica de .claude/skills (agentes compatíveis com AGENTS.md)
@@ -119,6 +120,16 @@ preparar um commit. O CI confere os caminhos versionados e os espelhos; `.gitign
 protege contra arquivo já rastreado ou inclusão forçada.
 
 ---
+
+### 3.2 Project Desktop (`desktop/`)
+
+Aplicativo Electron (TypeScript, `desktop/src/main.ts`) que abre o front do Project numa janela própria; o front continua sendo o
+centro e o desktop só aponta para a URL fixa (`desktop/src/config.ts`). A janela fica maximizada no monitor principal, sempre por cima,
+sem arrastar nem redimensionar, e só minimiza: fechar e Alt+F4 minimizam e a única saída é "Fechar completamente" no ícone da bandeja,
+com confirmação. O desligamento do sistema operacional nunca é impedido. Uma única instância, sem iniciar com o Windows. A lógica de
+decisão (fechar ou minimizar, janela fora do lugar, destino de um link, URL, texto do tempo) mora em funções puras com `node:test`
+(`desktop/src/politica-da-janela.ts`); o executável portátil sai de `npm run pack --workspace=desktop` e não tem atualização
+automática. O check-in no desktop vem nas tasks 160 e 161.
 
 ## 4. Regras de Linguagem
 
@@ -452,7 +463,7 @@ shared/src/
 ```json
 // package.json (raiz)
 {
-  "workspaces": ["shared", "backend", "frontend"]
+  "workspaces": ["shared", "backend", "frontend", "desktop"]
 }
 ```
 

@@ -38,6 +38,7 @@ Estas são as fontes da verdade. Em conflito entre código e documento, **o docu
 | Configuração (`ConfigService`) | `backend/src/config/` |
 | Conexão Knex, migrations `.sql` numeradas e corte de legado | `backend/src/database/` (`migrations/`, `sql-migration-source.ts`) |
 | Telas e serviços HTTP do frontend | `frontend/src/app/modules/<modulo>/` |
+| Project Desktop (Electron): janela, bandeja, travas e funções puras (task 152) | `desktop/src/` (`main.ts`, `politica-da-janela.ts`, `config.ts`); README em `desktop/README.md` |
 | Interceptors, guards e estado global | `frontend/src/app/core/` |
 | Componentes, diretivas, pipes e layout reutilizáveis | `frontend/src/app/shared/` |
 | Contrato de dialogs de formulário: autofocus, Enter, Ctrl+Enter, dica de atalhos (task 97) | `shared/directives/dialog-formulario.directive.ts` (`p-dialog[dialogFormulario]`) e `shared/components/dialog-dica-atalhos/` |

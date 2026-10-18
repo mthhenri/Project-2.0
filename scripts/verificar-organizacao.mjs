@@ -12,7 +12,7 @@ import { fileURLToPath } from "node:url";
 
 // ---------------------------------------------------------------- CONFIGURAÇÃO
 /** Pastas onde mídia (png, mp4...) é fonte/asset legítimo do produto, não evidência de execução. */
-const RAIZES_MIDIA_PERMITIDAS = /^(?:public\/|src\/assets\/|docs\/(?:assets|design\/assets)\/)/;
+const RAIZES_MIDIA_PERMITIDAS = /^(?:public\/|src\/assets\/|desktop\/assets\/|docs\/(?:assets|design\/assets)\/)/;
 /** Specs fora do ciclo backlog/active/done/discarded que são legítimas (modelos, constituição). */
 const SPECS_EXCECAO = ["docs/specs/TEMPLATE.spec.md", "docs/SYSTEM.SPEC.md"];
 // ---------------------------------------------------------------------------------

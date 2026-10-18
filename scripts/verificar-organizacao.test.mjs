@@ -10,7 +10,7 @@ test("aceita anexos, fonte SVG, corpus e documentos canônicos", () => {
     assert.deepEqual(verificarCaminhos([
         "docs/specs/active/tarefa-01.spec.md", "docs/specs/active/tarefa-01/prancha.html",
         "docs/specs/active/tarefa-01/fonte.svg", "docs/specs/active/tarefa-01/corpus.json",
-        "docs/assets/diagrama.png", "public/logo.png",
+        "docs/assets/diagrama.png", "public/logo.png", "desktop/assets/icone.png",
         "docs/specs/TEMPLATE.spec.md"
     ]), []);
 });

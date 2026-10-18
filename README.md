@@ -89,6 +89,8 @@ O backend sobe em `http://localhost:3000` e o frontend em `http://localhost:4200
 | `npm run db:down` | Para o PostgreSQL |
 | `npm run backend:dev` | Inicia o backend em modo watch |
 | `npm run frontend:dev` | Inicia o frontend com proxy para o backend |
+| `npm run start --workspace=desktop` | Abre o Project Desktop (Electron) apontando para o front |
+| `npm run pack --workspace=desktop` | Gera o executável portátil do Project Desktop em `desktop/release/` |
 | `npm run db:migrate --workspace=backend` | Executa todas as migrations pendentes |
 | `npm run db:rollback --workspace=backend` | Desfaz a última migration |
 | `npm run db:converter-descricoes --workspace=backend` | Conversão única do HTML do Quill para Markdown (task 123): dry-run por padrão; veja o procedimento abaixo |
@@ -119,6 +121,7 @@ convertido pelo mesmo script (alvo `anotacao.texto`), antes ou depois das migrat
 project-2.0/
   backend/          ← API NestJS
   frontend/         ← Aplicação Angular 21
+  desktop/          ← Project Desktop (Electron): janela própria para o front
   shared/           ← DTOs, Enums e Interfaces compartilhados
   docs/
     SYSTEM.SPEC.md  ← Constituição do projeto (leia antes de qualquer coisa)
@@ -135,7 +138,7 @@ project-2.0/
 
 ## Arquitetura
 
-O projeto é um monorepo com três pacotes independentes conectados via npm workspaces:
+O projeto é um monorepo com quatro pacotes independentes conectados via npm workspaces:
 
 - **`shared/`** — pacote `@project20/shared` com DTOs, enums e interfaces. Importado pelo backend e pelo frontend, garantindo consistência de tipos entre as duas camadas sem duplicação.
 - **`backend/`** — API REST em NestJS seguindo DDD simplificado: controller (burra) → service (inteligência de negócio) → repository (SQL bruto via Knex). Sem ORM.

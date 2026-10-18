@@ -1,0 +1,29 @@
+{
+  "name": "desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Project Desktop: abre o front do Project numa janela própria, fixa e com ícone na bandeja",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "npm run build && electron .",
+    "pack": "npm run build && electron-builder --win portable --publish never",
+    "test": "node --import tsx --test \"src/**/*.test.ts\""
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "electron": "39.8.10",
+    "electron-builder": "^26.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  },
+  "build": {
+    "appId": "br.com.project20.desktop",
+    "productName": "Project Desktop",
+    "directories": { "output": "release" },
+    "files": ["dist/**/*", "assets/**/*", "package.json"],
+    "win": { "target": ["portable"], "icon": "assets/icone.png" },
+    "linux": { "target": ["AppImage"], "icon": "assets/icone.png", "category": "Office" },
+    "portable": { "artifactName": "Project-Desktop-${version}.exe" }
+  }
+}

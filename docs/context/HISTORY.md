@@ -12,6 +12,19 @@
 
 ---
 
+## 2026-10-18 — Task 152: Project Desktop, casca e bandeja
+
+Spec em `docs/specs/done/152-desktop-casca-e-bandeja.spec.md`.
+
+- **Workspace `desktop/`** (Electron 39.8.10 fixo, porque o `electron-builder` exige versão exata; TypeScript; `npm test` entrou no `npm test` da raiz; `desktop/release/` no `.gitignore`). `main.ts` cria a janela, a bandeja e a instância única; as decisões ficam em `politica-da-janela.ts` com 6 testes: `decidirFechamento` (só a saída confirmada e o desligamento do sistema fecham), `janelaForaDoLugar`, `destinoDaNavegacao` (links externos vão ao navegador), `resolverUrlDoProject` e `textoDoProximoCheckin`.
+- **Janela:** monitor principal inteiro (`workArea`), maximizada, `alwaysOnTop`, `resizable`/`movable`/`maximizable: false`, sem menu; `close` é impedido e minimiza; `will-move`/`will-resize` impedidos e `resize`/`move`/`restore` devolvem o tamanho cheio; `session-end` libera o fechamento. Trazer a janela (bandeja, segunda instância) minimiza e restaura, que a põe na área de trabalho atual do Windows.
+- **Bandeja:** Abrir o Project, tempo até o próximo check-in ("indisponível" até a 161) e "Fechar completamente", que pergunta se pode desativar o check-in. Ícone gerado (`assets/icone.png`, um P branco sobre azul), provisório.
+- **Extra não pedido:** com o front fora do ar ou sem rede, a janela mostra um aviso e tenta de novo a cada 5 s (sem isso ela ficaria numa página de erro do navegador, e o app não fecha).
+- **Testes:** desktop 6 verdes; build do desktop passa; backend, shared e frontend não mudaram.
+- **Verificado ao vivo (Windows 11, script de PowerShell contra o Electron real):** abre em 0,0 com 1920×1032, maximizada e sempre por cima, título "Project 2.0"; `WM_CLOSE` (o que o Alt+F4 faz) deixa o app vivo e minimizado; restaurar volta a 1920×1032; mover e encolher pela API do Windows são desfeitos; uma segunda instância encerra sozinha e a janela continua inteira. O executável empacotado (`Project-Desktop-1.0.0.exe`, 85 MB, portátil) abre a janela.
+- **Não verificado:** o menu da bandeja e a caixa de confirmação (não há como clicar na bandeja daqui), várias áreas de trabalho, vários monitores, Linux, o desligamento do Windows com o app aberto, e o app contra um servidor de produção (a URL ainda é a de desenvolvimento).
+- **Limites conhecidos:** o executável não é assinado (o Windows pode avisar na primeira vez) e `winCodeSign` baixou ferramentas na primeira execução.
+
 ## 2026-10-18 — Chat: aviso de conversa só para leitura vai para o rodapé
 
 Pedido do autor: a barra "Conversa de dd/mm/aaaa, só para leitura" saiu do topo e ocupa o lugar do campo de mensagem, com o texto no meio e "Voltar para hoje" no canto direito. Só `chat.page` (html e scss). Verificado em 800×600 claro com a conversa de ontem; 1920×1080, 1080×1920 e tema escuro não verificados.
