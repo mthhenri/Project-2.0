@@ -12,6 +12,17 @@
 
 ---
 
+## 2026-10-18 — Task 104 (reativada): detalhe da atividade com faixa de execução, timer e pausa em 1 clique
+
+Frontend, mais um mínimo no backend: `AtividadeRecuperadaDto` ganhou `nomeDemanda`, `projetoId`, `nomeProjeto` e `usuarioTipo` (o repositório faz os JOINs que a listagem já usa).
+
+- **Faixa de execução** com estados decididos por regra pura (`utils/faixa-execucao.util.ts`, 9 testes junto com o formatador de intervalo): `ativa` (timer grande + descrição + Pausar, mantém a descrição), `livre` (campo "O que você vai fazer? — Enter inicia" + "Reutilizar última"), `outra` (o dono já executa outra atividade: "Pausar lá e iniciar aqui" encadeia encerrar + iniciar e só inicia se o encerramento der certo), `bloqueada` (Pendente/Desenvolvida, com aviso) e `oculta` (desenvolvedor sem posse). Iniciar **não navega mais** para /execucao. A descrição é opcional quando o dono é gestor.
+- **Cabeçalho**: breadcrumb Atividades › Projeto · Demanda #id — nome; selo de status, executor e "Criada em"; status travado (select desabilitado + tooltip) durante execução, com rollback em erro. Prioridade como antes.
+- **Tags** em popover de chips (o mesmo componente da listagem), agora também para o desenvolvedor dono (antes só o gestor). **Execuções recentes** com avatar, "hoje 09:12 → 11:27", duração em horas, timer e pausa inline na linha ativa, "Registrar tempo" (gestor) e CTA vazio. Skeleton ao carregar, "não encontrada" com botão de voltar, ressincronização em `visibilitychange` e quando a pausa parte do chip da topbar.
+- **Dialog de registro extraído**: o "Registrar execução" (task 103) saiu da listagem para `ExecucaoRegistroDialogComponent`, usado pela listagem e pelo detalhe — o SCSS da listagem desceu para 7,85 kB (limite 8).
+- **Desvios**: o link de demanda do breadcrumb leva às atividades da demanda (não existe página de demanda por id); "descrição click-to-edit" não se aplica (a atividade não tem descrição própria) e o popover de editar a descrição ao pausar não foi feito (pausa mantém a descrição).
+- Verificado ao vivo em 1366×768, 1920×1080 e 1080×1920: iniciar (fica na página, faixa vira ativa, chip da topbar aparece), pausar (faixa volta, select reabilita, "Reutilizar última" preenche). **Não verificado ao vivo**: o estado `outra` e o "Pausar lá e iniciar aqui" (precisam de um usuário dono executando outra atividade; a decisão do estado tem teste unitário). A execução de teste foi apagada (soft delete) do banco de desenvolvimento.
+
 ## 2026-10-18 — Task 103 (reativada): dialogs de execução sem atrito (iniciar, registrar, visualizar)
 
 Só frontend. A 103 foi implementada sobre os dialogs que já existiam; parte do escopo (linha de contexto, Ctrl+Enter, descrição opcional para dono gestor, validação "fim > início", foco na descrição) já estava pronta.

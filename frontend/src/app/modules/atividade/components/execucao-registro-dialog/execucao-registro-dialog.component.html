@@ -1,0 +1,114 @@
+<p-dialog
+  [visible]="mostrarDialog()"
+  (visibleChange)="mostrarDialog.set($event)"
+  header="Registrar execução"
+  dialogFormulario
+  [dialogBloqueado]="salvando()"
+  (dialogEnviar)="salvar()"
+  [dialogSemAutofocus]="true"
+  [modal]="true"
+  [style]="{ width: '42rem' }"
+  [draggable]="false"
+  [dismissableMask]="true"
+  [focusOnShow]="false"
+  (onShow)="focarDescricao()"
+>
+  @if (atividade(); as alvo) {
+    <p class="execucao-registro-dialog__atividade">{{ alvo.nomeProjeto }} · {{ alvo.nome }}</p>
+    <div class="execucao-registro-dialog__executor">
+      <span class="execucao-registro-dialog__avatar">{{ iniciais(alvo.nomeUsuario) }}</span>
+      <span class="text-color">{{ alvo.nomeUsuario }}</span>
+    </div>
+  }
+
+  <form [formGroup]="formulario" class="execucao-registro-dialog__form">
+    <div class="execucao-registro-dialog__duracoes" role="group" aria-label="Duração">
+      @for (duracao of duracoes; track duracao.minutos) {
+        <button
+          type="button"
+          class="execucao-registro-dialog__chip"
+          [class.execucao-registro-dialog__chip--ativo]="duracaoAtiva() === duracao.minutos"
+          (click)="aplicarDuracao(duracao.minutos)"
+        >{{ duracao.rotulo }}</button>
+      }
+      <button
+        type="button"
+        class="execucao-registro-dialog__chip"
+        [class.execucao-registro-dialog__chip--ativo]="duracaoAtiva() === 'manha'"
+        (click)="aplicarDuracao('manha')"
+      >Manhã 9h–12h</button>
+    </div>
+
+    <div class="execucao-registro-dialog__linha">
+      <div class="execucao-registro-dialog__campo">
+        <label for="registro-inicio" class="execucao-registro-dialog__label">Início *</label>
+        <p-datepicker
+          inputId="registro-inicio"
+          formControlName="inicioData"
+          [showTime]="true"
+          dateFormat="dd/mm/yy"
+          placeholder="dd/mm/aaaa hh:mm"
+          appendTo="body"
+          class="w-full"
+        />
+        @if (campoInvalido('inicioData')) {
+          <small class="execucao-registro-dialog__erro">Informe a data e hora de início</small>
+        }
+      </div>
+
+      <div class="execucao-registro-dialog__campo">
+        <label for="registro-fim" class="execucao-registro-dialog__label">Fim *</label>
+        <p-datepicker
+          inputId="registro-fim"
+          formControlName="fimData"
+          [showTime]="true"
+          dateFormat="dd/mm/yy"
+          placeholder="dd/mm/aaaa hh:mm"
+          appendTo="body"
+          class="w-full"
+        />
+        @if (campoInvalido('fimData')) {
+          <small class="execucao-registro-dialog__erro">Informe a data e hora de fim</small>
+        }
+        @if (formulario.errors?.['fimAntesDoInicio'] && formulario.controls.fimData.touched) {
+          <small class="execucao-registro-dialog__erro">O fim deve ser posterior ao início</small>
+        }
+      </div>
+    </div>
+
+    <div class="execucao-registro-dialog__campo">
+      <label for="registro-descricao" class="execucao-registro-dialog__label">Descrição *</label>
+      <textarea
+        #descricaoRegistro
+        id="registro-descricao"
+        pTextarea
+        spellcheck="true"
+        appBloquearCaracteresProibidos
+        formControlName="descricao"
+        rows="4"
+        placeholder="Descreva a execução..."
+        class="w-full"
+      ></textarea>
+      @if (campoInvalido('descricao')) {
+        <small class="execucao-registro-dialog__erro">
+          @if (formulario.controls.descricao.hasError('pattern')) {
+            {{ mensagemCaracteresProibidos }}
+          } @else {
+            Informe a descrição da execução
+          }
+        </small>
+      }
+      <app-assistente-descricao
+        [textoAtual]="formulario.value.descricao || ''"
+        tipoEntidade="execucao"
+        (textoAuxiliadoAceito)="aceitarDescricaoAssistente($event)"
+      />
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <app-dialog-dica-atalhos [comTextarea]="true" />
+    <p-button label="Cancelar" [text]="true" (onClick)="mostrarDialog.set(false)" />
+    <p-button label="Registrar" icon="pi pi-calendar-plus" [loading]="salvando()" (onClick)="salvar()" />
+  </ng-template>
+</p-dialog>

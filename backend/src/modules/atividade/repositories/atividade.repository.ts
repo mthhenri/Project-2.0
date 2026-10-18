@@ -80,8 +80,12 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
       `SELECT
          atividade.id,
          atividade.demanda_id      AS "demandaId",
+         demanda.nome              AS "nomeDemanda",
+         projeto.id                AS "projetoId",
+         projeto.nome              AS "nomeProjeto",
          atividade.usuario_id      AS "usuarioId",
          usuario.nome_completo     AS "nomeUsuario",
+         tipo_usuario.codigo       AS "usuarioTipo",
          atividade.nome,
          tipo_atividade_status.codigo AS status,
          ${SELECIONAR_PRIORIDADE},
@@ -97,9 +101,16 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
        INNER JOIN usuario
          ON usuario.id = atividade.usuario_id
          AND usuario.is_deleted = false
+       INNER JOIN tipo_usuario
+         ON tipo_usuario.id = usuario.tipo_usuario_id
+         AND tipo_usuario.is_deleted = false
        INNER JOIN tipo_atividade_status
          ON tipo_atividade_status.id = atividade.tipo_atividade_status_id
          AND tipo_atividade_status.is_deleted = false
+       INNER JOIN demanda
+         ON demanda.id = atividade.demanda_id
+       INNER JOIN projeto
+         ON projeto.id = demanda.projeto_id
        WHERE atividade.id = :id
          AND atividade.is_deleted = false
        LIMIT 1`,

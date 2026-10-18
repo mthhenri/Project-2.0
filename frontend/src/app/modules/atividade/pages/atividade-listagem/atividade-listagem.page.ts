@@ -1,7 +1,7 @@
-import { Component, inject, signal, DestroyRef, OnInit, HostListener, ViewChild, ElementRef, computed, effect, untracked, viewChild } from '@angular/core';
-import { DURACOES_REGISTRO, intervaloDaManha, intervaloRetroativo, minutosDoIntervalo } from '../../utils/intervalo-registro.util';
+import { Component, inject, signal, DestroyRef, OnInit, HostListener, computed, effect, untracked, viewChild } from '@angular/core';
+import { ExecucaoRegistroDialogComponent } from '../../components/execucao-registro-dialog/execucao-registro-dialog.component';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize, debounceTime, distinctUntilChanged, forkJoin, of, catchError, map, Observable } from 'rxjs';
 import { TableModule, TableLazyLoadEvent } from 'primeng/table';
@@ -32,7 +32,6 @@ import {
   ExecucaoItemDto,
   ExecucaoIniciarDto,
   ExecucaoEncerrarDto,
-  ExecucaoRegistrarDto,
   temPermissaoDeGestor,
   REGEX_SEM_CARACTERES_PROIBIDOS,
   MENSAGEM_CARACTERES_PROIBIDOS,
@@ -112,6 +111,7 @@ type CampoDescricaoDemanda = 'descricaoCliente' | 'descricaoTecnica' | 'document
     AtividadeTagsPopoverComponent,
     AtividadeDocumentosIndicadorComponent,
     AtividadeBarraEmMassaComponent,
+    ExecucaoRegistroDialogComponent,
     AssistenteDescricaoComponent,
     AtividadeVisualizarDialogComponent,
     DataBrasileiraPipe,
@@ -230,21 +230,7 @@ export class AtividadeListagemPage implements OnInit {
   /** Descrição opcional quando o dono da atividade em execução é gestor. */
   readonly descricaoExecucaoOpcional = signal<boolean>(false);
 
-  // --- Dialog: registrar execução manual (somente gestor) ---
-  /** Textarea de descrição; recebe o foco ao abrir o dialog, não o campo de início. */
-  @ViewChild('descricaoRegistro') private descricaoRegistro?: ElementRef<HTMLTextAreaElement>;
-  readonly mostrarDialogRegistro = signal<boolean>(false);
-  readonly salvandoRegistro = signal<boolean>(false);
-  readonly atividadeRegistro = signal<AtividadeResumoDto | null>(null);
-
-  readonly formularioRegistro = this.formBuilder.group(
-    {
-      inicioData: [null as Date | null, [Validators.required]],
-      fimData:    [null as Date | null, [Validators.required]],
-      descricao:  ['', [Validators.required, Validators.pattern(REGEX_SEM_CARACTERES_PROIBIDOS)]],
-    },
-    { validators: [this.fimPosteriorAoInicio] },
-  );
+  private readonly registroDialog = viewChild.required<ExecucaoRegistroDialogComponent>('registroDialog');
 
   readonly mensagemCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS;
 
@@ -752,88 +738,8 @@ export class AtividadeListagemPage implements OnInit {
     return !!(controle?.invalid && controle?.touched);
   }
 
-  // ---------------------------------------------------------------------------
-  // Registrar execução manual (somente gestor)
-  // ---------------------------------------------------------------------------
-
-  /** Validador cross-field: a data de fim deve ser posterior à data de início. */
-  private fimPosteriorAoInicio(controle: AbstractControl): ValidationErrors | null {
-    const inicio = controle.get('inicioData')?.value as Date | null;
-    const fim = controle.get('fimData')?.value as Date | null;
-    if (!inicio || !fim) return null;
-    return fim > inicio ? null : { fimAntesDoInicio: true };
-  }
-
   abrirDialogRegistro(atividade: AtividadeResumoDto): void {
-    this.atividadeRegistro.set(atividade);
-    // Padrão: o trabalho que acabou de terminar e durou 1h; os chips de duração reescrevem o intervalo.
-    const padrao = intervaloRetroativo(new Date(), 60);
-    this.formularioRegistro.reset({ inicioData: padrao.inicioData, fimData: padrao.fimData, descricao: '' });
-    this.mostrarDialogRegistro.set(true);
-  }
-
-  readonly duracoesRegistro = DURACOES_REGISTRO;
-
-  /** Aplica um atalho de duração ("2h", "Manhã") ao intervalo do registro, sempre terminando em agora (exceto a manhã). */
-  aplicarDuracaoRegistro(minutos: number | 'manha'): void {
-    const intervalo = minutos === 'manha' ? intervaloDaManha(new Date()) : intervaloRetroativo(new Date(), minutos);
-    this.formularioRegistro.patchValue({ inicioData: intervalo.inicioData, fimData: intervalo.fimData });
-  }
-
-  /** Atalho já aplicado ao intervalo atual (para destacar o chip), ou null quando o intervalo foi editado à mão. */
-  duracaoRegistroAtiva(): number | 'manha' | null {
-    const { inicioData, fimData } = this.formularioRegistro.value;
-    if (!inicioData || !fimData) return null;
-    const minutos = minutosDoIntervalo({ inicioData, fimData });
-    const manha = intervaloDaManha(inicioData);
-    if (inicioData.getTime() === manha.inicioData.getTime() && fimData.getTime() === manha.fimData.getTime()) return 'manha';
-    return this.duracoesRegistro.find((duracao) => duracao.minutos === minutos)?.minutos ?? null;
-  }
-
-  /** Foca a descrição ao abrir o dialog — em vez do primeiro campo (início). */
-  focarDescricaoRegistro(): void {
-    this.descricaoRegistro?.nativeElement.focus();
-  }
-
-  salvarRegistro(): void {
-    if (this.formularioRegistro.invalid) {
-      this.formularioRegistro.markAllAsTouched();
-      return;
-    }
-
-    const atividade = this.atividadeRegistro();
-    if (!atividade) return;
-
-    const { inicioData, fimData, descricao } = this.formularioRegistro.value;
-    const dto: ExecucaoRegistrarDto = {
-      atividadeId: atividade.id,
-      inicioData:  (inicioData as Date).toISOString(),
-      fimData:     (fimData as Date).toISOString(),
-      descricao:   (descricao ?? '').trim(),
-    };
-
-    this.salvandoRegistro.set(true);
-    this.execucaoService
-      .registrar(dto)
-      .pipe(finalize(() => this.salvandoRegistro.set(false)))
-      .subscribe({
-        next: (resposta) => {
-          if (resposta.sucesso) {
-            this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Execução registrada com sucesso' });
-            this.mostrarDialogRegistro.set(false);
-            this.buscarAtividades();
-          }
-        },
-      });
-  }
-
-  aceitarDescricaoAssistenteRegistro(texto: string): void {
-    this.formularioRegistro.patchValue({ descricao: texto });
-  }
-
-  campoInvalidoRegistro(nomeCampo: string): boolean {
-    const controle = this.formularioRegistro.get(nomeCampo);
-    return !!(controle?.invalid && controle?.touched);
+    this.registroDialog().abrir(atividade);
   }
 
   // ---------------------------------------------------------------------------

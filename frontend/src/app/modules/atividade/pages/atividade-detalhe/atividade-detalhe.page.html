@@ -1,40 +1,49 @@
 <div class="atividade-detalhe">
-  <div class="atividade-detalhe__topo">
-    <p-button
-      icon="pi pi-arrow-left"
-      [text]="true"
-      severity="secondary"
-      size="small"
-      label="Atividades"
-      (onClick)="voltar()"
-    />
-  </div>
+  @if (carregando() && !atividade()) {
+    <app-skeleton-lista variante="linhas" [quantidade]="6" />
+  } @else if (atividade(); as atividade) {
+    <nav class="atividade-detalhe__breadcrumb" aria-label="Você está em">
+      <a routerLink="/atividade">Atividades</a>
+      <i class="pi pi-angle-right" aria-hidden="true"></i>
+      <a [routerLink]="['/demanda']" [queryParams]="{ projetoId: atividade.projetoId }">{{ atividade.nomeProjeto }}</a>
+      <span aria-hidden="true">·</span>
+      <button
+        type="button"
+        class="atividade-detalhe__breadcrumb-demanda"
+        pTooltip="Ver as atividades desta demanda"
+        tooltipPosition="bottom"
+        (click)="verAtividadesDaDemanda()"
+      >Demanda #{{ atividade.demandaId }} — {{ atividade.nomeDemanda }}</button>
+    </nav>
 
-  @if (atividade(); as atividade) {
     <div class="atividade-detalhe__cabecalho">
       <div class="atividade-detalhe__identificacao">
         <h1 class="atividade-detalhe__titulo">{{ atividade.nome }}</h1>
         <div class="atividade-detalhe__meta">
-          <button type="button" class="atividade-detalhe__demanda-link" (click)="voltar()">
-            <i class="pi pi-sitemap"></i> Demanda #{{ atividade.demandaId }}
-          </button>
+          <p-tag [value]="rotuloStatus(atividade.status)" [severity]="severidadeStatus(atividade.status)" />
           <span class="atividade-detalhe__executor">
             <span class="atividade-detalhe__avatar">{{ iniciais() }}</span>
             {{ atividade.nomeUsuario }}
           </span>
+          <span class="text-muted-color">Criada em {{ atividade.createdDate | dataBrasileira }}</span>
         </div>
       </div>
 
       <div class="atividade-detalhe__status-inline">
         <label class="atividade-detalhe__status-label">Status</label>
-        <p-select
-          [formControl]="formularioStatus.controls.status"
-          [options]="statusOpcoes"
-          optionLabel="label"
-          optionValue="value"
-          (onChange)="alterarStatus()"
-          class="atividade-detalhe__status-select"
-        />
+        <span
+          [pTooltip]="execucaoAberta() ? 'Encerre a execução para trocar o status' : ''"
+          tooltipPosition="left"
+        >
+          <p-select
+            [formControl]="formularioStatus.controls.status"
+            [options]="statusOpcoes"
+            optionLabel="label"
+            optionValue="value"
+            (onChange)="alterarStatus()"
+            class="atividade-detalhe__status-select"
+          />
+        </span>
       </div>
 
       <div class="atividade-detalhe__status-inline">
@@ -57,62 +66,176 @@
       </div>
     </div>
 
+    <!-- Faixa de execução: o que fazer com o tempo desta atividade, sem sair daqui -->
+    @switch (estadoFaixa()) {
+      @case ('ativa') {
+        @if (execucaoAberta(); as aberta) {
+          <section class="atividade-detalhe__faixa atividade-detalhe__faixa--ativa" aria-label="Execução em andamento">
+            <div class="atividade-detalhe__faixa-relogio">
+              <app-execucao-timer [inicioData]="aberta.inicioData" />
+              @if (!execucaoAbertaEhMinha()) {
+                <span class="atividade-detalhe__faixa-dica">Em execução por {{ aberta.nomeUsuario }}</span>
+              }
+            </div>
+            <p class="atividade-detalhe__faixa-descricao">{{ aberta.descricao || 'Sem descrição' }}</p>
+            <p-button
+              icon="pi pi-pause"
+              label="Pausar"
+              [loading]="executando()"
+              (onClick)="pausarExecucao(aberta)"
+            />
+          </section>
+        }
+      }
+      @case ('livre') {
+        <section class="atividade-detalhe__faixa" aria-label="Iniciar execução">
+          <div class="atividade-detalhe__faixa-campo">
+            <label for="faixa-descricao" class="atividade-detalhe__status-label">
+              O que você vai fazer?{{ descricaoObrigatoria() ? '' : ' (opcional)' }}
+            </label>
+            <input
+              id="faixa-descricao"
+              pInputText
+              type="text"
+              appBloquearCaracteresProibidos
+              spellcheck="true"
+              autocomplete="off"
+              [formControl]="descricaoInicio"
+              placeholder="Descreva e tecle Enter para iniciar"
+              class="w-full"
+              (keydown.enter)="iniciarExecucao()"
+            />
+            @if (descricaoInicio.touched && descricaoInicio.invalid) {
+              <small class="atividade-detalhe__erro">{{ mensagemCaracteresProibidos }}</small>
+            } @else if (descricaoInicio.touched && descricaoObrigatoria() && !descricaoInicio.value.trim()) {
+              <small class="atividade-detalhe__erro">Informe o que será feito</small>
+            }
+            @if (ultimaDescricao(); as ultima) {
+              <button type="button" class="atividade-detalhe__reutilizar" (click)="reutilizarUltimaDescricao()">
+                <i class="pi pi-replay" aria-hidden="true"></i> Reutilizar última: <span>{{ ultima }}</span>
+              </button>
+            }
+          </div>
+          <p-button icon="pi pi-play" label="Iniciar" [loading]="executando()" (onClick)="iniciarExecucao()" />
+        </section>
+      }
+      @case ('outra') {
+        @if (minhaExecucaoEmOutra(); as outra) {
+          <section class="atividade-detalhe__faixa atividade-detalhe__faixa--aviso" aria-label="Execução em outra atividade">
+            <div class="atividade-detalhe__faixa-campo">
+              <p class="atividade-detalhe__faixa-aviso">
+                <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+                Você já está executando outra atividade:
+                <a [routerLink]="['/atividade', outra.atividadeId]">ver atividade</a>
+              </p>
+              <input
+                pInputText
+                type="text"
+                appBloquearCaracteresProibidos
+                spellcheck="true"
+                autocomplete="off"
+                [formControl]="descricaoInicio"
+                [placeholder]="'O que você vai fazer aqui?' + (descricaoObrigatoria() ? '' : ' (opcional)')"
+                class="w-full"
+                (keydown.enter)="pausarLaEIniciarAqui()"
+              />
+              @if (descricaoInicio.touched && descricaoObrigatoria() && !descricaoInicio.value.trim()) {
+                <small class="atividade-detalhe__erro">Informe o que será feito</small>
+              }
+            </div>
+            <p-button icon="pi pi-sync" label="Pausar lá e iniciar aqui" [loading]="executando()" (onClick)="pausarLaEIniciarAqui()" />
+          </section>
+        }
+      }
+      @case ('bloqueada') {
+        <section class="atividade-detalhe__faixa atividade-detalhe__faixa--bloqueada" aria-label="Execução indisponível">
+          <p class="atividade-detalhe__faixa-aviso">
+            <i class="pi pi-info-circle" aria-hidden="true"></i>
+            Só é possível executar atividades Planejadas ou Desenvolvendo. Mude o status para começar.
+          </p>
+        </section>
+      }
+    }
+
     <div class="atividade-detalhe__conteudo">
       <section class="atividade-detalhe__bloco">
         <div class="atividade-detalhe__bloco-cabecalho">
           <h2 class="atividade-detalhe__bloco-titulo">Tags</h2>
-          @if (sessao.eGestor()) {
-            <p-button
-              icon="pi pi-tags"
-              [text]="true"
-              size="small"
-              label="Editar"
-              (onClick)="abrirDialogTags()"
-            />
-          }
         </div>
-        <div class="atividade-detalhe__tags">
-          @for (tag of tagsDaAtividade(); track tag.id) {
-            <span
-              class="atividade-detalhe__chip"
-              [style.background-color]="tag.cor + '22'"
-              [style.color]="tag.cor"
-              [style.border-color]="tag.cor + '55'"
-            >{{ tag.nome }}</span>
-          } @empty {
-            <span class="text-muted-color">Nenhuma tag atribuída.</span>
-          }
-        </div>
+        @if (podeAgir()) {
+          <button
+            #celulaTags
+            type="button"
+            class="atividade-detalhe__tags atividade-detalhe__tags--editavel"
+            pTooltip="Editar tags"
+            tooltipPosition="top"
+            (click)="abrirTags($event, celulaTags)"
+          >
+            @for (tag of tagsDaAtividade(); track tag.id) {
+              <span
+                class="atividade-detalhe__chip"
+                [style.background-color]="tag.cor + '22'"
+                [style.color]="tag.cor"
+                [style.border-color]="tag.cor + '55'"
+              >{{ tag.nome }}</span>
+            } @empty {
+              <span class="text-muted-color"><i class="pi pi-plus" aria-hidden="true"></i> Adicionar tag</span>
+            }
+          </button>
+        } @else {
+          <div class="atividade-detalhe__tags">
+            @for (tag of tagsDaAtividade(); track tag.id) {
+              <span
+                class="atividade-detalhe__chip"
+                [style.background-color]="tag.cor + '22'"
+                [style.color]="tag.cor"
+                [style.border-color]="tag.cor + '55'"
+              >{{ tag.nome }}</span>
+            } @empty {
+              <span class="text-muted-color">Nenhuma tag atribuída.</span>
+            }
+          </div>
+        }
       </section>
 
       <section class="atividade-detalhe__bloco">
         <div class="atividade-detalhe__bloco-cabecalho">
           <h2 class="atividade-detalhe__bloco-titulo">Execuções recentes</h2>
-          <p-button
-            icon="pi pi-play"
-            size="small"
-            label="Iniciar Execução"
-            (onClick)="abrirDialogExecucao()"
-          />
+          @if (sessao.eGestor()) {
+            <p-button icon="pi pi-plus" size="small" [outlined]="true" label="Registrar tempo" (onClick)="abrirRegistro()" />
+          }
         </div>
 
         @if (execucoesRecentes().length) {
           <ul class="atividade-detalhe__execucoes">
             @for (execucao of execucoesRecentes(); track execucao.id) {
-              <li class="atividade-detalhe__execucao">
+              <li class="atividade-detalhe__execucao" [class.atividade-detalhe__execucao--ativa]="execucao.fimData === null">
+                <span class="atividade-detalhe__avatar" [pTooltip]="execucao.nomeUsuario" tooltipPosition="top">
+                  {{ iniciaisDe(execucao.nomeUsuario) }}
+                </span>
                 <div class="atividade-detalhe__execucao-info">
-                  <span class="atividade-detalhe__execucao-descricao">{{ execucao.descricao }}</span>
+                  <span class="atividade-detalhe__execucao-descricao">{{ execucao.descricao || 'Sem descrição' }}</span>
                   <span class="atividade-detalhe__execucao-data text-muted-color">
-                    {{ execucao.inicioData | dataBrasileira }}
-                    @if (execucao.duracaoMinutos !== null) {
-                      · {{ execucao.duracaoMinutos }} min
-                    } @else {
-                      · em andamento
-                    }
+                    {{ intervaloDaExecucao(execucao.inicioData, execucao.fimData) }}
                   </span>
                 </div>
                 @if (execucao.fimData === null) {
-                  <p-tag value="Em andamento" severity="info" />
+                  <app-execucao-timer [inicioData]="execucao.inicioData" tamanho="compacto" />
+                  @if (podeAgir()) {
+                    <p-button
+                      icon="pi pi-pause"
+                      [rounded]="true"
+                      [text]="true"
+                      size="small"
+                      ariaLabel="Pausar execução"
+                      pTooltip="Pausar"
+                      tooltipPosition="left"
+                      [loading]="executando()"
+                      (onClick)="pausarExecucao(execucao)"
+                    />
+                  }
+                } @else {
+                  <span class="atividade-detalhe__execucao-duracao">{{ execucao.duracaoMinutos | minutosParagHoras }}</span>
                 }
               </li>
             }
@@ -127,80 +250,29 @@
             />
           </div>
         } @else {
-          <p class="text-muted-color">Nenhuma execução registrada ainda.</p>
+          <div class="atividade-detalhe__vazio-bloco">
+            <p class="text-muted-color">Nenhuma execução registrada ainda.</p>
+            @if (estadoFaixa() === 'livre') {
+              <p-button icon="pi pi-play" size="small" label="Iniciar primeira execução" (onClick)="iniciarExecucao()" />
+            }
+          </div>
         }
       </section>
     </div>
-  } @else if (!carregando()) {
+  } @else {
     <div class="atividade-detalhe__vazio">
       <i class="pi pi-exclamation-circle text-4xl text-muted-color"></i>
       <p class="text-muted-color mt-3">Atividade não encontrada.</p>
+      <p-button label="Voltar para Atividades" icon="pi pi-arrow-left" [outlined]="true" routerLink="/atividade" />
     </div>
   }
 </div>
 
-<!-- Dialog: editar tags -->
-<p-dialog
-  [visible]="mostrarDialogTags()"
-  (visibleChange)="mostrarDialogTags.set($event)"
-  header="Editar tags"
-  dialogFormulario
-  [dialogBloqueado]="carregandoTags()"
-  (dialogEnviar)="salvarTags()"
-  [modal]="true"
-  [style]="{ width: '32rem' }"
-  [draggable]="false"
->
-  <form [formGroup]="formularioTags" class="atividade-detalhe__dialog-form">
-    <p-multiSelect
-      [options]="tagsDisponiveis()"
-      formControlName="tagIds"
-      optionLabel="nome"
-      optionValue="id"
-      placeholder="Selecione as tags"
-      display="chip"
-      class="w-full"
-    />
-  </form>
-  <ng-template pTemplate="footer">
-    <app-dialog-dica-atalhos />
-    <p-button label="Cancelar" severity="secondary" [outlined]="true" (onClick)="mostrarDialogTags.set(false)" />
-    <p-button label="Salvar" icon="pi pi-check" [loading]="carregandoTags()" (onClick)="salvarTags()" />
-  </ng-template>
-</p-dialog>
+<app-atividade-tags-popover
+  #tagsPopover
+  titulo="Tags da atividade"
+  [tags]="tagsDisponiveis()"
+  (salvar)="salvarTags($event)"
+/>
 
-<!-- Dialog: iniciar execução -->
-<p-dialog
-  [visible]="mostrarDialogExecucao()"
-  (visibleChange)="mostrarDialogExecucao.set($event)"
-  header="Iniciar execução"
-  dialogFormulario
-  [dialogBloqueado]="carregandoExecucao()"
-  (dialogEnviar)="iniciarExecucao()"
-  [modal]="true"
-  [style]="{ width: '36rem' }"
-  [draggable]="false"
->
-  <form [formGroup]="formularioExecucao" class="atividade-detalhe__dialog-form">
-    <label for="execucao-descricao" class="atividade-detalhe__status-label">
-      O que será executado?
-    </label>
-    <textarea
-      id="execucao-descricao"
-      pTextarea
-      spellcheck="true"
-      formControlName="descricao"
-      rows="4"
-      placeholder="Descreva o que será feito nesta execução..."
-      class="w-full"
-    ></textarea>
-    @if (formularioExecucao.controls.descricao.invalid && formularioExecucao.controls.descricao.touched) {
-      <small class="atividade-detalhe__erro">A descrição da execução é obrigatória</small>
-    }
-  </form>
-  <ng-template pTemplate="footer">
-    <app-dialog-dica-atalhos [comTextarea]="true" />
-    <p-button label="Cancelar" severity="secondary" [outlined]="true" (onClick)="mostrarDialogExecucao.set(false)" />
-    <p-button label="Iniciar" icon="pi pi-play" [loading]="carregandoExecucao()" (onClick)="iniciarExecucao()" />
-  </ng-template>
-</p-dialog>
+<app-execucao-registro-dialog #registroDialog (registrado)="aoRegistrarTempo()" />

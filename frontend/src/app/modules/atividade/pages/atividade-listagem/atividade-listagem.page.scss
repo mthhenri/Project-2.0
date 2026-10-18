@@ -372,10 +372,6 @@
     background: color-mix(in srgb, var(--p-primary-color) 8%, transparent);
   }
 
-  &__contexto--dialog {
-    margin: 0 0 0.25rem;
-  }
-
   // "Usar" numa execução anterior: discreto até o mouse passar na linha.
   &__usar-descricao {
     flex-shrink: 0;
