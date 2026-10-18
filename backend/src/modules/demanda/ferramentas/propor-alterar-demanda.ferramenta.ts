@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ProporAlterarDemandaDto, PropostaAlterarDemandaDadosDto, TipoDemandaStatusEnum, TipoPropostaIaEnum } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
+import { dataDoBancoComoTexto } from '../../../core/utils/data-do-banco';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { FerramentaPropostaIa } from '../../ferramenta-ia/ferramentas/ferramenta-proposta-ia';
 import { ProjetoService } from '../../projeto/services/projeto.service';
@@ -39,7 +40,8 @@ export class ProporAlterarDemandaFerramenta extends FerramentaPropostaIa<ProporA
     const demanda = (await this.demandaService.recuperar({ id: entrada.demandaId }, usuarioAtivo)).dados;
     if (!demanda) throw new BusinessException('Demanda não encontrada');
 
-    const previsaoAtual = demanda.previsaoFimData ? String(demanda.previsaoFimData).slice(0, 10) : null;
+    // `previsao_fim_data` é DATE: o pg a entrega como Date, não como texto.
+    const previsaoAtual = dataDoBancoComoTexto(demanda.previsaoFimData);
     const muda = {
       nome: entrada.nome !== undefined && entrada.nome !== demanda.nome,
       status: entrada.status !== undefined && entrada.status !== demanda.status,

@@ -23,6 +23,9 @@ const USUARIOS: Record<number, { nomeCompleto: string; cargoTitulo: string; tipo
   10: { nomeCompleto: 'Caio Inativo', cargoTitulo: 'Dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR, status: TipoUsuarioStatusEnum.INATIVO },
 };
 
+/** `UsuarioService` que lê a tabela de usuários do teste (o executor confere o tipo e a situação do alvo). */
+const usuarioServiceDoTeste = { recuperar: async ({ id }: { id: number }) => ({ dados: USUARIOS[id] ? { id, ...USUARIOS[id] } : { id, nomeCompleto: 'Caio Novo', cargoTitulo: 'Dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR, status: TipoUsuarioStatusEnum.ATIVO } }) } as unknown as UsuarioService;
+
 /** `DemandaService` em memória: a demanda 4 com os membros informados e o registro das chamadas. */
 function criarServico(membrosIniciais: number[]) {
   const membros = new Set(membrosIniciais);
@@ -70,7 +73,7 @@ test('propor recusa gestor, usuário inativo, já membro, não membro e o últim
 
 test('executar adiciona e remove pela service e desfazer faz a ação inversa', async () => {
   const { servico, chamadas, membros } = criarServico([7, 8]);
-  const executor = new AtribuirMembroExecutor(servico);
+  const executor = new AtribuirMembroExecutor(servico, usuarioServiceDoTeste);
   const adicionado = await executor.executar({ demandaId: 4, usuarioId: 11, acao: 'ADICIONAR' }, GESTOR);
   assert.ok(membros.has(11));
   await executor.desfazer(adicionado, GESTOR);
@@ -84,7 +87,7 @@ test('executar adiciona e remove pela service e desfazer faz a ação inversa', 
 
 test('desfazer é recusado se o estado mudou depois', async () => {
   const { servico, chamadas, membros } = criarServico([7]);
-  const executor = new AtribuirMembroExecutor(servico);
+  const executor = new AtribuirMembroExecutor(servico, usuarioServiceDoTeste);
   const resultado = await executor.executar({ demandaId: 4, usuarioId: 8, acao: 'ADICIONAR' }, GESTOR);
   membros.delete(8);
   chamadas.length = 0;
@@ -113,7 +116,7 @@ test('o gestor sem informar a pessoa é recusado (ele mesmo é gestor e não ent
 
 test('o executor do desenvolvedor usa ele mesmo quando o usuarioId não veio, e a service confere o resto', async () => {
   const { servico, chamadas, membros } = criarServico([8]);
-  const executor = new AtribuirMembroExecutor(servico);
+  const executor = new AtribuirMembroExecutor(servico, usuarioServiceDoTeste);
   const resultado = await executor.executar({ demandaId: 4, acao: 'ADICIONAR' }, DESENVOLVEDOR);
   assert.ok(membros.has(7));
   assert.equal(resultado['usuarioId'], 7);
@@ -125,11 +128,21 @@ test('o executor do desenvolvedor usa ele mesmo quando o usuarioId não veio, e 
 
 test('validar confere os dados; obsoleta quando a pessoa já está como a proposta pede', async () => {
   const { servico } = criarServico([7]);
-  const executor = new AtribuirMembroExecutor(servico);
+  const executor = new AtribuirMembroExecutor(servico, usuarioServiceDoTeste);
   assert.doesNotThrow(() => executor.validar({ demandaId: 4, usuarioId: 8, acao: 'ADICIONAR', usuarioNome: 'Ana' }));
   assert.throws(() => executor.validar({ demandaId: 4, usuarioId: 8, acao: 'EXCLUIR' }), BusinessException);
   assert.throws(() => executor.validar({ demandaId: 4, usuarioId: 8, acao: 'ADICIONAR', senha: 'x' }), BusinessException);
   assert.equal(await executor.estaObsoleta({ demandaId: 4, usuarioId: 7, acao: 'ADICIONAR' }, GESTOR), true);
   assert.equal(await executor.estaObsoleta({ demandaId: 4, usuarioId: 8, acao: 'ADICIONAR' }, GESTOR), false);
   assert.equal(await executor.estaObsoleta({ demandaId: 4, usuarioId: 8, acao: 'REMOVER' }, GESTOR), true);
+});
+
+test('o executor também recusa gestor e inativo como alvo (a rota de ajuste aceita dados alterados e a service não confere o tipo)', async () => {
+  const { servico, chamadas, membros } = criarServico([7]);
+  const executor = new AtribuirMembroExecutor(servico, usuarioServiceDoTeste);
+  await assert.rejects(executor.executar({ demandaId: 4, usuarioId: 9, acao: 'ADICIONAR' }, GESTOR), contem('é gestor'));
+  await assert.rejects(executor.executar({ demandaId: 4, usuarioId: 1, acao: 'ADICIONAR' }, GESTOR), contem('é gestor'));
+  await assert.rejects(executor.executar({ demandaId: 4, usuarioId: 10, acao: 'ADICIONAR' }, GESTOR), contem('inativo'));
+  assert.deepEqual(chamadas, []);
+  assert.ok(!membros.has(9) && !membros.has(1) && !membros.has(10));
 });

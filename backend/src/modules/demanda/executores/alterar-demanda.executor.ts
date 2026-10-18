@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PropostaAlterarDemandaDadosDto, TipoPropostaIaEnum } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
+import { dataDoBancoComoTexto } from '../../../core/utils/data-do-banco';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { ExecutorPropostaIa } from '../../proposta-ia/domain/executor-proposta-ia';
 import { validarDadosDaProposta } from '../../proposta-ia/domain/validar-dados-da-proposta';
@@ -8,7 +9,7 @@ import { validarNovoPaiDaDemanda } from '../domain/novo-pai-da-demanda';
 import { DemandaRepository } from '../repositories/demanda.repository';
 import { DemandaService } from '../services/demanda.service';
 
-const dia = (data: string | null | undefined): string | null => (data ? String(data).slice(0, 10) : null);
+const dia = (data: string | Date | null | undefined): string | null => dataDoBancoComoTexto(data);
 
 /**
  * Executor da proposta `ALTERAR_DEMANDA`: altera pela `DemandaService.alterar` com o usuário do token (valem o acesso e as demais
@@ -71,6 +72,10 @@ export class AlterarDemandaExecutor implements ExecutorPropostaIa {
     const atual = (await this.demandaService.recuperar({ id: demandaId }, usuarioAtivo)).dados;
     if (!atual) throw new BusinessException('Demanda não encontrada');
 
+    // Voltar ao topo da árvore (`demandaPaiId` nulo) a `DemandaService.alterar` não sabe fazer: trataria o nulo como um id. Recusa com clareza em vez de falhar no meio.
+    if (resultado['paiAnteriorId'] === null) {
+      throw new BusinessException('Esta demanda estava no topo da árvore e a IA não a devolve para lá: desfaça pela tela de Demandas.');
+    }
     const mudouDepois =
       (resultado['nome'] !== undefined && atual.nome !== resultado['nome']) ||
       (resultado['status'] !== undefined && atual.status !== resultado['status']) ||
@@ -88,9 +93,9 @@ export class AlterarDemandaExecutor implements ExecutorPropostaIa {
         ...(resultado['horasAnteriores'] !== undefined ? { horasEstimadas: resultado['horasAnteriores'] as number } : {}),
         // `null` limpa a previsão (a service e o repository aceitam); `undefined` deixaria como está.
         ...(resultado['previsaoAnteriorData'] !== undefined ? { previsaoFimData: resultado['previsaoAnteriorData'] as string | null } : {}),
-        // `null` limpa a documentação e devolve a demanda ao topo (a service e o repository aceitam; `undefined` deixaria como está).
+        // `null` limpa a documentação (o repository aceita; `undefined` deixaria como está).
         ...(resultado['documentacaoAnterior'] !== undefined ? { documentacao: resultado['documentacaoAnterior'] as string | null } : {}),
-        ...(resultado['paiAnteriorId'] !== undefined ? { demandaPaiId: resultado['paiAnteriorId'] as number | null } : {}),
+        ...(resultado['paiAnteriorId'] !== undefined ? { demandaPaiId: resultado['paiAnteriorId'] as number } : {}),
       },
       usuarioAtivo,
     );

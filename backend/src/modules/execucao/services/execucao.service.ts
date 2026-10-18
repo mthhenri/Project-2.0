@@ -16,6 +16,7 @@ import {
   ExecucaoRecuperarDto,
   ExecucaoAtivaDto,
   ExecucaoAtivaRecuperarDto,
+  ExecucaoSobreposicaoValidarDto,
   ExecucaoRegistrarDto,
   ExecucaoRegistradaDto,
   TipoUsuarioEnum,
@@ -242,6 +243,14 @@ export class ExecucaoService implements OnModuleInit {
       dados:    execucaoAtiva,
       mensagem: execucaoAtiva ? 'Execução ativa recuperada com sucesso' : 'Nenhuma execução ativa',
     };
+  }
+
+  /**
+   * Há execução do usuário que se sobreponha a este período (`ignorarExecucaoId` desconsidera a que está sendo reaberta ou corrigida)?
+   * Quem reabre ou corrige uma execução usa isto antes: `alterar` não confere sobreposição, e uma execução sem fim vale até "o infinito".
+   */
+  async existeSobreposicao(dto: ExecucaoSobreposicaoValidarDto): Promise<boolean> {
+    return this.execucaoRepositorio.validarSobreposicao(dto);
   }
 
   /**

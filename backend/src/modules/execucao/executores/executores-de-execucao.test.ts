@@ -58,6 +58,7 @@ function criarServico(inicial: Execucao[] = [], opcoes: { falharAoIniciar?: bool
   };
   // O executor lê a ativa do DONO da atividade; nos testes o dono é sempre o usuário do token.
   (servico as Record<string, unknown>)['recuperarAtivaDoUsuario'] = servico.recuperarAtiva;
+  (servico as Record<string, unknown>)['existeSobreposicao'] = async () => false;
   return { servico: servico as unknown as ExecucaoService, chamadas, execucoes };
 }
 

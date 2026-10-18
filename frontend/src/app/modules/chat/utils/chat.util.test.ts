@@ -86,6 +86,14 @@ test('depois de confirmar um cartão os botões seguem o que aconteceu, e o gest
   assert.deepEqual(sugestoesAposProposta(TipoPropostaIaEnum.INICIAR_EXECUCAO, StatusPropostaIaEnum.AJUSTADA, false), ['Pausar essa execução', 'Vou almoçar', 'Trocar para outra atividade']);
 });
 
+test('o desenvolvedor não recebe como próximo passo o que só o gestor consegue fazer', () => {
+  const soDoGestor = ['Marcar tags nessa demanda', 'Criar uma atividade para ele', 'Conectar essa demanda a outra', 'Descrever essa demanda', 'Marcar outra demanda', 'Registrar o horário dessa atividade', 'Quanto tempo o projeto consumiu este mês?'];
+  for (const tipo of Object.values(TipoPropostaIaEnum)) {
+    const dev = sugestoesAposProposta(tipo, StatusPropostaIaEnum.CONFIRMADA, false);
+    for (const botao of dev) assert.ok(!soDoGestor.includes(botao), `${tipo}: "${botao}" é do gestor`);
+  }
+});
+
 test('recusar, desfazer ou expirar não abrem próximo passo, e há no máximo quatro botões', () => {
   for (const status of [StatusPropostaIaEnum.EXPIRADA, StatusPropostaIaEnum.DESFEITA, StatusPropostaIaEnum.PENDENTE]) {
     assert.deepEqual(sugestoesAposProposta(TipoPropostaIaEnum.CRIAR_ATIVIDADE, status, true), []);

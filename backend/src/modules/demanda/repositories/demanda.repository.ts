@@ -609,10 +609,11 @@ export class DemandaRepository extends BaseRepository<Demanda> {
        FROM atividade
        INNER JOIN tipo_atividade_status
          ON tipo_atividade_status.id = atividade.tipo_atividade_status_id
+         AND tipo_atividade_status.is_deleted = false
        WHERE atividade.demanda_id = :demandaId
          AND atividade.is_deleted = false
-         AND tipo_atividade_status.codigo <> 'DESENVOLVIDA'`,
-      { demandaId: dto.id },
+         AND tipo_atividade_status.codigo <> :statusDesenvolvida`,
+      { demandaId: dto.id, statusDesenvolvida: 'DESENVOLVIDA' },
     );
     return resultado[0].total;
   }

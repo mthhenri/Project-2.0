@@ -12,6 +12,17 @@
 
 ---
 
+## 2026-10-18 — Revisão independente das tasks 164 a 170: 7 correções
+
+Subagente `revisor` (somente leitura, sem receber as conclusões, só problema, requisitos e o `git diff 1c55b8f..HEAD`). Achados e destino:
+
+- **Alto, corrigido:** `consultar_dias_nao_uteis` quebrava com qualquer dia cadastrado e a previsão da demanda era lida como `"Sun Nov 15"`: o `pg` devolve coluna `DATE` como **`Date`** (meia-noite local), não texto, e os testes usavam texto. Novo `dataDoBancoComoTexto` (`core/utils/data-do-banco.ts`, com teste) usado no calendário e em `ALTERAR_DEMANDA` (proposta, desfazer e obsoleta). **Lição:** mock de coluna `DATE` ou timestamp tem de ser `Date`, como o banco entrega; confirmado no banco de dev.
+- **Médio, corrigidos:** (a) desfazer mover de uma demanda que estava no **topo** falhava (a `DemandaService.alterar` não entende `demandaPaiId` nulo): agora recusa com mensagem clara e não altera nada; a service não foi mudada (mudaria a tela, decisão do autor); (b) o executor de `ATRIBUIR_MEMBRO` não recusava gestor/inativo como alvo (só a ferramenta recusava, e a rota de ajustar aceita dados alterados): agora confere; (c) desfazer correção de execução e desfazer pausa podiam **sobrepor** uma execução feita depois (horas em dobro no ponto): ambos conferem sobreposição (novo `ExecucaoService.existeSobreposicao`).
+- **Baixo, corrigidos:** botões de sugestão ofereciam ao desenvolvedor o que só o gestor faz (frases do prompt de sugestões e próximos passos por tipo de proposta, com teste que impede a regressão); `contarAtividadesEmAberto` passou a filtrar `is_deleted` do status e a usar parâmetro nomeado.
+- **Não corrigidos, de propósito:** desfazer mover não revalida ciclo se o pai antigo foi movido para dentro da demanda no meio-tempo (caso forçado; a própria tela já permite ciclos); desenvolvedor que saiu da demanda não marca tag nem corrige a própria execução pela IA (as leituras exigem ser membro, a service de tag deixa o autor): limitação, não falha; `contarAtividadesEmAberto` mora no repositório de demanda (convenção §16 #25 sobre onde contar atividades).
+- **Conferido sem problema (pelo revisor):** execução ativa pelo dono ao iniciar/pausar, `recuperarAtivaDoUsuario`, registro só gestor (ferramenta, executor e desfazer), tags de demanda negadas ao desenvolvedor, conjunto de tags e desfazer, ciclo/projeto/pai estrutural ao mover, fuso e horário de verão, `validarSobreposicao` com `ignorarExecucaoId`, `listar_usuarios` sem dado sensível, migrations 0039–0042, DTOs do `shared` com decorators suportados pelo bundle.
+- **Testes:** backend 508 (+7), frontend 42 (+1); builds passam; SQL conferido no banco de dev.
+
 ## 2026-10-18 — Task 170: IA edita a demanda a fundo, desenvolvedor participa/sai e marca tags — verificação visual pendente
 
 Escolha do autor depois do mapa de paridade tela × IA: editar demanda, desenvolvedor participar e sair de demandas e atribuir tags a demandas e atividades; **não** editar projeto nem criar tags. Sem migration nem tipo de proposta novo (reaproveita 167 e 168). Spec em `active/`.

@@ -1,6 +1,8 @@
-/** Um dia não útil cadastrado; os `recorrente` valem todo ano no mesmo mês e dia. */
+import { dataDoBancoComoTexto } from '../../../core/utils/data-do-banco';
+
+/** Um dia não útil cadastrado; os `recorrente` valem todo ano no mesmo mês e dia. `diaData` vem do banco como `Date` (coluna `DATE`). */
 export interface DiaNaoUtilCadastrado {
-  diaData: string;
+  diaData: string | Date;
   recorrente: boolean;
 }
 
@@ -14,7 +16,8 @@ export function ocorrenciasNoIntervalo<T extends DiaNaoUtilCadastrado>(
   const anoFim = Number(dataFim.slice(0, 4));
   const ocorrencias: { data: string; dia: T }[] = [];
   for (const dia of cadastrados) {
-    const cadastrado = dia.diaData.slice(0, 10);
+    const cadastrado = dataDoBancoComoTexto(dia.diaData);
+    if (!cadastrado) continue;
     if (!dia.recorrente) {
       if (cadastrado >= dataInicio && cadastrado <= dataFim) ocorrencias.push({ data: cadastrado, dia });
       continue;

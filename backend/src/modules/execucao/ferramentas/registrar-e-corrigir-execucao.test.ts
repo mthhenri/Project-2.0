@@ -158,6 +158,15 @@ test('corrigir: proposta velha (a execução mudou), sobreposição e desfazer i
   assert.equal(velha.chamadas.length + sobreposta.chamadas.length + mudada.chamadas.length, 0);
 });
 
+test('corrigir: desfazer que se sobreporia a uma execução feita depois é recusado, sem alterar', async () => {
+  const { servico, chamadas } = criarServicoDeExecucao(ANTES);
+  const ocupado = { validarSobreposicao: async () => true } as unknown as ExecucaoRepository;
+  const executor = new CorrigirExecucaoExecutor(servico, ocupado, atividadeService);
+  const resultado = { execucaoId: 5, inicioAnteriorData: NOVA_DADOS.inicioAnteriorData, fimAnteriorData: NOVA_DADOS.fimAnteriorData, descricaoAnterior: 'x', novoInicioData: ANTES.inicioData.toISOString(), novoFimData: ANTES.fimData!.toISOString(), descricaoNova: ANTES.descricao };
+  await assert.rejects(executor.desfazer(resultado, DESENVOLVEDOR), BusinessException);
+  assert.deepEqual(chamadas, []);
+});
+
 test('corrigir: obsoleta quando a execução já está como pedido ou já não está como a proposta a viu', async () => {
   const igual = criarServicoDeExecucao({ ...ANTES, fimData: new Date('2026-10-17T21:00:00Z') });
   assert.equal(await executorDeCorrecao(igual.servico).estaObsoleta(NOVA_DADOS, DESENVOLVEDOR), true);

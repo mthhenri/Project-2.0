@@ -72,13 +72,14 @@ export class CorrigirExecucaoExecutor implements ExecutorPropostaIa {
     if (mudouDepois) throw new BusinessException('A execução mudou depois desta correção: não dá para desfazer com segurança');
 
     const fimAnterior = (resultado['fimAnteriorData'] as string | null) ?? null;
-    // Voltar a "em andamento" só vale se o usuário não tem outra execução ativa agora (a service não confere).
-    if (fimAnterior === null) {
-      // De quem é a execução (o gestor corrige a de outra pessoa): é a ativa do dono que não pode existir.
-      const donoId = (await this.atividadeService.recuperar({ id: atual.atividadeId }, usuarioAtivo)).dados?.usuarioId ?? usuarioAtivo.sub;
-      if ((await this.execucaoService.recuperarAtivaDoUsuario({ usuarioId: donoId }, usuarioAtivo)).dados) {
-        throw new BusinessException('Há outra execução em andamento: a anterior não pôde ser reaberta');
-      }
+    // Devolver o período de antes não pode criar sobreposição com o que foi feito depois (as horas contariam em dobro no ponto); voltar a
+    // "em andamento" vale até o infinito, então qualquer execução posterior também bloqueia. Quem confere é o dono da execução.
+    const donoId = (await this.atividadeService.recuperar({ id: atual.atividadeId }, usuarioAtivo)).dados?.usuarioId ?? usuarioAtivo.sub;
+    if (fimAnterior === null && (await this.execucaoService.recuperarAtivaDoUsuario({ usuarioId: donoId }, usuarioAtivo)).dados) {
+      throw new BusinessException('Há outra execução em andamento: a anterior não pôde ser reaberta');
+    }
+    if (await this.execucaoRepositorio.validarSobreposicao({ usuarioId: donoId, inicioData: new Date(resultado['inicioAnteriorData'] as string), fimData: fimAnterior ? new Date(fimAnterior) : INFINITO, ignorarExecucaoId: execucaoId })) {
+      throw new BusinessException('Há outra execução neste período: devolver o horário de antes se sobreporia a ela');
     }
     await this.execucaoService.alterar(
       { id: execucaoId, descricao: String(resultado['descricaoAnterior'] ?? ''), inicioData: resultado['inicioAnteriorData'] as string, fimData: fimAnterior },

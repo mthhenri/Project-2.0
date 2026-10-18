@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { PropostaAtribuirMembroDadosDto, TipoPropostaIaEnum } from '@project20/shared';
+import { PropostaAtribuirMembroDadosDto, TipoPropostaIaEnum, TipoUsuarioStatusEnum, temPermissaoDeGestor } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { ExecutorPropostaIa } from '../../proposta-ia/domain/executor-proposta-ia';
 import { validarDadosDaProposta } from '../../proposta-ia/domain/validar-dados-da-proposta';
+import { UsuarioService } from '../../usuario/services/usuario.service';
 import { DemandaService } from '../services/demanda.service';
 
 /**
@@ -15,7 +16,10 @@ import { DemandaService } from '../services/demanda.service';
 export class AtribuirMembroExecutor implements ExecutorPropostaIa {
   readonly tipo = TipoPropostaIaEnum.ATRIBUIR_MEMBRO;
 
-  constructor(private readonly demandaService: DemandaService) {}
+  constructor(
+    private readonly demandaService: DemandaService,
+    private readonly usuarioService: UsuarioService,
+  ) {}
 
   validar(dados: Record<string, unknown>): void {
     validarDadosDaProposta(PropostaAtribuirMembroDadosDto, dados);
@@ -24,8 +28,17 @@ export class AtribuirMembroExecutor implements ExecutorPropostaIa {
   async executar(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
     const entrada = validarDadosDaProposta(PropostaAtribuirMembroDadosDto, dados);
     const alvo = { demandaId: entrada.demandaId, usuarioId: entrada.usuarioId ?? usuarioAtivo.sub };
-    if (entrada.acao === 'ADICIONAR') await this.demandaService.atribuirMembro(alvo, usuarioAtivo);
-    else await this.demandaService.removerMembro(alvo, usuarioAtivo);
+    if (entrada.acao === 'ADICIONAR') {
+      // A `DemandaService.atribuirMembro` não confere o tipo do alvo, e a rota de ajuste aceita dados alterados: a regra "gestor não entra em
+      // `demanda_usuario`" vale aqui também, não só na ferramenta que propôs.
+      const dono = (await this.usuarioService.recuperar({ id: alvo.usuarioId }, usuarioAtivo)).dados;
+      if (!dono) throw new BusinessException('Usuário não encontrado');
+      if (temPermissaoDeGestor(dono.tipo)) throw new BusinessException(`${dono.nomeCompleto} é gestor: gestores têm acesso por tipo e não são atribuídos como membros`);
+      if (dono.status !== TipoUsuarioStatusEnum.ATIVO) throw new BusinessException(`${dono.nomeCompleto} está inativo e não pode ser atribuído`);
+      await this.demandaService.atribuirMembro(alvo, usuarioAtivo);
+    } else {
+      await this.demandaService.removerMembro(alvo, usuarioAtivo);
+    }
     return { ...alvo, acao: entrada.acao };
   }
 

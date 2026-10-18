@@ -18,6 +18,12 @@ test('os recorrentes valem em todo ano do intervalo e os fixos só na própria d
   assert.deepEqual(resultado.map((item) => item.data), ['2026-10-12', '2026-12-25', '2027-01-01']);
 });
 
+test('o DATE do banco chega como Date e vira a data certa (o pg não devolve texto)', () => {
+  const doBanco = [{ ...NATAL, diaData: new Date(2020, 11, 25) }, { ...RECESSO, diaData: new Date(2026, 9, 12) }];
+  const resultado = ocorrenciasNoIntervalo(doBanco, '2026-10-01', '2026-12-31');
+  assert.deepEqual(resultado.map((item) => item.data), ['2026-10-12', '2026-12-25']);
+});
+
 test('intervalo sem ocorrência devolve vazio e as bordas do intervalo contam', () => {
   assert.deepEqual(ocorrenciasNoIntervalo([NATAL], '2026-01-01', '2026-06-30'), []);
   assert.equal(ocorrenciasNoIntervalo([NATAL], '2026-12-25', '2026-12-25').length, 1);

@@ -159,16 +159,41 @@ test('propor mover para o pai que já é o atual não é mudança', async () => 
   await assert.rejects(ferramenta.executar({ demandaId: 4, demandaPaiId: 20 }, GESTOR), BusinessException);
 });
 
-test('executar mover confere o ciclo de novo; confirmar e desfazer devolvem o pai de antes, inclusive o topo', async () => {
-  const { servico, demanda, alteracoes } = criarServico();
+test('executar mover confere o ciclo de novo; desfazer devolve o pai de antes', async () => {
+  const { servico, demanda, alteracoes } = criarServico({ ...INICIAL, demandaPaiId: 21 });
   const executor = new AlterarDemandaExecutor(servico, repositorioDeDemanda as never);
   await assert.rejects(executor.executar({ demandaId: 4, demandaPaiId: 30 }, GESTOR), BusinessException);
   assert.deepEqual(alteracoes, []);
   const resultado = await executor.executar({ demandaId: 4, demandaPaiId: 20 }, GESTOR);
   assert.equal(demanda.demandaPaiId, 20);
-  assert.equal(resultado['paiAnteriorId'], null);
+  assert.equal(resultado['paiAnteriorId'], 21);
   await executor.desfazer(resultado, GESTOR);
-  assert.equal(demanda.demandaPaiId, null);
+  assert.equal(demanda.demandaPaiId, 21);
+});
+
+test('desfazer mover de quem estava no topo é recusado com clareza (a service não sabe devolver ao topo) e não altera nada', async () => {
+  const { servico, demanda, alteracoes } = criarServico();
+  const executor = new AlterarDemandaExecutor(servico, repositorioDeDemanda as never);
+  const resultado = await executor.executar({ demandaId: 4, demandaPaiId: 20 }, GESTOR);
+  alteracoes.length = 0;
+  await assert.rejects(executor.desfazer(resultado, GESTOR), contem('topo da árvore'));
+  assert.deepEqual(alteracoes, []);
+  assert.equal(demanda.demandaPaiId, 20);
+});
+
+test('a previsão que o pg devolve como Date é lida como o dia certo, na proposta e no desfazer', async () => {
+  const { ferramenta, propostas } = criarFerramenta(0, { ...INICIAL, previsaoFimData: new Date(2026, 10, 15) as never });
+  await ferramenta.executar({ demandaId: 4, previsaoFimData: '2026-11-30' }, GESTOR);
+  assert.equal(propostas[0].dados['previsaoAnteriorData'], '2026-11-15');
+  await assert.rejects(ferramenta.executar({ demandaId: 4, previsaoFimData: '2026-11-15' }, GESTOR), BusinessException);
+
+  const { servico, demanda } = criarServico({ ...INICIAL, previsaoFimData: new Date(2026, 10, 15) as never });
+  const executor = new AlterarDemandaExecutor(servico, repositorioDeDemanda as never);
+  const resultado = await executor.executar({ demandaId: 4, previsaoFimData: '2026-11-30' }, GESTOR);
+  assert.equal(resultado['previsaoAnteriorData'], '2026-11-15');
+  demanda.previsaoFimData = new Date(2026, 10, 30) as never;
+  await executor.desfazer(resultado, GESTOR);
+  assert.equal(demanda.previsaoFimData, '2026-11-15');
 });
 
 test('propor acrescentar documentação guarda o texto acrescentado; o executor o junta ao que existe e o desfazer devolve o anterior', async () => {
