@@ -1,0 +1,10 @@
+@if (visivel()) {
+  <div class="checkin-janelinha" role="presentation">
+    <div class="checkin-janelinha__caixa" role="dialog" aria-modal="true" aria-label="Hora do check-in">
+      <!-- Carregada só quando o check-in dispara: fora do pacote inicial do layout. -->
+      @defer (on immediate) {
+        <app-checkin-page [embutido]="true" (encerrado)="aoEncerrar()" />
+      }
+    </div>
+  </div>
+}

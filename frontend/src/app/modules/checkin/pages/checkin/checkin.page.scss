@@ -2,6 +2,11 @@
   display: block;
   height: 100vh;
   background: var(--app-surface-50);
+
+  // Dentro do diálogo do Project: ocupa só o espaço dele.
+  &.checkin-embutido {
+    height: 100%;
+  }
 }
 
 .checkin {

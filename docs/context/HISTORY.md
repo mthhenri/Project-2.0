@@ -12,6 +12,18 @@
 
 ---
 
+## 2026-10-18 — Task 161: horário do check-in no backend e janelinha dentro do Project
+
+Spec em `docs/specs/done/161-checkin-horario-no-backend-e-no-project.spec.md`. Muda a premissa do V1, em que o timer vivia no Electron.
+
+- **Backend:** `CheckinAgendaService` (em memória, por usuário, como a suspensão) guarda o resultado de `calcularAgenda`, função pura: sem execução ou com check-ins suspensos não há horário; a mesma execução mantém o horário sorteado; execução nova ou volta da reunião sorteiam de novo, contando do **início da execução ou da volta**, o que vier depois (por isso nunca cai logo depois de um início). `CheckinSuspensaoService.ultimaRetomada` guarda a volta. `GET /checkin/situacao` ganhou `proximoCheckinData` e `disparado`. O sorteio é em segundos entre mínimo e máximo; máximo menor que o mínimo vale o mínimo.
+- **Frontend:** `CheckinPage` virou também a janelinha (inputs `embutido` e output `encerrado`; embutida não leva os toasts e some sozinha 2,5 s depois de registrar). `app-checkin-janelinha` fica no `LayoutComponent`: confere a situação a cada 20 s, ao voltar para a aba e no instante sorteado, e mostra a página num diálogo central (34 × 40 rem no máximo) com o fundo escurecido, sem fechar. Fica **abaixo dos overlays do PrimeNG** (z-index 900) para o seletor do "Ajustar" e os toasts aparecerem por cima. Carregada por `@defer`, porque importar a página no layout estourava o orçamento do pacote inicial.
+- **Com a IA desligada ou fora do ar** a janelinha não aparece (não travar o usuário sem conversa possível); o fallback completo é a 157.
+- **Testes:** backend 344 (+12: agenda pura e situação), frontend 32 (+3), builds passam; sem lint (P-001).
+- **Verificado ao vivo** (IA real, gestor): uma execução de teste iniciada agora não disparou (horário 63 min adiante); com o início voltado 3 h e o backend reiniciado, a janelinha apareceu sozinha em `/atividade` com a tela escurecida e o selo "3h00 acima do recomendado", com os toasts só do layout (um `p-toast`); "Vou entrar numa reunião" gerou o cartão de suspensão **dentro** da janelinha e confirmar levou ao estado "Check-ins suspensos", e "Fechar" tirou o diálogo; depois de retomar (proposta confirmada) o horário foi de agora + 48 min, e não do início da execução. A execução de teste foi excluída. As mensagens `CHECKIN` desta verificação ficaram no OpenSearch.
+- **Não verificado:** 1366×768, 1080×1920 e tema escuro, o diálogo no navegador e no Project Desktop real, dois lugares abertos ao mesmo tempo, o "Fechar" depois de registrado (testado só o de suspenso; mesma saída) e o comportamento com a IA fora do ar na tela.
+- **Achado:** `PUT /execucao/:id` com outro `inicioData` não muda o horário já sorteado (a execução é a mesma), então testar um check-in "atrasado" exige reiniciar o backend ou iniciar a execução com antecedência.
+
 ## 2026-10-18 — Task 152: Project Desktop, casca e bandeja
 
 Spec em `docs/specs/done/152-desktop-casca-e-bandeja.spec.md`.

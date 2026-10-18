@@ -152,6 +152,8 @@
     }
   </main>
 
-  <p-toast position="bottom-right" />
-  <app-toast-desfazer />
+  @if (!embutido()) {
+    <p-toast position="bottom-right" />
+    <app-toast-desfazer />
+  }
 </div>

@@ -7,7 +7,9 @@ import { ChatService } from '../../chat/services/chat.service';
 import { ConfiguracaoIaService } from '../../configuracao-ia/services/configuracao-ia.service';
 import { recuperarExecucaoAtivaDetalhada } from '../../execucao/domain/execucao-ativa-detalhada';
 import { ExecucaoService } from '../../execucao/services/execucao.service';
+import { checkinDisparado } from '../domain/agenda-do-checkin';
 import { montarContextoDoCheckin } from '../domain/contexto-do-checkin';
+import { CheckinAgendaService } from './checkin-agenda.service';
 import { CheckinSuspensaoService } from './checkin-suspensao.service';
 
 /**
@@ -23,6 +25,7 @@ export class CheckinService {
     private readonly checkinSuspensaoService: CheckinSuspensaoService,
     private readonly chatService: ChatService,
     private readonly configService: ConfigService,
+    private readonly checkinAgendaService: CheckinAgendaService,
   ) {}
 
   async consultarSituacao(usuarioAtivo: JwtPayload): Promise<StandardResponse<CheckinSituacaoConsultadaDto>> {
@@ -52,7 +55,17 @@ export class CheckinService {
   private async montarSituacao(usuarioAtivo: JwtPayload): Promise<CheckinSituacaoConsultadaDto> {
     const configuracao = await this.configuracaoIaService.obterAtiva();
     const ativa = await recuperarExecucaoAtivaDetalhada(this.execucaoService, usuarioAtivo);
-    const minutos = ativa ? Math.max(0, Math.round((this.agora().getTime() - ativa.inicioData.getTime()) / 60_000)) : 0;
+    const agora = this.agora();
+    const minutos = ativa ? Math.max(0, Math.round((agora.getTime() - ativa.inicioData.getTime()) / 60_000)) : 0;
+    const suspensao = this.checkinSuspensaoService.consultar(usuarioAtivo.sub);
+    const agenda = this.checkinAgendaService.atualizar(usuarioAtivo.sub, {
+      execucao: ativa ? { id: ativa.id, inicio: ativa.inicioData } : null,
+      suspenso: suspensao.suspenso,
+      retomadaEm: this.checkinSuspensaoService.ultimaRetomada(usuarioAtivo.sub),
+      agora,
+      minimoMinutos: configuracao.checkinMinimoMinutos,
+      maximoMinutos: configuracao.checkinMaximoMinutos,
+    });
     return {
       haCheckin: ativa !== null,
       execucao: ativa
@@ -66,12 +79,14 @@ export class CheckinService {
             minutos,
           }
         : null,
-      suspensao: this.checkinSuspensaoService.consultar(usuarioAtivo.sub),
+      suspensao,
       checkinMinimoMinutos: configuracao.checkinMinimoMinutos,
       checkinMaximoMinutos: configuracao.checkinMaximoMinutos,
       duracaoRecomendadaMinutos: configuracao.duracaoRecomendadaMinutos,
       rigorProporcional: configuracao.rigorProporcional,
       acimaDoRecomendado: ativa !== null && minutos > configuracao.duracaoRecomendadaMinutos,
+      proximoCheckinData: agenda?.proximoEm ?? null,
+      disparado: checkinDisparado(agenda, agora),
     };
   }
 

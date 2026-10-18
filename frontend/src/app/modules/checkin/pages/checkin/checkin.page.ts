@@ -1,4 +1,4 @@
-import { Component, DestroyRef, ElementRef, OnInit, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
+import { Component, DestroyRef, ElementRef, OnInit, computed, effect, inject, input, output, signal, untracked, viewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -22,6 +22,8 @@ import { EstadoDoCheckin, decidirEstado } from '../../utils/checkin.util';
 const INTERVALO_DA_SITUACAO_MS = 3000;
 /** Quanto a janela espera, sem execução em andamento, antes de se fechar sozinha. */
 const ESPERA_PARA_FECHAR_MS = 5000;
+/** Dentro do Project, depois de registrar, quanto a janelinha espera antes de sumir sozinha. */
+const ESPERA_PARA_SUMIR_REGISTRADO_MS = 2500;
 const CAMINHO_DA_CONVERSA = '/checkin/mensagem';
 const SUGESTOES = ['Terminei o que estava fazendo', 'Vou trocar de atividade', 'Vou entrar numa reunião'];
 
@@ -43,6 +45,9 @@ interface RespostaAoVivo {
  * com a duração (e o selo de rigor acima do recomendado), conversa com a IA com streaming e mostra a proposta de descrição para o
  * desenvolvedor confirmar. Só fecha quando a descrição é registrada ou os check-ins são suspensos (reunião). Análogo visual: a tela do
  * Chat (task 139), de onde vêm os balões, o campo de entrada e o cartão de proposta.
+ *
+ * Também é a janelinha do check-in **dentro do Project** (task 161): com `embutido` ela preenche o espaço do diálogo central, não leva
+ * os toasts (o layout já tem os dele) e avisa `encerrado` em vez de fechar a janela.
  */
 @Component({
   selector: 'app-checkin-page',
@@ -50,6 +55,7 @@ interface RespostaAoVivo {
   imports: [ReactiveFormsModule, ButtonModule, SkeletonModule, TextareaModule, ToastModule, TooltipModule, MarkdownVisualizadorComponent, PropostaCartaoComponent, ToastDesfazerComponent],
   templateUrl: './checkin.page.html',
   styleUrl: './checkin.page.scss',
+  host: { '[class.checkin-embutido]': 'embutido()' },
 })
 export class CheckinPage implements OnInit {
   private readonly checkinService = inject(CheckinService);
@@ -63,6 +69,11 @@ export class CheckinPage implements OnInit {
 
   readonly formatarDuracao = formatarDuracao;
   readonly sugestoes = SUGESTOES;
+
+  /** Dentro do diálogo do Project (em vez de numa janela própria). */
+  readonly embutido = input(false);
+  /** Embutida: a descrição foi registrada, os check-ins foram suspensos ou não havia o que fazer. O diálogo pode sumir. */
+  readonly encerrado = output<void>();
 
   readonly situacao = signal<CheckinSituacaoConsultadaDto | null>(null);
   readonly erroDeCarga = signal(false);
@@ -110,6 +121,12 @@ export class CheckinPage implements OnInit {
     effect((aoLimpar) => {
       if (this.estado() !== 'SEM_EXECUCAO') return;
       const temporizador = setTimeout(() => this.fechar(), ESPERA_PARA_FECHAR_MS);
+      aoLimpar(() => clearTimeout(temporizador));
+    });
+    // Dentro do Project, o check-in registrado some sozinho depois de uma pausa para o usuário ver a confirmação.
+    effect((aoLimpar) => {
+      if (!this.embutido() || this.estado() !== 'REGISTRADO') return;
+      const temporizador = setTimeout(() => this.fechar(), ESPERA_PARA_SUMIR_REGISTRADO_MS);
       aoLimpar(() => clearTimeout(temporizador));
     });
     this.destroyRef.onDestroy(() => this.pararDeConferir());
@@ -188,6 +205,10 @@ export class CheckinPage implements OnInit {
   /** Fecha a janela (no Electron, a janela some; no navegador, volta ao sistema). */
   fechar(): void {
     this.pararDeConferir();
+    if (this.embutido()) {
+      this.encerrado.emit();
+      return;
+    }
     window.close();
     // `window.close()` só fecha o que o próprio script abriu: no navegador comum a tela volta ao sistema.
     setTimeout(() => void this.roteador.navigateByUrl('/chat'), 150);

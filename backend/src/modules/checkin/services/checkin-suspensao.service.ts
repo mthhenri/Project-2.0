@@ -15,6 +15,7 @@ interface Suspensao {
 @Injectable()
 export class CheckinSuspensaoService {
   private readonly suspensoes = new Map<number, Suspensao>();
+  private readonly retomadas = new Map<number, Date>();
 
   constructor(private readonly configService: ConfigService) {}
 
@@ -27,7 +28,13 @@ export class CheckinSuspensaoService {
   retomar(usuarioId: number): CheckinSuspensaoConsultadaDto | null {
     const anterior = this.consultar(usuarioId);
     this.suspensoes.delete(usuarioId);
+    if (anterior.suspenso) this.retomadas.set(usuarioId, this.agora());
     return anterior.suspenso ? anterior : null;
+  }
+
+  /** Quando o usuário voltou da última reunião (a agenda do check-in recomeça dali), ou `null`. */
+  ultimaRetomada(usuarioId: number): Date | null {
+    return this.retomadas.get(usuarioId) ?? null;
   }
 
   consultar(usuarioId: number): CheckinSuspensaoConsultadaDto {

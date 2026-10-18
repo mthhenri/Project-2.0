@@ -28,4 +28,8 @@ export class CheckinSituacaoConsultadaDto {
   rigorProporcional: boolean;
   /** Há execução e ela passou da duração recomendada (a janela mostra o selo de rigor). */
   acimaDoRecomendado: boolean;
+  /** Quando o backend sorteou o próximo check-in (task 161); `null` sem execução em andamento ou com os check-ins suspensos. */
+  proximoCheckinData: Date | null;
+  /** O horário do check-in já chegou: o Project (navegador ou desktop) mostra a janelinha até a descrição ser confirmada ou a suspensão valer. */
+  disparado: boolean;
 }

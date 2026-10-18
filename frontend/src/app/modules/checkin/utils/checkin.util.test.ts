@@ -1,9 +1,9 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { CheckinSituacaoConsultadaDto } from '@project20/shared';
-import { decidirEstado } from './checkin.util';
+import { CheckinSituacaoConsultadaDto, EstadoIaEnum } from '@project20/shared';
+import { decidirEstado, deveMostrarJanelinha, esperaAteOCheckin } from './checkin.util';
 
-function situacao(parcial: Partial<CheckinSituacaoConsultadaDto> & { execucaoId?: number | null; suspenso?: boolean } = {}): CheckinSituacaoConsultadaDto {
+function situacao(parcial: Partial<CheckinSituacaoConsultadaDto> & { execucaoId?: number | null; suspenso?: boolean; disparado?: boolean } = {}): CheckinSituacaoConsultadaDto {
   const execucaoId = parcial.execucaoId === undefined ? 5 : parcial.execucaoId;
   return {
     haCheckin: execucaoId !== null,
@@ -14,6 +14,8 @@ function situacao(parcial: Partial<CheckinSituacaoConsultadaDto> & { execucaoId?
     duracaoRecomendadaMinutos: 90,
     rigorProporcional: true,
     acimaDoRecomendado: false,
+    proximoCheckinData: parcial.proximoCheckinData ?? null,
+    disparado: parcial.disparado ?? false,
   };
 }
 
@@ -36,4 +38,28 @@ test('execução que acabou desde a abertura (pausada) também libera a janela',
 
 test('check-ins suspensos (reunião) liberam a janela, mesmo com a execução em andamento', () => {
   assert.equal(decidirEstado(situacao({ suspenso: true }), 5), 'SUSPENSO');
+});
+
+test('a janelinha aparece só com o horário disparado, execução e sem suspensão', () => {
+  assert.equal(deveMostrarJanelinha(situacao({ disparado: true }), null), true);
+  assert.equal(deveMostrarJanelinha(situacao({ disparado: false }), null), false);
+  assert.equal(deveMostrarJanelinha(situacao({ disparado: true, suspenso: true }), null), false);
+  assert.equal(deveMostrarJanelinha(situacao({ disparado: true, execucaoId: null }), null), false);
+  assert.equal(deveMostrarJanelinha(null, null), false);
+});
+
+test('com a IA desligada ou fora do ar a janelinha não trava a tela', () => {
+  const disparada = situacao({ disparado: true });
+  assert.equal(deveMostrarJanelinha(disparada, EstadoIaEnum.NO_AR), true);
+  assert.equal(deveMostrarJanelinha(disparada, EstadoIaEnum.DESLIGADA), false);
+  assert.equal(deveMostrarJanelinha(disparada, EstadoIaEnum.FORA_DO_AR), false);
+});
+
+test('a espera até o check-in vem do horário sorteado e some quando já disparou', () => {
+  const agora = new Date('2026-10-19T12:00:00Z').getTime();
+  const proximo = new Date('2026-10-19T12:30:00Z');
+  assert.equal(esperaAteOCheckin(situacao({ proximoCheckinData: proximo }), agora), 30 * 60_000);
+  assert.equal(esperaAteOCheckin(situacao({ proximoCheckinData: proximo, disparado: true }), agora), null);
+  assert.equal(esperaAteOCheckin(situacao(), agora), null);
+  assert.equal(esperaAteOCheckin(situacao({ proximoCheckinData: new Date('2026-10-19T11:00:00Z') }), agora), 0);
 });

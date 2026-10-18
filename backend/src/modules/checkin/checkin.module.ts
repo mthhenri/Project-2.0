@@ -9,6 +9,7 @@ import { PropostaIaModule } from '../proposta-ia/proposta-ia.module';
 import { CheckinController } from './controllers/checkin.controller';
 import { SuspenderCheckinExecutor } from './executores/suspender-checkin.executor';
 import { ProporRetomarCheckinFerramenta, ProporSuspenderCheckinFerramenta } from './ferramentas/propor-checkin.ferramentas';
+import { CheckinAgendaService } from './services/checkin-agenda.service';
 import { CheckinSuspensaoService } from './services/checkin-suspensao.service';
 import { CheckinService } from './services/checkin.service';
 
@@ -16,7 +17,7 @@ import { CheckinService } from './services/checkin.service';
 @Module({
   imports:     [FerramentaIaModule, PropostaIaModule, ConfiguracaoIaModule, ChatModule, ExecucaoModule],
   controllers: [CheckinController],
-  providers:   [CheckinSuspensaoService, CheckinService, SuspenderCheckinExecutor, ProporSuspenderCheckinFerramenta, ProporRetomarCheckinFerramenta],
+  providers:   [CheckinSuspensaoService, CheckinAgendaService, CheckinService, SuspenderCheckinExecutor, ProporSuspenderCheckinFerramenta, ProporRetomarCheckinFerramenta],
   exports:     [CheckinSuspensaoService],
 })
 export class CheckinModule implements OnModuleInit {
