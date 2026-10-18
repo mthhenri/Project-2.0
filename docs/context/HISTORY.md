@@ -12,6 +12,16 @@
 
 ---
 
+## 2026-10-18 — Task 164: IA lê ponto, calendário, tags, equipe e relatório
+
+Primeira do bloco 11 (lacunas entre as telas e a IA). Só leitura; nada é gravado.
+
+- **Seis ferramentas**, cada uma no módulo do seu domínio e chamando a service da tela com o usuário do token: `consultar_ponto_do_dia` e `consultar_ponto_do_mes` (QUALQUER; a `PontoService` recusa o ponto alheio ao desenvolvedor e o gestor pode informar `usuarioId`), `consultar_dias_nao_uteis` (QUALQUER; recorrentes expandidos por ano, função pura `ocorrenciasNoIntervalo`), `listar_tags` (QUALQUER), `listar_usuarios` (GESTOR; só ativos; devolve id, nome, login, cargo e tipo, nunca senha/meta/anotações) e `consultar_relatorio_de_execucoes` (GESTOR; só totais por pessoa e por atividade, as 15 de mais tempo, nunca as linhas).
+- **Contratos** em `shared/src/dtos/ferramenta-ia/` (entrada validada + saída). Tudo em minutos; limites e `haMais` como nas demais leituras.
+- **Desvio da spec:** o prompt `CONVERSA` não foi alterado; ele não lista ferramentas (a IA as descobre pela descrição de cada uma), então a regra de uso ficou na `descricao`.
+- **Testes:** backend 435 (+25); builds de shared e backend passam; o backend sobe sem erro de injeção (o boot de teste só falhou na porta, já ocupada pelo dev).
+- **Não verificado:** conversa real com o modelo usando as ferramentas, e os valores contra as telas de Ponto e Relatório (só os testes com services falsas).
+
 ## 2026-10-18 — Mapa de lacunas da IA e specs 164 a 168 (bloco 11)
 
 Análise pedida pelo autor: o que as telas fazem e a IA ainda não. Hoje a IA cobre o dia do desenvolvedor (iniciar/pausar/descrever execução, criar atividade, pad, check-in) e criar projeto/demanda e conectar/descrever demanda (gestor); **não edita nada que já existe** e não lê ponto, calendário, tags, equipe nem relatório. Sem mudança de código.
