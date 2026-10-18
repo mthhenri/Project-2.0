@@ -12,6 +12,19 @@
 
 ---
 
+## 2026-10-18 — Task 146: pad pela IA
+
+Spec em `docs/specs/done/146-chat-pad-pela-ia.spec.md`.
+
+- **Leitura:** `consultar_pad` (seções pedidas, do pad do token; em Feito só o bloco `## dd/MM` do dia, hoje por padrão ou `diaDoFeito`; corta em 8000 caracteres e avisa). Helper novo `blocoDoDiaNoFeito` (com teste).
+- **Proposta e executor:** `propor_anotar_pad` (`ANEXAR` acrescenta ao fim, em Feito debaixo do título de hoje; `TROCAR` troca um trecho único; Pessoal só com `pedidoExplicito`, regra que a ferramenta e o executor impõem; para trocar, o trecho é conferido na hora de propor: ausente ou ambíguo volta ao modelo como erro, e nenhum cartão nasce) e `AnotarPadExecutor` (`AnotacaoService.anexarTexto/anexarFeito/trocarTrecho` no pad do usuário do token). **Desfazer** restaura o texto de antes via `alterar` com a versão lida, mas só se a seção ainda é exatamente a que a anotação deixou; se alguém escreveu depois, recusa com mensagem clara em vez de apagar o trabalho.
+- **Cartão do chat:** seção, "Antes" e "Depois" (ou "Acrescentar…") em Markdown, e Ajustar para o texto novo.
+- **Tela do pad (frontend):** no drawer, o próprio pad fica só leitura enquanto a IA está no ar (`editavelAgora`: sem editores, "Enviar para", Limpar nem Salvar, com aviso); desligada ou fora do ar, volta a editar.
+- **Desvio da spec:** o prompt `PAD` (nível padrão) e as instruções no `CONVERSA` não ganharam versão nova, pelo mesmo motivo da 144 (trocaria a ativa do administrador): a orientação está na descrição das ferramentas, e o prompt segue editável pela aba Prompts. A decisão de "anotar a cada execução encerrada" fica para a 150 (descrição formal), que é onde a execução é encerrada pelo check-in.
+- **Testes:** backend 256 verdes (executor: anexar, Feito, trocar, desfazer seguro e recusado após escrita externa, Pessoal, combinações inválidas; ferramentas: leitura por seção, só o dia em Feito, corte, propor, trecho ausente e ambíguo).
+- **Verificado ao vivo** (IA real, administrador; pad restaurado ao original): "Anota nos lembretes que a homologação reinicia às 18h" gerou a proposta, confirmar gravou e desfazer restaurou; "anota em andamento…" preservou o texto que já existia, e "atualiza essa anotação…" chamou `consultar_pad` e propôs `TROCAR` com o trecho exato; confirmar trocou, e desfazer nas duas, na ordem inversa, devolveu o pad ao original. O drawer do pad (`/usuario?anotacoes=3`) abriu só leitura, com aviso, sem editores nem Salvar.
+- **Não verificado:** o drawer editável com a IA desligada/fora do ar (é um `computed` do estado, sem teste de tela), o gate visual em 1366×768, 1080×1920 e tema escuro, Pessoal pelo chat com a IA real, e o desenvolvedor (a conta de teste é administrador).
+
 ## 2026-10-18 — Task 145: propostas de atividade e de execução pelo chat
 
 Spec em `docs/specs/done/145-chat-propostas-de-atividade-e-execucao.spec.md`.

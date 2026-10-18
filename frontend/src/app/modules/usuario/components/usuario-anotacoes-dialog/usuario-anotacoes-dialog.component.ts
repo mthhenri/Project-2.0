@@ -11,7 +11,8 @@ import { ButtonModule } from 'primeng/button';
 import { DrawerModule } from 'primeng/drawer';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TooltipModule } from 'primeng/tooltip';
-import { AnotacaoResumoDto, AnotacaoTrechoMovidoDto, TIPOS_ANOTACAO_ORDENADOS, TipoAnotacaoEnum } from '@project20/shared';
+import { AnotacaoResumoDto, AnotacaoTrechoMovidoDto, EstadoIaEnum, TIPOS_ANOTACAO_ORDENADOS, TipoAnotacaoEnum } from '@project20/shared';
+import { IaDisponibilidadeService } from '../../../../core/services/ia-disponibilidade.service';
 import { MarkdownEditorComponent, MenuContextoEditorEvento } from '../../../../shared/components/markdown-editor/markdown-editor.component';
 import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
 import { AnotacaoService } from '../../services/anotacao.service';
@@ -67,9 +68,18 @@ export class UsuarioAnotacoesDialogComponent {
   private readonly desfazerService = inject(DesfazerService);
   private readonly messageService = inject(MessageService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly iaDisponibilidade = inject(IaDisponibilidadeService);
 
   /** Falso mostra cada seção só no visualizador, sem salvar e sem "Limpar" (os blocos 4 e 10 acionam isso). */
   readonly editavel = input(true);
+
+  /**
+   * O próprio pad, com a IA no ar, é **só de leitura**: quem escreve nele é a IA (pelo chat, com confirmação). Com a IA desligada ou
+   * fora do ar o pad volta a ser editável (fallback), e o pad de outra pessoa (gestor) continua como a entrada `editavel` manda.
+   */
+  readonly somenteLeituraPelaIa = computed(() => this.usuarioId() === this.sessao.id() && this.iaDisponibilidade.estado() === EstadoIaEnum.NO_AR);
+  /** Pode editar: a entrada permite e a IA não é quem cuida deste pad agora. */
+  readonly editavelAgora = computed(() => this.editavel() && !this.somenteLeituraPelaIa());
 
   /** Emitido a cada salvamento bem-sucedido, para a listagem atualizar o ícone sem recarregar. */
   readonly aoAlterar = output<AnotacoesAlteradasEvento>();
@@ -167,7 +177,7 @@ export class UsuarioAnotacoesDialogComponent {
 
   /** Botão direito sobre um trecho selecionado: mostra "Enviar para" sem a própria seção. */
   abrirMenuDoTrecho(secao: SecaoAnotacao, selecao: MenuContextoEditorEvento): void {
-    if (!this.editavel()) return;
+    if (!this.editavelAgora()) return;
     this.trechoDoMenu = { secao, texto: selecao.texto };
     this.itensMenu[0].items?.forEach((item) => (item.visible = item.id !== secao.tipo));
     this.menuContexto()?.show(selecao.evento);
@@ -176,7 +186,7 @@ export class UsuarioAnotacoesDialogComponent {
   /** Esvazia a seção e deixa 7 s para desfazer; só depois o vazio é gravado. */
   limpar(secao: SecaoAnotacao): void {
     const anterior = secao.textoAtual;
-    if (!this.editavel() || !anotacaoTemTexto(anterior) || secao.limpando) return;
+    if (!this.editavelAgora() || !anotacaoTemTexto(anterior) || secao.limpando) return;
 
     secao.cancelarAgendamento();
     secao.conteudoAntesDeLimpar = anterior;

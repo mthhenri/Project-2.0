@@ -3,6 +3,7 @@ import * as assert from 'node:assert/strict';
 import {
   anexarAoFeitoDoDia,
   anexarAoFim,
+  blocoDoDiaNoFeito,
   contarOcorrencias,
   mesmaVersao,
   removerTrechoUnico,
@@ -80,4 +81,12 @@ test('mesmaVersao compara as datas pelo instante', () => {
   assert.equal(mesmaVersao(new Date('2026-10-17T10:00:00.123Z'), new Date('2026-10-17T10:00:00.123Z')), true);
   assert.equal(mesmaVersao(new Date('2026-10-17T10:00:00.123Z'), new Date('2026-10-17T10:00:00.124Z')), false);
   assert.equal(mesmaVersao(new Date('2026-10-17T10:00:00.123Z'), '2026-10-17T10:00:00.123Z' as unknown as Date), true);
+});
+
+test('blocoDoDiaNoFeito devolve só o título do dia e o que vem debaixo dele', () => {
+  const feito = '## 17/10\n- Login\n- Cadastro\n\n## 16/10\n- Layout';
+  assert.equal(blocoDoDiaNoFeito(feito, '17/10'), '## 17/10\n- Login\n- Cadastro');
+  assert.equal(blocoDoDiaNoFeito(feito, '16/10'), '## 16/10\n- Layout');
+  assert.equal(blocoDoDiaNoFeito(feito, '15/10'), '');
+  assert.equal(blocoDoDiaNoFeito('', '17/10'), '');
 });

@@ -97,6 +97,21 @@ export function anexarAoFeitoDoDia(texto: string, diaMes: string, anexo: string)
   return resultado.join('\n');
 }
 
+/** O bloco de um dia na seção Feito: o título `## dd/MM` e o que vem debaixo dele, até o próximo título. Vazio se o dia não tem título. */
+export function blocoDoDiaNoFeito(texto: string, diaMes: string): string {
+  const linhas = texto.split('\n');
+  const indiceTitulo = linhas.findIndex((linha) => linha.trim() === `## ${diaMes}`);
+  if (indiceTitulo === -1) return '';
+  let proximoTitulo = linhas.length;
+  for (let i = indiceTitulo + 1; i < linhas.length; i++) {
+    if (linhas[i].startsWith('## ')) {
+      proximoTitulo = i;
+      break;
+    }
+  }
+  return linhas.slice(indiceTitulo, proximoTitulo).join('\n').trimEnd();
+}
+
 /** Duas leituras são a mesma versão quando as datas coincidem (as duas passam pelo mesmo driver, em milissegundos). */
 export function mesmaVersao(atual: Date, lida: Date): boolean {
   return new Date(atual).getTime() === new Date(lida).getTime();

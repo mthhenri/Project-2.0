@@ -11,7 +11,9 @@ import { TagModule } from 'primeng/tag';
 import { TextareaModule } from 'primeng/textarea';
 import { PropostaIaResumoDto, StandardResponse, StatusPropostaIaEnum, TipoAtividadePrioridadeEnum, TipoPropostaIaEnum } from '@project20/shared';
 import { AtividadePrioridadeService } from '../../../../core/services/atividade-prioridade.service';
+import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
 import { PrioridadeSeloComponent } from '../../../../shared/components/prioridade-selo/prioridade-selo.component';
+import { ROTULO_SECAO_ANOTACAO } from '../../../usuario/utils/anotacoes.util';
 import { DesfazerService } from '../../../../core/services/desfazer.service';
 import { PropostaIaService } from '../../services/proposta-ia.service';
 import {
@@ -30,7 +32,7 @@ import {
 @Component({
   selector: 'app-chat-proposta-cartao',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, SkeletonModule, TagModule, TextareaModule, PrioridadeSeloComponent],
+  imports: [ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, SkeletonModule, TagModule, TextareaModule, PrioridadeSeloComponent, MarkdownVisualizadorComponent],
   templateUrl: './proposta-cartao.component.html',
   styleUrl: './proposta-cartao.component.scss',
 })
@@ -65,6 +67,7 @@ export class PropostaCartaoComponent {
     TipoPropostaIaEnum.CRIAR_ATIVIDADE,
     TipoPropostaIaEnum.INICIAR_EXECUCAO,
     TipoPropostaIaEnum.PAUSAR_EXECUCAO,
+    TipoPropostaIaEnum.ANOTAR_PAD,
   ];
   /** Pendente e de um tipo que sabe ser ajustado. */
   readonly podeAjustar = computed(() => {
@@ -105,6 +108,11 @@ export class PropostaCartaoComponent {
     return typeof valor === 'string' ? valor : '';
   }
 
+  /** O nome da seção do pad como a tela do pad mostra. */
+  rotuloSecao(codigo: string): string {
+    return (ROTULO_SECAO_ANOTACAO as Record<string, string>)[codigo] ?? codigo;
+  }
+
   prioridadeDe(codigo: string): { codigo: TipoAtividadePrioridadeEnum; descricao: string; cor: string } {
     const encontrada = this.prioridadeService.prioridades().find((item) => item.codigo === codigo);
     return encontrada ?? { codigo: codigo as TipoAtividadePrioridadeEnum, descricao: codigo, cor: '#94a3b8' };
@@ -113,9 +121,11 @@ export class PropostaCartaoComponent {
   abrirAjuste(): void {
     const atual = this.proposta();
     if (!atual) return;
+    // Na anotação do pad o campo editável é o texto novo: `texto` (anexar) ou `trechoNovo` (trocar).
+    const textoDoPad = this.texto('operacao') === 'TROCAR' ? this.texto('trechoNovo') : this.texto('texto');
     this.formularioAjuste.reset({
       nome: this.texto('nome'),
-      descricao: this.texto('descricao'),
+      descricao: atual.tipo === TipoPropostaIaEnum.ANOTAR_PAD ? textoDoPad : this.texto('descricao'),
       prioridade: (this.texto('prioridade') || TipoAtividadePrioridadeEnum.INDEFINIDA) as TipoAtividadePrioridadeEnum,
     });
     this.ajustando.set(true);
@@ -140,6 +150,9 @@ export class PropostaCartaoComponent {
       dados['prioridade'] = valores.prioridade;
     } else if (atual.tipo === TipoPropostaIaEnum.INICIAR_EXECUCAO) {
       dados['descricao'] = valores.descricao.trim();
+    } else if (atual.tipo === TipoPropostaIaEnum.ANOTAR_PAD) {
+      const campo = this.texto('operacao') === 'TROCAR' ? 'trechoNovo' : 'texto';
+      dados[campo] = valores.descricao;
     } else if (atual.tipo === TipoPropostaIaEnum.PAUSAR_EXECUCAO) {
       const descricao = valores.descricao.trim();
       if (descricao) dados['descricao'] = descricao;

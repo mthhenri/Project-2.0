@@ -40,6 +40,20 @@
           </span>
         </div>
       }
+      @case (Tipo.ANOTAR_PAD) {
+        <div class="proposta-cartao__resumo">
+          <strong class="proposta-cartao__destaque">Pad · {{ rotuloSecao(texto('secao')) }}</strong>
+          @if (texto('operacao') === 'TROCAR') {
+            <span class="proposta-cartao__linha">Antes</span>
+            <div class="proposta-cartao__trecho proposta-cartao__trecho--antes"><app-markdown-visualizador [texto]="texto('trechoAntigo')" /></div>
+            <span class="proposta-cartao__linha">Depois</span>
+            <div class="proposta-cartao__trecho proposta-cartao__trecho--depois"><app-markdown-visualizador [texto]="texto('trechoNovo')" /></div>
+          } @else {
+            <span class="proposta-cartao__linha">{{ texto('secao') === 'FEITO' ? 'Acrescentar debaixo do título de hoje:' : 'Acrescentar ao fim:' }}</span>
+            <div class="proposta-cartao__trecho proposta-cartao__trecho--depois"><app-markdown-visualizador [texto]="texto('texto')" /></div>
+          }
+        </div>
+      }
       @default {
         <dl class="proposta-cartao__dados">
           @for (par of paresDosDados(propostaAtual.dados); track par.chave) {
@@ -77,7 +91,7 @@
           </p-select>
         } @else {
           <label class="proposta-cartao__rotulo" for="ajuste-descricao-{{ propostaAtual.id }}">
-            {{ propostaAtual.tipo === Tipo.INICIAR_EXECUCAO ? 'Descrição provisória' : 'Descrição do que foi feito' }}
+            {{ propostaAtual.tipo === Tipo.INICIAR_EXECUCAO ? 'Descrição provisória' : propostaAtual.tipo === Tipo.ANOTAR_PAD ? (texto('operacao') === 'TROCAR' ? 'Trecho novo' : 'Texto a acrescentar') : 'Descrição do que foi feito' }}
           </label>
           <textarea pTextarea id="ajuste-descricao-{{ propostaAtual.id }}" formControlName="descricao" rows="3" [autoResize]="true" maxlength="1000" class="w-full"></textarea>
         }
