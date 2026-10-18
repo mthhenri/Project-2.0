@@ -65,6 +65,8 @@ export class PropostaCartaoComponent {
   readonly formularioAjuste = new FormGroup({
     nome: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.minLength(3), Validators.maxLength(255)] }),
     descricao: new FormControl('', { nonNullable: true }),
+    /** No projeto proposto: o código único (a IA derivou um do nome). */
+    codigo: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.minLength(2), Validators.maxLength(50)] }),
     prioridade: new FormControl<TipoAtividadePrioridadeEnum>(TipoAtividadePrioridadeEnum.INDEFINIDA, { nonNullable: true }),
     /** Na descrição do check-in: para qual atividade trocar depois (nulo é continuar na mesma). */
     atividadeSeguinteId: new FormControl<number | null>(null),
@@ -75,6 +77,8 @@ export class PropostaCartaoComponent {
 
   private static readonly TIPOS_AJUSTAVEIS: TipoPropostaIaEnum[] = [
     TipoPropostaIaEnum.CRIAR_ATIVIDADE,
+    TipoPropostaIaEnum.CRIAR_PROJETO,
+    TipoPropostaIaEnum.CRIAR_DEMANDA,
     TipoPropostaIaEnum.INICIAR_EXECUCAO,
     TipoPropostaIaEnum.PAUSAR_EXECUCAO,
     TipoPropostaIaEnum.ANOTAR_PAD,
@@ -142,6 +146,7 @@ export class PropostaCartaoComponent {
     const textoDoPad = this.texto('operacao') === 'TROCAR' ? this.texto('trechoNovo') : this.texto('texto');
     this.formularioAjuste.reset({
       nome: this.texto('nome'),
+      codigo: this.texto('codigo'),
       descricao: atual.tipo === TipoPropostaIaEnum.ANOTAR_PAD ? textoDoPad : this.texto('descricao'),
       atividadeSeguinteId: this.numero('atividadeSeguinteId') || null,
       prioridade: (this.texto('prioridade') || TipoAtividadePrioridadeEnum.INDEFINIDA) as TipoAtividadePrioridadeEnum,
@@ -170,13 +175,16 @@ export class PropostaCartaoComponent {
     if (!atual) return;
     const valores = this.formularioAjuste.getRawValue();
     const dados: Record<string, unknown> = { ...atual.dados };
-    if (atual.tipo === TipoPropostaIaEnum.CRIAR_ATIVIDADE) {
-      if (this.formularioAjuste.controls.nome.invalid) {
+    if (atual.tipo === TipoPropostaIaEnum.CRIAR_ATIVIDADE || atual.tipo === TipoPropostaIaEnum.CRIAR_PROJETO || atual.tipo === TipoPropostaIaEnum.CRIAR_DEMANDA) {
+      const ehProjeto = atual.tipo === TipoPropostaIaEnum.CRIAR_PROJETO;
+      if (this.formularioAjuste.controls.nome.invalid || (ehProjeto && this.formularioAjuste.controls.codigo.invalid)) {
         this.formularioAjuste.controls.nome.markAsTouched();
+        this.formularioAjuste.controls.codigo.markAsTouched();
         return;
       }
       dados['nome'] = valores.nome.trim();
-      dados['prioridade'] = valores.prioridade;
+      if (atual.tipo === TipoPropostaIaEnum.CRIAR_ATIVIDADE) dados['prioridade'] = valores.prioridade;
+      if (ehProjeto) dados['codigo'] = valores.codigo.trim().toUpperCase();
     } else if (atual.tipo === TipoPropostaIaEnum.INICIAR_EXECUCAO) {
       dados['descricao'] = valores.descricao.trim();
     } else if (atual.tipo === TipoPropostaIaEnum.DESCREVER_EXECUCAO) {

@@ -258,6 +258,19 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
     return resultado[0];
   }
 
+  /** Verifica se o projeto tem alguma demanda ativa (desfazer a criação pela IA só vale com o projeto ainda vazio). */
+  async possuiDemandas(dto: ProjetoRecuperarDto): Promise<boolean> {
+    const resultado = await this.executarConsulta<{ existe: boolean }>(
+      `SELECT EXISTS(
+         SELECT 1 FROM demanda
+         WHERE demanda.projeto_id = :projetoId
+           AND demanda.is_deleted = false
+       ) AS existe`,
+      { projetoId: dto.id },
+    );
+    return resultado[0].existe;
+  }
+
   /** Soft delete do projeto. */
   async excluir(dto: ProjetoExcluirDto): Promise<void> {
     await this.executarSoftDelete(dto.id);

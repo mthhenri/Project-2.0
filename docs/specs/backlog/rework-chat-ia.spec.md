@@ -24,6 +24,7 @@ sozinho ao fluxo convencional, sem parar o serviço.
    descrever execução, anotar no pad, criar demanda, conectar demanda) vira uma **proposta**
    exibida como cartão no chat (Confirmar / Ajustar). Só o clique do usuário executa.
 3. **A IA não exclui nada** na primeira versão. Excluir continua manual (ideia futura abaixo).
+   Por simetria (pedido do autor, task 159): **tudo o que o usuário faz no sistema a IA também faz, sempre por proposta confirmada**, e as ferramentas novas de cada tela nascem com isso.
 4. **O fallback é automático.** A IA caiu: o sistema troca para as telas convencionais. A IA
    voltou: pergunta ao usuário se ele quer voltar para ela, para não interromper o que estiver
    fazendo.
@@ -240,10 +241,11 @@ Os blocos 1 a 3 não dependem de IA e podem começar primeiro.
 | 7 | 151 | [`151-checkin-tela-da-janela`](151-checkin-tela-da-janela.spec.md) | 149, 150 |
 | 7 | 152 | [`152-electron-casca-e-timer-do-checkin`](152-electron-casca-e-timer-do-checkin.spec.md) | 149, 151 |
 | 9 | 153 | [`153-chat-gestor-ferramentas-de-leitura`](153-chat-gestor-ferramentas-de-leitura.spec.md) | 137, 139, 144 |
-| 9 | 154 | [`154-chat-gestor-criar-demanda`](154-chat-gestor-criar-demanda.spec.md) | 153 |
+| 9 | 154 | [`154-chat-gestor-criar-demanda`](../done/154-chat-gestor-criar-demanda.spec.md) (absorvida pela 159) | 153 |
 | 9 | 155 | [`155-chat-gestor-entrevista-de-demanda`](155-chat-gestor-entrevista-de-demanda.spec.md) | 154 |
 | 9 | 156 | [`156-chat-gestor-conexoes-e-lugar`](156-chat-gestor-conexoes-e-lugar.spec.md) | 153, 155 |
 | 10 | 157 | [`157-fallback-telas-convencionais-e-inicio-no-chat`](157-fallback-telas-convencionais-e-inicio-no-chat.spec.md) | 139, 145, 146 |
+| 9 | 159 | [`159-ia-cria-projetos-e-demandas`](../done/159-ia-cria-projetos-e-demandas.spec.md) (concluída) | 145, 153 |
 | 10 | 158 | [`158-fallback-retorno-da-ia-e-retomada`](158-fallback-retorno-da-ia-e-retomada.spec.md) | 145, 157 |
 
 O bloco 5 (chat) está quebrado em **135 a 141** (a 141 é o histórico de conversas e os refinos visuais, pedidos depois da 139); os blocos 6, 7, 9 e 10 estão quebrados em **142 a 158**: prioridade e ferramentas do desenvolvedor (142 a 148, com o pad pela IA na 146, que complementa o bloco 8), check-in e Electron (149 a 152), lado do gestor (153 a 156) e fallback (157 e 158). As tasks 125 a 128 saíram no mesmo lançamento. A 140 ("testar antes de salvar" os prompts) usa narrativas coladas pelo administrador, não o chat dos usuários

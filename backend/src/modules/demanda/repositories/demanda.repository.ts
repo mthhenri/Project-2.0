@@ -590,6 +590,18 @@ export class DemandaRepository extends BaseRepository<Demanda> {
     );
   }
 
+  /** Verifica se a demanda já tem sub-demanda ou atividade ativa (desfazer a criação pela IA só vale com a demanda ainda vazia). */
+  async possuiFilhasOuAtividades(dto: DemandaRecuperarDto): Promise<boolean> {
+    const resultado = await this.executarConsulta<{ existe: boolean }>(
+      `SELECT (
+         EXISTS(SELECT 1 FROM demanda AS demanda_filha WHERE demanda_filha.demanda_pai_id = :demandaId AND demanda_filha.is_deleted = false)
+         OR EXISTS(SELECT 1 FROM atividade WHERE atividade.demanda_id = :demandaId AND atividade.is_deleted = false)
+       ) AS existe`,
+      { demandaId: dto.id },
+    );
+    return resultado[0].existe;
+  }
+
   /** Soft delete da demanda. */
   async excluir(dto: DemandaExcluirDto): Promise<void> {
     await this.executarSoftDelete(dto.id);

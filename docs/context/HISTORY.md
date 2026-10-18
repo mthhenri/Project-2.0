@@ -12,6 +12,20 @@
 
 ---
 
+## 2026-10-18 — Task 159: a IA cria projetos e demandas (paridade com o usuário)
+
+Pedido do autor ao ver a IA dizer que não criava demandas nem projetos: "se o usuário consegue criar, a IA também consegue". Spec em `docs/specs/done/159-ia-cria-projetos-e-demandas.spec.md`; a task 154 (criar demanda) foi absorvida e movida para `done/` com a nota. O princípio entrou nos princípios da guarda-chuva: tudo o que o usuário faz a IA também faz, por proposta confirmada, sem excluir.
+
+- **Banco:** migration `0037` só insere `CRIAR_PROJETO` em `tipo_proposta_ia` (`CRIAR_DEMANDA` já existia).
+- **Ferramentas:** `listar_projetos` (`ProjetoService.listar`, com o usuário do token) e `listar_demandas_do_projeto` (`DemandaService.listar`, árvore com caminho e `isEstrutural`); `propor_criar_projeto` (permissão **GESTOR**, deriva código — iniciais, com sufixo numérico se já existir — e cor estável pelo nome) e `propor_criar_demanda` (qualquer usuário: quem barra o desenvolvedor sem pai é a regra da service e a própria ferramenta, cedo).
+- **Encadeamento:** pedido grande ("projeto, estrutura Cadastro e filha Novo cadastro") vira três propostas pendentes ligadas por `projetoPropostaId` e `demandaPaiPropostaId`; na hora de propor basta a referenciada existir, ser do tipo e não estar recusada/desfeita (`proposta-referenciada.ts`); na hora de executar ela precisa estar confirmada e o id sai do `resultado` dela, senão a confirmação recusa dizendo o que confirmar antes.
+- **Executores:** `CriarProjetoExecutor` (confere gestor porque a `ProjetoService.criar` não confere, quem barrava era o `@GestorOnly`) e `CriarDemandaExecutor` (usuário do token na `DemandaService.criar`). Desfazer: projeto só sem demandas (`ProjetoRepository.possuiDemandas`), demanda só sem filhas nem atividades (`DemandaRepository.possuiFilhasOuAtividades`); soft delete pelas services.
+- **Cartão do chat:** resumos de projeto (código, cor, datas) e de demanda (projeto, tipo, pai, aviso "confirme antes a proposta acima") e "Ajustar" de nome (e código do projeto).
+- **Testes:** backend 332 verdes (+24: código e cor, executores, ferramentas, encadeamento, recusas); frontend 29; builds passam; sem lint (P-001).
+- **Verificado ao vivo** (IA real, gestor): "crie o projeto Teste Paridade IA, nele a estrutura Cadastro e a filha Novo cadastro" gerou os três cartões na ordem certa, confirmados em sequência; desfazer o projeto com demandas foi recusado ("O projeto já tem demandas…") e desfazer na ordem inversa removeu tudo (dados de teste limpos).
+- **Não verificado:** confirmar fora de ordem na tela (coberto por teste de executor), o desenvolvedor criando sub-demanda pelo chat, "Ajustar" dos dois cartões, viewports 1366×768 e 1080×1920 e tema escuro, e nome/código duplicado vindo da IA no uso real.
+- **Observação:** o backend reinicia quando a migration é aplicada e a primeira mensagem do teste ficou sem resposta (a IA caiu no meio); reenviei.
+
 ## 2026-10-18 — Chat: ações rápidas úteis e sugestões da IA depois de cada resposta
 
 Pedido do autor ao ver "Que dia e hora são agora?" e "O que eu posso fazer por aqui?" como únicos botões.

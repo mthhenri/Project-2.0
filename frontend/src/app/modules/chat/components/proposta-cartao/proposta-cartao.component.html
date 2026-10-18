@@ -17,6 +17,44 @@
           </span>
         </div>
       }
+      @case (Tipo.CRIAR_PROJETO) {
+        <div class="proposta-cartao__resumo">
+          <strong class="proposta-cartao__destaque">{{ texto('nome') }}</strong>
+          <span class="proposta-cartao__linha">
+            <span>Código: {{ texto('codigo') }}</span>
+            <span class="proposta-cartao__cor" [style.background-color]="texto('cor')"></span>
+            <span>O projeto nasce ativo</span>
+          </span>
+          @if (texto('inicioData') || texto('previsaoFimData')) {
+            <span class="proposta-cartao__linha">
+              @if (texto('inicioData')) {
+                <span>Início: {{ texto('inicioData').slice(0, 10) }}</span>
+              }
+              @if (texto('previsaoFimData')) {
+                <span>Previsão de fim: {{ texto('previsaoFimData').slice(0, 10) }}</span>
+              }
+            </span>
+          }
+        </div>
+      }
+      @case (Tipo.CRIAR_DEMANDA) {
+        <div class="proposta-cartao__resumo">
+          <strong class="proposta-cartao__destaque">{{ texto('nome') }}</strong>
+          <span class="proposta-cartao__linha">
+            <span>Projeto: {{ texto('projetoNome') }}</span>
+            <span>{{ propostaAtual.dados['isEstrutural'] === true ? 'Demanda de estrutura' : 'Demanda de trabalho' }}</span>
+          </span>
+          <span class="proposta-cartao__linha">
+            {{ texto('demandaPaiNome') ? 'Dentro de: ' + texto('demandaPaiNome') : 'Demanda de topo do projeto' }}
+          </span>
+          @if (texto('descricaoTecnica') || texto('descricaoCliente')) {
+            <span class="proposta-cartao__linha">{{ texto('descricaoTecnica') || texto('descricaoCliente') }}</span>
+          }
+          @if (propostaAtual.status === Status.PENDENTE && (propostaAtual.dados['projetoPropostaId'] || propostaAtual.dados['demandaPaiPropostaId'])) {
+            <span class="proposta-cartao__aviso"><i class="pi pi-info-circle"></i>Confirme antes a proposta {{ propostaAtual.dados['projetoPropostaId'] ? 'do projeto' : 'da demanda de estrutura' }} acima: esta depende dela.</span>
+          }
+        </div>
+      }
       @case (Tipo.INICIAR_EXECUCAO) {
         <div class="proposta-cartao__resumo">
           <strong class="proposta-cartao__destaque">{{ texto('atividadeNome') || 'Atividade ' + propostaAtual.dados['atividadeId'] }}</strong>
@@ -117,6 +155,21 @@
               <app-prioridade-selo [prioridade]="prioridade" />
             </ng-template>
           </p-select>
+        } @else if (propostaAtual.tipo === Tipo.CRIAR_PROJETO || propostaAtual.tipo === Tipo.CRIAR_DEMANDA) {
+          <label class="proposta-cartao__rotulo" for="ajuste-nome-{{ propostaAtual.id }}">
+            {{ propostaAtual.tipo === Tipo.CRIAR_PROJETO ? 'Nome do projeto' : 'Nome da demanda' }}
+          </label>
+          <input pInputText id="ajuste-nome-{{ propostaAtual.id }}" formControlName="nome" maxlength="255" class="w-full" />
+          @if (formularioAjuste.controls.nome.touched && formularioAjuste.controls.nome.invalid) {
+            <small class="proposta-cartao__erro-campo">Informe um nome com ao menos 3 caracteres</small>
+          }
+          @if (propostaAtual.tipo === Tipo.CRIAR_PROJETO) {
+            <label class="proposta-cartao__rotulo" for="ajuste-codigo-{{ propostaAtual.id }}">Código</label>
+            <input pInputText id="ajuste-codigo-{{ propostaAtual.id }}" formControlName="codigo" maxlength="50" class="w-full" />
+            @if (formularioAjuste.controls.codigo.touched && formularioAjuste.controls.codigo.invalid) {
+              <small class="proposta-cartao__erro-campo">Informe um código com ao menos 2 caracteres</small>
+            }
+          }
         } @else if (propostaAtual.tipo === Tipo.DESCREVER_EXECUCAO) {
           <label class="proposta-cartao__rotulo" for="ajuste-descricao-{{ propostaAtual.id }}">Descrição formal</label>
           <textarea pTextarea id="ajuste-descricao-{{ propostaAtual.id }}" formControlName="descricao" rows="4" [autoResize]="true" maxlength="2000" class="w-full"></textarea>

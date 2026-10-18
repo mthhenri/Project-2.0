@@ -38,6 +38,14 @@
     font-size: 0.875rem;
   }
 
+  &__cor {
+    display: inline-block;
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
   &__destaque {
     font-size: 0.9375rem;
     overflow-wrap: anywhere;

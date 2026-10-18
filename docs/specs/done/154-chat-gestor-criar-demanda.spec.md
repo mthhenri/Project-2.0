@@ -1,5 +1,7 @@
 # Task 154 — Chat do gestor: criar demanda conversando
 
+> **2026-10-18 — Absorvida pela task 159** ([`159-ia-cria-projetos-e-demandas`](159-ia-cria-projetos-e-demandas.spec.md)): a criação de demanda (e de projeto) pela IA saiu lá, com permissão de qualquer usuário (as regras da `DemandaService` valem) em vez de só gestor. O corpo abaixo não foi reescrito.
+
 > Origem: guarda-chuva [`rework-chat-ia.spec.md`](rework-chat-ia.spec.md), bloco 9. Fluxo do gestor, item "Criar demanda conversando".
 
 ## Objetivo
