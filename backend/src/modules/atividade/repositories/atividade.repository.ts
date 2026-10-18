@@ -19,6 +19,15 @@ import {
 } from '@project20/shared';
 import { AtividadeRestaurarDto, AtividadeRestauradaDto } from '@project20/shared';
 
+/** A prioridade da atividade como objeto (`codigo`, `descricao`, `ordem`, `cor`), sempre lida de `atividade.tipo_atividade_prioridade_id`. */
+const SELECIONAR_PRIORIDADE = `(SELECT JSON_BUILD_OBJECT(
+            'codigo',    tipo_atividade_prioridade.codigo,
+            'descricao', tipo_atividade_prioridade.descricao,
+            'ordem',     tipo_atividade_prioridade.ordem,
+            'cor',       tipo_atividade_prioridade.cor)
+          FROM tipo_atividade_prioridade
+         WHERE tipo_atividade_prioridade.id = atividade.tipo_atividade_prioridade_id) AS prioridade`;
+
 type AtividadeInserirDados = Omit<Atividade, 'id' | 'isDeleted' | 'createdDate' | 'updatedDate' | 'deletedDate'>;
 
 @Injectable()
@@ -35,10 +44,12 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
    */
   async inserir(dados: AtividadeInserirDados): Promise<AtividadeCriadaDto> {
     const resultado = await this.executarConsulta<AtividadeCriadaDto>(
-      `INSERT INTO atividade (demanda_id, usuario_id, nome, tipo_atividade_status_id, created_date, updated_date, is_deleted)
+      `INSERT INTO atividade (demanda_id, usuario_id, nome, tipo_atividade_status_id, tipo_atividade_prioridade_id, created_date, updated_date, is_deleted)
        SELECT :demandaId, :usuarioId, :nome,
          (SELECT tipo_atividade_status.id FROM tipo_atividade_status
             WHERE tipo_atividade_status.codigo = :status AND tipo_atividade_status.is_deleted = false),
+         (SELECT tipo_atividade_prioridade.id FROM tipo_atividade_prioridade
+            WHERE tipo_atividade_prioridade.codigo = :prioridade AND tipo_atividade_prioridade.is_deleted = false),
          NOW(), NOW(), false
        RETURNING
          id,
@@ -47,12 +58,14 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
          nome,
          (SELECT tipo_atividade_status.codigo FROM tipo_atividade_status
             WHERE tipo_atividade_status.id = atividade.tipo_atividade_status_id) AS status,
+         ${SELECIONAR_PRIORIDADE},
          created_date    AS "createdDate"`,
       {
         demandaId:     dados.demandaId,
         usuarioId:     dados.usuarioId,
         nome:          dados.nome,
         status:        dados.status,
+        prioridade:    dados.prioridade,
       },
     );
     return resultado[0];
@@ -71,6 +84,7 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
          usuario.nome_completo     AS "nomeUsuario",
          atividade.nome,
          tipo_atividade_status.codigo AS status,
+         ${SELECIONAR_PRIORIDADE},
          (SELECT COUNT(*)::int
             FROM atividade atividade_do_usuario
            WHERE atividade_do_usuario.usuario_id = atividade.usuario_id
@@ -157,6 +171,9 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
        INNER JOIN tipo_atividade_status
          ON tipo_atividade_status.id = atividade.tipo_atividade_status_id
          AND tipo_atividade_status.is_deleted = false
+       INNER JOIN tipo_atividade_prioridade
+         ON tipo_atividade_prioridade.id = atividade.tipo_atividade_prioridade_id
+         AND tipo_atividade_prioridade.is_deleted = false
        INNER JOIN demanda
          ON demanda.id = atividade.demanda_id
        INNER JOIN projeto
@@ -178,6 +195,7 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
          atividade.id,
          atividade.nome,
          tipo_atividade_status.codigo AS status,
+         ${SELECIONAR_PRIORIDADE},
          atividade.usuario_id      AS "usuarioId",
          usuario.nome_completo     AS "nomeUsuario",
          tipo_usuario.codigo       AS "usuarioTipo",
@@ -219,7 +237,7 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
          LIMIT 1
        ) execucao_ativa ON true
        WHERE ${clausulaWhere}
-       ORDER BY usuario.nome_completo ASC, atividade.created_date DESC, atividade.nome ASC
+       ORDER BY tipo_atividade_prioridade.ordem ASC, usuario.nome_completo ASC, atividade.created_date DESC, atividade.nome ASC
        ${clausulaPaginacao}`,
       parametros,
     );
@@ -244,6 +262,12 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
       );
       parametros.status = dto.status;
     }
+    if (dto.prioridade !== undefined) {
+      setClauses.push(
+        'tipo_atividade_prioridade_id = (SELECT tipo_atividade_prioridade.id FROM tipo_atividade_prioridade WHERE tipo_atividade_prioridade.codigo = :prioridade AND tipo_atividade_prioridade.is_deleted = false)',
+      );
+      parametros.prioridade = dto.prioridade;
+    }
 
     const resultado = await this.executarConsulta<AtividadeAlteradaDto>(
       `UPDATE atividade
@@ -257,6 +281,7 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
          nome,
          (SELECT tipo_atividade_status.codigo FROM tipo_atividade_status
             WHERE tipo_atividade_status.id = atividade.tipo_atividade_status_id) AS status,
+         ${SELECIONAR_PRIORIDADE},
          created_date    AS "createdDate"`,
       parametros,
     );

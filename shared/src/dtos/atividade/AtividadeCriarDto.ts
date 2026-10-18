@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import { IsArray, IsEnum, IsNumber, IsOptional, IsString, Matches, MaxLength, Min, MinLength } from 'class-validator';
+import { TipoAtividadePrioridadeEnum } from '../../enums/tipo-atividade-prioridade.enum';
 import { TipoAtividadeStatusEnum } from '../../enums/tipo-atividade-status.enum';
 import {
   REGEX_SEM_CARACTERES_PROIBIDOS,
@@ -26,6 +27,11 @@ export class AtividadeCriarDto {
 
   @IsEnum(TipoAtividadeStatusEnum)
   status: TipoAtividadeStatusEnum;
+
+  /** Sem prioridade informada, a atividade nasce INDEFINIDA. */
+  @IsOptional()
+  @IsEnum(TipoAtividadePrioridadeEnum)
+  prioridade?: TipoAtividadePrioridadeEnum;
 
   @IsOptional()
   @IsArray()

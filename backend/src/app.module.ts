@@ -9,6 +9,7 @@ import { TagModule } from './modules/tag/tag.module';
 import { ProjetoModule } from './modules/projeto/projeto.module';
 import { DemandaModule } from './modules/demanda/demanda.module';
 import { AtividadeModule } from './modules/atividade/atividade.module';
+import { AtividadePrioridadeModule } from './modules/atividade-prioridade/atividade-prioridade.module';
 import { ExecucaoModule } from './modules/execucao/execucao.module';
 import { CalendarioModule } from './modules/calendario/calendario.module';
 import { PontoModule } from './modules/ponto/ponto.module';
@@ -23,6 +24,6 @@ import { AssistenteModule } from './modules/assistente/assistente.module';
 import { RelatorioModule } from './modules/relatorio/relatorio.module';
 
 @Module({
-  imports: [ScheduleModule.forRoot(), ConfigModule, DatabaseModule, CoreModule, AutenticacaoModule, UsuarioModule, TagModule, ProjetoModule, DemandaModule, AtividadeModule, ExecucaoModule, CalendarioModule, PontoModule, PontoJustificativaModule, AnotacaoModule, ConfiguracaoIaModule, PromptModule, ChatModule, PropostaIaModule, FerramentaIaModule, AssistenteModule, RelatorioModule],
+  imports: [ScheduleModule.forRoot(), ConfigModule, DatabaseModule, CoreModule, AutenticacaoModule, UsuarioModule, TagModule, ProjetoModule, DemandaModule, AtividadeModule, AtividadePrioridadeModule, ExecucaoModule, CalendarioModule, PontoModule, PontoJustificativaModule, AnotacaoModule, ConfiguracaoIaModule, PromptModule, ChatModule, PropostaIaModule, FerramentaIaModule, AssistenteModule, RelatorioModule],
 })
 export class AppModule {}

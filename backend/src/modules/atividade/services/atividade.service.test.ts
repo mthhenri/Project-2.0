@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
+import { TipoAtividadePrioridadeEnum, TipoAtividadeStatusEnum, TipoUsuarioEnum } from '@project20/shared';
 import { AtividadeService } from './atividade.service';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
@@ -32,4 +33,35 @@ test('restaurar: com a demanda ativa reativa a atividade', async () => {
     restaurar: async () => ({ id: 1, demandaId: 9, nome: 'A' }),
   });
   assert.equal((await servico.restaurar({ id: 1 })).dados?.id, 1);
+});
+
+// criar(): a prioridade que não vem no pedido é INDEFINIDA (a service fornece o valor, o banco não tem DEFAULT).
+function criarServicoDeCriacao(inseridas: Record<string, unknown>[]): AtividadeService {
+  const servico = Object.create(AtividadeService.prototype) as Record<string, unknown>;
+  servico.demandaRepositorio = { recuperar: async () => ({ id: 9 }) };
+  servico.tagRepositorio = {};
+  servico.atividadeRepositorio = {
+    inserir: async (dados: Record<string, unknown>) => {
+      inseridas.push(dados);
+      return { id: 1, ...dados };
+    },
+  };
+  return servico as unknown as AtividadeService;
+}
+
+const GESTOR_ATIVO = { sub: 2, tipo: TipoUsuarioEnum.GESTOR } as never;
+
+test('criar: sem prioridade informada a atividade nasce INDEFINIDA', async () => {
+  const inseridas: Record<string, unknown>[] = [];
+  await criarServicoDeCriacao(inseridas).criar({ demandaId: 9, nome: 'Ajustar login', status: TipoAtividadeStatusEnum.PLANEJADA }, GESTOR_ATIVO);
+  assert.equal(inseridas[0].prioridade, TipoAtividadePrioridadeEnum.INDEFINIDA);
+});
+
+test('criar: a prioridade informada é a gravada', async () => {
+  const inseridas: Record<string, unknown>[] = [];
+  await criarServicoDeCriacao(inseridas).criar(
+    { demandaId: 9, nome: 'Ajustar login', status: TipoAtividadeStatusEnum.PLANEJADA, prioridade: TipoAtividadePrioridadeEnum.URGENTE },
+    GESTOR_ATIVO,
+  );
+  assert.equal(inseridas[0].prioridade, TipoAtividadePrioridadeEnum.URGENTE);
 });

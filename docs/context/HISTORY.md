@@ -12,6 +12,18 @@
 
 ---
 
+## 2026-10-18 — Task 142: prioridade de atividade, modelo e API
+
+Spec em `docs/specs/done/142-atividade-prioridade-modelo-e-api.spec.md`. Sem tela (a 143 cuida disso).
+
+- **Migration `0036`:** `tipo_atividade_prioridade` (molde das tabelas de referência mais `ordem` e `cor`; índice único parcial também em `ordem`) com os cinco seeds, e `atividade.tipo_atividade_prioridade_id` NOT NULL com FK e índice parcial; as atividades existentes recebem INDEFINIDA na própria migration. Subida, descida e nova subida conferidas no banco de dev (11 atividades, todas INDEFINIDA; depois do rollback tabela e coluna somem).
+- **Shared:** `TipoAtividadePrioridadeEnum`, `AtividadePrioridadeResumoDto`, `AtividadePrioridadeCorAlterarDto` (`#rrggbb`) e `AtividadePrioridadeCorAlteradaDto`; `prioridade` opcional em `AtividadeCriarDto`/`AtividadeAlterarDto`/`AtividadeInternoAlterarDto`; as quatro saídas (`Criada`, `Alterada`, `Recuperada`, `Resumo`) devolvem o objeto da prioridade (`codigo`, `descricao`, `ordem`, `cor`).
+- **Backend:** `AtividadeRepository` grava, devolve (fragmento `SELECIONAR_PRIORIDADE`) e ordena a listagem por `ordem` antes da ordem de antes; `AtividadeService.criar` fornece INDEFINIDA quando a prioridade não vem; novo módulo `atividade-prioridade` (`GET` para qualquer usuário, `PATCH :codigo` só administrador, cor em minúsculas).
+- **Impacto avaliado (`gerenciamento-de-impacto`):** os consumidores de `AtividadeResumoDto` são só a listagem e o detalhe da demanda no frontend (que compilam e passam a receber o campo novo); as consultas de `demanda` e `execucao` que tocam `atividade` têm DTOs próprios e **não** foram alteradas (assistente e relatórios não listam atividade pela rota que mudou).
+- **Testes:** backend 212 verdes (prioridade padrão e informada na criação; cor só pelo administrador e em minúsculas; código inexistente). Frontend compila.
+- **Verificado ao vivo** (backend e banco de dev, usuário administrador): criar com URGENTE e sem prioridade (INDEFINIDA), a URGENTE vem primeiro na listagem, alterar para BAIXA e recuperar devolvem o objeto com `ordem` e `cor`, `PATCH` com cor válida, cor inválida e código inexistente dão 200, 400 e 400. As duas atividades de teste foram excluídas (soft delete).
+- **Não verificado ao vivo:** o 403 de gestor/desenvolvedor no `PATCH` (só no teste da service e pelo `@AdministradorOnly`, que já é usado igual nas rotas de prompt).
+
 ## 2026-10-18 — Quebra dos blocos 6, 7, 9 e 10 do rework do chat em 17 tasks (142 a 158)
 
 Pedido do autor depois de fechar o bloco 5. Só especificação (nenhum código). Specs em `docs/specs/backlog/`, na ordem da tabela da guarda-chuva:

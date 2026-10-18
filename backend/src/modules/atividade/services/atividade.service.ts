@@ -17,7 +17,7 @@ import {
   TipoUsuarioEnum,
   temPermissaoDeGestor,
 } from '@project20/shared';
-import { StandardResponse } from '@project20/shared';
+import { StandardResponse, TipoAtividadePrioridadeEnum } from '@project20/shared';
 import { PaginatedResult } from '@project20/shared';
 import { AtividadeRestaurarDto, AtividadeRestauradaDto } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
@@ -68,6 +68,7 @@ export class AtividadeService {
       usuarioId:     executorId,
       nome:          dto.nome,
       status:        dto.status,
+      prioridade:    dto.prioridade ?? TipoAtividadePrioridadeEnum.INDEFINIDA,
     });
 
     if (dto.tagIds && dto.tagIds.length > 0) {
@@ -222,6 +223,7 @@ export class AtividadeService {
       id:            dto.id,
       nome:          dto.nome,
       status:        dto.status,
+      prioridade:    dto.prioridade,
     });
 
     return {

@@ -3,6 +3,7 @@ export * from './usuario/index';
 export * from './projeto/index';
 export * from './demanda/index';
 export * from './atividade/index';
+export * from './atividade-prioridade/index';
 export * from './execucao/index';
 export * from './ponto/index';
 export * from './ponto-justificativa/index';

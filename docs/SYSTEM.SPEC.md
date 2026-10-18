@@ -1231,7 +1231,8 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 | `usuario` | CRUD de usuários, troca de senha (o pad é do módulo `anotacao`; `PUT /usuario/:id` é só de gestor e administrador, nem o desenvolvedor altera o próprio perfil) |
 | `projeto` | CRUD de projetos — apenas gestor cria |
 | `demanda` | CRUD, hierarquia, grafo force-directed (D3), tags, atribuições |
-| `atividade` | CRUD de atividades vinculadas a demandas, tags, controle de status |
+| `atividade` | CRUD de atividades vinculadas a demandas, tags, controle de status e **prioridade** (task 142: `prioridade` opcional na criação e na alteração, INDEFINIDA quando não vem; os DTOs de saída devolvem o objeto `{ codigo, descricao, ordem, cor }`; a listagem ordena por `ordem` e depois pela ordem de antes) |
+| `atividade-prioridade` | `GET /atividade-prioridade` (qualquer usuário autenticado, da mais para a menos urgente) e `PATCH /atividade-prioridade/:codigo` (`@AdministradorOnly`, só `cor` `#rrggbb`, gravada em minúsculas; `codigo`, `descricao` e `ordem` são fixos) |
 | `execucao` | Iniciar e encerrar execuções, histórico por atividade. O **gestor** também pode **registrar manualmente** uma execução já encerrada (`@GestorOnly POST /execucao/registro`), informando início e fim para o dono da atividade (valida datas e sobreposição). A **edição** de execução (`PUT /execucao/:id`) altera `descricao`, `inicio_data` e `fim_data`. Um **job interno de auto-stop** (cron às 23:59:59 no fuso `APP_TIMEZONE`) encerra automaticamente todas as execuções abertas na virada do dia |
 | `ponto` | Resumo de ponto em três modos: **diário** (`GET /ponto/diario`), **mensal** (`GET /ponto/mensal`) e **todos hoje** (`GET /ponto/todos`, `@GestorOnly`). Calcula horas trabalhadas, intervalos e comparativo com meta; a meta é ponderada por **fração de dia** (1 dia útil, 0.5 meio período, 0 não útil/fim de semana) |
 | `calendario` | Gestão de dias não úteis (feriados, recessos) |

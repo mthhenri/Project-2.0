@@ -1,3 +1,4 @@
+import { TipoAtividadePrioridadeEnum } from '../../enums/tipo-atividade-prioridade.enum';
 import { TipoAtividadeStatusEnum } from '../../enums/tipo-atividade-status.enum';
 
 /**
@@ -10,4 +11,5 @@ export class AtividadeInternoAlterarDto {
   id: number;
   nome?: string;
   status?: TipoAtividadeStatusEnum;
+  prioridade?: TipoAtividadePrioridadeEnum;
 }

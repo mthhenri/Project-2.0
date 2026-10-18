@@ -1,3 +1,4 @@
+import { AtividadePrioridadeResumoDto } from '../atividade-prioridade/AtividadePrioridadeResumoDto';
 import { TipoAtividadeStatusEnum } from '../../enums/tipo-atividade-status.enum';
 
 export class AtividadeRecuperadaDto {
@@ -7,6 +8,7 @@ export class AtividadeRecuperadaDto {
   nomeUsuario: string;
   nome: string;
   status: TipoAtividadeStatusEnum;
+  prioridade: AtividadePrioridadeResumoDto;
   posicaoAtividadeUsuario: number;
   createdDate: Date;
 }

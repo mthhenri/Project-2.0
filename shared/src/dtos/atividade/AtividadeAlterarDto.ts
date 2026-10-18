@@ -1,4 +1,5 @@
 import { IsEnum, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
+import { TipoAtividadePrioridadeEnum } from '../../enums/tipo-atividade-prioridade.enum';
 import { TipoAtividadeStatusEnum } from '../../enums/tipo-atividade-status.enum';
 import {
   REGEX_SEM_CARACTERES_PROIBIDOS,
@@ -16,4 +17,8 @@ export class AtividadeAlterarDto {
   @IsOptional()
   @IsEnum(TipoAtividadeStatusEnum)
   status?: TipoAtividadeStatusEnum;
+
+  @IsOptional()
+  @IsEnum(TipoAtividadePrioridadeEnum)
+  prioridade?: TipoAtividadePrioridadeEnum;
 }
