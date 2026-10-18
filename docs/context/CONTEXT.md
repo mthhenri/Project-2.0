@@ -97,6 +97,7 @@ project-2.0/
 
 ## 3. Decisões Vivas
 
+- **[seed de desenvolvimento]** `npm run db:seed-dev` (raiz ou backend) cria o projeto `DEMO`, demandas, atividades e o desenvolvedor `dev.teste` / `project2026` no banco local. Idempotente; recusa produção (`APP_AMBIENTE=production` ou `DB_SSL=true`). Fica fora das migrations de propósito (`backend/src/database/scripts/seed-desenvolvimento.ts`).
 - **[descarte da revisão de UX]** A tela de **Atividades** fica como está (102–105 descartadas); a de
   **Execuções** foi reativada e redesenhada (110/111, ver abaixo). O que as toca só por tabela (padrão de dialogs 97, otimista 98, undo 99,
   chip global 95) continua e, ao ser implementado, vale para as telas atuais.

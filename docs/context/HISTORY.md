@@ -12,6 +12,15 @@
 
 ---
 
+## 2026-10-18 — Seed de desenvolvimento: projeto e desenvolvedor de teste
+
+Pedido do autor, fora de spec: subir o ambiente dev sem criar projeto e demandas à mão.
+
+- **`npm run db:seed-dev`** (`backend/src/database/scripts/seed-desenvolvimento.ts`, fora das migrations de propósito: dado de teste não vai a produção). Cria o projeto `DEMO` (ativo), 7 demandas em árvore (2 estruturais, 5 folhas com status variados), 7 atividades do desenvolvedor `dev.teste` / `project2026` (status e prioridades variados), uma `demanda_conexao` e `demanda_usuario` só para o desenvolvedor nas demandas não estruturais (gestores não entram, por tipo). Tudo numa transação.
+- **Guardas:** idempotente (se o projeto `DEMO` ativo existe, não faz nada; reaproveita o `dev.teste` se já existir) e recusa rodar com `APP_AMBIENTE=production` ou `DB_SSL=true`.
+- **Testes:** backend 404 (+2: guarda de produção e coerência do plano). **Ao vivo:** rodei no PostgreSQL local (criou 7 demandas e 7 atividades) e de novo (nada alterado).
+- **Não verificado:** login do `dev.teste` e a visão do desenvolvedor pela aplicação (a senha usa o mesmo `bcrypt.hash(…, 10)` do `UsuarioService`).
+
 ## 2026-10-18 — Ajustes do Project Desktop e do selo da IA
 
 Pedido do autor depois de usar o desktop; fora de spec (ajuste das tasks 152 e do chat).

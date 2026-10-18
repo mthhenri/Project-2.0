@@ -69,6 +69,10 @@ npm run db:migrate --workspace=backend
 > Troque a senha após o primeiro login. Em produção, recomenda-se remover ou
 > desativar esse usuário.
 
+> **Dados de teste (opcional, só dev):** `npm run db:seed-dev` cria o projeto `DEMO` com demandas,
+> atividades e uma conexão, e o desenvolvedor `dev.teste` / `project2026` já atribuído a elas.
+> É idempotente e recusa rodar com `APP_AMBIENTE=production` ou `DB_SSL=true`.
+
 ### 5. Inicie o backend e o frontend
 
 ```bash
