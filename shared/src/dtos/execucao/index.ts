@@ -20,3 +20,4 @@ export * from './ExecucaoRegistrarDto';
 export * from './ExecucaoRegistradaDto';
 export * from './ExecucaoSobreposicaoValidarDto';
 export * from './ExecucaoAcessoFiltrarDto';
+export * from './ExecucaoUltimaPorAtividadeListarDto';

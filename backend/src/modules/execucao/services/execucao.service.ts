@@ -19,6 +19,8 @@ import {
   ExecucaoRegistradaDto,
   TipoUsuarioEnum,
   temPermissaoDeGestor,
+  ExecucaoUltimaPorAtividadeDto,
+  ExecucaoUltimaPorAtividadeListarDto,
   TipoAtividadeStatusEnum,
 } from '@project20/shared';
 import { StandardResponse } from '@project20/shared';
@@ -222,6 +224,13 @@ export class ExecucaoService implements OnModuleInit {
    * Recupera a execução ativa (sem fim_data) do usuário autenticado, ou null.
    * Usada para alternar o estado play/pause na listagem de atividades.
    */
+  async listarUltimaPorAtividade(dto: ExecucaoUltimaPorAtividadeListarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<ExecucaoUltimaPorAtividadeDto[]>> {
+    if (!temPermissaoDeGestor(usuarioAtivo.tipo)) {
+      throw new UnauthorizedAccessException('Apenas gestores consultam a última execução das atividades da equipe');
+    }
+    return { sucesso: true, dados: await this.execucaoRepositorio.listarUltimaPorAtividade(dto), mensagem: 'Últimas execuções listadas com sucesso' };
+  }
+
   async recuperarAtiva(
     usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<ExecucaoAtivaDto | null>> {

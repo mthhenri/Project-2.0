@@ -19,6 +19,8 @@ import { ProporIniciarExecucaoFerramenta } from './ferramentas/propor-iniciar-ex
 import { ProporPausarExecucaoFerramenta } from './ferramentas/propor-pausar-execucao.ferramenta';
 import { ConsultarExecucaoAtivaFerramenta } from './ferramentas/consultar-execucao-ativa.ferramenta';
 import { ConsultarMudancasDaQuedaFerramenta } from './ferramentas/consultar-mudancas-da-queda.ferramenta';
+import { ListarAtividadesParadasFerramenta } from './ferramentas/listar-atividades-paradas.ferramenta';
+import { ListarExecucoesDaEquipeFerramenta } from './ferramentas/listar-execucoes-da-equipe.ferramenta';
 import { ListarMinhasExecucoesDoDiaFerramenta } from './ferramentas/listar-minhas-execucoes-do-dia.ferramenta';
 
 @Module({
@@ -30,6 +32,8 @@ import { ListarMinhasExecucoesDoDiaFerramenta } from './ferramentas/listar-minha
     ConsultarExecucaoAtivaFerramenta,
     ListarMinhasExecucoesDoDiaFerramenta,
     ConsultarMudancasDaQuedaFerramenta,
+    ListarExecucoesDaEquipeFerramenta,
+    ListarAtividadesParadasFerramenta,
     ProporIniciarExecucaoFerramenta,
     ProporPausarExecucaoFerramenta,
     IniciarExecucaoExecutor,
@@ -45,6 +49,8 @@ export class ExecucaoModule implements OnModuleInit {
     private readonly consultarExecucaoAtiva: ConsultarExecucaoAtivaFerramenta,
     private readonly listarMinhasExecucoesDoDia: ListarMinhasExecucoesDoDiaFerramenta,
     private readonly consultarMudancasDaQueda: ConsultarMudancasDaQuedaFerramenta,
+    private readonly listarExecucoesDaEquipe: ListarExecucoesDaEquipeFerramenta,
+    private readonly listarAtividadesParadas: ListarAtividadesParadasFerramenta,
     private readonly proporIniciarExecucao: ProporIniciarExecucaoFerramenta,
     private readonly proporPausarExecucao: ProporPausarExecucaoFerramenta,
     private readonly registroDeExecutores: ExecutorPropostaIaRegistro,
@@ -59,6 +65,8 @@ export class ExecucaoModule implements OnModuleInit {
     this.registroDeFerramentas.registrar(this.consultarExecucaoAtiva);
     this.registroDeFerramentas.registrar(this.listarMinhasExecucoesDoDia);
     this.registroDeFerramentas.registrar(this.consultarMudancasDaQueda);
+    this.registroDeFerramentas.registrar(this.listarExecucoesDaEquipe);
+    this.registroDeFerramentas.registrar(this.listarAtividadesParadas);
     this.registroDeFerramentas.registrar(this.proporIniciarExecucao);
     this.registroDeFerramentas.registrar(this.proporPausarExecucao);
     this.registroDeExecutores.registrar(this.iniciarExecucaoExecutor);

@@ -14,6 +14,8 @@ import {
   ExecucaoAtivaRecuperarDto,
   ExecucaoInternoAlterarDto,
   ExecucaoExcluirDto,
+  ExecucaoUltimaPorAtividadeDto,
+  ExecucaoUltimaPorAtividadeListarDto,
   ExecucaoUsuarioRecuperarDto,
   ExecucaoAtivaDto,
   ExecucaoDiaAgruparDto,
@@ -372,6 +374,20 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
       { id: dto.id, descricao: dto.descricao, inicioData: dto.inicioData, fimData: dto.fimData },
     );
     return resultado[0];
+  }
+
+  /** A data da última execução de cada atividade da lista (em andamento vale agora); atividade sem execução não vem na resposta. */
+  async listarUltimaPorAtividade(dto: ExecucaoUltimaPorAtividadeListarDto): Promise<ExecucaoUltimaPorAtividadeDto[]> {
+    if (dto.atividadeIds.length === 0) return [];
+    return this.executarConsulta<ExecucaoUltimaPorAtividadeDto>(
+      `SELECT execucao.atividade_id AS "atividadeId",
+              MAX(COALESCE(execucao.fim_data, NOW())) AS "ultimaData"
+       FROM execucao
+       WHERE execucao.atividade_id = ANY(:atividadeIds)
+         AND execucao.is_deleted = false
+       GROUP BY execucao.atividade_id`,
+      { atividadeIds: dto.atividadeIds },
+    );
   }
 
   /** Soft delete da execução. */

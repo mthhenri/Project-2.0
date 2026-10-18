@@ -12,6 +12,17 @@
 
 ---
 
+## 2026-10-18 — Task 153: o gestor lê a equipe pelo chat
+
+Spec em `docs/specs/done/153-chat-gestor-ferramentas-de-leitura.spec.md`.
+
+- **Ferramentas (todas `LEITURA`, permissão `GESTOR`):** `listar_execucoes_da_equipe_no_dia` (até 150 execuções do dia, agrupadas por pessoa por `agruparExecucoesPorPessoa`), `listar_atividades_paradas` (`calcularAtividadesParadas`: atividade em desenvolvimento sem execução em andamento cuja última execução, ou a criação se nunca teve, é de `diasParada` dias ou mais; examina até 200 e devolve até 30, a mais parada primeiro), `consultar_grafo_do_projeto` (até 80 demandas, `paiId`, horas executadas, flags de descrição, tags e só as arestas de conexão) e `consultar_demanda` (textos cortados em 2000 caracteres com a marca `textoCortado`, até 30 atividades). Todas chamam as services com o usuário do token; o gestor tem acesso total por tipo.
+- **Novo no backend:** `ExecucaoRepository.listarUltimaPorAtividade` e `ExecucaoService.listarUltimaPorAtividade` (só gestor; DTOs `ExecucaoUltimaPorAtividadeListarDto/Dto` no `shared`) para a data da última execução de cada atividade em uma consulta só.
+- **Decisões:** `listar_projetos` ficou como está (task 159, qualquer usuário vê o que a tela de projetos mostra a ele), em vez de duplicá-lo como ferramenta de gestor; `consultar_demanda` mora no `AtividadeModule` (depende das atividades, e `DemandaModule` não importa `AtividadeModule`); **o prompt `CONVERSA` não ganhou versão nova** (decisão da task 131 para não sobrescrever a versão ativa do administrador): o desenvolvedor não tem as ferramentas (o registro as filtra), então a IA não tem como descrever a equipe para ele, e as descrições das ferramentas mandam falar da equipe só com quem perguntou.
+- **Testes:** backend 375 (+11: agrupamento, atividades paradas, registro que esconde as quatro do desenvolvedor, usuário do token e filtros, limites, corte dos textos); frontend sem alteração além do build (os DTOs novos entram no `shared`); builds passam; sem lint (P-001).
+- **Verificado ao vivo (IA real, gestor):** "o que a equipe fez hoje?" chamou a ferramenta e respondeu por pessoa (Gestor ontem, Matheus Silva hoje, com minutos e atividade); "quais atividades estão paradas há mais de 7 dias?" listou três com responsável e dias; "como está organizado o projeto GR?" usou o grafo e mostrou Cadastro → Novo cadastro sem descrições; "consulte a demanda Novo cadastro" trouxe as três atividades, quem trabalhou e as tags.
+- **Não verificado:** o desenvolvedor perguntando o mesmo na aplicação real (só o teste do registro: ele não tem as ferramentas), o corte de textos longos e os limites com dados reais volumosos, e conexões entre demandas (o projeto de teste não tem).
+
 ## 2026-10-18 — Task 158: retorno da IA, "agora não" e retomada
 
 Spec em `docs/specs/done/158-fallback-retorno-da-ia-e-retomada.spec.md`. Fecha o bloco 10 (fallback).

@@ -10,6 +10,7 @@ import { ExecutorPropostaIaRegistro } from '../proposta-ia/domain/executor-propo
 import { PropostaIaModule } from '../proposta-ia/proposta-ia.module';
 import { ProjetoModule } from '../projeto/projeto.module';
 import { CriarDemandaExecutor } from './executores/criar-demanda.executor';
+import { ConsultarGrafoDoProjetoFerramenta } from './ferramentas/consultar-grafo-do-projeto.ferramenta';
 import { ListarDemandasDoProjetoFerramenta } from './ferramentas/listar-demandas-do-projeto.ferramenta';
 import { ListarMinhasDemandasFerramenta } from './ferramentas/listar-minhas-demandas.ferramenta';
 import { ProporCriarDemandaFerramenta } from './ferramentas/propor-criar-demanda.ferramenta';
@@ -17,7 +18,7 @@ import { ProporCriarDemandaFerramenta } from './ferramentas/propor-criar-demanda
 @Module({
   imports:     [TagModule, UsuarioModule, FerramentaIaModule, PropostaIaModule, ProjetoModule],
   controllers: [DemandaController],
-  providers:   [DemandaService, DemandaRepository, ListarMinhasDemandasFerramenta, ListarDemandasDoProjetoFerramenta, ProporCriarDemandaFerramenta, CriarDemandaExecutor],
+  providers:   [DemandaService, DemandaRepository, ListarMinhasDemandasFerramenta, ListarDemandasDoProjetoFerramenta, ConsultarGrafoDoProjetoFerramenta, ProporCriarDemandaFerramenta, CriarDemandaExecutor],
   exports:     [DemandaService, DemandaRepository],
 })
 export class DemandaModule implements OnModuleInit {
@@ -25,6 +26,7 @@ export class DemandaModule implements OnModuleInit {
     private readonly registroDeFerramentas: FerramentaIaRegistro,
     private readonly listarMinhasDemandas: ListarMinhasDemandasFerramenta,
     private readonly listarDemandasDoProjeto: ListarDemandasDoProjetoFerramenta,
+    private readonly consultarGrafoDoProjeto: ConsultarGrafoDoProjetoFerramenta,
     private readonly proporCriarDemanda: ProporCriarDemandaFerramenta,
     private readonly registroDeExecutores: ExecutorPropostaIaRegistro,
     private readonly criarDemandaExecutor: CriarDemandaExecutor,
@@ -34,6 +36,7 @@ export class DemandaModule implements OnModuleInit {
   onModuleInit(): void {
     this.registroDeFerramentas.registrar(this.listarMinhasDemandas);
     this.registroDeFerramentas.registrar(this.listarDemandasDoProjeto);
+    this.registroDeFerramentas.registrar(this.consultarGrafoDoProjeto);
     this.registroDeFerramentas.registrar(this.proporCriarDemanda);
     this.registroDeExecutores.registrar(this.criarDemandaExecutor);
   }
