@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { dataDaConversa, extrairEventos, formatarDuracao, paresDosDados, rotuloDoDia, semMarcacaoMarkdown } from './chat.util';
+import { StatusPropostaIaEnum, TipoPropostaIaEnum } from '@project20/shared';
+import { dataDaConversa, extrairEventos, formatarDuracao, paresDosDados, rotuloDoDia, semMarcacaoMarkdown, sugestoesAposProposta, sugestoesIniciais } from './chat.util';
 
 test('lê vários eventos de uma vez', () => {
   const texto = 'data: {"tipo":"trecho","texto":"Bom "}\n\ndata: {"tipo":"trecho","texto":"dia"}\n\n';
@@ -66,4 +67,30 @@ test('formata a duração como o cartão a diz', () => {
   assert.equal(formatarDuracao(90), '1h30');
   assert.equal(formatarDuracao(160), '2h40');
   assert.equal(formatarDuracao(125), '2h05');
+});
+
+test('os botões iniciais lembram do que a IA faz de novo, por tipo de usuário', () => {
+  assert.ok(sugestoesIniciais(true).includes('Registrar o horário de alguém'));
+  assert.ok(sugestoesIniciais(false).includes('Corrigir um horário de ontem'));
+  assert.ok(!sugestoesIniciais(false).includes('Registrar o horário de alguém'), 'registrar é do gestor');
+  assert.equal(sugestoesIniciais(true).length, 4);
+  assert.equal(sugestoesIniciais(false).length, 4);
+});
+
+test('depois de confirmar um cartão os botões seguem o que aconteceu, e o gestor ganha o registro de horário', () => {
+  const dev = sugestoesAposProposta(TipoPropostaIaEnum.CRIAR_ATIVIDADE, StatusPropostaIaEnum.CONFIRMADA, false);
+  const gestor = sugestoesAposProposta(TipoPropostaIaEnum.CRIAR_ATIVIDADE, StatusPropostaIaEnum.CONFIRMADA, true);
+  assert.ok(dev.includes('Começar essa atividade') && gestor.includes('Começar essa atividade'));
+  assert.ok(gestor.includes('Registrar o horário dessa atividade'));
+  assert.ok(!dev.includes('Registrar o horário dessa atividade'));
+  assert.deepEqual(sugestoesAposProposta(TipoPropostaIaEnum.INICIAR_EXECUCAO, StatusPropostaIaEnum.AJUSTADA, false), ['Pausar essa execução', 'Vou almoçar', 'Trocar para outra atividade']);
+});
+
+test('recusar, desfazer ou expirar não abrem próximo passo, e há no máximo quatro botões', () => {
+  for (const status of [StatusPropostaIaEnum.EXPIRADA, StatusPropostaIaEnum.DESFEITA, StatusPropostaIaEnum.PENDENTE]) {
+    assert.deepEqual(sugestoesAposProposta(TipoPropostaIaEnum.CRIAR_ATIVIDADE, status, true), []);
+  }
+  for (const tipo of Object.values(TipoPropostaIaEnum)) {
+    assert.ok(sugestoesAposProposta(tipo, StatusPropostaIaEnum.CONFIRMADA, true).length <= 4);
+  }
 });

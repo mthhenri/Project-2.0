@@ -30,6 +30,44 @@ export const ROTULO_NIVEL: Record<NivelIaEnum, string> = {
   [NivelIaEnum.ANALITICO]: 'analítico',
 };
 
+/** Os botões de quando a conversa ainda não tem sugestão da IA: o que mais se faz por aqui, por tipo de usuário. */
+export function sugestoesIniciais(eGestor: boolean): string[] {
+  return eGestor
+    ? ['O que a equipe fez hoje?', 'Registrar o horário de alguém', 'Criar uma atividade para alguém', 'Criar uma demanda']
+    : ['O que eu tenho pra fazer hoje?', 'Quero começar uma atividade', 'Corrigir um horário de ontem', 'Anotar algo no pad'];
+}
+
+/** Os próximos passos naturais depois de resolver uma proposta (a IA não responde de novo ao clique no cartão, então os botões não mudariam). */
+const PROXIMOS_PASSOS_DA_PROPOSTA: Partial<Record<TipoPropostaIaEnum, { todos?: string[]; gestor?: string[]; desenvolvedor?: string[] }>> = {
+  [TipoPropostaIaEnum.CRIAR_ATIVIDADE]: { todos: ['Começar essa atividade', 'Criar outra atividade nessa demanda'], gestor: ['Registrar o horário dessa atividade'], desenvolvedor: ['Anotar algo no pad'] },
+  [TipoPropostaIaEnum.ALTERAR_ATIVIDADE]: { todos: ['O que mais eu tenho pra fazer?', 'Começar uma atividade'] },
+  [TipoPropostaIaEnum.INICIAR_EXECUCAO]: { todos: ['Pausar essa execução', 'Vou almoçar', 'Trocar para outra atividade'] },
+  [TipoPropostaIaEnum.PAUSAR_EXECUCAO]: { todos: ['Começar outra atividade', 'Quanto falta para fechar o dia?', 'O que eu fiz hoje?'] },
+  [TipoPropostaIaEnum.DESCREVER_EXECUCAO]: { todos: ['Como está meu dia?', 'Começar outra atividade'] },
+  [TipoPropostaIaEnum.REGISTRAR_EXECUCAO]: { todos: ['Registrar outro horário', 'Quanto ele fez no mês?'] },
+  [TipoPropostaIaEnum.CORRIGIR_EXECUCAO]: { todos: ['Corrigir outra execução', 'Quanto falta para fechar o dia?'] },
+  [TipoPropostaIaEnum.CRIAR_PROJETO]: { todos: ['Criar uma demanda nesse projeto', 'Colocar alguém numa demanda'] },
+  [TipoPropostaIaEnum.CRIAR_DEMANDA]: { todos: ['Criar atividades nessa demanda', 'Conectar essa demanda a outra', 'Descrever essa demanda'] },
+  [TipoPropostaIaEnum.DESCREVER_DEMANDA]: { todos: ['Criar atividades nessa demanda', 'Colocar alguém nessa demanda'] },
+  [TipoPropostaIaEnum.ALTERAR_DEMANDA]: { todos: ['Marcar tags nessa demanda', 'Criar uma atividade nessa demanda'] },
+  [TipoPropostaIaEnum.CONECTAR_DEMANDA]: { todos: ['Conectar outra demanda', 'Mostrar como as demandas se conectam'] },
+  [TipoPropostaIaEnum.ATRIBUIR_MEMBRO]: { todos: ['Criar uma atividade para ele', 'Marcar tags nessa demanda'] },
+  [TipoPropostaIaEnum.ATRIBUIR_TAG]: { todos: ['Marcar outra demanda', 'Quanto tempo o projeto consumiu este mês?'] },
+  [TipoPropostaIaEnum.ANOTAR_PAD]: { todos: ['Mostrar meu pad', 'O que eu tenho pra fazer hoje?'] },
+  [TipoPropostaIaEnum.SUSPENDER_CHECKIN]: { todos: ['Retomar os check-ins', 'O que eu tenho pra fazer hoje?'] },
+};
+
+/**
+ * Os botões depois de o usuário **resolver** uma proposta. Só confirmar (ou ajustar e confirmar) abre um próximo passo; recusar, desfazer
+ * e expirar devolvem a lista vazia (a tela volta às sugestões de antes).
+ */
+export function sugestoesAposProposta(tipo: TipoPropostaIaEnum, status: StatusPropostaIaEnum, eGestor: boolean): string[] {
+  if (status !== StatusPropostaIaEnum.CONFIRMADA && status !== StatusPropostaIaEnum.AJUSTADA) return [];
+  const passos = PROXIMOS_PASSOS_DA_PROPOSTA[tipo];
+  if (!passos) return [];
+  return [...(passos.todos ?? []), ...((eGestor ? passos.gestor : passos.desenvolvedor) ?? [])].slice(0, 4);
+}
+
 export const ROTULO_TIPO_PROPOSTA: Record<TipoPropostaIaEnum, string> = {
   [TipoPropostaIaEnum.INICIAR_EXECUCAO]: 'Iniciar execução',
   [TipoPropostaIaEnum.PAUSAR_EXECUCAO]: 'Pausar execução',

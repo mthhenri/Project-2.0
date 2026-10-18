@@ -8,14 +8,14 @@ import { ButtonModule } from 'primeng/button';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TextareaModule } from 'primeng/textarea';
 import { TooltipModule } from 'primeng/tooltip';
-import { AutorChatEnum, ChatEventoDto, ChatMensagemResumoDto, EstadoIaEnum, NivelIaEnum } from '@project20/shared';
+import { AutorChatEnum, ChatEventoDto, ChatMensagemResumoDto, EstadoIaEnum, NivelIaEnum, PropostaIaResumoDto } from '@project20/shared';
 import { IaDisponibilidadeService } from '../../../../core/services/ia-disponibilidade.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
 import { HistoricoComponent, MensagemDoHistorico } from '../../components/historico/historico.component';
 import { PropostaCartaoComponent } from '../../components/proposta-cartao/proposta-cartao.component';
 import { ChatService, ErroDoChat } from '../../services/chat.service';
-import { dataDaConversa, ROTULO_NIVEL } from '../../utils/chat.util';
+import { dataDaConversa, ROTULO_NIVEL, sugestoesAposProposta, sugestoesIniciais } from '../../utils/chat.util';
 
 /** Uma mensagem como a tela a mostra: as da conversa do dia mais as locais (otimistas), com os cartões de proposta ligados a ela. */
 interface MensagemNaTela {
@@ -102,15 +102,18 @@ export class ChatPage implements OnInit {
   /** Atalhos acima do campo: só com o campo vazio e a IA livre para receber. */
   private readonly sessao = inject(UsuarioSessaoService);
   /** As sugestões de quando a conversa ainda não tem nenhuma da IA: o que mais se faz por aqui (o gestor também cria demandas e projetos). */
-  readonly sugestoesIniciais = computed(() =>
-    this.sessao.eGestor()
-      ? ['O que eu tenho pra fazer hoje?', 'Criar uma demanda', 'Criar um projeto', 'Anotar algo no pad']
-      : ['O que eu tenho pra fazer hoje?', 'Quero começar uma atividade', 'Criar uma atividade', 'Anotar algo no pad'],
-  );
+  readonly sugestoesIniciais = computed(() => sugestoesIniciais(this.sessao.eGestor()));
   /** As sugestões que a IA trouxe junto da última resposta; somem quando o usuário manda outra mensagem. */
   readonly sugestoesDaIa = signal<string[]>([]);
   readonly sugestoes = computed(() => (this.sugestoesDaIa().length > 0 ? this.sugestoesDaIa() : this.sugestoesIniciais()));
   readonly podeSugerir = computed(() => !this.enviando() && !this.iaDesligada() && !this.somenteLeitura() && this.textoDigitado().trim() === '');
+  /** O usuário resolveu um cartão (confirmou, ajustou, recusou ou desfez): a IA não responde a esse clique, então os botões seguem o que acabou de acontecer. */
+  aoResolverProposta(proposta: PropostaIaResumoDto): void {
+    const proximos = sugestoesAposProposta(proposta.tipo, proposta.status, this.sessao.eGestor());
+    // Recusar, desfazer ou expirar não abrem um próximo passo: ficam os botões que já estavam.
+    if (proximos.length > 0) this.sugestoesDaIa.set(proximos);
+  }
+
   /** A última mensagem é a do sistema (falha): oferece "Tentar de novo". */
   readonly ultimaFoiFalha = computed(() => this.mensagens().at(-1)?.autor === AutorChatEnum.SISTEMA && !this.enviando());
   private contadorLocal = 0;

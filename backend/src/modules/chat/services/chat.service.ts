@@ -27,7 +27,7 @@ import { PropostaIaService } from '../../proposta-ia/services/proposta-ia.servic
 import { limparTitulo } from '../domain/chat-consultas';
 import { montarAberturaDoDia } from '../domain/abertura-do-dia';
 import { montarRetomadaAposQueda } from '../domain/retomada-apos-queda';
-import { INSTRUCOES_DE_SUGESTOES, interpretarSugestoes } from '../domain/sugestoes';
+import { interpretarSugestoes, montarInstrucoesDeSugestoes } from '../domain/sugestoes';
 import { instanteDoDiaUtilAnterior, montarConversaId } from '../domain/chat-conversa';
 import { ChatMensagemLida, paraResumo } from '../domain/chat-mensagem.documento';
 import { ARMAZENAMENTO_DE_CHAT, ArmazenamentoDeChat } from '../repositories/armazenamento-de-chat';
@@ -315,7 +315,8 @@ export class ChatService {
       const ultimaDoUsuario = [...conversa].reverse().find((mensagem) => mensagem.autor === AutorChatEnum.USUARIO);
       const resposta = await this.iaService.gerar({
         nivel: NivelIaEnum.RAPIDO,
-        instrucoes: INSTRUCOES_DE_SUGESTOES,
+        // Só as ferramentas que este tipo de usuário pode usar: a IA sugere o que ele de fato consegue fazer.
+        instrucoes: montarInstrucoesDeSugestoes(this.ferramentaIaRegistro.listarParaUsuario(usuarioAtivo).map((ferramenta) => ferramenta.nome)),
         mensagens: [
           {
             papel: 'usuario',

@@ -20,7 +20,7 @@ export class ProporRegistrarExecucaoFerramenta extends FerramentaPropostaIa<Prop
   readonly nome = 'propor_registrar_execucao';
   readonly descricao =
     'Propõe registrar uma execução passada, já encerrada, numa atividade (`atividadeId` de listar_minhas_atividades ou de consulta da equipe), com `data` (yyyy-mm-dd), `horaInicio` e `horaFim` (HH:mm) no horário do sistema e uma `descricao` do que foi feito. ' +
-    'Resolva "ontem", "segunda" etc. com consultar_data_e_hora ANTES de propor e confira o resultado no cartão. Nada é registrado até o gestor confirmar. ' +
+    'Resolva "ontem", "segunda" etc. com consultar_data_e_hora ANTES de propor e confira o resultado no cartão. Nada é registrado até o gestor confirmar (quem conversa com você; a pessoa dona da atividade NÃO precisa confirmar nada). ' +
     'Recusa período no futuro, invertido ou que se sobreponha a outra execução da pessoa. O registro vai para o dono da atividade.';
   readonly permissao = 'GESTOR' as const;
   readonly classeDeEntrada = ProporRegistrarExecucaoDto;

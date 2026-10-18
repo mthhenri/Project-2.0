@@ -74,7 +74,7 @@
                         }
                         <app-markdown-visualizador [texto]="mensagem.texto" />
                         @for (propostaId of mensagem.propostaIds; track propostaId) {
-                          <app-chat-proposta-cartao [propostaId]="propostaId" />
+                          <app-chat-proposta-cartao [propostaId]="propostaId" (resolvida)="aoResolverProposta($event)" />
                         }
                         <div class="chat__rodape-mensagem">
                           @if (mensagem.criadaEm) {
@@ -114,7 +114,7 @@
                       <span class="chat__ferramenta" role="status" aria-label="A IA está pensando"><span class="chat__pontos" aria-hidden="true"><i></i><i></i><i></i></span></span>
                     }
                     @for (propostaId of resposta.propostaIds; track propostaId) {
-                      <app-chat-proposta-cartao [propostaId]="propostaId" />
+                      <app-chat-proposta-cartao [propostaId]="propostaId" (resolvida)="aoResolverProposta($event)" />
                     }
                   </div>
                 </div>

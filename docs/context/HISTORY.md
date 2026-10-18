@@ -12,6 +12,16 @@
 
 ---
 
+## 2026-10-18 — Chat: botões de sugestão que conhecem o que a IA faz
+
+Pedido do autor, ao ver os botões depois de confirmar um cartão ("não trazem sugestões novas; poderia ter 'registrar horário'"). Três causas, três correções:
+
+1. **Botões iniciais estáticos e antigos** → atualizados (`sugestoesIniciais`): gestor "O que a equipe fez hoje?", "Registrar o horário de alguém", "Criar uma atividade para alguém", "Criar uma demanda"; desenvolvedor "O que eu tenho pra fazer hoje?", "Quero começar uma atividade", "Corrigir um horário de ontem", "Anotar algo no pad".
+2. **A chamada rápida que gera as sugestões não sabia o que a IA faz** (só via o último trecho da conversa) → a instrução agora traz a lista de coisas que **este tipo de usuário** pode pedir (uma frase por ferramenta, filtrada pelo registro por permissão) e manda incluir ao menos uma ação possível ainda não usada. Teste: toda frase aponta para uma ferramenta que existe no código.
+3. **Confirmar um cartão não gera nova resposta da IA, então os botões não mudavam** → o cartão emite `resolvida` e a tela troca os botões pelos próximos passos do tipo (ex.: criar atividade → "Começar essa atividade", "Criar outra atividade nessa demanda", e para o gestor "Registrar o horário dessa atividade"). Recusar, desfazer e expirar deixam os botões como estavam. Sem chamada extra.
+- **Também:** a descrição de `propor_registrar_execucao` agora diz que quem confirma é o gestor que conversa, não o dono da atividade (a IA tinha afirmado o contrário na conversa de teste).
+- **Testes:** backend 492 (+3), frontend 41 (+3); builds passam. **Verificado ao vivo:** os botões iniciais do gestor na tela real. **Não verificado:** a IA gerando as sugestões novas (precisa de conversa real) e os botões trocando depois de um clique em Confirmar.
+
 ## 2026-10-18 — Task 169: IA do gestor age por outro usuário — verificação visual pendente
 
 Corrige a lacuna achada no teste do autor ("cria uma atividade para ele naquela demanda"): a IA só atuava sobre o usuário do token.

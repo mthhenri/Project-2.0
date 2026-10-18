@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -102,6 +102,9 @@ export class PropostaCartaoComponent {
     const atual = this.proposta();
     return !!atual && atual.status === StatusPropostaIaEnum.PENDENTE && PropostaCartaoComponent.TIPOS_AJUSTAVEIS.includes(atual.tipo);
   });
+
+  /** A proposta mudou de situação por uma ação do usuário (confirmar, ajustar, recusar, desfazer): a tela atualiza os botões de sugestão. */
+  readonly resolvida = output<PropostaIaResumoDto>();
 
   constructor() {
     this.prioridadeService.carregar();
@@ -287,6 +290,7 @@ export class PropostaCartaoComponent {
       next: (resposta) => {
         this.operando.set(false);
         this.proposta.set(resposta.dados ?? null);
+        if (resposta.dados) this.resolvida.emit(resposta.dados);
         aoSucesso?.();
       },
       error: (erro: HttpErrorResponse) => {
