@@ -12,6 +12,10 @@
 
 ---
 
+## 2026-10-17 — Painel Histórico do chat passa a ser um cartão
+
+Ajuste da task 141 a pedido do autor: a faixa recolhida parecia solta (fundo branco colado na borda, só um ícone). O painel agora é um cartão arredondado com a mesma margem da conversa (`.chat` com respiro à direita, em cima e embaixo) e, recolhido, mostra o ícone e o nome "Histórico" na vertical. Só `historico.component.{html,scss}` e `chat.page.scss`. Verificado ao vivo (painel aberto e recolhido, janela estreita do navegador embutido); 1920×1080, 1080×1920 e tema escuro não revistos depois deste ajuste.
+
 ## 2026-10-17 — Task 141: histórico de conversas do chat e refinos visuais
 
 Pedido do autor sobre a tela do chat: sem o cabeçalho ("Chat" e "conversa de hoje" repetiam o menu), a busca passa a morar num **painel Histórico** à direita que recolhe, junto com a lista das conversas de todos os dias. Spec em `docs/specs/done/141-chat-historico-e-refinos-visuais.spec.md` (usou o 141; os blocos 6, 7, 9 e 10 serão numerados a partir da 142).

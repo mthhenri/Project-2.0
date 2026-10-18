@@ -14,7 +14,9 @@
     />
   </header>
 
-  @if (aberto()) {
+  @if (!aberto()) {
+    <span class="chat-historico__rotulo-vertical" aria-hidden="true">Histórico</span>
+  } @else {
     <span class="chat-historico__busca">
       <i class="pi pi-search chat-historico__busca-icone"></i>
       <input
