@@ -94,7 +94,7 @@ centralizada, administrador, layout, Markdown), do bloco 8 (**125–128**, pad e
 fundação da IA, já implementado), da **134** (editor de Markdown formatado, que troca o editor em todo o sistema) e do bloco 5
 (**135–141**, chat: OpenSearch, propostas, ferramentas, conversa com streaming, tela, teste de prompts e histórico, já implementados) e dos blocos 6, 7, 9 e 10
 (**142–161**: prioridade e ferramentas do desenvolvedor, check-in e Electron, lado do gestor e fallback, todas já implementadas). Confira o próximo número livre antes de criar
-uma spec nova: o maior em uso é 168 (162 e 163: armazenamento do chat trocável, já implementado; 164–168, bloco 11 da guarda-chuva, no backlog: a IA lê ponto, calendário, tags e equipe e propõe alterar atividade e demanda, registrar e corrigir execuções e atribuir membros e tags).
+uma spec nova: o maior em uso é 169 (162 e 163: armazenamento do chat trocável, já implementado; 164–169, bloco 11 da guarda-chuva, no backlog: a IA lê ponto, calendário, tags e equipe e propõe alterar atividade e demanda, registrar e corrigir execuções e atribuir membros e tags).
 
 ## Gate obrigatório de qualidade e conclusão
 

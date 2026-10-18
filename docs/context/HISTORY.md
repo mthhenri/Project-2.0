@@ -12,6 +12,10 @@
 
 ---
 
+## 2026-10-18 — Lacuna achada em teste: IA só age pelo próprio usuário (spec 169)
+
+O autor pediu à IA "cria uma atividade para ele naquela demanda" (falando de outro usuário) e ela recusou. Confere com o código: as ferramentas de ação (`propor_criar_atividade`, iniciar e pausar execução, consultar execução ativa, listar atividades) só atuam sobre o usuário do token, enquanto as telas deixam gestor e administrador criar atividade para outro (`AtividadeCriarDto.usuarioId`) e iniciar e encerrar a execução de qualquer atividade. Não estava no mapa de lacunas (o mapa olhou *o que* a tela faz, não *para quem*). Spec **169** no backlog (bloco 11); sem código.
+
 ## 2026-10-18 — Detalhe da demanda: seletor de membros e bolinha das tags
 
 Defeitos apontados pelo autor, fora de spec.
