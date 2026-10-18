@@ -11,3 +11,6 @@ coverage/
 .superpowers/
 
 desktop/release/
+
+# Configuração local do preview do app (cada máquina tem a sua)
+.claude/launch.json
