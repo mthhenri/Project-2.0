@@ -1,0 +1,157 @@
+<div class="checkin">
+  <header class="checkin__cabecalho">
+    <span class="checkin__logo" aria-hidden="true">P2</span>
+    <div class="checkin__titulos">
+      <h1 class="checkin__titulo">Hora do check-in</h1>
+      @if (situacao()?.execucao; as execucao) {
+        <span class="checkin__subtitulo">{{ execucao.atividade }} · {{ execucao.demanda }}</span>
+      }
+    </div>
+    @if (situacao(); as dados) {
+      @if (dados.execucao; as execucao) {
+        <span
+          class="checkin__duracao"
+          [class.checkin__duracao--acima]="acimaDoRecomendado()"
+          [pTooltip]="'Duração recomendada de uma execução: ' + formatarDuracao(dados.duracaoRecomendadaMinutos)"
+          tooltipPosition="bottom"
+        >
+          <i class="pi pi-clock"></i>{{ formatarDuracao(execucao.minutos) }}
+          @if (acimaDoRecomendado()) {
+            <span class="checkin__duracao-nota">acima do recomendado</span>
+          }
+        </span>
+      }
+    }
+  </header>
+
+  <main class="checkin__corpo">
+    @switch (estado()) {
+      @case ('CARREGANDO') {
+        <div class="checkin__esqueleto" aria-busy="true">
+          <p-skeleton height="3rem" width="60%" />
+          <p-skeleton height="6rem" />
+        </div>
+      }
+      @case ('ERRO') {
+        <div class="checkin__aviso checkin__aviso--erro" role="alert">
+          <i class="pi pi-exclamation-triangle"></i>
+          <span>Não foi possível carregar o check-in.</span>
+          <p-button label="Tentar de novo" icon="pi pi-refresh" size="small" [outlined]="true" (onClick)="carregar()" />
+        </div>
+      }
+      @case ('SEM_EXECUCAO') {
+        <div class="checkin__estado" role="status">
+          <i class="pi pi-pause-circle"></i>
+          <h2>Não há check-in agora</h2>
+          <p>Você não tem execução em andamento. Esta janela se fecha sozinha.</p>
+          <p-button label="Fechar" severity="secondary" [outlined]="true" (onClick)="fechar()" />
+        </div>
+      }
+      @case ('IA_INDISPONIVEL') {
+        <div class="checkin__estado" role="status">
+          <i class="pi pi-power-off"></i>
+          <h2>A IA está indisponível</h2>
+          <p>Sem a IA não há conversa de check-in. Descreva a execução pela tela de Atividades.</p>
+          <p-button label="Ir para Atividades" icon="pi pi-arrow-right" (onClick)="irParaAtividades()" />
+        </div>
+      }
+      @case ('SUSPENSO') {
+        <div class="checkin__estado" role="status">
+          <i class="pi pi-bell-slash"></i>
+          <h2>Check-ins suspensos</h2>
+          <p>
+            @if (situacao()?.suspensao?.motivo; as motivo) {
+              {{ motivo }}.
+            }
+            Eles voltam quando você voltar (ou amanhã). Pode fechar esta janela.
+          </p>
+          <p-button label="Fechar" (onClick)="fechar()" />
+        </div>
+      }
+      @case ('REGISTRADO') {
+        <div class="checkin__estado checkin__estado--sucesso" role="status">
+          <i class="pi pi-check-circle"></i>
+          <h2>Check-in registrado</h2>
+          <p>A descrição foi registrada. Pode fechar esta janela.</p>
+          <p-button label="Fechar" (onClick)="fechar()" />
+        </div>
+      }
+      @default {
+        <div #rolagem class="checkin__conversa" role="log" aria-live="polite" aria-label="Conversa do check-in">
+          <div class="checkin__fluxo">
+            <div class="checkin__linha checkin__linha--ia">
+              <span class="checkin__avatar" aria-hidden="true">IA</span>
+              <div class="checkin__ia-conteudo"><app-markdown-visualizador [texto]="textoDeAbertura()" /></div>
+            </div>
+
+            @for (mensagem of mensagens(); track mensagem.id) {
+              @if (mensagem.autor === 'USUARIO') {
+                <div class="checkin__linha checkin__linha--usuario"><div class="checkin__balao">{{ mensagem.texto }}</div></div>
+              } @else {
+                <div class="checkin__linha checkin__linha--ia">
+                  <span class="checkin__avatar" aria-hidden="true">IA</span>
+                  <div class="checkin__ia-conteudo">
+                    <app-markdown-visualizador [texto]="mensagem.texto" />
+                    @for (propostaId of mensagem.propostaIds; track propostaId) {
+                      <app-chat-proposta-cartao [propostaId]="propostaId" />
+                    }
+                  </div>
+                </div>
+              }
+            }
+
+            @if (aoVivo(); as resposta) {
+              <div class="checkin__linha checkin__linha--ia">
+                <span class="checkin__avatar" aria-hidden="true">IA</span>
+                <div class="checkin__ia-conteudo" aria-busy="true">
+                  @if (resposta.texto) {
+                    <app-markdown-visualizador [texto]="resposta.texto" />
+                  }
+                  @if (resposta.ferramenta) {
+                    <span class="checkin__ferramenta"><span class="checkin__pontos" aria-hidden="true"><i></i><i></i><i></i></span>consultando</span>
+                  } @else if (!resposta.texto) {
+                    <span class="checkin__ferramenta" role="status" aria-label="A IA está pensando"><span class="checkin__pontos" aria-hidden="true"><i></i><i></i><i></i></span></span>
+                  }
+                  @for (propostaId of resposta.propostaIds; track propostaId) {
+                    <app-chat-proposta-cartao [propostaId]="propostaId" />
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="checkin__rodape">
+          @if (podeSugerir()) {
+            <div class="checkin__sugestoes" role="group" aria-label="Sugestões de resposta">
+              @for (sugestao of sugestoes; track sugestao) {
+                <button type="button" class="checkin__sugestao" (click)="enviar(sugestao)">{{ sugestao }}</button>
+              }
+            </div>
+          }
+          <form class="checkin__entrada" (ngSubmit)="enviar()">
+            <textarea
+              #campoTexto
+              pTextarea
+              class="checkin__campo"
+              rows="2"
+              [autoResize]="true"
+              [formControl]="controleTexto"
+              placeholder="Conte do seu jeito o que você fez…"
+              aria-label="Resposta do check-in"
+              maxlength="4000"
+              (keydown)="aoTeclar($event)"
+            ></textarea>
+            <button type="submit" class="checkin__enviar" aria-label="Enviar" [disabled]="!podeEnviar()">
+              <i class="pi" [class.pi-arrow-right]="!enviando()" [class.pi-spin]="enviando()" [class.pi-spinner]="enviando()"></i>
+            </button>
+          </form>
+          <span class="checkin__legenda">A janela fica aberta até a descrição ser registrada ou os check-ins serem suspensos. Enter envia, Shift+Enter quebra a linha.</span>
+        </div>
+      }
+    }
+  </main>
+
+  <p-toast position="bottom-right" />
+  <app-toast-desfazer />
+</div>

@@ -12,6 +12,19 @@
 
 ---
 
+## 2026-10-18 — Task 151: tela da janela de check-in
+
+Spec em `docs/specs/done/151-checkin-tela-da-janela.spec.md`.
+
+- **Rota e layout:** `/checkin` no `app.routes` fora do `LayoutComponent` (sem menu lateral e sem barra superior), só com `autenticacaoGuard`; módulo `modules/checkin` (`CheckinPage`, `CheckinService` frontend, `decidirEstado` puro com testes). A página leva o próprio `p-toast` e o `app-toast-desfazer`, porque o layout que os hospeda não a envolve.
+- **Tela:** cabeçalho com logo, "Hora do check-in", atividade e demanda e a duração (selo neutro, laranja "acima do recomendado" com a nota); abertura da IA montada na tela com o tempo (e o pedido de mais detalhe acima do recomendado), balões e avatar no molde do chat, conversa com streaming (`ChatService.enviarMensagem` ganhou o parâmetro `caminho`, e a janela usa `/checkin/mensagem`), pontinhos "pensando", sugestões de resposta ("Terminei o que estava fazendo", "Vou trocar de atividade", "Vou entrar numa reunião"), campo arredondado e o cartão de proposta do chat (que já sabe descrever a execução, ajustar e suspender).
+- **Estados:** carregando (esqueleto), erro com "Tentar de novo", sem execução (explica e se fecha sozinha em 5 s), IA desligada ou fora do ar (aviso com "Ir para Atividades"; o fallback completo é a 157), check-ins suspensos, **registrado** e em andamento. A janela confere a situação a cada 3 s: execução diferente da que ela abriu (a descrição foi confirmada e abriu o trecho seguinte) ou sem execução (pausada) vira "registrado"; suspensão vira "suspenso". "Fechar" chama `window.close()` e, onde o navegador não deixa, volta ao chat.
+- **Análogo visual:** a tela do Chat (139): balões, avatar, campo de entrada, sugestões, cartão e pontinhos, mais o cabeçalho de janela.
+- **Testes:** frontend 29 verdes (`decidirEstado`: sem execução, mesma execução, execução trocada, execução encerrada, suspensão; formatação de duração); builds do frontend e do backend passam; sem lint (P-001).
+- **Verificado ao vivo** (IA real, administrador; execução de teste de 1h40 com o início voltado pelo `PUT /execucao/:id`): sem execução a tela explica; com execução, o título, a atividade e a duração em laranja; por teclado, o relato gerou o cartão **Descrever execução** na janela, **Ajustar** abriu o formulário com a descrição e o seletor "Depois de salvar", **Confirmar** abriu o trecho seguinte e em até 3 s a tela mostrou "Check-in registrado" com o toast "Proposta confirmada"; o chip "Vou entrar numa reunião" gerou o cartão de suspender e confirmar levou ao estado "Check-ins suspensos" com o motivo. Gate visual: 1920×1080 claro (conversa e cartão, ajuste, registrado), 1080×1920 claro, 1366×768 escuro (conversa). As execuções de teste foram excluídas e as mensagens `CHECKIN` apagadas do OpenSearch.
+- **Achados na verificação:** (1) o painel embutido do navegador perdeu a aba do 4200 no meio e passou a uma aba velha do 4201 (sem servidor); voltei ao 4200 e segui; (2) com a IA sem a mensagem do cartão certo no contexto do **chat**, "Voltei da reunião" não gerou nova proposta porque o modelo achou que a 18 (de teste, desfeita) ainda estava pendente; é comportamento do modelo com histórico, sem relação com a janela (retomei pelo pedido explícito).
+- **Não verificado:** 1366×768 claro e 1080×1920 escuro, o estado vazio de IA indisponível na tela (só o `computed`), o "sempre à frente" (152), o `window.close()` real num Electron, e o desenvolvedor. As mensagens que mandei no chat para limpar a suspensão ficaram na conversa de hoje do usuário de teste.
+
 ## 2026-10-18 — Task 150: descrição formal da execução (check-in)
 
 Spec em `docs/specs/done/150-checkin-descricao-formal-da-execucao.spec.md`.

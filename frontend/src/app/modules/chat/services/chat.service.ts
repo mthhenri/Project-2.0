@@ -49,12 +49,13 @@ export class ChatService {
   /**
    * Envia a mensagem e entrega os eventos conforme chegam. Termina em `fim` ou `erro` (evento) ou lança `ErroDoChat` quando o servidor
    * recusa antes de começar o fluxo (IA desligada, mensagem em andamento, sessão expirada). `sinal` interrompe a leitura (não a geração).
+   * `caminho` troca a rota (a conversa do check-in usa `/checkin/mensagem`, no mesmo formato).
    */
-  async enviarMensagem(texto: string, aoEvento: (evento: ChatEventoDto) => void, sinal?: AbortSignal): Promise<void> {
+  async enviarMensagem(texto: string, aoEvento: (evento: ChatEventoDto) => void, sinal?: AbortSignal, caminho = '/chat/mensagem'): Promise<void> {
     const token = localStorage.getItem('access_token');
     let resposta: Response;
     try {
-      resposta = await fetch(`${this.urlBase}/mensagem`, {
+      resposta = await fetch(`${ambiente.apiUrl}${caminho}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({ texto }),

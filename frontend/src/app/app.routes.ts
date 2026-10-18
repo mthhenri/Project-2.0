@@ -29,5 +29,11 @@ export const rotas: Routes = [
       { path: '', redirectTo: 'ponto', pathMatch: 'full' },
     ],
   },
+  // A janela do check-in (que o app Electron traz à frente) tem layout próprio: sem menu lateral nem barra superior.
+  {
+    path: 'checkin',
+    canActivate: [autenticacaoGuard],
+    loadChildren: () => import('./modules/checkin/checkin.routes').then((m) => m.checkinRotas),
+  },
   { path: '**', redirectTo: 'autenticacao' },
 ];
