@@ -86,6 +86,13 @@
           @if (propostaAtual.dados['previsaoAnteriorData'] !== undefined) {
             <span class="proposta-cartao__linha">Previsão de término: {{ dataBr(texto('previsaoAnteriorData')) || 'sem previsão' }} → {{ dataBr(texto('previsaoFimData')) }}</span>
           }
+          @if (texto('paiNovoNome')) {
+            <span class="proposta-cartao__linha">Pai: {{ texto('paiAnteriorNome') || 'topo da árvore' }} → {{ texto('paiNovoNome') }}</span>
+          }
+          @if (texto('acrescentarDocumentacao')) {
+            <span class="proposta-cartao__linha">Acrescenta à documentação</span>
+            <div class="proposta-cartao__trecho proposta-cartao__trecho--depois"><app-markdown-visualizador [texto]="texto('acrescentarDocumentacao')" /></div>
+          }
           @if (numero('atividadesEmAberto') > 0) {
             <span class="proposta-cartao__aviso"><i class="pi pi-exclamation-triangle"></i>Ainda há {{ numero('atividadesEmAberto') }} {{ numero('atividadesEmAberto') === 1 ? 'atividade' : 'atividades' }} em aberto nesta demanda.</span>
           }

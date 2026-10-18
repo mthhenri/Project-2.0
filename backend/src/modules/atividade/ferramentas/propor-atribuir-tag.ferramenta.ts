@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ProporAtribuirTagDto, PropostaAtribuirTagDadosDto, TipoPropostaIaEnum } from '@project20/shared';
+import { ProporAtribuirTagDto, PropostaAtribuirTagDadosDto, TipoPropostaIaEnum, temPermissaoDeGestor } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { DemandaService } from '../../demanda/services/demanda.service';
@@ -10,7 +10,8 @@ import { calcularConjuntoDeTags, mesmoConjuntoDeTags } from '../domain/conjunto-
 import { AtividadeService } from '../services/atividade.service';
 
 /**
- * Propõe acrescentar e/ou tirar tags de uma demanda ou de uma atividade (só o gestor); **não altera nada** (só o clique de Confirmar
+ * Propõe acrescentar e/ou tirar tags de uma demanda (só o gestor) ou de uma atividade (quem a tela deixa: o gestor, o autor e os membros
+ * da demanda; a `AtividadeService` confere); **não altera nada** (só o clique de Confirmar
  * no cartão altera). A IA informa só o que entra e o que sai, com ids de `listar_tags`; aqui se calcula o conjunto final a partir das
  * tags de hoje, descarta o que já está como pedido e mostra o antes e o depois com nomes. Tag inexistente é recusada (criar tag é pela
  * tela): a IA nunca inventa id.
@@ -20,8 +21,9 @@ export class ProporAtribuirTagFerramenta extends FerramentaPropostaIa<ProporAtri
   readonly nome = 'propor_atribuir_tag';
   readonly descricao =
     'Propõe acrescentar (`adicionarTagIds`) e/ou tirar (`removerTagIds`) tags de uma DEMANDA ou de uma ATIVIDADE (`alvo` e `alvoId`). Os ids das tags vêm de listar_tags; nunca invente id nem nome de tag. ' +
-    'Se a tag que o usuário pediu não existe, avise que criar tag é pela tela de Tags. Informe só o que muda. Nada muda até o gestor confirmar no cartão.';
-  readonly permissao = 'GESTOR' as const;
+    'Se a tag que o usuário pediu não existe, avise que criar tag é pela tela de Tags. Informe só o que muda. Nada muda até o usuário confirmar no cartão. ' +
+    'Tags de DEMANDA são só do gestor; o desenvolvedor marca tags nas ATIVIDADES.';
+  readonly permissao = 'QUALQUER' as const;
   readonly classeDeEntrada = ProporAtribuirTagDto;
   readonly tipoProposta = TipoPropostaIaEnum.ATRIBUIR_TAG;
 
@@ -35,6 +37,9 @@ export class ProporAtribuirTagFerramenta extends FerramentaPropostaIa<ProporAtri
   }
 
   protected async montarDados(entrada: ProporAtribuirTagDto, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
+    if (entrada.alvo === 'DEMANDA' && !temPermissaoDeGestor(usuarioAtivo.tipo)) {
+      throw new BusinessException('Só o gestor atribui tags a demandas; o desenvolvedor marca tags nas atividades.');
+    }
     const adicionar = entrada.adicionarTagIds ?? [];
     const remover = entrada.removerTagIds ?? [];
     if (adicionar.length === 0 && remover.length === 0) throw new BusinessException('Informe as tags a acrescentar (adicionarTagIds) e/ou a tirar (removerTagIds)');

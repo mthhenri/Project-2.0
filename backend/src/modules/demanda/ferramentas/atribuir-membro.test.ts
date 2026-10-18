@@ -2,7 +2,6 @@ import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
 import { TipoPropostaIaEnum, TipoUsuarioEnum, TipoUsuarioStatusEnum } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
-import { UnauthorizedAccessException } from '../../../core/exceptions/unauthorized-access.exception';
 import { ProjetoService } from '../../projeto/services/projeto.service';
 import { PropostaIaService } from '../../proposta-ia/services/proposta-ia.service';
 import { UsuarioService } from '../../usuario/services/usuario.service';
@@ -17,6 +16,7 @@ const DESENVOLVEDOR = { sub: 7, login: 'dev', tipo: TipoUsuarioEnum.DESENVOLVEDO
 const contem = (texto: string) => (erro: BusinessException) => JSON.stringify(erro.getResponse()).includes(texto);
 
 const USUARIOS: Record<number, { nomeCompleto: string; cargoTitulo: string; tipo: TipoUsuarioEnum; status: TipoUsuarioStatusEnum }> = {
+  1: { nomeCompleto: 'Gestor Inicial', cargoTitulo: 'Gestor', tipo: TipoUsuarioEnum.GESTOR, status: TipoUsuarioStatusEnum.ATIVO },
   7: { nomeCompleto: 'Dev de Teste', cargoTitulo: 'Desenvolvedor', tipo: TipoUsuarioEnum.DESENVOLVEDOR, status: TipoUsuarioStatusEnum.ATIVO },
   8: { nomeCompleto: 'Ana Silva', cargoTitulo: 'Desenvolvedora', tipo: TipoUsuarioEnum.DESENVOLVEDOR, status: TipoUsuarioStatusEnum.ATIVO },
   9: { nomeCompleto: 'Beto Gestor', cargoTitulo: 'Gestor', tipo: TipoUsuarioEnum.GESTOR, status: TipoUsuarioStatusEnum.ATIVO },
@@ -55,7 +55,7 @@ test('propor adicionar guarda a ação e os nomes para o cartão', async () => {
   assert.deepEqual(propostas[0].dados, {
     demandaId: 4, usuarioId: 8, acao: 'ADICIONAR', demandaNome: 'Tela de login', projetoNome: 'Projeto Demo', usuarioNome: 'Ana Silva', usuarioCargo: 'Desenvolvedora',
   });
-  assert.equal(ferramenta.permissao, 'GESTOR');
+  assert.equal(ferramenta.permissao, 'QUALQUER');
 });
 
 test('propor recusa gestor, usuário inativo, já membro, não membro e o último membro, sem criar proposta', async () => {
@@ -82,16 +82,45 @@ test('executar adiciona e remove pela service e desfazer faz a ação inversa', 
   assert.deepEqual(chamadas, ['adicionar:11', 'remover:11', 'remover:8', 'adicionar:8']);
 });
 
-test('desfazer é recusado se o estado mudou depois; só o gestor executa e desfaz', async () => {
+test('desfazer é recusado se o estado mudou depois', async () => {
   const { servico, chamadas, membros } = criarServico([7]);
   const executor = new AtribuirMembroExecutor(servico);
   const resultado = await executor.executar({ demandaId: 4, usuarioId: 8, acao: 'ADICIONAR' }, GESTOR);
   membros.delete(8);
   chamadas.length = 0;
   await assert.rejects(executor.desfazer(resultado, GESTOR), BusinessException);
-  await assert.rejects(executor.executar({ demandaId: 4, usuarioId: 8, acao: 'ADICIONAR' }, DESENVOLVEDOR), UnauthorizedAccessException);
-  await assert.rejects(executor.desfazer(resultado, DESENVOLVEDOR), UnauthorizedAccessException);
   assert.deepEqual(chamadas, []);
+});
+
+test('o desenvolvedor participa e sai ele mesmo, sem informar usuarioId; outra pessoa ele não coloca', async () => {
+  const entra = criarFerramenta([8]);
+  await entra.ferramenta.executar({ demandaId: 4, acao: 'ADICIONAR' }, DESENVOLVEDOR);
+  assert.equal(entra.propostas[0].dados['usuarioId'], 7);
+  assert.equal(entra.propostas[0].dados['usuarioNome'], 'Dev de Teste');
+  const sai = criarFerramenta([7, 8]);
+  await sai.ferramenta.executar({ demandaId: 4, acao: 'REMOVER' }, DESENVOLVEDOR);
+  assert.equal(sai.propostas[0].dados['acao'], 'REMOVER');
+  await assert.rejects(entra.ferramenta.executar({ demandaId: 4, usuarioId: 8, acao: 'REMOVER' }, DESENVOLVEDOR), contem('só entra e sai de uma demanda ele mesmo'));
+  await assert.rejects(entra.ferramenta.executar({ demandaId: 4, usuarioId: 9, acao: 'ADICIONAR' }, DESENVOLVEDOR), BusinessException);
+  assert.equal(entra.propostas.length, 1);
+});
+
+test('o gestor sem informar a pessoa é recusado (ele mesmo é gestor e não entra em demanda)', async () => {
+  const { ferramenta, propostas } = criarFerramenta([7]);
+  await assert.rejects(ferramenta.executar({ demandaId: 4, acao: 'ADICIONAR' }, GESTOR), contem('é gestor'));
+  assert.equal(propostas.length, 0);
+});
+
+test('o executor do desenvolvedor usa ele mesmo quando o usuarioId não veio, e a service confere o resto', async () => {
+  const { servico, chamadas, membros } = criarServico([8]);
+  const executor = new AtribuirMembroExecutor(servico);
+  const resultado = await executor.executar({ demandaId: 4, acao: 'ADICIONAR' }, DESENVOLVEDOR);
+  assert.ok(membros.has(7));
+  assert.equal(resultado['usuarioId'], 7);
+  await executor.desfazer(resultado, DESENVOLVEDOR);
+  assert.ok(!membros.has(7));
+  assert.deepEqual(chamadas, ['adicionar:7', 'remover:7']);
+  assert.equal(await executor.estaObsoleta({ demandaId: 4, acao: 'ADICIONAR' }, DESENVOLVEDOR), false);
 });
 
 test('validar confere os dados; obsoleta quando a pessoa já está como a proposta pede', async () => {

@@ -12,7 +12,7 @@ import { AtividadeService } from '../services/atividade.service';
 /**
  * Executor da proposta `ATRIBUIR_TAG`: lê as tags **de agora**, aplica a diferença (entram `adicionarTagIds`, saem `removerTagIds`) e
  * grava o conjunto final pela service do alvo (`PUT .../tag` substitui o conjunto inteiro, por isso a diferença é calculada aqui, sobre
- * o estado atual, para não desfazer o que outra pessoa mudou nesse meio tempo). Só o gestor. Desfazer devolve o conjunto de antes, mas
+ * o estado atual, para não desfazer o que outra pessoa mudou nesse meio tempo). Tags de demanda só o gestor; as de atividade, quem a service deixa. Desfazer devolve o conjunto de antes, mas
  * só se as tags ainda são as que a proposta deixou.
  */
 @Injectable()
@@ -30,8 +30,8 @@ export class AtribuirTagExecutor implements ExecutorPropostaIa {
   }
 
   async executar(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
-    this.exigirGestor(usuarioAtivo);
     const entrada = validarDadosDaProposta(PropostaAtribuirTagDadosDto, dados);
+    this.exigirGestorParaDemanda(entrada.alvo, usuarioAtivo);
     const antes = await this.lerTags(entrada.alvo, entrada.alvoId, usuarioAtivo);
     const depois = calcularConjuntoDeTags(antes, entrada.adicionarTagIds, entrada.removerTagIds);
     if (mesmoConjuntoDeTags(antes, depois)) throw new BusinessException('O alvo já está com essas tags: não há o que alterar');
@@ -40,8 +40,8 @@ export class AtribuirTagExecutor implements ExecutorPropostaIa {
   }
 
   async desfazer(resultado: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<void> {
-    this.exigirGestor(usuarioAtivo);
     const alvo = resultado['alvo'] as 'DEMANDA' | 'ATIVIDADE';
+    this.exigirGestorParaDemanda(alvo, usuarioAtivo);
     const alvoId = Number(resultado['alvoId']);
     const antes = resultado['tagsAntesIds'] as number[] | undefined;
     const depois = resultado['tagsDepoisIds'] as number[] | undefined;
@@ -72,7 +72,7 @@ export class AtribuirTagExecutor implements ExecutorPropostaIa {
     else await this.atividadeService.alterarTags({ id: alvoId, tagIds }, usuarioAtivo);
   }
 
-  private exigirGestor(usuarioAtivo: JwtPayload): void {
-    if (!temPermissaoDeGestor(usuarioAtivo.tipo)) throw new UnauthorizedAccessException('Só o gestor atribui tags pela IA');
+  private exigirGestorParaDemanda(alvo: 'DEMANDA' | 'ATIVIDADE', usuarioAtivo: JwtPayload): void {
+    if (alvo === 'DEMANDA' && !temPermissaoDeGestor(usuarioAtivo.tipo)) throw new UnauthorizedAccessException('Só o gestor atribui tags a demandas');
   }
 }

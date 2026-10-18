@@ -60,7 +60,7 @@ test('propor numa demanda calcula o antes e o depois, com nomes, e guarda só o 
   assert.deepEqual(propostas[0].dados, {
     alvo: 'DEMANDA', alvoId: 4, adicionarTagIds: [2], removerTagIds: [], alvoNome: 'Tela de login', tagsAntesNomes: ['Bug'], tagsDepoisNomes: ['Bug', 'Backend'],
   });
-  assert.equal(ferramenta.permissao, 'GESTOR');
+  assert.equal(ferramenta.permissao, 'QUALQUER');
 });
 
 test('propor numa atividade mostra também a demanda dela', async () => {
@@ -122,4 +122,19 @@ test('validar confere os dados; obsoleta quando o alvo já tem o conjunto pedido
   assert.throws(() => executor.validar({ alvo: 'PROJETO', alvoId: 4, adicionarTagIds: [2] }), BusinessException);
   assert.equal(await executor.estaObsoleta({ alvo: 'DEMANDA', alvoId: 4, adicionarTagIds: [2] }, GESTOR), true);
   assert.equal(await executor.estaObsoleta({ alvo: 'DEMANDA', alvoId: 4, adicionarTagIds: [3] }, GESTOR), false);
+});
+
+test('o desenvolvedor marca tags na atividade, mas não na demanda (nem na ferramenta nem no executor)', async () => {
+  const { ferramenta, propostas } = criarFerramenta([1], [2]);
+  await ferramenta.executar({ alvo: 'ATIVIDADE', alvoId: 9, adicionarTagIds: [1] }, DESENVOLVEDOR);
+  assert.equal(propostas.length, 1);
+  await assert.rejects(ferramenta.executar({ alvo: 'DEMANDA', alvoId: 4, adicionarTagIds: [2] }, DESENVOLVEDOR), contem('Só o gestor'));
+  assert.equal(propostas.length, 1);
+
+  const { demandaService, atividadeService, estado } = criarServicos([1], [2]);
+  const executor = new AtribuirTagExecutor(demandaService, atividadeService);
+  const resultado = await executor.executar({ alvo: 'ATIVIDADE', alvoId: 9, adicionarTagIds: [1] }, DESENVOLVEDOR);
+  assert.deepEqual(estado.ATIVIDADE, [1, 2]);
+  await executor.desfazer(resultado, DESENVOLVEDOR);
+  assert.deepEqual(estado.ATIVIDADE, [2]);
 });

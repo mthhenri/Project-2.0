@@ -12,6 +12,18 @@
 
 ---
 
+## 2026-10-18 — Task 170: IA edita a demanda a fundo, desenvolvedor participa/sai e marca tags — verificação visual pendente
+
+Escolha do autor depois do mapa de paridade tela × IA: editar demanda, desenvolvedor participar e sair de demandas e atribuir tags a demandas e atividades; **não** editar projeto nem criar tags. Sem migration nem tipo de proposta novo (reaproveita 167 e 168). Spec em `active/`.
+
+- **`ALTERAR_DEMANDA` liberada ao desenvolvedor** (a `DemandaService.alterar` já exige ser membro) e com dois campos novos: `acrescentarDocumentacao` (Markdown **acrescentado** ao texto de hoje, nunca substitui: a IA não lê a documentação inteira) e `demandaPaiId` (mover). Mover recusa, na ferramenta **e** no executor, a própria demanda, uma descendente (ciclo; a service só confere o projeto), pai de outro projeto e pai não estrutural (`validarNovoPaiDaDemanda`, função pura). Desfazer devolve documentação (ou limpa) e pai (ou topo) de antes, só se ainda estão como a proposta deixou. Não move para o topo (a própria tela não consegue).
+- **`ATRIBUIR_MEMBRO` liberada a todos:** `usuarioId` opcional; o desenvolvedor só entra e sai **ele mesmo** (como "Participar"/"Sair"); o gestor informa a pessoa. Gestor sem informar a pessoa é recusado (gestor não entra em `demanda_usuario`).
+- **`ATRIBUIR_TAG` liberada a todos:** tags de **demanda** só o gestor (ferramenta e executor); de **atividade**, quem a `AtividadeService.alterarTags` deixa (autor ou membro da demanda).
+- **Cartão:** "Pai: antes → depois" e a documentação a acrescentar em Markdown.
+- **Fora, de propósito:** marcar demanda como estrutural (a tela deixa livre e quebraria atividades ou filhas existentes) e remover conexão (é exclusão; a IA não exclui).
+- **Testes:** backend 501 (+9, e ajuste dos de 167 e 168 que assumiam só gestor); builds de shared, backend e frontend passam; o backend sobe sem erro de injeção.
+- **Pendente (spec fica em `active`):** cartões novos não vistos renderizados e conversa real não testada (mover, acrescentar documentação, "quero participar da demanda X" como desenvolvedor).
+
 ## 2026-10-18 — Chip "Sem execução ativa" e Execuções abertas ao desenvolvedor
 
 Pedido do autor: o chip levava às Atividades, que ficam desabilitadas com a IA no ar.
