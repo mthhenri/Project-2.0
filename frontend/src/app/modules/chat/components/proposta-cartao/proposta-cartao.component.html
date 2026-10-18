@@ -88,6 +88,30 @@
           }
         </div>
       }
+      @case (Tipo.ATRIBUIR_MEMBRO) {
+        <div class="proposta-cartao__resumo">
+          <strong class="proposta-cartao__destaque">{{ texto('usuarioNome') || 'Usuário ' + propostaAtual.dados['usuarioId'] }}</strong>
+          @if (texto('usuarioCargo')) {
+            <span class="proposta-cartao__linha">{{ texto('usuarioCargo') }}</span>
+          }
+          <span class="proposta-cartao__linha">
+            {{ texto('acao') === 'REMOVER' ? 'Sai da demanda' : 'Entra na demanda' }}: {{ texto('demandaNome') || propostaAtual.dados['demandaId'] }}
+          </span>
+          @if (texto('projetoNome')) {
+            <span class="proposta-cartao__linha">Projeto: {{ texto('projetoNome') }}</span>
+          }
+        </div>
+      }
+      @case (Tipo.ATRIBUIR_TAG) {
+        <div class="proposta-cartao__resumo">
+          <strong class="proposta-cartao__destaque">{{ texto('alvoNome') || 'Alvo ' + propostaAtual.dados['alvoId'] }}</strong>
+          <span class="proposta-cartao__linha">
+            {{ texto('alvo') === 'ATIVIDADE' ? 'Atividade' : 'Demanda' }}@if (texto('demandaNome')) { · {{ texto('demandaNome') }} }
+          </span>
+          <span class="proposta-cartao__linha">Tags antes: {{ lista('tagsAntesNomes') || 'nenhuma' }}</span>
+          <span class="proposta-cartao__linha">Tags depois: {{ lista('tagsDepoisNomes') || 'nenhuma' }}</span>
+        </div>
+      }
       @case (Tipo.CRIAR_PROJETO) {
         <div class="proposta-cartao__resumo">
           <strong class="proposta-cartao__destaque">{{ texto('nome') }}</strong>

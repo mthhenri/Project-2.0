@@ -22,12 +22,14 @@ import { ListarDemandasDoProjetoFerramenta } from './ferramentas/listar-demandas
 import { ListarMinhasDemandasFerramenta } from './ferramentas/listar-minhas-demandas.ferramenta';
 import { ProporCriarDemandaFerramenta } from './ferramentas/propor-criar-demanda.ferramenta';
 import { AlterarDemandaExecutor } from './executores/alterar-demanda.executor';
+import { AtribuirMembroExecutor } from './executores/atribuir-membro.executor';
+import { ProporAtribuirMembroFerramenta } from './ferramentas/propor-atribuir-membro.ferramenta';
 import { ProporAlterarDemandaFerramenta } from './ferramentas/propor-alterar-demanda.ferramenta';
 
 @Module({
   imports:     [TagModule, UsuarioModule, FerramentaIaModule, PropostaIaModule, ProjetoModule, IaModule, PromptModule],
   controllers: [DemandaController],
-  providers:   [DemandaService, DemandaRepository, ListarMinhasDemandasFerramenta, ListarDemandasDoProjetoFerramenta, ConsultarGrafoDoProjetoFerramenta, ProporCriarDemandaFerramenta, CriarDemandaExecutor, ProporDescreverDemandaFerramenta, DescreverDemandaExecutor, SugerirConexoesELugarFerramenta, ProporConectarDemandaFerramenta, ConectarDemandaExecutor, ProporAlterarDemandaFerramenta, AlterarDemandaExecutor],
+  providers:   [DemandaService, DemandaRepository, ListarMinhasDemandasFerramenta, ListarDemandasDoProjetoFerramenta, ConsultarGrafoDoProjetoFerramenta, ProporCriarDemandaFerramenta, CriarDemandaExecutor, ProporDescreverDemandaFerramenta, DescreverDemandaExecutor, SugerirConexoesELugarFerramenta, ProporConectarDemandaFerramenta, ConectarDemandaExecutor, ProporAlterarDemandaFerramenta, AlterarDemandaExecutor, ProporAtribuirMembroFerramenta, AtribuirMembroExecutor],
   exports:     [DemandaService, DemandaRepository],
 })
 export class DemandaModule implements OnModuleInit {
@@ -46,6 +48,8 @@ export class DemandaModule implements OnModuleInit {
     private readonly conectarDemandaExecutor: ConectarDemandaExecutor,
     private readonly proporAlterarDemanda: ProporAlterarDemandaFerramenta,
     private readonly alterarDemandaExecutor: AlterarDemandaExecutor,
+    private readonly proporAtribuirMembro: ProporAtribuirMembroFerramenta,
+    private readonly atribuirMembroExecutor: AtribuirMembroExecutor,
   ) {}
 
   /** As ferramentas de IA do domínio de demanda se registram aqui. */
@@ -62,5 +66,7 @@ export class DemandaModule implements OnModuleInit {
     this.registroDeExecutores.registrar(this.conectarDemandaExecutor);
     this.registroDeFerramentas.registrar(this.proporAlterarDemanda);
     this.registroDeExecutores.registrar(this.alterarDemandaExecutor);
+    this.registroDeFerramentas.registrar(this.proporAtribuirMembro);
+    this.registroDeExecutores.registrar(this.atribuirMembroExecutor);
   }
 }

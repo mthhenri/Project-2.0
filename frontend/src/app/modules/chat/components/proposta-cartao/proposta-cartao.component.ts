@@ -152,6 +152,12 @@ export class PropostaCartaoComponent {
     return data ? data.slice(0, 10).split('-').reverse().join('/') : '';
   }
 
+  /** Uma lista de textos da proposta, separada por vírgula (vazio se não houver). */
+  lista(chave: string): string {
+    const valor = this.proposta()?.dados[chave];
+    return Array.isArray(valor) ? valor.filter((item) => typeof item === 'string').join(', ') : '';
+  }
+
   /** Um dado numérico da proposta (0 se não houver). */
   numero(chave: string): number {
     const valor = this.proposta()?.dados[chave];

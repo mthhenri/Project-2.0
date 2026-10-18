@@ -38,6 +38,8 @@ export const ROTULO_TIPO_PROPOSTA: Record<TipoPropostaIaEnum, string> = {
   [TipoPropostaIaEnum.REGISTRAR_EXECUCAO]: 'Registrar execução',
   [TipoPropostaIaEnum.CORRIGIR_EXECUCAO]: 'Corrigir execução',
   [TipoPropostaIaEnum.ALTERAR_DEMANDA]: 'Alterar demanda',
+  [TipoPropostaIaEnum.ATRIBUIR_MEMBRO]: 'Atribuir membro',
+  [TipoPropostaIaEnum.ATRIBUIR_TAG]: 'Atribuir tags',
   [TipoPropostaIaEnum.CRIAR_PROJETO]: 'Criar projeto',
   [TipoPropostaIaEnum.DESCREVER_EXECUCAO]: 'Descrever execução',
   [TipoPropostaIaEnum.SUSPENDER_CHECKIN]: 'Suspender check-ins',

@@ -12,6 +12,16 @@
 
 ---
 
+## 2026-10-18 — Task 168: IA propõe atribuir membros e tags — verificação visual pendente
+
+- **Tipos `ATRIBUIR_MEMBRO` e `ATRIBUIR_TAG`** (migration `0042`, aplicada no banco de dev), só gestor (a ferramenta e o executor conferem).
+- **Membro** (`demanda/`): adicionar ou remover **um desenvolvedor** numa demanda. A ferramenta recusa já na proposta o que a service só diria no Confirmar: pessoa **gestor/administrador** (acesso por tipo, nunca `demanda_usuario`), inativa, já membro, não membro e o último membro. Desfazer faz a ação inversa e recusa se o estado mudou.
+- **Tag** (`atividade/`, que enxerga as duas services): demanda **ou** atividade. Em vez de a IA mandar o conjunto inteiro, ela informa o que **entra** e o que **sai** (`adicionarTagIds`, `removerTagIds`, ids de `listar_tags`); o conjunto final é calculado sobre as tags **de agora**, na proposta (para o cartão) e de novo no executor (para não desfazer o que outra pessoa mudou no meio, já que o `PUT .../tag` substitui tudo). Tag inexistente é recusada com a orientação de criar pela tela. Desfazer devolve o conjunto de antes, só se ainda é o que a proposta deixou.
+- **Cartões do chat:** membro ("Entra/Sai da demanda: X") e tag (antes e depois, com nomes). Sem "Ajustar".
+- **Descoberta:** o frontend não compila com `ArrayMaxSize` do `class-validator` (as classes de `shared/` entram no bundle do Angular); o DTO usa só `IsArray` e validadores `each`.
+- **Testes:** backend 477 (+13); builds de shared, backend e frontend passam; o backend sobe sem erro de injeção.
+- **Pendente (spec fica em `active`):** os cartões não foram vistos renderizados e a conversa real ("coloca a Ana na demanda X", "marca a Y com a tag Bug") não foi testada.
+
 ## 2026-10-18 — Task 167: IA propõe alterar demanda (nome, status, horas, previsão) — verificação visual pendente
 
 Task 166 fechada (validada pelo autor); spec movida para `done/`.
