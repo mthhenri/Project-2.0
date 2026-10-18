@@ -8,14 +8,13 @@ describe('lerArmazenamentoDoChat', () => {
     assert.equal(lerArmazenamentoDoChat('  '), 'opensearch');
   });
 
-  it('aceita os dois armazenamentos implementados, sem diferenciar maiúsculas', () => {
+  it('aceita os três armazenamentos, sem diferenciar maiúsculas', () => {
     assert.equal(lerArmazenamentoDoChat('postgres'), 'postgres');
     assert.equal(lerArmazenamentoDoChat('OpenSearch'), 'opensearch');
+    assert.equal(lerArmazenamentoDoChat(' Elasticsearch '), 'elasticsearch');
   });
 
-  it('elasticsearch (ainda sem implementação) e valores inválidos derrubam a subida com mensagem clara', () => {
-    for (const valor of ['elasticsearch', 'mongo']) {
-      assert.throws(() => lerArmazenamentoDoChat(valor), /Armazenamento do chat não suportado/);
-    }
+  it('valor desconhecido derruba a subida com mensagem clara', () => {
+    assert.throws(() => lerArmazenamentoDoChat('mongo'), /Armazenamento do chat não suportado: mongo/);
   });
 });

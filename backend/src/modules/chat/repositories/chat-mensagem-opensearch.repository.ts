@@ -1,25 +1,8 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Client } from '@opensearch-project/opensearch';
-import { randomUUID } from 'node:crypto';
 import { ConfiguracaoOpenSearch } from '../../../config/config.interface';
-import { BusinessException } from '../../../core/exceptions/business.exception';
-import {
-  BaldeConversa,
-  ConsultaBusca,
-  ConsultaConversa,
-  ConsultaConversas,
-  ConsultaTitulos,
-  INDICE_CHAT_CONVERSA,
-  INDICE_CHAT_MENSAGEM,
-  MAPEAMENTO_CHAT_CONVERSA,
-  MAPEAMENTO_CHAT_MENSAGEM,
-  montarConsultaBusca,
-  montarConsultaConversa,
-  montarConsultaConversas,
-  montarConsultaTitulos,
-} from '../domain/chat-consultas';
-import { ChatMensagemFonte, ChatMensagemLida, ChatMensagemNova, deFonte, paraFonte } from '../domain/chat-mensagem.documento';
-import { ArmazenamentoDeChat } from './armazenamento-de-chat';
+import { BaldeConversa } from '../domain/chat-consultas';
+import { ChatMensagemFonte } from '../domain/chat-mensagem.documento';
+import { ChatConversaFonte, ChatMensagemIndiceRepository, ResultadoDaPesquisa } from './chat-mensagem-indice.repository';
 
 /** O pedaço do cliente do OpenSearch que o chat usa (o cliente real o satisfaz; os testes passam um falso). */
 export interface ClienteOpenSearchChat {
@@ -33,118 +16,36 @@ export interface ClienteOpenSearchChat {
   }>;
 }
 
-/** Forma do documento de título (índice `chat-conversa`). */
-export interface ChatConversaFonte {
-  conversa_id: string;
-  titulo: string;
-}
-
 /** Cria o cliente real a partir da configuração. Este arquivo é o único que importa o pacote do OpenSearch. */
 export function criarClienteOpenSearchChat({ url, usuario, senha }: ConfiguracaoOpenSearch): ClienteOpenSearchChat {
   return new Client({ node: url, ...(usuario && senha ? { auth: { username: usuario, password: senha } } : {}) }) as unknown as ClienteOpenSearchChat;
 }
 
 /**
- * Mensagens do chat no OpenSearch (task 135): um documento por mensagem, gravado uma vez e nunca reescrito (não há método de exclusão
- * nem de alteração). É o armazenamento do desenvolvimento (`CHAT_ARMAZENAMENTO=opensearch`); o Elasticsearch da produção de verdade
- * será outra implementação do mesmo contrato `ArmazenamentoDeChat`.
+ * Mensagens do chat no OpenSearch (task 135), o armazenamento do desenvolvimento (`CHAT_ARMAZENAMENTO=opensearch`). A lógica vive em
+ * `ChatMensagemIndiceRepository`, igual à do Elasticsearch; aqui só a fala com o cliente do OpenSearch (resposta no envelope `body`).
  */
-@Injectable()
-export class ChatMensagemOpenSearchRepository implements ArmazenamentoDeChat, OnModuleInit {
-  private readonly logger = new Logger(ChatMensagemOpenSearchRepository.name);
-  private indiceGarantido = false;
+export class ChatMensagemOpenSearchRepository extends ChatMensagemIndiceRepository {
+  protected readonly servico = 'OpenSearch';
 
-  constructor(private readonly cliente: ClienteOpenSearchChat) {}
-
-  /** O OpenSearch fora do ar na subida não derruba o backend: o chat fica indisponível e o índice é criado na primeira chamada. */
-  async onModuleInit(): Promise<void> {
-    try {
-      await this.garantirIndice();
-    } catch {
-      this.logger.warn('OpenSearch indisponível na subida: o chat fica indisponível até ele voltar');
-    }
+  constructor(private readonly cliente: ClienteOpenSearchChat) {
+    super();
   }
 
-  async gravar(mensagem: ChatMensagemNova): Promise<ChatMensagemLida> {
-    return this.proteger(async () => {
-      await this.garantirIndice();
-      const id = randomUUID();
-      const fonte = paraFonte(mensagem, id, new Date());
-      await this.cliente.index({ index: INDICE_CHAT_MENSAGEM, id, body: fonte, refresh: 'wait_for' });
-      return deFonte(fonte);
-    });
+  protected async existeIndice(indice: string): Promise<boolean> {
+    return (await this.cliente.indices.exists({ index: indice })).body;
   }
 
-  async listarConversa(consulta: ConsultaConversa): Promise<ChatMensagemLida[]> {
-    return this.proteger(async () => {
-      await this.garantirIndice();
-      const resposta = await this.cliente.search({ index: INDICE_CHAT_MENSAGEM, body: montarConsultaConversa(consulta) });
-      return resposta.body.hits.hits.map((acerto) => deFonte(acerto._source));
-    });
+  protected async criarIndice(indice: string, mapeamento: unknown): Promise<void> {
+    await this.cliente.indices.create({ index: indice, body: mapeamento });
   }
 
-  /** As conversas do usuário (uma por dia), da mais recente à mais antiga, sem as mensagens. */
-  async listarConversas(consulta: ConsultaConversas): Promise<BaldeConversa[]> {
-    return this.proteger(async () => {
-      await this.garantirIndice();
-      const resposta = await this.cliente.search({ index: INDICE_CHAT_MENSAGEM, body: montarConsultaConversas(consulta) });
-      return resposta.body.aggregations?.conversas?.buckets ?? [];
-    });
+  protected async gravarDocumento(indice: string, id: string, documento: unknown): Promise<void> {
+    await this.cliente.index({ index: indice, id, body: documento, refresh: 'wait_for' });
   }
 
-  /** Guarda (ou troca) o título da conversa. */
-  async gravarTitulo(conversaId: string, usuarioId: number, titulo: string): Promise<void> {
-    await this.proteger(async () => {
-      await this.garantirIndice();
-      const corpo = { conversa_id: conversaId, usuario_id: usuarioId, titulo, created_date: new Date().toISOString() };
-      await this.cliente.index({ index: INDICE_CHAT_CONVERSA, id: conversaId, body: corpo, refresh: 'wait_for' });
-    });
-  }
-
-  /** Os títulos das conversas pedidas do usuário, por `conversaId` (quem ainda não tem título não aparece). */
-  async listarTitulos(consulta: ConsultaTitulos): Promise<Record<string, string>> {
-    if (consulta.conversaIds.length === 0) return {};
-    return this.proteger(async () => {
-      await this.garantirIndice();
-      const resposta = await this.cliente.search({ index: INDICE_CHAT_CONVERSA, body: montarConsultaTitulos(consulta) });
-      return Object.fromEntries(resposta.body.hits.hits.map((acerto) => [acerto._source.conversa_id, acerto._source.titulo ?? '']));
-    });
-  }
-
-  async buscar(consulta: ConsultaBusca): Promise<ChatMensagemLida[]> {
-    return this.proteger(async () => {
-      await this.garantirIndice();
-      const resposta = await this.cliente.search({ index: INDICE_CHAT_MENSAGEM, body: montarConsultaBusca(consulta) });
-      return resposta.body.hits.hits.map((acerto) => deFonte(acerto._source));
-    });
-  }
-
-  /** Cria o índice se não existir. Idempotente: subir de novo não falha nem duplica. */
-  private async garantirIndice(): Promise<void> {
-    if (this.indiceGarantido) return;
-    await this.criarIndiceSeNaoExiste(INDICE_CHAT_MENSAGEM, MAPEAMENTO_CHAT_MENSAGEM);
-    await this.criarIndiceSeNaoExiste(INDICE_CHAT_CONVERSA, MAPEAMENTO_CHAT_CONVERSA);
-    this.indiceGarantido = true;
-  }
-
-  private async criarIndiceSeNaoExiste(indice: string, mapeamento: unknown): Promise<void> {
-    const existe = await this.cliente.indices.exists({ index: indice });
-    if (existe.body) return;
-    try {
-      await this.cliente.indices.create({ index: indice, body: mapeamento });
-    } catch (erro) {
-      // Outra instância criou entre o exists e o create.
-      if (!JSON.stringify(erro).includes('resource_already_exists_exception')) throw erro;
-    }
-  }
-
-  private async proteger<T>(operacao: () => Promise<T>): Promise<T> {
-    try {
-      return await operacao();
-    } catch (erro) {
-      if (erro instanceof BusinessException) throw erro;
-      this.logger.error(`Falha no OpenSearch: ${erro instanceof Error ? erro.message : String(erro)}`);
-      throw new BusinessException('O chat está indisponível no momento (armazenamento das mensagens fora do ar). Tente de novo em instantes.');
-    }
+  protected async pesquisar(indice: string, consulta: unknown): Promise<ResultadoDaPesquisa> {
+    const { body } = await this.cliente.search({ index: indice, body: consulta });
+    return { fontes: body.hits.hits.map((acerto) => acerto._source), baldes: body.aggregations?.conversas?.buckets ?? [] };
   }
 }

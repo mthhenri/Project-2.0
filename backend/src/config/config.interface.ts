@@ -28,6 +28,15 @@ export interface ConfiguracaoOpenSearch {
   senha: string | undefined;
 }
 
+export interface ConfiguracaoElasticsearch {
+  /** Obrigatória só com `CHAT_ARMAZENAMENTO=elasticsearch`. */
+  url: string | undefined;
+  usuario: string | undefined;
+  senha: string | undefined;
+  /** Chave de API (Elastic Cloud); tem prioridade sobre usuário e senha. */
+  apiKey: string | undefined;
+}
+
 export interface ConfiguracaoAplicacao {
   porta: number;
   ambiente: string;
@@ -45,6 +54,7 @@ export interface Configuracao {
   anthropic:   ConfiguracaoAnthropic;
   chat:        ConfiguracaoChat;
   openSearch:  ConfiguracaoOpenSearch;
+  elasticsearch: ConfiguracaoElasticsearch;
   aplicacao:   ConfiguracaoAplicacao;
   negocio:     ConfiguracaoNegocio;
 }

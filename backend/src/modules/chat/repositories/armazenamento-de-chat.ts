@@ -3,13 +3,14 @@ import { ConfigService } from '../../../config/config.service';
 import { DATABASE_CONNECTION } from '../../../core/database/database.provider';
 import { BaldeConversa, ConsultaBusca, ConsultaConversa, ConsultaConversas, ConsultaTitulos } from '../domain/chat-consultas';
 import { ChatMensagemLida, ChatMensagemNova } from '../domain/chat-mensagem.documento';
+import { ChatMensagemElasticsearchRepository, criarClienteElasticsearchChat } from './chat-mensagem-elasticsearch.repository';
 import { ChatMensagemOpenSearchRepository, criarClienteOpenSearchChat } from './chat-mensagem-opensearch.repository';
 import { ChatMensagemPostgresRepository } from './chat-mensagem-postgres.repository';
 
 /**
  * O contrato do armazenamento das mensagens do chat (task 162). O `ChatService` só conhece isto; a implementação vem de
  * `CHAT_ARMAZENAMENTO`: OpenSearch no desenvolvimento, tabelas provisórias do Postgres na produção de teste e, na produção de
- * verdade, Elasticsearch (ainda sem implementação). Não há exclusão nem alteração de mensagem: elas são gravadas uma vez.
+ * verdade, Elasticsearch. Não há exclusão nem alteração de mensagem: elas são gravadas uma vez.
  */
 export interface ArmazenamentoDeChat {
   gravar(mensagem: ChatMensagemNova): Promise<ChatMensagemLida>;
@@ -33,8 +34,13 @@ export const armazenamentoDeChatProvider = {
   inject: [ConfigService, DATABASE_CONNECTION],
   useFactory: (configService: ConfigService, conexaoBancoDados: Knex): ArmazenamentoDeChat => {
     const configuracao = configService.obter();
-    return configuracao.chat.armazenamento === 'postgres'
-      ? new ChatMensagemPostgresRepository(conexaoBancoDados)
-      : new ChatMensagemOpenSearchRepository(criarClienteOpenSearchChat(configuracao.openSearch));
+    switch (configuracao.chat.armazenamento) {
+      case 'postgres':
+        return new ChatMensagemPostgresRepository(conexaoBancoDados);
+      case 'elasticsearch':
+        return new ChatMensagemElasticsearchRepository(criarClienteElasticsearchChat(configuracao.elasticsearch));
+      default:
+        return new ChatMensagemOpenSearchRepository(criarClienteOpenSearchChat(configuracao.openSearch));
+    }
   },
 };

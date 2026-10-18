@@ -1,12 +1,12 @@
 /**
- * Onde as mensagens do chat ficam (task 162). `elasticsearch` é o destino da produção de verdade e ainda não tem implementação:
- * pedir esse valor falha na subida, em vez de cair em outro armazenamento sem avisar.
+ * Onde as mensagens do chat ficam (tasks 162 e 163): `opensearch` no desenvolvimento, `postgres` (tabelas provisórias) na produção de
+ * teste e `elasticsearch` na produção de verdade.
  */
-export type ArmazenamentoDoChat = 'opensearch' | 'postgres';
+export type ArmazenamentoDoChat = 'opensearch' | 'postgres' | 'elasticsearch';
 
-export const ARMAZENAMENTOS_DO_CHAT: readonly ArmazenamentoDoChat[] = ['opensearch', 'postgres'];
+export const ARMAZENAMENTOS_DO_CHAT: readonly ArmazenamentoDoChat[] = ['opensearch', 'postgres', 'elasticsearch'];
 
-/** Lê `CHAT_ARMAZENAMENTO` (padrão `opensearch`); valor desconhecido ou ainda não implementado derruba a subida com mensagem clara. */
+/** Lê `CHAT_ARMAZENAMENTO` (padrão `opensearch`); valor desconhecido derruba a subida com mensagem clara. */
 export function lerArmazenamentoDoChat(valor: string | undefined): ArmazenamentoDoChat {
   const informado = valor?.trim().toLowerCase();
   if (!informado) return 'opensearch';

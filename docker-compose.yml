@@ -37,6 +37,27 @@ services:
       timeout: 5s
       retries: 12
 
+  # Só para testar o armazenamento de produção de verdade (task 163): `docker compose --profile elasticsearch up -d elasticsearch`.
+  # Não sobe com `npm run db:up`. Segurança desligada: serviço de desenvolvimento, nunca exposto. Porta 9201 (a 9200 é do OpenSearch).
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.1.0
+    container_name: project20-elasticsearch
+    profiles: ["elasticsearch"]
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    ports:
+      - "${ELASTICSEARCH_PORT:-9201}:9200"
+    volumes:
+      - elasticsearch_dados:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
 volumes:
   postgres_dados:
   opensearch_dados:
+  elasticsearch_dados:

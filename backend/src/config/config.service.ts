@@ -30,6 +30,12 @@ export class ConfigService {
         usuario: this.opcional('OPENSEARCH_USUARIO'),
         senha:   this.opcional('OPENSEARCH_SENHA'),
       },
+      elasticsearch: {
+        url:     armazenamentoDoChat === 'elasticsearch' ? this.obrigatoria('ELASTICSEARCH_URL') : this.opcional('ELASTICSEARCH_URL'),
+        usuario: this.opcional('ELASTICSEARCH_USUARIO'),
+        senha:   this.opcional('ELASTICSEARCH_SENHA'),
+        apiKey:  this.opcional('ELASTICSEARCH_API_KEY'),
+      },
       aplicacao: {
         porta:       Number(this.opcional('PORT') ?? this.obrigatoria('APP_PORTA')),
         ambiente:    this.obrigatoria('APP_AMBIENTE'),

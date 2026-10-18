@@ -12,6 +12,18 @@
 
 ---
 
+## 2026-10-18 — Task 163: armazenamento Elasticsearch do chat pronto para a produção de verdade
+
+Spec em `docs/specs/done/163-chat-armazenamento-elasticsearch.spec.md`. Pedido do autor: deixar o Elasticsearch (stack final) já implementado e verificado, para a troca (OpenSearch no dev, Postgres no teste, Elasticsearch na produção de verdade) ser só configuração.
+
+- **Base comum:** `ChatMensagemIndiceRepository` guarda a lógica que era do `ChatMensagemOpenSearchRepository` (índice idempotente, gravar uma vez, consultas e mapeamentos de `chat-consultas.ts`, erro vira "chat indisponível"); cada serviço implementa quatro métodos (`existeIndice`, `criarIndice`, `gravarDocumento`, `pesquisar`). O comportamento do OpenSearch não mudou (seus testes seguiram verdes; o de "sem exclusão nem alteração" agora olha também a classe-base).
+- **`ChatMensagemElasticsearchRepository`:** cliente `@elastic/elasticsearch` 9 (o atual do Elastic Cloud). Diferenças tratadas só ali: resposta sem envelope `body`, `document` no lugar de `body` ao gravar, mapeamento e consulta espalhados nos parâmetros (as mesmas consultas do OpenSearch funcionaram sem alteração). Autenticação por chave de API (prioridade), usuário e senha, ou nenhuma (só dev).
+- **Configuração:** `CHAT_ARMAZENAMENTO=elasticsearch`, `ELASTICSEARCH_URL` (obrigatória só com ele), `ELASTICSEARCH_API_KEY` ou `ELASTICSEARCH_USUARIO`/`ELASTICSEARCH_SENHA`. `.env.example`, `README.md`, `SYSTEM.SPEC.md`.
+- **Compose:** serviço `elasticsearch` 9.1 num **perfil opcional** (`docker compose --profile elasticsearch up -d elasticsearch`, porta 9201, segurança desligada); não sobe com `npm run db:up`.
+- **Testes:** backend 420 (+5 do repositório Elasticsearch e do config); com `CHAT_INTEGRACAO=1`, 438: os mesmos 6 cenários de contrato passaram contra **OpenSearch, Elasticsearch 9.1 e Postgres reais**, o Elasticsearch de primeira, sem ajuste nas consultas. Build do backend passa.
+- **Verificado ao vivo:** backend em outra porta com `CHAT_ARMAZENAMENTO=elasticsearch` e sem `OPENSEARCH_URL`: uma conversa real com a IA gravou as 2 mensagens no Elasticsearch e nenhuma no OpenSearch nem no Postgres; histórico, busca (`descricao` acha, palavra inexistente não) e título automático funcionaram; sem `ELASTICSEARCH_URL` a subida falha com mensagem clara. O container e o volume de teste foram removidos depois (a imagem baixada fica).
+- **Não verificado:** o Elastic Cloud de verdade (chave de API, TLS, HTTPS), a tela do chat contra o backend em `elasticsearch` (só a API), e o comportamento com volume real de mensagens (retenção, réplicas e backup são decisão do deploy).
+
 ## 2026-10-18 — Task 162: armazenamento do chat trocável e tabelas provisórias no Postgres
 
 Spec em `docs/specs/done/162-chat-armazenamento-trocavel-e-postgres-provisorio.spec.md`. Pedido do autor ao pensar no deploy de teste (Render + Cloudflare Pages + Supabase, sem custo mensal extra): a stack final tem Elasticsearch para o histórico das conversas, o desenvolvimento usa OpenSearch e o teste em produção usa o Postgres, só para manter a feature, com tabelas marcadas como removíveis.

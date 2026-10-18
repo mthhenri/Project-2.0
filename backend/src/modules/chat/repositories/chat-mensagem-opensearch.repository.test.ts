@@ -103,7 +103,7 @@ describe('ChatMensagemOpenSearchRepository', () => {
   });
 
   it('não expõe exclusão nem alteração de documento', () => {
-    const metodos = Object.getOwnPropertyNames(ChatMensagemOpenSearchRepository.prototype);
+    const metodos = [ChatMensagemOpenSearchRepository.prototype, Object.getPrototypeOf(ChatMensagemOpenSearchRepository.prototype)].flatMap((prototipo) => Object.getOwnPropertyNames(prototipo));
     assert.deepEqual(
       metodos.filter((nome) => /exclu|delet|remov|apag|alter|atualiz|update/i.test(nome)),
       [],
