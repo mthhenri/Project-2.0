@@ -227,9 +227,26 @@ Os blocos 1 a 3 não dependem de IA e podem começar primeiro.
 | 5 | 138 | [`138-chat-conversa-do-dia-e-streaming`](138-chat-conversa-do-dia-e-streaming.spec.md) | 135, 136, 137 |
 | 5 | 139 | [`139-chat-tela-do-chat`](139-chat-tela-do-chat.spec.md) | 136, 138 |
 | 5 | 140 | [`140-chat-testar-prompt-antes-de-salvar`](140-chat-testar-prompt-antes-de-salvar.spec.md) | 133 |
+| 5 | 141 | [`141-chat-historico-e-refinos-visuais`](141-chat-historico-e-refinos-visuais.spec.md) | 135, 139 |
+| 6 | 142 | [`142-atividade-prioridade-modelo-e-api`](142-atividade-prioridade-modelo-e-api.spec.md) | — |
+| 6 | 143 | [`143-atividade-prioridade-nas-telas`](143-atividade-prioridade-nas-telas.spec.md) | 142 |
+| 6 | 144 | [`144-chat-ferramentas-de-leitura-do-desenvolvedor`](144-chat-ferramentas-de-leitura-do-desenvolvedor.spec.md) | 137, 139, 142 |
+| 6 | 145 | [`145-chat-propostas-de-atividade-e-execucao`](145-chat-propostas-de-atividade-e-execucao.spec.md) | 136, 137, 142, 144 |
+| 8 | 146 | [`146-chat-pad-pela-ia`](146-chat-pad-pela-ia.spec.md) | 125–128, 136, 137, 139 |
+| 6 | 147 | [`147-chat-bom-dia-proativo`](147-chat-bom-dia-proativo.spec.md) | 144, 146 |
+| 6 | 148 | [`148-chat-reuniao-suspender-checkins`](148-chat-reuniao-suspender-checkins.spec.md) | 145 |
+| 7 | 149 | [`149-checkin-backend-e-rigor-proporcional`](149-checkin-backend-e-rigor-proporcional.spec.md) | 144, 148 |
+| 7 | 150 | [`150-checkin-descricao-formal-da-execucao`](150-checkin-descricao-formal-da-execucao.spec.md) | 145, 149 |
+| 7 | 151 | [`151-checkin-tela-da-janela`](151-checkin-tela-da-janela.spec.md) | 149, 150 |
+| 7 | 152 | [`152-electron-casca-e-timer-do-checkin`](152-electron-casca-e-timer-do-checkin.spec.md) | 149, 151 |
+| 9 | 153 | [`153-chat-gestor-ferramentas-de-leitura`](153-chat-gestor-ferramentas-de-leitura.spec.md) | 137, 139, 144 |
+| 9 | 154 | [`154-chat-gestor-criar-demanda`](154-chat-gestor-criar-demanda.spec.md) | 153 |
+| 9 | 155 | [`155-chat-gestor-entrevista-de-demanda`](155-chat-gestor-entrevista-de-demanda.spec.md) | 154 |
+| 9 | 156 | [`156-chat-gestor-conexoes-e-lugar`](156-chat-gestor-conexoes-e-lugar.spec.md) | 153, 155 |
+| 10 | 157 | [`157-fallback-telas-convencionais-e-inicio-no-chat`](157-fallback-telas-convencionais-e-inicio-no-chat.spec.md) | 139, 145, 146 |
+| 10 | 158 | [`158-fallback-retorno-da-ia-e-retomada`](158-fallback-retorno-da-ia-e-retomada.spec.md) | 145, 157 |
 
-O bloco 5 (chat) está quebrado em **135 a 140**; os blocos 6, 7, 9 e 10 são quebrados a partir da **141**. As tasks 125 a 128 saíram no
-mesmo lançamento. A 140 ("testar antes de salvar" os prompts) usa narrativas coladas pelo administrador, não o chat dos usuários
+O bloco 5 (chat) está quebrado em **135 a 141** (a 141 é o histórico de conversas e os refinos visuais, pedidos depois da 139); os blocos 6, 7, 9 e 10 estão quebrados em **142 a 158**: prioridade e ferramentas do desenvolvedor (142 a 148, com o pad pela IA na 146, que complementa o bloco 8), check-in e Electron (149 a 152), lado do gestor (153 a 156) e fallback (157 e 158). As tasks 125 a 128 saíram no mesmo lançamento. A 140 ("testar antes de salvar" os prompts) usa narrativas coladas pelo administrador, não o chat dos usuários
 (decisão de privacidade registrada na spec): por isso depende só da 133.
 
 ## Critérios de Aceite (da guarda-chuva)

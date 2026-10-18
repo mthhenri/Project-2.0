@@ -92,8 +92,9 @@ restam o guarda-chuva e o `INDEX-revisao-ux.md`, mapa em `docs/context/MEMORY.md
 `rework-chat-ia.spec.md` (chat com IA, 2026-10-17) já tem as tasks dos blocos 1 a 3 especificadas (**118–124**: permissão de gestor
 centralizada, administrador, layout, Markdown), do bloco 8 (**125–128**, pad estruturado, já implementado) do bloco 4 (**129–133**,
 fundação da IA, já implementado), da **134** (editor de Markdown formatado, que troca o editor em todo o sistema) e do bloco 5
-(**135–140**, chat: OpenSearch, propostas, ferramentas, conversa com streaming, tela e teste de prompts); os blocos 6, 7, 9 e 10 ainda
-serão quebrados a partir da 142. Confira o próximo número livre antes de criar uma spec nova: o maior em uso é 141.
+(**135–141**, chat: OpenSearch, propostas, ferramentas, conversa com streaming, tela, teste de prompts e histórico, já implementados) e dos blocos 6, 7, 9 e 10
+(**142–158**: prioridade e ferramentas do desenvolvedor, check-in e Electron, lado do gestor e fallback, ainda a implementar). Confira o próximo número livre antes de criar
+uma spec nova: o maior em uso é 158.
 
 ## Gate obrigatório de qualidade e conclusão
 

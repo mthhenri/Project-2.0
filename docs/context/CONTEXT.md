@@ -21,8 +21,7 @@ elas criaram (ver `MEMORY.md` §2). Siga a ordem de fases de `INDEX-revisao-ux.m
 2026-10-16 e estão em `docs/specs/discarded/`. As **110 e 111** (tela de Execuções) foram descartadas junto, mas o autor as
 **reativou em 2026-10-17** e elas foram **concluídas** (`docs/specs/done/`). A task 117 foi concluída. Não restam tasks
 numeradas no backlog.
-Próxima migration nova: `0036`. **Próximas tasks do rework do chat com IA:** o bloco 5 está especificado em `docs/specs/backlog/` (**135 a 140**; a 135 a 139 estão feitas: OpenSearch e
-repository de mensagens, proposta da IA, ferramentas, conversa do dia com streaming, tela do chat e teste de prompts); a ordem natural é 135 e 136 (independentes), 137, 138, 139 e 140.
+Próxima migration nova: `0036`. **Próximas tasks do rework do chat com IA:** os blocos 1 a 5 estão **concluídos** (118 a 141: administrador, layout, Markdown, pad estruturado, fundação da IA e chat com histórico e teste de prompts). Os blocos 6, 7, 9 e 10 estão especificados em `docs/specs/backlog/` (**142 a 158**); a ordem natural é a da tabela da guarda-chuva `rework-chat-ia.spec.md`: **142** (prioridade, modelo e API, migration `0036`), 143, 144, 145, 146, 147, 148 (desenvolvedor), 149 a 152 (check-in e Electron), 153 a 156 (gestor) e 157 e 158 (fallback).
 
 ## 2. Estado por Área
 

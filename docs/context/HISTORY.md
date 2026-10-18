@@ -12,6 +12,17 @@
 
 ---
 
+## 2026-10-18 — Quebra dos blocos 6, 7, 9 e 10 do rework do chat em 17 tasks (142 a 158)
+
+Pedido do autor depois de fechar o bloco 5. Só especificação (nenhum código). Specs em `docs/specs/backlog/`, na ordem da tabela da guarda-chuva:
+
+- **Bloco 6 (desenvolvedor), 142 a 148:** prioridade (modelo/API e telas com cor do administrador), ferramentas de leitura, propostas de atividade e execução (criar, iniciar e pausar, inclusive a pausa do almoço), pad pela IA, bom dia proativo e reunião (suspender check-ins).
+- **Bloco 7, 149 a 152:** backend do check-in e rigor proporcional, descrição formal, tela da janela e app Electron (novo workspace `electron/`).
+- **Bloco 9 (gestor), 153 a 156:** leitura de projetos, demandas e equipe, criar demanda, entrevista de descrições e conexões e lugar.
+- **Bloco 10, 157 e 158:** telas convencionais e login no chat, e retorno da IA com retomada.
+- **Decisões minhas, para o autor revisar:** (1) o **pad pela IA** (leitura por seção, `ANOTAR_PAD` pontual, pad só leitura com a IA no ar) não estava em nenhuma task dos blocos 8 (125 a 128 são modelo, tela e "Enviar para") e virou a **146**; (2) a **reunião** (suspensão em memória) entra no bloco 6 (148) e o timer no 7, como a guarda-chuva dividia; (3) a **equipe pelo chat** entrou só como leitura (153); (4) a IA do gestor **não reposiciona** demanda na árvore, só sugere e propõe conexão (156); (5) o login no chat (157) ajusta a nota de memória que dizia que `/atividade` é intencional, que valia antes da IA; (6) o 142 usa a migration `0036` e as seguintes pegam o próximo número livre.
+- Atualizados: tabela e texto da guarda-chuva, `CLAUDE.md` e `AGENTS.md` (iguais; maior número em uso agora 158) e `CONTEXT.md` (seção 1).
+
 ## 2026-10-17 — Task 140: testar o prompt antes de salvar (fecha o bloco 5)
 
 Spec em `docs/specs/done/140-chat-testar-prompt-antes-de-salvar.spec.md`. O botão reservado na aba Prompts (task 133) agora funciona.
