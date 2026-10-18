@@ -12,6 +12,14 @@
 
 ---
 
+## 2026-10-18 — Detalhe da demanda: seletor de membros e bolinha das tags
+
+Defeitos apontados pelo autor, fora de spec.
+
+- **Membros:** o autocomplete do cabeçalho (`demanda-membros-cabecalho`) usava `field="nomeCompleto"`, que o PrimeNG 21 não lê mais; a lista mostrava "[object Object]". Trocado por `optionLabel="nomeCompleto"`.
+- **Tags:** a bolinha de cor (chip e seletor, `demanda-tags-cabecalho__bolinha`) passou de 6px para 0.75rem (12px), para a cor da tag se ver de verdade.
+- **Verificado ao vivo** (app real, tema claro, 800×600 do painel): a lista de membros mostra "Matheus Henrique" e o seletor de tags mostra as bolinhas maiores. Não verificado: tema escuro e as três resoluções do projeto; o build do frontend passa.
+
 ## 2026-10-18 — Task 166: IA propõe registrar e corrigir execuções (verificação visual pendente)
 
 Task 165 fechada (o autor testou numa conversa real e aprovou); spec movida para `done/`.
