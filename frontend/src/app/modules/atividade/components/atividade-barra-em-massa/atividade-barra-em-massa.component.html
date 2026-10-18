@@ -1,0 +1,65 @@
+<div class="atividade-barra" role="toolbar" aria-label="Ações em massa nas atividades selecionadas">
+  <span class="atividade-barra__contagem">
+    <strong>{{ quantidade() }}</strong> {{ quantidade() === 1 ? 'selecionada' : 'selecionadas' }}
+  </span>
+
+  <span class="atividade-barra__separador" aria-hidden="true"></span>
+
+  <p-button
+    label="Mudar status"
+    icon="pi pi-sync"
+    [text]="true"
+    size="small"
+    [disabled]="ocupado()"
+    (onClick)="abrirStatus($event)"
+  />
+  <p-button
+    label="Acrescentar tags"
+    icon="pi pi-tags"
+    [text]="true"
+    size="small"
+    [disabled]="ocupado()"
+    (onClick)="abrirTags($event)"
+  />
+  <p-button
+    label="Excluir"
+    icon="pi pi-trash"
+    [text]="true"
+    severity="danger"
+    size="small"
+    [disabled]="ocupado()"
+    (onClick)="excluir.emit()"
+  />
+
+  <span class="atividade-barra__separador" aria-hidden="true"></span>
+
+  <p-button
+    icon="pi pi-times"
+    [text]="true"
+    [rounded]="true"
+    size="small"
+    severity="secondary"
+    ariaLabel="Limpar seleção"
+    [disabled]="ocupado()"
+    (onClick)="limpar.emit()"
+  />
+</div>
+
+<p-popover #statusPopover>
+  <div class="atividade-barra__status-opcoes">
+    @for (opcao of statusOpcoes; track opcao.value) {
+      <button type="button" class="atividade-barra__status-opcao" (click)="escolherStatus(opcao.value)">
+        <p-tag [value]="opcao.label" [severity]="opcao.value ? severidade(opcao.value) : undefined" />
+      </button>
+    }
+  </div>
+</p-popover>
+
+<app-atividade-tags-popover
+  #tagsPopover
+  titulo="Acrescentar tags às selecionadas"
+  [tags]="tags()"
+  [carregando]="carregandoTags()"
+  [exigirSelecao]="true"
+  (salvar)="acrescentarTags.emit($event)"
+/>

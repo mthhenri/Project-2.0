@@ -1,12 +1,39 @@
-<div class="atividade-listagem">
+<div class="atividade-listagem" [class.atividade-listagem--com-barra]="quantidadeSelecionada() > 0">
   <div class="atividade-listagem__cabecalho">
     <h1 class="atividade-listagem__titulo">Atividades</h1>
     <p-button
       label="Nova Atividade"
       icon="pi pi-plus"
+      pTooltip="Atalho: C"
+      tooltipPosition="left"
       (onClick)="novaDialog.abrir(demandaId())"
     />
   </div>
+
+  @if (sessao.eGestor() || demandaId()) {
+    <div class="atividade-listagem__contexto">
+      @if (sessao.eGestor()) {
+        <button
+          type="button"
+          class="atividade-listagem__chip-filtro"
+          [class.atividade-listagem__chip-filtro--ativo]="minhasAtivas()"
+          [attr.aria-pressed]="minhasAtivas()"
+          (click)="alternarMinhas()"
+        >
+          <i class="pi pi-user" aria-hidden="true"></i> Minhas atividades
+        </button>
+      }
+      @if (demandaId()) {
+        <span class="atividade-listagem__chip-contexto">
+          <i class="pi pi-sitemap" aria-hidden="true"></i>
+          Demanda: <strong>{{ nomeDemandaFiltrada() || '…' }}</strong>
+          <button type="button" class="atividade-listagem__chip-remover" aria-label="Remover o filtro de demanda" (click)="removerFiltroDeDemanda()">
+            <i class="pi pi-times" aria-hidden="true"></i>
+          </button>
+        </span>
+      }
+    </div>
+  }
 
   <form [formGroup]="formularioFiltros" class="atividade-listagem__filtros">
     <div class="atividade-listagem__filtro-campo atividade-listagem__filtro-campo--busca">
@@ -16,7 +43,7 @@
         type="text"
         pInputText
         formControlName="busca"
-        placeholder="Projeto, demanda ou atividade"
+        placeholder="Projeto, demanda ou atividade  ( / )"
         class="w-full"
       />
     </div>
@@ -75,12 +102,14 @@
     </div>
 
     <div class="atividade-listagem__filtro-acoes">
-      <p-button
-        label="Limpar"
-        icon="pi pi-filter-slash"
-        [text]="true"
-        (onClick)="limparFiltros()"
-      />
+      @if (filtrosAtivos() > 0) {
+        <p-button
+          [label]="'Limpar filtros (' + filtrosAtivos() + ')'"
+          icon="pi pi-filter-slash"
+          [text]="true"
+          (onClick)="limparFiltros()"
+        />
+      }
     </div>
   </form>
 
@@ -97,6 +126,8 @@
       [paginator]="true"
       [rows]="itensPorPagina()"
       [totalRecords]="totalRegistros()"
+      [selection]="selecionadas"
+      (selectionChange)="aoSelecionar($event)"
       (onLazyLoad)="aoCarregarTabela($event)"
       [rowsPerPageOptions]="[10, 25, 50]"
       [showCurrentPageReport]="true"
@@ -105,6 +136,9 @@
     >
       <ng-template pTemplate="header">
         <tr>
+          @if (sessao.eGestor()) {
+            <th class="atividade-listagem__coluna-selecao"><p-tableHeaderCheckbox ariaLabel="Selecionar todas as atividades da página" /></th>
+          }
           <th>Projeto</th>
           <th>Demanda</th>
           <th>Atividade</th>
@@ -120,49 +154,25 @@
       </ng-template>
 
       <ng-template pTemplate="body" let-atividade>
-        <tr>
+        <tr [class.atividade-listagem__linha--ativa]="atividadeEmExecucao(atividade)">
+          @if (sessao.eGestor()) {
+            <td class="atividade-listagem__coluna-selecao"><p-tableCheckbox [value]="atividade" [ariaLabel]="'Selecionar ' + atividade.nome" /></td>
+          }
           <td>{{ atividade.nomeProjeto }}</td>
           <td>
             <div class="atividade-listagem__demanda">
-              <div class="atividade-listagem__demanda-acoes">
-                <p-button
-                  icon="pi pi-user"
-                  [text]="true"
-                  [rounded]="true"
-                  size="small"
-                  severity="secondary"
-                  [styleClass]="classeIconeDescricao(atividade, 'descricaoCliente', 'cliente')"
-                  pTooltip="Descrição do cliente"
-                  tooltipPosition="top"
-                  (onClick)="abrirDescricaoDemanda(atividade, 'descricaoCliente')"
-                />
-                <p-button
-                  icon="pi pi-code"
-                  [text]="true"
-                  [rounded]="true"
-                  size="small"
-                  severity="secondary"
-                  [styleClass]="classeIconeDescricao(atividade, 'descricaoTecnica', 'tecnica')"
-                  pTooltip="Descrição técnica"
-                  tooltipPosition="top"
-                  (onClick)="abrirDescricaoDemanda(atividade, 'descricaoTecnica')"
-                />
-                <p-button
-                  icon="pi pi-book"
-                  [text]="true"
-                  [rounded]="true"
-                  size="small"
-                  severity="secondary"
-                  [styleClass]="classeIconeDescricao(atividade, 'documentacao', 'doc')"
-                  pTooltip="Documentação"
-                  tooltipPosition="top"
-                  (onClick)="abrirDescricaoDemanda(atividade, 'documentacao')"
-                />
-              </div>
+              <app-atividade-documentos-indicador [atividade]="atividade" (abrir)="abrirDescricaoDemanda(atividade, $event)" />
               <span class="atividade-listagem__demanda-nome">{{ atividade.nomeDemanda }}</span>
             </div>
           </td>
-          <td>{{ atividade.nome }}</td>
+          <td>
+            <div class="atividade-listagem__atividade">
+              <span>{{ atividade.nome }}</span>
+              @if (atividadeEmExecucao(atividade)) {
+                <app-atividade-em-execucao [inicio]="inicioDaExecucaoPropria(atividade)" />
+              }
+            </div>
+          </td>
           @if (sessao.eGestor()) {
             <td>
               <div class="atividade-listagem__executor">
@@ -218,32 +228,63 @@
             >{{ atividade.totalMinutosExecutados | tempoExibicao: unidadeTempo.emDias() : 'minutos' }}</span>
           </td>
           <td>
-            <div class="atividade-listagem__tags">
-              @for (tag of atividade.tags; track tag.id) {
-                <span
-                  class="atividade-listagem__chip"
-                  [style.background-color]="tag.cor + '22'"
-                  [style.color]="tag.cor"
-                  [style.border-color]="tag.cor + '55'"
-                >{{ tag.nome }}</span>
-              } @empty {
-                <span class="text-muted-color">—</span>
-              }
-            </div>
+            @if (podeEditar(atividade)) {
+              <button
+                #celulaTags
+                type="button"
+                [id]="'atividade-tags-' + atividade.id"
+                class="atividade-listagem__tags atividade-listagem__tags--editavel"
+                pTooltip="Editar tags"
+                tooltipPosition="top"
+                (click)="abrirTagsDaLinha($event, atividade, celulaTags)"
+              >
+                @for (tag of atividade.tags; track tag.id) {
+                  <span
+                    class="atividade-listagem__chip"
+                    [style.background-color]="tag.cor + '22'"
+                    [style.color]="tag.cor"
+                    [style.border-color]="tag.cor + '55'"
+                  >{{ tag.nome }}</span>
+                } @empty {
+                  <span class="atividade-listagem__tags-vazio"><i class="pi pi-plus" aria-hidden="true"></i> Tag</span>
+                }
+              </button>
+            } @else {
+              <div class="atividade-listagem__tags">
+                @for (tag of atividade.tags; track tag.id) {
+                  <span
+                    class="atividade-listagem__chip"
+                    [style.background-color]="tag.cor + '22'"
+                    [style.color]="tag.cor"
+                    [style.border-color]="tag.cor + '55'"
+                  >{{ tag.nome }}</span>
+                } @empty {
+                  <span class="text-muted-color">—</span>
+                }
+              </div>
+            }
           </td>
           <td>
             <div class="atividade-listagem__acoes">
-              <p-button
-                styleClass="atividade-listagem__botao-execucao"
-                [icon]="atividadeEmExecucao(atividade) ? 'pi pi-pause' : 'pi pi-play'"
-                [text]="true"
-                size="small"
-                [severity]="atividadeEmExecucao(atividade) ? 'warn' : 'success'"
-                [pTooltip]="atividadeEmExecucao(atividade) ? 'Encerrar execução' : 'Iniciar execução'"
-                tooltipPosition="left"
-                (onClick)="alternarExecucao(atividade)"
-                [style.visibility]="mostrarBotaoExecucao(atividade) ? 'visible' : 'hidden'"
-              />
+              @if (podeExecutar(atividade)) {
+                <span
+                  class="atividade-listagem__execucao-gatilho"
+                  [pTooltip]="atividadeEmExecucao(atividade) ? 'Encerrar execução' : motivoPlayIndisponivel(atividade) || 'Iniciar execução'"
+                  tooltipPosition="left"
+                >
+                  <p-button
+                    styleClass="atividade-listagem__botao-execucao"
+                    [icon]="atividadeEmExecucao(atividade) ? 'pi pi-pause' : 'pi pi-play'"
+                    [rounded]="true"
+                    [text]="true"
+                    [disabled]="!atividadeEmExecucao(atividade) && !podeIniciarExecucao(atividade)"
+                    [ariaLabel]="atividadeEmExecucao(atividade) ? 'Encerrar execução' : 'Iniciar execução'"
+                    (onClick)="alternarExecucao(atividade)"
+                  />
+                </span>
+              } @else {
+                <span class="atividade-listagem__acoes-vazio" aria-hidden="true"></span>
+              }
               <p-button
                 styleClass="atividade-listagem__botao-visualizar"
                 icon="pi pi-eye"
@@ -255,34 +296,14 @@
               />
               @if (podeEditar(atividade)) {
                 <p-button
-                  icon="pi pi-plus-circle"
+                  icon="pi pi-ellipsis-v"
                   [text]="true"
                   severity="secondary"
                   size="small"
-                  pTooltip="Atribuir tags"
+                  ariaLabel="Mais ações"
+                  pTooltip="Mais ações"
                   tooltipPosition="left"
-                  (onClick)="abrirDialogTags(atividade)"
-                />
-              }
-              @if (sessao.eGestor()) {
-                <p-button
-                  styleClass="atividade-listagem__botao-registrar"
-                  icon="pi pi-calendar-plus"
-                  [text]="true"
-                  severity="secondary"
-                  size="small"
-                  pTooltip="Registrar execução"
-                  tooltipPosition="left"
-                  (onClick)="abrirDialogRegistro(atividade)"
-                />
-                <p-button
-                  icon="pi pi-trash"
-                  [text]="true"
-                  severity="danger"
-                  size="small"
-                  pTooltip="Excluir"
-                  tooltipPosition="left"
-                  (onClick)="excluir(atividade)"
+                  (onClick)="abrirMenu($event, atividade)"
                 />
               }
             </div>
@@ -290,12 +311,23 @@
         </tr>
       </ng-template>
 
-      <ng-template pTemplate="empty">
+      <ng-template pTemplate="emptymessage">
         <tr>
-          <td [attr.colspan]="sessao.eGestor() ? 9 : 8">
+          <td [attr.colspan]="sessao.eGestor() ? 10 : 8">
             <div class="atividade-listagem__vazio">
               <i class="pi pi-list text-4xl text-muted-color"></i>
-              <p class="text-muted-color mt-3">Nenhuma atividade encontrada</p>
+              @if (filtrosAtivos() > 0) {
+                <p class="text-muted-color mt-3">Nenhuma atividade com esses filtros</p>
+                <div class="atividade-listagem__vazio-acoes">
+                  <p-button label="Limpar filtros" icon="pi pi-filter-slash" [outlined]="true" (onClick)="limparFiltros()" />
+                  <p-button label="Nova Atividade" icon="pi pi-plus" (onClick)="novaDialog.abrir(demandaId())" />
+                </div>
+              } @else {
+                <p class="text-muted-color mt-3">Ainda não há atividades em aberto</p>
+                <div class="atividade-listagem__vazio-acoes">
+                  <p-button label="Nova Atividade" icon="pi pi-plus" (onClick)="novaDialog.abrir(demandaId())" />
+                </div>
+              }
             </div>
           </td>
         </tr>
@@ -308,72 +340,13 @@
 
 <app-atividade-visualizar-dialog #visualizarDialog (aoAlterar)="buscarAtividades()" />
 
-<!-- Dialog: atribuir tags -->
-<p-dialog
-  [visible]="mostrarDialogTags()"
-  (visibleChange)="mostrarDialogTags.set($event)"
-  header="Atribuir tags"
-  dialogFormulario
-  [dialogBloqueado]="salvandoTags()"
-  (dialogEnviar)="salvarTags()"
-  [modal]="true"
-  [style]="{ width: '32rem' }"
-  [draggable]="false"
-  [dismissableMask]="true"
->
-  @if (atividadeTags(); as atividade) {
-    <p class="atividade-listagem__execucao-atividade">{{ atividade.nomeProjeto }} · {{ atividade.nome }}</p>
-  }
-
-  <form [formGroup]="formularioTags" class="atividade-listagem__dialog-form">
-    <div class="atividade-listagem__dialog-campo">
-      <label class="atividade-listagem__filtro-label">Tags</label>
-      @if (carregandoTags()) {
-        <i class="pi pi-spin pi-spinner text-muted-color"></i>
-      } @else {
-        <div class="atividade-listagem__tags-seletor atividade-listagem__tags-seletor--amplo">
-          @for (tag of todasAsTags(); track tag.id) {
-            <button
-              type="button"
-              class="atividade-listagem__tag-chip"
-              [class.atividade-listagem__tag-chip--ativo]="tagEstaSelecionada(formularioTags.controls.tagIds, tag.id)"
-              [style.--cor-tag]="tag.cor"
-              (click)="alternarTagSelecao(formularioTags.controls.tagIds, tag.id)"
-            >
-              @if (tagEstaSelecionada(formularioTags.controls.tagIds, tag.id)) {
-                <i class="pi pi-check atividade-listagem__tag-chip-check"></i>
-              } @else {
-                <span class="atividade-listagem__tag-bolinha" [style.background-color]="tag.cor"></span>
-              }
-              {{ tag.nome }}
-            </button>
-          } @empty {
-            <span class="text-muted-color">Nenhuma tag cadastrada</span>
-          }
-        </div>
-      }
-    </div>
-  </form>
-
-  <ng-template pTemplate="footer">
-    <app-dialog-dica-atalhos />
-    <p-button label="Cancelar" [text]="true" (onClick)="mostrarDialogTags.set(false)" />
-    <p-button
-      label="Salvar"
-      icon="pi pi-check"
-      [loading]="salvandoTags()"
-      (onClick)="salvarTags()"
-    />
-  </ng-template>
-</p-dialog>
-
 <!-- Dialog: descrição da demanda -->
 <p-dialog
   [visible]="mostrarDialogDescricao()"
   (visibleChange)="mostrarDialogDescricao.set($event)"
   [header]="cabecalhoDescricao()"
   [modal]="true"
-  [style]="{ width: '95vw', height: '95vh' }"
+  [style]="{ width: '56rem', maxWidth: '95vw', height: '80vh' }"
   [contentStyle]="{ display: 'flex', flexDirection: 'column' }"
   [draggable]="false"
   [dismissableMask]="true"
@@ -660,3 +633,29 @@
   </div>
 </p-popover>
 
+<!-- Popover: tags da linha (salva ao fechar) -->
+<app-atividade-tags-popover
+  #tagsPopoverLinha
+  [titulo]="atividadeTags() ? 'Tags de ' + atividadeTags()!.nome : 'Tags'"
+  [tags]="todasAsTags()"
+  [carregando]="carregandoTags()"
+  (salvar)="salvarTagsDaLinha($event)"
+/>
+
+<!-- Menu ⋮ da linha -->
+<p-menu #menuAcoes [model]="itensMenu" [popup]="true" appendTo="body" />
+
+<!-- Barra de ações em massa (gestor) -->
+@if (sessao.eGestor() && quantidadeSelecionada() > 0) {
+  <app-atividade-barra-em-massa
+    [quantidade]="quantidadeSelecionada()"
+    [tags]="todasAsTags()"
+    [carregandoTags]="carregandoTags()"
+    [ocupado]="executandoEmMassa()"
+    (precisaDasTags)="garantirTags()"
+    (mudarStatus)="mudarStatusEmMassa($event)"
+    (acrescentarTags)="acrescentarTagsEmMassa($event)"
+    (excluir)="excluirEmMassa()"
+    (limpar)="limparSelecao()"
+  />
+}

@@ -1,0 +1,31 @@
+<p-popover #popover (onHide)="aoFechar()">
+  <div class="atividade-tags-popover">
+    <span class="atividade-tags-popover__titulo">{{ titulo() }}</span>
+    @if (carregando()) {
+      <i class="pi pi-spin pi-spinner text-muted-color"></i>
+    } @else {
+      <div class="atividade-tags-popover__seletor">
+        @for (tag of tags(); track tag.id) {
+          <button
+            type="button"
+            class="atividade-tags-popover__opcao"
+            [class.atividade-tags-popover__opcao--ativa]="estaMarcada(tag.id)"
+            [style.--cor-tag]="tag.cor"
+            [attr.aria-pressed]="estaMarcada(tag.id)"
+            (click)="alternar(tag.id)"
+          >
+            @if (estaMarcada(tag.id)) {
+              <i class="pi pi-check atividade-tags-popover__check"></i>
+            } @else {
+              <span class="atividade-tags-popover__bolinha" [style.background-color]="tag.cor"></span>
+            }
+            {{ tag.nome }}
+          </button>
+        } @empty {
+          <span class="text-muted-color">Nenhuma tag cadastrada</span>
+        }
+      </div>
+      <small class="atividade-tags-popover__dica">Salva ao fechar.</small>
+    }
+  </div>
+</p-popover>

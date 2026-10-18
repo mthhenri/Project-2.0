@@ -1,0 +1,31 @@
+.atividade-em-execucao {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--p-primary-color) 14%, transparent);
+  color: var(--p-primary-color);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+
+  &__ponto {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--p-primary-color);
+    animation: atividade-em-execucao-pulso 1.6s ease-in-out infinite;
+  }
+}
+
+@keyframes atividade-em-execucao-pulso {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .atividade-em-execucao__ponto {
+    animation: none;
+  }
+}

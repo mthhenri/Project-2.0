@@ -12,6 +12,17 @@
 
 ---
 
+## 2026-10-18 — Task 102 (reativada): listagem de Atividades com filtros na URL, ações enxutas e ações em massa
+
+O autor reativou as tasks 102–105 (descartadas em 2026-10-16) depois de fechar a IA. A 102 foi implementada só no frontend.
+
+- **Filtros na URL** (`busca`, `status`, `usuarioId`, `periodo`, `demandaId`): regra pura em `utils/filtros-atividade.util.ts` (6 testes); a página lê a URL por `queryParamMap` e escreve com `replaceUrl`. "Limpar filtros (N)" só com filtro fora do padrão (o chip de demanda conta); chip-toggle "Minhas atividades" (gestor) e chip removível "Demanda: X".
+- **Ações da linha**: play/pause primário-suave, desabilitado com tooltip "Mude o status para Planejada ou Desenvolvendo"; visualizar; kebab ⋮ (Atribuir tags / Registrar execução / Excluir em vermelho). Tags viram popover inline na célula (salva ao fechar). Os três ícones de documento viraram um `pi-file` com pontos coloridos (`AtividadeDocumentosIndicadorComponent`); dialog de leitura 56rem/80vh. Linha em execução com fundo e selo "Em execução" + cronômetro (`AtividadeEmExecucaoComponent`, extraído para caber no orçamento de 8 kB do SCSS).
+- **Seleção múltipla (gestor)**: checkbox por linha e barra flutuante (`AtividadeBarraEmMassaComponent`) com Mudar status, Acrescentar tags (união), Excluir (um único toast de desfazer) — itera os endpoints existentes.
+- **Desvios da spec**: o atalho de Nova Atividade é **`C`**, não `N` (o `n` global já abre as anotações na topbar); `/` foca a busca. Tags também pelo ⋮.
+- **Achado na verificação ao vivo**: o estado vazio da tabela nunca aparecia — o template era `pTemplate="empty"`; no PrimeNG 21 é `emptymessage` (defeito preexistente, corrigido).
+- Testes do frontend: 48/48; build do frontend ok. Verificado ao vivo em 1366×768 (estados vazio, filtrado, cheio, seleção).
+
 ## 2026-10-18 — Correção: editar usuário falhava com "horasDiariasNecessarias must be a string"
 
 Ao editar um usuário o backend recusava o formulário com `horasDiariasNecessarias must be a string`. Causa: a task 128 (commit `a58b215`, remoção de `usuario.anotacoes`) apagou só a linha da propriedade `anotacoes` nos DTOs e deixou os decorators dela soltos; decorator sem propriedade gruda na seguinte. Em `UsuarioAlterarDto` o `@IsString()` de `anotacoes` passou a valer para `horasDiariasNecessarias`; em `UsuarioRecuperadoDto` e `UsuarioAlteradoDto` sobraram dois `@ApiProperty` órfãos (só Swagger, sem efeito em validação).

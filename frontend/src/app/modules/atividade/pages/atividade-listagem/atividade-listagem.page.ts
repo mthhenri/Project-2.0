@@ -1,8 +1,8 @@
-import { Component, inject, signal, DestroyRef, OnInit, HostListener, ViewChild, ElementRef, computed, effect, untracked } from '@angular/core';
+import { Component, inject, signal, DestroyRef, OnInit, HostListener, ViewChild, ElementRef, computed, effect, untracked, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
-import { finalize, debounceTime, distinctUntilChanged } from 'rxjs';
+import { ActivatedRoute, Router } from '@angular/router';
+import { finalize, debounceTime, distinctUntilChanged, forkJoin, of, catchError, map, Observable } from 'rxjs';
 import { TableModule, TableLazyLoadEvent } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { Select } from 'primeng/select';
@@ -16,7 +16,8 @@ import { MarkdownVisualizadorComponent } from '../../../../shared/components/mar
 import { Tag } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { PopoverModule, Popover } from 'primeng/popover';
-import { MessageService } from 'primeng/api';
+import { Menu, MenuModule } from 'primeng/menu';
+import { MenuItem, MessageService } from 'primeng/api';
 import {
   AtividadePrioridadeResumoDto,
   AtividadeResumoDto,
@@ -65,6 +66,19 @@ import { BarraRecargaComponent } from '../../../../shared/components/barra-recar
 import { DesfazerService } from '../../../../core/services/desfazer.service';
 import { ExecucaoAtivaService } from '../../../../core/services/execucao-ativa.service';
 import { PrioridadeSeloComponent } from '../../../../shared/components/prioridade-selo/prioridade-selo.component';
+import { focoEmCampo, haSobreposicaoAberta } from '../../../../core/utils/atalhos';
+import { AtividadeEmExecucaoComponent } from '../../components/atividade-em-execucao/atividade-em-execucao.component';
+import { AtividadeTagsPopoverComponent } from '../../components/atividade-tags-popover/atividade-tags-popover.component';
+import { AtividadeDocumentosIndicadorComponent } from '../../components/atividade-documentos-indicador/atividade-documentos-indicador.component';
+import { AtividadeBarraEmMassaComponent } from '../../components/atividade-barra-em-massa/atividade-barra-em-massa.component';
+import {
+  FiltrosAtividade,
+  contarFiltrosAtivos,
+  filtrosIguais,
+  filtrosPadrao,
+  lerFiltrosDaUrl,
+  paraParametrosDaUrl,
+} from '../../utils/filtros-atividade.util';
 
 type CampoDescricaoDemanda = 'descricaoCliente' | 'descricaoTecnica' | 'documentacao';
 
@@ -92,6 +106,11 @@ type CampoDescricaoDemanda = 'descricaoCliente' | 'descricaoTecnica' | 'document
     Tag,
     TooltipModule,
     PopoverModule,
+    MenuModule,
+    AtividadeEmExecucaoComponent,
+    AtividadeTagsPopoverComponent,
+    AtividadeDocumentosIndicadorComponent,
+    AtividadeBarraEmMassaComponent,
     AssistenteDescricaoComponent,
     AtividadeVisualizarDialogComponent,
     DataBrasileiraPipe,
@@ -109,8 +128,9 @@ export class AtividadeListagemPage implements OnInit {
   private readonly usuarioService = inject(UsuarioService);
   private readonly demandaService = inject(DemandaService);
   private readonly rotaAtiva = inject(ActivatedRoute);
+  private readonly roteador = inject(Router);
   private readonly desfazerService = inject(DesfazerService);
-  private readonly execucaoAtiva = inject(ExecucaoAtivaService);
+  protected readonly execucaoAtiva = inject(ExecucaoAtivaService);
   private readonly messageService = inject(MessageService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
@@ -124,7 +144,15 @@ export class AtividadeListagemPage implements OnInit {
     intervalo: [null as (Date | null)[] | null],
   });
 
-  readonly demandaId = signal<number | null>(null);
+  /** Os filtros em vigor: vêm da URL (a fonte do estado), então voltar à tela os restaura e o link é compartilhável. */
+  readonly filtros = signal<FiltrosAtividade>(filtrosPadrao());
+  readonly filtrosAtivos = computed(() => contarFiltrosAtivos(this.filtros()));
+  readonly demandaId = computed(() => this.filtros().demandaId);
+  /** O nome da demanda do chip de contexto (vem da primeira linha carregada ou de uma busca quando a lista está vazia). */
+  readonly nomeDemandaFiltrada = signal<string>('');
+  private nomeDemandaBuscadoPara: number | null = null;
+  /** "Minhas atividades" ligado: o filtro de usuário é o próprio gestor. */
+  readonly minhasAtivas = computed(() => !!this.sessao.id() && this.filtros().usuarioId === this.sessao.id());
   readonly atividades = signal<AtividadeResumoDto[]>([]);
   /** Mantém o DOM das linhas ao atualizar uma atividade in-place (sem remontar nem piscar). */
   readonly rastrearPorId = (_indice: number, atividade: AtividadeResumoDto): number => atividade.id;
@@ -146,16 +174,22 @@ export class AtividadeListagemPage implements OnInit {
   // --- Troca de status inline ---
   readonly atividadeStatusEdicao = signal<AtividadeResumoDto | null>(null);
 
-  // --- Dialog: atribuir tags ---
-  readonly mostrarDialogTags = signal<boolean>(false);
-  readonly salvandoTags = signal<boolean>(false);
+  // --- Tags inline (popover na célula) e em massa ---
   readonly carregandoTags = signal<boolean>(false);
   readonly todasAsTags = signal<TagResumoDto[]>([]);
   readonly atividadeTags = signal<AtividadeResumoDto | null>(null);
+  private readonly tagsPopoverLinha = viewChild.required<AtividadeTagsPopoverComponent>('tagsPopoverLinha');
 
-  readonly formularioTags = this.formBuilder.group({
-    tagIds: [[] as number[]],
-  });
+  // --- Menu ⋮ da linha ---
+  private readonly menuAcoes = viewChild<Menu>('menuAcoes');
+  itensMenu: MenuItem[] = [];
+
+  // --- Seleção múltipla (gestor) ---
+  selecionadas: AtividadeResumoDto[] = [];
+  readonly quantidadeSelecionada = signal<number>(0);
+  readonly executandoEmMassa = signal<boolean>(false);
+
+  private readonly novaDialog = viewChild.required<AtividadeNovaDialogComponent>('novaDialog');
 
   // --- Dialog: descrições da demanda ---
   readonly mostrarDialogDescricao = signal<boolean>(false);
@@ -224,17 +258,36 @@ export class AtividadeListagemPage implements OnInit {
   }
 
   ngOnInit(): void {
-    const demandaIdParam = Number(this.rotaAtiva.snapshot.queryParamMap.get('demandaId'));
-    this.demandaId.set(Number.isFinite(demandaIdParam) && demandaIdParam > 0 ? demandaIdParam : null);
-
     this.prioridadeService.carregar();
     if (this.sessao.eGestor()) this.carregarUsuarios();
+
+    // A URL é a fonte do estado: cada mudança (clique, Voltar, link) passa por aqui e recarrega.
+    this.rotaAtiva.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((parametros) => {
+      this.aplicarFiltros(lerFiltrosDaUrl(parametros, this.sessao.eGestor()));
+      this.paginaAtual.set(1);
+      this.buscarAtividades();
+    });
 
     this.formularioFiltros.controls.busca.valueChanges
       .pipe(debounceTime(400), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.aoMudarFiltro());
+  }
 
-    this.buscarAtividades();
+  /**
+   * Atalhos da listagem: `/` foca a busca e `c` abre "Nova atividade" (o `n` já é das anotações, em qualquer tela). Quietos em campo de
+   * texto e com dialog ou popover aberto.
+   */
+  @HostListener('document:keydown', ['$event'])
+  aoTeclar(evento: KeyboardEvent): void {
+    if (evento.defaultPrevented || evento.ctrlKey || evento.metaKey || evento.altKey) return;
+    if (focoEmCampo(evento.target) || haSobreposicaoAberta()) return;
+    if (evento.key === '/') {
+      evento.preventDefault();
+      document.getElementById('filtro-busca')?.focus();
+    } else if (evento.key.toLowerCase() === 'c' && !evento.shiftKey) {
+      evento.preventDefault();
+      this.novaDialog().abrir(this.demandaId());
+    }
   }
 
   /**
@@ -253,23 +306,18 @@ export class AtividadeListagemPage implements OnInit {
   buscarAtividades(): void {
     this.carregando.set(true);
 
+    const aplicados = this.filtros();
     const filtros: AtividadeListarDto = {
       pagina:         this.paginaAtual(),
       itensPorPagina: this.itensPorPagina(),
     };
 
-    const demandaId = this.demandaId();
-    if (demandaId) filtros.demandaId = demandaId;
-
-    const { status, usuarioId, busca } = this.formularioFiltros.value;
-    if (status?.length) filtros.status = status;
-    if (usuarioId)      filtros.usuarioId = usuarioId;
-    if (busca?.trim())  filtros.busca = busca.trim();
-
-    const intervalo = this.formularioFiltros.controls.intervalo.value ?? [];
-    const [dataInicio, dataFim] = intervalo;
-    if (dataInicio instanceof Date) filtros.dataInicio = this.formatarData(dataInicio);
-    if (dataFim instanceof Date)    filtros.dataFim = this.formatarData(dataFim);
+    if (aplicados.demandaId) filtros.demandaId = aplicados.demandaId;
+    if (aplicados.status.length) filtros.status = aplicados.status;
+    if (aplicados.usuarioId) filtros.usuarioId = aplicados.usuarioId;
+    if (aplicados.busca.trim()) filtros.busca = aplicados.busca.trim();
+    if (aplicados.periodo?.[0]) filtros.dataInicio = aplicados.periodo[0];
+    if (aplicados.periodo?.[1]) filtros.dataFim = aplicados.periodo[1];
 
     this.atividadeService
       .listar(filtros)
@@ -282,6 +330,7 @@ export class AtividadeListagemPage implements OnInit {
           if (resposta.sucesso && resposta.dados) {
             this.atividades.set(resposta.dados.itens);
             this.totalRegistros.set(resposta.dados.totalItens);
+            this.descobrirNomeDaDemanda();
           }
         },
       });
@@ -290,24 +339,102 @@ export class AtividadeListagemPage implements OnInit {
   aoCarregarTabela(evento: TableLazyLoadEvent): void {
     const primeira = evento.first ?? 0;
     const linhas = evento.rows ?? 10;
-    this.paginaAtual.set(Math.floor(primeira / linhas) + 1);
+    const pagina = Math.floor(primeira / linhas) + 1;
+    // O paginador dispara o carregamento ao montar: sem mudança de página ou de tamanho, a URL já recarregou.
+    if (pagina === this.paginaAtual() && linhas === this.itensPorPagina()) return;
+    this.paginaAtual.set(pagina);
     this.itensPorPagina.set(linhas);
     this.buscarAtividades();
   }
 
+  /** Um filtro mudou no formulário: vai para a URL, que recarrega. */
   aoMudarFiltro(): void {
-    this.paginaAtual.set(1);
-    this.buscarAtividades();
+    this.irParaFiltros(this.filtrosDoFormulario());
   }
 
   limparFiltros(): void {
-    this.formularioFiltros.reset({
-      status:    ATIVIDADE_STATUS_NAO_DESENVOLVIDA,
-      usuarioId: null,
-      busca:     '',
-      intervalo: null,
+    this.irParaFiltros(filtrosPadrao());
+  }
+
+  /** O chip "Minhas atividades" (gestor): liga e desliga o filtro de usuário pelo próprio gestor. */
+  alternarMinhas(): void {
+    const eu = this.sessao.id();
+    if (!eu) return;
+    this.irParaFiltros({ ...this.filtros(), usuarioId: this.minhasAtivas() ? null : eu });
+  }
+
+  /** O "✕" do chip "Demanda: X": volta a todas as demandas. */
+  removerFiltroDeDemanda(): void {
+    this.irParaFiltros({ ...this.filtros(), demandaId: null });
+  }
+
+  private filtrosDoFormulario(): FiltrosAtividade {
+    const { status, usuarioId, busca } = this.formularioFiltros.value;
+    const [inicio, fim] = this.formularioFiltros.controls.intervalo.value ?? [];
+    const periodo: [string | null, string | null] | null =
+      inicio instanceof Date || fim instanceof Date
+        ? [inicio instanceof Date ? this.formatarData(inicio) : null, fim instanceof Date ? this.formatarData(fim) : null]
+        : null;
+    return { busca: (busca ?? '').trim(), status: status ?? [], usuarioId: usuarioId ?? null, periodo, demandaId: this.filtros().demandaId };
+  }
+
+  /** Vai para a URL com os filtros (sem empilhar histórico); se nada mudou, só recarrega. */
+  private irParaFiltros(novos: FiltrosAtividade): void {
+    if (filtrosIguais(novos, this.filtros())) {
+      this.aplicarFiltros(novos);
+      this.paginaAtual.set(1);
+      this.buscarAtividades();
+      return;
+    }
+    void this.roteador.navigate([], { relativeTo: this.rotaAtiva, queryParams: paraParametrosDaUrl(novos), replaceUrl: true });
+  }
+
+  /** Espelha os filtros da URL no formulário (sem disparar a busca) e nos sinais. */
+  private aplicarFiltros(filtros: FiltrosAtividade): void {
+    this.filtros.set(filtros);
+    const [inicio, fim] = filtros.periodo ?? [null, null];
+    this.formularioFiltros.patchValue(
+      {
+        status: filtros.status,
+        usuarioId: filtros.usuarioId,
+        busca: filtros.busca,
+      },
+      { emitEvent: false },
+    );
+    // O tipo do grupo (FormBuilder com tupla) não aceita o intervalo no `patchValue`: o controle é definido à parte.
+    this.formularioFiltros.controls.intervalo.setValue((filtros.periodo ? [this.paraData(inicio), this.paraData(fim)] : null) as never, { emitEvent: false });
+    this.selecionadas = [];
+    this.quantidadeSelecionada.set(0);
+  }
+
+  private paraData(iso: string | null): Date | null {
+    if (!iso) return null;
+    const [ano, mes, dia] = iso.split('-').map(Number);
+    return new Date(ano, mes - 1, dia);
+  }
+
+  /** O nome do chip de contexto: da primeira linha da própria demanda ou, com a lista vazia, de uma consulta (uma vez por demanda). */
+  private descobrirNomeDaDemanda(): void {
+    const demandaId = this.demandaId();
+    if (!demandaId) {
+      this.nomeDemandaFiltrada.set('');
+      this.nomeDemandaBuscadoPara = null;
+      return;
+    }
+    const daLista = this.atividades().find((atividade) => atividade.demandaId === demandaId);
+    if (daLista) {
+      this.nomeDemandaFiltrada.set(daLista.nomeDemanda);
+      this.nomeDemandaBuscadoPara = demandaId;
+      return;
+    }
+    if (this.nomeDemandaBuscadoPara === demandaId) return;
+    this.nomeDemandaBuscadoPara = demandaId;
+    this.demandaService.recuperar(demandaId).subscribe({
+      next: (resposta) => {
+        if (this.demandaId() === demandaId) this.nomeDemandaFiltrada.set(resposta.dados?.nome ?? `#${demandaId}`);
+      },
+      error: () => this.nomeDemandaFiltrada.set(`#${demandaId}`),
     });
-    this.aoMudarFiltro();
   }
 
   // ---------------------------------------------------------------------------
@@ -372,50 +499,34 @@ export class AtividadeListagemPage implements OnInit {
   }
 
   // ---------------------------------------------------------------------------
-  // Atribuir tags
+  // Tags: popover na célula (salva ao fechar) e em massa
   // ---------------------------------------------------------------------------
 
-  abrirDialogTags(atividade: AtividadeResumoDto): void {
+  /** Abre o seletor de tags da linha ancorado na célula de tags (`alvo`); o menu ⋮ também chega aqui. */
+  abrirTagsDaLinha(evento: Event, atividade: AtividadeResumoDto, alvo?: HTMLElement): void {
+    if (!this.podeEditar(atividade)) return;
     this.atividadeTags.set(atividade);
-    this.formularioTags.reset({ tagIds: atividade.tags.map((tag) => tag.id) });
-    this.mostrarDialogTags.set(true);
-
-    if (this.todasAsTags().length === 0) this.carregarTodasAsTags();
+    this.garantirTags();
+    this.tagsPopoverLinha().abrir(evento, alvo, atividade.tags.map((tag) => tag.id));
   }
 
-  /** Alterna a seleção de uma tag no controle informado (seletor de chips). */
-  alternarTagSelecao(controle: AbstractControl, tagId: number): void {
-    const selecionadas = (controle.value as number[] | null) ?? [];
-    const novas = selecionadas.includes(tagId)
-      ? selecionadas.filter((id) => id !== tagId)
-      : [...selecionadas, tagId];
-    controle.setValue(novas);
-    controle.markAsDirty();
-  }
-
-  tagEstaSelecionada(controle: AbstractControl, tagId: number): boolean {
-    return ((controle.value as number[] | null) ?? []).includes(tagId);
-  }
-
-  salvarTags(): void {
+  /** O popover fechou com tags mudadas: salva o conjunto da linha. */
+  salvarTagsDaLinha(tagIds: number[]): void {
     const atividade = this.atividadeTags();
     if (!atividade) return;
+    const anteriores = atividade.tags;
+    this.atualizarTagsDaAtividade(atividade.id, this.todasAsTags().filter((tag) => tagIds.includes(tag.id)));
+    this.atividadeService.alterarTags(atividade.id, { tagIds }).subscribe({
+      next: (resposta) => {
+        if (resposta.sucesso && resposta.dados) this.atualizarTagsDaAtividade(atividade.id, resposta.dados.tags);
+        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Tags atualizadas' });
+      },
+      error: () => this.atualizarTagsDaAtividade(atividade.id, anteriores),
+    });
+  }
 
-    this.salvandoTags.set(true);
-    const tagIds = this.formularioTags.value.tagIds ?? [];
-
-    this.atividadeService
-      .alterarTags(atividade.id, { tagIds })
-      .pipe(finalize(() => this.salvandoTags.set(false)))
-      .subscribe({
-        next: (resposta) => {
-          if (resposta.sucesso && resposta.dados) {
-            this.atualizarTagsDaAtividade(atividade.id, resposta.dados.tags);
-            this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Tags atualizadas' });
-            this.mostrarDialogTags.set(false);
-          }
-        },
-      });
+  garantirTags(): void {
+    if (this.todasAsTags().length === 0 && !this.carregandoTags()) this.carregarTodasAsTags();
   }
 
   // ---------------------------------------------------------------------------
@@ -552,16 +663,15 @@ export class AtividadeListagemPage implements OnInit {
     return ATIVIDADE_STATUS_EXECUTAVEL.includes(atividade.status);
   }
 
-  /**
-   * Exibe o botão de play/pause. Encerrar (pause) fica sempre disponível quando há
-   * execução ativa; iniciar (play) só quando o status permite. Assim, atividades
-   * pendentes/desenvolvidas não ganham play, mas execuções já ativas podem ser encerradas.
-   */
-  mostrarBotaoExecucao(atividade: AtividadeResumoDto): boolean {
-    return (
-      this.podeExecutar(atividade) &&
-      (this.atividadeEmExecucao(atividade) || this.podeIniciarExecucao(atividade))
-    );
+  /** O início da execução em andamento **do usuário logado** nesta atividade (para o cronômetro da linha); as dos outros não têm início na listagem. */
+  inicioDaExecucaoPropria(atividade: AtividadeResumoDto): Date | null {
+    const propria = this.execucaoAtiva.ativa();
+    return propria && propria.atividadeId === atividade.id ? new Date(propria.inicioData) : null;
+  }
+
+  /** Por que o play está apagado (o status não deixa iniciar), ou vazio quando está livre. */
+  motivoPlayIndisponivel(atividade: AtividadeResumoDto): string {
+    return this.podeIniciarExecucao(atividade) ? '' : 'Mude o status para Planejada ou Desenvolvendo';
   }
 
   /** O status não pode ser trocado enquanto houver execução em andamento. */
@@ -698,6 +808,124 @@ export class AtividadeListagemPage implements OnInit {
   }
 
   // ---------------------------------------------------------------------------
+  // Menu ⋮ da linha
+  // ---------------------------------------------------------------------------
+
+  /** Atribuir tags, registrar execução e excluir saem da fila de botões e vão para o menu da linha. */
+  abrirMenu(evento: Event, atividade: AtividadeResumoDto): void {
+    const itens: MenuItem[] = [];
+    if (this.podeEditar(atividade)) {
+      itens.push({
+        label: 'Atribuir tags',
+        icon: 'pi pi-tags',
+        command: () => {
+          const celula = document.getElementById(`atividade-tags-${atividade.id}`) ?? undefined;
+          this.abrirTagsDaLinha(new Event('click'), atividade, celula);
+        },
+      });
+    }
+    if (this.sessao.eGestor()) {
+      itens.push(
+        { label: 'Registrar execução', icon: 'pi pi-calendar-plus', command: () => this.abrirDialogRegistro(atividade) },
+        { separator: true },
+        { label: 'Excluir', icon: 'pi pi-trash', styleClass: 'atividade-listagem__menu-excluir', command: () => this.excluir(atividade) },
+      );
+    }
+    this.itensMenu = itens;
+    this.menuAcoes()?.toggle(evento);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Ações em massa (gestor)
+  // ---------------------------------------------------------------------------
+
+  aoSelecionar(selecao: AtividadeResumoDto[]): void {
+    this.selecionadas = selecao;
+    this.quantidadeSelecionada.set(selecao.length);
+  }
+
+  limparSelecao(): void {
+    this.aoSelecionar([]);
+  }
+
+  /** Muda o status de todas as selecionadas; as que o servidor recusa (por exemplo, com execução em andamento) são contadas à parte. */
+  mudarStatusEmMassa(status: TipoAtividadeStatusEnum): void {
+    const alvos = this.selecionadas.filter((atividade) => atividade.status !== status);
+    if (alvos.length === 0) {
+      this.messageService.add({ severity: 'info', summary: 'Status', detail: 'As selecionadas já estão com esse status' });
+      return;
+    }
+    this.aplicarEmMassa(
+      alvos.map((atividade) => this.atividadeService.alterar(atividade.id, { status })),
+      `${rotuloStatusAtividade(status)}`,
+      'status alterado',
+    );
+  }
+
+  /** Acrescenta as tags escolhidas às selecionadas, mantendo as que cada uma já tem (a API substitui o conjunto inteiro). */
+  acrescentarTagsEmMassa(tagIds: number[]): void {
+    const alvos = this.selecionadas.filter((atividade) => tagIds.some((id) => !atividade.tags.some((tag) => tag.id === id)));
+    if (alvos.length === 0) {
+      this.messageService.add({ severity: 'info', summary: 'Tags', detail: 'As selecionadas já têm essas tags' });
+      return;
+    }
+    this.aplicarEmMassa(
+      alvos.map((atividade) => {
+        const uniao = [...new Set([...atividade.tags.map((tag) => tag.id), ...tagIds])];
+        return this.atividadeService.alterarTags(atividade.id, { tagIds: uniao });
+      }),
+      'Tags acrescentadas',
+      'tags acrescentadas',
+    );
+  }
+
+  /** Exclui as selecionadas (soft delete); o toast desfaz todas de uma vez. */
+  excluirEmMassa(): void {
+    const alvos = [...this.selecionadas];
+    if (alvos.length === 0) return;
+    this.executandoEmMassa.set(true);
+    const resultados = alvos.map((atividade) =>
+      this.atividadeService.excluir(atividade.id).pipe(
+        map(() => atividade),
+        catchError(() => of(null)),
+      ),
+    );
+    forkJoin(resultados)
+      .pipe(finalize(() => this.executandoEmMassa.set(false)))
+      .subscribe((feitas) => {
+        const excluidas = feitas.filter((atividade): atividade is AtividadeResumoDto => atividade !== null);
+        this.limparSelecao();
+        this.buscarAtividades();
+        if (excluidas.length === 0) return;
+        this.desfazerService.oferecer({
+          mensagem: excluidas.length === 1 ? `Atividade "${excluidas[0].nome}" excluída` : `${excluidas.length} atividades excluídas`,
+          desfazer: () => forkJoin(excluidas.map((atividade) => this.atividadeService.restaurar(atividade.id))),
+          aposDesfazer: () => this.buscarAtividades(),
+        });
+        if (excluidas.length < alvos.length) {
+          this.messageService.add({ severity: 'warn', summary: 'Excluir', detail: `${alvos.length - excluidas.length} não puderam ser excluídas` });
+        }
+      });
+  }
+
+  /** Roda as chamadas, recarrega a lista e resume: quantas deram certo e quantas o servidor recusou. */
+  private aplicarEmMassa(chamadas: Observable<unknown>[], titulo: string, verbo: string): void {
+    this.executandoEmMassa.set(true);
+    forkJoin(chamadas.map((chamada) => chamada.pipe(map(() => true), catchError(() => of(false)))))
+      .pipe(finalize(() => this.executandoEmMassa.set(false)))
+      .subscribe((resultados) => {
+        const certas = resultados.filter(Boolean).length;
+        const falhas = resultados.length - certas;
+        this.buscarAtividades();
+        this.messageService.add({
+          severity: falhas === 0 ? 'success' : 'warn',
+          summary: titulo,
+          detail: falhas === 0 ? `${certas} ${certas === 1 ? 'atividade' : 'atividades'}: ${verbo}` : `${certas} ok, ${falhas} não puderam ser alteradas (por exemplo, com execução em andamento)`,
+        });
+      });
+  }
+
+  // ---------------------------------------------------------------------------
   // Auxiliares de tabela
   // ---------------------------------------------------------------------------
 
@@ -716,6 +944,7 @@ export class AtividadeListagemPage implements OnInit {
     const totalAnterior = this.totalRegistros();
     this.atividades.set(listaAnterior.filter((item) => item.id !== atividade.id));
     this.totalRegistros.set(Math.max(0, totalAnterior - 1));
+    this.aoSelecionar(this.selecionadas.filter((item) => item.id !== atividade.id));
 
     this.atividadeService.excluir(atividade.id).subscribe({
       next: () =>
