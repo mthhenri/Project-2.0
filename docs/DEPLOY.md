@@ -25,9 +25,13 @@ build próprio) e o backend o importa via `@project20/shared`. Por isso **não**
 `node dist/main.js` — o backend roda direto do TS com **`ts-node`**, igual ao dev:
 
 ```
-node --require ts-node/register src/main.ts      →  npm run start:prod --workspace=backend
+node --require ts-node/register/transpile-only src/main.ts      →  npm run start:prod --workspace=backend
 ```
 
+O `start:prod` usa `transpile-only`: **sem checagem de tipos na subida**. A checagem completa (`ts-node/register`) estoura a memória do
+plano gratuito do Render (heap de ~256 MB: `JavaScript heap out of memory`, "No open ports detected") assim que o backend cresce. Os tipos
+continuam validados por `npm run build --workspace=backend`, que é o gate de cada task; o `transpile-only` ainda emite
+`emitDecoratorMetadata`, então a injeção de dependência do NestJS funciona (verificado).
 Consequência prática: `ts-node` e `typescript` são **devDependencies**. O Render
 pula devDependencies quando `NODE_ENV=production`, então o **Build Command instala
 com `--include=dev`** (ver abaixo). Não use `tsx`/esbuild: ele não emite
@@ -95,6 +99,7 @@ com `--include=dev`** (ver abaixo). Não use `tsx`/esbuild: ele não emite
    | `APP_TIMEZONE`            | `America/Sao_Paulo` — fixa o fuso da **sessão do banco** |
    | `TZ`                      | `America/Sao_Paulo` — recomendado (logs/exibição local) |
    | `APP_CORS_ORIGEM`         | a URL do Cloudflare Pages — **preencha no passo 3** |
+   | `CHAT_ARMAZENAMENTO`      | `postgres` — onde ficam as mensagens do chat (tabelas provisórias no Supabase). **Obrigatória na prática:** sem ela o padrão é `opensearch` e o backend não sobe sem `OPENSEARCH_URL`. Na produção de verdade: `elasticsearch` com `ELASTICSEARCH_URL` e `ELASTICSEARCH_API_KEY` |
    | `ANTHROPIC_API_KEY`       | *(opcional — deixe vazio por enquanto; sem ela o auxílio de descrições por IA fica indisponível, o resto funciona)* |
 
    > **Não** defina `NODE_ENV=production` — isso faria o `npm install` pular `ts-node`/`typescript`.
@@ -161,7 +166,7 @@ com `--include=dev`** (ver abaixo). Não use `tsx`/esbuild: ele não emite
 ## Checklist rápido
 
 - [ ] Supabase criado; Session pooler copiado; `DB_SSL=true`
-- [ ] Render: Build `npm install --include=dev && npm run db:migrate --workspace=backend`, Start `start:prod` (Pre-Deploy vazio — free tier)
+- [ ] Render: Build `npm install --include=dev && npm run db:migrate --workspace=backend`, Start `start:prod` (Pre-Deploy vazio — free tier); variável `CHAT_ARMAZENAMENTO=postgres`
 - [ ] Render: envs preenchidas; `JWT_SECRETO` forte; **sem** `NODE_ENV=production`
 - [ ] `environment.production.ts` apontando para a URL do Render (commitado)
 - [ ] Cloudflare Pages: output `frontend/dist/frontend/browser`

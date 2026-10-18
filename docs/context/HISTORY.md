@@ -12,6 +12,16 @@
 
 ---
 
+## 2026-10-18 — Segundo erro do primeiro deploy: backend sem memória no Render
+
+Com a `0038` corrigida o `db:migrate` passou no Render (Batch 8, 14 migrations), mas o backend não subiu: `JavaScript heap out of memory` (~256 MB) e "No open ports detected". Causa: o `start:prod` rodava `ts-node/register`, que **checa os tipos de todo o projeto na subida**; com o rework (muito mais código) isso passou do heap do plano gratuito. Antes do rework cabia.
+
+- **Reproduzido local** com `node --max-old-space-size=200`: `ts-node/register` estoura; `ts-node/register/transpile-only` sobe em ~2 s.
+- **Correção:** `start:prod` passou a `node --require ts-node/register/transpile-only src/main.ts`. A injeção de dependência do NestJS segue funcionando (o `transpile-only` do ts-node emite `emitDecoratorMetadata`, ao contrário de tsx/esbuild, que a `docs/DEPLOY.md` já proibia): com heap de 200 MB, login, `/chat/conversas` (armazenamento Postgres), `/ia/disponibilidade` e `/projeto` responderam 200 e o log não teve erro de resolução. Os tipos continuam validados por `npm run build --workspace=backend`, o gate de cada task.
+- **`docs/DEPLOY.md`** atualizado: explicação do `transpile-only`, a variável `CHAT_ARMAZENAMENTO=postgres` na tabela do Render e no checklist (eu tinha avisado no chat, mas o documento de deploy do projeto não a listava). Armadilha registrada na skill `verify`.
+- **Não verificado:** o Render de verdade; a memória de pico dele (512 MB no total) com o app inteiro rodando, incluindo os clientes do OpenSearch e do Elasticsearch carregados mesmo sem uso.
+- **Lição:** o `docs/DEPLOY.md` existia e eu não o li ao listar o que mudava para o deploy; o passe de "o que mudou no ambiente de produção" deve partir dele.
+
 ## 2026-10-18 — Correção da migration 0038 no Supabase (primeiro deploy do rework)
 
 O primeiro deploy do rework no Render falhou no `db:migrate`: `function unaccent(unknown, text) does not exist` na `0038`. Causa: no Supabase as extensões ficam no schema `extensions`, que a conexão da aplicação não enxerga por padrão, e o `CREATE FUNCTION fn_chat_texto_busca` referenciava `unaccent` sem schema. O banco local, com a extensão em `public`, escondia o problema (a tarefa 162 declarou o `unaccent` no Supabase como não verificado, e era exatamente aí que falharia).

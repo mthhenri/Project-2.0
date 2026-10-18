@@ -79,4 +79,9 @@ await browser.newContext({ viewport: { width: 1366, height: 768 } });
   extensão ganha `SET search_path = public, extensions, pg_catalog`, e o SQL da aplicação chama a função, nunca a extensão. Para provar antes de enviar:
   banco de teste com `CREATE SCHEMA extensions; CREATE EXTENSION <ext> WITH SCHEMA extensions;` e a migration rodada nele.
 
+- **Backend não sobe no Render: `JavaScript heap out of memory` e "No open ports detected"** (depois de a migration passar): o `start:prod` com
+  `ts-node/register` checa tipos na subida e estoura o heap (~256 MB) do plano gratuito quando o projeto cresce. O `start:prod` usa
+  `ts-node/register/transpile-only` (os tipos ficam por conta do `npm run build`). Para reproduzir local: `node --max-old-space-size=200 --require
+  ts-node/register src/main.ts` (estoura) contra `.../transpile-only` (sobe em segundos).
+
 Entra aqui na hora em que morder: sintoma → causa → como evitar.
