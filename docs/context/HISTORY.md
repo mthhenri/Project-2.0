@@ -12,6 +12,14 @@
 
 ---
 
+## 2026-10-18 — Passe de verificação visual do rework do chat com IA
+
+Sem mudança de código: percorri a aplicação real (backend e frontend de dev, gestor do seed, navegador do app) para fechar os portões visuais que as tasks 142–161 deixaram abertos.
+
+- **Verificado (1366×768 claro e escuro, 1080×1920 escuro, 1920×1080 claro):** chat com os cartões novos já existentes no histórico do dia (criar projeto, descrever demanda com Markdown, conectar demanda, suspender check-ins; estados "Confirmada" e "Desfeita"), histórico lateral e campo de busca no escuro (fundo e borda pelos tokens do tema), barra "só para leitura" no rodapé de uma conversa antiga (texto e "Voltar para hoje" no lugar certo), modo convencional (botão "Voltar para a IA" na barra superior, "Atividades" habilitada, claro e escuro, sem rolagem horizontal) e a página de check-in no estado vazio (escuro 1366×768, claro 1080×1920, com o skeleton de carregamento antes). Nada quebrado, sem rolagem horizontal, sem texto cortado.
+- **Não verificado:** aviso de retorno da IA e janelinha de check-in embutida (dependem de uma queda da IA e de um check-in vencido, que não provoquei de propósito), "Ajustar" aberto dos cartões nos três tamanhos, cartão `CRIAR_DEMANDA`/`CRIAR_PROJETO` pendente (só os já resolvidos estavam no histórico), tray e arrasto da janela do Electron, login real digitando a senha, `URL_DO_PROJECT` do desktop (ainda a de desenvolvimento).
+- Limite: o navegador do app mede 1920×1080 por emulação reduzida; o gate de layout é pelo DOM (sem estouro), não pelo pixel exato.
+
 ## 2026-10-18 — Task 156: conexões e lugar na árvore pelo chat
 
 Spec em `docs/specs/done/156-chat-gestor-conexoes-e-lugar.spec.md`. Fecha o bloco 9 e, com ele, o rework do chat com IA (blocos 1 a 10).
