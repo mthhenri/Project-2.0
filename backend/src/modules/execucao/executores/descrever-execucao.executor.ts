@@ -58,6 +58,13 @@ export class DescreverExecucaoExecutor implements ExecutorPropostaIa {
     }
   }
 
+  /** Obsoleta quando a execução a que a descrição se refere já não é a que está em andamento. */
+  async estaObsoleta(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<boolean> {
+    const entrada = validarDadosDaProposta(PropostaDescreverExecucaoDadosDto, dados);
+    const ativa = (await this.execucaoService.recuperarAtiva(usuarioAtivo)).dados;
+    return !ativa || (entrada.execucaoId !== undefined && ativa.id !== entrada.execucaoId);
+  }
+
   async desfazer(resultado: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<void> {
     const novaId = Number(resultado['novaExecucaoId']);
     const descritaId = Number(resultado['execucaoDescritaId']);

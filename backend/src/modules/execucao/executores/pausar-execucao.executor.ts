@@ -34,6 +34,11 @@ export class PausarExecucaoExecutor implements ExecutorPropostaIa {
     return { execucaoId: ativa.id, atividadeId: ativa.atividadeId, descricaoAnterior };
   }
 
+  /** Obsoleta quando já não há execução em andamento (o usuário a pausou à mão). */
+  async estaObsoleta(_dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<boolean> {
+    return (await this.execucaoService.recuperarAtiva(usuarioAtivo)).dados === null;
+  }
+
   async desfazer(resultado: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<void> {
     const execucaoId = Number(resultado['execucaoId']);
     if (!Number.isInteger(execucaoId)) throw new BusinessException('Não há execução a desfazer nesta proposta');

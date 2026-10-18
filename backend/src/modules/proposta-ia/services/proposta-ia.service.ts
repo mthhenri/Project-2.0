@@ -58,6 +58,25 @@ export class PropostaIaService {
     return { sucesso: true, dados: resolvida, mensagem: 'Proposta ajustada e confirmada com sucesso' };
   }
 
+  /**
+   * Expira as propostas pendentes do usuário que ficaram obsoletas (o executor do tipo diz, por `estaObsoleta`). Usado na volta da IA
+   * depois de uma queda: o usuário pode ter feito à mão o que a proposta pedia. Devolve quantas expiraram; falha em uma não impede as outras.
+   */
+  async expirarObsoletas(usuarioAtivo: JwtPayload): Promise<number> {
+    let expiradas = 0;
+    for (const proposta of await this.propostaIaRepositorio.listarPendentesDoUsuario(usuarioAtivo.sub)) {
+      try {
+        const executor = this.executores.obter(proposta.tipo);
+        if (!executor.estaObsoleta || !(await executor.estaObsoleta(proposta.dados, usuarioAtivo))) continue;
+        const expirada = await this.propostaIaRepositorio.transitar({ id: proposta.id, usuarioId: usuarioAtivo.sub, de: [StatusPropostaIaEnum.PENDENTE], para: StatusPropostaIaEnum.EXPIRADA });
+        if (expirada) expiradas++;
+      } catch {
+        // uma proposta que não dá para avaliar fica como está
+      }
+    }
+    return expiradas;
+  }
+
   /** Recusar não executa nada: a proposta vira `EXPIRADA`. */
   async recusar(id: number, usuarioAtivo: JwtPayload): Promise<StandardResponse<PropostaIaRecusadaDto>> {
     await this.obterDoUsuario(id, usuarioAtivo);

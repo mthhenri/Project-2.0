@@ -47,6 +47,8 @@ interface Cenario {
   titulosIniciais?: Record<string, string>;
   /** O que a IA devolve ao pedir o nome da conversa (ou lança). */
   titulo?: () => string;
+  /** Quantas propostas pendentes a retomada descarta como obsoletas. */
+  obsoletas?: number;
 }
 
 function montar(cenario: Cenario) {
@@ -122,6 +124,7 @@ function montar(cenario: Cenario) {
         recusadas.push(id);
         return {};
       },
+      expirarObsoletas: async () => cenario.obsoletas ?? 0,
     } as unknown as PropostaIaService,
     { obter: () => ({ aplicacao: { fusoHorario: 'America/Sao_Paulo' } }) } as unknown as ConfigService,
   );
@@ -484,4 +487,67 @@ test('sugestões: falha ou resposta inútil do modelo não atrapalha o chat nem 
   const eventos = await enviar(servico);
   assert.equal(eventos.at(-1)?.tipo, 'fim');
   assert.equal(eventos.some((evento) => evento.tipo === 'sugestoes'), false);
+});
+
+// ------------------------------------------------------------------ retomada depois da queda (task 158)
+
+async function retomar(servico: ChatService) {
+  const eventos: ChatEventoDto[] = [];
+  await servico.retomarAposQueda(USUARIO, (evento) => eventos.push(evento));
+  return eventos;
+}
+
+test('retomada: sem conversa hoje ou com a IA desligada é 409 e não chama o modelo', async () => {
+  const vazio = montar({ chamadas: [async () => resposta({ texto: 'x' })] });
+  await assert.rejects(retomar(vazio.servico), ConflictException);
+  assert.equal(vazio.solicitacoes.length, 0);
+  const desligada = montar({ chamadas: [], estado: EstadoIaEnum.DESLIGADA });
+  await assert.rejects(retomar(desligada.servico), ConflictException);
+});
+
+test('retomada: o histórico vai ao modelo, a instrução entra no fim e só a resposta da IA é gravada (a conversa continua a mesma)', async () => {
+  const { servico, gravadas, solicitacoes } = montar({ chamadas: [async () => resposta({ texto: 'Oi!' }), async () => resposta({ texto: 'Você iniciou o login à mão.' })] });
+  await enviar(servico, 'Bom dia');
+  const antes = gravadas.length;
+  const eventos = await retomar(servico);
+  assert.equal(eventos.at(-1)?.tipo, 'fim');
+  assert.equal(gravadas.length, antes + 1);
+  assert.equal(gravadas.at(-1)?.autor, AutorChatEnum.IA);
+  const contexto = solicitacoes[1].mensagens;
+  assert.equal(contexto[0].conteudo, 'Bom dia');
+  assert.match(String(contexto.at(-1)?.conteudo), /Retomada/);
+  assert.equal(contexto.at(-1)?.papel, 'usuario');
+});
+
+test('retomada: leva as propostas obsoletas descartadas para a instrução', async () => {
+  const { servico, solicitacoes } = montar({ chamadas: [async () => resposta({ texto: 'Oi!' }), async () => resposta({ texto: 'Ok.' })], obsoletas: 2 });
+  await enviar(servico, 'Bom dia');
+  await retomar(servico);
+  assert.match(String(solicitacoes[1].mensagens.at(-1)?.conteudo), /2 propostas pendentes ficaram obsoletas/);
+});
+
+test('retomada: a mensagem seguinte do usuário já leva a instrução e a resposta da retomada no contexto', async () => {
+  const { servico, solicitacoes } = montar({ chamadas: [async () => resposta({ texto: 'Oi!' }), async () => resposta({ texto: 'Tudo como estava.' }), async () => resposta({ texto: 'Certo.' })] });
+  await enviar(servico, 'Bom dia');
+  await retomar(servico);
+  await enviar(servico, 'Vamos seguir');
+  const contexto = solicitacoes[2].mensagens;
+  assert.ok(contexto.some((mensagem) => typeof mensagem.conteudo === 'string' && /Retomada/.test(mensagem.conteudo)));
+  assert.equal(contexto.at(-1)?.conteudo, 'Vamos seguir');
+});
+
+test('retomada: falha avisa pelo evento e não grava mensagem do sistema', async () => {
+  const { servico, gravadas } = montar({
+    chamadas: [
+      async () => resposta({ texto: 'Oi!' }),
+      async () => {
+        throw new IaException('INDISPONIVEL', 'A IA está fora do ar no momento');
+      },
+    ],
+  });
+  await enviar(servico, 'Bom dia');
+  const antes = gravadas.length;
+  const eventos = await retomar(servico);
+  assert.equal(eventos.at(-1)?.tipo, 'erro');
+  assert.equal(gravadas.length, antes);
 });

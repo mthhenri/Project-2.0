@@ -15,6 +15,11 @@ export interface ExecutorPropostaIa {
   executar(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>>;
   /** Aplica a ação inversa; lança `BusinessException` se já não for seguro (o estado mudou depois). */
   desfazer(resultado: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<void>;
+  /**
+   * Opcional: a proposta pendente ficou obsoleta porque o estado mudou (por exemplo, a execução que ela pausaria já acabou)? Quando a IA
+   * volta de uma queda, as pendentes obsoletas expiram em vez de aparecer como se ainda valessem.
+   */
+  estaObsoleta?(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<boolean>;
 }
 
 /** Os executores por tipo. Cada executor se registra na subida do módulo dele. */

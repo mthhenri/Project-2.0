@@ -33,6 +33,17 @@ export class ChatController {
     }
   }
 
+  /** A retomada depois de uma queda da IA (task 158; mesmo formato): 409 sem conversa hoje, com a IA desligada ou ainda respondendo. */
+  @Post('retomada')
+  async retomarAposQueda(@ActiveUser() usuarioAtivo: JwtPayload, @Res() resposta: Response) {
+    const fluxo = new EventStreamResponse(resposta);
+    try {
+      await this.chatService.retomarAposQueda(usuarioAtivo, (evento) => fluxo.enviar(evento));
+    } finally {
+      fluxo.encerrar();
+    }
+  }
+
   @Get('hoje')
   recuperarHoje(@ActiveUser() usuarioAtivo: JwtPayload) {
     return this.chatService.recuperarHoje(usuarioAtivo);

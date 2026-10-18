@@ -12,6 +12,17 @@
 
 ---
 
+## 2026-10-18 — Task 158: retorno da IA, "agora não" e retomada
+
+Spec em `docs/specs/done/158-fallback-retorno-da-ia-e-retomada.spec.md`. Fecha o bloco 10 (fallback).
+
+- **Backend:** `POST /chat/retomada` (`ChatService.retomarAposQueda`): 409 com a IA desligada, sem conversa de hoje ou com a IA respondendo; expira as propostas pendentes obsoletas e manda a IA, com uma instrução que **não vira mensagem do chat** (`montarRetomadaAposQueda`; no fim do histórico, também guardada no conteúdo bruto da resposta, como a abertura do dia), consultar `consultar_mudancas_da_queda` com o instante da última mensagem e `consultar_execucao_ativa`, resumir e continuar. A ferramenta (`ExecucaoModule`, função pura `calcularMudancasDaQueda`) lê, com o usuário do token, as execuções de hoje, a ativa (de qualquer dia) e as atividades criadas depois de `desde`. `ExecutorPropostaIa.estaObsoleta?` (opcional) e `PropostaIaService.expirarObsoletas`: iniciar fica obsoleta se a atividade já está em execução, pausar se não há execução, descrever se a execução em andamento não é a da proposta; falha ao avaliar deixa a proposta como está. Repositório: `listarPendentesDoUsuario`.
+- **Frontend:** `IaDisponibilidadeService` ganhou `estadoReal` (o chat usa este), `estado` efetivo (menu, pad e check-in; `estadoEfetivoDaIa`), `avisoDeRetorno`, `modoConvencional` (em `sessionStorage`, por sessão do navegador) e `retomadaPendente`. `app-ia-retorno-aviso` (faixa sob a topbar, não bloqueia nada) com "Voltar para a IA" e "Agora não"; a topbar mostra "Voltar para a IA" enquanto vale o "agora não"; abrir o chat à mão no modo convencional conta como voltar. O chat retoma pelo mesmo mecanismo do bom dia (`executarFluxoDoServidor`, com a resposta ao vivo).
+- **Decisões:** o "agora não" vale na sessão do navegador (`sessionStorage`) e some se a IA cair de novo; o aviso só aparece quando o estado real **muda** de fora do ar para no ar (não ao abrir o sistema com a IA no ar); a retomada só ocorre com conversa de hoje em andamento (sem resposta da IA, vale o bom dia).
+- **Testes:** backend 364 (+17: instrução da retomada, "o que mudou", propostas obsoletas, retomada no `ChatService`), frontend 38 (+3); builds passam; sem lint (P-001).
+- **Verificado ao vivo (IA real, gestor):** desliguei a IA (o chat mostrou o aviso de desligada), iniciei uma execução à mão pela API e religuei; em até 60 s a faixa "A IA voltou. Quer voltar a usar o chat?" apareceu; "Agora não" tirou a faixa, guardou o modo (`sessionStorage`), mostrou "Voltar para a IA" na topbar e manteve Atividades e Execuções habilitadas; o botão da topbar levou ao chat e a IA respondeu na mesma conversa que, durante a queda, o usuário iniciou à mão uma execução em "AAAA", sem pausas nem atividades criadas. A execução de teste foi excluída; a configuração ganhou as versões 36 (desligada) e 37 (religada), iguais às anteriores nos demais campos.
+- **Não verificado:** a expiração de proposta pendente obsoleta na aplicação real (só por testes de serviço e de executor), a retomada com atividades criadas durante a queda, 1366×768, 1080×1920 e tema escuro, e a faixa com a IA caindo e voltando de verdade (só por desligar na configuração).
+
 ## 2026-10-18 — Task 157: fallback para as telas convencionais e login no chat
 
 Spec em `docs/specs/done/157-fallback-telas-convencionais-e-inicio-no-chat.spec.md`.

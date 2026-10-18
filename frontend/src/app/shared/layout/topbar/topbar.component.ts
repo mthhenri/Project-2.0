@@ -10,6 +10,7 @@ import { DividerModule } from 'primeng/divider';
 import { ColorPickerModule } from 'primeng/colorpicker';
 import { timer } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { EstadoIaEnum } from '@project20/shared';
 import { AutenticacaoService } from '../../../core/services/autenticacao.service';
 import { UsuarioSessaoService } from '../../../core/services/usuario-sessao.service';
 import { rotuloTipoUsuario } from '../../../core/utils/tipo-usuario';
@@ -19,6 +20,7 @@ import { VisualizacaoTempoService } from '../../../core/services/visualizacao-te
 import { CORES_SUGERIDAS, COR_PRIMARIA_PADRAO_HEX } from '../../../core/models/tema-personalizado.model';
 import { focoEmCampo, haSobreposicaoAberta } from '../../../core/utils/atalhos';
 import { ExecucaoAtivaService } from '../../../core/services/execucao-ativa.service';
+import { IaDisponibilidadeService } from '../../../core/services/ia-disponibilidade.service';
 import { ChipExecucaoAtivaComponent } from './chip-execucao-ativa/chip-execucao-ativa.component';
 import { UsuarioAnotacoesDialogComponent } from '../../../modules/usuario/components/usuario-anotacoes-dialog/usuario-anotacoes-dialog.component';
 
@@ -49,9 +51,17 @@ export class TopbarComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly execucaoAtiva = inject(ExecucaoAtivaService);
   private readonly roteador = inject(Router);
+  private readonly iaDisponibilidade = inject(IaDisponibilidadeService);
+  /** Depois do "Agora não" com a IA no ar: o botão para voltar para ela fica à vista. */
+  readonly podeVoltarParaAIa = computed(() => this.iaDisponibilidade.modoConvencional() && this.iaDisponibilidade.estadoReal() === EstadoIaEnum.NO_AR);
   @ViewChild('anotacoesDialog') private anotacoesDialog?: UsuarioAnotacoesDialogComponent;
   readonly rotuloTipo = rotuloTipoUsuario;
   readonly horaAtual = signal<string>('');
+
+  voltarParaAIa(): void {
+    this.iaDisponibilidade.voltarParaAIa();
+    void this.roteador.navigateByUrl('/chat');
+  }
 
   readonly coresSugeridas = CORES_SUGERIDAS;
 

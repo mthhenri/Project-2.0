@@ -26,6 +26,7 @@ import { PromptService } from '../../prompt/services/prompt.service';
 import { PropostaIaService } from '../../proposta-ia/services/proposta-ia.service';
 import { limparTitulo } from '../domain/chat-consultas';
 import { montarAberturaDoDia } from '../domain/abertura-do-dia';
+import { montarRetomadaAposQueda } from '../domain/retomada-apos-queda';
 import { INSTRUCOES_DE_SUGESTOES, interpretarSugestoes } from '../domain/sugestoes';
 import { instanteDoDiaUtilAnterior, montarConversaId } from '../domain/chat-conversa';
 import { ChatMensagemLida, paraResumo } from '../domain/chat-mensagem.documento';
@@ -52,6 +53,8 @@ export interface OpcoesDeConversa {
   contexto: ContextoChatEnum;
   /** A instrução de abertura do dia (o bom dia): vai ao modelo como a primeira mensagem do usuário, sem ser gravada. */
   abertura?: string;
+  /** A instrução de retomada depois de uma queda da IA (task 158): vai ao modelo como a última mensagem do usuário, sem ser gravada. */
+  retomada?: string;
   instrucoesExtras?: string;
 }
 
@@ -184,6 +187,41 @@ export class ChatService {
     }
   }
 
+  /**
+   * Retomada depois de uma queda da IA (task 158): descarta as propostas pendentes que ficaram obsoletas e a IA lê o que o usuário
+   * mudou à mão desde a última mensagem, resume e continua dali. A instrução não vira mensagem do chat; a conversa do dia segue a mesma.
+   * 409 com a IA desligada, sem conversa hoje para retomar ou com a IA ainda respondendo; falha no meio não grava mensagem do sistema.
+   */
+  async retomarAposQueda(usuarioAtivo: JwtPayload, emitir: (evento: ChatEventoDto) => void): Promise<void> {
+    if ((await this.iaService.obterEstado()) === EstadoIaEnum.DESLIGADA) throw new ConflictException('A IA está desligada');
+
+    const conversaId = this.conversaDeHoje(usuarioAtivo);
+    const historico = await this.listarDoContexto(conversaId, usuarioAtivo.sub, ContextoChatEnum.CHAT);
+    if (historico.length === 0) throw new ConflictException('Não há conversa de hoje para retomar');
+    if (this.emAndamento.has(conversaId)) throw new ConflictException('A IA ainda está respondendo à mensagem anterior');
+    this.emAndamento.add(conversaId);
+
+    const propostasDoTurno: number[] = [];
+    try {
+      const ultima = new Date(historico[historico.length - 1].createdDate);
+      const propostasDescartadas = await this.propostaIaService.expirarObsoletas(usuarioAtivo);
+      const fusoHorario = this.configService.obter().aplicacao.fusoHorario;
+      const horaNoFuso = (instante: Date) => new Intl.DateTimeFormat('pt-BR', { timeZone: fusoHorario, hour: '2-digit', minute: '2-digit', hour12: false }).format(instante);
+      const retomada = montarRetomadaAposQueda({
+        hora: horaNoFuso(this.agora()),
+        horaDaUltimaMensagem: horaNoFuso(ultima),
+        desde: ultima.toISOString(),
+        propostasDescartadas,
+      });
+      await this.responder(usuarioAtivo, conversaId, propostasDoTurno, emitir, { contexto: ContextoChatEnum.CHAT, retomada });
+      await this.sugerirProximasMensagens(usuarioAtivo, conversaId, emitir);
+    } catch (erro) {
+      await this.registrarFalha(usuarioAtivo, conversaId, propostasDoTurno, erro, emitir, false);
+    } finally {
+      this.emAndamento.delete(conversaId);
+    }
+  }
+
   private abertura(): string {
     const fusoHorario = this.configService.obter().aplicacao.fusoHorario;
     const agora = this.agora();
@@ -207,7 +245,7 @@ export class ChatService {
     emitir: (evento: ChatEventoDto) => void,
     opcoes: OpcoesDeConversa,
   ): Promise<void> {
-    const { abertura, contexto } = opcoes;
+    const { abertura, retomada, contexto } = opcoes;
     const historico = await this.listarDoContexto(conversaId, usuarioAtivo.sub, contexto);
     const prompt = await this.promptService.obterAtivo(contexto === ContextoChatEnum.CHECKIN ? TipoPromptEnum.CHECKIN : TipoPromptEnum.CONVERSA);
     const instrucoes = opcoes.instrucoesExtras ? `${prompt.conteudo}\n\n${opcoes.instrucoesExtras}` : prompt.conteudo;
@@ -215,8 +253,10 @@ export class ChatService {
 
     // Na abertura do dia não há mensagem do usuário: a instrução entra como a primeira mensagem e fica no conteúdo bruto da resposta.
     const mensagemDeAbertura: IaMensagem | null = abertura ? { papel: 'usuario', conteudo: abertura } : null;
-    const mensagens = mensagemDeAbertura ? [mensagemDeAbertura] : this.montarMensagens(historico);
-    const trocasDoTurno: IaMensagem[] = mensagemDeAbertura ? [mensagemDeAbertura] : [];
+    // Na retomada a conversa do dia continua: o histórico vai ao modelo e a instrução entra no fim, também sem virar mensagem do chat.
+    const mensagemDeRetomada: IaMensagem | null = retomada ? { papel: 'usuario', conteudo: retomada } : null;
+    const mensagens = mensagemDeAbertura ? [mensagemDeAbertura] : mensagemDeRetomada ? [...this.montarMensagens(historico), mensagemDeRetomada] : this.montarMensagens(historico);
+    const trocasDoTurno: IaMensagem[] = mensagemDeAbertura ? [mensagemDeAbertura] : mensagemDeRetomada ? [mensagemDeRetomada] : [];
     const tokens: IaTokens = { entrada: 0, saida: 0, cache: 0 };
     let texto = '';
     let ultima: IaResposta | undefined;

@@ -1,0 +1,8 @@
+@if (disponibilidade.avisoDeRetorno()) {
+  <div class="ia-retorno" role="status">
+    <i class="pi pi-sparkles ia-retorno__icone" aria-hidden="true"></i>
+    <span class="ia-retorno__texto">A IA voltou. Quer voltar a usar o chat?</span>
+    <p-button label="Voltar para a IA" size="small" (onClick)="voltar()" />
+    <p-button label="Agora não" severity="secondary" size="small" [text]="true" (onClick)="agoraNao()" />
+  </div>
+}

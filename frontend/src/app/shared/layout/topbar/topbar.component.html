@@ -3,6 +3,10 @@
   <div class="topbar__acoes flex items-center gap-2 flex-shrink-0">
     <app-chip-execucao-ativa />
 
+    @if (podeVoltarParaAIa()) {
+      <p-button label="Voltar para a IA" icon="pi pi-sparkles" size="small" [outlined]="true" (onClick)="voltarParaAIa()" />
+    }
+
     <!-- Ponto de extensão do próximo check-in (bloco 7): sem conteúdo projetado, nada é renderizado. -->
     <ng-content select="[slotCheckin]" />
 

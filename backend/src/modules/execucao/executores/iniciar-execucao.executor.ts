@@ -47,6 +47,12 @@ export class IniciarExecucaoExecutor implements ExecutorPropostaIa {
     }
   }
 
+  /** Obsoleta quando a atividade já está em execução (o usuário a iniciou à mão). */
+  async estaObsoleta(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<boolean> {
+    const entrada = validarDadosDaProposta(PropostaIniciarExecucaoDadosDto, dados);
+    return (await this.execucaoService.recuperarAtiva(usuarioAtivo)).dados?.atividadeId === entrada.atividadeId;
+  }
+
   async desfazer(resultado: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<void> {
     const execucaoId = Number(resultado['execucaoId']);
     if (!Number.isInteger(execucaoId)) throw new BusinessException('Não há execução a desfazer nesta proposta');

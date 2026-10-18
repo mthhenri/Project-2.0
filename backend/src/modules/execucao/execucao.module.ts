@@ -18,6 +18,7 @@ import { PausarExecucaoExecutor } from './executores/pausar-execucao.executor';
 import { ProporIniciarExecucaoFerramenta } from './ferramentas/propor-iniciar-execucao.ferramenta';
 import { ProporPausarExecucaoFerramenta } from './ferramentas/propor-pausar-execucao.ferramenta';
 import { ConsultarExecucaoAtivaFerramenta } from './ferramentas/consultar-execucao-ativa.ferramenta';
+import { ConsultarMudancasDaQuedaFerramenta } from './ferramentas/consultar-mudancas-da-queda.ferramenta';
 import { ListarMinhasExecucoesDoDiaFerramenta } from './ferramentas/listar-minhas-execucoes-do-dia.ferramenta';
 
 @Module({
@@ -28,6 +29,7 @@ import { ListarMinhasExecucoesDoDiaFerramenta } from './ferramentas/listar-minha
     ExecucaoRepository,
     ConsultarExecucaoAtivaFerramenta,
     ListarMinhasExecucoesDoDiaFerramenta,
+    ConsultarMudancasDaQuedaFerramenta,
     ProporIniciarExecucaoFerramenta,
     ProporPausarExecucaoFerramenta,
     IniciarExecucaoExecutor,
@@ -42,6 +44,7 @@ export class ExecucaoModule implements OnModuleInit {
     private readonly registroDeFerramentas: FerramentaIaRegistro,
     private readonly consultarExecucaoAtiva: ConsultarExecucaoAtivaFerramenta,
     private readonly listarMinhasExecucoesDoDia: ListarMinhasExecucoesDoDiaFerramenta,
+    private readonly consultarMudancasDaQueda: ConsultarMudancasDaQuedaFerramenta,
     private readonly proporIniciarExecucao: ProporIniciarExecucaoFerramenta,
     private readonly proporPausarExecucao: ProporPausarExecucaoFerramenta,
     private readonly registroDeExecutores: ExecutorPropostaIaRegistro,
@@ -55,6 +58,7 @@ export class ExecucaoModule implements OnModuleInit {
   onModuleInit(): void {
     this.registroDeFerramentas.registrar(this.consultarExecucaoAtiva);
     this.registroDeFerramentas.registrar(this.listarMinhasExecucoesDoDia);
+    this.registroDeFerramentas.registrar(this.consultarMudancasDaQueda);
     this.registroDeFerramentas.registrar(this.proporIniciarExecucao);
     this.registroDeFerramentas.registrar(this.proporPausarExecucao);
     this.registroDeExecutores.registrar(this.iniciarExecucaoExecutor);

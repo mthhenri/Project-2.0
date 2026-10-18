@@ -39,6 +39,9 @@ function criarRepositorio() {
       const encontrada = propostas.find((proposta) => proposta.id === id);
       return encontrada ? { ...encontrada } : undefined;
     },
+    async listarPendentesDoUsuario(usuarioId: number) {
+      return propostas.filter((proposta) => proposta.usuarioId === usuarioId && proposta.status === StatusPropostaIaEnum.PENDENTE).map((proposta) => ({ ...proposta }));
+    },
     async transitar(transicao: PropostaIaTransicao) {
       const proposta = propostas.find((item) => item.id === transicao.id && item.usuarioId === transicao.usuarioId);
       if (!proposta || !transicao.de.includes(proposta.status)) return undefined;
@@ -56,7 +59,7 @@ function criarRepositorio() {
   return { repositorio, propostas };
 }
 
-function criarExecutor(opcoes: { falharAoExecutar?: boolean; falharAoDesfazer?: boolean; atraso?: boolean } = {}) {
+function criarExecutor(opcoes: { falharAoExecutar?: boolean; falharAoDesfazer?: boolean; atraso?: boolean; obsoleta?: boolean | 'falha' } = {}) {
   const chamadas = { executar: [] as Record<string, unknown>[], desfazer: 0 };
   const executor: ExecutorPropostaIa = {
     tipo: TIPO,
@@ -68,6 +71,10 @@ function criarExecutor(opcoes: { falharAoExecutar?: boolean; falharAoDesfazer?: 
       if (opcoes.atraso) await new Promise((resolver) => setTimeout(resolver, 20));
       if (opcoes.falharAoExecutar) throw new BusinessException('Já existe uma execução ativa');
       return { atividadeId: 99 };
+    },
+    async estaObsoleta() {
+      if (opcoes.obsoleta === 'falha') throw new Error('não deu para avaliar');
+      return opcoes.obsoleta === true;
     },
     async desfazer() {
       chamadas.desfazer++;
@@ -205,4 +212,29 @@ test('registrar dois executores do mesmo tipo é erro de programação', () => {
 test('proposta inexistente devolve 404', async () => {
   const { servico } = criarServico();
   await assert.rejects(servico.confirmar(999, DONO), (erro: { getStatus?: () => number }) => erro.getStatus?.() === 404);
+});
+
+test('expirar obsoletas: só as pendentes do usuário que o executor diz obsoletas expiram', async () => {
+  const { servico, propostas } = criarServico({ obsoleta: true });
+  const minha = await servico.criar({ usuarioId: 1, tipo: TIPO, dados: DADOS });
+  const dosOutros = await servico.criar({ usuarioId: 2, tipo: TIPO, dados: DADOS });
+  const jaConfirmada = await servico.criar({ usuarioId: 1, tipo: TIPO, dados: DADOS });
+  await servico.confirmar(jaConfirmada.id, DONO);
+
+  assert.equal(await servico.expirarObsoletas(DONO), 1);
+  assert.equal(propostas.find((proposta) => proposta.id === minha.id)?.status, StatusPropostaIaEnum.EXPIRADA);
+  assert.equal(propostas.find((proposta) => proposta.id === dosOutros.id)?.status, StatusPropostaIaEnum.PENDENTE);
+  assert.equal(propostas.find((proposta) => proposta.id === jaConfirmada.id)?.status, StatusPropostaIaEnum.CONFIRMADA);
+});
+
+test('expirar obsoletas: proposta que ainda vale fica pendente e uma que não dá para avaliar também', async () => {
+  const valendo = criarServico({ obsoleta: false });
+  await valendo.servico.criar({ usuarioId: 1, tipo: TIPO, dados: DADOS });
+  assert.equal(await valendo.servico.expirarObsoletas(DONO), 0);
+  assert.equal(valendo.propostas[0].status, StatusPropostaIaEnum.PENDENTE);
+
+  const falhando = criarServico({ obsoleta: 'falha' });
+  await falhando.servico.criar({ usuarioId: 1, tipo: TIPO, dados: DADOS });
+  assert.equal(await falhando.servico.expirarObsoletas(DONO), 0);
+  assert.equal(falhando.propostas[0].status, StatusPropostaIaEnum.PENDENTE);
 });

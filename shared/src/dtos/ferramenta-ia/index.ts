@@ -15,6 +15,7 @@ export * from './ProporCriarAtividadeDto';
 export * from './ProporCriarProjetoDto';
 export * from './ProporCriarDemandaDto';
 export * from './ProjetosListarDto';
+export * from './MudancasDaQuedaConsultarDto';
 export * from './DemandasDoProjetoListarDto';
 export * from './ProporDescreverExecucaoDto';
 export * from './ProporSuspenderCheckinDto';

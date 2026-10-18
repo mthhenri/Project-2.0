@@ -73,10 +73,23 @@ export class ChatService {
    * Termina como `enviarMensagem`; lança `ErroDoChat` com 409 quando o bom dia de hoje já foi dado ou a IA está desligada.
    */
   async iniciarBomDia(aoEvento: (evento: ChatEventoDto) => void): Promise<void> {
+    await this.iniciarFluxoDoServidor('/bom-dia', aoEvento);
+  }
+
+  /**
+   * A retomada depois de uma queda da IA (task 158): a IA lê o que mudou à mão e continua a conversa do dia. Termina como
+   * `enviarMensagem`; 409 quando não há conversa hoje para retomar, a IA está desligada ou ainda está respondendo.
+   */
+  async iniciarRetomada(aoEvento: (evento: ChatEventoDto) => void): Promise<void> {
+    await this.iniciarFluxoDoServidor('/retomada', aoEvento);
+  }
+
+  /** Um fluxo que o próprio servidor começa (sem mensagem do usuário): o bom dia e a retomada. */
+  private async iniciarFluxoDoServidor(caminho: string, aoEvento: (evento: ChatEventoDto) => void): Promise<void> {
     const token = localStorage.getItem('access_token');
     let resposta: Response;
     try {
-      resposta = await fetch(`${this.urlBase}/bom-dia`, {
+      resposta = await fetch(`${this.urlBase}${caminho}`, {
         method: 'POST',
         headers: { Accept: 'text/event-stream', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
       });

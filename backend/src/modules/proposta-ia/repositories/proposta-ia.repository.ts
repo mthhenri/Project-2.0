@@ -66,6 +66,19 @@ export class PropostaIaRepository extends BaseRepository<PropostaIa> {
     return encontradas[0];
   }
 
+  /** As propostas pendentes do usuário (a mais antiga primeiro). */
+  async listarPendentesDoUsuario(usuarioId: number): Promise<PropostaIaResumoDto[]> {
+    return this.executarConsulta<PropostaIaResumoDto>(
+      `SELECT ${COLUNAS_RESUMO}
+       ${JUNCOES_RESUMO}
+       WHERE proposta_ia.usuario_id = :usuarioId
+         AND tipo_proposta_ia_status.codigo = :pendente
+         AND proposta_ia.is_deleted = false
+       ORDER BY proposta_ia.id`,
+      { usuarioId, pendente: StatusPropostaIaEnum.PENDENTE },
+    );
+  }
+
   /**
    * Troca a situação **só se** a atual é uma das de `de` e a proposta é do usuário. Quem não recebe linha de volta perdeu a corrida
    * (outra chamada já resolveu): devolve `undefined`. É isto que impede uma ação de rodar duas vezes.

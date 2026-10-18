@@ -4,6 +4,7 @@ import { TipoUsuarioEnum } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { ExecucaoService } from '../services/execucao.service';
 import { DESCRICAO_PAUSA_PARA_INICIAR_OUTRA, IniciarExecucaoExecutor } from './iniciar-execucao.executor';
+import { DescreverExecucaoExecutor } from './descrever-execucao.executor';
 import { PausarExecucaoExecutor } from './pausar-execucao.executor';
 
 const USUARIO = { sub: 7, login: 'dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
@@ -157,4 +158,31 @@ test('pausar: desfazer reabre a execução; recusa se já há outra em andamento
   await executor.executar({ descricao: 'Trabalho feito.' }, USUARIO);
   await servico.iniciar({ atividadeId: 8, descricao: 'outra coisa' }, USUARIO);
   await assert.rejects(executor.desfazer(resultado, USUARIO), BusinessException);
+});
+
+test('proposta de iniciar fica obsoleta quando a atividade já está em execução (iniciada à mão)', async () => {
+  const dados = { atividadeId: 9, descricao: 'Validar e-mail' };
+  const emExecucao = criarServico([{ id: 1, atividadeId: 9, descricao: 'x', fimData: null }]);
+  assert.equal(await new IniciarExecucaoExecutor(emExecucao.servico).estaObsoleta(dados, USUARIO), true);
+  const outraAtividade = criarServico([{ id: 1, atividadeId: 5, descricao: 'x', fimData: null }]);
+  assert.equal(await new IniciarExecucaoExecutor(outraAtividade.servico).estaObsoleta(dados, USUARIO), false);
+  const semExecucao = criarServico();
+  assert.equal(await new IniciarExecucaoExecutor(semExecucao.servico).estaObsoleta(dados, USUARIO), false);
+});
+
+test('proposta de pausar fica obsoleta quando já não há execução em andamento (pausada à mão)', async () => {
+  const semExecucao = criarServico();
+  assert.equal(await new PausarExecucaoExecutor(semExecucao.servico).estaObsoleta({}, USUARIO), true);
+  const emExecucao = criarServico([{ id: 1, atividadeId: 5, descricao: 'x', fimData: null }]);
+  assert.equal(await new PausarExecucaoExecutor(emExecucao.servico).estaObsoleta({}, USUARIO), false);
+});
+
+test('proposta de descrever fica obsoleta quando a execução a que se refere já não é a em andamento', async () => {
+  const dados = { descricao: 'Validei o e-mail do cadastro', escolha: 'CONTINUAR', execucaoId: 1 };
+  const mesma = criarServico([{ id: 1, atividadeId: 5, descricao: 'x', fimData: null }]);
+  assert.equal(await new DescreverExecucaoExecutor(mesma.servico).estaObsoleta(dados, USUARIO), false);
+  const outra = criarServico([{ id: 2, atividadeId: 5, descricao: 'x', fimData: null }]);
+  assert.equal(await new DescreverExecucaoExecutor(outra.servico).estaObsoleta(dados, USUARIO), true);
+  const nenhuma = criarServico();
+  assert.equal(await new DescreverExecucaoExecutor(nenhuma.servico).estaObsoleta(dados, USUARIO), true);
 });

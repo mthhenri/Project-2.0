@@ -88,7 +88,8 @@ export class ChatPage implements OnInit {
   readonly somenteLeitura = computed(() => this.diaAberto() !== null);
   readonly diaExibido = computed(() => this.diaAberto() ?? this.hoje());
   readonly diaFormatado = computed(() => this.diaAberto()?.split('-').reverse().join('/') ?? '');
-  readonly disponibilidade = this.iaDisponibilidade.estado;
+  /** O estado de fato da IA (o chat não segue o modo convencional: se a IA está no ar, dá para conversar). */
+  readonly disponibilidade = this.iaDisponibilidade.estadoReal;
   /** Há texto abaixo da área visível (o usuário subiu para ler): mostra "ir para o fim". */
   readonly longeDoFim = signal(false);
 
@@ -135,6 +136,15 @@ export class ChatPage implements OnInit {
         if (pronto && estado === EstadoIaEnum.NO_AR) void this.darBomDia();
       });
     });
+    // O usuário escolheu "Voltar para a IA": a IA lê o que mudou durante a queda e continua a conversa do dia.
+    effect(() => {
+      const pedida = this.iaDisponibilidade.retomadaPendente();
+      const pronto = this.jaCarregou();
+      const estado = this.disponibilidade();
+      untracked(() => {
+        if (pedida && pronto && estado === EstadoIaEnum.NO_AR && this.iaDisponibilidade.consumirRetomada()) void this.retomar();
+      });
+    });
     effect((aoLimpar) => {
       const alvo = this.fluxo()?.nativeElement;
       if (!alvo) return;
@@ -150,6 +160,8 @@ export class ChatPage implements OnInit {
   }
 
   ngOnInit(): void {
+    // Quem abre o chat à mão depois do "Agora não" está voltando para a IA.
+    if (this.iaDisponibilidade.modoConvencional()) this.iaDisponibilidade.voltarParaAIa();
     this.carregar();
   }
 
@@ -235,13 +247,24 @@ export class ChatPage implements OnInit {
     if (this.bomDiaTentado || this.enviando() || this.diaAberto() !== null) return;
     if (this.mensagens().some((mensagem) => mensagem.autor === AutorChatEnum.IA)) return;
     this.bomDiaTentado = true;
+    await this.executarFluxoDoServidor((aoEvento) => this.chatService.iniciarBomDia(aoEvento));
+  }
 
+  /** Retoma a conversa de hoje depois de uma queda: só com conversa de hoje em andamento (sem resposta da IA ainda, o bom dia cobre). */
+  private async retomar(): Promise<void> {
+    if (this.enviando() || this.diaAberto() !== null) return;
+    if (!this.mensagens().some((mensagem) => mensagem.autor === AutorChatEnum.IA)) return;
+    await this.executarFluxoDoServidor((aoEvento) => this.chatService.iniciarRetomada(aoEvento));
+  }
+
+  /** A resposta que o servidor começa sozinho (bom dia ou retomada), mostrada ao vivo como as demais. */
+  private async executarFluxoDoServidor(iniciar: (aoEvento: (evento: ChatEventoDto) => void) => Promise<void>): Promise<void> {
     this.enviando.set(true);
     this.longeDoFim.set(false);
     this.aoVivo.set({ texto: '', ferramenta: null, propostaIds: [] });
     let terminou = false;
     try {
-      await this.chatService.iniciarBomDia((evento) => {
+      await iniciar((evento) => {
         if (evento.tipo === 'fim' || evento.tipo === 'erro') terminou = true;
         this.tratarEvento(evento);
       });
