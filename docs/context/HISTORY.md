@@ -12,6 +12,16 @@
 
 ---
 
+## 2026-10-17 — Ajuste do menu: Chat depois de Demandas e telas substituídas pelo chat
+
+Pedido do autor depois da task 139: o item Chat vai logo depois de Demandas; para o desenvolvedor, Atividades e Execuções ficam desabilitadas; para gestor e administrador, só Atividades. `ItemNavegacao` ganhou `substituidoPelaIa` (`TODOS` em Atividades, `SOMENTE_DESENVOLVEDOR` em Execuções),
+o `IaDisponibilidadeService` (core, `GET /ia/disponibilidade`, sinal com o estado) e a barra lateral renderiza o item desabilitado como `span` com `aria-disabled`, esmaecido e com dica ("Substituída pelo chat enquanto a IA está no ar"); o atalho `g` + letra também ignora o item desabilitado.
+
+- **Interpretação que assumi, e que o autor pode inverter:** o desabilitar vale **só enquanto a IA está no ar**. A guarda-chuva diz que Atividades "fica como reserva para quando a IA cair", e hoje o chat ainda não tem ferramentas de negócio (blocos 6 e 9): desabilitar sempre trancaria o desenvolvedor fora de criar atividade e
+  iniciar execução. Com a IA desligada (o estado de hoje) nada fica desabilitado. Para desabilitar sempre, basta tirar a condição `NO_AR` em `estaDesabilitado`. A rota continua acessível por URL direta (só o menu e o atalho são afetados).
+- **Verificação ao vivo (servidor temporário, IA ligada de verdade):** administrador viu só Atividades desabilitada; `g` `a` não navegou, `g` `h` foi ao chat e `g` `e` à tela de Execuções; um desenvolvedor de teste (criado e excluído ao fim) viu Ponto, Demandas, Chat e, desabilitadas, Atividades e Execuções; com a IA desligada de novo, tudo voltou.
+- **Não verificado:** a aparência do item desabilitado em todos os tamanhos e no tema escuro (a captura de tela falhou várias vezes nesta rodada; só conferi pelo DOM e uma captura anterior do item esmaecido), a barra recolhida com a dica e a atualização por minuto sem recarregar a página.
+
 ## 2026-10-17 — Task 139: tela do chat com a IA
 
 Bloco 5 do rework (5 de 6). Backend: `GET /ia/disponibilidade` (qualquer usuário autenticado; o `@AdministradorOnly` saiu da classe e ficou só no `estado`) e um teste de que cada rota tem a marca certa. Frontend: módulo `chat` (rota `/chat`, item "Chat" com `g` + `h`, `pi-comments`, primeiro da barra),

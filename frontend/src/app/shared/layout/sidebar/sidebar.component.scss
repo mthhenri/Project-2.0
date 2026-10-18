@@ -26,6 +26,13 @@
     font-weight: 600;
   }
 
+  // Tela substituída pelo chat enquanto a IA está no ar: visível, mas fora de alcance (volta sozinha se a IA cair).
+  &__item--desabilitado {
+    opacity: 0.45;
+    cursor: not-allowed;
+    color: var(--p-text-muted-color);
+  }
+
   &__nav {
     overflow-y: auto;
   }

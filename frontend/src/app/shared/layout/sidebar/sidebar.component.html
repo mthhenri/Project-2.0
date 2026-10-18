@@ -8,19 +8,35 @@
 
   <nav class="sidebar__nav flex flex-col gap-1 flex-1 px-2 py-2" aria-label="Navegação principal">
     @for (item of itensNavegacao(); track item.rotaLink) {
-      <a
-        [routerLink]="item.rotaLink"
-        routerLinkActive="sidebar__item--ativo"
-        class="sidebar__item flex items-center gap-3 px-3 py-2 rounded-lg text-color hover:bg-emphasis transition-colors text-sm font-medium whitespace-nowrap"
-        [attr.aria-label]="item.label"
-        [pTooltip]="recolhida() ? item.label : ''"
-        tooltipPosition="right"
-      >
-        <i [class]="item.icone"></i>
-        @if (!recolhida()) {
-          <span class="sidebar__rotulo">{{ item.label }}</span>
-        }
-      </a>
+      @if (item.desabilitado) {
+        <span
+          class="sidebar__item sidebar__item--desabilitado flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap"
+          role="link"
+          aria-disabled="true"
+          [attr.aria-label]="item.label + ' (substituída pelo chat enquanto a IA está no ar)'"
+          [pTooltip]="'Substituída pelo chat enquanto a IA está no ar'"
+          tooltipPosition="right"
+        >
+          <i [class]="item.icone"></i>
+          @if (!recolhida()) {
+            <span class="sidebar__rotulo">{{ item.label }}</span>
+          }
+        </span>
+      } @else {
+        <a
+          [routerLink]="item.rotaLink"
+          routerLinkActive="sidebar__item--ativo"
+          class="sidebar__item flex items-center gap-3 px-3 py-2 rounded-lg text-color hover:bg-emphasis transition-colors text-sm font-medium whitespace-nowrap"
+          [attr.aria-label]="item.label"
+          [pTooltip]="recolhida() ? item.label : ''"
+          tooltipPosition="right"
+        >
+          <i [class]="item.icone"></i>
+          @if (!recolhida()) {
+            <span class="sidebar__rotulo">{{ item.label }}</span>
+          }
+        </a>
+      }
     }
   </nav>
 

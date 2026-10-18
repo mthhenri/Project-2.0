@@ -5,7 +5,6 @@ import {
   ChatBuscadoDto,
   ChatEventoDto,
   ChatHojeRecuperadoDto,
-  IaEstadoRecuperadoDto,
   StandardResponse,
 } from '@project20/shared';
 import { ambiente } from '../../../../environments/environment';
@@ -35,11 +34,6 @@ export class ChatService {
   buscar(texto: string): Observable<StandardResponse<ChatBuscadoDto>> {
     const params = new HttpParams().set('texto', texto);
     return this.httpClient.get<StandardResponse<ChatBuscadoDto>>(`${this.urlBase}/busca`, { params, ...comFeedbackProprio() });
-  }
-
-  /** Disponível para qualquer usuário (a rota de estado completo é do administrador). */
-  recuperarDisponibilidade(): Observable<StandardResponse<IaEstadoRecuperadoDto>> {
-    return this.httpClient.get<StandardResponse<IaEstadoRecuperadoDto>>(`${ambiente.apiUrl}/ia/disponibilidade`, comFeedbackProprio());
   }
 
   /**

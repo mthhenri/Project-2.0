@@ -2,8 +2,6 @@ import { Component, ElementRef, OnInit, computed, effect, inject, signal, untrac
 import { DatePipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -11,6 +9,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { TagModule } from 'primeng/tag';
 import { TextareaModule } from 'primeng/textarea';
 import { AutorChatEnum, ChatEventoDto, ChatMensagemResumoDto, EstadoIaEnum, NivelIaEnum } from '@project20/shared';
+import { IaDisponibilidadeService } from '../../../../core/services/ia-disponibilidade.service';
 import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
 import { PropostaCartaoComponent } from '../../components/proposta-cartao/proposta-cartao.component';
 import { ChatService, ErroDoChat } from '../../services/chat.service';
@@ -62,6 +61,7 @@ const MARGEM_DO_FIM_PX = 80;
 export class ChatPage implements OnInit {
   private readonly chatService = inject(ChatService);
   private readonly messageService = inject(MessageService);
+  private readonly iaDisponibilidade = inject(IaDisponibilidadeService);
   private readonly areaDeRolagem = viewChild<ElementRef<HTMLElement>>('rolagem');
   private readonly fluxo = viewChild<ElementRef<HTMLElement>>('fluxo');
   private readonly campoDeTexto = viewChild<ElementRef<HTMLTextAreaElement>>('campoTexto');
@@ -77,7 +77,7 @@ export class ChatPage implements OnInit {
   readonly mensagens = signal<MensagemNaTela[]>([]);
   readonly aoVivo = signal<RespostaAoVivo | null>(null);
   readonly conversaId = signal<string>('');
-  readonly disponibilidade = signal<EstadoIaEnum | null>(null);
+  readonly disponibilidade = this.iaDisponibilidade.estado;
   /** Há texto abaixo da área visível (o usuário subiu para ler): mostra "ir para o fim". */
   readonly longeDoFim = signal(false);
 
@@ -126,11 +126,9 @@ export class ChatPage implements OnInit {
   carregar(): void {
     this.carregando.set(true);
     this.erro.set(false);
-    forkJoin({
-      hoje: this.chatService.recuperarHoje(),
-      disponibilidade: this.chatService.recuperarDisponibilidade().pipe(catchError(() => of(null))),
-    }).subscribe({
-      next: ({ hoje, disponibilidade }) => {
+    this.iaDisponibilidade.carregar();
+    this.chatService.recuperarHoje().subscribe({
+      next: (hoje) => {
         if (!hoje.dados) {
           this.erro.set(true);
           this.carregando.set(false);
@@ -138,7 +136,6 @@ export class ChatPage implements OnInit {
         }
         this.conversaId.set(hoje.dados.conversaId);
         this.mensagens.set(hoje.dados.mensagens.map((mensagem) => this.paraTela(mensagem)));
-        this.disponibilidade.set(disponibilidade?.dados?.estado ?? null);
         this.carregando.set(false);
         this.jaCarregou.set(true);
         this.longeDoFim.set(false);
@@ -280,12 +277,7 @@ export class ChatPage implements OnInit {
   }
 
   private atualizarDisponibilidade(): void {
-    this.chatService
-      .recuperarDisponibilidade()
-      .pipe(catchError(() => of(null)))
-      .subscribe((resposta) => {
-        if (resposta?.dados) this.disponibilidade.set(resposta.dados.estado);
-      });
+    this.iaDisponibilidade.carregar();
   }
 
   private paraTela(mensagem: ChatMensagemResumoDto): MensagemNaTela {
