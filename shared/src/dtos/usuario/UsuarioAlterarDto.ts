@@ -15,10 +15,6 @@ export class UsuarioAlterarDto {
   @IsString()
   cargoTitulo?: string;
 
-  @ApiPropertyOptional({ example: 'Responsável pelo módulo de autenticação.' })
-  @IsOptional()
-  @IsString()
-
   @ApiPropertyOptional({ example: 8 })
   @IsOptional()
   @IsNumber()

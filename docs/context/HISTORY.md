@@ -12,6 +12,15 @@
 
 ---
 
+## 2026-10-18 — Correção: editar usuário falhava com "horasDiariasNecessarias must be a string"
+
+Ao editar um usuário o backend recusava o formulário com `horasDiariasNecessarias must be a string`. Causa: a task 128 (commit `a58b215`, remoção de `usuario.anotacoes`) apagou só a linha da propriedade `anotacoes` nos DTOs e deixou os decorators dela soltos; decorator sem propriedade gruda na seguinte. Em `UsuarioAlterarDto` o `@IsString()` de `anotacoes` passou a valer para `horasDiariasNecessarias`; em `UsuarioRecuperadoDto` e `UsuarioAlteradoDto` sobraram dois `@ApiProperty` órfãos (só Swagger, sem efeito em validação).
+
+- **Correção:** removidos os decorators órfãos dos três DTOs; nenhum tipo ou contrato mudou.
+- **Verificado:** `validateSync` do `UsuarioAlterarDto` com `horasDiariasNecessarias: 6` sem erros; varredura de `shared/src` e `backend/src` sem outro decorator seguido de linha vazia; `shared` com 0 falhas e build do backend ok.
+- **Não verificado:** a edição ao vivo pela tela (correção só no contrato do backend).
+- **Lição:** ao remover uma propriedade decorada, remova o bloco inteiro (decorators + propriedade); o build não acusa o decorator órfão.
+
 ## 2026-10-18 — Segundo erro do primeiro deploy: backend sem memória no Render
 
 Com a `0038` corrigida o `db:migrate` passou no Render (Batch 8, 14 migrations), mas o backend não subiu: `JavaScript heap out of memory` (~256 MB) e "No open ports detected". Causa: o `start:prod` rodava `ts-node/register`, que **checa os tipos de todo o projeto na subida**; com o rework (muito mais código) isso passou do heap do plano gratuito. Antes do rework cabia.
