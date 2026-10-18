@@ -12,11 +12,11 @@
 
 ---
 
-## 2026-10-18 — Mapa de lacunas da IA e specs 162 a 166 (bloco 11)
+## 2026-10-18 — Mapa de lacunas da IA e specs 164 a 168 (bloco 11)
 
 Análise pedida pelo autor: o que as telas fazem e a IA ainda não. Hoje a IA cobre o dia do desenvolvedor (iniciar/pausar/descrever execução, criar atividade, pad, check-in) e criar projeto/demanda e conectar/descrever demanda (gestor); **não edita nada que já existe** e não lê ponto, calendário, tags, equipe nem relatório. Sem mudança de código.
 
-- **Specs no backlog (bloco 11 da guarda-chuva):** **162** leituras (ponto, calendário, tags, equipe, relatório); **163** alterar atividade (status, prioridade, nome); **164** registrar e corrigir execuções passadas; **165** alterar demanda (nome, status, horas, previsão); **166** atribuir membros e tags. 163 a 166 seguem o padrão de proposta (tipo em `tipo_proposta_ia`, executor, ferramenta, cartão, prompt).
+- **Specs no backlog (bloco 11 da guarda-chuva):** **164** leituras (ponto, calendário, tags, equipe, relatório); **165** alterar atividade (status, prioridade, nome); **166** registrar e corrigir execuções passadas; **167** alterar demanda (nome, status, horas, previsão); **168** atribuir membros e tags. 165 a 168 seguem o padrão de proposta (tipo em `tipo_proposta_ia`, executor, ferramenta, cartão, prompt).
 - **Deixado de fora de propósito:** justificativa de ponto, CRUD de usuários/tags/calendário, configuração de prompts e prioridades (telas administrativas; a IA não precisa substituí-las), e qualquer exclusão (princípio do projeto).
 
 ## 2026-10-18 — Task 163: armazenamento Elasticsearch do chat pronto para a produção de verdade

@@ -1,4 +1,4 @@
-# Task 163 — IA: propor alterar atividade (status, prioridade e nome)
+# Task 165 — IA: propor alterar atividade (status, prioridade e nome)
 
 > Origem: mapa de lacunas entre o que as telas fazem e o que a IA faz (2026-10-18), no espírito do princípio da guarda-chuva [`rework-chat-ia.spec.md`](rework-chat-ia.spec.md): a IA faz o que o usuário faz, sempre com confirmação.
 
@@ -25,7 +25,7 @@ Hoje a IA só cria atividade; para marcar "terminei", mudar a prioridade ou reno
 ## Fora de Escopo
 
 - Excluir atividade (a IA nunca exclui).
-- Alterar tags da atividade (task 166).
+- Alterar tags da atividade (task 168).
 
 ## Dependências
 

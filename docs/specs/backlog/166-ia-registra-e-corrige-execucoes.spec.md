@@ -1,4 +1,4 @@
-# Task 164 — IA: propor registrar e corrigir execuções passadas
+# Task 166 — IA: propor registrar e corrigir execuções passadas
 
 > Origem: mapa de lacunas entre o que as telas fazem e o que a IA faz (2026-10-18), no espírito do princípio da guarda-chuva [`rework-chat-ia.spec.md`](rework-chat-ia.spec.md): a IA faz o que o usuário faz, sempre com confirmação.
 
@@ -29,7 +29,7 @@ Esquecer de iniciar ou de pausar é comum, e o ponto depende dessas horas. A IA 
 
 ## Dependências
 
-`145`, `150` (descrição da execução) e `162` (leitura do ponto, para conferir o efeito).
+`145`, `150` (descrição da execução) e `164` (leitura do ponto, para conferir o efeito).
 
 ## Riscos e Mitigação
 

@@ -1,4 +1,4 @@
-# Task 166 — IA: propor atribuir membros e tags a demandas e atividades
+# Task 168 — IA: propor atribuir membros e tags a demandas e atividades
 
 > Origem: mapa de lacunas entre o que as telas fazem e o que a IA faz (2026-10-18), no espírito do princípio da guarda-chuva [`rework-chat-ia.spec.md`](rework-chat-ia.spec.md): a IA faz o que o usuário faz, sempre com confirmação.
 
@@ -11,7 +11,7 @@ Atribuir quem trabalha numa demanda e categorizar com tags são ações de gesto
 1. Padrão de toda proposta nova: migration inserindo o código em `tipo_proposta_ia` (modelo da `0037`), enum em `shared/`, DTO de dados, executor em `ExecutorPropostaIaRegistro` (`validar`, `executar` pela service com o `JwtPayload` do usuário, `desfazer`, `estaObsoleta`), ferramenta `FerramentaPropostaIa` que só cria a proposta, cartão no `app-chat-proposta-cartao` e instrução no prompt `CONVERSA`.
 2. Tipos `ATRIBUIR_MEMBRO` (adicionar ou remover usuário numa demanda) e `ATRIBUIR_TAG` (substituir o conjunto de tags de demanda ou atividade; o cartão mostra o conjunto antes e depois), ambos GESTOR.
 3. Executores via `DemandaService` e `AtividadeService` com o usuário do token; `desfazer` restaura o conjunto anterior de membros ou tags.
-4. `propor_atribuir_membro` e `propor_atribuir_tag`, apoiadas em `listar_usuarios` e `listar_tags` (task 162): a IA nunca inventa id nem nome de tag; tag inexistente leva a avisar que criar tag é pela tela (criar tag fica fora).
+4. `propor_atribuir_membro` e `propor_atribuir_tag`, apoiadas em `listar_usuarios` e `listar_tags` (task 164): a IA nunca inventa id nem nome de tag; tag inexistente leva a avisar que criar tag é pela tela (criar tag fica fora).
 5. Gestor **não** entra em `demanda_usuario` (acesso por tipo): a ferramenta recusa atribuir gestor, com mensagem clara.
 6. Testes: executores (adicionar, remover, desfazer, gestor recusado) e ferramentas só criam proposta.
 
@@ -30,7 +30,7 @@ Atribuir quem trabalha numa demanda e categorizar com tags são ações de gesto
 
 ## Dependências
 
-`162` (leituras de equipe e tags) e `153` (gestor).
+`164` (leituras de equipe e tags) e `153` (gestor).
 
 ## Riscos e Mitigação
 

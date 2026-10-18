@@ -252,11 +252,11 @@ Os blocos 1 a 3 não dependem de IA e podem começar primeiro.
 | 10 | 157 | [`157-fallback-telas-convencionais-e-inicio-no-chat`](157-fallback-telas-convencionais-e-inicio-no-chat.spec.md) | 139, 145, 146 |
 | 9 | 159 | [`159-ia-cria-projetos-e-demandas`](../done/159-ia-cria-projetos-e-demandas.spec.md) (concluída) | 145, 153 |
 | 10 | 158 | [`158-fallback-retorno-da-ia-e-retomada`](158-fallback-retorno-da-ia-e-retomada.spec.md) | 145, 157 |
-| 11 | 162 | [`162-ia-leituras-de-ponto-calendario-tags-e-equipe`](162-ia-leituras-de-ponto-calendario-tags-e-equipe.spec.md) | 144, 153 |
-| 11 | 163 | [`163-ia-altera-atividade`](163-ia-altera-atividade.spec.md) | 145 |
-| 11 | 164 | [`164-ia-registra-e-corrige-execucoes`](164-ia-registra-e-corrige-execucoes.spec.md) | 145, 150, 162 |
-| 11 | 165 | [`165-ia-altera-demanda`](165-ia-altera-demanda.spec.md) | 153, 159 |
-| 11 | 166 | [`166-ia-atribui-membros-e-tags`](166-ia-atribui-membros-e-tags.spec.md) | 153, 162 |
+| 11 | 164 | [`164-ia-leituras-de-ponto-calendario-tags-e-equipe`](164-ia-leituras-de-ponto-calendario-tags-e-equipe.spec.md) | 144, 153 |
+| 11 | 165 | [`165-ia-altera-atividade`](165-ia-altera-atividade.spec.md) | 145 |
+| 11 | 166 | [`166-ia-registra-e-corrige-execucoes`](166-ia-registra-e-corrige-execucoes.spec.md) | 145, 150, 164 |
+| 11 | 167 | [`167-ia-altera-demanda`](167-ia-altera-demanda.spec.md) | 153, 159 |
+| 11 | 168 | [`168-ia-atribui-membros-e-tags`](168-ia-atribui-membros-e-tags.spec.md) | 153, 164 |
 
 O bloco 5 (chat) está quebrado em **135 a 141** (a 141 é o histórico de conversas e os refinos visuais, pedidos depois da 139); os blocos 6, 7, 9 e 10 estão quebrados em **142 a 158**: prioridade e ferramentas do desenvolvedor (142 a 148, com o pad pela IA na 146, que complementa o bloco 8), check-in e Electron (149 a 152), lado do gestor (153 a 156) e fallback (157 e 158). As tasks 125 a 128 saíram no mesmo lançamento. A 140 ("testar antes de salvar" os prompts) usa narrativas coladas pelo administrador, não o chat dos usuários
 (decisão de privacidade registrada na spec): por isso depende só da 133.

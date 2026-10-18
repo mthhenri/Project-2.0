@@ -1,4 +1,4 @@
-# Task 165 — IA: propor alterar demanda (nome, status, horas e previsão)
+# Task 167 — IA: propor alterar demanda (nome, status, horas e previsão)
 
 > Origem: mapa de lacunas entre o que as telas fazem e o que a IA faz (2026-10-18), no espírito do princípio da guarda-chuva [`rework-chat-ia.spec.md`](rework-chat-ia.spec.md): a IA faz o que o usuário faz, sempre com confirmação.
 

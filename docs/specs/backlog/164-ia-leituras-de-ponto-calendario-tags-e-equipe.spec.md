@@ -1,4 +1,4 @@
-# Task 162 — IA: ferramentas de leitura de ponto, calendário, tags, equipe e relatório
+# Task 164 — IA: ferramentas de leitura de ponto, calendário, tags, equipe e relatório
 
 > Origem: mapa de lacunas entre o que as telas fazem e o que a IA faz (2026-10-18), no espírito do princípio da guarda-chuva [`rework-chat-ia.spec.md`](rework-chat-ia.spec.md): a IA faz o que o usuário faz, sempre com confirmação.
 
@@ -11,7 +11,7 @@ Dar à IA as leituras que hoje só existem nas telas, para responder "quantas ho
 1. `consultar_ponto_do_dia` e `consultar_ponto_do_mes` (QUALQUER, sempre do usuário do token; o gestor pode informar o usuário), pelo `PontoService`: horas feitas, meta, saldo e justificativas.
 2. `consultar_dias_nao_uteis` (QUALQUER), pelo `CalendarioService`, por intervalo de datas.
 3. `listar_tags` (QUALQUER), pela `TagService`.
-4. `listar_usuarios` (GESTOR), pela `UsuarioService`: nome, login, tipo e status, sem nenhum dado de senha; resolve nomes para as tasks 165 e 166.
+4. `listar_usuarios` (GESTOR), pela `UsuarioService`: nome, login, tipo e status, sem nenhum dado de senha; resolve nomes para as tasks 167 e 168.
 5. `consultar_relatorio_de_execucoes` (GESTOR), pelo `RelatorioService`: totais por projeto, usuário e período, sem gerar arquivo.
 6. Cada ferramenta com `classeDeEntrada`, limite de itens como `LIMITE_ATIVIDADES_DA_FERRAMENTA` (resposta enxuta, `haMais`) e permissão declarada; instruções de uso no prompt `CONVERSA`.
 7. Testes: cada ferramenta chama a service com o usuário do token; desenvolvedor não lê o ponto de outro usuário e gestor lê; nenhuma devolve dado sensível.
@@ -25,7 +25,7 @@ Dar à IA as leituras que hoje só existem nas telas, para responder "quantas ho
 
 ## Fora de Escopo
 
-- Qualquer proposta ou escrita (tasks 163 a 166).
+- Qualquer proposta ou escrita (tasks 165 a 168).
 - Gerar ou baixar o PDF do relatório.
 
 ## Dependências
