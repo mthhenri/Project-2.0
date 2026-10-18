@@ -14,8 +14,8 @@ export const LIMITE_EXECUCOES_DA_FERRAMENTA = 30;
 export class ListarMinhasExecucoesDoDiaFerramenta extends FerramentaIa<MinhasExecucoesDoDiaListarDto> {
   readonly nome = 'listar_minhas_execucoes_do_dia';
   readonly descricao =
-    'Lista as execuções do usuário que começaram hoje, com a atividade, a demanda, a descrição, o horário e a duração, e o total de minutos do dia. ' +
-    'Use para responder o que o usuário já fez hoje ou para retomar o contexto do dia.';
+    'Lista as execuções do usuário que começaram num dia (hoje, se não informar `data` em yyyy-mm-dd), com o id, a atividade, a demanda, a descrição, o horário e a duração, e o total de minutos do dia. ' +
+    'Use para responder o que o usuário já fez, para retomar o contexto do dia e para achar o execucaoId de uma execução a corrigir.';
   readonly tipo = 'LEITURA' as const;
   readonly permissao = 'QUALQUER' as const;
   readonly classeDeEntrada = MinhasExecucoesDoDiaListarDto;
@@ -27,8 +27,8 @@ export class ListarMinhasExecucoesDoDiaFerramenta extends FerramentaIa<MinhasExe
     super();
   }
 
-  async executar(_entrada: MinhasExecucoesDoDiaListarDto, usuarioAtivo: JwtPayload): Promise<MinhasExecucoesDoDiaListadasDto> {
-    const data = dataNoFuso(this.agora(), this.configService.obter().aplicacao.fusoHorario);
+  async executar(entrada: MinhasExecucoesDoDiaListarDto, usuarioAtivo: JwtPayload): Promise<MinhasExecucoesDoDiaListadasDto> {
+    const data = entrada.data ?? dataNoFuso(this.agora(), this.configService.obter().aplicacao.fusoHorario);
     const resposta = await this.execucaoService.listar(
       { usuarioId: usuarioAtivo.sub, data, itensPorPagina: LIMITE_EXECUCOES_DA_FERRAMENTA },
       usuarioAtivo,

@@ -12,6 +12,17 @@
 
 ---
 
+## 2026-10-18 — Task 166: IA propõe registrar e corrigir execuções (verificação visual pendente)
+
+Task 165 fechada (o autor testou numa conversa real e aprovou); spec movida para `done/`.
+
+- **Tipos `REGISTRAR_EXECUCAO` e `CORRIGIR_EXECUCAO`** (migration `0040`, aplicada no banco de dev). `propor_registrar_execucao` (**GESTOR**, como a tela: `registrar` é `@GestorOnly` e a service não confere o tipo, então o executor confere também) e `propor_corrigir_execucao` (QUALQUER; a `ExecucaoService.recuperar` barra execução alheia ao desenvolvedor).
+- **Datas sem ambiguidade:** a IA informa dia (`yyyy-mm-dd`) e horas (`HH:mm`) no fuso do sistema; `instanteNoFuso` (`execucao/domain/periodo-da-execucao.ts`, com teste de horário de verão) converte para instantes e `formatarPeriodo` monta o texto que o cartão mostra ("17/10/2026, 14:00 às 16:00"). Período no futuro, invertido ou sobreposto é recusado já na proposta (e de novo no executor).
+- **Correção:** o executor confere que a execução ainda está como a proposta a viu, guarda o antes (período e descrição) e o desfazer só vale se ela ainda está como a correção a deixou; voltar a "em andamento" só se não há outra ativa. `listar_minhas_execucoes_do_dia` ganhou `data` opcional para achar a de ontem.
+- **Achado:** a `ExecucaoService.alterar` não valida sobreposição de execuções (a tela deixa corrigir um horário por cima de outra). Não mexi na service (impacta a tela; decisão do autor); a conferência está na ferramenta e no executor da IA. `validarSobreposicao` ganhou `ignorarExecucaoId` (opcional, sem efeito para o chamador atual).
+- **Testes:** backend 456 (+14); builds de shared, backend e frontend passam; o backend sobe sem erro de injeção.
+- **Pendente (spec fica em `active`):** os dois cartões não foram vistos renderizados e a conversa real ("ontem das 14h às 16h", "esqueci de pausar") não foi testada.
+
 ## 2026-10-18 — Task 165: IA propõe alterar atividade (status, prioridade, nome) — verificação visual pendente
 
 - **Contrato:** tipo `ALTERAR_ATIVIDADE` (migration `0039`, aplicada no banco de dev), `ProporAlterarAtividadeDto` (+ dados com `statusAnterior`/`prioridadeAnterior`) em `shared/`.

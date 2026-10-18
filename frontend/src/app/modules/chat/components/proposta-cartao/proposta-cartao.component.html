@@ -39,6 +39,32 @@
           }
         </div>
       }
+      @case (Tipo.REGISTRAR_EXECUCAO) {
+        <div class="proposta-cartao__resumo">
+          <strong class="proposta-cartao__destaque">{{ texto('atividadeNome') || 'Atividade ' + propostaAtual.dados['atividadeId'] }}</strong>
+          @if (texto('demandaNome')) {
+            <span class="proposta-cartao__linha">Demanda: {{ texto('demandaNome') }}</span>
+          }
+          @if (texto('usuarioNome')) {
+            <span class="proposta-cartao__linha">Pessoa: {{ texto('usuarioNome') }}</span>
+          }
+          <span class="proposta-cartao__linha">Período: {{ texto('periodoTexto') }}@if (numero('duracaoMinutos')) { ({{ formatarDuracao(numero('duracaoMinutos')) }}) }</span>
+          <span class="proposta-cartao__linha">Descrição: {{ texto('descricao') }}</span>
+        </div>
+      }
+      @case (Tipo.CORRIGIR_EXECUCAO) {
+        <div class="proposta-cartao__resumo">
+          <strong class="proposta-cartao__destaque">{{ texto('atividadeNome') || 'Execução ' + propostaAtual.dados['execucaoId'] }}</strong>
+          @if (texto('demandaNome')) {
+            <span class="proposta-cartao__linha">Demanda: {{ texto('demandaNome') }}</span>
+          }
+          <span class="proposta-cartao__linha">Antes: {{ texto('periodoAnteriorTexto') }}</span>
+          <span class="proposta-cartao__linha">Depois: {{ texto('periodoNovoTexto') }}@if (numero('duracaoNovaMinutos')) { ({{ formatarDuracao(numero('duracaoNovaMinutos')) }}) }</span>
+          @if (texto('descricao')) {
+            <span class="proposta-cartao__linha">Nova descrição: {{ texto('descricao') }}</span>
+          }
+        </div>
+      }
       @case (Tipo.CRIAR_PROJETO) {
         <div class="proposta-cartao__resumo">
           <strong class="proposta-cartao__destaque">{{ texto('nome') }}</strong>

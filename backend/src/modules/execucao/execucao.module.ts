@@ -14,6 +14,10 @@ import { PromptModule } from '../prompt/prompt.module';
 import { DescreverExecucaoExecutor } from './executores/descrever-execucao.executor';
 import { ProporDescreverExecucaoFerramenta } from './ferramentas/propor-descrever-execucao.ferramenta';
 import { IniciarExecucaoExecutor } from './executores/iniciar-execucao.executor';
+import { RegistrarExecucaoExecutor } from './executores/registrar-execucao.executor';
+import { CorrigirExecucaoExecutor } from './executores/corrigir-execucao.executor';
+import { ProporRegistrarExecucaoFerramenta } from './ferramentas/propor-registrar-execucao.ferramenta';
+import { ProporCorrigirExecucaoFerramenta } from './ferramentas/propor-corrigir-execucao.ferramenta';
 import { PausarExecucaoExecutor } from './executores/pausar-execucao.executor';
 import { ProporIniciarExecucaoFerramenta } from './ferramentas/propor-iniciar-execucao.ferramenta';
 import { ProporPausarExecucaoFerramenta } from './ferramentas/propor-pausar-execucao.ferramenta';
@@ -40,6 +44,10 @@ import { ListarMinhasExecucoesDoDiaFerramenta } from './ferramentas/listar-minha
     PausarExecucaoExecutor,
     ProporDescreverExecucaoFerramenta,
     DescreverExecucaoExecutor,
+    ProporRegistrarExecucaoFerramenta,
+    RegistrarExecucaoExecutor,
+    ProporCorrigirExecucaoFerramenta,
+    CorrigirExecucaoExecutor,
   ],
   exports:     [ExecucaoService, ExecucaoRepository],
 })
@@ -58,6 +66,10 @@ export class ExecucaoModule implements OnModuleInit {
     private readonly pausarExecucaoExecutor: PausarExecucaoExecutor,
     private readonly proporDescreverExecucao: ProporDescreverExecucaoFerramenta,
     private readonly descreverExecucaoExecutor: DescreverExecucaoExecutor,
+    private readonly proporRegistrarExecucao: ProporRegistrarExecucaoFerramenta,
+    private readonly registrarExecucaoExecutor: RegistrarExecucaoExecutor,
+    private readonly proporCorrigirExecucao: ProporCorrigirExecucaoFerramenta,
+    private readonly corrigirExecucaoExecutor: CorrigirExecucaoExecutor,
   ) {}
 
   /** As ferramentas de IA do domínio de execução se registram aqui. */
@@ -72,6 +84,10 @@ export class ExecucaoModule implements OnModuleInit {
     this.registroDeExecutores.registrar(this.iniciarExecucaoExecutor);
     this.registroDeExecutores.registrar(this.pausarExecucaoExecutor);
     this.registroDeFerramentas.registrar(this.proporDescreverExecucao);
+    this.registroDeFerramentas.registrar(this.proporRegistrarExecucao);
+    this.registroDeExecutores.registrar(this.registrarExecucaoExecutor);
+    this.registroDeFerramentas.registrar(this.proporCorrigirExecucao);
+    this.registroDeExecutores.registrar(this.corrigirExecucaoExecutor);
     this.registroDeExecutores.registrar(this.descreverExecucaoExecutor);
   }
 }

@@ -113,8 +113,9 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
            AND atividade.usuario_id = :usuarioId
            AND execucao.inicio_data < :fimData
            AND :inicioData < COALESCE(execucao.fim_data, 'infinity'::timestamptz)
+           AND execucao.id <> :ignorarExecucaoId
        ) AS "existe"`,
-      { usuarioId: dto.usuarioId, inicioData: dto.inicioData, fimData: dto.fimData },
+      { usuarioId: dto.usuarioId, inicioData: dto.inicioData, fimData: dto.fimData, ignorarExecucaoId: dto.ignorarExecucaoId ?? 0 },
     );
     return resultado[0].existe;
   }

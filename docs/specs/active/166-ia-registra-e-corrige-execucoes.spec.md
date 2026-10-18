@@ -22,6 +22,13 @@ Esquecer de iniciar ou de pausar é comum, e o ponto depende dessas horas. A IA 
 - Testes de `backend` (node:test) e builds de `backend` e `frontend` passam; frontend sem lint (P-001), declarado no fecho.
 - Cartão novo verificado ao vivo em `1920×1080`, `1366×768` e `1080×1920`, temas claro e escuro, tendo como análogo o cartão de `INICIAR_EXECUCAO` (estados vazio, carregando, cheio e erro).
 
+## Ajustes feitos na implementação (2026-10-18)
+
+- **Registrar é só do gestor**, como na tela (`POST execucao/registro` é `@GestorOnly`, e a `ExecucaoService.registrar` não confere o tipo): `propor_registrar_execucao` é GESTOR e o executor confere de novo. O desenvolvedor corrige as **próprias** execuções (`propor_corrigir_execucao`, QUALQUER).
+- As ferramentas recebem **dia e horas** (`yyyy-mm-dd`, `HH:mm` no fuso do sistema) e convertem para instantes; o modelo nunca escreve ISO.
+- `listar_minhas_execucoes_do_dia` ganhou `data` opcional, para achar a execução de ontem.
+- A `ExecucaoService.alterar` **não valida sobreposição**; a tool e o executor de correção conferem (`validarSobreposicao` ganhou `ignorarExecucaoId`). Mudar a service é decisão do autor (impacta a tela).
+
 ## Fora de Escopo
 
 - Excluir execução.
