@@ -28,6 +28,7 @@ export * from './ProporDescreverExecucaoDto';
 export * from './ProporSuspenderCheckinDto';
 export * from './ProporIniciarExecucaoDto';
 export * from './ProporPausarExecucaoDto';
+export * from './ProporAlterarAtividadeDto';
 export * from './PontoDoDiaConsultarDto';
 export * from './PontoDoMesConsultarDto';
 export * from './DiasNaoUteisConsultarDto';

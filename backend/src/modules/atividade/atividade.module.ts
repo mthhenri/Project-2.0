@@ -9,14 +9,16 @@ import { FerramentaIaRegistro } from '../ferramenta-ia/services/ferramenta-ia.re
 import { ExecutorPropostaIaRegistro } from '../proposta-ia/domain/executor-proposta-ia';
 import { PropostaIaModule } from '../proposta-ia/proposta-ia.module';
 import { CriarAtividadeExecutor } from './executores/criar-atividade.executor';
+import { AlterarAtividadeExecutor } from './executores/alterar-atividade.executor';
 import { ProporCriarAtividadeFerramenta } from './ferramentas/propor-criar-atividade.ferramenta';
+import { ProporAlterarAtividadeFerramenta } from './ferramentas/propor-alterar-atividade.ferramenta';
 import { ConsultarDemandaFerramenta } from './ferramentas/consultar-demanda.ferramenta';
 import { ListarMinhasAtividadesFerramenta } from './ferramentas/listar-minhas-atividades.ferramenta';
 
 @Module({
   imports:     [DemandaModule, TagModule, FerramentaIaModule, PropostaIaModule],
   controllers: [AtividadeController],
-  providers:   [AtividadeService, AtividadeRepository, ListarMinhasAtividadesFerramenta, ConsultarDemandaFerramenta, ProporCriarAtividadeFerramenta, CriarAtividadeExecutor],
+  providers:   [AtividadeService, AtividadeRepository, ListarMinhasAtividadesFerramenta, ConsultarDemandaFerramenta, ProporCriarAtividadeFerramenta, CriarAtividadeExecutor, ProporAlterarAtividadeFerramenta, AlterarAtividadeExecutor],
   exports:     [AtividadeService, AtividadeRepository],
 })
 export class AtividadeModule implements OnModuleInit {
@@ -27,6 +29,8 @@ export class AtividadeModule implements OnModuleInit {
     private readonly proporCriarAtividade: ProporCriarAtividadeFerramenta,
     private readonly registroDeExecutores: ExecutorPropostaIaRegistro,
     private readonly criarAtividadeExecutor: CriarAtividadeExecutor,
+    private readonly proporAlterarAtividade: ProporAlterarAtividadeFerramenta,
+    private readonly alterarAtividadeExecutor: AlterarAtividadeExecutor,
   ) {}
 
   /** As ferramentas de IA do domínio de atividade se registram aqui (a IA só lê o que a service entrega ao usuário). */
@@ -35,5 +39,7 @@ export class AtividadeModule implements OnModuleInit {
     this.registroDeFerramentas.registrar(this.consultarDemanda);
     this.registroDeFerramentas.registrar(this.proporCriarAtividade);
     this.registroDeExecutores.registrar(this.criarAtividadeExecutor);
+    this.registroDeFerramentas.registrar(this.proporAlterarAtividade);
+    this.registroDeExecutores.registrar(this.alterarAtividadeExecutor);
   }
 }

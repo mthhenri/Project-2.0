@@ -12,6 +12,15 @@
 
 ---
 
+## 2026-10-18 — Task 165: IA propõe alterar atividade (status, prioridade, nome) — verificação visual pendente
+
+- **Contrato:** tipo `ALTERAR_ATIVIDADE` (migration `0039`, aplicada no banco de dev), `ProporAlterarAtividadeDto` (+ dados com `statusAnterior`/`prioridadeAnterior`) em `shared/`.
+- **Ferramenta `propor_alterar_atividade`:** lê a atividade com o usuário do token, descarta o que já está igual (nada a alterar é erro), guarda os valores de antes e **recusa mudar o status com execução em andamento**, mandando a IA propor a pausa primeiro (a pausa é uma proposta que o usuário confirma; só depois a IA propõe o status).
+- **Executor:** altera pela `AtividadeService` (dono e regras da tela valem); guarda antes e aplicado; desfazer devolve o anterior e é recusado se a atividade mudou depois; obsoleta se já está como pedido.
+- **Cartão do chat:** resumo com antes → depois (status, prioridade com selo, novo nome). Sem "Ajustar" (não há o que ajustar além de recusar).
+- **Testes:** backend 442 (+7); builds de shared, backend e frontend passam.
+- **Pendente (spec fica em `active`):** o cartão não foi visto renderizado. Tentei injetar uma proposta de teste no chat da conta aberta no navegador do app (linha em `proposta_ia` e documento no OpenSearch), mas a tela não a exibiu; **removi tudo** o que inseri. Falta verificar o cartão ao vivo (1920×1080, 1366×768, 1080×1920, claro e escuro) quando a IA gerar uma proposta de verdade, e a conversa real ("terminei a X", com e sem execução ativa).
+
 ## 2026-10-18 — Task 164: IA lê ponto, calendário, tags, equipe e relatório
 
 Primeira do bloco 11 (lacunas entre as telas e a IA). Só leitura; nada é gravado.

@@ -17,6 +17,28 @@
           </span>
         </div>
       }
+      @case (Tipo.ALTERAR_ATIVIDADE) {
+        <div class="proposta-cartao__resumo">
+          <strong class="proposta-cartao__destaque">{{ texto('atividadeNome') || 'Atividade ' + propostaAtual.dados['atividadeId'] }}</strong>
+          @if (texto('demandaNome')) {
+            <span class="proposta-cartao__linha">Demanda: {{ texto('demandaNome') }}</span>
+          }
+          @if (texto('statusAnterior')) {
+            <span class="proposta-cartao__linha">Status: {{ rotuloDoStatus('statusAnterior') }} → {{ rotuloDoStatus('status') }}</span>
+          }
+          @if (texto('prioridadeAnterior')) {
+            <span class="proposta-cartao__linha">
+              Prioridade:
+              <app-prioridade-selo [prioridade]="prioridadeDe(texto('prioridadeAnterior'))" />
+              <i class="pi pi-arrow-right" aria-hidden="true"></i>
+              <app-prioridade-selo [prioridade]="prioridadeDe(texto('prioridade'))" />
+            </span>
+          }
+          @if (texto('nome')) {
+            <span class="proposta-cartao__linha">Novo nome: {{ texto('nome') }}</span>
+          }
+        </div>
+      }
       @case (Tipo.CRIAR_PROJETO) {
         <div class="proposta-cartao__resumo">
           <strong class="proposta-cartao__destaque">{{ texto('nome') }}</strong>
