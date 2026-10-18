@@ -1,5 +1,6 @@
 import { Component, ElementRef, OnInit, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MessageService } from 'primeng/api';
@@ -63,6 +64,7 @@ export class ChatPage implements OnInit {
   private readonly chatService = inject(ChatService);
   private readonly messageService = inject(MessageService);
   private readonly iaDisponibilidade = inject(IaDisponibilidadeService);
+  private readonly roteador = inject(Router);
   private readonly areaDeRolagem = viewChild<ElementRef<HTMLElement>>('rolagem');
   private readonly fluxo = viewChild<ElementRef<HTMLElement>>('fluxo');
   private readonly campoDeTexto = viewChild<ElementRef<HTMLTextAreaElement>>('campoTexto');
@@ -291,6 +293,11 @@ export class ChatPage implements OnInit {
       },
       error: () => this.messageService.add({ severity: 'warn', summary: 'Chat', detail: 'Não foi possível abrir essa conversa' }),
     });
+  }
+
+  /** Com a IA fora do ar ou desligada, a tela convencional de Atividades (o fallback). */
+  irParaAtividades(): void {
+    void this.roteador.navigateByUrl('/atividade');
   }
 
   voltarParaHoje(mensagemId?: string): void {

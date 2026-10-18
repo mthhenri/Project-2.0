@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { catchError, of } from 'rxjs';
+import { Observable, catchError, map, of, tap } from 'rxjs';
 import { EstadoIaEnum, IaEstadoRecuperadoDto, StandardResponse } from '@project20/shared';
 import { ambiente } from '../../../environments/environment';
 import { comFeedbackProprio } from '../interceptors/loading.interceptor';
@@ -15,6 +15,17 @@ export class IaDisponibilidadeService {
   private readonly httpClient = inject(HttpClient);
 
   readonly estado = signal<EstadoIaEnum | null>(null);
+
+  /** Consulta o estado agora (guardando no sinal) e o devolve, ou `null` se a consulta falhar: o login decide o destino por ele. */
+  consultar(): Observable<EstadoIaEnum | null> {
+    return this.httpClient.get<StandardResponse<IaEstadoRecuperadoDto>>(`${ambiente.apiUrl}/ia/disponibilidade`, comFeedbackProprio()).pipe(
+      tap((resposta) => {
+        if (resposta.dados) this.estado.set(resposta.dados.estado);
+      }),
+      map((resposta) => resposta.dados?.estado ?? null),
+      catchError(() => of(null)),
+    );
+  }
 
   carregar(): void {
     this.httpClient

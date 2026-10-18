@@ -43,6 +43,16 @@
     font-size: 0.875rem;
   }
 
+  // O botão do aviso fica no canto direito, sem quebrar o rótulo.
+  &__aviso-acao {
+    margin-left: auto;
+    flex-shrink: 0;
+
+    ::ng-deep .p-button {
+      white-space: nowrap;
+    }
+  }
+
   &__aviso--neutro {
     border-color: var(--app-surface-200);
   }

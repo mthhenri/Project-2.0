@@ -33,22 +33,26 @@ export class IaService {
   ) {}
 
   async gerar(solicitacao: IaSolicitacao): Promise<IaResposta> {
-    const { provedor, solicitacaoProvedor } = await this.preparar(solicitacao);
-    return this.executar(solicitacao, () => provedor.gerar(solicitacaoProvedor));
+    const { provedor, solicitacaoProvedor, deteccaoAutomatica } = await this.preparar(solicitacao);
+    return this.executar(solicitacao, deteccaoAutomatica, () => provedor.gerar(solicitacaoProvedor));
   }
 
   async transmitir(solicitacao: IaSolicitacao, aoTrecho: (trecho: string) => void): Promise<IaResposta> {
-    const { provedor, solicitacaoProvedor } = await this.preparar(solicitacao);
-    return this.executar(solicitacao, () => provedor.transmitir(solicitacaoProvedor, aoTrecho));
+    const { provedor, solicitacaoProvedor, deteccaoAutomatica } = await this.preparar(solicitacao);
+    return this.executar(solicitacao, deteccaoAutomatica, () => provedor.transmitir(solicitacaoProvedor, aoTrecho));
   }
 
-  /** `DESLIGADA` se o administrador desligou; senão, `FORA_DO_AR` sem chave ou depois de uma falha, e `NO_AR` caso contrário. */
+  /**
+   * `DESLIGADA` se o administrador desligou; senão, `FORA_DO_AR` sem chave ou, **com a detecção automática ligada**, depois de uma falha do
+   * provedor (a primeira chamada bem-sucedida recupera); `NO_AR` caso contrário. Com a detecção desligada, só o desligamento manual
+   * troca as telas: falhas do provedor não derrubam o estado.
+   */
   async obterEstado(): Promise<EstadoIaEnum> {
     const configuracao = await this.configuracaoIaService.obterAtiva();
     if (configuracao.iaDesligada) return EstadoIaEnum.DESLIGADA;
     const provedor = this.provedores[configuracao.provedor];
     if (!provedor || !provedor.estaDisponivel()) return EstadoIaEnum.FORA_DO_AR;
-    return this.ultimoResultado;
+    return configuracao.deteccaoAutomatica ? this.ultimoResultado : EstadoIaEnum.NO_AR;
   }
 
   /** Para a rota de leitura do estado (administrador). */
@@ -57,7 +61,7 @@ export class IaService {
   }
 
   /** Lê a configuração, recusa se a IA está desligada (antes de qualquer requisição externa) e resolve nível → modelo. */
-  private async preparar(solicitacao: IaSolicitacao): Promise<{ provedor: IaProvedor; solicitacaoProvedor: IaSolicitacaoProvedor }> {
+  private async preparar(solicitacao: IaSolicitacao): Promise<{ provedor: IaProvedor; solicitacaoProvedor: IaSolicitacaoProvedor; deteccaoAutomatica: boolean }> {
     const configuracao = await this.configuracaoIaService.obterAtiva();
     if (configuracao.iaDesligada) throw new IaException('DESLIGADA', 'A IA está desligada');
 
@@ -67,6 +71,7 @@ export class IaService {
     const { nivel, maximoTokens, ...resto } = solicitacao;
     return {
       provedor,
+      deteccaoAutomatica: configuracao.deteccaoAutomatica,
       solicitacaoProvedor: {
         ...resto,
         modelo: this.modeloDoNivel(nivel, configuracao),
@@ -87,13 +92,13 @@ export class IaService {
     }
   }
 
-  private async executar(solicitacao: IaSolicitacao, chamada: () => Promise<IaRespostaProvedor>): Promise<IaResposta> {
+  private async executar(solicitacao: IaSolicitacao, deteccaoAutomatica: boolean, chamada: () => Promise<IaRespostaProvedor>): Promise<IaResposta> {
     try {
       const resposta = await chamada();
       this.ultimoResultado = EstadoIaEnum.NO_AR;
       return { ...resposta, nivel: solicitacao.nivel };
     } catch (erro) {
-      if (erro instanceof IaException && erro.motivo === 'INDISPONIVEL') this.ultimoResultado = EstadoIaEnum.FORA_DO_AR;
+      if (deteccaoAutomatica && erro instanceof IaException && erro.motivo === 'INDISPONIVEL') this.ultimoResultado = EstadoIaEnum.FORA_DO_AR;
       throw erro;
     }
   }

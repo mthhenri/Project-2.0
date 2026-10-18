@@ -12,6 +12,17 @@
 
 ---
 
+## 2026-10-18 — Task 157: fallback para as telas convencionais e login no chat
+
+Spec em `docs/specs/done/157-fallback-telas-convencionais-e-inicio-no-chat.spec.md`.
+
+- **Detecção automática (achado):** a flag `deteccao_automatica` existia na configuração (task 132) mas o `IaService` ignorava: toda falha `INDISPONIVEL` derrubava o estado. Agora `executar` só marca fora do ar com a flag ligada e `obterEstado` devolve `NO_AR` com ela desligada (só `iaDesligada` troca as telas). 3 testes novos (flag desligada não derruba; desligar depois de uma queda volta ao ar e religar traz a queda de volta; desligamento manual vale sempre).
+- **Login:** `IaDisponibilidadeService.consultar()` (devolve e guarda o estado) e `destinoPosLogin` (puro, 3 testes): retorno válido vence; sem retorno, chat com a IA no ar e `/atividade` sem ela ou sem resposta. **O destino sem IA mudou de `/ponto` para `/atividade`:** desde a task 94 o código mandava para `/ponto` (padrão do `urlRetornoSegura`), embora o autor tenha confirmado `/atividade` como o destino intencional e a spec peça "como hoje"; segui a spec e o autor.
+- **Chat:** os avisos de IA desligada e fora do ar ganharam o botão "Ir para Atividades". O menu (Atividades e Execuções) e o pad editável já seguiam a regra única de `IaDisponibilidadeService`; iniciar/pausar manuais e a descrição da execução nunca dependeram da IA.
+- **Testes:** backend 347 (+3), frontend 35 (+3); builds passam; sem lint (P-001).
+- **Verificado ao vivo (IA real, gestor):** desligando a IA pela configuração, o chat mostrou o aviso com "Ir para Atividades", o menu liberou Atividades, o botão levou a `/atividade` com os botões de iniciar/pausar habilitados; religando, o estado voltou a `NO_AR`. A configuração ganhou as versões 34 (desligada) e 35 (religada) no histórico, iguais à 33 nos demais campos.
+- **Não verificado:** o login de fato levando ao chat e a `/atividade` (exige digitar a senha; só os testes da função pura), a detecção automática com uma queda real do provedor, as telas em 1366×768, 1080×1920 e no tema escuro, e o gate "em até 1 minuto" (o menu atualiza pelo intervalo já existente da barra lateral; testei com a página recarregada).
+
 ## 2026-10-18 — Task 160: janelinha do check-in no Project Desktop
 
 Spec em `docs/specs/done/160-desktop-janelinha-do-checkin.spec.md`. Fecha o Electron (152, 161 e 160).

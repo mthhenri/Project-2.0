@@ -115,3 +115,24 @@ test('estado: provedor sem chave está fora do ar; limite de uso não derruba o 
   await assert.rejects(() => limite.servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.RAPIDO }), IaException);
   assert.equal(await limite.servico.obterEstado(), EstadoIaEnum.NO_AR);
 });
+
+test('detecção automática desligada: a falha do provedor não derruba o estado (só o desligamento manual troca as telas)', async () => {
+  const { servico } = criar({ deteccaoAutomatica: false }, { falha: new IaException('INDISPONIVEL', 'caiu') });
+  await assert.rejects(() => servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.RAPIDO }), IaException);
+  assert.equal(await servico.obterEstado(), EstadoIaEnum.NO_AR);
+});
+
+test('detecção automática desligada depois de uma queda registrada: o estado volta ao ar, e ligar de novo traz a queda de volta', async () => {
+  const { servico, estado } = criar({}, { falha: new IaException('INDISPONIVEL', 'caiu') });
+  await assert.rejects(() => servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.RAPIDO }), IaException);
+  assert.equal(await servico.obterEstado(), EstadoIaEnum.FORA_DO_AR);
+  estado.atual = configuracao({ deteccaoAutomatica: false, versao: 2 });
+  assert.equal(await servico.obterEstado(), EstadoIaEnum.NO_AR);
+  estado.atual = configuracao({ deteccaoAutomatica: true, versao: 3 });
+  assert.equal(await servico.obterEstado(), EstadoIaEnum.FORA_DO_AR);
+});
+
+test('desligar manualmente vale mesmo com a detecção automática desligada', async () => {
+  const { servico } = criar({ deteccaoAutomatica: false, iaDesligada: true });
+  assert.equal(await servico.obterEstado(), EstadoIaEnum.DESLIGADA);
+});

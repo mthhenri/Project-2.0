@@ -12,6 +12,8 @@ import { MessageModule } from 'primeng/message';
 import { AutenticacaoService } from '../../../../core/services/autenticacao.service';
 import { TemaService } from '../../../../core/services/tema.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
+import { IaDisponibilidadeService } from '../../../../core/services/ia-disponibilidade.service';
+import { destinoPosLogin } from '../../../../core/utils/destino-pos-login';
 import { urlRetornoSegura } from '../../../../core/utils/url-retorno';
 import { AutenticacaoLoginDto } from '@project20/shared';
 
@@ -34,6 +36,7 @@ export class LoginPage implements OnInit {
   private readonly autenticacaoService = inject(AutenticacaoService);
   private readonly sessao = inject(UsuarioSessaoService);
   private readonly router = inject(Router);
+  private readonly iaDisponibilidade = inject(IaDisponibilidadeService);
   private readonly rotaAtiva = inject(ActivatedRoute);
   private readonly formBuilder = inject(FormBuilder);
   private readonly elemento = inject<ElementRef<HTMLElement>>(ElementRef);
@@ -100,7 +103,9 @@ export class LoginPage implements OnInit {
       .subscribe({
         next: () => {
           this.guardarUsuarioLembrado(!!lembrar);
-          this.router.navigateByUrl(urlRetornoSegura(this.router, this.rotaAtiva.snapshot.queryParamMap.get('returnUrl')));
+          const retorno = urlRetornoSegura(this.router, this.rotaAtiva.snapshot.queryParamMap.get('returnUrl'));
+          // Com a IA no ar o login cai no chat; senão, no fluxo convencional (a consulta já vai com o token novo).
+          this.iaDisponibilidade.consultar().subscribe((estado) => this.router.navigateByUrl(destinoPosLogin(retorno, estado)));
         },
         error: (erro: HttpErrorResponse) => this.aoFalhar(erro),
       });

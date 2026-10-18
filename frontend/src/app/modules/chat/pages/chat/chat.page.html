@@ -13,11 +13,13 @@
         <p class="chat__aviso" role="status">
           <i class="pi pi-power-off"></i>
           <span>A IA está desligada. Você pode reler a conversa, mas não enviar mensagens. Use as telas convencionais enquanto isso.</span>
+          <p-button class="chat__aviso-acao" label="Ir para Atividades" icon="pi pi-arrow-right" size="small" [text]="true" (onClick)="irParaAtividades()" />
         </p>
       } @else if (iaForaDoAr()) {
         <p class="chat__aviso" role="status">
           <i class="pi pi-exclamation-triangle"></i>
           <span>A IA está fora do ar no momento. Você pode tentar enviar mesmo assim; se não responder, use as telas convencionais.</span>
+          <p-button class="chat__aviso-acao" label="Ir para Atividades" icon="pi pi-arrow-right" size="small" [text]="true" (onClick)="irParaAtividades()" />
         </p>
       }
 
