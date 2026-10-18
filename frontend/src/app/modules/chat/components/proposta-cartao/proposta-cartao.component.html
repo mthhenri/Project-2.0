@@ -71,6 +71,17 @@
           }
         </div>
       }
+      @case (Tipo.CONECTAR_DEMANDA) {
+        <div class="proposta-cartao__resumo">
+          <strong class="proposta-cartao__destaque">
+            {{ texto('demandaOrigemNome') || 'Demanda ' + propostaAtual.dados['demandaOrigemId'] }}
+            <i class="pi" [class.pi-arrow-right]="propostaAtual.dados['ehBidirecional'] !== true" [class.pi-arrows-h]="propostaAtual.dados['ehBidirecional'] === true" aria-hidden="true"></i>
+            {{ texto('demandaDestinoNome') || 'Demanda ' + propostaAtual.dados['demandaDestinoId'] }}
+          </strong>
+          <span class="proposta-cartao__linha">{{ propostaAtual.dados['ehBidirecional'] === true ? 'Conexão nos dois sentidos' : 'Conexão do primeiro para o segundo' }}</span>
+          <span class="proposta-cartao__linha">Motivo: {{ texto('motivo') }}</span>
+        </div>
+      }
       @case (Tipo.INICIAR_EXECUCAO) {
         <div class="proposta-cartao__resumo">
           <strong class="proposta-cartao__destaque">{{ texto('atividadeNome') || 'Atividade ' + propostaAtual.dados['atividadeId'] }}</strong>

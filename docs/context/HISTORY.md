@@ -12,6 +12,18 @@
 
 ---
 
+## 2026-10-18 — Task 156: conexões e lugar na árvore pelo chat
+
+Spec em `docs/specs/done/156-chat-gestor-conexoes-e-lugar.spec.md`. Fecha o bloco 9 e, com ele, o rework do chat com IA (blocos 1 a 10).
+
+- **`sugerir_conexoes_e_lugar`** (leitura, GESTOR, `DemandaModule`): lê a demanda, o grafo do projeto, até 25 outras demandas com a descrição resumida e as conexões da demanda, e faz uma chamada **analítica** com o prompt `CONEXAO_DEMANDA` ativo. A resposta (array JSON) passa por `filtrarSugestoes`, que descarta ids fora do projeto, a própria demanda, conexão que já existe (em qualquer sentido), lugar que não é demanda de estrutura, é o pai atual ou está abaixo da própria demanda (`descendentesDe`), repetidas e o que passar de cinco. Sem outra demanda no projeto nem chama o modelo.
+- **`propor_conectar_demanda`** (GESTOR): só depois do aceite do gestor (a descrição da ferramenta proíbe propor o que ele não aceitou); recusa já na proposta a mesma demanda, a conexão repetida e o ciclo (`validarConexao` e `verificarCriariaCiclo`, as mesmas da service).
+- **`ConectarDemandaExecutor`:** `DemandaService.criarConexao` (repete as checagens; a service não confere o tipo do usuário, quem barrava era o `@GestorOnly` da rota, então o executor confere); desfazer chama `excluirConexao` (soft delete). Cartão com origem → destino (ou ↔), sentido e motivo.
+- **Decisões:** a IA não move demanda na árvore (`LUGAR` é só sugestão, como a spec decidiu); sem versão nova do prompt `CONEXAO_DEMANDA` (decisão da task 131).
+- **Testes:** backend 402 (+15: filtro e contexto das sugestões, executor, ciclo e duplicada, desfazer, só gestor, nível analítico e prompt, sugestão que não vira proposta); builds passam; sem lint (P-001).
+- **Verificado ao vivo (IA real, gestor):** com uma demanda de teste "Relatório de parceiros" no projeto GR, a análise da "Novo cadastro" **sem descrição** devolveu `[]` (a IA disse que não havia sugestão, certo para quem não tem fundamento); com descrições, sugeriu uma conexão para o relatório com motivo apoiado nos textos, **sem propor nada** e perguntando; ao "sim, aceito" propôs (proposta 37), confirmar criou a conexão no grafo, uma conexão no sentido oposto foi recusada pelo **ciclo** e uma repetida pela **duplicidade**, ambas com mensagem clara e sem cartão; o cartão aparece como "Confirmada" e desfazer removeu a conexão do grafo. Depois exclui a demanda de teste e limpei as descrições que pus na "Novo cadastro" (voltaram a vazias). Um código de depuração temporário gravava a resposta bruta do modelo em arquivo para eu ver por que a primeira análise veio vazia; foi removido.
+- **Não verificado:** sugestão de `LUGAR` na aplicação real (o projeto de teste não tinha estrutura alternativa), conexão bidirecional ao vivo, projetos grandes (o corte de 25 demandas), o cartão em 1366×768, 1080×1920 e tema escuro.
+
 ## 2026-10-18 — Task 155: entrevista de demanda pelo chat
 
 Spec em `docs/specs/done/155-chat-gestor-entrevista-de-demanda.spec.md`.

@@ -10,6 +10,9 @@ import { ExecutorPropostaIaRegistro } from '../proposta-ia/domain/executor-propo
 import { PropostaIaModule } from '../proposta-ia/proposta-ia.module';
 import { ProjetoModule } from '../projeto/projeto.module';
 import { CriarDemandaExecutor } from './executores/criar-demanda.executor';
+import { ConectarDemandaExecutor } from './executores/conectar-demanda.executor';
+import { ProporConectarDemandaFerramenta } from './ferramentas/propor-conectar-demanda.ferramenta';
+import { SugerirConexoesELugarFerramenta } from './ferramentas/sugerir-conexoes-e-lugar.ferramenta';
 import { IaModule } from '../ia/ia.module';
 import { PromptModule } from '../prompt/prompt.module';
 import { DescreverDemandaExecutor } from './executores/descrever-demanda.executor';
@@ -22,7 +25,7 @@ import { ProporCriarDemandaFerramenta } from './ferramentas/propor-criar-demanda
 @Module({
   imports:     [TagModule, UsuarioModule, FerramentaIaModule, PropostaIaModule, ProjetoModule, IaModule, PromptModule],
   controllers: [DemandaController],
-  providers:   [DemandaService, DemandaRepository, ListarMinhasDemandasFerramenta, ListarDemandasDoProjetoFerramenta, ConsultarGrafoDoProjetoFerramenta, ProporCriarDemandaFerramenta, CriarDemandaExecutor, ProporDescreverDemandaFerramenta, DescreverDemandaExecutor],
+  providers:   [DemandaService, DemandaRepository, ListarMinhasDemandasFerramenta, ListarDemandasDoProjetoFerramenta, ConsultarGrafoDoProjetoFerramenta, ProporCriarDemandaFerramenta, CriarDemandaExecutor, ProporDescreverDemandaFerramenta, DescreverDemandaExecutor, SugerirConexoesELugarFerramenta, ProporConectarDemandaFerramenta, ConectarDemandaExecutor],
   exports:     [DemandaService, DemandaRepository],
 })
 export class DemandaModule implements OnModuleInit {
@@ -36,6 +39,9 @@ export class DemandaModule implements OnModuleInit {
     private readonly criarDemandaExecutor: CriarDemandaExecutor,
     private readonly proporDescreverDemanda: ProporDescreverDemandaFerramenta,
     private readonly descreverDemandaExecutor: DescreverDemandaExecutor,
+    private readonly sugerirConexoesELugar: SugerirConexoesELugarFerramenta,
+    private readonly proporConectarDemanda: ProporConectarDemandaFerramenta,
+    private readonly conectarDemandaExecutor: ConectarDemandaExecutor,
   ) {}
 
   /** As ferramentas de IA do domínio de demanda se registram aqui. */
@@ -47,5 +53,8 @@ export class DemandaModule implements OnModuleInit {
     this.registroDeExecutores.registrar(this.criarDemandaExecutor);
     this.registroDeFerramentas.registrar(this.proporDescreverDemanda);
     this.registroDeExecutores.registrar(this.descreverDemandaExecutor);
+    this.registroDeFerramentas.registrar(this.sugerirConexoesELugar);
+    this.registroDeFerramentas.registrar(this.proporConectarDemanda);
+    this.registroDeExecutores.registrar(this.conectarDemandaExecutor);
   }
 }
