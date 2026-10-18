@@ -21,11 +21,13 @@ import { ConsultarGrafoDoProjetoFerramenta } from './ferramentas/consultar-grafo
 import { ListarDemandasDoProjetoFerramenta } from './ferramentas/listar-demandas-do-projeto.ferramenta';
 import { ListarMinhasDemandasFerramenta } from './ferramentas/listar-minhas-demandas.ferramenta';
 import { ProporCriarDemandaFerramenta } from './ferramentas/propor-criar-demanda.ferramenta';
+import { AlterarDemandaExecutor } from './executores/alterar-demanda.executor';
+import { ProporAlterarDemandaFerramenta } from './ferramentas/propor-alterar-demanda.ferramenta';
 
 @Module({
   imports:     [TagModule, UsuarioModule, FerramentaIaModule, PropostaIaModule, ProjetoModule, IaModule, PromptModule],
   controllers: [DemandaController],
-  providers:   [DemandaService, DemandaRepository, ListarMinhasDemandasFerramenta, ListarDemandasDoProjetoFerramenta, ConsultarGrafoDoProjetoFerramenta, ProporCriarDemandaFerramenta, CriarDemandaExecutor, ProporDescreverDemandaFerramenta, DescreverDemandaExecutor, SugerirConexoesELugarFerramenta, ProporConectarDemandaFerramenta, ConectarDemandaExecutor],
+  providers:   [DemandaService, DemandaRepository, ListarMinhasDemandasFerramenta, ListarDemandasDoProjetoFerramenta, ConsultarGrafoDoProjetoFerramenta, ProporCriarDemandaFerramenta, CriarDemandaExecutor, ProporDescreverDemandaFerramenta, DescreverDemandaExecutor, SugerirConexoesELugarFerramenta, ProporConectarDemandaFerramenta, ConectarDemandaExecutor, ProporAlterarDemandaFerramenta, AlterarDemandaExecutor],
   exports:     [DemandaService, DemandaRepository],
 })
 export class DemandaModule implements OnModuleInit {
@@ -42,6 +44,8 @@ export class DemandaModule implements OnModuleInit {
     private readonly sugerirConexoesELugar: SugerirConexoesELugarFerramenta,
     private readonly proporConectarDemanda: ProporConectarDemandaFerramenta,
     private readonly conectarDemandaExecutor: ConectarDemandaExecutor,
+    private readonly proporAlterarDemanda: ProporAlterarDemandaFerramenta,
+    private readonly alterarDemandaExecutor: AlterarDemandaExecutor,
   ) {}
 
   /** As ferramentas de IA do domínio de demanda se registram aqui. */
@@ -56,5 +60,7 @@ export class DemandaModule implements OnModuleInit {
     this.registroDeFerramentas.registrar(this.sugerirConexoesELugar);
     this.registroDeFerramentas.registrar(this.proporConectarDemanda);
     this.registroDeExecutores.registrar(this.conectarDemandaExecutor);
+    this.registroDeFerramentas.registrar(this.proporAlterarDemanda);
+    this.registroDeExecutores.registrar(this.alterarDemandaExecutor);
   }
 }

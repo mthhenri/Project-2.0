@@ -65,6 +65,29 @@
           }
         </div>
       }
+      @case (Tipo.ALTERAR_DEMANDA) {
+        <div class="proposta-cartao__resumo">
+          <strong class="proposta-cartao__destaque">{{ texto('demandaNome') || 'Demanda ' + propostaAtual.dados['demandaId'] }}</strong>
+          @if (texto('projetoNome')) {
+            <span class="proposta-cartao__linha">Projeto: {{ texto('projetoNome') }}</span>
+          }
+          @if (texto('nome')) {
+            <span class="proposta-cartao__linha">Novo nome: {{ texto('nome') }}</span>
+          }
+          @if (texto('statusAnterior')) {
+            <span class="proposta-cartao__linha">Status: {{ rotuloDoStatusDaDemanda('statusAnterior') }} → {{ rotuloDoStatusDaDemanda('status') }}</span>
+          }
+          @if (propostaAtual.dados['horasAnteriores'] !== undefined) {
+            <span class="proposta-cartao__linha">Horas estimadas: {{ numero('horasAnteriores') }}h → {{ numero('horasEstimadas') }}h</span>
+          }
+          @if (propostaAtual.dados['previsaoAnteriorData'] !== undefined) {
+            <span class="proposta-cartao__linha">Previsão de término: {{ dataBr(texto('previsaoAnteriorData')) || 'sem previsão' }} → {{ dataBr(texto('previsaoFimData')) }}</span>
+          }
+          @if (numero('atividadesEmAberto') > 0) {
+            <span class="proposta-cartao__aviso"><i class="pi pi-exclamation-triangle"></i>Ainda há {{ numero('atividadesEmAberto') }} {{ numero('atividadesEmAberto') === 1 ? 'atividade' : 'atividades' }} em aberto nesta demanda.</span>
+          }
+        </div>
+      }
       @case (Tipo.CRIAR_PROJETO) {
         <div class="proposta-cartao__resumo">
           <strong class="proposta-cartao__destaque">{{ texto('nome') }}</strong>

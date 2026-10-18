@@ -12,6 +12,17 @@
 
 ---
 
+## 2026-10-18 — Task 167: IA propõe alterar demanda (nome, status, horas, previsão) — verificação visual pendente
+
+Task 166 fechada (validada pelo autor); spec movida para `done/`.
+
+- **Tipo `ALTERAR_DEMANDA`** (migration `0041`, aplicada no banco de dev), só gestor. `propor_alterar_demanda` lê a demanda com o usuário do token, descarta o que já está igual, recusa nome vazio e guarda os valores de antes. Ao propor **concluir**, conta as atividades ainda abertas (`DemandaRepository.contarAtividadesEmAberto`) e o cartão avisa; a regra de hoje não bloqueia concluir, e a IA também não.
+- **Executor:** altera pela `DemandaService.alterar` (acesso e regras da tela); guarda antes e aplicado; desfazer devolve o anterior, inclusive **limpa a previsão** que não existia (`null`), e é recusado se a demanda mudou depois; obsoleta se já está como pedido. Confere o tipo gestor também no executor.
+- **Cartão do chat:** resumo com antes → depois (status, horas, previsão) e o aviso de atividades abertas. Sem "Ajustar".
+- **Fora:** `demandaPaiId` (segue pela 156), descrições (`DESCREVER_DEMANDA`), conexões, excluir.
+- **Testes:** backend 464 (+8); builds de shared, backend e frontend passam; o backend sobe sem erro de injeção.
+- **Pendente (spec fica em `active`):** o cartão não foi visto renderizado e a conversa real ("conclui a demanda X", "muda a previsão") não foi testada.
+
 ## 2026-10-18 — Lacuna achada em teste: IA só age pelo próprio usuário (spec 169)
 
 O autor pediu à IA "cria uma atividade para ele naquela demanda" (falando de outro usuário) e ela recusou. Confere com o código: as ferramentas de ação (`propor_criar_atividade`, iniciar e pausar execução, consultar execução ativa, listar atividades) só atuam sobre o usuário do token, enquanto as telas deixam gestor e administrador criar atividade para outro (`AtividadeCriarDto.usuarioId`) e iniciar e encerrar a execução de qualquer atividade. Não estava no mapa de lacunas (o mapa olhou *o que* a tela faz, não *para quem*). Spec **169** no backlog (bloco 11); sem código.

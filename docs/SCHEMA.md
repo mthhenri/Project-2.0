@@ -709,7 +709,7 @@ Seeds (`codigo` → `descricao`):
 | `tipo_dia_nao_util` | FERIADO→"Feriado", RECESSO→"Recesso", PONTO_FACULTATIVO→"Ponto facultativo" |
 | `tipo_dia_nao_util_duracao` | INTEGRAL→"Integral", MEIO_PERIODO→"Meio período" |
 | `tipo_atividade_prioridade` | URGENTE (1, `#dc2626`), ALTA (2, `#f97316`), MEDIA (3, `#eab308`), BAIXA (4, `#0ea5e9`), INDEFINIDA (5, `#94a3b8`), com `ordem` INTEGER (única entre as ativas) e `cor` VARCHAR(7) além do molde; só a `cor` é editável, só pelo administrador (migration `0036`) |
-| `tipo_proposta_ia` | INICIAR_EXECUCAO, PAUSAR_EXECUCAO, CRIAR_ATIVIDADE, DESCREVER_EXECUCAO, SUSPENDER_CHECKIN, ANOTAR_PAD, CRIAR_DEMANDA, DESCREVER_DEMANDA, CONECTAR_DEMANDA (migration `0035`; `CRIAR_PROJETO` na `0037`; `ALTERAR_ATIVIDADE` na `0039`; `REGISTRAR_EXECUCAO` e `CORRIGIR_EXECUCAO` na `0040`; sem tipo de exclusão) |
+| `tipo_proposta_ia` | INICIAR_EXECUCAO, PAUSAR_EXECUCAO, CRIAR_ATIVIDADE, DESCREVER_EXECUCAO, SUSPENDER_CHECKIN, ANOTAR_PAD, CRIAR_DEMANDA, DESCREVER_DEMANDA, CONECTAR_DEMANDA (migration `0035`; `CRIAR_PROJETO` na `0037`; `ALTERAR_ATIVIDADE` na `0039`; `REGISTRAR_EXECUCAO` e `CORRIGIR_EXECUCAO` na `0040`; `ALTERAR_DEMANDA` na `0041`; sem tipo de exclusão) |
 | `tipo_proposta_ia_status` | PENDENTE, CONFIRMADA, AJUSTADA, EXPIRADA (também a recusada), DESFEITA (migration `0035`) |
 | `tipo_prompt` | CONVERSA, CHECKIN, DESCRICAO_EXECUCAO, PAD, PRIORIDADE, ENTREVISTA_DEMANDA, CONEXAO_DEMANDA (migration `0034`; a lista cresce por migration) |
 | `tipo_provedor_ia` | ANTHROPIC→"Anthropic", GOOGLE→"Google", OPENAI→"OpenAI" (migration `0033`; só ANTHROPIC terá implementação) |

@@ -602,6 +602,21 @@ export class DemandaRepository extends BaseRepository<Demanda> {
     return resultado[0].existe;
   }
 
+  /** Quantas atividades ativas da demanda ainda não estão desenvolvidas (a IA avisa ao propor concluir a demanda). */
+  async contarAtividadesEmAberto(dto: DemandaRecuperarDto): Promise<number> {
+    const resultado = await this.executarConsulta<{ total: number }>(
+      `SELECT COUNT(*)::int AS total
+       FROM atividade
+       INNER JOIN tipo_atividade_status
+         ON tipo_atividade_status.id = atividade.tipo_atividade_status_id
+       WHERE atividade.demanda_id = :demandaId
+         AND atividade.is_deleted = false
+         AND tipo_atividade_status.codigo <> 'DESENVOLVIDA'`,
+      { demandaId: dto.id },
+    );
+    return resultado[0].total;
+  }
+
   /** Soft delete da demanda. */
   async excluir(dto: DemandaExcluirDto): Promise<void> {
     await this.executarSoftDelete(dto.id);

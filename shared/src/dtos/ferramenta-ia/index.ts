@@ -31,6 +31,7 @@ export * from './ProporPausarExecucaoDto';
 export * from './ProporAlterarAtividadeDto';
 export * from './ProporRegistrarExecucaoDto';
 export * from './ProporCorrigirExecucaoDto';
+export * from './ProporAlterarDemandaDto';
 export * from './PontoDoDiaConsultarDto';
 export * from './PontoDoMesConsultarDto';
 export * from './DiasNaoUteisConsultarDto';

@@ -37,6 +37,7 @@ export const ROTULO_TIPO_PROPOSTA: Record<TipoPropostaIaEnum, string> = {
   [TipoPropostaIaEnum.ALTERAR_ATIVIDADE]: 'Alterar atividade',
   [TipoPropostaIaEnum.REGISTRAR_EXECUCAO]: 'Registrar execução',
   [TipoPropostaIaEnum.CORRIGIR_EXECUCAO]: 'Corrigir execução',
+  [TipoPropostaIaEnum.ALTERAR_DEMANDA]: 'Alterar demanda',
   [TipoPropostaIaEnum.CRIAR_PROJETO]: 'Criar projeto',
   [TipoPropostaIaEnum.DESCREVER_EXECUCAO]: 'Descrever execução',
   [TipoPropostaIaEnum.SUSPENDER_CHECKIN]: 'Suspender check-ins',

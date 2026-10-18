@@ -33,6 +33,14 @@ import {
  * dados como pares e só oferecem Confirmar e Recusar até ganharem o resumo deles.
  * Nada roda sem o clique de Confirmar. Um 409 (já resolvida em outro lugar) recarrega o cartão.
  */
+/** Status de demanda como as telas os mostram. */
+const ROTULO_STATUS_DA_DEMANDA: Record<string, string> = {
+  PENDENTE: 'Pendente',
+  PLANEJADA: 'Planejada',
+  CONCLUIDA: 'Concluída',
+  CANCELADA: 'Cancelada',
+};
+
 @Component({
   selector: 'app-chat-proposta-cartao',
   standalone: true,
@@ -132,6 +140,16 @@ export class PropostaCartaoComponent {
   rotuloDoStatus(chave: string): string {
     const codigo = this.texto(chave);
     return ATIVIDADE_STATUS_OPCOES.find((opcao) => opcao.value === codigo)?.label ?? '';
+  }
+
+  /** Rótulo de um status de demanda guardado na proposta (vazio se não houver). */
+  rotuloDoStatusDaDemanda(chave: string): string {
+    return ROTULO_STATUS_DA_DEMANDA[this.texto(chave)] ?? '';
+  }
+
+  /** `yyyy-mm-dd` como `dd/mm/aaaa` (vazio se não houver). */
+  dataBr(data: string): string {
+    return data ? data.slice(0, 10).split('-').reverse().join('/') : '';
   }
 
   /** Um dado numérico da proposta (0 se não houver). */
