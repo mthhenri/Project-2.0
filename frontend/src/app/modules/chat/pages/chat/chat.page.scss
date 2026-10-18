@@ -125,22 +125,20 @@
     font-size: 0.875rem;
   }
 
+  // A conversa é uma coluna centralizada, sem moldura: só ela rola; o rodapé (sugestões, campo, legenda) fica sempre à vista.
   &__conversa {
     position: relative;
     flex: 1;
     min-height: 0;
     display: flex;
     flex-direction: column;
-    border: 1px solid var(--app-surface-200);
-    border-radius: 8px;
-    background: var(--app-surface-0);
   }
 
   &__mensagens {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    padding: 1.25rem;
+    padding: 0.5rem 0 1rem;
   }
 
   // O conteúdo que cresce (resposta chegando, cartões carregando): o que se observa para acompanhar o fim.
@@ -148,7 +146,9 @@
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    max-width: 48rem;
     min-height: 100%;
+    margin: 0 auto;
   }
 
   &__esqueleto {
@@ -167,25 +167,34 @@
     text-align: center;
     color: var(--p-text-muted-color);
 
-    i {
-      font-size: 2rem;
-    }
-
     p {
-      margin: 0;
+      margin: 0.5rem 0 0;
       font-weight: 600;
       color: var(--p-text-color);
     }
   }
 
+  &__avatar {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.875rem;
+    height: 1.875rem;
+    border-radius: 8px;
+    background: var(--p-surface-900);
+    color: #fff;
+    font-size: 0.6875rem;
+    font-weight: 700;
+  }
+
   &__linha {
     display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.75rem;
     max-width: 100%;
 
     &--usuario {
-      align-items: flex-end;
+      justify-content: flex-end;
     }
 
     &--ia {
@@ -193,75 +202,154 @@
     }
 
     &--sistema {
-      align-items: center;
+      justify-content: center;
+    }
+  }
+
+  // A mensagem da IA não tem balão: o texto corre ao lado do avatar, com o selo do nível e os cartões abaixo.
+  &__ia-conteudo {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.625rem;
+    overflow-wrap: anywhere;
+
+    > app-chat-proposta-cartao {
+      align-self: stretch;
     }
   }
 
   &__balao {
-    max-width: min(46rem, 85%);
+    max-width: 72%;
     padding: 0.625rem 0.875rem;
-    border-radius: 12px;
+    border-radius: 14px 14px 4px 14px;
+    background: var(--p-primary-600);
+    color: var(--p-primary-contrast-color);
+    line-height: 1.45;
+    white-space: pre-wrap;
     overflow-wrap: anywhere;
-
-    &--usuario {
-      white-space: pre-wrap;
-      background: var(--p-primary-600);
-      color: var(--p-primary-contrast-color);
-      border-bottom-right-radius: 4px;
-    }
-
-    &--ia {
-      border: 1px solid var(--app-surface-200);
-      background: var(--app-surface-50);
-      border-bottom-left-radius: 4px;
-    }
-
-    &--ao-vivo {
-      border-style: dashed;
-    }
   }
 
-  &__nivel,
+  &__nivel {
+    padding: 1px 0.5rem;
+    border-radius: 999px;
+    background: var(--app-surface-100);
+    color: var(--p-text-muted-color);
+    font-size: 0.6875rem;
+    font-weight: 600;
+  }
+
   &__ferramenta {
     display: inline-flex;
     align-items: center;
     gap: 0.375rem;
-    margin-top: 0.375rem;
     color: var(--p-text-muted-color);
-    font-size: 0.75rem;
-  }
-
-  &__cartao {
-    display: block;
-    width: min(46rem, 85%);
+    font-size: 0.8125rem;
   }
 
   &__sistema {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+    justify-content: center;
     gap: 0.5rem;
-    padding: 0.5rem 0.875rem;
-    border-radius: 8px;
+    padding: 0.375rem 0.875rem;
+    border-radius: 999px;
     border: 1px solid color-mix(in srgb, var(--p-orange-500) 45%, var(--app-surface-200));
-    font-size: 0.875rem;
+    font-size: 0.8125rem;
   }
 
   &__ir-para-o-fim {
     position: absolute;
     right: 1.25rem;
-    bottom: 1rem;
+    bottom: 0.5rem;
+  }
+
+  &__rodape {
+    width: 100%;
+    max-width: 48rem;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__sugestoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  &__sugestao {
+    min-height: 2.125rem;
+    padding: 0 0.75rem;
+    border: 1px solid var(--app-surface-300);
+    border-radius: 999px;
+    background: var(--app-surface-0);
+    color: var(--p-text-color);
+    font: inherit;
+    font-size: 0.8125rem;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--app-surface-100);
+    }
   }
 
   &__entrada {
     display: flex;
     align-items: flex-end;
-    gap: 0.75rem;
+    gap: 0.625rem;
+    padding: 0.625rem 0.625rem 0.625rem 1rem;
+    border: 1px solid var(--app-surface-300);
+    border-radius: 14px;
+    background: var(--app-surface-0);
+
+    &:focus-within {
+      border-color: var(--p-primary-500);
+    }
   }
 
+  // O campo se funde à moldura arredondada do formulário.
   &__campo {
     flex: 1;
     max-height: 10rem;
     resize: none;
+    padding: 0.25rem 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    outline: none;
+  }
+
+  &__enviar {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: none;
+    border-radius: 10px;
+    background: var(--p-primary-600);
+    color: var(--p-primary-contrast-color);
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      background: var(--p-primary-700);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &__legenda {
+    color: var(--p-text-muted-color);
+    font-size: 0.75rem;
+    text-align: center;
   }
 }

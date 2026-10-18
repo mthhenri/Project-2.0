@@ -90,6 +90,9 @@ export class ChatPage implements OnInit {
   readonly iaDesligada = computed(() => this.disponibilidade() === EstadoIaEnum.DESLIGADA);
   readonly iaForaDoAr = computed(() => this.disponibilidade() === EstadoIaEnum.FORA_DO_AR);
   readonly podeEnviar = computed(() => !this.enviando() && !this.iaDesligada() && this.textoDigitado().trim() !== '');
+  /** Atalhos acima do campo: só com o campo vazio e a IA livre para receber. */
+  readonly sugestoes = ['Que dia e hora são agora?', 'O que eu posso fazer por aqui?'];
+  readonly podeSugerir = computed(() => !this.enviando() && !this.iaDesligada() && this.textoDigitado().trim() === '');
   /** A última mensagem é a do sistema (falha): oferece "Tentar de novo". */
   readonly ultimaFoiFalha = computed(() => this.mensagens().at(-1)?.autor === AutorChatEnum.SISTEMA && !this.enviando());
   private contadorLocal = 0;

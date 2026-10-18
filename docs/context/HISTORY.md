@@ -12,6 +12,14 @@
 
 ---
 
+## 2026-10-17 — Visual do chat aproximado do protótipo (artefato de design)
+
+Pedido do autor depois da task 139. Só apresentação (`chat.page.{html,scss,ts}` e `proposta-cartao`), sem mudar comportamento: conversa em coluna centralizada de 48rem e sem moldura; mensagem da IA sem balão, com avatar quadrado escuro "IA" e selo do nível (rápido/padrão/analítico) acima do texto; balão do usuário azul com canto inferior direito reto; falha do sistema como pílula centralizada; cartão de proposta com raio 12, rótulo "PROPOSTA · tipo" em maiúsculas e botões Confirmar (cheio) e Recusar (contorno); rodapé com chips de sugestão (só com o campo vazio e a IA livre), campo arredondado com botão quadrado azul de seta e a legenda "A IA sempre pede confirmação antes de criar, iniciar, pausar ou anotar.".
+
+- **Decisão minha:** os chips são dois atalhos fixos ("Que dia e hora são agora?", "O que eu posso fazer por aqui?"), porque as ferramentas de negócio (blocos 6 e 9) ainda não existem; os do protótipo ("O que eu tenho pra fazer?"…) dependem delas. O botão "Ajustar" do protótipo continua de fora (parcial desde a 139).
+- **Verificado ao vivo** (app em execução do autor, conversa real): 1920×1080 claro, 1366×768 escuro e 1080×1920 (a emulação de tema escuro do navegador não afeta o app; o escuro foi pelo botão do cabeçalho). Build do frontend passa; o `chat.page.scss` estourou o orçamento de 4 kB (4,96 kB), aviso como o do calendário.
+- **Não verificado:** cartões de proposta no novo estilo com dados reais (não há executores ainda), erro de rede e IA desligada/fora do ar no novo layout, e os chips no clique.
+
 ## 2026-10-17 — Ajuste do menu: Chat depois de Demandas e telas substituídas pelo chat
 
 Pedido do autor depois da task 139: o item Chat vai logo depois de Demandas; para o desenvolvedor, Atividades e Execuções ficam desabilitadas; para gestor e administrador, só Atividades. `ItemNavegacao` ganhou `substituidoPelaIa` (`TODOS` em Atividades, `SOMENTE_DESENVOLVEDOR` em Execuções),

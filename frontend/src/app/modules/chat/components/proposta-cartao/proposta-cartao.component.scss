@@ -4,7 +4,7 @@
   gap: 0.625rem;
   padding: 0.875rem 1rem;
   border: 1px solid color-mix(in srgb, var(--p-primary-500) 35%, var(--app-surface-200));
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--app-surface-0);
 
   &--erro {
@@ -24,10 +24,10 @@
   }
 
   &__titulo {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    font-size: 0.75rem;
     font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
     color: var(--p-primary-600);
   }
 
@@ -51,7 +51,6 @@
   &__acoes {
     display: flex;
     flex-wrap: wrap;
-    justify-content: flex-end;
     gap: 0.5rem;
   }
 }
