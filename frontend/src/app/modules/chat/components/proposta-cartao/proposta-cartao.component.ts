@@ -65,6 +65,9 @@ export class PropostaCartaoComponent {
   readonly formularioAjuste = new FormGroup({
     nome: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.minLength(3), Validators.maxLength(255)] }),
     descricao: new FormControl('', { nonNullable: true }),
+    /** Na descrição da demanda: os dois textos em Markdown (cada um só vale se a proposta o trouxe). */
+    descricaoCliente: new FormControl('', { nonNullable: true }),
+    descricaoTecnica: new FormControl('', { nonNullable: true }),
     /** No projeto proposto: o código único (a IA derivou um do nome). */
     codigo: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.minLength(2), Validators.maxLength(50)] }),
     prioridade: new FormControl<TipoAtividadePrioridadeEnum>(TipoAtividadePrioridadeEnum.INDEFINIDA, { nonNullable: true }),
@@ -79,6 +82,7 @@ export class PropostaCartaoComponent {
     TipoPropostaIaEnum.CRIAR_ATIVIDADE,
     TipoPropostaIaEnum.CRIAR_PROJETO,
     TipoPropostaIaEnum.CRIAR_DEMANDA,
+    TipoPropostaIaEnum.DESCREVER_DEMANDA,
     TipoPropostaIaEnum.INICIAR_EXECUCAO,
     TipoPropostaIaEnum.PAUSAR_EXECUCAO,
     TipoPropostaIaEnum.ANOTAR_PAD,
@@ -147,6 +151,8 @@ export class PropostaCartaoComponent {
     this.formularioAjuste.reset({
       nome: this.texto('nome'),
       codigo: this.texto('codigo'),
+      descricaoCliente: this.texto('descricaoCliente'),
+      descricaoTecnica: this.texto('descricaoTecnica'),
       descricao: atual.tipo === TipoPropostaIaEnum.ANOTAR_PAD ? textoDoPad : this.texto('descricao'),
       atividadeSeguinteId: this.numero('atividadeSeguinteId') || null,
       prioridade: (this.texto('prioridade') || TipoAtividadePrioridadeEnum.INDEFINIDA) as TipoAtividadePrioridadeEnum,
@@ -185,6 +191,17 @@ export class PropostaCartaoComponent {
       dados['nome'] = valores.nome.trim();
       if (atual.tipo === TipoPropostaIaEnum.CRIAR_ATIVIDADE) dados['prioridade'] = valores.prioridade;
       if (ehProjeto) dados['codigo'] = valores.codigo.trim().toUpperCase();
+    } else if (atual.tipo === TipoPropostaIaEnum.DESCREVER_DEMANDA) {
+      // Só os campos que a proposta trouxe: um campo ausente não é alterado na demanda; esvaziar um que veio não é um ajuste válido.
+      const cliente = valores.descricaoCliente.trim();
+      const tecnica = valores.descricaoTecnica.trim();
+      if ((this.texto('descricaoCliente') && !cliente) || (this.texto('descricaoTecnica') && !tecnica)) {
+        this.formularioAjuste.controls.descricaoCliente.markAsTouched();
+        this.formularioAjuste.controls.descricaoTecnica.markAsTouched();
+        return;
+      }
+      if (this.texto('descricaoCliente')) dados['descricaoCliente'] = cliente;
+      if (this.texto('descricaoTecnica')) dados['descricaoTecnica'] = tecnica;
     } else if (atual.tipo === TipoPropostaIaEnum.INICIAR_EXECUCAO) {
       dados['descricao'] = valores.descricao.trim();
     } else if (atual.tipo === TipoPropostaIaEnum.DESCREVER_EXECUCAO) {

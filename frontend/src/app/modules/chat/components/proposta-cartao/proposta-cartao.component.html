@@ -55,6 +55,22 @@
           }
         </div>
       }
+      @case (Tipo.DESCREVER_DEMANDA) {
+        <div class="proposta-cartao__resumo">
+          <strong class="proposta-cartao__destaque">{{ texto('demandaNome') || 'Demanda ' + propostaAtual.dados['demandaId'] }}</strong>
+          @if (texto('projetoNome')) {
+            <span class="proposta-cartao__linha">Projeto: {{ texto('projetoNome') }}</span>
+          }
+          @if (texto('descricaoCliente')) {
+            <span class="proposta-cartao__linha">Descrição do cliente</span>
+            <div class="proposta-cartao__trecho proposta-cartao__trecho--depois"><app-markdown-visualizador [texto]="texto('descricaoCliente')" /></div>
+          }
+          @if (texto('descricaoTecnica')) {
+            <span class="proposta-cartao__linha">Descrição técnica</span>
+            <div class="proposta-cartao__trecho proposta-cartao__trecho--depois"><app-markdown-visualizador [texto]="texto('descricaoTecnica')" /></div>
+          }
+        </div>
+      }
       @case (Tipo.INICIAR_EXECUCAO) {
         <div class="proposta-cartao__resumo">
           <strong class="proposta-cartao__destaque">{{ texto('atividadeNome') || 'Atividade ' + propostaAtual.dados['atividadeId'] }}</strong>
@@ -168,6 +184,21 @@
             <input pInputText id="ajuste-codigo-{{ propostaAtual.id }}" formControlName="codigo" maxlength="50" class="w-full" />
             @if (formularioAjuste.controls.codigo.touched && formularioAjuste.controls.codigo.invalid) {
               <small class="proposta-cartao__erro-campo">Informe um código com ao menos 2 caracteres</small>
+            }
+          }
+        } @else if (propostaAtual.tipo === Tipo.DESCREVER_DEMANDA) {
+          @if (texto('descricaoCliente')) {
+            <label class="proposta-cartao__rotulo" for="ajuste-cliente-{{ propostaAtual.id }}">Descrição do cliente (Markdown)</label>
+            <textarea pTextarea id="ajuste-cliente-{{ propostaAtual.id }}" formControlName="descricaoCliente" rows="5" [autoResize]="true" class="w-full"></textarea>
+            @if (formularioAjuste.controls.descricaoCliente.touched && formularioAjuste.controls.descricaoCliente.value.trim() === '') {
+              <small class="proposta-cartao__erro-campo">A descrição não pode ficar vazia</small>
+            }
+          }
+          @if (texto('descricaoTecnica')) {
+            <label class="proposta-cartao__rotulo" for="ajuste-tecnica-{{ propostaAtual.id }}">Descrição técnica (Markdown)</label>
+            <textarea pTextarea id="ajuste-tecnica-{{ propostaAtual.id }}" formControlName="descricaoTecnica" rows="5" [autoResize]="true" class="w-full"></textarea>
+            @if (formularioAjuste.controls.descricaoTecnica.touched && formularioAjuste.controls.descricaoTecnica.value.trim() === '') {
+              <small class="proposta-cartao__erro-campo">A descrição não pode ficar vazia</small>
             }
           }
         } @else if (propostaAtual.tipo === Tipo.DESCREVER_EXECUCAO) {

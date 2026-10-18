@@ -12,6 +12,19 @@
 
 ---
 
+## 2026-10-18 — Task 155: entrevista de demanda pelo chat
+
+Spec em `docs/specs/done/155-chat-gestor-entrevista-de-demanda.spec.md`.
+
+- **Ferramenta `propor_descrever_demanda`** (`DemandaModule`, GESTOR, `ProporDescreverDemandaDto`): a IA entrevista o gestor no chat (a descrição da ferramenta manda perguntar o que o cliente pediu e o que será feito, uma coisa de cada vez, e nunca inventar) e chama a ferramenta com o relato dele. A redação é uma chamada **analítica** à parte (`NIVEL_DO_TIPO_DE_PROMPT`): prompt `ENTREVISTA_DEMANDA` ativo + `montarInstrucoesDeRedacaoDaDemanda` (Markdown, só o relato, incorpora a descrição atual) e a resposta é um objeto JSON (`interpretarRedacaoDaDemanda`). Só o campo com relato é redigido (o outro não é inventado nem alterado); resposta ilegível ou relato vazio recusam a proposta sem criar cartão.
+- **Executor `DESCREVER_DEMANDA`:** `DemandaService.alterar` com o usuário do token (descrição do cliente é só do gestor, regra da service); resultado guarda o anterior e o gravado; desfazer restaura cada campo apenas se o texto atual ainda é o gravado pela IA (senão `BusinessException` e nada muda).
+- **Cartão:** as duas descrições renderizadas em Markdown e "Ajustar" com uma caixa de texto por descrição (só as que a proposta trouxe; esvaziar uma não é válido).
+- **Decisão:** o prompt `ENTREVISTA_DEMANDA` não ganhou versão nova de seed (já existe desde a `0034` e a decisão da task 131 evita sobrescrever a versão ativa do administrador).
+- **Testes:** backend 387 (+12: redação pura, executor, desfazer seguro e inseguro, nível analítico e prompt certo, só o campo com relato, sem relato); builds de backend e frontend passam; sem lint (P-001).
+- **Verificado ao vivo (IA real, gestor):** com a demanda "Novo cadastro" do projeto GR, o relato do gestor virou a proposta 36 em uma chamada de `propor_descrever_demanda`; o cartão mostrou as duas descrições em Markdown (títulos, listas e negrito) e o "Ajustar" abriu as duas caixas; ajustar e confirmar gravou nas duas colunas da demanda e **desfazer devolveu as duas a vazio** (o estado anterior). A demanda terminou como estava.
+- **Achado:** a redação acrescentou, por conta própria, uma seção "Critérios de verificação" deduzida do relato; não foi pedida e o gestor a vê (e edita) no cartão antes de confirmar, mas é a tendência do modelo analítico a elaborar além do relato; se incomodar, endurecer a instrução em `redacao-da-demanda.ts`.
+- **Não verificado:** a conversa de entrevista com várias perguntas (a verificação deu o relato completo de uma vez), 1366×768, 1080×1920 e tema escuro do cartão e do "Ajustar", e o detalhe da demanda mostrando o texto em Markdown depois de confirmar (a leitura da demanda foi pela API).
+
 ## 2026-10-18 — Task 153: o gestor lê a equipe pelo chat
 
 Spec em `docs/specs/done/153-chat-gestor-ferramentas-de-leitura.spec.md`.
