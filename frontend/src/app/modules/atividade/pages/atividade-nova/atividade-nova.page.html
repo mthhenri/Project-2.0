@@ -1,0 +1,17 @@
+<div class="atividade-nova">
+  <div class="atividade-nova__topo">
+    <p-button icon="pi pi-arrow-left" [text]="true" severity="secondary" size="small" label="Atividades" (onClick)="voltar()" />
+  </div>
+
+  <section class="atividade-nova__cartao" (keydown.enter)="aoTeclarEnter($event)">
+    <h1 class="atividade-nova__titulo">Nova Atividade</h1>
+
+    <app-atividade-formulario [demandaIdInicial]="demandaId" (criada)="aoCriar($event.criarOutra)" />
+
+    <div class="atividade-nova__acoes">
+      <p-button label="Cancelar" [text]="true" (onClick)="voltar()" />
+      <p-button label="Salvar e criar outra" severity="secondary" [loading]="salvando()" (onClick)="salvar(true)" />
+      <p-button label="Criar" icon="pi pi-check" [loading]="salvando()" (onClick)="salvar()" />
+    </div>
+  </section>
+</div>

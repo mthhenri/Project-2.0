@@ -101,6 +101,7 @@
       <app-assistente-descricao
         [textoAtual]="formulario.value.descricao || ''"
         tipoEntidade="execucao"
+        [contextoEntidade]="atividade()?.nome ?? ''"
         (textoAuxiliadoAceito)="aceitarDescricaoAssistente($event)"
       />
     </div>

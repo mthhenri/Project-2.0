@@ -1,8 +1,6 @@
 # 105 — Nova Atividade: unificar página e dialog + responsável/tags + IA confiável
 
-> **DESCARTADA em 2026-10-16 — decisão do autor.** Esta task mexe diretamente nas telas de Atividades
-> e Execuções, que ficam como estão. Não implementar. O texto abaixo é o registro da revisão de
-> UI/UX e não foi reescrito.
+> **REATIVADA em 2026-10-18 — decisão do autor.** Descartada em 2026-10-16; o autor reativou as tasks 102–105 após concluir a IA. O texto abaixo é o registro da revisão de UI/UX e não foi reescrito.
 
 **Origem:** Revisão de UI/UX — prints `docs/assets/revisao-ui-ux/prints/16-atividade-formulario.png` e `docs/assets/revisao-ui-ux/prints/17-assistente-ia-dialog.png`, análises `atividade-formulario.md`
 

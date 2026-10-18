@@ -1,20 +1,33 @@
 <div class="assistente-descricao">
-  <p-button
-    label="Auxiliar com IA"
-    icon="pi pi-sparkles"
-    [loading]="carregandoAuxilio()"
-    [disabled]="!textoAtual || carregandoAuxilio()"
-    (onClick)="auxiliar()"
-    styleClass="p-button-outlined p-button-sm"
-  />
+  <span
+    class="inline-block"
+    [pTooltip]="textoAtual.trim().length < minimoCaracteres ? 'Escreva ao menos ' + minimoCaracteres + ' caracteres para a IA ajudar' : ''"
+    tooltipPosition="right"
+  >
+    <p-button
+      label="Auxiliar com IA"
+      icon="pi pi-sparkles"
+      [loading]="carregandoAuxilio()"
+      [disabled]="!podeAuxiliar()"
+      (onClick)="auxiliar()"
+      styleClass="p-button-outlined p-button-sm"
+    />
+  </span>
 
   @if (mostrarComparacao()) {
     <div class="assistente-descricao__comparacao grid grid-cols-2 gap-4 mt-4">
       <p-panel header="Texto original">
         <p class="assistente-descricao__texto whitespace-pre-wrap">{{ textoAtual }}</p>
       </p-panel>
-      <p-panel header="Texto auxiliado">
-        <p class="assistente-descricao__texto whitespace-pre-wrap">{{ textoAuxiliado() }}</p>
+      <p-panel header="Sugestão (editável)">
+        <textarea
+          pTextarea
+          spellcheck="true"
+          rows="6"
+          class="assistente-descricao__texto w-full"
+          [value]="textoAuxiliado()"
+          (input)="editarSugestao($event)"
+        ></textarea>
       </p-panel>
     </div>
 
@@ -24,6 +37,14 @@
         icon="pi pi-check"
         severity="success"
         (onClick)="aceitar()"
+      />
+      <p-button
+        label="Regenerar"
+        icon="pi pi-refresh"
+        severity="secondary"
+        [outlined]="true"
+        [loading]="carregandoAuxilio()"
+        (onClick)="auxiliar()"
       />
       <p-button
         label="Descartar"

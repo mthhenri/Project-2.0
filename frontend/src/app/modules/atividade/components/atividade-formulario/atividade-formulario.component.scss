@@ -34,6 +34,40 @@
     color: var(--p-red-500);
   }
 
+  &__dica {
+    font-size: 0.75rem;
+    color: var(--p-text-muted-color);
+  }
+
+  // Status em segmentos: as quatro opções sempre à vista, sem abrir lista.
+  &__segmentos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+  }
+
+  &__segmento {
+    padding: 0.375rem 0.875rem;
+    border: 1px solid var(--app-surface-300);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--p-text-color);
+    font-size: 0.8125rem;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+
+    &:hover {
+      background: var(--app-surface-100);
+    }
+
+    &--ativo {
+      border-color: var(--p-primary-color);
+      background: color-mix(in srgb, var(--p-primary-color) 14%, transparent);
+      color: var(--p-primary-color);
+      font-weight: 600;
+    }
+  }
+
   &__tags {
     display: flex;
     flex-wrap: wrap;

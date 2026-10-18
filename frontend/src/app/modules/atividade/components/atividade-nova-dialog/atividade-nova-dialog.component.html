@@ -5,143 +5,18 @@
   dialogFormulario
   [dialogBloqueado]="salvando()"
   (dialogEnviar)="salvar()"
+  [dialogSemAutofocus]="true"
   [modal]="true"
   [style]="{ width: '40rem' }"
   [draggable]="false"
   [dismissableMask]="true"
 >
-  <form [formGroup]="formulario" class="nova-atividade__form">
-    <div class="nova-atividade__campo">
-      <label for="nova-nome" class="nova-atividade__rotulo">Nome *</label>
-      <input
-        #campoNovoNome
-        id="nova-nome"
-        type="text"
-        pInputText
-        spellcheck="true"
-        appBloquearCaracteresProibidos
-        formControlName="nome"
-        placeholder="Nome da atividade"
-        class="w-full"
-      />
-      @if (campoInvalido('nome')) {
-        <small class="nova-atividade__erro">
-          @if (formulario.controls.nome.hasError('pattern')) {
-            {{ mensagemCaracteresProibidos }}
-          } @else {
-            Informe um nome com ao menos 3 caracteres
-          }
-        </small>
-      }
-    </div>
-
-    <div class="nova-atividade__campo">
-      <label for="nova-demanda" class="nova-atividade__rotulo">Demanda *</label>
-      <p-select
-        inputId="nova-demanda"
-        formControlName="demandaId"
-        [options]="demandasAtribuidas()"
-        optionLabel="rotulo"
-        optionValue="id"
-        placeholder="Selecione a demanda"
-        [filter]="true"
-        filterBy="rotulo"
-        [loading]="carregandoDemandasAtribuidas()"
-        appendTo="body"
-        class="w-full"
-      />
-      @if (campoInvalido('demandaId')) {
-        <small class="nova-atividade__erro">Selecione a demanda</small>
-      }
-    </div>
-
-    <div class="nova-atividade__linha">
-      @if (sessao.eGestor()) {
-        <div class="nova-atividade__campo">
-          <label for="nova-usuario" class="nova-atividade__rotulo">Usuário</label>
-          <p-select
-            inputId="nova-usuario"
-            formControlName="usuarioId"
-            [options]="usuarios()"
-            optionLabel="nomeCompleto"
-            optionValue="id"
-            placeholder="Meu próprio usuário"
-            [showClear]="true"
-            [filter]="true"
-            filterBy="nomeCompleto"
-            appendTo="body"
-            class="w-full"
-          />
-        </div>
-      }
-
-      <div class="nova-atividade__campo">
-        <label for="nova-status" class="nova-atividade__rotulo">Status *</label>
-        <p-select
-          inputId="nova-status"
-          formControlName="status"
-          [options]="statusOpcoes"
-          optionLabel="label"
-          optionValue="value"
-          appendTo="body"
-          class="w-full"
-        />
-      </div>
-    </div>
-
-    <div class="nova-atividade__campo">
-      <label for="nova-prioridade" class="nova-atividade__rotulo">Prioridade</label>
-      <p-select
-        inputId="nova-prioridade"
-        formControlName="prioridade"
-        [options]="prioridadeService.prioridades()"
-        optionLabel="descricao"
-        optionValue="codigo"
-        appendTo="body"
-        class="w-full"
-      >
-        <ng-template #selectedItem let-prioridade>
-          <app-prioridade-selo [prioridade]="prioridade" />
-        </ng-template>
-        <ng-template #item let-prioridade>
-          <app-prioridade-selo [prioridade]="prioridade" />
-        </ng-template>
-      </p-select>
-    </div>
-
-    <div class="nova-atividade__campo">
-      <label class="nova-atividade__rotulo">Tags</label>
-      @if (carregandoTags()) {
-        <i class="pi pi-spin pi-spinner text-muted-color"></i>
-      } @else {
-        <div class="nova-atividade__tags">
-          @for (tag of todasAsTags(); track tag.id) {
-            <button
-              type="button"
-              class="nova-atividade__tag-chip"
-              [class.nova-atividade__tag-chip--ativo]="tagEstaSelecionada(formulario.controls.tagIds, tag.id)"
-              [style.--cor-tag]="tag.cor"
-              (click)="alternarTagSelecao(formulario.controls.tagIds, tag.id)"
-            >
-              @if (tagEstaSelecionada(formulario.controls.tagIds, tag.id)) {
-                <i class="pi pi-check nova-atividade__tag-check"></i>
-              } @else {
-                <span class="nova-atividade__tag-bolinha" [style.background-color]="tag.cor"></span>
-              }
-              {{ tag.nome }}
-            </button>
-          } @empty {
-            <span class="text-muted-color">Nenhuma tag cadastrada</span>
-          }
-        </div>
-      }
-    </div>
-  </form>
+  <app-atividade-formulario [demandaIdInicial]="demandaIdInicial()" (criada)="aoCriarAtividade($event.criarOutra)" />
 
   <ng-template pTemplate="footer">
     <app-dialog-dica-atalhos />
     <p-button label="Cancelar" [text]="true" (onClick)="visivel.set(false)" />
-    <p-button label="Criar e adicionar outra" severity="secondary" [loading]="salvando()" (onClick)="salvar(true)" />
+    <p-button label="Salvar e criar outra" severity="secondary" [loading]="salvando()" (onClick)="salvar(true)" />
     <p-button label="Criar" icon="pi pi-check" [loading]="salvando()" (onClick)="salvar()" />
   </ng-template>
 </p-dialog>

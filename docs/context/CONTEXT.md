@@ -17,9 +17,8 @@
 Nenhuma task em andamento. O backlog não tem mais tasks numeradas (revisão de UI/UX:
 94–117 concluídas; guarda-chuva `revisao-ui-ux.spec.md`). As fundações **94–99** , o Ponto (**100–101**)
 e a toolbar, o grafo, o detalhe e o formulário de Demandas (**106–109**) a de Projetos (**112**) a de Usuários (**113**) as Anotações (**114**) o Calendário (**115**) e as Tags (**116**) foram concluídos em 2026-10-16 e estão em `docs/specs/done/`; as seguintes devem **reutilizar** o que
-elas criaram (ver `MEMORY.md` §2). Siga a ordem de fases de `INDEX-revisao-ux.md`: fase 4 (concluída). As tasks **102, 103, 104 e 105** (que mexem direto na tela de Atividades) foram **descartadas** em
-2026-10-16 e estão em `docs/specs/discarded/`. As **110 e 111** (tela de Execuções) foram descartadas junto, mas o autor as
-**reativou em 2026-10-17** e elas foram **concluídas** (`docs/specs/done/`). A task 117 foi concluída. Não restam tasks
+elas criaram (ver `MEMORY.md` §2). Siga a ordem de fases de `INDEX-revisao-ux.md`: fase 4 (concluída). As tasks **102, 103, 104 e 105** (tela de Atividades) e **110 e 111** (tela de Execuções) foram descartadas em
+2026-10-16; o autor reativou 110 e 111 em 2026-10-17 e **102–105 em 2026-10-18**, e todas foram **concluídas** (`docs/specs/done/`). A task 117 foi concluída. Não restam tasks
 numeradas no backlog.
 Próxima migration nova: `0043`. **Próximas tasks do rework do chat com IA:** os blocos 1 a 5 estão **concluídos** (118 a 141: administrador, layout, Markdown, pad estruturado, fundação da IA e chat com histórico e teste de prompts). Os blocos 6, 7, 9 e 10 estão especificados em `docs/specs/backlog/` (**142 a 158**); a ordem natural é a da tabela da guarda-chuva `rework-chat-ia.spec.md`: **142** (concluída: prioridade, modelo e API, migration `0036`), **143** (concluída: prioridade nas telas e cor pelo administrador), **144** (concluída: ferramentas de leitura do desenvolvedor), **145** (concluída: propostas de atividade e execução), **146** (concluída: pad pela IA), **147** (concluída: bom dia proativo), **148** (concluída: reunião e suspensão dos check-ins), **149** (concluída: check-in no backend e rigor proporcional), **150** (concluída: descrição formal da execução), **151** (concluída: tela da janela de check-in), **159** (concluída: a IA cria projetos e demandas; absorveu a 154), a **152** (concluída: casca e bandeja do Project Desktop, pasta `desktop/`), a **161** (concluída: horário do check-in no backend e janelinha dentro do Project) e a **160** (concluída: janelinha do check-in no desktop minimizado; o Electron está completo), **157** (concluída: fallback e login no chat), **158** (concluída: retorno da IA e retomada; o bloco 10 está completo), **153** (concluída: leitura da equipe pelo gestor), **155** (concluída: entrevista de demanda), **156** (concluída: conexões e lugar na árvore; **todo o rework do chat com IA, blocos 1 a 10, está concluído**), 146, 147, 148 (desenvolvedor), 149 a 152 (check-in e Electron), 153 a 156 (gestor) e 157 e 158 (fallback).
 
@@ -98,9 +97,9 @@ project-2.0/
 ## 3. Decisões Vivas
 
 - **[seed de desenvolvimento]** `npm run db:seed-dev` (raiz ou backend) cria o projeto `DEMO`, demandas, atividades e o desenvolvedor `dev.teste` / `project2026` no banco local. Idempotente; recusa produção (`APP_AMBIENTE=production` ou `DB_SSL=true`). Fica fora das migrations de propósito (`backend/src/database/scripts/seed-desenvolvimento.ts`).
-- **[descarte da revisão de UX]** A tela de **Atividades** fica como está (102–105 descartadas); a de
-  **Execuções** foi reativada e redesenhada (110/111, ver abaixo). O que as toca só por tabela (padrão de dialogs 97, otimista 98, undo 99,
-  chip global 95) continua e, ao ser implementado, vale para as telas atuais.
+- **[revisão de UX reativada]** As telas de **Atividades** (102–105: listagem com filtros na URL e ações em massa, dialogs de execução,
+  detalhe com faixa de execução, nova atividade em dialog e em `/atividade/nova`) e de **Execuções** (110/111) foram descartadas em
+  2026-10-16 e reativadas e concluídas depois (HISTORY: blocos de 2026-10-17 e 2026-10-18).
 - **[tasks 110–111]** O histórico de Execuções guarda dia e usuário na URL (`?data=&usuario=`, `replaceUrl`): a URL é a
   fonte do estado e cada mudança recarrega; atalhos ←/→/Home reutilizam os guardas de `core/utils/atalhos.ts`. O dialog de
   relatório abre carregado, recarrega a cada filtro (debounce 400 ms) e só exporta/revisa os parâmetros do relatório

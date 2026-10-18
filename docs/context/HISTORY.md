@@ -12,6 +12,17 @@
 
 ---
 
+## 2026-10-18 — Task 105 (reativada): nova atividade unificada (dialog e página), responsável/tags e assistente de IA confiável
+
+Só frontend. Boa parte do escopo já existia no dialog (seletor de demanda com busca, responsável, tags, "criar e adicionar outra"); a rota `/atividade/nova` **não existia** (caía em `:id`).
+
+- **Unificação**: o corpo do dialog virou `AtividadeFormularioComponent`, usado pelo `AtividadeNovaDialogComponent` (API `abrir`/`aoCriar` intacta; os dois consumidores — listagem e detalhe da demanda — não mudaram) e pela nova página `AtividadeNovaPage` em `/atividade/nova?demandaId=` (rota antes de `:id`). Mesmos campos e defaults nos dois: status **Desenvolvendo**, responsável "Eu mesmo" (rótulo antes "Usuário"). Sem `demandaId` o seletor de demanda abre vazio, focado e com hint inline.
+- **Status em segmentos** (Pendente | Planejada | Desenvolvendo | Desenvolvida) no lugar do select. **"Salvar e criar outra"** mantém demanda, responsável, status e tags, limpa o nome (sem ficar vermelho) e refoca; o aviso de criação traz "Ver atividade" (reaproveita a oferta do `DesfazerService`, que já tem rótulo configurável). Enter no nome cria na página.
+- **Assistente de IA** (`AssistenteDescricaoComponent`, 4 consumidores, API de eventos intacta): habilita só com ≥10 caracteres (o DTO exige `MinLength(10)`; tooltip explica), sugestão em **textarea editável**, "Regenerar" e, ao aceitar, "Desfazer" por 5 s que devolve o texto anterior pelo mesmo evento `textoAuxiliadoAceito`.
+- **Achado na verificação**: os dialogs de iniciar/registrar execução não mandavam `contextoEntidade` (o DTO exige não vazio) — o assistente dava 400 nesses dois dialogs desde sempre; agora mandam o nome da atividade. A chamada passa na validação (a resposta atual é "A IA está desligada", da configuração do ambiente).
+- **Desvios**: o formulário de atividade não tem campo Descrição (só nome), então "limpar Nome/Descrição" é só o nome e o assistente continua nas descrições de execução e de demanda; "Desfazer" do assistente usa o toast de oferta do projeto (5 s). No dialog o foco inicial segue no Nome (a diretiva do dialog); na página sem demanda o foco vai ao seletor.
+- **Não verificado ao vivo**: a comparação com textarea editável, Regenerar e Desfazer do assistente (a IA está desligada no ambiente de desenvolvimento). Verificado: página com e sem `demandaId`, criação em série (2 atividades de teste, depois apagadas por soft delete), "Ver atividade", dialog com os mesmos campos, botão do assistente desabilitado/habilitado conforme o tamanho do texto. Testes: backend/shared/frontend sem regressão; build ok.
+
 ## 2026-10-18 — Task 104 (reativada): detalhe da atividade com faixa de execução, timer e pausa em 1 clique
 
 Frontend, mais um mínimo no backend: `AtividadeRecuperadaDto` ganhou `nomeDemanda`, `projetoId`, `nomeProjeto` e `usuarioTipo` (o repositório faz os JOINs que a listagem já usa).
