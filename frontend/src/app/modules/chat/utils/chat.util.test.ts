@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { extrairEventos, paresDosDados } from './chat.util';
+import { dataDaConversa, extrairEventos, paresDosDados, rotuloDoDia } from './chat.util';
 
 test('lê vários eventos de uma vez', () => {
   const texto = 'data: {"tipo":"trecho","texto":"Bom "}\n\ndata: {"tipo":"trecho","texto":"dia"}\n\n';
@@ -41,4 +41,16 @@ test('pares dos dados mostram texto puro e JSON para o resto', () => {
     { chave: 'ids', valor: '[1,2]' },
     { chave: 'obrigatorio', valor: 'true' },
   ]);
+});
+
+test('o dia da conversa é o final do id', () => {
+  assert.equal(dataDaConversa('7-2026-10-17'), '2026-10-17');
+  assert.equal(dataDaConversa('123-2026-01-05'), '2026-01-05');
+});
+
+test('rotula hoje, ontem e os outros dias, inclusive na virada de mês', () => {
+  assert.equal(rotuloDoDia('2026-10-17', '2026-10-17'), 'Hoje');
+  assert.equal(rotuloDoDia('2026-10-16', '2026-10-17'), 'Ontem');
+  assert.equal(rotuloDoDia('2026-09-30', '2026-10-01'), 'Ontem');
+  assert.match(rotuloDoDia('2026-10-10', '2026-10-17'), /^sáb\.?, 10\/10\/2026$/);
 });

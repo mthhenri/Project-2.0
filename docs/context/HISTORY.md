@@ -12,6 +12,17 @@
 
 ---
 
+## 2026-10-17 — Task 141: histórico de conversas do chat e refinos visuais
+
+Pedido do autor sobre a tela do chat: sem o cabeçalho ("Chat" e "conversa de hoje" repetiam o menu), a busca passa a morar num **painel Histórico** à direita que recolhe, junto com a lista das conversas de todos os dias. Spec em `docs/specs/done/141-chat-historico-e-refinos-visuais.spec.md` (usou o 141; os blocos 6, 7, 9 e 10 serão numerados a partir da 142).
+
+- **Backend:** `GET /chat/conversas` (agregação `terms` por `conversa_id`, filtrada por dono e contexto `CHAT`, ordenada pela chave decrescente, com `max(created_date)` e `top_hits` da primeira mensagem; até 100 dias) e `GET /chat/conversa/:data` (`ChatConversaRecuperarDto`, `yyyy-mm-dd`; o id da conversa é montado com o dono do token, então um dia alheio nunca vaza). Sem migration. `ClienteOpenSearchChat.search` passou a admitir `aggregations`.
+- **Frontend:** `app-chat-historico` (busca, lista, recolher), dia antigo aberto só para leitura com aviso e "Voltar para hoje", hora (`HH:mm`) embaixo de cada mensagem, botão de copiar (aparece ao passar o mouse ou com foco) e estado vazio com avatar e sugestões no meio. `rotuloDoDia`/`dataDaConversa` puros, com teste.
+- **Testes:** backend (consulta de agregação, `listarConversas`, `recuperarConversa`: 29 verdes nos arquivos do chat); frontend `npm test` com os testes novos de rótulo de dia.
+- **Verificado ao vivo** (app do autor, usuário 3, com duas mensagens de um dia antigo inseridas no OpenSearch e apagadas depois): lista com "Hoje" e o dia antigo, abrir o antigo (só leitura, aviso, sem campo), busca achando a mensagem antiga, "Voltar para hoje", recolher e expandir com o estado em `localStorage`; 1920×1080 e 1366×768 claro, 1366×768 escuro.
+- **Não verificado:** 1080×1920 com o painel, o copiar de fato (área de transferência do navegador embutido), o clique no resultado da busca que abre o dia antigo (só a busca e a abertura direta do dia foram exercitadas), estado de erro da lista e o estado vazio novo (a conversa de teste tinha mensagens).
+- **Decisões:** o separador de dia dentro da conversa ficou de fora (cada conversa é um dia só); o painel "Execuções de hoje" fica para quando o autor decidir (depende dos blocos 6 e 8).
+
 ## 2026-10-17 — Visual do chat aproximado do protótipo (artefato de design)
 
 Pedido do autor depois da task 139. Só apresentação (`chat.page.{html,scss,ts}` e `proposta-cartao`), sem mudar comportamento: conversa em coluna centralizada de 48rem e sem moldura; mensagem da IA sem balão, com avatar quadrado escuro "IA" e selo do nível (rápido/padrão/analítico) acima do texto; balão do usuário azul com canto inferior direito reto; falha do sistema como pílula centralizada; cartão de proposta com raio 12, rótulo "PROPOSTA · tipo" em maiúsculas e botões Confirmar (cheio) e Recusar (contorno); rodapé com chips de sugestão (só com o campo vazio e a IA livre), campo arredondado com botão quadrado azul de seta e a legenda "A IA sempre pede confirmação antes de criar, iniciar, pausar ou anotar.".

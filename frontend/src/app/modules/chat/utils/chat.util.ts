@@ -65,3 +65,25 @@ export function paresDosDados(dados: Record<string, unknown>): { chave: string; 
     valor: typeof valor === 'string' ? valor : JSON.stringify(valor),
   }));
 }
+
+/** O dia (`yyyy-mm-dd`) de uma conversa, que é o final do `conversaId` (`<usuarioId>-<yyyy-mm-dd>`). */
+export function dataDaConversa(conversaId: string): string {
+  return conversaId.slice(-10);
+}
+
+const MILISSEGUNDOS_POR_DIA = 86_400_000;
+
+function emUtc(data: string): number {
+  const [ano, mes, dia] = data.split('-').map(Number);
+  return Date.UTC(ano, mes - 1, dia);
+}
+
+/** "Hoje", "Ontem" ou "sex., 17/10/2026" para um dia da lista do histórico; `hoje` vem do servidor (o fuso é o do sistema). */
+export function rotuloDoDia(data: string, hoje: string): string {
+  const diferenca = Math.round((emUtc(hoje) - emUtc(data)) / MILISSEGUNDOS_POR_DIA);
+  if (diferenca === 0) return 'Hoje';
+  if (diferenca === 1) return 'Ontem';
+  const diaDaSemana = new Date(emUtc(data)).toLocaleDateString('pt-BR', { weekday: 'short', timeZone: 'UTC' });
+  const [ano, mes, dia] = data.split('-');
+  return `${diaDaSemana}, ${dia}/${mes}/${ano}`;
+}

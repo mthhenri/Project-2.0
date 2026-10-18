@@ -4,16 +4,15 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
-import { InputTextModule } from 'primeng/inputtext';
 import { SkeletonModule } from 'primeng/skeleton';
-import { TagModule } from 'primeng/tag';
 import { TextareaModule } from 'primeng/textarea';
 import { AutorChatEnum, ChatEventoDto, ChatMensagemResumoDto, EstadoIaEnum, NivelIaEnum } from '@project20/shared';
 import { IaDisponibilidadeService } from '../../../../core/services/ia-disponibilidade.service';
 import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
+import { HistoricoComponent, MensagemDoHistorico } from '../../components/historico/historico.component';
 import { PropostaCartaoComponent } from '../../components/proposta-cartao/proposta-cartao.component';
 import { ChatService, ErroDoChat } from '../../services/chat.service';
-import { ROTULO_NIVEL } from '../../utils/chat.util';
+import { dataDaConversa, ROTULO_NIVEL } from '../../utils/chat.util';
 
 /** Uma mensagem como a tela a mostra: as da conversa do dia mais as locais (otimistas), com os cartões de proposta ligados a ela. */
 interface MensagemNaTela {
@@ -48,12 +47,11 @@ const MARGEM_DO_FIM_PX = 80;
     DatePipe,
     ReactiveFormsModule,
     ButtonModule,
-    InputTextModule,
     SkeletonModule,
-    TagModule,
     TextareaModule,
     MarkdownVisualizadorComponent,
     PropostaCartaoComponent,
+    HistoricoComponent,
   ],
   templateUrl: './chat.page.html',
   styleUrl: './chat.page.scss',
@@ -65,6 +63,7 @@ export class ChatPage implements OnInit {
   private readonly areaDeRolagem = viewChild<ElementRef<HTMLElement>>('rolagem');
   private readonly fluxo = viewChild<ElementRef<HTMLElement>>('fluxo');
   private readonly campoDeTexto = viewChild<ElementRef<HTMLTextAreaElement>>('campoTexto');
+  private readonly historico = viewChild(HistoricoComponent);
 
   readonly Autor = AutorChatEnum;
   readonly Estado = EstadoIaEnum;
@@ -77,22 +76,26 @@ export class ChatPage implements OnInit {
   readonly mensagens = signal<MensagemNaTela[]>([]);
   readonly aoVivo = signal<RespostaAoVivo | null>(null);
   readonly conversaId = signal<string>('');
+  /** O dia de hoje no servidor (`yyyy-mm-dd`, do id da conversa de hoje); vazio até a primeira carga. */
+  readonly hoje = signal('');
+  /** O dia aberto no lugar de hoje (`yyyy-mm-dd`), só para leitura; `null` é a conversa de hoje. */
+  readonly diaAberto = signal<string | null>(null);
+  readonly somenteLeitura = computed(() => this.diaAberto() !== null);
+  readonly diaExibido = computed(() => this.diaAberto() ?? this.hoje());
+  readonly diaFormatado = computed(() => this.diaAberto()?.split('-').reverse().join('/') ?? '');
   readonly disponibilidade = this.iaDisponibilidade.estado;
   /** Há texto abaixo da área visível (o usuário subiu para ler): mostra "ir para o fim". */
   readonly longeDoFim = signal(false);
 
   readonly controleTexto = new FormControl<string>('', { nonNullable: true });
   private readonly textoDigitado = signal('');
-  readonly controleBusca = new FormControl<string>('', { nonNullable: true });
-  readonly resultadosBusca = signal<ChatMensagemResumoDto[] | null>(null);
-  readonly buscando = signal(false);
 
   readonly iaDesligada = computed(() => this.disponibilidade() === EstadoIaEnum.DESLIGADA);
   readonly iaForaDoAr = computed(() => this.disponibilidade() === EstadoIaEnum.FORA_DO_AR);
-  readonly podeEnviar = computed(() => !this.enviando() && !this.iaDesligada() && this.textoDigitado().trim() !== '');
+  readonly podeEnviar = computed(() => !this.enviando() && !this.somenteLeitura() && !this.iaDesligada() && this.textoDigitado().trim() !== '');
   /** Atalhos acima do campo: só com o campo vazio e a IA livre para receber. */
   readonly sugestoes = ['Que dia e hora são agora?', 'O que eu posso fazer por aqui?'];
-  readonly podeSugerir = computed(() => !this.enviando() && !this.iaDesligada() && this.textoDigitado().trim() === '');
+  readonly podeSugerir = computed(() => !this.enviando() && !this.iaDesligada() && !this.somenteLeitura() && this.textoDigitado().trim() === '');
   /** A última mensagem é a do sistema (falha): oferece "Tentar de novo". */
   readonly ultimaFoiFalha = computed(() => this.mensagens().at(-1)?.autor === AutorChatEnum.SISTEMA && !this.enviando());
   private contadorLocal = 0;
@@ -126,7 +129,7 @@ export class ChatPage implements OnInit {
     this.carregar();
   }
 
-  carregar(): void {
+  carregar(mensagemId?: string): void {
     this.carregando.set(true);
     this.erro.set(false);
     this.iaDisponibilidade.carregar();
@@ -138,10 +141,11 @@ export class ChatPage implements OnInit {
           return;
         }
         this.conversaId.set(hoje.dados.conversaId);
+        this.hoje.set(dataDaConversa(hoje.dados.conversaId));
         this.mensagens.set(hoje.dados.mensagens.map((mensagem) => this.paraTela(mensagem)));
         this.carregando.set(false);
         this.jaCarregou.set(true);
-        this.longeDoFim.set(false);
+        this.irParaMensagemOuFim(mensagemId);
       },
       error: () => {
         this.erro.set(true);
@@ -209,39 +213,54 @@ export class ChatPage implements OnInit {
     this.rolarParaOFim();
   }
 
-  buscar(): void {
-    const texto = this.controleBusca.value.trim();
-    if (!texto) {
-      this.resultadosBusca.set(null);
+  /** Abre um dia da lista do histórico: hoje volta à conversa viva; os outros abrem só para leitura. */
+  abrirDia(data: string, mensagemId?: string): void {
+    if (data === this.hoje()) {
+      this.voltarParaHoje(mensagemId);
       return;
     }
-    this.buscando.set(true);
-    this.chatService.buscar(texto).subscribe({
+    this.chatService.recuperarConversa(data).subscribe({
       next: (resposta) => {
-        this.resultadosBusca.set(resposta.dados?.mensagens ?? []);
-        this.buscando.set(false);
+        if (!resposta.dados) return;
+        this.diaAberto.set(data);
+        this.conversaId.set(resposta.dados.conversaId);
+        this.mensagens.set(resposta.dados.mensagens.map((mensagem) => this.paraTela(mensagem)));
+        this.irParaMensagemOuFim(mensagemId);
       },
-      error: () => this.buscando.set(false),
+      error: () => this.messageService.add({ severity: 'warn', summary: 'Chat', detail: 'Não foi possível abrir essa conversa' }),
     });
   }
 
-  limparBusca(): void {
-    this.controleBusca.setValue('');
-    this.resultadosBusca.set(null);
+  voltarParaHoje(mensagemId?: string): void {
+    this.diaAberto.set(null);
+    this.carregar(mensagemId);
   }
 
-  /** O resultado é de hoje (a única conversa que a tela abre): leva até a mensagem. */
-  ehDeHoje(resultado: ChatMensagemResumoDto): boolean {
-    return resultado.conversaId === this.conversaId();
+  abrirMensagem(escolhida: MensagemDoHistorico): void {
+    this.abrirDia(escolhida.data, escolhida.mensagemId);
   }
 
-  verNoDia(resultado: ChatMensagemResumoDto): void {
-    this.limparBusca();
+  async copiar(texto: string): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(texto);
+      this.messageService.add({ severity: 'success', summary: 'Copiado', detail: 'Resposta copiada', life: 2000 });
+    } catch {
+      this.messageService.add({ severity: 'warn', summary: 'Chat', detail: 'Não foi possível copiar' });
+    }
+  }
+
+  /** Rola até a mensagem (centralizada) ou, sem ela, até o fim do dia aberto. */
+  private irParaMensagemOuFim(mensagemId?: string): void {
+    if (!mensagemId) {
+      this.longeDoFim.set(false);
+      this.rolarParaOFim();
+      return;
+    }
+    this.longeDoFim.set(true);
     setTimeout(() => {
-      const alvo = this.areaDeRolagem()?.nativeElement.querySelector<HTMLElement>(`[data-mensagem-id="${resultado.id}"]`);
+      const alvo = this.areaDeRolagem()?.nativeElement.querySelector<HTMLElement>(`[data-mensagem-id="${mensagemId}"]`);
       alvo?.scrollIntoView({ block: 'center', behavior: 'smooth' });
-      this.longeDoFim.set(true);
-    });
+    }, 50);
   }
 
   private tratarEvento(evento: ChatEventoDto): void {
@@ -261,6 +280,7 @@ export class ChatPage implements OnInit {
         mensagem.propostaIds = [...new Set([...propostasDoFluxo, ...mensagem.propostaIds])];
         this.aoVivo.set(null);
         this.mensagens.update((lista) => [...lista, mensagem]);
+        this.historico()?.recarregar();
         this.atualizarDisponibilidade();
         break;
       }

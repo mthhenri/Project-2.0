@@ -1,185 +1,181 @@
 <div class="chat">
-  <div class="chat__cabecalho">
-    <div class="chat__titulo-grupo">
-      <h1 class="chat__titulo">Chat</h1>
-      @if (jaCarregou()) {
-        <span class="chat__contador">conversa de hoje</span>
-      }
-    </div>
-
-    <span class="chat__busca">
-      <i class="pi pi-search chat__busca-icone"></i>
-      <input
-        pInputText
-        type="text"
-        class="chat__busca-campo"
-        placeholder="Buscar nas minhas conversas…"
-        aria-label="Buscar nas minhas conversas"
-        [formControl]="controleBusca"
-        (keydown.enter)="buscar()"
-        (keydown.escape)="limparBusca()"
-      />
-    </span>
-  </div>
-
-  @if (resultadosBusca(); as resultados) {
-    <section class="chat__resultados" aria-label="Resultados da busca">
-      <header class="chat__resultados-cabecalho">
-        <strong>{{ resultados.length }} {{ resultados.length === 1 ? 'resultado' : 'resultados' }}</strong>
-        <p-button label="Fechar" size="small" [text]="true" (onClick)="limparBusca()" />
-      </header>
-      @if (resultados.length === 0) {
-        <p class="chat__vazio-busca">Nenhuma mensagem encontrada.</p>
-      } @else {
-        <ul class="chat__lista-resultados">
-          @for (resultado of resultados; track resultado.id) {
-            <li class="chat__resultado">
-              <span class="chat__resultado-meta">
-                {{ resultado.autor === Autor.USUARIO ? 'Você' : 'IA' }} · {{ resultado.createdDate | date: 'dd/MM/yyyy HH:mm' }}
-              </span>
-              <span class="chat__resultado-texto">{{ resultado.texto }}</span>
-              @if (ehDeHoje(resultado)) {
-                <p-button label="Ver no dia" size="small" [text]="true" (onClick)="verNoDia(resultado)" />
-              }
-            </li>
-          }
-        </ul>
-      }
-    </section>
-  }
-
-  @if (erro()) {
-    <div class="chat__erro" role="alert">
-      <i class="pi pi-exclamation-triangle"></i>
-      <span>Não foi possível carregar a conversa.</span>
-      <p-button label="Tentar de novo" icon="pi pi-refresh" size="small" [outlined]="true" (onClick)="carregar()" />
-    </div>
-  } @else {
-    @if (iaDesligada()) {
-      <p class="chat__aviso" role="status">
-        <i class="pi pi-power-off"></i>
-        <span>A IA está desligada. Você pode reler a conversa, mas não enviar mensagens. Use as telas convencionais enquanto isso.</span>
-      </p>
-    } @else if (iaForaDoAr()) {
-      <p class="chat__aviso" role="status">
+  <div class="chat__principal">
+    @if (erro()) {
+      <div class="chat__erro" role="alert">
         <i class="pi pi-exclamation-triangle"></i>
-        <span>A IA está fora do ar no momento. Você pode tentar enviar mesmo assim; se não responder, use as telas convencionais.</span>
-      </p>
-    }
+        <span>Não foi possível carregar a conversa.</span>
+        <p-button label="Tentar de novo" icon="pi pi-refresh" size="small" [outlined]="true" (onClick)="carregar()" />
+      </div>
+    } @else {
+      @if (somenteLeitura()) {
+        <p class="chat__aviso chat__aviso--neutro" role="status">
+          <i class="pi pi-calendar"></i>
+          <span>Conversa de {{ diaFormatado() }}, só para leitura.</span>
+          <p-button label="Voltar para hoje" icon="pi pi-arrow-right" size="small" [text]="true" (onClick)="voltarParaHoje()" />
+        </p>
+      } @else if (iaDesligada()) {
+        <p class="chat__aviso" role="status">
+          <i class="pi pi-power-off"></i>
+          <span>A IA está desligada. Você pode reler a conversa, mas não enviar mensagens. Use as telas convencionais enquanto isso.</span>
+        </p>
+      } @else if (iaForaDoAr()) {
+        <p class="chat__aviso" role="status">
+          <i class="pi pi-exclamation-triangle"></i>
+          <span>A IA está fora do ar no momento. Você pode tentar enviar mesmo assim; se não responder, use as telas convencionais.</span>
+        </p>
+      }
 
-    <div class="chat__conversa">
-      <div #rolagem class="chat__mensagens" role="log" aria-live="polite" aria-label="Conversa de hoje" (scroll)="aoRolar()">
-        <div #fluxo class="chat__fluxo">
-          @if (!jaCarregou()) {
-            <div class="chat__esqueleto" aria-busy="true">
-              <p-skeleton height="3rem" width="55%" />
-              <p-skeleton height="5rem" width="75%" />
-              <p-skeleton height="3rem" width="40%" />
-            </div>
-          } @else if (mensagens().length === 0 && !aoVivo()) {
-            <div class="chat__vazio">
-              <span class="chat__avatar" aria-hidden="true">IA</span>
-              <p>Nenhuma mensagem hoje ainda.</p>
-              <small>Conte o que vai fazer ou pergunte o que precisar; a IA sempre pede confirmação antes de gravar algo.</small>
-            </div>
-          } @else {
-            @for (mensagem of mensagens(); track mensagem.id; let ultima = $last) {
-              @switch (mensagem.autor) {
-                @case (Autor.USUARIO) {
-                  <div class="chat__linha chat__linha--usuario" [attr.data-mensagem-id]="mensagem.id">
-                    <div class="chat__balao">{{ mensagem.texto }}</div>
-                  </div>
-                }
-                @case (Autor.IA) {
-                  <div class="chat__linha chat__linha--ia" [attr.data-mensagem-id]="mensagem.id">
-                    <span class="chat__avatar" aria-hidden="true">IA</span>
-                    <div class="chat__ia-conteudo">
-                      @if (mensagem.nivel) {
-                        <span class="chat__nivel" [attr.aria-label]="'Nível usado: ' + rotuloNivel[mensagem.nivel]">{{ rotuloNivel[mensagem.nivel] }}</span>
-                      }
-                      <app-markdown-visualizador [texto]="mensagem.texto" />
-                      @for (propostaId of mensagem.propostaIds; track propostaId) {
-                        <app-chat-proposta-cartao [propostaId]="propostaId" />
+      <div class="chat__conversa">
+        <div #rolagem class="chat__mensagens" role="log" aria-live="polite" aria-label="Conversa" (scroll)="aoRolar()">
+          <div #fluxo class="chat__fluxo">
+            @if (!jaCarregou()) {
+              <div class="chat__esqueleto" aria-busy="true">
+                <p-skeleton height="3rem" width="55%" />
+                <p-skeleton height="5rem" width="75%" />
+                <p-skeleton height="3rem" width="40%" />
+              </div>
+            } @else if (mensagens().length === 0 && !aoVivo()) {
+              <div class="chat__vazio">
+                <span class="chat__avatar chat__avatar--grande" aria-hidden="true">IA</span>
+                <p>Nenhuma mensagem {{ somenteLeitura() ? 'neste dia' : 'hoje ainda' }}.</p>
+                @if (!somenteLeitura()) {
+                  <small>Conte o que vai fazer ou pergunte o que precisar; a IA sempre pede confirmação antes de gravar algo.</small>
+                  @if (podeSugerir()) {
+                    <div class="chat__sugestoes chat__sugestoes--centro" role="group" aria-label="Sugestões de mensagem">
+                      @for (sugestao of sugestoes; track sugestao) {
+                        <button type="button" class="chat__sugestao" (click)="enviar(sugestao)">{{ sugestao }}</button>
                       }
                     </div>
-                  </div>
+                  }
                 }
-                @default {
-                  <div class="chat__linha chat__linha--sistema" [attr.data-mensagem-id]="mensagem.id">
-                    <div class="chat__sistema" role="alert">
-                      <i class="pi pi-exclamation-circle"></i>
-                      <span>{{ mensagem.texto }}</span>
-                      @if (ultima && ultimaFoiFalha()) {
-                        <p-button label="Tentar de novo" icon="pi pi-refresh" size="small" [text]="true" (onClick)="tentarDeNovo()" />
-                      }
+              </div>
+            } @else {
+              @for (mensagem of mensagens(); track mensagem.id; let ultima = $last) {
+                @switch (mensagem.autor) {
+                  @case (Autor.USUARIO) {
+                    <div class="chat__linha chat__linha--usuario" [attr.data-mensagem-id]="mensagem.id">
+                      <div class="chat__coluna-usuario">
+                        <div class="chat__balao">{{ mensagem.texto }}</div>
+                        @if (mensagem.criadaEm) {
+                          <span class="chat__hora">{{ mensagem.criadaEm | date: 'HH:mm' }}</span>
+                        }
+                      </div>
                     </div>
-                  </div>
+                  }
+                  @case (Autor.IA) {
+                    <div class="chat__linha chat__linha--ia" [attr.data-mensagem-id]="mensagem.id">
+                      <span class="chat__avatar" aria-hidden="true">IA</span>
+                      <div class="chat__ia-conteudo">
+                        @if (mensagem.nivel) {
+                          <span class="chat__nivel" [attr.aria-label]="'Nível usado: ' + rotuloNivel[mensagem.nivel]">{{ rotuloNivel[mensagem.nivel] }}</span>
+                        }
+                        <app-markdown-visualizador [texto]="mensagem.texto" />
+                        @for (propostaId of mensagem.propostaIds; track propostaId) {
+                          <app-chat-proposta-cartao [propostaId]="propostaId" />
+                        }
+                        <div class="chat__rodape-mensagem">
+                          @if (mensagem.criadaEm) {
+                            <span class="chat__hora">{{ mensagem.criadaEm | date: 'HH:mm' }}</span>
+                          }
+                          <button
+                            type="button"
+                            class="chat__copiar"
+                            aria-label="Copiar a resposta"
+                            title="Copiar a resposta"
+                            (click)="copiar(mensagem.texto)"
+                          >
+                            <i class="pi pi-copy"></i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                  @default {
+                    <div class="chat__linha chat__linha--sistema" [attr.data-mensagem-id]="mensagem.id">
+                      <div class="chat__sistema" role="alert">
+                        <i class="pi pi-exclamation-circle"></i>
+                        <span>{{ mensagem.texto }}</span>
+                        @if (ultima && ultimaFoiFalha() && !somenteLeitura()) {
+                          <p-button label="Tentar de novo" icon="pi pi-refresh" size="small" [text]="true" (onClick)="tentarDeNovo()" />
+                        }
+                      </div>
+                    </div>
+                  }
                 }
               }
-            }
 
-            @if (aoVivo(); as resposta) {
-              <div class="chat__linha chat__linha--ia">
-                <span class="chat__avatar" aria-hidden="true">IA</span>
-                <div class="chat__ia-conteudo" aria-busy="true">
-                  @if (resposta.texto) {
-                    <app-markdown-visualizador [texto]="resposta.texto" />
-                  }
-                  @if (resposta.ferramenta) {
-                    <span class="chat__ferramenta"><i class="pi pi-spin pi-spinner"></i>consultando…</span>
-                  } @else if (!resposta.texto) {
-                    <span class="chat__ferramenta"><i class="pi pi-spin pi-spinner"></i>pensando…</span>
-                  }
-                  @for (propostaId of resposta.propostaIds; track propostaId) {
-                    <app-chat-proposta-cartao [propostaId]="propostaId" />
-                  }
+              @if (aoVivo(); as resposta) {
+                <div class="chat__linha chat__linha--ia">
+                  <span class="chat__avatar" aria-hidden="true">IA</span>
+                  <div class="chat__ia-conteudo" aria-busy="true">
+                    @if (resposta.texto) {
+                      <app-markdown-visualizador [texto]="resposta.texto" />
+                    }
+                    @if (resposta.ferramenta) {
+                      <span class="chat__ferramenta"><i class="pi pi-spin pi-spinner"></i>consultando…</span>
+                    } @else if (!resposta.texto) {
+                      <span class="chat__ferramenta"><i class="pi pi-spin pi-spinner"></i>pensando…</span>
+                    }
+                    @for (propostaId of resposta.propostaIds; track propostaId) {
+                      <app-chat-proposta-cartao [propostaId]="propostaId" />
+                    }
+                  </div>
                 </div>
-              </div>
+              }
             }
-          }
+          </div>
         </div>
+
+        @if (longeDoFim()) {
+          <p-button
+            class="chat__ir-para-o-fim"
+            icon="pi pi-arrow-down"
+            label="Ir para o fim"
+            size="small"
+            severity="secondary"
+            [rounded]="true"
+            (onClick)="irParaOFim()"
+          />
+        }
       </div>
 
-      @if (longeDoFim()) {
-        <p-button
-          class="chat__ir-para-o-fim"
-          icon="pi pi-arrow-down"
-          label="Ir para o fim"
-          size="small"
-          severity="secondary"
-          [rounded]="true"
-          (onClick)="irParaOFim()"
-        />
-      }
-    </div>
-
-    <div class="chat__rodape">
-      @if (podeSugerir()) {
-        <div class="chat__sugestoes" role="group" aria-label="Sugestões de mensagem">
-          @for (sugestao of sugestoes; track sugestao) {
-            <button type="button" class="chat__sugestao" (click)="enviar(sugestao)">{{ sugestao }}</button>
+      @if (!somenteLeitura()) {
+        <div class="chat__rodape">
+          @if (podeSugerir() && mensagens().length > 0) {
+            <div class="chat__sugestoes" role="group" aria-label="Sugestões de mensagem">
+              @for (sugestao of sugestoes; track sugestao) {
+                <button type="button" class="chat__sugestao" (click)="enviar(sugestao)">{{ sugestao }}</button>
+              }
+            </div>
           }
+
+          <form class="chat__entrada" (ngSubmit)="enviar()">
+            <textarea
+              #campoTexto
+              pTextarea
+              class="chat__campo"
+              rows="2"
+              [autoResize]="true"
+              [formControl]="controleTexto"
+              [placeholder]="iaDesligada() ? 'A IA está desligada' : 'Fale com a IA: o que vai fazer, o que fez, o que recebeu…'"
+              aria-label="Mensagem para a IA"
+              maxlength="4000"
+              (keydown)="aoTeclar($event)"
+            ></textarea>
+            <button type="submit" class="chat__enviar" aria-label="Enviar" [disabled]="!podeEnviar()">
+              <i class="pi" [class.pi-arrow-right]="!enviando()" [class.pi-spin]="enviando()" [class.pi-spinner]="enviando()"></i>
+            </button>
+          </form>
+          <span class="chat__legenda">A IA sempre pede confirmação antes de criar, iniciar, pausar ou anotar. Enter envia, Shift+Enter quebra a linha.</span>
         </div>
       }
+    }
+  </div>
 
-      <form class="chat__entrada" (ngSubmit)="enviar()">
-        <textarea
-          #campoTexto
-          pTextarea
-          class="chat__campo"
-          rows="2"
-          [autoResize]="true"
-          [formControl]="controleTexto"
-          [placeholder]="iaDesligada() ? 'A IA está desligada' : 'Fale com a IA: o que vai fazer, o que fez, o que recebeu…'"
-          aria-label="Mensagem para a IA"
-          maxlength="4000"
-          (keydown)="aoTeclar($event)"
-        ></textarea>
-        <button type="submit" class="chat__enviar" aria-label="Enviar" [disabled]="!podeEnviar()">
-          <i class="pi" [class.pi-arrow-right]="!enviando()" [class.pi-spin]="enviando()" [class.pi-spinner]="enviando()"></i>
-        </button>
-      </form>
-      <span class="chat__legenda">A IA sempre pede confirmação antes de criar, iniciar, pausar ou anotar. Enter envia, Shift+Enter quebra a linha.</span>
-    </div>
-  }
+  <app-chat-historico
+    [diaAtual]="diaExibido()"
+    [hoje]="hoje()"
+    (diaEscolhido)="abrirDia($event)"
+    (mensagemEscolhida)="abrirMensagem($event)"
+  />
 </div>

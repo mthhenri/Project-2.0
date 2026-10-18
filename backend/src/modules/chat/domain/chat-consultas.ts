@@ -3,6 +3,8 @@ export const INDICE_CHAT_MENSAGEM = 'chat-mensagem';
 /** Limite de uma conversa do dia lida de uma vez (uma conversa por dia nunca chega perto). */
 export const LIMITE_CONVERSA = 1000;
 export const LIMITE_BUSCA = 50;
+/** Quantas conversas (dias) a lista do histórico traz. */
+export const LIMITE_CONVERSAS = 100;
 
 /**
  * Índice único com um documento por mensagem. O texto é analisado em português **sem acento** (`descricao` acha `descrição`):
@@ -85,5 +87,34 @@ export function montarConsultaBusca(consulta: ConsultaBusca) {
     size: LIMITE_BUSCA,
     query: { bool: { filter: filtros, must: [{ match: { texto: { query: consulta.texto, operator: 'and' } } }] } },
     sort: [{ _score: 'desc' }, { created_date: 'desc' }],
+  };
+}
+
+export interface ConsultaConversas {
+  usuarioId: number;
+}
+
+/** Uma conversa na agregação: o dia (`key`), o total, a última data e a primeira mensagem. */
+export interface BaldeConversa {
+  key: string;
+  doc_count: number;
+  ultima: { value: number };
+  primeira: { hits: { hits: { _source: { texto: string } }[] } };
+}
+
+/** As conversas de chat do usuário, uma por `conversa_id`, da mais recente à mais antiga (o id termina na data `yyyy-mm-dd`). */
+export function montarConsultaConversas(consulta: ConsultaConversas) {
+  return {
+    size: 0,
+    query: { bool: { filter: [{ term: { usuario_id: consulta.usuarioId } }, { term: { contexto: 'CHAT' } }] } },
+    aggs: {
+      conversas: {
+        terms: { field: 'conversa_id', size: LIMITE_CONVERSAS, order: { _key: 'desc' } },
+        aggs: {
+          ultima: { max: { field: 'created_date' } },
+          primeira: { top_hits: { size: 1, sort: [{ created_date: 'asc' }], _source: ['texto'] } },
+        },
+      },
+    },
   };
 }

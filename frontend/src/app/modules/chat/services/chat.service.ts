@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
   ChatBuscadoDto,
+  ChatConversasListadasDto,
   ChatEventoDto,
   ChatHojeRecuperadoDto,
   StandardResponse,
@@ -29,6 +30,15 @@ export class ChatService {
 
   recuperarHoje(): Observable<StandardResponse<ChatHojeRecuperadoDto>> {
     return this.httpClient.get<StandardResponse<ChatHojeRecuperadoDto>>(`${this.urlBase}/hoje`, comFeedbackProprio());
+  }
+
+  listarConversas(): Observable<StandardResponse<ChatConversasListadasDto>> {
+    return this.httpClient.get<StandardResponse<ChatConversasListadasDto>>(`${this.urlBase}/conversas`, comFeedbackProprio());
+  }
+
+  /** A conversa de um dia (`yyyy-mm-dd`) do próprio usuário, no mesmo formato de `recuperarHoje`. */
+  recuperarConversa(data: string): Observable<StandardResponse<ChatHojeRecuperadoDto>> {
+    return this.httpClient.get<StandardResponse<ChatHojeRecuperadoDto>>(`${this.urlBase}/conversa/${data}`, comFeedbackProprio());
   }
 
   buscar(texto: string): Observable<StandardResponse<ChatBuscadoDto>> {

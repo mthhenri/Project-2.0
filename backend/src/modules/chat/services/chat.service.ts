@@ -3,6 +3,8 @@ import {
   AutorChatEnum,
   ChatBuscadoDto,
   ChatBuscarDto,
+  ChatConversaRecuperarDto,
+  ChatConversasListadasDto,
   ChatEventoDto,
   ChatHojeRecuperadoDto,
   ChatMensagemEnviarDto,
@@ -61,6 +63,26 @@ export class ChatService {
 
   async recuperarHoje(usuarioAtivo: JwtPayload): Promise<StandardResponse<ChatHojeRecuperadoDto>> {
     const conversaId = this.conversaDeHoje(usuarioAtivo);
+    const mensagens = await this.chatMensagemRepositorio.listarConversa({ conversaId, usuarioId: usuarioAtivo.sub });
+    return { sucesso: true, dados: { conversaId, mensagens: mensagens.map(paraResumo) }, mensagem: 'Conversa recuperada com sucesso' };
+  }
+
+  /** A lista do histórico: uma entrada por dia com conversa, da mais recente à mais antiga. */
+  async listarConversas(usuarioAtivo: JwtPayload): Promise<StandardResponse<ChatConversasListadasDto>> {
+    const baldes = await this.chatMensagemRepositorio.listarConversas({ usuarioId: usuarioAtivo.sub });
+    const conversas = baldes.map((balde) => ({
+      conversaId: balde.key,
+      data: balde.key.slice(-10),
+      primeiraMensagem: balde.primeira.hits.hits[0]?._source.texto ?? '',
+      quantidadeDeMensagens: balde.doc_count,
+      ultimaMensagemDate: new Date(balde.ultima.value),
+    }));
+    return { sucesso: true, dados: { conversas }, mensagem: 'Conversas listadas com sucesso' };
+  }
+
+  /** A conversa de um dia do próprio usuário; o dono vem do token, então um dia sem mensagens devolve a lista vazia. */
+  async recuperarConversa(dto: ChatConversaRecuperarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<ChatHojeRecuperadoDto>> {
+    const conversaId = `${usuarioAtivo.sub}-${dto.data}`;
     const mensagens = await this.chatMensagemRepositorio.listarConversa({ conversaId, usuarioId: usuarioAtivo.sub });
     return { sucesso: true, dados: { conversaId, mensagens: mensagens.map(paraResumo) }, mensagem: 'Conversa recuperada com sucesso' };
   }

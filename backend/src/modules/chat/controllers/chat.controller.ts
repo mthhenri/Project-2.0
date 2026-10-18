@@ -1,6 +1,6 @@
-import { Body, Controller, Get, Post, Query, Res } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, Res } from '@nestjs/common';
 import type { Response } from 'express';
-import { ChatBuscarDto, ChatMensagemEnviarDto } from '@project20/shared';
+import { ChatBuscarDto, ChatConversaRecuperarDto, ChatMensagemEnviarDto } from '@project20/shared';
 import { ActiveUser } from '../../autenticacao/decorators/active-user.decorator';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { ChatService } from '../services/chat.service';
@@ -25,6 +25,16 @@ export class ChatController {
   @Get('hoje')
   recuperarHoje(@ActiveUser() usuarioAtivo: JwtPayload) {
     return this.chatService.recuperarHoje(usuarioAtivo);
+  }
+
+  @Get('conversas')
+  listarConversas(@ActiveUser() usuarioAtivo: JwtPayload) {
+    return this.chatService.listarConversas(usuarioAtivo);
+  }
+
+  @Get('conversa/:data')
+  recuperarConversa(@Param() dto: ChatConversaRecuperarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
+    return this.chatService.recuperarConversa(dto, usuarioAtivo);
   }
 
   @Get('busca')

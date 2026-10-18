@@ -1,0 +1,87 @@
+<aside class="chat-historico" aria-label="Histórico de conversas">
+  <header class="chat-historico__cabecalho">
+    @if (aberto()) {
+      <strong class="chat-historico__titulo">Histórico</strong>
+    }
+    <p-button
+      [icon]="aberto() ? 'pi pi-angle-double-right' : 'pi pi-history'"
+      [text]="true"
+      severity="secondary"
+      size="small"
+      [attr.aria-expanded]="aberto()"
+      [ariaLabel]="aberto() ? 'Recolher histórico' : 'Abrir histórico'"
+      (onClick)="alternar()"
+    />
+  </header>
+
+  @if (aberto()) {
+    <span class="chat-historico__busca">
+      <i class="pi pi-search chat-historico__busca-icone"></i>
+      <input
+        pInputText
+        type="text"
+        class="chat-historico__busca-campo"
+        placeholder="Buscar nas minhas conversas…"
+        aria-label="Buscar nas minhas conversas"
+        [formControl]="controleBusca"
+        (keydown.enter)="buscar()"
+        (keydown.escape)="limparBusca()"
+      />
+    </span>
+
+    <div class="chat-historico__corpo">
+      @if (resultados(); as encontrados) {
+        <div class="chat-historico__secao-cabecalho">
+          <span>{{ encontrados.length }} {{ encontrados.length === 1 ? 'resultado' : 'resultados' }}</span>
+          <p-button label="Limpar" size="small" [text]="true" (onClick)="limparBusca()" />
+        </div>
+        @if (encontrados.length === 0) {
+          <p class="chat-historico__vazio">Nenhuma mensagem encontrada.</p>
+        } @else {
+          <ul class="chat-historico__lista">
+            @for (resultado of encontrados; track resultado.id) {
+              <li>
+                <button type="button" class="chat-historico__item" (click)="escolherResultado(resultado)">
+                  <span class="chat-historico__item-meta">
+                    {{ resultado.autor === Autor.USUARIO ? 'Você' : 'IA' }} · {{ resultado.createdDate | date: 'dd/MM/yyyy HH:mm' }}
+                  </span>
+                  <span class="chat-historico__item-texto">{{ resultado.texto }}</span>
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      } @else if (carregando()) {
+        <div class="chat-historico__esqueleto" aria-busy="true">
+          <p-skeleton height="3rem" />
+          <p-skeleton height="3rem" />
+          <p-skeleton height="3rem" />
+        </div>
+      } @else if (erro()) {
+        <div class="chat-historico__vazio" role="alert">
+          <span>Não foi possível carregar o histórico.</span>
+          <p-button label="Tentar de novo" size="small" [text]="true" (onClick)="recarregar()" />
+        </div>
+      } @else if (conversas().length === 0) {
+        <p class="chat-historico__vazio">Nenhuma conversa ainda.</p>
+      } @else {
+        <ul class="chat-historico__lista">
+          @for (conversa of conversas(); track conversa.conversaId) {
+            <li>
+              <button
+                type="button"
+                class="chat-historico__item"
+                [class.chat-historico__item--atual]="conversa.data === diaAtual()"
+                [attr.aria-current]="conversa.data === diaAtual() ? 'true' : null"
+                (click)="diaEscolhido.emit(conversa.data)"
+              >
+                <span class="chat-historico__item-meta">{{ rotuloDoDia(conversa.data, hoje()) }} · {{ conversa.quantidadeDeMensagens }} msg</span>
+                <span class="chat-historico__item-texto">{{ conversa.primeiraMensagem }}</span>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  }
+</aside>

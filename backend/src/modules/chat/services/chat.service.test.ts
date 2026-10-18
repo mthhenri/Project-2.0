@@ -59,6 +59,13 @@ function montar(cenario: Cenario) {
     async listarConversa() {
       return [...gravadas];
     },
+    async listarConversas(consulta: unknown) {
+      ordem.push(`conversas:${JSON.stringify(consulta)}`);
+      return [
+        { key: '7-2026-10-17', doc_count: 4, ultima: { value: Date.parse('2026-10-17T15:00:00Z') }, primeira: { hits: { hits: [{ _source: { texto: 'bom dia' } }] } } },
+        { key: '7-2026-10-16', doc_count: 2, ultima: { value: Date.parse('2026-10-16T12:00:00Z') }, primeira: { hits: { hits: [] } } },
+      ];
+    },
     async buscar(consulta: unknown) {
       ordem.push(`buscar:${JSON.stringify(consulta)}`);
       return [];
@@ -300,6 +307,23 @@ test('recuperarHoje devolve a conversa do dia no fuso configurado, sem o conteú
   assert.match(hoje.dados.conversaId, /^7-\d{4}-\d{2}-\d{2}$/);
   assert.equal(hoje.dados.mensagens.length, 2);
   assert.equal(hoje.dados.mensagens.some((mensagem) => 'conteudoBruto' in mensagem), false);
+});
+
+test('listarConversas devolve o dia, o trecho inicial e a contagem de cada conversa do dono', async () => {
+  const { servico, ordem } = montar({ chamadas: [] });
+  const resposta = await servico.listarConversas(USUARIO);
+  assert.match(ordem[0], /"usuarioId":7/);
+  assert.deepEqual(
+    resposta.dados.conversas.map((conversa) => [conversa.data, conversa.primeiraMensagem, conversa.quantidadeDeMensagens]),
+    [['2026-10-17', 'bom dia', 4], ['2026-10-16', '', 2]],
+  );
+  assert.equal(resposta.dados.conversas[0].ultimaMensagemDate.toISOString(), '2026-10-17T15:00:00.000Z');
+});
+
+test('recuperarConversa monta o id com o dono do token, nunca com outro', async () => {
+  const { servico } = montar({ chamadas: [] });
+  const resposta = await servico.recuperarConversa({ data: '2026-10-10' }, USUARIO);
+  assert.equal(resposta.dados.conversaId, '7-2026-10-10');
 });
 
 test('buscar repassa o usuário do token e o período', async () => {

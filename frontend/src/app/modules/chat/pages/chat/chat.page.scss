@@ -5,101 +5,17 @@
 
 .chat {
   display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  // A conversa ocupa a altura do conteúdo e só ela rola; o resto (título, aviso, campo) fica à vista.
   height: 100%;
   min-height: 24rem;
-  padding: 1.5rem;
 
-  &__cabecalho {
+  // A coluna da conversa ocupa a altura e só ela rola; o resto (aviso, campo) fica à vista. O histórico fica colado à direita.
+  &__principal {
+    flex: 1;
+    min-width: 0;
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-  }
-
-  &__titulo-grupo {
-    display: flex;
-    align-items: baseline;
+    flex-direction: column;
     gap: 0.75rem;
-  }
-
-  &__titulo {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--p-primary-600);
-    margin: 0;
-  }
-
-  &__contador {
-    font-size: 0.875rem;
-    color: var(--p-text-muted-color);
-  }
-
-  &__busca {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-  }
-
-  &__busca-icone {
-    position: absolute;
-    left: 0.75rem;
-    color: var(--p-text-muted-color);
-  }
-
-  &__busca-campo {
-    width: 20rem;
-    padding-left: 2.25rem;
-  }
-
-  &__resultados {
-    max-height: 14rem;
-    overflow-y: auto;
-    padding: 0.75rem 1rem;
-    border: 1px solid var(--app-surface-200);
-    border-radius: 8px;
-    background: var(--app-surface-0);
-  }
-
-  &__resultados-cabecalho {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  &__vazio-busca {
-    margin: 0.5rem 0 0;
-    color: var(--p-text-muted-color);
-  }
-
-  &__lista-resultados {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  &__resultado {
-    display: grid;
-    grid-template-columns: 10rem minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.5rem 0;
-    border-top: 1px solid var(--app-surface-200);
-    font-size: 0.875rem;
-  }
-
-  &__resultado-meta {
-    color: var(--p-text-muted-color);
-    font-size: 0.75rem;
-  }
-
-  &__resultado-texto {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    padding: 1.5rem;
   }
 
   &__erro {
@@ -123,6 +39,10 @@
     border-radius: 8px;
     background: var(--app-surface-0);
     font-size: 0.875rem;
+  }
+
+  &__aviso--neutro {
+    border-color: var(--app-surface-200);
   }
 
   // A conversa é uma coluna centralizada, sem moldura: só ela rola; o rodapé (sugestões, campo, legenda) fica sempre à vista.
@@ -188,6 +108,54 @@
     font-weight: 700;
   }
 
+  &__avatar--grande {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 12px;
+    font-size: 0.875rem;
+  }
+
+  &__coluna-usuario {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.25rem;
+    max-width: 72%;
+  }
+
+  &__hora {
+    color: var(--p-text-muted-color);
+    font-size: 0.6875rem;
+  }
+
+  // Hora e copiar embaixo da resposta; o botão só aparece ao passar o mouse ou receber foco.
+  &__rodape-mensagem {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__copiar {
+    display: inline-flex;
+    padding: 0.25rem;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--p-text-muted-color);
+    cursor: pointer;
+    opacity: 0;
+
+    &:hover {
+      background: var(--app-surface-100);
+      color: var(--p-text-color);
+    }
+  }
+
+  &__linha:hover &__copiar,
+  &__copiar:focus-visible {
+    opacity: 1;
+  }
+
   &__linha {
     display: flex;
     gap: 0.75rem;
@@ -222,7 +190,6 @@
   }
 
   &__balao {
-    max-width: 72%;
     padding: 0.625rem 0.875rem;
     border-radius: 14px 14px 4px 14px;
     background: var(--p-primary-600);
@@ -280,6 +247,11 @@
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
+  }
+
+  &__sugestoes--centro {
+    justify-content: center;
+    margin-top: 0.5rem;
   }
 
   &__sugestao {

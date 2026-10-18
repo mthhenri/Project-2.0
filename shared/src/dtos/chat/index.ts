@@ -4,3 +4,6 @@ export * from './ChatEventoDto';
 export * from './ChatHojeRecuperadoDto';
 export * from './ChatBuscarDto';
 export * from './ChatBuscadoDto';
+export * from './ChatConversaResumoDto';
+export * from './ChatConversasListadasDto';
+export * from './ChatConversaRecuperarDto';

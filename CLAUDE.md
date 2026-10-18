@@ -93,7 +93,7 @@ restam o guarda-chuva e o `INDEX-revisao-ux.md`, mapa em `docs/context/MEMORY.md
 centralizada, administrador, layout, Markdown), do bloco 8 (**125–128**, pad estruturado, já implementado) do bloco 4 (**129–133**,
 fundação da IA, já implementado), da **134** (editor de Markdown formatado, que troca o editor em todo o sistema) e do bloco 5
 (**135–140**, chat: OpenSearch, propostas, ferramentas, conversa com streaming, tela e teste de prompts); os blocos 6, 7, 9 e 10 ainda
-serão quebrados a partir da 141. Confira o próximo número livre antes de criar uma spec nova: o maior em uso é 140.
+serão quebrados a partir da 142. Confira o próximo número livre antes de criar uma spec nova: o maior em uso é 141.
 
 ## Gate obrigatório de qualidade e conclusão
 

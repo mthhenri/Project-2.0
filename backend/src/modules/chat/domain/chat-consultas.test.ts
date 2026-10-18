@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import * as assert from 'node:assert/strict';
 import { AutorChatEnum, ContextoChatEnum, NivelIaEnum } from '@project20/shared';
-import { MAPEAMENTO_CHAT_MENSAGEM, montarConsultaBusca, montarConsultaConversa } from './chat-consultas';
+import { MAPEAMENTO_CHAT_MENSAGEM, montarConsultaBusca, montarConsultaConversa, montarConsultaConversas } from './chat-consultas';
 import { ChatMensagemNova, deFonte, paraFonte, paraResumo } from './chat-mensagem.documento';
 
 describe('consultas do chat', () => {
@@ -17,6 +17,14 @@ describe('consultas do chat', () => {
     const comPeriodo = montarConsultaBusca({ usuarioId: 7, texto: 'descricao', inicio: new Date('2026-10-01T00:00:00Z') });
     assert.deepEqual(comPeriodo.query.bool.filter[1], { range: { created_date: { gte: '2026-10-01T00:00:00.000Z' } } });
     assert.deepEqual(comPeriodo.query.bool.filter[0], { term: { usuario_id: 7 } });
+  });
+
+  it('a lista de conversas filtra por dono e só pelo chat, agrupa por conversa e traz a mais recente primeiro', () => {
+    const consulta = montarConsultaConversas({ usuarioId: 7 });
+    assert.deepEqual(consulta.query.bool.filter, [{ term: { usuario_id: 7 } }, { term: { contexto: 'CHAT' } }]);
+    assert.equal(consulta.size, 0);
+    assert.deepEqual(consulta.aggs.conversas.terms.order, { _key: 'desc' });
+    assert.equal(consulta.aggs.conversas.terms.field, 'conversa_id');
   });
 
   it('o mapeamento tira acento e não indexa o conteúdo bruto', () => {

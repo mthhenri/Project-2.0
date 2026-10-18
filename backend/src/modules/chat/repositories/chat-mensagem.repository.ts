@@ -4,12 +4,15 @@ import { randomUUID } from 'node:crypto';
 import { ConfigService } from '../../../config/config.service';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import {
+  BaldeConversa,
   ConsultaBusca,
   ConsultaConversa,
+  ConsultaConversas,
   INDICE_CHAT_MENSAGEM,
   MAPEAMENTO_CHAT_MENSAGEM,
   montarConsultaBusca,
   montarConsultaConversa,
+  montarConsultaConversas,
 } from '../domain/chat-consultas';
 import { ChatMensagemFonte, ChatMensagemLida, ChatMensagemNova, deFonte, paraFonte } from '../domain/chat-mensagem.documento';
 
@@ -20,7 +23,9 @@ export interface ClienteOpenSearchChat {
     create(parametros: { index: string; body: unknown }): Promise<unknown>;
   };
   index(parametros: { index: string; id: string; body: unknown; refresh: 'wait_for' }): Promise<unknown>;
-  search(parametros: { index: string; body: unknown }): Promise<{ body: { hits: { hits: { _source: ChatMensagemFonte }[] } } }>;
+  search(parametros: { index: string; body: unknown }): Promise<{
+    body: { hits: { hits: { _source: ChatMensagemFonte }[] }; aggregations?: { conversas?: { buckets: BaldeConversa[] } } };
+  }>;
 }
 
 export const CLIENTE_OPENSEARCH_CHAT = 'CLIENTE_OPENSEARCH_CHAT';
@@ -70,6 +75,15 @@ export class ChatMensagemRepository implements OnModuleInit {
       await this.garantirIndice();
       const resposta = await this.cliente.search({ index: INDICE_CHAT_MENSAGEM, body: montarConsultaConversa(consulta) });
       return resposta.body.hits.hits.map((acerto) => deFonte(acerto._source));
+    });
+  }
+
+  /** As conversas do usuário (uma por dia), da mais recente à mais antiga, sem as mensagens. */
+  async listarConversas(consulta: ConsultaConversas): Promise<BaldeConversa[]> {
+    return this.proteger(async () => {
+      await this.garantirIndice();
+      const resposta = await this.cliente.search({ index: INDICE_CHAT_MENSAGEM, body: montarConsultaConversas(consulta) });
+      return resposta.body.aggregations?.conversas?.buckets ?? [];
     });
   }
 
