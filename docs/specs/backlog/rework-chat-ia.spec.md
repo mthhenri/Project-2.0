@@ -42,8 +42,8 @@ sozinho ao fluxo convencional, sem parar o serviço.
    com a demanda de cada uma.
 5. **"Bora fazer tal coisa."** A IA propõe iniciar a execução com uma descrição provisória.
    Se houver outra ativa, ela é pausada antes.
-6. **Check-in periódico.** O app Electron aparece à frente em intervalo sorteado entre 30 min e
-   1h20 (configurável), só enquanto há execução ativa. A IA pergunta o que foi feito; o dev
+6. **Check-in periódico.** O Project (no navegador ou no Project Desktop) mostra o check-in em
+   horário sorteado pelo backend entre 30 min e 1h20 (configurável), só enquanto há execução ativa. A IA pergunta o que foi feito; o dev
    responde do jeito dele; a IA devolve uma **descrição formal** (sem "eu", sem gírias) como
    proposta. Ao salvar, o dev escolhe continuar na mesma atividade (pausa e reabre a execução)
    ou trocar de atividade. O tempo desde o último check-in é sempre o `inicio_data` da
@@ -159,12 +159,15 @@ sozinho ao fluxo convencional, sem parar o serviço.
   (hora, execução atual, próximo check-in, usuário).
 - As permissões de tela continuam exatamente como hoje.
 
-## App Electron
+## Project Desktop (Electron)
 
-- Uma casca simples que carrega a URL do Project, como uma aba do navegador, num Windows comum.
-- Tem o timer do check-in, que sorteia o próximo intervalo e consulta a execução ativa para não
-  aparecer logo depois de um início.
-- Fica **sempre à frente** na hora do check-in, até a resposta ser registrada.
+- Aplicativo em `desktop/` que abre o front do Project numa janela própria (URL fixa); o navegador
+  continua sendo o centro e todo mundo usa o desktop no dia a dia (152).
+- Janela principal sempre por cima, em tela cheia, que só minimiza; só fecha por "Fechar
+  completamente" na bandeja, com confirmação. A bandeja mostra o tempo até o próximo check-in.
+- O **horário** do check-in é sorteado no **backend**, e o Project (navegador ou desktop) mostra a
+  janelinha sobre a tela escurecida (161). Com o desktop minimizado, aparece só a janelinha:
+  arrastável, sempre por cima, sem fechar nem minimizar, com "Estou em reunião" como única saída (160).
 
 ## Armazenamento
 
@@ -239,7 +242,9 @@ Os blocos 1 a 3 não dependem de IA e podem começar primeiro.
 | 7 | 149 | [`149-checkin-backend-e-rigor-proporcional`](149-checkin-backend-e-rigor-proporcional.spec.md) | 144, 148 |
 | 7 | 150 | [`150-checkin-descricao-formal-da-execucao`](150-checkin-descricao-formal-da-execucao.spec.md) | 145, 149 |
 | 7 | 151 | [`151-checkin-tela-da-janela`](151-checkin-tela-da-janela.spec.md) | 149, 150 |
-| 7 | 152 | [`152-electron-casca-e-timer-do-checkin`](152-electron-casca-e-timer-do-checkin.spec.md) | 149, 151 |
+| 7 | 152 | [`152-desktop-casca-e-bandeja`](152-desktop-casca-e-bandeja.spec.md) | — |
+| 7 | 160 | [`160-desktop-janelinha-do-checkin`](160-desktop-janelinha-do-checkin.spec.md) | 151, 152, 161 |
+| 7 | 161 | [`161-checkin-horario-no-backend-e-no-project`](161-checkin-horario-no-backend-e-no-project.spec.md) | 148, 149, 151 |
 | 9 | 153 | [`153-chat-gestor-ferramentas-de-leitura`](153-chat-gestor-ferramentas-de-leitura.spec.md) | 137, 139, 144 |
 | 9 | 154 | [`154-chat-gestor-criar-demanda`](../done/154-chat-gestor-criar-demanda.spec.md) (absorvida pela 159) | 153 |
 | 9 | 155 | [`155-chat-gestor-entrevista-de-demanda`](155-chat-gestor-entrevista-de-demanda.spec.md) | 154 |

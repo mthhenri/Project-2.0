@@ -12,6 +12,15 @@
 
 ---
 
+## 2026-10-18 — Project Desktop: specs 152, 160 e 161 reescritas
+
+Conversa com o autor sobre o Electron (o app V1 vivia na empresa e não está disponível); nada foi implementado. Um protótipo de comportamento foi validado: janelinha arrastável com o desktop minimizado, diálogo escurecido com o Project aberto e menu da bandeja com confirmação.
+
+- **152** virou "Project Desktop: casca e bandeja" (pasta `desktop/`): abre a URL fixa do front, janela sempre por cima e em tela cheia que só minimiza, só fecha por "Fechar completamente" na bandeja com confirmação, instância única, não inicia com o Windows, executável portátil para Windows (Linux se for direto), sem atualização automática.
+- **160** nova: a janelinha do check-in no desktop (só com o Project minimizado; sempre por cima, arrastável, sem fechar nem minimizar, "Estou em reunião" como única saída).
+- **161** nova: o **horário** do check-in passa a ser sorteado no backend (`proximoCheckinData` na situação) e o Project, no navegador ou no desktop, mostra a janelinha sobre a tela escurecida. Muda a premissa anterior de que o timer vivia no Electron.
+- Ordem natural: 161, 152, 160. A guarda-chuva e o `CLAUDE.md`/`AGENTS.md` (maior número em uso: 161) foram atualizados.
+
 ## 2026-10-18 — Task 159: a IA cria projetos e demandas (paridade com o usuário)
 
 Pedido do autor ao ver a IA dizer que não criava demandas nem projetos: "se o usuário consegue criar, a IA também consegue". Spec em `docs/specs/done/159-ia-cria-projetos-e-demandas.spec.md`; a task 154 (criar demanda) foi absorvida e movida para `done/` com a nota. O princípio entrou nos princípios da guarda-chuva: tudo o que o usuário faz a IA também faz, por proposta confirmada, sem excluir.
