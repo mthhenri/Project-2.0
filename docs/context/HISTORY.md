@@ -12,6 +12,21 @@
 
 ---
 
+## 2026-10-18 — Task 169: IA do gestor age por outro usuário — verificação visual pendente
+
+Corrige a lacuna achada no teste do autor ("cria uma atividade para ele naquela demanda"): a IA só atuava sobre o usuário do token.
+
+- **`ExecucaoService.recuperarAtivaDoUsuario`** (nova): a ativa de **um usuário**; o gestor lê a de qualquer um, o desenvolvedor só a própria (senão `UnauthorizedAccessException`). `recuperarAtiva(usuarioAtivo)` continua como era.
+- **Criar atividade** (`propor_criar_atividade`): `usuarioId` opcional, só para gestor; para si mesmo ele some da proposta; a pessoa precisa existir e estar ativa; o cartão mostra "Pessoa". O executor recusa `usuarioId` alheio de quem não é gestor (a `AtividadeService.criar` apenas o ignora, e a atividade sairia no nome errado). `AtividadeModule` passou a importar `UsuarioModule`.
+- **Iniciar** (`propor_iniciar_execucao` e executor): a execução é do **dono da atividade**. A regra "uma ativa por usuário", "pausa antes" e o "reabrir" no desfazer olham a execução **dele**, não a do gestor (o executor lê o dono pela atividade; o resultado guarda `donoId`). Desenvolvedor numa atividade alheia é recusado já na ferramenta.
+- **Pausar** (`propor_pausar_execucao` e executor): `usuarioId` opcional (só gestor) para pausar a execução de outra pessoa; o resultado guarda de quem era para o desfazer.
+- **Leituras:** `consultar_execucao_ativa` e `listar_minhas_atividades` aceitam `usuarioId` (só gestor; a service/ferramenta recusam os demais). Nenhuma regra de permissão das services mudou.
+- **Também:** o desfazer da correção de execução (166) agora confere a ativa do dono, não a de quem desfaz.
+- **Cartões:** linha "Pessoa" em criar atividade, iniciar e pausar execução, quando é outra pessoa.
+- **Testes:** backend 489 (+12; e ajuste dos mocks de iniciar/pausar/criar, que agora leem a execução do dono); builds de shared, backend e frontend passam; o backend sobe sem erro de injeção. Cobre: gestor com execução própria ativa **não** é pausado ao iniciar a atividade de outra pessoa.
+- **Fora (como na spec):** descrever execução e check-in de outra pessoa.
+- **Pendente (spec fica em `active`):** os cartões com "Pessoa" não foram vistos renderizados e a conversa real ("cria uma atividade para o Matheus...", "inicia a atividade X do Matheus") não foi testada.
+
 ## 2026-10-18 — Task 168: IA propõe atribuir membros e tags — verificação visual pendente
 
 - **Tipos `ATRIBUIR_MEMBRO` e `ATRIBUIR_TAG`** (migration `0042`, aplicada no banco de dev), só gestor (a ferramenta e o executor conferem).

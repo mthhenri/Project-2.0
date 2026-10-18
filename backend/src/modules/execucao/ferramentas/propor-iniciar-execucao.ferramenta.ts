@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ProporIniciarExecucaoDto, PropostaIniciarExecucaoDadosDto, TipoAtividadeStatusEnum, TipoPropostaIaEnum } from '@project20/shared';
+import { ProporIniciarExecucaoDto, PropostaIniciarExecucaoDadosDto, TipoAtividadeStatusEnum, TipoPropostaIaEnum, temPermissaoDeGestor } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { AtividadeService } from '../../atividade/services/atividade.service';
@@ -21,7 +21,8 @@ export class ProporIniciarExecucaoFerramenta extends FerramentaPropostaIa<Propor
     'se o usuário não deixar claro qual atividade, pergunte antes de propor. Só atividades PLANEJADA ou DESENVOLVENDO podem ser iniciadas. ' +
     'Antes de propor, confira o status em listar_minhas_atividades e PERGUNTE ao usuário: se a atividade estiver PENDENTE, se ele quer deixá-la PLANEJADA ou em DESENVOLVENDO; ' +
     'se estiver PLANEJADA, se quer passá-la para DESENVOLVENDO ou iniciar como planejada mesmo. Depois da resposta, proponha com novoStatus (omita para manter o status). ' +
-    'Numa DESENVOLVIDA, pergunte o que ele quer fazer. Sem novoStatus, PENDENTE e DESENVOLVIDA são recusadas.';
+    'Numa DESENVOLVIDA, pergunte o que ele quer fazer. Sem novoStatus, PENDENTE e DESENVOLVIDA são recusadas. ' +
+    'O gestor pode iniciar a execução de uma atividade de OUTRA pessoa (passe o atividadeId dela; use listar_minhas_atividades com usuarioId): a execução é do dono da atividade e é a execução em andamento DELE que será pausada.';
   readonly permissao = 'QUALQUER' as const;
   readonly classeDeEntrada = ProporIniciarExecucaoDto;
   readonly tipoProposta = TipoPropostaIaEnum.INICIAR_EXECUCAO;
@@ -47,13 +48,19 @@ export class ProporIniciarExecucaoFerramenta extends FerramentaPropostaIa<Propor
       );
     }
     const statusMuda = atividade && entrada.novoStatus && entrada.novoStatus !== atividade.status;
-    const ativa = (await this.execucaoService.recuperarAtiva(usuarioAtivo)).dados;
+    // A execução é do DONO da atividade (o gestor age por ele): é a execução ativa dele que a regra "uma por usuário" e a pausa olham.
+    const donoId = atividade?.usuarioId ?? usuarioAtivo.sub;
+    if (donoId !== usuarioAtivo.sub && !temPermissaoDeGestor(usuarioAtivo.tipo)) {
+      throw new BusinessException('Só o gestor inicia a execução de uma atividade de outra pessoa.');
+    }
+    const ativa = (await this.execucaoService.recuperarAtivaDoUsuario({ usuarioId: donoId }, usuarioAtivo)).dados;
     const aPausar = ativa && ativa.atividadeId !== entrada.atividadeId ? (await this.atividadeService.recuperar({ id: ativa.atividadeId }, usuarioAtivo)).dados : null;
 
     const dados: PropostaIniciarExecucaoDadosDto = {
       ...entrada,
       atividadeNome: atividade?.nome,
       demandaNome: demanda?.nome,
+      ...(donoId !== usuarioAtivo.sub && atividade ? { usuarioNome: atividade.nomeUsuario } : {}),
       ...(statusMuda ? { statusAnterior: atividade.status as TipoAtividadeStatusEnum } : {}),
       ...(aPausar ? { pausaraAtividadeNome: aPausar.nome } : {}),
     };

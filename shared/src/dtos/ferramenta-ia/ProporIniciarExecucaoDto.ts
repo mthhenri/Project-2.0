@@ -43,6 +43,11 @@ export class PropostaIniciarExecucaoDadosDto extends ProporIniciarExecucaoDto {
   @IsString()
   pausaraAtividadeNome?: string;
 
+  /** O dono da atividade, quando não é quem confirma (o gestor age por ele): a execução é dele e a que será pausada também. */
+  @IsOptional()
+  @IsString()
+  usuarioNome?: string;
+
   /** Status da atividade antes de a proposta mudá-lo (só presente quando muda); serve ao cartão e ao desfazer. */
   @IsOptional()
   @IsEnum(TipoAtividadeStatusEnum)

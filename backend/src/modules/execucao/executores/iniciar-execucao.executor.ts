@@ -11,7 +11,7 @@ import { ExecucaoService } from '../services/execucao.service';
 export const DESCRICAO_PAUSA_PARA_INICIAR_OUTRA = 'Pausada para iniciar outra atividade';
 
 /**
- * Executor da proposta `INICIAR_EXECUCAO`: **pausa antes** a execução ativa do usuário (se houver) e inicia a nova, tudo pela
+ * Executor da proposta `INICIAR_EXECUCAO`: **pausa antes** a execução ativa do dono da atividade (se houver; o gestor age por ele) e inicia a nova, tudo pela
  * `ExecucaoService` com o usuário do token (valem o dono da atividade, o status executável e a regra de uma execução ativa). Se
  * iniciar falhar depois da pausa, reabre a anterior. Quando o usuário escolheu mudar o status da atividade (`novoStatus`), muda-o
  * antes de iniciar e o devolve se iniciar falhar. Desfazer exclui a execução recém-iniciada (só enquanto está em andamento), reabre a
@@ -32,7 +32,9 @@ export class IniciarExecucaoExecutor implements ExecutorPropostaIa {
 
   async executar(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
     const entrada = validarDadosDaProposta(PropostaIniciarExecucaoDadosDto, dados);
-    const anterior = (await this.execucaoService.recuperarAtiva(usuarioAtivo)).dados;
+    // A execução é do DONO da atividade (o gestor age por ele): é a ativa dele que pausa antes e que a regra "uma por usuário" olha.
+    const donoId = await this.donoDaAtividade(entrada.atividadeId, usuarioAtivo);
+    const anterior = (await this.execucaoService.recuperarAtivaDoUsuario({ usuarioId: donoId }, usuarioAtivo)).dados;
 
     if (anterior) {
       if (anterior.atividadeId === entrada.atividadeId) throw new BusinessException('Esta atividade já está em execução');
@@ -46,20 +48,22 @@ export class IniciarExecucaoExecutor implements ExecutorPropostaIa {
       return {
         execucaoId: iniciada?.id,
         atividadeId: entrada.atividadeId,
+        donoId,
         ...(statusAnterior ? { statusAnterior } : {}),
         ...(anterior ? { pausouExecucaoId: anterior.id, pausouDescricao: anterior.descricao.trim() || DESCRICAO_PAUSA_PARA_INICIAR_OUTRA } : {}),
       };
     } catch (erro) {
       if (statusAnterior) await this.restaurarStatus(entrada.atividadeId, statusAnterior, usuarioAtivo).catch(() => undefined);
-      if (anterior) await this.reabrir(anterior.id, anterior.descricao.trim() || DESCRICAO_PAUSA_PARA_INICIAR_OUTRA, usuarioAtivo).catch(() => undefined);
+      if (anterior) await this.reabrir(anterior.id, anterior.descricao.trim() || DESCRICAO_PAUSA_PARA_INICIAR_OUTRA, donoId, usuarioAtivo).catch(() => undefined);
       throw erro;
     }
   }
 
-  /** Obsoleta quando a atividade já está em execução (o usuário a iniciou à mão). */
+  /** Obsoleta quando a atividade já está em execução (o dono a iniciou à mão, ou o gestor por ele). */
   async estaObsoleta(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<boolean> {
     const entrada = validarDadosDaProposta(PropostaIniciarExecucaoDadosDto, dados);
-    return (await this.execucaoService.recuperarAtiva(usuarioAtivo)).dados?.atividadeId === entrada.atividadeId;
+    const donoId = await this.donoDaAtividade(entrada.atividadeId, usuarioAtivo);
+    return (await this.execucaoService.recuperarAtivaDoUsuario({ usuarioId: donoId }, usuarioAtivo)).dados?.atividadeId === entrada.atividadeId;
   }
 
   async desfazer(resultado: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<void> {
@@ -74,7 +78,8 @@ export class IniciarExecucaoExecutor implements ExecutorPropostaIa {
     if (statusAnterior && Number.isInteger(atividadeId)) await this.restaurarStatus(atividadeId, statusAnterior, usuarioAtivo);
     const pausadaId = Number(resultado['pausouExecucaoId']);
     if (Number.isInteger(pausadaId)) {
-      await this.reabrir(pausadaId, String(resultado['pausouDescricao'] ?? DESCRICAO_PAUSA_PARA_INICIAR_OUTRA), usuarioAtivo);
+      const donoId = Number.isInteger(Number(resultado['donoId'])) ? Number(resultado['donoId']) : usuarioAtivo.sub;
+      await this.reabrir(pausadaId, String(resultado['pausouDescricao'] ?? DESCRICAO_PAUSA_PARA_INICIAR_OUTRA), donoId, usuarioAtivo);
     }
   }
 
@@ -82,9 +87,16 @@ export class IniciarExecucaoExecutor implements ExecutorPropostaIa {
     await this.atividadeService.alterar({ id: atividadeId, status }, usuarioAtivo);
   }
 
-  /** Reabre uma execução encerrada (fim nulo), desde que o usuário não tenha outra em andamento. */
-  private async reabrir(execucaoId: number, descricao: string, usuarioAtivo: JwtPayload): Promise<void> {
-    if ((await this.execucaoService.recuperarAtiva(usuarioAtivo)).dados) {
+  /** O dono da atividade (de quem é a execução); a service confere o acesso de quem confirma. */
+  private async donoDaAtividade(atividadeId: number, usuarioAtivo: JwtPayload): Promise<number> {
+    const atividade = (await this.atividadeService.recuperar({ id: atividadeId }, usuarioAtivo)).dados;
+    if (!atividade) throw new BusinessException('Atividade não encontrada');
+    return atividade.usuarioId;
+  }
+
+  /** Reabre uma execução encerrada (fim nulo), desde que o dono não tenha outra em andamento. */
+  private async reabrir(execucaoId: number, descricao: string, donoId: number, usuarioAtivo: JwtPayload): Promise<void> {
+    if ((await this.execucaoService.recuperarAtivaDoUsuario({ usuarioId: donoId }, usuarioAtivo)).dados) {
       throw new BusinessException('Há outra execução em andamento: a anterior não pôde ser reaberta');
     }
     await this.execucaoService.alterar({ id: execucaoId, descricao, fimData: null }, usuarioAtivo);

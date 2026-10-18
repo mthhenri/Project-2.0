@@ -30,13 +30,13 @@ function montar(opcoes: { ativa?: { id: number; atividadeId: number; descricao: 
   const demandaRepositorio = {
     recuperar: async ({ id }: { id: number }) => (opcoes.demandaExiste === false ? null : { id, nome: id === 3 ? 'Autenticação' : 'Carrinho' }),
   };
-  const execucaoService = { recuperarAtiva: async () => ({ dados: opcoes.ativa ?? null }) };
+  const execucaoService = { recuperarAtiva: async () => ({ dados: opcoes.ativa ?? null }), recuperarAtivaDoUsuario: async () => ({ dados: opcoes.ativa ?? null }) };
   const proposta = propostaIaService as unknown as PropostaIaService;
   return {
     propostas,
     iniciar: new ProporIniciarExecucaoFerramenta(proposta, atividadeService as unknown as AtividadeService, demandaRepositorio as unknown as DemandaRepository, execucaoService as unknown as ExecucaoService),
     pausar: new ProporPausarExecucaoFerramenta(proposta, atividadeService as unknown as AtividadeService, demandaRepositorio as unknown as DemandaRepository, execucaoService as unknown as ExecucaoService),
-    criar: new ProporCriarAtividadeFerramenta(proposta, demandaRepositorio as unknown as DemandaRepository),
+    criar: new ProporCriarAtividadeFerramenta(proposta, demandaRepositorio as unknown as DemandaRepository, {} as never),
   };
 }
 

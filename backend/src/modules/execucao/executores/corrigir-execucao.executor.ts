@@ -73,8 +73,12 @@ export class CorrigirExecucaoExecutor implements ExecutorPropostaIa {
 
     const fimAnterior = (resultado['fimAnteriorData'] as string | null) ?? null;
     // Voltar a "em andamento" só vale se o usuário não tem outra execução ativa agora (a service não confere).
-    if (fimAnterior === null && (await this.execucaoService.recuperarAtiva(usuarioAtivo)).dados) {
-      throw new BusinessException('Há outra execução em andamento: a anterior não pôde ser reaberta');
+    if (fimAnterior === null) {
+      // De quem é a execução (o gestor corrige a de outra pessoa): é a ativa do dono que não pode existir.
+      const donoId = (await this.atividadeService.recuperar({ id: atual.atividadeId }, usuarioAtivo)).dados?.usuarioId ?? usuarioAtivo.sub;
+      if ((await this.execucaoService.recuperarAtivaDoUsuario({ usuarioId: donoId }, usuarioAtivo)).dados) {
+        throw new BusinessException('Há outra execução em andamento: a anterior não pôde ser reaberta');
+      }
     }
     await this.execucaoService.alterar(
       { id: execucaoId, descricao: String(resultado['descricaoAnterior'] ?? ''), inicioData: resultado['inicioAnteriorData'] as string, fimData: fimAnterior },

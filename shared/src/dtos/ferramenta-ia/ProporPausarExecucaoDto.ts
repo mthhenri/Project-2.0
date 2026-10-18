@@ -1,4 +1,5 @@
-import { IsOptional, IsString, Matches, MaxLength } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsInt, IsOptional, IsString, Matches, MaxLength, Min } from 'class-validator';
 import { MENSAGEM_CARACTERES_PROIBIDOS, REGEX_SEM_CARACTERES_PROIBIDOS } from '../../validators/caracteres-proibidos.validator';
 
 /**
@@ -6,6 +7,13 @@ import { MENSAGEM_CARACTERES_PROIBIDOS, REGEX_SEM_CARACTERES_PROIBIDOS } from '.
  * em andamento do usuário; `descricao` (opcional) descreve o trabalho feito até ali, e sem ela vale a provisória.
  */
 export class ProporPausarExecucaoDto {
+  /** Só o gestor: pausa a execução em andamento de outra pessoa (`usuarioId` de `listar_usuarios`); sem ele, a do próprio usuário. */
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Type(() => Number)
+  usuarioId?: number;
+
   @IsOptional()
   @IsString()
   @MaxLength(1000)
@@ -22,4 +30,9 @@ export class PropostaPausarExecucaoDadosDto extends ProporPausarExecucaoDto {
   @IsOptional()
   @IsString()
   demandaNome?: string;
+
+  /** A pessoa da execução, quando não é quem confirma. */
+  @IsOptional()
+  @IsString()
+  usuarioNome?: string;
 }

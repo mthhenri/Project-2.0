@@ -56,6 +56,8 @@ function criarServico(inicial: Execucao[] = [], opcoes: { falharAoIniciar?: bool
       return { dados: execucao };
     },
   };
+  // O executor lê a ativa do DONO da atividade; nos testes o dono é sempre o usuário do token.
+  (servico as Record<string, unknown>)['recuperarAtivaDoUsuario'] = servico.recuperarAtiva;
   return { servico: servico as unknown as ExecucaoService, chamadas, execucoes };
 }
 
@@ -63,7 +65,10 @@ function criarServico(inicial: Execucao[] = [], opcoes: { falharAoIniciar?: bool
 
 /** `AtividadeService` que só registra as mudanças de status pedidas. */
 function atividadesEmMemoria(chamadas: string[]) {
-  return { alterar: async (dto: { id: number; status: string }) => { chamadas.push(`status:${dto.id}:${dto.status}`); return { dados: {} }; } } as unknown as AtividadeService;
+  return {
+    alterar: async (dto: { id: number; status: string }) => { chamadas.push(`status:${dto.id}:${dto.status}`); return { dados: {} }; },
+    recuperar: async () => ({ dados: { usuarioId: 7, nomeUsuario: 'Dev' } }),
+  } as unknown as AtividadeService;
 }
 
 test('iniciar: com novoStatus muda o status antes de iniciar e devolve o anterior no resultado', async () => {

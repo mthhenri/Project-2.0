@@ -31,6 +31,7 @@ test('cria planejada, com a prioridade da proposta, pelo usuário do token', asy
   const resultado = await executor.executar({ demandaId: 9, nome: 'Ajustar login', prioridade: 'URGENTE', demandaNome: 'Autenticação' }, USUARIO);
   assert.deepEqual(criadas[0], {
     demandaId: 9,
+    usuarioId: undefined,
     nome: 'Ajustar login',
     status: TipoAtividadeStatusEnum.PLANEJADA,
     prioridade: TipoAtividadePrioridadeEnum.URGENTE,
@@ -48,7 +49,7 @@ test('os dados são validados (nome curto, prioridade inexistente, campo desconh
   const { executor } = criar();
   assert.throws(() => executor.validar({ demandaId: 9, nome: 'ab' }), BusinessException);
   assert.throws(() => executor.validar({ demandaId: 9, nome: 'Ajustar login', prioridade: 'ENORME' }), BusinessException);
-  assert.throws(() => executor.validar({ demandaId: 9, nome: 'Ajustar login', usuarioId: 2 }), BusinessException);
+  assert.throws(() => executor.validar({ demandaId: 9, nome: 'Ajustar login', senha: 'x' }), BusinessException);
   assert.doesNotThrow(() => executor.validar({ demandaId: 9, nome: 'Ajustar login', prioridade: 'ALTA', demandaNome: 'X' }));
 });
 

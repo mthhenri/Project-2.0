@@ -10,13 +10,21 @@ export interface ExecucaoAtivaDetalhada {
   nomeAtividade?: string;
   nomeDemanda?: string;
   nomeProjeto?: string;
+  nomeUsuario?: string;
 }
 
-/** Os nomes vêm da listagem da própria atividade (a mesma da tela de Execuções), sempre do usuário do token. `null` sem execução ativa. */
-export async function recuperarExecucaoAtivaDetalhada(execucaoService: ExecucaoService, usuarioAtivo: JwtPayload): Promise<ExecucaoAtivaDetalhada | null> {
-  const ativa = (await execucaoService.recuperarAtiva(usuarioAtivo)).dados;
+/**
+ * Os nomes vêm da listagem da própria atividade (a mesma da tela de Execuções). Por padrão é a execução do usuário do token; o gestor pode
+ * pedir a de outro com `usuarioId` (a `ExecucaoService` recusa o desenvolvedor). `null` sem execução ativa.
+ */
+export async function recuperarExecucaoAtivaDetalhada(
+  execucaoService: ExecucaoService,
+  usuarioAtivo: JwtPayload,
+  usuarioId: number = usuarioAtivo.sub,
+): Promise<ExecucaoAtivaDetalhada | null> {
+  const ativa = (usuarioId === usuarioAtivo.sub ? await execucaoService.recuperarAtiva(usuarioAtivo) : await execucaoService.recuperarAtivaDoUsuario({ usuarioId }, usuarioAtivo)).dados;
   if (!ativa) return null;
-  const daAtividade = (await execucaoService.listar({ usuarioId: usuarioAtivo.sub, atividadeId: ativa.atividadeId, allRows: true }, usuarioAtivo)).dados;
+  const daAtividade = (await execucaoService.listar({ usuarioId, atividadeId: ativa.atividadeId, allRows: true }, usuarioAtivo)).dados;
   const detalhada = daAtividade?.itens.find((item) => item.id === ativa.id);
   return {
     id: ativa.id,
@@ -26,5 +34,6 @@ export async function recuperarExecucaoAtivaDetalhada(execucaoService: ExecucaoS
     nomeAtividade: detalhada?.nomeAtividade,
     nomeDemanda: detalhada?.nomeDemanda,
     nomeProjeto: detalhada?.nomeProjeto,
+    nomeUsuario: detalhada?.nomeUsuario,
   };
 }

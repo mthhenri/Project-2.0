@@ -15,6 +15,7 @@ import {
   ExecucaoAlterarDto,
   ExecucaoRecuperarDto,
   ExecucaoAtivaDto,
+  ExecucaoAtivaRecuperarDto,
   ExecucaoRegistrarDto,
   ExecucaoRegistradaDto,
   TipoUsuarioEnum,
@@ -235,6 +236,26 @@ export class ExecucaoService implements OnModuleInit {
     usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<ExecucaoAtivaDto | null>> {
     const execucaoAtiva = await this.execucaoRepositorio.recuperarAtiva({ usuarioId: usuarioAtivo.sub });
+
+    return {
+      sucesso:  true,
+      dados:    execucaoAtiva,
+      mensagem: execucaoAtiva ? 'Execução ativa recuperada com sucesso' : 'Nenhuma execução ativa',
+    };
+  }
+
+  /**
+   * A execução ativa de **um usuário** (a do dono de uma atividade, quando o gestor age por ele). O gestor lê a de qualquer um; o
+   * desenvolvedor, só a própria (`recuperarAtiva` cobre o caso do próprio usuário do token).
+   */
+  async recuperarAtivaDoUsuario(
+    dto: ExecucaoAtivaRecuperarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<StandardResponse<ExecucaoAtivaDto | null>> {
+    if (dto.usuarioId !== usuarioAtivo.sub && !temPermissaoDeGestor(usuarioAtivo.tipo)) {
+      throw new UnauthorizedAccessException('Desenvolvedor só consulta a própria execução ativa');
+    }
+    const execucaoAtiva = await this.execucaoRepositorio.recuperarAtiva({ usuarioId: dto.usuarioId });
 
     return {
       sucesso:  true,

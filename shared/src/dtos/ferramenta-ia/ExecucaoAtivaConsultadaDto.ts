@@ -2,6 +2,8 @@
 export interface ExecucaoAtivaConsultadaDto {
   ativa: boolean;
   execucaoId?: number;
+  /** Quando o gestor consultou outra pessoa: o nome dela. */
+  usuario?: string;
   atividade?: string;
   demanda?: string;
   projeto?: string;

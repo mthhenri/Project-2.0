@@ -15,6 +15,9 @@
             }
             <app-prioridade-selo [prioridade]="prioridadeDe(texto('prioridade') || 'INDEFINIDA')" />
           </span>
+          @if (texto('usuarioNome')) {
+            <span class="proposta-cartao__linha">Pessoa: {{ texto('usuarioNome') }}</span>
+          }
         </div>
       }
       @case (Tipo.ALTERAR_ATIVIDADE) {
@@ -183,6 +186,9 @@
           @if (texto('demandaNome')) {
             <span class="proposta-cartao__linha">Demanda: {{ texto('demandaNome') }}</span>
           }
+          @if (texto('usuarioNome')) {
+            <span class="proposta-cartao__linha">Pessoa: {{ texto('usuarioNome') }}</span>
+          }
           <span class="proposta-cartao__linha">Descrição provisória: {{ texto('descricao') }}</span>
           @if (texto('statusAnterior')) {
             <span class="proposta-cartao__linha">Status: {{ rotuloDoStatus('statusAnterior') }} → {{ rotuloDoStatus('novoStatus') }}</span>
@@ -197,6 +203,9 @@
           <strong class="proposta-cartao__destaque">{{ texto('atividadeNome') || 'Execução em andamento' }}</strong>
           @if (texto('demandaNome')) {
             <span class="proposta-cartao__linha">Demanda: {{ texto('demandaNome') }}</span>
+          }
+          @if (texto('usuarioNome')) {
+            <span class="proposta-cartao__linha">Pessoa: {{ texto('usuarioNome') }}</span>
           }
           <span class="proposta-cartao__linha">
             {{ texto('descricao') ? 'Descrição do que foi feito: ' + texto('descricao') : 'Vale a descrição provisória da execução.' }}

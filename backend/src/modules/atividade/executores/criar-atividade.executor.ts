@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PropostaCriarAtividadeDadosDto, TipoAtividadePrioridadeEnum, TipoAtividadeStatusEnum, TipoPropostaIaEnum } from '@project20/shared';
+import { PropostaCriarAtividadeDadosDto, TipoAtividadePrioridadeEnum, TipoAtividadeStatusEnum, TipoPropostaIaEnum, temPermissaoDeGestor } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { ExecutorPropostaIa } from '../../proposta-ia/domain/executor-proposta-ia';
@@ -26,9 +26,14 @@ export class CriarAtividadeExecutor implements ExecutorPropostaIa {
 
   async executar(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
     const entrada = validarDadosDaProposta(PropostaCriarAtividadeDadosDto, dados);
+    // A service já ignora `usuarioId` de quem não é gestor (e a atividade sairia no nome errado): recusar é melhor que criar para a pessoa errada.
+    if (entrada.usuarioId !== undefined && entrada.usuarioId !== usuarioAtivo.sub && !temPermissaoDeGestor(usuarioAtivo.tipo)) {
+      throw new BusinessException('Só o gestor cria atividade para outra pessoa');
+    }
     const criada = await this.atividadeService.criar(
       {
         demandaId: entrada.demandaId,
+        usuarioId: entrada.usuarioId,
         nome: entrada.nome,
         status: TipoAtividadeStatusEnum.PLANEJADA,
         prioridade: entrada.prioridade ?? TipoAtividadePrioridadeEnum.INDEFINIDA,

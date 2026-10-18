@@ -19,6 +19,16 @@ export class ProporCriarAtividadeDto {
   @Matches(REGEX_SEM_CARACTERES_PROIBIDOS, { message: MENSAGEM_CARACTERES_PROIBIDOS })
   nome: string;
 
+  /**
+   * Só o gestor: de quem é a atividade (`usuarioId` de `listar_usuarios`, só quando o usuário nomeia outra pessoa). Sem ele, é do próprio
+   * usuário que confirma.
+   */
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Type(() => Number)
+  usuarioId?: number;
+
   /** Sem prioridade informada, a atividade nasce INDEFINIDA. */
   @IsOptional()
   @IsEnum(TipoAtividadePrioridadeEnum)
@@ -30,4 +40,9 @@ export class PropostaCriarAtividadeDadosDto extends ProporCriarAtividadeDto {
   @IsOptional()
   @IsString()
   demandaNome?: string;
+
+  /** O dono da atividade, quando não é quem confirma. */
+  @IsOptional()
+  @IsString()
+  usuarioNome?: string;
 }
