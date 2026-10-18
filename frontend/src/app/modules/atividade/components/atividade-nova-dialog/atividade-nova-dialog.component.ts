@@ -5,6 +5,8 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
+import { PrioridadeSeloComponent } from '../../../../shared/components/prioridade-selo/prioridade-selo.component';
+import { AtividadePrioridadeService } from '../../../../core/services/atividade-prioridade.service';
 import { MessageService } from 'primeng/api';
 import {
   AtividadeCriarDto,
@@ -12,6 +14,7 @@ import {
   MENSAGEM_CARACTERES_PROIBIDOS,
   REGEX_SEM_CARACTERES_PROIBIDOS,
   TagResumoDto,
+  TipoAtividadePrioridadeEnum,
   TipoAtividadeStatusEnum,
   TipoUsuarioStatusEnum,
   UsuarioResumoDto,
@@ -38,6 +41,7 @@ type DemandaAtribuidaOpcao = DemandaAtribuidaDto & { rotulo: string };
     DialogModule,
     InputTextModule,
     Select,
+    PrioridadeSeloComponent,
     BloquearCaracteresProibidosDirective,
     DialogFormularioDirective,
     DialogDicaAtalhosComponent,
@@ -68,6 +72,7 @@ export class AtividadeNovaDialogComponent {
   readonly usuarios = signal<UsuarioResumoDto[]>([]);
 
   readonly statusOpcoes = ATIVIDADE_STATUS_OPCOES;
+  protected readonly prioridadeService = inject(AtividadePrioridadeService);
   readonly mensagemCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS;
 
   readonly formulario = this.formBuilder.group({
@@ -75,6 +80,7 @@ export class AtividadeNovaDialogComponent {
     demandaId: [null as number | null, [Validators.required]],
     usuarioId: [null as number | null],
     status:    [TipoAtividadeStatusEnum.DESENVOLVENDO as TipoAtividadeStatusEnum, [Validators.required]],
+    prioridade: [TipoAtividadePrioridadeEnum.INDEFINIDA as TipoAtividadePrioridadeEnum, [Validators.required]],
     tagIds:    [[] as number[]],
   });
 
@@ -85,8 +91,10 @@ export class AtividadeNovaDialogComponent {
       demandaId,
       usuarioId: null,
       status:    TipoAtividadeStatusEnum.DESENVOLVENDO,
+      prioridade: TipoAtividadePrioridadeEnum.INDEFINIDA,
       tagIds:    [],
     });
+    this.prioridadeService.carregar();
     if (this.demandasAtribuidas().length === 0) this.carregarDemandasAtribuidas();
     if (this.todasAsTags().length === 0) this.carregarTodasAsTags();
     if (this.sessao.eGestor() && this.usuarios().length === 0) this.carregarUsuarios();
@@ -106,6 +114,7 @@ export class AtividadeNovaDialogComponent {
       demandaId: valor.demandaId!,
       nome:      valor.nome!,
       status:    valor.status!,
+      prioridade: valor.prioridade!,
     };
     if (this.sessao.eGestor() && valor.usuarioId) dto.usuarioId = valor.usuarioId;
     if (valor.tagIds?.length) dto.tagIds = valor.tagIds;
@@ -123,6 +132,7 @@ export class AtividadeNovaDialogComponent {
               demandaId: valor.demandaId,
               usuarioId: valor.usuarioId,
               status:    valor.status,
+              prioridade: valor.prioridade,
               tagIds:    valor.tagIds,
             });
             this.campoNovoNome?.nativeElement.focus();

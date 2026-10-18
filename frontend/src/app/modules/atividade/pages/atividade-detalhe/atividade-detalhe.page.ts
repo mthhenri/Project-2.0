@@ -14,6 +14,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
 import {
   AtividadeRecuperadaDto,
+  TipoAtividadePrioridadeEnum,
   TipoAtividadeStatusEnum,
   AtividadeAlterarDto,
   AtividadeTagsAtribuirDto,
@@ -25,6 +26,7 @@ import {
   PaginatedResult,
 } from '@project20/shared';
 import { AtividadeService } from '../../services/atividade.service';
+import { AtividadePrioridadeService } from '../../../../core/services/atividade-prioridade.service';
 import { TagService } from '../../../tag/services/tag.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { DataBrasileiraPipe } from '../../../../shared/pipes/data-brasileira.pipe';
@@ -36,11 +38,13 @@ import {
 } from '../../models/atividade.model';
 import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
 import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
+import { PrioridadeSeloComponent } from '../../../../shared/components/prioridade-selo/prioridade-selo.component';
 
 @Component({
   selector: 'app-atividade-detalhe',
   standalone: true,
   imports: [
+    PrioridadeSeloComponent,
     DialogFormularioDirective,
     DialogDicaAtalhosComponent,
     ReactiveFormsModule,
@@ -79,11 +83,13 @@ export class AtividadeDetalhePage implements OnInit {
   readonly carregandoExecucao = signal<boolean>(false);
 
   readonly statusOpcoes = ATIVIDADE_STATUS_OPCOES;
+  protected readonly prioridadeService = inject(AtividadePrioridadeService);
   readonly severidadeStatus = severidadeStatusAtividade;
   readonly rotuloStatus = rotuloStatusAtividade;
 
   readonly formularioStatus = this.formBuilder.group({
     status: [TipoAtividadeStatusEnum.PLANEJADA as TipoAtividadeStatusEnum],
+    prioridade: [TipoAtividadePrioridadeEnum.INDEFINIDA as TipoAtividadePrioridadeEnum],
   });
 
 
@@ -101,6 +107,7 @@ export class AtividadeDetalhePage implements OnInit {
   });
 
   ngOnInit(): void {
+    this.prioridadeService.carregar();
     const id = Number(this.rotaAtiva.snapshot.paramMap.get('id'));
     this.atividadeId.set(id);
     this.carregarTudo(id);
@@ -120,6 +127,23 @@ export class AtividadeDetalhePage implements OnInit {
           this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Status atualizado' });
         }
       },
+    });
+  }
+
+  alterarPrioridade(): void {
+    const atividade = this.atividade();
+    const novaPrioridade = this.formularioStatus.value.prioridade;
+    if (!atividade || !novaPrioridade || novaPrioridade === atividade.prioridade.codigo) return;
+
+    this.atividadeService.alterar(atividade.id, { prioridade: novaPrioridade }).subscribe({
+      next: (resposta) => {
+        if (resposta.sucesso && resposta.dados) {
+          const alterada = resposta.dados;
+          this.atividade.update((atual) => (atual ? { ...atual, prioridade: alterada.prioridade } : atual));
+          this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Prioridade atualizada' });
+        }
+      },
+      error: () => this.formularioStatus.patchValue({ prioridade: atividade.prioridade.codigo }, { emitEvent: false }),
     });
   }
 
@@ -202,7 +226,7 @@ export class AtividadeDetalhePage implements OnInit {
         next: ({ atividade, tags, todasTags, execucoes }) => {
           if (atividade.sucesso && atividade.dados) {
             this.atividade.set(atividade.dados);
-            this.formularioStatus.patchValue({ status: atividade.dados.status }, { emitEvent: false });
+            this.formularioStatus.patchValue({ status: atividade.dados.status, prioridade: atividade.dados.prioridade.codigo }, { emitEvent: false });
           }
           if (tags.sucesso && tags.dados) this.tagsDaAtividade.set(tags.dados);
           if (todasTags.sucesso && todasTags.dados) this.tagsDisponiveis.set(todasTags.dados);

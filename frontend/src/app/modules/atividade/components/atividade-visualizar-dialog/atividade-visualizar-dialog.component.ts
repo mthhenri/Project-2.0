@@ -21,11 +21,13 @@ import { DataBrasileiraPipe } from '../../../../shared/pipes/data-brasileira.pip
 import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-horas.pipe';
 import { BloquearCaracteresProibidosDirective } from '../../../../shared/directives/bloquear-caracteres-proibidos.directive';
 import { severidadeStatusAtividade, rotuloStatusAtividade } from '../../models/atividade.model';
+import { PrioridadeSeloComponent } from '../../../../shared/components/prioridade-selo/prioridade-selo.component';
 
 @Component({
   selector: 'app-atividade-visualizar-dialog',
   standalone: true,
   imports: [
+    PrioridadeSeloComponent,
     ReactiveFormsModule,
     ButtonModule,
     DialogModule,

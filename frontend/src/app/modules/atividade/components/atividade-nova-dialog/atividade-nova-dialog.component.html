@@ -90,6 +90,26 @@
     </div>
 
     <div class="nova-atividade__campo">
+      <label for="nova-prioridade" class="nova-atividade__rotulo">Prioridade</label>
+      <p-select
+        inputId="nova-prioridade"
+        formControlName="prioridade"
+        [options]="prioridadeService.prioridades()"
+        optionLabel="descricao"
+        optionValue="codigo"
+        appendTo="body"
+        class="w-full"
+      >
+        <ng-template #selectedItem let-prioridade>
+          <app-prioridade-selo [prioridade]="prioridade" />
+        </ng-template>
+        <ng-template #item let-prioridade>
+          <app-prioridade-selo [prioridade]="prioridade" />
+        </ng-template>
+      </p-select>
+    </div>
+
+    <div class="nova-atividade__campo">
       <label class="nova-atividade__rotulo">Tags</label>
       @if (carregandoTags()) {
         <i class="pi pi-spin pi-spinner text-muted-color"></i>

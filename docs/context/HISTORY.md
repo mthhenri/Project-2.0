@@ -12,6 +12,17 @@
 
 ---
 
+## 2026-10-18 — Task 143: prioridade da atividade nas telas e cor pelo administrador
+
+Spec em `docs/specs/done/143-atividade-prioridade-nas-telas.spec.md`. Só frontend (a API é da 142).
+
+- **Selo e cache:** `app-prioridade-selo` (shared) e `AtividadePrioridadeService` (core, sinal `prioridades` carregado uma vez; `alterarCor` atualiza o cache, e com ele todos os selos abertos). O selo usa `color-mix` com o token de texto do tema para o contraste nos temas claro e escuro.
+- **Telas:** listagem de atividades (coluna "Prioridade" antes do Status, troca inline por popover otimista no molde do status, só para quem pode editar a atividade; a ordenação já vem da API), detalhe da atividade (seletor ao lado do status), nova atividade (seletor, INDEFINIDA por padrão, preservada no "criar e adicionar outra"), dialog de visualização e detalhe da demanda (só o selo). Colspan do estado vazio da tabela ajustado (8 e 9).
+- **Configurações da IA:** nova aba "Prioridades" (só administrador, a tela já é exclusiva) com seletor de cor nativo, campo `#rrggbb` validado, selo ao vivo e "Salvar cor"/"Descartar" por linha.
+- **Análogos:** a coluna Status da listagem (gatilho + popover) e a aba Provedor e modelos (cartão com borda).
+- **Verificado ao vivo** (app em execução, administrador): coluna e selos; trocar a prioridade de uma atividade pelo popover (aparece na hora, toast, persiste e sobe na ordem; revertida depois); detalhe com o seletor; dialog de nova atividade com o seletor; aba Prioridades editando a cor de ALTA (prévia, salvar, API confirma; revertida para `#f97316`); tema claro e escuro na listagem. Build do frontend passa; frontend sem testes e sem lint (P-001). Dados de teste revertidos para INDEFINIDA.
+- **Não verificado:** 1366×768 e 1080×1920; a aba Prioridades no tema escuro; usuário gestor/desenvolvedor (não veem a aba: a tela de Configurações já é exclusiva do administrador); estado de erro da aba.
+
 ## 2026-10-18 — Task 142: prioridade de atividade, modelo e API
 
 Spec em `docs/specs/done/142-atividade-prioridade-modelo-e-api.spec.md`. Sem tela (a 143 cuida disso).

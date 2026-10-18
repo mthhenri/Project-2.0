@@ -15,6 +15,7 @@ import { TagModule } from 'primeng/tag';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { ConfiguracaoIaResumoDto, EsforcoIaEnum, EstadoIaEnum, TipoProvedorIaEnum } from '@project20/shared';
 import { PromptsAbaComponent } from '../../components/prompts-aba/prompts-aba.component';
+import { PrioridadesAbaComponent } from '../../components/prioridades-aba/prioridades-aba.component';
 import { ConfiguracaoIaService } from '../../services/configuracao-ia.service';
 import {
   OPCOES_ESFORCO,
@@ -51,6 +52,7 @@ import {
     TagModule,
     ToggleSwitchModule,
     PromptsAbaComponent,
+    PrioridadesAbaComponent,
   ],
   templateUrl: './configuracao-ia.page.html',
   styleUrl: './configuracao-ia.page.scss',

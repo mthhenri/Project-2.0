@@ -49,6 +49,7 @@ import { AssistenteDescricaoComponent } from '../../../../shared/components/assi
 import { TempoExibicaoPipe } from '../../../../shared/pipes/tempo-exibicao.pipe';
 import { VisualizacaoTempoService } from '../../../../core/services/visualizacao-tempo.service';
 import { DesfazerService } from '../../../../core/services/desfazer.service';
+import { PrioridadeSeloComponent } from '../../../../shared/components/prioridade-selo/prioridade-selo.component';
 
 type CampoDescricao = 'descricaoTecnica' | 'descricaoCliente' | 'documentacao';
 
@@ -68,6 +69,7 @@ interface EstadoDetalhe {
   selector: 'app-demanda-detalhe-dialog',
   standalone: true,
   imports: [
+    PrioridadeSeloComponent,
     ReactiveFormsModule,
     ButtonModule,
     DialogModule,

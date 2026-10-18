@@ -36,6 +36,25 @@
           class="atividade-detalhe__status-select"
         />
       </div>
+
+      <div class="atividade-detalhe__status-inline">
+        <label class="atividade-detalhe__status-label">Prioridade</label>
+        <p-select
+          [formControl]="formularioStatus.controls.prioridade"
+          [options]="prioridadeService.prioridades()"
+          optionLabel="descricao"
+          optionValue="codigo"
+          (onChange)="alterarPrioridade()"
+          class="atividade-detalhe__status-select"
+        >
+          <ng-template #selectedItem let-prioridade>
+            <app-prioridade-selo [prioridade]="prioridade" />
+          </ng-template>
+          <ng-template #item let-prioridade>
+            <app-prioridade-selo [prioridade]="prioridade" />
+          </ng-template>
+        </p-select>
+      </div>
     </div>
 
     <div class="atividade-detalhe__conteudo">

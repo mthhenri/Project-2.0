@@ -18,6 +18,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { PopoverModule, Popover } from 'primeng/popover';
 import { MessageService } from 'primeng/api';
 import {
+  AtividadePrioridadeResumoDto,
   AtividadeResumoDto,
   TipoAtividadeStatusEnum,
   AtividadeListarDto,
@@ -35,6 +36,7 @@ import {
   MENSAGEM_CARACTERES_PROIBIDOS,
 } from '@project20/shared';
 import { AtividadeService } from '../../services/atividade.service';
+import { AtividadePrioridadeService } from '../../../../core/services/atividade-prioridade.service';
 import { ExecucaoService } from '../../../execucao/services/execucao.service';
 import { TagService } from '../../../tag/services/tag.service';
 import { UsuarioService } from '../../../usuario/services/usuario.service';
@@ -62,6 +64,7 @@ import { SkeletonListaComponent } from '../../../../shared/components/skeleton-l
 import { BarraRecargaComponent } from '../../../../shared/components/barra-recarga/barra-recarga.component';
 import { DesfazerService } from '../../../../core/services/desfazer.service';
 import { ExecucaoAtivaService } from '../../../../core/services/execucao-ativa.service';
+import { PrioridadeSeloComponent } from '../../../../shared/components/prioridade-selo/prioridade-selo.component';
 
 type CampoDescricaoDemanda = 'descricaoCliente' | 'descricaoTecnica' | 'documentacao';
 
@@ -69,6 +72,7 @@ type CampoDescricaoDemanda = 'descricaoCliente' | 'descricaoTecnica' | 'document
   selector: 'app-atividade-listagem',
   standalone: true,
   imports: [
+    PrioridadeSeloComponent,
     SkeletonListaComponent,
     BarraRecargaComponent,
     DialogFormularioDirective,
@@ -134,6 +138,8 @@ export class AtividadeListagemPage implements OnInit {
   readonly itensPorPagina = signal<number>(10);
 
   readonly statusOpcoes = ATIVIDADE_STATUS_OPCOES;
+  protected readonly prioridadeService = inject(AtividadePrioridadeService);
+  readonly atividadePrioridadeEdicao = signal<AtividadeResumoDto | null>(null);
   readonly severidadeStatus = severidadeStatusAtividade;
   readonly rotuloStatus = rotuloStatusAtividade;
 
@@ -221,6 +227,7 @@ export class AtividadeListagemPage implements OnInit {
     const demandaIdParam = Number(this.rotaAtiva.snapshot.queryParamMap.get('demandaId'));
     this.demandaId.set(Number.isFinite(demandaIdParam) && demandaIdParam > 0 ? demandaIdParam : null);
 
+    this.prioridadeService.carregar();
     if (this.sessao.eGestor()) this.carregarUsuarios();
 
     this.formularioFiltros.controls.busca.valueChanges
@@ -310,6 +317,29 @@ export class AtividadeListagemPage implements OnInit {
   abrirSeletorStatus(evento: Event, atividade: AtividadeResumoDto, popover: Popover): void {
     this.atividadeStatusEdicao.set(atividade);
     popover.toggle(evento);
+  }
+
+  abrirSeletorPrioridade(evento: Event, atividade: AtividadeResumoDto, popover: Popover): void {
+    this.atividadePrioridadeEdicao.set(atividade);
+    popover.toggle(evento);
+  }
+
+  alterarPrioridade(nova: AtividadePrioridadeResumoDto, popover: Popover): void {
+    const atividade = this.atividadePrioridadeEdicao();
+    popover.hide();
+    if (!atividade || nova.codigo === atividade.prioridade.codigo) return;
+
+    // Otimista, como o status: o selo muda na hora; se a API recusar (o interceptor já avisou), volta ao anterior.
+    const anterior = atividade.prioridade;
+    this.definirPrioridadeDaAtividade(atividade.id, nova);
+    this.atividadeService.alterar(atividade.id, { prioridade: nova.codigo }).subscribe({
+      next: () => this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Prioridade alterada' }),
+      error: () => this.definirPrioridadeDaAtividade(atividade.id, anterior),
+    });
+  }
+
+  private definirPrioridadeDaAtividade(atividadeId: number, prioridade: AtividadePrioridadeResumoDto): void {
+    this.atividades.update((lista) => lista.map((item) => (item.id === atividadeId ? { ...item, prioridade } : item)));
   }
 
   severidadeOpcao(status: TipoAtividadeStatusEnum | null): SeveridadeTag | undefined {

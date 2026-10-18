@@ -111,6 +111,7 @@
           @if (sessao.eGestor()) {
             <th>Usuário</th>
           }
+          <th>Prioridade</th>
           <th>Status</th>
           <th>Tempo executado</th>
           <th>Tags</th>
@@ -170,6 +171,22 @@
               </div>
             </td>
           }
+          <td>
+            @if (podeEditar(atividade)) {
+              <button
+                type="button"
+                class="atividade-listagem__status-gatilho"
+                pTooltip="Trocar prioridade"
+                tooltipPosition="top"
+                (click)="abrirSeletorPrioridade($event, atividade, prioridadePopover)"
+              >
+                <app-prioridade-selo [prioridade]="atividade.prioridade" />
+                <i class="pi pi-chevron-down atividade-listagem__status-seta"></i>
+              </button>
+            } @else {
+              <app-prioridade-selo [prioridade]="atividade.prioridade" />
+            }
+          </td>
           <td>
             @if (podeTrocarStatus(atividade)) {
               <button
@@ -275,7 +292,7 @@
 
       <ng-template pTemplate="empty">
         <tr>
-          <td [attr.colspan]="sessao.eGestor() ? 8 : 7">
+          <td [attr.colspan]="sessao.eGestor() ? 9 : 8">
             <div class="atividade-listagem__vazio">
               <i class="pi pi-list text-4xl text-muted-color"></i>
               <p class="text-muted-color mt-3">Nenhuma atividade encontrada</p>
@@ -604,6 +621,25 @@
     />
   </ng-template>
 </p-dialog>
+
+<!-- Popover: troca de prioridade inline -->
+<p-popover #prioridadePopover>
+  <div class="atividade-listagem__status-opcoes">
+    @for (opcao of prioridadeService.prioridades(); track opcao.codigo) {
+      <button
+        type="button"
+        class="atividade-listagem__status-opcao"
+        [class.atividade-listagem__status-opcao--ativo]="opcao.codigo === atividadePrioridadeEdicao()?.prioridade?.codigo"
+        (click)="alterarPrioridade(opcao, prioridadePopover)"
+      >
+        <app-prioridade-selo [prioridade]="opcao" />
+        @if (opcao.codigo === atividadePrioridadeEdicao()?.prioridade?.codigo) {
+          <i class="pi pi-check atividade-listagem__status-opcao-check"></i>
+        }
+      </button>
+    }
+  </div>
+</p-popover>
 
 <!-- Popover: troca de status inline -->
 <p-popover #statusPopover>

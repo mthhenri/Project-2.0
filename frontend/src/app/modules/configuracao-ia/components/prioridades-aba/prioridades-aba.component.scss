@@ -1,0 +1,73 @@
+.prioridades-aba {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 52rem;
+
+  &__explicacao {
+    margin: 0;
+    color: var(--p-text-muted-color);
+    font-size: 0.875rem;
+  }
+
+  &__esqueleto {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__lista {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--app-surface-200);
+    border-radius: 12px;
+    background: var(--app-surface-0);
+    list-style: none;
+    overflow: hidden;
+  }
+
+  &__linha {
+    display: grid;
+    grid-template-columns: 1.5rem 9rem 2.5rem 7rem minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+
+    & + & {
+      border-top: 1px solid var(--app-surface-200);
+    }
+  }
+
+  &__ordem {
+    color: var(--p-text-muted-color);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__seletor {
+    width: 2.5rem;
+    height: 2rem;
+    padding: 0;
+    border: 1px solid var(--app-surface-300);
+    border-radius: 6px;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  &__hex {
+    font-family: ui-monospace, Menlo, monospace;
+  }
+
+  &__erro {
+    color: var(--p-red-500);
+  }
+
+  &__acoes {
+    display: inline-flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    grid-column: 6;
+  }
+}

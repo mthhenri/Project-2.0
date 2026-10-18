@@ -1,0 +1,57 @@
+<section class="prioridades-aba">
+  <p class="prioridades-aba__explicacao">
+    A cor de cada prioridade aparece no selo das atividades, em todas as telas. O nome e a ordem são fixos; a IA e a listagem usam a ordem
+    abaixo (da mais para a menos urgente).
+  </p>
+
+  @if (prioridades().length === 0) {
+    <div class="prioridades-aba__esqueleto" aria-busy="true">
+      <p-skeleton height="3rem" />
+      <p-skeleton height="3rem" />
+      <p-skeleton height="3rem" />
+    </div>
+  } @else {
+    <ul class="prioridades-aba__lista">
+      @for (prioridade of prioridades(); track prioridade.codigo; let indice = $index) {
+        @if (cores.at(indice); as controle) {
+          <li class="prioridades-aba__linha">
+            <span class="prioridades-aba__ordem">{{ prioridade.ordem }}</span>
+            <app-prioridade-selo class="prioridades-aba__selo" [prioridade]="prioridade" [corForcada]="controle.valid ? controle.value : null" />
+            <input
+              type="color"
+              class="prioridades-aba__seletor"
+              [formControl]="controle"
+              [attr.aria-label]="'Cor da prioridade ' + prioridade.descricao"
+            />
+            <input
+              pInputText
+              type="text"
+              class="prioridades-aba__hex"
+              maxlength="7"
+              [formControl]="controle"
+              [attr.aria-label]="'Código da cor da prioridade ' + prioridade.descricao"
+              [class.ng-invalid]="controle.invalid"
+            />
+            @if (controle.invalid) {
+              <small class="prioridades-aba__erro">Use o formato #rrggbb</small>
+            }
+            <span class="prioridades-aba__acoes">
+              @if (mudou(indice)) {
+                <p-button label="Descartar" severity="secondary" [text]="true" size="small" [disabled]="salvando() !== null" (onClick)="descartar(indice)" />
+              }
+              <p-button
+                label="Salvar cor"
+                icon="pi pi-check"
+                size="small"
+                [outlined]="true"
+                [loading]="salvando() === prioridade.codigo"
+                [disabled]="!mudou(indice) || controle.invalid || salvando() !== null"
+                (onClick)="salvar(indice, prioridade)"
+              />
+            </span>
+          </li>
+        }
+      }
+    </ul>
+  }
+</section>

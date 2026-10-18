@@ -94,6 +94,7 @@
         [value]="rotuloStatus(atividade.status)"
         [severity]="severidadeStatus(atividade.status)"
       />
+      <app-prioridade-selo [prioridade]="atividade.prioridade" />
     </div>
 
     @if (tagsVisualizar().length) {
