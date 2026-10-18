@@ -292,7 +292,7 @@
                 size="small"
                 pTooltip="Visualizar"
                 tooltipPosition="left"
-                (onClick)="visualizarDialog.abrir(atividade.id)"
+                (onClick)="visualizarDialog.abrir(atividade.id, atividade)"
               />
               @if (podeEditar(atividade)) {
                 <p-button
@@ -338,7 +338,7 @@
 
 <app-atividade-nova-dialog #novaDialog (aoCriar)="aoMudarFiltro()" />
 
-<app-atividade-visualizar-dialog #visualizarDialog (aoAlterar)="buscarAtividades()" />
+<app-atividade-visualizar-dialog #visualizarDialog (aoAlterar)="buscarAtividades()" (alternarExecucao)="alternarExecucao($event)" />
 
 <!-- Dialog: descrição da demanda -->
 <p-dialog
@@ -470,6 +470,17 @@
                 [pTooltip]="execucao.descricao"
                 tooltipPosition="top"
               >{{ execucao.descricao }}</span>
+              @if (modoExecucao() === 'iniciar') {
+                <button
+                  type="button"
+                  class="atividade-listagem__usar-descricao"
+                  pTooltip="Copiar esta descrição para o campo"
+                  tooltipPosition="left"
+                  (click)="usarDescricaoExecucao(execucao.descricao)"
+                >
+                  <i class="pi pi-replay" aria-hidden="true"></i> Usar
+                </button>
+              }
             </div>
           }
         </div>
@@ -516,6 +527,22 @@
   }
 
   <form [formGroup]="formularioRegistro" class="atividade-listagem__dialog-form">
+    <div class="atividade-listagem__contexto atividade-listagem__contexto--dialog" role="group" aria-label="Duração">
+      @for (duracao of duracoesRegistro; track duracao.minutos) {
+        <button
+          type="button"
+          class="atividade-listagem__chip-filtro"
+          [class.atividade-listagem__chip-filtro--ativo]="duracaoRegistroAtiva() === duracao.minutos"
+          (click)="aplicarDuracaoRegistro(duracao.minutos)"
+        >{{ duracao.rotulo }}</button>
+      }
+      <button
+        type="button"
+        class="atividade-listagem__chip-filtro"
+        [class.atividade-listagem__chip-filtro--ativo]="duracaoRegistroAtiva() === 'manha'"
+        (click)="aplicarDuracaoRegistro('manha')"
+      >Manhã 9h–12h</button>
+    </div>
     <div class="atividade-listagem__dialog-linha">
       <div class="atividade-listagem__dialog-campo">
         <label for="registro-inicio" class="atividade-listagem__filtro-label">Início *</label>

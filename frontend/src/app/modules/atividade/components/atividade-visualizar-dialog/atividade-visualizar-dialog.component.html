@@ -77,6 +77,19 @@
     </div>
   </ng-template>
 
+  <ng-template #footer>
+    @if (resumo() && podeEditar()) {
+      <span [pTooltip]="emExecucao() || podeIniciar() ? '' : 'Mude o status para Planejada ou Desenvolvendo'" tooltipPosition="top">
+        <p-button
+          [label]="emExecucao() ? 'Encerrar execução' : 'Iniciar execução'"
+          [icon]="emExecucao() ? 'pi pi-pause' : 'pi pi-play'"
+          [disabled]="!emExecucao() && !podeIniciar()"
+          (onClick)="alternarExecucao.emit(resumo()!)"
+        />
+      </span>
+    }
+  </ng-template>
+
   @if (carregandoVisualizar()) {
     <div class="atividade-visualizar-dialog__carregando">
       <i class="pi pi-spin pi-spinner text-2xl text-muted-color"></i>
@@ -90,14 +103,61 @@
       <span class="atividade-visualizar-dialog__info-secundaria">
         {{ atividade.posicaoAtividadeUsuario }}ª atividade
       </span>
-      <p-tag
-        [value]="rotuloStatus(atividade.status)"
-        [severity]="severidadeStatus(atividade.status)"
-      />
+      @if (!podeTrocarStatus()) {
+        <p-tag
+          [value]="rotuloStatus(atividade.status)"
+          [severity]="severidadeStatus(atividade.status)"
+          [pTooltip]="emExecucao() ? 'Encerre a execução para trocar o status' : ''"
+          tooltipPosition="top"
+        />
+      }
       <app-prioridade-selo [prioridade]="atividade.prioridade" />
     </div>
 
-    @if (tagsVisualizar().length) {
+    @if (resumo(); as resumoAtividade) {
+      <p class="atividade-visualizar-dialog__contexto">
+        {{ resumoAtividade.nomeProjeto }} · {{ resumoAtividade.nomeDemanda }}
+        <span class="atividade-visualizar-dialog__tempo-total">
+          <i class="pi pi-clock" aria-hidden="true"></i> {{ resumoAtividade.totalMinutosExecutados | minutosParagHoras }} no total
+        </span>
+      </p>
+    }
+
+    @if (podeTrocarStatus()) {
+      <div class="atividade-visualizar-dialog__status" role="group" aria-label="Status">
+        @for (opcao of statusOpcoes; track opcao.value) {
+          <button
+            type="button"
+            class="atividade-visualizar-dialog__status-opcao"
+            [class.atividade-visualizar-dialog__status-opcao--ativo]="opcao.value === atividade.status"
+            [attr.aria-pressed]="opcao.value === atividade.status"
+            (click)="alterarStatus(opcao.value)"
+          >{{ opcao.label }}</button>
+        }
+      </div>
+    }
+
+    @if (podeEditar()) {
+      <button
+        #celulaTags
+        type="button"
+        class="atividade-visualizar-dialog__tags atividade-visualizar-dialog__tags--visualizar atividade-visualizar-dialog__tags--editavel"
+        pTooltip="Editar tags"
+        tooltipPosition="top"
+        (click)="abrirTags($event, celulaTags)"
+      >
+        @for (tag of tagsVisualizar(); track tag.id) {
+          <span
+            class="atividade-visualizar-dialog__chip"
+            [style.background-color]="tag.cor + '22'"
+            [style.color]="tag.cor"
+            [style.border-color]="tag.cor + '55'"
+          >{{ tag.nome }}</span>
+        } @empty {
+          <span class="atividade-visualizar-dialog__chip-vazio"><i class="pi pi-plus" aria-hidden="true"></i> Tag</span>
+        }
+      </button>
+    } @else if (tagsVisualizar().length) {
       <div class="atividade-visualizar-dialog__tags atividade-visualizar-dialog__tags--visualizar">
         @for (tag of tagsVisualizar(); track tag.id) {
           <span
@@ -138,3 +198,9 @@
     }
   }
 </p-dialog>
+
+<app-atividade-tags-popover
+  titulo="Tags"
+  [tags]="todasAsTags()"
+  (salvar)="salvarTags($event)"
+/>

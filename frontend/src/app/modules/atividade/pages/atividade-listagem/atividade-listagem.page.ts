@@ -1,4 +1,5 @@
 import { Component, inject, signal, DestroyRef, OnInit, HostListener, ViewChild, ElementRef, computed, effect, untracked, viewChild } from '@angular/core';
+import { DURACOES_REGISTRO, intervaloDaManha, intervaloRetroativo, minutosDoIntervalo } from '../../utils/intervalo-registro.util';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -190,6 +191,7 @@ export class AtividadeListagemPage implements OnInit {
   readonly executandoEmMassa = signal<boolean>(false);
 
   private readonly novaDialog = viewChild.required<AtividadeNovaDialogComponent>('novaDialog');
+  private readonly visualizarDialog = viewChild.required<AtividadeVisualizarDialogComponent>('visualizarDialog');
 
   // --- Dialog: descrições da demanda ---
   readonly mostrarDialogDescricao = signal<boolean>(false);
@@ -331,6 +333,7 @@ export class AtividadeListagemPage implements OnInit {
             this.atividades.set(resposta.dados.itens);
             this.totalRegistros.set(resposta.dados.totalItens);
             this.descobrirNomeDaDemanda();
+            this.visualizarDialog().sincronizar(resposta.dados.itens);
           }
         },
       });
@@ -734,6 +737,12 @@ export class AtividadeListagemPage implements OnInit {
     }
   }
 
+  /** Copia a descrição de uma execução anterior para o campo, para retomar o trabalho sem digitar. */
+  usarDescricaoExecucao(descricao: string): void {
+    this.formularioExecucao.patchValue({ descricao });
+    this.formularioExecucao.controls.descricao.markAsDirty();
+  }
+
   aceitarDescricaoAssistenteExecucao(texto: string): void {
     this.formularioExecucao.patchValue({ descricao: texto });
   }
@@ -757,8 +766,28 @@ export class AtividadeListagemPage implements OnInit {
 
   abrirDialogRegistro(atividade: AtividadeResumoDto): void {
     this.atividadeRegistro.set(atividade);
-    this.formularioRegistro.reset({ inicioData: null, fimData: null, descricao: '' });
+    // Padrão: o trabalho que acabou de terminar e durou 1h; os chips de duração reescrevem o intervalo.
+    const padrao = intervaloRetroativo(new Date(), 60);
+    this.formularioRegistro.reset({ inicioData: padrao.inicioData, fimData: padrao.fimData, descricao: '' });
     this.mostrarDialogRegistro.set(true);
+  }
+
+  readonly duracoesRegistro = DURACOES_REGISTRO;
+
+  /** Aplica um atalho de duração ("2h", "Manhã") ao intervalo do registro, sempre terminando em agora (exceto a manhã). */
+  aplicarDuracaoRegistro(minutos: number | 'manha'): void {
+    const intervalo = minutos === 'manha' ? intervaloDaManha(new Date()) : intervaloRetroativo(new Date(), minutos);
+    this.formularioRegistro.patchValue({ inicioData: intervalo.inicioData, fimData: intervalo.fimData });
+  }
+
+  /** Atalho já aplicado ao intervalo atual (para destacar o chip), ou null quando o intervalo foi editado à mão. */
+  duracaoRegistroAtiva(): number | 'manha' | null {
+    const { inicioData, fimData } = this.formularioRegistro.value;
+    if (!inicioData || !fimData) return null;
+    const minutos = minutosDoIntervalo({ inicioData, fimData });
+    const manha = intervaloDaManha(inicioData);
+    if (inicioData.getTime() === manha.inicioData.getTime() && fimData.getTime() === manha.fimData.getTime()) return 'manha';
+    return this.duracoesRegistro.find((duracao) => duracao.minutos === minutos)?.minutos ?? null;
   }
 
   /** Foca a descrição ao abrir o dialog — em vez do primeiro campo (início). */

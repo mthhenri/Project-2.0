@@ -12,6 +12,17 @@
 
 ---
 
+## 2026-10-18 — Task 103 (reativada): dialogs de execução sem atrito (iniciar, registrar, visualizar)
+
+Só frontend. A 103 foi implementada sobre os dialogs que já existiam; parte do escopo (linha de contexto, Ctrl+Enter, descrição opcional para dono gestor, validação "fim > início", foco na descrição) já estava pronta.
+
+- **Iniciar**: cada item de "Últimas execuções" ganhou o botão "Usar" (copia a descrição para o campo; só ao iniciar, não ao encerrar).
+- **Registrar (gestor)**: abre com Início = agora−1h e Fim = agora; chips 30min · 1h · 2h · 4h · Manhã 9h–12h reescrevem o intervalo e o chip aplicado fica realçado. A regra é pura em `utils/intervalo-registro.util.ts` (4 testes: retroativo, virada de meia-noite, manhã, vazio).
+- **Visualizar**: `abrir(id, resumo?)` — quando a tela passa o resumo da linha, o dialog mostra Projeto · Demanda e o tempo total, troca o status inline (chips; travado durante execução), edita as tags (popover que salva ao fechar) e traz o botão Iniciar/Encerrar execução no rodapé (emite `alternarExecucao`; a listagem abre o dialog de execução por cima e `sincronizar` atualiza o resumo depois). Sem resumo (Ponto e Execuções, que também usam o componente) o dialog segue só de leitura — nada mudou lá.
+- **Desvio da spec**: o dialog nunca teve aba "Descrição" (a atividade não tem descrição própria), então o item "descrição em modo leitura com Editar" não se aplica.
+- **Achado na verificação ao vivo**: o item "Excluir" do menu ⋮ da task 102 nunca ficava vermelho — o menu vai para o `body` (`appendTo`) e o seletor aninhado em `.atividade-listagem` não o alcançava; passou a ser global.
+- Testes do frontend 52/52; build ok. Verificado ao vivo em 1366×768, 1920×1080 e 1080×1920 (trocar status → iniciar habilitado, chips, "Usar").
+
 ## 2026-10-18 — Task 102 (reativada): listagem de Atividades com filtros na URL, ações enxutas e ações em massa
 
 O autor reativou as tasks 102–105 (descartadas em 2026-10-16) depois de fechar a IA. A 102 foi implementada só no frontend.

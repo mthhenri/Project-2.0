@@ -372,6 +372,26 @@
     background: color-mix(in srgb, var(--p-primary-color) 8%, transparent);
   }
 
+  &__contexto--dialog {
+    margin: 0 0 0.25rem;
+  }
+
+  // "Usar" numa execução anterior: discreto até o mouse passar na linha.
+  &__usar-descricao {
+    flex-shrink: 0;
+    padding: 0 0.375rem;
+    border: none;
+    border-radius: 0.375rem;
+    background: transparent;
+    color: var(--p-primary-color);
+    font-size: 0.75rem;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--app-surface-100);
+    }
+  }
+
   &__chip-remover {
     display: inline-flex;
     align-items: center;
@@ -440,9 +460,12 @@
     gap: 0.5rem;
     margin-top: 1rem;
   }
+}
 
-  ::ng-deep .atividade-listagem__menu-excluir .p-menu-item-label,
-  ::ng-deep .atividade-listagem__menu-excluir .p-menu-item-icon {
+// O menu ⋮ vai para o body (appendTo), fora do escopo da página: o seletor do item "Excluir" precisa ser global.
+::ng-deep .atividade-listagem__menu-excluir {
+  .p-menu-item-label,
+  .p-menu-item-icon {
     color: var(--p-red-500);
   }
 }
