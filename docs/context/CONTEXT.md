@@ -157,7 +157,8 @@ project-2.0/
 - **[task 133]** Aba **"Prompts"** das Configurações da IA (`modules/configuracao-ia/components/prompts-aba/`, `PromptService` no frontend): lista dos 7 tipos (versão ativa e etiqueta "Rascunho"),
   painel com a versão ativa em `app-markdown-visualizador`, rascunho em `app-markdown-editor`, "Salvar rascunho" (botão; trocar de tipo ou sair da tela com mudança pendente pergunta, via
   `canDeactivate` da rota), "Ativar rascunho" (confirmação, só com o rascunho salvo e sem mudança pendente), descartar rascunho com Desfazer (regrava o mesmo texto), histórico no próprio cartão da versão (setas anterior/seguinte e menu de
-  versões; numa versão antiga, "Usar como base" só preenche o editor) e "Restaurar padrão" (confirmação; reativa a versão 1). "Testar antes de salvar" fica desabilitado até o chat (bloco 5). Fecha o bloco 4.
+  versões; numa versão antiga, "Usar como base" só preenche o editor) e "Restaurar padrão" (confirmação; reativa a versão 1). Fecha o bloco 4.
+  **[task 140]** "Testar antes de salvar" abre `app-prompt-teste-dialog`: até 5 narrativas coladas (guardadas por tipo no `localStorage`), "Testar" roda cada uma com o prompt ativo e com o texto do editor, lado a lado em Markdown, com tokens e erro por saída; o nível analítico pede confirmação (`key` `prompts-acao`). Backend `PromptTesteService` (nada é gravado). Fecha o bloco 5.
 - **[task 132]** Tela **Configurações da IA** (`/configuracao-ia`, `modules/configuracao-ia/`, exclusiva de administrador: item "IA" na sidebar com `somenteAdministrador` e tecla `g`+`i`,
   rota com `administradorGuard`): aba "Provedor e modelos" (formulário reativo com provedor, três modelos com sugestões, esforço, intervalo do check-in, duração e quatro interruptores,
   incluindo "IA desligada"; Google e OpenAI listados e desabilitados), salvar cria a **versão seguinte**, histórico com "Usar como base" (só preenche o formulário), estado da IA em leitura

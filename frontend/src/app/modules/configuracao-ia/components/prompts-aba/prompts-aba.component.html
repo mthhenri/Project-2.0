@@ -146,9 +146,8 @@
                   icon="pi pi-play"
                   severity="secondary"
                   [outlined]="true"
-                  [disabled]="true"
-                  pTooltip="Disponível quando o chat com a IA existir"
-                  tooltipPosition="top"
+                  [disabled]="operando() || textoParaTeste().trim() === ''"
+                  (onClick)="testando.set(true)"
                 />
                 <p-button label="Salvar rascunho" icon="pi pi-save" [outlined]="true" [disabled]="!podeSalvar() || operando()" (onClick)="salvarRascunho()" />
                 <p-button label="Ativar rascunho" icon="pi pi-check" [disabled]="!podeAtivar() || operando()" (onClick)="ativarRascunho()" />
@@ -163,3 +162,7 @@
 
 <p-confirmDialog key="prompts-pendente" />
 <p-confirmDialog key="prompts-acao" />
+
+@if (tipoAberto(); as tipoSelecionado) {
+  <app-prompt-teste-dialog [(visivel)]="testando" [tipo]="tipoSelecionado" [conteudo]="textoParaTeste()" />
+}

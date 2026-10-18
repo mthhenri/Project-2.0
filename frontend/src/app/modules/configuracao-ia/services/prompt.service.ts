@@ -8,6 +8,8 @@ import {
   PromptRascunhoSalvarDto,
   PromptRascunhoSalvoDto,
   PromptResumoDto,
+  PromptTestadoDto,
+  PromptTestarDto,
   PromptTipoResumoDto,
   StandardResponse,
   TipoPromptEnum,
@@ -43,6 +45,11 @@ export class PromptService {
 
   restaurarPadrao(tipo: TipoPromptEnum): Observable<StandardResponse<PromptPadraoRestauradoDto>> {
     return this.httpClient.post<StandardResponse<PromptPadraoRestauradoDto>>(`${this.urlBase}/${tipo}/restaurar-padrao`, {});
+  }
+
+  /** Testa um texto candidato contra narrativas, ao lado do prompt ativo (não grava nada; pode levar dezenas de segundos). */
+  testar(tipo: TipoPromptEnum, dto: PromptTestarDto): Observable<StandardResponse<PromptTestadoDto>> {
+    return this.httpClient.post<StandardResponse<PromptTestadoDto>>(`${this.urlBase}/${tipo}/testar`, dto, comFeedbackProprio());
   }
 
   descartarRascunho(tipo: TipoPromptEnum): Observable<StandardResponse<void>> {

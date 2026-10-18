@@ -12,6 +12,17 @@
 
 ---
 
+## 2026-10-17 — Task 140: testar o prompt antes de salvar (fecha o bloco 5)
+
+Spec em `docs/specs/done/140-chat-testar-prompt-antes-de-salvar.spec.md`. O botão reservado na aba Prompts (task 133) agora funciona.
+
+- **Backend:** `POST /prompt/:tipo/testar` (`@AdministradorOnly`; `PromptTesteService`, no módulo `prompt`, que passou a importar `IaModule`). Valida (conteúdo não vazio, de 1 a 5 narrativas, vazias descartadas, 8000 caracteres cada), confere que a IA não está desligada (409) e, uma narrativa por vez, roda as duas chamadas (ativo e candidato) em paralelo com `IaService.gerar`, no nível do tipo, sem ferramentas, 1024 tokens. A falha de uma chamada vira o `erro` daquela saída (mensagem da `IaException`, ou a genérica sem vazar detalhe). A tabela `NIVEL_DO_TIPO_DE_PROMPT` e `MAXIMO_DE_NARRATIVAS` moraram no `shared` para o frontend usar a mesma fonte.
+- **Frontend:** `app-prompt-teste-dialog` (narrativas em `FormArray`, adicionar/remover até 5, guardadas por tipo no `localStorage`; resultados em dois cartões lado a lado com tokens; esqueleto enquanto roda; erro geral e por saída). Nível analítico confirma antes (a mensagem diz quantas chamadas).
+- **Desvio da spec:** IA **fora do ar** (por falha) não bloqueia o teste, só a desligada: o estado "fora do ar" só se recupera com chamada bem-sucedida e o teste é justamente uma chamada; o erro aparece na saída.
+- **Testes:** `prompt-teste.service.test.ts` (6: duas chamadas por narrativa e só texto, nível por tipo, limite de 5 e vazias, isolamento de falhas, erro genérico, 409 e não-administrador); backend 207 verdes.
+- **Verificado ao vivo** (IA real, 1 narrativa no tipo Conversa): dialog abre, narrativa guardada no `localStorage`, as duas respostas aparecem com tokens, e o chat do dia continua com as mesmas 5 mensagens (nada gravado). 1920×1080 claro.
+- **Não verificado:** 1366×768, 1080×1920 e tema escuro; erro por saída e erro geral na tela (só no teste unitário); a confirmação do nível analítico; gestor/desenvolvedor recebendo 403 (a rota usa o mesmo `@AdministradorOnly` do controller, e a service também confere).
+
 ## 2026-10-17 — Correção: botão do histórico sumia recolhido
 
 Na animação do histórico o título (sem quebra de linha) empurrava o botão para fora da faixa recolhida e o `overflow: hidden` o cortava. O título agora encolhe a zero (largura, margem e opacidade, com transição) quando recolhido; conferido pelas posições no DOM (botão centralizado na faixa de 60 px, aberto e recolhido) e por captura de tela. Lição: a verificação da entrada anterior olhou só largura e opacidade, não se o botão continuava visível.

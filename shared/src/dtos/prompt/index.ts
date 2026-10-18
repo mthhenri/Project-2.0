@@ -5,3 +5,6 @@ export * from './PromptRascunhoSalvarDto';
 export * from './PromptRascunhoSalvoDto';
 export * from './PromptRascunhoAtivadoDto';
 export * from './PromptPadraoRestauradoDto';
+export * from './PromptTestarDto';
+export * from './PromptTesteSaidaDto';
+export * from './PromptTestadoDto';

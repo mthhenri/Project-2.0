@@ -13,6 +13,7 @@ import { DesfazerService } from '../../../../core/services/desfazer.service';
 import { MarkdownEditorComponent } from '../../../../shared/components/markdown-editor/markdown-editor.component';
 import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
 import { PromptService } from '../../services/prompt.service';
+import { PromptTesteDialogComponent } from '../prompt-teste-dialog/prompt-teste-dialog.component';
 
 /**
  * Aba "Prompts" das Configurações da IA (task 133, exclusiva de administrador). Cada tipo tem uma versão ativa, no máximo um
@@ -33,6 +34,7 @@ import { PromptService } from '../../services/prompt.service';
     TooltipModule,
     MarkdownEditorComponent,
     MarkdownVisualizadorComponent,
+    PromptTesteDialogComponent,
   ],
   providers: [ConfirmationService],
   templateUrl: './prompts-aba.component.html',
@@ -52,6 +54,9 @@ export class PromptsAbaComponent implements OnInit {
   readonly carregandoTipo = signal(false);
   readonly erro = signal(false);
   readonly operando = signal(false);
+  readonly testando = signal(false);
+  /** O texto que está no editor, para o teste (candidato). */
+  readonly textoParaTeste = computed(() => this.textoEditado());
 
   /** Texto do editor do rascunho. */
   readonly controleRascunho = new FormControl<string>('', { nonNullable: true });

@@ -1,0 +1,88 @@
+<p-dialog
+  [visible]="visivel()"
+  (visibleChange)="visivel.set($event)"
+  header="Testar antes de salvar"
+  [modal]="true"
+  [style]="{ width: '72rem', maxWidth: '96vw' }"
+  [draggable]="false"
+  [closable]="!executando()"
+  [dismissableMask]="!executando()"
+>
+  <div class="prompt-teste">
+    <p class="prompt-teste__explicacao">
+      Cole até {{ limite }} narrativas (o que o usuário diria). Cada uma roda duas vezes, no nível <strong>{{ rotuloNivel[nivel()] }}</strong>: com o
+      prompt ativo e com o texto do editor. Nada é gravado no chat nem vira proposta.
+    </p>
+
+    <section class="prompt-teste__narrativas" aria-label="Narrativas do teste">
+      @for (controle of narrativas.controls; track controle; let indice = $index) {
+        <div class="prompt-teste__narrativa">
+          <textarea
+            pTextarea
+            rows="3"
+            [autoResize]="true"
+            class="prompt-teste__campo"
+            [formControl]="controle"
+            [attr.aria-label]="'Narrativa ' + (indice + 1)"
+            [placeholder]="'Narrativa ' + (indice + 1) + ': cole aqui o que o usuário diria…'"
+            maxlength="8000"
+          ></textarea>
+          <p-button
+            icon="pi pi-trash"
+            severity="secondary"
+            [text]="true"
+            size="small"
+            [ariaLabel]="'Remover narrativa ' + (indice + 1)"
+            [disabled]="executando()"
+            (onClick)="remover(indice)"
+          />
+        </div>
+      }
+      <div class="prompt-teste__acoes">
+        <p-button label="Adicionar narrativa" icon="pi pi-plus" severity="secondary" [text]="true" size="small" [disabled]="!podeAdicionar() || executando()" (onClick)="adicionar()" />
+        <span class="prompt-teste__limite">{{ narrativas.length }} de {{ limite }}</span>
+        <span class="prompt-teste__espaco"></span>
+        <p-button label="Testar" icon="pi pi-play" [loading]="executando()" [disabled]="!podeTestar()" (onClick)="testar()" />
+      </div>
+    </section>
+
+    @if (erro(); as mensagem) {
+      <p class="prompt-teste__erro" role="alert"><i class="pi pi-exclamation-triangle"></i>{{ mensagem }}</p>
+    }
+
+    @if (executando()) {
+      <div class="prompt-teste__resultados" aria-busy="true">
+        <p-skeleton height="8rem" />
+        <p-skeleton height="8rem" />
+      </div>
+    } @else if (resultado(); as testado) {
+      <div class="prompt-teste__resultados">
+        @for (item of testado.resultados; track $index; let indice = $index) {
+          <article class="prompt-teste__item">
+            <header class="prompt-teste__item-cabecalho">
+              <strong>Narrativa {{ indice + 1 }}</strong>
+              <span class="prompt-teste__item-texto">{{ item.narrativa }}</span>
+            </header>
+            <div class="prompt-teste__lado-a-lado">
+              @for (saida of [{ rotulo: 'Ativo', dados: item.ativo }, { rotulo: 'Rascunho', dados: item.candidato }]; track saida.rotulo) {
+                <section class="prompt-teste__saida">
+                  <h3 class="prompt-teste__saida-titulo">
+                    {{ saida.rotulo }}
+                    @if (!saida.dados.erro) {
+                      <small>{{ saida.dados.tokensEntrada }} entrada · {{ saida.dados.tokensSaida }} saída (tokens)</small>
+                    }
+                  </h3>
+                  @if (saida.dados.erro) {
+                    <p class="prompt-teste__erro" role="alert"><i class="pi pi-exclamation-triangle"></i>{{ saida.dados.erro }}</p>
+                  } @else {
+                    <app-markdown-visualizador [texto]="saida.dados.texto ?? ''" />
+                  }
+                </section>
+              }
+            </div>
+          </article>
+        }
+      </div>
+    }
+  </div>
+</p-dialog>
