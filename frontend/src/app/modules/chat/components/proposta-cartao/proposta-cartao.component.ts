@@ -9,7 +9,9 @@ import { SelectModule } from 'primeng/select';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TagModule } from 'primeng/tag';
 import { TextareaModule } from 'primeng/textarea';
-import { PropostaIaResumoDto, StandardResponse, StatusPropostaIaEnum, TipoAtividadePrioridadeEnum, TipoPropostaIaEnum } from '@project20/shared';
+import { PropostaIaResumoDto, StandardResponse, StatusPropostaIaEnum, TipoAtividadePrioridadeEnum, TipoAtividadeStatusEnum, TipoPropostaIaEnum } from '@project20/shared';
+import { AtividadeService } from '../../../atividade/services/atividade.service';
+import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { AtividadePrioridadeService } from '../../../../core/services/atividade-prioridade.service';
 import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
 import { PrioridadeSeloComponent } from '../../../../shared/components/prioridade-selo/prioridade-selo.component';
@@ -20,6 +22,7 @@ import {
   ROTULO_STATUS_PROPOSTA,
   ROTULO_TIPO_PROPOSTA,
   SEVERIDADE_STATUS_PROPOSTA,
+  formatarDuracao,
   paresDosDados,
 } from '../../utils/chat.util';
 
@@ -40,6 +43,8 @@ export class PropostaCartaoComponent {
   private readonly propostaIaService = inject(PropostaIaService);
   private readonly messageService = inject(MessageService);
   private readonly desfazerService = inject(DesfazerService);
+  private readonly atividadeService = inject(AtividadeService);
+  private readonly sessao = inject(UsuarioSessaoService);
 
   readonly propostaId = input.required<number>();
 
@@ -61,13 +66,19 @@ export class PropostaCartaoComponent {
     nome: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.minLength(3), Validators.maxLength(255)] }),
     descricao: new FormControl('', { nonNullable: true }),
     prioridade: new FormControl<TipoAtividadePrioridadeEnum>(TipoAtividadePrioridadeEnum.INDEFINIDA, { nonNullable: true }),
+    /** Na descrição do check-in: para qual atividade trocar depois (nulo é continuar na mesma). */
+    atividadeSeguinteId: new FormControl<number | null>(null),
   });
+  /** As atividades do usuário em que dá para começar uma execução (a escolha "Trocar para…" do check-in). */
+  readonly atividadesParaTroca = signal<{ id: number; rotulo: string }[]>([]);
+  readonly formatarDuracao = formatarDuracao;
 
   private static readonly TIPOS_AJUSTAVEIS: TipoPropostaIaEnum[] = [
     TipoPropostaIaEnum.CRIAR_ATIVIDADE,
     TipoPropostaIaEnum.INICIAR_EXECUCAO,
     TipoPropostaIaEnum.PAUSAR_EXECUCAO,
     TipoPropostaIaEnum.ANOTAR_PAD,
+    TipoPropostaIaEnum.DESCREVER_EXECUCAO,
   ];
   /** Pendente e de um tipo que sabe ser ajustado. */
   readonly podeAjustar = computed(() => {
@@ -108,6 +119,12 @@ export class PropostaCartaoComponent {
     return typeof valor === 'string' ? valor : '';
   }
 
+  /** Um dado numérico da proposta (0 se não houver). */
+  numero(chave: string): number {
+    const valor = this.proposta()?.dados[chave];
+    return typeof valor === 'number' ? valor : 0;
+  }
+
   /** O nome da seção do pad como a tela do pad mostra. */
   rotuloSecao(codigo: string): string {
     return (ROTULO_SECAO_ANOTACAO as Record<string, string>)[codigo] ?? codigo;
@@ -126,9 +143,21 @@ export class PropostaCartaoComponent {
     this.formularioAjuste.reset({
       nome: this.texto('nome'),
       descricao: atual.tipo === TipoPropostaIaEnum.ANOTAR_PAD ? textoDoPad : this.texto('descricao'),
+      atividadeSeguinteId: this.numero('atividadeSeguinteId') || null,
       prioridade: (this.texto('prioridade') || TipoAtividadePrioridadeEnum.INDEFINIDA) as TipoAtividadePrioridadeEnum,
     });
+    if (atual.tipo === TipoPropostaIaEnum.DESCREVER_EXECUCAO) this.carregarAtividadesParaTroca();
     this.ajustando.set(true);
+  }
+
+  private carregarAtividadesParaTroca(): void {
+    this.atividadeService
+      .listar({ usuarioId: this.sessao.id() ?? undefined, status: [TipoAtividadeStatusEnum.PLANEJADA, TipoAtividadeStatusEnum.DESENVOLVENDO], itensPorPagina: 100 })
+      .subscribe({
+        next: (resposta) =>
+          this.atividadesParaTroca.set((resposta.dados?.itens ?? []).map((item) => ({ id: item.id, rotulo: `${item.nome} · ${item.nomeDemanda}` }))),
+        error: () => this.atividadesParaTroca.set([]),
+      });
   }
 
   cancelarAjuste(): void {
@@ -150,6 +179,24 @@ export class PropostaCartaoComponent {
       dados['prioridade'] = valores.prioridade;
     } else if (atual.tipo === TipoPropostaIaEnum.INICIAR_EXECUCAO) {
       dados['descricao'] = valores.descricao.trim();
+    } else if (atual.tipo === TipoPropostaIaEnum.DESCREVER_EXECUCAO) {
+      const descricao = valores.descricao.trim();
+      if (descricao.length < 3) {
+        this.formularioAjuste.controls.descricao.markAsTouched();
+        return;
+      }
+      dados['descricao'] = descricao;
+      const seguinte = this.atividadesParaTroca().find((item) => item.id === valores.atividadeSeguinteId);
+      if (valores.atividadeSeguinteId) {
+        dados['escolha'] = 'TROCAR';
+        dados['atividadeSeguinteId'] = valores.atividadeSeguinteId;
+        dados['atividadeSeguinteNome'] = seguinte?.rotulo.split(' · ')[0] ?? '';
+        delete dados['descricaoSeguinte'];
+      } else {
+        dados['escolha'] = 'CONTINUAR';
+        delete dados['atividadeSeguinteId'];
+        delete dados['atividadeSeguinteNome'];
+      }
     } else if (atual.tipo === TipoPropostaIaEnum.ANOTAR_PAD) {
       const campo = this.texto('operacao') === 'TROCAR' ? 'trechoNovo' : 'texto';
       dados[campo] = valores.descricao;

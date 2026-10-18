@@ -46,5 +46,6 @@ test('leva a execução, a descrição provisória e a regra da narrativa crua',
   assert.match(texto, /"Ajustar login" \(demanda "Autenticação", projeto "Loja"\), iniciada às 09:10, há 2h40/);
   assert.match(texto, /Descrição provisória atual: "Validar e-mail"/);
   assert.match(texto, /só a descrição formal vai para a execução/);
-  assert.match(texto, /Descrição proposta/);
+  assert.match(texto, /propor_descrever_execucao/);
+  assert.match(texto, /Não escreva a descrição você mesmo/);
 });

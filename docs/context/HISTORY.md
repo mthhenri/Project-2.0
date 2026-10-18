@@ -12,6 +12,19 @@
 
 ---
 
+## 2026-10-18 — Task 150: descrição formal da execução (check-in)
+
+Spec em `docs/specs/done/150-checkin-descricao-formal-da-execucao.spec.md`.
+
+- **Ferramenta `propor_descrever_execucao`:** a entrada é o **relato** do desenvolvedor (a narrativa crua, que não entra na proposta nem na execução), `escolha` (`CONTINUAR` padrão ou `TROCAR` com `atividadeSeguinteId`) e `descricaoSeguinte` opcional. A **redação** é uma chamada à parte (`IaService.gerar`, nível **padrão**, prompt `DESCRICAO_EXECUCAO` ativo mais `montarInstrucoesDeRedacao`: com o rigor ligado e a execução acima da duração recomendada, descrição mais completa; senão, uma ou duas frases; só trabalho; devolve `NENHUM_TRABALHO` se o relato for só almoço, pausa ou conversa, e a ferramenta recusa). A saída é limpa dos caracteres que as descrições proíbem (aspas, crases etc.) e do prefixo "Descrição:". Sem execução em andamento, `TROCAR` sem atividade ou para a mesma, ou atividade sem acesso: erro ao modelo, nenhum cartão.
+- **Executor `DESCREVER_EXECUCAO`:** pela `ExecucaoService` com o usuário do token: **encerra** a execução ativa com a descrição formal e **abre o trecho seguinte** (mesma atividade, com "Continuação da atividade"; ou a escolhida, com a provisória da proposta ou "Início da atividade"). Recusa a proposta cuja `execucaoId` não é mais a ativa e a ausência de execução; se abrir o trecho seguinte falhar (atividade não executável etc.), **reabre** a execução e o erro segue. Desfazer exclui o trecho novo se ainda em andamento e reabre a execução descrita com a descrição provisória de antes; recusa se o trecho novo já foi encerrado.
+- **Cartão do chat:** atividade, demanda, "Execução de 2h40", a descrição formal e "Depois: continuar nesta atividade / trocar para X"; **Ajustar** edita a descrição e, com um seletor ("Continuar nesta atividade" ou uma das atividades do usuário executáveis), muda a escolha.
+- **Contexto do check-in (149) atualizado:** agora manda chamar `propor_descrever_execucao` com o relato fiel (e não escrever a descrição) e perguntar se continua ou troca.
+- **Prompt:** nenhuma versão nova do `DESCRICAO_EXECUCAO` (mesmo motivo das tasks 144 a 149); as regras de sistema (rigor, só trabalho, sem aspas) vão nas instruções da redação, o tom fica no prompt editável.
+- **Testes:** backend 303 e frontend 24 verdes (executor: continuar, trocar, recusas, execução velha, falha reabre, desfazer e recusa; ferramenta: nível padrão e prompt certos, rigor, sem a narrativa crua, trocar, sem trabalho, limpeza; instruções de redação; formatação de duração).
+- **Verificado ao vivo** (IA real, administrador): com uma execução de teste de 100 min (início voltado pelo `PUT /execucao/:id`) o relato informal virou uma descrição formal em três períodos (rigor: acima de 1h30); confirmar com **continuar** passou a execução ativa para um trecho novo na mesma atividade e desfazer devolveu a original; com **trocar para a AAA** a execução original ficou encerrada com a descrição formal, a nova abriu na AAA com a provisória e desfazer restaurou a original. A execução de teste foi excluída (soft delete) e as mensagens `CHECKIN` de teste, apagadas do OpenSearch.
+- **Não verificado:** o cartão no navegador (as mensagens do check-in não aparecem na tela do chat; o cartão só tem onde aparecer na janela da 151, onde o gate visual vai valer), o "relato sem trabalho" com a IA real (só unitário), o desenvolvedor e a IA fora do ar na redação.
+
 ## 2026-10-18 — Task 149: check-in no backend e rigor proporcional
 
 Spec em `docs/specs/done/149-checkin-backend-e-rigor-proporcional.spec.md`.

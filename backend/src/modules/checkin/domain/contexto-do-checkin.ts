@@ -42,7 +42,8 @@ export function montarContextoDoCheckin(dados: DadosDoContextoDoCheckin): string
     );
   }
   linhas.push(
-    'Pergunte o que foi feito desde o último check-in, de forma curta. Quando tiver o suficiente, escreva a descrição formal do trabalho: terceira pessoa, sem "eu", sem gírias, objetiva, só trabalho (nunca almoço ou pausa pessoal), numa seção iniciada por "**Descrição proposta:**".',
+    'Pergunte o que foi feito desde o último check-in, de forma curta. Quando tiver o suficiente (e só trabalho: nunca almoço ou pausa pessoal), chame propor_descrever_execucao com o relato fiel do desenvolvedor: o sistema redige a descrição formal e mostra o cartão para ele confirmar. Não escreva a descrição você mesmo.',
+    'Pergunte também se ele continua na mesma atividade ou vai trocar (se for trocar, use o id de listar_minhas_atividades); sem resposta, continue na mesma.',
     'A narrativa crua do desenvolvedor fica nesta conversa; só a descrição formal vai para a execução.',
   );
   return linhas.join('\n');

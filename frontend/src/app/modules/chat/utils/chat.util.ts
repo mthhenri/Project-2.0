@@ -66,6 +66,13 @@ export function paresDosDados(dados: Record<string, unknown>): { chave: string; 
   }));
 }
 
+/** Duração como o cartão a diz: `45 min`, `1h30`, `2h40`. */
+export function formatarDuracao(minutos: number): string {
+  const total = Math.max(0, Math.round(minutos));
+  if (total < 60) return `${total} min`;
+  return `${Math.floor(total / 60)}h${String(total % 60).padStart(2, '0')}`;
+}
+
 /** O dia (`yyyy-mm-dd`) de uma conversa, que é o final do `conversaId` (`<usuarioId>-<yyyy-mm-dd>`). */
 export function dataDaConversa(conversaId: string): string {
   return conversaId.slice(-10);

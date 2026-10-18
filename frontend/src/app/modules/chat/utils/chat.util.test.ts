@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { dataDaConversa, extrairEventos, paresDosDados, rotuloDoDia, semMarcacaoMarkdown } from './chat.util';
+import { dataDaConversa, extrairEventos, formatarDuracao, paresDosDados, rotuloDoDia, semMarcacaoMarkdown } from './chat.util';
 
 test('lê vários eventos de uma vez', () => {
   const texto = 'data: {"tipo":"trecho","texto":"Bom "}\n\ndata: {"tipo":"trecho","texto":"dia"}\n\n';
@@ -59,4 +59,11 @@ test('tira a marcação do Markdown e junta tudo numa linha', () => {
   const comMarcacao = ['Boa noite! **Plano do dia**', '', '1. **AAAA**: Integrações', '- Item'].join(String.fromCharCode(10));
   assert.equal(semMarcacaoMarkdown(comMarcacao), 'Boa noite! Plano do dia AAAA: Integrações Item');
   assert.equal(semMarcacaoMarkdown('  `código` e > citação  '), 'código e citação');
+});
+
+test('formata a duração como o cartão a diz', () => {
+  assert.equal(formatarDuracao(45), '45 min');
+  assert.equal(formatarDuracao(90), '1h30');
+  assert.equal(formatarDuracao(160), '2h40');
+  assert.equal(formatarDuracao(125), '2h05');
 });

@@ -40,6 +40,23 @@
           </span>
         </div>
       }
+      @case (Tipo.DESCREVER_EXECUCAO) {
+        <div class="proposta-cartao__resumo">
+          <strong class="proposta-cartao__destaque">{{ texto('atividadeNome') || 'Execução em andamento' }}</strong>
+          <span class="proposta-cartao__linha">
+            @if (texto('demandaNome')) {
+              <span>Demanda: {{ texto('demandaNome') }}</span>
+            }
+            <span>Execução de {{ formatarDuracao(numero('minutos')) }}</span>
+          </span>
+          <span class="proposta-cartao__linha">Descrição formal</span>
+          <div class="proposta-cartao__trecho proposta-cartao__trecho--depois">{{ texto('descricao') }}</div>
+          <span class="proposta-cartao__linha">
+            Depois:
+            {{ texto('escolha') === 'TROCAR' ? 'trocar para ' + (texto('atividadeSeguinteNome') || 'outra atividade') : 'continuar nesta atividade (abre um novo trecho)' }}
+          </span>
+        </div>
+      }
       @case (Tipo.SUSPENDER_CHECKIN) {
         <div class="proposta-cartao__resumo">
           <strong class="proposta-cartao__destaque">{{ texto('acao') === 'RETOMAR' ? 'Retomar os check-ins' : 'Suspender os check-ins até você voltar' }}</strong>
@@ -100,6 +117,26 @@
               <app-prioridade-selo [prioridade]="prioridade" />
             </ng-template>
           </p-select>
+        } @else if (propostaAtual.tipo === Tipo.DESCREVER_EXECUCAO) {
+          <label class="proposta-cartao__rotulo" for="ajuste-descricao-{{ propostaAtual.id }}">Descrição formal</label>
+          <textarea pTextarea id="ajuste-descricao-{{ propostaAtual.id }}" formControlName="descricao" rows="4" [autoResize]="true" maxlength="2000" class="w-full"></textarea>
+          @if (formularioAjuste.controls.descricao.touched && formularioAjuste.controls.descricao.value.trim().length < 3) {
+            <small class="proposta-cartao__erro-campo">Informe a descrição</small>
+          }
+          <label class="proposta-cartao__rotulo" for="ajuste-seguinte-{{ propostaAtual.id }}">Depois de salvar</label>
+          <p-select
+            [inputId]="'ajuste-seguinte-' + propostaAtual.id"
+            formControlName="atividadeSeguinteId"
+            [options]="atividadesParaTroca()"
+            optionLabel="rotulo"
+            optionValue="id"
+            placeholder="Continuar nesta atividade"
+            [showClear]="true"
+            [filter]="true"
+            filterBy="rotulo"
+            appendTo="body"
+            class="w-full"
+          />
         } @else {
           <label class="proposta-cartao__rotulo" for="ajuste-descricao-{{ propostaAtual.id }}">
             {{ propostaAtual.tipo === Tipo.INICIAR_EXECUCAO ? 'Descrição provisória' : propostaAtual.tipo === Tipo.ANOTAR_PAD ? (texto('operacao') === 'TROCAR' ? 'Trecho novo' : 'Texto a acrescentar') : 'Descrição do que foi feito' }}

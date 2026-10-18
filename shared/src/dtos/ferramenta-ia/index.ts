@@ -12,6 +12,7 @@ export * from './PadConsultarDto';
 export * from './PadConsultadoDto';
 export * from './ProporAnotarPadDto';
 export * from './ProporCriarAtividadeDto';
+export * from './ProporDescreverExecucaoDto';
 export * from './ProporSuspenderCheckinDto';
 export * from './ProporIniciarExecucaoDto';
 export * from './ProporPausarExecucaoDto';
