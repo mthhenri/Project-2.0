@@ -10,6 +10,7 @@ export interface ItemNavegacao {
 }
 
 export const ITENS_NAVEGACAO: readonly ItemNavegacao[] = [
+  { label: 'Chat',       icone: 'pi pi-comments',     rotaLink: '/chat',       tecla: 'h', somenteGestor: false },
   { label: 'Ponto',      icone: 'pi pi-clock',        rotaLink: '/ponto',      tecla: 'p', somenteGestor: false },
   { label: 'Calendário', icone: 'pi pi-calendar',     rotaLink: '/calendario', tecla: 'c', somenteGestor: true  },
   { label: 'Projetos',   icone: 'pi pi-folder',       rotaLink: '/projeto',    tecla: 'j', somenteGestor: true  },

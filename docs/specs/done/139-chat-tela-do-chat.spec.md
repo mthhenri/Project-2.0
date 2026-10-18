@@ -29,8 +29,8 @@ cartões de cada tipo (iniciar execução, criar atividade etc.) vem com os exec
   Desfazer padrão do projeto). "Ajustar" abre um formulário simples dos dados da proposta, **desenhado por tipo quando o executor existir**;
   até lá, o cartão mostra os dados e só oferece Confirmar e Recusar.
 - **Busca** no histórico (`GET /chat/busca`) por um campo no cabeçalho, com resultados em lista e "ver no dia".
-- **Estados:** carregando (esqueleto), vazio (conversa do dia sem mensagens), IA desligada ou fora do ar (aviso com o motivo, entrada
-  desabilitada, mensagens antigas continuam legíveis) e erro de rede.
+- **Estados:** carregando (esqueleto), vazio (conversa do dia sem mensagens), IA desligada (aviso, entrada desabilitada, mensagens antigas legíveis),
+  IA fora do ar (só avisa e deixa tentar: o estado só se recupera com uma chamada bem-sucedida) e erro de rede.
 - Análogo visual registrado na task (candidato: a tela do Pad, pela densidade e pelo uso do Markdown).
 
 ### 3. Documentação

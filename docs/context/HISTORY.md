@@ -12,6 +12,20 @@
 
 ---
 
+## 2026-10-17 — Task 139: tela do chat com a IA
+
+Bloco 5 do rework (5 de 6). Backend: `GET /ia/disponibilidade` (qualquer usuário autenticado; o `@AdministradorOnly` saiu da classe e ficou só no `estado`) e um teste de que cada rota tem a marca certa. Frontend: módulo `chat` (rota `/chat`, item "Chat" com `g` + `h`, `pi-comments`, primeiro da barra),
+`ChatService` (leituras por `HttpClient`, envio por `fetch` com leitura do fluxo), `PropostaIaService`, `chat.util.ts` (parser do SSE e rótulos), `ChatPage` e `PropostaCartaoComponent`. Análogo registrado: a tela de Configurações da IA (título e cartões com borda) e o Pad (leitura em Markdown).
+
+- **Desvio da spec, pelo mesmo motivo da 138:** a spec pedia a entrada desabilitada com a IA "desligada **ou fora do ar**". Só **desligada** desabilita; **fora do ar** mostra o aviso e deixa tentar, porque esse estado só se recupera com uma chamada bem-sucedida e bloquear a entrada travaria a recuperação.
+- **Outros desvios, por falta de suporte do backend:** o "ver no dia" da busca só aparece para resultados de hoje (a única conversa que a tela abre; não existe rota para ler outro dia); "Ajustar" não aparece (o formulário é por tipo e os executores ainda não existem: o cartão só oferece Confirmar, Recusar e Desfazer).
+- **Pegadinhas de implementação:** a rolagem para o fim usa um `ResizeObserver` no conteúdo (cartões carregam depois de renderizados e empurravam o fim para baixo); `fetch` não passa pelos interceptores, então o token e o tratamento de erro do envio são da própria `ChatService`; as chamadas de proposta usam `comErroTratadoPelaTela` para o 409 recarregar o cartão em vez de virar "Erro interno".
+- **Verificação ao vivo (servidor temporário na 4201 sobre o backend do autor, Anthropic real):** estados vazio e IA desligada; conversa real (a IA usou a ferramenta e respondeu em lista Markdown, com o nível "rápido"); cartões semeados no banco e no índice nas três situações (pendente, confirmada, recusada): **Confirmar** devolveu a mensagem clara de que
+  a ação ainda não está disponível (não há executor) e o cartão ficou pendente; Recusar mudou para "Recusada ou expirada"; Desfazer sem executor mostrou a mesma mensagem; a busca por "relatorio" achou a mensagem com acento; "Ver no dia" e "Ir para o fim" funcionaram; **o fluxo SSE passa pelo proxy do Angular sem buffer** (25 pedaços, 20 ms entre eles).
+  1920×1080, 1366×768 e 1080×1920, claro e escuro. Dados de teste removidos do banco e do índice, IA desligada de novo, servidor temporário encerrado.
+- **Não verificado:** Confirmar e Desfazer com sucesso (dependem de executores reais, blocos 6, 8 e 9), a resposta chegando ao vivo (só o resultado final e o tempo dos pedaços pelo proxy), o estado "fora do ar" na tela, o estado de erro de rede da carga e o formulário "Ajustar".
+- **Testes:** 6 novos no parser do SSE (frontend, `npm test --workspace=frontend`) e 1 no controller da IA; builds ok; frontend segue sem teste de componente e sem lint (P-001).
+
 ## 2026-10-17 — Task 138: conversa do dia com a IA e streaming
 
 Bloco 5 do rework (4 de 6). Shared: `ChatMensagemEnviarDto`, `ChatEventoDto` (união tipada dos eventos), `ChatHojeRecuperadoDto`, `ChatBuscarDto` e `ChatBuscadoDto`. Backend: `ChatService`, `ChatController` e `EventStreamResponse` (cabeçalhos do `text/event-stream` só no primeiro evento,

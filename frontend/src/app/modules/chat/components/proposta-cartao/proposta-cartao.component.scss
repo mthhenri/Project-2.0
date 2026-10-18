@@ -1,0 +1,57 @@
+.proposta-cartao {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding: 0.875rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--p-primary-500) 35%, var(--app-surface-200));
+  border-radius: 8px;
+  background: var(--app-surface-0);
+
+  &--erro {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    color: var(--p-red-500);
+    border-color: var(--app-surface-200);
+  }
+
+  &__cabecalho {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  &__titulo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: var(--p-primary-600);
+  }
+
+  &__dados {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 0.25rem 0.75rem;
+    margin: 0;
+    font-size: 0.8125rem;
+
+    dt {
+      color: var(--p-text-muted-color);
+    }
+
+    dd {
+      margin: 0;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  &__acoes {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+}
