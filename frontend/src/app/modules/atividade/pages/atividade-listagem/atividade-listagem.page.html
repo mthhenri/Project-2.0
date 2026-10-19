@@ -294,7 +294,7 @@
                 tooltipPosition="left"
                 (onClick)="visualizarDialog.abrir(atividade.id, atividade)"
               />
-              @if (podeEditar(atividade)) {
+              @if (sessao.eGestor()) {
                 <p-button
                   icon="pi pi-ellipsis-v"
                   [text]="true"

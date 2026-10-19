@@ -491,8 +491,8 @@ export class AtividadeListagemPage implements OnInit {
   // Tags: popover na célula (salva ao fechar) e em massa
   // ---------------------------------------------------------------------------
 
-  /** Abre o seletor de tags da linha ancorado na célula de tags (`alvo`); o menu ⋮ também chega aqui. */
-  abrirTagsDaLinha(evento: Event, atividade: AtividadeResumoDto, alvo?: HTMLElement): void {
+  /** Abre o seletor de tags da linha ancorado na célula de tags (`alvo`). */
+  abrirTagsDaLinha(evento: Event, atividade: AtividadeResumoDto, alvo: HTMLElement): void {
     if (!this.podeEditar(atividade)) return;
     this.atividadeTags.set(atividade);
     this.garantirTags();
@@ -746,27 +746,13 @@ export class AtividadeListagemPage implements OnInit {
   // Menu ⋮ da linha
   // ---------------------------------------------------------------------------
 
-  /** Atribuir tags, registrar execução e excluir saem da fila de botões e vão para o menu da linha. */
+  /** Menu ⋮ do gestor: registrar execução e excluir. Tags são editadas na própria célula da linha. */
   abrirMenu(evento: Event, atividade: AtividadeResumoDto): void {
-    const itens: MenuItem[] = [];
-    if (this.podeEditar(atividade)) {
-      itens.push({
-        label: 'Atribuir tags',
-        icon: 'pi pi-tags',
-        command: () => {
-          const celula = document.getElementById(`atividade-tags-${atividade.id}`) ?? undefined;
-          this.abrirTagsDaLinha(new Event('click'), atividade, celula);
-        },
-      });
-    }
-    if (this.sessao.eGestor()) {
-      itens.push(
-        { label: 'Registrar execução', icon: 'pi pi-calendar-plus', command: () => this.abrirDialogRegistro(atividade) },
-        { separator: true },
-        { label: 'Excluir', icon: 'pi pi-trash', styleClass: 'atividade-listagem__menu-excluir', command: () => this.excluir(atividade) },
-      );
-    }
-    this.itensMenu = itens;
+    this.itensMenu = [
+      { label: 'Registrar execução', icon: 'pi pi-calendar-plus', command: () => this.abrirDialogRegistro(atividade) },
+      { separator: true },
+      { label: 'Excluir', icon: 'pi pi-trash', styleClass: 'atividade-listagem__menu-excluir', command: () => this.excluir(atividade) },
+    ];
     this.menuAcoes()?.toggle(evento);
   }
 
