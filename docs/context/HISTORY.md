@@ -12,6 +12,37 @@
 
 ---
 
+## 2026-10-19 — Task 184: testes da camada de IA
+
+Décima quarta task da guarda-chuva `testes-automatizados`. Nenhum código de produção mudou. Os services de `ia`, `configuracao-ia`, `prompt`, `proposta-ia` e
+`ferramenta-ia` já tinham testes; esta task cobre o que faltava: SQL, rotas, regras puras, assistente e telas. O frontend foi escrito por um subagente
+(`implementador`) e conferido aqui (suíte completa e builds).
+
+**Backend, integração (22 novos, banco real).**
+- `configuracao-ia.repository` (8): ativa é a de maior versão, a antiga fica intacta, histórico paginado, versão excluída ignorada, provedor inexistente não grava.
+- `prompt.repository` (12): salvar rascunho (um por tipo, sem nova versão), ativar troca a única ativa, restaurar padrão reativa a versão 1 e mantém o histórico, descartar
+  é soft delete, isolamento entre tipos, paginação.
+- `proposta-ia.repository` (12): `transitar` só vale para o dono, na situação de partida e em proposta não excluída; ajuste substitui os dados; voltar a pendente limpa a
+  resolução.
+- **Corridas com conexões reais do pool** (fora do rollback do teste, com limpeza no `finally`): em cada repository, um teste **determinístico** em que uma transação segura o
+  lock (consultivo em `configuracao_ia`, linha do tipo em `prompt`, linha da proposta) e a operação concorrente tem de esperar; mais um com `Promise.all`. Os determinísticos
+  foram validados por mutação: tirando o lock de `configuracao_ia` ou a trava do tipo em `prompt`, o teste cai. Achado: o `Promise.all` sozinho **não** provava nada
+  (as transações nem se sobrepõem), e o segurador do tipo precisa ser `FOR NO KEY UPDATE`, porque o `FOR UPDATE` já bloquearia pelo `INSERT` com FK e esconderia a ausência da trava.
+
+**Backend, unidade (~40 novos).** `ia.exception`/`traduzirFalhaDeIa`, `esquema-da-classe`, `sem-exclusao`, `ferramenta-proposta-ia`, `proposta-referenciada`,
+`validar-dados-da-proposta`, `assistente.service` (nível padrão, prompt, falha traduzida) e os controllers de assistente, configuração, prompt (só administrador) e proposta
+(nenhuma rota de gestor/administrador, dono pelo token). `ia.service` (`ia_desligada` antes do provedor, `FORA_DO_AR` só com detecção automática) já estava coberto.
+
+**Frontend (113 novos, 10 arquivos).** `configuracao-ia.util`, `configuracao-ia.service`, `prompt.service`, `ia-disponibilidade.service`, página `configuracao-ia`
+(administrador entra; gestor e desenvolvedor voltam a `/`), `prompts-aba`, `prompt-teste-dialog`, `prioridades-aba`, `assistente-descricao`, `ia-retorno-aviso`.
+
+**Divergências entre a spec e o código (não são defeitos).** O texto da task falava em "pendente de dia anterior expira na leitura no fuso": a expiração real é por
+`estaObsoleta` do executor (`expirarObsoletas`), não por dia, e já tinha teste. Os services de IA do frontend não usam `ERRO_TRATADO_PELA_TELA`, e sim `comFeedbackProprio`; o
+`assistente-descricao` não tem mensagem própria para a IA fora do ar (quem avisa é o toast do interceptor). Os testes afirmam o comportamento real.
+
+**Gates.** `npm test`: shared/backend 934 (927 + 7 `todo` de P-010 a P-016, anteriores), frontend 85 arquivos e 922 testes (+1 `todo`); `test:integracao` 221 passando; builds de
+backend e frontend verdes; `repo:verificar` aprovado. Sem lint (P-001). Sem verificação ao vivo: só testes.
+
 ## 2026-10-19 — Task 183: testes do relatório de execuções
 
 Décima terceira task da guarda-chuva `testes-automatizados`. Nenhum código de produção mudou.
