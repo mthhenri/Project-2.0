@@ -1,8 +1,8 @@
 # Task 174 — Testes: autenticação e usuários
 
-> Task 4/17 da guarda-chuva [`testes-automatizados.spec.md`](testes-automatizados.spec.md) — método comum, regras da
+> Task 4/17 da guarda-chuva [`testes-automatizados.spec.md`](../backlog/testes-automatizados.spec.md) — método comum, regras da
 > cobertura e política para divergência entre código e documento estão lá. Inventário de partida:
-> [análise](testes-automatizados/ANALISE.md).
+> [análise](../backlog/testes-automatizados/ANALISE.md).
 
 ## Objetivo
 

@@ -62,3 +62,11 @@
 - **Contorno:** nenhum no servidor; a tela sempre manda texto.
 - **Correção:** `typeof value === 'string' ? value.toLowerCase().trim() : value` nos três DTOs (e promover o `todo` de `validacao-dos-dtos.test.ts`).
 - **Desde:** origem; achado pela task 173.
+
+### P-008 — O token JWT é anexado a qualquer URL, não só à API · `ABERTO` · frontend
+
+- **Sintoma:** `authTokenInterceptor` põe `Authorization: Bearer` em toda requisição do `HttpClient` que não seja o login, inclusive para outro host.
+- **Causa:** o filtro é só `url.includes("/autenticacao/login")`; não confere se a URL é a da API (`ambiente.apiUrl`).
+- **Contorno:** hoje nenhuma chamada do front vai a outro host, então o token não vaza na prática.
+- **Correção:** anexar o token só quando a URL começar por `ambiente.apiUrl` (e promover o `it.todo` de `auth-token.interceptor.spec.ts`).
+- **Desde:** origem; achado pela task 174.

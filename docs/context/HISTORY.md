@@ -12,6 +12,48 @@
 
 ---
 
+## 2026-10-18 — Task 174: testes de autenticação e usuários
+
+Quarta task da guarda-chuva `testes-automatizados`. Nenhum código de produção mudou.
+
+**Backend.** `autenticacao.service` (6): token com `sub/login/tipo` e expiração, administrador no token, senha errada e login
+inexistente com a **mesma** mensagem, inativo recusado, excluído cai em "Credenciais inválidas". Guards e decorators (13): `jwt-auth.guard`
+(rota `@Public` passa sem token; fechada devolve 401 sem token, com token forjado, de outro segredo e expirado; válido põe o payload em
+`request.user`, usando a strategy real), `gestor.guard` (gestor e administrador passam, desenvolvedor e anônimo 403), `jwt.strategy`,
+`@ActiveUser` e os três decorators de permissão. Controllers (5, com o helper novo `backend/src/testes/rotas-do-controller.ts`, que lê
+os metadados de rota sem subir Nest e serve às próximas tasks): só o login é `@Public`; criar, listar, excluir, restaurar e trocar senha
+são `@GestorOnly`; `recuperar` e `alterar` ficam sem decorator porque a service decide. `usuario.service` (13 novos, em
+`usuario.service.leituras-e-senha.test.ts`): login duplicado, hash bcrypt, resposta sem senha, paginação e `allRows`, desenvolvedor só vê o
+próprio perfil, inexistente em alterar/excluir/senha, senha de gestor e de desenvolvedor. `usuario.repository` (integração, 14): login único
+só entre não excluídos (inclusive o índice `uix_usuario_login_ativo`), recuperar traz a senha mas listar nunca, inativo aparece e excluído não,
+filtros, ordem e paginação, `temAnotacoes`, `inserir` cria o pad (5 seções) na mesma transação e é atômico (falha no pad desfaz o usuário),
+alterar por código, soft delete e restauração, `listarAdministradoresAtivos` só conta ativos e não excluídos. `listar-usuarios.ferramenta`
+já tinha teste (permissão `GESTOR`, sem senha), item 6 coberto antes.
+
+**Frontend (Vitest).** Guards (autenticação com `returnUrl`, só-público, gestor, administrador), `auth-token.interceptor`, `autenticacao.service`,
+`usuario-sessao.service` (sessão corrompida descartada), signal, utils (`tipo-usuario`, `url-retorno` contra open redirect,
+`usuario-credenciais`), `usuario.service`. Componentes: `login` (validação, normalização do login, erro de credencial, servidor fora do ar,
+destino pós-login chat/atividade, usuário lembrado sem senha, formato antigo descartado), `usuario-listagem` (esqueleto, cheio, vazio, vazio com
+filtro, erro; ações por tipo; status e exclusão com desfazer e rollback), `usuario-formulario-dialog` (criar e editar; gestor não vê
+"Administrador"; ninguém muda o próprio tipo/status), `usuario-senha-dialog`, `usuario-perfil-dialog`, `usuario-cartao`.
+`montarComponente` ganhou a opção `armazenamento` (localStorage pré-preenchido).
+
+**Regras de §14 → teste.** Gestor não cria/promove administrador: `gestor não cria administrador…` e `gestor não promove ninguém…`
+(service) + `gestor não vê "Administrador"` (tela). Gestor não altera/exclui/restaura/troca senha de administrador: `gestor não altera, exclui,
+restaura nem troca a senha…` (service) e `gestor não gerencia administrador` (tela). Sempre ≥ 1 administrador ativo: 7 testes de rebaixar/
+inativar/excluir no `usuario.service.test.ts` + `listarAdministradoresAtivos` no repository. Desenvolvedor não altera usuário: `desenvolvedor não
+altera usuário nenhum…` (service). `PUT /usuario/:id` só gestor/administrador: service + controller (sem decorator, por desenho).
+
+**Achados.** (1) **P-008:** o `authTokenInterceptor` só exclui o login; qualquer outra URL, inclusive de outro host, recebe o token (hoje o app
+só chama a própria API, então sem exploração; `it.todo` + `PROBLEMS.md`, não corrigido). (2) Observação sem item: usuário **inativo** com senha
+errada recebe "Usuário inativo" (a checagem de status vem antes da senha), o que confirma a existência da conta; a spec só exige que
+inativo não entre. (3) O comentário de `podeEditar` na listagem ("ou a própria pessoa") não tem efeito: a rota exige gestor, e o desenvolvedor
+não chega à tela; mantido como está.
+
+**Verificado:** `npm test` da raiz — shared 156 + 1 `todo`, backend 571 (antes 536), frontend 163 + 1 `todo` (antes 72), desktop 19, scripts 13 +
+1 pulado; `npm run test:integracao` 47 (antes 33); builds de backend e frontend passam. Nenhuma tela mudou, sem verificação visual.
+Fora: `usuario-anotacoes*` (task 182).
+
 ## 2026-10-18 — Task 173: testes do núcleo (core, config, shared e desktop)
 
 Terceira task da guarda-chuva `testes-automatizados`. Nenhum código de produção mudou.

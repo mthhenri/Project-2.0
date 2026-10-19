@@ -26,6 +26,8 @@ export interface OpcoesMontagem {
   usuario?: TipoUsuarioEnum;
   /** Rotas do roteador de teste (padrão: nenhuma). */
   rotas?: Routes;
+  /** Chaves do localStorage já preenchidas antes de o componente nascer (ele é limpo a cada montagem). */
+  armazenamento?: Record<string, string>;
   /** Provedores extras (substituições de serviço, por exemplo). */
   provedores?: Array<Provider | EnvironmentProviders>;
 }
@@ -50,6 +52,7 @@ export interface ComponenteMontado<T> {
  */
 export async function montarComponente<T>(componente: Type<T>, opcoes: OpcoesMontagem = {}): Promise<ComponenteMontado<T>> {
   localStorage.clear();
+  for (const [chave, valor] of Object.entries(opcoes.armazenamento ?? {})) localStorage.setItem(chave, valor);
   TestBed.configureTestingModule({
     imports: [componente],
     providers: [
