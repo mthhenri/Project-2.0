@@ -44,7 +44,7 @@ function situacao(opcoes: OpcoesSituacao = {}): CheckinSituacaoConsultadaDto {
 function mensagemDaIa(texto: string, sobrescrita: Record<string, unknown> = {}) {
   return {
     id: `m-${texto}`, conversaId: '1-2026-10-19', usuarioId: 1, contexto: ContextoChatEnum.CHECKIN, autor: AutorChatEnum.IA, texto,
-    nivel: NivelIaEnum.RAPIDO, modelo: null, tokensEntrada: null, tokensSaida: null, tokensCache: null, propostaId: null,
+    nivel: NivelIaEnum.RAPIDO, modelo: null, tokensEntrada: null, tokensSaida: null, assunto: null, tokensCache: null, propostaId: null,
     execucaoId: null, atividadeId: null, demandaId: null, createdDate: '2026-10-19T12:00:00.000Z', ...sobrescrita,
   };
 }

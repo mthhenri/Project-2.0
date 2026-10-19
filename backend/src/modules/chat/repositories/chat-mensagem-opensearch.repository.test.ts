@@ -15,7 +15,7 @@ const nova: ChatMensagemNova = {
 };
 
 function criarClienteFalso(opcoes: { indiceExiste?: boolean; falhar?: boolean; corridaNoCreate?: boolean } = {}) {
-  const chamadas = { exists: 0, create: 0, index: [] as { id: string; refresh: string }[] };
+  const chamadas = { exists: 0, create: 0, putMapping: [] as { index: string; body: unknown }[], index: [] as { id: string; refresh: string }[] };
   const documentos: ChatMensagemFonte[] = [];
   const cliente: ClienteOpenSearchChat = {
     indices: {
@@ -27,6 +27,10 @@ function criarClienteFalso(opcoes: { indiceExiste?: boolean; falhar?: boolean; c
       create: async () => {
         chamadas.create++;
         if (opcoes.corridaNoCreate) throw { body: { error: { type: 'resource_already_exists_exception' } } };
+        return {};
+      },
+      putMapping: async (parametros) => {
+        chamadas.putMapping.push(parametros);
         return {};
       },
     },
@@ -68,6 +72,13 @@ describe('ChatMensagemOpenSearchRepository', () => {
     await repositorio.gravar(nova);
     assert.equal(chamadas.create, 2);
     assert.equal(chamadas.exists, 2);
+  });
+
+  it('um índice que já existe ganha o campo `assunto` (keyword) sem ser recriado', async () => {
+    const { cliente, chamadas } = criarClienteFalso({ indiceExiste: true });
+    await new ChatMensagemOpenSearchRepository(cliente).gravar(nova);
+    assert.equal(chamadas.create, 0);
+    assert.deepEqual(chamadas.putMapping, [{ index: 'chat-mensagem', body: { properties: { assunto: { type: 'keyword' } } } }]);
   });
 
   it('não recria um índice que já existe', async () => {

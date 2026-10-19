@@ -34,7 +34,7 @@ interface LinhaDeTitulo {
   titulo_editado: boolean;
 }
 
-const COLUNAS_DA_MENSAGEM = `mensagem_id, conversa_id, usuario_id, contexto, autor, texto, nivel, modelo, tokens_entrada, tokens_saida,
+const COLUNAS_DA_MENSAGEM = `mensagem_id, conversa_id, usuario_id, contexto, autor, assunto, texto, nivel, modelo, tokens_entrada, tokens_saida,
   tokens_cache, proposta_id, execucao_id, atividade_id, demanda_id, conteudo_bruto, created_date`;
 
 function deLinha(linha: LinhaDeMensagem): ChatMensagemLida {
@@ -58,11 +58,11 @@ export class ChatMensagemPostgresRepository extends BaseRepository<ChatMensagemF
     return this.proteger(async () => {
       const fonte = paraFonte(mensagem, randomUUID(), new Date());
       await this.executarConsulta(
-        `INSERT INTO chat_mensagem (created_date, updated_date, is_deleted, mensagem_id, conversa_id, usuario_id, contexto, autor, texto,
-                                    nivel, modelo, tokens_entrada, tokens_saida, tokens_cache, proposta_id, execucao_id, atividade_id,
+        `INSERT INTO chat_mensagem (created_date, updated_date, is_deleted, mensagem_id, conversa_id, usuario_id, contexto, autor, assunto,
+                                    texto, nivel, modelo, tokens_entrada, tokens_saida, tokens_cache, proposta_id, execucao_id, atividade_id,
                                     demanda_id, conteudo_bruto)
-         SELECT :criadaEm, :criadaEm, false, CAST(:mensagemId AS uuid), :conversaId, :usuarioId, :contexto, :autor, :texto,
-                :nivel, :modelo, :tokensEntrada, :tokensSaida, :tokensCache, :propostaId, :execucaoId, :atividadeId,
+         SELECT :criadaEm, :criadaEm, false, CAST(:mensagemId AS uuid), :conversaId, :usuarioId, :contexto, :autor, :assunto,
+                :texto, :nivel, :modelo, :tokensEntrada, :tokensSaida, :tokensCache, :propostaId, :execucaoId, :atividadeId,
                 :demandaId, CAST(:conteudoBruto AS jsonb)
          RETURNING id`,
         {
@@ -72,6 +72,7 @@ export class ChatMensagemPostgresRepository extends BaseRepository<ChatMensagemF
           usuarioId: fonte.usuario_id,
           contexto: fonte.contexto,
           autor: fonte.autor,
+          assunto: fonte.assunto ?? null,
           texto: fonte.texto,
           nivel: fonte.nivel,
           modelo: fonte.modelo,

@@ -1,5 +1,5 @@
 import * as assert from 'node:assert/strict';
-import { AutorChatEnum, ContextoChatEnum, NivelIaEnum } from '@project20/shared';
+import { AssuntoChatEnum, AutorChatEnum, ContextoChatEnum, NivelIaEnum } from '@project20/shared';
 import { testarComBanco, ConexaoTeste } from '../../../testes/banco-teste';
 import { criarRepositorio } from '../../../testes/criar-repositorio';
 import { criarDesenvolvedor } from '../../../testes/fabricas';
@@ -30,7 +30,7 @@ testarComBanco('gravar e listarConversa: ordem crescente, campos opcionais e con
   const primeira = await repositorio.gravar(mensagem('Bom dia'));
   await espera(15);
   const segunda = await repositorio.gravar(mensagem('Claro, aqui está', {
-    autor: AutorChatEnum.IA, nivel: NivelIaEnum.RAPIDO, modelo: 'modelo-x', tokensEntrada: 10, tokensSaida: 20, tokensCache: 0,
+    autor: AutorChatEnum.IA, assunto: AssuntoChatEnum.CODIGO, nivel: NivelIaEnum.RAPIDO, modelo: 'modelo-x', tokensEntrada: 10, tokensSaida: 20, tokensCache: 0,
     propostaId: 7, conteudoBruto: [{ type: 'text', text: 'Claro' }],
   }));
 
@@ -43,6 +43,8 @@ testarComBanco('gravar e listarConversa: ordem crescente, campos opcionais e con
   assert.equal(lida[1].tokensCache, 0);
   assert.equal(lida[1].propostaId, 7);
   assert.equal(lida[0].propostaId, null);
+  assert.equal(lida[1].assunto, AssuntoChatEnum.CODIGO);
+  assert.equal(lida[0].assunto, null);
   assert.deepEqual(lida[1].conteudoBruto, [{ type: 'text', text: 'Claro' }]);
   assert.ok(lida[0].createdDate instanceof Date && lida[0].createdDate <= lida[1].createdDate);
 });

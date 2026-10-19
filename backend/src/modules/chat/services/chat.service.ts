@@ -1,5 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import {
+  AssuntoChatEnum,
   AutorChatEnum,
   ChatBuscadoDto,
   ChatBuscarDto,
@@ -10,6 +11,7 @@ import {
   ChatEventoDto,
   ChatHojeRecuperadoDto,
   ChatMensagemEnviarDto,
+  ConfiguracaoIaResumoDto,
   ContextoChatEnum,
   diaMesNoFuso,
   EstadoIaEnum,
@@ -21,6 +23,7 @@ import { ConfigService } from '../../../config/config.service';
 import { ConflictException } from '../../../core/exceptions/conflict.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
+import { ConfiguracaoIaService } from '../../configuracao-ia/services/configuracao-ia.service';
 import { FerramentaIaRegistro } from '../../ferramenta-ia/services/ferramenta-ia.registro';
 import { IaException } from '../../ia/domain/ia.exception';
 import { IaBloco, IaMensagem } from '../../ia/domain/ia.tipos';
@@ -28,6 +31,15 @@ import { executarNoTurno, TurnoIa } from '../../ia/domain/turno-ia';
 import { IaService } from '../../ia/services/ia.service';
 import { PromptService } from '../../prompt/services/prompt.service';
 import { PropostaIaService } from '../../proposta-ia/services/proposta-ia.service';
+import {
+  assuntoDaUltimaMarcada,
+  filtrarHistoricoPorModo,
+  INSTRUCOES_DE_ASSUNTO,
+  interpretarAssunto,
+  MAXIMO_TOKENS_DA_CLASSIFICACAO,
+  montarInstrucoesDaConversa,
+  montarPedidoDeAssunto,
+} from '../domain/assunto-do-chat';
 import { limparTitulo } from '../domain/chat-consultas';
 import { montarAberturaDoDia } from '../domain/abertura-do-dia';
 import { montarRetomadaAposQueda } from '../domain/retomada-apos-queda';
@@ -40,8 +52,8 @@ import { ARMAZENAMENTO_DE_CHAT, ArmazenamentoDeChat } from '../repositories/arma
 export const JANELA_DE_MENSAGENS = 40;
 /** Voltas de ferramenta por mensagem do usuário: cada volta é uma chamada ao modelo. */
 export const MAXIMO_DE_VOLTAS = 8;
-/** Teto de tokens de cada chamada do chat. */
-export const MAXIMO_TOKENS_DO_CHAT = 2048;
+/** Teto de tokens de cada chamada do chat (alto o bastante para a resposta de código não cortar no meio). */
+export const MAXIMO_TOKENS_DO_CHAT = 4096;
 
 /** Instrução interna (não editável) para dar nome à conversa: só o nome, curto, sem enfeite. */
 export const INSTRUCOES_TITULO =
@@ -91,6 +103,7 @@ export class ChatService {
     private readonly ferramentaIaRegistro: FerramentaIaRegistro,
     private readonly propostaIaService: PropostaIaService,
     private readonly configService: ConfigService,
+    private readonly configuracaoIaService: ConfiguracaoIaService,
   ) {}
 
   async recuperarHoje(usuarioAtivo: JwtPayload): Promise<StandardResponse<ChatHojeRecuperadoDto>> {
@@ -176,14 +189,17 @@ export class ChatService {
 
     const propostasDoTurno: number[] = [];
     try {
+      // As mensagens nunca são reescritas: o assunto é decidido antes de gravar a pergunta e vale para ela e para a resposta do turno.
+      const assunto = opcoes.contexto === ContextoChatEnum.CHAT ? await this.classificarAssunto(usuarioAtivo, conversaId, dto.texto) : null;
       await this.chatMensagemRepositorio.gravar({
         conversaId,
         usuarioId: usuarioAtivo.sub,
         contexto: opcoes.contexto,
         autor: AutorChatEnum.USUARIO,
+        assunto,
         texto: dto.texto,
       });
-      await this.responder(usuarioAtivo, conversaId, propostasDoTurno, emitir, opcoes);
+      await this.responder(usuarioAtivo, conversaId, propostasDoTurno, emitir, opcoes, assunto);
       // O nome da conversa e as sugestões não dependem um do outro: saem juntos, para o campo voltar logo.
       if (opcoes.contexto === ContextoChatEnum.CHAT) await Promise.all([this.nomearConversa(usuarioAtivo, conversaId), this.sugerirProximasMensagens(usuarioAtivo, conversaId, emitir)]);
     } catch (erro) {
@@ -212,7 +228,7 @@ export class ChatService {
     const propostasDoTurno: number[] = [];
     try {
       if (await jaDeuBomDia()) return;
-      await this.responder(usuarioAtivo, conversaId, propostasDoTurno, emitir, { contexto: ContextoChatEnum.CHAT, abertura: this.abertura() });
+      await this.responder(usuarioAtivo, conversaId, propostasDoTurno, emitir, { contexto: ContextoChatEnum.CHAT, abertura: this.abertura() }, AssuntoChatEnum.SISTEMA);
       await this.sugerirProximasMensagens(usuarioAtivo, conversaId, emitir);
     } catch (erro) {
       await this.registrarFalha(usuarioAtivo, conversaId, propostasDoTurno, erro, emitir, false);
@@ -278,10 +294,11 @@ export class ChatService {
     propostasDoTurno: number[],
     emitir: (evento: ChatEventoDto) => void,
     opcoes: OpcoesDeConversa,
+    assunto?: AssuntoChatEnum | null,
   ): Promise<void> {
     // O turno junta o que as chamadas desta resposta gastaram, as da conversa e as das ferramentas (task 188): o selo é o maior nível.
     const turno = new TurnoIa();
-    await executarNoTurno(turno, () => this.responderNoTurno(usuarioAtivo, conversaId, propostasDoTurno, emitir, opcoes, turno));
+    await executarNoTurno(turno, () => this.responderNoTurno(usuarioAtivo, conversaId, propostasDoTurno, emitir, opcoes, turno, assunto));
   }
 
   private async responderNoTurno(
@@ -291,11 +308,19 @@ export class ChatService {
     emitir: (evento: ChatEventoDto) => void,
     opcoes: OpcoesDeConversa,
     turno: TurnoIa,
+    assuntoInformado?: AssuntoChatEnum | null,
   ): Promise<void> {
     const { abertura, retomada, contexto } = opcoes;
-    const historico = await this.listarDoContexto(conversaId, usuarioAtivo.sub, contexto);
+    const doChat = contexto === ContextoChatEnum.CHAT;
+    const configuracao = await this.configuracaoIaService.obterAtiva();
+    const historicoDoContexto = await this.listarDoContexto(conversaId, usuarioAtivo.sub, contexto);
+    // Só o chat tem assunto (o check-in tem o próprio prompt e não é marcado). A retomada continua no assunto da última mensagem marcada.
+    const assunto: AssuntoChatEnum | null = !doChat ? null : assuntoInformado ?? assuntoDaUltimaMarcada(historicoDoContexto);
+    const historico = assunto ? filtrarHistoricoPorModo(historicoDoContexto, configuracao.modoContextoChat, assunto) : historicoDoContexto;
     const prompt = await this.promptService.obterAtivo(contexto === ContextoChatEnum.CHECKIN ? TipoPromptEnum.CHECKIN : TipoPromptEnum.CONVERSA);
-    const instrucoes = opcoes.instrucoesExtras ? `${prompt.conteudo}\n\n${opcoes.instrucoesExtras}` : prompt.conteudo;
+    const promptDuvidaCodigo = doChat && configuracao.duvidasCodigo ? (await this.promptService.obterAtivo(TipoPromptEnum.DUVIDA_CODIGO)).conteudo : null;
+    const base = doChat ? montarInstrucoesDaConversa(prompt.conteudo, configuracao.duvidasCodigo, promptDuvidaCodigo) : prompt.conteudo;
+    const instrucoes = opcoes.instrucoesExtras ? `${base}\n\n${opcoes.instrucoesExtras}` : base;
     const ferramentas = this.ferramentaIaRegistro.listarParaUsuario(usuarioAtivo);
 
     // Na abertura do dia não há mensagem do usuário: a instrução entra como a primeira mensagem e fica no conteúdo bruto da resposta.
@@ -333,6 +358,7 @@ export class ChatService {
       usuarioId: usuarioAtivo.sub,
       contexto,
       autor: AutorChatEnum.IA,
+      assunto,
       texto,
       nivel: turno.nivel,
       modelo: turno.modelo,
@@ -343,6 +369,38 @@ export class ChatService {
       conteudoBruto,
     });
     emitir({ tipo: 'fim', mensagem: paraResumo(gravada) });
+  }
+
+  /**
+   * O assunto da pergunta do chat (task 191). Com as dúvidas de código desligadas não há chamada: tudo é `SISTEMA`. Ligadas, uma chamada
+   * curta no nível rápido, sem ferramentas e com teto pequeno, olhando também as últimas mensagens. Falhar aqui nunca derruba o chat: vale
+   * o assunto da última mensagem marcada do dia (ou `SISTEMA`).
+   */
+  private async classificarAssunto(usuarioAtivo: JwtPayload, conversaId: string, pergunta: string): Promise<AssuntoChatEnum> {
+    let configuracao: ConfiguracaoIaResumoDto;
+    try {
+      configuracao = await this.configuracaoIaService.obterAtiva();
+    } catch {
+      return AssuntoChatEnum.SISTEMA;
+    }
+    if (!configuracao.duvidasCodigo) return AssuntoChatEnum.SISTEMA;
+
+    let historico: ChatMensagemLida[] = [];
+    try {
+      historico = await this.listarDoContexto(conversaId, usuarioAtivo.sub, ContextoChatEnum.CHAT);
+      const resposta = await this.iaService.gerar({
+        nivel: NivelIaEnum.RAPIDO,
+        instrucoes: INSTRUCOES_DE_ASSUNTO,
+        mensagens: [{ papel: 'usuario', conteudo: montarPedidoDeAssunto(historico, pergunta) }],
+        maximoTokens: MAXIMO_TOKENS_DA_CLASSIFICACAO,
+      });
+      const assunto = interpretarAssunto(resposta.texto);
+      if (assunto) return assunto;
+      this.logger.warn(`A classificação do assunto não respondeu SISTEMA nem CODIGO: "${resposta.texto.slice(0, 40)}"`);
+    } catch (erro) {
+      this.logger.warn(`Não foi possível classificar o assunto: ${erro instanceof Error ? erro.message : String(erro)}`);
+    }
+    return assuntoDaUltimaMarcada(historico);
   }
 
   /**

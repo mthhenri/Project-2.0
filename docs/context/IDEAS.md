@@ -97,5 +97,5 @@
 
 ### I-004 — Chat IA como tira-dúvidas de programação, com bloco de código copiável · chat IA/frontend
 
-- **Promovida em 2026-10-19** para a guarda-chuva [`chat-duvidas-de-codigo.spec.md`](../specs/backlog/chat-duvidas-de-codigo.spec.md)
+- **Promovida em 2026-10-19** para a guarda-chuva [`chat-duvidas-de-codigo.spec.md`](../specs/done/chat-duvidas-de-codigo.spec.md)
   (tasks 188–191). As decisões da conversa com o autor estão na seção "Decisões" da guarda-chuva.

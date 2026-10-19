@@ -1,3 +1,4 @@
+import { AssuntoChatEnum } from '../../enums/assunto-chat.enum';
 import { AutorChatEnum } from '../../enums/autor-chat.enum';
 import { ContextoChatEnum } from '../../enums/contexto-chat.enum';
 import { NivelIaEnum } from '../../enums/nivel-ia.enum';
@@ -10,6 +11,8 @@ export interface ChatMensagemResumoDto {
   usuarioId: number;
   contexto: ContextoChatEnum;
   autor: AutorChatEnum;
+  /** Sobre o que é a mensagem; `null` (mensagem antiga, do sistema ou do check-in) é lido como `SISTEMA`. */
+  assunto: AssuntoChatEnum | null;
   /** Markdown. */
   texto: string;
   /** Só nas mensagens da IA. */

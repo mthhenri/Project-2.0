@@ -9,6 +9,7 @@ export interface ClienteOpenSearchChat {
   indices: {
     exists(parametros: { index: string }): Promise<{ body: boolean }>;
     create(parametros: { index: string; body: unknown }): Promise<unknown>;
+    putMapping(parametros: { index: string; body: unknown }): Promise<unknown>;
   };
   index(parametros: { index: string; id: string; body: unknown; refresh: 'wait_for' }): Promise<unknown>;
   search(parametros: { index: string; body: unknown }): Promise<{
@@ -38,6 +39,10 @@ export class ChatMensagemOpenSearchRepository extends ChatMensagemIndiceReposito
 
   protected async criarIndice(indice: string, mapeamento: unknown): Promise<void> {
     await this.cliente.indices.create({ index: indice, body: mapeamento });
+  }
+
+  protected async acrescentarCampos(indice: string, propriedades: unknown): Promise<void> {
+    await this.cliente.indices.putMapping({ index: indice, body: { properties: propriedades } });
   }
 
   protected async gravarDocumento(indice: string, id: string, documento: unknown): Promise<void> {

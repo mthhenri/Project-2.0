@@ -23,7 +23,7 @@ function conversa(data: string, sobrescrita: Record<string, unknown> = {}) {
 function resultadoDeBusca(id: string, sobrescrita: Record<string, unknown> = {}) {
   return {
     id, conversaId: '1-2026-10-17', usuarioId: 1, contexto: ContextoChatEnum.CHAT, autor: AutorChatEnum.USUARIO, texto: 'combinei o prazo com o cliente',
-    nivel: null, modelo: null, tokensEntrada: null, tokensSaida: null, tokensCache: null, propostaId: null, execucaoId: null,
+    nivel: null, modelo: null, tokensEntrada: null, tokensSaida: null, assunto: null, tokensCache: null, propostaId: null, execucaoId: null,
     atividadeId: null, demandaId: null, createdDate: '2026-10-17T15:00:00.000Z', ...sobrescrita,
   };
 }

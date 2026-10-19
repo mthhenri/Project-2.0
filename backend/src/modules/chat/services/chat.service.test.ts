@@ -1,7 +1,9 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { AutorChatEnum, ChatEventoDto, ContextoChatEnum, EstadoIaEnum, NivelIaEnum, TipoPromptEnum, TipoUsuarioEnum } from '@project20/shared';
+import { AssuntoChatEnum, AutorChatEnum, ChatEventoDto, ContextoChatEnum, EstadoIaEnum, ModoContextoChatEnum, NivelIaEnum, TipoPromptEnum, TipoUsuarioEnum } from '@project20/shared';
 import { ConfigService } from '../../../config/config.service';
+import { ConfiguracaoIaService } from '../../configuracao-ia/services/configuracao-ia.service';
+import { INSTRUCOES_DE_ASSUNTO, INSTRUCOES_SO_PROJECT } from '../domain/assunto-do-chat';
 import { ConflictException } from '../../../core/exceptions/conflict.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
 import { FerramentaIaRegistro } from '../../ferramenta-ia/services/ferramenta-ia.registro';
@@ -14,7 +16,7 @@ import { PropostaIaService } from '../../proposta-ia/services/proposta-ia.servic
 import { ChatMensagemLida, ChatMensagemNova, deFonte, paraFonte } from '../domain/chat-mensagem.documento';
 import { ArmazenamentoDeChat } from '../repositories/armazenamento-de-chat';
 import { TituloDaConversa, TituloParaGravar } from '../domain/chat-consultas';
-import { CARACTERES_POR_MENSAGEM_PARA_NOMEAR, ChatService, INSTRUCOES_TITULO, JANELA_DE_MENSAGENS, MAXIMO_DE_VOLTAS, MENSAGENS_PARA_NOMEAR } from './chat.service';
+import { CARACTERES_POR_MENSAGEM_PARA_NOMEAR, ChatService, INSTRUCOES_TITULO, JANELA_DE_MENSAGENS, MAXIMO_DE_VOLTAS, MAXIMO_TOKENS_DO_CHAT, MENSAGENS_PARA_NOMEAR } from './chat.service';
 
 const USUARIO = { sub: 7, login: 'dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
 
@@ -54,6 +56,10 @@ interface Cenario {
   titulo?: (solicitacao: IaSolicitacao) => string;
   /** Quantas propostas pendentes a retomada descarta como obsoletas. */
   obsoletas?: number;
+  /** As flags das dúvidas de código da configuração da IA ativa (padrão: desligadas e contexto misturado). */
+  configuracao?: { duvidasCodigo?: boolean; modoContextoChat?: ModoContextoChatEnum };
+  /** O que a IA devolve na classificação do assunto (ou lança). */
+  assunto?: (solicitacao: IaSolicitacao) => string;
 }
 
 function montar(cenario: Cenario) {
@@ -104,7 +110,10 @@ function montar(cenario: Cenario) {
     },
     async gerar(solicitacao: IaSolicitacao) {
       geradas.push(solicitacao);
-      const gerada = resposta({ texto: cenario.titulo ? cenario.titulo(solicitacao) : '"Revisão do webhook."' });
+      const ehClassificacao = solicitacao.instrucoes === INSTRUCOES_DE_ASSUNTO;
+      if (ehClassificacao) ordem.push('classificar');
+      const texto = ehClassificacao ? (cenario.assunto ? cenario.assunto(solicitacao) : 'SISTEMA') : cenario.titulo ? cenario.titulo(solicitacao) : '"Revisão do webhook."';
+      const gerada = resposta({ texto });
       turnoAtual()?.registrar(gerada); // como o `IaService` real: se houvesse um turno aberto, a chamada entraria nele
       return gerada;
     },
@@ -125,7 +134,7 @@ function montar(cenario: Cenario) {
     {
       obterAtivo: async (tipo: TipoPromptEnum) => {
         tiposDePrompt.push(tipo);
-        return { conteudo: 'Você é o assistente.' };
+        return { conteudo: tipo === TipoPromptEnum.DUVIDA_CODIGO ? 'Regras de código.' : 'Você é o assistente.' };
       },
     } as unknown as PromptService,
     {
@@ -143,6 +152,9 @@ function montar(cenario: Cenario) {
       expirarObsoletas: async () => cenario.obsoletas ?? 0,
     } as unknown as PropostaIaService,
     { obter: () => ({ aplicacao: { fusoHorario: 'America/Sao_Paulo' } }) } as unknown as ConfigService,
+    {
+      obterAtiva: async () => ({ duvidasCodigo: false, modoContextoChat: ModoContextoChatEnum.MISTURADO, ...cenario.configuracao }),
+    } as unknown as ConfiguracaoIaService,
   );
   return { servico, gravadas, ordem, solicitacoes, recusadas, titulos, gravacoesDeTitulo, geradas, tiposDePrompt };
 }
@@ -184,7 +196,7 @@ test('a primeira chamada leva o prompt CONVERSA, as ferramentas do usuário, o n
   const { servico, solicitacoes } = montar({ chamadas: [async () => resposta({ texto: 'ok' })] });
   await enviar(servico, 'Bom dia');
   assert.equal(solicitacoes[0].nivel, NivelIaEnum.RAPIDO);
-  assert.equal(solicitacoes[0].instrucoes, 'Você é o assistente.');
+  assert.equal(solicitacoes[0].instrucoes, `Você é o assistente.\n\n${INSTRUCOES_SO_PROJECT}`);
   assert.equal(solicitacoes[0].ferramentas?.[0].nome, 'consultar_data_e_hora');
   assert.deepEqual(solicitacoes[0].mensagens, [{ papel: 'usuario', conteudo: 'Bom dia' }]);
 });
@@ -723,4 +735,135 @@ test('o turno acaba com a resposta: a nomeação e as sugestões não entram na 
   await enviar(servico);
   assert.ok(geradas.length >= 2, 'houve nomeação e sugestões');
   assert.deepEqual([gravadas.at(-1)!.tokensEntrada, gravadas.at(-1)!.tokensSaida], [10, 5]);
+});
+
+// ---- Task 191: assunto das mensagens, dúvidas de código e contexto do chat ----
+
+const historicoDeAssuntos = (): ChatMensagemNova[] => [
+  { conversaId: 'x', usuarioId: 7, contexto: ContextoChatEnum.CHAT, autor: AutorChatEnum.USUARIO, assunto: AssuntoChatEnum.SISTEMA, texto: 'quais minhas atividades?' },
+  { conversaId: 'x', usuarioId: 7, contexto: ContextoChatEnum.CHAT, autor: AutorChatEnum.IA, assunto: AssuntoChatEnum.SISTEMA, texto: 'você tem duas' },
+  { conversaId: 'x', usuarioId: 7, contexto: ContextoChatEnum.CHAT, autor: AutorChatEnum.USUARIO, assunto: AssuntoChatEnum.CODIGO, texto: 'como faço um loop em PHP?' },
+  { conversaId: 'x', usuarioId: 7, contexto: ContextoChatEnum.CHAT, autor: AutorChatEnum.IA, assunto: AssuntoChatEnum.CODIGO, texto: 'use foreach' },
+];
+
+test('dúvidas de código desligadas: não classifica, grava SISTEMA nas duas mensagens e a conversa leva a recusa fixa', async () => {
+  const { servico, gravadas, geradas, solicitacoes, tiposDePrompt } = montar({ chamadas: [async () => resposta({ texto: 'ok' })] });
+  await enviar(servico, 'como faço um loop em PHP?');
+  assert.equal(geradas.some((solicitacao) => solicitacao.instrucoes === INSTRUCOES_DE_ASSUNTO), false);
+  assert.deepEqual(gravadas.map((mensagem) => mensagem.assunto), [AssuntoChatEnum.SISTEMA, AssuntoChatEnum.SISTEMA]);
+  assert.equal(solicitacoes[0].instrucoes, `Você é o assistente.\n\n${INSTRUCOES_SO_PROJECT}`);
+  assert.equal(tiposDePrompt.includes(TipoPromptEnum.DUVIDA_CODIGO), false);
+  assert.equal(solicitacoes[0].ferramentas?.length, 1, 'as ferramentas continuam disponíveis');
+});
+
+test('dúvidas de código ligadas: classifica antes de gravar (nível rápido, sem ferramentas, teto pequeno) e grava o assunto nas duas mensagens', async () => {
+  const { servico, gravadas, geradas, ordem, solicitacoes, tiposDePrompt } = montar({
+    configuracao: { duvidasCodigo: true },
+    assunto: () => 'CODIGO',
+    chamadas: [async () => resposta({ texto: 'use foreach' })],
+  });
+  await enviar(servico, 'como faço um loop em PHP?');
+  assert.deepEqual(ordem.slice(0, 4), ['classificar', 'gravar:USUARIO', 'ia', 'gravar:IA']);
+  const classificacao = geradas.find((solicitacao) => solicitacao.instrucoes === INSTRUCOES_DE_ASSUNTO)!;
+  assert.equal(classificacao.nivel, NivelIaEnum.RAPIDO);
+  assert.equal(classificacao.ferramentas, undefined);
+  assert.equal(classificacao.maximoTokens, 10);
+  assert.match(String(classificacao.mensagens[0].conteudo), /Pergunta atual: como faço um loop em PHP\?/);
+  assert.deepEqual(gravadas.map((mensagem) => mensagem.assunto), [AssuntoChatEnum.CODIGO, AssuntoChatEnum.CODIGO]);
+  assert.equal(solicitacoes[0].instrucoes, 'Você é o assistente.\n\nRegras de código.');
+  assert.ok(tiposDePrompt.includes(TipoPromptEnum.DUVIDA_CODIGO));
+});
+
+test('dúvidas de código ligadas: pergunta do sistema grava SISTEMA nas duas mensagens', async () => {
+  const { servico, gravadas } = montar({ configuracao: { duvidasCodigo: true }, assunto: () => 'SISTEMA', chamadas: [async () => resposta({ texto: 'ok' })] });
+  await enviar(servico, 'quais minhas atividades de hoje?');
+  assert.deepEqual(gravadas.map((mensagem) => mensagem.assunto), [AssuntoChatEnum.SISTEMA, AssuntoChatEnum.SISTEMA]);
+});
+
+test('a classificação olha as últimas mensagens para "e em C#?" seguir o assunto anterior', async () => {
+  const { servico, geradas } = montar({ configuracao: { duvidasCodigo: true }, assunto: () => 'CODIGO', chamadas: [async () => resposta({ texto: 'ok' })], historicoInicial: historicoDeAssuntos() });
+  await enviar(servico, 'e em C#?');
+  const pedido = String(geradas.find((solicitacao) => solicitacao.instrucoes === INSTRUCOES_DE_ASSUNTO)!.mensagens[0].conteudo);
+  assert.match(pedido, /Usuário: como faço um loop em PHP\?/);
+  assert.match(pedido, /IA: use foreach/);
+  assert.ok(pedido.endsWith('Pergunta atual: e em C#?'));
+});
+
+test('falha da classificação nunca derruba o chat: vale o assunto da última mensagem marcada do dia', async () => {
+  const { servico, gravadas, solicitacoes } = montar({
+    configuracao: { duvidasCodigo: true },
+    assunto: () => {
+      throw new IaException('INDISPONIVEL', 'fora do ar');
+    },
+    chamadas: [async () => resposta({ texto: 'em C# é assim' })],
+    historicoInicial: historicoDeAssuntos(),
+  });
+  const eventos = await enviar(servico, 'e em C#?');
+  assert.equal(eventos.at(-1)?.tipo, 'fim');
+  assert.equal(solicitacoes.length, 1);
+  assert.deepEqual(gravadas.slice(-2).map((mensagem) => mensagem.assunto), [AssuntoChatEnum.CODIGO, AssuntoChatEnum.CODIGO]);
+});
+
+test('falha da classificação sem nenhuma mensagem marcada cai em SISTEMA; resposta que não é um assunto também', async () => {
+  const falhar = (): string => {
+    throw new Error('boom');
+  };
+  for (const assunto of [falhar, () => 'talvez']) {
+    const { servico, gravadas } = montar({ configuracao: { duvidasCodigo: true }, assunto, chamadas: [async () => resposta({ texto: 'ok' })] });
+    await enviar(servico, 'oi');
+    assert.deepEqual(gravadas.map((mensagem) => mensagem.assunto), [AssuntoChatEnum.SISTEMA, AssuntoChatEnum.SISTEMA]);
+  }
+});
+
+test('contexto SEPARADO manda ao modelo só o histórico do assunto da pergunta atual; MISTURADO manda tudo', async () => {
+  const separado = montar({ configuracao: { duvidasCodigo: true, modoContextoChat: ModoContextoChatEnum.SEPARADO }, assunto: () => 'CODIGO', chamadas: [async () => resposta({ texto: 'ok' })], historicoInicial: historicoDeAssuntos() });
+  await enviar(separado.servico, 'e em C#?');
+  assert.deepEqual(separado.solicitacoes[0].mensagens.map((mensagem) => mensagem.conteudo), ['como faço um loop em PHP?', 'use foreach', 'e em C#?']);
+
+  const doSistema = montar({ configuracao: { duvidasCodigo: true, modoContextoChat: ModoContextoChatEnum.SEPARADO }, assunto: () => 'SISTEMA', chamadas: [async () => resposta({ texto: 'ok' })], historicoInicial: historicoDeAssuntos() });
+  await enviar(doSistema.servico, 'e as execuções?');
+  assert.deepEqual(doSistema.solicitacoes[0].mensagens.map((mensagem) => mensagem.conteudo), ['quais minhas atividades?', 'você tem duas', 'e as execuções?']);
+
+  const misturado = montar({ configuracao: { duvidasCodigo: true, modoContextoChat: ModoContextoChatEnum.MISTURADO }, assunto: () => 'CODIGO', chamadas: [async () => resposta({ texto: 'ok' })], historicoInicial: historicoDeAssuntos() });
+  await enviar(misturado.servico, 'e em C#?');
+  assert.deepEqual(misturado.solicitacoes[0].mensagens.map((mensagem) => mensagem.conteudo), [
+    'quais minhas atividades?', 'você tem duas', 'como faço um loop em PHP?', 'use foreach', 'e em C#?',
+  ]);
+});
+
+test('mensagem antiga sem assunto conta como SISTEMA no contexto SEPARADO', async () => {
+  const antigas: ChatMensagemNova[] = [
+    { conversaId: 'x', usuarioId: 7, contexto: ContextoChatEnum.CHAT, autor: AutorChatEnum.USUARIO, texto: 'antiga do sistema' },
+    { conversaId: 'x', usuarioId: 7, contexto: ContextoChatEnum.CHAT, autor: AutorChatEnum.IA, texto: 'resposta antiga' },
+  ];
+  const { servico, solicitacoes } = montar({ configuracao: { modoContextoChat: ModoContextoChatEnum.SEPARADO }, chamadas: [async () => resposta({ texto: 'ok' })], historicoInicial: antigas });
+  await enviar(servico, 'mais uma');
+  assert.deepEqual(solicitacoes[0].mensagens.map((mensagem) => mensagem.conteudo), ['antiga do sistema', 'resposta antiga', 'mais uma']);
+});
+
+test('o check-in não classifica, não é marcado e não leva a recusa nem o prompt de código', async () => {
+  const { servico, gravadas, geradas, solicitacoes } = montar({ configuracao: { duvidasCodigo: true, modoContextoChat: ModoContextoChatEnum.SEPARADO }, assunto: () => 'CODIGO', chamadas: [async () => resposta({ texto: 'ok' })] });
+  await servico.enviarMensagem(USUARIO, { texto: 'fiz o login' }, () => undefined, { contexto: ContextoChatEnum.CHECKIN, instrucoesExtras: '[Contexto do check-in]' });
+  assert.equal(geradas.some((solicitacao) => solicitacao.instrucoes === INSTRUCOES_DE_ASSUNTO), false);
+  assert.deepEqual(gravadas.map((mensagem) => mensagem.assunto), [null, null]);
+  assert.equal(solicitacoes[0].instrucoes, 'Você é o assistente.\n\n[Contexto do check-in]');
+});
+
+test('a resposta de código tem teto de 4096 tokens por chamada', async () => {
+  assert.equal(MAXIMO_TOKENS_DO_CHAT, 4096);
+  const { servico, solicitacoes } = montar({ chamadas: [async () => resposta({ texto: 'ok' })] });
+  await enviar(servico);
+  assert.equal(solicitacoes[0].maximoTokens, 4096);
+});
+
+test('a retomada segue o modo de contexto e o assunto da última mensagem marcada', async () => {
+  const { servico, solicitacoes } = montar({
+    configuracao: { duvidasCodigo: true, modoContextoChat: ModoContextoChatEnum.SEPARADO },
+    chamadas: [async () => resposta({ texto: 'retomando' })],
+    historicoInicial: historicoDeAssuntos(),
+  });
+  await servico.retomarAposQueda(USUARIO, () => undefined);
+  const textos = solicitacoes[0].mensagens.map((mensagem) => (typeof mensagem.conteudo === 'string' ? mensagem.conteudo : ''));
+  assert.deepEqual(textos.slice(0, 2), ['como faço um loop em PHP?', 'use foreach']);
+  assert.equal(textos.some((texto) => texto.includes('quais minhas atividades?')), false);
 });

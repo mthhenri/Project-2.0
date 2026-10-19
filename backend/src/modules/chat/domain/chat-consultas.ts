@@ -9,6 +9,14 @@ export const LIMITE_BUSCA = 50;
 export const LIMITE_CONVERSAS = 100;
 
 /**
+ * Campos que nasceram depois da criação do índice (task 191: `assunto`). Um índice que já existe não os tem; `acrescentarCampos` os
+ * põe nele ao subir (acrescentar um campo novo é permitido, mudar o tipo de um existente não).
+ */
+export const CAMPOS_POSTERIORES_DA_MENSAGEM = {
+  assunto: { type: 'keyword' },
+};
+
+/**
  * Índice único com um documento por mensagem. O texto é analisado em português **sem acento** (`descricao` acha `descrição`):
  * `brazilian` com `asciifolding` antes do radical. O subcampo `keyword` serve a ordenação e a igualdade exata.
  */
@@ -35,6 +43,7 @@ export const MAPEAMENTO_CHAT_MENSAGEM = {
       usuario_id: { type: 'integer' },
       contexto: { type: 'keyword' },
       autor: { type: 'keyword' },
+      ...CAMPOS_POSTERIORES_DA_MENSAGEM,
       texto: { type: 'text', analyzer: 'texto_pt', fields: { keyword: { type: 'keyword', ignore_above: 512 } } },
       nivel: { type: 'keyword' },
       modelo: { type: 'keyword' },

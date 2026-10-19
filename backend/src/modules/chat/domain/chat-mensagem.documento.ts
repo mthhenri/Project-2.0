@@ -1,4 +1,4 @@
-import { AutorChatEnum, ChatMensagemResumoDto, ContextoChatEnum, NivelIaEnum } from '@project20/shared';
+import { AssuntoChatEnum, AutorChatEnum, ChatMensagemResumoDto, ContextoChatEnum, NivelIaEnum } from '@project20/shared';
 
 /** A mensagem a gravar (o repository cria o `id` e a data). */
 export interface ChatMensagemNova {
@@ -6,6 +6,8 @@ export interface ChatMensagemNova {
   usuarioId: number;
   contexto: ContextoChatEnum;
   autor: AutorChatEnum;
+  /** Sobre o que é a mensagem (task 191); ausente fica `null`. */
+  assunto?: AssuntoChatEnum | null;
   texto: string;
   nivel?: NivelIaEnum | null;
   modelo?: string | null;
@@ -32,6 +34,8 @@ export interface ChatMensagemFonte {
   usuario_id: number;
   contexto: string;
   autor: string;
+  /** Ausente nos documentos anteriores à task 191: conta como `null`. */
+  assunto?: string | null;
   texto: string;
   nivel: string | null;
   modelo: string | null;
@@ -53,6 +57,7 @@ export function paraFonte(mensagem: ChatMensagemNova, id: string, criadaEm: Date
     usuario_id: mensagem.usuarioId,
     contexto: mensagem.contexto,
     autor: mensagem.autor,
+    assunto: mensagem.assunto ?? null,
     texto: mensagem.texto,
     nivel: mensagem.nivel ?? null,
     modelo: mensagem.modelo ?? null,
@@ -75,6 +80,7 @@ export function deFonte(fonte: ChatMensagemFonte): ChatMensagemLida {
     usuarioId: fonte.usuario_id,
     contexto: fonte.contexto as ContextoChatEnum,
     autor: fonte.autor as AutorChatEnum,
+    assunto: (fonte.assunto as AssuntoChatEnum | null | undefined) ?? null,
     texto: fonte.texto,
     nivel: (fonte.nivel as NivelIaEnum | null) ?? null,
     modelo: fonte.modelo,

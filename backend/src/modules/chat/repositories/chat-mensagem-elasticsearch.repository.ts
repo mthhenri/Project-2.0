@@ -12,6 +12,7 @@ export interface ClienteElasticsearchChat {
   indices: {
     exists(parametros: { index: string }): Promise<boolean>;
     create(parametros: { index: string } & Record<string, unknown>): Promise<unknown>;
+    putMapping(parametros: { index: string } & Record<string, unknown>): Promise<unknown>;
   };
   index(parametros: { index: string; id: string; document: unknown; refresh: 'wait_for' }): Promise<unknown>;
   search(parametros: { index: string } & Record<string, unknown>): Promise<{
@@ -46,6 +47,10 @@ export class ChatMensagemElasticsearchRepository extends ChatMensagemIndiceRepos
 
   protected async criarIndice(indice: string, mapeamento: unknown): Promise<void> {
     await this.cliente.indices.create({ index: indice, ...(mapeamento as Record<string, unknown>) });
+  }
+
+  protected async acrescentarCampos(indice: string, propriedades: unknown): Promise<void> {
+    await this.cliente.indices.putMapping({ index: indice, properties: propriedades as Record<string, unknown> });
   }
 
   protected async gravarDocumento(indice: string, id: string, documento: unknown): Promise<void> {

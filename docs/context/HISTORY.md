@@ -12,6 +12,19 @@
 
 ---
 
+## 2026-10-19 — Task 191: assunto das mensagens e contexto do chat (fecha a guarda-chuva das dúvidas de código)
+
+Quarta e última task da guarda-chuva `chat-duvidas-de-codigo`: com as dúvidas de código ligadas o chat responde perguntas de programação com o prompt `DUVIDA_CODIGO`, marca cada mensagem pelo assunto e monta o contexto conforme o modo; desligadas, a IA recusa com educação.
+
+- **Assunto:** `AssuntoChatEnum` (`SISTEMA`/`CODIGO`) e campo `assunto` anulável nos três armazenamentos: coluna em `chat_mensagem` (migration `0045`, a seguinte à da 190, que usou a 0044), `keyword` no mapeamento e no documento (`ChatMensagemFonte`). Para um índice que já existe, `ChatMensagemIndiceRepository` ganhou `acrescentarCampos` (`putMapping` no OpenSearch e no Elasticsearch), chamado a cada subida: conferido no OpenSearch real, o índice antigo ganhou `assunto: keyword` sem falhar.
+- **Classificação antes de gravar** (`ChatService.classificarAssunto`): com a flag ligada e contexto `CHAT`, uma chamada rápida (sem ferramentas, 10 tokens) com as últimas 4 mensagens e a pergunta; a pergunta e a resposta gravam o mesmo assunto. Falha ou resposta que não é um assunto cai no assunto da última mensagem marcada, ou `SISTEMA`. A chamada fica fora do turno (como a nomeação): não entra nos tokens da mensagem.
+- **Instruções e contexto:** `CONVERSA` + `DUVIDA_CODIGO` (ligado) ou `CONVERSA` + a recusa fixa (desligado); check-in intacto. `SEPARADO` filtra o histórico pelo assunto da pergunta atual e depois aplica a janela de 40; a retomada segue o modo no assunto da última marcada; o "bom dia" é `SISTEMA`. A service ganhou a dependência de `ConfiguracaoIaService` (módulo `ConfiguracaoIaModule` importado pelo do chat).
+- **Teto de tokens:** `MAXIMO_TOKENS_DO_CHAT` foi de 2048 para 4096. Nas respostas de código reais da verificação o maior `tokens_saida` foi 516, então o corte no meio não aparece nem com margem larga; o valor fica em 4096 como a spec pede.
+- **Testes:** shared 165; backend 1044 passando + 7 `todo` antigos (P-010 a P-016); integração 238 (o repository Postgres grava e lê `assunto`); contrato dos armazenamentos contra o OpenSearch real (`CHAT_INTEGRACAO=1`) 14 passando; frontend 1368 passando + 3 `todo` (só os dados de teste ganharam o campo). Builds de backend e frontend passam; `db:rollback` e `db:migrate` conferidos. Sem lint (P-001). O contrato do Elasticsearch não foi rodado (sem o serviço no ambiente); fica o dublê.
+- **Verificado ao vivo** (administrador de teste, IA ligada só durante o teste e desligada no fim, configuração v20 com as flags desligadas; OpenSearch conferido): com a flag ligada e misturado, "como faço um loop em PHP?" voltou com bloco ```php realçado e gravou `CODIGO` nas duas mensagens; "e em C#?" seguiu como `CODIGO`; "quais as minhas atividades de hoje?" usou a ferramenta e gravou `SISTEMA`. Em `SEPARADO` o mesmo roteiro marcou igual, e a pergunta "sobre quais linguagens eu perguntei hoje?" (classificada `SISTEMA`) não enxergou as mensagens de código, o risco aceito do modo. Com a flag desligada a pergunta de PHP foi recusada com educação. Telas do chat em 1920×1080, 1366×768 e 1080×1920 sem quebra, com o bloco realçado e o nome da conversa automático ("Dúvidas de programação e atividades").
+- **Latência:** o primeiro trecho da resposta levou 3,3 a 4,1 s com a flag desligada e 4,6 a 5,9 s com ela ligada (mais uma chamada rápida antes da resposta, cerca de 1 a 1,5 s); amostra pequena, sem medida formal.
+- **Observação:** com a flag desligada e o contexto misturado, a IA às vezes "se corrige" por ter respondido código antes (as mensagens de código antigas continuam no contexto). Com `SEPARADO` isso não ocorre; fica como efeito do modo misturado.
+
 ## 2026-10-19 — Task 190: configuração das dúvidas de código
 
 Terceira task da guarda-chuva `chat-duvidas-de-codigo`. Só cria a configuração e o prompt; ligar a flag ainda não muda a conversa (a 191 é quem usa).

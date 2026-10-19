@@ -23,7 +23,7 @@ function mensagem(autor: AutorChatEnum, texto: string, sobrescrita: Record<strin
   return {
     id: `m-${texto}`, conversaId: CONVERSA_DE_HOJE, usuarioId: 1, contexto: ContextoChatEnum.CHAT, autor, texto,
     nivel: autor === AutorChatEnum.IA ? NivelIaEnum.RAPIDO : null, modelo: null, tokensEntrada: null, tokensSaida: null,
-    tokensCache: null, propostaId: null, execucaoId: null, atividadeId: null, demandaId: null,
+    assunto: null, tokensCache: null, propostaId: null, execucaoId: null, atividadeId: null, demandaId: null,
     createdDate: '2026-10-19T12:00:00.000Z', ...sobrescrita,
   };
 }

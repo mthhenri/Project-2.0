@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import {
   BaldeConversa,
+  CAMPOS_POSTERIORES_DA_MENSAGEM,
   ConsultaBusca,
   ConsultaConversa,
   ConsultaConversas,
@@ -51,6 +52,8 @@ export abstract class ChatMensagemIndiceRepository implements ArmazenamentoDeCha
   protected abstract existeIndice(indice: string): Promise<boolean>;
   protected abstract criarIndice(indice: string, mapeamento: unknown): Promise<void>;
   /** Grava o documento com o `id` e só volta quando ele já aparece nas buscas (`refresh` esperado). */
+  /** Acrescenta propriedades ao mapeamento de um índice que já existe (nunca troca o tipo de uma existente). */
+  protected abstract acrescentarCampos(indice: string, propriedades: unknown): Promise<void>;
   protected abstract gravarDocumento(indice: string, id: string, documento: unknown): Promise<void>;
   protected abstract pesquisar(indice: string, consulta: unknown): Promise<ResultadoDaPesquisa>;
 
@@ -125,13 +128,16 @@ export abstract class ChatMensagemIndiceRepository implements ArmazenamentoDeCha
   /** Cria os índices se não existirem. Idempotente: subir de novo não falha nem duplica. */
   private async garantirIndice(): Promise<void> {
     if (this.indiceGarantido) return;
-    await this.criarIndiceSeNaoExiste(INDICE_CHAT_MENSAGEM, MAPEAMENTO_CHAT_MENSAGEM);
+    await this.criarIndiceSeNaoExiste(INDICE_CHAT_MENSAGEM, MAPEAMENTO_CHAT_MENSAGEM, CAMPOS_POSTERIORES_DA_MENSAGEM);
     await this.criarIndiceSeNaoExiste(INDICE_CHAT_CONVERSA, MAPEAMENTO_CHAT_CONVERSA);
     this.indiceGarantido = true;
   }
 
-  private async criarIndiceSeNaoExiste(indice: string, mapeamento: unknown): Promise<void> {
-    if (await this.existeIndice(indice)) return;
+  private async criarIndiceSeNaoExiste(indice: string, mapeamento: unknown, camposPosteriores?: unknown): Promise<void> {
+    if (await this.existeIndice(indice)) {
+      if (camposPosteriores) await this.acrescentarCampos(indice, camposPosteriores);
+      return;
+    }
     try {
       await this.criarIndice(indice, mapeamento);
     } catch (erro) {

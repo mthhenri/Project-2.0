@@ -29,7 +29,7 @@ registrarContratoDeArmazenamento(
 const nova: ChatMensagemNova = { conversaId: '7-2026-10-17', usuarioId: 7, contexto: ContextoChatEnum.CHAT, autor: AutorChatEnum.USUARIO, texto: 'Oi' };
 
 function criarClienteFalso(opcoes: { indiceExiste?: boolean; falhar?: boolean; corridaNoCreate?: boolean } = {}) {
-  const chamadas = { exists: 0, create: [] as Record<string, unknown>[], index: [] as { id: string; refresh: string }[], search: [] as Record<string, unknown>[] };
+  const chamadas = { exists: 0, create: [] as Record<string, unknown>[], putMapping: [] as Record<string, unknown>[], index: [] as { id: string; refresh: string }[], search: [] as Record<string, unknown>[] };
   const documentos: ChatMensagemFonte[] = [];
   const cliente: ClienteElasticsearchChat = {
     indices: {
@@ -41,6 +41,10 @@ function criarClienteFalso(opcoes: { indiceExiste?: boolean; falhar?: boolean; c
       create: async (parametros) => {
         chamadas.create.push(parametros);
         if (opcoes.corridaNoCreate) throw { meta: { body: { error: { type: 'resource_already_exists_exception' } } } };
+        return {};
+      },
+      putMapping: async (parametros) => {
+        chamadas.putMapping.push(parametros);
         return {};
       },
     },
@@ -66,6 +70,13 @@ describe('ChatMensagemElasticsearchRepository', () => {
     const existente = criarClienteFalso({ indiceExiste: true });
     await new ChatMensagemElasticsearchRepository(existente.cliente).gravar(nova);
     assert.equal(existente.chamadas.create.length, 0);
+  });
+
+  it('um índice que já existe ganha o campo `assunto` (keyword) sem ser recriado', async () => {
+    const { cliente, chamadas } = criarClienteFalso({ indiceExiste: true });
+    await new ChatMensagemElasticsearchRepository(cliente).gravar(nova);
+    assert.equal(chamadas.create.length, 0);
+    assert.deepEqual(chamadas.putMapping, [{ index: 'chat-mensagem', properties: { assunto: { type: 'keyword' } } }]);
   });
 
   it('tolera outra instância criando o índice ao mesmo tempo', async () => {
