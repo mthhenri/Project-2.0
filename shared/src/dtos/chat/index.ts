@@ -7,3 +7,5 @@ export * from './ChatBuscadoDto';
 export * from './ChatConversaResumoDto';
 export * from './ChatConversasListadasDto';
 export * from './ChatConversaRecuperarDto';
+export * from './ChatConversaTituloAlterarDto';
+export * from './ChatConversaTituloAlteradoDto';

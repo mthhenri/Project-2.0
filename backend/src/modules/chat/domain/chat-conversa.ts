@@ -22,3 +22,14 @@ export function instanteDoDiaUtilAnterior(instante: Date, fusoHorario: string): 
 export function montarConversaId(usuarioId: number, instante: Date, fusoHorario: string): string {
   return `${usuarioId}-${dataNoFuso(instante, fusoHorario)}`;
 }
+
+const MESES_POR_EXTENSO = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+
+/**
+ * O nome de uma conversa que ainda não tem nome gravado: "Chat do dia 19 de outubro de 2026". A data vem do fim do `conversaId`
+ * (`<usuarioId>-<yyyy-mm-dd>`), sem passar por `Date`, então não há fuso nem virada de dia para errar.
+ */
+export function nomePadraoDaConversa(conversaId: string): string {
+  const [ano, mes, dia] = conversaId.slice(-10).split('-').map(Number);
+  return `Chat do dia ${dia} de ${MESES_POR_EXTENSO[mes - 1]} de ${ano}`;
+}

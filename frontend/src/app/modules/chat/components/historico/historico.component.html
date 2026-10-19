@@ -67,17 +67,41 @@
       } @else {
         <ul class="chat-historico__lista">
           @for (conversa of conversas(); track conversa.conversaId) {
-            <li>
-              <button
-                type="button"
-                class="chat-historico__item"
-                [class.chat-historico__item--atual]="conversa.data === diaAtual()"
-                [attr.aria-current]="conversa.data === diaAtual() ? 'true' : null"
-                (click)="diaEscolhido.emit(conversa.data)"
-              >
-                <span class="chat-historico__item-titulo">{{ conversa.titulo ?? semMarcacao(conversa.primeiraMensagem) }}</span>
-                <span class="chat-historico__item-meta">{{ rotuloDoDia(conversa.data, hoje()) }} · {{ conversa.quantidadeDeMensagens }} msg</span>
-              </button>
+            <li class="chat-historico__linha">
+              @if (editandoId() === conversa.conversaId) {
+                <div class="chat-historico__edicao">
+                  <input
+                    #campoNome
+                    pInputText
+                    type="text"
+                    class="chat-historico__edicao-campo"
+                    aria-label="Nome da conversa"
+                    placeholder="Chat do dia…"
+                    [maxlength]="limiteNome"
+                    [formControl]="controleNome"
+                    (keydown.enter)="salvarNome(conversa)"
+                    (keydown.escape)="cancelarEdicao()"
+                    (blur)="salvarNome(conversa)"
+                  />
+                  <span class="chat-historico__edicao-dica">Enter salva · Esc cancela · em branco volta ao padrão</span>
+                </div>
+              } @else {
+                <button
+                  type="button"
+                  class="chat-historico__item"
+                  [class.chat-historico__item--atual]="conversa.data === diaAtual()"
+                  [attr.aria-current]="conversa.data === diaAtual() ? 'true' : null"
+                  [pTooltip]="conversa.titulo"
+                  tooltipPosition="top"
+                  (click)="diaEscolhido.emit(conversa.data)"
+                >
+                  <span class="chat-historico__item-titulo">{{ conversa.titulo }}</span>
+                  <span class="chat-historico__item-meta">{{ rotuloDoDia(conversa.data, hoje()) }} · {{ conversa.quantidadeDeMensagens }} msg</span>
+                </button>
+                <button type="button" class="chat-historico__renomear" aria-label="Renomear conversa" pTooltip="Renomear" tooltipPosition="left" (click)="iniciarEdicao(conversa)">
+                  <i class="pi pi-pencil"></i>
+                </button>
+              }
             </li>
           }
         </ul>

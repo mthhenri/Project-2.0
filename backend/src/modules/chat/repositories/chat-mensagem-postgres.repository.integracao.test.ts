@@ -136,12 +136,27 @@ testarComBanco('título da conversa: grava, troca e só aparece para o dono; que
   const repositorio = repositorioDe(conexao);
   assert.deepEqual(await repositorio.listarTitulos({ usuarioId: dono.id, conversaIds: [] }), {});
 
-  await repositorio.gravarTitulo(conversaId, dono.id, 'Descrição do cadastro');
-  assert.deepEqual(await repositorio.listarTitulos({ usuarioId: dono.id, conversaIds: [conversaId, `${dono.id}-2026-10-18`] }), { [conversaId]: 'Descrição do cadastro' });
+  await repositorio.gravarTitulo({ conversaId, usuarioId: dono.id, titulo: 'Descrição do cadastro', editado: false });
+  assert.deepEqual(await repositorio.listarTitulos({ usuarioId: dono.id, conversaIds: [conversaId, `${dono.id}-2026-10-18`] }), { [conversaId]: { titulo: 'Descrição do cadastro', editado: false } });
 
-  await repositorio.gravarTitulo(conversaId, dono.id, 'Cadastro de parceiros');
-  assert.deepEqual(await repositorio.listarTitulos({ usuarioId: dono.id, conversaIds: [conversaId] }), { [conversaId]: 'Cadastro de parceiros' });
+  await repositorio.gravarTitulo({ conversaId, usuarioId: dono.id, titulo: 'Cadastro de parceiros', editado: false });
+  assert.deepEqual(await repositorio.listarTitulos({ usuarioId: dono.id, conversaIds: [conversaId] }), { [conversaId]: { titulo: 'Cadastro de parceiros', editado: false } });
   assert.deepEqual(await repositorio.listarTitulos({ usuarioId: outro.id, conversaIds: [conversaId] }), {});
+  const linhas = await conexao.raw('SELECT COUNT(*)::int AS total FROM chat_conversa WHERE conversa_id = :conversaId', { conversaId });
+  assert.equal(linhas.rows[0].total, 1);
+});
+
+testarComBanco('nome editado pelo usuário: marca editado, troca depois, e vazio com editado falso devolve ao padrão (task 192)', async (conexao) => {
+  const { dono, conversaId } = await cenario(conexao);
+  const repositorio = repositorioDe(conexao);
+  const lido = async () => (await repositorio.listarTitulos({ usuarioId: dono.id, conversaIds: [conversaId] }))[conversaId];
+
+  await repositorio.gravarTitulo({ conversaId, usuarioId: dono.id, titulo: 'Nome da IA', editado: false });
+  await repositorio.gravarTitulo({ conversaId, usuarioId: dono.id, titulo: 'Meu nome', editado: true });
+  assert.deepEqual(await lido(), { titulo: 'Meu nome', editado: true });
+
+  await repositorio.gravarTitulo({ conversaId, usuarioId: dono.id, titulo: '', editado: false });
+  assert.deepEqual(await lido(), { titulo: '', editado: false });
   const linhas = await conexao.raw('SELECT COUNT(*)::int AS total FROM chat_conversa WHERE conversa_id = :conversaId', { conversaId });
   assert.equal(linhas.rows[0].total, 1);
 });

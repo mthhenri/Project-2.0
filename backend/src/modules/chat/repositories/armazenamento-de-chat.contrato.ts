@@ -96,11 +96,18 @@ export function registrarContratoDeArmazenamento(
 
     it('guarda e troca o título da conversa, só para o dono, e quem não tem título não aparece', async () => {
       assert.deepEqual(await armazenamento.listarTitulos({ usuarioId: dono, conversaIds: [] }), {});
-      await armazenamento.gravarTitulo(conversaId, dono, 'Descrição do cadastro');
-      assert.deepEqual(await armazenamento.listarTitulos({ usuarioId: dono, conversaIds: [conversaId, `${dono}-2026-10-18`] }), { [conversaId]: 'Descrição do cadastro' });
-      await armazenamento.gravarTitulo(conversaId, dono, 'Cadastro de parceiros');
-      assert.deepEqual(await armazenamento.listarTitulos({ usuarioId: dono, conversaIds: [conversaId] }), { [conversaId]: 'Cadastro de parceiros' });
+      await armazenamento.gravarTitulo({ conversaId, usuarioId: dono, titulo: 'Descrição do cadastro', editado: false });
+      assert.deepEqual(await armazenamento.listarTitulos({ usuarioId: dono, conversaIds: [conversaId, `${dono}-2026-10-18`] }), { [conversaId]: { titulo: 'Descrição do cadastro', editado: false } });
+      await armazenamento.gravarTitulo({ conversaId, usuarioId: dono, titulo: 'Cadastro de parceiros', editado: false });
+      assert.deepEqual(await armazenamento.listarTitulos({ usuarioId: dono, conversaIds: [conversaId] }), { [conversaId]: { titulo: 'Cadastro de parceiros', editado: false } });
       assert.deepEqual(await armazenamento.listarTitulos({ usuarioId: outro, conversaIds: [conversaId] }), {});
+    });
+
+    it('o nome dado pelo usuário fica marcado como editado e, em branco, volta a não ter nome (task 192)', async () => {
+      await armazenamento.gravarTitulo({ conversaId, usuarioId: dono, titulo: 'Meu nome', editado: true });
+      assert.deepEqual((await armazenamento.listarTitulos({ usuarioId: dono, conversaIds: [conversaId] }))[conversaId], { titulo: 'Meu nome', editado: true });
+      await armazenamento.gravarTitulo({ conversaId, usuarioId: dono, titulo: '', editado: false });
+      assert.deepEqual((await armazenamento.listarTitulos({ usuarioId: dono, conversaIds: [conversaId] }))[conversaId], { titulo: '', editado: false });
     });
   });
 }

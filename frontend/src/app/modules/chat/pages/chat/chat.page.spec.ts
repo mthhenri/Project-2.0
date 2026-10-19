@@ -545,8 +545,8 @@ describe('ChatPage — retomada após queda da IA', () => {
 
 describe('ChatPage — histórico: abrir um dia anterior', () => {
   const CONVERSAS = [
-    { conversaId: CONVERSA_DE_HOJE, data: HOJE, titulo: 'Conversa de hoje', primeiraMensagem: 'Oi', quantidadeDeMensagens: 2, ultimaMensagemDate: '2026-10-19T12:00:00.000Z' },
-    { conversaId: `1-${ONTEM}`, data: ONTEM, titulo: 'Conversa de ontem', primeiraMensagem: 'Ontem', quantidadeDeMensagens: 2, ultimaMensagemDate: '2026-10-18T12:00:00.000Z' },
+    { conversaId: CONVERSA_DE_HOJE, data: HOJE, titulo: 'Conversa de hoje', primeiraMensagem: 'Oi', tituloEditado: false, quantidadeDeMensagens: 2, ultimaMensagemDate: '2026-10-19T12:00:00.000Z' },
+    { conversaId: `1-${ONTEM}`, data: ONTEM, titulo: 'Conversa de ontem', primeiraMensagem: 'Ontem', tituloEditado: false, quantidadeDeMensagens: 2, ultimaMensagemDate: '2026-10-18T12:00:00.000Z' },
   ];
 
   async function abrirOntem(): Promise<Montado> {

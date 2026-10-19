@@ -1,12 +1,14 @@
-import { Component, inject, input, output, signal } from '@angular/core';
+import { Component, ElementRef, inject, input, output, signal, viewChild } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SkeletonModule } from 'primeng/skeleton';
-import { AutorChatEnum, ChatConversaResumoDto, ChatMensagemResumoDto } from '@project20/shared';
+import { TooltipModule } from 'primeng/tooltip';
+import { AutorChatEnum, ChatConversaResumoDto, ChatMensagemResumoDto, LIMITE_TITULO_CONVERSA_EDITADO } from '@project20/shared';
 import { ChatService } from '../../services/chat.service';
-import { dataDaConversa, rotuloDoDia, semMarcacaoMarkdown } from '../../utils/chat.util';
+import { dataDaConversa, rotuloDoDia } from '../../utils/chat.util';
 
 const CHAVE_ABERTO = 'chat.historico.aberto';
 
@@ -24,7 +26,7 @@ export interface MensagemDoHistorico {
 @Component({
   selector: 'app-chat-historico',
   standalone: true,
-  imports: [DatePipe, ReactiveFormsModule, ButtonModule, InputTextModule, SkeletonModule],
+  imports: [DatePipe, ReactiveFormsModule, ButtonModule, InputTextModule, SkeletonModule, TooltipModule],
   templateUrl: './historico.component.html',
   styleUrl: './historico.component.scss',
   host: { '[class.chat-historico--recolhido]': '!aberto()' },
@@ -40,7 +42,7 @@ export class HistoricoComponent {
 
   readonly Autor = AutorChatEnum;
   readonly rotuloDoDia = rotuloDoDia;
-  readonly semMarcacao = semMarcacaoMarkdown;
+  readonly limiteNome = LIMITE_TITULO_CONVERSA_EDITADO;
   readonly aberto = signal(this.lerAberto());
   readonly conversas = signal<ChatConversaResumoDto[]>([]);
   readonly carregando = signal(true);
@@ -48,8 +50,14 @@ export class HistoricoComponent {
   readonly resultados = signal<ChatMensagemResumoDto[] | null>(null);
   readonly buscando = signal(false);
   readonly controleBusca = new FormControl<string>('', { nonNullable: true });
+  /** A conversa cujo nome está sendo editado (`conversaId`) e o campo da edição. */
+  readonly editandoId = signal<string | null>(null);
+  readonly salvandoNome = signal(false);
+  readonly controleNome = new FormControl<string>('', { nonNullable: true });
 
+  private readonly campoNome = viewChild<ElementRef<HTMLInputElement>>('campoNome');
   private readonly chatService = inject(ChatService);
+  private readonly messageService = inject(MessageService);
 
   constructor() {
     this.recarregar();
@@ -93,6 +101,51 @@ export class HistoricoComponent {
         this.buscando.set(false);
       },
       error: () => this.buscando.set(false),
+    });
+  }
+
+  /** Troca o nome da linha por um campo, já com o nome de hoje selecionado. */
+  iniciarEdicao(conversa: ChatConversaResumoDto): void {
+    this.controleNome.setValue(conversa.titulo);
+    this.editandoId.set(conversa.conversaId);
+    setTimeout(() => {
+      const campo = this.campoNome()?.nativeElement;
+      campo?.focus();
+      campo?.select();
+    });
+  }
+
+  cancelarEdicao(): void {
+    this.editandoId.set(null);
+  }
+
+  /**
+   * Enter ou perder o foco salva; em branco volta ao nome padrão. Sem mudança, só fecha o campo. Falha mantém o campo aberto com o aviso.
+   * `salvandoNome` impede o salvamento duplo (Enter e depois o blur do campo que some).
+   */
+  salvarNome(conversa: ChatConversaResumoDto): void {
+    if (this.editandoId() !== conversa.conversaId || this.salvandoNome()) return;
+    const digitado = this.controleNome.value.trim();
+    if (digitado === conversa.titulo) {
+      this.cancelarEdicao();
+      return;
+    }
+    this.salvandoNome.set(true);
+    this.chatService.alterarTituloConversa(conversa.data, digitado).subscribe({
+      next: (resposta) => {
+        const alterado = resposta.dados;
+        if (alterado) {
+          this.conversas.update((lista) =>
+            lista.map((item) => (item.conversaId === alterado.conversaId ? { ...item, titulo: alterado.titulo, tituloEditado: alterado.tituloEditado } : item)),
+          );
+        }
+        this.salvandoNome.set(false);
+        this.cancelarEdicao();
+      },
+      error: (falha) => {
+        this.salvandoNome.set(false);
+        this.messageService.add({ severity: 'warn', summary: 'Chat', detail: falha?.mensagem ?? 'Não foi possível renomear a conversa' });
+      },
     });
   }
 

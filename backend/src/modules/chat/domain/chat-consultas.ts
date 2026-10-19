@@ -127,10 +127,23 @@ export const MAPEAMENTO_CHAT_CONVERSA = {
       conversa_id: { type: 'keyword' },
       usuario_id: { type: 'integer' },
       titulo: { type: 'text', index: false },
+      titulo_editado: { type: 'boolean' },
       created_date: { type: 'date' },
     },
   },
 };
+
+/** O nome de uma conversa: vazio quando só vale o padrão; `editado` quando foi o usuário que deu (a IA não o troca). */
+export interface TituloDaConversa {
+  titulo: string;
+  editado: boolean;
+}
+
+/** Grava (ou troca) o nome da conversa; `titulo` vazio e `editado` falso devolvem a conversa ao nome padrão. */
+export interface TituloParaGravar extends TituloDaConversa {
+  conversaId: string;
+  usuarioId: number;
+}
 
 export interface ConsultaTitulos {
   usuarioId: number;

@@ -100,11 +100,19 @@ test('gravar: um documento por mensagem no índice de mensagens, com id próprio
 
 test('gravarTitulo: um documento por conversa, com o id da conversa (gravar de novo troca o título)', async () => {
   const indice = new IndiceFalso();
-  await indice.gravarTitulo('7-2026-10-17', 7, 'Cadastro de parceiros');
+  await indice.gravarTitulo({ conversaId: '7-2026-10-17', usuarioId: 7, titulo: 'Cadastro de parceiros', editado: false });
   assert.equal(indice.gravados[0].indice, INDICE_CHAT_CONVERSA);
   assert.equal(indice.gravados[0].id, '7-2026-10-17');
   assert.equal(indice.gravados[0].documento.titulo, 'Cadastro de parceiros');
+  assert.equal(indice.gravados[0].documento.titulo_editado, false);
   assert.equal(indice.gravados[0].documento.usuario_id, 7);
+});
+
+test('gravarTitulo: o nome do usuário grava titulo_editado verdadeiro, e o mapeamento da conversa declara o campo (task 192)', async () => {
+  const indice = new IndiceFalso();
+  await indice.gravarTitulo({ conversaId: '7-2026-10-17', usuarioId: 7, titulo: 'Meu nome', editado: true });
+  assert.equal(indice.gravados[0].documento.titulo_editado, true);
+  assert.deepEqual((MAPEAMENTO_CHAT_CONVERSA.mappings.properties as Record<string, unknown>).titulo_editado, { type: 'boolean' });
 });
 
 test('listarTitulos: lista vazia devolve {} sem nem falar com o serviço; senão, indexa o título por conversa', async () => {
@@ -112,8 +120,9 @@ test('listarTitulos: lista vazia devolve {} sem nem falar com o serviço; senão
   assert.deepEqual(await indice.listarTitulos({ usuarioId: 7, conversaIds: [] }), {});
   assert.equal(indice.consultasDeExistencia, 0);
 
-  indice.resultado = { fontes: [{ conversa_id: 'a', titulo: 'Um' }, { conversa_id: 'b' }] as never, baldes: [] };
-  assert.deepEqual(await indice.listarTitulos({ usuarioId: 7, conversaIds: ['a', 'b'] }), { a: 'Um', b: '' });
+  indice.resultado = { fontes: [{ conversa_id: 'a', titulo: 'Um', titulo_editado: true }, { conversa_id: 'b' }] as never, baldes: [] };
+  // Documento anterior à task 192 (sem `titulo_editado`) conta como não editado.
+  assert.deepEqual(await indice.listarTitulos({ usuarioId: 7, conversaIds: ['a', 'b'] }), { a: { titulo: 'Um', editado: true }, b: { titulo: '', editado: false } });
   assert.equal(indice.pesquisas[0].indice, INDICE_CHAT_CONVERSA);
 });
 
@@ -164,7 +173,7 @@ test('falha ao gravar, pesquisar ou conferir o índice vira a mensagem clara de 
   const mensagemDe = (erro: unknown) => JSON.stringify((erro as BusinessException).getResponse());
   const casos: [string, IndiceFalso, (indice: IndiceFalso) => Promise<unknown>][] = [
     ['gravar', comFalha((indice) => { indice.falhaAoGravar = new Error('segredo-interno'); }), (indice) => indice.gravar(NOVA)],
-    ['gravarTitulo', comFalha((indice) => { indice.falhaAoGravar = new Error('segredo-interno'); }), (indice) => indice.gravarTitulo('c', 7, 'T')],
+    ['gravarTitulo', comFalha((indice) => { indice.falhaAoGravar = new Error('segredo-interno'); }), (indice) => indice.gravarTitulo({ conversaId: 'c', usuarioId: 7, titulo: 'T', editado: false })],
     ['listarConversa', comFalha((indice) => { indice.falhaAoPesquisar = new Error('segredo-interno'); }), (indice) => indice.listarConversa({ conversaId: 'c', usuarioId: 7 })],
     ['buscar', comFalha((indice) => { indice.falhaAoPesquisar = new Error('segredo-interno'); }), (indice) => indice.buscar({ usuarioId: 7, texto: 'x' })],
     ['listarConversas', comFalha((indice) => { indice.falhaAoExistir = new Error('segredo-interno'); }), (indice) => indice.listarConversas({ usuarioId: 7 })],

@@ -3,6 +3,7 @@ import * as assert from 'node:assert/strict';
 import { AutorChatEnum, ChatEventoDto, ContextoChatEnum, EstadoIaEnum, NivelIaEnum, TipoPromptEnum, TipoUsuarioEnum } from '@project20/shared';
 import { ConfigService } from '../../../config/config.service';
 import { ConflictException } from '../../../core/exceptions/conflict.exception';
+import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
 import { FerramentaIaRegistro } from '../../ferramenta-ia/services/ferramenta-ia.registro';
 import { IaException } from '../../ia/domain/ia.exception';
 import { IaResposta, IaSolicitacao } from '../../ia/domain/ia.tipos';
@@ -11,7 +12,8 @@ import { PromptService } from '../../prompt/services/prompt.service';
 import { PropostaIaService } from '../../proposta-ia/services/proposta-ia.service';
 import { ChatMensagemLida, ChatMensagemNova, deFonte, paraFonte } from '../domain/chat-mensagem.documento';
 import { ArmazenamentoDeChat } from '../repositories/armazenamento-de-chat';
-import { ChatService, INSTRUCOES_TITULO, JANELA_DE_MENSAGENS, MAXIMO_DE_VOLTAS } from './chat.service';
+import { TituloDaConversa, TituloParaGravar } from '../domain/chat-consultas';
+import { CARACTERES_POR_MENSAGEM_PARA_NOMEAR, ChatService, INSTRUCOES_TITULO, JANELA_DE_MENSAGENS, MAXIMO_DE_VOLTAS, MENSAGENS_PARA_NOMEAR } from './chat.service';
 
 const USUARIO = { sub: 7, login: 'dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
 
@@ -44,16 +46,19 @@ interface Cenario {
   ferramenta?: (nome: string) => { conteudo: string; erro: boolean; propostaId?: number };
   estado?: EstadoIaEnum;
   historicoInicial?: ChatMensagemNova[];
-  titulosIniciais?: Record<string, string>;
+  titulosIniciais?: Record<string, string | TituloDaConversa>;
   /** O que a IA devolve ao pedir o nome da conversa (ou lança). */
-  titulo?: () => string;
+  titulo?: (solicitacao: IaSolicitacao) => string;
   /** Quantas propostas pendentes a retomada descarta como obsoletas. */
   obsoletas?: number;
 }
 
 function montar(cenario: Cenario) {
   const gravadas: ChatMensagemLida[] = [];
-  const titulos: Record<string, string> = { ...(cenario.titulosIniciais ?? {}) };
+  const titulos: Record<string, TituloDaConversa> = Object.fromEntries(
+    Object.entries(cenario.titulosIniciais ?? {}).map(([conversaId, valor]) => [conversaId, typeof valor === 'string' ? { titulo: valor, editado: false } : valor]),
+  );
+  const gravacoesDeTitulo: TituloParaGravar[] = [];
   const geradas: IaSolicitacao[] = [];
   const ordem: string[] = [];
   const repositorio = {
@@ -69,8 +74,9 @@ function montar(cenario: Cenario) {
     async listarTitulos() {
       return { ...titulos };
     },
-    async gravarTitulo(conversaId: string, _usuarioId: number, titulo: string) {
-      titulos[conversaId] = titulo;
+    async gravarTitulo(novo: TituloParaGravar) {
+      gravacoesDeTitulo.push(novo);
+      titulos[novo.conversaId] = { titulo: novo.titulo, editado: novo.editado };
     },
     async listarConversas(consulta: unknown) {
       ordem.push(`conversas:${JSON.stringify(consulta)}`);
@@ -95,7 +101,7 @@ function montar(cenario: Cenario) {
     },
     async gerar(solicitacao: IaSolicitacao) {
       geradas.push(solicitacao);
-      return resposta({ texto: cenario.titulo ? cenario.titulo() : '"Revisão do webhook."' });
+      return resposta({ texto: cenario.titulo ? cenario.titulo(solicitacao) : '"Revisão do webhook."' });
     },
     async transmitir(solicitacao: IaSolicitacao, aoTrecho: (trecho: string) => void) {
       ordem.push('ia');
@@ -128,7 +134,7 @@ function montar(cenario: Cenario) {
     } as unknown as PropostaIaService,
     { obter: () => ({ aplicacao: { fusoHorario: 'America/Sao_Paulo' } }) } as unknown as ConfigService,
   );
-  return { servico, gravadas, ordem, solicitacoes, recusadas, titulos, geradas, tiposDePrompt };
+  return { servico, gravadas, ordem, solicitacoes, recusadas, titulos, gravacoesDeTitulo, geradas, tiposDePrompt };
 }
 
 async function enviar(servico: ChatService, texto = 'Oi') {
@@ -333,16 +339,85 @@ test('recuperarHoje devolve a conversa do dia no fuso configurado, sem o conteú
   assert.equal(hoje.dados.mensagens.some((mensagem) => 'conteudoBruto' in mensagem), false);
 });
 
-test('dá nome à conversa depois da primeira resposta, só uma vez, e limpa o que a IA devolve', async () => {
-  const { servico, titulos, geradas: todasAsGeradas } = montar({ chamadas: [async () => resposta({ texto: 'oi' })] });
-  const geradas = () => todasAsGeradas.filter((solicitacao) => solicitacao.instrucoes === INSTRUCOES_TITULO);
+const nomesGerados = (geradas: IaSolicitacao[]) => geradas.filter((solicitacao) => solicitacao.instrucoes === INSTRUCOES_TITULO);
+const nomesDe = (titulos: Record<string, TituloDaConversa>) => Object.values(titulos).map((valor) => valor.titulo);
+
+test('dá nome à conversa já na primeira resposta, limpa o que a IA devolve e não o marca como editado', async () => {
+  const { servico, titulos, geradas } = montar({ chamadas: [async () => resposta({ texto: 'oi' })] });
   await enviar(servico);
-  assert.equal(geradas().length, 1);
-  assert.equal(geradas()[0].nivel, NivelIaEnum.RAPIDO);
-  assert.match(String(geradas()[0].mensagens[0].conteudo), /Usuário: Oi/);
-  assert.deepEqual(Object.values(titulos), ['Revisão do webhook']);
+  assert.equal(nomesGerados(geradas).length, 1);
+  assert.equal(nomesGerados(geradas)[0].nivel, NivelIaEnum.RAPIDO);
+  assert.match(String(nomesGerados(geradas)[0].mensagens[0].conteudo), /Usuário: Oi/);
+  assert.deepEqual(Object.values(titulos), [{ titulo: 'Revisão do webhook', editado: false }]);
+});
+
+test('na primeira vez o nome atual mandado à IA é o padrão "Chat do dia ..."', async () => {
+  const { servico, geradas } = montar({ chamadas: [async () => resposta({ texto: 'oi' })] });
+  await enviar(servico);
+  assert.match(String(nomesGerados(geradas)[0].mensagens[0].conteudo), /^Nome atual: Chat do dia \d{1,2} de \p{L}+ de \d{4}\n\n/u);
+});
+
+test('a cada mensagem nova do usuário o nome é reavaliado e uma mudança de assunto troca o nome', async () => {
+  let rodada = 0;
+  const { servico, titulos, geradas, gravacoesDeTitulo } = montar({
+    chamadas: [async () => resposta({ texto: 'oi' })],
+    titulo: (solicitacao) => (solicitacao.instrucoes !== INSTRUCOES_TITULO || ++rodada <= 2 ? 'Revisão do webhook' : 'Relatório mensal'),
+  });
+  await enviar(servico);
   await enviar(servico, 'de novo');
-  assert.equal(geradas().length, 1);
+  assert.equal(nomesGerados(geradas).length, 2);
+  assert.equal(gravacoesDeTitulo.length, 1, 'o mesmo nome devolvido pela IA não é gravado de novo');
+  assert.match(String(nomesGerados(geradas)[1].mensagens[0].conteudo), /^Nome atual: Revisão do webhook\n\n/);
+
+  await enviar(servico, 'outro assunto');
+  assert.equal(gravacoesDeTitulo.length, 2);
+  assert.deepEqual(nomesDe(titulos), ['Relatório mensal']);
+});
+
+test('a nomeação manda só as últimas mensagens, cada uma cortada: o custo não cresce com a conversa', async () => {
+  const longa = 'x'.repeat(CARACTERES_POR_MENSAGEM_PARA_NOMEAR + 200);
+  const { servico, geradas } = montar({ chamadas: [async () => resposta({ texto: 'resposta curta' })] });
+  for (let volta = 1; volta <= 8; volta++) await enviar(servico, `${volta}-${longa}`);
+  const ultimo = String(nomesGerados(geradas).at(-1)!.mensagens[0].conteudo);
+  const trechos = ultimo.split('\n\n').slice(1);
+  assert.equal(trechos.length, MENSAGENS_PARA_NOMEAR);
+  assert.ok(trechos.every((trecho) => trecho.length <= 'Usuário: '.length + CARACTERES_POR_MENSAGEM_PARA_NOMEAR));
+  assert.doesNotMatch(ultimo, /Usuário: 1-/);
+  assert.match(ultimo, /Usuário: 8-/);
+});
+
+test('nome dado pelo usuário nunca é trocado e a IA nem é chamada para nomear', async () => {
+  const { servico, titulos, geradas, gravacoesDeTitulo } = montar({ chamadas: [async () => resposta({ texto: 'oi' })] });
+  await enviar(servico);
+  const conversaId = (await servico.recuperarHoje(USUARIO)).dados.conversaId;
+  titulos[conversaId] = { titulo: 'Meu nome', editado: true };
+  geradas.length = 0;
+  gravacoesDeTitulo.length = 0;
+  await enviar(servico, 'mais uma');
+  assert.equal(nomesGerados(geradas).length, 0);
+  assert.equal(gravacoesDeTitulo.length, 0);
+  assert.deepEqual(titulos[conversaId], { titulo: 'Meu nome', editado: true });
+});
+
+test('se o usuário renomeia enquanto a IA pensa, o nome dele vence', async () => {
+  const montado = montar({
+    chamadas: [async () => resposta({ texto: 'oi' })],
+    titulo: () => {
+      const conversaId = Object.keys(montado.gravadas).length ? montado.gravadas[0].conversaId : '';
+      montado.titulos[conversaId] = { titulo: 'Meu nome', editado: true };
+      return 'Nome da IA';
+    },
+  });
+  await enviar(montado.servico);
+  assert.deepEqual(nomesDe(montado.titulos), ['Meu nome']);
+  assert.equal(montado.gravacoesDeTitulo.length, 0);
+});
+
+test('o check-in nunca nomeia a conversa', async () => {
+  const { servico, geradas, gravacoesDeTitulo } = montar({ chamadas: [async () => resposta({ texto: 'Anotado' })] });
+  await servico.enviarMensagem(USUARIO, { texto: 'fiz o login' }, () => undefined, { contexto: ContextoChatEnum.CHECKIN, instrucoesExtras: '[Contexto do check-in]' });
+  assert.equal(nomesGerados(geradas).length, 0);
+  assert.equal(gravacoesDeTitulo.length, 0);
 });
 
 test('falha ao nomear a conversa não atrapalha a resposta', async () => {
@@ -357,21 +432,49 @@ test('falha ao nomear a conversa não atrapalha a resposta', async () => {
   assert.deepEqual(titulos, {});
 });
 
+test('alterarTituloConversa grava o nome aparado e sem espaços repetidos, marcado como editado, na conversa do dono do token', async () => {
+  const { servico, gravacoesDeTitulo } = montar({ chamadas: [], historicoInicial: [{ conversaId: '7-2026-10-17', usuarioId: 7, contexto: ContextoChatEnum.CHAT, autor: AutorChatEnum.USUARIO, texto: 'oi' }] });
+  const resposta = await servico.alterarTituloConversa({ data: '2026-10-17', titulo: '  Plano   da sprint \n ' }, USUARIO);
+  assert.deepEqual(gravacoesDeTitulo, [{ conversaId: '7-2026-10-17', usuarioId: 7, titulo: 'Plano da sprint', editado: true }]);
+  assert.deepEqual(resposta.dados, { conversaId: '7-2026-10-17', titulo: 'Plano da sprint', tituloEditado: true });
+});
+
+test('alterarTituloConversa em branco volta ao padrão e à renomeação automática', async () => {
+  const { servico, gravacoesDeTitulo } = montar({ chamadas: [], historicoInicial: [{ conversaId: '7-2026-10-17', usuarioId: 7, contexto: ContextoChatEnum.CHAT, autor: AutorChatEnum.USUARIO, texto: 'oi' }] });
+  const resposta = await servico.alterarTituloConversa({ data: '2026-10-17', titulo: '   ' }, USUARIO);
+  assert.deepEqual(gravacoesDeTitulo, [{ conversaId: '7-2026-10-17', usuarioId: 7, titulo: '', editado: false }]);
+  assert.deepEqual(resposta.dados, { conversaId: '7-2026-10-17', titulo: 'Chat do dia 17 de outubro de 2026', tituloEditado: false });
+});
+
+test('alterarTituloConversa: conversa sem mensagens do dono do token (inclusive a de outra pessoa) é 404 e nada é gravado', async () => {
+  const { servico, gravacoesDeTitulo } = montar({ chamadas: [] });
+  await assert.rejects(() => servico.alterarTituloConversa({ data: '2026-10-17', titulo: 'Invasão' }, USUARIO), ResourceNotFoundException);
+  assert.deepEqual(gravacoesDeTitulo, []);
+});
+
 test('listarConversas devolve o dia, o trecho inicial e a contagem de cada conversa do dono', async () => {
   const { servico, ordem } = montar({ chamadas: [], titulosIniciais: { '7-2026-10-17': 'Bom dia no projeto' } });
   const resposta = await servico.listarConversas(USUARIO);
   assert.match(ordem[0], /"usuarioId":7/);
   assert.deepEqual(
     resposta.dados.conversas.map((conversa) => [conversa.data, conversa.titulo, conversa.primeiraMensagem, conversa.quantidadeDeMensagens]),
-    [['2026-10-17', 'Bom dia no projeto', 'bom dia', 4], ['2026-10-16', null, '', 2]],
+    [['2026-10-17', 'Bom dia no projeto', 'bom dia', 4], ['2026-10-16', 'Chat do dia 16 de outubro de 2026', '', 2]],
   );
+  assert.deepEqual(resposta.dados.conversas.map((conversa) => conversa.tituloEditado), [false, false]);
   assert.equal(resposta.dados.conversas[0].ultimaMensagemDate.toISOString(), '2026-10-17T15:00:00.000Z');
 });
 
-test('recuperarConversa monta o id com o dono do token, nunca com outro', async () => {
+test('listarConversas devolve se o nome é do usuário e usa o padrão quando o nome gravado está vazio', async () => {
+  const { servico } = montar({ chamadas: [], titulosIniciais: { '7-2026-10-17': { titulo: 'Meu nome', editado: true }, '7-2026-10-16': { titulo: '', editado: false } } });
+  const conversas = (await servico.listarConversas(USUARIO)).dados.conversas;
+  assert.deepEqual(conversas.map((conversa) => [conversa.titulo, conversa.tituloEditado]), [['Meu nome', true], ['Chat do dia 16 de outubro de 2026', false]]);
+});
+
+test('recuperarConversa monta o id com o dono do token, nunca com outro, e traz o nome (o padrão se não há)', async () => {
   const { servico } = montar({ chamadas: [] });
   const resposta = await servico.recuperarConversa({ data: '2026-10-10' }, USUARIO);
   assert.equal(resposta.dados.conversaId, '7-2026-10-10');
+  assert.equal(resposta.dados.titulo, 'Chat do dia 10 de outubro de 2026');
 });
 
 test('buscar repassa o usuário do token e o período', async () => {

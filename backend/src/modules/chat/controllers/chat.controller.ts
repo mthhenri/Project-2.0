@@ -1,6 +1,6 @@
-import { Body, Controller, Get, Param, Post, Query, Res } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, Query, Res } from '@nestjs/common';
 import type { Response } from 'express';
-import { ChatBuscarDto, ChatConversaRecuperarDto, ChatMensagemEnviarDto } from '@project20/shared';
+import { ChatBuscarDto, ChatConversaRecuperarDto, ChatConversaTituloAlterarDto, ChatMensagemEnviarDto } from '@project20/shared';
 import { ActiveUser } from '../../autenticacao/decorators/active-user.decorator';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { ChatService } from '../services/chat.service';
@@ -57,6 +57,12 @@ export class ChatController {
   @Get('conversa/:data')
   recuperarConversa(@Param() dto: ChatConversaRecuperarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
     return this.chatService.recuperarConversa(dto, usuarioAtivo);
+  }
+
+  /** Renomeia a conversa de um dia do próprio usuário; em branco, volta ao nome padrão. */
+  @Put('conversa/:data/titulo')
+  alterarTituloConversa(@Param() parametros: ChatConversaRecuperarDto, @Body() dto: ChatConversaTituloAlterarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
+    return this.chatService.alterarTituloConversa({ ...dto, ...parametros }, usuarioAtivo);
   }
 
   @Get('busca')

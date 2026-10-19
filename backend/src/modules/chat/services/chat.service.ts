@@ -4,6 +4,8 @@ import {
   ChatBuscadoDto,
   ChatBuscarDto,
   ChatConversaRecuperarDto,
+  ChatConversaTituloAlteradoDto,
+  ChatConversaTituloAlterarDto,
   ChatConversasListadasDto,
   ChatEventoDto,
   ChatHojeRecuperadoDto,
@@ -17,6 +19,7 @@ import {
 } from '@project20/shared';
 import { ConfigService } from '../../../config/config.service';
 import { ConflictException } from '../../../core/exceptions/conflict.exception';
+import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { FerramentaIaRegistro } from '../../ferramenta-ia/services/ferramenta-ia.registro';
 import { IaException } from '../../ia/domain/ia.exception';
@@ -28,7 +31,7 @@ import { limparTitulo } from '../domain/chat-consultas';
 import { montarAberturaDoDia } from '../domain/abertura-do-dia';
 import { montarRetomadaAposQueda } from '../domain/retomada-apos-queda';
 import { interpretarSugestoes, montarInstrucoesDeSugestoes } from '../domain/sugestoes';
-import { instanteDoDiaUtilAnterior, montarConversaId } from '../domain/chat-conversa';
+import { instanteDoDiaUtilAnterior, montarConversaId, nomePadraoDaConversa } from '../domain/chat-conversa';
 import { ChatMensagemLida, paraResumo } from '../domain/chat-mensagem.documento';
 import { ARMAZENAMENTO_DE_CHAT, ArmazenamentoDeChat } from '../repositories/armazenamento-de-chat';
 
@@ -41,7 +44,13 @@ export const MAXIMO_TOKENS_DO_CHAT = 2048;
 
 /** Instrução interna (não editável) para dar nome à conversa: só o nome, curto, sem enfeite. */
 export const INSTRUCOES_TITULO =
-  'Dê um nome curto (de 3 a 6 palavras, em português, sem aspas nem ponto final) para a conversa a seguir. Responda só com o nome.';
+  'Dê um nome curto (de 3 a 6 palavras, em português, sem aspas nem ponto final) ao assunto atual da conversa a seguir, que vem depois de "Nome atual". ' +
+  'Olhe principalmente para as últimas mensagens. Se o nome atual ainda descreve bem o assunto delas, devolva-o exatamente igual, letra por letra. ' +
+  'Se o assunto das últimas mensagens mudou, dê um nome novo para o novo assunto. Se o nome atual é só um "Chat do dia ...", dê um nome novo. ' +
+  'Responda só com o nome.';
+/** Quantas das últimas mensagens vão para a nomeação e o quanto de cada uma (o custo não cresce com a conversa). */
+export const MENSAGENS_PARA_NOMEAR = 8;
+export const CARACTERES_POR_MENSAGEM_PARA_NOMEAR = 300;
 
 const MENSAGEM_GENERICA = 'Serviço de IA temporariamente indisponível';
 
@@ -86,7 +95,8 @@ export class ChatService {
   async recuperarHoje(usuarioAtivo: JwtPayload): Promise<StandardResponse<ChatHojeRecuperadoDto>> {
     const conversaId = this.conversaDeHoje(usuarioAtivo);
     const mensagens = await this.listarDoContexto(conversaId, usuarioAtivo.sub, ContextoChatEnum.CHAT);
-    return { sucesso: true, dados: { conversaId, mensagens: mensagens.map(paraResumo) }, mensagem: 'Conversa recuperada com sucesso' };
+    const { titulo } = await this.nomeDaConversa(conversaId, usuarioAtivo.sub);
+    return { sucesso: true, dados: { conversaId, titulo, mensagens: mensagens.map(paraResumo) }, mensagem: 'Conversa recuperada com sucesso' };
   }
 
   /** A lista do histórico: uma entrada por dia com conversa, da mais recente à mais antiga. */
@@ -99,7 +109,8 @@ export class ChatService {
     const conversas = baldes.map((balde) => ({
       conversaId: balde.key,
       data: balde.key.slice(-10),
-      titulo: titulos[balde.key] ?? null,
+      titulo: titulos[balde.key]?.titulo || nomePadraoDaConversa(balde.key),
+      tituloEditado: titulos[balde.key]?.editado ?? false,
       primeiraMensagem: balde.primeira.hits.hits[0]?._source.texto ?? '',
       quantidadeDeMensagens: balde.doc_count,
       ultimaMensagemDate: new Date(balde.ultima.value),
@@ -111,7 +122,29 @@ export class ChatService {
   async recuperarConversa(dto: ChatConversaRecuperarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<ChatHojeRecuperadoDto>> {
     const conversaId = `${usuarioAtivo.sub}-${dto.data}`;
     const mensagens = await this.listarDoContexto(conversaId, usuarioAtivo.sub, ContextoChatEnum.CHAT);
-    return { sucesso: true, dados: { conversaId, mensagens: mensagens.map(paraResumo) }, mensagem: 'Conversa recuperada com sucesso' };
+    const { titulo } = await this.nomeDaConversa(conversaId, usuarioAtivo.sub);
+    return { sucesso: true, dados: { conversaId, titulo, mensagens: mensagens.map(paraResumo) }, mensagem: 'Conversa recuperada com sucesso' };
+  }
+
+  /**
+   * O usuário renomeia a conversa de um dia dele. O nome dele vale mais que o da IA (a renomeação automática não o troca mais); em
+   * branco, depois de aparar, a conversa volta ao nome padrão e à renomeação automática. Conversa sem mensagens ou de outra pessoa: 404.
+   */
+  async alterarTituloConversa(
+    dto: ChatConversaTituloAlterarDto & ChatConversaRecuperarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<StandardResponse<ChatConversaTituloAlteradoDto>> {
+    const conversaId = `${usuarioAtivo.sub}-${dto.data}`;
+    if ((await this.listarDoContexto(conversaId, usuarioAtivo.sub, ContextoChatEnum.CHAT)).length === 0) throw new ResourceNotFoundException('Conversa');
+
+    const titulo = dto.titulo.replace(/\s+/g, ' ').trim();
+    const editado = titulo.length > 0;
+    await this.chatMensagemRepositorio.gravarTitulo({ conversaId, usuarioId: usuarioAtivo.sub, titulo, editado });
+    return {
+      sucesso: true,
+      dados: { conversaId, titulo: editado ? titulo : nomePadraoDaConversa(conversaId), tituloEditado: editado },
+      mensagem: editado ? 'Nome da conversa alterado com sucesso' : 'Nome da conversa restaurado para o padrão',
+    };
   }
 
   async buscar(dto: ChatBuscarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<ChatBuscadoDto>> {
@@ -332,26 +365,38 @@ export class ChatService {
     }
   }
 
+  /** O nome vigente da conversa (o gravado ou, se não há, o padrão) e se foi o usuário que o deu. */
+  private async nomeDaConversa(conversaId: string, usuarioId: number): Promise<{ titulo: string; editado: boolean }> {
+    const gravado = (await this.chatMensagemRepositorio.listarTitulos({ usuarioId, conversaIds: [conversaId] }))[conversaId];
+    return { titulo: gravado?.titulo || nomePadraoDaConversa(conversaId), editado: gravado?.editado ?? false };
+  }
+
   /**
-   * Dá nome à conversa do dia depois da primeira resposta (uma chamada curta no nível rápido). Falhar aqui nunca atrapalha o chat: a
-   * lista do histórico cai no trecho da primeira mensagem.
+   * Reavalia o nome da conversa do dia a cada mensagem do usuário (uma chamada curta no nível rápido, só com as últimas mensagens,
+   * cortadas): a IA devolve o nome atual se ele ainda serve, e só uma mudança é gravada. Nome dado pelo usuário nunca é trocado, e nem
+   * chega a chamar a IA. Falhar aqui nunca atrapalha o chat: o nome fica como estava.
    */
   private async nomearConversa(usuarioAtivo: JwtPayload, conversaId: string): Promise<void> {
     try {
-      const existentes = await this.chatMensagemRepositorio.listarTitulos({ usuarioId: usuarioAtivo.sub, conversaIds: [conversaId] });
-      if (existentes[conversaId]) return;
+      const atual = await this.nomeDaConversa(conversaId, usuarioAtivo.sub);
+      if (atual.editado) return;
       const conversa = await this.listarDoContexto(conversaId, usuarioAtivo.sub, ContextoChatEnum.CHAT);
-      const primeiraDoUsuario = conversa.find((mensagem) => mensagem.autor === AutorChatEnum.USUARIO);
-      const primeiraDaIa = conversa.find((mensagem) => mensagem.autor === AutorChatEnum.IA);
-      if (!primeiraDoUsuario || !primeiraDaIa) return;
+      if (!conversa.some((mensagem) => mensagem.autor === AutorChatEnum.USUARIO) || !conversa.some((mensagem) => mensagem.autor === AutorChatEnum.IA)) return;
+      const recentes = conversa
+        .slice(-MENSAGENS_PARA_NOMEAR)
+        .map((mensagem) => `${mensagem.autor === AutorChatEnum.USUARIO ? 'Usuário' : 'IA'}: ${mensagem.texto.slice(0, CARACTERES_POR_MENSAGEM_PARA_NOMEAR)}`)
+        .join('\n\n');
       const resposta = await this.iaService.gerar({
         nivel: NivelIaEnum.RAPIDO,
         instrucoes: INSTRUCOES_TITULO,
-        mensagens: [{ papel: 'usuario', conteudo: `Usuário: ${primeiraDoUsuario.texto}\n\nIA: ${primeiraDaIa.texto}` }],
+        mensagens: [{ papel: 'usuario', conteudo: `Nome atual: ${atual.titulo}\n\n${recentes}` }],
         maximoTokens: 40,
       });
       const titulo = limparTitulo(resposta.texto);
-      if (titulo) await this.chatMensagemRepositorio.gravarTitulo(conversaId, usuarioAtivo.sub, titulo);
+      if (!titulo || titulo === atual.titulo) return;
+      // O usuário pode ter renomeado enquanto a IA pensava: o nome dele vence.
+      if ((await this.nomeDaConversa(conversaId, usuarioAtivo.sub)).editado) return;
+      await this.chatMensagemRepositorio.gravarTitulo({ conversaId, usuarioId: usuarioAtivo.sub, titulo, editado: false });
     } catch (erro) {
       this.logger.warn(`Não foi possível nomear a conversa ${conversaId}: ${erro instanceof Error ? erro.message : String(erro)}`);
     }

@@ -7,6 +7,8 @@ import {
   ConsultaConversa,
   ConsultaConversas,
   ConsultaTitulos,
+  TituloDaConversa,
+  TituloParaGravar,
   INDICE_CHAT_CONVERSA,
   INDICE_CHAT_MENSAGEM,
   MAPEAMENTO_CHAT_CONVERSA,
@@ -23,6 +25,8 @@ import { ArmazenamentoDeChat } from './armazenamento-de-chat';
 export interface ChatConversaFonte {
   conversa_id: string;
   titulo: string;
+  /** Ausente nos documentos anteriores à task 192: conta como `false`. */
+  titulo_editado?: boolean;
 }
 
 /** O resultado de uma pesquisa já sem o envelope do cliente: os documentos achados e, na agregação de conversas, os baldes. */
@@ -86,21 +90,27 @@ export abstract class ChatMensagemIndiceRepository implements ArmazenamentoDeCha
   }
 
   /** Guarda (ou troca) o título da conversa. */
-  async gravarTitulo(conversaId: string, usuarioId: number, titulo: string): Promise<void> {
+  async gravarTitulo(titulo: TituloParaGravar): Promise<void> {
     await this.proteger(async () => {
       await this.garantirIndice();
-      const documento = { conversa_id: conversaId, usuario_id: usuarioId, titulo, created_date: new Date().toISOString() };
-      await this.gravarDocumento(INDICE_CHAT_CONVERSA, conversaId, documento);
+      const documento = {
+        conversa_id: titulo.conversaId,
+        usuario_id: titulo.usuarioId,
+        titulo: titulo.titulo,
+        titulo_editado: titulo.editado,
+        created_date: new Date().toISOString(),
+      };
+      await this.gravarDocumento(INDICE_CHAT_CONVERSA, titulo.conversaId, documento);
     });
   }
 
   /** Os títulos das conversas pedidas do usuário, por `conversaId` (quem ainda não tem título não aparece). */
-  async listarTitulos(consulta: ConsultaTitulos): Promise<Record<string, string>> {
+  async listarTitulos(consulta: ConsultaTitulos): Promise<Record<string, TituloDaConversa>> {
     if (consulta.conversaIds.length === 0) return {};
     return this.proteger(async () => {
       await this.garantirIndice();
       const resultado = await this.pesquisar(INDICE_CHAT_CONVERSA, montarConsultaTitulos(consulta));
-      return Object.fromEntries(resultado.fontes.map((fonte) => [fonte.conversa_id, fonte.titulo ?? '']));
+      return Object.fromEntries(resultado.fontes.map((fonte) => [fonte.conversa_id, { titulo: fonte.titulo ?? '', editado: fonte.titulo_editado ?? false }]));
     });
   }
 

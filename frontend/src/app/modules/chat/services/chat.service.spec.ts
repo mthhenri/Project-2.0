@@ -4,6 +4,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { AutorChatEnum, ChatEventoDto, ChatMensagemResumoDto, ContextoChatEnum, NivelIaEnum } from '@project20/shared';
 import { esperarRequisicao, responderSucesso } from '../../../../testes/http-teste';
+import { SEM_OVERLAY_GLOBAL } from '../../../core/interceptors/loading.interceptor';
 import { ChatService, ErroDoChat } from './chat.service';
 
 // Chat (SYSTEM.SPEC.md §12 "chat"): o envio é `POST` com resposta `text/event-stream` lida por `fetch`
@@ -268,6 +269,15 @@ describe('ChatService — leituras pelo HttpClient', () => {
     responderSucesso(esperarRequisicao(http, 'GET', '/chat/conversas'), { conversas: [] });
     servico.recuperarConversa('2026-10-18').subscribe();
     responderSucesso(esperarRequisicao(http, 'GET', '/chat/conversa/2026-10-18'), { conversaId: '1-2026-10-18', mensagens: [] });
+  });
+
+  it('renomear a conversa é um PUT em /chat/conversa/<data>/titulo com o título no corpo, sem overlay global', () => {
+    servico.alterarTituloConversa('2026-10-19', 'Planejando').subscribe();
+
+    const requisicao = esperarRequisicao(http, 'PUT', '/chat/conversa/2026-10-19/titulo');
+    expect(requisicao.request.body).toEqual({ titulo: 'Planejando' });
+    expect(requisicao.request.context.get(SEM_OVERLAY_GLOBAL)).toBe(true);
+    responderSucesso(requisicao, { conversaId: '1-2026-10-19', titulo: 'Planejando', tituloEditado: true });
   });
 
   it('a busca manda o texto como parâmetro de consulta', () => {

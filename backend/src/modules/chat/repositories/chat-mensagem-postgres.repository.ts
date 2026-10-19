@@ -12,6 +12,8 @@ import {
   LIMITE_BUSCA,
   LIMITE_CONVERSA,
   LIMITE_CONVERSAS,
+  TituloDaConversa,
+  TituloParaGravar,
 } from '../domain/chat-consultas';
 import { ChatMensagemFonte, ChatMensagemLida, ChatMensagemNova, deFonte, paraFonte } from '../domain/chat-mensagem.documento';
 import { ArmazenamentoDeChat } from './armazenamento-de-chat';
@@ -29,6 +31,7 @@ interface LinhaDeConversa {
 interface LinhaDeTitulo {
   conversa_id: string;
   titulo: string;
+  titulo_editado: boolean;
 }
 
 const COLUNAS_DA_MENSAGEM = `mensagem_id, conversa_id, usuario_id, contexto, autor, texto, nivel, modelo, tokens_entrada, tokens_saida,
@@ -123,29 +126,30 @@ export class ChatMensagemPostgresRepository extends BaseRepository<ChatMensagemF
     });
   }
 
-  async gravarTitulo(conversaId: string, usuarioId: number, titulo: string): Promise<void> {
+  async gravarTitulo(titulo: TituloParaGravar): Promise<void> {
     await this.proteger(async () => {
       await this.executarConsulta(
-        `INSERT INTO chat_conversa (created_date, updated_date, is_deleted, conversa_id, usuario_id, titulo)
-         SELECT NOW(), NOW(), false, :conversaId, :usuarioId, :titulo
-         ON CONFLICT (conversa_id) DO UPDATE SET titulo = EXCLUDED.titulo, usuario_id = EXCLUDED.usuario_id, updated_date = NOW()
+        `INSERT INTO chat_conversa (created_date, updated_date, is_deleted, conversa_id, usuario_id, titulo, titulo_editado)
+         SELECT NOW(), NOW(), false, :conversaId, :usuarioId, :titulo, :editado
+         ON CONFLICT (conversa_id) DO UPDATE SET titulo = EXCLUDED.titulo, titulo_editado = EXCLUDED.titulo_editado,
+           usuario_id = EXCLUDED.usuario_id, updated_date = NOW()
          RETURNING id`,
-        { conversaId, usuarioId, titulo },
+        { ...titulo },
       );
     });
   }
 
-  async listarTitulos(consulta: ConsultaTitulos): Promise<Record<string, string>> {
+  async listarTitulos(consulta: ConsultaTitulos): Promise<Record<string, TituloDaConversa>> {
     if (consulta.conversaIds.length === 0) return {};
     return this.proteger(async () => {
       const linhas = await this.executarConsulta<LinhaDeTitulo>(
-        `SELECT conversa_id, titulo
+        `SELECT conversa_id, titulo, titulo_editado
          FROM chat_conversa
          WHERE usuario_id = :usuarioId AND conversa_id = ANY(CAST(:conversaIds AS text[])) AND is_deleted = false
          LIMIT :limite`,
         { usuarioId: consulta.usuarioId, conversaIds: consulta.conversaIds, limite: LIMITE_CONVERSAS },
       );
-      return Object.fromEntries(linhas.map((linha) => [linha.conversa_id, linha.titulo ?? '']));
+      return Object.fromEntries(linhas.map((linha) => [linha.conversa_id, { titulo: linha.titulo ?? '', editado: linha.titulo_editado }]));
     });
   }
 

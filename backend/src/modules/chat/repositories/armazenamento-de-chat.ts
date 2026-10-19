@@ -1,7 +1,7 @@
 import { Knex } from 'knex';
 import { ConfigService } from '../../../config/config.service';
 import { DATABASE_CONNECTION } from '../../../core/database/database.provider';
-import { BaldeConversa, ConsultaBusca, ConsultaConversa, ConsultaConversas, ConsultaTitulos } from '../domain/chat-consultas';
+import { BaldeConversa, ConsultaBusca, ConsultaConversa, ConsultaConversas, ConsultaTitulos, TituloDaConversa, TituloParaGravar } from '../domain/chat-consultas';
 import { ChatMensagemLida, ChatMensagemNova } from '../domain/chat-mensagem.documento';
 import { ChatMensagemElasticsearchRepository, criarClienteElasticsearchChat } from './chat-mensagem-elasticsearch.repository';
 import { ChatMensagemOpenSearchRepository, criarClienteOpenSearchChat } from './chat-mensagem-opensearch.repository';
@@ -18,10 +18,10 @@ export interface ArmazenamentoDeChat {
   listarConversa(consulta: ConsultaConversa): Promise<ChatMensagemLida[]>;
   /** As conversas do usuário (uma por dia, contexto CHAT), da mais recente à mais antiga, sem as mensagens. */
   listarConversas(consulta: ConsultaConversas): Promise<BaldeConversa[]>;
-  /** Guarda (ou troca) o título da conversa. */
-  gravarTitulo(conversaId: string, usuarioId: number, titulo: string): Promise<void>;
-  /** Os títulos das conversas pedidas do usuário, por `conversaId`; quem não tem título não aparece. */
-  listarTitulos(consulta: ConsultaTitulos): Promise<Record<string, string>>;
+  /** Guarda (ou troca) o nome da conversa e se foi o usuário que o deu. */
+  gravarTitulo(titulo: TituloParaGravar): Promise<void>;
+  /** Os nomes das conversas pedidas do usuário, por `conversaId`; quem não tem registro não aparece (o nome vazio também vale o padrão). */
+  listarTitulos(consulta: ConsultaTitulos): Promise<Record<string, TituloDaConversa>>;
   /** Busca textual (sem acento, todas as palavras) nas mensagens do próprio usuário, mais relevantes primeiro. */
   buscar(consulta: ConsultaBusca): Promise<ChatMensagemLida[]>;
 }

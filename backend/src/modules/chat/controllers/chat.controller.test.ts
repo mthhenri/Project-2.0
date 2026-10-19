@@ -10,10 +10,10 @@ import { ChatController } from './chat.controller';
 
 const USUARIO = { sub: 7, login: 'dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
 
-test('verbos e caminhos das sete rotas do chat', () => {
+test('verbos e caminhos das oito rotas do chat', () => {
   assert.deepEqual(
     Object.values(rotasPorNome(ChatController)).map((rota) => `${rota.verbo} ${rota.caminho}`).sort(),
-    ['GET busca', 'GET conversa/:data', 'GET conversas', 'GET hoje', 'POST bom-dia', 'POST mensagem', 'POST retomada'].sort(),
+    ['GET busca', 'GET conversa/:data', 'GET conversas', 'GET hoje', 'POST bom-dia', 'POST mensagem', 'POST retomada', 'PUT conversa/:data/titulo'].sort(),
   );
 });
 
@@ -41,6 +41,20 @@ test('as rotas de leitura repassam o DTO e o usuário do token (nunca um id vind
   assert.deepEqual(chamadas, [
     ['recuperarHoje', USUARIO], ['listarConversas', USUARIO], ['recuperarConversa', { data: '2026-10-16' }, USUARIO], ['buscar', { texto: 'cadastro' }, USUARIO],
   ]);
+});
+
+test('renomear a conversa junta o dia da rota ao corpo e usa o usuário do token (nunca um id da requisição)', async () => {
+  const chamadas: unknown[][] = [];
+  const controller = new ChatController({ alterarTituloConversa: async (...argumentos: unknown[]) => { chamadas.push(argumentos); return null; } } as never);
+  await controller.alterarTituloConversa({ data: '2026-10-16' }, { titulo: 'Meu nome' }, USUARIO);
+  assert.deepEqual(chamadas, [[{ titulo: 'Meu nome', data: '2026-10-16' }, USUARIO]]);
+});
+
+test('o dia da rota vence um "data" que venha no corpo', async () => {
+  const chamadas: unknown[][] = [];
+  const controller = new ChatController({ alterarTituloConversa: async (...argumentos: unknown[]) => { chamadas.push(argumentos); return null; } } as never);
+  await controller.alterarTituloConversa({ data: '2026-10-16' }, { titulo: 'x', data: '1999-01-01' } as never, USUARIO);
+  assert.equal((chamadas[0][0] as { data: string }).data, '2026-10-16');
 });
 
 function criarResposta() {

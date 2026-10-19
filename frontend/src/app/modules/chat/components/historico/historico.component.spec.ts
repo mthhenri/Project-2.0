@@ -1,11 +1,13 @@
 import { describe, it, expect } from 'vitest';
+import { By } from '@angular/platform-browser';
+import { Tooltip } from 'primeng/tooltip';
 import { AutorChatEnum, ContextoChatEnum, TipoUsuarioEnum } from '@project20/shared';
 import { montarComponente, ComponenteMontado } from '../../../../../testes/montar-componente';
 import { esperarRequisicao, responderErro, responderSucesso } from '../../../../../testes/http-teste';
 import { HistoricoComponent, MensagemDoHistorico } from './historico.component';
 
-// Histórico do chat (SYSTEM.SPEC.md §12 "chat": `GET /chat/conversas` uma por dia, da mais recente para a mais antiga; título dado
-// pela IA ou, sem ele, o trecho da primeira mensagem; `GET /chat/busca?texto=` só do próprio usuário).
+// Histórico do chat (SYSTEM.SPEC.md §12 "chat": `GET /chat/conversas` uma por dia, da mais recente para a mais antiga; nome =
+// o dado pelo usuário, o dado pela IA ou o padrão "Chat do dia ..." (sempre `titulo`; renomear é `PUT /chat/conversa/:data/titulo`); `GET /chat/busca?texto=` só do próprio usuário).
 
 type Montado = ComponenteMontado<HistoricoComponent>;
 
@@ -13,7 +15,7 @@ const HOJE = '2026-10-19';
 
 function conversa(data: string, sobrescrita: Record<string, unknown> = {}) {
   return {
-    conversaId: `1-${data}`, data, titulo: null, primeiraMensagem: 'Primeira fala do dia', quantidadeDeMensagens: 4,
+    conversaId: `1-${data}`, data, titulo: `Chat do dia ${data}`, tituloEditado: false, primeiraMensagem: 'Primeira fala do dia', quantidadeDeMensagens: 4,
     ultimaMensagemDate: `${data}T18:00:00.000Z`, ...sobrescrita,
   };
 }
@@ -28,8 +30,8 @@ function resultadoDeBusca(id: string, sobrescrita: Record<string, unknown> = {})
 
 const CONVERSAS = [
   conversa(HOJE, { titulo: 'Planejando a semana', quantidadeDeMensagens: 6 }),
-  conversa('2026-10-18', { primeiraMensagem: '**Bom dia**, vou começar o login' }),
-  conversa('2026-10-15'),
+  conversa('2026-10-18', { titulo: 'Chat do dia 18 de outubro de 2026' }),
+  conversa('2026-10-15', { titulo: 'Chat do dia 15 de outubro de 2026' }),
 ];
 
 async function montarHistorico(): Promise<Montado> {
@@ -47,7 +49,7 @@ async function montarComLista(conversas = CONVERSAS): Promise<Montado> {
 }
 
 const texto = (montado: Montado) => montado.elemento.textContent ?? '';
-const itens = (montado: Montado) => Array.from(montado.elemento.querySelectorAll<HTMLButtonElement>('ul button'));
+const itens = (montado: Montado) => Array.from(montado.elemento.querySelectorAll<HTMLButtonElement>('.chat-historico__item'));
 const campoBusca = (montado: Montado) => montado.elemento.querySelector<HTMLInputElement>('[aria-label="Buscar nas minhas conversas"]')!;
 
 async function buscar(montado: Montado, termo: string) {
@@ -68,14 +70,14 @@ describe('HistoricoComponent — lista de conversas', () => {
     expect(montado.elemento.querySelector('[aria-busy="true"]')).toBeNull();
   });
 
-  it('lista um item por dia: título da IA ou, sem ele, o trecho da primeira mensagem sem marcação Markdown', async () => {
+  it('lista um item por dia com o nome (`titulo`), nunca o trecho da primeira mensagem', async () => {
     const montado = await montarComLista();
 
     expect(itens(montado)).toHaveLength(3);
     expect(texto(montado)).toContain('Planejando a semana');
-    expect(texto(montado)).toContain('Bom dia, vou começar o login');
-    expect(texto(montado)).not.toContain('**');
-    expect(texto(montado)).toContain('Primeira fala do dia');
+    expect(texto(montado)).toContain('Chat do dia 18 de outubro de 2026');
+    expect(texto(montado)).toContain('Chat do dia 15 de outubro de 2026');
+    expect(texto(montado)).not.toContain('Primeira fala do dia');
   });
 
   it('rotula Hoje e Ontem e mostra a quantidade de mensagens de cada dia', async () => {
@@ -253,5 +255,154 @@ describe('HistoricoComponent — busca', () => {
     expect(montado.componente.buscando()).toBe(false);
     expect(montado.componente.resultados()).toBeNull();
     expect(itens(montado)).toHaveLength(3);
+  });
+});
+
+const NOME_LONGO = 'Um nome de conversa bem comprido que o painel estreito do histórico corta com reticências na linha';
+
+const lapis = (montado: Montado) => Array.from(montado.elemento.querySelectorAll<HTMLButtonElement>('[aria-label="Renomear conversa"]'));
+const campoNome = (montado: Montado) => montado.elemento.querySelector<HTMLInputElement>('[aria-label="Nome da conversa"]');
+const avisosDe = (montado: Montado) => {
+  const avisos: { severity?: string; detail?: string }[] = [];
+  montado.mensagens.messageObserver.subscribe((recebido) => avisos.push(...[recebido].flat()));
+  return avisos;
+};
+
+async function editar(montado: Montado, indice: number, digitado?: string): Promise<HTMLInputElement> {
+  lapis(montado)[indice].click();
+  await montado.atualizar();
+  const campo = campoNome(montado)!;
+  if (digitado !== undefined) {
+    campo.value = digitado;
+    campo.dispatchEvent(new Event('input'));
+  }
+  return campo;
+}
+
+const tecla = (campo: HTMLInputElement, key: string) => campo.dispatchEvent(new KeyboardEvent('keydown', { key }));
+
+describe('HistoricoComponent — renomear a conversa', () => {
+  it('o botão do item leva o nome completo no tooltip, mesmo cortado na linha', async () => {
+    const montado = await montarComLista([conversa(HOJE, { titulo: NOME_LONGO })]);
+
+    const botaoDoItem = montado.fixture.debugElement.query(By.css('.chat-historico__item'));
+    expect(botaoDoItem.injector.get(Tooltip).content).toBe(NOME_LONGO);
+  });
+
+  it('cada linha tem o lápis "Renomear conversa" além do botão do item', async () => {
+    const montado = await montarComLista();
+
+    expect(lapis(montado)).toHaveLength(3);
+    expect(itens(montado)).toHaveLength(3);
+  });
+
+  it('o lápis troca o item por um campo "Nome da conversa" com o nome atual e limite de 120 caracteres', async () => {
+    const montado = await montarComLista();
+
+    const campo = await editar(montado, 0);
+
+    expect(campo.value).toBe('Planejando a semana');
+    expect(campo.getAttribute('maxlength')).toBe('120');
+    expect(itens(montado)).toHaveLength(2);
+    expect(lapis(montado)).toHaveLength(2);
+  });
+
+  it('Enter salva (PUT com o título no corpo) e atualiza o nome da linha sem recarregar a lista', async () => {
+    const montado = await montarComLista();
+    const campo = await editar(montado, 0, '  Semana nova ');
+
+    tecla(campo, 'Enter');
+    const pedido = esperarRequisicao(montado.http, 'PUT', '/chat/conversa/2026-10-19/titulo');
+    expect(pedido.request.body).toEqual({ titulo: 'Semana nova' });
+    responderSucesso(pedido, { conversaId: `1-${HOJE}`, titulo: 'Semana nova', tituloEditado: true });
+    await montado.atualizar();
+
+    expect(campoNome(montado)).toBeNull();
+    expect(texto(montado)).toContain('Semana nova');
+    expect(texto(montado)).not.toContain('Planejando a semana');
+    expect(montado.componente.conversas()[0].tituloEditado).toBe(true);
+    montado.http.expectNone((requisicao) => requisicao.url.endsWith('/chat/conversas'));
+  });
+
+  it('perder o foco também salva', async () => {
+    const montado = await montarComLista();
+    const campo = await editar(montado, 1, 'Outro nome');
+
+    campo.dispatchEvent(new Event('blur'));
+    const pedido = esperarRequisicao(montado.http, 'PUT', '/chat/conversa/2026-10-18/titulo');
+    expect(pedido.request.body).toEqual({ titulo: 'Outro nome' });
+    responderSucesso(pedido, { conversaId: '1-2026-10-18', titulo: 'Outro nome', tituloEditado: true });
+    await montado.atualizar();
+
+    expect(texto(montado)).toContain('Outro nome');
+  });
+
+  it('Enter seguido do blur salva uma única vez', async () => {
+    const montado = await montarComLista();
+    const campo = await editar(montado, 0, 'Semana nova');
+
+    tecla(campo, 'Enter');
+    campo.dispatchEvent(new Event('blur'));
+
+    const pedido = esperarRequisicao(montado.http, 'PUT', '/chat/conversa/2026-10-19/titulo');
+    responderSucesso(pedido, { conversaId: `1-${HOJE}`, titulo: 'Semana nova', tituloEditado: true });
+    await montado.atualizar();
+    montado.http.expectNone((requisicao) => requisicao.method === 'PUT');
+  });
+
+  it('Esc cancela sem chamar a API e mantém o nome', async () => {
+    const montado = await montarComLista();
+    const campo = await editar(montado, 0, 'Descartado');
+
+    tecla(campo, 'Escape');
+    await montado.atualizar();
+
+    expect(campoNome(montado)).toBeNull();
+    expect(texto(montado)).toContain('Planejando a semana');
+    montado.http.expectNone((requisicao) => requisicao.method === 'PUT');
+  });
+
+  it('texto igual ao nome atual só fecha o campo, sem chamar a API', async () => {
+    const montado = await montarComLista();
+    const campo = await editar(montado, 0, '  Planejando a semana ');
+
+    tecla(campo, 'Enter');
+    await montado.atualizar();
+
+    expect(campoNome(montado)).toBeNull();
+    montado.http.expectNone((requisicao) => requisicao.method === 'PUT');
+  });
+
+  it('em branco manda titulo vazio e a linha passa a mostrar o padrão devolvido', async () => {
+    const montado = await montarComLista();
+    const campo = await editar(montado, 0, '   ');
+
+    tecla(campo, 'Enter');
+    const pedido = esperarRequisicao(montado.http, 'PUT', '/chat/conversa/2026-10-19/titulo');
+    expect(pedido.request.body).toEqual({ titulo: '' });
+    responderSucesso(pedido, { conversaId: `1-${HOJE}`, titulo: 'Chat do dia 19 de outubro de 2026', tituloEditado: false });
+    await montado.atualizar();
+
+    expect(texto(montado)).toContain('Chat do dia 19 de outubro de 2026');
+    expect(texto(montado)).not.toContain('Planejando a semana');
+    expect(montado.componente.conversas()[0].tituloEditado).toBe(false);
+  });
+
+  it('erro da API mantém o campo aberto, avisa com toast de atenção e permite tentar de novo', async () => {
+    const montado = await montarComLista();
+    const avisos = avisosDe(montado);
+    const campo = await editar(montado, 0, 'Semana nova');
+
+    tecla(campo, 'Enter');
+    responderErro(esperarRequisicao(montado.http, 'PUT', '/chat/conversa/2026-10-19/titulo'), 500, 'Falhou');
+    await montado.atualizar();
+
+    expect(campoNome(montado)).not.toBeNull();
+    expect(avisos.filter((aviso) => aviso.severity === 'warn')).toHaveLength(1);
+    expect(montado.componente.salvandoNome()).toBe(false);
+    expect(texto(montado)).not.toContain('Semana nova');
+
+    tecla(campoNome(montado)!, 'Enter');
+    esperarRequisicao(montado.http, 'PUT', '/chat/conversa/2026-10-19/titulo');
   });
 });

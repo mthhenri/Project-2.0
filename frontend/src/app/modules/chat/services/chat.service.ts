@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import {
   ChatBuscadoDto,
   ChatConversasListadasDto,
+  ChatConversaTituloAlteradoDto,
   ChatEventoDto,
   ChatHojeRecuperadoDto,
   StandardResponse,
@@ -39,6 +40,11 @@ export class ChatService {
   /** A conversa de um dia (`yyyy-mm-dd`) do próprio usuário, no mesmo formato de `recuperarHoje`. */
   recuperarConversa(data: string): Observable<StandardResponse<ChatHojeRecuperadoDto>> {
     return this.httpClient.get<StandardResponse<ChatHojeRecuperadoDto>>(`${this.urlBase}/conversa/${data}`, comFeedbackProprio());
+  }
+
+  /** Renomeia a conversa de um dia (`yyyy-mm-dd`); em branco volta ao nome padrão. Quem chama dá o aviso de erro (sem overlay global). */
+  alterarTituloConversa(data: string, titulo: string): Observable<StandardResponse<ChatConversaTituloAlteradoDto>> {
+    return this.httpClient.put<StandardResponse<ChatConversaTituloAlteradoDto>>(`${this.urlBase}/conversa/${data}/titulo`, { titulo }, comFeedbackProprio());
   }
 
   buscar(texto: string): Observable<StandardResponse<ChatBuscadoDto>> {
