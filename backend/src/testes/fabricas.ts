@@ -193,3 +193,36 @@ export async function criarDiaNaoUtil(
       tipoCodigo: 'FERIADO', duracaoCodigo: 'INTEGRAL', dataBase: DATA_BASE_TESTE, ...sobrescrita,
     });
 }
+
+/** Conexão do grafo (origem → destino; `ehBidirecional` liga também no sentido inverso). */
+export async function criarDemandaConexao(
+  conexao: ConexaoTeste,
+  dados: { demandaOrigemId: number; demandaDestinoId: number; ehBidirecional?: boolean; dataBase?: string },
+): Promise<{ id: number }> {
+  return inserirLinha<{ id: number }>(conexao,
+    `INSERT INTO demanda_conexao (demanda_origem_id, demanda_destino_id, eh_bidirecional, created_date, updated_date, is_deleted)
+     SELECT :demandaOrigemId, :demandaDestinoId, :ehBidirecional, :dataBase::timestamptz, :dataBase::timestamptz, false
+     RETURNING id`,
+    { ehBidirecional: false, dataBase: DATA_BASE_TESTE, ...dados });
+}
+
+export async function criarDemandaTag(
+  conexao: ConexaoTeste,
+  dados: { demandaId: number; tagId: number; dataBase?: string },
+): Promise<{ id: number }> {
+  return inserirLinha<{ id: number }>(conexao,
+    `INSERT INTO demanda_tag (demanda_id, tag_id, created_date, updated_date, is_deleted)
+     SELECT :demandaId, :tagId, :dataBase::timestamptz, :dataBase::timestamptz, false
+     RETURNING id`,
+    { dataBase: DATA_BASE_TESTE, ...dados });
+}
+
+const TABELAS_COM_SOFT_DELETE = new Set([
+  'usuario', 'projeto', 'tag', 'demanda', 'demanda_usuario', 'demanda_conexao', 'demanda_tag', 'atividade', 'atividade_tag', 'execucao', 'dia_nao_util',
+]);
+
+/** Marca a linha de uma tabela de negócio como excluída (soft delete direto, para montar cenários). */
+export async function excluirLinha(conexao: ConexaoTeste, tabela: string, id: number): Promise<void> {
+  if (!TABELAS_COM_SOFT_DELETE.has(tabela)) throw new Error(`Tabela fora da lista de soft delete dos testes: ${tabela}`);
+  await conexao.raw(`UPDATE ${tabela} SET is_deleted = true, deleted_date = NOW() WHERE id = :id`, { id });
+}

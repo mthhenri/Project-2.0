@@ -53,7 +53,7 @@ Regras da cobertura:
 | 173 | [Núcleo: core, config, shared e desktop](../done/173-testes-nucleo-core-config-shared-desktop.spec.md) | transversal |
 | 174 | [Autenticação e usuários](../done/174-testes-autenticacao-e-usuarios.spec.md) | `autenticacao`, `usuario` |
 | 175 | [Projetos](../done/175-testes-projetos.spec.md) | `projeto` |
-| 176 | [Demandas](176-testes-demandas.spec.md) | `demanda` |
+| 176 | [Demandas](../done/176-testes-demandas.spec.md) | `demanda` |
 | 177 | [Atividades e prioridade](177-testes-atividades-e-prioridade.spec.md) | `atividade`, `atividade-prioridade` |
 | 178 | [Execuções](178-testes-execucoes.spec.md) | `execucao` |
 | 179 | [Ponto e justificativas](179-testes-ponto-e-justificativas.spec.md) | `ponto`, `ponto-justificativa` |

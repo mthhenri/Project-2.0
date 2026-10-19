@@ -12,6 +12,42 @@
 
 ---
 
+## 2026-10-19 — Task 176: testes de demandas
+
+Sexta task da guarda-chuva `testes-automatizados`. Nenhum código de produção mudou.
+
+**Backend.**
+- `demanda.service` (`demanda.service.regras.test.ts`, 51 testes, 47 verdes + 4 `todo`), uma bateria por linha de §14 "Demandas": desenvolvedor só cria
+  sub-demanda e gestor cria raiz; criador desenvolvedor é auto-atribuído e **gestor criador não**; membros escolhidos na criação entram; desenvolvedor vê
+  demanda de projeto acessível e só edita as que é membro (`podeEditar`); `descricaoCliente` só o gestor altera; atribuir/remover membro (gestor qualquer
+  um, desenvolvedor só a si mesmo em projeto acessível); **o último membro não sai**; conexões (ciclo recusado sem gravar, excluir, listar); tags;
+  árvore, ancestral, planejamento, grafo e exclusão/restauração com as permissões de leitura.
+- `demanda.repository` (integração, 32): CTE de ciclo (direto, indireto de 3+ nós, auto-conexão, diamante válido, conexão excluída não conta), conexões
+  por direção, descendentes/ancestral/caminho com nós excluídos, filtros de acesso do desenvolvedor, `inserirComAtribuicao` atômica, membros, tags,
+  alterar/excluir/restaurar, grafo, planejamento, `possuiFilhasOuAtividades` e `contarAtividadesEmAberto`. Fábricas novas em `fabricas.ts`
+  (`criarDemandaConexao`, `criarDemandaTag`, `excluirLinha`).
+- Regra pura `novo-pai-da-demanda` (6); controller (5: `@GestorOnly` em planejamento, excluir, restaurar, criar e excluir conexão; rotas fixas antes de
+  `:id`); ferramentas de leitura da IA `consultar_grafo_do_projeto` e `listar_demandas_do_projeto` (7). `redacao-da-demanda`, `sugestoes-de-conexao`,
+  executores e ferramentas `propor-*`/`alterar-demanda`/`atribuir-membro` já tinham teste (conferidos).
+
+**Frontend.**
+- Lógica: `demanda-utils.spec.ts` (árvore, datas, filtro e a fábrica do menu de contexto, com a verificação de que os itens são propriedade, nunca
+  getter) e `demanda.service.spec.ts`.
+- Componentes: `status-chip`, `tags-cabecalho`, `toolbar`, `metricas` (19); `membros-cabecalho`, `membro-lista`, `conexao-lista` (20); formulário (16:
+  raiz só para gestor, `descricaoCliente` só para gestor); detalhe (18); `arvore-item`, `arvore-painel` e `planejamento-painel` (26: menu do desenvolvedor
+  sem Editar/Tags/Membros, teclado ↑↓←→/Enter, descrição do cliente só do gestor, status otimista com rollback); `demanda-grafo` (8: nós, arestas
+  filtradas, clique e cartão do hover — a simulação de forças nasce parada no teste, senão cada um custaria ~5 s); página `demanda-projeto` (19: projeto
+  inicial por URL/lembrado/único, modos por URL e armazenamento, **desenvolvedor nunca vê "Nova Demanda" nem cai no Planejamento**, atalho `C` só do
+  gestor, status e tags aplicados no estado sem recarregar).
+
+**Achados** (testes `todo`, itens novos em `PROBLEMS.md`, **não corrigidos**): P-010 (mover a demanda para dentro dela mesma ou de uma descendente
+cria ciclo na árvore), P-011 (§14 diz que o desenvolvedor membro atribui tags; o código recusa — decisão da task 170; o autor escolhe documento ou
+código), P-012 (criar com tag inexistente grava a demanda e depois devolve 404). Observação sem item: com o servidor fora, a página mostra dois
+avisos (o do interceptor e o próprio da tela).
+
+**Verificado:** `npm test` da raiz — shared 163, backend 663 (659 + 4 `todo`; antes 594), frontend 361 (antes 207), desktop 19; `test:integracao` 92;
+builds de backend e frontend passam. Nenhuma tela mudou, sem verificação visual.
+
 ## 2026-10-18 — Correção do P-009 (achado da task 175)
 
 `ProjetoService.recuperar` decidia o acesso do desenvolvedor procurando o projeto numa listagem paginada em 20: quem tinha mais de 20 projetos

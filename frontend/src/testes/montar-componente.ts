@@ -28,6 +28,8 @@ export interface OpcoesMontagem {
   rotas?: Routes;
   /** Chaves do localStorage já preenchidas antes de o componente nascer (ele é limpo a cada montagem). */
   armazenamento?: Record<string, string>;
+  /** Entradas (`input()`) do componente, aplicadas antes da primeira detecção de mudanças. */
+  entradas?: Record<string, unknown>;
   /** Provedores extras (substituições de serviço, por exemplo). */
   provedores?: Array<Provider | EnvironmentProviders>;
 }
@@ -73,6 +75,7 @@ export async function montarComponente<T>(componente: Type<T>, opcoes: OpcoesMon
   destinoDosErrosHttp = errosHttpNaoTratados;
 
   const fixture = TestBed.createComponent(componente);
+  for (const [nome, valor] of Object.entries(opcoes.entradas ?? {})) fixture.componentRef.setInput(nome, valor);
   const montado: ComponenteMontado<T> = {
     fixture,
     componente: fixture.componentInstance,
