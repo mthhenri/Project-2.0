@@ -56,7 +56,7 @@ Regras da cobertura:
 | 176 | [Demandas](../done/176-testes-demandas.spec.md) | `demanda` |
 | 177 | [Atividades e prioridade](../done/177-testes-atividades-e-prioridade.spec.md) | `atividade`, `atividade-prioridade` |
 | 178 | [Execuções](../done/178-testes-execucoes.spec.md) | `execucao` |
-| 179 | [Ponto e justificativas](179-testes-ponto-e-justificativas.spec.md) | `ponto`, `ponto-justificativa` |
+| 179 | [Ponto e justificativas](../done/179-testes-ponto-e-justificativas.spec.md) | `ponto`, `ponto-justificativa` |
 | 180 | [Calendário](180-testes-calendario.spec.md) | `calendario` |
 | 181 | [Tags](181-testes-tags.spec.md) | `tag` |
 | 182 | [Anotações (pad)](182-testes-anotacoes.spec.md) | `anotacao` |

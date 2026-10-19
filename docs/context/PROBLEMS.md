@@ -105,3 +105,16 @@
 - **Contorno:** nenhum.
 - **Correção:** validar as tags antes de inserir. O teste `todo: 'P-014'` vira normal.
 - **Desde:** origem (achado na task 177).
+
+### P-015 — Ponto diário cobra a meta cheia em fim de semana e dia não útil integral · `ABERTO` · backend
+
+- **Sintoma:** `GET /ponto/diario` e `/ponto/todos` num sábado, domingo ou feriado integral devolvem `metaMinutos` igual à jornada (ex.: 480) e
+  `saldoMinutos` negativo quando ninguém trabalhou. O mensal (`/ponto/mensal`) zera a meta desses mesmos dias, então o diário e o mensal discordam.
+- **Causa:** `PontoService.montarPontoDiario` só trata a fração 0.5; no ramo "dias integrais" usa `metaMinutosCompleta` mesmo com `fracaoMeta = 0`.
+  `SYSTEM.SPEC.md` §14 diz que fim de semana e dia não útil integral têm fração 0 e "não contam na meta".
+- **Contorno:** a tela do card da equipe mostra o motivo no lugar do saldo em dia não útil, então o saldo errado quase não aparece; a IA
+  (`consultar_ponto_do_dia`) devolve o `metaMinutos` e o `saldoMinutos` como vêm.
+- **Correção:** meta 0 (descontada a justificativa, que então não deixa a meta negativa) quando `fracaoMeta === 0`; o saldo passa a ser só o
+  trabalhado como extra, sem negativo. O `todo: 'P-015'` em `ponto.service.calculo.test.ts` vira teste normal. Confirmar com o autor se o saldo do
+  dia não útil deve ser `0` ou o total trabalhado antes de corrigir.
+- **Desde:** origem (achado na task 179).

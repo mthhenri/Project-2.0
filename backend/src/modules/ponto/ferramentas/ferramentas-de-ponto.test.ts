@@ -82,3 +82,32 @@ test('ponto: as duas ferramentas são de leitura e abertas a qualquer usuário (
     assert.equal(ferramenta.permissao, 'QUALQUER');
   }
 });
+
+test('ponto do dia: perto da meia-noite "hoje" é a data no fuso, não a do UTC', async () => {
+  const servico = { consultarDiario: async (dto: PontoConsultarDto) => ({ data: dto.data, nomeUsuario: 'Dev', execucoes: [] }) };
+  class DiaTarde extends ConsultarPontoDoDiaFerramenta {
+    protected agora(): Date { return new Date('2026-10-19T01:30:00Z'); } // 22:30 do dia 18 em São Paulo
+  }
+  const ferramenta = new DiaTarde(servico as unknown as PontoService, configService);
+  assert.equal((await ferramenta.executar({}, DESENVOLVEDOR)).data, '2026-10-18');
+});
+
+test('ponto do mês: ano, mês e usuário informados seguem para a service, e a data de hoje não os substitui', async () => {
+  const { mes, mensais } = criar();
+  await mes.executar({ ano: 2026, mes: 3, usuarioId: 7 }, GESTOR);
+  assert.deepEqual(mensais[0].dto, { ano: 2026, mes: 3, usuarioId: 7 });
+  assert.equal(mensais[0].usuarioId, 1);
+});
+
+test('ponto: a recusa da service (desenvolvedor pedindo o ponto de outro) chega à IA sem ser engolida', async () => {
+  const recusa = new Error('sem permissão');
+  const servico = { consultarDiario: async () => { throw recusa; }, consultarMensal: async () => { throw recusa; } } as unknown as PontoService;
+  await assert.rejects(() => new ConsultarPontoDoDiaFerramenta(servico, configService).executar({ usuarioId: 99 }, DESENVOLVEDOR), recusa);
+  await assert.rejects(() => new ConsultarPontoDoMesFerramenta(servico, configService).executar({ usuarioId: 99 }, DESENVOLVEDOR), recusa);
+});
+
+test('ponto do mês: dia só com justificativa entra na lista, dia sem nada fica de fora', async () => {
+  const { mes } = criar();
+  const resultado = await mes.executar({}, DESENVOLVEDOR);
+  assert.deepEqual(resultado.dias.map((dia) => [dia.data, dia.justificativa]), [['2026-10-01', null], ['2026-10-05', 'Consulta médica']]);
+});

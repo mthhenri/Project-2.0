@@ -194,6 +194,24 @@ export async function criarDiaNaoUtil(
     });
 }
 
+/** Justificativa de ponto de um usuário num dia (`diaData` `AAAA-MM-DD`), criada por um gestor. */
+export async function criarPontoJustificativa(
+  conexao: ConexaoTeste,
+  dados: {
+    usuarioId: number; gestorId: number; diaData: string; nome?: string; descricao?: string;
+    horasCobertas?: number; dataBase?: string;
+  },
+): Promise<{ id: number }> {
+  const sufixo = proximoSufixo();
+  return inserirLinha<{ id: number }>(conexao,
+    `INSERT INTO ponto_justificativa (usuario_id, gestor_id, dia_data, nome, descricao, horas_cobertas,
+       created_date, updated_date, is_deleted)
+     SELECT :usuarioId, :gestorId, :diaData::date, :nome, :descricao, :horasCobertas,
+       :dataBase::timestamptz, :dataBase::timestamptz, false
+     RETURNING id`,
+    { nome: `Justificativa de teste ${sufixo}`, descricao: 'Descrição de teste', horasCobertas: 2, dataBase: DATA_BASE_TESTE, ...dados });
+}
+
 /** Conexão do grafo (origem → destino; `ehBidirecional` liga também no sentido inverso). */
 export async function criarDemandaConexao(
   conexao: ConexaoTeste,
@@ -218,7 +236,7 @@ export async function criarDemandaTag(
 }
 
 const TABELAS_COM_SOFT_DELETE = new Set([
-  'usuario', 'projeto', 'tag', 'demanda', 'demanda_usuario', 'demanda_conexao', 'demanda_tag', 'atividade', 'atividade_tag', 'execucao', 'dia_nao_util',
+  'usuario', 'projeto', 'tag', 'demanda', 'demanda_usuario', 'demanda_conexao', 'demanda_tag', 'atividade', 'atividade_tag', 'execucao', 'dia_nao_util', 'ponto_justificativa',
 ]);
 
 /** Marca a linha de uma tabela de negócio como excluída (soft delete direto, para montar cenários). */

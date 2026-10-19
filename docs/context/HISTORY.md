@@ -12,6 +12,37 @@
 
 ---
 
+## 2026-10-19 — Task 179: testes de ponto e justificativas
+
+Nona task da guarda-chuva `testes-automatizados`. Nenhum código de produção mudou; a fábrica `criarPontoJustificativa` entrou em
+`backend/src/testes/fabricas.ts` (e `ponto_justificativa` na lista de soft delete dos testes).
+
+**Backend.**
+- `ponto.service` (`ponto.service.calculo.test.ts`, 30, dublês): diário em dia útil (só execução encerrada soma, meta pela jornada do usuário, saldo
+  positivo e negativo), meio período (meta pela metade, excedente vira extra, saldo nunca positivo), fim de semana e feriado integral como hora extra,
+  intervalos (gap abaixo do mínimo não conta, igual ao mínimo conta, vários no dia, ordenação por início, execução aberta ignorada), justificativa
+  (desconta, nunca deixa a meta negativa, no meio período desconta da meta já reduzida, de outro dia/usuário não vale), permissão (desenvolvedor só o próprio,
+  gestor qualquer, usuário inexistente), `todos` (um ponto por usuário, dia não útil para todos, lista vazia) e mensal (28/29 dias de fevereiro,
+  meta = soma das frações, integral zera, meio período 0,5, sábado cadastrado como feriado continua "Fim de semana", soma e saldo do mês).
+- `ponto.service.integracao.test.ts` (7, repositories reais): feriado **recorrente** cadastrado em 2020 vale em 2031 (diário e mensal), não recorrente só
+  no ano, meio período no SQL, mensal com intervalo e justificativa, justificativa excluída não desconta, `todos` sem misturar donos.
+- `ponto-justificativa`: service (6: autor é o gestor do token, usuário inexistente, teto da jornada, uma por usuário e dia, excluir), repository
+  (integração, 8: ordem e filtro por mês, `is_deleted`, `validarPorUsuarioEDia`, soft delete, junção com usuário excluído) e controller (a classe inteira é `@GestorOnly`).
+- Controller do ponto (`/ponto/todos` é `@GestorOnly`, diário e mensal abertos) e ferramentas da IA (4 testes novos: fuso perto da meia-noite, mês
+  explícito, recusa da service não engolida, dia só com justificativa).
+
+**Frontend.** `ponto.service` e `ponto-justificativa.service` (URL, parâmetros, feedback próprio), `ponto.model` (3), `ponto-resumo-card`,
+`ponto-intervalo-lista`, `ponto-usuario-card`, `ponto-mes-dia` (cabeçalho, meio período, justificativa só para o gestor, "Justificar" nas regras certas,
+expandir e consultar o diário uma vez), `ponto-justificativa-dialog` (abertura, teto de horas, validação, criar, recusa, remover com confirmação),
+`ponto-impressao` e a página (gestor: equipe de hoje, "somente ativos", estados vazio e erro, abrir o mês de uma pessoa; desenvolvedor: só o mês, sem filtro
+nem "Justificar"; navegação e atalhos do mês). Não testados: o calendário do PrimeNG e o `window.print` real.
+
+**Divergência registrada, não corrigida (P-015):** o diário e o "todos" cobram a meta cheia em fim de semana e feriado integral, enquanto o mensal a zera e
+§14 diz que não contam na meta. `todo: 'P-015'`. Também: a spec cita "alterar" justificativa, mas o sistema só cria, lista e exclui (nada a testar).
+
+**Verificado:** backend 811 (805 + 6 `todo`, 5 preexistentes e o P-015), frontend 679 (+1 `it.todo`; antes 606), `test:integracao` 160 (antes 145), build do
+backend passa. Nenhuma tela mudou, sem verificação visual. Sem lint (P-001).
+
 ## 2026-10-19 — Task 178: testes de execuções
 
 Oitava task da guarda-chuva `testes-automatizados`. Nenhum código de produção mudou. Backend escrito direto; frontend por um agente `implementador`
