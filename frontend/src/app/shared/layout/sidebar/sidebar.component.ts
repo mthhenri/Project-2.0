@@ -34,7 +34,10 @@ export class SidebarComponent implements OnInit {
       (item) =>
         (!item.somenteGestor || this.sessao.eGestor()) &&
         (!item.somenteAdministrador || this.sessao.eAdministrador()),
-    ).map((item) => ({ ...item, desabilitado: this.estaDesabilitado(item) })),
+    ).map((item) => {
+      const semIa = !!item.iconeSemIa && this.iaDisponibilidade.estadoReal() !== null && this.iaDisponibilidade.estadoReal() !== EstadoIaEnum.NO_AR;
+      return { ...item, icone: semIa ? item.iconeSemIa! : item.icone, semIa, desabilitado: this.estaDesabilitado(item) };
+    }),
   );
 
   ngOnInit(): void {

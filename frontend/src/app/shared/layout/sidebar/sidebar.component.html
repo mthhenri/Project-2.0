@@ -31,7 +31,7 @@
           routerLinkActive="sidebar__item--ativo"
           class="sidebar__item flex items-center gap-3 px-3 py-2 rounded-lg text-color hover:bg-emphasis transition-colors text-sm font-medium whitespace-nowrap"
           [attr.aria-label]="item.label"
-          [pTooltip]="recolhida() ? item.label : ''"
+          [pTooltip]="item.semIa ? item.label + ': a IA está desativada' : recolhida() ? item.label : ''"
           tooltipPosition="right"
         >
           <i [class]="item.icone"></i>
