@@ -63,7 +63,7 @@ Regras da cobertura:
 | 183 | [Relatório](../done/183-testes-relatorio.spec.md) | `relatorio` |
 | 184 | [Camada de IA](../done/184-testes-camada-de-ia.spec.md) | `ia`, `configuracao-ia`, `prompt`, `ferramenta-ia`, `proposta-ia`, `assistente` |
 | 185 | [Chat](../done/185-testes-chat.spec.md) | `chat` |
-| 186 | [Check-in](186-testes-checkin.spec.md) | `checkin` |
+| 186 | [Check-in](../done/186-testes-checkin.spec.md) | `checkin` |
 | 187 | [Frontend: núcleo e componentes compartilhados](187-testes-frontend-nucleo-e-compartilhados.spec.md) | `frontend/src/app/core`, `shared`, layout |
 
 **Ordem:** 171 e 172 primeiro (independentes entre si); depois 173; depois os domínios, começando pelos de maior risco de

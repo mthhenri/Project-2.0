@@ -142,12 +142,12 @@
   ferramentas.
 - **Desde:** origem do chat (bloco 5 do rework); achado em conversa com o autor (2026-10-19).
 
-### P-018 — O botão Enviar do chat não dispara o envio · `ABERTO` · frontend
+### P-018 — O botão Enviar do chat e do check-in não dispara o envio · `ABERTO` · frontend
 
-- **Sintoma:** no teste de componente, o clique em "Enviar" não chama `enviar()`; só o Enter (`aoTeclar`) e os botões de sugestão enviam. Em um navegador
+- **Sintoma:** no chat e na página do check-in (a mesma estrutura), no teste de componente, o clique em "Enviar" não chama `enviar()`; só o Enter (`aoTeclar`) e os botões de sugestão enviam. Em um navegador
   real o clique pode cair no submit nativo do `<form>` (recarregar a página) — **não confirmado ao vivo**.
-- **Causa:** `chat.page.html` usa `<form (ngSubmit)="enviar()">` sem `[formGroup]`, e `chat.page.ts` importa só `ReactiveFormsModule` (sem `FormsModule`/`NgForm`),
+- **Causa:** `chat.page.html` e `checkin.page.html` (linha 132) usam `<form (ngSubmit)="enviar()">` sem `[formGroup]`, e as duas páginas importam só `ReactiveFormsModule` (sem `FormsModule`/`NgForm`),
   então nenhuma diretiva emite o `ngSubmit`.
 - **Contorno:** enviar com Enter ou por uma sugestão.
-- **Correção:** `(click)="enviar()"` no botão (sem `type="submit"`), ou `[formGroup]` no formulário. O `it.todo('P-018: ...')` em `chat.page.spec.ts` vira teste normal.
-- **Desde:** origem da tela do chat; achado na task 185.
+- **Correção:** `(click)="enviar()"` no botão (sem `type="submit"`), ou `[formGroup]` no formulário. Os `it.todo('P-018: ...')` em `chat.page.spec.ts` e `checkin.page.spec.ts` viram teste normal.
+- **Desde:** origem da tela do chat; achado na task 185 (chat) e estendido na 186 (check-in).

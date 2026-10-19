@@ -12,6 +12,31 @@
 
 ---
 
+## 2026-10-19 — Task 186: testes do check-in
+
+Décima sexta task da guarda-chuva `testes-automatizados`. Nenhum código de produção mudou. O frontend foi escrito por um subagente (`implementador`) e conferido aqui
+(suíte completa, builds e leitura do achado no código).
+
+**Backend (20 novos).**
+- `checkin-agenda.service` (8, sorteio fixado): horário entre o mínimo e o máximo contado do início da execução, consultas repetidas mantêm o horário, execução nova e volta da
+  reunião sorteiam de novo (a volta, uma vez só), sem execução ou suspenso a agenda é esquecida, um usuário não vaza para o outro, backend reiniciado sorteia de novo.
+- `checkin-suspensao.service` (7, complementa `checkin-suspensao.test.ts`): `ultimaRetomada` que a agenda usa, retomar sem suspensão não registra volta, volta por usuário, motivo
+  em branco vira `null`, virada do dia no fuso configurado (Tóquio) e sem suspensão fantasma depois da meia-noite.
+- `checkin.controller` (6): três rotas, nenhuma pública/de gestor/de administrador, o usuário do token em `situacao` e `suspensao`, `mensagem` com eventos no fluxo e 409
+  sem execução em andamento antes de qualquer evento.
+- Conferido e sem lacuna: executor `suspender-checkin` e ferramentas `propor-checkin` (desfazer, flag check-in inteligente que as esconde e as recusa) já estavam em
+  `checkin-suspensao.test.ts`; `agenda-do-checkin`, `contexto-do-checkin` e `checkin.service` idem. Sem integração: o domínio não tem repository (estado em memória).
+
+**Frontend (57 testes + 1 `todo`, 3 arquivos novos).** `checkin.service` (3), página `checkin` (36: abertura, SEM_EXECUCAO que fecha em 5 s, SUSPENSO, IA desligada e fora do ar,
+conversa com stream simulado, 409, conferência a cada 3 s, fechar embutida/navegador/desktop) e `checkin-janelinha` (18: quando aparece, horário sorteado, conferência de 20 s e por
+visibilidade, encerramento). `checkin.util` já cobria as três funções. Lição de teste: com `@defer` e `setInterval`, os specs usam `vi.useFakeTimers` desde antes de montar.
+
+**Achados.** P-018 (botão Enviar não dispara) vale também aqui: `checkin.page.html:132` tem a mesma estrutura do chat; `it.todo('P-018: ...')` no spec. Observação menor, sem item
+próprio: no 409, `checkin.page.ts` chama `conferirSituacao()` no `catch` e de novo no `finally`, gerando duas leituras seguidas de `/checkin/situacao`; sem efeito visível.
+
+**Gates.** `npm test`: frontend 93 arquivos e 1070 testes passando (+3 `todo`); backend 995 (988 + 7 `todo` de P-010 a P-016, anteriores); `test:integracao` 232 passando; builds de
+backend e frontend verdes; `repo:verificar` aprovado. Sem lint (P-001). Sem verificação ao vivo: só testes.
+
 ## 2026-10-19 — Task 185: testes do chat
 
 Décima quinta task da guarda-chuva `testes-automatizados`. Nenhum código de produção mudou. O frontend foi escrito por um subagente (`implementador`) e conferido aqui
