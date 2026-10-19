@@ -81,3 +81,33 @@ testarComBanco('recuperarExcluida e restaurar desfazem o soft delete', async (co
   const { rows } = await conexao.raw('SELECT deleted_date FROM tag WHERE tag.id = :id', { id: tag.id });
   assert.equal(rows[0].deleted_date, null);
 });
+
+// Task 181: lacunas que a 171 deixou.
+
+testarComBanco('validarNome compara o nome literalmente (caixa e acento contam)', async (conexao) => {
+  const repositorio = criarRepositorio(TagRepository, conexao);
+  await criarTag(conexao, { nome: 'Acentuação' });
+  assert.equal(await repositorio.validarNome({ nome: 'Acentuação' }), true);
+  assert.equal(await repositorio.validarNome({ nome: 'acentuação' }), false);
+  assert.equal(await repositorio.validarNome({ nome: 'Acentuacao' }), false);
+});
+
+testarComBanco('recuperar e recuperarExcluida não devolvem tag inexistente', async (conexao) => {
+  const repositorio = criarRepositorio(TagRepository, conexao);
+  assert.equal(await repositorio.recuperar({ id: 2147483000 }), null);
+  assert.equal(await repositorio.recuperarExcluida({ id: 2147483000 }), null);
+});
+
+testarComBanco('restaurar não toca tag ativa', async (conexao) => {
+  const repositorio = criarRepositorio(TagRepository, conexao);
+  const tag = await criarTag(conexao, { nome: 'Ativa' });
+  assert.equal(await repositorio.restaurar({ id: tag.id }), undefined);
+});
+
+testarComBanco('excluir uma tag não mexe nas outras', async (conexao) => {
+  const repositorio = criarRepositorio(TagRepository, conexao);
+  const excluida = await criarTag(conexao, { nome: 'Sai' });
+  const mantida = await criarTag(conexao, { nome: 'Fica' });
+  await repositorio.excluir({ id: excluida.id });
+  assert.equal((await repositorio.recuperar({ id: mantida.id }))?.nome, 'Fica');
+});

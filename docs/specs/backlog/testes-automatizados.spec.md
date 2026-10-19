@@ -58,7 +58,7 @@ Regras da cobertura:
 | 178 | [Execuções](../done/178-testes-execucoes.spec.md) | `execucao` |
 | 179 | [Ponto e justificativas](../done/179-testes-ponto-e-justificativas.spec.md) | `ponto`, `ponto-justificativa` |
 | 180 | [Calendário](../done/180-testes-calendario.spec.md) | `calendario` |
-| 181 | [Tags](181-testes-tags.spec.md) | `tag` |
+| 181 | [Tags](../done/181-testes-tags.spec.md) | `tag` |
 | 182 | [Anotações (pad)](182-testes-anotacoes.spec.md) | `anotacao` |
 | 183 | [Relatório](183-testes-relatorio.spec.md) | `relatorio` |
 | 184 | [Camada de IA](184-testes-camada-de-ia.spec.md) | `ia`, `configuracao-ia`, `prompt`, `ferramenta-ia`, `proposta-ia`, `assistente` |

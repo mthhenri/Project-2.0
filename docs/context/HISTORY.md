@@ -12,6 +12,31 @@
 
 ---
 
+## 2026-10-19 — Task 181: testes de tags
+
+Décima primeira task da guarda-chuva `testes-automatizados`. Nenhum código de produção mudou.
+
+**Backend.**
+- `tag.service` (de 3 para 13, dublê de repository): criar (repassa só nome e cor; nome em uso entre as ativas recusado **sem gravar**), listar, recuperar,
+  alterar (inexistente e nome de outra tag recusados sem gravar; a checagem ignora a própria tag; só a cor não confere nome), excluir (inexistente não exclui) e a
+  checagem de nome do `restaurar`. A permissão de gestor **não** está na service (ela não recebe usuário): vive no controller.
+- `tag.controller` (5): `criar`, `alterar`, `excluir` e `restaurar` são `@GestorOnly`; `listar` e `recuperar` abertos; verbos e caminhos; repasse de DTO e id.
+- `listar-tags.ferramenta` (5): leitura aberta a qualquer usuário, só id/nome/cor, vazio, corte no limite com `total` e `haMais`.
+- `tag.repository.integracao` (de 7 para 11): nome comparado literalmente, ids inexistentes, `restaurar` não toca ativa e `excluir` não mexe nas outras.
+  Não existe "contagem de uso" no repository, então não havia o que cobrir ali.
+
+**Frontend.** `tag.util` (4), `tag.service` (6: URL, verbos, corpo, feedback próprio da lista e `erroNaTela`) e a página `tag-listagem` (+20 em
+`tag-listagem.page.acoes.spec.ts`: validação do quick-add — vazio, repetido sem caixa/acento, caractere proibido, tag temporária sem ação —, criar a partir da
+busca, cor inline — aplica na hora com PUT só da cor, rollback na falha, mesma cor não chama, cor personalizada só ao fechar, swatch do quick-add —, edição,
+exclusão com "Desfazer" e falha, seleção e exclusão em lote). `tag-edicao-dialog` já estava coberto pela 172. Não há ação "só para gestor" na tela: a rota inteira
+é `gestorGuard`.
+
+**Divergência (sem `todo`).** A tela confere duplicidade ignorando caixa e acento (`nomeDeTagIgual`), o servidor compara o nome literalmente, e o documento não
+define o critério. "Backend" e "backend" são barrados na tela e aceitos pela API. Registrado nos testes; se o autor quiser unicidade sem caixa, vira spec nova.
+
+**Verificado:** `npm test` (backend, scripts, desktop e frontend 739 + 1 `it.todo`; 7 `todo` de P-010 a P-016 preexistentes), `test:integracao` 178 sem falha, builds do
+backend e do frontend passam. Nenhuma tela mudou, sem verificação visual. Sem lint (P-001).
+
 ## 2026-10-19 — Task 180: testes do calendário (dias não úteis)
 
 Décima task da guarda-chuva `testes-automatizados`. Nenhum código de produção mudou.
