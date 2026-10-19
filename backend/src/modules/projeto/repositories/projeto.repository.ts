@@ -14,6 +14,7 @@ import {
   ProjetoInternoAlterarDto,
   ProjetoExcluirDto,
   ProjetoUsuarioListarDto,
+  ProjetoAcessoValidarDto,
 } from '@project20/shared';
 import { ProjetoRestaurarDto, ProjetoRestauradoDto } from '@project20/shared';
 
@@ -208,6 +209,29 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
     );
 
     return { itens, total };
+  }
+
+  /**
+   * Verifica se o usuário tem ao menos uma demanda (não excluída) atribuída no projeto: o acesso do desenvolvedor a UM projeto.
+   * Pergunta direto, sem passar pela listagem paginada.
+   */
+  async validarAcesso(dto: ProjetoAcessoValidarDto): Promise<boolean> {
+    const resultado = await this.executarConsulta<{ existe: boolean }>(
+      `SELECT EXISTS(
+         SELECT 1 FROM demanda
+         INNER JOIN demanda_usuario
+           ON demanda_usuario.demanda_id = demanda.id
+           AND demanda_usuario.is_deleted = false
+         INNER JOIN projeto
+           ON projeto.id = demanda.projeto_id
+           AND projeto.is_deleted = false
+         WHERE demanda.projeto_id = :projetoId
+           AND demanda.is_deleted = false
+           AND demanda_usuario.usuario_id = :usuarioId
+       ) AS existe`,
+      { projetoId: dto.projetoId, usuarioId: dto.usuarioId },
+    );
+    return resultado[0].existe;
   }
 
   /** Altera campos do projeto. O código não pode ser alterado. */

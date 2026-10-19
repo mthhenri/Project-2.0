@@ -165,8 +165,7 @@ testarComBanco('possuiDemandas só conta demanda não excluída', async (conexao
 });
 
 // Service + repository reais: a service decide o acesso do desenvolvedor a UM projeto pela lista de acesso dele.
-// P-009: `recuperar` confere o acesso numa listagem paginada (20 por página), então o 21º projeto dele dá 404.
-testarComBanco('desenvolvedor com mais de 20 projetos ainda recupera o 21º', { todo: 'P-009' }, async (conexao) => {
+testarComBanco('desenvolvedor com mais de 20 projetos ainda recupera o 21º', async (conexao) => {
   const servico = new ProjetoService(criarRepositorio(ProjetoRepository, conexao));
   const desenvolvedor = await criarDesenvolvedor(conexao);
   const marca = 'zzacesso';
@@ -179,4 +178,33 @@ testarComBanco('desenvolvedor com mais de 20 projetos ainda recupera o 21º', { 
   const usuarioDoToken = { sub: desenvolvedor.id, login: desenvolvedor.login, tipo: TipoUsuarioEnum.DESENVOLVEDOR };
   const resposta = await servico.recuperar({ id: ultimo }, usuarioDoToken);
   assert.equal(resposta.dados?.id, ultimo);
+});
+
+testarComBanco('validarAcesso: só vale com demanda e atribuição não excluídas, no projeto certo e para o usuário certo', async (conexao) => {
+  const repositorio = criarRepositorio(ProjetoRepository, conexao);
+  const desenvolvedor = await criarDesenvolvedor(conexao);
+  const outro = await criarDesenvolvedor(conexao);
+  const projeto = await criarProjeto(conexao);
+  const outroProjeto = await criarProjeto(conexao);
+  const demanda = await criarDemanda(conexao, { projetoId: projeto.id });
+  const atribuicao = await criarDemandaUsuario(conexao, { demandaId: demanda.id, usuarioId: desenvolvedor.id });
+
+  assert.equal(await repositorio.validarAcesso({ usuarioId: desenvolvedor.id, projetoId: projeto.id }), true);
+  assert.equal(await repositorio.validarAcesso({ usuarioId: outro.id, projetoId: projeto.id }), false, 'outro usuário');
+  assert.equal(await repositorio.validarAcesso({ usuarioId: desenvolvedor.id, projetoId: outroProjeto.id }), false, 'outro projeto');
+
+  await conexao.raw('UPDATE demanda_usuario SET is_deleted = true, deleted_date = NOW() WHERE demanda_usuario.id = :id', { id: atribuicao.id });
+  assert.equal(await repositorio.validarAcesso({ usuarioId: desenvolvedor.id, projetoId: projeto.id }), false, 'atribuição excluída');
+  await conexao.raw('UPDATE demanda_usuario SET is_deleted = false, deleted_date = NULL WHERE demanda_usuario.id = :id', { id: atribuicao.id });
+  await conexao.raw('UPDATE demanda SET is_deleted = true, deleted_date = NOW() WHERE demanda.id = :id', { id: demanda.id });
+  assert.equal(await repositorio.validarAcesso({ usuarioId: desenvolvedor.id, projetoId: projeto.id }), false, 'demanda excluída');
+});
+
+testarComBanco('validarAcesso é falso para projeto excluído, mesmo com demanda atribuída', async (conexao) => {
+  const repositorio = criarRepositorio(ProjetoRepository, conexao);
+  const desenvolvedor = await criarDesenvolvedor(conexao);
+  const projeto = await criarProjeto(conexao);
+  await criarDemandaUsuario(conexao, { demandaId: (await criarDemanda(conexao, { projetoId: projeto.id })).id, usuarioId: desenvolvedor.id });
+  await repositorio.excluir({ id: projeto.id });
+  assert.equal(await repositorio.validarAcesso({ usuarioId: desenvolvedor.id, projetoId: projeto.id }), false);
 });

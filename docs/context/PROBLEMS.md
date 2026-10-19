@@ -43,7 +43,6 @@
   services e telas por domínio; (2) escolher e configurar lint e acrescentar ao CI.
 - **Desde:** origem do projeto.
 
-
 ### P-004 — Outras telas ainda calculam "hoje" e as horas no fuso do navegador · `ACEITO` · frontend
 
 - **Sintoma:** com o navegador num fuso diferente de `APP_TIMEZONE` (America/Sao_Paulo), Ponto, Calendário, Atividades e
@@ -54,12 +53,3 @@
 - **Contorno:** o time usa o fuso do servidor; nada a fazer no uso normal.
 - **Correção:** migrar as demais telas para as mesmas funções (o `DatePipe` não aceita nome IANA de fuso).
 - **Desde:** origem.
-
-
-### P-009 — Desenvolvedor com mais de 20 projetos não abre o 21º · `ABERTO` · backend
-
-- **Sintoma:** `GET /projeto/:id` devolve 404 para um desenvolvedor que tem demanda atribuída no projeto, quando ele tem mais de 20 projetos e o projeto está depois do 20º na ordem de nome.
-- **Causa:** `ProjetoService.recuperar` decide o acesso procurando o id dentro de `listarPorUsuario({ filtros: {} })`, que pagina com o padrão de 20 itens.
-- **Contorno:** nenhum no uso normal enquanto ninguém passa de 20 projetos; a listagem da tela (até 100) mostra o projeto, mas o clique falha.
-- **Correção:** perguntar o acesso a um projeto só (`EXISTS` em `demanda_usuario` por `projeto_id` e `usuario_id`) ou listar com `allRows`; promover o `todo` de `projeto.repository.integracao.test.ts`.
-- **Desde:** origem; achado pela task 175.

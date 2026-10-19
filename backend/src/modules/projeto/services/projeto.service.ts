@@ -113,8 +113,7 @@ export class ProjetoService {
     }
 
     if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
-      const { itens } = await this.projetoRepositorio.listarPorUsuario({ usuarioId: usuarioAtivo.sub, filtros: {} });
-      const temAcesso = itens.some((projeto) => projeto.id === dto.id);
+      const temAcesso = await this.projetoRepositorio.validarAcesso({ usuarioId: usuarioAtivo.sub, projetoId: dto.id });
 
       if (!temAcesso) {
         throw new ResourceNotFoundException('Projeto');

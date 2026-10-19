@@ -114,19 +114,21 @@ test('recuperar: projeto inexistente ou excluído lança ResourceNotFoundExcepti
 
 test('recuperar: gestor e administrador veem qualquer projeto sem consultar o acesso por demanda', async () => {
   let consultouAcesso = false;
-  const servico = criarServico({ recuperar: async () => PROJETO, listarPorUsuario: async () => { consultouAcesso = true; return { itens: [], total: 0 }; } });
+  const servico = criarServico({ recuperar: async () => PROJETO, validarAcesso: async () => { consultouAcesso = true; return false; } });
   for (const usuario of [GESTOR, ADMINISTRADOR]) assert.equal((await servico.recuperar({ id: 10 }, usuario)).dados?.id, 10);
   assert.equal(consultouAcesso, false);
 });
 
 test('recuperar: desenvolvedor sem demanda no projeto recebe 404 (não revela que o projeto existe)', async () => {
-  const servico = criarServico({ recuperar: async () => PROJETO, listarPorUsuario: async () => ({ itens: [{ id: 77 }], total: 1 }) });
+  const servico = criarServico({ recuperar: async () => PROJETO, validarAcesso: async () => false });
   await assert.rejects(() => servico.recuperar({ id: 10 }, DESENVOLVEDOR), ResourceNotFoundException);
 });
 
 test('recuperar: desenvolvedor com demanda no projeto o recupera', async () => {
-  const servico = criarServico({ recuperar: async () => PROJETO, listarPorUsuario: async () => ({ itens: [{ id: 10 }], total: 1 }) });
+  const consultas: unknown[] = [];
+  const servico = criarServico({ recuperar: async () => PROJETO, validarAcesso: async (dto: unknown) => { consultas.push(dto); return true; } });
   assert.equal((await servico.recuperar({ id: 10 }, DESENVOLVEDOR)).dados?.id, 10);
+  assert.deepEqual(consultas, [{ usuarioId: 3, projetoId: 10 }]);
 });
 
 // ---------------------------------------------------------------------------

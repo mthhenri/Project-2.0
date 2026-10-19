@@ -12,6 +12,15 @@
 
 ---
 
+## 2026-10-18 — Correção do P-009 (achado da task 175)
+
+`ProjetoService.recuperar` decidia o acesso do desenvolvedor procurando o projeto numa listagem paginada em 20: quem tinha mais de 20 projetos
+recebia 404 no 21º. Agora o acesso a **um** projeto é uma pergunta direta, `ProjetoRepository.validarAcesso` (`EXISTS` em `demanda` + `demanda_usuario` +
+`projeto`, todos não excluídos), com o DTO novo `ProjetoAcessoValidarDto { usuarioId, projetoId }` (convenção: zero primitivos, verbo `validar`). Único
+consumidor: `projeto.service` (conferido com `npm run impacto`). A regra de acesso é a mesma de antes (demanda não excluída com atribuição não excluída no
+projeto não excluído). O `todo` virou teste normal e ganhou dois de `validarAcesso` (usuário, projeto, atribuição e demanda excluídas; projeto excluído); os
+testes da service passaram a usar o método novo. Item removido de `PROBLEMS.md`.
+
 ## 2026-10-18 — Task 175: testes de projetos
 
 Quinta task da guarda-chuva `testes-automatizados`. Nenhum código de produção mudou.
