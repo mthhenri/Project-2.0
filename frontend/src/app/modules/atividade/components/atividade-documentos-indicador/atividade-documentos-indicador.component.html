@@ -1,29 +1,15 @@
-<button
-  type="button"
-  class="atividade-documentos"
-  [class.atividade-documentos--vazio]="existentes().length === 0"
-  [attr.aria-label]="'Documentos da demanda: ' + dica()"
-  [pTooltip]="dica()"
-  tooltipPosition="top"
-  (click)="alternar($event)"
->
-  <i class="pi pi-file atividade-documentos__icone" aria-hidden="true"></i>
-  @if (existentes().length > 0) {
-    <span class="atividade-documentos__pontos" aria-hidden="true">
-      @for (documento of existentes(); track documento.campo) {
-        <span class="atividade-documentos__ponto atividade-documentos__ponto--{{ documento.tipo }}"></span>
-      }
-    </span>
+<div class="atividade-documentos">
+  @for (documento of documentos; track documento.campo) {
+    <button
+      type="button"
+      class="atividade-documentos__icone atividade-documentos__icone--{{ documento.tipo }}"
+      [class.atividade-documentos__icone--ativo]="temConteudo(documento.campo)"
+      [attr.aria-label]="documento.rotulo"
+      [pTooltip]="documento.rotulo"
+      tooltipPosition="top"
+      (click)="abrir.emit(documento.campo)"
+    >
+      <i class="pi {{ documento.icone }}" aria-hidden="true"></i>
+    </button>
   }
-</button>
-
-<p-popover #popover>
-  <div class="atividade-documentos__lista">
-    @for (documento of existentes(); track documento.campo) {
-      <button type="button" class="atividade-documentos__item" (click)="escolher(documento)">
-        <span class="atividade-documentos__ponto atividade-documentos__ponto--{{ documento.tipo }}"></span>
-        {{ documento.rotulo }}
-      </button>
-    }
-  </div>
-</p-popover>
+</div>
