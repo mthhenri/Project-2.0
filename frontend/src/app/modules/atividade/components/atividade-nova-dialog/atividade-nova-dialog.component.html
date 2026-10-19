@@ -11,7 +11,10 @@
   [draggable]="false"
   [dismissableMask]="true"
 >
-  <app-atividade-formulario [demandaIdInicial]="demandaIdInicial()" (criada)="aoCriarAtividade($event.criarOutra)" />
+  <!-- O conteúdo do p-dialog é projetado e nasceria com o componente; o @if cria o formulário a cada abertura, com a demanda de abrir(). -->
+  @if (visivel()) {
+    <app-atividade-formulario [demandaIdInicial]="demandaIdInicial()" (criada)="aoCriarAtividade($event.criarOutra)" />
+  }
 
   <ng-template pTemplate="footer">
     <app-dialog-dica-atalhos />

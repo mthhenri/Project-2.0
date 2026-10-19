@@ -263,9 +263,19 @@ describe('CheckinPage — estados sem conversa', () => {
 });
 
 describe('CheckinPage — conversa', () => {
-  // Divergência (mesma causa do P-018 do chat): `<form (ngSubmit)="enviar()">` não tem `[formGroup]` nem `FormsModule`, então `ngSubmit`
-  // nunca dispara; o clique no botão Enviar (type="submit") não envia (só o Enter e as sugestões enviam): checkin.page.html:132.
-  it.todo('P-018: o clique no botão Enviar envia a resposta (hoje o ngSubmit do formulário não dispara: checkin.page.html <form (ngSubmit)>)');
+  it('o clique no botão Enviar envia a resposta (P-018)', async () => {
+    const montado = await montarCheckin();
+    controlarFluxo(enviarMensagemEspiao);
+    await digitar(montado, 'Terminei o formulário de login');
+
+    botaoEnviar(montado).dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    await montado.atualizar();
+
+    expect(enviarMensagemEspiao).toHaveBeenCalledTimes(1);
+    expect(enviarMensagemEspiao.mock.calls[0][0]).toBe('Terminei o formulário de login');
+    expect(campo(montado).value).toBe('');
+  });
+
 
   it('o botão Enviar só vale com texto; ao enviar chama o stream do check-in e a mensagem aparece na hora', async () => {
     const montado = await montarCheckin();

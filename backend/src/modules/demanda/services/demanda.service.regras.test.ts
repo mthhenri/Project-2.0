@@ -143,18 +143,15 @@ test('criar: o pai precisa existir, ser do mesmo projeto e ser estrutural', asyn
   for (const repo of [inexistente, outroProjeto, naoEstrutural]) assert.equal(gravou(repo), false);
 });
 
-test('criar: só gestor atribui tags na criação; desenvolvedor é recusado', async () => {
-  const repo = repositorio({ recuperar: async () => PAI_ESTRUTURAL });
-  await assert.rejects(
-    () => criarServico(repo, tagExistente, usuarioExistente).criar({ ...DADOS_CRIAR, demandaPaiId: 5, tagIds: [1] }, DESENVOLVEDOR),
-    UnauthorizedAccessException,
-  );
-  assert.equal(gravou(repo), false);
-
+test('criar: gestor e desenvolvedor atribuem tags na criação (o desenvolvedor vira membro da demanda criada)', async () => {
   const comTags = repositorio();
   await criarServico(comTags, tagExistente, usuarioExistente).criar({ ...DADOS_CRIAR, tagIds: [1, 2] }, GESTOR);
   assert.deepEqual(comTags.gravacoes.map((g) => g.metodo), ['inserirComAtribuicao', 'atribuirTagsDemanda']);
   assert.deepEqual(comTags.gravacoes[1].argumento, { demandaId: 99, tagIds: [1, 2] });
+
+  const doDesenvolvedor = repositorio({ recuperar: async () => PAI_ESTRUTURAL });
+  await criarServico(doDesenvolvedor, tagExistente, usuarioExistente).criar({ ...DADOS_CRIAR, demandaPaiId: 5, tagIds: [1] }, DESENVOLVEDOR);
+  assert.deepEqual(doDesenvolvedor.gravacoes.map((g) => g.metodo), ['inserirComAtribuicao', 'atribuirTagsDemanda']);
 });
 
 test('criar: tag inexistente é recusada sem gravar a demanda', async () => {
@@ -450,8 +447,7 @@ test('alterarTagsDemanda: desenvolvedor que NÃO é membro é recusado', async (
   assert.equal(gravou(repo), false);
 });
 
-// P-011: §14 diz "atribuir tag apenas em demandas das quais é membro" para o desenvolvedor; o código (e a decisão da task 170) recusa o desenvolvedor sempre.
-test('alterarTagsDemanda: desenvolvedor membro da demanda atribui tags (§14)', { todo: 'P-011' }, async () => {
+test('alterarTagsDemanda: desenvolvedor membro da demanda atribui tags (§14)', async () => {
   const repo = repositorio({ validarMembro: async () => true });
   await criarServico(repo, tagExistente).alterarTagsDemanda({ demandaId: 10, tagIds: [1] }, DESENVOLVEDOR);
   assert.deepEqual(repo.gravacoes.map((g) => g.metodo), ['atribuirTagsDemanda']);

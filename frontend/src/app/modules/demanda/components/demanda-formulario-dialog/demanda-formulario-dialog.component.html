@@ -114,7 +114,7 @@
       >
         <i class="pi" [class.pi-chevron-down]="!maisOpcoesAbertas()" [class.pi-chevron-up]="maisOpcoesAbertas()"></i>
         Mais opções
-        <span class="demanda-dialog__mais-opcoes-resumo">Status{{ sessao.eGestor() ? ', membros e tags' : '' }}</span>
+        <span class="demanda-dialog__mais-opcoes-resumo">Status{{ sessao.eGestor() ? ', membros e tags' : ' e tags' }}</span>
       </button>
 
       @if (maisOpcoesAbertas()) {
@@ -146,35 +146,35 @@
                 class="w-full"
               />
             </div>
-
-            <div class="demanda-dialog__campo demanda-dialog__campo--full">
-              <label class="demanda-dialog__label">Tags</label>
-              @if (carregandoTags()) {
-                <i class="pi pi-spin pi-spinner text-muted-color"></i>
-              } @else {
-                <div class="demanda-dialog__tags-seletor">
-                  @for (tag of todasAsTags(); track tag.id) {
-                    <button
-                      type="button"
-                      class="demanda-dialog__tag-chip"
-                      [class.demanda-dialog__tag-chip--ativo]="tagEstaSelecionada(formulario.controls.tagIds, tag.id)"
-                      [style.--cor-tag]="tag.cor"
-                      (click)="alternarTagSelecao(formulario.controls.tagIds, tag.id)"
-                    >
-                      @if (tagEstaSelecionada(formulario.controls.tagIds, tag.id)) {
-                        <i class="pi pi-check demanda-dialog__tag-chip-check"></i>
-                      } @else {
-                        <span class="demanda-dialog__tag-bolinha" [style.background-color]="tag.cor"></span>
-                      }
-                      {{ tag.nome }}
-                    </button>
-                  } @empty {
-                    <span class="text-muted-color">Nenhuma tag cadastrada</span>
-                  }
-                </div>
-              }
-            </div>
           }
+
+          <div class="demanda-dialog__campo demanda-dialog__campo--full">
+            <label class="demanda-dialog__label">Tags</label>
+            @if (carregandoTags()) {
+              <i class="pi pi-spin pi-spinner text-muted-color"></i>
+            } @else {
+              <div class="demanda-dialog__tags-seletor">
+                @for (tag of todasAsTags(); track tag.id) {
+                  <button
+                    type="button"
+                    class="demanda-dialog__tag-chip"
+                    [class.demanda-dialog__tag-chip--ativo]="tagEstaSelecionada(formulario.controls.tagIds, tag.id)"
+                    [style.--cor-tag]="tag.cor"
+                    (click)="alternarTagSelecao(formulario.controls.tagIds, tag.id)"
+                  >
+                    @if (tagEstaSelecionada(formulario.controls.tagIds, tag.id)) {
+                      <i class="pi pi-check demanda-dialog__tag-chip-check"></i>
+                    } @else {
+                      <span class="demanda-dialog__tag-bolinha" [style.background-color]="tag.cor"></span>
+                    }
+                    {{ tag.nome }}
+                  </button>
+                } @empty {
+                  <span class="text-muted-color">Nenhuma tag cadastrada</span>
+                }
+              </div>
+            }
+          </div>
         </div>
       }
 

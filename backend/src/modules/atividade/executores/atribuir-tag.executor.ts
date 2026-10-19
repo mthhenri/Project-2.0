@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { PropostaAtribuirTagDadosDto, TipoPropostaIaEnum, temPermissaoDeGestor } from '@project20/shared';
+import { PropostaAtribuirTagDadosDto, TipoPropostaIaEnum } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
-import { UnauthorizedAccessException } from '../../../core/exceptions/unauthorized-access.exception';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { DemandaService } from '../../demanda/services/demanda.service';
 import { ExecutorPropostaIa } from '../../proposta-ia/domain/executor-proposta-ia';
@@ -12,7 +11,7 @@ import { AtividadeService } from '../services/atividade.service';
 /**
  * Executor da proposta `ATRIBUIR_TAG`: lê as tags **de agora**, aplica a diferença (entram `adicionarTagIds`, saem `removerTagIds`) e
  * grava o conjunto final pela service do alvo (`PUT .../tag` substitui o conjunto inteiro, por isso a diferença é calculada aqui, sobre
- * o estado atual, para não desfazer o que outra pessoa mudou nesse meio tempo). Tags de demanda só o gestor; as de atividade, quem a service deixa. Desfazer devolve o conjunto de antes, mas
+ * o estado atual, para não desfazer o que outra pessoa mudou nesse meio tempo). Quem pode é decidido pela service do alvo (demanda: gestor ou membro; atividade: gestor, autor ou membro). Desfazer devolve o conjunto de antes, mas
  * só se as tags ainda são as que a proposta deixou.
  */
 @Injectable()
@@ -31,7 +30,6 @@ export class AtribuirTagExecutor implements ExecutorPropostaIa {
 
   async executar(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
     const entrada = validarDadosDaProposta(PropostaAtribuirTagDadosDto, dados);
-    this.exigirGestorParaDemanda(entrada.alvo, usuarioAtivo);
     const antes = await this.lerTags(entrada.alvo, entrada.alvoId, usuarioAtivo);
     const depois = calcularConjuntoDeTags(antes, entrada.adicionarTagIds, entrada.removerTagIds);
     if (mesmoConjuntoDeTags(antes, depois)) throw new BusinessException('O alvo já está com essas tags: não há o que alterar');
@@ -41,7 +39,6 @@ export class AtribuirTagExecutor implements ExecutorPropostaIa {
 
   async desfazer(resultado: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<void> {
     const alvo = resultado['alvo'] as 'DEMANDA' | 'ATIVIDADE';
-    this.exigirGestorParaDemanda(alvo, usuarioAtivo);
     const alvoId = Number(resultado['alvoId']);
     const antes = resultado['tagsAntesIds'] as number[] | undefined;
     const depois = resultado['tagsDepoisIds'] as number[] | undefined;
@@ -70,9 +67,5 @@ export class AtribuirTagExecutor implements ExecutorPropostaIa {
   private async gravarTags(alvo: 'DEMANDA' | 'ATIVIDADE', alvoId: number, tagIds: number[], usuarioAtivo: JwtPayload): Promise<void> {
     if (alvo === 'DEMANDA') await this.demandaService.alterarTagsDemanda({ demandaId: alvoId, tagIds }, usuarioAtivo);
     else await this.atividadeService.alterarTags({ id: alvoId, tagIds }, usuarioAtivo);
-  }
-
-  private exigirGestorParaDemanda(alvo: 'DEMANDA' | 'ATIVIDADE', usuarioAtivo: JwtPayload): void {
-    if (alvo === 'DEMANDA' && !temPermissaoDeGestor(usuarioAtivo.tipo)) throw new UnauthorizedAccessException('Só o gestor atribui tags a demandas');
   }
 }

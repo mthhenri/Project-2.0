@@ -140,11 +140,11 @@ describe('construirMenuDemanda', () => {
     return { acoes, chamadas };
   };
 
-  it('desenvolvedor vê só Visualizar e as três descrições', () => {
-    expect(rotulos(construirMenuDemanda(alvo(), acoesRegistradas().acoes, false))).toEqual(['Visualizar', 'Desc. Técnica', 'Desc. Cliente', 'Documentação']);
+  it('desenvolvedor vê Visualizar, Tags e as três descrições', () => {
+    expect(rotulos(construirMenuDemanda(alvo(), acoesRegistradas().acoes, false))).toEqual(['Visualizar', 'Tags', 'Desc. Técnica', 'Desc. Cliente', 'Documentação']);
   });
 
-  it('gestor vê também Editar, Tags e Membros', () => {
+  it('gestor vê também Editar e Membros', () => {
     expect(rotulos(construirMenuDemanda(alvo(), acoesRegistradas().acoes, true))).toEqual(['Visualizar', 'Editar', 'Tags', 'Membros', 'Desc. Técnica', 'Desc. Cliente', 'Documentação']);
   });
 

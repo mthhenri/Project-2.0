@@ -63,13 +63,56 @@ test('consultar grafo: projeto sem demandas devolve listas vazias', async () => 
 // listar_demandas_do_projeto
 // ---------------------------------------------------------------------------
 
-test('listar demandas do projeto: usa a service com o usuário do token (as mesmas regras da tela) e pede todas as linhas', async () => {
+test('listar demandas do projeto: o gestor usa a listagem da tela (com o usuário do token) e pede todas as linhas', async () => {
   const chamadas: Array<{ filtros: unknown; usuario: unknown }> = [];
   const servico = { listar: async (filtros: unknown, usuario: unknown) => { chamadas.push({ filtros, usuario }); return { dados: { itens: [] } }; } };
   const ferramenta = new ListarDemandasDoProjetoFerramenta(servico as unknown as DemandaService);
-  await ferramenta.executar({ projetoId: 7 }, DESENVOLVEDOR);
-  assert.deepEqual(chamadas, [{ filtros: { projetoId: 7, allRows: true }, usuario: DESENVOLVEDOR }]);
+  await ferramenta.executar({ projetoId: 7 }, GESTOR);
+  assert.deepEqual(chamadas, [{ filtros: { projetoId: 7, allRows: true }, usuario: GESTOR }]);
   assert.deepEqual([ferramenta.permissao, ferramenta.tipo], ['QUALQUER', 'LEITURA']);
+});
+
+// P-019: a listagem do desenvolvedor só traz as demandas dele; a IA não achava pelo nome uma demanda em que ele ainda não está.
+test('listar demandas do projeto: o desenvolvedor recebe o projeto inteiro (pelo grafo), com o caminho e a marca de participação', async () => {
+  const chamadas: string[] = [];
+  const servico = {
+    recuperarGrafo: async (dto: unknown, usuario: unknown) => {
+      chamadas.push('grafo');
+      assert.deepEqual([dto, usuario], [{ projetoId: 7 }, DESENVOLVEDOR]);
+      return { dados: { nos: [
+        no(1, { nome: 'Estrutura', isEstrutural: true }),
+        no(2, { nome: 'Login', demandaPaiId: 1 }),
+        no(3, { nome: 'Integracao com ERP', demandaPaiId: 1 }),
+      ], arestas: [] } };
+    },
+    listar: async (filtros: unknown, usuario: unknown) => {
+      chamadas.push('listar');
+      assert.deepEqual([filtros, usuario], [{ projetoId: 7, allRows: true }, DESENVOLVEDOR]);
+      return { dados: { itens: [{ id: 2 }] } };
+    },
+  };
+  const resultado = await new ListarDemandasDoProjetoFerramenta(servico as unknown as DemandaService).executar({ projetoId: 7 }, DESENVOLVEDOR);
+  assert.deepEqual(chamadas, ['grafo', 'listar']);
+  assert.deepEqual(resultado.demandas, [
+    { id: 1, nome: 'Estrutura', caminho: 'Estrutura', isEstrutural: true, status: 'PENDENTE', participa: false },
+    { id: 2, nome: 'Login', caminho: 'Estrutura > Login', isEstrutural: false, status: 'PENDENTE', participa: true },
+    { id: 3, nome: 'Integracao com ERP', caminho: 'Estrutura > Integracao com ERP', isEstrutural: false, status: 'PENDENTE', participa: false },
+  ]);
+  assert.equal(resultado.total, 3);
+});
+
+test('listar demandas do projeto: o desenvolvedor sem acesso ao projeto recebe o erro da service (nada vaza)', async () => {
+  const servico = { recuperarGrafo: async () => { throw new Error('sem acesso'); }, listar: async () => ({ dados: { itens: [] } }) };
+  await assert.rejects(new ListarDemandasDoProjetoFerramenta(servico as unknown as DemandaService).executar({ projetoId: 7 }, DESENVOLVEDOR), /sem acesso/);
+});
+
+test('listar demandas do projeto: caminho resiste a pai que se repete ou que não está no grafo', async () => {
+  const servico = {
+    recuperarGrafo: async () => ({ dados: { nos: [no(1, { nome: 'A', demandaPaiId: 2 }), no(2, { nome: 'B', demandaPaiId: 1 }), no(3, { nome: 'C', demandaPaiId: 99 })], arestas: [] } }),
+    listar: async () => ({ dados: { itens: [] } }),
+  };
+  const resultado = await new ListarDemandasDoProjetoFerramenta(servico as unknown as DemandaService).executar({ projetoId: 7 }, DESENVOLVEDOR);
+  assert.deepEqual(resultado.demandas.map((demanda) => demanda.caminho), ['B > A', 'A > B', 'C']);
 });
 
 test('listar demandas do projeto: devolve só id, nome, caminho, estrutural e status', async () => {

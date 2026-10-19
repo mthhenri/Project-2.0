@@ -2,7 +2,6 @@ import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
 import { TipoPropostaIaEnum, TipoUsuarioEnum } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
-import { UnauthorizedAccessException } from '../../../core/exceptions/unauthorized-access.exception';
 import { DemandaService } from '../../demanda/services/demanda.service';
 import { PropostaIaService } from '../../proposta-ia/services/proposta-ia.service';
 import { TagService } from '../../tag/services/tag.service';
@@ -102,15 +101,13 @@ test('numa atividade, executar e desfazer usam a service da atividade', async ()
   assert.deepEqual(estado.ATIVIDADE, [2]);
 });
 
-test('desfazer é recusado se as tags mudaram depois; só o gestor executa e desfaz', async () => {
+test('desfazer é recusado se as tags mudaram depois', async () => {
   const { demandaService, atividadeService, estado, gravacoes } = criarServicos([1], []);
   const executor = new AtribuirTagExecutor(demandaService, atividadeService);
   const resultado = await executor.executar({ alvo: 'DEMANDA', alvoId: 4, adicionarTagIds: [2] }, GESTOR);
   estado.DEMANDA = [3];
   gravacoes.length = 0;
   await assert.rejects(executor.desfazer(resultado, GESTOR), BusinessException);
-  await assert.rejects(executor.executar({ alvo: 'DEMANDA', alvoId: 4, adicionarTagIds: [2] }, DESENVOLVEDOR), UnauthorizedAccessException);
-  await assert.rejects(executor.desfazer(resultado, DESENVOLVEDOR), UnauthorizedAccessException);
   assert.deepEqual(gravacoes, []);
 });
 
@@ -124,17 +121,20 @@ test('validar confere os dados; obsoleta quando o alvo já tem o conjunto pedido
   assert.equal(await executor.estaObsoleta({ alvo: 'DEMANDA', alvoId: 4, adicionarTagIds: [3] }, GESTOR), false);
 });
 
-test('o desenvolvedor marca tags na atividade, mas não na demanda (nem na ferramenta nem no executor)', async () => {
+test('o desenvolvedor propõe, executa e desfaz tags na atividade e na demanda (quem pode, a service do alvo decide)', async () => {
   const { ferramenta, propostas } = criarFerramenta([1], [2]);
   await ferramenta.executar({ alvo: 'ATIVIDADE', alvoId: 9, adicionarTagIds: [1] }, DESENVOLVEDOR);
-  assert.equal(propostas.length, 1);
-  await assert.rejects(ferramenta.executar({ alvo: 'DEMANDA', alvoId: 4, adicionarTagIds: [2] }, DESENVOLVEDOR), contem('Só o gestor'));
-  assert.equal(propostas.length, 1);
+  await ferramenta.executar({ alvo: 'DEMANDA', alvoId: 4, adicionarTagIds: [2] }, DESENVOLVEDOR);
+  assert.equal(propostas.length, 2);
 
   const { demandaService, atividadeService, estado } = criarServicos([1], [2]);
   const executor = new AtribuirTagExecutor(demandaService, atividadeService);
-  const resultado = await executor.executar({ alvo: 'ATIVIDADE', alvoId: 9, adicionarTagIds: [1] }, DESENVOLVEDOR);
+  const daAtividade = await executor.executar({ alvo: 'ATIVIDADE', alvoId: 9, adicionarTagIds: [1] }, DESENVOLVEDOR);
   assert.deepEqual(estado.ATIVIDADE, [1, 2]);
-  await executor.desfazer(resultado, DESENVOLVEDOR);
+  await executor.desfazer(daAtividade, DESENVOLVEDOR);
   assert.deepEqual(estado.ATIVIDADE, [2]);
+  const daDemanda = await executor.executar({ alvo: 'DEMANDA', alvoId: 4, adicionarTagIds: [2] }, DESENVOLVEDOR);
+  assert.deepEqual(estado.DEMANDA, [1, 2]);
+  await executor.desfazer(daDemanda, DESENVOLVEDOR);
+  assert.deepEqual(estado.DEMANDA, [1]);
 });

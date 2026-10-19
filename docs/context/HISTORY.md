@@ -12,6 +12,18 @@
 
 ---
 
+## 2026-10-19 — P-011, P-013, P-018 e P-019 resolvidos (P-015 segue aberto)
+
+Decisão do autor para o P-011: **o desenvolvedor pode pôr tags nas suas atividades e nas suas demandas** (as de que é membro). `SYSTEM.SPEC.md` §14 já dizia isso; o código é que recusava.
+
+- **P-011 (backend):** `DemandaService.alterarTagsDemanda` aceita o desenvolvedor que é membro (`validarMembro`; não-membro continua recusado) e `DemandaService.criar` aceita `tagIds` do desenvolvedor, que vira membro da demanda criada. A ferramenta `propor_atribuir_tag` e o executor `ATRIBUIR_TAG` deixaram de barrar o desenvolvedor na demanda (a service do alvo decide, como já era na atividade); o texto da ferramenta e da sugestão do chat mudou. Atividade já funcionava (autor ou membro).
+- **P-011 (frontend):** o menu de contexto da árvore e do planejamento mostra "Tags" também ao desenvolvedor (Editar e Membros seguem do gestor); o diálogo de tags abre para ele; o formulário de demanda mostra o campo Tags ao desenvolvedor (Membros segue do gestor) e envia `tagIds` na criação. O menu mostra "Tags" em qualquer demanda: se ele não é membro, o backend recusa com a mensagem "Você só pode atribuir tags em demandas das quais é membro" (o nó da árvore não traz a membresia).
+- **P-013:** o `p-dialog` projeta o conteúdo, então o formulário nascia na montagem, antes de `abrir(demandaId)`. O diálogo de nova atividade agora cria o formulário com `@if (visivel())`: cada abertura recebe a demanda de `abrir()` e estado limpo (o comentário do componente, antes falso, passou a valer). Causa conferida no código; não confirmei ao vivo antes de corrigir.
+- **P-018:** o `<form (ngSubmit)>` do chat e do check-in não tinha diretiva que emitisse `ngSubmit`; passou a `(submit)="$event.preventDefault(); enviar()"`, de modo que o clique no botão envia e a página não recarrega.
+- **P-019:** `listar_demandas_do_projeto` para o desenvolvedor devolve as demandas do projeto **inteiro** (nós do grafo, que já confere o acesso dele ao projeto), com o caminho na árvore e `participa` (cruzado com a listagem dele). A regra de `DemandaService.listar` (tela) não mudou; o gestor continua com a listagem de antes e sem `participa`. Com isso a IA acha "Integracao com ERP" pelo nome e propõe a entrada.
+- **Testes:** shared 165; backend 1053 passando + 1 `todo` (P-015); frontend 1373 passando e nenhum `todo` (saíram o do P-013 e os dois do P-018, que viraram testes de clique; o spec do dialog de nova atividade ganhou "cada abertura recria o formulário"). Specs que afirmavam a regra antiga do desenvolvedor foram atualizados (menu, formulário, diálogo de tags, ferramenta/executor de tag). Builds de backend e frontend OK. Sem lint (P-001).
+- **Pendente:** verificação ao vivo (Tags do desenvolvedor na árvore e no formulário, nova atividade pré-selecionada, botão Enviar do chat e do check-in, "quero participar da demanda X" na IA) em 1920×1080, 1366×768 e 1080×1920; não feita nesta sessão. O P-018 estava "não confirmado ao vivo": a causa está provada pelo teste de clique, mas o comportamento no navegador real não foi visto.
+
 ## 2026-10-19 — P-010, P-012, P-014 e P-016 resolvidos (backend)
 
 Os quatro defeitos achados nas tasks 176, 177 e 180 tinham teste `todo` pronto; os testes viraram normais.

@@ -16,6 +16,8 @@ export interface DemandaDaFerramentaDto {
   caminho: string;
   isEstrutural: boolean;
   status: string;
+  /** Só para o desenvolvedor: ele é membro desta demanda (a lista dele traz as do projeto inteiro). Ausente para o gestor. */
+  participa?: boolean;
 }
 
 /** O que a ferramenta `listar_demandas_do_projeto` devolve à IA. */

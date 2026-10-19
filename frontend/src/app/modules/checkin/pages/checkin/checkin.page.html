@@ -129,7 +129,7 @@
               }
             </div>
           }
-          <form class="checkin__entrada" (ngSubmit)="enviar()">
+          <form class="checkin__entrada" (submit)="$event.preventDefault(); enviar()">
             <textarea
               #campoTexto
               pTextarea

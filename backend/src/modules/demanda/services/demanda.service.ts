@@ -120,10 +120,6 @@ export class DemandaService {
       }
     }
 
-    if (dto.tagIds && dto.tagIds.length > 0 && !temPermissaoDeGestor(usuarioAtivo.tipo)) {
-      throw new UnauthorizedAccessException('Apenas gestores podem atribuir tags às demandas');
-    }
-
     for (const tagId of dto.tagIds ?? []) {
       const tagEncontrada = await this.tagRepositorio.recuperar({ id: tagId });
       if (!tagEncontrada) {
@@ -655,10 +651,11 @@ export class DemandaService {
       throw new ResourceNotFoundException('Demanda');
     }
 
-    if (!temPermissaoDeGestor(usuarioAtivo.tipo)) {
-      throw new UnauthorizedAccessException(
-        'Apenas gestores podem atribuir tags às demandas',
-      );
+    if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
+      const eMembro = await this.demandaRepositorio.validarMembro({ demandaId, usuarioId: usuarioAtivo.sub });
+      if (!eMembro) {
+        throw new UnauthorizedAccessException('Você só pode atribuir tags em demandas das quais é membro');
+      }
     }
 
     for (const tagId of dto.tagIds) {

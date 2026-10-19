@@ -146,7 +146,7 @@
             </div>
           }
 
-          <form class="chat__entrada" (ngSubmit)="enviar()">
+          <form class="chat__entrada" (submit)="$event.preventDefault(); enviar()">
             <textarea
               #campoTexto
               pTextarea
