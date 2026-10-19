@@ -42,6 +42,7 @@ import {
 } from '../domain/assunto-do-chat';
 import { limparTitulo } from '../domain/chat-consultas';
 import { montarAberturaDoDia } from '../domain/abertura-do-dia';
+import { atualizarPropostasNoContexto, idsDePropostasNoContexto, SituacaoDaProposta } from '../domain/propostas-no-contexto';
 import { montarRetomadaAposQueda } from '../domain/retomada-apos-queda';
 import { interpretarSugestoes, montarInstrucoesDeSugestoes } from '../domain/sugestoes';
 import { instanteDoDiaUtilAnterior, montarConversaId, nomePadraoDaConversa } from '../domain/chat-conversa';
@@ -327,7 +328,8 @@ export class ChatService {
     const mensagemDeAbertura: IaMensagem | null = abertura ? { papel: 'usuario', conteudo: abertura } : null;
     // Na retomada a conversa do dia continua: o histórico vai ao modelo e a instrução entra no fim, também sem virar mensagem do chat.
     const mensagemDeRetomada: IaMensagem | null = retomada ? { papel: 'usuario', conteudo: retomada } : null;
-    const mensagens = mensagemDeAbertura ? [mensagemDeAbertura] : mensagemDeRetomada ? [...this.montarMensagens(historico), mensagemDeRetomada] : this.montarMensagens(historico);
+    const contextoDoHistorico = mensagemDeAbertura ? [] : await this.montarContextoAtualizado(historico, usuarioAtivo);
+    const mensagens = mensagemDeAbertura ? [mensagemDeAbertura] : mensagemDeRetomada ? [...contextoDoHistorico, mensagemDeRetomada] : contextoDoHistorico;
     const trocasDoTurno: IaMensagem[] = mensagemDeAbertura ? [mensagemDeAbertura] : mensagemDeRetomada ? [mensagemDeRetomada] : [];
     let texto = '';
 
@@ -538,6 +540,28 @@ export class ChatService {
     // Um resultado de ferramenta sem a chamada que o originou seria recusado pelo provedor: começa pela primeira mensagem de texto do usuário.
     while (mensagens.length > 0 && !(mensagens[0].papel === 'usuario' && typeof mensagens[0].conteudo === 'string')) mensagens.shift();
     return mensagens;
+  }
+
+  /**
+   * O histórico remontado, com a situação **de agora** de cada proposta que a IA fez (P-022): o resultado gravado diz "nada foi feito ainda",
+   * e o usuário pode ter confirmado, recusado ou desfeito no cartão depois. Falha ao ler uma proposta deixa o resultado como estava.
+   */
+  private async montarContextoAtualizado(historico: ChatMensagemLida[], usuarioAtivo: JwtPayload): Promise<IaMensagem[]> {
+    const mensagens = this.montarMensagens(historico);
+    const ids = idsDePropostasNoContexto(mensagens);
+    if (ids.length === 0) return mensagens;
+    const situacoes = new Map<number, SituacaoDaProposta>();
+    await Promise.all(
+      ids.map(async (propostaId) => {
+        try {
+          const proposta = (await this.propostaIaService.recuperarPorId(propostaId, usuarioAtivo)).dados;
+          if (proposta) situacoes.set(propostaId, { status: proposta.status, resultado: proposta.resultado });
+        } catch {
+          // proposta ilegível: a IA segue com o resultado gravado no turno
+        }
+      }),
+    );
+    return atualizarPropostasNoContexto(mensagens, situacoes);
   }
 
   /** As mensagens da conversa do dia que são de um contexto (o chat e o check-in não se leem). */
