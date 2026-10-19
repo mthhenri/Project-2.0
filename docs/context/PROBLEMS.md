@@ -54,3 +54,11 @@
 - **Contorno:** o time usa o fuso do servidor; nada a fazer no uso normal.
 - **Correção:** migrar as demais telas para as mesmas funções (o `DatePipe` não aceita nome IANA de fuso).
 - **Desde:** origem.
+
+### P-007 — Login ou código não textual derruba a validação com erro interno · `ABERTO` · shared/backend
+
+- **Sintoma:** `POST` com `login` numérico (ex.: `{"login": 123}`) em `UsuarioCriarDto` ou `AutenticacaoLoginDto`, ou `codigo` numérico em `ProjetoCriarDto`, estoura `TypeError: value?.toLowerCase is not a function` dentro do `@Transform` do `ValidationPipe` e a API responde 500 em vez de 400.
+- **Causa:** o `@Transform` usa `value?.toLowerCase().trim()` (ou `toUpperCase`) sem checar `typeof value === 'string'`; a validação `@IsString()` só roda depois.
+- **Contorno:** nenhum no servidor; a tela sempre manda texto.
+- **Correção:** `typeof value === 'string' ? value.toLowerCase().trim() : value` nos três DTOs (e promover o `todo` de `validacao-dos-dtos.test.ts`).
+- **Desde:** origem; achado pela task 173.

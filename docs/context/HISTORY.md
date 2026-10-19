@@ -12,6 +12,42 @@
 
 ---
 
+## 2026-10-18 — Task 173: testes do núcleo (core, config, shared e desktop)
+
+Terceira task da guarda-chuva `testes-automatizados`. Nenhum código de produção mudou.
+
+- **BaseRepository** (integração, 8): consulta com parâmetro nomeado, lista vazia, comando sem retorno, soft delete (`is_deleted`,
+  `deleted_date`, `updated_date` avança, linha preservada), transação opcional (rollback desfaz), paginação (página 1 e N) e
+  ordenação.
+- **GlobalExceptionFilter** (9): `BusinessException` 400, `ResourceNotFoundException` 404, `UnauthorizedAccessException` 403,
+  `ConflictException` 409, erro do `class-validator` ("Dados inválidos" + lista), `HttpException` simples e com status próprio, erro
+  desconhecido e valor não-`Error` viram 500 genérico sem vazar mensagem/senha/stack.
+- **ResponseFormatInterceptor** (5): embrulha em `StandardResponse`; resposta já padronizada e `StreamableFile` passam direto.
+  **Divergência da spec:** ela pedia `text/event-stream` não embrulhado, mas o interceptor não trata isso — os controllers de SSE
+  (chat, checkin) escrevem direto na resposta com `@Res()`, então o `map` do interceptor nem é alcançado. Não é defeito; fica
+  anotado aqui em vez de virar teste.
+- **ConfigService** (11): obrigatórias ausentes ou vazias derrubam citando o nome; `PORT` da plataforma tem prioridade sobre
+  `APP_PORTA`; `APP_TIMEZONE`, `DB_SSL` e `CHAT_ARMAZENAMENTO` com seus padrões e as exigências condicionais de OpenSearch e
+  Elasticsearch; o `.env.example` sozinho é uma configuração válida e os padrões documentados valem.
+- **Enums** (shared, 25): todo enum é string enum SCREAMING_SNAKE_CASE com valor = nome; todo `*.enum.ts` está no índice; todo
+  `TipoPromptEnum` tem nível. **Integração** (14): cada enum com tabela `tipo_*` bate com a coluna `codigo` depois das migrations, e
+  toda tabela `tipo_*` tem enum no shared — tudo consistente.
+- **DTOs de entrada** (shared, ~60): caracteres proibidos em nome (projeto, demanda, atividade, tag) e descrição de execução, com
+  varredura que lista os que faltarem; carga válida, campo obrigatório ausente (um a um), tipo errado e campo desconhecido
+  (`forbidNonWhitelisted`, como no `main.ts`) para usuário, projeto, demanda, atividade, execução, dia não útil e tag; limites de
+  tamanho/faixa e normalização de login e código.
+- **Desktop:** `main.ts` só delega a decisão às funções puras já testadas (o que sobra são guardas `isDestroyed`/`isMinimized` do
+  Electron, não testáveis sem ele) e `preload.ts` expõe uma única ponte (`encerrarCheckin`); `config.ts` ganhou 2 testes.
+- **Achado:** o `@Transform` de login (`UsuarioCriarDto`, `AutenticacaoLoginDto`) e de código de projeto chama `.toLowerCase()`/
+  `.toUpperCase()` sem checar o tipo — `{"login": 123}` vira 500 em vez de 400. Teste `todo: 'P-007'`; item novo em `PROBLEMS.md`;
+  **não corrigido** (vai ao autor). Observação sem item: `PontoJustificativaCriarDto.nome` não usa o validador de caracteres
+  proibidos, mas §10 não o lista — ficou fora da varredura de propósito.
+
+**Verificado:** `npm test` da raiz — shared 156 + 1 `todo` (antes 68), backend 536 (antes 511), frontend 72, desktop 19 (antes 17),
+scripts 13 + 1 pulado; `npm run test:integracao` 33 (antes 12). **Não rodado:** builds (nenhum arquivo de produção mudou);
+nenhuma tela mudou, sem verificação visual. Camadas fora: controllers e services (cobertos nas tasks de domínio), migrations (já
+têm testes).
+
 ## 2026-10-18 — Tasks 171 e 172: banco de teste para repositories e testes de componente Angular no `npm test` e no CI
 
 Primeiras duas tasks da guarda-chuva `testes-automatizados` (infraestrutura; nenhuma regra de negócio mudou).
