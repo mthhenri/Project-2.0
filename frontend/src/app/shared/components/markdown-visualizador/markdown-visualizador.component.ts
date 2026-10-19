@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { interpretarMarkdown } from '@project20/shared';
+import { MarkdownBlocoCodigoComponent } from '../markdown-bloco-codigo/markdown-bloco-codigo.component';
 
 /**
  * Exibe um texto em Markdown. O texto vira uma árvore de nós (`interpretarMarkdown`) e o template cria
@@ -11,7 +12,7 @@ import { interpretarMarkdown } from '@project20/shared';
 @Component({
   selector: 'app-markdown-visualizador',
   standalone: true,
-  imports: [NgTemplateOutlet],
+  imports: [NgTemplateOutlet, MarkdownBlocoCodigoComponent],
   templateUrl: './markdown-visualizador.component.html',
   styleUrl: './markdown-visualizador.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

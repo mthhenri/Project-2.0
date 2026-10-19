@@ -1,0 +1,120 @@
+// Cores dos tokens: um conjunto para o tema claro e outro para o escuro, como variáveis do bloco (nunca `--p-surface-N` direto).
+// O escuro é escolhido pelo mesmo seletor que o resto do sistema usa para o tema (`.app-escuro` na raiz).
+:host {
+  display: block;
+  margin: 0 0 0.6em;
+
+  --bloco-codigo-comentario: #6b7280;
+  --bloco-codigo-pontuacao: #4b5563;
+  --bloco-codigo-palavra: #7c3aed;
+  --bloco-codigo-texto: #0f766e;
+  --bloco-codigo-numero: #b45309;
+  --bloco-codigo-funcao: #1d4ed8;
+  --bloco-codigo-tipo: #be185d;
+  --bloco-codigo-variavel: #0369a1;
+}
+
+:host-context(.app-escuro) {
+  --bloco-codigo-comentario: #9ca3af;
+  --bloco-codigo-pontuacao: #cbd5e1;
+  --bloco-codigo-palavra: #c4b5fd;
+  --bloco-codigo-texto: #5eead4;
+  --bloco-codigo-numero: #fcd34d;
+  --bloco-codigo-funcao: #93c5fd;
+  --bloco-codigo-tipo: #f9a8d4;
+  --bloco-codigo-variavel: #7dd3fc;
+}
+
+.bloco-codigo {
+  overflow: hidden;
+  border: 1px solid var(--app-surface-200);
+  border-radius: 6px;
+  background: var(--app-surface-100);
+
+  &__cabecalho {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.125rem 0.25rem 0.125rem 0.75rem;
+    border-bottom: 1px solid var(--app-surface-200);
+    background: var(--app-surface-50, var(--app-surface-100));
+  }
+
+  &__linguagem {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--p-text-muted-color);
+  }
+
+  &__corpo {
+    margin: 0;
+    padding: 0.75em 1em;
+    overflow-x: auto;
+    font-family: var(--font-mono, monospace);
+    font-size: 0.85em;
+    line-height: 1.45;
+    white-space: pre;
+    word-break: normal;
+    overflow-wrap: normal;
+  }
+
+  &__token {
+    &--comment,
+    &--prolog,
+    &--doctype,
+    &--cdata {
+      color: var(--bloco-codigo-comentario);
+      font-style: italic;
+    }
+
+    &--punctuation,
+    &--operator {
+      color: var(--bloco-codigo-pontuacao);
+    }
+
+    &--keyword,
+    &--atrule,
+    &--important,
+    &--boolean,
+    &--tag {
+      color: var(--bloco-codigo-palavra);
+    }
+
+    &--string,
+    &--char,
+    &--attr-value,
+    &--template-string,
+    &--regex,
+    &--url,
+    &--inserted {
+      color: var(--bloco-codigo-texto);
+    }
+
+    &--number,
+    &--constant,
+    &--symbol,
+    &--deleted {
+      color: var(--bloco-codigo-numero);
+    }
+
+    &--function,
+    &--class-name,
+    &--builtin,
+    &--selector {
+      color: var(--bloco-codigo-funcao);
+    }
+
+    &--property,
+    &--attr-name,
+    &--namespace {
+      color: var(--bloco-codigo-tipo);
+    }
+
+    &--variable,
+    &--parameter {
+      color: var(--bloco-codigo-variavel);
+    }
+  }
+}

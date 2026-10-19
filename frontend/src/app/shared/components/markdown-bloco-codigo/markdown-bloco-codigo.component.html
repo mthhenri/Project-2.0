@@ -1,0 +1,16 @@
+<div class="bloco-codigo">
+  <div class="bloco-codigo__cabecalho">
+    <span class="bloco-codigo__linguagem">{{ rotulo() }}</span>
+    <p-button
+      class="bloco-codigo__copiar"
+      [icon]="copiado() ? 'pi pi-check' : 'pi pi-copy'"
+      [label]="copiado() ? 'Copiado' : 'Copiar'"
+      [text]="true"
+      severity="secondary"
+      size="small"
+      [ariaLabel]="copiado() ? 'Código copiado' : 'Copiar o código'"
+      (onClick)="copiar()"
+    />
+  </div>
+  <pre class="bloco-codigo__corpo"><code>@for (trecho of exibicao(); track $index) {<span [class]="trecho.tipo ? 'bloco-codigo__token bloco-codigo__token--' + trecho.tipo : ''">{{ trecho.texto }}</span>}</code></pre>
+</div>

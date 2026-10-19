@@ -45,7 +45,7 @@
         </blockquote>
       }
       @case ('bloco-codigo') {
-        <pre class="markdown__bloco-codigo"><code>{{ bloco.valor }}</code></pre>
+        <app-markdown-bloco-codigo [linguagem]="bloco.linguagem" [valor]="bloco.valor" />
       }
       @case ('regua') {
         <hr class="markdown__regua" />
