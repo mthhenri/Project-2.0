@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
+import { describe, it } from 'vitest';
 import { TipoAtividadeStatusEnum } from '@project20/shared';
 import { estadoDaFaixaDeExecucao, formatarIntervaloDaExecucao } from './faixa-execucao.util';
 

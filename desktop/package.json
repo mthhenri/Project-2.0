@@ -8,7 +8,8 @@
     "build": "tsc -p tsconfig.json",
     "start": "npm run build && electron .",
     "pack": "npm run build && electron-builder --win portable --publish never",
-    "test": "node --import tsx --test \"src/**/*.test.ts\""
+    "test": "node --import tsx --test \"src/**/*.test.ts\"",
+    "test:cobertura": "node --import tsx --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=../.artifacts/cobertura/desktop.lcov --test-reporter=spec --test-reporter-destination=stdout \"src/**/*.test.ts\""
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
@@ -20,10 +21,29 @@
   "build": {
     "appId": "br.com.project20.desktop",
     "productName": "Project Desktop",
-    "directories": { "output": "release" },
-    "files": ["dist/**/*", "assets/**/*", "package.json"],
-    "win": { "target": ["portable"], "icon": "assets/icone.png" },
-    "linux": { "target": ["AppImage"], "icon": "assets/icone.png", "category": "Office" },
-    "portable": { "artifactName": "Project-Desktop-${version}.exe" }
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "portable"
+      ],
+      "icon": "assets/icone.png"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "icon": "assets/icone.png",
+      "category": "Office"
+    },
+    "portable": {
+      "artifactName": "Project-Desktop-${version}.exe"
+    }
   }
 }

@@ -294,6 +294,28 @@ DROP TABLE IF EXISTS exemplo CASCADE;
 
 ---
 
+## Testes de integração (repositories)
+
+Repository é SQL: só se prova contra PostgreSQL de verdade (task 171). Arquivo
+`<nome>.repository.integracao.test.ts` ao lado do repository; o `npm test` (unitários) **não** os roda,
+`npm run test:integracao` roda e **não** depende de Docker no `npm test`.
+
+- **Banco:** `<DB_NOME>_teste` (ou `DB_NOME_TESTE`), no mesmo PostgreSQL do `docker-compose.yml`. O
+  `test:integracao` cria e migra o banco uma vez por rodada (`src/testes/preparar-banco-teste.ts`). O helper
+  recusa o banco de desenvolvimento.
+- **Isolamento:** use `testarComBanco(nome, async (conexao) => ...)` (`src/testes/banco-teste.ts`). Cada teste
+  roda numa transação que sofre rollback; as transações internas dos repositories viram savepoints. Nada
+  de limpar à mão.
+- **Repository:** `criarRepositorio(Classe, conexao)` — sem subir Nest.
+- **Dados:** fábricas de `src/testes/fabricas.ts` (`criarDesenvolvedor`, `criarProjeto`, `criarDemanda`,
+  `criarTag`, `criarAtividade`, `criarExecucao`, `criarDiaNaoUtil`, ...). Preenchem todos os campos (sem
+  `DEFAULT`) e aceitam sobrescrita. Modelo completo: `tag.repository.integracao.test.ts`.
+- **Armadilha do `NOW()`:** dentro da transação de teste `NOW()` fica **congelado** no início do teste. Não
+  teste ordem ou intervalo que dependa de `NOW()` avançar; passe datas explícitas (as fábricas já exigem
+  `inicioData`/`fimData`).
+
+---
+
 ## Camadas — Regras Rápidas
 
 ### Controller → burra
@@ -405,6 +427,18 @@ frontend nunca veem o id.
 - **Signals** (`signal`/`computed`/`effect`) para estado reativo — evitar `Subject`/`BehaviorSubject`
 - **Reactive Forms** em **todos** os formulários — **sem template-driven forms**, **sem `ngModel`/`FormsModule`**
 - **Lazy loading** por rota via `loadComponent`/`loadChildren`
+
+**Testes de componente (task 172).** O frontend roda no Vitest pelo `ng test` (builder
+`@angular/build:unit-test`, jsdom); `npm test` da raiz o inclui. Nome do arquivo: `<nome>.spec.ts` ao
+lado do componente/página/serviço; `<nome>.test.ts` fica para lógica pura sem Angular. Importe
+`describe/it/expect` de `vitest` e use `montarComponente` (`src/testes/montar-componente.ts`): ele
+configura HttpClient (com o interceptor de erros), `HttpTestingController`, roteador, PrimeNG sem tema,
+animações desligadas e o usuário autenticado do tipo pedido (`usuario: TipoUsuarioEnum.GESTOR`);
+`esperarRequisicao`/`responderSucesso`/`responderErro` (`http-teste.ts`) respondem a API; `atualizar()`
+detecta mudanças e espera Signals/efeitos. Consulte por texto ou `aria-label`, **nunca** por classe interna
+do PrimeNG. Modelos: `tag-listagem.page.spec.ts` (carregando, vazio, cheio, erro, quick-add) e
+`tag-edicao-dialog.component.spec.ts` (validação, envio, erro do backend). Passam a existir, mas **não
+substituem** a verificação ao vivo da tela (skill `verify`).
 
 **Texto rico** é Markdown: editado por `app-markdown-editor` (no editor `Enter` é nova linha e o `Ctrl+Enter` confirma o dialog) e exibido só por `app-markdown-visualizador` (`shared/components/`). Proibido `[innerHTML]`, `bypassSecurityTrust*` e qualquer escrita de HTML na página; o interpretador é `interpretarMarkdown` (`@project20/shared`).
 

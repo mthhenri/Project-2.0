@@ -1,4 +1,4 @@
-import { test } from 'node:test';
+import { test } from 'vitest';
 import * as assert from 'node:assert/strict';
 import { CheckinSituacaoConsultadaDto, EstadoIaEnum } from '@project20/shared';
 import { decidirEstado, deveMostrarJanelinha, esperaAteOCheckin } from './checkin.util';

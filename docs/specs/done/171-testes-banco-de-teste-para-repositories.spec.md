@@ -1,7 +1,7 @@
 # Task 171 — Testes: banco de teste para repositories
 
-> Task 1/17 da guarda-chuva [`testes-automatizados.spec.md`](testes-automatizados.spec.md). Origem: decisão do autor em
-> 2026-10-18 de testar os repositories contra PostgreSQL real ([análise](testes-automatizados/ANALISE.md) §3).
+> Task 1/17 da guarda-chuva [`testes-automatizados.spec.md`](../backlog/testes-automatizados.spec.md). Origem: decisão do autor em
+> 2026-10-18 de testar os repositories contra PostgreSQL real ([análise](../backlog/testes-automatizados/ANALISE.md) §3).
 
 ## Objetivo
 

@@ -48,8 +48,8 @@ Regras da cobertura:
 
 | # | Task | Domínio / escopo |
 |---|---|---|
-| 171 | [Banco de teste para repositories](171-testes-banco-de-teste-para-repositories.spec.md) | infraestrutura backend |
-| 172 | [Testes de componente e frontend no CI](172-testes-componente-angular-e-frontend-no-ci.spec.md) | infraestrutura frontend, raiz e CI |
+| 171 | [Banco de teste para repositories](../done/171-testes-banco-de-teste-para-repositories.spec.md) | infraestrutura backend |
+| 172 | [Testes de componente e frontend no CI](../done/172-testes-componente-angular-e-frontend-no-ci.spec.md) | infraestrutura frontend, raiz e CI |
 | 173 | [Núcleo: core, config, shared e desktop](173-testes-nucleo-core-config-shared-desktop.spec.md) | transversal |
 | 174 | [Autenticação e usuários](174-testes-autenticacao-e-usuarios.spec.md) | `autenticacao`, `usuario` |
 | 175 | [Projetos](175-testes-projetos.spec.md) | `projeto` |

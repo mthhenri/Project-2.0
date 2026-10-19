@@ -8,7 +8,7 @@
 > [`MEMORY.md`](MEMORY.md) (onde fica o quê) · [`IDEAS.md`](IDEAS.md) (o que ainda não é sistema) ·
 > [`HISTORY.md`](HISTORY.md) (o que aconteceu e por quê).
 >
-> **Última revisão:** 2026-10-16 · **Última decisão registrada:** task 116 (Tags: quick-add e cor inline) — `HISTORY.md`, bloco de 2026-10-16
+> **Última revisão:** 2026-10-18 · **Última decisão registrada:** task 116 (Tags: quick-add e cor inline) — `HISTORY.md`, bloco de 2026-10-16
 
 ---
 
@@ -262,6 +262,7 @@ project-2.0/
 - **[adoção do kit — testes]** Testes usam `node:test` (sem Jest), ao lado do código em
   `*.test.ts`; `shared` roda com `tsx` e `backend` com `ts-node` (o `tsx` não aplica
   `experimentalDecorators` aos arquivos de `shared/` quando roda a partir do backend).
+  **[tasks 171 e 172]** Repository novo ou alterado ganha teste de integração (`*.integracao.test.ts`, `npm run test:integracao`, banco `<DB_NOME>_teste`, fábricas em `backend/src/testes/`; `npm test` não roda esses, para não exigir Docker). O frontend roda no Vitest pelo `ng test` (`*.test.ts` lógica, `*.spec.ts` componente, utilitários em `frontend/src/testes/`) e entra no `npm test` e no CI; `npm run test:cobertura` mede (sem gate; partida: frontend 8%, backend 71%). Ver `CONVENTIONS.md`.
 
 Decisões conscientes que estão funcionando como desejado — não são bug, não precisam de spec nova
 e não devem ser "redescobertas" como problema. O contexto de cada uma está no registro da task

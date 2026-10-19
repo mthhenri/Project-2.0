@@ -4,7 +4,8 @@
   "scripts": {
     "start": "npx ng serve --proxy-config proxy.conf.json",
     "build": "npx ng build",
-    "test": "node --conditions=import --import tsx --test \"src/**/*.test.ts\""
+    "test": "ng test",
+    "test:cobertura": "ng test --coverage"
   },
   "dependencies": {
     "@angular/animations": "^21.0.0",
@@ -31,11 +32,13 @@
     "@angular/compiler-cli": "^21.0.0",
     "@types/d3": "^7.4.3",
     "@types/node": "^22.0.0",
+    "@vitest/coverage-v8": "^4.1.12",
     "autoprefixer": "^10.4.20",
     "jsdom": "^29.1.1",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.14",
     "tailwindcss-primeui": "^0.6.1",
-    "typescript": "~5.9.0"
+    "typescript": "~5.9.0",
+    "vitest": "^4.1.12"
   }
 }

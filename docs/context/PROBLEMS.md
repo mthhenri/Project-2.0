@@ -29,18 +29,18 @@
 
 ## Ativos
 
-### P-001 — Cobertura de testes mínima, frontend sem testes e sem lint · `CONTORNADO` · repositório
+### P-001 — Cobertura de testes parcial e sem lint · `CONTORNADO` · repositório
 
-- **Sintoma:** só existem testes para `shared/src/validators`, o `SqlMigrationSource` e as
-  invariantes das migrations, e os helpers puros do `PontoService` (18 casos no total). Services,
-  repositories e todo o frontend não têm teste. Não há ESLint nem Prettier em nenhum workspace.
+- **Sintoma:** a cobertura é parcial: o frontend mede ~8% de statements (lógica pura e Tags; as
+  demais telas não têm teste de componente), os repositories só ganharam teste de integração com a
+  task 171 (Tags) e os services ainda não têm teste com repositório falso. Não há ESLint nem
+  Prettier em nenhum workspace. Números de partida: `npm run test:cobertura`.
 - **Causa:** o projeto foi construído verificando por build e execução manual; os primeiros testes
   só entraram na adoção do kit (2026-10-16).
 - **Contorno:** `npm test` na raiz; build dos workspaces; verificação ao vivo (skill `verify`).
   Código novo em regra pura ou helper de service leva teste no mesmo commit.
-- **Correção:** (1) testar services com repositórios falsos, começando por permissão e regras de
-  execução; (2) escolher e configurar lint e acrescentar ao CI; (3) decidir se o frontend terá
-  testes (Angular/Karma ou Vitest) antes da migração de UI de `IDEAS.md` I-001.
+- **Correção:** (1) as tasks 173–187 (guarda-chuva `testes-automatizados`) cobrem repositories,
+  services e telas por domínio; (2) escolher e configurar lint e acrescentar ao CI.
 - **Desde:** origem do projeto.
 
 

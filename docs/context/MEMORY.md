@@ -56,7 +56,8 @@ Estas são as fontes da verdade. Em conflito entre código e documento, **o docu
 | Demandas: toolbar de filtros, chip de status com popover, árvore com ações no hover e contexto lembrado (tasks 106–109) | `modules/demanda/` (`components/demanda-toolbar`, `demanda-status-chip`, `demanda-grafo`, `demanda-formulario-dialog` (criar e editar), `demanda-detalhe-dialog` (+ `demanda-tags-cabecalho`, `demanda-membros-cabecalho`, `demanda-metricas`), `utils/demanda-filtro.util.ts`, `constants/demanda-cores.constants.ts`) |
 | Exclusão com "Desfazer" de 6 s (task 99) | `core/services/desfazer.service.ts`, `shared/components/toast-desfazer/` e `PATCH /<recurso>/:id/restaurar` no backend |
 | Estilos globais, tema e Tailwind | `frontend/src/styles.scss`, `frontend/src/app/shared/styles/`, `frontend/tailwind.config.js` |
-| Testes (`node:test`, ao lado do código em `*.test.ts`; rode com `npm test`) | `shared/src/validators/`, `backend/src/database/`, `backend/src/modules/*/services/` |
+| Testes (`node:test` em shared/backend/desktop; Vitest no frontend: `*.test.ts` lógica, `*.spec.ts` componente; rode com `npm test`) | `shared/src/validators/`, `backend/src/database/`, `backend/src/modules/*/services/`, `frontend/src/testes/` |
+| Testes de integração dos repositories (banco `<DB_NOME>_teste`, fábricas, `testarComBanco`; `npm run test:integracao`) | `backend/src/testes/`, `backend/scripts/executar-testes.mjs` |
 | Verificação de organização do repositório (`repo:verificar`) | `scripts/verificar-organizacao.mjs` |
 | Mapa de impacto (`npm run impacto`) | `scripts/impacto.mjs`, `scripts/agentes/hook-impacto.mjs` |
 | Subagentes (`implementador`, `revisor`, `testador`) | `.claude/agents/` |

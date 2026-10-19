@@ -4,6 +4,7 @@
   "main": "src/index.ts",
   "types": "src/index.ts",
   "scripts": {
-    "test": "node --import tsx --test \"src/**/*.test.ts\""
+    "test": "node --import tsx --test \"src/**/*.test.ts\"",
+    "test:cobertura": "node --import tsx --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=../.artifacts/cobertura/shared.lcov --test-reporter=spec --test-reporter-destination=stdout \"src/**/*.test.ts\""
   }
 }

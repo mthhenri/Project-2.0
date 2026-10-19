@@ -40,8 +40,52 @@ jobs:
       - name: Testes do backend
         run: npm run test --workspace=backend
 
+      - name: Testes do frontend (lógica e componentes)
+        run: npm run test --workspace=frontend
+
+      - name: Testes do desktop
+        run: npm run test --workspace=desktop
+
       - name: Build do backend
         run: npm run build --workspace=backend
 
       - name: Build do frontend
         run: npm run build --workspace=frontend
+
+  # Repositories contra PostgreSQL de verdade (task 171). Migra uma vez e roda *.integracao.test.ts.
+  integracao:
+    name: Testes de integração (PostgreSQL)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: project20
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_NOME: project20
+      DB_USUARIO: postgres
+      DB_SENHA: postgres
+      APP_TIMEZONE: America/Sao_Paulo
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Testes de integração do backend
+        run: npm run test:integracao --workspace=backend

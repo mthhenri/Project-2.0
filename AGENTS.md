@@ -155,11 +155,12 @@ Sem app executável, a tarefa visual permanece **aberta**.
 1. Revise o diff completo contra a spec e as convenções (skill `conventions-check`); sem hardcodes
    nem atalhos que contornem a fonte de verdade.
 2. Rode os testes e o build dos workspaces afetados e a verificação ao vivo proporcional ao risco.
-   `shared` e `backend` têm testes (Node test runner); o `frontend` não tem testes e o projeto
-   **não tem lint** (`docs/context/PROBLEMS.md` P-001): declare essas lacunas no fecho. Regra pura
-   ou helper de service que mudou ganha teste no mesmo commit. Relate comandos, resultados e falhas
-   preexistentes **separadamente**.
-3. Para UI, cumpra o processo visual acima.
+   Todos os workspaces têm testes (`shared`, `backend` e `desktop` no Node test runner; `frontend`
+   no Vitest via `ng test`, com teste de componente) e o projeto **não tem lint**
+   (`docs/context/PROBLEMS.md` P-001): declare essa lacuna no fecho. Regra pura ou helper de service
+   que mudou ganha teste no mesmo commit; repository novo ou alterado ganha teste de integração
+   (`npm run test:integracao`). Relate comandos, resultados e falhas preexistentes **separadamente**.
+3. Para UI, cumpra o processo visual acima; os testes de componente somam-se a ele, não o substituem.
 4. No fecho, liste de forma auditável o que foi verificado e o que ficou pendente. Item sem
    verificação obrigatória fica **aberto**, não "concluído".
 
@@ -263,7 +264,10 @@ npm run frontend:dev                       # SPA em http://localhost:4200 (proxy
 npm run dev                                # backend e frontend juntos
 npm test                                   # shared + backend + scripts de repositório
 npm run test --workspace=shared            # só o shared
-npm run test --workspace=backend           # só o backend
+npm run test --workspace=backend           # só o backend (unitários, sem Docker)
+npm run test:integracao                    # repositories contra o PostgreSQL de teste (precisa do banco no ar)
+npm run test --workspace=frontend          # Vitest: lógica (*.test.ts) e componentes (*.spec.ts)
+npm run test:cobertura                     # mede a cobertura de cada workspace em .artifacts/cobertura (sem gate)
 npm run build --workspace=backend          # compilação do backend (usada como gate)
 npm run build --workspace=frontend         # compilação do frontend (usada como gate)
 npm run test --workspace=desktop           # funções puras do Project Desktop
@@ -273,8 +277,10 @@ npm run repo:test                          # testes dos scripts de verificação
 npm run impacto -- <arquivo>               # consumidores antes de alterar algo compartilhado
 ```
 
-Testes ficam ao lado do código, em `*.test.ts`, com `node:test` e `node:assert/strict` (sem Jest);
-não há script de teste no `frontend` nem lint em nenhum workspace (`PROBLEMS.md` P-001). Variáveis de ambiente:
+Testes ficam ao lado do código, em `*.test.ts`, com `node:test` e `node:assert/strict` (sem Jest) em
+`shared`, `backend` e `desktop`; o `frontend` usa Vitest pelo `ng test` (`*.test.ts` para lógica pura,
+`*.spec.ts` para componente; `docs/CONVENTIONS.md` "Testes de componente"). Não há lint em nenhum
+workspace (`PROBLEMS.md` P-001). `npm run test:cobertura` mede a cobertura (sem gate). Variáveis de ambiente:
 `.env.example` e `README.md`. Para verificação manual da aplicação real, consulte
 `.agents/skills/verify/SKILL.md`; build não a substitui quando a tarefa exige observar o app.
 

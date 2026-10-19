@@ -1,5 +1,4 @@
-import './jsdom-para-testes';
-import { test } from 'node:test';
+import { test } from 'vitest';
 import * as assert from 'node:assert/strict';
 import { TextSelection } from '@milkdown/kit/prose/state';
 import { editorViewCtx } from '@milkdown/kit/core';

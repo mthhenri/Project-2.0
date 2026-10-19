@@ -1,4 +1,4 @@
-import { test } from 'node:test';
+import { test } from 'vitest';
 import * as assert from 'node:assert/strict';
 import { StatusPropostaIaEnum, TipoPropostaIaEnum } from '@project20/shared';
 import { dataDaConversa, extrairEventos, formatarDuracao, paresDosDados, rotuloDoDia, semMarcacaoMarkdown, sugestoesAposProposta, sugestoesIniciais } from './chat.util';

@@ -1,7 +1,7 @@
 # Task 172 — Testes: componente Angular, frontend na raiz e no CI
 
-> Task 2/17 da guarda-chuva [`testes-automatizados.spec.md`](testes-automatizados.spec.md). Origem: decisão do autor em
-> 2026-10-18 de testar componentes além da lógica pura ([análise](testes-automatizados/ANALISE.md) §3).
+> Task 2/17 da guarda-chuva [`testes-automatizados.spec.md`](../backlog/testes-automatizados.spec.md). Origem: decisão do autor em
+> 2026-10-18 de testar componentes além da lógica pura ([análise](../backlog/testes-automatizados/ANALISE.md) §3).
 
 ## Objetivo
 

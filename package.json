@@ -21,7 +21,9 @@
     "repo:verificar": "node scripts/verificar-organizacao.mjs",
     "repo:test": "node --test scripts/verificar-organizacao.test.mjs scripts/impacto.test.mjs",
     "impacto": "node scripts/impacto.mjs",
-    "test": "npm run test --workspace=shared && npm run test --workspace=backend && npm run test --workspace=desktop && npm run repo:test"
+    "test": "npm run test --workspace=shared && npm run test --workspace=backend && npm run test --workspace=frontend && npm run test --workspace=desktop && npm run repo:test",
+    "test:integracao": "npm run test:integracao --workspace=backend",
+    "test:cobertura": "node scripts/cobertura.mjs"
   },
   "devDependencies": {
     "concurrently": "^10.0.3"

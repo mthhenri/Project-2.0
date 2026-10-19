@@ -12,6 +12,51 @@
 
 ---
 
+## 2026-10-18 — Tasks 171 e 172: banco de teste para repositories e testes de componente Angular no `npm test` e no CI
+
+Primeiras duas tasks da guarda-chuva `testes-automatizados` (infraestrutura; nenhuma regra de negócio mudou).
+
+**171 — banco de teste (backend).** `npm run test:integracao` (backend e raiz) roda `src/**/*.integracao.test.ts`
+contra `<DB_NOME>_teste` (ou `DB_NOME_TESTE`), no mesmo PostgreSQL do compose. `backend/scripts/executar-testes.mjs`
+separa os grupos (o `node --test` não exclui arquivo por glob): `npm test` do backend roda só `*.test.ts` sem
+`.integracao.`, sem Docker; o grupo de integração antes chama `src/testes/preparar-banco-teste.ts`, que cria o banco se
+faltar e migra **uma vez por rodada**. Isolamento: `testarComBanco(nome, conexao => ...)` abre uma transação por teste e dá
+rollback; o repository recebe a transação no lugar do Knex (`criarRepositorio`), e a transação interna dele vira
+savepoint — provado com `usuario.inserir` (que abre a própria transação) dentro do isolamento, então **não foi preciso o
+plano B de TRUNCATE**. Trava: `resolverNomeBancoTeste` recusa o banco de desenvolvimento (3 testes unitários). Banco fora
+do ar: `npm run test:integracao` falha com "Banco de teste indisponível em host:porta (ECONNREFUSED)" (conferido com
+`DB_PORT=5999`). Fábricas em `backend/src/testes/fabricas.ts` (usuário dos três tipos, projeto, demanda raiz/filha,
+`demanda_usuario`, tag, atividade, execução, dia não útil), todas com SQL de parâmetros nomeados e data-base explícita
+(`NOW()` fica congelado na transação — armadilha escrita em `CONVENTIONS.md`). Repository de referência: `tag.repository`
+inteiro (7 testes). `src/testes` fica fora do build (`tsconfig.build.json`). CI: job novo `integracao` com serviço
+`postgres:16`. Números: `test:integracao` 12 verdes, duas rodadas seguidas sem limpar nada; `npm test` do backend 511
+verdes (508 + 3 da trava). Achado: nenhuma migration exigiu criação manual de extensão.
+
+**172 — frontend.** Escolha: o caminho oficial, `@angular/build:unit-test` com Vitest 4 e jsdom, via `ng test`
+(`angular.json`, alvo `test`). O builder de build/serve **não mudou** (`@angular-devkit/build-angular:application`); o
+`ng test` avisa que o `buildTarget` não é `@angular/build:application`, mas funciona — risco registrado, a trocar quando o
+projeto migrar o builder. **Um runner só:** os 8 arquivos de lógica (61 testes) migraram de `node:test` para `vitest`
+trocando o import (o `assert` ficou); o `jsdom-para-testes.ts` caseiro foi apagado (o ambiente já é jsdom) e o
+`--conditions=import` deixou de ser necessário (o builder resolve `@project20/shared` por `paths`). Convenção:
+`*.test.ts` lógica pura, `*.spec.ts` componente. Utilitários em `frontend/src/testes/`: `montarComponente` (HttpClient com o
+interceptor de erros real, `HttpTestingController`, roteador, PrimeNG sem tema, animações desligadas, usuário autenticado do
+tipo pedido), `http-teste` (`esperarRequisicao`, `responderSucesso`, `responderErro`) e `preparar-ambiente` (matchMedia e
+ResizeObserver que o jsdom não traz). Referência: `tag-listagem.page.spec.ts` (esqueleto, cheio, vazio, erro de API, busca,
+quick-add com sucesso/duplicado/erro do backend) e `tag-edicao-dialog.component.spec.ts` (validação, envio, erro). Achado: a
+falha HTTP relançada pelo interceptor vira erro global do rxjs, às vezes depois do teardown e derrubava a rodada —
+`montarComponente` instala um coletor (`rxjs config.onUnhandledError`) e expõe `errosHttpNaoTratados`. `npm test` da raiz
+agora roda também frontend e desktop; o `ci.yml` ganhou os dois passos. Cobertura: `npm run test:cobertura` (script
+`scripts/cobertura.mjs`; relatórios em `.artifacts/cobertura/`, sem gate). **Números de partida (linhas):** shared 99,7%,
+backend 71,4% (unitários), desktop 99,5%, frontend 8,3% (statements 8,5%, `src/app` inteiro). Documentação corrigida:
+`CLAUDE.md`/`AGENTS.md`, skill `task-flow` (espelhada), `CONVENTIONS.md` ("Testes de componente") e `PROBLEMS.md` P-001 (não
+diz mais que o frontend não tem testes).
+
+**Verificado:** `npm test` da raiz verde (shared 68, backend 511, frontend 72 = 61 + 11 novos, desktop 17, scripts 14 com 1
+pulado); teste de componente quebrado de propósito (e desfeito) → `npm run test --workspace=frontend` sai com código 1;
+`npm run build --workspace=frontend` e `--workspace=backend` passam e o bundle de produção não contém código de teste;
+`npm run repo:verificar` aprovado. **Pendente:** os jobs do CI (`integracao` e os passos novos) só rodam no GitHub — não
+executados aqui. Não há verificação visual (nenhuma tela mudou); testes de componente não têm lint (P-001).
+
 ## 2026-10-18 — Nova atividade só em dialog (página `/atividade/nova` removida) e selo de "IA desativada" no ícone do Chat
 
 Decisão do autor: criar atividade existe **apenas como dialog**, em todos os aspectos; não há nem deve haver página de criação. A página `/atividade/nova` criada na task 105 foi removida (página, rota e o tratamento de Enter); o `AtividadeFormularioComponent` fica como o corpo do dialog. `/atividade/nova` agora cai no detalhe e mostra "Atividade não encontrada" sem chamar a API (id não numérico). Isto corrige o que o bloco da task 105 descreve sobre a página. Na barra lateral, o ícone do Chat com a IA desativada ou fora do ar passou de `pi-ban` sozinho para `pi-comments` com um selo `pi-ban` vermelho no canto (`exigeIa` em `navegacao.ts`; segue o estado real da IA). Verificado ao vivo (IA desligada no ambiente).

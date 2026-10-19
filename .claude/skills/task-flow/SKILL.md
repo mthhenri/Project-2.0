@@ -49,14 +49,15 @@ nomear um contrato/DTO, use a skill `project20-dto-conventions`.
 | Workspace | Teste focado | Suíte completa | Lint / compilação |
 |---|---|---|---|
 | `shared` | `cd shared && node --import tsx --test src/<arquivo>.test.ts` | `npm run test --workspace=shared` | compila junto com o consumidor (`npm run build --workspace=backend`) |
-| `backend` | `cd backend && node --require ts-node/register --test src/<arquivo>.test.ts` | `npm run test --workspace=backend` | `npm run build --workspace=backend` |
-| `frontend` | — (não há testes) | — (não há testes) | `npm run build --workspace=frontend` |
+| `backend` | `cd backend && node --require ts-node/register --test src/<arquivo>.test.ts` | `npm run test --workspace=backend` (unitários) · `npm run test:integracao` (repositories, banco no ar) | `npm run build --workspace=backend` |
+| `frontend` | `cd frontend && npx ng test --include src/app/<arquivo>.spec.ts` | `npm run test --workspace=frontend` (lógica + componentes, Vitest) | `npm run build --workspace=frontend` |
 
-> Raiz: `npm test` roda shared + backend + `repo:test`. Os testes usam `node:test` e ficam em
-> `*.test.ts` ao lado do código; no backend, `import * as assert from 'node:assert/strict'` (o
-> tsconfig dele não tem `esModuleInterop`). Não há **lint** nem testes no frontend (`PROBLEMS.md`
-> P-001): o gate nessas áreas é build + verificação ao vivo (skill `verify`). Declare a lacuna no
-> fecho — "sem testes" é uma limitação a relatar, não um item verde.
+> Raiz: `npm test` roda shared + backend + frontend + desktop + `repo:test`. `shared`, `backend` e
+> `desktop` usam `node:test` em `*.test.ts` ao lado do código (no backend, `import * as assert from
+> 'node:assert/strict'`: o tsconfig dele não tem `esModuleInterop`); o `frontend` usa Vitest pelo
+> `ng test` (`*.test.ts` lógica, `*.spec.ts` componente). Não há **lint** (`PROBLEMS.md` P-001): declare
+> a lacuna no fecho. Para tela, os testes de componente somam-se à verificação ao vivo (skill
+> `verify`), não a substituem. `npm run test:cobertura` mede (sem gate).
 
 - Um comando de raiz que roda tudo de uma vez, para o gate de integração/conclusão — não repita
   build/lint/teste sem mudança relevante desde a última rodada.

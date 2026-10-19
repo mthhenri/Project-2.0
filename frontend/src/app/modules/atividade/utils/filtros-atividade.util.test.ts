@@ -1,4 +1,4 @@
-import { test } from 'node:test';
+import { test } from 'vitest';
 import * as assert from 'node:assert/strict';
 import { TipoAtividadeStatusEnum } from '@project20/shared';
 import { contarFiltrosAtivos, filtrosIguais, filtrosPadrao, lerFiltrosDaUrl, paraParametrosDaUrl } from './filtros-atividade.util';

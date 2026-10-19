@@ -160,6 +160,7 @@ O projeto é um monorepo com quatro pacotes independentes conectados via npm wor
 | `DB_USUARIO` | Usuário do banco | `postgres` |
 | `DB_SENHA` | Senha do banco | `postgres` |
 | `DB_SSL` | Opcional: `true` liga SSL na conexão (bancos gerenciados); omitido = sem SSL | `false` |
+| `DB_NOME_TESTE` | Opcional: banco dos testes de integração (`npm run test:integracao`); omitido = `<DB_NOME>_teste`, criado e migrado sozinho no mesmo PostgreSQL. O helper recusa o banco de desenvolvimento | `project20_teste` |
 | `JWT_SECRETO` | Secret do JWT (troque em produção) | `sua-chave-segura` |
 | `JWT_EXPIRACAO` | Tempo de expiração do token | `8h` |
 | `INTERVALO_MINIMO_MINUTOS` | Gap mínimo entre execuções para ser considerado intervalo | `15` |

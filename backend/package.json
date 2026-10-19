@@ -9,7 +9,9 @@
     "db:rollback": "knex --knexfile src/database/knexfile.ts migrate:rollback",
     "db:seed-dev": "node --require ts-node/register src/database/scripts/seed-desenvolvimento.ts",
     "db:converter-descricoes": "node --require ts-node/register src/database/scripts/converter-descricoes.ts",
-    "test": "node --require ts-node/register --test \"src/**/*.test.ts\""
+    "test": "node scripts/executar-testes.mjs unitarios",
+    "test:integracao": "node scripts/executar-testes.mjs integracao",
+    "test:cobertura": "node scripts/executar-testes.mjs unitarios --cobertura"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.135.0",

@@ -1,4 +1,4 @@
-import { test } from 'node:test';
+import { test } from 'vitest';
 import * as assert from 'node:assert/strict';
 import { EstadoIaEnum } from '@project20/shared';
 import { estadoEfetivoDaIa, iaVoltou } from './retorno-da-ia';
