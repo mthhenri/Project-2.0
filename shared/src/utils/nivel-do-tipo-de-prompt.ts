@@ -10,6 +10,7 @@ export const NIVEL_DO_TIPO_DE_PROMPT: Record<TipoPromptEnum, NivelIaEnum> = {
   [TipoPromptEnum.PRIORIDADE]: NivelIaEnum.PADRAO,
   [TipoPromptEnum.ENTREVISTA_DEMANDA]: NivelIaEnum.ANALITICO,
   [TipoPromptEnum.CONEXAO_DEMANDA]: NivelIaEnum.ANALITICO,
+  [TipoPromptEnum.DUVIDA_CODIGO]: NivelIaEnum.RAPIDO,
 };
 
 /** Quantas narrativas um teste de prompt aceita (cada uma custa duas chamadas à IA). */

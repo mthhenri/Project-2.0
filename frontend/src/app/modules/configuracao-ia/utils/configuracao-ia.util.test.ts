@@ -1,7 +1,7 @@
 import { test } from 'vitest';
 import * as assert from 'node:assert/strict';
 import { FormControl, FormGroup } from '@angular/forms';
-import { ConfiguracaoIaResumoDto, EsforcoIaEnum, EstadoIaEnum, TipoProvedorIaEnum } from '@project20/shared';
+import { ConfiguracaoIaResumoDto, EsforcoIaEnum, EstadoIaEnum, ModoContextoChatEnum, TipoProvedorIaEnum } from '@project20/shared';
 import {
   OPCOES_PROVEDOR,
   ROTULO_ESTADO_IA,
@@ -18,7 +18,8 @@ const VERSAO: ConfiguracaoIaResumoDto = {
   id: 4, versao: 3, provedor: TipoProvedorIaEnum.ANTHROPIC,
   modeloRapido: 'claude-haiku-5-5', modeloPadrao: 'claude-sonnet-5-5', modeloAnalitico: 'claude-opus-5-5',
   esforcoAnalitico: EsforcoIaEnum.ALTO, checkinMinimoMinutos: 20, checkinMaximoMinutos: 40, duracaoRecomendadaMinutos: 90,
-  checkinInteligente: true, rigorProporcional: false, deteccaoAutomatica: true, iaDesligada: false,
+  checkinInteligente: true, rigorProporcional: false, deteccaoAutomatica: true,
+  duvidasCodigo: false, modoContextoChat: ModoContextoChatEnum.MISTURADO, iaDesligada: false,
   usuarioId: 1, usuarioNome: 'Admin', createdDate: new Date('2026-10-01T12:00:00Z'),
 };
 
@@ -71,7 +72,8 @@ test('valoresDaVersao copia só os campos do formulário (sem id, versão, autor
   const valores = valoresDaVersao(VERSAO);
   assert.deepEqual(Object.keys(valores).sort(), [
     'checkinInteligente', 'checkinMaximoMinutos', 'checkinMinimoMinutos', 'deteccaoAutomatica', 'duracaoRecomendadaMinutos',
-    'esforcoAnalitico', 'iaDesligada', 'modeloAnalitico', 'modeloPadrao', 'modeloRapido', 'provedor', 'rigorProporcional',
+    'duvidasCodigo', 'esforcoAnalitico', 'iaDesligada', 'modeloAnalitico', 'modeloPadrao', 'modeloRapido', 'modoContextoChat', 'provedor',
+    'rigorProporcional',
   ]);
   assert.equal(valores.modeloAnalitico, 'claude-opus-5-5');
   assert.equal(valores.rigorProporcional, false);
@@ -82,6 +84,8 @@ test('formularioIgualAVersao: igual à versão não há o que salvar; qualquer c
   assert.equal(formularioIgualAVersao({ ...valoresDaVersao(VERSAO), iaDesligada: true }, VERSAO), false);
   assert.equal(formularioIgualAVersao({ ...valoresDaVersao(VERSAO), checkinMaximoMinutos: 41 }, VERSAO), false);
   assert.equal(formularioIgualAVersao({ ...valoresDaVersao(VERSAO), esforcoAnalitico: EsforcoIaEnum.BAIXO }, VERSAO), false);
+  assert.equal(formularioIgualAVersao({ ...valoresDaVersao(VERSAO), duvidasCodigo: true }, VERSAO), false);
+  assert.equal(formularioIgualAVersao({ ...valoresDaVersao(VERSAO), modoContextoChat: ModoContextoChatEnum.SEPARADO }, VERSAO), false);
 });
 
 test('paraDtoDeCriacao apara os nomes dos modelos e mantém o restante', () => {
@@ -92,4 +96,6 @@ test('paraDtoDeCriacao apara os nomes dos modelos e mantém o restante', () => {
   assert.equal(dto.checkinMinimoMinutos, 20);
   assert.equal(dto.duracaoRecomendadaMinutos, 90);
   assert.equal(dto.iaDesligada, false);
+  assert.equal(dto.duvidasCodigo, false);
+  assert.equal(dto.modoContextoChat, ModoContextoChatEnum.MISTURADO);
 });

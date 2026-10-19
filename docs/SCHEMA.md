@@ -577,7 +577,7 @@ CREATE UNIQUE INDEX uix_anotacao_usuario_tipo_ativa
 ### configuracao_ia — configuração da IA, uma linha por versão (migration `0033`)
 
 A versão ativa é a de maior `versao`; versão antiga nunca é alterada (editar é gravar a seguinte). A chave de API do provedor **não** fica no banco
-(`.env`). A versão 1 vem por seed (Anthropic, IA **desligada**, check-in entre 30 e 80 minutos, duração recomendada de 90).
+(`.env`). A versão 1 vem por seed (Anthropic, IA **desligada**, check-in entre 30 e 80 minutos, duração recomendada de 90). A migration `0044` acrescentou `duvidas_codigo` e `modo_contexto_chat` (as versões que já existiam ficaram `false` e `MISTURADO`).
 
 ```sql
 CREATE TABLE configuracao_ia (
@@ -599,6 +599,8 @@ CREATE TABLE configuracao_ia (
   checkin_inteligente          BOOLEAN      NOT NULL,
   rigor_proporcional           BOOLEAN      NOT NULL,
   deteccao_automatica          BOOLEAN      NOT NULL,
+  duvidas_codigo               BOOLEAN      NOT NULL,   -- migration 0044: o chat também responde dúvidas de programação (false: só o Project)
+  modo_contexto_chat           VARCHAR(20)  NOT NULL,   -- migration 0044: MISTURADO/SEPARADO (ModoContextoChatEnum do shared; sem tabela nem CHECK)
   ia_desligada                 BOOLEAN      NOT NULL,
   usuario_id                   INTEGER      NOT NULL CONSTRAINT fk_configuracao_ia_usuario REFERENCES usuario(id),  -- quem salvou
 
@@ -711,7 +713,7 @@ Seeds (`codigo` → `descricao`):
 | `tipo_atividade_prioridade` | URGENTE (1, `#dc2626`), ALTA (2, `#f97316`), MEDIA (3, `#eab308`), BAIXA (4, `#0ea5e9`), INDEFINIDA (5, `#94a3b8`), com `ordem` INTEGER (única entre as ativas) e `cor` VARCHAR(7) além do molde; só a `cor` é editável, só pelo administrador (migration `0036`) |
 | `tipo_proposta_ia` | INICIAR_EXECUCAO, PAUSAR_EXECUCAO, CRIAR_ATIVIDADE, DESCREVER_EXECUCAO, SUSPENDER_CHECKIN, ANOTAR_PAD, CRIAR_DEMANDA, DESCREVER_DEMANDA, CONECTAR_DEMANDA (migration `0035`; `CRIAR_PROJETO` na `0037`; `ALTERAR_ATIVIDADE` na `0039`; `REGISTRAR_EXECUCAO` e `CORRIGIR_EXECUCAO` na `0040`; `ALTERAR_DEMANDA` na `0041`; `ATRIBUIR_MEMBRO` e `ATRIBUIR_TAG` na `0042`; sem tipo de exclusão) |
 | `tipo_proposta_ia_status` | PENDENTE, CONFIRMADA, AJUSTADA, EXPIRADA (também a recusada), DESFEITA (migration `0035`) |
-| `tipo_prompt` | CONVERSA, CHECKIN, DESCRICAO_EXECUCAO, PAD, PRIORIDADE, ENTREVISTA_DEMANDA, CONEXAO_DEMANDA (migration `0034`; a lista cresce por migration) |
+| `tipo_prompt` | CONVERSA, CHECKIN, DESCRICAO_EXECUCAO, PAD, PRIORIDADE, ENTREVISTA_DEMANDA, CONEXAO_DEMANDA (migration `0034`), DUVIDA_CODIGO (migration `0044`, com a versão 1 semeada; a lista cresce por migration) |
 | `tipo_provedor_ia` | ANTHROPIC→"Anthropic", GOOGLE→"Google", OPENAI→"OpenAI" (migration `0033`; só ANTHROPIC terá implementação) |
 | `tipo_anotacao` | EM_ANDAMENTO→"Em andamento", FEITO→"Feito", PENDENCIA→"Pendências", LEMBRETE→"Lembretes", PESSOAL→"Pessoal" (migration `0030`, com `ordem` 1 a 5) |
 

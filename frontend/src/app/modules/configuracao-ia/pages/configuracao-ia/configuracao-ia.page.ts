@@ -13,12 +13,14 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { TabsModule } from 'primeng/tabs';
 import { TagModule } from 'primeng/tag';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
-import { ConfiguracaoIaResumoDto, EsforcoIaEnum, EstadoIaEnum, TipoProvedorIaEnum } from '@project20/shared';
+import { ConfiguracaoIaResumoDto, EsforcoIaEnum, EstadoIaEnum, ModoContextoChatEnum, TipoProvedorIaEnum } from '@project20/shared';
 import { PromptsAbaComponent } from '../../components/prompts-aba/prompts-aba.component';
 import { PrioridadesAbaComponent } from '../../components/prioridades-aba/prioridades-aba.component';
 import { ConfiguracaoIaService } from '../../services/configuracao-ia.service';
 import {
+  EXPLICACAO_MODO_CONTEXTO,
   OPCOES_ESFORCO,
+  OPCOES_MODO_CONTEXTO,
   OPCOES_PROVEDOR,
   ROTULO_ESTADO_IA,
   SEVERIDADE_ESTADO_IA,
@@ -28,6 +30,7 @@ import {
   intervaloDoCheckinValido,
   paraDtoDeCriacao,
   rotuloDoEsforco,
+  rotuloDoModoContexto,
   rotuloDoProvedor,
   valoresDaVersao,
 } from '../../utils/configuracao-ia.util';
@@ -65,8 +68,11 @@ export class ConfiguracaoIaPage implements OnInit {
 
   readonly opcoesProvedor = OPCOES_PROVEDOR;
   readonly opcoesEsforco = OPCOES_ESFORCO;
+  readonly opcoesModoContexto = OPCOES_MODO_CONTEXTO;
+  readonly explicacaoModoContexto = EXPLICACAO_MODO_CONTEXTO;
   readonly sugestoesModelos = SUGESTOES_MODELOS;
   readonly rotuloDoEsforco = rotuloDoEsforco;
+  readonly rotuloDoModoContexto = rotuloDoModoContexto;
   readonly rotuloDoProvedor = rotuloDoProvedor;
   readonly rotuloEstado = ROTULO_ESTADO_IA;
   readonly severidadeEstado = SEVERIDADE_ESTADO_IA;
@@ -97,6 +103,8 @@ export class ConfiguracaoIaPage implements OnInit {
       checkinInteligente: [true],
       rigorProporcional: [true],
       deteccaoAutomatica: [true],
+      duvidasCodigo: [false],
+      modoContextoChat: [ModoContextoChatEnum.MISTURADO, Validators.required],
       iaDesligada: [true],
     },
     { validators: intervaloDoCheckinValido },
@@ -198,6 +206,9 @@ export class ConfiguracaoIaPage implements OnInit {
       detail: `Valores da versão ${versao.versao} no formulário. Salvar cria a versão ${this.proximaVersao()}.`,
     });
   }
+
+  /** O texto que explica o modo de contexto escolhido no formulário. */
+  readonly explicacaoDoModoEscolhido = computed(() => this.explicacaoModoContexto[this.valorAtual().modoContextoChat]);
 
   campoInvalido(nome: keyof ValorFormularioConfiguracaoIa): boolean {
     const controle = this.formulario.controls[nome];

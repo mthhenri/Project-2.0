@@ -4,6 +4,7 @@ import {
   ConfiguracaoIaResumoDto,
   EsforcoIaEnum,
   EstadoIaEnum,
+  ModoContextoChatEnum,
   TipoProvedorIaEnum,
 } from '@project20/shared';
 
@@ -25,6 +26,20 @@ export const OPCOES_ESFORCO: OpcaoDoSelect<EsforcoIaEnum>[] = [
   { valor: EsforcoIaEnum.MEDIO, rotulo: 'Médio' },
   { valor: EsforcoIaEnum.ALTO, rotulo: 'Alto' },
 ];
+
+export const OPCOES_MODO_CONTEXTO: OpcaoDoSelect<ModoContextoChatEnum>[] = [
+  { valor: ModoContextoChatEnum.MISTURADO, rotulo: 'Misturado' },
+  { valor: ModoContextoChatEnum.SEPARADO, rotulo: 'Separado' },
+];
+
+/** O que cada modo faz, mostrado abaixo da escolha. */
+export const EXPLICACAO_MODO_CONTEXTO: Record<ModoContextoChatEnum, string> = {
+  [ModoContextoChatEnum.MISTURADO]: 'A IA lê a conversa inteira, de código e de Project, e pode relacionar uma com a outra.',
+  [ModoContextoChatEnum.SEPARADO]: 'Dúvidas de código e assuntos do Project não se enxergam: cada pergunta só vê as mensagens do próprio assunto.',
+};
+
+export const rotuloDoModoContexto = (modo: ModoContextoChatEnum): string =>
+  OPCOES_MODO_CONTEXTO.find((opcao) => opcao.valor === modo)?.rotulo ?? modo;
 
 /** Sugestões dos campos de modelo (o campo é texto livre: os nomes mudam com frequência). */
 export const SUGESTOES_MODELOS: readonly string[] = [
@@ -65,6 +80,8 @@ export interface ValorFormularioConfiguracaoIa {
   checkinInteligente: boolean;
   rigorProporcional: boolean;
   deteccaoAutomatica: boolean;
+  duvidasCodigo: boolean;
+  modoContextoChat: ModoContextoChatEnum;
   iaDesligada: boolean;
 }
 
@@ -89,6 +106,8 @@ export function valoresDaVersao(versao: ConfiguracaoIaResumoDto): ValorFormulari
     checkinInteligente: versao.checkinInteligente,
     rigorProporcional: versao.rigorProporcional,
     deteccaoAutomatica: versao.deteccaoAutomatica,
+    duvidasCodigo: versao.duvidasCodigo,
+    modoContextoChat: versao.modoContextoChat,
     iaDesligada: versao.iaDesligada,
   };
 }

@@ -52,6 +52,7 @@ test('usa o nível do tipo (tabela fixa)', async () => {
     [TipoPromptEnum.PRIORIDADE, NivelIaEnum.PADRAO],
     [TipoPromptEnum.ENTREVISTA_DEMANDA, NivelIaEnum.ANALITICO],
     [TipoPromptEnum.CONEXAO_DEMANDA, NivelIaEnum.ANALITICO],
+    [TipoPromptEnum.DUVIDA_CODIGO, NivelIaEnum.RAPIDO],
   ];
   assert.equal(Object.keys(NIVEL_DO_TIPO_DE_PROMPT).length, Object.keys(TipoPromptEnum).length);
   for (const [tipo, nivel] of esperado) {

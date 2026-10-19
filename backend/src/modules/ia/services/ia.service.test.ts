@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { ConfiguracaoIaResumoDto, EsforcoIaEnum, EstadoIaEnum, NivelIaEnum, TipoProvedorIaEnum } from '@project20/shared';
+import { ConfiguracaoIaResumoDto, EsforcoIaEnum, EstadoIaEnum, ModoContextoChatEnum, NivelIaEnum, TipoProvedorIaEnum } from '@project20/shared';
 import { ConfiguracaoIaService } from '../../configuracao-ia/services/configuracao-ia.service';
 import { IaException } from '../domain/ia.exception';
 import { IaProvedor } from '../domain/ia-provedor';
@@ -13,7 +13,8 @@ function configuracao(parcial: Partial<ConfiguracaoIaResumoDto> = {}): Configura
     id: 1, versao: 1, provedor: TipoProvedorIaEnum.ANTHROPIC,
     modeloRapido: 'haiku', modeloPadrao: 'sonnet', modeloAnalitico: 'opus', esforcoAnalitico: EsforcoIaEnum.MEDIO,
     checkinMinimoMinutos: 30, checkinMaximoMinutos: 80, duracaoRecomendadaMinutos: 90,
-    checkinInteligente: true, rigorProporcional: true, deteccaoAutomatica: true, iaDesligada: false,
+    checkinInteligente: true, rigorProporcional: true, deteccaoAutomatica: true,
+    duvidasCodigo: false, modoContextoChat: ModoContextoChatEnum.MISTURADO, iaDesligada: false,
     usuarioId: 1, usuarioNome: 'Admin', createdDate: new Date(),
     ...parcial,
   };

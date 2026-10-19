@@ -3,7 +3,7 @@ import { By } from '@angular/platform-browser';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { describe, it, expect } from 'vitest';
-import { ConfiguracaoIaResumoDto, EsforcoIaEnum, EstadoIaEnum, TipoProvedorIaEnum, TipoUsuarioEnum } from '@project20/shared';
+import { ConfiguracaoIaResumoDto, EsforcoIaEnum, EstadoIaEnum, ModoContextoChatEnum, TipoProvedorIaEnum, TipoUsuarioEnum } from '@project20/shared';
 import { montarComponente, ComponenteMontado } from '../../../../../testes/montar-componente';
 import { esperarRequisicao, responderErro, responderSucesso } from '../../../../../testes/http-teste';
 import { PromptsAbaComponent } from '../../components/prompts-aba/prompts-aba.component';
@@ -20,7 +20,8 @@ function versao(numero: number, sobrescrita: Partial<ConfiguracaoIaResumoDto> = 
     id: numero, versao: numero, provedor: TipoProvedorIaEnum.ANTHROPIC,
     modeloRapido: 'claude-haiku-5-5', modeloPadrao: 'claude-sonnet-5-5', modeloAnalitico: 'claude-opus-5-5',
     esforcoAnalitico: EsforcoIaEnum.MEDIO, checkinMinimoMinutos: 20, checkinMaximoMinutos: 40, duracaoRecomendadaMinutos: 90,
-    checkinInteligente: true, rigorProporcional: true, deteccaoAutomatica: true, iaDesligada: false,
+    checkinInteligente: true, rigorProporcional: true, deteccaoAutomatica: true,
+    duvidasCodigo: false, modoContextoChat: ModoContextoChatEnum.MISTURADO, iaDesligada: false,
     usuarioId: 1, usuarioNome: 'Ana Admin', createdDate: new Date('2026-10-01T12:00:00Z'),
     ...sobrescrita,
   };
@@ -208,6 +209,45 @@ describe('ConfiguracaoIaPage — editar e salvar', () => {
     expect(montado.componente.salvando()).toBe(false);
     expect(montado.componente.formulario.controls.iaDesligada.value).toBe(true);
     expect(botao('Salvar nova versão').disabled).toBe(false);
+  });
+});
+
+describe('ConfiguracaoIaPage — dúvidas de programação no chat (task 190)', () => {
+  it('mostra o interruptor e a escolha do contexto, com o que cada modo faz, carregados da versão ativa', async () => {
+    const ativa = versao(3, { duvidasCodigo: true, modoContextoChat: ModoContextoChatEnum.SEPARADO });
+    const montado = await montarComponente(ConfiguracaoIaPage, { usuario: TipoUsuarioEnum.ADMINISTRADOR });
+    responderCarga(montado, { ativa, historico: [ativa] });
+    await montado.atualizar();
+
+    expect(textoDaTela()).toContain('Dúvidas de programação no chat');
+    expect(document.body.querySelector('#ia-modo-contexto')).not.toBeNull();
+    expect(montado.componente.formulario.controls.duvidasCodigo.value).toBe(true);
+    expect(montado.componente.formulario.controls.modoContextoChat.value).toBe(ModoContextoChatEnum.SEPARADO);
+    expect(textoDaTela()).toContain('cada pergunta só vê as mensagens do próprio assunto');
+    expect(textoDaTela()).toContain('Nada a salvar');
+  });
+
+  it('trocar o modo muda a explicação e habilita salvar; os dois campos entram no POST da versão nova', async () => {
+    const montado = await abrir();
+    expect(montado.componente.formulario.controls.duvidasCodigo.value).toBe(false);
+    expect(textoDaTela()).toContain('pode relacionar uma com a outra');
+
+    montado.componente.formulario.patchValue({ duvidasCodigo: true, modoContextoChat: ModoContextoChatEnum.SEPARADO });
+    await montado.atualizar();
+    expect(textoDaTela()).toContain('cada pergunta só vê as mensagens do próprio assunto');
+    expect(botao('Salvar nova versão').disabled).toBe(false);
+
+    botao('Salvar nova versão').click();
+    const requisicao = esperarRequisicao(montado.http, 'POST', '/configuracao-ia');
+    expect(requisicao.request.body).toMatchObject({ duvidasCodigo: true, modoContextoChat: ModoContextoChatEnum.SEPARADO });
+  });
+
+  it('o histórico mostra as flags de cada versão', async () => {
+    const montado = await abrir();
+    botao('Versão 2').click();
+    await montado.atualizar();
+    expect(document.body.querySelector('dl')?.textContent).toContain('Dúvidas de código');
+    expect(document.body.querySelector('dl')?.textContent).toContain('Não · contexto misturado');
   });
 });
 

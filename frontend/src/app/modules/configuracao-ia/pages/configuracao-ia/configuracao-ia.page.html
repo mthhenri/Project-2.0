@@ -155,6 +155,29 @@
                   </label>
                 </section>
 
+                <section class="configuracao-ia__secao">
+                  <h2 class="configuracao-ia__secao-titulo">Chat</h2>
+                  <label class="configuracao-ia__interruptor">
+                    <p-toggleswitch formControlName="duvidasCodigo" />
+                    <span>
+                      <strong>Dúvidas de programação no chat</strong>
+                      <small>Desligado, o chat só trata do Project. Ligado, também responde dúvidas de programação, com o código em bloco.</small>
+                    </span>
+                  </label>
+                  <div class="configuracao-ia__campo">
+                    <label class="configuracao-ia__label" for="ia-modo-contexto">Contexto do chat</label>
+                    <p-select
+                      inputId="ia-modo-contexto"
+                      formControlName="modoContextoChat"
+                      [options]="opcoesModoContexto"
+                      optionLabel="rotulo"
+                      optionValue="valor"
+                      class="w-full"
+                    />
+                    <small class="configuracao-ia__ajuda">{{ explicacaoDoModoEscolhido() }}</small>
+                  </div>
+                </section>
+
                 </div>
 
                 <section class="configuracao-ia__secao configuracao-ia__secao--alerta">
@@ -221,6 +244,7 @@
                             <dt>Inteligente</dt><dd>{{ versao.checkinInteligente ? 'Sim' : 'Não' }}</dd>
                             <dt>Rigor</dt><dd>{{ versao.rigorProporcional ? 'Sim' : 'Não' }}</dd>
                             <dt>Detecção</dt><dd>{{ versao.deteccaoAutomatica ? 'Sim' : 'Não' }}</dd>
+                            <dt>Dúvidas de código</dt><dd>{{ versao.duvidasCodigo ? 'Sim' : 'Não' }} · contexto {{ rotuloDoModoContexto(versao.modoContextoChat) | lowercase }}</dd>
                             <dt>IA</dt><dd>{{ versao.iaDesligada ? 'Desligada' : 'Ligada' }}</dd>
                           </dl>
                           <p-button label="Usar como base" icon="pi pi-copy" size="small" [outlined]="true" (onClick)="usarComoBase(versao)" />

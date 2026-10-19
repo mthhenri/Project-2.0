@@ -19,6 +19,8 @@ const COLUNAS_RESUMO = `
          configuracao_ia.checkin_inteligente         AS "checkinInteligente",
          configuracao_ia.rigor_proporcional          AS "rigorProporcional",
          configuracao_ia.deteccao_automatica         AS "deteccaoAutomatica",
+         configuracao_ia.duvidas_codigo              AS "duvidasCodigo",
+         configuracao_ia.modo_contexto_chat          AS "modoContextoChat",
          configuracao_ia.ia_desligada                AS "iaDesligada",
          configuracao_ia.usuario_id                  AS "usuarioId",
          usuario.nome_completo                       AS "usuarioNome",
@@ -83,14 +85,14 @@ export class ConfiguracaoIaRepository extends BaseRepository<ConfiguracaoIa> {
         `INSERT INTO configuracao_ia (
            versao, tipo_provedor_ia_id, modelo_rapido, modelo_padrao, modelo_analitico, esforco_analitico,
            checkin_minimo_minutos, checkin_maximo_minutos, duracao_recomendada_minutos,
-           checkin_inteligente, rigor_proporcional, deteccao_automatica, ia_desligada,
+           checkin_inteligente, rigor_proporcional, deteccao_automatica, duvidas_codigo, modo_contexto_chat, ia_desligada,
            usuario_id, created_date, updated_date, is_deleted
          )
          SELECT
            COALESCE((SELECT MAX(configuracao_ia.versao) FROM configuracao_ia WHERE configuracao_ia.is_deleted = false), 0) + 1,
            tipo_provedor_ia.id, :modeloRapido, :modeloPadrao, :modeloAnalitico, :esforcoAnalitico,
            :checkinMinimoMinutos, :checkinMaximoMinutos, :duracaoRecomendadaMinutos,
-           :checkinInteligente, :rigorProporcional, :deteccaoAutomatica, :iaDesligada,
+           :checkinInteligente, :rigorProporcional, :deteccaoAutomatica, :duvidasCodigo, :modoContextoChat, :iaDesligada,
            :usuarioId, NOW(), NOW(), false
          FROM tipo_provedor_ia
          WHERE tipo_provedor_ia.codigo = :provedor

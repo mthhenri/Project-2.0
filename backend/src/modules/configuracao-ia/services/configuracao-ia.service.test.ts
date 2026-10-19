@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { ConfiguracaoIaCriarDto, ConfiguracaoIaResumoDto, EsforcoIaEnum, TipoProvedorIaEnum, TipoUsuarioEnum } from '@project20/shared';
+import { ConfiguracaoIaCriarDto, ConfiguracaoIaResumoDto, EsforcoIaEnum, ModoContextoChatEnum, TipoProvedorIaEnum, TipoUsuarioEnum } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { UnauthorizedAccessException } from '../../../core/exceptions/unauthorized-access.exception';
 import { ConfiguracaoIaRepository } from '../repositories/configuracao-ia.repository';
@@ -22,6 +22,8 @@ const BASE: ConfiguracaoIaCriarDto = {
   checkinInteligente: true,
   rigorProporcional: true,
   deteccaoAutomatica: true,
+  duvidasCodigo: false,
+  modoContextoChat: ModoContextoChatEnum.MISTURADO,
   iaDesligada: true,
 };
 
@@ -61,6 +63,21 @@ test('criar grava a versão seguinte sem alterar a anterior e renova o cache', a
   assert.equal(versoes[0].modeloPadrao, 'padrao', 'a versão 1 não muda');
   assert.equal((await servico.obterAtiva()).modeloPadrao, 'outro');
   assert.equal(estado.leiturasDaAtiva, 1, 'a leitura seguinte vem do cache, sem ir ao banco');
+});
+
+test('criar leva as duas flags das dúvidas de código para a versão nova e a anterior continua intacta', async () => {
+  const { repositorio, versoes } = criarRepositorio();
+  const servico = new ConfiguracaoIaService(repositorio);
+
+  const resposta = await servico.criar({ ...BASE, duvidasCodigo: true, modoContextoChat: ModoContextoChatEnum.SEPARADO }, ADMINISTRADOR);
+
+  assert.equal(resposta.dados.duvidasCodigo, true);
+  assert.equal(resposta.dados.modoContextoChat, ModoContextoChatEnum.SEPARADO);
+  assert.equal(versoes[0].duvidasCodigo, false, 'a versão 1 não muda');
+  assert.equal(versoes[0].modoContextoChat, ModoContextoChatEnum.MISTURADO);
+  const ativa = await servico.obterAtiva();
+  assert.equal(ativa.duvidasCodigo, true);
+  assert.equal(ativa.modoContextoChat, ModoContextoChatEnum.SEPARADO);
 });
 
 test('obterAtiva lê o banco uma vez e depois usa o cache', async () => {

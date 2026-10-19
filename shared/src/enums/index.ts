@@ -16,5 +16,6 @@ export * from './estado-ia.enum';
 export * from './tipo-prompt.enum';
 export * from './autor-chat.enum';
 export * from './contexto-chat.enum';
+export * from './modo-contexto-chat.enum';
 export * from './tipo-proposta-ia.enum';
 export * from './status-proposta-ia.enum';

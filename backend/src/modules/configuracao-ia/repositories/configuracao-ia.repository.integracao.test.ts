@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { ConfiguracaoIaCriarDto, EsforcoIaEnum, TipoProvedorIaEnum } from '@project20/shared';
+import { ConfiguracaoIaCriarDto, EsforcoIaEnum, ModoContextoChatEnum, TipoProvedorIaEnum } from '@project20/shared';
 import { testarComBanco, obterConexaoBancoTeste, ConexaoTeste } from '../../../testes/banco-teste';
 import { criarRepositorio } from '../../../testes/criar-repositorio';
 import { criarAdministrador } from '../../../testes/fabricas';
@@ -14,7 +14,8 @@ const repositorioDe = (conexao: ConexaoTeste) => criarRepositorio(ConfiguracaoIa
 const NOVA: ConfiguracaoIaCriarDto = {
   provedor: TipoProvedorIaEnum.ANTHROPIC, modeloRapido: 'modelo-rapido', modeloPadrao: 'modelo-padrao', modeloAnalitico: 'modelo-analitico',
   esforcoAnalitico: EsforcoIaEnum.ALTO, checkinMinimoMinutos: 20, checkinMaximoMinutos: 60, duracaoRecomendadaMinutos: 45,
-  checkinInteligente: false, rigorProporcional: false, deteccaoAutomatica: false, iaDesligada: true,
+  checkinInteligente: false, rigorProporcional: false, deteccaoAutomatica: false,
+  duvidasCodigo: true, modoContextoChat: ModoContextoChatEnum.SEPARADO, iaDesligada: true,
 };
 
 testarComBanco('recuperarAtiva: a versão de maior número, com provedor e nome de quem gravou', async (conexao) => {
@@ -28,9 +29,20 @@ testarComBanco('recuperarAtiva: a versão de maior número, com provedor e nome 
   assert.equal(ativa?.provedor, TipoProvedorIaEnum.ANTHROPIC);
   assert.equal(ativa?.modeloPadrao, 'modelo-padrao');
   assert.equal(ativa?.esforcoAnalitico, EsforcoIaEnum.ALTO);
+  assert.equal(ativa?.duvidasCodigo, true);
+  assert.equal(ativa?.modoContextoChat, ModoContextoChatEnum.SEPARADO);
   assert.equal(ativa?.iaDesligada, true);
   assert.equal(ativa?.usuarioId, administrador.id);
   assert.equal(ativa?.usuarioNome, 'Admin Teste');
+});
+
+testarComBanco('migration 0044: as versões que já existiam ficam "só Project" e com contexto misturado', async (conexao) => {
+  const administrador = await criarAdministrador(conexao);
+  await repositorioDe(conexao).inserirNovaVersao(NOVA, administrador.id);
+  const { itens } = await repositorioDe(conexao).listar({ itensPorPagina: 100 });
+  const primeira = itens.find((item) => item.versao === 1)!;
+  assert.equal(primeira.duvidasCodigo, false);
+  assert.equal(primeira.modoContextoChat, ModoContextoChatEnum.MISTURADO);
 });
 
 testarComBanco('inserirNovaVersao: a anterior continua intacta e o histórico lista as duas, da mais nova para a mais antiga', async (conexao) => {

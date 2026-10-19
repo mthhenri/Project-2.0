@@ -1,5 +1,6 @@
 import { IsBoolean, IsEnum, IsInt, IsNotEmpty, IsString, MaxLength, Min } from 'class-validator';
 import { EsforcoIaEnum } from '../../enums/esforco-ia.enum';
+import { ModoContextoChatEnum } from '../../enums/modo-contexto-chat.enum';
 import { TipoProvedorIaEnum } from '../../enums/tipo-provedor-ia.enum';
 
 /** Grava uma **versão nova** da configuração (a antiga nunca é alterada). O intervalo mínimo < máximo é conferido na service. */
@@ -45,6 +46,12 @@ export class ConfiguracaoIaCriarDto {
 
   @IsBoolean()
   deteccaoAutomatica: boolean;
+
+  @IsBoolean()
+  duvidasCodigo: boolean;
+
+  @IsEnum(ModoContextoChatEnum)
+  modoContextoChat: ModoContextoChatEnum;
 
   @IsBoolean()
   iaDesligada: boolean;

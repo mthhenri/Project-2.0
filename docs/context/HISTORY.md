@@ -12,6 +12,17 @@
 
 ---
 
+## 2026-10-19 — Task 190: configuração das dúvidas de código
+
+Terceira task da guarda-chuva `chat-duvidas-de-codigo`. Só cria a configuração e o prompt; ligar a flag ainda não muda a conversa (a 191 é quem usa).
+
+- **Migration `0044`:** `configuracao_ia.duvidas_codigo` (`BOOLEAN NOT NULL`) e `modo_contexto_chat` (`VARCHAR(20) NOT NULL`, sem tabela nem `CHECK`, como `esforco_analitico`); as versões existentes recebem `false` e `MISTURADO` (o `DEFAULT` entra só para preencher e sai em seguida). O mesmo arquivo cria o tipo `DUVIDA_CODIGO` e a versão 1 do prompt (autoria do gestor inicial), para "restaurar padrão" funcionar. A spec dizia "a partir de 0043", mas a 0043 já era da task 192.
+- **Contratos:** `ModoContextoChatEnum` (`MISTURADO`/`SEPARADO`), `TipoPromptEnum.DUVIDA_CODIGO`, `NIVEL_DO_TIPO_DE_PROMPT[DUVIDA_CODIGO] = RAPIDO`, `ConfiguracaoIaCriarDto`/`ResumoDto` com os dois campos; repository, model e service levam os campos (a service não precisou mudar: grava o DTO inteiro).
+- **Tela:** nova seção "Chat" no mesmo grupo das flags do check-in: interruptor "Dúvidas de programação no chat" e `p-select` "Contexto do chat" (misturado/separado) com a explicação do modo escolhido embaixo; o histórico de versões mostra as duas flags. O texto da versão 1 do prompt evita crases literais: o editor formatado as lia como código inline e deformava o texto ("```php" virava um trecho de código).
+- **Testes:** shared 164; backend 1030 (1023 passando + 7 `todo` antigos P-010 a P-016), integração 238 (+1: a migration deixa as versões antigas "só Project" e misturado), frontend 1368 passando + 3 `todo` (+3: componente da tela com os dois controles, POST com os campos, histórico). `db:rollback` e `db:migrate` conferidos num banco com versões existentes. Builds de backend e frontend passam (avisos de orçamento antigos; sem lint, P-001).
+- **Verificado ao vivo** (administrador de teste; IA ligada só durante o teste e desligada no fim, configuração v15 com as flags desligadas; 1366×768, 1920×1080 e 1080×1920): ligar a flag, trocar o modo e salvar gravou a v13 com `true`/`SEPARADO` e o formulário voltou "Nada a salvar"; o prompt `DUVIDA_CODIGO` apareceu na aba Prompts, o teste rodou no nível rápido com resposta real (bloco PHP com "Copiar", ativo e rascunho lado a lado), o rascunho foi salvo e ativado (v2) e "Restaurar padrão" devolveu a v1 como ativa.
+- **Achado na verificação:** uma vez, o editor do rascunho mostrou o texto do prompt `CONVERSA` ao receber o primeiro teclado depois de trocar de tipo (logo após recargas do dev server). Não reproduziu em três tentativas seguintes nem no Check-in; fica aqui como suspeita do editor formatado ao trocar de tipo, sem task aberta.
+
 ## 2026-10-19 — Task 189: bloco de código com copiar e realce por linguagem
 
 Segunda task da guarda-chuva `chat-duvidas-de-codigo`. Todo bloco cercado exibido pelo `app-markdown-visualizador` ganha cabeçalho com a linguagem, botão Copiar e realce de sintaxe, em todo o sistema.

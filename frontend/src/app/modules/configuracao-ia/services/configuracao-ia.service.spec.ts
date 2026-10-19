@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { EsforcoIaEnum, TipoProvedorIaEnum } from '@project20/shared';
+import { EsforcoIaEnum, ModoContextoChatEnum, TipoProvedorIaEnum } from '@project20/shared';
 import { SEM_OVERLAY_GLOBAL } from '../../../core/interceptors/loading.interceptor';
 import { ConfiguracaoIaService } from './configuracao-ia.service';
 
@@ -37,7 +37,8 @@ describe('ConfiguracaoIaService (frontend)', () => {
     const dto = {
       provedor: TipoProvedorIaEnum.ANTHROPIC, modeloRapido: 'a', modeloPadrao: 'b', modeloAnalitico: 'c',
       esforcoAnalitico: EsforcoIaEnum.MEDIO, checkinMinimoMinutos: 20, checkinMaximoMinutos: 40, duracaoRecomendadaMinutos: 90,
-      checkinInteligente: true, rigorProporcional: true, deteccaoAutomatica: true, iaDesligada: false,
+      checkinInteligente: true, rigorProporcional: true, deteccaoAutomatica: true,
+    duvidasCodigo: false, modoContextoChat: ModoContextoChatEnum.MISTURADO, iaDesligada: false,
     };
     servico.criar(dto).subscribe();
     const requisicao = pedido('POST', '/configuracao-ia');
