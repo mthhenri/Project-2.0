@@ -55,18 +55,3 @@
 - **Correção:** migrar as demais telas para as mesmas funções (o `DatePipe` não aceita nome IANA de fuso).
 - **Desde:** origem.
 
-### P-007 — Login ou código não textual derruba a validação com erro interno · `ABERTO` · shared/backend
-
-- **Sintoma:** `POST` com `login` numérico (ex.: `{"login": 123}`) em `UsuarioCriarDto` ou `AutenticacaoLoginDto`, ou `codigo` numérico em `ProjetoCriarDto`, estoura `TypeError: value?.toLowerCase is not a function` dentro do `@Transform` do `ValidationPipe` e a API responde 500 em vez de 400.
-- **Causa:** o `@Transform` usa `value?.toLowerCase().trim()` (ou `toUpperCase`) sem checar `typeof value === 'string'`; a validação `@IsString()` só roda depois.
-- **Contorno:** nenhum no servidor; a tela sempre manda texto.
-- **Correção:** `typeof value === 'string' ? value.toLowerCase().trim() : value` nos três DTOs (e promover o `todo` de `validacao-dos-dtos.test.ts`).
-- **Desde:** origem; achado pela task 173.
-
-### P-008 — O token JWT é anexado a qualquer URL, não só à API · `ABERTO` · frontend
-
-- **Sintoma:** `authTokenInterceptor` põe `Authorization: Bearer` em toda requisição do `HttpClient` que não seja o login, inclusive para outro host.
-- **Causa:** o filtro é só `url.includes("/autenticacao/login")`; não confere se a URL é a da API (`ambiente.apiUrl`).
-- **Contorno:** hoje nenhuma chamada do front vai a outro host, então o token não vaza na prática.
-- **Correção:** anexar o token só quando a URL começar por `ambiente.apiUrl` (e promover o `it.todo` de `auth-token.interceptor.spec.ts`).
-- **Desde:** origem; achado pela task 174.

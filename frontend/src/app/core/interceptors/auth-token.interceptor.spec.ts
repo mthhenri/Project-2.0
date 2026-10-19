@@ -32,6 +32,11 @@ describe('authTokenInterceptor', () => {
     expect(controlador.expectOne('/api/v1/autenticacao/login').request.headers.has('Authorization')).toBe(false);
   });
 
-  // P-008: o interceptor só exclui o login; qualquer outra URL, inclusive de outro host, recebe o token.
-  it.todo('não manda o token a outro host (P-008)');
+  it('não manda o token a outro host', () => {
+    localStorage.setItem('access_token', 'meu-token');
+    const { http, controlador } = configurar();
+    http.get('https://terceiro.exemplo.com/dados').subscribe();
+    expect(controlador.expectOne('https://terceiro.exemplo.com/dados').request.headers.has('Authorization')).toBe(false);
+  });
+
 });

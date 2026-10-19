@@ -86,6 +86,7 @@ const CARGAS_VALIDAS: Record<string, Record<string, unknown>> = {
   ExecucaoRegistrarDto: { atividadeId: 1, inicioData: '2026-01-15T10:00:00-03:00', fimData: '2026-01-15T11:00:00-03:00', descricao: 'Trabalho feito' },
   DiaNaoUtilCriarDto: { diaData: '2026-03-10', descricao: 'Feriado', tipo: 'FERIADO', duracao: 'INTEGRAL', recorrente: false },
   TagCriarDto: { nome: 'Backend', cor: '#112233' },
+  AutenticacaoLoginDto: { login: 'maria', senha: 'segredo' },
   // Alteração: todos os campos são opcionais, então a carga mínima válida é vazia.
   UsuarioAlterarDto: {},
   ProjetoAlterarDto: {},
@@ -104,6 +105,7 @@ const OBRIGATORIOS: Record<string, string[]> = {
   ExecucaoRegistrarDto: ['atividadeId', 'inicioData', 'fimData', 'descricao'],
   DiaNaoUtilCriarDto: ['diaData', 'descricao', 'tipo', 'duracao', 'recorrente'],
   TagCriarDto: ['nome', 'cor'],
+  AutenticacaoLoginDto: ['login', 'senha'],
   ExecucaoAlterarDto: ['descricao'],
 };
 
@@ -131,6 +133,9 @@ const TIPO_ERRADO: Array<[string, string, unknown]> = [
   ['UsuarioCriarDto', 'horasDiariasNecessarias', 'oito'],
   ['UsuarioCriarDto', 'tipo', 'CHEFE'],
   ['UsuarioCriarDto', 'login', 123],
+  ['AutenticacaoLoginDto', 'login', 123],
+  ['AutenticacaoLoginDto', 'senha', 123],
+  ['ProjetoCriarDto', 'codigo', 42],
   ['UsuarioAlterarDto', 'status', 'DESCONHECIDO'],
   ['ProjetoCriarDto', 'status', 'EM_ABERTO'],
   ['ProjetoCriarDto', 'cor', 'azul'],
@@ -149,12 +154,8 @@ const TIPO_ERRADO: Array<[string, string, unknown]> = [
   ['TagCriarDto', 'nome', ['lista']],
 ];
 
-// P-007: o @Transform de login/código chama .toLowerCase()/.toUpperCase() sem checar o tipo, e um valor não textual estoura TypeError (500).
-const ESTOURA_NO_TRANSFORM = new Set(['UsuarioCriarDto.login']);
-
 for (const [nome, campo, valor] of TIPO_ERRADO) {
-  const opcoes = ESTOURA_NO_TRANSFORM.has(`${nome}.${campo}`) ? { todo: 'P-007' } : {};
-  test(`${nome}: ${campo} com tipo/valor errado (${JSON.stringify(valor)}) é recusado`, opcoes, async () => {
+  test(`${nome}: ${campo} com tipo/valor errado (${JSON.stringify(valor)}) é recusado`, async () => {
     assert.deepEqual(await erros(nome, { ...CARGAS_VALIDAS[nome], [campo]: valor }), [campo]);
   });
 }

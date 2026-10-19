@@ -24,7 +24,7 @@ export class ProjetoCriarDto {
   nome: string;
 
   @ApiProperty({ example: 'PROJ-001' })
-  @Transform(({ value }) => value?.toUpperCase().trim())
+  @Transform(({ value }) => typeof value === 'string' ? value.toUpperCase().trim() : value)
   @IsString()
   @IsNotEmpty()
   @MaxLength(50)

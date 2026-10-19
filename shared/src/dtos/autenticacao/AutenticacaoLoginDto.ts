@@ -4,7 +4,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class AutenticacaoLoginDto {
   @ApiProperty({ example: 'joao.silva' })
-  @Transform(({ value }) => value?.toLowerCase().trim())
+  @Transform(({ value }) => typeof value === 'string' ? value.toLowerCase().trim() : value)
   @IsString()
   @MinLength(4)
   login: string;

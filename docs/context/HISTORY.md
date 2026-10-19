@@ -12,6 +12,21 @@
 
 ---
 
+## 2026-10-18 — Correção dos P-007 e P-008 (achados das tasks 173 e 174)
+
+Pedido do autor: corrigir os dois defeitos que os testes acharam e promover os `todo` a testes normais.
+
+- **P-007 (login/código não textual virava 500):** o `@Transform` de `UsuarioCriarDto.login`, `AutenticacaoLoginDto.login` e `ProjetoCriarDto.codigo`
+  agora só normaliza quando o valor é texto (`typeof value === 'string' ? ... : value`); um número cai no `@IsString()` e a API responde 400. Consumidores
+  avaliados com `npm run impacto`: backend (controller/service de usuário) e frontend só usam os DTOs como tipo (`class-transformer` é stub lá), então só
+  muda o caso que antes quebrava. Testes novos em `validacao-dos-dtos.test.ts` para os três campos (e a senha do login) e carga válida de
+  `AutenticacaoLoginDto`; o `todo` virou teste normal.
+- **P-008 (token em qualquer URL):** `authTokenInterceptor` só anexa o `Authorization` quando a URL começa por `ambiente.apiUrl` (relativa no
+  desenvolvimento, absoluta no `environment.production.ts`) e continua sem anexar no login. O `it.todo` virou teste (outro host não recebe o token).
+  Não há teste para o endereço absoluto de produção porque `ambiente` é uma constante do build; a regra é a mesma comparação por prefixo, e o
+  build de produção troca o arquivo.
+- **Verificado:** shared 163 verdes e 0 `todo`; frontend 164 verdes e 0 `todo`; ver o fecho do commit para a rodada completa. Itens removidos de `PROBLEMS.md`.
+
 ## 2026-10-18 — Task 174: testes de autenticação e usuários
 
 Quarta task da guarda-chuva `testes-automatizados`. Nenhum código de produção mudou.
