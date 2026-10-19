@@ -12,6 +12,10 @@
 
 ---
 
+## 2026-10-18 — Nova atividade só em dialog (página `/atividade/nova` removida) e selo de "IA desativada" no ícone do Chat
+
+Decisão do autor: criar atividade existe **apenas como dialog**, em todos os aspectos; não há nem deve haver página de criação. A página `/atividade/nova` criada na task 105 foi removida (página, rota e o tratamento de Enter); o `AtividadeFormularioComponent` fica como o corpo do dialog. `/atividade/nova` agora cai no detalhe e mostra "Atividade não encontrada" sem chamar a API (id não numérico). Isto corrige o que o bloco da task 105 descreve sobre a página. Na barra lateral, o ícone do Chat com a IA desativada ou fora do ar passou de `pi-ban` sozinho para `pi-comments` com um selo `pi-ban` vermelho no canto (`exigeIa` em `navegacao.ts`; segue o estado real da IA). Verificado ao vivo (IA desligada no ambiente).
+
 ## 2026-10-18 — Testes automatizados: análise da cobertura e specs 171–187
 
 Pedido do autor: montar os testes de tudo que já existe, começando por uma análise e uma spec por módulo, antes de

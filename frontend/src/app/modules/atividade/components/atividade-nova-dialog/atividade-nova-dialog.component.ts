@@ -5,7 +5,7 @@ import { DialogFormularioDirective } from '../../../../shared/directives/dialog-
 import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
 import { AtividadeFormularioComponent } from '../atividade-formulario/atividade-formulario.component';
 
-/** Dialog de nova atividade: hospeda o formulário compartilhado (o mesmo da rota `/atividade/nova`) com os botões do rodapé. */
+/** Dialog de nova atividade: é o único ponto de criação de atividades (não há página) e hospeda o formulário com os botões do rodapé. */
 @Component({
   selector: 'app-atividade-nova-dialog',
   standalone: true,

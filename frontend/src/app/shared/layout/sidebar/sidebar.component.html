@@ -34,7 +34,14 @@
           [pTooltip]="item.semIa ? item.label + ': a IA está desativada' : recolhida() ? item.label : ''"
           tooltipPosition="right"
         >
-          <i [class]="item.icone"></i>
+          @if (item.semIa) {
+            <span class="sidebar__icone-composto">
+              <i [class]="item.icone"></i>
+              <i class="pi pi-ban sidebar__icone-selo" aria-hidden="true"></i>
+            </span>
+          } @else {
+            <i [class]="item.icone"></i>
+          }
           @if (!recolhida()) {
             <span class="sidebar__rotulo">{{ item.label }}</span>
           }

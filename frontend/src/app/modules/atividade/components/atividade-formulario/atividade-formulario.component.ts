@@ -30,8 +30,8 @@ import { ATIVIDADE_STATUS_OPCOES, severidadeStatusAtividade } from '../../models
 type DemandaAtribuidaOpcao = DemandaAtribuidaDto & { rotulo: string };
 
 /**
- * Formulário de nova atividade, **o mesmo** no dialog da listagem/demanda e na rota `/atividade/nova`: mesmos campos, mesmos
- * defaults (status Desenvolvendo, responsável "Eu mesmo"). Quem hospeda cuida dos botões e chama `salvar()`.
+ * Formulário de nova atividade. Criar atividade é só pelo dialog (`AtividadeNovaDialogComponent`), que hospeda este formulário,
+ * cuida dos botões e chama `salvar()`. Não existe página de criação.
  */
 @Component({
   selector: 'app-atividade-formulario',
@@ -86,7 +86,7 @@ export class AtividadeFormularioComponent implements OnInit {
     this.carregarDemandasAtribuidas();
     this.carregarTodasAsTags();
     if (this.sessao.eGestor()) this.carregarUsuarios();
-    // Com a demanda definida o foco vai para o nome; sem ela, para o seletor de demanda (nunca um beco sem saída).
+    // Com a demanda definida o foco vai para o nome; sem ela, para o seletor de demanda.
     setTimeout(() => (this.demandaIdInicial() ? this.campoNome()?.nativeElement.focus() : this.seletorDemanda()?.focus()));
   }
 

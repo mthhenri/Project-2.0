@@ -175,6 +175,12 @@ export class AtividadeDetalhePage implements OnInit {
     this.rotaAtiva.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((parametros) => {
       const id = Number(parametros.get('id'));
       this.atividadeId.set(id);
+      // Rota com id que não é número (ex.: /atividade/nova): "não encontrada" direto, sem chamar a API.
+      if (!Number.isInteger(id) || id <= 0) {
+        this.atividade.set(null);
+        this.jaCarregou.set(true);
+        return;
+      }
       this.carregarTudo(id);
     });
   }

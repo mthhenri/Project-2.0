@@ -9,14 +9,6 @@ export const atividadeRotas: Routes = [
       ),
   },
   {
-    // Antes de ':id': "nova" não é um id.
-    path: 'nova',
-    loadComponent: () =>
-      import('./pages/atividade-nova/atividade-nova.page').then(
-        (modulo) => modulo.AtividadeNovaPage,
-      ),
-  },
-  {
     path: ':id',
     loadComponent: () =>
       import('./pages/atividade-detalhe/atividade-detalhe.page').then(

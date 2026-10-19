@@ -92,4 +92,21 @@
       background: var(--p-content-hover-background);
     }
   }
+
+  // Ícone com selo: o ícone do item e um "proibido" pequeno no canto (chat com a IA desativada).
+  &__icone-composto {
+    position: relative;
+    display: inline-flex;
+  }
+
+  &__item &__icone-selo {
+    position: absolute;
+    width: auto;
+    right: -0.45rem;
+    bottom: -0.35rem;
+    font-size: 0.7rem !important;
+    color: var(--p-red-500);
+    border-radius: 50%;
+    background: var(--app-surface-0);
+  }
 }

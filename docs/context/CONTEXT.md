@@ -98,7 +98,7 @@ project-2.0/
 
 - **[seed de desenvolvimento]** `npm run db:seed-dev` (raiz ou backend) cria o projeto `DEMO`, demandas, atividades e o desenvolvedor `dev.teste` / `project2026` no banco local. Idempotente; recusa produção (`APP_AMBIENTE=production` ou `DB_SSL=true`). Fica fora das migrations de propósito (`backend/src/database/scripts/seed-desenvolvimento.ts`).
 - **[revisão de UX reativada]** As telas de **Atividades** (102–105: listagem com filtros na URL e ações em massa, dialogs de execução,
-  detalhe com faixa de execução, nova atividade em dialog e em `/atividade/nova`) e de **Execuções** (110/111) foram descartadas em
+  detalhe com faixa de execução, nova atividade só em dialog — não existe página de criação) e de **Execuções** (110/111) foram descartadas em
   2026-10-16 e reativadas e concluídas depois (HISTORY: blocos de 2026-10-17 e 2026-10-18).
 - **[tasks 110–111]** O histórico de Execuções guarda dia e usuário na URL (`?data=&usuario=`, `replaceUrl`): a URL é a
   fonte do estado e cada mudança recarrega; atalhos ←/→/Home reutilizam os guardas de `core/utils/atalhos.ts`. O dialog de

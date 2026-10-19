@@ -12,8 +12,8 @@ export interface ItemNavegacao {
    * cai ou é desligada (fallback).
    */
   substituidoPelaIa?: 'TODOS' | 'SOMENTE_DESENVOLVEDOR';
-  /** Item que só funciona com a IA no ar (o chat): com a IA desligada ou fora do ar troca para este ícone, para não parecer ativo. */
-  iconeSemIa?: string;
+  /** Item que só funciona com a IA no ar (o chat): com a IA desligada ou fora do ar o ícone ganha um selo de "proibido", para não parecer ativo. */
+  exigeIa?: boolean;
 }
 
 export const ITENS_NAVEGACAO: readonly ItemNavegacao[] = [
@@ -21,7 +21,7 @@ export const ITENS_NAVEGACAO: readonly ItemNavegacao[] = [
   { label: 'Calendário', icone: 'pi pi-calendar',     rotaLink: '/calendario', tecla: 'c', somenteGestor: true  },
   { label: 'Projetos',   icone: 'pi pi-folder',       rotaLink: '/projeto',    tecla: 'j', somenteGestor: true  },
   { label: 'Demandas',   icone: 'pi pi-sitemap',      rotaLink: '/demanda',    tecla: 'd', somenteGestor: false },
-  { label: 'Chat',       icone: 'pi pi-comments',     rotaLink: '/chat',       tecla: 'h', somenteGestor: false, iconeSemIa: 'pi pi-ban' },
+  { label: 'Chat',       icone: 'pi pi-comments',     rotaLink: '/chat',       tecla: 'h', somenteGestor: false, exigeIa: true },
   { label: 'Atividades', icone: 'pi pi-check-square', rotaLink: '/atividade',  tecla: 'a', somenteGestor: false, substituidoPelaIa: 'TODOS' },
   { label: 'Execuções',  icone: 'pi pi-play',         rotaLink: '/execucao',   tecla: 'e', somenteGestor: false },
   { label: 'Tags',       icone: 'pi pi-tag',          rotaLink: '/tag',        tecla: 't', somenteGestor: true  },
