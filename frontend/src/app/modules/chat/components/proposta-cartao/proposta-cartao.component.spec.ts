@@ -1,0 +1,350 @@
+import { describe, it, expect, afterEach } from 'vitest';
+import { TestBed } from '@angular/core/testing';
+import { StatusPropostaIaEnum, TipoPropostaIaEnum, TipoUsuarioEnum } from '@project20/shared';
+import { montarComponente, ComponenteMontado } from '../../../../../testes/montar-componente';
+import { esperarRequisicao, responderErro, responderSucesso } from '../../../../../testes/http-teste';
+import { DesfazerService } from '../../../../core/services/desfazer.service';
+import { PropostaCartaoComponent } from './proposta-cartao.component';
+
+// Cartão de proposta da IA (SYSTEM.SPEC.md §12 "chat"/"proposta-ia"): nada roda sem o clique de Confirmar; Ajustar confirma já com os
+// campos corrigidos; Recusar e Desfazer têm botões próprios; um 409 (já resolvida em outro lugar) recarrega o cartão em vez de insistir.
+// O "Desfazer" do toast usa timer de 6 s: estes testes usam `detectChanges` (nunca `whenStable`) depois de confirmar e dispensam a oferta.
+
+type Montado = ComponenteMontado<PropostaCartaoComponent>;
+
+const ID = 7;
+
+function proposta(tipo: TipoPropostaIaEnum, status: StatusPropostaIaEnum, dados: Record<string, unknown>) {
+  return { id: ID, usuarioId: 1, tipo, status, dados, resultado: null, resolucaoData: null, createdDate: '2026-10-19T12:00:00.000Z' };
+}
+
+const CRIAR_ATIVIDADE = proposta(TipoPropostaIaEnum.CRIAR_ATIVIDADE, StatusPropostaIaEnum.PENDENTE, {
+  nome: 'Montar o formulário', demandaNome: 'Login', prioridade: 'ALTA', usuarioNome: 'Ana',
+});
+
+const PRIORIDADES = [{ codigo: 'ALTA', descricao: 'Alta', ordem: 2, cor: '#ff0000' }, { codigo: 'INDEFINIDA', descricao: 'Indefinida', ordem: 5, cor: '#888888' }];
+
+async function montarCartao(carregada: ReturnType<typeof proposta> | null = CRIAR_ATIVIDADE): Promise<Montado> {
+  const montado = await montarComponente(PropostaCartaoComponent, { usuario: TipoUsuarioEnum.DESENVOLVEDOR, entradas: { propostaId: ID } });
+  responderSucesso(esperarRequisicao(montado.http, 'GET', '/atividade-prioridade'), PRIORIDADES);
+  if (carregada) responderSucesso(esperarRequisicao(montado.http, 'GET', `/proposta-ia/${ID}`), carregada);
+  await montado.atualizar();
+  return montado;
+}
+
+/** Detecta mudanças sem esperar a estabilização: a oferta de desfazer deixa um timer pendente. */
+function detectar(montado: Montado): void {
+  montado.fixture.detectChanges();
+}
+
+const texto = (montado: Montado) => montado.elemento.textContent ?? '';
+const botao = (montado: Montado, rotulo: string) =>
+  Array.from(montado.elemento.querySelectorAll<HTMLButtonElement>('button')).find((candidato) => candidato.textContent?.trim() === rotulo);
+const avisosDe = (montado: Montado) => {
+  const avisos: { severity?: string; detail?: string }[] = [];
+  montado.mensagens.messageObserver.subscribe((mensagem) => avisos.push(...[mensagem].flat()));
+  return avisos;
+};
+
+afterEach(() => TestBed.inject(DesfazerService).dispensarSemEncerrar());
+
+describe('PropostaCartaoComponent — carregar', () => {
+  it('mostra o esqueleto enquanto a proposta carrega e depois o resumo, o status e os botões de uma pendente', async () => {
+    const montado = await montarComponente(PropostaCartaoComponent, { usuario: TipoUsuarioEnum.DESENVOLVEDOR, entradas: { propostaId: ID } });
+    expect(montado.elemento.querySelector('p-skeleton')).not.toBeNull();
+
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/atividade-prioridade'), PRIORIDADES);
+    responderSucesso(esperarRequisicao(montado.http, 'GET', `/proposta-ia/${ID}`), CRIAR_ATIVIDADE);
+    await montado.atualizar();
+
+    expect(montado.elemento.querySelector('p-skeleton')).toBeNull();
+    expect(texto(montado)).toContain('Proposta · Criar atividade');
+    expect(texto(montado)).toContain('Montar o formulário');
+    expect(texto(montado)).toContain('Demanda: Login');
+    expect(texto(montado)).toContain('Aguardando você');
+    expect(botao(montado, 'Confirmar')).toBeDefined();
+    expect(botao(montado, 'Ajustar')).toBeDefined();
+    expect(botao(montado, 'Recusar')).toBeDefined();
+    expect(botao(montado, 'Desfazer')).toBeUndefined();
+  });
+
+  it('falha ao carregar mostra o erro e "Tentar de novo" pede a proposta outra vez', async () => {
+    const montado = await montarComponente(PropostaCartaoComponent, { usuario: TipoUsuarioEnum.DESENVOLVEDOR, entradas: { propostaId: ID } });
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/atividade-prioridade'), PRIORIDADES);
+    responderErro(esperarRequisicao(montado.http, 'GET', `/proposta-ia/${ID}`), 500, 'Falhou');
+    await montado.atualizar();
+
+    expect(texto(montado)).toContain('Não foi possível carregar a proposta.');
+    botao(montado, 'Tentar de novo')!.click();
+    await montado.atualizar();
+    responderSucesso(esperarRequisicao(montado.http, 'GET', `/proposta-ia/${ID}`), CRIAR_ATIVIDADE);
+    await montado.atualizar();
+
+    expect(texto(montado)).toContain('Montar o formulário');
+  });
+
+  it('proposta já resolvida não oferece Confirmar nem Recusar; confirmada oferece só Desfazer', async () => {
+    const montado = await montarCartao(proposta(TipoPropostaIaEnum.CRIAR_ATIVIDADE, StatusPropostaIaEnum.CONFIRMADA, CRIAR_ATIVIDADE.dados));
+
+    expect(texto(montado)).toContain('Confirmada');
+    expect(botao(montado, 'Confirmar')).toBeUndefined();
+    expect(botao(montado, 'Recusar')).toBeUndefined();
+    expect(botao(montado, 'Desfazer')).toBeDefined();
+  });
+
+  it('proposta recusada/expirada ou desfeita fica sem botões', async () => {
+    const expirada = await montarCartao(proposta(TipoPropostaIaEnum.CRIAR_ATIVIDADE, StatusPropostaIaEnum.EXPIRADA, CRIAR_ATIVIDADE.dados));
+    expect(texto(expirada)).toContain('Recusada ou expirada');
+    expect(expirada.elemento.querySelectorAll('button')).toHaveLength(0);
+  });
+
+  it('só os tipos que sabem ser ajustados mostram "Ajustar"; os demais só Confirmar e Recusar', async () => {
+    const montado = await montarCartao(
+      proposta(TipoPropostaIaEnum.ALTERAR_ATIVIDADE, StatusPropostaIaEnum.PENDENTE, { atividadeNome: 'Formulário', atividadeId: 4 }),
+    );
+
+    expect(texto(montado)).toContain('Formulário');
+    expect(botao(montado, 'Confirmar')).toBeDefined();
+    expect(botao(montado, 'Recusar')).toBeDefined();
+    expect(botao(montado, 'Ajustar')).toBeUndefined();
+  });
+});
+
+describe('PropostaCartaoComponent — Confirmar', () => {
+  it('Confirmar faz POST em /confirmar, mostra a proposta confirmada com Desfazer, avisa a tela e oferece o desfazer do toast', async () => {
+    const montado = await montarCartao();
+    const resolvidas: StatusPropostaIaEnum[] = [];
+    montado.componente.resolvida.subscribe((resolvida) => resolvidas.push(resolvida.status));
+
+    botao(montado, 'Confirmar')!.click();
+    detectar(montado);
+    const pedido = esperarRequisicao(montado.http, 'POST', `/proposta-ia/${ID}/confirmar`);
+    responderSucesso(pedido, proposta(TipoPropostaIaEnum.CRIAR_ATIVIDADE, StatusPropostaIaEnum.CONFIRMADA, CRIAR_ATIVIDADE.dados));
+    detectar(montado);
+
+    expect(texto(montado)).toContain('Confirmada');
+    expect(botao(montado, 'Desfazer')).toBeDefined();
+    expect(botao(montado, 'Confirmar')).toBeUndefined();
+    expect(resolvidas).toEqual([StatusPropostaIaEnum.CONFIRMADA]);
+    expect(TestBed.inject(DesfazerService).oferta()?.mensagem).toBe('Proposta confirmada');
+  });
+
+  it('o "Desfazer" do toast desfaz no servidor e recarrega o cartão com a situação nova', async () => {
+    const montado = await montarCartao();
+    botao(montado, 'Confirmar')!.click();
+    responderSucesso(
+      esperarRequisicao(montado.http, 'POST', `/proposta-ia/${ID}/confirmar`),
+      proposta(TipoPropostaIaEnum.CRIAR_ATIVIDADE, StatusPropostaIaEnum.CONFIRMADA, CRIAR_ATIVIDADE.dados),
+    );
+
+    TestBed.inject(DesfazerService).executar();
+    responderSucesso(
+      esperarRequisicao(montado.http, 'POST', `/proposta-ia/${ID}/desfazer`),
+      proposta(TipoPropostaIaEnum.CRIAR_ATIVIDADE, StatusPropostaIaEnum.DESFEITA, CRIAR_ATIVIDADE.dados),
+    );
+    responderSucesso(
+      esperarRequisicao(montado.http, 'GET', `/proposta-ia/${ID}`),
+      proposta(TipoPropostaIaEnum.CRIAR_ATIVIDADE, StatusPropostaIaEnum.DESFEITA, CRIAR_ATIVIDADE.dados),
+    );
+    detectar(montado);
+
+    expect(texto(montado)).toContain('Desfeita');
+    expect(botao(montado, 'Desfazer')).toBeUndefined();
+  });
+
+  it('um segundo clique enquanto a chamada está em andamento não repete o POST', async () => {
+    const montado = await montarCartao();
+
+    botao(montado, 'Confirmar')!.click();
+    botao(montado, 'Confirmar')!.click();
+
+    const pedido = esperarRequisicao(montado.http, 'POST', `/proposta-ia/${ID}/confirmar`);
+    responderSucesso(pedido, proposta(TipoPropostaIaEnum.CRIAR_ATIVIDADE, StatusPropostaIaEnum.CONFIRMADA, CRIAR_ATIVIDADE.dados));
+  });
+
+  it('409 (já resolvida em outro lugar) recarrega o cartão e avisa com severidade informativa, sem toast de erro', async () => {
+    const montado = await montarCartao();
+    const avisos = avisosDe(montado);
+
+    botao(montado, 'Confirmar')!.click();
+    responderErro(esperarRequisicao(montado.http, 'POST', `/proposta-ia/${ID}/confirmar`), 409, 'A proposta já foi resolvida.');
+    responderSucesso(
+      esperarRequisicao(montado.http, 'GET', `/proposta-ia/${ID}`),
+      proposta(TipoPropostaIaEnum.CRIAR_ATIVIDADE, StatusPropostaIaEnum.EXPIRADA, CRIAR_ATIVIDADE.dados),
+    );
+    detectar(montado);
+
+    expect(avisos).toEqual([expect.objectContaining({ severity: 'info', detail: 'A proposta já foi resolvida.' })]);
+    expect(texto(montado)).toContain('Recusada ou expirada');
+    expect(botao(montado, 'Confirmar')).toBeUndefined();
+    expect(montado.errosHttpNaoTratados).toHaveLength(0);
+  });
+
+  it('outro erro mostra o aviso do backend, mantém os botões e não recarrega', async () => {
+    const montado = await montarCartao();
+    const avisos = avisosDe(montado);
+
+    botao(montado, 'Confirmar')!.click();
+    responderErro(esperarRequisicao(montado.http, 'POST', `/proposta-ia/${ID}/confirmar`), 400, 'Atividade sem demanda.');
+    detectar(montado);
+
+    expect(avisos).toEqual([expect.objectContaining({ severity: 'warn', detail: 'Atividade sem demanda.' })]);
+    expect(botao(montado, 'Confirmar')).toBeDefined();
+    expect(botao(montado, 'Confirmar')!.disabled).toBe(false);
+    montado.http.expectNone((requisicao) => requisicao.method === 'GET');
+  });
+});
+
+describe('PropostaCartaoComponent — Recusar e Desfazer', () => {
+  it('Recusar faz POST em /recusar e o cartão fica sem botões, sem oferecer desfazer no toast', async () => {
+    const montado = await montarCartao();
+
+    botao(montado, 'Recusar')!.click();
+    responderSucesso(
+      esperarRequisicao(montado.http, 'POST', `/proposta-ia/${ID}/recusar`),
+      proposta(TipoPropostaIaEnum.CRIAR_ATIVIDADE, StatusPropostaIaEnum.EXPIRADA, CRIAR_ATIVIDADE.dados),
+    );
+    detectar(montado);
+
+    expect(texto(montado)).toContain('Recusada ou expirada');
+    expect(montado.elemento.querySelectorAll('button')).toHaveLength(0);
+    expect(TestBed.inject(DesfazerService).oferta()).toBeNull();
+  });
+
+  it('Desfazer (botão do cartão) faz POST em /desfazer e mostra a proposta desfeita', async () => {
+    const montado = await montarCartao(proposta(TipoPropostaIaEnum.CRIAR_ATIVIDADE, StatusPropostaIaEnum.CONFIRMADA, CRIAR_ATIVIDADE.dados));
+
+    botao(montado, 'Desfazer')!.click();
+    responderSucesso(
+      esperarRequisicao(montado.http, 'POST', `/proposta-ia/${ID}/desfazer`),
+      proposta(TipoPropostaIaEnum.CRIAR_ATIVIDADE, StatusPropostaIaEnum.DESFEITA, CRIAR_ATIVIDADE.dados),
+    );
+    detectar(montado);
+
+    expect(texto(montado)).toContain('Desfeita');
+    expect(montado.elemento.querySelectorAll('button')).toHaveLength(0);
+  });
+
+  it('409 ao desfazer (já desfeita em outro lugar) recarrega o cartão', async () => {
+    const montado = await montarCartao(proposta(TipoPropostaIaEnum.CRIAR_ATIVIDADE, StatusPropostaIaEnum.CONFIRMADA, CRIAR_ATIVIDADE.dados));
+
+    botao(montado, 'Desfazer')!.click();
+    responderErro(esperarRequisicao(montado.http, 'POST', `/proposta-ia/${ID}/desfazer`), 409, 'Já desfeita.');
+    responderSucesso(
+      esperarRequisicao(montado.http, 'GET', `/proposta-ia/${ID}`),
+      proposta(TipoPropostaIaEnum.CRIAR_ATIVIDADE, StatusPropostaIaEnum.DESFEITA, CRIAR_ATIVIDADE.dados),
+    );
+    detectar(montado);
+
+    expect(texto(montado)).toContain('Desfeita');
+  });
+});
+
+describe('PropostaCartaoComponent — Ajustar', () => {
+  const campoNome = (montado: Montado) => montado.elemento.querySelector<HTMLInputElement>('input[formcontrolname="nome"]')!;
+
+  async function abrirAjuste(carregada = CRIAR_ATIVIDADE): Promise<Montado> {
+    const montado = await montarCartao(carregada);
+    botao(montado, 'Ajustar')!.click();
+    await montado.atualizar();
+    return montado;
+  }
+
+  async function digitarNome(montado: Montado, valor: string) {
+    campoNome(montado).value = valor;
+    campoNome(montado).dispatchEvent(new Event('input'));
+    montado.fixture.detectChanges();
+  }
+
+  const enviarFormulario = (montado: Montado) => {
+    montado.elemento.querySelector('form')!.dispatchEvent(new Event('submit'));
+    detectar(montado);
+  };
+
+  it('abre o formulário com o nome proposto, troca os botões por "Confirmar com o ajuste" e "Cancelar"', async () => {
+    const montado = await abrirAjuste();
+
+    expect(campoNome(montado).value).toBe('Montar o formulário');
+    expect(botao(montado, 'Confirmar com o ajuste')).toBeDefined();
+    expect(botao(montado, 'Cancelar')).toBeDefined();
+    expect(botao(montado, 'Confirmar')).toBeUndefined();
+    expect(botao(montado, 'Recusar')).toBeUndefined();
+  });
+
+  it('Cancelar fecha o formulário sem chamar o servidor e devolve os botões da pendente', async () => {
+    const montado = await abrirAjuste();
+
+    botao(montado, 'Cancelar')!.click();
+    await montado.atualizar();
+
+    montado.http.expectNone((requisicao) => requisicao.method === 'POST');
+    expect(montado.elemento.querySelector('form')).toBeNull();
+    expect(botao(montado, 'Confirmar')).toBeDefined();
+  });
+
+  it('nome com menos de 3 caracteres: não envia e mostra o erro do campo', async () => {
+    const montado = await abrirAjuste();
+
+    await digitarNome(montado, 'ab');
+    enviarFormulario(montado);
+
+    montado.http.expectNone((requisicao) => requisicao.method === 'POST');
+    expect(texto(montado)).toContain('Informe um nome com ao menos 3 caracteres');
+  });
+
+  it('Confirmar com o ajuste faz POST em /ajustar com os dados corrigidos (nome sem espaços nas pontas), fecha o formulário e oferece desfazer', async () => {
+    const montado = await abrirAjuste();
+    const resolvidas: StatusPropostaIaEnum[] = [];
+    montado.componente.resolvida.subscribe((resolvida) => resolvidas.push(resolvida.status));
+
+    await digitarNome(montado, '  Montar o formulário de cadastro ');
+    enviarFormulario(montado);
+    const pedido = esperarRequisicao(montado.http, 'POST', `/proposta-ia/${ID}/ajustar`);
+    expect(pedido.request.body).toEqual({ dados: { ...CRIAR_ATIVIDADE.dados, nome: 'Montar o formulário de cadastro', prioridade: 'ALTA' } });
+    responderSucesso(
+      pedido,
+      proposta(TipoPropostaIaEnum.CRIAR_ATIVIDADE, StatusPropostaIaEnum.AJUSTADA, { ...CRIAR_ATIVIDADE.dados, nome: 'Montar o formulário de cadastro' }),
+    );
+    detectar(montado);
+
+    expect(montado.elemento.querySelector('form')).toBeNull();
+    expect(texto(montado)).toContain('Ajustada e confirmada');
+    expect(texto(montado)).toContain('Montar o formulário de cadastro');
+    expect(resolvidas).toEqual([StatusPropostaIaEnum.AJUSTADA]);
+    expect(TestBed.inject(DesfazerService).oferta()?.mensagem).toBe('Proposta ajustada e confirmada');
+  });
+
+  it('409 ao ajustar recarrega o cartão e mantém o formulário aberto até a situação nova chegar', async () => {
+    const montado = await abrirAjuste();
+
+    enviarFormulario(montado);
+    responderErro(esperarRequisicao(montado.http, 'POST', `/proposta-ia/${ID}/ajustar`), 409, 'Já resolvida.');
+    responderSucesso(
+      esperarRequisicao(montado.http, 'GET', `/proposta-ia/${ID}`),
+      proposta(TipoPropostaIaEnum.CRIAR_ATIVIDADE, StatusPropostaIaEnum.CONFIRMADA, CRIAR_ATIVIDADE.dados),
+    );
+    detectar(montado);
+
+    expect(texto(montado)).toContain('Confirmada');
+  });
+
+  it('no projeto proposto, o código é obrigatório, vai em maiúsculas e o nome também é ajustado', async () => {
+    const projeto = proposta(TipoPropostaIaEnum.CRIAR_PROJETO, StatusPropostaIaEnum.PENDENTE, { nome: 'Loja virtual', codigo: 'LOJA', cor: '#112233' });
+    const montado = await abrirAjuste(projeto);
+    const campoCodigo = montado.elemento.querySelector<HTMLInputElement>('input[formcontrolname="codigo"]')!;
+
+    campoCodigo.value = 'x';
+    campoCodigo.dispatchEvent(new Event('input'));
+    enviarFormulario(montado);
+    montado.http.expectNone((requisicao) => requisicao.method === 'POST');
+    expect(texto(montado)).toContain('Informe um código com ao menos 2 caracteres');
+
+    campoCodigo.value = 'loja2';
+    campoCodigo.dispatchEvent(new Event('input'));
+    enviarFormulario(montado);
+    const pedido = esperarRequisicao(montado.http, 'POST', `/proposta-ia/${ID}/ajustar`);
+    expect(pedido.request.body).toEqual({ dados: { nome: 'Loja virtual', codigo: 'LOJA2', cor: '#112233' } });
+    responderSucesso(pedido, { ...projeto, status: StatusPropostaIaEnum.AJUSTADA });
+    detectar(montado);
+  });
+});

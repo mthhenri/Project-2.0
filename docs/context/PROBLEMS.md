@@ -141,3 +141,13 @@
 - **Correção:** task 188 (`docs/specs/backlog/188-chat-nivel-real-e-tokens-do-turno.spec.md`): gravar o maior nível do turno e somar os tokens das
   ferramentas.
 - **Desde:** origem do chat (bloco 5 do rework); achado em conversa com o autor (2026-10-19).
+
+### P-018 — O botão Enviar do chat não dispara o envio · `ABERTO` · frontend
+
+- **Sintoma:** no teste de componente, o clique em "Enviar" não chama `enviar()`; só o Enter (`aoTeclar`) e os botões de sugestão enviam. Em um navegador
+  real o clique pode cair no submit nativo do `<form>` (recarregar a página) — **não confirmado ao vivo**.
+- **Causa:** `chat.page.html` usa `<form (ngSubmit)="enviar()">` sem `[formGroup]`, e `chat.page.ts` importa só `ReactiveFormsModule` (sem `FormsModule`/`NgForm`),
+  então nenhuma diretiva emite o `ngSubmit`.
+- **Contorno:** enviar com Enter ou por uma sugestão.
+- **Correção:** `(click)="enviar()"` no botão (sem `type="submit"`), ou `[formGroup]` no formulário. O `it.todo('P-018: ...')` em `chat.page.spec.ts` vira teste normal.
+- **Desde:** origem da tela do chat; achado na task 185.

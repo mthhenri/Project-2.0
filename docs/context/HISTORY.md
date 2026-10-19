@@ -12,6 +12,36 @@
 
 ---
 
+## 2026-10-19 — Task 185: testes do chat
+
+Décima quinta task da guarda-chuva `testes-automatizados`. Nenhum código de produção mudou. O frontend foi escrito por um subagente (`implementador`) e conferido aqui
+(suíte completa, builds e leitura do achado no código).
+
+**Backend.**
+- `chat.controller` (13): sete rotas com verbo e caminho, nenhuma pública/de gestor/de administrador, leituras com o usuário do token, e para cada uma das três rotas de
+  envio (`mensagem`, `bom-dia`, `retomada`): eventos viram o fluxo na ordem e a resposta é encerrada; 409 antes do primeiro evento sobe sem abrir nem fechar o fluxo; falha
+  depois do primeiro evento ainda fecha o fluxo; cliente que fecha a conexão não interrompe a geração.
+- `event-stream.response` (5): cabeçalhos só no primeiro evento, uma linha `data:` por evento, escrita ignorada com a conexão fechada, `encerrar` idempotente.
+- `chat-mensagem.documento` (6): `paraFonte`/`deFonte`/`paraResumo` (nulos, zero preservado, sem conteúdo bruto na API).
+- `chat-mensagem-indice.repository` (14, cliente em dublê): índices criados uma vez e de forma idempotente, corrida de criação ignorada, consultas compartilhadas
+  (dono, `CHAT` só nas conversas, todas as palavras, período, limites), título por conversa, falha vira `BusinessException` sem vazar o erro do serviço, subida com o
+  serviço fora do ar.
+- `chat-mensagem-postgres.repository.integracao` (11, banco real, em transação com rollback): ordem e campos, isolamento entre usuários, busca com e sem acento e todas as
+  palavras, período, relevância e depois a mais recente, limite de 50, conversas só do contexto `CHAT`, título gravado/trocado/isolado, mensagens nunca alteradas, soft delete.
+  O contrato antigo (`armazenamento-de-chat.contrato`) segue desligado por padrão e aponta para o banco de desenvolvimento; não foi alterado.
+- Separação de contextos (item 5): conferida, já coberta em `chat.service.test.ts` ("check-in e chat não se leem", "uma resposta do check-in não conta como o bom dia").
+
+**Frontend (106 testes + 1 `todo`, 5 arquivos novos).** `chat.service` (20: stream sobre `POST` com `fetch` simulado, eventos cortados no meio de pedaço, malformados,
+409 e falta de rede antes do stream, cancelamento, bom dia e retomada), `proposta-ia.service` (5), `historico` (17), `proposta-cartao` (19: Confirmar com Desfazer,
+clique duplo, 409 que recarrega, Recusar, Ajustar) e a página `chat` (33: envio, trechos, ferramenta, proposta, erro com nova tentativa, sugestões, IA desligada e fora do ar,
+bom dia, retomada, histórico, copiar). Ficaram de fora: "Ir para o fim" (medidas de rolagem que o jsdom não tem) e o formulário de Ajustar de cinco tipos de proposta.
+
+**Achado.** P-018: o botão "Enviar" não dispara o envio — o `<form (ngSubmit)>` não tem `FormsModule` nem `[formGroup]`, então o `ngSubmit` nunca é emitido; só o Enter e as
+sugestões enviam. Confirmado por teste de componente e pela leitura do template e dos `imports`; **não confirmado ao vivo**. `it.todo('P-018: ...')` no spec da página.
+
+**Gates.** `npm test`: frontend 90 arquivos, 1014 testes passando e 2 `todo`; backend 974 (967 + 7 `todo` de P-010 a P-016, anteriores); `test:integracao` 232 passando; builds de
+backend e frontend verdes; `repo:verificar` aprovado. Sem lint (P-001). Sem verificação ao vivo: só testes.
+
 ## 2026-10-19 — Task 184: testes da camada de IA
 
 Décima quarta task da guarda-chuva `testes-automatizados`. Nenhum código de produção mudou. Os services de `ia`, `configuracao-ia`, `prompt`, `proposta-ia` e

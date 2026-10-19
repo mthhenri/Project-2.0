@@ -62,7 +62,7 @@ Regras da cobertura:
 | 182 | [Anotações (pad)](../done/182-testes-anotacoes.spec.md) | `anotacao` |
 | 183 | [Relatório](../done/183-testes-relatorio.spec.md) | `relatorio` |
 | 184 | [Camada de IA](../done/184-testes-camada-de-ia.spec.md) | `ia`, `configuracao-ia`, `prompt`, `ferramenta-ia`, `proposta-ia`, `assistente` |
-| 185 | [Chat](185-testes-chat.spec.md) | `chat` |
+| 185 | [Chat](../done/185-testes-chat.spec.md) | `chat` |
 | 186 | [Check-in](186-testes-checkin.spec.md) | `checkin` |
 | 187 | [Frontend: núcleo e componentes compartilhados](187-testes-frontend-nucleo-e-compartilhados.spec.md) | `frontend/src/app/core`, `shared`, layout |
 
