@@ -165,6 +165,16 @@
     }
   }
 
+  &__intervalo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--p-text-muted-color);
+    padding: 0 0 0.75rem;
+  }
+
   // "Justificar" inline: fantasma, só aparece com o mouse (ou foco) na linha.
   &__justificar {
     display: inline-flex;

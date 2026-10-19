@@ -188,8 +188,8 @@ describe('PontoMesDiaComponent: expandir o dia', () => {
 
     expect(montado.componente.carregando()).toBe(false);
     expect(texto(montado.elemento)).toContain('Atividade um');
-    expect(texto(montado.elemento)).toContain('Intervalos detectados');
-    expect(montado.elemento.querySelectorAll('app-ponto-intervalo-lista li')).toHaveLength(1);
+    expect(texto(montado.elemento)).toContain('Intervalo (1h');
+    expect(montado.elemento.querySelectorAll('.ponto-mes-dia__intervalo')).toHaveLength(1);
 
     // recolher e abrir de novo reaproveita o detalhe, sem nova consulta
     (montado.elemento.querySelector('.ponto-mes-dia__linha') as HTMLElement).click();

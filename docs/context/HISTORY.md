@@ -12,6 +12,10 @@
 
 ---
 
+## 2026-10-19 — Ponto: intervalos entram na linha do tempo do dia
+
+Na tela de ponto, o dia expandido mostrava as execuções numa `p-timeline` e os intervalos num bloco separado ("Intervalos detectados"). Agora `PontoMesDiaComponent.itensLinhaDoTempo` mescla execuções e intervalos por `inicioData` e a timeline mostra "Intervalo (1h 11min)" no ponto exato entre as execuções. O componente `PontoIntervaloListaComponent` ficou sem uso e foi removido, com o seu teste. Frontend: 121 arquivos, 1366 testes passando. Não verificado ao vivo no navegador; sem lint no projeto (P-001).
+
 ## 2026-10-19 — Task 191: assunto das mensagens e contexto do chat (fecha a guarda-chuva das dúvidas de código)
 
 Quarta e última task da guarda-chuva `chat-duvidas-de-codigo`: com as dúvidas de código ligadas o chat responde perguntas de programação com o prompt `DUVIDA_CODIGO`, marca cada mensagem pelo assunto e monta o contexto conforme o modo; desligadas, a IA recusa com educação.
