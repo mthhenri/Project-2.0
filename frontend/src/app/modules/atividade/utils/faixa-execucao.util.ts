@@ -1,4 +1,5 @@
-import { TipoAtividadeStatusEnum } from '@project20/shared';
+import { TipoAtividadeStatusEnum, dataIsoNoFuso, diaMesNoFuso, horaNoFuso } from '@project20/shared';
+import { ambiente } from '../../../../environments/environment';
 import { ATIVIDADE_STATUS_EXECUTAVEL } from '../models/atividade.model';
 
 /**
@@ -27,22 +28,29 @@ export function estadoDaFaixaDeExecucao(entrada: EntradaFaixaExecucao): EstadoFa
   return 'livre';
 }
 
-const hora = (data: Date) => `${String(data.getHours()).padStart(2, '0')}:${String(data.getMinutes()).padStart(2, '0')}`;
-const mesmoDia = (a: Date, b: Date) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
-
-function rotuloDoDia(data: Date, agora: Date): string {
-  if (mesmoDia(data, agora)) return 'hoje';
-  const ontem = new Date(agora);
-  ontem.setDate(ontem.getDate() - 1);
-  if (mesmoDia(data, ontem)) return 'ontem';
-  return `${String(data.getDate()).padStart(2, '0')}/${String(data.getMonth() + 1).padStart(2, '0')}`;
+function rotuloDoDia(data: Date, agora: Date, fusoHorario: string): string {
+  const diaDoInstante = dataIsoNoFuso(data, fusoHorario);
+  if (diaDoInstante === dataIsoNoFuso(agora, fusoHorario)) return 'hoje';
+  // 24h antes de "agora" cai no dia anterior no fuso do sistema (o Brasil não tem horário de verão).
+  if (diaDoInstante === dataIsoNoFuso(new Date(agora.getTime() - 24 * 3_600_000), fusoHorario)) return 'ontem';
+  return diaMesNoFuso(data, fusoHorario);
 }
 
-/** "hoje 09:12 → 11:27", "ontem 17:00 → 18:10", "18/10 22:00 → 19/10 01:30" e, em andamento, "hoje 09:12 → agora". */
-export function formatarIntervaloDaExecucao(inicio: Date | string, fim: Date | string | null, agora: Date = new Date()): string {
+/**
+ * "hoje 09:12 → 11:27", "ontem 17:00 → 18:10", "18/10 22:00 → 19/10 01:30" e, em andamento, "hoje 09:12 → agora".
+ * Dia e hora seguem o fuso do sistema, não o do navegador.
+ */
+export function formatarIntervaloDaExecucao(
+  inicio: Date | string,
+  fim: Date | string | null,
+  agora: Date = new Date(),
+  fusoHorario: string = ambiente.fusoHorario,
+): string {
   const inicioData = new Date(inicio);
-  const comeco = `${rotuloDoDia(inicioData, agora)} ${hora(inicioData)}`;
+  const comeco = `${rotuloDoDia(inicioData, agora, fusoHorario)} ${horaNoFuso(inicioData, fusoHorario)}`;
   if (!fim) return `${comeco} → agora`;
   const fimData = new Date(fim);
-  return mesmoDia(inicioData, fimData) ? `${comeco} → ${hora(fimData)}` : `${comeco} → ${rotuloDoDia(fimData, agora)} ${hora(fimData)}`;
+  const mesmoDia = dataIsoNoFuso(inicioData, fusoHorario) === dataIsoNoFuso(fimData, fusoHorario);
+  const fimTexto = horaNoFuso(fimData, fusoHorario);
+  return mesmoDia ? `${comeco} → ${fimTexto}` : `${comeco} → ${rotuloDoDia(fimData, agora, fusoHorario)} ${fimTexto}`;
 }

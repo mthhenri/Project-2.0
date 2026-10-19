@@ -10,7 +10,8 @@ import { DividerModule } from 'primeng/divider';
 import { ColorPickerModule } from 'primeng/colorpicker';
 import { timer } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { EstadoIaEnum } from '@project20/shared';
+import { EstadoIaEnum, dataHoraNoFuso } from '@project20/shared';
+import { ambiente } from '../../../../environments/environment';
 import { AutenticacaoService } from '../../../core/services/autenticacao.service';
 import { UsuarioSessaoService } from '../../../core/services/usuario-sessao.service';
 import { rotuloTipoUsuario } from '../../../core/utils/tipo-usuario';
@@ -133,9 +134,7 @@ export class TopbarComponent {
   }
 
   private atualizarHora(): void {
-    const agora = new Date();
-    const hora = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    const data = agora.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const [data, hora] = dataHoraNoFuso(new Date(), ambiente.fusoHorario).split(' ');
     this.horaAtual.set(`${hora} ${data}`);
   }
 

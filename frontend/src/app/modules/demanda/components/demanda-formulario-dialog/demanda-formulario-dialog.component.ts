@@ -23,7 +23,9 @@ import {
   temPermissaoDeGestor,
   REGEX_SEM_CARACTERES_PROIBIDOS,
   MENSAGEM_CARACTERES_PROIBIDOS,
+  hojeNoFuso,
 } from '@project20/shared';
+import { ambiente } from '../../../../../environments/environment';
 import { DemandaService } from '../../services/demanda.service';
 import { TagService } from '../../../tag/services/tag.service';
 import { UsuarioService } from '../../../usuario/services/usuario.service';
@@ -188,7 +190,7 @@ export class DemandaFormularioDialogComponent implements OnChanges {
   }
 
   aplicarAtalhoPrevisao(atalho: AtalhoPrevisao): void {
-    this.formulario.controls.previsaoFimData.setValue(dataDoAtalho(atalho));
+    this.formulario.controls.previsaoFimData.setValue(dataDoAtalho(atalho, hojeNoFuso(ambiente.fusoHorario)));
     this.formulario.controls.previsaoFimData.markAsDirty();
   }
 

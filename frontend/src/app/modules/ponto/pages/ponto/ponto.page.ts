@@ -24,7 +24,9 @@ import {
   PontoMensalConsultarDto,
   UsuarioResumoDto,
   TipoUsuarioStatusEnum,
+  hojeNoFuso,
 } from '@project20/shared';
+import { ambiente } from '../../../../../environments/environment';
 import { PontoService } from '../../services/ponto.service';
 import { UsuarioService } from '../../../usuario/services/usuario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
@@ -74,7 +76,7 @@ export class PontoPage implements OnInit {
   readonly sessao = inject(UsuarioSessaoService);
   private readonly roteador = inject(Router);
 
-  readonly hoje = this.inicioDoDia(new Date());
+  readonly hoje = hojeNoFuso(ambiente.fusoHorario);
 
   readonly formularioFiltros = this.formBuilder.group({
     usuarioId: [null as number | null],
@@ -289,10 +291,6 @@ export class PontoPage implements OnInit {
   }
 
   @ViewChild('justificativaDialog') private justificativaDialog?: PontoJustificativaDialogComponent;
-
-  private inicioDoDia(data: Date): Date {
-    return new Date(data.getFullYear(), data.getMonth(), data.getDate());
-  }
 
   private formatarData(data: Date): string {
     const ano = data.getFullYear();

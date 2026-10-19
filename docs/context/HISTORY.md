@@ -12,6 +12,19 @@
 
 ---
 
+## 2026-10-19 — P-004 resolvido nas demais telas: "hoje" e as horas seguem o fuso do sistema
+
+Continuação do bloco de 2026-10-17 (Execuções e Relatório). As telas que ainda liam `new Date()` passam a usar as funções de `shared/src/utils/fuso-horario.ts` com `ambiente.fusoHorario`; o `DatePipe` já estava em `-0300` fixo (`DATE_PIPE_DEFAULT_OPTIONS`), então as horas formatadas em template não mudaram.
+
+- **"Hoje" por `hojeNoFuso`:** Calendário (mês exibido, "Hoje", ano/mês de hoje), Ponto (página: mês inicial e limite de "hoje"; linha do dia: `ehHoje` por `dataIsoNoFuso`; dialog de justificativa: ano e mês iniciais) e os atalhos de previsão de Demanda (`dataDoAtalho` no formulário e nas métricas passa `hojeNoFuso`).
+- **Relógio da topbar:** `dataHoraNoFuso` no lugar de `toLocale*String`.
+- **Faixa de execução da atividade** (`formatarIntervaloDaExecucao`): rótulo `hoje`/`ontem`, dia/mês e hora pelo fuso, com o fuso como 4º parâmetro (padrão `ambiente.fusoHorario`); "ontem" é o dia de 24h antes de agora no fuso.
+- **Dialog "Registrar execução":** o datepicker com hora recebe o relógio do fuso (`instanteParaRelogioLocal`) e o envio converte de volta (`relogioLocalParaInstante`) antes do `toISOString()`, o mesmo par da edição no histórico de execuções. Antes, com o navegador fora de São Paulo, o "agora" e a "Manhã" (09:00–12:00) saíam no horário errado.
+- **Não mudou, por serem instantes ou datas sem fuso:** durações e cronômetros (`Date.now()` menos início), "salvo há X" das anotações, `data-brasileira.pipe` (data só-data ao meio-dia local), `formatarDataIso`/`lerDataIso` e `rotuloDoDia` do chat (recebem o "hoje" do servidor).
+- **Specs corrigidos:** os specs de Ponto e do dialog de registro calculavam "hoje" pelo relógio local (repetiam o defeito); passaram a usar `hojeNoFuso`. Teste novo no `faixa-execucao.util.test.ts`: 02:00Z de 19/10 ainda é 18/10 23:00 em Brasília.
+- **Testes:** shared 165; frontend 1369 passando + 3 `todo`, **em três fusos de navegador** (`TZ=America/Sao_Paulo`, `Asia/Tokyo`, `Pacific/Auckland`); antes do ajuste dos specs, `Asia/Tokyo` derrubava 5 testes. Build do frontend OK. Backend não foi tocado. Sem lint (P-001).
+- **Pendente:** verificação ao vivo das telas alteradas (Calendário, Ponto, formulário de demanda, topbar, dialog de registro) em 1920×1080, 1366×768 e 1080×1920, com o navegador em fuso diferente do sistema; não foi feita nesta sessão (sem app no ar).
+
 ## 2026-10-19 — Task 191: assunto das mensagens e contexto do chat (fecha a guarda-chuva das dúvidas de código)
 
 Quarta e última task da guarda-chuva `chat-duvidas-de-codigo`: com as dúvidas de código ligadas o chat responde perguntas de programação com o prompt `DUVIDA_CODIGO`, marca cada mensagem pelo assunto e monta o contexto conforme o modo; desligadas, a IA recusa com educação.
