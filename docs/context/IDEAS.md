@@ -63,17 +63,39 @@
 - **Custo aparente:** estender o interpretador (nó de tabela, sem HTML), o visualizador e o esquema do editor (Milkdown tem o preset GFM), mais testes
   de ida e volta; decidir o que a IA pode gerar.
 
-### I-004 — Chat IA como tira-dúvidas de programação, com bloco de código copiável · chat IA/frontend
+### I-005 — IA lê o código dos projetos · chat IA/backend
 
-- **Ideia:** o chat da IA também funciona como auxiliador de programação: responde perguntas como "como faço X em TypeScript?",
-  "como faço um loop em PHP?" ou "como faço uma classe em C#?", exibindo o código em bloco com realce de sintaxe da linguagem
-  e um botão de copiar.
-- **Origem:** pedido do autor em conversa (2026-10-19).
-- **Por quê:** tirar dúvida de sintaxe sem sair do sistema; hoje o chat é voltado às operações do próprio sistema, e o bloco
-  de código não tem cópia em um clique.
-- **Custo aparente:** ajuste de prompt/escopo do chat para aceitar perguntas de programação; no visualizador de Markdown, realce
-  por linguagem e botão de copiar nos blocos de código (afeta todo lugar que usa o visualizador — avaliar impacto).
+- **Ideia:** dar à IA acesso de leitura ao código-fonte dos projetos cadastrados, para responder dúvidas e relacionar
+  atividades e demandas com o código real.
+- **Origem:** conversa sobre a I-004 (2026-10-19).
+- **Por quê:** a resposta de programação deixa de ser genérica ("como faço um loop") e passa a falar do código do projeto
+  ("onde isso é feito aqui", "por que isso quebra"); as dúvidas registradas pela I-004 também passam a ser ligadas ao código.
+- **Custo aparente:** vincular projeto a repositório (schema novo?), credencial de acesso, indexação ou busca no código
+  (ferramenta nova da IA), controle de quem vê qual repositório — alinhado ao acesso por projeto (`demanda_usuario`); custo
+  de contexto alto.
+
+### I-006 — Gestor pergunta à IA onde o time tem mais dúvida · chat IA/gestor
+
+- **Ideia:** o gestor consulta a IA sobre o histórico de dúvidas do time ("com o que o pessoal está tendo mais dúvida?",
+  "o que está mais difícil?"), a partir das conversas registradas pela I-004.
+- **Origem:** conversa sobre a I-004 (2026-10-19).
+- **Por quê:** transforma as dúvidas do dia a dia em sinal para treinamento, pareamento ou revisão de demanda.
+- **Custo aparente:** ferramenta da IA para ler e resumir conversas de outros usuários (permissão de gestor), depende da
+  marcação de assunto das mensagens (I-004) para filtrar dúvidas de código; decidir o que o desenvolvedor sabe sobre essa
+  leitura. A marcação de assunto entra na task 191.
+
+### I-007 — Dúvida de código complexa escala para um nível mais forte · chat IA/backend
+
+- **Ideia:** quando a IA perceber que uma dúvida de código ficou complexa, ela escala para o nível padrão ou analítico, no
+  mesmo molde das tarefas pesadas: uma ferramenta "responder dúvida de código complexa" que roda num modelo mais forte.
+- **Origem:** conversa sobre a I-004 (2026-10-19); o autor quer a possibilidade anotada, com a dúvida de código começando no rápido.
+- **Por quê:** o rápido basta para sintaxe, mas não para dúvida de arquitetura ou depuração; o usuário nunca escolhe modelo.
+- **Custo aparente:** ferramenta nova; decidir como a resposta dela chega ao usuário com streaming (hoje o resultado de uma
+  ferramenta volta ao modelo rápido, que reescreve) e o custo. O selo de nível verdadeiro (task 188) é pré-requisito.
 
 ## Promovidas
 
-Nenhuma ainda.
+### I-004 — Chat IA como tira-dúvidas de programação, com bloco de código copiável · chat IA/frontend
+
+- **Promovida em 2026-10-19** para a guarda-chuva [`chat-duvidas-de-codigo.spec.md`](../specs/backlog/chat-duvidas-de-codigo.spec.md)
+  (tasks 188–191). As decisões da conversa com o autor estão na seção "Decisões" da guarda-chuva.

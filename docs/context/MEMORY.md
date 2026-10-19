@@ -80,3 +80,4 @@ quando essa branch for mergeada). A task 117 (remover a descrição da atividade
 | Prints da revisão (PNG, referência canônica) | `docs/assets/revisao-ui-ux/prints/` |
 | Cobertura de testes: guarda-chuva, método comum por camada e tasks 171–187 | `docs/specs/backlog/testes-automatizados.spec.md` |
 | Retrato da cobertura em 2026-10-18 (números, lacunas por camada, armadilhas) | `docs/specs/backlog/testes-automatizados/ANALISE.md` |
+| Dúvidas de programação no chat: guarda-chuva, decisões do autor e tasks 188–191 | `docs/specs/backlog/chat-duvidas-de-codigo.spec.md` |

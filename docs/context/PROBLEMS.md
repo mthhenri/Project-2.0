@@ -129,3 +129,15 @@
 - **Correção:** descartar a ocorrência quando a data não existe naquele ano (a decisão do que fazer com 29/02 fora de bissexto é do autor: omitir, ou
   cair em 28/02). O `todo: 'P-016'` em `dias-nao-uteis-no-intervalo.test.ts` vira teste normal.
 - **Desde:** origem (achado na task 180).
+
+### P-017 — Selo de nível do chat é sempre "rápido" e os tokens das ferramentas se perdem · `ABERTO` · backend
+
+- **Sintoma:** toda resposta do chat mostra o selo "rápido", mesmo quando uma ferramenta rodou no analítico (descrever demanda, sugerir conexões)
+  ou no padrão (descrição de execução). Os tokens dessas chamadas não entram em `tokensEntrada`/`tokensSaida`/`tokensCache` da mensagem, nem em
+  outro lugar. `rework-chat-ia.spec.md` diz que "cada resposta exibe o nível usado".
+- **Causa:** `ChatService` grava a mensagem com `nivel: NivelIaEnum.RAPIDO` fixo e soma só os tokens das próprias chamadas; as ferramentas chamam
+  `IaService` por conta própria e `ResultadoFerramentaIa` não devolve nível nem tokens.
+- **Contorno:** nenhum.
+- **Correção:** task 188 (`docs/specs/backlog/188-chat-nivel-real-e-tokens-do-turno.spec.md`): gravar o maior nível do turno e somar os tokens das
+  ferramentas.
+- **Desde:** origem do chat (bloco 5 do rework); achado em conversa com o autor (2026-10-19).

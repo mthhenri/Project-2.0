@@ -12,6 +12,26 @@
 
 ---
 
+## 2026-10-19 — I-004 vira spec: guarda-chuva das dúvidas de programação no chat (tasks 188–191) e P-017
+
+Conversa com o autor sobre a ideia I-004 (chat como tira-dúvidas de programação), sem mudança de código. Decisões, registradas
+na guarda-chuva `docs/specs/backlog/chat-duvidas-de-codigo.spec.md`:
+
+- O ganho é a dúvida ficar **registrada** no sistema: base para o gestor perguntar onde o time tem dificuldade (I-006, nova) e,
+  depois, ligar a dúvida ao código quando a IA ler os repositórios (I-005, nova).
+- Qualquer usuário usa; as dúvidas ficam na conversa do dia; interruptor "só Project / Project e código" na configuração da IA;
+  prompt próprio `DUVIDA_CODIGO` (tipo novo, para "restaurar padrão" ter versão 1); toda mensagem marcada por assunto; flag de
+  contexto `MISTURADO` (padrão) ou `SEPARADO`.
+- Modelo: dúvida de código no nível rápido, como a conversa. A escalada de dúvida complexa ficou anotada como I-007.
+- Bloco de código: botão de copiar e realce por tokenizador que devolve tokens (o visualizador proíbe HTML injetado).
+
+Achado na conversa: o selo de nível do chat é sempre "rápido" (gravado fixo em `chat.service.ts`) e os tokens das chamadas de IA
+feitas pelas ferramentas não são somados em lugar nenhum — registrado como **P-017**, corrigido pela task 188. Também conferido:
+o contexto do chat já é limitado a 40 mensagens (`JANELA_DE_MENSAGENS`) e o teto de resposta é 2048 tokens (sobe na 191).
+
+Tasks: **188** nível real e tokens do turno · **189** bloco de código copiável e realçado · **190** flags e prompt · **191** assunto
+das mensagens e contexto. I-004 foi para "Promovidas"; `CLAUDE.md`/`AGENTS.md` apontam o maior número em uso (191).
+
 ## 2026-10-19 — Task 181: testes de tags
 
 Décima primeira task da guarda-chuva `testes-automatizados`. Nenhum código de produção mudou.
