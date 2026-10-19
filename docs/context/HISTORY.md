@@ -12,6 +12,16 @@
 
 ---
 
+## 2026-10-19 — P-010, P-012, P-014 e P-016 resolvidos (backend)
+
+Os quatro defeitos achados nas tasks 176, 177 e 180 tinham teste `todo` pronto; os testes viraram normais.
+
+- **P-010 (`DemandaService.alterar`):** com `demandaPaiId`, além de existir e ser do mesmo projeto, o novo pai não pode ser a própria demanda nem estar em `listarDescendentes` dela (`BusinessException`). Antes a demanda sumia da árvore e o projeto ganhava um ciclo de hierarquia.
+- **P-012 e P-014 (`DemandaService.criar`, `AtividadeService.criar`):** a existência de cada tag passa a ser conferida **antes** de gravar; tag inexistente dá 404 sem deixar demanda/atividade criada. O laço que ficava depois do insert foi removido (a atribuição das tags continua depois).
+- **P-016 (`ocorrenciasNoIntervalo`):** a ocorrência de um recorrente cuja data não existe no ano (29/02 em ano não bissexto) é descartada; não cai em 28/02 nem em 01/03. A decisão "omitir" foi minha, por ser a leitura do teste existente; se o autor preferir 28/02, é uma linha.
+- **Testes:** shared 165 e backend 1049 passando + 2 `todo` (P-011 e P-015, abertos); build do backend OK. Integração não rodada (nenhum repository foi tocado). Sem lint (P-001).
+- **Verificação ao vivo:** não feita; são regras de service cobertas por teste de unidade.
+
 ## 2026-10-19 — P-004 resolvido nas demais telas: "hoje" e as horas seguem o fuso do sistema
 
 Continuação do bloco de 2026-10-17 (Execuções e Relatório). As telas que ainda liam `new Date()` passam a usar as funções de `shared/src/utils/fuso-horario.ts` com `ambiente.fusoHorario`; o `DatePipe` já estava em `-0300` fixo (`DATE_PIPE_DEFAULT_OPTIONS`), então as horas formatadas em template não mudaram.

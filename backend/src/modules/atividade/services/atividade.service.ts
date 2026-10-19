@@ -63,6 +63,13 @@ export class AtividadeService {
       }
     }
 
+    for (const tagId of dto.tagIds ?? []) {
+      const tagEncontrada = await this.tagRepositorio.recuperar({ id: tagId });
+      if (!tagEncontrada) {
+        throw new ResourceNotFoundException(`Tag com id ${tagId}`);
+      }
+    }
+
     const atividadeCriada = await this.atividadeRepositorio.inserir({
       demandaId:     dto.demandaId,
       usuarioId:     executorId,
@@ -72,12 +79,6 @@ export class AtividadeService {
     });
 
     if (dto.tagIds && dto.tagIds.length > 0) {
-      for (const tagId of dto.tagIds) {
-        const tagEncontrada = await this.tagRepositorio.recuperar({ id: tagId });
-        if (!tagEncontrada) {
-          throw new ResourceNotFoundException(`Tag com id ${tagId}`);
-        }
-      }
       await this.atividadeRepositorio.alterarTags({ atividadeId: atividadeCriada.id, tagIds: dto.tagIds });
     }
 

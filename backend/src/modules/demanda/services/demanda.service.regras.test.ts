@@ -157,8 +157,7 @@ test('criar: só gestor atribui tags na criação; desenvolvedor é recusado', a
   assert.deepEqual(comTags.gravacoes[1].argumento, { demandaId: 99, tagIds: [1, 2] });
 });
 
-// P-012: a existência das tags só é conferida DEPOIS de gravar a demanda, então uma tag inexistente deixa a demanda criada e devolve 404.
-test('criar: tag inexistente é recusada sem gravar a demanda', { todo: 'P-012' }, async () => {
+test('criar: tag inexistente é recusada sem gravar a demanda', async () => {
   const repo = repositorio();
   const semTag = { recuperar: async () => null };
   await assert.rejects(() => criarServico(repo, semTag, usuarioExistente).criar({ ...DADOS_CRIAR, tagIds: [404] }, GESTOR), ResourceNotFoundException);
@@ -272,14 +271,13 @@ test('alterar: o novo pai precisa existir e ser do mesmo projeto da demanda', as
   assert.equal(gravou(semPai) || gravou(outroProjeto), false);
 });
 
-// P-010: a service só confere o projeto do novo pai; mover a demanda para dentro dela mesma ou de uma descendente cria um ciclo na árvore.
-test('alterar: uma demanda não pode virar filha de si mesma', { todo: 'P-010' }, async () => {
+test('alterar: uma demanda não pode virar filha de si mesma', async () => {
   const repo = repositorio({ recuperar: async () => ({ ...DEMANDA, isEstrutural: true }) });
   await assert.rejects(() => criarServico(repo).alterar({ id: 10, demandaPaiId: 10 }, GESTOR), BusinessException);
   assert.equal(gravou(repo), false);
 });
 
-test('alterar: uma demanda não pode ser movida para dentro de uma descendente (ciclo na árvore)', { todo: 'P-010' }, async () => {
+test('alterar: uma demanda não pode ser movida para dentro de uma descendente (ciclo na árvore)', async () => {
   const filha = { ...PAI_ESTRUTURAL, id: 11 };
   const repo = repositorio({
     recuperar: async ({ id }: { id: number }) => (id === 10 ? { ...DEMANDA, isEstrutural: true } : filha),

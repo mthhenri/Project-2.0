@@ -44,6 +44,6 @@ test('29/02 recorrente existe em ano bissexto', () => {
   assert.deepEqual(datas(ocorrenciasNoIntervalo([recorrente('2020-02-29')], '2028-02-01', '2028-03-31')), ['2028-02-29']);
 });
 
-test('29/02 recorrente não gera uma data inexistente em ano não bissexto', { todo: 'P-016' }, () => {
+test('29/02 recorrente não gera uma data inexistente em ano não bissexto', () => {
   assert.deepEqual(datas(ocorrenciasNoIntervalo([recorrente('2020-02-29')], '2027-02-01', '2027-03-31')), []);
 });

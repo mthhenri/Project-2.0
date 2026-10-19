@@ -124,6 +124,13 @@ export class DemandaService {
       throw new UnauthorizedAccessException('Apenas gestores podem atribuir tags às demandas');
     }
 
+    for (const tagId of dto.tagIds ?? []) {
+      const tagEncontrada = await this.tagRepositorio.recuperar({ id: tagId });
+      if (!tagEncontrada) {
+        throw new ResourceNotFoundException(`Tag com id ${tagId}`);
+      }
+    }
+
     const usuarioIds = [
       ...new Set([
         ...(usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR ? [usuarioAtivo.sub] : []),
@@ -148,12 +155,6 @@ export class DemandaService {
     );
 
     if (dto.tagIds && dto.tagIds.length > 0) {
-      for (const tagId of dto.tagIds) {
-        const tagEncontrada = await this.tagRepositorio.recuperar({ id: tagId });
-        if (!tagEncontrada) {
-          throw new ResourceNotFoundException(`Tag com id ${tagId}`);
-        }
-      }
       await this.demandaRepositorio.atribuirTagsDemanda({ demandaId: demandaCriada.id, tagIds: dto.tagIds });
     }
 
@@ -337,6 +338,15 @@ export class DemandaService {
         throw new BusinessException(
           'A demanda pai deve pertencer ao mesmo projeto',
         );
+      }
+
+      // Mover para dentro de si mesma ou de uma descendente cortaria a demanda da árvore (ciclo de hierarquia).
+      if (dto.demandaPaiId === dto.id) {
+        throw new BusinessException('Uma demanda não pode ser filha de si mesma');
+      }
+      const descendentes = await this.demandaRepositorio.listarDescendentes({ demandaId: dto.id });
+      if (descendentes.some((descendente) => descendente.id === dto.demandaPaiId)) {
+        throw new BusinessException('Uma demanda não pode ser movida para dentro de uma descendente');
       }
     }
 
