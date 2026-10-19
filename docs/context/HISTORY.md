@@ -12,6 +12,25 @@
 
 ---
 
+## 2026-10-18 — Testes automatizados: análise da cobertura e specs 171–187
+
+Pedido do autor: montar os testes de tudo que já existe, começando por uma análise e uma spec por módulo, antes de
+implementar. Nenhum código mudou.
+
+- **Retrato** (rodado com `--test-reporter=tap` em cada workspace): 668 testes verdes — backend 508, shared 68, frontend
+  61 (só utilitários puros), desktop 17, scripts 14 (1 pulado). Todos de unidade com dublê. Nenhum repository/SQL é
+  testado, nenhum controller (exceto `ia`), nenhum componente Angular; `execucao.service` (433 linhas) não tem teste
+  direto e `demanda.service` (835) só `restaurar`. Frontend e desktop **não** rodam em `npm test` nem no CI. `PROBLEMS.md`
+  P-001 e `CLAUDE.md` estão desatualizados ("18 casos", "frontend sem testes") — a correção ficou na task 172.
+- **Decisões do autor:** repositories com integração em PostgreSQL real; frontend com testes de componente (não só
+  lógica); uma spec por domínio com backend e frontend juntos.
+- **Specs:** guarda-chuva `docs/specs/backlog/testes-automatizados.spec.md` (método comum por camada, política "o
+  documento vence: divergência vira `todo` + `PROBLEMS.md`, sem correção na task de teste") com a análise em
+  `testes-automatizados/ANALISE.md`; **171** banco de teste, **172** teste de componente + frontend/desktop na raiz e no
+  CI, **173** núcleo, **174–186** um domínio cada, **187** núcleo do frontend e matriz de permissões de §14 que fecha a
+  guarda-chuva. Ordem: 171/172, 173, depois 178, 176, 174, 175, 177 e o resto. A 177 espera a 105 (em `active/`) e a 176
+  espera as 167–170.
+
 ## 2026-10-18 — Task 105 (reativada): nova atividade unificada (dialog e página), responsável/tags e assistente de IA confiável
 
 Só frontend. Boa parte do escopo já existia no dialog (seletor de demanda com busca, responsável, tags, "criar e adicionar outra"); a rota `/atividade/nova` **não existia** (caía em `:id`).

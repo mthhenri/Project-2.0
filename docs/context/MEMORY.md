@@ -77,3 +77,5 @@ quando essa branch for mergeada). A task 117 (remover a descrição da atividade
 | Índice, ordem e dependências das tasks 94–116 (97–99 concluídas) | `docs/specs/backlog/INDEX-revisao-ux.md` |
 | Spec guarda-chuva e material da revisão (relatório, mockups HTML, análises) | `docs/specs/backlog/revisao-ui-ux.spec.md` e `docs/specs/backlog/revisao-ui-ux/` |
 | Prints da revisão (PNG, referência canônica) | `docs/assets/revisao-ui-ux/prints/` |
+| Cobertura de testes: guarda-chuva, método comum por camada e tasks 171–187 | `docs/specs/backlog/testes-automatizados.spec.md` |
+| Retrato da cobertura em 2026-10-18 (números, lacunas por camada, armadilhas) | `docs/specs/backlog/testes-automatizados/ANALISE.md` |
