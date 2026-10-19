@@ -40,7 +40,7 @@ export const FRASE_DA_FERRAMENTA: Readonly<Record<string, string>> = {
   propor_conectar_demanda: 'conectar duas demandas',
   propor_alterar_demanda: 'concluir, renomear, reestimar ou replanejar uma demanda',
   propor_atribuir_membro: 'entrar ou sair de uma demanda (o gestor também coloca ou tira outra pessoa)',
-  propor_atribuir_tag: 'marcar atividades com tags (o gestor também as demandas)',
+  propor_atribuir_tag: 'marcar atividades e demandas com tags (o desenvolvedor, as suas)',
   listar_tags: 'ver as tags',
   listar_usuarios: 'ver quem está na equipe',
   listar_execucoes_da_equipe_no_dia: 'ver o que a equipe fez no dia',

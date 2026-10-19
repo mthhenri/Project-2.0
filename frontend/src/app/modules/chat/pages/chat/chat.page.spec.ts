@@ -99,7 +99,7 @@ async function digitar(montado: Montado, conteudo: string) {
 async function enviarPeloTeclado(montado: Montado, conteudo: string) {
   await digitar(montado, conteudo);
   expect(botaoEnviar(montado).disabled).toBe(false);
-  // Pelo Enter: o `(ngSubmit)` do formulário não dispara (ver o it.todo P-018 do botão Enviar).
+  // Pelo Enter (o clique no botão tem o próprio teste).
   campo(montado).dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', cancelable: true }));
   await montado.atualizar();
 }
@@ -136,7 +136,11 @@ describe('ChatPage — abrir a conversa de hoje', () => {
 
     expect(conversaDa(montado)).toContain('Bom dia, IA');
     expect(conversaDa(montado)).toContain('Bom dia! Vamos ao que importa.');
-    expect(montado.elemento.querySelector('[aria-label="Nível usado: analítico"]')).not.toBeNull();
+    // O chip de nível fica no rodapé da resposta, ao lado do horário (task 193), e não mais no alto dela.
+    const chip = montado.elemento.querySelector('[aria-label="Nível usado: analítico"]');
+    expect(chip).not.toBeNull();
+    expect(chip!.closest('.chat__rodape-mensagem')).not.toBeNull();
+    expect(chip!.previousElementSibling?.classList.contains('chat__hora')).toBe(true);
     expect(montado.elemento.querySelector('[aria-label="Copiar a mensagem"]')).not.toBeNull();
     expect(montado.elemento.querySelector('[aria-label="Copiar a resposta"]')).not.toBeNull();
   });
@@ -174,9 +178,20 @@ describe('ChatPage — abrir a conversa de hoje', () => {
 });
 
 describe('ChatPage — enviar e receber a resposta', () => {
-  // Divergência: o formulário do campo (`<form (ngSubmit)="enviar()">`) não tem `[formGroup]` nem `FormsModule`, então `ngSubmit`
-  // nunca dispara; o clique no botão Enviar (type="submit") não chama `enviar()` (só o Enter e as sugestões enviam).
-  it.todo('P-018: o clique no botão Enviar envia a mensagem (hoje o ngSubmit do formulário não dispara: chat.page.html <form (ngSubmit)>)');
+  it('o clique no botão Enviar envia a mensagem (P-018) sem recarregar a página', async () => {
+    const montado = await montarChat({ mensagens: [DA_IA('Olá!')] });
+    controlarFluxo(enviarMensagemEspiao, 1);
+    await digitar(montado, 'Vou começar o login');
+
+    const clique = new MouseEvent('click', { bubbles: true, cancelable: true });
+    botaoEnviar(montado).dispatchEvent(clique);
+    await montado.atualizar();
+
+    expect(enviarMensagemEspiao).toHaveBeenCalledTimes(1);
+    expect(enviarMensagemEspiao.mock.calls[0][0]).toBe('Vou começar o login');
+    expect(campo(montado).value).toBe('');
+  });
+
 
   it('o botão Enviar só vale com texto; ao enviar, a mensagem aparece na hora e o campo é esvaziado', async () => {
     const montado = await montarChat({ mensagens: [DA_IA('Olá!')] });

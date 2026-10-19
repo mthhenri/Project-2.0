@@ -18,3 +18,4 @@ export * from './chat/index';
 export * from './proposta-ia/index';
 export * from './ferramenta-ia/index';
 export * from './checkin/index';
+export * from './desktop/index';

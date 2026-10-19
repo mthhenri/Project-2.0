@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { TipoUsuarioEnum } from '@project20/shared';
+import { TipoUsuarioEnum, hojeNoFuso, relogioLocalParaInstante } from '@project20/shared';
+import { ambiente } from '../../../../../environments/environment';
 import { montarComponente, ComponenteMontado } from '../../../../../testes/montar-componente';
 import { esperarRequisicao, responderErro, responderSucesso } from '../../../../../testes/http-teste';
 import { minutosDoIntervalo } from '../../utils/intervalo-registro.util';
@@ -32,7 +33,7 @@ describe('ExecucaoRegistroDialogComponent — abrir', () => {
     expect(montado.componente.atividade()).toEqual(ATIVIDADE);
     const { inicioData, fimData, descricao } = montado.componente.formulario.getRawValue();
     expect(minutosDoIntervalo({ inicioData: inicioData!, fimData: fimData! })).toBe(60);
-    expect(Math.abs(Date.now() - fimData!.getTime())).toBeLessThan(120_000);
+    expect(Math.abs(Date.now() - relogioLocalParaInstante(fimData!, ambiente.fusoHorario).getTime())).toBeLessThan(120_000);
     expect(descricao).toBe('');
     expect(montado.componente.duracaoAtiva()).toBe(60);
   });
@@ -65,7 +66,7 @@ describe('ExecucaoRegistroDialogComponent — chips de duração', () => {
     await montado.atualizar();
     const { inicioData, fimData } = montado.componente.formulario.getRawValue();
     expect(minutosDoIntervalo({ inicioData: inicioData!, fimData: fimData! })).toBe(120);
-    expect(Math.abs(Date.now() - fimData!.getTime())).toBeLessThan(120_000);
+    expect(Math.abs(Date.now() - relogioLocalParaInstante(fimData!, ambiente.fusoHorario).getTime())).toBeLessThan(120_000);
     expect(montado.componente.duracaoAtiva()).toBe(120);
     const ativos = chips().filter((chip) => chip.classList.contains('execucao-registro-dialog__chip--ativo'));
     expect(ativos.map((chip) => chip.textContent?.trim())).toEqual(['2h']);
@@ -76,7 +77,7 @@ describe('ExecucaoRegistroDialogComponent — chips de duração', () => {
     montado.componente.aplicarDuracao('manha');
     await montado.atualizar();
     const { inicioData, fimData } = montado.componente.formulario.getRawValue();
-    const hoje = new Date();
+    const hoje = hojeNoFuso(ambiente.fusoHorario);
     expect([inicioData!.getHours(), inicioData!.getMinutes(), fimData!.getHours(), fimData!.getMinutes()]).toEqual([9, 0, 12, 0]);
     expect(inicioData!.toDateString()).toBe(hoje.toDateString());
     expect(montado.componente.duracaoAtiva()).toBe('manha');
@@ -131,7 +132,7 @@ describe('ExecucaoRegistroDialogComponent — salvar', () => {
     montado.componente.salvar();
     expect(montado.componente.salvando()).toBe(true);
     const requisicao = esperarRequisicao(montado.http, 'POST', '/execucao/registro');
-    expect(requisicao.request.body).toEqual({ atividadeId: 30, inicioData: inicio.toISOString(), fimData: fim.toISOString(), descricao: 'Corrigi o bug' });
+    expect(requisicao.request.body).toEqual({ atividadeId: 30, inicioData: relogioLocalParaInstante(inicio, ambiente.fusoHorario).toISOString(), fimData: relogioLocalParaInstante(fim, ambiente.fusoHorario).toISOString(), descricao: 'Corrigi o bug' });
     responderSucesso(requisicao, { id: 70 }, 201);
     await montado.atualizar();
     expect(montado.componente.mostrarDialog()).toBe(false);

@@ -6,7 +6,14 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { DialogModule } from 'primeng/dialog';
 import { TextareaModule } from 'primeng/textarea';
 import { MessageService } from 'primeng/api';
-import { ExecucaoRegistrarDto, MENSAGEM_CARACTERES_PROIBIDOS, REGEX_SEM_CARACTERES_PROIBIDOS } from '@project20/shared';
+import {
+  ExecucaoRegistrarDto,
+  MENSAGEM_CARACTERES_PROIBIDOS,
+  REGEX_SEM_CARACTERES_PROIBIDOS,
+  instanteParaRelogioLocal,
+  relogioLocalParaInstante,
+} from '@project20/shared';
+import { ambiente } from '../../../../../environments/environment';
 import { ExecucaoService } from '../../../execucao/services/execucao.service';
 import { AssistenteDescricaoComponent } from '../../../../shared/components/assistente-descricao/assistente-descricao.component';
 import { BloquearCaracteresProibidosDirective } from '../../../../shared/directives/bloquear-caracteres-proibidos.directive';
@@ -76,17 +83,22 @@ export class ExecucaoRegistroDialogComponent {
     return fim > inicio ? null : { fimAntesDoInicio: true };
   }
 
+  /** Agora como relógio do fuso do sistema nos campos locais: é o que o datepicker com hora mostra e edita. */
+  private agoraNoFuso(): Date {
+    return instanteParaRelogioLocal(new Date(), ambiente.fusoHorario);
+  }
+
   abrir(atividade: AtividadeParaRegistro): void {
     this.atividade.set(atividade);
     // Padrão: o trabalho que acabou de terminar e durou 1h; os chips de duração reescrevem o intervalo.
-    const padrao = intervaloRetroativo(new Date(), 60);
+    const padrao = intervaloRetroativo(this.agoraNoFuso(), 60);
     this.formulario.reset({ inicioData: padrao.inicioData, fimData: padrao.fimData, descricao: '' });
     this.mostrarDialog.set(true);
   }
 
   /** Aplica um atalho de duração ("2h", "Manhã") ao intervalo, sempre terminando em agora (exceto a manhã). */
   aplicarDuracao(minutos: number | 'manha'): void {
-    const intervalo = minutos === 'manha' ? intervaloDaManha(new Date()) : intervaloRetroativo(new Date(), minutos);
+    const intervalo = minutos === 'manha' ? intervaloDaManha(this.agoraNoFuso()) : intervaloRetroativo(this.agoraNoFuso(), minutos);
     this.formulario.patchValue({ inicioData: intervalo.inicioData, fimData: intervalo.fimData });
   }
 
@@ -117,8 +129,8 @@ export class ExecucaoRegistroDialogComponent {
     const { inicioData, fimData, descricao } = this.formulario.value;
     const dto: ExecucaoRegistrarDto = {
       atividadeId: atividade.id,
-      inicioData:  (inicioData as Date).toISOString(),
-      fimData:     (fimData as Date).toISOString(),
+      inicioData:  relogioLocalParaInstante(inicioData as Date, ambiente.fusoHorario).toISOString(),
+      fimData:     relogioLocalParaInstante(fimData as Date, ambiente.fusoHorario).toISOString(),
       descricao:   (descricao ?? '').trim(),
     };
 

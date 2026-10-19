@@ -18,7 +18,10 @@ type Montado = ComponenteMontado<TopbarComponent>;
 const ATIVA: ExecucaoAtivaDto = { id: 4, atividadeId: 2, descricao: 'Revisando o PR', inicioData: new Date() };
 
 /** A hora do minuto seguinte é um `timer` do rxjs: temporizadores simulados desde o início (e `whenStable` não espera por eles). */
-async function montarBarra(usuario = TipoUsuarioEnum.DESENVOLVEDOR, ativa: ExecucaoAtivaDto | null = null, provedores: unknown[] = []): Promise<Montado> {
+const SEM_DESKTOP = { disponivel: false, versao: null, nomeArquivo: null, tamanhoBytes: null };
+const COM_DESKTOP = { disponivel: true, versao: '1.2.0', nomeArquivo: 'Project-Desktop-1.2.0.exe', tamanhoBytes: 87_654_321 };
+
+async function montarBarra(usuario = TipoUsuarioEnum.DESENVOLVEDOR, ativa: ExecucaoAtivaDto | null = null, provedores: unknown[] = [], desktop: typeof SEM_DESKTOP | typeof COM_DESKTOP = SEM_DESKTOP): Promise<Montado> {
   vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'] });
   const montado = await montarComponente(TopbarComponent, {
     usuario,
@@ -26,6 +29,7 @@ async function montarBarra(usuario = TipoUsuarioEnum.DESENVOLVEDOR, ativa: Execu
     provedores: provedores as never[],
   });
   responderSucesso(esperarRequisicao(montado.http, 'GET', '/execucao/ativa'), ativa);
+  responderSucesso(esperarRequisicao(montado.http, 'GET', '/desktop/versao'), desktop);
   await montado.atualizar();
   return montado;
 }
@@ -141,6 +145,22 @@ describe('TopbarComponent — menu do perfil', () => {
     expect(corpo).toContain('Usuário ADMINISTRADOR');
     expect(corpo).toContain('@administrador.teste');
     expect(corpo).toContain('Administrador');
+  });
+
+  it('"Baixar Project Desktop" aparece com a versão e o tamanho quando há executável publicado, e o clique baixa o arquivo (task 198)', async () => {
+    const montado = await montarBarra(TipoUsuarioEnum.DESENVOLVEDOR, null, [], COM_DESKTOP);
+    await abrirPerfil(montado);
+    const botao = Array.from(document.querySelectorAll<HTMLButtonElement>('button')).find((candidato) => candidato.textContent?.includes('Baixar Project Desktop'))!;
+    expect(botao.textContent).toContain('v1.2.0');
+    expect(botao.textContent).toContain('83,6 MB');
+    botao.click();
+    esperarRequisicao(montado.http, 'GET', '/desktop/download');
+  });
+
+  it('sem executável publicado o menu não tem o botão de baixar o desktop', async () => {
+    const montado = await montarBarra();
+    await abrirPerfil(montado);
+    expect(document.body.textContent).not.toContain('Baixar Project Desktop');
   });
 
   it('"Sair" encerra a sessão pelo serviço de autenticação', async () => {

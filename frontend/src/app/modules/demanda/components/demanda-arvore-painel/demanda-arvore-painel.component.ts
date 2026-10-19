@@ -237,7 +237,7 @@ export class DemandaArvorePainelComponent {
   readonly mostrarDialogNovaFilha = signal<boolean>(false);
   readonly demandaPaiIdNovaFilha = signal<number>(0);
 
-  // --- Tags (gestor-only via context menu) ---
+  // --- Tags (menu de contexto; o desenvolvedor só grava nas demandas de que é membro) ---
   readonly tagsDisponiveis = signal<TagResumoDto[]>([]);
   readonly demandaIdTagsEditando = signal<number>(0);
   readonly mostrarDialogTags = signal<boolean>(false);
@@ -319,11 +319,10 @@ export class DemandaArvorePainelComponent {
   }
 
   // ---------------------------------------------------------------------------
-  // Tags (gestor-only)
+  // Tags
   // ---------------------------------------------------------------------------
 
   abrirDialogTagsPorId(demandaId: number): void {
-    if (!this.sessao.eGestor()) return;
     this.demandaIdTagsEditando.set(demandaId);
 
     const carregarTagsDemanda = () => {

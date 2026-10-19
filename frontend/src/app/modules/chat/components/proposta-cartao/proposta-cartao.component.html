@@ -1,5 +1,5 @@
 @if (proposta(); as propostaAtual) {
-  <article class="proposta-cartao" [attr.aria-label]="'Proposta: ' + rotuloTipo[propostaAtual.tipo]">
+  <article class="proposta-cartao" [class.proposta-cartao--operando]="operando()" [attr.aria-label]="'Proposta: ' + rotuloTipo[propostaAtual.tipo]">
     <header class="proposta-cartao__cabecalho">
       <span class="proposta-cartao__titulo">Proposta · {{ rotuloTipo[propostaAtual.tipo] }}</span>
       <p-tag [value]="rotuloStatus[propostaAtual.status]" [severity]="severidade[propostaAtual.status]" [rounded]="true" />
@@ -353,21 +353,24 @@
           <textarea pTextarea id="ajuste-descricao-{{ propostaAtual.id }}" formControlName="descricao" rows="3" [autoResize]="true" maxlength="1000" class="w-full"></textarea>
         }
         <div class="proposta-cartao__acoes">
-          <p-button type="submit" label="Confirmar com o ajuste" icon="pi pi-check" size="small" [loading]="operando()" />
+          <p-button type="submit" label="Confirmar com o ajuste" icon="pi pi-check" size="small" [disabled]="operando()" />
           <p-button label="Cancelar" severity="secondary" size="small" [text]="true" [disabled]="operando()" (onClick)="cancelarAjuste()" />
         </div>
       </form>
     } @else if (propostaAtual.status === Status.PENDENTE) {
       <div class="proposta-cartao__acoes">
-        <p-button label="Confirmar" icon="pi pi-check" size="small" [loading]="operando()" (onClick)="confirmar()" />
+        <p-button label="Confirmar" icon="pi pi-check" size="small" [disabled]="operando()" (onClick)="confirmar()" />
         @if (podeAjustar()) {
           <p-button label="Ajustar" icon="pi pi-pencil" severity="secondary" size="small" [outlined]="true" [disabled]="operando()" (onClick)="abrirAjuste()" />
         }
         <p-button label="Recusar" severity="secondary" size="small" [text]="true" [disabled]="operando()" (onClick)="recusar()" />
       </div>
     } @else if (propostaAtual.status === Status.CONFIRMADA || propostaAtual.status === Status.AJUSTADA) {
-      <div class="proposta-cartao__acoes">
-        <p-button label="Desfazer" icon="pi pi-undo" severity="secondary" size="small" [outlined]="true" [loading]="operando()" (onClick)="desfazer()" />
+      <!-- Desfazer fica no lado oposto ao de Confirmar e vale por 30 min depois de resolvida (task 194). -->
+      <div class="proposta-cartao__acoes proposta-cartao__acoes--desfazer">
+        <span [pTooltip]="desfazerDisponivel() ? '' : 'Passou o prazo de ' + prazoParaDesfazerMinutos + ' min para desfazer'" tooltipPosition="top">
+          <p-button label="Desfazer" icon="pi pi-undo" severity="secondary" size="small" [outlined]="true" [disabled]="operando() || !desfazerDisponivel()" (onClick)="desfazer()" />
+        </span>
       </div>
     }
   </article>
@@ -378,5 +381,5 @@
     <p-button label="Tentar de novo" size="small" [text]="true" (onClick)="carregar()" />
   </div>
 } @else {
-  <p-skeleton height="5rem" />
+  <p class="proposta-cartao__carregando" role="status">Carregando proposta…</p>
 }

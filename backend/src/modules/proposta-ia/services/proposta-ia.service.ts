@@ -7,6 +7,8 @@ import {
   PropostaIaDesfeitaDto,
   PropostaIaRecuperadaDto,
   PropostaIaRecusadaDto,
+  podeDesfazerProposta,
+  PRAZO_PARA_DESFAZER_PROPOSTA_MINUTOS,
   PropostaIaResumoDto,
   StandardResponse,
   StatusPropostaIaEnum,
@@ -90,7 +92,7 @@ export class PropostaIaService {
     return { sucesso: true, dados: recusada, mensagem: 'Proposta recusada com sucesso' };
   }
 
-  /** Só depois de confirmada (ou ajustada): aplica a ação inversa do executor. Se já não for seguro, a proposta continua como estava. */
+  /** Só depois de confirmada (ou ajustada) e dentro do prazo (task 194): aplica a ação inversa do executor. Se já não for seguro, a proposta continua como estava. */
   async desfazer(id: number, usuarioAtivo: JwtPayload): Promise<StandardResponse<PropostaIaDesfeitaDto>> {
     const proposta = await this.obterDoUsuario(id, usuarioAtivo);
     const situacaoAtual = proposta.status;
@@ -98,6 +100,9 @@ export class PropostaIaService {
       throw new BusinessException('Só é possível desfazer uma proposta confirmada');
     }
     if (!proposta.resultado) throw new BusinessException('A ação desta proposta ainda está em andamento');
+    if (!podeDesfazerProposta(proposta.resolucaoData)) {
+      throw new BusinessException(`O prazo de ${PRAZO_PARA_DESFAZER_PROPOSTA_MINUTOS} minutos para desfazer esta proposta passou`);
+    }
 
     const executor = this.executores.obter(proposta.tipo);
     const reivindicada = await this.propostaIaRepositorio.transitar({

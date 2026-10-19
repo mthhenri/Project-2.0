@@ -3,6 +3,7 @@ import { app, BrowserWindow, ipcMain, Menu, nativeImage, nativeTheme, screen, sh
 import { NOME_DO_APP, URL_DO_PROJECT } from './config';
 import { montarPaginaDoDialogoDeSaida, RespostaDaSaida, respostaDaNavegacao } from './dialogo-de-saida';
 import { decidirFechamento, destinoDaNavegacao, EstadoDeEncerramento, janelaForaDoLugar, limitarAoMonitor, resolverUrlDoProject, textoDoProximoCheckin } from './politica-da-janela';
+import { deveConferirVersao, enderecoParaBaixar, lerVersaoPublicada, textoDaAtualizacao, VersaoPublicada } from './politica-da-versao';
 import { deveAbrirJanelinha, deveFecharJanelinha, enderecoDaApi, lerEstadoDaIa, lerSituacao, segundosAteOCheckin, SituacaoDoCheckin } from './politica-do-checkin';
 
 const urlDoProject = resolverUrlDoProject(URL_DO_PROJECT, process.env);
@@ -16,6 +17,9 @@ const LIMITE_DA_REDE_MS = 8_000;
 
 /** A última situação lida do backend: o menu da bandeja calcula o tempo até o próximo check-in a partir dela. */
 let ultimaSituacao: SituacaoDoCheckin | null = null;
+/** O executável publicado no servidor (task 198) e quando o desktop conferiu pela última vez; o aviso de versão nova sai daqui. */
+let versaoPublicada: VersaoPublicada | null = null;
+let ultimaConferenciaDeVersao: number | null = null;
 let janelinha: BrowserWindow | null = null;
 /** Só quando o check-in terminou (ou deixou de ser exigido) a janelinha pode fechar; antes, fechar é recusado. */
 let janelinhaLiberada = false;
@@ -148,9 +152,12 @@ function criarJanela(): void {
 }
 
 function montarMenuDaBandeja(): Menu {
+  const atualizacao = textoDaAtualizacao(versaoPublicada, app.getVersion());
   return Menu.buildFromTemplate([
     { label: 'Abrir o Project', click: trazerParaAFrente },
     { label: textoDoProximoCheckin(segundosAteOCheckin(ultimaSituacao, Date.now())), enabled: false },
+    // Há executável mais novo no servidor (task 198): abre o Project no navegador, que inicia o download com o login do usuário.
+    ...(atualizacao ? [{ label: atualizacao, click: () => void shell.openExternal(enderecoParaBaixar(urlDoProject)) }] : []),
     { type: 'separator' },
     { label: 'Fechar completamente', click: () => void pedirSaida() },
   ]);
@@ -309,10 +316,19 @@ function fecharJanelinha(): void {
   janelinha.close();
 }
 
+/** Confere de hora em hora se o servidor publicou um executável mais novo; falha de rede deixa o aviso como estava. */
+async function conferirVersao(token: string): Promise<void> {
+  if (!deveConferirVersao(ultimaConferenciaDeVersao, Date.now())) return;
+  ultimaConferenciaDeVersao = Date.now();
+  const corpo = await chamarApi('desktop/versao', token);
+  if (corpo !== null) versaoPublicada = lerVersaoPublicada(corpo);
+}
+
 /** Lê a situação do check-in no backend: atualiza a bandeja e abre ou fecha a janelinha conforme a regra pura. */
 async function conferirCheckin(): Promise<void> {
   const token = await lerTokenDoLogin();
   if (!token) return;
+  await conferirVersao(token);
   const situacao = lerSituacao(await chamarApi('checkin/situacao', token));
   if (situacao) {
     ultimaSituacao = situacao;

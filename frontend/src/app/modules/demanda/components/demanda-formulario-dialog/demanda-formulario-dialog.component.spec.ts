@@ -5,8 +5,8 @@ import { montarComponente, ComponenteMontado } from '../../../../../testes/monta
 import { esperarRequisicao, responderErro, responderSucesso } from '../../../../../testes/http-teste';
 import { DemandaFormularioDialogComponent } from './demanda-formulario-dialog.component';
 
-// Formulário de demanda (SYSTEM.SPEC.md §14): o gestor também escolhe tags e membros; o desenvolvedor só cria sub-demanda (pai preenchido
-// pela árvore) e nunca manda tags nem membros. Estrutural não tem estimativa nem previsão próprias.
+// Formulário de demanda (SYSTEM.SPEC.md §14): o gestor escolhe tags e membros; o desenvolvedor só cria sub-demanda (pai preenchido
+// pela árvore), escolhe tags (vira membro da demanda criada) e nunca manda membros. Estrutural não tem estimativa nem previsão próprias.
 
 type Montado = ComponenteMontado<DemandaFormularioDialogComponent>;
 
@@ -29,12 +29,10 @@ async function abrir(tipo: TipoUsuarioEnum, entradas: Record<string, unknown> = 
   return { montado, criadas, alteradas, visibilidade };
 }
 
-/** Responde às leituras que o formulário faz ao abrir (tags e usuários só para o gestor). */
+/** Responde às leituras que o formulário faz ao abrir (as tags para todos; os usuários só para o gestor). */
 async function responderAbertura(montado: Montado, gestor: boolean): Promise<void> {
-  if (gestor) {
-    responderSucesso(esperarRequisicao(montado.http, 'GET', '/tag'), TAGS);
-    responderSucesso(esperarRequisicao(montado.http, 'GET', '/usuario'), PAGINA(USUARIOS));
-  }
+  responderSucesso(esperarRequisicao(montado.http, 'GET', '/tag'), TAGS);
+  if (gestor) responderSucesso(esperarRequisicao(montado.http, 'GET', '/usuario'), PAGINA(USUARIOS));
   responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda'), PAGINA(PAIS));
   await montado.atualizar();
 }
@@ -55,10 +53,11 @@ describe('DemandaFormularioDialogComponent — abrir', () => {
     expect(montado.componente.demandasPaiOpcoes().map((demanda) => demanda.id)).toEqual([5]);
   });
 
-  it('desenvolvedor: só pede as demandas candidatas a pai (nada de tags nem usuários, que são do gestor)', async () => {
+  it('desenvolvedor: pede as demandas candidatas a pai e as tags (nada de usuários, que são do gestor)', async () => {
     const { montado } = await abrir(TipoUsuarioEnum.DESENVOLVEDOR, { demandaPaiIdInicial: 5 });
     await responderAbertura(montado, false);
-    montado.http.expectNone((requisicao) => requisicao.url.endsWith('/tag') || requisicao.url.endsWith('/usuario'));
+    montado.http.expectNone((requisicao) => requisicao.url.endsWith('/usuario'));
+    expect(montado.componente.todasAsTags()).toHaveLength(2);
     expect(montado.componente.formulario.controls.demandaPaiId.value).toBe(5);
   });
 
@@ -107,14 +106,14 @@ describe('DemandaFormularioDialogComponent — criar', () => {
     expect(visibilidade).toEqual([false]);
   });
 
-  it('desenvolvedor cria sub-demanda: o pai vai no corpo e tags e membros NUNCA vão, mesmo que o formulário os tenha', async () => {
+  it('desenvolvedor cria sub-demanda: o pai e as tags vão no corpo; os membros NUNCA vão, mesmo que o formulário os tenha', async () => {
     const { montado } = await abrir(TipoUsuarioEnum.DESENVOLVEDOR, { demandaPaiIdInicial: 5 });
     await responderAbertura(montado, false);
     montado.componente.formulario.patchValue({ nome: 'Sub', tagIds: [1], usuarioIds: [2] });
     montado.componente.salvar();
     const corpo = esperarRequisicao(montado.http, 'POST', '/demanda').request.body;
     expect(corpo.demandaPaiId).toBe(5);
-    expect('tagIds' in corpo).toBe(false);
+    expect(corpo.tagIds).toEqual([1]);
     expect('usuarioIds' in corpo).toBe(false);
   });
 
@@ -176,13 +175,11 @@ describe('DemandaFormularioDialogComponent — editar', () => {
     const contexto = await abrir(tipo, { demandaId: 10, projetoId: 0 });
     const { montado } = contexto;
     const gestor = tipo === TipoUsuarioEnum.GESTOR;
-    if (gestor) {
-      responderSucesso(esperarRequisicao(montado.http, 'GET', '/v1/tag'), TAGS);
-      responderSucesso(esperarRequisicao(montado.http, 'GET', '/v1/usuario'), PAGINA(USUARIOS));
-    }
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/v1/tag'), TAGS);
+    if (gestor) responderSucesso(esperarRequisicao(montado.http, 'GET', '/v1/usuario'), PAGINA(USUARIOS));
     responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/10'), DEMANDA);
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/10/tag'), [TAGS[0]]);
     if (gestor) {
-      responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/10/tag'), [TAGS[0]]);
       responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/10/membro'), [{ usuarioId: 2, nomeCompleto: 'Ana', login: 'ana', tipo: 'DESENVOLVEDOR', cargoTitulo: 'Dev' }]);
     }
     responderSucesso(esperarRequisicao(montado.http, 'GET', '/v1/demanda'), PAGINA([...PAIS, { ...PAIS[0], id: 10, nome: 'Ela mesma' }]));
@@ -210,7 +207,7 @@ describe('DemandaFormularioDialogComponent — editar', () => {
     esperarRequisicao(montado.http, 'DELETE', '/demanda/10/membro/2');
   });
 
-  it('desenvolvedor salva só a demanda: nenhuma chamada de tags nem de membros', async () => {
+  it('desenvolvedor sem mudança nas tags salva só a demanda: nenhuma chamada de tags nem de membros', async () => {
     const { montado, alteradas } = await abrirEdicao(TipoUsuarioEnum.DESENVOLVEDOR);
     montado.componente.formulario.patchValue({ nome: 'Ajuste' });
     montado.componente.salvar();

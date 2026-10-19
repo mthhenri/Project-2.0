@@ -107,6 +107,15 @@
             </div>
           }
 
+          @if (desktopDownload.versao(); as desktop) {
+            <p-divider class="my-0" />
+            <button type="button" class="topbar__baixar-desktop flex items-center gap-2 text-sm" [disabled]="desktopDownload.baixando()" (click)="desktopDownload.baixar()">
+              <i class="pi text-xs" [class.pi-download]="!desktopDownload.baixando()" [class.pi-spin]="desktopDownload.baixando()" [class.pi-spinner]="desktopDownload.baixando()"></i>
+              <span>Baixar Project Desktop</span>
+              <span class="topbar__baixar-desktop-versao text-muted-color text-xs">v{{ desktop.versao }} · {{ formatarTamanho(desktop.tamanhoBytes ?? 0) }}</span>
+            </button>
+          }
+
           <p-divider class="my-0" />
           <button type="button" class="topbar__sair flex items-center gap-2 text-sm" (click)="sair()">
             <i class="pi pi-sign-out text-xs"></i>

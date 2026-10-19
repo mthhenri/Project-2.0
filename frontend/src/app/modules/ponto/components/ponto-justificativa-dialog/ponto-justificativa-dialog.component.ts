@@ -11,7 +11,8 @@ import { TextareaModule } from 'primeng/textarea';
 import { ConfirmPopupModule } from 'primeng/confirmpopup';
 import { TooltipModule } from 'primeng/tooltip';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { PontoJustificativaResumoDto } from '@project20/shared';
+import { PontoJustificativaResumoDto, hojeNoFuso } from '@project20/shared';
+import { ambiente } from '../../../../../environments/environment';
 import { PontoJustificativaService } from '../../services/ponto-justificativa.service';
 import { UsuarioService } from '../../../usuario/services/usuario.service';
 import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
@@ -50,8 +51,8 @@ export class PontoJustificativaDialogComponent {
 
   readonly mostrarDialog = signal<boolean>(false);
   readonly usuarioId = signal<number | null>(null);
-  readonly ano = signal<number>(new Date().getFullYear());
-  readonly mes = signal<number>(new Date().getMonth() + 1);
+  readonly ano = signal<number>(hojeNoFuso(ambiente.fusoHorario).getFullYear());
+  readonly mes = signal<number>(hojeNoFuso(ambiente.fusoHorario).getMonth() + 1);
 
   /** Limites do datepicker: a justificativa é sempre de um dia do mês visível. */
   readonly dataMinima = signal<Date | null>(null);

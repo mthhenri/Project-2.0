@@ -36,6 +36,12 @@ describe('execucaoAtivaInterceptor', () => {
     expect(carregar).toHaveBeenCalledTimes(1);
   });
 
+  it.each(['confirmar', 'desfazer'])('%s uma proposta da IA bem-sucedido ressincroniza a execução ativa (P-020)', (acao) => {
+    http.post(`/api/v1/proposta-ia/5/${acao}`, {}).subscribe();
+    controlador.expectOne(`/api/v1/proposta-ia/5/${acao}`).flush({});
+    expect(carregar).toHaveBeenCalledTimes(1);
+  });
+
   it('resposta com erro não ressincroniza', () => {
     http.post('/api/v1/execucao', {}).subscribe({ error: () => undefined });
     controlador.expectOne('/api/v1/execucao').flush({}, { status: 409, statusText: 'Conflict' });
@@ -53,6 +59,9 @@ describe('execucaoAtivaInterceptor', () => {
     ['POST', '/api/v1/execucao/12/encerrar'],
     ['PATCH', '/api/v1/atividade/12/encerrar'],
     ['POST', '/api/v1/atividade'],
+    ['POST', '/api/v1/proposta-ia/5/recusar'],
+    ['POST', '/api/v1/proposta-ia/5/ajustar'],
+    ['GET', '/api/v1/proposta-ia/5'],
   ])('%s %s não ressincroniza', (metodo, url) => {
     http.request(metodo, url, { body: {} }).subscribe();
     controlador.expectOne(url).flush({});

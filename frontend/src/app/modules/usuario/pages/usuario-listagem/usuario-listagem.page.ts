@@ -14,6 +14,7 @@ import { UsuarioResumoDto, TipoUsuarioEnum, TipoUsuarioStatusEnum, UsuarioListar
 import { UsuarioService } from '../../services/usuario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { rotuloTipoUsuario, severidadeTipoUsuario } from '../../../../core/utils/tipo-usuario';
+import { podeAbrirAnotacoes } from '../../utils/anotacoes-acesso.util';
 import { AnotacoesAlteradasEvento, UsuarioAnotacoesDialogComponent } from '../../components/usuario-anotacoes-dialog/usuario-anotacoes-dialog.component';
 import { UsuarioPerfilDialogComponent } from '../../components/usuario-perfil-dialog/usuario-perfil-dialog.component';
 import { UsuarioFormularioDialogComponent } from '../../components/usuario-formulario-dialog/usuario-formulario-dialog.component';
@@ -215,6 +216,12 @@ export class UsuarioListagemPage implements OnInit {
     this.termoBusca.set('');
     this.formularioFiltros.controls.busca.setValue('', { emitEvent: false });
     this.aoMudarFiltro();
+  }
+
+  /** O botão de anotações só aparece onde o backend deixa abrir: o pad de desenvolvedores e o próprio (task 195). */
+  podeVerAnotacoes(usuario: UsuarioResumoDto): boolean {
+    const atual = this.sessao.usuarioAtual();
+    return !!atual && podeAbrirAnotacoes(atual, usuario);
   }
 
   /** Quem pode alterar o cadastro de `usuario`: gestor, ou a própria pessoa. */

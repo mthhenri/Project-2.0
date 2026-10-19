@@ -117,6 +117,26 @@
     cursor: pointer;
   }
 
+  // Baixar Project Desktop (task 198): mesma linha de ação do "Sair", na cor do texto.
+  &__baixar-desktop {
+    color: var(--p-text-color);
+    text-align: left;
+
+    &:hover:not(:disabled) {
+      text-decoration: underline;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+  }
+
+  &__baixar-desktop-versao {
+    margin-left: auto;
+    white-space: nowrap;
+  }
+
   &__sair {
     color: var(--p-red-500);
 

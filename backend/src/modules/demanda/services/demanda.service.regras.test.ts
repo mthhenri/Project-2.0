@@ -143,22 +143,18 @@ test('criar: o pai precisa existir, ser do mesmo projeto e ser estrutural', asyn
   for (const repo of [inexistente, outroProjeto, naoEstrutural]) assert.equal(gravou(repo), false);
 });
 
-test('criar: só gestor atribui tags na criação; desenvolvedor é recusado', async () => {
-  const repo = repositorio({ recuperar: async () => PAI_ESTRUTURAL });
-  await assert.rejects(
-    () => criarServico(repo, tagExistente, usuarioExistente).criar({ ...DADOS_CRIAR, demandaPaiId: 5, tagIds: [1] }, DESENVOLVEDOR),
-    UnauthorizedAccessException,
-  );
-  assert.equal(gravou(repo), false);
-
+test('criar: gestor e desenvolvedor atribuem tags na criação (o desenvolvedor vira membro da demanda criada)', async () => {
   const comTags = repositorio();
   await criarServico(comTags, tagExistente, usuarioExistente).criar({ ...DADOS_CRIAR, tagIds: [1, 2] }, GESTOR);
   assert.deepEqual(comTags.gravacoes.map((g) => g.metodo), ['inserirComAtribuicao', 'atribuirTagsDemanda']);
   assert.deepEqual(comTags.gravacoes[1].argumento, { demandaId: 99, tagIds: [1, 2] });
+
+  const doDesenvolvedor = repositorio({ recuperar: async () => PAI_ESTRUTURAL });
+  await criarServico(doDesenvolvedor, tagExistente, usuarioExistente).criar({ ...DADOS_CRIAR, demandaPaiId: 5, tagIds: [1] }, DESENVOLVEDOR);
+  assert.deepEqual(doDesenvolvedor.gravacoes.map((g) => g.metodo), ['inserirComAtribuicao', 'atribuirTagsDemanda']);
 });
 
-// P-012: a existência das tags só é conferida DEPOIS de gravar a demanda, então uma tag inexistente deixa a demanda criada e devolve 404.
-test('criar: tag inexistente é recusada sem gravar a demanda', { todo: 'P-012' }, async () => {
+test('criar: tag inexistente é recusada sem gravar a demanda', async () => {
   const repo = repositorio();
   const semTag = { recuperar: async () => null };
   await assert.rejects(() => criarServico(repo, semTag, usuarioExistente).criar({ ...DADOS_CRIAR, tagIds: [404] }, GESTOR), ResourceNotFoundException);
@@ -272,14 +268,13 @@ test('alterar: o novo pai precisa existir e ser do mesmo projeto da demanda', as
   assert.equal(gravou(semPai) || gravou(outroProjeto), false);
 });
 
-// P-010: a service só confere o projeto do novo pai; mover a demanda para dentro dela mesma ou de uma descendente cria um ciclo na árvore.
-test('alterar: uma demanda não pode virar filha de si mesma', { todo: 'P-010' }, async () => {
+test('alterar: uma demanda não pode virar filha de si mesma', async () => {
   const repo = repositorio({ recuperar: async () => ({ ...DEMANDA, isEstrutural: true }) });
   await assert.rejects(() => criarServico(repo).alterar({ id: 10, demandaPaiId: 10 }, GESTOR), BusinessException);
   assert.equal(gravou(repo), false);
 });
 
-test('alterar: uma demanda não pode ser movida para dentro de uma descendente (ciclo na árvore)', { todo: 'P-010' }, async () => {
+test('alterar: uma demanda não pode ser movida para dentro de uma descendente (ciclo na árvore)', async () => {
   const filha = { ...PAI_ESTRUTURAL, id: 11 };
   const repo = repositorio({
     recuperar: async ({ id }: { id: number }) => (id === 10 ? { ...DEMANDA, isEstrutural: true } : filha),
@@ -452,8 +447,7 @@ test('alterarTagsDemanda: desenvolvedor que NÃO é membro é recusado', async (
   assert.equal(gravou(repo), false);
 });
 
-// P-011: §14 diz "atribuir tag apenas em demandas das quais é membro" para o desenvolvedor; o código (e a decisão da task 170) recusa o desenvolvedor sempre.
-test('alterarTagsDemanda: desenvolvedor membro da demanda atribui tags (§14)', { todo: 'P-011' }, async () => {
+test('alterarTagsDemanda: desenvolvedor membro da demanda atribui tags (§14)', async () => {
   const repo = repositorio({ validarMembro: async () => true });
   await criarServico(repo, tagExistente).alterarTagsDemanda({ demandaId: 10, tagIds: [1] }, DESENVOLVEDOR);
   assert.deepEqual(repo.gravacoes.map((g) => g.metodo), ['atribuirTagsDemanda']);

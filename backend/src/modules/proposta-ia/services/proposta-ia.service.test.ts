@@ -161,6 +161,21 @@ test('desfazer só depois de confirmar, aplica a ação inversa e marca DESFEITA
   await assert.rejects(servico.desfazer(criada.id, DONO), BusinessException);
 });
 
+test('desfazer só vale nos 30 minutos depois de resolvida (task 194): fora do prazo é recusado e a ação inversa não roda', async () => {
+  const { servico, propostas, chamadas } = criarServico();
+  const criada = await servico.criar({ usuarioId: 1, tipo: TIPO, dados: DADOS });
+  await servico.confirmar(criada.id, DONO);
+  propostas[0].resolucaoData = new Date(Date.now() - 31 * 60_000);
+  await assert.rejects(servico.desfazer(criada.id, DONO), (erro) => erro instanceof BusinessException && /prazo de 30 minutos/.test(mensagemDe(erro)));
+  assert.equal(chamadas.desfazer, 0);
+  assert.equal(propostas[0].status, StatusPropostaIaEnum.CONFIRMADA);
+
+  propostas[0].resolucaoData = new Date(Date.now() - 29 * 60_000);
+  const desfeita = await servico.desfazer(criada.id, DONO);
+  assert.equal(desfeita.dados.status, StatusPropostaIaEnum.DESFEITA);
+  assert.equal(chamadas.desfazer, 1);
+});
+
 test('desfazer que o executor recusa mantém a proposta como estava', async () => {
   const { servico, propostas } = criarServico({ falharAoDesfazer: true });
   const criada = await servico.criar({ usuarioId: 1, tipo: TIPO, dados: DADOS });

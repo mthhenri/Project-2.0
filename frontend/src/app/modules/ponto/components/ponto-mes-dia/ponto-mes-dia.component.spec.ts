@@ -5,6 +5,8 @@ import { montarComponente as montarSemReinicio } from '../../../../../testes/mon
 import { esperarRequisicao, responderSucesso } from '../../../../../testes/http-teste';
 import { PontoMesDiaComponent } from './ponto-mes-dia.component';
 import { dataParaIso } from '../../../execucao/utils/execucao.util';
+import { hojeNoFuso } from '@project20/shared';
+import { ambiente } from '../../../../../environments/environment';
 
 const montarComponente: typeof montarSemReinicio = (componente, opcoes) => {
   TestBed.resetTestingModule();
@@ -15,9 +17,9 @@ afterEach(() => vi.useRealTimers());
 
 const texto = (elemento: HTMLElement) => (elemento.textContent ?? '').replace(/\s+/g, ' ').trim();
 
-/** Data ISO `dias` dias a partir de hoje (negativo = passado), no calendário local, como o componente compara. */
+/** Data ISO `dias` dias a partir de hoje (negativo = passado), no dia do fuso do sistema, como o componente compara. */
 const dataRelativa = (dias: number) => {
-  const data = new Date();
+  const data = hojeNoFuso(ambiente.fusoHorario);
   data.setDate(data.getDate() + dias);
   return dataParaIso(data);
 };

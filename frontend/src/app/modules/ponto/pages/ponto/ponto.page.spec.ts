@@ -6,6 +6,8 @@ import { montarComponente, ComponenteMontado } from '../../../../../testes/monta
 import { esperarRequisicao, responderErro, responderSucesso } from '../../../../../testes/http-teste';
 import { dataParaIso } from '../../../execucao/utils/execucao.util';
 import { PontoPage } from './ponto.page';
+import { hojeNoFuso } from '@project20/shared';
+import { ambiente } from '../../../../../environments/environment';
 
 type Montado = ComponenteMontado<PontoPage>;
 
@@ -20,14 +22,14 @@ const execucao = (id: number, aberta = false) => ({
 }) as unknown as ExecucaoItemDto;
 
 const pontoDiario = (usuarioId: number, nomeUsuario: string, execucoes: ExecucaoItemDto[] = []): PontoDiarioDto => ({
-  data: dataParaIso(new Date()), usuarioId, nomeUsuario, ehDiaUtil: true, motivoNaoUtil: null, metaMinutos: 480,
+  data: dataParaIso(hojeNoFuso(ambiente.fusoHorario)), usuarioId, nomeUsuario, ehDiaUtil: true, motivoNaoUtil: null, metaMinutos: 480,
   minutosTrabalhadosDiaUtil: 60, minutosTrabalhadosExtra: 0, totalMinutosTrabalhados: execucoes.length * 60,
   saldoMinutos: -420, intervalos: [], execucoes,
 });
 
 /** Mês corrente com um dia no passado (ou hoje) com saldo e outro com trabalho, para o "saldo até hoje". */
 function mensalDoMesAtual(usuarioId = 1): PontoMensalDto {
-  const agora = new Date();
+  const agora = hojeNoFuso(ambiente.fusoHorario);
   const dia = (numero: number, saldoMinutos: number): PontoDiaResumoDto => ({
     data: dataParaIso(new Date(agora.getFullYear(), agora.getMonth(), numero)), ehDiaUtil: true, motivoNaoUtil: null,
     primeiroInicioData: null, ultimoFimData: null, totalMinutosTrabalhados: 0, saldoMinutos, metaMinutos: 480,
@@ -74,7 +76,7 @@ describe('PontoPage: gestor, modo "todos hoje"', () => {
     const montado = await montarPagina(TipoUsuarioEnum.GESTOR);
     expect(montado.componente.modo()).toBe('todos');
     const requisicao = esperarRequisicao(montado.http, 'GET', '/ponto/todos');
-    expect(requisicao.request.params.get('data')).toBe(dataParaIso(new Date()));
+    expect(requisicao.request.params.get('data')).toBe(dataParaIso(hojeNoFuso(ambiente.fusoHorario)));
     montado.http.expectNone((r) => r.url.endsWith('/ponto/mensal'));
     expect(montado.componente.primeiraCarga()).toBe(true);
     expect(montado.elemento.querySelector('app-skeleton-lista')).not.toBeNull();
@@ -175,7 +177,7 @@ describe('PontoPage: desenvolvedor, só o próprio mês', () => {
   it('abre no mensal sem consultar a equipe nem a lista de usuários, e sem pedir usuarioId', async () => {
     const montado = await montarPagina(TipoUsuarioEnum.DESENVOLVEDOR);
     expect(montado.componente.modo()).toBe('mensal');
-    const agora = new Date();
+    const agora = hojeNoFuso(ambiente.fusoHorario);
     const requisicao = esperarRequisicao(montado.http, 'GET', '/ponto/mensal');
     expect(requisicao.request.params.get('ano')).toBe(String(agora.getFullYear()));
     expect(requisicao.request.params.get('mes')).toBe(String(agora.getMonth() + 1));
@@ -222,7 +224,7 @@ describe('PontoPage: desenvolvedor, só o próprio mês', () => {
     montado.http.expectNone(() => true);
 
     montado.componente.retornarMes();
-    const anterior = new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1);
+    const anterior = new Date(hojeNoFuso(ambiente.fusoHorario).getFullYear(), hojeNoFuso(ambiente.fusoHorario).getMonth() - 1, 1);
     const requisicao = esperarRequisicao(montado.http, 'GET', '/ponto/mensal');
     expect(requisicao.request.params.get('mes')).toBe(String(anterior.getMonth() + 1));
     expect(requisicao.request.params.get('ano')).toBe(String(anterior.getFullYear()));

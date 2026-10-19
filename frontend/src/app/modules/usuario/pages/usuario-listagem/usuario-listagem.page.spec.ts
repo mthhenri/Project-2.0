@@ -39,6 +39,22 @@ const botaoPorRotulo = (montado: Montado, rotulo: string) =>
   montado.elemento.querySelector<HTMLElement>(`[aria-label="${rotulo}"]`);
 const quantosBotoes = (montado: Montado, rotulo: string) => montado.elemento.querySelectorAll(`[aria-label="${rotulo}"]`).length;
 
+describe('UsuarioListagemPage — anotações (task 195)', () => {
+  const botoesDeAnotacao = (montado: Montado) => Array.from(montado.elemento.querySelectorAll<HTMLElement>('.usuario-listagem__coluna-anotacoes button'));
+
+  it('o gestor vê o botão nas linhas de desenvolvedores e na própria, e não na de outro gestor ou administrador', async () => {
+    const montado = await montarListagem(TipoUsuarioEnum.GESTOR);
+    await carregar(montado, [
+      resumo(2),
+      resumo(3),
+      resumo(4, { tipo: TipoUsuarioEnum.GESTOR }),
+      resumo(5, { tipo: TipoUsuarioEnum.ADMINISTRADOR }),
+      resumo(ID_LOGADO, { tipo: TipoUsuarioEnum.GESTOR }),
+    ]);
+    expect(botoesDeAnotacao(montado)).toHaveLength(3);
+  });
+});
+
 describe('UsuarioListagemPage — estados', () => {
   it('na primeira carga mostra o esqueleto; chegando os dados, mostra a tabela e o contador', async () => {
     const montado = await montarListagem(TipoUsuarioEnum.GESTOR);

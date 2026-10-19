@@ -43,7 +43,7 @@ export class AnotacaoService {
 
   /** Seções do pad (todas, ou só as pedidas), na ordem de exibição. */
   async listar(dto: AnotacaoListarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<AnotacaoResumoDto[]>> {
-    this.validarAcesso(dto.usuarioId, usuarioAtivo);
+    await this.validarAcesso(dto.usuarioId, usuarioAtivo);
     const itens = await this.anotacaoRepositorio.listar(dto);
     if (itens.length === 0) throw new ResourceNotFoundException('Anotações');
 
@@ -55,7 +55,7 @@ export class AnotacaoService {
     dto: AnotacaoAlterarDto & AnotacaoRecuperarDto,
     usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<AnotacaoAlteradaDto>> {
-    this.validarAcesso(dto.usuarioId, usuarioAtivo);
+    await this.validarAcesso(dto.usuarioId, usuarioAtivo);
     const [gravada] = await this.anotacaoRepositorio.modificarSecoes(
       { usuarioId: dto.usuarioId, tipos: [dto.tipo] },
       ([atual]) => {
@@ -73,7 +73,7 @@ export class AnotacaoService {
     dto: AnotacaoTrechoTrocarDto & AnotacaoRecuperarDto,
     usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<AnotacaoTrechoTrocadoDto>> {
-    this.validarAcesso(dto.usuarioId, usuarioAtivo);
+    await this.validarAcesso(dto.usuarioId, usuarioAtivo);
     const [gravada] = await this.anotacaoRepositorio.modificarSecoes(
       { usuarioId: dto.usuarioId, tipos: [dto.tipo] },
       ([atual]) => {
@@ -92,7 +92,7 @@ export class AnotacaoService {
     dto: AnotacaoTextoAnexarDto & AnotacaoRecuperarDto,
     usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<AnotacaoTextoAnexadoDto>> {
-    this.validarAcesso(dto.usuarioId, usuarioAtivo);
+    await this.validarAcesso(dto.usuarioId, usuarioAtivo);
     const [gravada] = await this.anotacaoRepositorio.modificarSecoes(
       { usuarioId: dto.usuarioId, tipos: [dto.tipo] },
       ([atual]) => {
@@ -109,7 +109,7 @@ export class AnotacaoService {
     dto: AnotacaoFeitoAnexarDto & Pick<AnotacaoRecuperarDto, 'usuarioId'>,
     usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<AnotacaoFeitoAnexadoDto>> {
-    this.validarAcesso(dto.usuarioId, usuarioAtivo);
+    await this.validarAcesso(dto.usuarioId, usuarioAtivo);
     const diaMes = diaMesNoFuso(new Date(), this.configService.obter().aplicacao.fusoHorario);
     const [gravada] = await this.anotacaoRepositorio.modificarSecoes(
       { usuarioId: dto.usuarioId, tipos: [TipoAnotacaoEnum.FEITO] },
@@ -127,7 +127,7 @@ export class AnotacaoService {
     dto: AnotacaoTrechoMoverDto & Pick<AnotacaoRecuperarDto, 'usuarioId'>,
     usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<AnotacaoTrechoMovidoDto>> {
-    this.validarAcesso(dto.usuarioId, usuarioAtivo);
+    await this.validarAcesso(dto.usuarioId, usuarioAtivo);
     if (dto.tipoOrigem === dto.tipoDestino) {
       throw new BusinessException('A seção de destino deve ser diferente da de origem');
     }
@@ -158,9 +158,19 @@ export class AnotacaoService {
   }
 
   /** O dono acessa o próprio pad; gestor e administrador, o de qualquer um. */
-  private validarAcesso(usuarioId: number, usuarioAtivo: JwtPayload): void {
-    if (!temPermissaoDeGestor(usuarioAtivo.tipo) && usuarioAtivo.sub !== usuarioId) {
+  /**
+   * Cada um acessa o próprio pad; gestor e administrador também o dos **desenvolvedores**, nunca o de outro gestor ou administrador
+   * (task 195). O desenvolvedor só o próprio. Pad de usuário que não existe é 404, sem dizer que o usuário existe ou não.
+   */
+  private async validarAcesso(usuarioId: number, usuarioAtivo: JwtPayload): Promise<void> {
+    if (usuarioAtivo.sub === usuarioId) return;
+    if (!temPermissaoDeGestor(usuarioAtivo.tipo)) {
       throw new UnauthorizedAccessException('Desenvolvedor acessa apenas o próprio pad');
+    }
+    const tipoDoDono = await this.anotacaoRepositorio.recuperarTipoDoDono({ usuarioId });
+    if (!tipoDoDono) throw new ResourceNotFoundException('Anotações');
+    if (temPermissaoDeGestor(tipoDoDono)) {
+      throw new UnauthorizedAccessException('O pad de outro gestor ou administrador é só dele');
     }
   }
 

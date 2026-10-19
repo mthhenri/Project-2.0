@@ -19,7 +19,9 @@ import {
   DiaNaoUtilAlterarDto,
   TipoDiaNaoUtilEnum,
   TipoDiaNaoUtilDuracaoEnum,
+  hojeNoFuso,
 } from '@project20/shared';
+import { ambiente } from '../../../../../environments/environment';
 import { CalendarioService } from '../../services/calendario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import {
@@ -82,9 +84,9 @@ export class CalendarioListagemPage implements OnInit {
   /** Dia aberto no popover do calendário (nome, data, badges, Editar/Excluir). */
   readonly diaDoPopover = signal<DiaNaoUtilResumoDto | null>(null);
   /** Data para o `p-datepicker` do calendário navegar (Hoje, ano ‹ ›, mês); a cada uso vira um objeto novo. */
-  readonly dataDeReferencia = signal<Date>(new Date());
-  readonly anoDeHoje = new Date().getFullYear();
-  readonly mesDeHoje = new Date().getMonth() + 1;
+  readonly dataDeReferencia = signal<Date>(hojeNoFuso(ambiente.fusoHorario));
+  readonly anoDeHoje = hojeNoFuso(ambiente.fusoHorario).getFullYear();
+  readonly mesDeHoje = hojeNoFuso(ambiente.fusoHorario).getMonth() + 1;
 
   readonly diasNaoUteis = signal<DiaNaoUtilResumoDto[]>([]);
   readonly carregando = signal<boolean>(false);
@@ -94,8 +96,8 @@ export class CalendarioListagemPage implements OnInit {
 
   /** Mês/ano atualmente exibido no calendário (mês de 1 a 12). */
   readonly mesExibido = signal<{ ano: number; mes: number }>({
-    ano: new Date().getFullYear(),
-    mes: new Date().getMonth() + 1,
+    ano: hojeNoFuso(ambiente.fusoHorario).getFullYear(),
+    mes: hojeNoFuso(ambiente.fusoHorario).getMonth() + 1,
   });
   /** Verdadeiro quando o calendário já está no mês/ano de hoje (o botão "Hoje" fica desativado). */
   readonly noMesDeHoje = computed(
@@ -228,7 +230,7 @@ export class CalendarioListagemPage implements OnInit {
 
   /** "Hoje": volta ao mês corrente. */
   irParaHoje(): void {
-    const hoje = new Date();
+    const hoje = hojeNoFuso(ambiente.fusoHorario);
     this.irParaMes(hoje.getFullYear(), hoje.getMonth() + 1);
   }
 

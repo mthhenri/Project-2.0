@@ -4,7 +4,8 @@ import { ButtonModule } from 'primeng/button';
 import { DatePickerModule } from 'primeng/datepicker';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { TooltipModule } from 'primeng/tooltip';
-import { DemandaAlterarDto } from '@project20/shared';
+import { DemandaAlterarDto, hojeNoFuso } from '@project20/shared';
+import { ambiente } from '../../../../../environments/environment';
 import { DemandaService } from '../../services/demanda.service';
 import { VisualizacaoTempoService } from '../../../../core/services/visualizacao-tempo.service';
 import { HORAS_POR_DIA } from '../../../../core/models/visualizacao-tempo.model';
@@ -77,7 +78,7 @@ export class DemandaMetricasComponent {
 
   /** Atalhos a partir de hoje: +1 semana, +2 semanas e o último dia do mês. */
   atalho(tipo: AtalhoPrevisao): void {
-    this.salvarData(dataDoAtalho(tipo));
+    this.salvarData(dataDoAtalho(tipo, hojeNoFuso(ambiente.fusoHorario)));
   }
 
   aoTeclarHoras(evento: KeyboardEvent): void {

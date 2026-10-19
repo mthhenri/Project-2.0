@@ -48,6 +48,11 @@ export interface ConfiguracaoNegocio {
   intervaloMinimoMinutos: number;
 }
 
+export interface ConfiguracaoDesktop {
+  /** Pasta com os `Project-Desktop-<versão>.exe` publicados; sem ela não há download (task 198). */
+  pastaExecutaveis: string | undefined;
+}
+
 export interface Configuracao {
   bancoDados:  ConfiguracaoBancoDados;
   jwt:         ConfiguracaoJwt;
@@ -57,4 +62,5 @@ export interface Configuracao {
   elasticsearch: ConfiguracaoElasticsearch;
   aplicacao:   ConfiguracaoAplicacao;
   negocio:     ConfiguracaoNegocio;
+  desktop:     ConfiguracaoDesktop;
 }

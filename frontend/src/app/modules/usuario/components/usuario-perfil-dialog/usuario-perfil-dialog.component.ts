@@ -9,6 +9,7 @@ import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.s
 import { rotuloTipoUsuario, severidadeTipoUsuario } from '../../../../core/utils/tipo-usuario';
 import { AnotacoesAlteradasEvento, UsuarioAnotacoesDialogComponent } from '../usuario-anotacoes-dialog/usuario-anotacoes-dialog.component';
 import { iniciaisDoNome } from '../../utils/usuario-credenciais.util';
+import { podeAbrirAnotacoes } from '../../utils/anotacoes-acesso.util';
 
 /**
  * Perfil em modo leitura (task 113). Editar e alterar senha vivem em dialogs próprios da
@@ -39,6 +40,13 @@ export class UsuarioPerfilDialogComponent {
     const usuarioPerfil = this.usuario();
     if (!usuarioAtual || !usuarioPerfil) return false;
     return usuarioAtual.id === usuarioPerfil.id || this.sessao.eGestor();
+  });
+
+  /** Anotações: o próprio pad e o dos desenvolvedores (task 195); o pad de outro gestor ou administrador não abre. */
+  readonly podeVerAnotacoes = computed(() => {
+    const usuarioAtual = this.sessao.usuarioAtual();
+    const usuarioPerfil = this.usuario();
+    return !!usuarioAtual && !!usuarioPerfil && podeAbrirAnotacoes(usuarioAtual, usuarioPerfil);
   });
 
   /** Abre o dialog e carrega o usuário informado. */

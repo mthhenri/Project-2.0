@@ -23,7 +23,9 @@ import {
   temPermissaoDeGestor,
   REGEX_SEM_CARACTERES_PROIBIDOS,
   MENSAGEM_CARACTERES_PROIBIDOS,
+  hojeNoFuso,
 } from '@project20/shared';
+import { ambiente } from '../../../../../environments/environment';
 import { DemandaService } from '../../services/demanda.service';
 import { TagService } from '../../../tag/services/tag.service';
 import { UsuarioService } from '../../../usuario/services/usuario.service';
@@ -135,10 +137,8 @@ export class DemandaFormularioDialogComponent implements OnChanges {
       tagIds:         [],
       usuarioIds:     [],
     });
-    if (this.sessao.eGestor()) {
-      if (this.todasAsTags().length === 0) this.carregarTodasAsTags();
-      if (this.usuariosDisponiveis().length === 0) this.carregarUsuarios();
-    }
+    if (this.todasAsTags().length === 0) this.carregarTodasAsTags();
+    if (this.sessao.eGestor() && this.usuariosDisponiveis().length === 0) this.carregarUsuarios();
     if (this.demandaId !== null) this.carregarDemanda(this.demandaId);
     else this.carregarDemandasPai();
   }
@@ -188,7 +188,7 @@ export class DemandaFormularioDialogComponent implements OnChanges {
   }
 
   aplicarAtalhoPrevisao(atalho: AtalhoPrevisao): void {
-    this.formulario.controls.previsaoFimData.setValue(dataDoAtalho(atalho));
+    this.formulario.controls.previsaoFimData.setValue(dataDoAtalho(atalho, hojeNoFuso(ambiente.fusoHorario)));
     this.formulario.controls.previsaoFimData.markAsDirty();
   }
 
@@ -217,10 +217,8 @@ export class DemandaFormularioDialogComponent implements OnChanges {
       horasEstimadas:  estrutural ? 0 : this.paraHorasEstimadas(valor.horasEstimadas),
       previsaoFimData: !estrutural && valor.previsaoFimData ? formatarDataIso(valor.previsaoFimData) : undefined,
     };
-    if (this.sessao.eGestor()) {
-      if (valor.tagIds?.length) dto.tagIds = valor.tagIds;
-      if (valor.usuarioIds?.length) dto.usuarioIds = valor.usuarioIds;
-    }
+    if (valor.tagIds?.length) dto.tagIds = valor.tagIds;
+    if (this.sessao.eGestor() && valor.usuarioIds?.length) dto.usuarioIds = valor.usuarioIds;
 
     this.demandaService
       .criar(dto)
@@ -286,9 +284,8 @@ export class DemandaFormularioDialogComponent implements OnChanges {
     this.fecharDeVez();
   }
 
-  /** Gestor: grava só o que mudou em tags (PUT) e membros (POST/DELETE individuais). */
+  /** Grava só o que mudou em tags (PUT) e, para o gestor, em membros (POST/DELETE individuais). */
   private gravarTagsEMembros(demandaId: number): Observable<unknown> {
-    if (!this.sessao.eGestor()) return of(null);
     const valor = this.formulario.value;
     const chamadas: Observable<unknown>[] = [];
 
@@ -296,6 +293,8 @@ export class DemandaFormularioDialogComponent implements OnChanges {
     if (!this.mesmosIds(tagIds, this.tagIdsOriginais)) {
       chamadas.push(this.demandaService.alterarTags(demandaId, { tagIds }));
     }
+
+    if (!this.sessao.eGestor()) return chamadas.length ? forkJoin(chamadas) : of(null);
 
     const usuarioIds = valor.usuarioIds ?? [];
     for (const usuarioId of usuarioIds.filter((id) => !this.usuarioIdsOriginais.includes(id))) {
@@ -334,7 +333,7 @@ export class DemandaFormularioDialogComponent implements OnChanges {
     this.carregandoDados.set(true);
     forkJoin({
       demanda: this.demandaService.recuperar(identificador),
-      tags:    this.sessao.eGestor() ? this.demandaService.listarTags(identificador) : of(null),
+      tags:    this.demandaService.listarTags(identificador),
       membros: this.sessao.eGestor() ? this.demandaService.listarMembros(identificador) : of(null),
     })
       .pipe(finalize(() => this.carregandoDados.set(false)))

@@ -300,8 +300,11 @@ export class PontoService {
       minutosTrabalhadosExtra = totalMinutosTrabalhados - minutosTrabalhadosDiaUtil;
       saldoMinutos = minutosTrabalhadosDiaUtil - metaMinutos;
     } else {
-      // Dias integrais (úteis ou não úteis): meta completa descontada a justificativa.
-      metaMinutos = Math.max(0, metaMinutosCompleta - minutosCobertos);
+      // Dias integrais: o útil exige a meta completa; o não útil (fim de semana, feriado integral) não exige
+      // nenhuma e todo o trabalho vira extra (saldo = trabalhado), como no ponto mensal. A justificativa
+      // abate a meta, sem deixá-la negativa.
+      const metaBase = ehDiaUtil ? metaMinutosCompleta : 0;
+      metaMinutos = Math.max(0, metaBase - minutosCobertos);
       minutosTrabalhadosDiaUtil = ehDiaUtil ? totalMinutosTrabalhados : 0;
       minutosTrabalhadosExtra = ehDiaUtil ? 0 : totalMinutosTrabalhados;
       saldoMinutos = totalMinutosTrabalhados - metaMinutos;

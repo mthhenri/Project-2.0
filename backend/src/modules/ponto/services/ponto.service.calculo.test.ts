@@ -159,7 +159,7 @@ test('diário: trabalho no fim de semana é hora extra, nunca "dia útil"', asyn
   assert.equal(ponto.totalMinutosTrabalhados, 180);
 });
 
-test('diário: fim de semana e dia não útil integral têm fração 0 e não exigem meta (§14: não contam na meta)', { todo: 'P-015' }, async () => {
+test('diário: fim de semana e dia não útil integral têm fração 0 e não exigem meta (§14: não contam na meta)', async () => {
   const sabado = await criarServico().servico.consultarDiario({ data: SABADO }, DESENVOLVEDOR);
   assert.equal(sabado.metaMinutos, 0);
   assert.equal(sabado.saldoMinutos, 0);
@@ -167,6 +167,12 @@ test('diário: fim de semana e dia não útil integral têm fração 0 e não ex
   const feriado = await criarServico({ diasNaoUteis: { [SEGUNDA]: FERIADO_INTEGRAL } }).servico.consultarDiario({ data: SEGUNDA }, DESENVOLVEDOR);
   assert.equal(feriado.metaMinutos, 0);
   assert.equal(feriado.saldoMinutos, 0);
+});
+
+test('diário: trabalho em fim de semana ou feriado integral é hora extra (saldo = trabalhado), igual ao mensal', async () => {
+  const { servico } = criarServico({ execucoes: { 3: [execucao(SABADO, '10:00', '12:00')] } });
+  const sabado = await servico.consultarDiario({ data: SABADO }, DESENVOLVEDOR);
+  assert.deepEqual([sabado.metaMinutos, sabado.minutosTrabalhadosExtra, sabado.saldoMinutos], [0, 120, 120]);
 });
 
 test('diário: dia não útil integral informa o motivo "<tipo> - <descrição>" e conta o trabalho como extra', async () => {

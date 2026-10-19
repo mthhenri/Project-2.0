@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { AssuntoChatEnum, AutorChatEnum, ChatEventoDto, ContextoChatEnum, EstadoIaEnum, ModoContextoChatEnum, NivelIaEnum, TipoPromptEnum, TipoUsuarioEnum } from '@project20/shared';
+import { AssuntoChatEnum, AutorChatEnum, ChatEventoDto, ContextoChatEnum, EstadoIaEnum, ModoContextoChatEnum, NivelIaEnum, StatusPropostaIaEnum, TipoPromptEnum, TipoUsuarioEnum } from '@project20/shared';
 import { ConfigService } from '../../../config/config.service';
 import { ConfiguracaoIaService } from '../../configuracao-ia/services/configuracao-ia.service';
 import { INSTRUCOES_DE_ASSUNTO, INSTRUCOES_SO_PROJECT } from '../domain/assunto-do-chat';
@@ -56,6 +56,8 @@ interface Cenario {
   titulo?: (solicitacao: IaSolicitacao) => string;
   /** Quantas propostas pendentes a retomada descarta como obsoletas. */
   obsoletas?: number;
+  /** A situação atual de cada proposta (por id), como a lê a `PropostaIaService`; sem ela a proposta não é encontrada. */
+  propostas?: Record<number, { status: StatusPropostaIaEnum; resultado?: Record<string, unknown> | null }>;
   /** As flags das dúvidas de código da configuração da IA ativa (padrão: desligadas e contexto misturado). */
   configuracao?: { duvidasCodigo?: boolean; modoContextoChat?: ModoContextoChatEnum };
   /** O que a IA devolve na classificação do assunto (ou lança). */
@@ -150,6 +152,11 @@ function montar(cenario: Cenario) {
         return {};
       },
       expirarObsoletas: async () => cenario.obsoletas ?? 0,
+      recuperarPorId: async (id: number) => {
+        const proposta = cenario.propostas?.[id];
+        if (!proposta) throw new ResourceNotFoundException('Proposta');
+        return { dados: { id, status: proposta.status, resultado: proposta.resultado ?? null } };
+      },
     } as unknown as PropostaIaService,
     { obter: () => ({ aplicacao: { fusoHorario: 'America/Sao_Paulo' } }) } as unknown as ConfigService,
     {
@@ -243,6 +250,47 @@ test('proposta criada por uma ferramenta emite o evento e fica ligada à mensage
   const eventos = await enviar(servico);
   assert.deepEqual(eventos.find((evento) => evento.tipo === 'proposta'), { tipo: 'proposta', propostaId: 42 });
   assert.equal(gravadas[1].propostaId, 42);
+});
+
+// P-022: o resultado gravado da ferramenta diz "nada foi feito ainda"; o usuário confirma no cartão e a IA, na mensagem seguinte, precisa saber.
+function cenarioDeProposta(propostas: Cenario['propostas']): Cenario {
+  return {
+    chamadas: [async () => pedidoDeFerramenta('t1', 'propor_atividade'), async () => resposta({ texto: 'Proposta criada.' }), async () => resposta({ texto: 'Certo.' })],
+    ferramenta: () => ({ conteudo: '{"propostaId":42,"situacao":"PENDENTE","mensagem":"Proposta criada. Nada foi feito ainda: o usuário precisa confirmar no cartão da conversa."}', erro: false, propostaId: 42 }),
+    propostas,
+  };
+}
+const resultadosNoContexto = (solicitacao: IaSolicitacao) =>
+  solicitacao.mensagens.flatMap((mensagem) => (typeof mensagem.conteudo === 'string' ? [] : mensagem.conteudo)).flatMap((bloco) => (bloco.tipo === 'resultado_ferramenta' ? [bloco.conteudo] : []));
+
+test('proposta confirmada no cartão: a mensagem seguinte leva ao modelo a situação atual, não "nada foi feito ainda"', async () => {
+  const { servico, solicitacoes } = montar(cenarioDeProposta({ 42: { status: StatusPropostaIaEnum.CONFIRMADA, resultado: { atividadeId: 9 } } }));
+  await enviar(servico, 'cria a atividade Login');
+  await enviar(servico, 'e agora?');
+  const lidos = resultadosNoContexto(solicitacoes[2]).map((conteudo) => JSON.parse(conteudo) as Record<string, unknown>);
+  assert.equal(lidos.length, 1);
+  assert.deepEqual([lidos[0]['propostaId'], lidos[0]['situacao'], lidos[0]['resultado']], [42, 'CONFIRMADA', { atividadeId: 9 }]);
+  assert.match(String(lidos[0]['mensagem']), /JÁ FOI FEITA/);
+});
+
+test('proposta que o usuário recusou ou ainda não decidiu: o modelo vê a situação verdadeira', async () => {
+  const recusada = montar(cenarioDeProposta({ 42: { status: StatusPropostaIaEnum.EXPIRADA } }));
+  await enviar(recusada.servico, 'cria a atividade Login');
+  await enviar(recusada.servico, 'e agora?');
+  assert.match(resultadosNoContexto(recusada.solicitacoes[2])[0], /NADA foi feito/);
+
+  const pendente = montar(cenarioDeProposta({ 42: { status: StatusPropostaIaEnum.PENDENTE } }));
+  await enviar(pendente.servico, 'cria a atividade Login');
+  await enviar(pendente.servico, 'e agora?');
+  assert.match(resultadosNoContexto(pendente.solicitacoes[2])[0], /Nada foi feito ainda/);
+});
+
+test('proposta que não dá para ler: o contexto segue com o resultado gravado e a conversa não quebra', async () => {
+  const { servico, solicitacoes } = montar(cenarioDeProposta(undefined));
+  await enviar(servico, 'cria a atividade Login');
+  const eventos = await enviar(servico, 'e agora?');
+  assert.equal(eventos.at(-1)?.tipo, 'fim');
+  assert.match(resultadosNoContexto(solicitacoes[2])[0], /Nada foi feito ainda/);
 });
 
 test('passar de 8 voltas vira erro, grava a mensagem do sistema e recusa a proposta pendente', async () => {

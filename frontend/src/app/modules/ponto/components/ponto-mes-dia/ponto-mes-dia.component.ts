@@ -4,7 +4,8 @@ import { TimelineModule } from 'primeng/timeline';
 import { TooltipModule } from 'primeng/tooltip';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { finalize } from 'rxjs';
-import { ExecucaoItemDto, IntervaloDto, PontoDiaResumoDto, PontoDiarioDto } from '@project20/shared';
+import { ExecucaoItemDto, IntervaloDto, PontoDiaResumoDto, PontoDiarioDto, dataIsoNoFuso } from '@project20/shared';
+import { ambiente } from '../../../../../environments/environment';
 import { PontoService } from '../../services/ponto.service';
 import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-horas.pipe';
 import { ExecucaoTimerComponent } from '../../../execucao/components/execucao-timer/execucao-timer.component';
@@ -66,13 +67,9 @@ export class PontoMesDiaComponent {
     return this.dia.totalMinutosTrabalhados > 0 || this.dia.primeiroInicioData !== null;
   }
 
-  /** O dia exibido é o dia de hoje (compara o calendário local com a data ISO do dia). */
+  /** O dia exibido é o dia de hoje no fuso do sistema (compara com a data ISO do dia). */
   get ehHoje(): boolean {
-    const agora = new Date();
-    const ano = agora.getFullYear();
-    const mes = String(agora.getMonth() + 1).padStart(2, '0');
-    const dia = String(agora.getDate()).padStart(2, '0');
-    return this.dia.data.slice(0, 10) === `${ano}-${mes}-${dia}`;
+    return this.dia.data.slice(0, 10) === this.hojeIso();
   }
 
   /** Horas cobertas pela justificativa do dia, formatadas de forma compacta (ex.: "3h", "3h 30min"). */
@@ -115,8 +112,7 @@ export class PontoMesDiaComponent {
   }
 
   private hojeIso(): string {
-    const agora = new Date();
-    return `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}-${String(agora.getDate()).padStart(2, '0')}`;
+    return dataIsoNoFuso(new Date(), ambiente.fusoHorario);
   }
 
   abreviacao(): string {

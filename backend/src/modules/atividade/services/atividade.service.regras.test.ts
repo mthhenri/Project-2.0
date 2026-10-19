@@ -103,8 +103,7 @@ test('criar: sem tags não toca nas tags', async () => {
   assert.deepEqual(repo.gravacoes.map((g) => g.metodo), ['inserir']);
 });
 
-// P-014: a existência das tags só é conferida DEPOIS de gravar a atividade, então uma tag inexistente deixa a atividade criada e devolve 404.
-test('criar: tag inexistente é recusada sem gravar a atividade', { todo: 'P-014' }, async () => {
+test('criar: tag inexistente é recusada sem gravar a atividade', async () => {
   const repo = repositorio();
   const semTag = { recuperar: async () => null };
   await assert.rejects(() => criarServico(repo, semTag, demandaExistente).criar({ ...DADOS_CRIAR, tagIds: [404] }, GESTOR), ResourceNotFoundException);

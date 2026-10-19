@@ -47,11 +47,26 @@ describe('AtividadeNovaDialogComponent', () => {
     expect(formularioHospedado(montado).formulario.controls.demandaId.value).toBeNull();
   });
 
-  // DIVERGÊNCIA (produção, não corrigida aqui): o formulário é projetado dentro do p-dialog e nasce já na montagem do componente,
-  // então o ngOnInit dele roda antes de abrir(). A demanda passada em abrir(10) chega só ao input (demandaIdInicial = 10) e nunca ao
-  // controle `demandaId`; o comentário do dialog ("formulário recriado a cada abertura") também não vale. Quando corrigir, ativar:
-  // abrirDialog(10) -> formularioHospedado(montado).formulario.controls.demandaId.value === 10.
-  it.todo('o formulário hospedado recebe a demanda inicial passada em abrir()');
+  it('o formulário hospedado recebe a demanda inicial passada em abrir()', async () => {
+    const { montado } = await abrirDialog(10);
+    expect(formularioHospedado(montado).formulario.controls.demandaId.value).toBe(10);
+  });
+
+  it('cada abertura recria o formulário: o que foi digitado antes não volta', async () => {
+    const { montado } = await abrirDialog();
+    formularioHospedado(montado).formulario.patchValue({ nome: 'Rascunho antigo' });
+    montado.componente.visivel.set(false);
+    await montado.atualizar();
+    expect(montado.fixture.debugElement.query(By.directive(AtividadeFormularioComponent))).toBeNull();
+
+    montado.componente.abrir(10);
+    await montado.atualizar();
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/atribuidas'), DEMANDAS);
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/tag'), []);
+    await montado.atualizar();
+    const formulario = formularioHospedado(montado).formulario;
+    expect([formulario.controls.nome.value, formulario.controls.demandaId.value]).toEqual(['', 10]);
+  });
 
   it('salvar() com formulário inválido não chama a API nem fecha o dialog', async () => {
     const { montado, criacoes } = await abrirDialog();

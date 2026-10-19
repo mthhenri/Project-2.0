@@ -10,7 +10,10 @@ import { DividerModule } from 'primeng/divider';
 import { ColorPickerModule } from 'primeng/colorpicker';
 import { timer } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { EstadoIaEnum } from '@project20/shared';
+import { EstadoIaEnum, dataHoraNoFuso } from '@project20/shared';
+import { ambiente } from '../../../../environments/environment';
+import { DesktopDownloadService } from '../../../core/services/desktop-download.service';
+import { formatarTamanhoDoArquivo } from '../../../core/utils/tamanho-do-arquivo';
 import { AutenticacaoService } from '../../../core/services/autenticacao.service';
 import { UsuarioSessaoService } from '../../../core/services/usuario-sessao.service';
 import { rotuloTipoUsuario } from '../../../core/utils/tipo-usuario';
@@ -52,6 +55,8 @@ export class TopbarComponent {
   private readonly execucaoAtiva = inject(ExecucaoAtivaService);
   private readonly roteador = inject(Router);
   private readonly iaDisponibilidade = inject(IaDisponibilidadeService);
+  readonly desktopDownload = inject(DesktopDownloadService);
+  readonly formatarTamanho = formatarTamanhoDoArquivo;
   /** Depois do "Agora não" com a IA no ar: o botão para voltar para ela fica à vista. */
   readonly podeVoltarParaAIa = computed(() => this.iaDisponibilidade.modoConvencional() && this.iaDisponibilidade.estadoReal() === EstadoIaEnum.NO_AR);
   @ViewChild('anotacoesDialog') private anotacoesDialog?: UsuarioAnotacoesDialogComponent;
@@ -99,6 +104,7 @@ export class TopbarComponent {
 
   constructor() {
     this.execucaoAtiva.carregar();
+    this.desktopDownload.carregar();
     this.atualizarHora();
     this.agendarProximaAtualizacao();
 
@@ -107,6 +113,12 @@ export class TopbarComponent {
     this.roteador.events.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((evento) => {
       if (!(evento instanceof NavigationEnd)) return;
       const arvore = this.roteador.parseUrl(evento.urlAfterRedirects);
+      // Deep-link `?baixar-desktop=1` (task 198): o aviso de versão nova no app do desktop abre o Project no navegador e o download começa aqui.
+      if (arvore.queryParams['baixar-desktop']) {
+        this.desktopDownload.baixar();
+        this.roteador.navigate([], { queryParams: { 'baixar-desktop': null }, queryParamsHandling: 'merge', replaceUrl: true });
+        return;
+      }
       const usuarioId = Number(arvore.queryParams['anotacoes']);
       if (!usuarioId || arvore.root.children['primary']?.segments[0]?.path === 'usuario') return;
       this.anotacoesDialog?.abrir(usuarioId, usuarioId === this.sessao.id() ? this.sessao.nomeCompleto()! : '');
@@ -133,9 +145,7 @@ export class TopbarComponent {
   }
 
   private atualizarHora(): void {
-    const agora = new Date();
-    const hora = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    const data = agora.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const [data, hora] = dataHoraNoFuso(new Date(), ambiente.fusoHorario).split(' ');
     this.horaAtual.set(`${hora} ${data}`);
   }
 

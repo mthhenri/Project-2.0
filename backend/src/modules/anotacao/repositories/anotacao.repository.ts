@@ -3,7 +3,7 @@ import { Knex } from 'knex';
 import { BaseRepository } from '../../../core/base/base.repository';
 import { DATABASE_CONNECTION } from '../../../core/database/database.provider';
 import { Anotacao } from '../domain/models/anotacao.model';
-import { AnotacaoListarDto, AnotacaoResumoDto, TipoAnotacaoEnum } from '@project20/shared';
+import { AnotacaoListarDto, AnotacaoResumoDto, TipoAnotacaoEnum, TipoUsuarioEnum } from '@project20/shared';
 
 /** Quais seções do usuário uma operação vai ler (e travar) dentro da transação. */
 export interface AnotacaoSecoesModificarDados {
@@ -53,6 +53,18 @@ export class AnotacaoRepository extends BaseRepository<Anotacao> {
       transacao,
     );
     return criadas.length;
+  }
+
+  /** O tipo do dono do pad (quem decide quem pode abri-lo); `null` se o usuário não existe ou foi excluído. */
+  async recuperarTipoDoDono(dados: { usuarioId: number }): Promise<TipoUsuarioEnum | null> {
+    const [encontrado] = await this.executarConsulta<{ tipo: TipoUsuarioEnum }>(
+      `SELECT tipo_usuario.codigo AS tipo
+       FROM usuario
+       INNER JOIN tipo_usuario ON tipo_usuario.id = usuario.tipo_usuario_id AND tipo_usuario.is_deleted = false
+       WHERE usuario.id = :usuarioId AND usuario.is_deleted = false`,
+      { usuarioId: dados.usuarioId },
+    );
+    return encontrado?.tipo ?? null;
   }
 
   /** Seções do usuário na ordem de exibição; com `tipos`, só essas. Usuário sem nenhuma seção ganha as cinco vazias e elas voltam. */

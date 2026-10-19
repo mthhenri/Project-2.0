@@ -31,15 +31,15 @@ describe('DemandaArvoreItemComponent', () => {
     return { montado, eventos };
   }
 
-  it('o menu do desenvolvedor só tem Visualizar e as descrições; o do gestor tem também Editar, Nova Sub-demanda, Tags e Membros', async () => {
+  it('o menu do desenvolvedor tem Visualizar, Tags e as descrições; o do gestor tem também Editar, Nova Sub-demanda e Membros', async () => {
     const gestor = await montar(criarItem(1));
     const rotulosGestor = gestor.montado.componente.itensMenu.map((opcao) => opcao.label);
     expect(rotulosGestor).toEqual(expect.arrayContaining(['Visualizar', 'Editar', 'Tags', 'Membros']));
 
     const desenvolvedor = await montar(criarItem(1), TipoUsuarioEnum.DESENVOLVEDOR);
     const rotulosDev = desenvolvedor.montado.componente.itensMenu.map((opcao) => opcao.label);
-    expect(rotulosDev).toContain('Visualizar');
-    for (const proibido of ['Editar', 'Tags', 'Membros']) expect(rotulosDev).not.toContain(proibido);
+    expect(rotulosDev).toEqual(expect.arrayContaining(['Visualizar', 'Tags']));
+    for (const proibido of ['Editar', 'Membros']) expect(rotulosDev).not.toContain(proibido);
     expect(rotulosDev.some((rotulo) => rotulo?.startsWith('Nova'))).toBe(false);
   });
 
@@ -223,13 +223,16 @@ describe('DemandaArvorePainelComponent', () => {
     expect(eventos.status[1]).toEqual({ demandaId: 5, status: TipoDemandaStatusEnum.PENDENTE });
   });
 
-  it('desenvolvedor não abre o diálogo de tags nem o de membros (nenhuma chamada sai)', async () => {
+  it('desenvolvedor abre o diálogo de tags, mas não o de membros (nenhuma chamada de membros sai)', async () => {
     const { montado } = await montar(TipoUsuarioEnum.DESENVOLVEDOR);
-    montado.componente.abrirDialogTagsPorId(1);
     montado.componente.abrirDialogMembros(1);
-    expect(montado.componente.mostrarDialogTags()).toBe(false);
     expect(montado.componente.mostrarDialogMembros()).toBe(false);
     montado.http.expectNone(() => true);
+
+    montado.componente.abrirDialogTagsPorId(1);
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/v1/tag'), [{ id: 1, nome: 'A', cor: '#111111' }]);
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/1/tag'), []);
+    expect(montado.componente.mostrarDialogTags()).toBe(true);
   });
 
   it('gestor: tags carrega o catálogo e as tags da demanda e só então abre; salvar manda os ids e avisa o host', async () => {
@@ -384,12 +387,12 @@ describe('DemandaPlanejamentoPainelComponent', () => {
     expect(cores[3]).toBe('rgb(59, 130, 246)');
   });
 
-  it('o menu de contexto do desenvolvedor não tem Editar/Tags/Membros; as ações emitem o id da linha', async () => {
+  it('o menu de contexto do desenvolvedor não tem Editar/Membros; as ações emitem o id da linha', async () => {
     const { montado, visualizar } = await montar([criarLinha(8)], TipoUsuarioEnum.DESENVOLVEDOR);
     const menu = { show: () => undefined } as never;
     montado.componente.abrirMenu({} as MouseEvent, montado.componente.linhas()[0], menu);
     const rotulos = montado.componente.itensMenu.map((opcao) => opcao.label);
-    for (const proibido of ['Editar', 'Tags', 'Membros']) expect(rotulos).not.toContain(proibido);
+    for (const proibido of ['Editar', 'Membros']) expect(rotulos).not.toContain(proibido);
     montado.componente.itensMenu.find((opcao) => opcao.label === 'Visualizar')?.command?.({} as never);
     expect(visualizar).toEqual([8]);
   });

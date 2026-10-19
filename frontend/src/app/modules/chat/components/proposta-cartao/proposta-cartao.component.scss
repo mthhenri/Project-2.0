@@ -120,5 +120,24 @@
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
+
+    // Desfazer no lado oposto ao de Confirmar (task 194).
+    &--desfazer {
+      justify-content: flex-end;
+    }
+  }
+
+  // Carregando e operando discretos (task 196): sem bloco cinza nem spinner, só texto pequeno e o cartão esmaecido.
+  &__carregando {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--p-text-muted-color);
+    opacity: 0.8;
+  }
+
+  &--operando {
+    opacity: 0.6;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
   }
 }

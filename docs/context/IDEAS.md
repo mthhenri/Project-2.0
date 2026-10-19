@@ -93,9 +93,40 @@
 - **Custo aparente:** ferramenta nova; decidir como a resposta dela chega ao usuário com streaming (hoje o resultado de uma
   ferramenta volta ao modelo rápido, que reescreve) e o custo. O selo de nível verdadeiro (task 188) é pré-requisito.
 
+### I-010 — Revisar os prompts da revisão das descrições · chat IA/prompts
+
+- **Ideia:** nos prompts da revisão/redação das descrições de demanda: remover a temporalidade, tirar a herança de descrição da atividade e dar exemplos melhores de descrição boa.
+- **Origem:** anotações do autor (2026-10-19).
+- **Por quê:** descrições saem com marcas de tempo ("hoje", "nesta sprint") e misturam o que é da atividade com o da demanda.
+- **Custo aparente:** só texto de prompt (versão nova do prompt na tela de configuração), mais um teste manual com entrevistas reais.
+
 ## Promovidas
 
 ### I-004 — Chat IA como tira-dúvidas de programação, com bloco de código copiável · chat IA/frontend
 
 - **Promovida em 2026-10-19** para a guarda-chuva [`chat-duvidas-de-codigo.spec.md`](../specs/done/chat-duvidas-de-codigo.spec.md)
   (tasks 188–191). As decisões da conversa com o autor estão na seção "Decisões" da guarda-chuva.
+
+### I-008 — Chip de nível (rápido / padrão / analítico) abaixo, ao lado do horário · chat IA/frontend
+
+- **Promovida em 2026-10-19** para a task [`193-chat-chip-de-nivel-ao-lado-do-horario`](../specs/done/193-chat-chip-de-nivel-ao-lado-do-horario.spec.md) (implementada).
+
+### I-009 — Desfazer das propostas no lado oposto e com prazo · chat IA/frontend
+
+- **Promovida em 2026-10-19** para a task [`194-chat-desfazer-proposta-com-prazo`](../specs/done/194-chat-desfazer-proposta-com-prazo.spec.md) (implementada).
+
+### I-011 — Gestor/admin lê e edita o pad dos desenvolvedores · anotações/permissão
+
+- **Promovida em 2026-10-19** para a task [`195-gestor-le-e-edita-pad-dos-desenvolvedores`](../specs/done/195-gestor-le-e-edita-pad-dos-desenvolvedores.spec.md) (implementada).
+
+### I-012 — Loading das propostas mais discreto · chat IA/frontend
+
+- **Promovida em 2026-10-19** para a task [`196-chat-loading-da-proposta-discreto`](../specs/done/196-chat-loading-da-proposta-discreto.spec.md) (implementada).
+
+### I-013 — Volume de trabalho por projeto · projeto/relatório
+
+- **Promovida em 2026-10-19** para a task [`197-projeto-volume-de-trabalho`](../specs/backlog/197-projeto-volume-de-trabalho.spec.md) (só a spec, no backlog (a implementação não foi pedida)).
+
+### I-014 — Botão "Baixar Project Desktop" e conferir a atualização do app · desktop/frontend
+
+- **Promovida em 2026-10-19** para a task [`198-desktop-baixar-e-atualizar`](../specs/done/198-desktop-baixar-e-atualizar.spec.md) (implementada).
