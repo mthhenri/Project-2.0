@@ -25,7 +25,7 @@ import { DemandaService } from '../../../demanda/services/demanda.service';
 import { TagService } from '../../../tag/services/tag.service';
 import { UsuarioService } from '../../../usuario/services/usuario.service';
 import { AtividadeService } from '../../services/atividade.service';
-import { ATIVIDADE_STATUS_OPCOES } from '../../models/atividade.model';
+import { ATIVIDADE_STATUS_OPCOES, severidadeStatusAtividade } from '../../models/atividade.model';
 
 type DemandaAtribuidaOpcao = DemandaAtribuidaDto & { rotulo: string };
 
@@ -68,6 +68,7 @@ export class AtividadeFormularioComponent implements OnInit {
   readonly usuarios = signal<UsuarioResumoDto[]>([]);
 
   readonly statusOpcoes = ATIVIDADE_STATUS_OPCOES;
+  readonly severidadeStatus = severidadeStatusAtividade;
   readonly mensagemCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS;
 
   readonly formulario = this.formBuilder.group({

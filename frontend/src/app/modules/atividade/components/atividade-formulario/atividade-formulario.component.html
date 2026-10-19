@@ -94,6 +94,7 @@
         <button
           type="button"
           class="nova-atividade__segmento"
+          [attr.data-severidade]="opcao.value && severidadeStatus(opcao.value)"
           [class.nova-atividade__segmento--ativo]="formulario.controls.status.value === opcao.value"
           [attr.aria-pressed]="formulario.controls.status.value === opcao.value"
           (click)="formulario.controls.status.setValue(opcao.value)"

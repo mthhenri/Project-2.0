@@ -165,10 +165,29 @@
     }
 
     &--ativo {
-      border-color: var(--p-primary-color);
-      background: color-mix(in srgb, var(--p-primary-color) 14%, transparent);
-      color: var(--p-primary-color);
       font-weight: 600;
+    }
+
+    // A cor do status selecionado é a mesma do selo da coluna Status da listagem (tokens do p-tag).
+    &--ativo[data-severidade='warn'] {
+      border-color: var(--p-tag-warn-color);
+      background: var(--p-tag-warn-background);
+      color: var(--p-tag-warn-color);
+    }
+    &--ativo[data-severidade='secondary'] {
+      border-color: var(--p-tag-secondary-color);
+      background: var(--p-tag-secondary-background);
+      color: var(--p-tag-secondary-color);
+    }
+    &--ativo[data-severidade='info'] {
+      border-color: var(--p-tag-info-color);
+      background: var(--p-tag-info-background);
+      color: var(--p-tag-info-color);
+    }
+    &--ativo[data-severidade='success'] {
+      border-color: var(--p-tag-success-color);
+      background: var(--p-tag-success-background);
+      color: var(--p-tag-success-color);
     }
   }
 

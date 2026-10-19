@@ -129,6 +129,7 @@
           <button
             type="button"
             class="atividade-visualizar-dialog__status-opcao"
+            [attr.data-severidade]="opcao.value && severidadeStatus(opcao.value)"
             [class.atividade-visualizar-dialog__status-opcao--ativo]="opcao.value === atividade.status"
             [attr.aria-pressed]="opcao.value === atividade.status"
             (click)="alterarStatus(opcao.value)"
