@@ -12,6 +12,32 @@
 
 ---
 
+## 2026-10-19 — Task 183: testes do relatório de execuções
+
+Décima terceira task da guarda-chuva `testes-automatizados`. Nenhum código de produção mudou.
+
+**O que a spec dizia e o código faz.** O texto da task falava em "desenvolvedor só vê as próprias", filtro por usuário e fuso nos intervalos. O relatório real é
+**só de gestor** (`@GestorOnly` nas três rotas), **por projeto** e sem filtro por usuário; o intervalo é de datas puras (`YYYY-MM-DD`), e o fuso `APP_TIMEZONE` entra na
+formatação das datas do CSV e, no SQL, pela sessão do Knex (`knexfile.ts`). Os testes afirmam isso, e a linha "Ver execuções de todos" de §14 fica provada pelo
+controller (as três rotas exclusivas de gestor) e pelo teste de que a service não filtra por usuário. Não é defeito: a divergência estava no texto da spec.
+
+**Backend.**
+- `relatorio.service` (24, dublês de `ExecucaoRepository`, `ProjetoRepository`, `ConfigService` e `IaService`): anual, mensal (fevereiro bissexto, mês de 30 dias, nome do mês) e
+  personalizado (início igual ao fim); campos faltando e fim antes do início recusados sem consultar; projeto inexistente (404) sem consultar execuções; totais e
+  relatório vazio; CSV (tipo e nome do arquivo, BOM, cabeçalho, CRLF, datas no fuso e forçadas a texto, virada de dia, execução em andamento, escape de vírgula, aspas e
+  quebra, duração `HH:MM`) e XLSX recusado; revisão por IA no nível padrão, amostra de 200 linhas, leitura defensiva do JSON, falha de IA e resposta sem JSON traduzidas
+  por `traduzirFalhaDeIa`, e recusa antes de chamar a IA.
+- `relatorio.controller` (4): verbos e caminhos, três rotas `@GestorOnly`, `projetoId` da query juntado ao DTO e cabeçalhos `Content-Type`/`Content-Disposition` do download.
+- `consultar-relatorio-de-execucoes` (+3, 7 no total): desempate por nome, período vazio, falha da service chega a quem chamou.
+- Sem teste de integração novo: a service não tem SQL próprio, e `listarParaRelatorio` já tem o seu na task 178.
+
+**Frontend.** `relatorio.util` (6), `relatorio.service` (5: URL, parâmetros por tipo de período, blob, corpo da revisão) e o dialog (15: abrir pelo detalhe, sem projeto,
+projeto lembrado, vazio, erro com "Tentar de novo", atalhos recarregando, personalizado incompleto, CSV e IA desligados enquanto o filtro não sincronizou, baixar CSV com e
+sem nome no cabeçalho e com falha, revisão com achados ordenados, sem achados, IA fora do ar e revisão descartada ao mudar o filtro).
+
+**Gates.** `npm test`: frontend 75 arquivos, 809 testes passando e 1 `todo`; as `todo` do backend são as de `PROBLEMS.md` P-010 a P-016, anteriores a esta task. Builds de
+backend e frontend verdes. `repo:verificar` aprovado. Sem lint (`P-001`). Sem verificação ao vivo: a task só acrescenta testes e não altera tela.
+
 ## 2026-10-19 — Task 182: testes de anotações (pad)
 
 Décima segunda task da guarda-chuva `testes-automatizados`. Nenhum código de produção mudou.

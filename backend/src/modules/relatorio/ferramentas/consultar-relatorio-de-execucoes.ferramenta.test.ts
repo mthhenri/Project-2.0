@@ -61,3 +61,25 @@ test('limita as atividades do resumo e avisa que há mais; só o gestor tem a fe
   assert.equal(resultado.haMaisAtividades, true);
   assert.equal(ferramenta.permissao, 'GESTOR');
 });
+
+test('somarPorChave desempata minutos iguais pelo nome', () => {
+  const totais = somarPorChave([{ chave: 'Bia', minutos: 30 }, { chave: 'Ana', minutos: 30 }]);
+  assert.deepEqual(totais.map((total) => total.nome), ['Ana', 'Bia']);
+});
+
+test('período sem execuções devolve totais zerados e nenhuma atividade extra', async () => {
+  const { ferramenta } = criar([]);
+  const resultado = await ferramenta.executar({ projetoId: 3, ano: 2026 }, GESTOR);
+  assert.equal(resultado.totalMinutos, 0);
+  assert.equal(resultado.totalExecucoes, 0);
+  assert.deepEqual(resultado.porUsuario, []);
+  assert.deepEqual(resultado.porAtividade, []);
+  assert.equal(resultado.haMaisAtividades, false);
+});
+
+test('é ferramenta de leitura, e a falha da service (período inválido, projeto inexistente) chega a quem chamou', async () => {
+  const falha = new Error('Projeto não encontrado');
+  const ferramenta = new ConsultarRelatorioDeExecucoesFerramenta({ gerarRelatorio: async () => { throw falha; } } as unknown as RelatorioService);
+  assert.equal(ferramenta.tipo, 'LEITURA');
+  await assert.rejects(() => ferramenta.executar({ projetoId: 99, ano: 2026 }, GESTOR), falha);
+});

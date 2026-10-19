@@ -60,7 +60,7 @@ Regras da cobertura:
 | 180 | [Calendário](../done/180-testes-calendario.spec.md) | `calendario` |
 | 181 | [Tags](../done/181-testes-tags.spec.md) | `tag` |
 | 182 | [Anotações (pad)](../done/182-testes-anotacoes.spec.md) | `anotacao` |
-| 183 | [Relatório](183-testes-relatorio.spec.md) | `relatorio` |
+| 183 | [Relatório](../done/183-testes-relatorio.spec.md) | `relatorio` |
 | 184 | [Camada de IA](184-testes-camada-de-ia.spec.md) | `ia`, `configuracao-ia`, `prompt`, `ferramenta-ia`, `proposta-ia`, `assistente` |
 | 185 | [Chat](185-testes-chat.spec.md) | `chat` |
 | 186 | [Check-in](186-testes-checkin.spec.md) | `checkin` |
