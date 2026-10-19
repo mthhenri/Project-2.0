@@ -1,7 +1,7 @@
 # Task 177 — Testes: atividades e prioridade
 
-> Task 7/17 da guarda-chuva [`testes-automatizados.spec.md`](testes-automatizados.spec.md) — método comum lá.
-> Inventário de partida: [análise](testes-automatizados/ANALISE.md).
+> Task 7/17 da guarda-chuva [`testes-automatizados.spec.md`](../backlog/testes-automatizados.spec.md) — método comum lá.
+> Inventário de partida: [análise](../backlog/testes-automatizados/ANALISE.md).
 
 ## Objetivo
 

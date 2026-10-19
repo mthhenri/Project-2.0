@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'vitest';
-import { intervaloDaManha, intervaloRetroativo, minutosDoIntervalo } from './intervalo-registro.util';
+import { DURACOES_REGISTRO, intervaloDaManha, intervaloRetroativo, minutosDoIntervalo } from './intervalo-registro.util';
 
 describe('intervalo-registro.util', () => {
   const agora = new Date(2026, 9, 18, 14, 37, 42, 500);
@@ -31,5 +31,17 @@ describe('intervalo-registro.util', () => {
 
   it('minutosDoIntervalo devolve null sem intervalo', () => {
     assert.equal(minutosDoIntervalo(null), null);
+  });
+
+  it('minutosDoIntervalo devolve a duração do intervalo, para destacar o atalho aplicado', () => {
+    assert.equal(minutosDoIntervalo(intervaloRetroativo(agora, 90)), 90);
+    assert.equal(minutosDoIntervalo(intervaloDaManha(agora)), 180);
+  });
+
+  it('cada atalho de duração do dialog gera um intervalo com exatamente os seus minutos', () => {
+    assert.deepEqual(DURACOES_REGISTRO.map((duracao) => duracao.minutos), [30, 60, 120, 240]);
+    for (const duracao of DURACOES_REGISTRO) {
+      assert.equal(minutosDoIntervalo(intervaloRetroativo(agora, duracao.minutos)), duracao.minutos);
+    }
   });
 });

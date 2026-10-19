@@ -12,6 +12,35 @@
 
 ---
 
+## 2026-10-19 — Task 177: testes de atividades e prioridade
+
+Sétima task da guarda-chuva `testes-automatizados`. Nenhum código de produção mudou. Frontend escrito por dois agentes `implementador` em
+paralelo (lógica/listagem/detalhe e dialogs/componentes); o backend, direto.
+
+**Backend.**
+- `atividade.service` (`atividade.service.regras.test.ts`, 31 testes, 30 verdes + 1 `todo`): criar (demanda inexistente, vínculo exigido só do
+  desenvolvedor, dono forçado para o desenvolvedor, gestor/administrador escolhem o dono, tags), listar (gestor vê todas; desenvolvedor só as
+  próprias, ou todas as da demanda de que é membro; paginação e `allRows`), recuperar/listarTags, alterar (dono ou membro; trava de status com
+  execução ativa só quando o status muda; prioridade), excluir e tags (tag inexistente recusa tudo).
+- `atividade.repository` (integração, 25): ordenação por `ordem` da prioridade e depois executor, mais nova e nome; filtros de demanda, executor,
+  status, busca (atividade, demanda, projeto), intervalo de datas e paginação; excluída/demanda ou projeto excluído fora; minutos e execução ativa;
+  soft delete e restauração sem cascata; posição da atividade; sincronização de tags. `atividade-prioridade.repository` (integração, 4) e controller (3).
+- Controller de atividade (5: só excluir e restaurar são `@GestorOnly`; as ações em massa da task 102 não têm rota própria, a tela chama as
+  mesmas rotas por atividade), regra pura `conjunto-de-tags` (4) e ferramentas da IA `consultar_demanda` (5) e `propor_criar_atividade` (7).
+  Executores e ferramentas `alterar-atividade`, `atribuir-tag`, `criar-atividade` e `listar-minhas-atividades` já tinham teste (conferidos).
+
+**Frontend.** Services (`atividade`, `atividade-prioridade`), lacunas dos utils, página de listagem (45: filtros na URL, estados, seleção e barra em
+massa, menu ⋮ só para o gestor e sem "Atribuir tags"), detalhe (28: faixa de execução, timer, pausa em 1 clique da task 104), barra em massa, formulário,
+nova-dialog, registro de execução (task 103), visualizar, popover de tags, em-execução e indicador de documentos. `atividade-nova` não existe como página.
+Os specs com `setInterval` (timer) usam `vi.useFakeTimers({ toFake: ['setInterval','clearInterval'] })`, porque o `whenStable` do `montarComponente` trava.
+
+**Achados** (`todo`/`it.todo`, itens novos em `PROBLEMS.md`, **não corrigidos**): P-014 (criar atividade com tag inexistente grava e depois dá 404) e
+P-013 (o dialog "Nova Atividade" não pré-seleciona a demanda de `abrir()`; visto só em teste de componente). Observação: o spec do
+`demanda-detalhe-dialog` (176) falhou uma vez na suíte inteira por tempo (12,9 s) e passou isolado e na repetição.
+
+**Verificado:** `npm test` da raiz — backend 718 (713 + 5 `todo`: 4 da 176 e 1 da 177), frontend 534 (+1 `it.todo`; antes 361); `test:integracao`
+121; builds de backend e frontend passam; `repo:verificar` aprovado. Nenhuma tela mudou, sem verificação visual. Sem lint (P-001).
+
 ## 2026-10-19 — Task 176: testes de demandas
 
 Sexta task da guarda-chuva `testes-automatizados`. Nenhum código de produção mudou.

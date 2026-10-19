@@ -85,3 +85,23 @@
 - **Correção:** validar as tags antes de gravar (ou gravar demanda e tags na mesma transação). O teste
   `todo: 'P-012'` vira normal.
 - **Desde:** origem (achado na task 176).
+
+### P-013 — O dialog "Nova Atividade" não pré-seleciona a demanda passada em `abrir(demandaId)` · `ABERTO` · frontend
+
+- **Sintoma:** depois de `abrir(10)`, o input `demandaIdInicial` vale 10, mas o controle `demandaId` do formulário continua vazio
+  (achado no teste de componente; **não confirmado ao vivo**).
+- **Causa:** o `AtividadeFormularioComponent` é projetado dentro do `p-dialog` e instanciado na montagem; o `ngOnInit` aplica o
+  `demandaIdInicial` uma única vez, com ele ainda nulo. O estado do formulário também persiste entre aberturas, ao contrário do
+  que o comentário do componente afirma.
+- **Contorno:** o usuário escolhe a demanda no seletor.
+- **Correção:** reagir à mudança de `demandaIdInicial` (efeito) ou recriar o formulário a cada abertura. O `it.todo` em
+  `atividade-nova-dialog.component.spec.ts` vira teste normal. Confirmar ao vivo antes de corrigir.
+- **Desde:** origem (achado na task 177).
+
+### P-014 — Criar atividade com tag inexistente grava a atividade e depois devolve 404 · `ABERTO` · backend
+
+- **Sintoma:** `POST /atividade` com `tagIds` contendo uma tag que não existe responde 404, mas a atividade já ficou criada.
+- **Causa:** `AtividadeService.criar` insere a atividade e só depois confere a existência de cada tag (mesmo defeito do P-012).
+- **Contorno:** nenhum.
+- **Correção:** validar as tags antes de inserir. O teste `todo: 'P-014'` vira normal.
+- **Desde:** origem (achado na task 177).

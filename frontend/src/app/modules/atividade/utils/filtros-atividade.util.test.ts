@@ -48,3 +48,24 @@ test('filtrosIguais compara pelo que viaja na URL', () => {
   assert.equal(filtrosIguais(filtrosPadrao(), { ...filtrosPadrao(), busca: ' x ' }), false);
   assert.equal(filtrosIguais({ ...filtrosPadrao(), busca: 'x' }, { ...filtrosPadrao(), busca: ' x ' }), true);
 });
+
+test('a lista de status da URL ignora os inválidos e sai na ordem das opções; o mesmo conjunto em outra ordem é o padrão', () => {
+  assert.deepEqual(lerFiltrosDaUrl(url('status=DESENVOLVIDA,XXX,PENDENTE'), true).status, [
+    TipoAtividadeStatusEnum.PENDENTE,
+    TipoAtividadeStatusEnum.DESENVOLVIDA,
+  ]);
+  const outraOrdem = { ...filtrosPadrao(), status: [...filtrosPadrao().status].reverse() };
+  assert.deepEqual(paraParametrosDaUrl(outraOrdem), {});
+});
+
+test('a busca só de espaços não conta como filtro e não vai para a URL', () => {
+  const filtros = lerFiltrosDaUrl(url('busca=%20%20'), true);
+  assert.equal(filtros.busca, '');
+  assert.deepEqual(paraParametrosDaUrl({ ...filtrosPadrao(), busca: '   ' }), {});
+  assert.equal(contarFiltrosAtivos({ ...filtrosPadrao(), busca: '   ' }), 0);
+});
+
+test('cada filtro fora do padrão soma um na contagem do "Limpar filtros"', () => {
+  const todos = { busca: 'x', status: [], usuarioId: 3, periodo: ['2026-10-01', '2026-10-31'] as [string, string], demandaId: 9 };
+  assert.equal(contarFiltrosAtivos(todos), 5);
+});
