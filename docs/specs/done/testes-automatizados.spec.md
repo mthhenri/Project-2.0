@@ -48,22 +48,22 @@ Regras da cobertura:
 
 | # | Task | Domínio / escopo |
 |---|---|---|
-| 171 | [Banco de teste para repositories](../done/171-testes-banco-de-teste-para-repositories.spec.md) | infraestrutura backend |
-| 172 | [Testes de componente e frontend no CI](../done/172-testes-componente-angular-e-frontend-no-ci.spec.md) | infraestrutura frontend, raiz e CI |
-| 173 | [Núcleo: core, config, shared e desktop](../done/173-testes-nucleo-core-config-shared-desktop.spec.md) | transversal |
-| 174 | [Autenticação e usuários](../done/174-testes-autenticacao-e-usuarios.spec.md) | `autenticacao`, `usuario` |
-| 175 | [Projetos](../done/175-testes-projetos.spec.md) | `projeto` |
-| 176 | [Demandas](../done/176-testes-demandas.spec.md) | `demanda` |
-| 177 | [Atividades e prioridade](../done/177-testes-atividades-e-prioridade.spec.md) | `atividade`, `atividade-prioridade` |
-| 178 | [Execuções](../done/178-testes-execucoes.spec.md) | `execucao` |
-| 179 | [Ponto e justificativas](../done/179-testes-ponto-e-justificativas.spec.md) | `ponto`, `ponto-justificativa` |
-| 180 | [Calendário](../done/180-testes-calendario.spec.md) | `calendario` |
-| 181 | [Tags](../done/181-testes-tags.spec.md) | `tag` |
-| 182 | [Anotações (pad)](../done/182-testes-anotacoes.spec.md) | `anotacao` |
-| 183 | [Relatório](../done/183-testes-relatorio.spec.md) | `relatorio` |
-| 184 | [Camada de IA](../done/184-testes-camada-de-ia.spec.md) | `ia`, `configuracao-ia`, `prompt`, `ferramenta-ia`, `proposta-ia`, `assistente` |
-| 185 | [Chat](../done/185-testes-chat.spec.md) | `chat` |
-| 186 | [Check-in](../done/186-testes-checkin.spec.md) | `checkin` |
+| 171 | [Banco de teste para repositories](171-testes-banco-de-teste-para-repositories.spec.md) | infraestrutura backend |
+| 172 | [Testes de componente e frontend no CI](172-testes-componente-angular-e-frontend-no-ci.spec.md) | infraestrutura frontend, raiz e CI |
+| 173 | [Núcleo: core, config, shared e desktop](173-testes-nucleo-core-config-shared-desktop.spec.md) | transversal |
+| 174 | [Autenticação e usuários](174-testes-autenticacao-e-usuarios.spec.md) | `autenticacao`, `usuario` |
+| 175 | [Projetos](175-testes-projetos.spec.md) | `projeto` |
+| 176 | [Demandas](176-testes-demandas.spec.md) | `demanda` |
+| 177 | [Atividades e prioridade](177-testes-atividades-e-prioridade.spec.md) | `atividade`, `atividade-prioridade` |
+| 178 | [Execuções](178-testes-execucoes.spec.md) | `execucao` |
+| 179 | [Ponto e justificativas](179-testes-ponto-e-justificativas.spec.md) | `ponto`, `ponto-justificativa` |
+| 180 | [Calendário](180-testes-calendario.spec.md) | `calendario` |
+| 181 | [Tags](181-testes-tags.spec.md) | `tag` |
+| 182 | [Anotações (pad)](182-testes-anotacoes.spec.md) | `anotacao` |
+| 183 | [Relatório](183-testes-relatorio.spec.md) | `relatorio` |
+| 184 | [Camada de IA](184-testes-camada-de-ia.spec.md) | `ia`, `configuracao-ia`, `prompt`, `ferramenta-ia`, `proposta-ia`, `assistente` |
+| 185 | [Chat](185-testes-chat.spec.md) | `chat` |
+| 186 | [Check-in](186-testes-checkin.spec.md) | `checkin` |
 | 187 | [Frontend: núcleo e componentes compartilhados](187-testes-frontend-nucleo-e-compartilhados.spec.md) | `frontend/src/app/core`, `shared`, layout |
 
 **Ordem:** 171 e 172 primeiro (independentes entre si); depois 173; depois os domínios, começando pelos de maior risco de

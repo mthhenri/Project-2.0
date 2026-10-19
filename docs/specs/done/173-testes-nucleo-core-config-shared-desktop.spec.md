@@ -1,6 +1,6 @@
 # Task 173 — Testes: núcleo (core, config, shared e desktop)
 
-> Task 3/17 da guarda-chuva [`testes-automatizados.spec.md`](../backlog/testes-automatizados.spec.md). Método comum na guarda-chuva.
+> Task 3/17 da guarda-chuva [`testes-automatizados.spec.md`](testes-automatizados.spec.md). Método comum na guarda-chuva.
 
 ## Objetivo
 

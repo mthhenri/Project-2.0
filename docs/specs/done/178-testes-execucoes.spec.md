@@ -1,7 +1,7 @@
 # Task 178 — Testes: execuções
 
-> Task 8/17 da guarda-chuva [`testes-automatizados.spec.md`](../backlog/testes-automatizados.spec.md) — método comum lá.
-> Inventário de partida: [análise](../backlog/testes-automatizados/ANALISE.md). **Prioridade 1** entre os domínios: é a regra mais
+> Task 8/17 da guarda-chuva [`testes-automatizados.spec.md`](testes-automatizados.spec.md) — método comum lá.
+> Inventário de partida: [análise](testes-automatizados/ANALISE.md). **Prioridade 1** entre os domínios: é a regra mais
 > violada do projeto e `execucao.service` (433 linhas) não tem teste direto.
 
 ## Objetivo

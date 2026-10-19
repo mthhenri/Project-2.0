@@ -12,6 +12,47 @@
 
 ---
 
+## 2026-10-19 — Task 187: testes do frontend (núcleo, layout, compartilhados) e fecho da guarda-chuva `testes-automatizados`
+
+Última das 17 tasks (171–187). Nenhum código de produção mudou. O núcleo lógico (11 arquivos) e o layout com os componentes compartilhados (14 arquivos) foram escritos por dois
+subagentes (`implementador`), em paralelo e em arquivos disjuntos, e conferidos aqui (suíte completa, builds e cobertura). A matriz foi escrita e validada à mão.
+
+**Frontend, núcleo e lógica (11 arquivos, ~96 testes).** `error-handler.interceptor` (cada status gera o aviso certo; 401 limpa só a sessão e leva ao login com `returnUrl`; `comErroTratadoPelaTela`),
+`loading.interceptor` (overlay só após 250 ms, GET e `comFeedbackProprio` ignorados, contagem em erro e em cancelamento), `desfazer.service`, `tema`, `visualizacao-tempo` e
+`tema-personalizado` (inclusive o esquecimento ao logar com outro usuário), `rxjs-erros-http`, `atalhos`, `navegacao.ts` (itens por tipo, `somenteAdministrador`, `exigeIa`), os três pipes e
+as diretivas `bloquear-caracteres-proibidos` (igual ao validador do `shared`) e `dialog-formulario` (Enter, Ctrl/Cmd+Enter, autofocus).
+
+**Frontend, layout e compartilhados (14 arquivos, 137 testes com os dois que já existiam).** `layout`, `sidebar` (5 itens do desenvolvedor, 9 do gestor, 10 do administrador, só ele vê "IA"; estado da IA;
+recolher; atalho `g`+letra), `topbar`, `chip-execucao-ativa` (aparece com execução ativa, cronômetro, some ao encerrar, pausa inline otimista), `markdown-editor`, `markdown-visualizador` (HTML
+perigoso vira texto, `javascript:` não vira `href`), `toast-desfazer`, `seletor-cor`, `prioridade-selo`, `skeleton-lista`, `error-message`, `loading-spinner`, `barra-recarga` e
+`dialog-dica-atalhos`. Nenhum componente ficou de fora. O prazo do Desfazer é 6 s (`VIDA_TOAST_DESFAZER_MS`) e 7 s no pad (`duracaoMs`); o texto da spec dizia 7 s para todos — código e
+`SYSTEM.SPEC.md` concordam, os testes afirmam os dois.
+
+**Matriz de permissões.** `docs/specs/done/187-testes-frontend-nucleo-e-compartilhados/MATRIZ-PERMISSOES.md`: as 13 linhas da tabela de §14, as 5 regras do administrador e as demais regras de acesso
+com o(s) teste(s) de cada uma. Os nomes de teste citados foram conferidos mecanicamente contra o código de teste (nenhum ausente). **Nenhuma linha ficou sem teste**; três ficam com `todo` por divergência
+entre documento e código (P-010, P-011, P-015), sem reabrir as tasks de domínio.
+
+**Cobertura (linhas; `npm run test:cobertura`, sem gate).**
+
+| Workspace | Partida (task 172, 2026-10-18) | Final (2026-10-19) |
+|---|---|---|
+| shared | 99,7% | 97,8% |
+| backend (unitários) | 71,4% | 81,6% |
+| desktop | 99,5% | 99,5% |
+| frontend | 8,3% (statements 8,5%) | 91,5% (statements 89,6%) |
+
+A queda do `shared` vem de DTOs com validadores só parcialmente exercitados (por exemplo `AtividadeCriarDto`, 90%); não é código novo sem teste e não foi investigada além disso. A cobertura do backend não
+inclui os testes de integração (que exercitam o SQL dos repositories). **Testes (arquivos de teste → casos):** partida da análise de 2026-10-18 — shared 68, backend 508, desktop 17, frontend 61 (nenhum de componente), scripts 14.
+Final — shared 163, backend 995 unitários (988 passando + 7 `todo`) e **232 de integração** contra o PostgreSQL de teste, desktop 19, frontend 1289 (+3 `todo`, em 118 arquivos, com teste de componente), scripts 14.
+
+**Balanço da guarda-chuva.** Achados durante a cobertura, todos fora do escopo das tasks e registrados em `PROBLEMS.md` (nenhum corrigido): P-010 a P-016 e P-018 (o botão Enviar do chat e do check-in não dispara o envio).
+`PROBLEMS.md` P-001 foi reescrito: a parte de testes saiu, ficou só o lint (`IDEAS.md` I-002). Guarda-chuva e anexo (`ANALISE.md`) foram para `done/`, e os ponteiros das tasks 171–178 foram corrigidos.
+Observações sem item próprio: `tema.service`, `visualizacao-tempo.service` e `tema-personalizado.service` leem e gravam `localStorage` sem `try/catch` (se o armazenamento estiver indisponível, lançariam); e a verificação
+visual ao vivo das telas continua sendo da skill `verify`, os testes de componente não a substituem.
+
+**Gates.** `npm test`: shared 163, backend 995 (988 + 7 `todo` de P-010 a P-016), frontend 1289 (+3 `todo`), desktop 19, scripts 14 (13 + 1 pulado); `test:integracao` 232 passando; builds de backend e frontend
+verdes; `repo:verificar` aprovado. Sem lint (P-001). Sem verificação ao vivo: só testes.
+
 ## 2026-10-19 — Task 186: testes do check-in
 
 Décima sexta task da guarda-chuva `testes-automatizados`. Nenhum código de produção mudou. O frontend foi escrito por um subagente (`implementador`) e conferido aqui

@@ -52,8 +52,8 @@
   permissão e de execução só é verificada ao vivo.
 - **Custo aparente:** configuração por workspace e um passo de CI; services estendem
   `BaseRepository` com injeção do Knex, então os falsos precisam de um ponto de injeção.
-- **Situação (2026-10-18):** a parte de **testes** foi especificada nas tasks 171–187
-  (`docs/specs/backlog/testes-automatizados.spec.md`); o **lint** continua ideia aberta.
+- **Situação (2026-10-18):** a parte de **testes** foi entregue nas tasks 171–187
+  (`docs/specs/done/testes-automatizados.spec.md`, concluída em 2026-10-19); o **lint** continua ideia aberta.
 
 ### I-003 — Tabelas no editor e no visualizador de Markdown · frontend/shared
 

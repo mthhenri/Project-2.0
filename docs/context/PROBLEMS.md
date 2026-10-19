@@ -29,18 +29,13 @@
 
 ## Ativos
 
-### P-001 — Cobertura de testes parcial e sem lint · `CONTORNADO` · repositório
+### P-001 — Projeto sem lint · `CONTORNADO` · repositório
 
-- **Sintoma:** a cobertura é parcial: o frontend mede ~8% de statements (lógica pura e Tags; as
-  demais telas não têm teste de componente), os repositories só ganharam teste de integração com a
-  task 171 (Tags) e os services ainda não têm teste com repositório falso. Não há ESLint nem
-  Prettier em nenhum workspace. Números de partida: `npm run test:cobertura`.
-- **Causa:** o projeto foi construído verificando por build e execução manual; os primeiros testes
-  só entraram na adoção do kit (2026-10-16).
-- **Contorno:** `npm test` na raiz; build dos workspaces; verificação ao vivo (skill `verify`).
-  Código novo em regra pura ou helper de service leva teste no mesmo commit.
-- **Correção:** (1) as tasks 173–187 (guarda-chuva `testes-automatizados`) cobrem repositories,
-  services e telas por domínio; (2) escolher e configurar lint e acrescentar ao CI.
+- **Sintoma:** não há ESLint nem Prettier em nenhum workspace; o gate de qualidade do `CLAUDE.md` pede lint e hoje a lacuna é só declarada no fecho de cada task.
+  (A parte de **testes** deste item foi resolvida pelas tasks 171–187: ver `HISTORY.md`, bloco da 187, com a cobertura de partida e a final.)
+- **Causa:** o projeto foi construído verificando por build, testes e execução manual; nunca se escolheu nem configurou um linter.
+- **Contorno:** `npm test` na raiz, `npm run test:integracao`, build dos workspaces e verificação ao vivo (skill `verify`); revisão do diff pela skill `conventions-check`.
+- **Correção:** escolher e configurar lint e acrescentar ao CI (`IDEAS.md` I-002).
 - **Desde:** origem do projeto.
 
 ### P-004 — Outras telas ainda calculam "hoje" e as horas no fuso do navegador · `ACEITO` · frontend
