@@ -63,6 +63,17 @@
 - **Custo aparente:** estender o interpretador (nó de tabela, sem HTML), o visualizador e o esquema do editor (Milkdown tem o preset GFM), mais testes
   de ida e volta; decidir o que a IA pode gerar.
 
+### I-004 — Chat IA como tira-dúvidas de programação, com bloco de código copiável · chat IA/frontend
+
+- **Ideia:** o chat da IA também funciona como auxiliador de programação: responde perguntas como "como faço X em TypeScript?",
+  "como faço um loop em PHP?" ou "como faço uma classe em C#?", exibindo o código em bloco com realce de sintaxe da linguagem
+  e um botão de copiar.
+- **Origem:** pedido do autor em conversa (2026-10-19).
+- **Por quê:** tirar dúvida de sintaxe sem sair do sistema; hoje o chat é voltado às operações do próprio sistema, e o bloco
+  de código não tem cópia em um clique.
+- **Custo aparente:** ajuste de prompt/escopo do chat para aceitar perguntas de programação; no visualizador de Markdown, realce
+  por linguagem e botão de copiar nos blocos de código (afeta todo lugar que usa o visualizador — avaliar impacto).
+
 ## Promovidas
 
 Nenhuma ainda.
