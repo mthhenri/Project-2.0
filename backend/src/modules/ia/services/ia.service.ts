@@ -10,6 +10,7 @@ import {
 import { ConfiguracaoIaService } from '../../configuracao-ia/services/configuracao-ia.service';
 import { IaException } from '../domain/ia.exception';
 import { IaProvedor } from '../domain/ia-provedor';
+import { turnoAtual } from '../domain/turno-ia';
 import { IaResposta, IaRespostaProvedor, IaSolicitacao, IaSolicitacaoProvedor } from '../domain/ia.tipos';
 
 /** Provedores implementados, por tipo. Os que faltam (Google, OpenAI) falham com erro claro de configuração. */
@@ -96,7 +97,10 @@ export class IaService {
     try {
       const resposta = await chamada();
       this.ultimoResultado = EstadoIaEnum.NO_AR;
-      return { ...resposta, nivel: solicitacao.nivel };
+      const respondida = { ...resposta, nivel: solicitacao.nivel };
+      // O ponto único da coleta do turno do chat (task 188): só chamada bem-sucedida entra, e fora de um turno nada muda.
+      turnoAtual()?.registrar(respondida);
+      return respondida;
     } catch (erro) {
       if (deteccaoAutomatica && erro instanceof IaException && erro.motivo === 'INDISPONIVEL') this.ultimoResultado = EstadoIaEnum.FORA_DO_AR;
       throw erro;

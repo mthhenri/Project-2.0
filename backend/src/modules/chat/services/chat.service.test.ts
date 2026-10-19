@@ -7,6 +7,7 @@ import { ResourceNotFoundException } from '../../../core/exceptions/resource-not
 import { FerramentaIaRegistro } from '../../ferramenta-ia/services/ferramenta-ia.registro';
 import { IaException } from '../../ia/domain/ia.exception';
 import { IaResposta, IaSolicitacao } from '../../ia/domain/ia.tipos';
+import { turnoAtual } from '../../ia/domain/turno-ia';
 import { IaService } from '../../ia/services/ia.service';
 import { PromptService } from '../../prompt/services/prompt.service';
 import { PropostaIaService } from '../../proposta-ia/services/proposta-ia.service';
@@ -44,6 +45,8 @@ interface Cenario {
   /** Cada item é uma chamada ao modelo: devolve a resposta (trechos opcionais) ou lança. */
   chamadas: ((solicitacao: IaSolicitacao, aoTrecho: (trecho: string) => void) => Promise<IaResposta>)[];
   ferramenta?: (nome: string) => { conteudo: string; erro: boolean; propostaId?: number };
+  /** As chamadas à IA que a ferramenta faz por baixo e que chegam ao fim (as que falham não entram), como o `IaService` real as registra no turno. */
+  iaDaFerramenta?: (nome: string) => IaResposta[];
   estado?: EstadoIaEnum;
   historicoInicial?: ChatMensagemNova[];
   titulosIniciais?: Record<string, string | TituloDaConversa>;
@@ -101,13 +104,17 @@ function montar(cenario: Cenario) {
     },
     async gerar(solicitacao: IaSolicitacao) {
       geradas.push(solicitacao);
-      return resposta({ texto: cenario.titulo ? cenario.titulo(solicitacao) : '"Revisão do webhook."' });
+      const gerada = resposta({ texto: cenario.titulo ? cenario.titulo(solicitacao) : '"Revisão do webhook."' });
+      turnoAtual()?.registrar(gerada); // como o `IaService` real: se houvesse um turno aberto, a chamada entraria nele
+      return gerada;
     },
     async transmitir(solicitacao: IaSolicitacao, aoTrecho: (trecho: string) => void) {
       ordem.push('ia');
       solicitacoes.push({ ...solicitacao, mensagens: [...solicitacao.mensagens] });
       const chamada = cenario.chamadas[Math.min(indice++, cenario.chamadas.length - 1)];
-      return chamada(solicitacao, aoTrecho);
+      const resultado = await chamada(solicitacao, aoTrecho);
+      turnoAtual()?.registrar(resultado); // o `IaService` real registra toda chamada bem-sucedida no turno aberto
+      return resultado;
     },
   };
   const recusadas: number[] = [];
@@ -123,7 +130,10 @@ function montar(cenario: Cenario) {
     } as unknown as PromptService,
     {
       listarParaUsuario: () => [{ nome: 'consultar_data_e_hora', descricao: 'd', esquemaEntrada: {} }],
-      executar: async (nome: string) => (cenario.ferramenta ? cenario.ferramenta(nome) : { conteudo: '{"data":"2026-10-17"}', erro: false }),
+      executar: async (nome: string) => {
+        for (const chamadaDaFerramenta of cenario.iaDaFerramenta?.(nome) ?? []) turnoAtual()?.registrar(chamadaDaFerramenta);
+        return cenario.ferramenta ? cenario.ferramenta(nome) : { conteudo: '{"data":"2026-10-17"}', erro: false };
+      },
     } as unknown as FerramentaIaRegistro,
     {
       recusar: async (id: number) => {
@@ -653,4 +663,64 @@ test('retomada: falha avisa pelo evento e não grava mensagem do sistema', async
   const eventos = await retomar(servico);
   assert.equal(eventos.at(-1)?.tipo, 'erro');
   assert.equal(gravadas.length, antes);
+});
+
+// Task 188 (corrige P-017): o selo da resposta é o maior nível do turno, contando as ferramentas que chamam a IA por baixo.
+
+const chamadaDaIa = (nivel: NivelIaEnum, modelo: string, tokens = { entrada: 100, saida: 50, cache: 7 }) => ({ ...resposta({ texto: 'x', tokens }), nivel, modelo });
+
+test('turno sem ferramenta que chame a IA grava RAPIDO, o modelo e os tokens da própria conversa', async () => {
+  const { servico, gravadas } = montar({ chamadas: [async () => resposta({ texto: 'oi' })] });
+  await enviar(servico);
+  const ia = gravadas.at(-1)!;
+  assert.deepEqual([ia.nivel, ia.modelo, ia.tokensEntrada, ia.tokensSaida, ia.tokensCache], [NivelIaEnum.RAPIDO, 'claude-haiku-5-5', 10, 5, 1]);
+});
+
+test('ferramenta que chamou o analítico: a mensagem grava ANALITICO, o modelo dele e os tokens somados', async () => {
+  const { servico, gravadas } = montar({
+    chamadas: [async () => pedidoDeFerramenta('t1', 'descrever_demanda'), async () => resposta({ texto: 'Pronto.' })],
+    iaDaFerramenta: () => [chamadaDaIa(NivelIaEnum.ANALITICO, 'claude-opus-5-5')],
+  });
+  await enviar(servico, 'descreve a demanda');
+  const ia = gravadas.at(-1)!;
+  assert.equal(ia.nivel, NivelIaEnum.ANALITICO);
+  assert.equal(ia.modelo, 'claude-opus-5-5');
+  // duas chamadas da conversa (10/5/1 cada) + a da ferramenta (100/50/7); a nomeação e as sugestões, que vêm depois do turno, não entram
+  assert.deepEqual([ia.tokensEntrada, ia.tokensSaida, ia.tokensCache], [120, 60, 9]);
+});
+
+test('duas ferramentas em níveis diferentes: grava o maior, em qualquer ordem', async () => {
+  const { servico, gravadas } = montar({
+    chamadas: [async () => pedidoDeFerramenta('t1', 'descrever_demanda'), async () => pedidoDeFerramenta('t2', 'descrever_execucao'), async () => resposta({ texto: 'Pronto.' })],
+    iaDaFerramenta: (nome) => [nome === 'descrever_demanda' ? chamadaDaIa(NivelIaEnum.ANALITICO, 'opus') : chamadaDaIa(NivelIaEnum.PADRAO, 'sonnet')],
+  });
+  await enviar(servico);
+  assert.deepEqual([gravadas.at(-1)!.nivel, gravadas.at(-1)!.modelo], [NivelIaEnum.ANALITICO, 'opus']);
+});
+
+test('ferramenta que falhou, e por isso não registrou chamada, não soma nem sobe o nível', async () => {
+  const { servico, gravadas } = montar({
+    chamadas: [async () => pedidoDeFerramenta('t1', 'descrever_demanda'), async () => resposta({ texto: 'Não consegui.' })],
+    ferramenta: () => ({ conteudo: 'erro', erro: true }),
+    iaDaFerramenta: () => [],
+  });
+  await enviar(servico);
+  const ia = gravadas.at(-1)!;
+  assert.deepEqual([ia.nivel, ia.tokensEntrada], [NivelIaEnum.RAPIDO, 20]);
+});
+
+test('o check-in também grava o maior nível do turno', async () => {
+  const { servico, gravadas } = montar({
+    chamadas: [async () => pedidoDeFerramenta('t1', 'descrever_execucao'), async () => resposta({ texto: 'Anotado' })],
+    iaDaFerramenta: () => [chamadaDaIa(NivelIaEnum.PADRAO, 'sonnet')],
+  });
+  await servico.enviarMensagem(USUARIO, { texto: 'fiz o login' }, () => undefined, { contexto: ContextoChatEnum.CHECKIN, instrucoesExtras: '[Contexto do check-in]' });
+  assert.equal(gravadas.at(-1)!.nivel, NivelIaEnum.PADRAO);
+});
+
+test('o turno acaba com a resposta: a nomeação e as sugestões não entram na conta do selo', async () => {
+  const { servico, gravadas, geradas } = montar({ chamadas: [async () => resposta({ texto: 'oi' })] });
+  await enviar(servico);
+  assert.ok(geradas.length >= 2, 'houve nomeação e sugestões');
+  assert.deepEqual([gravadas.at(-1)!.tokensEntrada, gravadas.at(-1)!.tokensSaida], [10, 5]);
 });

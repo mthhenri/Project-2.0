@@ -23,7 +23,8 @@ import { ResourceNotFoundException } from '../../../core/exceptions/resource-not
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { FerramentaIaRegistro } from '../../ferramenta-ia/services/ferramenta-ia.registro';
 import { IaException } from '../../ia/domain/ia.exception';
-import { IaBloco, IaMensagem, IaResposta, IaTokens } from '../../ia/domain/ia.tipos';
+import { IaBloco, IaMensagem } from '../../ia/domain/ia.tipos';
+import { executarNoTurno, TurnoIa } from '../../ia/domain/turno-ia';
 import { IaService } from '../../ia/services/ia.service';
 import { PromptService } from '../../prompt/services/prompt.service';
 import { PropostaIaService } from '../../proposta-ia/services/proposta-ia.service';
@@ -278,6 +279,19 @@ export class ChatService {
     emitir: (evento: ChatEventoDto) => void,
     opcoes: OpcoesDeConversa,
   ): Promise<void> {
+    // O turno junta o que as chamadas desta resposta gastaram, as da conversa e as das ferramentas (task 188): o selo é o maior nível.
+    const turno = new TurnoIa();
+    await executarNoTurno(turno, () => this.responderNoTurno(usuarioAtivo, conversaId, propostasDoTurno, emitir, opcoes, turno));
+  }
+
+  private async responderNoTurno(
+    usuarioAtivo: JwtPayload,
+    conversaId: string,
+    propostasDoTurno: number[],
+    emitir: (evento: ChatEventoDto) => void,
+    opcoes: OpcoesDeConversa,
+    turno: TurnoIa,
+  ): Promise<void> {
     const { abertura, retomada, contexto } = opcoes;
     const historico = await this.listarDoContexto(conversaId, usuarioAtivo.sub, contexto);
     const prompt = await this.promptService.obterAtivo(contexto === ContextoChatEnum.CHECKIN ? TipoPromptEnum.CHECKIN : TipoPromptEnum.CONVERSA);
@@ -290,20 +304,14 @@ export class ChatService {
     const mensagemDeRetomada: IaMensagem | null = retomada ? { papel: 'usuario', conteudo: retomada } : null;
     const mensagens = mensagemDeAbertura ? [mensagemDeAbertura] : mensagemDeRetomada ? [...this.montarMensagens(historico), mensagemDeRetomada] : this.montarMensagens(historico);
     const trocasDoTurno: IaMensagem[] = mensagemDeAbertura ? [mensagemDeAbertura] : mensagemDeRetomada ? [mensagemDeRetomada] : [];
-    const tokens: IaTokens = { entrada: 0, saida: 0, cache: 0 };
     let texto = '';
-    let ultima: IaResposta | undefined;
 
     for (let volta = 1; volta <= MAXIMO_DE_VOLTAS; volta++) {
       const resposta = await this.iaService.transmitir(
         { nivel: NivelIaEnum.RAPIDO, instrucoes, mensagens, ferramentas, maximoTokens: MAXIMO_TOKENS_DO_CHAT },
         (trecho) => emitir({ tipo: 'trecho', texto: trecho }),
       );
-      ultima = resposta;
       texto += resposta.texto;
-      tokens.entrada += resposta.tokens.entrada;
-      tokens.saida += resposta.tokens.saida;
-      tokens.cache += resposta.tokens.cache;
 
       const mensagemDaIa: IaMensagem = { papel: 'ia', conteudo: resposta.blocos };
       mensagens.push(mensagemDaIa);
@@ -319,14 +327,15 @@ export class ChatService {
     }
 
     const conteudoBruto: ConteudoBrutoDoTurno = { mensagens: trocasDoTurno };
+    const tokens = turno.tokens;
     const gravada = await this.chatMensagemRepositorio.gravar({
       conversaId,
       usuarioId: usuarioAtivo.sub,
       contexto,
       autor: AutorChatEnum.IA,
       texto,
-      nivel: NivelIaEnum.RAPIDO,
-      modelo: ultima?.modelo ?? null,
+      nivel: turno.nivel,
+      modelo: turno.modelo,
       tokensEntrada: tokens.entrada,
       tokensSaida: tokens.saida,
       tokensCache: tokens.cache,

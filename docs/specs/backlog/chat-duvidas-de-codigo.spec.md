@@ -53,7 +53,7 @@ código) e o administrador liga e desliga as dúvidas de código e escolhe se o 
 
 | # | Task | Escopo |
 |---|---|---|
-| 188 | [Nível real e tokens do turno no chat](188-chat-nivel-real-e-tokens-do-turno.spec.md) | `ia`, `chat`; corrige P-017 |
+| 188 | [Nível real e tokens do turno no chat](../done/188-chat-nivel-real-e-tokens-do-turno.spec.md) | `ia`, `chat`; corrige P-017 |
 | 189 | [Bloco de código: copiar e realce por linguagem](189-markdown-bloco-de-codigo-copiar-e-realce.spec.md) | `app-markdown-visualizador` (frontend) |
 | 190 | [Configuração das dúvidas de código](190-ia-configuracao-duvidas-de-codigo.spec.md) | `configuracao-ia`, `prompt`, migration, tela |
 | 191 | [Assunto das mensagens e contexto do chat](191-chat-assunto-e-contexto.spec.md) | `chat`, armazenamentos, migration |

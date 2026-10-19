@@ -12,6 +12,17 @@
 
 ---
 
+## 2026-10-19 — Task 188: nível real e tokens do turno no chat (P-017 corrigido)
+
+Primeira task da guarda-chuva `chat-duvidas-de-codigo`. A resposta do chat gravava `RAPIDO` fixo e somava só as próprias chamadas; o que as ferramentas gastavam por baixo (descrever demanda no analítico, descrição de execução no padrão) se perdia.
+
+- **Coleta num ponto só:** `ia/domain/turno-ia.ts` (`TurnoIa`, `nivelMaisAlto`, `executarNoTurno`, `turnoAtual` sobre `AsyncLocalStorage`) e uma linha em `IaService.executar`, que registra no turno aberto toda chamada **bem-sucedida** (`gerar` e `transmitir`). Nenhuma ferramenta mudou e a assinatura pública do `IaService` ficou igual; fora de um turno nada acontece (relatório, assistente, prompts de teste, executores).
+- **Chat:** `ChatService.responder` abre o turno e delega a `responderNoTurno`; a mensagem da IA grava `turno.nivel`, `turno.modelo` (o da última chamada do nível mais alto) e a soma dos tokens do turno (inclui as chamadas da própria conversa, que antes eram somadas à mão). Vale para chat, check-in, bom dia e retomada. A nomeação (task 192) e as sugestões rodam depois do turno e não entram na conta.
+- **Tela:** sem mudança; o selo já lia `mensagem.nivel`.
+- **Testes:** backend 1029 unitários (1022 passando, 7 `todo` antigos): `turno-ia` (ordem dos níveis, soma, empate, cópia dos tokens, turnos simultâneos não se misturam), `IaService` (dentro do turno registra, fora não, falha não registra, simultâneos), `chat.service` (sem ferramenta = RAPIDO, ferramenta no analítico = ANALITICO com o modelo e os tokens somados, duas ferramentas gravam o maior, ferramenta que falhou não soma, check-in, nomeação e sugestões fora da conta). Mutação: tirar a linha do `IaService` derruba os testes dele. Builds de backend e frontend passam; sem lint (P-001).
+- **Verificado ao vivo** (IA no ar, conta de gestor de teste; 1366×768 e conferido em 1920×1080 e 1080×1920): pergunta simples continua "rápido"; "escreve a descrição técnica da demanda…" mostra **"analítico"** e a mensagem gravada tem `ANALITICO`, `claude-opus-5-5` e 55 993 tokens de entrada (contra ~13 mil nas respostas só da conversa).
+- P-017 saiu de `PROBLEMS.md`.
+
 ## 2026-10-19 — Task 192: nome da conversa do chat (padrão, renomeação a cada mensagem, tooltip e edição)
 
 Pedido do autor ao usar o histórico: o nome era dado uma vez, aparecia cortado sem como ler inteiro e não podia ser editado. Spec em `done/`.
