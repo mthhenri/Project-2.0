@@ -89,8 +89,8 @@ await browser.newContext({ viewport: { width: 1366, height: 768 } });
   `.env.example`), `createdb project20` e `db:migrate`. Sem OpenSearch o chat fica indisponível: use `CHAT_ARMAZENAMENTO=postgres` no `.env` (ignorado pelo Git).
   Sem chave da Anthropic a IA não responde, mas o chat e o check-in abrem: ligue a IA com `update configuracao_ia set ia_desligada = false` (e **reinicie o
   backend**, a configuração fica em cache) e monte cenários inserindo `proposta_ia` + `chat_mensagem` (com `proposta_id`) direto no banco.
-- **`pkill -f "nest start"` mata o próprio shell** (saída 144): o padrão casa com a linha de comando da ferramenta. Mate o backend pelo PID da porta
-  (`lsof -ti tcp:3000`) e suba com `setsid nohup ... &`.
+- **`pkill -f` e `pgrep -f "..."` matam o próprio shell** (saída 144): o padrão casa com a linha de comando da ferramenta. Mate o backend pelo PID da porta
+  (`lsof -ti tcp:3000`) e suba com `setsid nohup ... &`. Um backend velho que ficou na porta continua respondendo com o **.env antigo**: confira o PID antes de achar que a variável nova "não pegou".
 - **A janelinha do check-in cobre a tela inteira** e atrapalha qualquer captura: aparece quando a execução ativa passa do mínimo (30 min). A agenda do check-in
   fica **em memória por execução**: para sair dela, encerre a execução e inicie outra (mexer em `inicio_data` não basta).
 - **Provar um bug de "recarrega a página"**: plante `window.__sentinela` e confira depois do clique; reverta o arquivo corrigido só para a contraprova

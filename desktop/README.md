@@ -21,9 +21,13 @@ npm run test --workspace=desktop    # funções puras (src/politica-da-janela.ts
 npm run pack --workspace=desktop    # executável portátil em desktop/release/ (Windows)
 ```
 
-Para publicar: troque `URL_DO_PROJECT` em `src/config.ts`, rode o `pack` e coloque `release/Project-Desktop-<versão>.exe` na pasta
-compartilhada. Não há atualização automática: a cada mudança no desktop (ou no Project) recompila-se e redistribui-se o executável.
-O executável não é assinado.
+Para publicar: troque `URL_DO_PROJECT` em `src/config.ts`, rode o `pack` e coloque `release/Project-Desktop-<versão>.exe` na pasta do servidor
+indicada por `DESKTOP_PASTA_EXECUTAVEIS` (ver `.env.example`). O backend serve o arquivo de **maior versão** (`GET /desktop/download`) e o menu do perfil do
+Project mostra "Baixar Project Desktop" (task 198). O `package.json` do desktop é a versão instalada: aumente-a a cada publicação.
+
+**Atualização:** o app só abre a URL do front, então o **front** se atualiza sozinho; o **executável** não. De hora em hora o desktop lê `GET /desktop/versao`
+com o token do login e, se a publicada for maior que a instalada (`src/politica-da-versao.ts`), o menu da bandeja ganha "Nova versão disponível (vX.Y.Z): baixar",
+que abre o Project no navegador com `?baixar-desktop=1`; o front inicia o download com o login do usuário. Não há atualização silenciosa. O executável não é assinado.
 
 ## Estrutura
 

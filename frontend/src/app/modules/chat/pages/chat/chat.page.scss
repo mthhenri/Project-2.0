@@ -236,13 +236,15 @@
     overflow-wrap: anywhere;
   }
 
+  // Metadado ao lado do horário (task 193): mesmo tamanho da hora, só com a pílula para se destacar de leve.
   &__nivel {
-    padding: 1px 0.5rem;
+    padding: 0 0.4375rem;
     border-radius: 999px;
     background: var(--app-surface-100);
     color: var(--p-text-muted-color);
     font-size: 0.6875rem;
     font-weight: 600;
+    line-height: 1.125rem;
   }
 
   // Os três pontinhos que pulsam enquanto a IA pensa.

@@ -15,7 +15,7 @@ const GESTOR = { sub: 1, tipo: TipoUsuarioEnum.GESTOR } as never;
 const ADMINISTRADOR = { sub: 2, tipo: TipoUsuarioEnum.ADMINISTRADOR } as never;
 
 /** Repositório em memória: a "transação" só grava se o modificador não lançar, como a real. */
-function criarRepositorio(textosIniciais: Partial<Record<TipoAnotacaoEnum, string>> = {}, usuarioExiste = true) {
+function criarRepositorio(textosIniciais: Partial<Record<TipoAnotacaoEnum, string>> = {}, usuarioExiste = true, tipoDoDono: TipoUsuarioEnum = TipoUsuarioEnum.DESENVOLVEDOR) {
   const secoes = new Map<TipoAnotacaoEnum, AnotacaoResumoDto>();
   let relogio = 1_000;
   for (const tipo of TIPOS_ANOTACAO_ORDENADOS) {
@@ -25,6 +25,7 @@ function criarRepositorio(textosIniciais: Partial<Record<TipoAnotacaoEnum, strin
   return {
     secoes,
     get gravacoes() { return gravacoes; },
+    recuperarTipoDoDono: async () => (usuarioExiste ? tipoDoDono : null),
     listar: async (dto: { tipos?: TipoAnotacaoEnum[] }) =>
       usuarioExiste ? TIPOS_ANOTACAO_ORDENADOS.filter((t) => !dto.tipos || dto.tipos.includes(t)).map((t) => ({ ...secoes.get(t)! })) : [],
     modificarSecoes: async (
@@ -53,11 +54,31 @@ function criarServico(repositorio: ReturnType<typeof criarRepositorio>): Anotaca
 
 // --- Permissão ---------------------------------------------------------------------------------
 
-test('o dono lê e altera o próprio pad; gestor e administrador, o de qualquer um', async () => {
+test('o dono lê e altera o próprio pad; gestor e administrador, o de qualquer desenvolvedor', async () => {
   const servico = criarServico(criarRepositorio());
   for (const usuario of [DESENVOLVEDOR_DONO, GESTOR, ADMINISTRADOR]) {
     const resposta = await servico.listar({ usuarioId: 7 }, usuario);
     assert.equal(resposta.dados!.length, 5);
+  }
+});
+
+test('task 195: gestor e administrador não tocam no pad de outro gestor ou administrador (403) em nenhuma operação; no próprio, sim', async () => {
+  const OUTRO_GESTOR = { sub: 3, tipo: TipoUsuarioEnum.GESTOR } as never;
+  const data = new Date(1_000);
+  for (const dono of [TipoUsuarioEnum.GESTOR, TipoUsuarioEnum.ADMINISTRADOR]) {
+    const repositorio = criarRepositorio({ FEITO: 'x' }, true, dono);
+    const servico = criarServico(repositorio);
+    for (const ator of [GESTOR, ADMINISTRADOR]) {
+      await assert.rejects(() => servico.listar({ usuarioId: 3 }, ator), UnauthorizedAccessException);
+      await assert.rejects(() => servico.alterar({ usuarioId: 3, tipo: TipoAnotacaoEnum.FEITO, texto: 'y', updatedDateLido: data }, ator), UnauthorizedAccessException);
+      await assert.rejects(() => servico.trocarTrecho({ usuarioId: 3, tipo: TipoAnotacaoEnum.FEITO, trechoAntigo: 'x', trechoNovo: 'y' }, ator), UnauthorizedAccessException);
+      await assert.rejects(() => servico.anexarTexto({ usuarioId: 3, tipo: TipoAnotacaoEnum.FEITO, texto: 'y' }, ator), UnauthorizedAccessException);
+      await assert.rejects(() => servico.anexarFeito({ usuarioId: 3, texto: 'y' }, ator), UnauthorizedAccessException);
+      await assert.rejects(() => servico.moverTrecho({ usuarioId: 3, tipoOrigem: TipoAnotacaoEnum.FEITO, tipoDestino: TipoAnotacaoEnum.PESSOAL, trecho: 'x', updatedDateOrigemLido: data, updatedDateDestinoLido: data }, ator), UnauthorizedAccessException);
+    }
+    assert.equal(repositorio.gravacoes, 0);
+    // O pad de um gestor continua sendo dele.
+    assert.equal((await servico.listar({ usuarioId: 3 }, OUTRO_GESTOR)).dados!.length, 5);
   }
 });
 

@@ -38,7 +38,9 @@ Estas são as fontes da verdade. Em conflito entre código e documento, **o docu
 | Configuração (`ConfigService`) | `backend/src/config/` |
 | Conexão Knex, migrations `.sql` numeradas e corte de legado | `backend/src/database/` (`migrations/`, `sql-migration-source.ts`) |
 | Telas e serviços HTTP do frontend | `frontend/src/app/modules/<modulo>/` |
-| Project Desktop (Electron): janela, bandeja, travas e funções puras (task 152) | `desktop/src/` (`main.ts`, `politica-da-janela.ts`, `config.ts`); README em `desktop/README.md` |
+| Project Desktop (Electron): janela, bandeja, travas e funções puras (task 152); aviso de versão nova (task 198) | `desktop/src/` (`main.ts`, `politica-da-janela.ts`, `politica-da-versao.ts`, `config.ts`); README em `desktop/README.md` |
+| Download do Project Desktop (versão publicada, arquivo, botão da topbar) (task 198) | `backend/src/modules/desktop/` (`DESKTOP_PASTA_EXECUTAVEIS`), `frontend/src/app/core/services/desktop-download.service.ts`, `shared/src/utils/versao.ts` |
+| Prazo para desfazer uma proposta da IA (task 194) | `shared/src/utils/prazo-para-desfazer-proposta.ts`; `PropostaIaService.desfazer`; `proposta-cartao.component` |
 | Interceptors, guards e estado global | `frontend/src/app/core/` |
 | Componentes, diretivas, pipes e layout reutilizáveis | `frontend/src/app/shared/` |
 | Contrato de dialogs de formulário: autofocus, Enter, Ctrl+Enter, dica de atalhos (task 97) | `shared/directives/dialog-formulario.directive.ts` (`p-dialog[dialogFormulario]`) e `shared/components/dialog-dica-atalhos/` |

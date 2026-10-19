@@ -12,6 +12,21 @@
 
 ---
 
+## 2026-10-19 — Tasks 193 a 196 e 198 (ideias I-008, I-009, I-011, I-012 e I-014) e spec 197 (I-013)
+
+Pedido do autor: fazer as ideias I-008, I-009, I-011, I-012, I-013 e I-014; depois, "sobre a I-013 apenas crie a spec". Cada ideia virou uma spec (`193`–`198`); a **197** (volume de trabalho por projeto) ficou só como spec em `docs/specs/backlog/`, sem implementação.
+
+- **193 (chip de nível):** sai do alto da resposta e vai para o rodapé, depois do horário (`chat.page.html`/`.scss`).
+- **194 (desfazer com prazo):** decisão minha, a confirmar: **30 min** contados de `resolucaoData`, valendo também no backend. `shared`: `PRAZO_PARA_DESFAZER_PROPOSTA_MINUTOS` e `podeDesfazerProposta`; `PropostaIaService.desfazer` recusa com `BusinessException` fora do prazo, antes do executor; no cartão, Desfazer vai para a direita e desativa sozinho (temporizador **fora da zona do Angular**, senão segura a estabilização) com tooltip.
+- **196 (loading discreto):** sem `p-skeleton` nem spinners; "Carregando proposta…" em texto pequeno e o cartão esmaece (`--operando`) enquanto confirma/desfaz.
+- **195 (pad):** `validarAcesso` agora é assíncrono e consulta o tipo do dono (`AnotacaoRepository.recuperarTipoDoDono`): o próprio pad sempre; gestor/administrador o dos desenvolvedores; nunca o de outro gestor/administrador (403); dono inexistente 404; desenvolvedor só o próprio. A listagem de usuários e o perfil só mostram "Anotações" onde vale (`podeAbrirAnotacoes`, mesma regra no front). As ferramentas da IA do pad seguem só no pad do próprio usuário.
+- **198 (Project Desktop):** módulo `desktop` no backend (pasta `DESKTOP_PASTA_EXECUTAVEIS` no `ConfigService`; `GET /desktop/versao` e `/desktop/download`, qualquer usuário autenticado; o nome do arquivo vem da lista da pasta e só vale `Project-Desktop-<x.y.z>.exe`, sem caminho do cliente), `compararVersoes`/`versaoEhMaisNova` no `shared`, botão "Baixar Project Desktop" no menu do perfil (download por blob, porque a rota exige o token) e, no app Electron, aviso na bandeja quando há versão mais nova (hora em hora; abre o Project com `?baixar-desktop=1`, que a topbar trata como o deep link das anotações). Achado: **não havia atualização**: só o front se atualiza (o app abre a URL); o executável precisava ser redistribuído à mão.
+- **197 (só spec):** `projeto.volume_esperado_horas_mes` (horas por mês, opcional, editado pelo gestor) e a rota `GET /projeto/volume?ano&mes` com as horas gastas por projeto; decisões marcadas como minhas, a confirmar.
+- **Testes:** shared 171; backend 1075 + integração 240 (inclui `recuperarTipoDoDono` e a service com o repository real); frontend 1395; desktop 24 (inclui a política da versão). Builds do backend, do frontend e do desktop OK. Sem lint (P-001).
+- **Verificado ao vivo** (stack local em 1920×1080, 1366×768 e 1080×1920, Postgres local, chat em Postgres, mensagens e propostas plantadas no banco): chip de nível ao lado do horário em todas as respostas e nenhum acima do texto; Desfazer à direita, ativo na proposta confirmada há 5 min e desativado nas de 40 min e de 1h; estado "Carregando proposta…" discreto com a resposta atrasada 4 s; listagem de usuários com o botão só nas linhas de desenvolvedor e na própria; `GET /anotacao` 200 no pad de desenvolvedor e no próprio, 403 no de outro gestor (nos dois sentidos); menu do perfil com "Baixar Project Desktop v1.2.0 · 2,9 MB" e o download no navegador idêntico ao arquivo (3.000.000 bytes, `cmp`), pegando a maior versão (1.2.0 sobre 1.0.0).
+- **Não verificado ao vivo:** o item da bandeja do app Electron (não roda em ambiente de nuvem; só as funções puras têm teste); o esmaecer do cartão durante confirmar/desfazer (coberto só por teste de componente); o botão Enviar etc. das correções anteriores continuam como já registrado.
+- **Armadilhas novas** (skill `verify`): `pgrep -f` também mata o próprio shell; um backend velho na porta segue respondendo com o `.env` antigo.
+
 ## 2026-10-19 — P-020, P-021 e P-022 resolvidos (com verificação ao vivo dos dois primeiros)
 
 Stack local montado nesta sessão (Postgres 16 local, backend e frontend, Chromium via Playwright em 1366×768; ver as armadilhas novas na skill `verify`).

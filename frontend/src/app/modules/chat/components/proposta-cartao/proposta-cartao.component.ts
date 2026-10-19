@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, input, NgZone, output, signal, untracked } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -6,10 +6,10 @@ import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
-import { SkeletonModule } from 'primeng/skeleton';
+import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
 import { TextareaModule } from 'primeng/textarea';
-import { PropostaIaResumoDto, StandardResponse, StatusPropostaIaEnum, TipoAtividadePrioridadeEnum, TipoAtividadeStatusEnum, TipoPropostaIaEnum } from '@project20/shared';
+import { limiteParaDesfazerProposta, podeDesfazerProposta, PRAZO_PARA_DESFAZER_PROPOSTA_MINUTOS, PropostaIaResumoDto, StandardResponse, StatusPropostaIaEnum, TipoAtividadePrioridadeEnum, TipoAtividadeStatusEnum, TipoPropostaIaEnum } from '@project20/shared';
 import { AtividadeService } from '../../../atividade/services/atividade.service';
 import { ATIVIDADE_STATUS_OPCOES } from '../../../atividade/models/atividade.model';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
@@ -44,7 +44,7 @@ const ROTULO_STATUS_DA_DEMANDA: Record<string, string> = {
 @Component({
   selector: 'app-chat-proposta-cartao',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, SkeletonModule, TagModule, TextareaModule, PrioridadeSeloComponent, MarkdownVisualizadorComponent],
+  imports: [ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, TooltipModule, TagModule, TextareaModule, PrioridadeSeloComponent, MarkdownVisualizadorComponent],
   templateUrl: './proposta-cartao.component.html',
   styleUrl: './proposta-cartao.component.scss',
 })
@@ -54,6 +54,7 @@ export class PropostaCartaoComponent {
   private readonly desfazerService = inject(DesfazerService);
   private readonly atividadeService = inject(AtividadeService);
   private readonly sessao = inject(UsuarioSessaoService);
+  private readonly zona = inject(NgZone);
 
   readonly propostaId = input.required<number>();
 
@@ -103,6 +104,11 @@ export class PropostaCartaoComponent {
     return !!atual && atual.status === StatusPropostaIaEnum.PENDENTE && PropostaCartaoComponent.TIPOS_AJUSTAVEIS.includes(atual.tipo);
   });
 
+  readonly prazoParaDesfazerMinutos = PRAZO_PARA_DESFAZER_PROPOSTA_MINUTOS;
+  /** O relógio do cartão: só avança quando o prazo de desfazer vence, para o botão desativar com o cartão aberto. */
+  private readonly agora = signal(Date.now());
+  readonly desfazerDisponivel = computed(() => podeDesfazerProposta(this.proposta()?.resolucaoData, new Date(this.agora())));
+
   /** A proposta mudou de situação por uma ação do usuário (confirmar, ajustar, recusar, desfazer): a tela atualiza os botões de sugestão. */
   readonly resolvida = output<PropostaIaResumoDto>();
 
@@ -111,6 +117,15 @@ export class PropostaCartaoComponent {
     effect(() => {
       const id = this.propostaId();
       untracked(() => this.carregar(id));
+    });
+    effect((aoLimpar) => {
+      const limite = limiteParaDesfazerProposta(this.proposta()?.resolucaoData);
+      if (!limite) return;
+      const espera = limite.getTime() - Date.now() + 1000;
+      if (espera <= 0 || espera > 2_147_000_000) return;
+      // Fora da zona: um temporizador de até 30 min dentro dela seguraria a estabilização da aplicação (e dos testes).
+      const temporizador = this.zona.runOutsideAngular(() => setTimeout(() => this.zona.run(() => this.agora.set(Date.now())), espera));
+      aoLimpar(() => clearTimeout(temporizador));
     });
   }
 

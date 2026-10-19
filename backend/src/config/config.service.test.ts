@@ -93,6 +93,13 @@ test('com CHAT_ARMAZENAMENTO=elasticsearch a ELASTICSEARCH_URL passa a ser exigi
   assert.equal(new ConfigService().obter().elasticsearch.url, 'http://localhost:9201');
 });
 
+test('DESKTOP_PASTA_EXECUTAVEIS é opcional: ausente, não há download do Project Desktop', () => {
+  definirAmbiente({ DESKTOP_PASTA_EXECUTAVEIS: undefined });
+  assert.equal(new ConfigService().obter().desktop.pastaExecutaveis, undefined);
+  definirAmbiente({ DESKTOP_PASTA_EXECUTAVEIS: '/srv/desktop' });
+  assert.equal(new ConfigService().obter().desktop.pastaExecutaveis, '/srv/desktop');
+});
+
 test('ANTHROPIC_API_KEY é opcional', () => {
   definirAmbiente({ ANTHROPIC_API_KEY: undefined });
   assert.equal(new ConfigService().obter().anthropic.apiKey, undefined);

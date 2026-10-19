@@ -15,7 +15,7 @@ type Montado = ComponenteMontado<PropostaCartaoComponent>;
 const ID = 7;
 
 function proposta(tipo: TipoPropostaIaEnum, status: StatusPropostaIaEnum, dados: Record<string, unknown>) {
-  return { id: ID, usuarioId: 1, tipo, status, dados, resultado: null, resolucaoData: null, createdDate: '2026-10-19T12:00:00.000Z' };
+  return { id: ID, usuarioId: 1, tipo, status, dados, resultado: null, resolucaoData: null as string | null, createdDate: '2026-10-19T12:00:00.000Z' };
 }
 
 const CRIAR_ATIVIDADE = proposta(TipoPropostaIaEnum.CRIAR_ATIVIDADE, StatusPropostaIaEnum.PENDENTE, {
@@ -49,15 +49,16 @@ const avisosDe = (montado: Montado) => {
 afterEach(() => TestBed.inject(DesfazerService).dispensarSemEncerrar());
 
 describe('PropostaCartaoComponent — carregar', () => {
-  it('mostra o esqueleto enquanto a proposta carrega e depois o resumo, o status e os botões de uma pendente', async () => {
+  it('mostra um aviso discreto (sem esqueleto) enquanto a proposta carrega e depois o resumo, o status e os botões de uma pendente', async () => {
     const montado = await montarComponente(PropostaCartaoComponent, { usuario: TipoUsuarioEnum.DESENVOLVEDOR, entradas: { propostaId: ID } });
-    expect(montado.elemento.querySelector('p-skeleton')).not.toBeNull();
+    expect(montado.elemento.querySelector('p-skeleton')).toBeNull();
+    expect(montado.elemento.querySelector('.proposta-cartao__carregando')?.textContent).toContain('Carregando proposta');
 
     responderSucesso(esperarRequisicao(montado.http, 'GET', '/atividade-prioridade'), PRIORIDADES);
     responderSucesso(esperarRequisicao(montado.http, 'GET', `/proposta-ia/${ID}`), CRIAR_ATIVIDADE);
     await montado.atualizar();
 
-    expect(montado.elemento.querySelector('p-skeleton')).toBeNull();
+    expect(montado.elemento.querySelector('.proposta-cartao__carregando')).toBeNull();
     expect(texto(montado)).toContain('Proposta · Criar atividade');
     expect(texto(montado)).toContain('Montar o formulário');
     expect(texto(montado)).toContain('Demanda: Login');
@@ -192,6 +193,34 @@ describe('PropostaCartaoComponent — Confirmar', () => {
     expect(botao(montado, 'Confirmar')).toBeDefined();
     expect(botao(montado, 'Confirmar')!.disabled).toBe(false);
     montado.http.expectNone((requisicao) => requisicao.method === 'GET');
+  });
+});
+
+describe('PropostaCartaoComponent — prazo para desfazer (task 194)', () => {
+  const confirmadaHa = (minutos: number, segundosExtra = 0) => ({
+    ...proposta(TipoPropostaIaEnum.CRIAR_ATIVIDADE, StatusPropostaIaEnum.CONFIRMADA, CRIAR_ATIVIDADE.dados),
+    resolucaoData: new Date(Date.now() - minutos * 60_000 + segundosExtra * 1000).toISOString(),
+  });
+
+  it('Desfazer fica no lado oposto (direita) e ativo dentro dos 30 minutos', async () => {
+    const montado = await montarCartao(confirmadaHa(5));
+    expect(montado.elemento.querySelector('.proposta-cartao__acoes--desfazer')).not.toBeNull();
+    expect(botao(montado, 'Desfazer')!.disabled).toBe(false);
+  });
+
+  it('depois dos 30 minutos o botão fica desativado e não chama a API', async () => {
+    const montado = await montarCartao(confirmadaHa(40));
+    expect(botao(montado, 'Desfazer')!.disabled).toBe(true);
+    botao(montado, 'Desfazer')!.click();
+    montado.http.expectNone((requisicao) => requisicao.url.endsWith('/desfazer'));
+  });
+
+  it('o prazo vence com o cartão aberto: o botão desativa sozinho', async () => {
+    const montado = await montarCartao(confirmadaHa(30, 1));
+    expect(botao(montado, 'Desfazer')!.disabled).toBe(false);
+    await new Promise((resolver) => setTimeout(resolver, 2600));
+    detectar(montado);
+    expect(botao(montado, 'Desfazer')!.disabled).toBe(true);
   });
 });
 

@@ -28,12 +28,14 @@
           [outlined]="true"
           (onClick)="pedirSenha(usuario)"
         />
-        <p-button
-          label="Anotações"
-          icon="pi pi-file-edit"
-          [outlined]="true"
-          (onClick)="anotacoesDialog.abrir(usuario.id, usuario.nomeCompleto)"
-        />
+        @if (podeVerAnotacoes()) {
+          <p-button
+            label="Anotações"
+            icon="pi pi-file-edit"
+            [outlined]="true"
+            (onClick)="anotacoesDialog.abrir(usuario.id, usuario.nomeCompleto)"
+          />
+        }
       </div>
     }
 

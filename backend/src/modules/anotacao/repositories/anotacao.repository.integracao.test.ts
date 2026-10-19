@@ -4,9 +4,10 @@ import { ConfigService } from '../../../config/config.service';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { ConflictException } from '../../../core/exceptions/conflict.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
+import { UnauthorizedAccessException } from '../../../core/exceptions/unauthorized-access.exception';
 import { ConexaoTeste, testarComBanco } from '../../../testes/banco-teste';
 import { criarRepositorio } from '../../../testes/criar-repositorio';
-import { criarDesenvolvedor, DATA_BASE_TESTE } from '../../../testes/fabricas';
+import { criarAdministrador, criarDesenvolvedor, criarGestor, DATA_BASE_TESTE } from '../../../testes/fabricas';
 import { AnotacaoService } from '../services/anotacao.service';
 import { AnotacaoRepository } from './anotacao.repository';
 
@@ -230,4 +231,27 @@ testarComBanco('modificarSecoes: se o modificador lança, nada é gravado; as se
   assert.deepEqual(recebidas, [TipoAnotacaoEnum.FEITO, TipoAnotacaoEnum.PESSOAL]);
   assert.equal(await textoDe(repositorio, usuario.id, TipoAnotacaoEnum.PESSOAL), 'p');
   assert.equal(await textoDe(repositorio, usuario.id, TipoAnotacaoEnum.FEITO), 'f');
+});
+
+testarComBanco('recuperarTipoDoDono devolve o tipo do usuário (desenvolvedor, gestor, administrador) e null para quem não existe ou foi excluído', async (conexao) => {
+  const { repositorio } = criarServico(conexao);
+  const desenvolvedor = await criarDesenvolvedor(conexao);
+  const gestor = await criarGestor(conexao);
+  const administrador = await criarAdministrador(conexao);
+  assert.equal(await repositorio.recuperarTipoDoDono({ usuarioId: desenvolvedor.id }), TipoUsuarioEnum.DESENVOLVEDOR);
+  assert.equal(await repositorio.recuperarTipoDoDono({ usuarioId: gestor.id }), TipoUsuarioEnum.GESTOR);
+  assert.equal(await repositorio.recuperarTipoDoDono({ usuarioId: administrador.id }), TipoUsuarioEnum.ADMINISTRADOR);
+  assert.equal(await repositorio.recuperarTipoDoDono({ usuarioId: 987654 }), null);
+
+  await conexao.raw('UPDATE usuario SET is_deleted = true WHERE id = :id', { id: desenvolvedor.id });
+  assert.equal(await repositorio.recuperarTipoDoDono({ usuarioId: desenvolvedor.id }), null);
+});
+
+testarComBanco('task 195: a service (com o repository real) recusa o pad de outro gestor e libera o de um desenvolvedor', async (conexao) => {
+  const { servico } = criarServico(conexao);
+  const alvoGestor = await criarGestor(conexao);
+  const alvoDesenvolvedor = await criarPad(conexao, { FEITO: 'f' });
+  await assert.rejects(servico.listar({ usuarioId: alvoGestor.id }, GESTOR), UnauthorizedAccessException);
+  const resposta = await servico.listar({ usuarioId: alvoDesenvolvedor.id }, GESTOR);
+  assert.equal(resposta.dados!.length, 5);
 });

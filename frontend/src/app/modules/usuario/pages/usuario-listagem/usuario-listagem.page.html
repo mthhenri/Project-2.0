@@ -116,17 +116,19 @@
             </label>
           </td>
           @if (sessao.eGestor()) {
-            <td class="usuario-listagem__coluna-anotacoes" (click)="$event.stopPropagation(); anotacoesDialog.abrir(usuario.id, usuario.nomeCompleto)">
-              <p-button
-                icon="pi pi-file-edit"
-                [text]="true"
-                severity="secondary"
-                size="small"
-                [pTooltip]="usuario.temAnotacoes ? 'Ver anotações' : 'Adicionar anotações'"
-                tooltipPosition="left"
-                [styleClass]="usuario.temAnotacoes ? 'usuario-listagem__btn-anotacao--ativo' : 'usuario-listagem__btn-anotacao--vazio'"
-                (keydown.enter)="$event.stopPropagation()"
-              />
+            <td class="usuario-listagem__coluna-anotacoes" (click)="$event.stopPropagation(); podeVerAnotacoes(usuario) && anotacoesDialog.abrir(usuario.id, usuario.nomeCompleto)">
+              @if (podeVerAnotacoes(usuario)) {
+                <p-button
+                  icon="pi pi-file-edit"
+                  [text]="true"
+                  severity="secondary"
+                  size="small"
+                  [pTooltip]="usuario.temAnotacoes ? 'Ver anotações' : 'Adicionar anotações'"
+                  tooltipPosition="left"
+                  [styleClass]="usuario.temAnotacoes ? 'usuario-listagem__btn-anotacao--ativo' : 'usuario-listagem__btn-anotacao--vazio'"
+                  (keydown.enter)="$event.stopPropagation()"
+                />
+              }
             </td>
           }
           <td (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()">

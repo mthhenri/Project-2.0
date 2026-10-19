@@ -69,9 +69,6 @@
                     <div class="chat__linha chat__linha--ia" [attr.data-mensagem-id]="mensagem.id">
                       <span class="chat__avatar" aria-hidden="true">IA</span>
                       <div class="chat__ia-conteudo">
-                        @if (mensagem.nivel) {
-                          <span class="chat__nivel" [attr.aria-label]="'Nível usado: ' + rotuloNivel[mensagem.nivel]">{{ rotuloNivel[mensagem.nivel] }}</span>
-                        }
                         <app-markdown-visualizador [texto]="mensagem.texto" />
                         @for (propostaId of mensagem.propostaIds; track propostaId) {
                           <app-chat-proposta-cartao [propostaId]="propostaId" (resolvida)="aoResolverProposta($event)" />
@@ -79,6 +76,9 @@
                         <div class="chat__rodape-mensagem">
                           @if (mensagem.criadaEm) {
                             <span class="chat__hora">{{ mensagem.criadaEm | date: 'dd/MM/yyyy HH:mm' }}</span>
+                          }
+                          @if (mensagem.nivel) {
+                            <span class="chat__nivel" [attr.aria-label]="'Nível usado: ' + rotuloNivel[mensagem.nivel]">{{ rotuloNivel[mensagem.nivel] }}</span>
                           }
                           <button type="button" class="chat__copiar" aria-label="Copiar a resposta" pTooltip="Copiar" tooltipPosition="bottom" (click)="copiar(mensagem.texto)">
                             <i class="pi pi-copy"></i>

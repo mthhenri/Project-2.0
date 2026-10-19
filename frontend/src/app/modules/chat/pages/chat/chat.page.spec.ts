@@ -136,7 +136,11 @@ describe('ChatPage — abrir a conversa de hoje', () => {
 
     expect(conversaDa(montado)).toContain('Bom dia, IA');
     expect(conversaDa(montado)).toContain('Bom dia! Vamos ao que importa.');
-    expect(montado.elemento.querySelector('[aria-label="Nível usado: analítico"]')).not.toBeNull();
+    // O chip de nível fica no rodapé da resposta, ao lado do horário (task 193), e não mais no alto dela.
+    const chip = montado.elemento.querySelector('[aria-label="Nível usado: analítico"]');
+    expect(chip).not.toBeNull();
+    expect(chip!.closest('.chat__rodape-mensagem')).not.toBeNull();
+    expect(chip!.previousElementSibling?.classList.contains('chat__hora')).toBe(true);
     expect(montado.elemento.querySelector('[aria-label="Copiar a mensagem"]')).not.toBeNull();
     expect(montado.elemento.querySelector('[aria-label="Copiar a resposta"]')).not.toBeNull();
   });

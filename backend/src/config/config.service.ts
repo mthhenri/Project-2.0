@@ -45,6 +45,9 @@ export class ConfigService {
       negocio: {
         intervaloMinimoMinutos: Number(this.obrigatoria('INTERVALO_MINIMO_MINUTOS')),
       },
+      desktop: {
+        pastaExecutaveis: this.opcional('DESKTOP_PASTA_EXECUTAVEIS'),
+      },
     };
   }
 
