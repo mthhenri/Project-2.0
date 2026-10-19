@@ -12,6 +12,11 @@
 
 ---
 
+## 2026-10-19 — P-015 resolvido (ponto diário) e pendências do autor registradas
+
+- **P-015:** decisão do autor: trabalho em fim de semana ou feriado integral **conta como hora extra**. `PontoService.montarPontoDiario` passou a exigir meta 0 nos dias integrais não úteis (a justificativa só abate meta, sem negativa); o saldo é o trabalhado, igual ao mensal. Dia útil e meio período não mudaram. O `todo: 'P-015'` virou teste normal, mais um teste novo (sábado com 2h: meta 0, extra 120, saldo 120). Backend 1055 passando, 0 `todo`; build OK. Não verifiquei ao vivo (cálculo de service coberto por teste de unidade).
+- **Anotações do autor:** as pendências viraram `PROBLEMS.md` P-020 (chip da execução atual não atualiza após iniciar pelo chat), P-021 (reload do check-in; provável efeito do P-018 já corrigido) e P-022 (a IA não reconfere o estado depois de criar), e `IDEAS.md` I-008 a I-014 (chip de nível, desfazer com prazo, prompts das descrições, pad por gestor/admin, loading das propostas, volume de trabalho por projeto, baixar o Project Desktop e conferir a atualização).
+
 ## 2026-10-19 — P-011, P-013, P-018 e P-019 resolvidos (P-015 segue aberto)
 
 Decisão do autor para o P-011: **o desenvolvedor pode pôr tags nas suas atividades e nas suas demandas** (as de que é membro). `SYSTEM.SPEC.md` §14 já dizia isso; o código é que recusava.

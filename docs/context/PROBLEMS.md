@@ -38,16 +38,26 @@
 - **Correção:** escolher e configurar lint e acrescentar ao CI (`IDEAS.md` I-002).
 - **Desde:** origem do projeto.
 
-### P-015 — Ponto diário cobra a meta cheia em fim de semana e dia não útil integral · `ABERTO` · backend
+### P-020 — O chip "execução atual" da topbar não atualiza sozinho depois de iniciar uma atividade pelo chat · `ABERTO` · frontend
 
-- **Sintoma:** `GET /ponto/diario` e `/ponto/todos` num sábado, domingo ou feriado integral devolvem `metaMinutos` igual à jornada (ex.: 480) e
-  `saldoMinutos` negativo quando ninguém trabalhou. O mensal (`/ponto/mensal`) zera a meta desses mesmos dias, então o diário e o mensal discordam.
-- **Causa:** `PontoService.montarPontoDiario` só trata a fração 0.5; no ramo "dias integrais" usa `metaMinutosCompleta` mesmo com `fracaoMeta = 0`.
-  `SYSTEM.SPEC.md` §14 diz que fim de semana e dia não útil integral têm fração 0 e "não contam na meta".
-- **Contorno:** a tela do card da equipe mostra o motivo no lugar do saldo em dia não útil, então o saldo errado quase não aparece; a IA
-  (`consultar_ponto_do_dia`) devolve o `metaMinutos` e o `saldoMinutos` como vêm.
-- **Correção:** meta 0 (descontada a justificativa, que então não deixa a meta negativa) quando `fracaoMeta === 0`; o saldo passa a ser só o
-  trabalhado como extra, sem negativo. O `todo: 'P-015'` em `ponto.service.calculo.test.ts` vira teste normal. Confirmar com o autor se o saldo do
-  dia não útil deve ser `0` ou o total trabalhado antes de corrigir.
-- **Desde:** origem (achado na task 179).
+- **Sintoma:** ao confirmar no chat uma proposta que inicia uma atividade, a execução começa, mas o chip da topbar continua como antes até a página ser recarregada ou a aba refocada (relato do autor; não reproduzido nesta sessão).
+- **Causa:** não investigada. Suspeita: o chip se atualiza pelo `execucaoAtivaInterceptor` (chamadas HTTP de execução da tela) e pelo `ressincronizarExecucao` (foco da aba), e a confirmação da proposta passa por outro endpoint que o interceptor não reconhece.
+- **Contorno:** focar outra aba e voltar, ou recarregar.
+- **Correção:** a confirmação de proposta (e o desfazer) que inicia/pausa/encerra execução deve disparar `execucaoAtiva.carregar()`.
+- **Desde:** tasks do chat com propostas (135–141); anotado em 2026-10-19.
 
+### P-021 — "Reload estranho" do check-in ao enviar · `ABERTO` · frontend
+
+- **Sintoma:** ao enviar uma resposta no check-in, a página parece recarregar (relato do autor).
+- **Causa:** provável: era o submit nativo do `<form>` sem `ngSubmit` (P-018), corrigido em 2026-10-19 com `(submit)="$event.preventDefault(); enviar()"`. Falta confirmar ao vivo; se o reload persistir, a causa é outra (por exemplo, a navegação ou o `window.focus` recarregando a situação do check-in).
+- **Contorno:** enviar com Enter.
+- **Correção:** verificar ao vivo (check-in, botão e Enter, nos três tamanhos); remover o item se o reload não ocorrer mais.
+- **Desde:** origem da tela do check-in; anotado em 2026-10-19.
+
+### P-022 — A IA "se perde" depois de criar algo: não confere se a criação foi feita · `ABERTO` · backend/chat IA
+
+- **Sintoma:** depois que uma proposta é confirmada (ou é só proposta ainda), a IA fala como se o estado fosse o de antes: não rechecou se a criação aconteceu, repete a proposta ou afirma coisas desatualizadas (relato do autor; sem caso reproduzido).
+- **Causa:** não investigada. Suspeita: o histórico enviado ao modelo não traz o resultado da confirmação (só o texto da conversa) e as ferramentas de leitura não são reconsultadas depois da confirmação.
+- **Contorno:** pedir à IA que confira ("veja de novo").
+- **Correção:** investigar com uma conversa real; candidatas: registrar a confirmação como evento no contexto, e/ou instruir o prompt a reler o estado depois de uma proposta confirmada.
+- **Desde:** blocos 5–6 do chat (propostas e ferramentas); anotado em 2026-10-19.

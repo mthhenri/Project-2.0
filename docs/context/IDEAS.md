@@ -93,6 +93,55 @@
 - **Custo aparente:** ferramenta nova; decidir como a resposta dela chega ao usuário com streaming (hoje o resultado de uma
   ferramenta volta ao modelo rápido, que reescreve) e o custo. O selo de nível verdadeiro (task 188) é pré-requisito.
 
+### I-008 — Chip de nível (rápido / padrão / analítico) abaixo, ao lado do horário · chat IA/frontend
+
+- **Ideia:** mover o chip do nível da IA, hoje no alto da mensagem, para baixo, ao lado do horário da mensagem.
+- **Origem:** anotações do autor (2026-10-19).
+- **Por quê:** o chip chama atenção demais no topo; ao lado do horário vira metadado.
+- **Custo aparente:** só UI (`chat.page.html` e estilos); verificação visual nos três tamanhos.
+
+### I-009 — Desfazer das propostas no lado oposto e com prazo · chat IA/frontend
+
+- **Ideia:** colocar o botão "Desfazer" do cartão de proposta no lado oposto ao de Confirmar e desativá-lo depois de um tempo (talvez 30 min).
+- **Origem:** anotações do autor (2026-10-19).
+- **Por quê:** evita clique por engano e desfazer algo muito antigo, quando o estado já mudou (hoje o executor só recusa se as tags/estado mudaram).
+- **Custo aparente:** UI do cartão; decidir se o prazo é só visual ou também recusado pelo backend (`desfazer` do executor, com a data da confirmação).
+
+### I-010 — Revisar os prompts da revisão das descrições · chat IA/prompts
+
+- **Ideia:** nos prompts da revisão/redação das descrições de demanda: remover a temporalidade, tirar a herança de descrição da atividade e dar exemplos melhores de descrição boa.
+- **Origem:** anotações do autor (2026-10-19).
+- **Por quê:** descrições saem com marcas de tempo ("hoje", "nesta sprint") e misturam o que é da atividade com o da demanda.
+- **Custo aparente:** só texto de prompt (versão nova do prompt na tela de configuração), mais um teste manual com entrevistas reais.
+
+### I-011 — Gestor/admin lê e edita o pad dos desenvolvedores · anotações/permissão
+
+- **Ideia:** gestor e administrador leem e editam o pad (anotações) dos desenvolvedores, mas não o de outros gestores ou administradores.
+- **Origem:** anotações do autor (2026-10-19).
+- **Por quê:** acompanhar e ajudar o time pelo pad; manter privado o pad entre pares de gestão.
+- **Custo aparente:** regra de permissão na service de anotações (`temPermissaoDeGestor` + tipo do dono), DTO/tela para escolher de quem é o pad, `SYSTEM.SPEC.md` §14 e testes de permissão; conferir a regra atual antes (não verificada).
+
+### I-012 — Loading das propostas mais discreto · chat IA/frontend
+
+- **Ideia:** reduzir o destaque do estado de carregamento do cartão de proposta.
+- **Origem:** anotações do autor (2026-10-19).
+- **Por quê:** o loading atual chama atenção demais para algo rápido.
+- **Custo aparente:** só UI; verificação visual.
+
+### I-013 — Volume de trabalho por projeto · projeto/relatório
+
+- **Ideia:** ampliar a parte de projetos com uma visão do volume de trabalho: horas gastas em cada projeto e o volume esperado, definido por projeto.
+- **Origem:** anotações do autor (2026-10-19).
+- **Por quê:** comparar o gasto com o esperado e planejar a capacidade do time.
+- **Custo aparente:** coluna nova em `projeto` (volume esperado, migration), consulta agregada de horas por projeto (execuções por atividade/demanda), tela e, talvez, ferramenta da IA; decidir a unidade (horas por mês?) e quem edita.
+
+### I-014 — Botão "Baixar Project Desktop" e conferir a atualização do app · desktop/frontend
+
+- **Ideia:** um botão no sistema que baixa o executável do Project Desktop; e verificar como o app se atualiza.
+- **Origem:** anotações do autor (2026-10-19).
+- **Por quê:** hoje o executável (`npm run pack --workspace=desktop`) não tem caminho de distribuição dentro do sistema.
+- **Custo aparente:** onde hospedar o executável (backend serve o arquivo ou link externo), versão publicada, e revisar o mecanismo de atualização do `desktop/` (hoje não verificado).
+
 ## Promovidas
 
 ### I-004 — Chat IA como tira-dúvidas de programação, com bloco de código copiável · chat IA/frontend
