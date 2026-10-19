@@ -34,6 +34,9 @@ prioridade) e as telas de atividade, que são o fluxo convencional quando a IA e
    `atividade-formulario`/`atividade-nova-dialog` (task 105), `atividade-visualizar-dialog`,
    `execucao-registro-dialog` (chips de duração, usar descrição — task 103), `atividade-tags-popover`,
    `atividade-em-execucao`, `atividade-documentos-indicador`; `prioridades-aba` fica na 184.
+   Na `atividade-listagem`, cobrir também o **menu ⋮ da linha**: o botão só aparece para o gestor (o desenvolvedor não
+   vê o ⋮), o menu traz só "Registrar execução" e "Excluir" (sem "Atribuir tags"), e as tags são editadas na célula da
+   linha, só por quem pode editar a atividade.
 
 ## Critérios de Aceite
 
