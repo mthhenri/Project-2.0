@@ -12,6 +12,16 @@
 
 ---
 
+## 2026-10-19 — Verificação ao vivo das tasks 167 a 170: 167, 168 e 169 fechadas; 170 segue aberta (P-019)
+
+Pedido do autor ("você pode testar por mim?"). Conversa real com a IA (a chave do ambiente), a aplicação no ar e o banco de dev conferido por SQL depois de cada Confirmar; relatório em `docs/specs/active/170-ia-edicao-de-demanda-participar-e-tags-do-desenvolvedor/VERIFICACAO-167-A-170.md`.
+
+- **Fechadas e movidas para `done/`:** 167 (concluir demanda e previsão, com aviso de atividades abertas), 168 (membro e tag) e 169 (gestor cria atividade, inicia e pausa a execução **do dono**, com a linha "Pessoa"). Os cartões renderizaram, o Confirmar gravou o esperado e o Desfazer da 167 devolveu o estado anterior; layout conferido em 1366×768, 1920×1080 e 1080×1920.
+- **170 continua em `active/`:** documentação acrescentada, mover para uma demanda de estrutura, desenvolvedor entrando por id, marcando tag na própria atividade e a recusa de sair sendo o último membro funcionaram; mas "quero participar da demanda X" **por nome** falha para o desenvolvedor (P-019: a leitura de demandas do projeto só devolve as dele).
+- **Cuidados do teste:** a IA estava desligada e foi ligada pela rota do administrador, e desligada de novo no fim (configuração v8); contas, projeto, demandas, atividades e tags de teste foram excluídos por soft delete; a navegação usou `http://[::1]:4200`, sem tocar a sessão real do autor.
+- **Sem item próprio:** a IA reutiliza uma lista de demandas antiga dentro da mesma conversa e disse duas vezes que um membro "aguardava confirmação" depois de confirmado; um "Erro interno" no histórico na primeira abertura, não reproduzido.
+- **Não verificado:** Desfazer em 168 e 169; o botão Enviar (P-018), pois todas as mensagens foram enviadas com Enter. Nenhum código de produção alterado; o projeto segue sem lint (P-001).
+
 ## 2026-10-19 — Task 187: testes do frontend (núcleo, layout, compartilhados) e fecho da guarda-chuva `testes-automatizados`
 
 Última das 17 tasks (171–187). Nenhum código de produção mudou. O núcleo lógico (11 arquivos) e o layout com os componentes compartilhados (14 arquivos) foram escritos por dois

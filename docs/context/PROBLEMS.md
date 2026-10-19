@@ -146,3 +146,11 @@
 - **Contorno:** enviar com Enter ou por uma sugestão.
 - **Correção:** `(click)="enviar()"` no botão (sem `type="submit"`), ou `[formGroup]` no formulário. Os `it.todo('P-018: ...')` em `chat.page.spec.ts` e `checkin.page.spec.ts` viram teste normal.
 - **Desde:** origem da tela do chat; achado na task 185 (chat) e estendido na 186 (check-in).
+
+### P-019 — A IA não acha, pelo nome, uma demanda em que o desenvolvedor ainda não está · `ABERTO` · backend
+
+- **Sintoma:** como desenvolvedor, "quero participar da demanda Integracao com ERP" (projeto em que ele já tem outra demanda) recebe "não encontrei a demanda"; a IA só propõe a entrada se o usuário informar o **id**. A tela deixa o desenvolvedor abrir a demanda (`GET /demanda/:id` e o grafo do projeto respondem) e clicar em "Participar".
+- **Causa:** `listar_demandas_do_projeto` chama `DemandaService.listar`, que para o desenvolvedor devolve só as demandas **dele** (`demanda_usuario`); nenhuma ferramenta lista as demais do projeto. A spec 170 pede "quero participar da demanda X".
+- **Contorno:** informar o id da demanda na conversa (o cartão e a confirmação funcionam).
+- **Correção:** uma leitura para o desenvolvedor que liste, nos projetos a que ele tem acesso, as demandas de trabalho com a marca "participa ou não" (a mesma visão do grafo), sem abrir a regra de `listar`.
+- **Desde:** task 170; achado na verificação ao vivo de 2026-10-19 (`docs/specs/active/170-ia-edicao-de-demanda-participar-e-tags-do-desenvolvedor/VERIFICACAO-167-A-170.md`).
