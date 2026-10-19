@@ -33,8 +33,36 @@ export class AnotacaoRepository extends BaseRepository<Anotacao> {
     super(conexaoBancoDados, 'anotacao');
   }
 
-  /** Seções do usuário na ordem de exibição; com `tipos`, só essas. */
+  /**
+   * Cria as seções que o usuário ainda não tem (o cadastro pela `UsuarioService` já cria as cinco; quem entrou por SQL ou script não tem
+   * nenhuma e o pad não abria). Idempotente e seguro com duas chamadas ao mesmo tempo (o índice único descarta a repetida). Usuário
+   * inexistente ou excluído não ganha nada. Devolve quantas seções criou.
+   */
+  async criarSecoesFaltantes(dados: { usuarioId: number }, transacao?: Knex.Transaction): Promise<number> {
+    const criadas = await this.executarConsulta<{ id: number }>(
+      `INSERT INTO anotacao (usuario_id, tipo_anotacao_id, texto, created_date, updated_date, is_deleted)
+       SELECT usuario.id, tipo_anotacao.id, '', NOW(), NOW(), false
+       FROM usuario
+       CROSS JOIN tipo_anotacao
+       WHERE usuario.id = :usuarioId
+         AND usuario.is_deleted = false
+         AND tipo_anotacao.is_deleted = false
+       ON CONFLICT (usuario_id, tipo_anotacao_id) WHERE is_deleted = false DO NOTHING
+       RETURNING id`,
+      { usuarioId: dados.usuarioId },
+      transacao,
+    );
+    return criadas.length;
+  }
+
+  /** Seções do usuário na ordem de exibição; com `tipos`, só essas. Usuário sem nenhuma seção ganha as cinco vazias e elas voltam. */
   async listar(dto: AnotacaoListarDto): Promise<AnotacaoResumoDto[]> {
+    const itens = await this.lerSecoes(dto);
+    if (itens.length > 0 || (await this.criarSecoesFaltantes({ usuarioId: dto.usuarioId })) === 0) return itens;
+    return this.lerSecoes(dto);
+  }
+
+  private async lerSecoes(dto: AnotacaoListarDto): Promise<AnotacaoResumoDto[]> {
     const parametros: Record<string, unknown> = { usuarioId: dto.usuarioId };
     let filtroTipos = '';
     if (dto.tipos && dto.tipos.length > 0) {
@@ -67,20 +95,24 @@ export class AnotacaoRepository extends BaseRepository<Anotacao> {
     modificador: (atuais: AnotacaoResumoDto[]) => AnotacaoTextoNovo[],
   ): Promise<AnotacaoResumoDto[]> {
     return this.conexaoBancoDados.transaction(async (transacao) => {
-      const atuais = await this.executarConsulta<AnotacaoResumoDto>(
-        `SELECT ${COLUNAS_RESUMO}
-         FROM anotacao
-         INNER JOIN tipo_anotacao
-            ON tipo_anotacao.id = anotacao.tipo_anotacao_id
-           AND tipo_anotacao.is_deleted = false
-         WHERE anotacao.usuario_id = :usuarioId
-           AND anotacao.is_deleted = false
-           AND tipo_anotacao.codigo = ANY(:tipos)
-         ORDER BY tipo_anotacao.ordem ASC
-         FOR UPDATE OF anotacao`,
-        { usuarioId: dados.usuarioId, tipos: dados.tipos },
-        transacao,
-      );
+      const lerETravar = () =>
+        this.executarConsulta<AnotacaoResumoDto>(
+          `SELECT ${COLUNAS_RESUMO}
+           FROM anotacao
+           INNER JOIN tipo_anotacao
+              ON tipo_anotacao.id = anotacao.tipo_anotacao_id
+             AND tipo_anotacao.is_deleted = false
+           WHERE anotacao.usuario_id = :usuarioId
+             AND anotacao.is_deleted = false
+             AND tipo_anotacao.codigo = ANY(:tipos)
+           ORDER BY tipo_anotacao.ordem ASC
+           FOR UPDATE OF anotacao`,
+          { usuarioId: dados.usuarioId, tipos: dados.tipos },
+          transacao,
+        );
+      let atuais = await lerETravar();
+      // Quem nunca teve o pad (entrou por SQL ou script) não deve levar 404 ao anotar: as seções vazias nascem aqui, na mesma transação.
+      if (atuais.length === 0 && (await this.criarSecoesFaltantes({ usuarioId: dados.usuarioId }, transacao)) > 0) atuais = await lerETravar();
 
       const novos = modificador(atuais);
       const gravadas: AnotacaoResumoDto[] = [];

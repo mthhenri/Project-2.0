@@ -12,6 +12,15 @@
 
 ---
 
+## 2026-10-19 — Pad que não abria: usuário sem seções agora ganha as cinco vazias
+
+Achado do autor ("o pad não está abrindo"). Causa em duas partes: (1) o navegador tinha um login de 18/10 (JWT e `usuario_sessao` com id 3, `gestor.inicial`) emitido antes de o banco de dev ser refeito; hoje o id 3 é o `dev.teste`, então a tela pedia o pad dele; (2) o `dev.teste` foi criado fora da `UsuarioService`, que é quem insere as cinco seções do pad, e o `GET /anotacao` devolvia 404 ("Anotações não encontrado"), que a tela mostrava como "Não foi possível carregar as anotações". Os usuários 1 e 2 respondiam 200.
+
+- **Correção (opção escolhida pelo autor):** `AnotacaoRepository.criarSecoesFaltantes` (INSERT ... SELECT com `ON CONFLICT ... DO NOTHING`, só para usuário existente e não excluído) é chamada por `listar` e por `modificarSecoes` (dentro da transação) quando o usuário não tem nenhuma seção. Vale também para a IA anotando no pad de quem nunca o abriu. Service e telas não mudaram; usuário inexistente ou excluído segue 404.
+- **Testes:** integração 237 (+4 líquidos: o teste "sem pad devolve vazio e 404" virou "cria as cinco"; `listar` com `tipos`; anotar sem pad; usuário excluído e inexistente; idempotência), backend unitário 1029 (1022 passando). O teste de repetição roda dentro da transação do teste (uma conexão), então não prova corrida real; o índice único parcial é quem a impede.
+- **Verificado ao vivo:** com o mesmo login antigo do navegador, o pad do usuário 3 abriu com as cinco seções vazias.
+- **Ainda de pé, fora do código:** o login antigo do navegador segue apontando para o `dev.teste`; sair e entrar de novo resolve (o chip "Geração do cabeçalho" e o "trabalhando agora" do `dev.teste` são uma execução ativa desse usuário).
+
 ## 2026-10-19 — Task 188: nível real e tokens do turno no chat (P-017 corrigido)
 
 Primeira task da guarda-chuva `chat-duvidas-de-codigo`. A resposta do chat gravava `RAPIDO` fixo e somava só as próprias chamadas; o que as ferramentas gastavam por baixo (descrever demanda no analítico, descrição de execução no padrão) se perdia.
