@@ -12,6 +12,37 @@
 
 ---
 
+## 2026-10-19 — Task 180: testes do calendário (dias não úteis)
+
+Décima task da guarda-chuva `testes-automatizados`. Nenhum código de produção mudou.
+
+**Backend.**
+- `calendario.service` (14, dublê de repository): `restaurar` (já existia) mais criar (repassa só os campos; tipo e duração independentes), listar,
+  recuperar, alterar e excluir (inexistente → `ResourceNotFoundException` **sem gravar**; alterar não carrega a data) e `verificarDiaUtil` (fim de semana
+  não consulta o calendário, integral devolve o tipo, meio período marca "(meio período)", dia comum é útil). A permissão de gestor **não** está na service
+  (ela não recebe usuário): vive no controller.
+- `calendario.controller` (5): `criar`, `alterar`, `excluir` e `restaurar` são `@GestorOnly`; `listar`, `recuperar` e `verificar` abertos; verbos e caminhos;
+  `alterar` junta o id da rota ao corpo.
+- `dias-nao-uteis-no-intervalo` (regra pura, 8): virada de ano, vários anos, pontual só na própria data, recorrente e pontual na mesma data, bordas,
+  `Date` do banco e 29/02.
+- `calendario.repository.integracao` (14, banco real): `is_deleted = false` em toda leitura, ordem por data, soft delete e restauração, `alterar` parcial e que
+  não toca excluído, `validarDia`/`recuperarTipo` (pontual só na data, recorrente em qualquer ano) e `listarDiasNaoUteisDoMes`.
+  A ferramenta da IA `consultar-dias-nao-uteis` já tinha 5 testes que cobrem a regra de intervalo e o limite: sem lacuna a preencher.
+
+**Frontend.** `calendario.service` (6: URL, verbos, corpo, feedback próprio da lista), `dia-nao-util.model` (4) e a página `calendario-listagem` (20: esqueleto,
+mês cheio com recorrente de qualquer ano e pontual do ano, vazio com e sem atalho, erro, navegação de mês; gestor × desenvolvedor — "Novo", coluna de ações
+e clique no dia vazio só para o gestor; formulário com validação, meio período, recorrente, "salvar e adicionar outro" e falha; edição com data travada e
+"Excluir e recriar"; exclusão com desfazer e falha que devolve a linha). Não testados: o popover do dia marcado e a rolagem até a linha destacada.
+
+**Divergências.**
+- **P-016 (registrado, não corrigido):** a regra pura devolve a data inexistente `2027-02-29` para um recorrente de 29/02. `todo: 'P-016'`.
+- A spec pedia "data duplicada recusada", mas nem `SYSTEM.SPEC.md` nem o banco (só índice comum em `dia_nao_util(dia_data)`) exigem unicidade: service e
+  repository aceitam duas linhas na mesma data, e o teste de integração documenta isso. Se o autor quiser a regra, vira spec nova.
+- A spec citava "consulta por intervalo" no repository; ela só existe como regra pura (`ocorrenciasNoIntervalo`) sobre `listar()`.
+
+**Verificado:** `npm test` (shared 19, backend 163, scripts, desktop 14 e frontend 709 + 1 `it.todo`), `test:integracao` 174 (7 `todo` de P-010 a P-016), builds do
+backend e do frontend passam. Nenhuma tela mudou, sem verificação visual. Sem lint (P-001).
+
 ## 2026-10-19 — Task 179: testes de ponto e justificativas
 
 Nona task da guarda-chuva `testes-automatizados`. Nenhum código de produção mudou; a fábrica `criarPontoJustificativa` entrou em

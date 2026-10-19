@@ -118,3 +118,14 @@
   trabalhado como extra, sem negativo. O `todo: 'P-015'` em `ponto.service.calculo.test.ts` vira teste normal. Confirmar com o autor se o saldo do
   dia não útil deve ser `0` ou o total trabalhado antes de corrigir.
 - **Desde:** origem (achado na task 179).
+
+### P-016 — Dia não útil recorrente de 29/02 vira a data inexistente `AAAA-02-29` em ano não bissexto · `ABERTO` · backend
+
+- **Sintoma:** `ocorrenciasNoIntervalo` (usada pela ferramenta da IA `consultar_dias_nao_uteis`) devolve `2027-02-29` para um recorrente
+  cadastrado em 29/02, quando o intervalo cobre fevereiro de um ano não bissexto. A consulta do ponto (`validarDia`, `recuperarTipo`, `listarDiasNaoUteisDoMes`)
+  casa por mês e dia no SQL e nunca marca essa data; só a IA enxergaria um dia que não existe.
+- **Causa:** a regra monta `${ano}${cadastrado.slice(4)}` sem validar que a data existe no calendário.
+- **Contorno:** nenhum cadastro de 29/02 recorrente existe hoje (os feriados semeados são de data fixa e a tela aceita o cadastro).
+- **Correção:** descartar a ocorrência quando a data não existe naquele ano (a decisão do que fazer com 29/02 fora de bissexto é do autor: omitir, ou
+  cair em 28/02). O `todo: 'P-016'` em `dias-nao-uteis-no-intervalo.test.ts` vira teste normal.
+- **Desde:** origem (achado na task 180).
