@@ -12,6 +12,33 @@
 
 ---
 
+## 2026-10-19 — Task 178: testes de execuções
+
+Oitava task da guarda-chuva `testes-automatizados`. Nenhum código de produção mudou. Backend escrito direto; frontend por um agente `implementador`
+(inspecionado: suíte inteira rodada pelo orquestrador).
+
+**Backend.**
+- `execucao.service` (`execucao.service.regras.test.ts`, 35): iniciar (404, só status planejada/em desenvolvimento, desenvolvedor só a própria,
+  gestor/administrador qualquer uma sem `demanda_usuario`, a trava de ativa olha o **dono** da atividade e a ativa do gestor não impede iniciar a de
+  outro, descrição obrigatória só quando o dono é desenvolvedor), registrar (404, futuro, fim ≤ início, sobreposição do dono), encerrar, alterar
+  (inclui reabrir com `fimData: null`), listar (restrição do desenvolvedor, paginação, `allRows`), recuperar, ativa, última por atividade, excluir,
+  `encerrarExecucoesAbertas` e o job `onModuleInit` às 23:59:59 em dois fusos (`America/Sao_Paulo` e `Asia/Tokyo`).
+- `execucao.repository` (integração, 24): ativa pelo dono em qualquer atividade, sobreposição (encostadas não, contidas/cruzadas/envolventes/idênticas
+  sim, ativa até o infinito, `ignorarExecucaoId`), listagem (ordem, nomes, restrição, filtros, 23h30 do fuso, `totalMinutosDia` com a ativa, paginação,
+  excluídos em cada nível), soft delete, auto-stop, agrupamento por dia e relatório. Instantes explícitos (`NOW()` congelado).
+- Controller (5: só `registrar` e `excluir` são `@GestorOnly`) e regra pura `execucao-ativa-detalhada` (5). Executores e ferramentas da IA de execução já
+  tinham cobertura nos testes agregados (conferidos; nenhuma lacuna relevante).
+
+**Frontend.** `execucao.util` (12), service HTTP (9), `execucao-ativa.service` (10), interceptor (11), `execucao-timer` (5) e página `execucao-historico`
+(25: estados, filtros pela URL, gestor × desenvolvedor, edição pelo gestor). Não testados: atalhos de teclado, paginação da tabela e overlays do PrimeNG.
+
+**Observações (sem `todo`, não são defeito frente ao documento):** o código não exige "mesmo dia" em `registrar`, e `alterar` não confere sobreposição (a service
+documenta que quem corrige usa `existeSobreposicao` antes); `SYSTEM.SPEC.md` §14 não diz nada sobre o desenvolvedor editar a própria execução (a API
+permite, a tela só deixa o gestor).
+
+**Verificado:** `npm test` da raiz — backend 763 (758 + 5 `todo` preexistentes), frontend 606 (+1 `it.todo`; antes 534), shared/desktop/scripts verdes;
+`test:integracao` 145 (antes 121); builds de backend e frontend passam. Nenhuma tela mudou, sem verificação visual. Sem lint (P-001).
+
 ## 2026-10-19 — Task 177: testes de atividades e prioridade
 
 Sétima task da guarda-chuva `testes-automatizados`. Nenhum código de produção mudou. Frontend escrito por dois agentes `implementador` em
