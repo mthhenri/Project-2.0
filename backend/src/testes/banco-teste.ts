@@ -1,5 +1,5 @@
 import Knex, { Knex as KnexTipos } from 'knex';
-import { after, test } from 'node:test';
+import { after, test, TestOptions } from 'node:test';
 import {
   lerConfiguracaoBancoTeste,
   montarConfiguracaoKnex,
@@ -73,10 +73,18 @@ function traduzirFalhaDeConexao(erro: unknown): unknown {
  * `test` do node:test com isolamento: o corpo recebe uma transação descartada ao final.
  * Registra o encerramento do pool ao fim do arquivo.
  */
-export function testarComBanco(nome: string, corpo: (conexao: ConexaoTeste) => Promise<void>): void {
+export function testarComBanco(nome: string, corpo: (conexao: ConexaoTeste) => Promise<void>): void;
+export function testarComBanco(nome: string, opcoes: TestOptions, corpo: (conexao: ConexaoTeste) => Promise<void>): void;
+export function testarComBanco(
+  nome: string,
+  opcoesOuCorpo: TestOptions | ((conexao: ConexaoTeste) => Promise<void>),
+  corpoComOpcoes?: (conexao: ConexaoTeste) => Promise<void>,
+): void {
+  const opcoes = typeof opcoesOuCorpo === 'function' ? {} : opcoesOuCorpo;
+  const corpo = typeof opcoesOuCorpo === 'function' ? opcoesOuCorpo : corpoComOpcoes!;
   if (!encerramentoRegistrado) {
     encerramentoRegistrado = true;
     after(() => encerrarConexaoBancoTeste());
   }
-  test(nome, () => executarIsolado(corpo));
+  test(nome, opcoes, () => executarIsolado(corpo));
 }

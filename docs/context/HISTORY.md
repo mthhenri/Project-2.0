@@ -12,6 +12,36 @@
 
 ---
 
+## 2026-10-18 — Task 175: testes de projetos
+
+Quinta task da guarda-chuva `testes-automatizados`. Nenhum código de produção mudou.
+
+**Backend.** `projeto.service` (+16 em `projeto.service.regras.test.ts`; o `restaurar` já tinha 3): código duplicado e datas (fim ≤ início, também
+mudando só uma data contra a existente), listagem por tipo (gestor e administrador `listarTodos`, desenvolvedor `listarPorUsuario` com o id do
+token), paginação e `allRows`, recuperar (404 para o desenvolvedor sem demanda, sem consultar o acesso para gestor), alterar sem o código, excluir
+por soft delete. **A permissão de criar/alterar/excluir não está na service** (ela nem recebe o usuário): é o `@GestorOnly` do controller, e por isso
+o teste mora no `projeto.controller.test.ts` (4: quatro rotas `@GestorOnly`, listar/recuperar abertas, nenhuma pública, verbos e caminhos).
+`projeto.repository` (integração, 12): gestor vê todos sem nenhuma linha em `demanda_usuario`; desenvolvedor só os projetos com demanda atribuída a ele,
+sem duplicar com várias demandas, e perde o acesso quando a demanda ou a atribuição é excluída; excluído sai das duas listagens e aparece só em
+`recuperarExcluido`; ordem, filtro de status e paginação (gestor e desenvolvedor); unicidade do código só entre não excluídos (inclusive o índice);
+inserir/alterar por código de status e datas como texto; restaurar; `possuiDemandas`. `listar-projetos.ferramenta` (4): chama a service com o usuário do
+token, devolve só id/nome/código/status, limita e avisa "há mais". `criar-projeto.executor`, `propor-criar-projeto` e `dados-do-projeto-proposto` já
+estavam testados. `testarComBanco` agora aceita opções do `node:test` (usado para o `todo`).
+
+**Frontend.** `projeto.service` e `gerarCodigoDoNome`; `projeto-status-chip`; `projeto-formulario-dialog` (criar: código derivado do nome até a edição à mão,
+campos obrigatórios, caractere proibido, previsão de fim, corpo enviado, erro de código duplicado; editar: com o projeto completo ou só o resumo, PUT sem
+código); `projeto-listagem` (esqueleto, cheio, vazio com e sem convite, erro, busca sem acento e filtro de status no cliente com contadores, ações por
+tipo, status e exclusão com desfazer e rollback); `projeto-detalhe` (rota, cabeçalho, estado vazio, gestor × desenvolvedor, datas, resumo executado ×
+estimado, status otimista com rollback, visões, 404).
+
+**Achado — P-009.** `ProjetoService.recuperar` confere o acesso do desenvolvedor chamando `listarPorUsuario` **com a paginação padrão (20)**: quem tem
+mais de 20 projetos recebe 404 ao abrir o 21º (por ordem de nome). Teste de integração service + repository reais marcado `todo: 'P-009'`; item novo em
+`PROBLEMS.md`; **não corrigido**. Observação sem item: `ProjetoFormularioDialog` não consegue apagar uma data (a edição manda `undefined` e o
+repository ignora campo ausente).
+
+**Verificado:** `npm test` da raiz — shared 163, backend 594 (antes 571), frontend 207 (antes 164), desktop 19, scripts 13 + 1 pulado; `test:integracao`
+59 (58 + 1 `todo`, antes 47); builds de backend e frontend passam. Nenhuma tela mudou, sem verificação visual. Fora: demandas dentro do projeto (176).
+
 ## 2026-10-18 — Correção dos P-007 e P-008 (achados das tasks 173 e 174)
 
 Pedido do autor: corrigir os dois defeitos que os testes acharam e promover os `todo` a testes normais.

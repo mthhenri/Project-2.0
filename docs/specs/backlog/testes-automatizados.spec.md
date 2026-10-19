@@ -52,7 +52,7 @@ Regras da cobertura:
 | 172 | [Testes de componente e frontend no CI](../done/172-testes-componente-angular-e-frontend-no-ci.spec.md) | infraestrutura frontend, raiz e CI |
 | 173 | [Núcleo: core, config, shared e desktop](../done/173-testes-nucleo-core-config-shared-desktop.spec.md) | transversal |
 | 174 | [Autenticação e usuários](../done/174-testes-autenticacao-e-usuarios.spec.md) | `autenticacao`, `usuario` |
-| 175 | [Projetos](175-testes-projetos.spec.md) | `projeto` |
+| 175 | [Projetos](../done/175-testes-projetos.spec.md) | `projeto` |
 | 176 | [Demandas](176-testes-demandas.spec.md) | `demanda` |
 | 177 | [Atividades e prioridade](177-testes-atividades-e-prioridade.spec.md) | `atividade`, `atividade-prioridade` |
 | 178 | [Execuções](178-testes-execucoes.spec.md) | `execucao` |
