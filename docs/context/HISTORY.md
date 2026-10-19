@@ -12,6 +12,32 @@
 
 ---
 
+## 2026-10-19 — Task 182: testes de anotações (pad)
+
+Décima segunda task da guarda-chuva `testes-automatizados`. Nenhum código de produção mudou.
+
+**Backend.**
+- `anotacao.repository.integracao` (11, banco real): cinco seções na ordem de exibição (inclusive com `tipos`), `is_deleted` e isolamento entre usuários, usuário
+  sem pad (vazio no repository, 404 na service), `alterar` com versão lida grava e com versão velha dá 409 sem gravar, mover (as duas seções, 409 por versão velha de
+  uma delas sem gravar nenhuma, trecho ausente/repetido recusado sem gravar) e `modificarSecoes` atômico: segunda gravação falhando (NOT NULL) desfaz a primeira, e
+  modificador que lança não grava. A service entra com o repository real, porque o 409 e o mover dependem do SQL e da transação.
+- `anotacao.controller` (3): seis rotas de §12 com verbo e caminho; nenhuma é `@GestorOnly`/pública (a regra "dono, gestor e administrador" vive na service, que já
+  tinha o teste); `usuarioId` e `tipo` da URL são juntados ao corpo.
+- `rotulo-secao-do-pad` (2). `consultar-pad`/`propor-anotar-pad` (Feito só do dia, corte em 8000, Pessoal só com `pedidoExplicito`, trecho único conferido) já estavam
+  cobertos em `ferramentas-do-pad.test.ts`; conferido, nada a acrescentar.
+
+**Frontend.** `anotacao.service` (4: URL, verbos, corpo, `tipos` em vírgula, erro tratado pelo drawer), `anotacoes.util` (4), `secao-anotacao` (5), página
+`usuario-anotacoes` (4: gestor/administrador → listagem com o drawer; desenvolvedor → o próprio pad no Ponto, id alheio → Ponto sem drawer) e o dialog (25 testes de
+componente): esqueleto e cinco seções, título próprio/alheio, falha ao carregar, salvar com a versão lida, salvamento automático em 2 s, fechar salva, 409 recarrega e
+avisa, "Enviar para" (versões lidas, salva as duas antes, Desfazer de 7 s e inverso, 409/400/500), Limpar com Desfazer, modo somente leitura com a IA no ar e
+`editavel=false`.
+
+**Fora do que a spec previa.** "Feito sob o título do dia" não existe na tela do pad (a escrita em Feito é da service/IA e tem teste no backend); o dialog não bloqueia
+desenvolvedor em pad alheio (a rota do deep-link redireciona e a service responde 403 — ambos testados).
+
+**Verificado:** `npm test` sem falha (backend 854 + 7 `todo` de P-010 a P-016 preexistentes, frontend 783 + 1 `it.todo`, desktop 19, scripts 13 + 1 pulado preexistente),
+`test:integracao` 189 sem falha, builds do backend e do frontend passam. Nenhuma tela mudou, sem verificação visual. Sem lint (P-001).
+
 ## 2026-10-19 — I-004 vira spec: guarda-chuva das dúvidas de programação no chat (tasks 188–191) e P-017
 
 Conversa com o autor sobre a ideia I-004 (chat como tira-dúvidas de programação), sem mudança de código. Decisões, registradas

@@ -59,7 +59,7 @@ Regras da cobertura:
 | 179 | [Ponto e justificativas](../done/179-testes-ponto-e-justificativas.spec.md) | `ponto`, `ponto-justificativa` |
 | 180 | [Calendário](../done/180-testes-calendario.spec.md) | `calendario` |
 | 181 | [Tags](../done/181-testes-tags.spec.md) | `tag` |
-| 182 | [Anotações (pad)](182-testes-anotacoes.spec.md) | `anotacao` |
+| 182 | [Anotações (pad)](../done/182-testes-anotacoes.spec.md) | `anotacao` |
 | 183 | [Relatório](183-testes-relatorio.spec.md) | `relatorio` |
 | 184 | [Camada de IA](184-testes-camada-de-ia.spec.md) | `ia`, `configuracao-ia`, `prompt`, `ferramenta-ia`, `proposta-ia`, `assistente` |
 | 185 | [Chat](185-testes-chat.spec.md) | `chat` |
