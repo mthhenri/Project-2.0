@@ -77,6 +77,10 @@ Continuação do bloco de 2026-10-17 (Execuções e Relatório). As telas que ai
 - **Testes:** shared 165; frontend 1369 passando + 3 `todo`, **em três fusos de navegador** (`TZ=America/Sao_Paulo`, `Asia/Tokyo`, `Pacific/Auckland`); antes do ajuste dos specs, `Asia/Tokyo` derrubava 5 testes. Build do frontend OK. Backend não foi tocado. Sem lint (P-001).
 - **Pendente:** verificação ao vivo das telas alteradas (Calendário, Ponto, formulário de demanda, topbar, dialog de registro) em 1920×1080, 1366×768 e 1080×1920, com o navegador em fuso diferente do sistema; não foi feita nesta sessão (sem app no ar).
 
+## 2026-10-19 — Ponto: intervalos entram na linha do tempo do dia
+
+Na tela de ponto, o dia expandido mostrava as execuções numa `p-timeline` e os intervalos num bloco separado ("Intervalos detectados"). Agora `PontoMesDiaComponent.itensLinhaDoTempo` mescla execuções e intervalos por `inicioData` e a timeline mostra "Intervalo (1h 11min)" no ponto exato entre as execuções. O componente `PontoIntervaloListaComponent` ficou sem uso e foi removido, com o seu teste. Frontend: 121 arquivos, 1366 testes passando. Não verificado ao vivo no navegador; sem lint no projeto (P-001).
+
 ## 2026-10-19 — Task 191: assunto das mensagens e contexto do chat (fecha a guarda-chuva das dúvidas de código)
 
 Quarta e última task da guarda-chuva `chat-duvidas-de-codigo`: com as dúvidas de código ligadas o chat responde perguntas de programação com o prompt `DUVIDA_CODIGO`, marca cada mensagem pelo assunto e monta o contexto conforme o modo; desligadas, a IA recusa com educação.

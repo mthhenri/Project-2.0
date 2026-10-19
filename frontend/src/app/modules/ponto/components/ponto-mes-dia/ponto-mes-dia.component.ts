@@ -1,20 +1,24 @@
-import { Component, EventEmitter, Input, Output, inject, signal } from '@angular/core';
+import { Component, EventEmitter, Input, Output, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { TimelineModule } from 'primeng/timeline';
 import { TooltipModule } from 'primeng/tooltip';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { finalize } from 'rxjs';
-import { PontoDiaResumoDto, PontoDiarioDto, dataIsoNoFuso } from '@project20/shared';
+import { ExecucaoItemDto, IntervaloDto, PontoDiaResumoDto, PontoDiarioDto, dataIsoNoFuso } from '@project20/shared';
+import { ambiente } from '../../../../../environments/environment';
 import { PontoService } from '../../services/ponto.service';
 import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-horas.pipe';
 import { ExecucaoTimerComponent } from '../../../execucao/components/execucao-timer/execucao-timer.component';
-import { PontoIntervaloListaComponent } from '../ponto-intervalo-lista/ponto-intervalo-lista.component';
 import {
   formatarSaldoMinutos,
   abreviacaoDiaSemana,
   numeroDoDia,
 } from '../../models/ponto.model';
-import { ambiente } from '../../../../../environments/environment';
+
+/** Item da linha do tempo do dia: uma execução ou um intervalo detectado entre elas. */
+type ItemLinhaDoTempo =
+  | (ExecucaoItemDto & { tipo: 'EXECUCAO' })
+  | (IntervaloDto & { tipo: 'INTERVALO' });
 
 @Component({
   selector: 'app-ponto-mes-dia',
@@ -26,7 +30,6 @@ import { ambiente } from '../../../../../environments/environment';
     ProgressSpinnerModule,
     MinutosParaHorasPipe,
     ExecucaoTimerComponent,
-    PontoIntervaloListaComponent,
   ],
   templateUrl: './ponto-mes-dia.component.html',
   styleUrl: './ponto-mes-dia.component.scss',
@@ -41,11 +44,23 @@ export class PontoMesDiaComponent {
   @Output() justificarSolicitada = new EventEmitter<PontoDiaResumoDto>();
 
   private readonly pontoService = inject(PontoService);
-  readonly intervaloMinimoMinutos = ambiente.intervaloMinimoMinutos;
 
   readonly expandido = signal<boolean>(false);
   readonly carregando = signal<boolean>(false);
   readonly detalhe = signal<PontoDiarioDto | null>(null);
+
+  /** Execuções e intervalos do dia numa só sequência, em ordem de horário. */
+  readonly itensLinhaDoTempo = computed<ItemLinhaDoTempo[]>(() => {
+    const detalheDia = this.detalhe();
+    if (!detalheDia) return [];
+    const itens: ItemLinhaDoTempo[] = [
+      ...detalheDia.execucoes.map((execucao) => ({ ...execucao, tipo: 'EXECUCAO' as const })),
+      ...detalheDia.intervalos.map((intervalo) => ({ ...intervalo, tipo: 'INTERVALO' as const })),
+    ];
+    return itens.sort(
+      (itemA, itemB) => new Date(itemA.inicioData).getTime() - new Date(itemB.inicioData).getTime(),
+    );
+  });
 
   /** Há registro de trabalho no dia (logo, é expansível para ver a timeline). */
   get temRegistro(): boolean {

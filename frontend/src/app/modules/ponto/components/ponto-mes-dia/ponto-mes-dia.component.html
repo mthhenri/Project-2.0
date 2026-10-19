@@ -69,35 +69,37 @@
         <div class="ponto-mes-dia__carregando">
           <p-progressSpinner strokeWidth="4" />
         </div>
-      } @else if (detalhe(); as detalheDia) {
-        <p-timeline [value]="detalheDia.execucoes" align="left">
-          <ng-template pTemplate="opposite" let-execucao>
+      } @else if (detalhe()) {
+        <p-timeline [value]="itensLinhaDoTempo()" align="left">
+          <ng-template pTemplate="opposite" let-item>
             <span class="ponto-mes-dia__execucao-horario">
-              {{ execucao.inicioData | date: 'HH:mm' }}
+              {{ item.inicioData | date: 'HH:mm' }}
               <i class="pi pi-arrow-right ponto-mes-dia__seta"></i>
-              @if (execucao.fimData) {
-                {{ execucao.fimData | date: 'HH:mm' }}
+              @if (item.fimData) {
+                {{ item.fimData | date: 'HH:mm' }}
               } @else {
-                <app-execucao-timer [inicioData]="execucao.inicioData" tamanho="compacto" />
+                <app-execucao-timer [inicioData]="item.inicioData" tamanho="compacto" />
               }
             </span>
           </ng-template>
-          <ng-template pTemplate="content" let-execucao>
-            <button
-              type="button"
-              class="ponto-mes-dia__execucao-atividade"
-              (click)="atividadeSelecionada.emit(execucao.atividadeId)"
-            >
-              <i class="pi pi-check-square"></i>
-              <span>{{ execucao.nomeAtividade }}</span>
-            </button>
+          <ng-template pTemplate="content" let-item>
+            @if (item.tipo === 'INTERVALO') {
+              <span class="ponto-mes-dia__intervalo">
+                <i class="pi pi-pause-circle"></i>
+                <span>Intervalo ({{ item.duracaoMinutos | minutosParagHoras }})</span>
+              </span>
+            } @else {
+              <button
+                type="button"
+                class="ponto-mes-dia__execucao-atividade"
+                (click)="atividadeSelecionada.emit(item.atividadeId)"
+              >
+                <i class="pi pi-check-square"></i>
+                <span>{{ item.nomeAtividade }}</span>
+              </button>
+            }
           </ng-template>
         </p-timeline>
-
-        <app-ponto-intervalo-lista
-          [intervalos]="detalheDia.intervalos"
-          [minutoMinimo]="intervaloMinimoMinutos"
-        />
       }
     </div>
   }

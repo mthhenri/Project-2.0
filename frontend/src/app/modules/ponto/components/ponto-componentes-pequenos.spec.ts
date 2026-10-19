@@ -3,7 +3,6 @@ import { ExecucaoItemDto, IntervaloDto, PontoDiarioDto, TipoUsuarioEnum } from '
 import { TestBed } from '@angular/core/testing';
 import { montarComponente as montarSemReinicio } from '../../../../testes/montar-componente';
 import { PontoResumoCardComponent } from './ponto-resumo-card/ponto-resumo-card.component';
-import { PontoIntervaloListaComponent } from './ponto-intervalo-lista/ponto-intervalo-lista.component';
 import { PontoUsuarioCardComponent } from './ponto-usuario-card/ponto-usuario-card.component';
 
 // Vários componentes por teste: cada montagem recomeça o TestBed.
@@ -36,29 +35,6 @@ describe('PontoResumoCardComponent', () => {
     expect(await classeDe('negativo')).toContain('text-red-600');
     expect(await classeDe('primario')).toContain('--p-primary-color');
     expect(await classeDe('neutro')).toContain('text-color');
-  });
-});
-
-describe('PontoIntervaloListaComponent', () => {
-  const intervalo = (duracaoMinutos: number): IntervaloDto => ({
-    inicioData: new Date(2026, 2, 2, 12, 0), fimData: new Date(2026, 2, 2, 12, duracaoMinutos), duracaoMinutos,
-  });
-
-  it('sem intervalos mostra o estado vazio e o mínimo no título', async () => {
-    const montado = await montarComponente(PontoIntervaloListaComponent, { entradas: { intervalos: [], minutoMinimo: 15 } });
-    expect(texto(montado.elemento)).toContain('Intervalos detectados (≥ 15 min)');
-    expect(texto(montado.elemento)).toContain('Nenhum intervalo detectado no dia.');
-    expect(montado.elemento.querySelector('li')).toBeNull();
-  });
-
-  it('com intervalos lista cada um com horário e duração', async () => {
-    const montado = await montarComponente(PontoIntervaloListaComponent, { entradas: { intervalos: [intervalo(30), intervalo(45)], minutoMinimo: 15 } });
-    const itens = Array.from(montado.elemento.querySelectorAll('li')).map((item) => texto(item as HTMLElement));
-    expect(itens).toHaveLength(2);
-    expect(itens[0]).toContain('12:00');
-    expect(itens[0]).toContain('12:30');
-    expect(itens[1]).toContain('12:45');
-    expect(montado.elemento.textContent).not.toContain('Nenhum intervalo');
   });
 });
 
