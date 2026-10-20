@@ -97,6 +97,17 @@ test('listarVolume: o mês vira o intervalo de datas e a lista do repository vol
   assert.deepEqual(resposta.dados, itens);
 });
 
+test('listarVolumeAnual: o ano vira o intervalo e as linhas projeto × mês saem agrupadas por projeto', async () => {
+  let recebido: unknown;
+  const linhas = [1, 2, 3].map((mes) => ({ projetoId: 10, nome: 'Projeto A', codigo: 'PA', cor: '#336699', volumeEsperadoHorasMes: 40, mes, minutosGastos: mes === 2 ? 120 : 0 }));
+  const servico = criarServico({ listarVolumePorMes: async (filtros: unknown) => { recebido = filtros; return linhas; } });
+  const resposta = await servico.listarVolumeAnual({ ano: 2026 });
+  assert.deepEqual(recebido, { dataInicio: '2026-01-01', dataFim: '2026-12-31' });
+  assert.equal(resposta.sucesso, true);
+  assert.equal(resposta.dados?.length, 1);
+  assert.deepEqual(resposta.dados?.[0].minutosGastosPorMes.slice(0, 4), [0, 120, 0, 0]);
+});
+
 // ---------------------------------------------------------------------------
 // listar: "Ver todos os projetos" (§14) é do gestor e do administrador; o desenvolvedor vê os seus
 // ---------------------------------------------------------------------------

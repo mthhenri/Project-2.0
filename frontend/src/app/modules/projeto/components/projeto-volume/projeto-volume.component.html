@@ -1,95 +1,135 @@
 <div class="projeto-volume">
   <div class="projeto-volume__navegacao">
-    <p-button
-      icon="pi pi-chevron-left"
-      severity="secondary"
-      [outlined]="true"
-      ariaLabel="Mês anterior"
-      pTooltip="Mês anterior"
-      tooltipPosition="top"
-      (onClick)="retornarMes()"
+    <p-selectbutton
+      [options]="opcoesPeriodo"
+      [formControl]="periodoControl"
+      optionLabel="rotulo"
+      optionValue="valor"
+      [allowEmpty]="false"
+      size="small"
+      ariaLabelledBy="projeto-listagem-titulo"
     />
-    <p-datepicker
-      [formControl]="mesControl"
-      view="month"
-      dateFormat="mm/yy"
-      [maxDate]="hoje"
-      [showIcon]="true"
-      appendTo="body"
-      ariaLabel="Mês do volume"
-    />
-    <p-button
-      icon="pi pi-chevron-right"
-      severity="secondary"
-      [outlined]="true"
-      ariaLabel="Próximo mês"
-      [disabled]="visualizandoMesAtual()"
-      pTooltip="Próximo mês"
-      tooltipPosition="top"
-      (onClick)="avancarMes()"
-    />
-    <p-button label="Mês atual" [text]="true" [disabled]="visualizandoMesAtual()" (onClick)="irParaMesAtual()" />
+
+    @if (periodo() === 'MENSAL') {
+      <p-button
+        icon="pi pi-chevron-left"
+        severity="secondary"
+        [outlined]="true"
+        ariaLabel="Mês anterior"
+        pTooltip="Mês anterior"
+        tooltipPosition="top"
+        (onClick)="retornarMes()"
+      />
+      <p-datepicker
+        [formControl]="mesControl"
+        view="month"
+        dateFormat="mm/yy"
+        [maxDate]="hoje"
+        [showIcon]="true"
+        appendTo="body"
+        ariaLabel="Mês do volume"
+      />
+      <p-button
+        icon="pi pi-chevron-right"
+        severity="secondary"
+        [outlined]="true"
+        ariaLabel="Próximo mês"
+        [disabled]="visualizandoMesAtual()"
+        pTooltip="Próximo mês"
+        tooltipPosition="top"
+        (onClick)="avancarMes()"
+      />
+      <p-button label="Mês atual" [text]="true" [disabled]="visualizandoMesAtual()" (onClick)="irParaMesAtual()" />
+    } @else {
+      <p-button
+        icon="pi pi-chevron-left"
+        severity="secondary"
+        [outlined]="true"
+        ariaLabel="Ano anterior"
+        pTooltip="Ano anterior"
+        tooltipPosition="top"
+        (onClick)="retornarAno()"
+      />
+      <p-datepicker
+        [formControl]="anoControl"
+        view="year"
+        dateFormat="yy"
+        [maxDate]="hoje"
+        [showIcon]="true"
+        appendTo="body"
+        ariaLabel="Ano do volume"
+      />
+      <p-button
+        icon="pi pi-chevron-right"
+        severity="secondary"
+        [outlined]="true"
+        ariaLabel="Próximo ano"
+        [disabled]="visualizandoAnoAtual()"
+        pTooltip="Próximo ano"
+        tooltipPosition="top"
+        (onClick)="avancarAno()"
+      />
+      <p-button label="Ano atual" [text]="true" [disabled]="visualizandoAnoAtual()" (onClick)="irParaAnoAtual()" />
+    }
   </div>
 
   @if (primeiraCarga()) {
-    <app-skeleton-lista variante="cartoes" [quantidade]="4" />
+    <app-skeleton-lista variante="cartoes" [quantidade]="3" />
   } @else {
     <div class="projeto-volume__conteudo" [class.conteudo-recarregando]="recarregando()">
       <app-barra-recarga [ativa]="recarregando()" />
 
-      @if (linhas().length === 0) {
-        <div class="projeto-volume__vazio">
-          <i class="pi pi-chart-bar text-5xl text-muted-color"></i>
-          <p class="text-muted-color mt-3">Nenhum projeto ainda.</p>
-        </div>
+      @if (periodo() === 'MENSAL') {
+        @if (categoriasMensais().length === 0) {
+          <div class="projeto-volume__vazio">
+            <i class="pi pi-chart-bar text-5xl text-muted-color"></i>
+            <p class="text-muted-color mt-3">Nenhum projeto ainda.</p>
+          </div>
+        } @else {
+          <section class="projeto-volume__cartao" aria-label="Volume do mês por projeto">
+            <ul class="projeto-volume__legenda" aria-label="Legenda">
+              <li><span class="projeto-volume__legenda-cor projeto-volume__legenda-cor--projeto"></span>Gastas (cor do projeto)</li>
+              <li><span class="projeto-volume__legenda-cor" [style.background-color]="corEsperado"></span>Esperadas</li>
+              <li><span class="projeto-volume__legenda-cor" [style.background-color]="corEstouro"></span>Acima do esperado</li>
+            </ul>
+            <app-grafico-barras
+              [categorias]="categoriasMensais()"
+              [altura]="320"
+              unidadeDoEixo=" h"
+              descricaoGeral="Horas gastas e esperadas por projeto no mês"
+            />
+          </section>
+        }
       } @else {
-        <ul class="projeto-volume__lista">
-          @for (linha of linhas(); track linha.projetoId) {
-            <li class="projeto-volume__linha" [class.projeto-volume__linha--estouro]="linha.estourou">
-              <div class="projeto-volume__projeto">
-                <span class="projeto-volume__cor" [style.background-color]="linha.cor" aria-hidden="true"></span>
-                <div class="projeto-volume__identificacao">
-                  <span class="projeto-volume__codigo">{{ linha.codigo }}</span>
-                  <a class="projeto-volume__nome" [routerLink]="['/projeto', linha.projetoId]">{{ linha.nome }}</a>
-                </div>
-              </div>
-
-              <div class="projeto-volume__progresso">
-                @if (linha.minutosEsperados !== null) {
-                  <div class="projeto-volume__barra" [class.projeto-volume__barra--estouro]="linha.estourou" [style.--cor-barra]="linha.cor">
-                    <p-progressbar [value]="linha.percentualBarra" [showValue]="false" />
+        @if (projetosAnuais().length === 0) {
+          <div class="projeto-volume__vazio">
+            <i class="pi pi-chart-bar text-5xl text-muted-color"></i>
+            <p class="text-muted-color mt-3">Nenhum projeto ainda.</p>
+          </div>
+        } @else {
+          <div class="projeto-volume__anual">
+            @for (projeto of projetosAnuais(); track projeto.item.projetoId) {
+              <section class="projeto-volume__cartao">
+                <header class="projeto-volume__cabecalho-projeto">
+                  <span class="projeto-volume__cor" [style.background-color]="projeto.item.cor" aria-hidden="true"></span>
+                  <div class="projeto-volume__identificacao">
+                    <span class="projeto-volume__codigo">{{ projeto.item.codigo }}</span>
+                    <a class="projeto-volume__nome" [routerLink]="['/projeto', projeto.item.projetoId]">{{ projeto.item.nome }}</a>
                   </div>
-                }
-                <div class="projeto-volume__legenda">
-                  <span
-                    class="projeto-volume__gasto"
-                    [class.projeto-volume__gasto--estouro]="linha.estourou"
-                    [pTooltip]="unidadeTempo.emDias() ? (linha.minutosGastos | tempoExibicao: false : 'minutos') : ''"
-                  >
-                    {{ linha.minutosGastos | tempoExibicao: unidadeTempo.emDias() : 'minutos' }}
-                  </span>
-                  @if (linha.minutosEsperados !== null) {
-                    <span class="projeto-volume__separador">de</span>
-                    <span
-                      class="projeto-volume__esperado"
-                      [pTooltip]="unidadeTempo.emDias() ? (linha.minutosEsperados | tempoExibicao: false : 'minutos') : ''"
-                    >
-                      {{ linha.minutosEsperados | tempoExibicao: unidadeTempo.emDias() : 'minutos' }}
-                    </span>
-                    @if (linha.percentual !== null) {
-                      <span class="projeto-volume__percentual">({{ linha.percentual }}%)</span>
-                    }
-                    @if (linha.estourou) {
-                      <span class="projeto-volume__aviso-estouro"><i class="pi pi-exclamation-triangle"></i> acima do esperado</span>
-                    }
-                  } @else {
-                    <span class="projeto-volume__sem-volume">sem volume definido</span>
-                  }
-                </div>
-              </div>
-            </li>
-          }
-        </ul>
+                  <span class="projeto-volume__esperado" [class.projeto-volume__esperado--vazio]="projeto.item.volumeEsperadoHorasMes === null">{{ projeto.rotuloEsperado }}</span>
+                </header>
+                <app-grafico-barras
+                  [categorias]="projeto.categorias"
+                  [linhaReferencia]="projeto.item.volumeEsperadoHorasMes"
+                  rotuloLinhaReferencia="esperado por mês"
+                  [altura]="220"
+                  unidadeDoEixo=" h"
+                  [descricaoGeral]="'Horas gastas por mês em ' + projeto.item.nome"
+                />
+              </section>
+            }
+          </div>
+        }
       }
     </div>
   }

@@ -17,6 +17,7 @@ import {
   ProjetoAcessoValidarDto,
   ProjetoVolumeFiltrarDto,
   ProjetoVolumeResumoDto,
+  ProjetoVolumeMesDto,
 } from '@project20/shared';
 import { ProjetoRestaurarDto, ProjetoRestauradoDto } from '@project20/shared';
 
@@ -182,6 +183,47 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
          ON execucao_do_mes.projeto_id = projeto.id
        WHERE projeto.is_deleted = false
        ORDER BY projeto.nome ASC`,
+      { dataInicio: filtros.dataInicio, dataFim: filtros.dataFim },
+    );
+  }
+
+  /**
+   * Volume do ano (task 199): uma linha por projeto não excluído e por mês (1 a 12), com os minutos das execuções **encerradas** daquele
+   * mês, pelo mesmo critério de dia da visão mensal (`inicio_data` no fuso da sessão). Mês sem execução volta com 0.
+   */
+  async listarVolumePorMes(filtros: ProjetoVolumeFiltrarDto): Promise<ProjetoVolumeMesDto[]> {
+    return this.executarConsulta<ProjetoVolumeMesDto>(
+      `SELECT
+         projeto.id                                  AS "projetoId",
+         projeto.nome,
+         projeto.codigo,
+         projeto.cor,
+         projeto.volume_esperado_horas_mes           AS "volumeEsperadoHorasMes",
+         mes_do_ano.mes                              AS "mes",
+         COALESCE(execucao_do_mes.minutos_gastos, 0) AS "minutosGastos"
+       FROM projeto
+       CROSS JOIN generate_series(1, 12) AS mes_do_ano(mes)
+       LEFT JOIN (
+         SELECT
+           demanda.projeto_id AS projeto_id,
+           EXTRACT(MONTH FROM execucao.inicio_data)::int AS mes,
+           SUM(EXTRACT(EPOCH FROM (execucao.fim_data - execucao.inicio_data))::int / 60)::int AS minutos_gastos
+         FROM execucao
+         INNER JOIN atividade
+           ON atividade.id = execucao.atividade_id
+           AND atividade.is_deleted = false
+         INNER JOIN demanda
+           ON demanda.id = atividade.demanda_id
+           AND demanda.is_deleted = false
+         WHERE execucao.is_deleted = false
+           AND execucao.fim_data IS NOT NULL
+           AND DATE(execucao.inicio_data) BETWEEN :dataInicio::DATE AND :dataFim::DATE
+         GROUP BY demanda.projeto_id, EXTRACT(MONTH FROM execucao.inicio_data)
+       ) AS execucao_do_mes
+         ON execucao_do_mes.projeto_id = projeto.id
+         AND execucao_do_mes.mes = mes_do_ano.mes
+       WHERE projeto.is_deleted = false
+       ORDER BY projeto.nome ASC, projeto.id ASC, mes_do_ano.mes ASC`,
       { dataInicio: filtros.dataInicio, dataFim: filtros.dataFim },
     );
   }

@@ -16,3 +16,6 @@ export * from './ProjetoRestauradoDto';
 export * from './ProjetoVolumeListarDto';
 export * from './ProjetoVolumeFiltrarDto';
 export * from './ProjetoVolumeResumoDto';
+export * from './ProjetoVolumeAnualListarDto';
+export * from './ProjetoVolumeAnualResumoDto';
+export * from './ProjetoVolumeMesDto';

@@ -200,6 +200,30 @@ testarComBanco('listarVolume soma só as execuções encerradas do mês, nas ati
   assert.equal((await repositorio.listarVolume({ dataInicio: '2026-10-01', dataFim: '2026-10-31' })).some((item) => item.projetoId === projetoVazio.id), false);
 });
 
+testarComBanco('listarVolumePorMes devolve 12 linhas por projeto, com os minutos de cada mês e a virada do mês pelo fuso', async (conexao) => {
+  const repositorio = criarRepositorio(ProjetoRepository, conexao);
+  const desenvolvedor = await criarDesenvolvedor(conexao);
+  const projeto = await criarProjeto(conexao);
+  const demanda = await criarDemanda(conexao, { projetoId: projeto.id });
+  const atividade = await criarAtividade(conexao, { demandaId: demanda.id, usuarioId: desenvolvedor.id });
+  await conexao.raw('UPDATE projeto SET volume_esperado_horas_mes = 40 WHERE projeto.id = :id', { id: projeto.id });
+
+  // 31/10 22:00 -03:00 já é 01/11 em UTC: conta em outubro (fuso do sistema). Em andamento e excluída ficam fora; 2025 fica fora do ano.
+  await criarExecucao(conexao, { atividadeId: atividade.id, inicioData: '2026-10-31T22:00:00-03:00', fimData: '2026-10-31T23:00:00-03:00' });
+  await criarExecucao(conexao, { atividadeId: atividade.id, inicioData: '2026-10-05T09:00:00-03:00', fimData: '2026-10-05T10:30:00-03:00' });
+  await criarExecucao(conexao, { atividadeId: atividade.id, inicioData: '2026-09-02T09:00:00-03:00', fimData: '2026-09-02T10:00:00-03:00' });
+  await criarExecucao(conexao, { atividadeId: atividade.id, inicioData: '2026-10-20T09:00:00-03:00', fimData: null });
+  await criarExecucao(conexao, { atividadeId: atividade.id, inicioData: '2025-10-05T09:00:00-03:00', fimData: '2025-10-05T10:00:00-03:00' });
+  const excluida = await criarExecucao(conexao, { atividadeId: atividade.id, inicioData: '2026-10-11T09:00:00-03:00', fimData: '2026-10-11T12:00:00-03:00' });
+  await excluirLinha(conexao, 'execucao', excluida.id);
+
+  const linhas = (await repositorio.listarVolumePorMes({ dataInicio: '2026-01-01', dataFim: '2026-12-31' })).filter((linha) => linha.projetoId === projeto.id);
+  assert.deepEqual(linhas.map((linha) => linha.mes), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+  const porMes = new Map(linhas.map((linha) => [linha.mes, linha.minutosGastos]));
+  assert.deepEqual([porMes.get(9), porMes.get(10), porMes.get(11), porMes.get(1)], [60, 150, 0, 0]);
+  assert.equal(linhas[0].volumeEsperadoHorasMes, 40);
+});
+
 testarComBanco('restaurar desfaz o soft delete e limpa deleted_date', async (conexao) => {
   const repositorio = criarRepositorio(ProjetoRepository, conexao);
   const projeto = await criarProjeto(conexao);

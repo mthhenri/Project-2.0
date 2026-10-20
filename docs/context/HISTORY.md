@@ -12,6 +12,16 @@
 
 ---
 
+## 2026-10-19 — Task 199: gráfico de barras e visão anual do volume (correção da 197)
+
+Pedido do autor ao ver a 197: "na tela deveria ter o filtro anual e o filtro mensal, também deveria ser um gráfico de barras" (e perguntou qual valor vai no campo "Volume esperado": as horas por mês que se espera do projeto, somando as pessoas; exemplo 160 h = uma pessoa em tempo integral). Decisões confirmadas com o autor: anual = mês a mês por projeto (12 barras e linha do esperado), gráfico em d3 (já instalado).
+
+- **Backend:** `GET /projeto/volume/anual?ano` (`@GestorOnly`, antes de `:id`); SQL com `generate_series(1, 12)` × projeto e `LEFT JOIN` das execuções encerradas agrupadas por `EXTRACT(MONTH FROM inicio_data)` (mesmo critério de dia da 197); `limitesDoAno` e `agruparVolumePorProjeto` em `domain/volume-anual.ts`. DTOs: `ProjetoVolumeAnualListarDto`, `ProjetoVolumeAnualResumoDto`, `ProjetoVolumeMesDto` (o intervalo reaproveita `ProjetoVolumeFiltrarDto`).
+- **Frontend:** `app-grafico-barras` (shared; escalas do d3, desenho no template, responsivo por `ResizeObserver`, tooltip `<title>`, linha de referência opcional); a visão virou "Volume" com `p-selectbutton` Mensal | Anual (Reactive Forms), seletor de mês ou de ano e `volume-grafico.util.ts` (dados do gráfico, puro e testado). As barras de progresso da 197 saíram.
+- **Achado na verificação:** um projeto de cor vermelha ficava igual ao vermelho do estouro; a barra acima do esperado ganhou contorno escuro e o valor em vermelho (`destaque`), independente da cor do projeto. O rótulo da linha tracejada foi para a esquerda, onde não cobre a barra de outubro.
+- **Testes:** backend 1084 + integração 244 (virada de mês pelo fuso, em andamento e excluída fora); frontend 1431 (gráfico 8, visão 17, utilitários 13 nos dois arquivos); builds ok.
+- **Verificado ao vivo** (`docs/specs/done/199-projeto-volume-grafico-e-visao-anual/verificacao.md`): mensal e anual em 1366×768 por captura e em 1920×1080 e 1080×1920 por medida do DOM; usuário de teste promovido a gestor só durante a verificação e devolvido; cenário removido.
+
 ## 2026-10-19 — Task 197: volume de trabalho por projeto (horas gastas × esperadas por mês)
 
 Pedido do autor: "faça a spec 197". Implementada como a spec define; as decisões marcadas como minhas na spec valeram.

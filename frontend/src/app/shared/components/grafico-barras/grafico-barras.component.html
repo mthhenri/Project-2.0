@@ -1,0 +1,37 @@
+<div #conteiner class="grafico-barras">
+  <svg
+    class="grafico-barras__svg"
+    role="img"
+    [attr.aria-label]="descricaoGeral()"
+    [attr.viewBox]="'0 0 ' + largura() + ' ' + altura()"
+    [attr.width]="largura()"
+    [attr.height]="altura()"
+  >
+    @for (marca of marcas(); track marca.valor) {
+      <line class="grafico-barras__grade" [attr.x1]="margem.esquerda" [attr.x2]="largura() - margem.direita" [attr.y1]="marca.y" [attr.y2]="marca.y" />
+      <text class="grafico-barras__marca" [attr.x]="margem.esquerda - 6" [attr.y]="marca.y" text-anchor="end" dominant-baseline="middle">{{ marca.valor }}{{ unidadeDoEixo() }}</text>
+    }
+
+    @for (categoria of categoriasDesenhadas(); track $index) {
+      <g class="grafico-barras__categoria">
+        <title>{{ categoria.descricao }}</title>
+        @for (barra of categoria.barras; track $index) {
+          <rect class="grafico-barras__barra" [class.grafico-barras__barra--destaque]="barra.destaque" [attr.x]="barra.x" [attr.y]="barra.y" [attr.width]="barra.largura" [attr.height]="barra.altura" [style.fill]="barra.cor" rx="2">
+            <title>{{ barra.descricao }}</title>
+          </rect>
+          @if (cabeRotulo(barra) && barra.rotulo) {
+            <text class="grafico-barras__valor" [class.grafico-barras__valor--destaque]="barra.destaque" [attr.x]="barra.x + barra.largura / 2" [attr.y]="barra.y - 5" text-anchor="middle">{{ barra.rotulo }}</text>
+          }
+        }
+        <text class="grafico-barras__rotulo" [attr.x]="categoria.centroX" [attr.y]="altura() - margem.inferior + 16" text-anchor="middle">{{ rotuloDoEixo(categoria) }}</text>
+      </g>
+    }
+
+    @if (linhaDeReferenciaY() !== null) {
+      <line class="grafico-barras__referencia" [attr.x1]="margem.esquerda" [attr.x2]="largura() - margem.direita" [attr.y1]="linhaDeReferenciaY()" [attr.y2]="linhaDeReferenciaY()" />
+      @if (rotuloLinhaReferencia()) {
+        <text class="grafico-barras__rotulo-referencia" [attr.x]="margem.esquerda + 4" [attr.y]="linhaDeReferenciaY()! - 4" text-anchor="start">{{ rotuloLinhaReferencia() }}</text>
+      }
+    }
+  </svg>
+</div>

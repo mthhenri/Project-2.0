@@ -1241,7 +1241,7 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 |---|---|
 | `autenticacao` | Login e geração de JWT |
 | `usuario` | CRUD de usuários, troca de senha (o pad é do módulo `anotacao`; `PUT /usuario/:id` é só de gestor e administrador, nem o desenvolvedor altera o próprio perfil) |
-| `projeto` | CRUD de projetos — apenas gestor cria. `GET /projeto/volume?ano&mes` (`@GestorOnly`, task 197): por projeto, os minutos das execuções **encerradas** do mês (pelo dia de `inicio_data` no fuso do sistema, o critério do relatório) e o `volumeEsperadoHorasMes`; declarada antes de `:id` |
+| `projeto` | CRUD de projetos — apenas gestor cria. `GET /projeto/volume?ano&mes` (`@GestorOnly`, task 197): por projeto, os minutos das execuções **encerradas** do mês (pelo dia de `inicio_data` no fuso do sistema, o critério do relatório) e o `volumeEsperadoHorasMes`; declarada antes de `:id`. `GET /projeto/volume/anual?ano` (`@GestorOnly`, task 199): o mesmo critério, mês a mês (12 posições por projeto) |
 | `demanda` | CRUD, hierarquia, grafo force-directed (D3), tags, atribuições |
 | `atividade` | CRUD de atividades vinculadas a demandas, tags, controle de status e **prioridade** (task 142: `prioridade` opcional na criação e na alteração, INDEFINIDA quando não vem; os DTOs de saída devolvem o objeto `{ codigo, descricao, ordem, cor }`; a listagem ordena por `ordem` e depois pela ordem de antes) |
 | `atividade-prioridade` | `GET /atividade-prioridade` (qualquer usuário autenticado, da mais para a menos urgente) e `PATCH /atividade-prioridade/:codigo` (`@AdministradorOnly`, só `cor` `#rrggbb`, gravada em minúsculas; `codigo`, `descricao` e `ordem` são fixos) |

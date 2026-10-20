@@ -5,6 +5,10 @@
     align-items: center;
     gap: 0.5rem;
     margin-bottom: 1.5rem;
+
+    p-selectbutton {
+      margin-right: 0.75rem;
+    }
   }
 
   &__conteudo {
@@ -18,35 +22,53 @@
     padding: 4rem 0;
   }
 
-  &__lista {
-    list-style: none;
-    margin: 0 0 1.5rem;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  &__linha {
-    display: grid;
-    grid-template-columns: minmax(14rem, 22rem) 1fr;
-    align-items: center;
-    gap: 1.5rem;
-    padding: 1rem 1.25rem;
+  &__cartao {
+    padding: 1rem 1.25rem 0.75rem;
     background: var(--app-surface-0);
     border: 1px solid var(--app-surface-200);
     border-radius: 8px;
+  }
 
-    &--estouro {
-      border-color: var(--p-red-300);
+  &__anual {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(28rem, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  &__legenda {
+    list-style: none;
+    margin: 0 0 0.5rem;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1.25rem;
+    font-size: 0.8125rem;
+    color: var(--p-text-muted-color);
+
+    li {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
     }
   }
 
-  &__projeto {
+  &__legenda-cor {
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 3px;
+
+    // "Cor do projeto" não é uma cor só: um degradê de exemplo deixa claro que cada projeto usa a sua.
+    &--projeto {
+      background: linear-gradient(135deg, var(--p-primary-500), var(--p-green-500));
+    }
+  }
+
+  &__cabecalho-projeto {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    min-width: 0;
+    margin-bottom: 0.5rem;
   }
 
   &__cor {
@@ -83,57 +105,14 @@
     }
   }
 
-  &__progresso {
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-    min-width: 0;
-  }
-
-  &__barra {
-    // A barra leva a cor do projeto; no estouro vira vermelha (mesmo critério de destaque do Planejamento).
-    ::ng-deep .p-progressbar .p-progressbar-value {
-      background: var(--cor-barra, var(--p-primary-color));
-    }
-
-    &--estouro ::ng-deep .p-progressbar .p-progressbar-value {
-      background: var(--p-red-500);
-    }
-  }
-
-  &__legenda {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 0.35rem;
-    font-size: 0.85rem;
-  }
-
-  &__gasto {
-    font-weight: 600;
-    color: var(--p-text-color);
-
-    &--estouro {
-      color: var(--p-red-500);
-    }
-  }
-
-  &__separador,
-  &__esperado,
-  &__percentual,
-  &__sem-volume {
+  &__esperado {
+    margin-left: auto;
+    font-size: 0.8125rem;
     color: var(--p-text-muted-color);
-  }
+    white-space: nowrap;
 
-  &__aviso-estouro {
-    color: var(--p-red-500);
-    font-weight: 600;
-  }
-
-  @media (max-width: 1100px) {
-    &__linha {
-      grid-template-columns: 1fr;
-      gap: 0.75rem;
+    &--vazio {
+      font-style: italic;
     }
   }
 }

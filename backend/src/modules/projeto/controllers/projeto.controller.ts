@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { ProjetoService } from '../services/projeto.service';
-import { ProjetoCriarDto, ProjetoListarDto, ProjetoAlterarDto, ProjetoVolumeListarDto } from '@project20/shared';
+import { ProjetoCriarDto, ProjetoListarDto, ProjetoAlterarDto, ProjetoVolumeListarDto, ProjetoVolumeAnualListarDto } from '@project20/shared';
 import { GestorOnly } from '../../autenticacao/decorators/gestor-only.decorator';
 import { ActiveUser } from '../../autenticacao/decorators/active-user.decorator';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
@@ -69,6 +69,16 @@ export class ProjetoController {
   @Get('volume')
   listarVolume(@Query() filtros: ProjetoVolumeListarDto) {
     return this.projetoService.listarVolume(filtros);
+  }
+
+  @ApiOperation({ summary: 'Volume de trabalho do ano por projeto, mês a mês (somente gestor)' })
+  @ApiResponse({ status: 200, description: 'Volume do ano listado com sucesso' })
+  @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+  @ApiResponse({ status: 403, description: 'Acesso restrito a gestores', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+  @GestorOnly()
+  @Get('volume/anual')
+  listarVolumeAnual(@Query() filtros: ProjetoVolumeAnualListarDto) {
+    return this.projetoService.listarVolumeAnual(filtros);
   }
 
   @ApiOperation({ summary: 'Recuperar projeto por ID' })

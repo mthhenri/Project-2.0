@@ -4,7 +4,7 @@ import { montarComponente, ComponenteMontado } from '../../../../../testes/monta
 import { esperarRequisicao, responderErro, responderSucesso } from '../../../../../testes/http-teste';
 import { ProjetoVolumeComponent } from './projeto-volume.component';
 
-// "Volume do mês" (task 197): horas gastas × esperadas por projeto, no mês escolhido (o atual por padrão).
+// "Volume" (tasks 197 e 199): horas gastas × esperadas por projeto, em gráfico de barras, mensal ou anual.
 
 type Montado = ComponenteMontado<ProjetoVolumeComponent>;
 
@@ -12,19 +12,32 @@ function item(projetoId: number, minutosGastos: number, volumeEsperadoHorasMes: 
   return { projetoId, nome: `Projeto ${projetoId}`, codigo: `P${projetoId}`, cor: '#336699', minutosGastos, volumeEsperadoHorasMes };
 }
 
+function itemAnual(projetoId: number, minutosGastosPorMes: number[], volumeEsperadoHorasMes: number | null) {
+  return { projetoId, nome: `Projeto ${projetoId}`, codigo: `P${projetoId}`, cor: '#336699', volumeEsperadoHorasMes, minutosGastosPorMes };
+}
+
+const ANO_SEM_EXECUCAO = new Array<number>(12).fill(0);
+
 async function montar(): Promise<Montado> {
   return montarComponente(ProjetoVolumeComponent, { usuario: TipoUsuarioEnum.GESTOR });
 }
 
-async function carregar(montado: Montado, itens: ReturnType<typeof item>[]): Promise<void> {
+async function carregarMensal(montado: Montado, itens: ReturnType<typeof item>[]): Promise<void> {
   responderSucesso(esperarRequisicao(montado.http, 'GET', '/projeto/volume'), itens);
   await montado.atualizar();
 }
 
-const texto = (montado: Montado) => (montado.elemento.textContent ?? '').replace(/\s+/g, ' ');
+async function irParaAnual(montado: Montado, itens: ReturnType<typeof itemAnual>[]): Promise<void> {
+  montado.componente.periodoControl.setValue('ANUAL');
+  responderSucesso(esperarRequisicao(montado.http, 'GET', '/projeto/volume/anual'), itens);
+  await montado.atualizar();
+}
 
-describe('ProjetoVolumeComponent', () => {
-  it('pede o mês atual, mostra o esqueleto e depois as linhas', async () => {
+const texto = (montado: Montado) => (montado.elemento.textContent ?? '').replace(/\s+/g, ' ');
+const barras = (montado: Montado) => montado.elemento.querySelectorAll('.grafico-barras__barra');
+
+describe('ProjetoVolumeComponent — mensal', () => {
+  it('abre no mensal do mês atual: esqueleto e depois o gráfico', async () => {
     const montado = await montar();
     expect(montado.elemento.querySelector('app-skeleton-lista')).not.toBeNull();
     const requisicao = esperarRequisicao(montado.http, 'GET', '/projeto/volume');
@@ -34,51 +47,43 @@ describe('ProjetoVolumeComponent', () => {
     responderSucesso(requisicao, [item(1, 720, 40)]);
     await montado.atualizar();
     expect(montado.elemento.querySelector('app-skeleton-lista')).toBeNull();
-    expect(texto(montado)).toContain('Projeto 1');
+    expect(montado.elemento.querySelector('app-grafico-barras')).not.toBeNull();
   });
 
-  it('12 h de 40 h: mostra as horas, o esperado e 30%, sem destaque de estouro', async () => {
+  it('desenha duas barras por projeto com esperado (gastas e esperadas) e uma sem esperado', async () => {
     const montado = await montar();
-    await carregar(montado, [item(1, 720, 40)]);
-    expect(texto(montado)).toContain('12h 0min');
+    await carregarMensal(montado, [item(1, 918, 40), item(2, 300, null)]);
+    expect(barras(montado)).toHaveLength(3);
+    expect(texto(montado)).toContain('15h 18min');
     expect(texto(montado)).toContain('40h 0min');
-    expect(texto(montado)).toContain('(30%)');
-    expect(montado.elemento.querySelector('.projeto-volume__linha--estouro')).toBeNull();
-    expect(montado.elemento.querySelector('p-progressbar')).not.toBeNull();
+    expect(texto(montado)).toContain('P1');
+    expect(texto(montado)).toContain('P2');
   });
 
-  it('sem volume esperado: só as horas, "sem volume definido" e nenhuma barra', async () => {
+  it('estouro: a barra de gastas fica vermelha e o tooltip avisa', async () => {
     const montado = await montar();
-    await carregar(montado, [item(1, 300, null)]);
-    expect(texto(montado)).toContain('5h 0min');
-    expect(texto(montado)).toContain('sem volume definido');
-    expect(montado.elemento.querySelector('p-progressbar')).toBeNull();
+    await carregarMensal(montado, [item(1, 150, 2)]);
+    const gastas = barras(montado)[0] as SVGRectElement;
+    expect(gastas.style.fill).toContain('--p-red-500');
+    expect(gastas.querySelector('title')?.textContent).toContain('acima do esperado');
   });
 
-  it('estouro (acima de 100%) é destacado e leva o aviso', async () => {
+  it('mês sem execução: barra de altura zero, sem erro', async () => {
     const montado = await montar();
-    await carregar(montado, [item(1, 50 * 60, 40)]);
-    expect(montado.elemento.querySelector('.projeto-volume__linha--estouro')).not.toBeNull();
-    expect(texto(montado)).toContain('(125%)');
-    expect(texto(montado)).toContain('acima do esperado');
-  });
-
-  it('mês sem execução mostra 0h', async () => {
-    const montado = await montar();
-    await carregar(montado, [item(1, 0, 40)]);
-    expect(texto(montado)).toContain('0h 0min');
-    expect(texto(montado)).toContain('(0%)');
+    await carregarMensal(montado, [item(1, 0, 40)]);
+    expect((barras(montado)[0] as SVGRectElement).getAttribute('height')).toBe('0');
   });
 
   it('sem projetos: estado vazio', async () => {
     const montado = await montar();
-    await carregar(montado, []);
+    await carregarMensal(montado, []);
     expect(texto(montado)).toContain('Nenhum projeto ainda');
+    expect(montado.elemento.querySelector('app-grafico-barras')).toBeNull();
   });
 
   it('mês anterior pede o mês anterior; o próximo e o "Mês atual" ficam desabilitados no mês atual e voltam a valer depois', async () => {
     const montado = await montar();
-    await carregar(montado, []);
+    await carregarMensal(montado, []);
     expect(montado.componente.visualizandoMesAtual()).toBe(true);
 
     montado.componente.retornarMes();
@@ -97,7 +102,7 @@ describe('ProjetoVolumeComponent', () => {
 
   it('escolher o mês no seletor pede aquele mês e mostra o primeiro dia dele', async () => {
     const montado = await montar();
-    await carregar(montado, []);
+    await carregarMensal(montado, []);
     montado.componente.mesControl.setValue(new Date(2026, 5, 15));
     const requisicao = esperarRequisicao(montado.http, 'GET', '/projeto/volume');
     expect([requisicao.request.params.get('ano'), requisicao.request.params.get('mes')]).toEqual(['2026', '6']);
@@ -107,7 +112,7 @@ describe('ProjetoVolumeComponent', () => {
 
   it('avançar no mês atual não faz nada (não há futuro)', async () => {
     const montado = await montar();
-    await carregar(montado, []);
+    await carregarMensal(montado, []);
     montado.componente.avancarMes();
     montado.http.expectNone((requisicao) => requisicao.url.endsWith('/projeto/volume'));
   });
@@ -120,8 +125,8 @@ describe('ProjetoVolumeComponent', () => {
     responderSucesso(segunda, [item(2, 60, null)]);
     responderSucesso(primeira, [item(1, 60, null)]);
     await montado.atualizar();
-    expect(texto(montado)).toContain('Projeto 2');
-    expect(texto(montado)).not.toContain('Projeto 1');
+    expect(texto(montado)).toContain('P2');
+    expect(texto(montado)).not.toContain('P1');
   });
 
   it('erro da API: sai do carregamento e avisa por toast', async () => {
@@ -132,5 +137,92 @@ describe('ProjetoVolumeComponent', () => {
     await montado.atualizar();
     expect(montado.elemento.querySelector('app-skeleton-lista')).toBeNull();
     expect(avisos).toHaveLength(1);
+  });
+});
+
+describe('ProjetoVolumeComponent — anual', () => {
+  it('trocar para Anual pede o ano atual e desenha um gráfico de doze barras por projeto', async () => {
+    const montado = await montar();
+    await carregarMensal(montado, []);
+    montado.componente.periodoControl.setValue('ANUAL');
+    const requisicao = esperarRequisicao(montado.http, 'GET', '/projeto/volume/anual');
+    expect(requisicao.request.params.get('ano')).toBe(String(montado.componente.hoje.getFullYear()));
+    responderSucesso(requisicao, [
+      itemAnual(1, [0, 0, 0, 0, 0, 0, 0, 0, 60, 918, 0, 0], 40),
+      itemAnual(2, ANO_SEM_EXECUCAO, null),
+    ]);
+    await montado.atualizar();
+    expect(montado.elemento.querySelectorAll('app-grafico-barras')).toHaveLength(2);
+    expect(barras(montado)).toHaveLength(24);
+    expect(texto(montado)).toContain('Jan');
+    expect(texto(montado)).toContain('Dez');
+    expect(texto(montado)).toContain('15h 18min');
+  });
+
+  it('a linha tracejada do esperado só aparece no projeto que tem volume definido', async () => {
+    const montado = await montar();
+    await carregarMensal(montado, []);
+    await irParaAnual(montado, [itemAnual(1, ANO_SEM_EXECUCAO, 40), itemAnual(2, ANO_SEM_EXECUCAO, null)]);
+    expect(montado.elemento.querySelectorAll('.grafico-barras__referencia')).toHaveLength(1);
+    expect(texto(montado)).toContain('sem volume definido');
+    expect(texto(montado)).toContain('40h por mês');
+  });
+
+  it('o mês acima do esperado fica vermelho e os outros não', async () => {
+    const montado = await montar();
+    await carregarMensal(montado, []);
+    await irParaAnual(montado, [itemAnual(1, [0, 0, 0, 0, 0, 0, 0, 0, 60, 3000, 0, 0], 40)]);
+    const vermelhas = Array.from(barras(montado)).filter((barra) => (barra as SVGRectElement).style.fill.includes('--p-red-500'));
+    expect(vermelhas).toHaveLength(1);
+  });
+
+  it('sem projetos no ano: estado vazio', async () => {
+    const montado = await montar();
+    await carregarMensal(montado, []);
+    await irParaAnual(montado, []);
+    expect(texto(montado)).toContain('Nenhum projeto ainda');
+  });
+
+  it('ano anterior pede o ano anterior; o próximo e o "Ano atual" ficam desabilitados no ano atual', async () => {
+    const montado = await montar();
+    await carregarMensal(montado, []);
+    await irParaAnual(montado, []);
+    expect(montado.componente.visualizandoAnoAtual()).toBe(true);
+
+    montado.componente.retornarAno();
+    const requisicao = esperarRequisicao(montado.http, 'GET', '/projeto/volume/anual');
+    expect(requisicao.request.params.get('ano')).toBe(String(montado.componente.hoje.getFullYear() - 1));
+    responderSucesso(requisicao, []);
+    await montado.atualizar();
+    expect(montado.componente.visualizandoAnoAtual()).toBe(false);
+
+    montado.componente.irParaAnoAtual();
+    esperarRequisicao(montado.http, 'GET', '/projeto/volume/anual');
+    expect(montado.componente.visualizandoAnoAtual()).toBe(true);
+  });
+
+  it('avançar no ano atual não faz nada, e escolher o ano no seletor pede aquele ano', async () => {
+    const montado = await montar();
+    await carregarMensal(montado, []);
+    await irParaAnual(montado, []);
+    montado.componente.avancarAno();
+    montado.http.expectNone((requisicao) => requisicao.url.endsWith('/projeto/volume/anual'));
+
+    montado.componente.anoControl.setValue(new Date(2024, 6, 10));
+    const requisicao = esperarRequisicao(montado.http, 'GET', '/projeto/volume/anual');
+    expect(requisicao.request.params.get('ano')).toBe('2024');
+    responderSucesso(requisicao, []);
+  });
+
+  it('voltar para Mensal pede o mês de novo, e resposta atrasada da outra visão não aparece', async () => {
+    const montado = await montar();
+    const mensalAtrasada = esperarRequisicao(montado.http, 'GET', '/projeto/volume');
+    montado.componente.periodoControl.setValue('ANUAL');
+    const anual = esperarRequisicao(montado.http, 'GET', '/projeto/volume/anual');
+    responderSucesso(anual, [itemAnual(7, ANO_SEM_EXECUCAO, null)]);
+    responderSucesso(mensalAtrasada, [item(9, 60, null)]);
+    await montado.atualizar();
+    expect(texto(montado)).toContain('Projeto 7');
+    expect(texto(montado)).not.toContain('P9');
   });
 });

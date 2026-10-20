@@ -11,6 +11,8 @@ import {
   ProjetoAlteradoDto,
   ProjetoVolumeListarDto,
   ProjetoVolumeResumoDto,
+  ProjetoVolumeAnualListarDto,
+  ProjetoVolumeAnualResumoDto,
   TipoUsuarioEnum,
   temPermissaoDeGestor,
 } from '@project20/shared';
@@ -20,6 +22,7 @@ import { ProjetoRestaurarDto, ProjetoRestauradoDto } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
 import { limitesDoMes } from '../domain/limites-do-mes';
+import { agruparVolumePorProjeto, limitesDoAno } from '../domain/volume-anual';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 
 @Injectable()
@@ -108,6 +111,15 @@ export class ProjetoService {
   async listarVolume(dto: ProjetoVolumeListarDto): Promise<StandardResponse<ProjetoVolumeResumoDto[]>> {
     const itens = await this.projetoRepositorio.listarVolume(limitesDoMes(dto.ano, dto.mes));
     return { sucesso: true, dados: itens, mensagem: 'Volume do mês listado com sucesso' };
+  }
+
+  /**
+   * Volume do ano (task 199): os minutos gastos em cada mês do ano por projeto, mais o volume esperado por mês. Gestor-only no controller;
+   * o ano vira o intervalo de datas aqui, o repository devolve projeto × mês e a service agrupa.
+   */
+  async listarVolumeAnual(dto: ProjetoVolumeAnualListarDto): Promise<StandardResponse<ProjetoVolumeAnualResumoDto[]>> {
+    const linhas = await this.projetoRepositorio.listarVolumePorMes(limitesDoAno(dto.ano));
+    return { sucesso: true, dados: agruparVolumePorProjeto(linhas), mensagem: 'Volume do ano listado com sucesso' };
   }
 
   /**

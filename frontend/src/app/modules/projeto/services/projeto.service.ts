@@ -14,6 +14,8 @@ import {
   ProjetoRestauradoDto,
   ProjetoVolumeListarDto,
   ProjetoVolumeResumoDto,
+  ProjetoVolumeAnualListarDto,
+  ProjetoVolumeAnualResumoDto,
 } from '@project20/shared';
 import { ambiente } from '../../../../environments/environment';
 import { comFeedbackProprio } from '../../../core/interceptors/loading.interceptor';
@@ -36,6 +38,12 @@ export class ProjetoService {
   listarVolume(filtros: ProjetoVolumeListarDto): Observable<StandardResponse<ProjetoVolumeResumoDto[]>> {
     const params = new HttpParams().set('ano', String(filtros.ano)).set('mes', String(filtros.mes));
     return this.httpClient.get<StandardResponse<ProjetoVolumeResumoDto[]>>(`${this.urlBase}/volume`, { params, ...comFeedbackProprio() });
+  }
+
+  /** Volume do ano por projeto, mês a mês (gestor). */
+  listarVolumeAnual(filtros: ProjetoVolumeAnualListarDto): Observable<StandardResponse<ProjetoVolumeAnualResumoDto[]>> {
+    const params = new HttpParams().set('ano', String(filtros.ano));
+    return this.httpClient.get<StandardResponse<ProjetoVolumeAnualResumoDto[]>>(`${this.urlBase}/volume/anual`, { params, ...comFeedbackProprio() });
   }
 
   criar(dto: ProjetoCriarDto): Observable<StandardResponse<ProjetoCriadoDto>> {

@@ -123,11 +123,11 @@ describe('ProjetoListagemPage — ações por tipo de usuário', () => {
   });
 });
 
-describe('ProjetoListagemPage — Volume do mês (task 197)', () => {
-  it('gestor vê o alternador e, ao escolher "Volume do mês", troca a listagem pela visão do volume', async () => {
+describe('ProjetoListagemPage — Volume (tasks 197 e 199)', () => {
+  it('gestor vê o alternador e, ao escolher "Volume", troca a listagem pela visão do volume', async () => {
     const montado = await montarListagem(TipoUsuarioEnum.GESTOR);
     await carregar(montado, [projeto(1, 'Alfa')]);
-    expect(texto(montado)).toContain('Volume do mês');
+    expect(texto(montado)).toContain('Volume');
     expect(montado.elemento.querySelector('app-projeto-volume')).toBeNull();
 
     montado.componente.aoMudarVisao('VOLUME');
@@ -144,7 +144,7 @@ describe('ProjetoListagemPage — Volume do mês (task 197)', () => {
   it('desenvolvedor não vê o alternador nem a visão do volume', async () => {
     const montado = await montarListagem(TipoUsuarioEnum.DESENVOLVEDOR);
     await carregar(montado, [projeto(1, 'Alfa')]);
-    expect(texto(montado)).not.toContain('Volume do mês');
+    expect(texto(montado)).not.toContain('Volume');
     expect(montado.elemento.querySelector('app-projeto-volume')).toBeNull();
   });
 });

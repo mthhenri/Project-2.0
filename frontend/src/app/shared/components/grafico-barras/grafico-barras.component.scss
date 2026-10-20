@@ -1,0 +1,59 @@
+.grafico-barras {
+  width: 100%;
+
+  &__svg {
+    display: block;
+    max-width: 100%;
+    font-family: inherit;
+  }
+
+  &__grade {
+    stroke: var(--app-surface-200);
+    stroke-width: 1;
+  }
+
+  &__marca,
+  &__rotulo {
+    fill: var(--p-text-muted-color);
+    font-size: 11px;
+  }
+
+  &__rotulo {
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  &__valor {
+    fill: var(--p-text-color);
+    font-size: 11px;
+    font-weight: 600;
+
+    &--destaque {
+      fill: var(--p-red-500);
+    }
+  }
+
+  &__barra {
+    transition: opacity 0.15s ease;
+
+    &:hover {
+      opacity: 0.85;
+    }
+
+    &--destaque {
+      stroke: var(--p-red-900);
+      stroke-width: 2;
+    }
+  }
+
+  &__referencia {
+    stroke: var(--p-text-muted-color);
+    stroke-width: 1.5;
+    stroke-dasharray: 5 4;
+  }
+
+  &__rotulo-referencia {
+    fill: var(--p-text-muted-color);
+    font-size: 11px;
+  }
+}

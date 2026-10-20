@@ -65,11 +65,11 @@ export class ProjetoListagemPage implements OnInit {
 
   readonly termoBusca = signal<string>('');
   readonly statusFiltro = signal<TipoProjetoStatusEnum | null>(null);
-  /** "Volume do mês" é só do gestor (task 197); o estado fica na URL (`visao=volume`) como a busca e o status. */
+  /** "Volume" é só do gestor (tasks 197 e 199); o estado fica na URL (`visao=volume`) como a busca e o status. */
   readonly visao = signal<VisaoProjetos>('PROJETOS');
   readonly opcoesVisao = [
     { rotulo: 'Projetos', valor: 'PROJETOS' as VisaoProjetos },
-    { rotulo: 'Volume do mês', valor: 'VOLUME' as VisaoProjetos },
+    { rotulo: 'Volume', valor: 'VOLUME' as VisaoProjetos },
   ];
   itensMenu: MenuItem[] = [];
 
