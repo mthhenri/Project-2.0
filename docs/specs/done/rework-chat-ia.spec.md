@@ -1,5 +1,10 @@
 # rework-chat-ia.spec.md
 
+> **Concluída em 2026-10-20.** As 51 tasks da tabela (118–170, com a 154 absorvida pela 159) estão em `docs/specs/done/`; as verificações
+> ao vivo ficaram nas próprias tasks (`HISTORY.md`). O critério de "fluxos ponta a ponta com a IA ligada e desligada" não teve uma rodada única
+> própria: vale pelas verificações de cada task e pelas de 2026-10-19 e 20 (chat do desenvolvedor e do gestor, com a IA no ar). O texto abaixo segue
+> como estava; o que virou ideia está em `docs/context/IDEAS.md`. Movida junto com `rework-chat-ia/modelagem.md`.
+
 > Guarda-chuva do rework que transforma o dia a dia do Project 2.0 em uma conversa com IA.
 > Origem: discussão de produto com o autor em 2026-10-17. **Não é uma task implementável**: é a
 > spec proprietária da visão, das decisões e da modelagem. O trabalho será quebrado em tasks

@@ -1,6 +1,6 @@
 # Task 141 — Chat: histórico de conversas e refinos visuais
 
-> Origem: pedido do autor depois da task 139 ([`rework-chat-ia.spec.md`](../backlog/rework-chat-ia.spec.md), bloco 5, extensão). Usa o
+> Origem: pedido do autor depois da task 139 ([`rework-chat-ia.spec.md`](rework-chat-ia.spec.md), bloco 5, extensão). Usa o
 > número 141 porque era o próximo livre; os blocos 6, 7, 9 e 10 serão numerados a partir da 142.
 
 ## Objetivo

@@ -1,6 +1,6 @@
 # Task 194 — Desfazer da proposta no lado oposto e com prazo
 
-> Origem: ideia I-009 (anotações do autor, 2026-10-19). Guarda-chuva [`rework-chat-ia.spec.md`](../backlog/rework-chat-ia.spec.md), bloco 5.
+> Origem: ideia I-009 (anotações do autor, 2026-10-19). Guarda-chuva [`rework-chat-ia.spec.md`](rework-chat-ia.spec.md), bloco 5.
 
 ## Decisões (minhas, a confirmar com o autor)
 

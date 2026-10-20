@@ -1,6 +1,6 @@
 # Task 193 — Chip de nível da IA ao lado do horário
 
-> Origem: ideia I-008 (anotações do autor, 2026-10-19). Guarda-chuva [`rework-chat-ia.spec.md`](../backlog/rework-chat-ia.spec.md), bloco 5 (chat).
+> Origem: ideia I-008 (anotações do autor, 2026-10-19). Guarda-chuva [`rework-chat-ia.spec.md`](rework-chat-ia.spec.md), bloco 5 (chat).
 
 ## Objetivo
 

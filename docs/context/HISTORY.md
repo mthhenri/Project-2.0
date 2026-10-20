@@ -12,6 +12,14 @@
 
 ---
 
+## 2026-10-20 — Guarda-chuva `rework-chat-ia` movido para `done/`
+
+Pedido do autor ("sim", ao oferecer conferir). Conferido: as 51 tasks da tabela do guarda-chuva (118–124, 125–128, 129–133, 134, 135–141, 142–148, 149–152, 153–156, 157–158, 159–161 e 164–170) estão em `docs/specs/done/`, e os blocos 1 a 10 já constavam como concluídos no `CONTEXT.md`.
+
+- **Movidos para `done/`:** `rework-chat-ia.spec.md` e `rework-chat-ia/modelagem.md`; o `docs/specs/backlog/` ficou **vazio**.
+- **Nota de fecho:** no topo da spec, sem reescrever o corpo, com o limite honesto de que o critério "fluxos ponta a ponta com a IA ligada e desligada" não teve rodada única própria (vale pelas verificações de cada task e pelas de 2026-10-19 e 20, com a IA no ar). Os ponteiros das specs 141, 193 e 194 e o trecho do `CLAUDE.md`/`AGENTS.md` (espelho idêntico) sobre o backlog foram ajustados.
+- **Enviado ao remoto na mesma sessão:** os 7 commits anteriores (`17c66b7..fc33648`, fast-forward na `master`).
+
 ## 2026-10-20 — Revisão de UI/UX: guarda-chuva, índice e material movidos para `done/`
 
 Pedido do autor: "aquelas specs do ajuste visual que estão no backlog já podem ir para concluído, não?". Conferido: as 24 tasks (94–117) estão em `docs/specs/done/` (as seis descartadas em 2026-10-16 foram reativadas e implementadas) e o critério do guarda-chuva, "o índice não lista pendência", vale; o próprio guarda-chuva dizia que ia para `done/` junto com a pasta `revisao-ui-ux/` quando a última task terminasse.
