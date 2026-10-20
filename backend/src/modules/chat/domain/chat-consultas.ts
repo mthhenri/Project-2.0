@@ -178,3 +178,90 @@ export function limparTitulo(bruto: string): string {
     .replace(/\s+/g, ' ');
   return semDecoracao.length > LIMITE_TITULO ? `${semDecoracao.slice(0, LIMITE_TITULO - 1).trimEnd()}…` : semDecoracao;
 }
+
+/**
+ * O recorte da soma de tokens (task 202): do dia `dataInicio` ao `dataFim` (`yyyy-mm-dd`, extremos inclusos), no fuso do sistema, agrupado
+ * por dia ou por mês. É o que a aba "Custos" soma: toda mensagem que tem modelo e tokens gravados, de qualquer usuário e contexto.
+ */
+export interface ConsultaTokens {
+  dataInicio: string;
+  dataFim: string;
+  porMes: boolean;
+  fusoHorario: string;
+}
+
+/** Os tokens de um modelo num período: `yyyy-mm-dd` (por dia) ou `yyyy-mm` (por mês). `mensagens` conta as mensagens que os gastaram. */
+export interface TokensSomados {
+  periodo: string;
+  modelo: string;
+  mensagens: number;
+  tokensEntrada: number;
+  tokensSaida: number;
+  tokensCache: number;
+}
+
+/** Um período da agregação de tokens (`date_histogram`), com um balde por modelo dentro. */
+export interface BaldeTokensPorPeriodo {
+  key_as_string: string;
+  modelos: {
+    buckets: { key: string; doc_count: number; entrada: { value: number | null }; saida: { value: number | null }; cache: { value: number | null } }[];
+  };
+}
+
+/** O dia seguinte a `yyyy-mm-dd`: o limite exclusivo do intervalo (evita depender de como cada serviço arredonda `lte` de uma data sem hora). */
+export function diaSeguinte(dia: string): string {
+  const data = new Date(`${dia}T00:00:00Z`);
+  data.setUTCDate(data.getUTCDate() + 1);
+  return data.toISOString().slice(0, 10);
+}
+
+/** A soma de tokens por período e modelo: só mensagens com modelo e tokens, no fuso do sistema. Limite de 50 modelos por período. */
+export function montarConsultaTokens(consulta: ConsultaTokens) {
+  return {
+    size: 0,
+    query: {
+      bool: {
+        filter: [
+          { exists: { field: 'tokens_entrada' } },
+          { exists: { field: 'modelo' } },
+          { range: { created_date: { gte: consulta.dataInicio, lt: diaSeguinte(consulta.dataFim), format: 'yyyy-MM-dd', time_zone: consulta.fusoHorario } } },
+        ],
+      },
+    },
+    aggs: {
+      periodos: {
+        date_histogram: {
+          field: 'created_date',
+          calendar_interval: consulta.porMes ? 'month' : 'day',
+          format: consulta.porMes ? 'yyyy-MM' : 'yyyy-MM-dd',
+          time_zone: consulta.fusoHorario,
+          min_doc_count: 1,
+        },
+        aggs: {
+          modelos: {
+            terms: { field: 'modelo', size: 50 },
+            aggs: {
+              entrada: { sum: { field: 'tokens_entrada' } },
+              saida: { sum: { field: 'tokens_saida' } },
+              cache: { sum: { field: 'tokens_cache' } },
+            },
+          },
+        },
+      },
+    },
+  };
+}
+
+/** Os baldes da agregação viram uma linha por período e modelo (soma nula, de campo ausente, vale zero). */
+export function deBaldesDeTokens(baldes: BaldeTokensPorPeriodo[]): TokensSomados[] {
+  return baldes.flatMap((periodo) =>
+    periodo.modelos.buckets.map((modelo) => ({
+      periodo: periodo.key_as_string,
+      modelo: modelo.key,
+      mensagens: modelo.doc_count,
+      tokensEntrada: modelo.entrada.value ?? 0,
+      tokensSaida: modelo.saida.value ?? 0,
+      tokensCache: modelo.cache.value ?? 0,
+    })),
+  );
+}

@@ -96,6 +96,28 @@ export function registrarContratoDeArmazenamento(
       assert.deepEqual(await armazenamento.listarConversas({ usuarioId: outro }), []);
     });
 
+    it('soma os tokens gravados por dia e por modelo, só de mensagem com modelo e tokens, no fuso do sistema (task 202)', async () => {
+      const modelo = `modelo-contrato-${dono}`;
+      await armazenamento.gravar(mensagem('Resposta 1', { autor: AutorChatEnum.IA, modelo, tokensEntrada: 100, tokensSaida: 10, tokensCache: 5 }));
+      await armazenamento.gravar(mensagem('Resposta 2', { autor: AutorChatEnum.IA, modelo, tokensEntrada: 50, tokensSaida: 4, tokensCache: 0 }));
+      await armazenamento.gravar(mensagem('Sem tokens', { autor: AutorChatEnum.IA, modelo }));
+      await armazenamento.gravar(mensagem('Do usuário'));
+      const ontem = new Date(Date.now() - 24 * 3_600_000).toISOString().slice(0, 10);
+      const amanha = new Date(Date.now() + 24 * 3_600_000).toISOString().slice(0, 10);
+
+      const porDia = (await armazenamento.somarTokens({ dataInicio: ontem, dataFim: amanha, porMes: false, fusoHorario: 'UTC' })).filter((linha) => linha.modelo === modelo);
+      assert.equal(porDia.length, 1);
+      assert.deepEqual([porDia[0].mensagens, porDia[0].tokensEntrada, porDia[0].tokensSaida, porDia[0].tokensCache], [2, 150, 14, 5]);
+      assert.match(porDia[0].periodo, /^\d{4}-\d{2}-\d{2}$/);
+
+      const porMes = (await armazenamento.somarTokens({ dataInicio: ontem, dataFim: amanha, porMes: true, fusoHorario: 'UTC' })).filter((linha) => linha.modelo === modelo);
+      assert.equal(porMes.length, 1);
+      assert.match(porMes[0].periodo, /^\d{4}-\d{2}$/);
+
+      const foraDoRecorte = await armazenamento.somarTokens({ dataInicio: '2000-01-01', dataFim: '2000-01-31', porMes: false, fusoHorario: 'UTC' });
+      assert.equal(foraDoRecorte.filter((linha) => linha.modelo === modelo).length, 0);
+    });
+
     it('guarda e troca o título da conversa, só para o dono, e quem não tem título não aparece', async () => {
       assert.deepEqual(await armazenamento.listarTitulos({ usuarioId: dono, conversaIds: [] }), {});
       await armazenamento.gravarTitulo({ conversaId, usuarioId: dono, titulo: 'Descrição do cadastro', editado: false });

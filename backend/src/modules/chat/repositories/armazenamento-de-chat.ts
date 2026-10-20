@@ -1,7 +1,17 @@
 import { Knex } from 'knex';
 import { ConfigService } from '../../../config/config.service';
 import { DATABASE_CONNECTION } from '../../../core/database/database.provider';
-import { BaldeConversa, ConsultaBusca, ConsultaConversa, ConsultaConversas, ConsultaTitulos, TituloDaConversa, TituloParaGravar } from '../domain/chat-consultas';
+import {
+  BaldeConversa,
+  ConsultaBusca,
+  ConsultaConversa,
+  ConsultaConversas,
+  ConsultaTitulos,
+  ConsultaTokens,
+  TituloDaConversa,
+  TituloParaGravar,
+  TokensSomados,
+} from '../domain/chat-consultas';
 import { ChatMensagemLida, ChatMensagemNova } from '../domain/chat-mensagem.documento';
 import { ChatMensagemElasticsearchRepository, criarClienteElasticsearchChat } from './chat-mensagem-elasticsearch.repository';
 import { ChatMensagemOpenSearchRepository, criarClienteOpenSearchChat } from './chat-mensagem-opensearch.repository';
@@ -24,6 +34,8 @@ export interface ArmazenamentoDeChat {
   listarTitulos(consulta: ConsultaTitulos): Promise<Record<string, TituloDaConversa>>;
   /** Busca textual (sem acento, todas as palavras) nas mensagens do próprio usuário, mais relevantes primeiro. */
   buscar(consulta: ConsultaBusca): Promise<ChatMensagemLida[]>;
+  /** Os tokens gravados nas mensagens (de qualquer usuário), somados por dia ou mês e por modelo: a base da aba "Custos" (task 202). */
+  somarTokens(consulta: ConsultaTokens): Promise<TokensSomados[]>;
 }
 
 export const ARMAZENAMENTO_DE_CHAT = 'ARMAZENAMENTO_DE_CHAT';

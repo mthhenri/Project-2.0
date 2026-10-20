@@ -185,3 +185,36 @@ testarComBanco('mensagem excluída (soft delete) some da leitura, da busca e das
   assert.deepEqual(await repositorio.buscar({ usuarioId: dono.id, texto: 'cadastro' }), []);
   assert.deepEqual(await repositorio.listarConversas({ usuarioId: dono.id }), []);
 });
+
+testarComBanco('somarTokens: soma por dia e por modelo só as mensagens com modelo e tokens, de qualquer usuário, no fuso pedido, sem as excluídas (task 202)', async (conexao) => {
+  const { dono, outro, mensagem } = await cenario(conexao);
+  const repositorio = repositorioDe(conexao);
+  const gravarEm = async (instante: string, extras: Partial<ChatMensagemNova>, usuarioId = dono.id) => {
+    const gravada = await repositorio.gravar({ ...mensagem('resposta', { autor: AutorChatEnum.IA, ...extras }), usuarioId });
+    await conexao.raw('UPDATE chat_mensagem SET created_date = CAST(:instante AS timestamptz) WHERE mensagem_id = CAST(:id AS uuid)', { instante, id: gravada.id });
+    return gravada;
+  };
+  // 2031-03-06 01:30 UTC ainda é dia 5 em São Paulo (UTC-3): o fuso decide o dia.
+  await gravarEm('2031-03-05T15:00:00Z', { modelo: 'modelo-soma-a', tokensEntrada: 100, tokensSaida: 10, tokensCache: 5 });
+  await gravarEm('2031-03-06T01:30:00Z', { modelo: 'modelo-soma-a', tokensEntrada: 50, tokensSaida: 1, tokensCache: 0 });
+  await gravarEm('2031-03-05T16:00:00Z', { modelo: 'modelo-soma-b', tokensEntrada: 1, tokensSaida: 1, tokensCache: 1 }, outro.id);
+  await gravarEm('2031-03-20T12:00:00Z', { modelo: 'modelo-soma-a', tokensEntrada: 7, tokensSaida: 0, tokensCache: 0 });
+  await gravarEm('2031-04-01T12:00:00Z', { modelo: 'modelo-soma-a', tokensEntrada: 999, tokensSaida: 0, tokensCache: 0 });
+  await gravarEm('2031-03-07T12:00:00Z', { modelo: 'modelo-soma-a' }); // sem tokens: fica de fora
+  await gravarEm('2031-03-08T12:00:00Z', { tokensEntrada: 3, tokensSaida: 3, tokensCache: 3 }); // sem modelo: fica de fora
+  const excluida = await gravarEm('2031-03-09T12:00:00Z', { modelo: 'modelo-soma-a', tokensEntrada: 500, tokensSaida: 0, tokensCache: 0 });
+  await conexao.raw('UPDATE chat_mensagem SET is_deleted = true, deleted_date = NOW() WHERE mensagem_id = CAST(:id AS uuid)', { id: excluida.id });
+
+  const porDia = (await repositorio.somarTokens({ dataInicio: '2031-03-01', dataFim: '2031-03-31', porMes: false, fusoHorario: 'America/Sao_Paulo' })).filter((linha) => linha.modelo.startsWith('modelo-soma-'));
+  const linha = (periodo: string, modelo: string) => porDia.find((item) => item.periodo === periodo && item.modelo === modelo);
+  assert.equal(porDia.length, 3);
+  assert.deepEqual([linha('2031-03-05', 'modelo-soma-a')?.mensagens, linha('2031-03-05', 'modelo-soma-a')?.tokensEntrada, linha('2031-03-05', 'modelo-soma-a')?.tokensSaida, linha('2031-03-05', 'modelo-soma-a')?.tokensCache], [2, 150, 11, 5]);
+  assert.equal(linha('2031-03-05', 'modelo-soma-b')?.tokensEntrada, 1);
+  assert.equal(linha('2031-03-20', 'modelo-soma-a')?.tokensEntrada, 7);
+
+  const emUtc = (await repositorio.somarTokens({ dataInicio: '2031-03-06', dataFim: '2031-03-06', porMes: false, fusoHorario: 'UTC' })).filter((item) => item.modelo === 'modelo-soma-a');
+  assert.deepEqual(emUtc.map((item) => [item.periodo, item.tokensEntrada]), [['2031-03-06', 50]]);
+
+  const porMes = (await repositorio.somarTokens({ dataInicio: '2031-01-01', dataFim: '2031-12-31', porMes: true, fusoHorario: 'America/Sao_Paulo' })).filter((item) => item.modelo === 'modelo-soma-a');
+  assert.deepEqual(porMes.map((item) => [item.periodo, item.tokensEntrada]).sort(), [['2031-03', 157], ['2031-04', 999]]);
+});

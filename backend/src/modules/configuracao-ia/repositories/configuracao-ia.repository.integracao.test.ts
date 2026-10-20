@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { ConfiguracaoIaCriarDto, EsforcoIaEnum, ModoContextoChatEnum, TipoProvedorIaEnum } from '@project20/shared';
+import { ConfiguracaoIaCriarDto, EsforcoIaEnum, IaModeloPrecoDto, ModoContextoChatEnum, TipoProvedorIaEnum } from '@project20/shared';
 import { testarComBanco, obterConexaoBancoTeste, ConexaoTeste } from '../../../testes/banco-teste';
 import { criarRepositorio } from '../../../testes/criar-repositorio';
 import { criarAdministrador } from '../../../testes/fabricas';
@@ -143,4 +143,42 @@ test('inserirNovaVersao espera o lock consultivo e só grava depois que a outra 
   } finally {
     await pendente?.catch(() => undefined);
   }
+});
+
+// Preços por modelo no JSONB `precos_modelo` (task 202, migration 0048): vivem na versão ativa e são copiados para a versão seguinte.
+
+const PRECO_A = { modelo: 'modelo-preco-a', precoEntradaMilhao: 3, precoSaidaMilhao: 15, precoCacheMilhao: 0.3 };
+const doModelo = (precos: IaModeloPrecoDto[], modelo: string) => precos.find((preco) => preco.modelo === modelo);
+
+testarComBanco('alterarPrecoDaVersaoAtiva cria o preço do modelo, troca na segunda vez e não cria versão', async (conexao) => {
+  const repositorio = repositorioDe(conexao);
+  const versaoAntes = (await repositorio.recuperarAtiva())!;
+
+  assert.deepEqual(await repositorio.alterarPrecoDaVersaoAtiva(PRECO_A), PRECO_A);
+  assert.deepEqual(doModelo(await repositorio.listarPrecos(), 'modelo-preco-a'), PRECO_A);
+
+  await repositorio.alterarPrecoDaVersaoAtiva({ ...PRECO_A, precoEntradaMilhao: 4.5, precoCacheMilhao: 0.45 });
+  const trocado = (await repositorio.listarPrecos()).filter((preco) => preco.modelo === 'modelo-preco-a');
+  assert.deepEqual(trocado, [{ modelo: 'modelo-preco-a', precoEntradaMilhao: 4.5, precoSaidaMilhao: 15, precoCacheMilhao: 0.45 }]);
+
+  const versaoDepois = (await repositorio.recuperarAtiva())!;
+  assert.equal(versaoDepois.id, versaoAntes.id);
+  assert.equal(versaoDepois.versao, versaoAntes.versao);
+});
+
+testarComBanco('inserirNovaVersao copia os preços da versão anterior; a anterior continua com os dela', async (conexao) => {
+  const administrador = await criarAdministrador(conexao);
+  const repositorio = repositorioDe(conexao);
+  await repositorio.alterarPrecoDaVersaoAtiva(PRECO_A);
+  const anterior = (await repositorio.recuperarAtiva())!;
+
+  const nova = await repositorio.inserirNovaVersao(NOVA, administrador.id);
+  assert.notEqual(nova.id, anterior.id);
+  assert.deepEqual(doModelo(await repositorio.listarPrecos(), 'modelo-preco-a'), PRECO_A);
+
+  // Trocar o preço agora altera só a versão ativa (a nova).
+  await repositorio.alterarPrecoDaVersaoAtiva({ ...PRECO_A, precoSaidaMilhao: 20 });
+  const { rows } = await conexao.raw('SELECT precos_modelo -> \'modelo-preco-a\' ->> \'precoSaidaMilhao\' AS saida FROM configuracao_ia WHERE id = :id', { id: anterior.id });
+  assert.equal(Number(rows[0].saida), 15);
+  assert.equal(doModelo(await repositorio.listarPrecos(), 'modelo-preco-a')?.precoSaidaMilhao, 20);
 });

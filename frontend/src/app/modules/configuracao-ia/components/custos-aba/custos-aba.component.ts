@@ -19,9 +19,9 @@ type RecorteDeCusto = 'MENSAL' | 'ANUAL';
 type FormularioDePreco = FormGroup<{ entrada: FormControl<number>; saida: FormControl<number>; cache: FormControl<number> }>;
 
 /**
- * Aba "Custos" das Configurações da IA (task 201, exclusiva de administrador): quanto a IA gastou no mês ou no ano (chamadas, tokens e
- * custo estimado em dólar), por modelo e ao longo do período, e o preço de cada modelo (dólar por milhão de tokens), que o administrador
- * mantém aqui. O custo é uma estimativa: tokens medidos pelo provedor × o preço cadastrado. Análogo visual: o Volume dos projetos.
+ * Aba "Custos" das Configurações da IA (task 201, exclusiva de administrador): quanto a IA gastou no mês ou no ano (mensagens do chat,
+ * tokens e custo estimado em dólar, task 202), por modelo e ao longo do período, e o preço de cada modelo (dólar por milhão de tokens), que o administrador
+ * mantém aqui. O custo é uma estimativa: tokens gravados nas mensagens do chat × o preço cadastrado. Análogo visual: o Volume dos projetos.
  */
 @Component({
   selector: 'app-custos-aba',
@@ -75,7 +75,7 @@ export class CustosAbaComponent implements OnInit {
       : this.ano() === this.hoje.getFullYear(),
   );
   readonly categorias = computed(() => montarCategoriasDeCusto(this.consulta()?.periodos ?? []));
-  readonly temUso = computed(() => (this.consulta()?.totais.chamadas ?? 0) > 0);
+  readonly temUso = computed(() => (this.consulta()?.totais.mensagens ?? 0) > 0);
 
   readonly formatarDolar = formatarDolar;
   readonly formatarTokens = formatarTokens;

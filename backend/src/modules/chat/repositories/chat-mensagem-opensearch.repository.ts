@@ -1,6 +1,6 @@
 import { Client } from '@opensearch-project/opensearch';
 import { ConfiguracaoOpenSearch } from '../../../config/config.interface';
-import { BaldeConversa } from '../domain/chat-consultas';
+import { BaldeConversa, BaldeTokensPorPeriodo } from '../domain/chat-consultas';
 import { ChatMensagemFonte } from '../domain/chat-mensagem.documento';
 import { ChatConversaFonte, ChatMensagemIndiceRepository, ResultadoDaPesquisa } from './chat-mensagem-indice.repository';
 
@@ -13,7 +13,7 @@ export interface ClienteOpenSearchChat {
   };
   index(parametros: { index: string; id: string; body: unknown; refresh: 'wait_for' }): Promise<unknown>;
   search(parametros: { index: string; body: unknown }): Promise<{
-    body: { hits: { hits: { _source: ChatMensagemFonte & Partial<ChatConversaFonte> }[] }; aggregations?: { conversas?: { buckets: BaldeConversa[] } } };
+    body: { hits: { hits: { _source: ChatMensagemFonte & Partial<ChatConversaFonte> }[] }; aggregations?: { conversas?: { buckets: BaldeConversa[] }; periodos?: { buckets: BaldeTokensPorPeriodo[] } } };
   }>;
 }
 
@@ -51,6 +51,6 @@ export class ChatMensagemOpenSearchRepository extends ChatMensagemIndiceReposito
 
   protected async pesquisar(indice: string, consulta: unknown): Promise<ResultadoDaPesquisa> {
     const { body } = await this.cliente.search({ index: indice, body: consulta });
-    return { fontes: body.hits.hits.map((acerto) => acerto._source), baldes: body.aggregations?.conversas?.buckets ?? [] };
+    return { fontes: body.hits.hits.map((acerto) => acerto._source), baldes: body.aggregations?.conversas?.buckets ?? [], periodosDeTokens: body.aggregations?.periodos?.buckets ?? [] };
   }
 }

@@ -2,8 +2,6 @@ import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
 import { ConfiguracaoIaResumoDto, EsforcoIaEnum, EstadoIaEnum, ModoContextoChatEnum, NivelIaEnum, TipoProvedorIaEnum } from '@project20/shared';
 import { ConfiguracaoIaService } from '../../configuracao-ia/services/configuracao-ia.service';
-import { IaUsoRegistrarDto } from '@project20/shared';
-import { IaCustoService } from '../../ia-custo/services/ia-custo.service';
 import { IaException } from '../domain/ia.exception';
 import { IaProvedor } from '../domain/ia-provedor';
 import { IaRespostaProvedor, IaSolicitacaoProvedor } from '../domain/ia.tipos';
@@ -41,9 +39,7 @@ function criar(parcial: Partial<ConfiguracaoIaResumoDto> = {}, opcoes: { disponi
   };
   const configuracaoIaService = { obterAtiva: async () => estado.atual } as unknown as ConfiguracaoIaService;
   const provedores: IaProvedores = { [TipoProvedorIaEnum.ANTHROPIC]: provedor };
-  const usosRegistrados: IaUsoRegistrarDto[] = [];
-  const iaCustoService = { registrarUso: async (uso: IaUsoRegistrarDto) => void usosRegistrados.push(uso) } as unknown as IaCustoService;
-  return { servico: new IaService(configuracaoIaService, iaCustoService, provedores), estado, chamadas, usosRegistrados };
+  return { servico: new IaService(configuracaoIaService, provedores), estado, chamadas };
 }
 
 function resposta(modelo: string): IaRespostaProvedor {
@@ -176,18 +172,4 @@ test('turnos simultâneos pelo mesmo serviço não misturam o que cada um gastou
   ]);
   assert.deepEqual([primeiro.nivel, primeiro.tokens.entrada], [NivelIaEnum.ANALITICO, 1]);
   assert.deepEqual([segundo.nivel, segundo.tokens.entrada], [NivelIaEnum.RAPIDO, 2]);
-});
-
-test('toda chamada bem-sucedida grava o uso do modelo que respondeu; a que falha, não (custo, task 201)', async () => {
-  const bemSucedida = criar();
-  await bemSucedida.servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.PADRAO });
-  await bemSucedida.servico.transmitir({ ...PEDIDO, nivel: NivelIaEnum.ANALITICO }, () => undefined);
-  assert.deepEqual(bemSucedida.usosRegistrados, [
-    { modelo: 'sonnet', tokensEntrada: 1, tokensSaida: 1, tokensCache: 0 },
-    { modelo: 'opus', tokensEntrada: 1, tokensSaida: 1, tokensCache: 0 },
-  ]);
-
-  const falha = criar({}, { falha: new IaException('INDISPONIVEL', 'fora') });
-  await assert.rejects(() => falha.servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.RAPIDO }));
-  assert.deepEqual(falha.usosRegistrados, []);
 });

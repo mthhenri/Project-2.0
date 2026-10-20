@@ -140,7 +140,7 @@
 - **Ideia:** além do custo por modelo e por dia, mostrar quanto cada pessoa e cada origem (chat, check-in, assistente de descrição, relatório, nomeação) gastou; e guardar o preço vigente de cada época, para trocar um preço não recalcular o passado.
 - **Origem:** task 201 (aba Custos); ficou fora do escopo de propósito.
 - **Por quê:** hoje trocar o preço de um modelo muda o custo de tudo o que já foi registrado, e não dá para saber quem ou o que mais gasta.
-- **Custo aparente:** `ia_uso` ganha `usuario_id` e origem (o `IaService` não conhece o usuário: viria do `TurnoIa`/contexto da requisição), tabela de preço com vigência e mais um corte na aba.
+- **Custo aparente:** o corte por pessoa já existe nas mensagens (`usuario_id`) e é um filtro a mais em `somarTokens`; a origem exige gravar a origem na mensagem; o preço com vigência vira um histórico dentro de `configuracao_ia.precos_modelo` (hoje o preço é único e retroativo, task 202).
 
 ### I-017 — Avisar o desenvolvedor quando o gestor consulta a conversa dele pela IA · chat IA/gestor
 
@@ -148,3 +148,10 @@
 - **Origem:** task 201; a decisão de não avisar foi minha e está marcada a confirmar.
 - **Por quê:** transparência sobre um acesso sensível a conversas pessoais de trabalho.
 - **Custo aparente:** uma tabela de acessos, a escrita nas três ferramentas e um ponto de exibição para o desenvolvedor (por exemplo, no histórico do chat).
+
+### I-018 — Custo exato por modelo e custo do que fica fora do chat · ia-custo
+
+- **Ideia:** (a) gravar na mensagem os tokens **por modelo** do turno, em vez de um só `modelo` com a soma de tudo; (b) medir também o que não é mensagem do chat (relatório, assistente de descrição, nomeação, sugestões de conexões e lugar, propostas de descrição, teste de prompts).
+- **Origem:** task 202 (aba Custos pelas mensagens); o autor pediu para deixar anotado.
+- **Por quê:** (a) o turno soma as chamadas das ferramentas (task 188), que podem rodar num nível mais barato, mas todos os tokens são precificados pelo modelo da mensagem (o do nível mais alto): o custo sai aproximado, para mais. (b) a aba só enxerga o chat: o que o Console da Anthropic mostra a mais é isso, mais o uso da mesma chave fora da aplicação.
+- **Custo aparente:** (a) campo novo no documento da mensagem e no mapeamento dos três armazenamentos, mudança no `TurnoIa` e em `somarTokens`; só vale para mensagem nova. (b) exige um lugar para gravar chamadas que não têm mensagem (uma tabela de uso, que é o que a task 202 tirou) ou um conceito de "mensagem de sistema" por origem.
