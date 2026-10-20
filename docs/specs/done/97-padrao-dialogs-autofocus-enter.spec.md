@@ -1,6 +1,6 @@
 # 97 — Padrão único de formulário em dialogs: autofocus, Enter, footer e pós-criar
 
-**Origem:** Revisão de UI/UX — achados globais G2/G17 (`docs/specs/backlog/revisao-ui-ux/README.md`)
+**Origem:** Revisão de UI/UX — achados globais G2/G17 (`docs/specs/done/revisao-ui-ux/README.md`)
 
 **Depende de:** —
 

@@ -1,6 +1,6 @@
 # 94 — Login: segurança da credencial lembrada + fluxo sem fricção
 
-**Origem:** Revisão de UI/UX — `docs/specs/backlog/revisao-ui-ux/` (print `docs/assets/revisao-ui-ux/prints/01-login.png`, análise `analise-detalhada/login.md`)
+**Origem:** Revisão de UI/UX — `docs/specs/done/revisao-ui-ux/` (print `docs/assets/revisao-ui-ux/prints/01-login.png`, análise `analise-detalhada/login.md`)
 
 **Depende de:** —
 

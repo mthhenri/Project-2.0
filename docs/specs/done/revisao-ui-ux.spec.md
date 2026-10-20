@@ -1,5 +1,9 @@
 # revisao-ui-ux.spec.md
 
+> **Concluída em 2026-10-20.** As 24 tasks (94–117) estão em `docs/specs/done/`: as seis que o autor descartou em 2026-10-16 (102–105, 110 e 111) foram
+> reativadas e implementadas (110 e 111 em 2026-10-17, 102–105 em 2026-10-18), então os "19 das 23" e as "descartadas" abaixo são o plano de
+> 2026-10-16, mantido como registro. Esta spec, o `INDEX-revisao-ux.md` e a pasta `revisao-ui-ux/` foram movidos juntos para `done/`.
+
 > Guarda-chuva da revisão de UI/UX das telas do Project 2.0. Origem: branch
 > `claude/ui-ux-review-optimization-4da6md`, mergeada na adoção do kit de processo (2026-10-16).
 > Não é uma task implementável: é a spec proprietária do material em

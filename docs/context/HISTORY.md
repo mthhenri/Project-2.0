@@ -12,6 +12,15 @@
 
 ---
 
+## 2026-10-20 — Revisão de UI/UX: guarda-chuva, índice e material movidos para `done/`
+
+Pedido do autor: "aquelas specs do ajuste visual que estão no backlog já podem ir para concluído, não?". Conferido: as 24 tasks (94–117) estão em `docs/specs/done/` (as seis descartadas em 2026-10-16 foram reativadas e implementadas) e o critério do guarda-chuva, "o índice não lista pendência", vale; o próprio guarda-chuva dizia que ia para `done/` junto com a pasta `revisao-ui-ux/` quando a última task terminasse.
+
+- **Movidos para `done/`:** `revisao-ui-ux.spec.md`, `INDEX-revisao-ux.md` e a pasta `revisao-ui-ux/` (relatório, 16 análises, 25 mockups). No `backlog/` ficam só o `rework-chat-ia.spec.md` e a pasta `rework-chat-ia/` (outro guarda-chuva, que não foi tocado).
+- **Ajustes de texto (sem reescrever o corpo das specs):** nota de fecho no topo do guarda-chuva; o índice trocou "DESCARTADA" por "concluída" nas tasks 102–105 e a origem aponta para `done/`; os ponteiros de `docs/specs/backlog/revisao-ui-ux/` nas specs 94, 97 e 99 e numa análise foram para `done/`; `CLAUDE.md`/`AGENTS.md` (espelho idêntico), `CONTEXT.md` e `MEMORY.md` deixaram de dizer que o backlog guarda o índice e o guarda-chuva.
+- **Não alterado:** o histórico antigo, que cita os caminhos de antes; os prints em `docs/assets/revisao-ui-ux/prints/` (referência canônica, no mesmo lugar).
+- **Verificação:** `npm run repo:verificar`.
+
 ## 2026-10-20 — Tela de Configurações da IA: colunas, histórico estreito e interruptor "Ligar a IA"
 
 Pedido do autor sobre a tela do administrador: reduzir o histórico pela metade na horizontal, pôr o Chat (dúvidas de programação) entre o Check-in e o histórico, manter o desligar da IA embaixo mas invertendo o texto para "ligar" (parecia contraditório), e, depois de ver o resultado, tirar 2/5 do Chat para dar 1/5 a cada uma das outras colunas (textos cortados), deixar o texto do interruptor dinâmico e a barra mais baixa.

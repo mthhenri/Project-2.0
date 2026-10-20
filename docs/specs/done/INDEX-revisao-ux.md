@@ -1,6 +1,6 @@
 # Índice — tasks da Revisão de UI/UX (94–117)
 
-Origem: `docs/specs/backlog/revisao-ui-ux/` (relatório, prints com callouts, mockups HTML e análise detalhada por tela).
+Origem: `docs/specs/done/revisao-ui-ux/` (relatório, prints com callouts, mockups HTML e análise detalhada por tela).
 
 ## Ordem sugerida de implementação
 
@@ -21,10 +21,10 @@ Origem: `docs/specs/backlog/revisao-ui-ux/` (relatório, prints com callouts, mo
 |---|---|
 | ~~100~~ | ~~Ponto mensal: justificar inline, imprimir dev, saldo até hoje~~ — **concluída** (`../done/`) |
 | ~~101~~ | ~~Ponto equipe: triagem e nome clicável~~ — **concluída** (`../done/`) |
-| ~~102~~ | ~~Atividades: filtros persistentes, ações enxutas, massa~~ — **DESCARTADA** (`../discarded/`) |
-| ~~103~~ | ~~Atividades: dialogs de execução sem atrito~~ — **DESCARTADA** (`../discarded/`) |
-| ~~104~~ | ~~Atividade detalhe: timer, pausar/trocar em 1 clique~~ — **DESCARTADA** (`../discarded/`) |
-| ~~105~~ | ~~Nova Atividade: unificação + responsável/tags + IA~~ — **DESCARTADA** (`../discarded/`) |
+| ~~102~~ | ~~Atividades: filtros persistentes, ações enxutas, massa~~ — **concluída** (`../done/`; descartada em 2026-10-16 e reativada em 2026-10-18) |
+| ~~103~~ | ~~Atividades: dialogs de execução sem atrito~~ — **concluída** (`../done/`; descartada em 2026-10-16 e reativada em 2026-10-18) |
+| ~~104~~ | ~~Atividade detalhe: timer, pausar/trocar em 1 clique~~ — **concluída** (`../done/`; descartada em 2026-10-16 e reativada em 2026-10-18) |
+| ~~105~~ | ~~Nova Atividade: unificação + responsável/tags + IA~~ — **concluída** (`../done/`; descartada em 2026-10-16 e reativada em 2026-10-18) |
 
 **Fase 3 — Demandas e Execuções:**
 
@@ -47,11 +47,11 @@ Origem: `docs/specs/backlog/revisao-ui-ux/` (relatório, prints com callouts, mo
 | ~~115~~ | ~~Calendário: criação pelo clique no dia~~ — **concluída** (`../done/`) |
 | ~~116~~ | ~~Tags: quick-add e cor inline~~ — **concluída** (`../done/`) |
 
-## Descartadas (2026-10-16)
+## Descartadas (2026-10-16) e depois reativadas
 
-Decisão do autor: tudo que mexe **diretamente** nas telas de Atividades fica de fora —
-**102, 103, 104 e 105**, em `docs/specs/discarded/`. **Em 2026-10-17 o autor reativou as tasks da tela de
-Execuções (110 e 111)**, que foram implementadas. O que mexe nelas só
+Decisão do autor em 2026-10-16: tudo que mexe **diretamente** nas telas de Atividades fica de fora —
+**102, 103, 104 e 105**. **Em 2026-10-17 o autor reativou as tasks da tela de
+Execuções (110 e 111)** e **em 2026-10-18 as de Atividades (102–105)**; todas foram implementadas e estão em `done/`. O que mexe nelas só
 indiretamente continua na lista (97, 98, 99, 95, 96, 108, 116 e as demais). Nenhuma task restante depende de uma descartada.
 
 ## Dependências entre tasks

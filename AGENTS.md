@@ -88,7 +88,7 @@ Specs de fase/milestone são divididas em tarefas numeradas antes da implementa�
 autor e não são implementadas (o corpo também não é reescrito).
 
 O backlog está em `docs/specs/backlog/` (a revisão de UI/UX 94–117 foi concluída, inclusive 110 e 111 (reativadas em 2026-10-17) e 102–105 (reativadas em 2026-10-18);
-restam o guarda-chuva e o `INDEX-revisao-ux.md`, mapa em `docs/context/MEMORY.md` §3). A guarda-chuva
+o guarda-chuva e o `INDEX-revisao-ux.md` foram para `docs/specs/done/` em 2026-10-20, mapa em `docs/context/MEMORY.md` §3). A guarda-chuva
 `rework-chat-ia.spec.md` (chat com IA, 2026-10-17) já tem as tasks dos blocos 1 a 3 especificadas (**118–124**: permissão de gestor
 centralizada, administrador, layout, Markdown), do bloco 8 (**125–128**, pad estruturado, já implementado) do bloco 4 (**129–133**,
 fundação da IA, já implementado), da **134** (editor de Markdown formatado, que troca o editor em todo o sistema) e do bloco 5

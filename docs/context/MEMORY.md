@@ -75,10 +75,10 @@ quando essa branch for mergeada). A task 117 (remover a descrição da atividade
 
 | Item | Onde |
 |---|---|
-| Tasks da revisão de UI/UX: todas concluídas (94–101, 106–109, 112–116 em `docs/specs/done/`) | `docs/specs/backlog/` guarda só o índice e o guarda-chuva |
+| Tasks da revisão de UI/UX: todas concluídas (94–117 em `docs/specs/done/`) | o índice e o guarda-chuva também estão em `docs/specs/done/` desde 2026-10-20 |
 | Tasks descartadas pelo autor | `docs/specs/discarded/` (hoje vazia: 102–105 e 110/111 foram reativadas e concluídas) |
-| Índice, ordem e dependências das tasks 94–116 (97–99 concluídas) | `docs/specs/backlog/INDEX-revisao-ux.md` |
-| Spec guarda-chuva e material da revisão (relatório, mockups HTML, análises) | `docs/specs/backlog/revisao-ui-ux.spec.md` e `docs/specs/backlog/revisao-ui-ux/` |
+| Índice, ordem e dependências das tasks 94–117 (todas concluídas) | `docs/specs/done/INDEX-revisao-ux.md` |
+| Spec guarda-chuva e material da revisão (relatório, mockups HTML, análises) | `docs/specs/done/revisao-ui-ux.spec.md` e `docs/specs/done/revisao-ui-ux/` |
 | Prints da revisão (PNG, referência canônica) | `docs/assets/revisao-ui-ux/prints/` |
 | Cobertura de testes: guarda-chuva, método comum por camada e tasks 171–187 | `docs/specs/done/testes-automatizados.spec.md` |
 | Retrato da cobertura em 2026-10-18 (números, lacunas por camada, armadilhas) | `docs/specs/done/testes-automatizados/ANALISE.md` (e a matriz de permissões em `docs/specs/done/187-testes-frontend-nucleo-e-compartilhados/MATRIZ-PERMISSOES.md`) |
