@@ -9,6 +9,8 @@ import {
   ProjetoRecuperarDto,
   ProjetoInternoAlterarDto,
   ProjetoAlteradoDto,
+  ProjetoVolumeListarDto,
+  ProjetoVolumeResumoDto,
   TipoUsuarioEnum,
   temPermissaoDeGestor,
 } from '@project20/shared';
@@ -17,6 +19,7 @@ import { PaginatedResult } from '@project20/shared';
 import { ProjetoRestaurarDto, ProjetoRestauradoDto } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
+import { limitesDoMes } from '../domain/limites-do-mes';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 
 @Injectable()
@@ -42,6 +45,7 @@ export class ProjetoService {
       status:          dto.status,
       inicioData:      dto.inicioData      ?? null,
       previsaoFimData: dto.previsaoFimData ?? null,
+      volumeEsperadoHorasMes: dto.volumeEsperadoHorasMes ?? null,
     });
 
     return {
@@ -98,6 +102,15 @@ export class ProjetoService {
   }
 
   /**
+   * Volume do mês (task 197): horas gastas × esperadas de cada projeto no mês informado. O acesso gestor-only é do `@GestorOnly()` do
+   * controller; o mês vira o intervalo de datas aqui e o repository agrega no fuso do sistema.
+   */
+  async listarVolume(dto: ProjetoVolumeListarDto): Promise<StandardResponse<ProjetoVolumeResumoDto[]>> {
+    const itens = await this.projetoRepositorio.listarVolume(limitesDoMes(dto.ano, dto.mes));
+    return { sucesso: true, dados: itens, mensagem: 'Volume do mês listado com sucesso' };
+  }
+
+  /**
    * Recupera projeto por ID.
    * Desenvolvedor sem demanda atribuída recebe ResourceNotFoundException
    * para não revelar a existência do projeto.
@@ -151,6 +164,7 @@ export class ProjetoService {
       status:          dto.status,
       inicioData:      dto.inicioData,
       previsaoFimData: dto.previsaoFimData,
+      volumeEsperadoHorasMes: dto.volumeEsperadoHorasMes,
     });
 
     return {

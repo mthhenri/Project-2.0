@@ -9,6 +9,8 @@
   &__linha { @include form-dialog-linha; }
 
   &__campo       { @include form-campo; }
+  // Duas perguntas empilhadas na coluna que a cor (alta) deixaria meio vazia.
+  &__coluna      { display: flex; flex-direction: column; gap: 1.25rem; }
   &__label       { @include form-label; }
   &__obrigatorio { @include form-obrigatorio; }
   &__erro        { @include form-erro; }

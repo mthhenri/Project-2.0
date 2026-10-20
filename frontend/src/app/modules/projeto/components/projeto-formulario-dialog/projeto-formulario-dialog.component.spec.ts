@@ -91,6 +91,28 @@ describe('ProjetoFormularioDialogComponent — criar', () => {
     expect(criados).toEqual([33]);
   });
 
+  it('o volume esperado é opcional: informado vai no corpo; vazio não vai; negativo invalida', async () => {
+    const { montado } = await montar();
+    montado.componente.abrir();
+    montado.componente.formulario.patchValue({ nome: 'Projeto Novo', codigo: 'NOVO-1', volumeEsperadoHorasMes: 40 });
+    montado.componente.salvar();
+    await montado.atualizar();
+    const requisicao = esperarRequisicao(montado.http, 'POST', '/projeto');
+    expect(requisicao.request.body).toMatchObject({ volumeEsperadoHorasMes: 40 });
+    responderSucesso(requisicao, { id: 34, nome: 'Projeto Novo', codigo: 'NOVO-1' }, 201);
+    await montado.atualizar();
+
+    montado.componente.abrir();
+    montado.componente.formulario.patchValue({ nome: 'Outro', codigo: 'OUTRO' });
+    montado.componente.salvar();
+    await montado.atualizar();
+    expect((esperarRequisicao(montado.http, 'POST', '/projeto').request.body as { volumeEsperadoHorasMes?: number }).volumeEsperadoHorasMes).toBeUndefined();
+
+    montado.componente.abrir();
+    montado.componente.formulario.patchValue({ nome: 'Negativo', codigo: 'NEG', volumeEsperadoHorasMes: -1 });
+    expect(montado.componente.formulario.controls.volumeEsperadoHorasMes.invalid).toBe(true);
+  });
+
   it('erro de código duplicado: o dialog continua aberto, nada é emitido e o botão volta a ficar livre', async () => {
     const { montado, criados } = await montar();
     montado.componente.abrir();
@@ -123,6 +145,17 @@ describe('ProjetoFormularioDialogComponent — editar', () => {
     await montado.atualizar();
     expect(montado.componente.formulario.controls.nome.value).toBe('Projeto Antigo');
     expect(montado.componente.carregandoDados()).toBe(false);
+  });
+
+  it('o volume esperado do projeto aparece na edição; esvaziar o campo manda null (limpa o volume)', async () => {
+    const { montado } = await montar();
+    montado.componente.abrirEdicao({ ...PROJETO_COMPLETO, volumeEsperadoHorasMes: 40 } as never);
+    expect(montado.componente.formulario.controls.volumeEsperadoHorasMes.value).toBe(40);
+
+    montado.componente.formulario.patchValue({ volumeEsperadoHorasMes: null });
+    montado.componente.salvar();
+    const requisicao = esperarRequisicao(montado.http, 'PUT', '/projeto/12');
+    expect(requisicao.request.body).toMatchObject({ volumeEsperadoHorasMes: null });
   });
 
   it('salvar envia PUT sem o código e emite o projeto alterado', async () => {

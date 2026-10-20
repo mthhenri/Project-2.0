@@ -12,6 +12,19 @@
 
 ---
 
+## 2026-10-19 — Task 197: volume de trabalho por projeto (horas gastas × esperadas por mês)
+
+Pedido do autor: "faça a spec 197". Implementada como a spec define; as decisões marcadas como minhas na spec valeram.
+
+- **Banco:** migration `0046` — `projeto.volume_esperado_horas_mes` (`INTEGER`, nulo, sem `DEFAULT`, `chk_projeto_volume_esperado_horas_mes` ≥ 0). Aplicar → reverter → aplicar de novo, sem erro (lote próprio, só esta migration).
+- **Shared:** `volumeEsperadoHorasMes` em `ProjetoCriarDto` (opcional), `ProjetoAlterarDto` (`null` limpa), `ProjetoInternoAlterarDto`, `ProjetoCriadoDto`, `ProjetoAlteradoDto` e `ProjetoRecuperadoDto`; `LIMITE_VOLUME_ESPERADO_HORAS_MES` (100000, barra erro de digitação e estouro do INTEGER); `ProjetoVolumeListarDto { ano, mes }`, `ProjetoVolumeFiltrarDto` (intervalo já resolvido) e `ProjetoVolumeResumoDto`. **Desvio da spec, a confirmar:** o campo **não** entrou no `ProjetoResumoDto` (a listagem do desenvolvedor também o devolve e o volume esperado é dado do gestor); o formulário de edição o busca por `GET /projeto/:id` quando abre pela listagem.
+- **Backend:** `GET /projeto/volume?ano&mes` (`@GestorOnly`, declarada antes de `:id`); a service converte o mês em intervalo (`limitesDoMes`, função pura com teste, fevereiro bissexto e de século) e o repository agrega num `LEFT JOIN` por projeto: só execução **encerrada**, atividade e demanda não excluídas, dia pelo `DATE(inicio_data)` no fuso da sessão (o critério de `listarParaRelatorio`); projeto sem execução volta com 0.
+- **Frontend:** na listagem de projetos, o gestor ganha o alternador "Projetos / Volume do mês" (`?visao=volume` na URL) que mostra `app-projeto-volume`: seletor de mês como o do Ponto (anterior, datepicker, próximo, "Mês atual"; sem futuro), uma linha por projeto com a barra do Planejamento de demandas como análogo (cor do projeto; vermelha com borda e aviso "acima do esperado" no estouro; sem barra e "sem volume definido" quando nulo). Tempos pelo `tempoExibicao` (respeita "Tempos em dias"). Campo "Volume esperado" no formulário do projeto. Utilitário puro `montarLinhaDeVolume`.
+- **Testes:** shared 171; backend 1080 + integração 243 (3 novos: gravar/limpar o volume, `CHECK` recusa negativo, `listarVolume` com mês, execução em andamento, excluída e projeto excluído); frontend 1409 (volume: 11 de componente + 6 do utilitário; listagem e formulário); desktop 24. Builds do backend e do frontend ok.
+- **Verificado ao vivo** (relatório em `docs/specs/done/197-projeto-volume-de-trabalho/verificacao.md`): números conferidos contra o banco, estouro, sem volume, mês anterior, desenvolvedor recebe 403 e não vê o alternador, formulário carrega e limpa o volume, 1366×768 por captura e 1920×1080 e 1080×1920 por medida do DOM. O usuário de teste foi promovido a gestor só durante a verificação e devolvido; o cenário plantado foi removido.
+- **Não verificado ao vivo:** execução em andamento e execução na virada do mês (só por teste de integração).
+- **Armadilha nova (ferramenta, não do projeto):** heredoc grande no shell do agente falha com "unexpected EOF"; gravar o script num arquivo e executar.
+
 ## 2026-10-19 — Tasks 193 a 196 e 198 (ideias I-008, I-009, I-011, I-012 e I-014) e spec 197 (I-013)
 
 Pedido do autor: fazer as ideias I-008, I-009, I-011, I-012, I-013 e I-014; depois, "sobre a I-013 apenas crie a spec". Cada ideia virou uma spec (`193`–`198`); a **197** (volume de trabalho por projeto) ficou só como spec em `docs/specs/backlog/`, sem implementação.

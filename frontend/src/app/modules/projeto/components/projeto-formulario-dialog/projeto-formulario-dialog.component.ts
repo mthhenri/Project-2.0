@@ -6,6 +6,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 import { DatePickerModule } from 'primeng/datepicker';
+import { InputNumberModule } from 'primeng/inputnumber';
 import { DialogModule } from 'primeng/dialog';
 import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
@@ -17,6 +18,7 @@ import {
   TipoProjetoStatusEnum,
   REGEX_SEM_CARACTERES_PROIBIDOS,
   MENSAGEM_CARACTERES_PROIBIDOS,
+  LIMITE_VOLUME_ESPERADO_HORAS_MES,
 } from '@project20/shared';
 import { ProjetoService } from '../../services/projeto.service';
 import { formatarDataIso, lerDataIso } from '../../../demanda/utils/demanda-datas.util';
@@ -29,7 +31,7 @@ import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog
 @Component({
   selector: 'app-projeto-formulario-dialog',
   standalone: true,
-  imports: [DialogFormularioDirective, DialogDicaAtalhosComponent, ReactiveFormsModule, ButtonModule, InputTextModule, Select, SeletorCorComponent, DatePickerModule, DialogModule, BloquearCaracteresProibidosDirective, TooltipModule],
+  imports: [DialogFormularioDirective, DialogDicaAtalhosComponent, ReactiveFormsModule, ButtonModule, InputTextModule, InputNumberModule, Select, SeletorCorComponent, DatePickerModule, DialogModule, BloquearCaracteresProibidosDirective, TooltipModule],
   templateUrl: './projeto-formulario-dialog.component.html',
   styleUrl: './projeto-formulario-dialog.component.scss',
 })
@@ -60,9 +62,11 @@ export class ProjetoFormularioDialogComponent {
       status:          [TipoProjetoStatusEnum.ATIVO as TipoProjetoStatusEnum, [Validators.required]],
       inicioData:      [null as Date | null],
       previsaoFimData: [null as Date | null],
+      volumeEsperadoHorasMes: [null as number | null, [Validators.min(0), Validators.max(LIMITE_VOLUME_ESPERADO_HORAS_MES)]],
     },
     { validators: this.validarPrevisaoFim },
   );
+  readonly limiteVolumeEsperado = LIMITE_VOLUME_ESPERADO_HORAS_MES;
 
   readonly carregando = signal<boolean>(false);
   readonly mostrarDialog = signal<boolean>(false);
@@ -149,6 +153,7 @@ export class ProjetoFormularioDialogComponent {
       status:          projeto.status,
       inicioData:      projeto.inicioData ? lerDataIso(projeto.inicioData) : null,
       previsaoFimData: projeto.previsaoFimData ? lerDataIso(projeto.previsaoFimData) : null,
+      volumeEsperadoHorasMes: projeto.volumeEsperadoHorasMes ?? null,
     });
     this.periodoAberto.set(!!(projeto.inicioData || projeto.previsaoFimData) || this.focarDatas());
     if (this.focarDatas()) setTimeout(() => document.getElementById('inicioData')?.focus(), 100);
@@ -180,6 +185,7 @@ export class ProjetoFormularioDialogComponent {
       status: valor.status!,
       inicioData:      valor.inicioData ? formatarDataIso(valor.inicioData) : undefined,
       previsaoFimData: valor.previsaoFimData ? formatarDataIso(valor.previsaoFimData) : undefined,
+      volumeEsperadoHorasMes: valor.volumeEsperadoHorasMes ?? undefined,
     };
 
     this.projetoService
@@ -210,6 +216,8 @@ export class ProjetoFormularioDialogComponent {
       status:          valor.status ?? undefined,
       inicioData:      valor.inicioData ? formatarDataIso(valor.inicioData) : undefined,
       previsaoFimData: valor.previsaoFimData ? formatarDataIso(valor.previsaoFimData) : undefined,
+      // Campo vazio manda null: limpa o volume (as datas não têm esse caminho).
+      volumeEsperadoHorasMes: valor.volumeEsperadoHorasMes ?? null,
     };
 
     this.projetoService

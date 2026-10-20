@@ -5,7 +5,13 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 0.75rem;
     margin-bottom: 1.5rem;
+  }
+
+  // Alternador Projetos / Volume do mês (gestor): fica junto do botão de ação, à direita do título.
+  &__visao {
+    margin-left: auto;
   }
 
   &__titulo {

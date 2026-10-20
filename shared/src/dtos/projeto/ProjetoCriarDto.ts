@@ -6,6 +6,9 @@ import {
   IsEnum,
   IsOptional,
   IsDateString,
+  IsInt,
+  Min,
+  Max,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -14,6 +17,9 @@ import {
   REGEX_SEM_CARACTERES_PROIBIDOS,
   MENSAGEM_CARACTERES_PROIBIDOS,
 } from '../../validators/caracteres-proibidos.validator';
+
+/** Teto do volume esperado em horas por mês: barra erro de digitação e estouro do INTEGER da coluna. */
+export const LIMITE_VOLUME_ESPERADO_HORAS_MES = 100000;
 
 export class ProjetoCriarDto {
   @ApiProperty({ example: 'Sistema de Gestão' })
@@ -48,4 +54,11 @@ export class ProjetoCriarDto {
   @IsOptional()
   @IsDateString()
   previsaoFimData?: string;
+
+  @ApiPropertyOptional({ example: 40, description: 'Horas esperadas por mês (opcional)' })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(LIMITE_VOLUME_ESPERADO_HORAS_MES)
+  volumeEsperadoHorasMes?: number | null;
 }

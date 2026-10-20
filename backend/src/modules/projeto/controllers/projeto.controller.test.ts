@@ -6,9 +6,9 @@ import { ProjetoController } from './projeto.controller';
 // SYSTEM.SPEC.md §14: "Criar projeto" é do gestor (e do administrador). A service não recebe o usuário em criar/alterar/excluir:
 // quem barra o desenvolvedor é o `@GestorOnly` — por isso o teste de permissão mora aqui.
 
-test('criar, alterar, excluir e restaurar projeto são @GestorOnly', () => {
+test('criar, alterar, excluir, restaurar e o volume do mês do projeto são @GestorOnly', () => {
   const rotas = rotasPorNome(ProjetoController);
-  for (const nome of ['criar', 'alterar', 'excluir', 'restaurar']) {
+  for (const nome of ['criar', 'alterar', 'excluir', 'restaurar', 'listarVolume']) {
     assert.equal(rotas[nome].gestorOnly, true, `${nome} deveria ser @GestorOnly`);
   }
 });
@@ -31,6 +31,6 @@ test('nenhuma rota de projeto é pública nem exclusiva de administrador', () =>
 test('verbos e caminhos das rotas', () => {
   assert.deepEqual(
     Object.values(rotasPorNome(ProjetoController)).map((rota) => `${rota.verbo} ${rota.caminho}`).sort(),
-    ['DELETE :id', 'GET /', 'GET :id', 'PATCH :id/restaurar', 'POST /', 'PUT :id'].sort(),
+    ['DELETE :id', 'GET /', 'GET :id', 'GET volume', 'PATCH :id/restaurar', 'POST /', 'PUT :id'].sort(),
   );
 });

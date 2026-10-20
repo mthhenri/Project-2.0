@@ -1241,7 +1241,7 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 |---|---|
 | `autenticacao` | Login e geração de JWT |
 | `usuario` | CRUD de usuários, troca de senha (o pad é do módulo `anotacao`; `PUT /usuario/:id` é só de gestor e administrador, nem o desenvolvedor altera o próprio perfil) |
-| `projeto` | CRUD de projetos — apenas gestor cria |
+| `projeto` | CRUD de projetos — apenas gestor cria. `GET /projeto/volume?ano&mes` (`@GestorOnly`, task 197): por projeto, os minutos das execuções **encerradas** do mês (pelo dia de `inicio_data` no fuso do sistema, o critério do relatório) e o `volumeEsperadoHorasMes`; declarada antes de `:id` |
 | `demanda` | CRUD, hierarquia, grafo force-directed (D3), tags, atribuições |
 | `atividade` | CRUD de atividades vinculadas a demandas, tags, controle de status e **prioridade** (task 142: `prioridade` opcional na criação e na alteração, INDEFINIDA quando não vem; os DTOs de saída devolvem o objeto `{ codigo, descricao, ordem, cor }`; a listagem ordena por `ordem` e depois pela ordem de antes) |
 | `atividade-prioridade` | `GET /atividade-prioridade` (qualquer usuário autenticado, da mais para a menos urgente) e `PATCH /atividade-prioridade/:codigo` (`@AdministradorOnly`, só `cor` `#rrggbb`, gravada em minúsculas; `codigo`, `descricao` e `ordem` são fixos) |
@@ -1287,6 +1287,7 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 | `tipo_projeto_status_id` | INTEGER FK | → `tipo_projeto_status` (ATIVO, PAUSADO, CONCLUIDO, CANCELADO) |
 | `inicio_data` | DATE \| NULL | |
 | `previsao_fim_data` | DATE \| NULL | |
+| `volume_esperado_horas_mes` | INTEGER \| NULL | volume de trabalho esperado, em horas por mês (task 197); nulo = não definido; `CHECK` ≥ 0; só o gestor edita |
 
 > **Sem tabela `projeto_usuario`** — acesso a projeto é derivado de `demanda_usuario`
 

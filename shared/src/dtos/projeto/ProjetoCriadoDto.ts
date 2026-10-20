@@ -23,6 +23,9 @@ export class ProjetoCriadoDto {
   @ApiProperty({ example: '2026-12-31', nullable: true })
   previsaoFimData: string | null;
 
+  @ApiProperty({ example: 40, nullable: true, description: 'Horas esperadas por mês; nulo = não definido' })
+  volumeEsperadoHorasMes: number | null;
+
   @ApiProperty({ example: '2026-06-13T12:00:00.000Z' })
   createdDate: Date;
 }

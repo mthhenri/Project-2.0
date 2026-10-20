@@ -65,23 +65,45 @@
     </div>
 
     <div class="projeto-formulario-dialog__linha">
-      <div class="projeto-formulario-dialog__campo">
-        <label for="status" class="projeto-formulario-dialog__label">
-          Status <span class="projeto-formulario-dialog__obrigatorio">*</span>
-        </label>
-        <p-select
-          inputId="status"
-          formControlName="status"
-          [options]="statusOpcoes"
-          optionLabel="label"
-          optionValue="value"
-          placeholder="Selecione o status"
-          appendTo="body"
-          class="w-full"
-        />
-        @if (campoInvalido('status')) {
-          <small class="projeto-formulario-dialog__erro">Status é obrigatório</small>
-        }
+      <div class="projeto-formulario-dialog__coluna">
+        <div class="projeto-formulario-dialog__campo">
+          <label for="status" class="projeto-formulario-dialog__label">
+            Status <span class="projeto-formulario-dialog__obrigatorio">*</span>
+          </label>
+          <p-select
+            inputId="status"
+            formControlName="status"
+            [options]="statusOpcoes"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Selecione o status"
+            appendTo="body"
+            class="w-full"
+          />
+          @if (campoInvalido('status')) {
+            <small class="projeto-formulario-dialog__erro">Status é obrigatório</small>
+          }
+        </div>
+
+        <div class="projeto-formulario-dialog__campo">
+          <label for="volumeEsperadoHorasMes" class="projeto-formulario-dialog__label">
+            Volume esperado <span class="projeto-formulario-dialog__periodo-dica">(opcional)</span>
+          </label>
+          <p-inputnumber
+            inputId="volumeEsperadoHorasMes"
+            formControlName="volumeEsperadoHorasMes"
+            [min]="0"
+            [max]="limiteVolumeEsperado"
+            [useGrouping]="false"
+            [maxFractionDigits]="0"
+            suffix=" h por mês"
+            placeholder="Sem volume definido"
+            locale="pt-BR"
+            class="w-full"
+            [inputStyle]="{ width: '100%' }"
+          />
+          <small class="projeto-formulario-dialog__dica">Compara com as horas gastas no mês em "Volume do mês"</small>
+        </div>
       </div>
 
       <div class="projeto-formulario-dialog__campo">

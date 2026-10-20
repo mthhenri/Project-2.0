@@ -1,6 +1,7 @@
-import { IsOptional, IsString, MinLength, Matches, IsEnum, IsDateString } from 'class-validator';
+import { IsOptional, IsString, MinLength, Matches, IsEnum, IsDateString, IsInt, Min, Max } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { TipoProjetoStatusEnum } from '../../enums/tipo-projeto-status.enum';
+import { LIMITE_VOLUME_ESPERADO_HORAS_MES } from './ProjetoCriarDto';
 import {
   REGEX_SEM_CARACTERES_PROIBIDOS,
   MENSAGEM_CARACTERES_PROIBIDOS,
@@ -34,4 +35,11 @@ export class ProjetoAlterarDto {
   @IsOptional()
   @IsDateString()
   previsaoFimData?: string;
+
+  @ApiPropertyOptional({ example: 40, nullable: true, description: 'Horas esperadas por mês; null limpa o volume' })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(LIMITE_VOLUME_ESPERADO_HORAS_MES)
+  volumeEsperadoHorasMes?: number | null;
 }

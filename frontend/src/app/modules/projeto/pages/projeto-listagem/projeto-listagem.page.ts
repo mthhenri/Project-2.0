@@ -13,11 +13,14 @@ import { ProjetoService } from '../../services/projeto.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { ProjetoFormularioDialogComponent } from '../../components/projeto-formulario-dialog/projeto-formulario-dialog.component';
 import { ProjetoStatusChipComponent } from '../../components/projeto-status-chip/projeto-status-chip.component';
+import { ProjetoVolumeComponent } from '../../components/projeto-volume/projeto-volume.component';
 import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
 import { BarraRecargaComponent } from '../../../../shared/components/barra-recarga/barra-recarga.component';
 import { DesfazerService } from '../../../../core/services/desfazer.service';
 import { focoEmCampo, haSobreposicaoAberta } from '../../../../core/utils/atalhos';
 import { normalizarTexto } from '../../../demanda/utils/demanda-filtro.util';
+
+type VisaoProjetos = 'PROJETOS' | 'VOLUME';
 
 /** O backend entrega no máximo 100 por página; a busca e os contadores trabalham sobre esses (task 112). */
 const LIMITE_PROJETOS = 100;
@@ -36,6 +39,7 @@ const LIMITE_PROJETOS = 100;
     TooltipModule,
     ProjetoFormularioDialogComponent,
     ProjetoStatusChipComponent,
+    ProjetoVolumeComponent,
   ],
   templateUrl: './projeto-listagem.page.html',
   styleUrl: './projeto-listagem.page.scss',
@@ -61,6 +65,12 @@ export class ProjetoListagemPage implements OnInit {
 
   readonly termoBusca = signal<string>('');
   readonly statusFiltro = signal<TipoProjetoStatusEnum | null>(null);
+  /** "Volume do mês" é só do gestor (task 197); o estado fica na URL (`visao=volume`) como a busca e o status. */
+  readonly visao = signal<VisaoProjetos>('PROJETOS');
+  readonly opcoesVisao = [
+    { rotulo: 'Projetos', valor: 'PROJETOS' as VisaoProjetos },
+    { rotulo: 'Volume do mês', valor: 'VOLUME' as VisaoProjetos },
+  ];
   itensMenu: MenuItem[] = [];
 
   /** Projetos que atendem à busca (nome/código), antes do filtro de status: base dos contadores. */
@@ -97,7 +107,13 @@ export class ProjetoListagemPage implements OnInit {
     this.termoBusca.set(parametros.get('q') ?? '');
     const statusDaUrl = parametros.get('status') as TipoProjetoStatusEnum | null;
     this.statusFiltro.set(statusDaUrl && Object.values(TipoProjetoStatusEnum).includes(statusDaUrl) ? statusDaUrl : null);
+    this.visao.set(parametros.get('visao') === 'volume' && this.sessao.eGestor() ? 'VOLUME' : 'PROJETOS');
     this.buscarProjetos();
+  }
+
+  aoMudarVisao(visao: VisaoProjetos): void {
+    this.visao.set(visao);
+    this.atualizarUrl();
   }
 
   /** `/` leva o foco à busca (quieto com campo em foco ou overlay aberto). */
@@ -145,6 +161,7 @@ export class ProjetoListagemPage implements OnInit {
     const queryParams: Record<string, string | null> = {
       q: this.termoBusca().trim() || null,
       status: this.statusFiltro(),
+      visao: this.visao() === 'VOLUME' ? 'volume' : null,
     };
     this.router.navigate([], { queryParams, queryParamsHandling: 'merge', replaceUrl: true });
   }

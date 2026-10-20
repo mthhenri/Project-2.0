@@ -1,7 +1,18 @@
 <div class="projeto-listagem">
   <div class="projeto-listagem__cabecalho">
-    <h1 class="projeto-listagem__titulo">Projetos</h1>
+    <h1 id="projeto-listagem-titulo" class="projeto-listagem__titulo">Projetos</h1>
     @if (sessao.eGestor()) {
+      <p-selectbutton
+        [options]="opcoesVisao"
+        [ngModel]="visao()"
+        (ngModelChange)="aoMudarVisao($event)"
+        optionLabel="rotulo"
+        optionValue="valor"
+        [allowEmpty]="false"
+        size="small"
+        ariaLabelledBy="projeto-listagem-titulo"
+        class="projeto-listagem__visao"
+      />
       <p-button
         label="Novo Projeto"
         icon="pi pi-plus"
@@ -10,6 +21,9 @@
     }
   </div>
 
+  @if (visao() === 'VOLUME') {
+    <app-projeto-volume />
+  } @else {
   <!-- Toolbar: busca (/) e filtro de status com contadores; estado na URL -->
   <div class="projeto-listagem__toolbar">
     <span class="projeto-listagem__busca">
@@ -109,6 +123,7 @@
         }
       </div>
     </div>
+  }
   }
 </div>
 

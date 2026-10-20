@@ -125,7 +125,7 @@
 
 ### I-013 — Volume de trabalho por projeto · projeto/relatório
 
-- **Promovida em 2026-10-19** para a task [`197-projeto-volume-de-trabalho`](../specs/backlog/197-projeto-volume-de-trabalho.spec.md) (só a spec, no backlog (a implementação não foi pedida)).
+- **Promovida em 2026-10-19** para a task [`197-projeto-volume-de-trabalho`](../specs/done/197-projeto-volume-de-trabalho.spec.md) (implementada em 2026-10-19).
 
 ### I-014 — Botão "Baixar Project Desktop" e conferir a atualização do app · desktop/frontend
 

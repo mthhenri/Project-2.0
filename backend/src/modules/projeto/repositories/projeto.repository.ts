@@ -15,6 +15,8 @@ import {
   ProjetoExcluirDto,
   ProjetoUsuarioListarDto,
   ProjetoAcessoValidarDto,
+  ProjetoVolumeFiltrarDto,
+  ProjetoVolumeResumoDto,
 } from '@project20/shared';
 import { ProjetoRestaurarDto, ProjetoRestauradoDto } from '@project20/shared';
 
@@ -45,11 +47,11 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
   /** Insere novo projeto e retorna os dados do projeto criado. */
   async inserir(dados: ProjetoCriarDados): Promise<ProjetoCriadoDto> {
     const resultado = await this.executarConsulta<ProjetoCriadoDto>(
-      `INSERT INTO projeto (nome, codigo, cor, tipo_projeto_status_id, inicio_data, previsao_fim_data, created_date, updated_date, is_deleted)
+      `INSERT INTO projeto (nome, codigo, cor, tipo_projeto_status_id, inicio_data, previsao_fim_data, volume_esperado_horas_mes, created_date, updated_date, is_deleted)
        SELECT :nome, :codigo, :cor,
          (SELECT tipo_projeto_status.id FROM tipo_projeto_status
             WHERE tipo_projeto_status.codigo = :status AND tipo_projeto_status.is_deleted = false),
-         :inicioData, :previsaoFimData, NOW(), NOW(), false
+         :inicioData, :previsaoFimData, :volumeEsperadoHorasMes, NOW(), NOW(), false
        RETURNING
          id,
          nome,
@@ -59,6 +61,7 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
             WHERE tipo_projeto_status.id = projeto.tipo_projeto_status_id) AS status,
          inicio_data::text       AS "inicioData",
          previsao_fim_data::text AS "previsaoFimData",
+         volume_esperado_horas_mes AS "volumeEsperadoHorasMes",
          created_date            AS "createdDate"`,
       {
         nome:            dados.nome,
@@ -67,6 +70,7 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
         status:          dados.status,
         inicioData:      dados.inicioData ?? null,
         previsaoFimData: dados.previsaoFimData ?? null,
+        volumeEsperadoHorasMes: dados.volumeEsperadoHorasMes ?? null,
       },
     );
     return resultado[0];
@@ -83,6 +87,7 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
          tipo_projeto_status.codigo      AS status,
          projeto.inicio_data::text       AS "inicioData",
          projeto.previsao_fim_data::text AS "previsaoFimData",
+         projeto.volume_esperado_horas_mes AS "volumeEsperadoHorasMes",
          projeto.created_date            AS "createdDate"
        FROM projeto
        INNER JOIN tipo_projeto_status
@@ -141,6 +146,44 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
     );
 
     return { itens, total };
+  }
+
+  /**
+   * Volume do mês (task 197): por projeto, os minutos das execuções **encerradas** cujo início cai no intervalo e o volume esperado.
+   * O dia da execução é o de `inicio_data` no fuso da sessão (o do sistema), o mesmo critério do relatório; execução em andamento
+   * não entra. Projeto sem execução no mês volta com 0 minutos.
+   */
+  async listarVolume(filtros: ProjetoVolumeFiltrarDto): Promise<ProjetoVolumeResumoDto[]> {
+    return this.executarConsulta<ProjetoVolumeResumoDto>(
+      `SELECT
+         projeto.id                                  AS "projetoId",
+         projeto.nome,
+         projeto.codigo,
+         projeto.cor,
+         COALESCE(execucao_do_mes.minutos_gastos, 0) AS "minutosGastos",
+         projeto.volume_esperado_horas_mes           AS "volumeEsperadoHorasMes"
+       FROM projeto
+       LEFT JOIN (
+         SELECT
+           demanda.projeto_id AS projeto_id,
+           SUM(EXTRACT(EPOCH FROM (execucao.fim_data - execucao.inicio_data))::int / 60)::int AS minutos_gastos
+         FROM execucao
+         INNER JOIN atividade
+           ON atividade.id = execucao.atividade_id
+           AND atividade.is_deleted = false
+         INNER JOIN demanda
+           ON demanda.id = atividade.demanda_id
+           AND demanda.is_deleted = false
+         WHERE execucao.is_deleted = false
+           AND execucao.fim_data IS NOT NULL
+           AND DATE(execucao.inicio_data) BETWEEN :dataInicio::DATE AND :dataFim::DATE
+         GROUP BY demanda.projeto_id
+       ) AS execucao_do_mes
+         ON execucao_do_mes.projeto_id = projeto.id
+       WHERE projeto.is_deleted = false
+       ORDER BY projeto.nome ASC`,
+      { dataInicio: filtros.dataInicio, dataFim: filtros.dataFim },
+    );
   }
 
   /**
@@ -261,6 +304,10 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
       setClauses.push('previsao_fim_data = :previsaoFimData');
       parametros.previsaoFimData = dto.previsaoFimData;
     }
+    if (dto.volumeEsperadoHorasMes !== undefined) {
+      setClauses.push('volume_esperado_horas_mes = :volumeEsperadoHorasMes');
+      parametros.volumeEsperadoHorasMes = dto.volumeEsperadoHorasMes;
+    }
 
     const resultado = await this.executarConsulta<ProjetoAlteradoDto>(
       `UPDATE projeto
@@ -276,6 +323,7 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
             WHERE tipo_projeto_status.id = projeto.tipo_projeto_status_id) AS status,
          inicio_data::text       AS "inicioData",
          previsao_fim_data::text AS "previsaoFimData",
+         volume_esperado_horas_mes AS "volumeEsperadoHorasMes",
          created_date            AS "createdDate"`,
       parametros,
     );

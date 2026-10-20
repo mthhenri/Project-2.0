@@ -186,7 +186,10 @@ CREATE TABLE projeto (
   tipo_projeto_status_id INTEGER NOT NULL
                       CONSTRAINT fk_projeto_tipo_projeto_status REFERENCES tipo_projeto_status(id),
   inicio_data       DATE,
-  previsao_fim_data DATE
+  previsao_fim_data DATE,
+  volume_esperado_horas_mes INTEGER
+                      CONSTRAINT chk_projeto_volume_esperado_horas_mes
+                      CHECK (volume_esperado_horas_mes IS NULL OR volume_esperado_horas_mes >= 0)
 );
 
 CREATE UNIQUE INDEX uix_projeto_codigo_ativo

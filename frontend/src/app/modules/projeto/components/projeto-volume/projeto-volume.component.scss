@@ -1,0 +1,139 @@
+.projeto-volume {
+  &__navegacao {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  &__conteudo {
+    position: relative;
+  }
+
+  &__vazio {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 4rem 0;
+  }
+
+  &__lista {
+    list-style: none;
+    margin: 0 0 1.5rem;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  &__linha {
+    display: grid;
+    grid-template-columns: minmax(14rem, 22rem) 1fr;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1rem 1.25rem;
+    background: var(--app-surface-0);
+    border: 1px solid var(--app-surface-200);
+    border-radius: 8px;
+
+    &--estouro {
+      border-color: var(--p-red-300);
+    }
+  }
+
+  &__projeto {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+
+  &__cor {
+    flex: 0 0 auto;
+    width: 0.5rem;
+    align-self: stretch;
+    border-radius: 4px;
+  }
+
+  &__identificacao {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__codigo {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--p-text-muted-color);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  &__nome {
+    font-weight: 600;
+    color: var(--p-text-color);
+    text-decoration: none;
+    overflow-wrap: anywhere;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--p-primary-600);
+      text-decoration: underline;
+    }
+  }
+
+  &__progresso {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 0;
+  }
+
+  &__barra {
+    // A barra leva a cor do projeto; no estouro vira vermelha (mesmo critério de destaque do Planejamento).
+    ::ng-deep .p-progressbar .p-progressbar-value {
+      background: var(--cor-barra, var(--p-primary-color));
+    }
+
+    &--estouro ::ng-deep .p-progressbar .p-progressbar-value {
+      background: var(--p-red-500);
+    }
+  }
+
+  &__legenda {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35rem;
+    font-size: 0.85rem;
+  }
+
+  &__gasto {
+    font-weight: 600;
+    color: var(--p-text-color);
+
+    &--estouro {
+      color: var(--p-red-500);
+    }
+  }
+
+  &__separador,
+  &__esperado,
+  &__percentual,
+  &__sem-volume {
+    color: var(--p-text-muted-color);
+  }
+
+  &__aviso-estouro {
+    color: var(--p-red-500);
+    font-weight: 600;
+  }
+
+  @media (max-width: 1100px) {
+    &__linha {
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+    }
+  }
+}

@@ -12,6 +12,8 @@ import {
   StandardResponse,
   PaginatedResult,
   ProjetoRestauradoDto,
+  ProjetoVolumeListarDto,
+  ProjetoVolumeResumoDto,
 } from '@project20/shared';
 import { ambiente } from '../../../../environments/environment';
 import { comFeedbackProprio } from '../../../core/interceptors/loading.interceptor';
@@ -28,6 +30,12 @@ export class ProjetoService {
     if (filtros.itensPorPagina) params = params.set('itensPorPagina', String(filtros.itensPorPagina));
     if (filtros.allRows) params = params.set('allRows', 'true');
     return this.httpClient.get<StandardResponse<PaginatedResult<ProjetoResumoDto>>>(this.urlBase, { params, ...comFeedbackProprio() });
+  }
+
+  /** Volume do mês por projeto (gestor): horas gastas × esperadas. */
+  listarVolume(filtros: ProjetoVolumeListarDto): Observable<StandardResponse<ProjetoVolumeResumoDto[]>> {
+    const params = new HttpParams().set('ano', String(filtros.ano)).set('mes', String(filtros.mes));
+    return this.httpClient.get<StandardResponse<ProjetoVolumeResumoDto[]>>(`${this.urlBase}/volume`, { params, ...comFeedbackProprio() });
   }
 
   criar(dto: ProjetoCriarDto): Observable<StandardResponse<ProjetoCriadoDto>> {

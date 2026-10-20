@@ -61,9 +61,40 @@ test('criar: grava os campos informados e responde com o projeto criado', async 
   let gravado: Record<string, unknown> | undefined;
   const servico = criarServico({ validarCodigo: async () => false, inserir: async (dados: Record<string, unknown>) => { gravado = dados; return PROJETO; } });
   const resposta = await servico.criar({ ...DADOS_CRIAR, inicioData: '2026-01-01', previsaoFimData: '2026-06-30' });
-  assert.deepEqual(gravado, { ...DADOS_CRIAR, inicioData: '2026-01-01', previsaoFimData: '2026-06-30' });
+  assert.deepEqual(gravado, { ...DADOS_CRIAR, inicioData: '2026-01-01', previsaoFimData: '2026-06-30', volumeEsperadoHorasMes: null });
   assert.equal(resposta.sucesso, true);
   assert.equal(resposta.dados?.id, 10);
+});
+
+test('criar: o volume esperado informado é gravado; sem ele, nulo', async () => {
+  const gravados: Array<Record<string, unknown>> = [];
+  const servico = criarServico({ validarCodigo: async () => false, inserir: async (dados: Record<string, unknown>) => { gravados.push(dados); return PROJETO; } });
+  await servico.criar({ ...DADOS_CRIAR, volumeEsperadoHorasMes: 40 });
+  await servico.criar(DADOS_CRIAR);
+  assert.deepEqual(gravados.map((dados) => dados.volumeEsperadoHorasMes), [40, null]);
+});
+
+test('alterar: o volume esperado vai ao repository, e null limpa o valor', async () => {
+  const alterados: Array<Record<string, unknown>> = [];
+  const servico = criarServico({ recuperar: async () => PROJETO, alterar: async (dados: Record<string, unknown>) => { alterados.push(dados); return PROJETO; } });
+  await servico.alterar({ id: 10, volumeEsperadoHorasMes: 80 });
+  await servico.alterar({ id: 10, volumeEsperadoHorasMes: null });
+  await servico.alterar({ id: 10, nome: 'Outro' });
+  assert.deepEqual(alterados.map((dados) => dados.volumeEsperadoHorasMes), [80, null, undefined]);
+});
+
+// ---------------------------------------------------------------------------
+// listarVolume (task 197)
+// ---------------------------------------------------------------------------
+
+test('listarVolume: o mês vira o intervalo de datas e a lista do repository volta como veio', async () => {
+  let recebido: unknown;
+  const itens = [{ projetoId: 10, nome: 'Projeto A', codigo: 'PA', cor: '#336699', minutosGastos: 720, volumeEsperadoHorasMes: 40 }];
+  const servico = criarServico({ listarVolume: async (filtros: unknown) => { recebido = filtros; return itens; } });
+  const resposta = await servico.listarVolume({ ano: 2028, mes: 2 });
+  assert.deepEqual(recebido, { dataInicio: '2028-02-01', dataFim: '2028-02-29' });
+  assert.equal(resposta.sucesso, true);
+  assert.deepEqual(resposta.dados, itens);
 });
 
 // ---------------------------------------------------------------------------

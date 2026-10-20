@@ -2,7 +2,7 @@ import * as assert from 'node:assert/strict';
 import { TipoProjetoStatusEnum, TipoUsuarioEnum } from '@project20/shared';
 import { testarComBanco } from '../../../testes/banco-teste';
 import { criarRepositorio } from '../../../testes/criar-repositorio';
-import { criarDemanda, criarDemandaUsuario, criarDesenvolvedor, criarGestor, criarProjeto } from '../../../testes/fabricas';
+import { criarAtividade, criarDemanda, criarDemandaUsuario, criarDesenvolvedor, criarExecucao, criarGestor, criarProjeto, excluirLinha } from '../../../testes/fabricas';
 import { ProjetoRepository } from './projeto.repository';
 import { ProjetoService } from '../services/projeto.service';
 
@@ -140,6 +140,64 @@ testarComBanco('inserir e alterar gravam status por código e devolvem datas com
 
   const alterado = await repositorio.alterar({ id: criado.id, nome: 'Renomeado', status: TipoProjetoStatusEnum.PAUSADO, previsaoFimData: '2026-12-31' });
   assert.deepEqual([alterado.nome, alterado.codigo, alterado.status, alterado.previsaoFimData], ['Renomeado', 'NOVO1', TipoProjetoStatusEnum.PAUSADO, '2026-12-31']);
+});
+
+testarComBanco('volume esperado: inserir grava, alterar muda e null limpa; recuperar devolve', async (conexao) => {
+  const repositorio = criarRepositorio(ProjetoRepository, conexao);
+  const criado = await repositorio.inserir({
+    nome: 'Com volume', codigo: 'VOL1', cor: '#123456', status: TipoProjetoStatusEnum.ATIVO, inicioData: null, previsaoFimData: null, volumeEsperadoHorasMes: 40,
+  } as never);
+  assert.equal(criado.volumeEsperadoHorasMes, 40);
+  assert.equal((await repositorio.recuperar({ id: criado.id }))?.volumeEsperadoHorasMes, 40);
+
+  assert.equal((await repositorio.alterar({ id: criado.id, volumeEsperadoHorasMes: 80 })).volumeEsperadoHorasMes, 80);
+  assert.equal((await repositorio.alterar({ id: criado.id, nome: 'Outro nome' })).volumeEsperadoHorasMes, 80);
+  assert.equal((await repositorio.alterar({ id: criado.id, volumeEsperadoHorasMes: null })).volumeEsperadoHorasMes, null);
+
+  const semVolume = await repositorio.inserir({
+    nome: 'Sem volume', codigo: 'VOL2', cor: '#123456', status: TipoProjetoStatusEnum.ATIVO, inicioData: null, previsaoFimData: null,
+  } as never);
+  assert.equal(semVolume.volumeEsperadoHorasMes, null);
+});
+
+testarComBanco('a coluna recusa volume esperado negativo', async (conexao) => {
+  const projeto = await criarProjeto(conexao);
+  await assert.rejects(() => conexao.raw('UPDATE projeto SET volume_esperado_horas_mes = -1 WHERE projeto.id = :id', { id: projeto.id }), /chk_projeto_volume_esperado_horas_mes/);
+});
+
+testarComBanco('listarVolume soma só as execuções encerradas do mês, nas atividades e demandas ativas, e devolve 0 sem execução', async (conexao) => {
+  const repositorio = criarRepositorio(ProjetoRepository, conexao);
+  const desenvolvedor = await criarDesenvolvedor(conexao);
+  const projetoA = await criarProjeto(conexao);
+  const projetoB = await criarProjeto(conexao);
+  const projetoVazio = await criarProjeto(conexao);
+  await conexao.raw('UPDATE projeto SET volume_esperado_horas_mes = 40 WHERE projeto.id = :id', { id: projetoA.id });
+
+  const demandaA = await criarDemanda(conexao, { projetoId: projetoA.id });
+  const demandaB = await criarDemanda(conexao, { projetoId: projetoB.id });
+  const atividadeA = await criarAtividade(conexao, { demandaId: demandaA.id, usuarioId: desenvolvedor.id });
+  const atividadeB = await criarAtividade(conexao, { demandaId: demandaB.id, usuarioId: desenvolvedor.id });
+
+  // Projeto A em outubro/2026 (fuso do sistema, -03:00): 2 h + 1 h30 = 210 min; a execução em andamento, a de setembro e a de novembro ficam fora.
+  await criarExecucao(conexao, { atividadeId: atividadeA.id, inicioData: '2026-10-05T09:00:00-03:00', fimData: '2026-10-05T11:00:00-03:00' });
+  await criarExecucao(conexao, { atividadeId: atividadeA.id, inicioData: '2026-10-31T22:00:00-03:00', fimData: '2026-10-31T23:30:00-03:00' });
+  await criarExecucao(conexao, { atividadeId: atividadeA.id, inicioData: '2026-10-20T09:00:00-03:00', fimData: null });
+  await criarExecucao(conexao, { atividadeId: atividadeA.id, inicioData: '2026-09-30T09:00:00-03:00', fimData: '2026-09-30T10:00:00-03:00' });
+  await criarExecucao(conexao, { atividadeId: atividadeA.id, inicioData: '2026-11-01T09:00:00-03:00', fimData: '2026-11-01T10:00:00-03:00' });
+  // Projeto B: 1 h, mais uma execução excluída que não conta.
+  await criarExecucao(conexao, { atividadeId: atividadeB.id, inicioData: '2026-10-10T09:00:00-03:00', fimData: '2026-10-10T10:00:00-03:00' });
+  const excluida = await criarExecucao(conexao, { atividadeId: atividadeB.id, inicioData: '2026-10-11T09:00:00-03:00', fimData: '2026-10-11T12:00:00-03:00' });
+  await excluirLinha(conexao, 'execucao', excluida.id);
+
+  const volume = await repositorio.listarVolume({ dataInicio: '2026-10-01', dataFim: '2026-10-31' });
+  const porProjeto = new Map(volume.map((item) => [item.projetoId, item]));
+  assert.deepEqual([porProjeto.get(projetoA.id)?.minutosGastos, porProjeto.get(projetoA.id)?.volumeEsperadoHorasMes], [210, 40]);
+  assert.deepEqual([porProjeto.get(projetoB.id)?.minutosGastos, porProjeto.get(projetoB.id)?.volumeEsperadoHorasMes], [60, null]);
+  assert.deepEqual([porProjeto.get(projetoVazio.id)?.minutosGastos, porProjeto.get(projetoVazio.id)?.volumeEsperadoHorasMes], [0, null]);
+
+  // Projeto excluído sai da visão.
+  await excluirLinha(conexao, 'projeto', projetoVazio.id);
+  assert.equal((await repositorio.listarVolume({ dataInicio: '2026-10-01', dataFim: '2026-10-31' })).some((item) => item.projetoId === projetoVazio.id), false);
 });
 
 testarComBanco('restaurar desfaz o soft delete e limpa deleted_date', async (conexao) => {

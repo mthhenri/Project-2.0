@@ -13,3 +13,6 @@ export * from './ProjetoAcessoValidarDto';
 export * from './ProjetoExcluirDto';
 export * from './ProjetoRestaurarDto';
 export * from './ProjetoRestauradoDto';
+export * from './ProjetoVolumeListarDto';
+export * from './ProjetoVolumeFiltrarDto';
+export * from './ProjetoVolumeResumoDto';

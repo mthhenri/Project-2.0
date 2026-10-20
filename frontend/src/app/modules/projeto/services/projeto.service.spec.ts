@@ -31,6 +31,14 @@ describe('ProjetoService (frontend)', () => {
     expect(http.expectOne((r) => r.url.endsWith('/projeto')).request.params.keys()).toEqual([]);
   });
 
+  it('listarVolume pede /projeto/volume com ano e mês', () => {
+    servico.listarVolume({ ano: 2026, mes: 10 }).subscribe();
+    const req = http.expectOne((r) => r.url.endsWith('/projeto/volume'));
+    expect(req.request.method).toBe('GET');
+    expect(req.request.params.get('ano')).toBe('2026');
+    expect(req.request.params.get('mes')).toBe('10');
+  });
+
   it('criar, recuperar, alterar, excluir e restaurar usam verbo, URL e corpo certos', () => {
     const dto = { nome: 'A', codigo: 'A', cor: '#112233', status: TipoProjetoStatusEnum.ATIVO };
     servico.criar(dto).subscribe();
