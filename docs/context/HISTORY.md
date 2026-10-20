@@ -12,6 +12,16 @@
 
 ---
 
+## 2026-10-20 — Tela de Configurações da IA: colunas, histórico estreito e interruptor "Ligar a IA"
+
+Pedido do autor sobre a tela do administrador: reduzir o histórico pela metade na horizontal, pôr o Chat (dúvidas de programação) entre o Check-in e o histórico, manter o desligar da IA embaixo mas invertendo o texto para "ligar" (parecia contraditório), e, depois de ver o resultado, tirar 2/5 do Chat para dar 1/5 a cada uma das outras colunas (textos cortados), deixar o texto do interruptor dinâmico e a barra mais baixa.
+
+- **Layout** (`configuracao-ia.page.scss`): o histórico passou de `2fr 1fr` para `5fr 1fr` (mínimo de 14 rem; cerca de 254 px em 1920 contra uns 500 antes). Com 1800 px ou mais, Provedor, Check-in e Chat ficam em três colunas `2fr 2fr 1fr` (495, 495 e 248 px em 1920×1080); de 1500 a 1799 px seguem duas colunas (o Chat abaixo do Provedor); abaixo disso empilham. Os três campos de minutos do Check-in se alinham pela base (o rótulo "Duração recomendada" quebrava e empurrava o campo).
+- **"Ligar a IA":** o dado gravado continua `iaDesligada`; o `p-toggleswitch` usa `[trueValue]="false" [falseValue]="true"`, então **aceso = IA ligada**. O texto acompanha o botão (`iaLigada`, computed do formulário): "IA ligada" (verde, com ícone) explica que o chat responde e que os check-ins e sugestões usam a IA, e "IA desligada" diz que nenhuma chamada é feita, o chat não responde e valem as telas convencionais. A seção virou uma faixa baixa (título e interruptor na mesma linha; 73 px contra uns 130; empilha abaixo de 900 px).
+- **Testes:** frontend 1435 (4 novos: texto "Ligar a IA", interruptor aceso e apagado conforme a versão, apagar grava `iaDesligada = true`, texto dinâmico); build ok. Uma vez um teste do editor de Markdown estourou 7 s sob carga e passou na repetição (não relacionado).
+- **Verificado ao vivo** (`dev.teste` promovido a administrador no banco de dev, com autorização do autor, e devolvido a desenvolvedor): 1920×1080 por captura nos temas claro e escuro, 1366×768 e 1080×1920 por medida do DOM e captura (sem rolagem horizontal e sem campo cortado); o interruptor foi apagado e acendido sem salvar (a configuração seguiu na versão 21, IA ligada).
+- **Não verificado:** salvar uma versão com a IA desligada pela nova faixa (o POST é o mesmo de antes, coberto por teste).
+
 ## 2026-10-19 — Atividades e pad liberados com a IA no ar (registro feito em 2026-10-20)
 
 Pedido do autor: "quando a IA estiver ativa, não precisa mais deixar desativado as atividades; só faz com que ela seja o start" e, depois, "o gerenciamento do pad pela IA tem que acontecer, mas em ambos os casos eu posso editar". Commit `fix(frontend): atividades e pad seguem liberados com a IA no ar`; o registro ficou faltando e foi feito só agora, junto da correção do `CONTEXT.md`.

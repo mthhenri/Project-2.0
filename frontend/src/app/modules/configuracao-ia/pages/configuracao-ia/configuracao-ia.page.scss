@@ -46,10 +46,11 @@
     padding: 1rem 0;
   }
 
-  // Duas colunas (formulário e histórico) no desktop; empilha em telas estreitas ou verticais.
+  // Duas colunas (formulário e histórico) no desktop; empilha em telas estreitas ou verticais. O histórico é a coluna estreita
+  // (cerca de um sexto da largura): só lista versões e abre o detalhe de uma por vez.
   &__grade {
     display: grid;
-    grid-template-columns: minmax(0, 2fr) minmax(16rem, 1fr);
+    grid-template-columns: minmax(0, 5fr) minmax(14rem, 1fr);
     gap: 1.5rem;
     align-items: start;
     padding-top: 0.5rem;
@@ -65,7 +66,8 @@
     }
   }
 
-  // Provedor e Check-in lado a lado quando há largura; empilham abaixo disso.
+  // Provedor, Check-in e Chat em três colunas quando há largura (o Chat fica entre o Check-in e o histórico); em duas (Chat
+  // abaixo do Provedor) numa largura média; empilhados abaixo disso.
   &__secoes-lado {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
@@ -74,6 +76,12 @@
 
     @media (min-width: 1500px) {
       grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    // O Chat tem pouco conteúdo (um interruptor e uma escolha): ele cede 2/5 da sua largura, 1/5 para cada uma das outras duas
+    // colunas (2fr 2fr 1fr), para os campos de modelo e de minutos não cortarem o texto.
+    @media (min-width: 1800px) {
+      grid-template-columns: minmax(0, 2fr) minmax(0, 2fr) minmax(0, 1fr);
     }
   }
 
@@ -95,6 +103,31 @@
     &--alerta {
       border-color: color-mix(in srgb, var(--p-orange-500) 45%, var(--app-surface-200));
     }
+
+    // Faixa baixa: o título e o interruptor lado a lado em vez de empilhados (empilha só em tela estreita).
+    &--faixa {
+      flex-direction: row;
+      align-items: center;
+      gap: 1.5rem;
+      padding: 0.75rem 1.25rem;
+
+      @media (max-width: 900px) {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+    }
+  }
+
+  &__estado-ia {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--p-text-muted-color);
+
+    &--ligada {
+      color: var(--p-green-600);
+    }
   }
 
   &__secao-titulo {
@@ -112,8 +145,10 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
+    // Um rótulo que quebra em duas linhas ("Duração recomendada") não pode empurrar o campo dele para baixo dos vizinhos.
     &--tripla {
       grid-template-columns: repeat(3, minmax(0, 1fr));
+      align-items: end;
     }
 
     // O campo numérico tem largura mínima própria; sem isto ele vaza da coluna estreita.
@@ -162,6 +197,12 @@
     // O interruptor não encolhe quando o texto ao lado é longo.
     p-toggleswitch {
       flex: none;
+    }
+
+    // Na faixa baixa o interruptor fica no meio da altura do texto e ocupa o resto da linha.
+    &--centrado {
+      flex: 1;
+      align-items: center;
     }
 
     span {

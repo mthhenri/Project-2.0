@@ -212,6 +212,59 @@ describe('ConfiguracaoIaPage — editar e salvar', () => {
   });
 });
 
+describe('ConfiguracaoIaPage — interruptor "Ligar a IA"', () => {
+  const interruptorDaIa = () => {
+    const secao = Array.from(document.body.querySelectorAll('section')).find((candidata) => candidata.textContent?.includes('Ligar a IA'));
+    return secao?.querySelector('input[role="switch"]') as HTMLInputElement | null;
+  };
+
+  it('o texto é "Ligar a IA / IA ligada" e o interruptor aceso significa IA ligada (o dado segue sendo iaDesligada)', async () => {
+    const montado = await abrir();
+    expect(textoDaTela()).toContain('Ligar a IA');
+    expect(textoDaTela()).toContain('IA ligada');
+    expect(textoDaTela()).not.toContain('Desligar a IA');
+    expect(montado.componente.formulario.controls.iaDesligada.value).toBe(false);
+    expect(interruptorDaIa()?.checked).toBe(true);
+  });
+
+  it('com a IA desligada na versão ativa o interruptor aparece apagado', async () => {
+    const ativa = versao(3, { iaDesligada: true });
+    const montado = await montarComponente(ConfiguracaoIaPage, { usuario: TipoUsuarioEnum.ADMINISTRADOR });
+    responderCarga(montado, { ativa, historico: [ativa] });
+    await montado.atualizar();
+    expect(interruptorDaIa()?.checked).toBe(false);
+  });
+
+  it('apagar o interruptor grava iaDesligada = true, e acender volta a false', async () => {
+    const montado = await abrir();
+    interruptorDaIa()!.click();
+    await montado.atualizar();
+    expect(montado.componente.formulario.controls.iaDesligada.value).toBe(true);
+    expect(botao('Salvar nova versão').disabled).toBe(false);
+
+    interruptorDaIa()!.click();
+    await montado.atualizar();
+    expect(montado.componente.formulario.controls.iaDesligada.value).toBe(false);
+    expect(textoDaTela()).toContain('Nada a salvar');
+  });
+
+  it('o texto ao lado acompanha o interruptor: ligada explica que o chat responde, desligada que nada é chamado', async () => {
+    const montado = await abrir();
+    expect(montado.componente.iaLigada()).toBe(true);
+    expect(textoDaTela()).toContain('O chat responde às mensagens');
+    expect(textoDaTela()).not.toContain('IA desligada');
+    expect(document.body.querySelector('.configuracao-ia__estado-ia--ligada')).not.toBeNull();
+
+    interruptorDaIa()!.click();
+    await montado.atualizar();
+    expect(montado.componente.iaLigada()).toBe(false);
+    expect(textoDaTela()).toContain('IA desligada');
+    expect(textoDaTela()).toContain('o chat não responde');
+    expect(textoDaTela()).not.toContain('O chat responde às mensagens');
+    expect(document.body.querySelector('.configuracao-ia__estado-ia--ligada')).toBeNull();
+  });
+});
+
 describe('ConfiguracaoIaPage — dúvidas de programação no chat (task 190)', () => {
   it('mostra o interruptor e a escolha do contexto, com o que cada modo faz, carregados da versão ativa', async () => {
     const ativa = versao(3, { duvidasCodigo: true, modoContextoChat: ModoContextoChatEnum.SEPARADO });

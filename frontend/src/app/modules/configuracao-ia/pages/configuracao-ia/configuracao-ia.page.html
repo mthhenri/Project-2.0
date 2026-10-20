@@ -180,16 +180,22 @@
 
                 </div>
 
-                <section class="configuracao-ia__secao configuracao-ia__secao--alerta">
-                  <h2 class="configuracao-ia__secao-titulo">Desligar a IA</h2>
-                  <label class="configuracao-ia__interruptor">
-                    <p-toggleswitch formControlName="iaDesligada" />
+                <section class="configuracao-ia__secao configuracao-ia__secao--alerta configuracao-ia__secao--faixa">
+                  <h2 class="configuracao-ia__secao-titulo">Ligar a IA</h2>
+                  <label class="configuracao-ia__interruptor configuracao-ia__interruptor--centrado">
+                    <!-- O dado gravado segue sendo `iaDesligada`; o interruptor mostra o contrário (aceso = IA ligada). -->
+                    <p-toggleswitch formControlName="iaDesligada" [trueValue]="false" [falseValue]="true" />
                     <span>
-                      <strong>IA desligada</strong>
-                      <small>
-                        Nenhuma chamada à IA é feita e o sistema usa as telas convencionais para todos. Ligar sem a chave da API no
-                        ambiente deixa a IA "fora do ar" (a chave fica no <code>.env</code>, não nesta tela).
-                      </small>
+                      @if (iaLigada()) {
+                        <strong class="configuracao-ia__estado-ia configuracao-ia__estado-ia--ligada"><i class="pi pi-check-circle"></i>IA ligada</strong>
+                        <small>
+                          O chat responde às mensagens e os check-ins e as sugestões usam a IA. Sem a chave da API no ambiente ela fica "fora do ar"
+                          (a chave fica no <code>.env</code>, não nesta tela).
+                        </small>
+                      } @else {
+                        <strong class="configuracao-ia__estado-ia"><i class="pi pi-ban"></i>IA desligada</strong>
+                        <small>Nenhuma chamada à IA é feita: o chat não responde e o sistema usa as telas convencionais para todos.</small>
+                      }
                     </span>
                   </label>
                 </section>

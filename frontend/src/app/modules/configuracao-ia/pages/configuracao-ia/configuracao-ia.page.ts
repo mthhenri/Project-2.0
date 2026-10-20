@@ -120,6 +120,9 @@ export class ConfiguracaoIaPage implements OnInit {
 
   readonly proximaVersao = computed(() => (this.ativa()?.versao ?? 0) + 1);
 
+  /** O que o interruptor "Ligar a IA" mostra agora (o inverso do `iaDesligada` do formulário): o texto ao lado dele acompanha. */
+  readonly iaLigada = computed(() => !this.valorAtual().iaDesligada);
+
   constructor() {
     this.formulario.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
