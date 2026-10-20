@@ -61,6 +61,8 @@ export class GraficoBarrasComponent {
   readonly descricaoGeral = input<string>('Gráfico de barras');
   /** Sufixo dos números do eixo vertical (ex.: " h"). */
   readonly unidadeDoEixo = input<string>('');
+  /** Empilha as barras de cada categoria numa só coluna (o eixo vai até a maior soma) em vez de lado a lado. */
+  readonly empilhado = input<boolean>(false);
 
   private readonly conteiner = viewChild<ElementRef<HTMLElement>>('conteiner');
   readonly largura = signal<number>(LARGURA_PADRAO);
@@ -81,7 +83,11 @@ export class GraficoBarrasComponent {
   }
 
   private readonly escalaY = computed(() => {
-    const maiorValor = max(this.categorias().flatMap((categoria) => categoria.barras.map((barra) => barra.valor))) ?? 0;
+    const somar = (valores: number[]) => valores.reduce((soma, valor) => soma + valor, 0);
+    const valores = this.empilhado()
+      ? this.categorias().map((categoria) => somar(categoria.barras.map((barra) => barra.valor)))
+      : this.categorias().flatMap((categoria) => categoria.barras.map((barra) => barra.valor));
+    const maiorValor = max(valores) ?? 0;
     const teto = Math.max(maiorValor, this.linhaReferencia() ?? 0, 1);
     return scaleLinear().domain([0, teto]).nice().range([this.altura() - MARGEM.inferior, MARGEM.superior]);
   });
@@ -106,9 +112,11 @@ export class GraficoBarrasComponent {
       .paddingInner(0.25)
       .paddingOuter(0.1);
     const larguraDaCategoria = escalaCategoria.bandwidth();
+    const empilhado = this.empilhado();
 
     return categorias.map((categoria, indice) => {
       const inicio = escalaCategoria(indice) ?? MARGEM.esquerda;
+      let acumulado = 0;
       const escalaBarra = scaleBand<number>()
         .domain(categoria.barras.map((_, posicao) => posicao))
         .range([0, larguraDaCategoria])
@@ -118,6 +126,12 @@ export class GraficoBarrasComponent {
         descricao: categoria.descricao ?? categoria.rotulo,
         centroX: inicio + larguraDaCategoria / 2,
         barras: categoria.barras.map((barra, posicao) => {
+          if (empilhado) {
+            const baseDoSegmento = escalaY(acumulado);
+            acumulado += barra.valor;
+            const topoDoSegmento = escalaY(acumulado);
+            return { ...barra, x: inicio, y: topoDoSegmento, largura: larguraDaCategoria, altura: Math.max(0, baseDoSegmento - topoDoSegmento) };
+          }
           const topo = escalaY(barra.valor);
           return {
             ...barra,

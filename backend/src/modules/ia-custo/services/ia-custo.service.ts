@@ -4,6 +4,7 @@ import {
   IaCustoConsultarDto,
   IaModeloPrecoAlteradoDto,
   IaModeloPrecoAlterarDto,
+  NivelIaEnum,
   StandardResponse,
   temPermissaoDeAdministrador,
 } from '@project20/shared';
@@ -38,9 +39,14 @@ export class IaCustoService {
       this.configuracaoIaService.listarPrecos(),
       this.configuracaoIaService.obterAtiva(),
     ]);
-    const modelosEmUso = [...new Set([configuracao.modeloRapido, configuracao.modeloPadrao, configuracao.modeloAnalitico])];
+    const modelosPorNivel = {
+      [NivelIaEnum.RAPIDO]: configuracao.modeloRapido,
+      [NivelIaEnum.PADRAO]: configuracao.modeloPadrao,
+      [NivelIaEnum.ANALITICO]: configuracao.modeloAnalitico,
+    };
+    const modelosEmUso = [...new Set(Object.values(modelosPorNivel))];
     const usos = agruparPeloNomeConhecido(usosPorId, [...new Set([...precos.map((preco) => preco.modelo), ...modelosEmUso])]);
-    const modelos = montarModelos(usos, precos, modelosEmUso);
+    const modelos = montarModelos(usos, precos, modelosPorNivel);
 
     return {
       sucesso: true,

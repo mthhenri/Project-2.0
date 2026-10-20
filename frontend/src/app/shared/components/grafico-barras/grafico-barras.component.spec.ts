@@ -87,4 +87,16 @@ describe('GraficoBarrasComponent', () => {
     await montado.atualizar();
     expect(montado.elemento.querySelectorAll('.grafico-barras__valor')).toHaveLength(0);
   });
+
+  it('empilhado: os segmentos da categoria ficam numa coluna só, um sobre o outro, e o eixo vai até a soma', async () => {
+    const montado = await montar({ categorias: categorias([[10, 20]]), empilhado: true });
+    await montado.atualizar();
+    const [embaixo, emcima] = Array.from(montado.elemento.querySelectorAll('.grafico-barras__barra'));
+    expect(embaixo.getAttribute('x')).toBe(emcima.getAttribute('x'));
+    expect(embaixo.getAttribute('width')).toBe(emcima.getAttribute('width'));
+    const topoDeBaixo = Number(embaixo.getAttribute('y'));
+    const baseDeCima = Number(emcima.getAttribute('y')) + Number(emcima.getAttribute('height'));
+    expect(baseDeCima).toBeCloseTo(topoDeBaixo, 5);
+    expect(Number(emcima.getAttribute('height'))).toBeGreaterThan(Number(embaixo.getAttribute('height')));
+  });
 });

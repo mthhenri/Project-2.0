@@ -24,12 +24,15 @@ test('os modelos juntam uso, preços e a configuração ativa; sem preço o cust
       uso('2026-10-02', 'modelo-sem-preco', { tokensEntrada: 500, mensagens: 9 }),
     ],
     [PRECO_SONNET, PRECO_HAIKU],
-    ['haiku', 'sonnet'],
+    { RAPIDO: 'haiku', PADRAO: 'sonnet', ANALITICO: 'sonnet' },
   );
   const porNome = Object.fromEntries(modelos.map((modelo) => [modelo.modelo, modelo]));
   assert.equal(porNome.sonnet.mensagens, 6);
   assert.equal(porNome.sonnet.custoDolar, 18);
   assert.equal(porNome.sonnet.emUso, true);
+  assert.deepEqual(porNome.sonnet.niveis, ['PADRAO', 'ANALITICO']);
+  assert.deepEqual(porNome.haiku.niveis, ['RAPIDO']);
+  assert.deepEqual(porNome['modelo-sem-preco'].niveis, []);
   assert.deepEqual([porNome.haiku.mensagens, porNome.haiku.custoDolar, porNome.haiku.emUso], [0, 0, true]);
   assert.deepEqual([porNome['modelo-sem-preco'].preco, porNome['modelo-sem-preco'].custoDolar, porNome['modelo-sem-preco'].emUso], [null, null, false]);
   assert.deepEqual(modelos.map((modelo) => modelo.modelo), ['sonnet', 'haiku', 'modelo-sem-preco']);
@@ -39,7 +42,7 @@ test('os totais somam tudo e contam os modelos com uso e sem preço', () => {
   const modelos = montarModelos(
     [uso('2026-10-01', 'sonnet', { tokensEntrada: 1_000_000, tokensSaida: 10, tokensCache: 5, mensagens: 3 }), uso('2026-10-01', 'sem-preco', { mensagens: 2 })],
     [PRECO_SONNET, PRECO_HAIKU],
-    [],
+    {},
   );
   assert.deepEqual(somarTotais(modelos), { mensagens: 5, tokensEntrada: 1_000_000, tokensSaida: 10, tokensCache: 5, custoDolar: 3.000152, modelosSemPreco: 1 });
 });
@@ -54,8 +57,8 @@ test('o período traz todos os dias do mês, mesmo sem uso, e ignora o que cai f
     dias,
   );
   assert.equal(periodos.length, 28);
-  assert.deepEqual(periodos[2], { periodo: '2026-02-03', mensagens: 2, tokens: 1_000_120, custoDolar: 3.001506 });
-  assert.deepEqual(periodos[0], { periodo: '2026-02-01', mensagens: 0, tokens: 0, custoDolar: 0 });
+  assert.deepEqual(periodos[2], { periodo: '2026-02-03', mensagens: 2, tokens: 1_000_120, custoDolar: 3.001506, modelos: [{ modelo: 'sonnet', mensagens: 2, tokens: 1_000_120, custoDolar: 3.001506 }] });
+  assert.deepEqual(periodos[0], { periodo: '2026-02-01', mensagens: 0, tokens: 0, custoDolar: 0, modelos: [] });
 });
 
 test('sem mês o período são os doze meses do ano', () => {

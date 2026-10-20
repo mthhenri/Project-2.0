@@ -23,7 +23,7 @@
       <p-button label="Tentar de novo" icon="pi pi-refresh" size="small" [outlined]="true" (onClick)="carregar()" />
     </div>
   } @else {
-    <p-tabs value="provedor">
+    <p-tabs [value]="abaAtiva()" (valueChange)="abaAtiva.set($any($event))">
       <p-tablist>
         <p-tab value="provedor"><i class="pi pi-sliders-h mr-2"></i>Provedor e modelos</p-tab>
         <p-tab value="prompts"><i class="pi pi-file-edit mr-2"></i>Prompts</p-tab>
@@ -273,11 +273,11 @@
           <app-prioridades-aba />
         </p-tabpanel>
 
-        <!-- Lazy: a consulta de custos só roda quando o administrador abre a aba. -->
-        <p-tabpanel value="custos" [lazy]="true">
-          <ng-template #content>
+        <!-- A aba só existe enquanto está aberta: cada vez que o administrador entra nela, a consulta de custos roda de novo. -->
+        <p-tabpanel value="custos">
+          @if (abaAtiva() === 'custos') {
             <app-custos-aba />
-          </ng-template>
+          }
         </p-tabpanel>
       </p-tabpanels>
     </p-tabs>

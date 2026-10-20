@@ -11,6 +11,7 @@
     <span class="custos-aba__recorte" aria-live="polite">{{ rotuloDoRecorte() }}</span>
     <p-button icon="pi pi-chevron-right" severity="secondary" [outlined]="true" [ariaLabel]="recorte() === 'MENSAL' ? 'Próximo mês' : 'Próximo ano'" [disabled]="noPeriodoAtual()" (onClick)="proximo()" />
     <p-button [label]="recorte() === 'MENSAL' ? 'Mês atual' : 'Ano atual'" [text]="true" [disabled]="noPeriodoAtual()" (onClick)="irParaAtual()" />
+    <p-button icon="pi pi-refresh" severity="secondary" [text]="true" [loading]="carregando()" ariaLabel="Atualizar" pTooltip="Atualizar" tooltipPosition="top" (onClick)="carregar()" />
   </div>
 
   @if (erro() && !consulta()) {
@@ -62,7 +63,12 @@
         <section class="custos-aba__cartao" aria-label="Custo ao longo do período">
           <h2 class="custos-aba__titulo-secao">Custo {{ recorte() === 'MENSAL' ? 'por dia' : 'por mês' }} (US$)</h2>
           @if (temUso()) {
-            <app-grafico-barras [categorias]="categorias()" [altura]="240" [descricaoGeral]="'Custo estimado da IA em ' + rotuloDoRecorte()" />
+            <app-grafico-barras [categorias]="categorias()" [empilhado]="true" [altura]="240" [descricaoGeral]="'Custo estimado da IA em ' + rotuloDoRecorte() + ', por modelo'" />
+            <ul class="custos-aba__legenda" aria-label="Modelos do gráfico">
+              @for (item of legenda(); track item.modelo) {
+                <li class="custos-aba__legenda-item"><span class="custos-aba__legenda-cor" [style.background-color]="item.cor"></span>{{ item.modelo }}</li>
+              }
+            </ul>
           } @else {
             <div class="custos-aba__vazio">
               <i class="pi pi-chart-bar text-4xl text-muted-color"></i>
