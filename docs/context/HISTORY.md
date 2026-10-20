@@ -12,6 +12,17 @@
 
 ---
 
+## 2026-10-19 — Task 170 fechada: verificação ao vivo depois da correção do P-019
+
+Pedido do autor: "faça os testes e se tudo tiver certo só completar" e, depois da pergunta sobre o que faltava, promover o `dev.teste` a gestor só para rever os cartões do gestor e reverter. A 170 estava em `active/` desde a verificação de 167 a 170, só por causa do P-019 (participar por **nome**), corrigido no commit `459e8d9` sem verificação ao vivo.
+
+- **Resultado (relatório `docs/specs/done/170-ia-edicao-de-demanda-participar-e-tags-do-desenvolvedor/VERIFICACAO-170-FECHAMENTO.md`):** o desenvolvedor pediu "quero participar da demanda Integracao com ERP" e a IA achou a demanda pelo nome (com o caminho na árvore) e gerou o cartão "Atribuir membro"; Confirmar gravou em `demanda_usuario`. "Sai da demanda" foi recusado por ele ser o único membro, e o Desfazer da entrada pela mesma regra (`400`). O gestor acrescentou documentação (cartão, texto anterior preservado, Desfazer devolveu o inicial) e moveu uma demanda de uma estrutura para outra (cartão "Pai: A → B", `demanda_pai_id` 17 → 18, Desfazer voltou a 17).
+- **Viewports e temas:** os três cartões em 1366×768 por captura nos dois temas e em 1920×1080 e 1080×1920 por medida do DOM, claro e escuro, sem rolagem horizontal nem corte.
+- **Cuidados:** `dev.teste` promovido a gestor no banco de dev com autorização do autor e devolvido a desenvolvedor (conferido por SQL); demandas plantadas excluídas por soft delete; a IA já estava ligada e foi mantida.
+- **Observação do modelo (sem item próprio):** com a demanda recém-criada a IA reaproveitou a lista antiga da conversa e só achou depois de mandada consultar de novo, como na primeira rodada.
+- **Não exercitado ao vivo:** recusa de mover para dentro de uma filha (ciclo) e tag em demanda pelo desenvolvedor (a regra mudou no P-011); ambos com teste de unidade. Sem lint (P-001); nenhum código de produção foi alterado.
+- **Spec movida para `done/`**; a linha 170 da tabela do `rework-chat-ia.spec.md` aponta para `done/`.
+
 ## 2026-10-19 — Task 199: gráfico de barras e visão anual do volume (correção da 197)
 
 Pedido do autor ao ver a 197: "na tela deveria ter o filtro anual e o filtro mensal, também deveria ser um gráfico de barras" (e perguntou qual valor vai no campo "Volume esperado": as horas por mês que se espera do projeto, somando as pessoas; exemplo 160 h = uma pessoa em tempo integral). Decisões confirmadas com o autor: anual = mês a mês por projeto (12 barras e linha do esperado), gráfico em d3 (já instalado).
