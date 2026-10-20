@@ -12,6 +12,13 @@
 
 ---
 
+## 2026-10-20 — Spec 200 no backlog: Project Desktop mostra e avisa que atualizou (ideia I-015) e envio ao remoto
+
+Pedido do autor: ao mexer no Project Desktop ele deveria mostrar e avisar que atualizou, mas isso fica para depois; "deixa anotado no backlog" e "envia esses commits que estão prontos para o remoto".
+
+- **Só a spec**, em `docs/specs/backlog/200-desktop-aviso-de-que-atualizou.spec.md`, com as decisões em aberto marcadas como minhas, a confirmar: onde avisar (notificação do Windows e item no menu da bandeja), o que dizer (só o número da versão), quando contar como atualizado (versão maior que a registrada na última execução, guardada em `userData`) e que a task só avisa e não troca o executável. A ideia foi registrada como **I-015** já promovida para a spec; `CLAUDE.md`/`AGENTS.md` (espelho idêntico) passaram a dizer que o maior número em uso é 200 e que o backlog tem só ela.
+- **Enviados ao `origin/master`:** `fc33648..6e58ad2` (o `rework-chat-ia` em `done/` e o Project Desktop v1.0.1, fast-forward; nada novo no remoto). Antes, na mesma sessão, `17c66b7..fc33648`.
+
 ## 2026-10-20 — Project Desktop: fechar e minimizar ocultam a janela (somem da barra de tarefas) e o app segue na bandeja
 
 Pedido do autor: o fechar não deveria agir como o minimizar (que deixa o botão na barra de tarefas); ao clicar em fechar a janela some da barra, mas o app continua aberto, só oculto, e o minimizar faz o mesmo.

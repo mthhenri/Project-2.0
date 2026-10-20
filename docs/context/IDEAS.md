@@ -130,3 +130,7 @@
 ### I-014 — Botão "Baixar Project Desktop" e conferir a atualização do app · desktop/frontend
 
 - **Promovida em 2026-10-19** para a task [`198-desktop-baixar-e-atualizar`](../specs/done/198-desktop-baixar-e-atualizar.spec.md) (implementada).
+
+### I-015 — Project Desktop mostra e avisa que atualizou · desktop
+
+- **Promovida em 2026-10-20** para a task [`200-desktop-aviso-de-que-atualizou`](../specs/backlog/200-desktop-aviso-de-que-atualizou.spec.md) (só a spec, no backlog; a implementação fica para depois).
