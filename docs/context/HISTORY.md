@@ -12,6 +12,17 @@
 
 ---
 
+## 2026-10-20 — Project Desktop: fechar e minimizar ocultam a janela (somem da barra de tarefas) e o app segue na bandeja
+
+Pedido do autor: o fechar não deveria agir como o minimizar (que deixa o botão na barra de tarefas); ao clicar em fechar a janela some da barra, mas o app continua aberto, só oculto, e o minimizar faz o mesmo.
+
+- **O que mudou** (`desktop/src/main.ts`, `politica-da-janela.ts`): `decidirFechamento` devolve `'ocultar'` (era `'minimizar'`); o `close` da janela faz `hide()` em vez de `minimize()`; o evento `minimize` também oculta; um `show` (bandeja, segunda instância) reajusta o tamanho e fecha a janelinha do check-in. `trazerParaAFrente` agora também sai do oculto (`show`, depois o `minimize`/`restore` de sempre, que traz a janela para a área de trabalho atual) e usa uma folga de 700 ms para o minimizar do próprio truque não ocultar a janela que acabou de voltar.
+- **Janelinha do check-in:** nada mudou na regra: `principalMinimizada()` já valia para "minimizada ou não visível", então com o Project oculto o check-in abre a janelinha como antes (o texto da spec e do README passou a dizer "minimizado ou oculto").
+- **Testes:** `desktop` 24 (o teste de fechar virou "só ocultam a janela"). **Verificado de verdade no Windows**, com uma instância de teste de pasta de dados própria (o app do autor, aberto, não foi tocado): aberta visível; WM_CLOSE (o X e o Alt+F4) deixa a janela invisível com o processo vivo; segunda instância (o mesmo caminho do ícone da bandeja) a traz de volta visível e não minimizada; minimizar a oculta com o processo vivo; voltar depois do minimizar funciona; e um minimizar logo depois de voltar também oculta (a folga não engole o gesto do usuário).
+- **O autor testou e "não mudou nada":** ele rodou o executável de 18/10 (`release/Project-Desktop-1.0.0.exe`, anterior à mudança) ou deixou o app antigo aberto, e a instância única só traz a janela do antigo para a frente. Repetido de forma mais realista: Alt+F4 pelo teclado (só enviado depois de confirmar que a janela do app tem o primeiro plano), `WM_SYSCOMMAND` de fechar e de minimizar, e voltar pela segunda instância, no `electron .`, no `win-unpacked` e no portátil novo: todos ocultam a janela (invisível, fora da barra de tarefas) com o processo vivo. Um primeiro teste do Alt+F4 no empacotado deu "visível" porque a tecla não tinha o foco (a janela estava inalterada); o teste passou a recusar enviar a tecla sem o foco, para não fechar outro programa.
+- **Versão:** `desktop/package.json` e a entrada do workspace no `package-lock.json` subiram para **1.0.1**, e `npm run pack --workspace=desktop` gerou `desktop/release/Project-Desktop-1.0.1.exe` (o 1.0.0 continua na pasta; o backend serve o de maior versão, e os apps 1.0.0 passam a mostrar "Nova versão disponível" na bandeja). **Para o autor ver a mudança:** "Fechar completamente" no app antigo, abrir o `Project-Desktop-1.0.1.exe`.
+- **Não verificado:** o clique do mouse no X e no minimizar da barra de título e o clique no ícone da bandeja (os testes usaram as mensagens do sistema e a segunda instância, que é o mesmo caminho do ícone).
+
 ## 2026-10-20 — Guarda-chuva `rework-chat-ia` movido para `done/`
 
 Pedido do autor ("sim", ao oferecer conferir). Conferido: as 51 tasks da tabela do guarda-chuva (118–124, 125–128, 129–133, 134, 135–141, 142–148, 149–152, 153–156, 157–158, 159–161 e 164–170) estão em `docs/specs/done/`, e os blocos 1 a 10 já constavam como concluídos no `CONTEXT.md`.

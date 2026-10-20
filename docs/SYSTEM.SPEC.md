@@ -126,9 +126,9 @@ protege contra arquivo já rastreado ou inclusão forçada.
 
 Aplicativo Electron (TypeScript, `desktop/src/main.ts`) que abre o front do Project numa janela própria; o front continua sendo o
 centro e o desktop só aponta para a URL fixa (`desktop/src/config.ts`). A janela abre cobrindo o monitor principal, sempre por cima, sem arrastar
-nem redimensionar pela borda; pode maximizar (e restaurar volta ao tamanho de abertura) e minimizar: fechar e Alt+F4 minimizam e a única saída é "Fechar completamente" no ícone da bandeja,
+nem redimensionar pela borda; pode maximizar (e restaurar volta ao tamanho de abertura); **fechar, Alt+F4 e minimizar ocultam a janela** (ela some da barra de tarefas e o app segue vivo na bandeja, que a traz de volta) e a única saída é "Fechar completamente" no ícone da bandeja,
 com confirmação numa janelinha própria, no tema do sistema. O desligamento do sistema operacional nunca é impedido. Uma única instância, sem iniciar com o Windows. A lógica de
-decisão (fechar ou minimizar, janela fora do lugar, destino de um link, URL, texto do tempo) mora em funções puras com `node:test`
+decisão (fechar ou ocultar, janela fora do lugar, destino de um link, URL, texto do tempo) mora em funções puras com `node:test`
 (`desktop/src/politica-da-janela.ts`); o executável portátil sai de `npm run pack --workspace=desktop` e não tem atualização
 automática (task 198): o backend serve o `Project-Desktop-<versão>.exe` de maior versão da pasta `DESKTOP_PASTA_EXECUTAVEIS` (`GET /desktop/versao` e `GET /desktop/download`, qualquer usuário autenticado; módulo `desktop`), o menu do perfil tem "Baixar Project Desktop" e o app avisa na bandeja quando há versão mais nova (confere de hora em hora; o front inicia o download). Com o Project minimizado e o check-in disparado pelo backend, o desktop abre a **janelinha do check-in** (480 × 560, sem moldura, sempre por cima, arrastável, sem fechar nem minimizar; `src/politica-do-checkin.ts` decide quando abrir e fechar); com o Project à tela, o check-in é o diálogo dentro dele (task 161). O desktop lê a situação em `GET /checkin/situacao` com o token que a página guarda, e a página `/checkin` avisa o fim por `window.projectDesktop.encerrarCheckin()` (`src/preload.ts`) (task 160).
 

@@ -2,8 +2,8 @@ import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
 import { decidirFechamento, destinoDaNavegacao, janelaForaDoLugar, limitarAoMonitor, resolverUrlDoProject, textoDoProximoCheckin } from './politica-da-janela';
 
-test('fechar, Alt+F4 e afins só minimizam', () => {
-  assert.equal(decidirFechamento({ saidaConfirmada: false, encerramentoDoSistema: false }), 'minimizar');
+test('fechar, Alt+F4 e afins só ocultam a janela (ela some da barra de tarefas e o app segue na bandeja)', () => {
+  assert.equal(decidirFechamento({ saidaConfirmada: false, encerramentoDoSistema: false }), 'ocultar');
 });
 
 test('a saída confirmada na bandeja e o desligamento do sistema fecham de verdade', () => {

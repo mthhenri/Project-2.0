@@ -29,6 +29,8 @@ let janela: BrowserWindow | null = null;
 let dialogoDeSaida: BrowserWindow | null = null;
 let bandeja: Tray | null = null;
 let reajustando = false;
+/** Trazer o Project para a frente minimiza e restaura de propósito; enquanto isso, o minimizar não pode ocultar a janela. */
+let trazendoParaAFrente = false;
 let tentativaDeReabrir: NodeJS.Timeout | null = null;
 
 if (!app.requestSingleInstanceLock()) {
@@ -52,20 +54,34 @@ function reajustarJanela(): void {
   }
 }
 
+/** Esconde a janela: ela some da barra de tarefas e do Alt+Tab, mas o app segue aberto e a bandeja a traz de volta. */
+function ocultarJanela(): void {
+  if (janela && !janela.isDestroyed()) janela.hide();
+}
+
 /**
- * Traz o Project para a frente na área de trabalho atual do Windows: minimiza e restaura, o que o coloca na área em uso
- * (o Windows não deixa uma janela comum "seguir" o usuário entre áreas de trabalho de outro jeito).
+ * Traz o Project para a frente na área de trabalho atual do Windows, saindo do oculto se for o caso: minimiza e restaura, o que o coloca
+ * na área em uso (o Windows não deixa uma janela comum "seguir" o usuário entre áreas de trabalho de outro jeito).
  */
 function trazerParaAFrente(): void {
   if (!janela || janela.isDestroyed()) {
     criarJanela();
     return;
   }
-  janela.minimize();
-  janela.restore();
-  janela.show();
-  reajustarJanela();
-  janela.focus();
+  trazendoParaAFrente = true;
+  try {
+    if (!janela.isVisible()) janela.show();
+    janela.minimize();
+    janela.restore();
+    janela.show();
+    reajustarJanela();
+    janela.focus();
+  } finally {
+    // O evento de minimizar pode chegar um instante depois; a folga evita que ele oculte a janela que acabou de voltar.
+    setTimeout(() => {
+      trazendoParaAFrente = false;
+    }, 700);
+  }
 }
 
 function paginaDeFalha(): string {
@@ -97,12 +113,21 @@ function criarJanela(): void {
     reajustarJanela();
   });
 
-  // Nunca fecha por conta própria: fechar e Alt+F4 só minimizam (o sistema desligando e a saída confirmada na bandeja passam).
+  // Nunca fecha por conta própria: fechar e Alt+F4 só ocultam a janela, e minimizar faz o mesmo (o sistema desligando e a saída
+  // confirmada na bandeja passam). Oculta, ela some da barra de tarefas e o app segue vivo na bandeja.
   janela.on('close', (evento) => {
-    if (decidirFechamento(encerramento) === 'minimizar') {
+    if (decidirFechamento(encerramento) === 'ocultar') {
       evento.preventDefault();
-      janela?.minimize();
+      ocultarJanela();
     }
+  });
+  janela.on('minimize', () => {
+    if (!trazendoParaAFrente) ocultarJanela();
+  });
+  // Voltou à tela (bandeja, segunda instância): o tamanho de abertura volta e o check-in passa a ser o diálogo dentro do Project.
+  janela.on('show', () => {
+    reajustarJanela();
+    fecharJanelinha();
   });
   janela.on('session-end', () => {
     encerramento.encerramentoDoSistema = true;

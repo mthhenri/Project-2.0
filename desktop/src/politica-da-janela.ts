@@ -1,4 +1,4 @@
-/** O que o app sabe sobre o próprio encerramento (decide se um pedido de fechar vale ou só minimiza). */
+/** O que o app sabe sobre o próprio encerramento (decide se um pedido de fechar vale ou só oculta a janela). */
 export interface EstadoDeEncerramento {
   /** O usuário escolheu e confirmou "Fechar completamente" na bandeja. */
   saidaConfirmada: boolean;
@@ -6,14 +6,15 @@ export interface EstadoDeEncerramento {
   encerramentoDoSistema: boolean;
 }
 
-export type DecisaoDeFechamento = 'fechar' | 'minimizar';
+export type DecisaoDeFechamento = 'fechar' | 'ocultar';
 
 /**
- * O Project Desktop nunca fecha por conta própria: fechar, Alt+F4 e equivalentes só minimizam. Só vale o fechamento confirmado pelo
- * usuário na bandeja ou o pedido do sistema operacional (que o app jamais impede, para não travar o desligamento).
+ * O Project Desktop nunca fecha por conta própria: fechar, Alt+F4 e equivalentes só **ocultam** a janela (ela some da barra de tarefas e o
+ * app segue vivo na bandeja; minimizar faz o mesmo). Só vale o fechamento confirmado pelo usuário na bandeja ou o pedido do sistema
+ * operacional (que o app jamais impede, para não travar o desligamento).
  */
 export function decidirFechamento(estado: EstadoDeEncerramento): DecisaoDeFechamento {
-  return estado.saidaConfirmada || estado.encerramentoDoSistema ? 'fechar' : 'minimizar';
+  return estado.saidaConfirmada || estado.encerramentoDoSistema ? 'fechar' : 'ocultar';
 }
 
 /** Os limites da janela de tela cheia: o monitor principal inteiro. */
