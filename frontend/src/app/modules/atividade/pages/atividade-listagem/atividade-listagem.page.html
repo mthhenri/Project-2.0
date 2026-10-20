@@ -114,7 +114,7 @@
   </form>
 
   @if (primeiraCarga()) {
-    <app-skeleton-lista variante="tabela" [quantidade]="8" [colunas]="7" />
+    <app-skeleton-lista variante="tabela" [quantidade]="5" [cabecalhos]="esqueleto().cabecalhos" [larguras]="esqueleto().larguras" alturaLinha="5.25rem" />
   }
   <div class="lista-recarga" [hidden]="primeiraCarga()" [class.conteudo-recarregando]="recarregando()">
     <app-barra-recarga [ativa]="recarregando()" />

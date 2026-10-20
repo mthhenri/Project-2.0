@@ -1,3 +1,4 @@
+import { montarEsqueletoDeTabela } from '../../../../shared/components/skeleton-lista/esqueleto-tabela';
 import { Component, ElementRef, inject, signal, OnInit, HostListener, DestroyRef, computed, viewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -59,6 +60,17 @@ interface FiltrosPersistidos {
 export class UsuarioListagemPage implements OnInit {
   private readonly usuarioService = inject(UsuarioService);
   readonly sessao = inject(UsuarioSessaoService);
+  /** Os rótulos e as larguras da tabela real (a coluna Anotações só existe para o gestor), para o esqueleto não parecer outra tela. */
+  readonly esqueleto = computed(() =>
+    montarEsqueletoDeTabela([
+      { rotulo: 'Usuário', peso: 248 },
+      { rotulo: 'Cargo', peso: 218 },
+      { rotulo: 'Tipo', peso: 176 },
+      { rotulo: 'Status', peso: 160 },
+      ...(this.sessao.eGestor() ? [{ rotulo: 'Anotações', peso: 99 }] : []),
+      { rotulo: '', peso: 128 },
+    ]),
+  );
   private readonly desfazerService = inject(DesfazerService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);

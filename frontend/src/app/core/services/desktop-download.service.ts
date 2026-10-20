@@ -2,8 +2,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { DesktopVersaoRecuperadaDto, StandardResponse } from '@project20/shared';
 import { ambiente } from '../../../environments/environment';
-import { comFeedbackProprio } from '../interceptors/loading.interceptor';
-import { comErroTratadoPelaTela } from '../interceptors/error-handler.interceptor';
+import { comFeedbackProprioEErroTratado } from '../interceptors/loading.interceptor';
 
 /** O Project Desktop publicado no servidor (task 198): a versão disponível e o download pelo botão da topbar. */
 @Injectable({ providedIn: 'root' })
@@ -22,7 +21,7 @@ export class DesktopDownloadService {
   /** Lê a versão publicada; falha em silêncio (sem o botão, nada mais muda). */
   carregar(): void {
     this.http
-      .get<StandardResponse<DesktopVersaoRecuperadaDto>>(`${ambiente.apiUrl}/desktop/versao`, { ...comFeedbackProprio(), ...comErroTratadoPelaTela() })
+      .get<StandardResponse<DesktopVersaoRecuperadaDto>>(`${ambiente.apiUrl}/desktop/versao`, comFeedbackProprioEErroTratado())
       .subscribe({
         next: (resposta) => this._versao.set(resposta.sucesso ? resposta.dados ?? null : null),
         error: () => this._versao.set(null),

@@ -134,3 +134,17 @@
 ### I-015 — Project Desktop mostra e avisa que atualizou · desktop
 
 - **Promovida em 2026-10-20** para a task [`200-desktop-aviso-de-que-atualizou`](../specs/backlog/200-desktop-aviso-de-que-atualizou.spec.md) (só a spec, no backlog; a implementação fica para depois).
+
+### I-016 — Custo da IA por usuário e por origem, com histórico de preço · ia-custo
+
+- **Ideia:** além do custo por modelo e por dia, mostrar quanto cada pessoa e cada origem (chat, check-in, assistente de descrição, relatório, nomeação) gastou; e guardar o preço vigente de cada época, para trocar um preço não recalcular o passado.
+- **Origem:** task 201 (aba Custos); ficou fora do escopo de propósito.
+- **Por quê:** hoje trocar o preço de um modelo muda o custo de tudo o que já foi registrado, e não dá para saber quem ou o que mais gasta.
+- **Custo aparente:** `ia_uso` ganha `usuario_id` e origem (o `IaService` não conhece o usuário: viria do `TurnoIa`/contexto da requisição), tabela de preço com vigência e mais um corte na aba.
+
+### I-017 — Avisar o desenvolvedor quando o gestor consulta a conversa dele pela IA · chat IA/gestor
+
+- **Ideia:** registrar e mostrar ao desenvolvedor que o gestor leu (ou buscou em) suas conversas com a IA.
+- **Origem:** task 201; a decisão de não avisar foi minha e está marcada a confirmar.
+- **Por quê:** transparência sobre um acesso sensível a conversas pessoais de trabalho.
+- **Custo aparente:** uma tabela de acessos, a escrita nas três ferramentas e um ponto de exibição para o desenvolvedor (por exemplo, no histórico do chat).

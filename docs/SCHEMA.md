@@ -734,6 +734,12 @@ Uma linha por mensagem do chat, gravada uma vez e nunca reescrita (sem exclusão
 #### `chat_conversa`
 O nome da conversa: `conversa_id` (único), `usuario_id`, `titulo` (vazio = sem nome gravado; vale o padrão "Chat do dia ...") e `titulo_editado` (verdadeiro quando o usuário renomeou; a renomeação automática da IA deixa essa conversa em paz), mais as colunas de `BaseEntity`.
 
+#### `ia_uso`
+Uma linha por chamada bem-sucedida ao provedor de IA (task 201, migration `0047`). Colunas de `BaseEntity` mais: `uso_data` (`timestamptz`, o instante da chamada), `modelo` (o que respondeu), `tokens_entrada`, `tokens_saida` e `tokens_cache` (inteiros ≥ 0). Sem usuário nem origem: o custo é por modelo e por dia. Índice `ix_ia_uso_uso_data` (parcial, `is_deleted = false`).
+
+#### `ia_modelo_preco`
+O preço de um modelo em dólar por milhão de tokens (task 201, migration `0047`), editado pelo administrador na aba "Custos": `modelo` (único entre os não excluídos, `uix_ia_modelo_preco_modelo_ativo`), `preco_entrada_milhao`, `preco_saida_milhao` e `preco_cache_milhao` (`NUMERIC(12,4)` ≥ 0). O custo de `ia_uso` é calculado na consulta com este preço, então trocar o preço muda também o custo do que já foi registrado.
+
 ---
 
 ## Resumo de Relacionamentos

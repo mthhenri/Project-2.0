@@ -4,6 +4,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TipoAnotacaoEnum } from '@project20/shared';
 import { ERRO_TRATADO_PELA_TELA } from '../../../core/interceptors/error-handler.interceptor';
+import { SEM_OVERLAY_GLOBAL } from '../../../core/interceptors/loading.interceptor';
 import { AnotacaoService } from './anotacao.service';
 
 let http: HttpTestingController;
@@ -39,6 +40,8 @@ describe('AnotacaoService (frontend)', () => {
     const requisicao = pedido('PUT', '/anotacao/7/LEMBRETE');
     expect(requisicao.request.body).toEqual({ texto: 'avisar', updatedDateLido: lida });
     expect(requisicao.request.context.get(ERRO_TRATADO_PELA_TELA)).toBe(true);
+    // O pad salva sozinho em segundo plano: o overlay que trava a tela toda fica de fora.
+    expect(requisicao.request.context.get(SEM_OVERLAY_GLOBAL)).toBe(true);
   });
 
   it('moverTrecho faz POST em /anotacao/:usuarioId/mover com as duas versões lidas', () => {
@@ -51,5 +54,6 @@ describe('AnotacaoService (frontend)', () => {
     const requisicao = pedido('POST', '/anotacao/7/mover');
     expect(requisicao.request.body).toEqual(dto);
     expect(requisicao.request.context.get(ERRO_TRATADO_PELA_TELA)).toBe(true);
+    expect(requisicao.request.context.get(SEM_OVERLAY_GLOBAL)).toBe(true);
   });
 });

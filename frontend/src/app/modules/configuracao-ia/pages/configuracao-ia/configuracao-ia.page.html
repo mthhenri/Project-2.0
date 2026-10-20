@@ -28,6 +28,7 @@
         <p-tab value="provedor"><i class="pi pi-sliders-h mr-2"></i>Provedor e modelos</p-tab>
         <p-tab value="prompts"><i class="pi pi-file-edit mr-2"></i>Prompts</p-tab>
         <p-tab value="prioridades"><i class="pi pi-flag mr-2"></i>Prioridades</p-tab>
+        <p-tab value="custos"><i class="pi pi-dollar mr-2"></i>Custos</p-tab>
       </p-tablist>
 
       <p-tabpanels>
@@ -270,6 +271,13 @@
 
         <p-tabpanel value="prioridades">
           <app-prioridades-aba />
+        </p-tabpanel>
+
+        <!-- Lazy: a consulta de custos só roda quando o administrador abre a aba. -->
+        <p-tabpanel value="custos" [lazy]="true">
+          <ng-template #content>
+            <app-custos-aba />
+          </ng-template>
         </p-tabpanel>
       </p-tabpanels>
     </p-tabs>

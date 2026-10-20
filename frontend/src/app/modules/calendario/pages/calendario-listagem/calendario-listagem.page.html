@@ -86,7 +86,7 @@
       <h2 class="calendario-listagem__tabela-titulo">{{ rotuloMes() }}</h2>
 
       @if (primeiraCarga()) {
-        <app-skeleton-lista variante="tabela" [quantidade]="5" [colunas]="4" />
+        <app-skeleton-lista variante="tabela" [quantidade]="3" [cabecalhos]="esqueleto.cabecalhos" [larguras]="esqueleto.larguras" alturaLinha="3.25rem" />
       } @else {
         <div class="lista-recarga" [class.conteudo-recarregando]="recarregando()">
           <app-barra-recarga [ativa]="recarregando()" />

@@ -1,3 +1,4 @@
+import { montarEsqueletoDeTabela } from '../../../../shared/components/skeleton-lista/esqueleto-tabela';
 import { Component, inject, signal, DestroyRef, OnInit, HostListener, computed, effect, untracked, viewChild } from '@angular/core';
 import { ExecucaoRegistroDialogComponent } from '../../components/execucao-registro-dialog/execucao-registro-dialog.component';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -136,6 +137,21 @@ export class AtividadeListagemPage implements OnInit {
   private readonly formBuilder = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
   readonly sessao = inject(UsuarioSessaoService);
+  /** Os rótulos e as larguras da tabela real (seleção e Usuário só para o gestor), para o esqueleto não parecer outra tela. */
+  readonly esqueleto = computed(() =>
+    montarEsqueletoDeTabela([
+      ...(this.sessao.eGestor() ? [{ rotulo: '', peso: 36 }] : []),
+      { rotulo: 'Projeto', peso: 71 },
+      { rotulo: 'Demanda', peso: 212 },
+      { rotulo: 'Atividade', peso: 124 },
+      ...(this.sessao.eGestor() ? [{ rotulo: 'Usuário', peso: 93 }] : []),
+      { rotulo: 'Prioridade', peso: 119 },
+      { rotulo: 'Status', peso: 138 },
+      { rotulo: 'Tempo executado', peso: 97 },
+      { rotulo: 'Tags', peso: 67 },
+      { rotulo: 'Ações', peso: 124 },
+    ]),
+  );
   readonly unidadeTempo = inject(VisualizacaoTempoService);
 
   readonly formularioFiltros = this.formBuilder.group({

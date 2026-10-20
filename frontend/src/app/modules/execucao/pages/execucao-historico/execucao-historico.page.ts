@@ -1,3 +1,4 @@
+import { montarEsqueletoDeTabela } from '../../../../shared/components/skeleton-lista/esqueleto-tabela';
 import {
   Component,
   inject,
@@ -95,6 +96,20 @@ export class ExecucaoHistoricoPage implements OnInit {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
   readonly sessao = inject(UsuarioSessaoService);
+  /** Os rótulos e as larguras da tabela real (Usuário e Ações só para o gestor), para o esqueleto não parecer outra tela. */
+  readonly esqueleto = computed(() =>
+    montarEsqueletoDeTabela([
+      ...(this.sessao.eGestor() ? [{ rotulo: 'Usuário', peso: 103 }] : []),
+      { rotulo: 'Projeto', peso: 101 },
+      { rotulo: 'Demanda', peso: 136 },
+      { rotulo: 'Atividade', peso: 154 },
+      { rotulo: 'Início', peso: 76 },
+      { rotulo: 'Fim', peso: 132 },
+      { rotulo: 'Duração', peso: 119 },
+      { rotulo: 'Descrição', peso: 128 },
+      ...(this.sessao.eGestor() ? [{ rotulo: 'Ações', peso: 81 }] : []),
+    ]),
+  );
 
   /** Data máxima navegável: hoje. Não é permitido visualizar dias futuros. */
   readonly hoje = hojeNoFuso(ambiente.fusoHorario);

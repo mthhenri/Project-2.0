@@ -15,6 +15,7 @@ import { TagModule } from 'primeng/tag';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { ConfiguracaoIaResumoDto, EsforcoIaEnum, EstadoIaEnum, ModoContextoChatEnum, TipoProvedorIaEnum } from '@project20/shared';
 import { PromptsAbaComponent } from '../../components/prompts-aba/prompts-aba.component';
+import { CustosAbaComponent } from '../../components/custos-aba/custos-aba.component';
 import { PrioridadesAbaComponent } from '../../components/prioridades-aba/prioridades-aba.component';
 import { ConfiguracaoIaService } from '../../services/configuracao-ia.service';
 import {
@@ -56,6 +57,7 @@ import {
     ToggleSwitchModule,
     PromptsAbaComponent,
     PrioridadesAbaComponent,
+    CustosAbaComponent,
   ],
   templateUrl: './configuracao-ia.page.html',
   styleUrl: './configuracao-ia.page.scss',

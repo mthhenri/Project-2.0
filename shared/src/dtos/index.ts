@@ -19,3 +19,4 @@ export * from './proposta-ia/index';
 export * from './ferramenta-ia/index';
 export * from './checkin/index';
 export * from './desktop/index';
+export * from './ia-custo/index';

@@ -26,6 +26,13 @@
     }
   }
 
+  // O rótulo real de uma coluna, no mesmo peso e tamanho dos `th` das tabelas (que já sabem o texto antes dos dados).
+  &__rotulo {
+    overflow-wrap: anywhere;
+    font-weight: 600;
+    color: var(--p-text-color);
+  }
+
   &__grade {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));

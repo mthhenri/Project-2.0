@@ -1,0 +1,8 @@
+// O cronômetro entra no meio de texto e de células de tabela: alinhado ao centro da linha (e não à linha de base do texto vizinho, que
+// o fazia subir uns pixels) e sem quebra, para os dígitos que mudam a cada segundo nunca empurrarem o que vem depois.
+:host {
+  display: inline-flex;
+  vertical-align: middle;
+  line-height: 1;
+  white-space: nowrap;
+}
