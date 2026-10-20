@@ -158,7 +158,10 @@
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    padding: 0.5rem 0 1rem;
+    // A barra de rolagem fica numa faixa própria à direita do texto (e não colada nele), e fina.
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    padding: 0.5rem 1.25rem 1rem 0;
   }
 
   &__fluxo {

@@ -42,7 +42,7 @@ describe('SkeletonListaComponent', () => {
   it('com cabeçalhos mostra os rótulos reais como texto e usa o número deles como colunas', async () => {
     const montado = await montarComponente(SkeletonListaComponent, { entradas: { cabecalhos: ['Usuário', 'Cargo', ''], quantidade: 2 } });
     const rotulos = Array.from(montado.elemento.querySelectorAll('.skeleton-lista__rotulo')).map((no) => no.textContent);
-    expect(rotulos).toEqual(['Usuário', 'Cargo']);
+    expect(rotulos).toEqual(['Usuário', 'Cargo', '']);
     // A coluna sem rótulo fica vazia no cabeçalho (como o `th` real); as linhas têm uma célula por cabeçalho.
     expect(montado.elemento.querySelectorAll('.skeleton-lista__rotulo').length).toBe(3);
     expect(blocos(montado.elemento)).toBe(2 * 3);
