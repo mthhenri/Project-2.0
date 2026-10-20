@@ -113,6 +113,14 @@ describe('ChatMensagemOpenSearchRepository', () => {
     await assert.rejects(repositorio.buscar({ usuarioId: 1, texto: 'x' }), (erro) => erro instanceof BusinessException);
   });
 
+  it('somarTokens lê os baldes da agregação `periodos` (resposta no envelope `body`)', async () => {
+    const { cliente } = criarClienteFalso({ indiceExiste: true });
+    const agregacao = { key_as_string: '2026-10-05', modelos: { buckets: [{ key: 'haiku', doc_count: 1, entrada: { value: 9 }, saida: { value: 1 }, cache: { value: 0 } }] } };
+    cliente.search = async () => ({ body: { hits: { hits: [] }, aggregations: { periodos: { buckets: [agregacao] } } } });
+    const somados = await new ChatMensagemOpenSearchRepository(cliente).somarTokens({ dataInicio: '2026-10-01', dataFim: '2026-10-31', porMes: false, fusoHorario: 'UTC' });
+    assert.deepEqual(somados, [{ periodo: '2026-10-05', modelo: 'haiku', mensagens: 1, tokensEntrada: 9, tokensSaida: 1, tokensCache: 0 }]);
+  });
+
   it('não expõe exclusão nem alteração de documento', () => {
     const metodos = [ChatMensagemOpenSearchRepository.prototype, Object.getPrototypeOf(ChatMensagemOpenSearchRepository.prototype)].flatMap((prototipo) => Object.getOwnPropertyNames(prototipo));
     assert.deepEqual(

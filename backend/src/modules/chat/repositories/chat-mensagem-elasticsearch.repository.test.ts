@@ -96,6 +96,18 @@ describe('ChatMensagemElasticsearchRepository', () => {
     assert.ok('query' in chamadas.search[0] && 'sort' in chamadas.search[0] && !('body' in chamadas.search[0]));
   });
 
+  it('somarTokens espalha a consulta nos parâmetros e lê os baldes da agregação `periodos` (resposta sem envelope)', async () => {
+    const { cliente, chamadas } = criarClienteFalso({ indiceExiste: true });
+    const agregacao = { key_as_string: '2026-10', modelos: { buckets: [{ key: 'sonnet', doc_count: 2, entrada: { value: 50 }, saida: { value: 6 }, cache: { value: 1 } }] } };
+    cliente.search = async (parametros) => {
+      chamadas.search.push(parametros);
+      return { hits: { hits: [] }, aggregations: { periodos: { buckets: [agregacao] } } };
+    };
+    const somados = await new ChatMensagemElasticsearchRepository(cliente).somarTokens({ dataInicio: '2026-01-01', dataFim: '2026-12-31', porMes: true, fusoHorario: 'UTC' });
+    assert.deepEqual(somados, [{ periodo: '2026-10', modelo: 'sonnet', mensagens: 2, tokensEntrada: 50, tokensSaida: 6, tokensCache: 1 }]);
+    assert.ok('aggs' in chamadas.search[0] && 'query' in chamadas.search[0] && !('body' in chamadas.search[0]));
+  });
+
   it('Elasticsearch fora do ar vira mensagem clara e não derruba a subida', async () => {
     const repositorio = new ChatMensagemElasticsearchRepository(criarClienteFalso({ falhar: true }).cliente);
     await assert.doesNotReject(repositorio.onModuleInit());

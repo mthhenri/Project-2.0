@@ -2,7 +2,7 @@ import { IaModeloPrecoDto } from './IaModeloPrecoDto';
 
 /** O total do recorte. `custoDolar` soma só os modelos com preço; `modelosSemPreco` diz quantos ficaram de fora. */
 export interface IaCustoTotaisDto {
-  chamadas: number;
+  mensagens: number;
   tokensEntrada: number;
   tokensSaida: number;
   tokensCache: number;
@@ -13,7 +13,7 @@ export interface IaCustoTotaisDto {
 /** O uso de um modelo no recorte. `preco` é `null` sem preço cadastrado (e então `custoDolar` também). Modelos sem uso aparecem com zeros. */
 export interface IaCustoModeloDto {
   modelo: string;
-  chamadas: number;
+  mensagens: number;
   tokensEntrada: number;
   tokensSaida: number;
   tokensCache: number;
@@ -27,7 +27,7 @@ export interface IaCustoModeloDto {
 export interface IaCustoPeriodoDto {
   /** `yyyy-mm-dd` no recorte de mês; `yyyy-mm` no de ano. */
   periodo: string;
-  chamadas: number;
+  mensagens: number;
   tokens: number;
   custoDolar: number;
 }

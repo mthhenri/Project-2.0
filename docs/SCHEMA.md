@@ -605,6 +605,7 @@ CREATE TABLE configuracao_ia (
   duvidas_codigo               BOOLEAN      NOT NULL,   -- migration 0044: o chat também responde dúvidas de programação (false: só o Project)
   modo_contexto_chat           VARCHAR(20)  NOT NULL,   -- migration 0044: MISTURADO/SEPARADO (ModoContextoChatEnum do shared; sem tabela nem CHECK)
   ia_desligada                 BOOLEAN      NOT NULL,
+  precos_modelo                JSONB        NOT NULL,   -- migration 0048: modelo → { precoEntradaMilhao, precoSaidaMilhao, precoCacheMilhao } em dólar por milhão de tokens; a nova versão copia os da anterior e editar um preço na aba Custos altera a versão ativa no lugar
   usuario_id                   INTEGER      NOT NULL CONSTRAINT fk_configuracao_ia_usuario REFERENCES usuario(id),  -- quem salvou
 
   CONSTRAINT chk_configuracao_ia_intervalo_checkin CHECK (checkin_minimo_minutos < checkin_maximo_minutos)
@@ -734,11 +735,8 @@ Uma linha por mensagem do chat, gravada uma vez e nunca reescrita (sem exclusão
 #### `chat_conversa`
 O nome da conversa: `conversa_id` (único), `usuario_id`, `titulo` (vazio = sem nome gravado; vale o padrão "Chat do dia ...") e `titulo_editado` (verdadeiro quando o usuário renomeou; a renomeação automática da IA deixa essa conversa em paz), mais as colunas de `BaseEntity`.
 
-#### `ia_uso`
-Uma linha por chamada bem-sucedida ao provedor de IA (task 201, migration `0047`). Colunas de `BaseEntity` mais: `uso_data` (`timestamptz`, o instante da chamada), `modelo` (o que respondeu), `tokens_entrada`, `tokens_saida` e `tokens_cache` (inteiros ≥ 0). Sem usuário nem origem: o custo é por modelo e por dia. Índice `ix_ia_uso_uso_data` (parcial, `is_deleted = false`).
-
-#### `ia_modelo_preco`
-O preço de um modelo em dólar por milhão de tokens (task 201, migration `0047`), editado pelo administrador na aba "Custos": `modelo` (único entre os não excluídos, `uix_ia_modelo_preco_modelo_ativo`), `preco_entrada_milhao`, `preco_saida_milhao` e `preco_cache_milhao` (`NUMERIC(12,4)` ≥ 0). O custo de `ia_uso` é calculado na consulta com este preço, então trocar o preço muda também o custo do que já foi registrado.
+#### Custo da IA (task 202)
+Não há tabela de uso nem de preço: `ia_uso` e `ia_modelo_preco` (task 201, migration `0047`) saíram na migration `0048`. O custo é calculado a partir dos tokens gravados em `chat_mensagem` (`modelo`, `tokens_entrada`, `tokens_saida`, `tokens_cache`), somados por dia ou mês e por modelo (`ArmazenamentoDeChat.somarTokens`), e o preço de cada modelo vive em `configuracao_ia.precos_modelo`.
 
 ---
 

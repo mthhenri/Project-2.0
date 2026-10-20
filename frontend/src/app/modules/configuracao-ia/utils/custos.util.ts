@@ -40,7 +40,7 @@ export function montarCategoriasDeCusto(periodos: readonly IaCustoPeriodoDto[]):
           valor: periodo.custoDolar,
           cor: COR_CUSTO,
           rotulo: periodo.custoDolar > 0 ? formatarDolar(periodo.custoDolar).replace('US$', '').trim() : '',
-          descricao: `${quando}: ${formatarDolar(periodo.custoDolar)} em ${periodo.chamadas} ${periodo.chamadas === 1 ? 'chamada' : 'chamadas'} (${formatarTokens(periodo.tokens)} tokens)`,
+          descricao: `${quando}: ${formatarDolar(periodo.custoDolar)} em ${periodo.mensagens} ${periodo.mensagens === 1 ? 'mensagem' : 'mensagens'} da IA (${formatarTokens(periodo.tokens)} tokens)`,
         },
       ],
     };

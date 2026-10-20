@@ -5,6 +5,9 @@ import {
   ConfiguracaoIaListarDto,
   ConfiguracaoIaRecuperadaDto,
   ConfiguracaoIaResumoDto,
+  IaModeloPrecoAlteradoDto,
+  IaModeloPrecoAlterarDto,
+  IaModeloPrecoDto,
   PaginatedResult,
   StandardResponse,
   temPermissaoDeAdministrador,
@@ -72,7 +75,7 @@ export class ConfiguracaoIaService implements OnModuleInit {
     };
   }
 
-  /** Grava uma versão nova (a antiga nunca é alterada) e renova o cache. */
+  /** Grava uma versão nova (a antiga nunca é alterada; os preços por modelo são copiados para a nova) e renova o cache. */
   async criar(dto: ConfiguracaoIaCriarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<ConfiguracaoIaCriadaDto>> {
     this.validarAdministrador(usuarioAtivo);
     if (dto.checkinMinimoMinutos >= dto.checkinMaximoMinutos) {
@@ -81,6 +84,16 @@ export class ConfiguracaoIaService implements OnModuleInit {
     const criada = await this.configuracaoIaRepositorio.inserirNovaVersao(dto, usuarioAtivo.sub);
     this.ativaEmCache = criada;
     return { sucesso: true, dados: criada, mensagem: `Versão ${criada.versao} da configuração da IA salva com sucesso` };
+  }
+
+  /** Para a aba "Custos" (que confere a permissão): os preços por modelo da versão ativa (task 202). */
+  async listarPrecos(): Promise<IaModeloPrecoDto[]> {
+    return this.configuracaoIaRepositorio.listarPrecos();
+  }
+
+  /** Para a aba "Custos" (que confere a permissão): grava o preço de um modelo na versão ativa, no lugar. */
+  async alterarPreco(dto: IaModeloPrecoAlterarDto): Promise<IaModeloPrecoAlteradoDto> {
+    return this.configuracaoIaRepositorio.alterarPrecoDaVersaoAtiva(dto);
   }
 
   /** Defesa em profundidade: o `AdministradorGuard` já barra a rota. */

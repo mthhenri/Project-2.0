@@ -1,19 +1,37 @@
 import { IaCustoModeloDto, IaCustoPeriodoDto, IaCustoTotaisDto, IaModeloPrecoDto } from '@project20/shared';
+import { TokensSomados } from '../../chat/domain/chat-consultas';
 
 const TOKENS_POR_MILHAO = 1_000_000;
 
-/** Uma soma do repository: o uso de um modelo num período (dia ou mês). */
-export interface UsoSomado {
-  periodo: string;
-  modelo: string;
-  chamadas: number;
-  tokensEntrada: number;
-  tokensSaida: number;
-  tokensCache: number;
+/**
+ * A mensagem guarda o modelo que o provedor devolveu, e para um alias ele devolve o id datado (`claude-haiku-5-5-20261015` para
+ * `claude-haiku-5-5`). O administrador precifica o nome que está na configuração, então o uso de um id datado conta no nome conhecido a que
+ * ele só acrescenta `-` e uma data de 8 dígitos (sem exigir a data, `claude-opus-5-5` cairia em `claude-opus-5`). Modelo que não casa com
+ * nenhum nome conhecido fica como veio. Linhas que passam a ter o mesmo período e modelo são somadas.
+ */
+export function agruparPeloNomeConhecido(usos: TokensSomados[], nomesConhecidos: string[]): TokensSomados[] {
+  const comDataDoProvedor = (modelo: string, nome: string): boolean => modelo.startsWith(`${nome}-`) && /^\d{8}$/.test(modelo.slice(nome.length + 1));
+  const nomeConhecido = (modelo: string): string => nomesConhecidos.find((nome) => nome === modelo || comDataDoProvedor(modelo, nome)) ?? modelo;
+
+  const somados = new Map<string, TokensSomados>();
+  for (const uso of usos) {
+    const modelo = nomeConhecido(uso.modelo);
+    const chave = `${uso.periodo}|${modelo}`;
+    const atual = somados.get(chave);
+    somados.set(chave, {
+      periodo: uso.periodo,
+      modelo,
+      mensagens: (atual?.mensagens ?? 0) + uso.mensagens,
+      tokensEntrada: (atual?.tokensEntrada ?? 0) + uso.tokensEntrada,
+      tokensSaida: (atual?.tokensSaida ?? 0) + uso.tokensSaida,
+      tokensCache: (atual?.tokensCache ?? 0) + uso.tokensCache,
+    });
+  }
+  return [...somados.values()];
 }
 
 /** O custo em dólares: cada tipo de token pelo preço do milhão dele. Arredondado em 6 casas para o ruído do ponto flutuante não aparecer. */
-export function calcularCustoDolar(uso: Pick<UsoSomado, 'tokensEntrada' | 'tokensSaida' | 'tokensCache'>, preco: IaModeloPrecoDto): number {
+export function calcularCustoDolar(uso: Pick<TokensSomados, 'tokensEntrada' | 'tokensSaida' | 'tokensCache'>, preco: IaModeloPrecoDto): number {
   const custo =
     (uso.tokensEntrada * preco.precoEntradaMilhao + uso.tokensSaida * preco.precoSaidaMilhao + uso.tokensCache * preco.precoCacheMilhao) /
     TOKENS_POR_MILHAO;
@@ -22,15 +40,15 @@ export function calcularCustoDolar(uso: Pick<UsoSomado, 'tokensEntrada' | 'token
 
 /**
  * Uma linha por modelo: os que tiveram uso no recorte, os que têm preço cadastrado e os que a configuração ativa usa (assim o
- * administrador define o preço de um modelo antes de ele ser chamado). Ordem: em uso, depois mais custo/mais chamadas, depois nome.
+ * administrador define o preço de um modelo antes de ele ser chamado). Ordem: em uso, depois mais custo/mais mensagens, depois nome.
  */
-export function montarModelos(usos: UsoSomado[], precos: IaModeloPrecoDto[], modelosEmUso: string[]): IaCustoModeloDto[] {
+export function montarModelos(usos: TokensSomados[], precos: IaModeloPrecoDto[], modelosEmUso: string[]): IaCustoModeloDto[] {
   const precoPorModelo = new Map(precos.map((preco) => [preco.modelo, preco]));
-  const somaPorModelo = new Map<string, Omit<UsoSomado, 'periodo' | 'modelo'>>();
+  const somaPorModelo = new Map<string, Omit<TokensSomados, 'periodo' | 'modelo'>>();
   for (const uso of usos) {
-    const atual = somaPorModelo.get(uso.modelo) ?? { chamadas: 0, tokensEntrada: 0, tokensSaida: 0, tokensCache: 0 };
+    const atual = somaPorModelo.get(uso.modelo) ?? { mensagens: 0, tokensEntrada: 0, tokensSaida: 0, tokensCache: 0 };
     somaPorModelo.set(uso.modelo, {
-      chamadas: atual.chamadas + uso.chamadas,
+      mensagens: atual.mensagens + uso.mensagens,
       tokensEntrada: atual.tokensEntrada + uso.tokensEntrada,
       tokensSaida: atual.tokensSaida + uso.tokensSaida,
       tokensCache: atual.tokensCache + uso.tokensCache,
@@ -39,7 +57,7 @@ export function montarModelos(usos: UsoSomado[], precos: IaModeloPrecoDto[], mod
 
   const nomes = new Set([...somaPorModelo.keys(), ...precoPorModelo.keys(), ...modelosEmUso]);
   const modelos = [...nomes].map((modelo): IaCustoModeloDto => {
-    const soma = somaPorModelo.get(modelo) ?? { chamadas: 0, tokensEntrada: 0, tokensSaida: 0, tokensCache: 0 };
+    const soma = somaPorModelo.get(modelo) ?? { mensagens: 0, tokensEntrada: 0, tokensSaida: 0, tokensCache: 0 };
     const preco = precoPorModelo.get(modelo) ?? null;
     return { modelo, ...soma, preco, custoDolar: preco ? calcularCustoDolar(soma, preco) : null, emUso: modelosEmUso.includes(modelo) };
   });
@@ -47,7 +65,7 @@ export function montarModelos(usos: UsoSomado[], precos: IaModeloPrecoDto[], mod
     (primeiro, segundo) =>
       Number(segundo.emUso) - Number(primeiro.emUso) ||
       (segundo.custoDolar ?? 0) - (primeiro.custoDolar ?? 0) ||
-      segundo.chamadas - primeiro.chamadas ||
+      segundo.mensagens - primeiro.mensagens ||
       primeiro.modelo.localeCompare(segundo.modelo),
   );
 }
@@ -55,26 +73,26 @@ export function montarModelos(usos: UsoSomado[], precos: IaModeloPrecoDto[], mod
 export function somarTotais(modelos: IaCustoModeloDto[]): IaCustoTotaisDto {
   return modelos.reduce<IaCustoTotaisDto>(
     (totais, modelo) => ({
-      chamadas: totais.chamadas + modelo.chamadas,
+      mensagens: totais.mensagens + modelo.mensagens,
       tokensEntrada: totais.tokensEntrada + modelo.tokensEntrada,
       tokensSaida: totais.tokensSaida + modelo.tokensSaida,
       tokensCache: totais.tokensCache + modelo.tokensCache,
       custoDolar: Math.round((totais.custoDolar + (modelo.custoDolar ?? 0)) * 1_000_000) / 1_000_000,
-      modelosSemPreco: totais.modelosSemPreco + (modelo.preco === null && modelo.chamadas > 0 ? 1 : 0),
+      modelosSemPreco: totais.modelosSemPreco + (modelo.preco === null && modelo.mensagens > 0 ? 1 : 0),
     }),
-    { chamadas: 0, tokensEntrada: 0, tokensSaida: 0, tokensCache: 0, custoDolar: 0, modelosSemPreco: 0 },
+    { mensagens: 0, tokensEntrada: 0, tokensSaida: 0, tokensCache: 0, custoDolar: 0, modelosSemPreco: 0 },
   );
 }
 
 /** O uso ao longo do período: todos os dias do mês (ou todos os meses do ano) aparecem, mesmo sem uso, para o gráfico não ter buracos. */
-export function montarPeriodos(usos: UsoSomado[], precos: IaModeloPrecoDto[], todosOsPeriodos: string[]): IaCustoPeriodoDto[] {
+export function montarPeriodos(usos: TokensSomados[], precos: IaModeloPrecoDto[], todosOsPeriodos: string[]): IaCustoPeriodoDto[] {
   const precoPorModelo = new Map(precos.map((preco) => [preco.modelo, preco]));
-  const porPeriodo = new Map<string, IaCustoPeriodoDto>(todosOsPeriodos.map((periodo) => [periodo, { periodo, chamadas: 0, tokens: 0, custoDolar: 0 }]));
+  const porPeriodo = new Map<string, IaCustoPeriodoDto>(todosOsPeriodos.map((periodo) => [periodo, { periodo, mensagens: 0, tokens: 0, custoDolar: 0 }]));
   for (const uso of usos) {
     const periodo = porPeriodo.get(uso.periodo);
     if (!periodo) continue;
     const preco = precoPorModelo.get(uso.modelo);
-    periodo.chamadas += uso.chamadas;
+    periodo.mensagens += uso.mensagens;
     periodo.tokens += uso.tokensEntrada + uso.tokensSaida + uso.tokensCache;
     if (preco) periodo.custoDolar = Math.round((periodo.custoDolar + calcularCustoDolar(uso, preco)) * 1_000_000) / 1_000_000;
   }

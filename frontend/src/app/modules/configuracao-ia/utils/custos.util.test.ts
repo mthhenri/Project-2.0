@@ -23,16 +23,16 @@ test('rotuloDoRecorte mostra o mês por extenso ou só o ano', () => {
 
 test('montarCategoriasDeCusto: dia no recorte de mês, mês abreviado no de ano, sem rótulo de valor no período sem custo', () => {
   const [dia, vazio] = montarCategoriasDeCusto([
-    { periodo: '2026-10-05', chamadas: 1, tokens: 1500, custoDolar: 1.5 },
-    { periodo: '2026-10-06', chamadas: 0, tokens: 0, custoDolar: 0 },
+    { periodo: '2026-10-05', mensagens: 1, tokens: 1500, custoDolar: 1.5 },
+    { periodo: '2026-10-06', mensagens: 0, tokens: 0, custoDolar: 0 },
   ]);
   assert.equal(dia.rotulo, '5');
   assert.equal(dia.barras[0].valor, 1.5);
   assert.equal(normalizar(dia.barras[0].rotulo), '1,50');
-  assert.match(dia.barras[0].descricao, /5 de outubro: .*1,50 em 1 chamada \(1\.500 tokens\)/);
+  assert.match(dia.barras[0].descricao, /5 de outubro: .*1,50 em 1 mensagem da IA \(1\.500 tokens\)/);
   assert.equal(vazio.barras[0].rotulo, '');
 
-  const [mes] = montarCategoriasDeCusto([{ periodo: '2026-03', chamadas: 2, tokens: 10, custoDolar: 2 }]);
+  const [mes] = montarCategoriasDeCusto([{ periodo: '2026-03', mensagens: 2, tokens: 10, custoDolar: 2 }]);
   assert.equal(mes.rotulo, 'Mar');
   assert.equal(mes.descricao, 'março de 2026');
 });

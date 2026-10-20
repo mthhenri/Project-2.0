@@ -1,6 +1,6 @@
 import { Client } from '@elastic/elasticsearch';
 import { ConfiguracaoElasticsearch } from '../../../config/config.interface';
-import { BaldeConversa } from '../domain/chat-consultas';
+import { BaldeConversa, BaldeTokensPorPeriodo } from '../domain/chat-consultas';
 import { ChatMensagemFonte } from '../domain/chat-mensagem.documento';
 import { ChatConversaFonte, ChatMensagemIndiceRepository, ResultadoDaPesquisa } from './chat-mensagem-indice.repository';
 
@@ -17,7 +17,7 @@ export interface ClienteElasticsearchChat {
   index(parametros: { index: string; id: string; document: unknown; refresh: 'wait_for' }): Promise<unknown>;
   search(parametros: { index: string } & Record<string, unknown>): Promise<{
     hits: { hits: { _source?: ChatMensagemFonte & Partial<ChatConversaFonte> }[] };
-    aggregations?: { conversas?: { buckets: BaldeConversa[] } };
+    aggregations?: { conversas?: { buckets: BaldeConversa[] }; periodos?: { buckets: BaldeTokensPorPeriodo[] } };
   }>;
 }
 
@@ -62,6 +62,7 @@ export class ChatMensagemElasticsearchRepository extends ChatMensagemIndiceRepos
     return {
       fontes: resposta.hits.hits.flatMap((acerto) => (acerto._source ? [acerto._source] : [])),
       baldes: resposta.aggregations?.conversas?.buckets ?? [],
+      periodosDeTokens: resposta.aggregations?.periodos?.buckets ?? [],
     };
   }
 }

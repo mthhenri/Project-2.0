@@ -1,4 +1,3 @@
-export * from './IaUsoRegistrarDto';
 export * from './IaCustoConsultarDto';
 export * from './IaCustoConsultadoDto';
 export * from './IaModeloPrecoDto';

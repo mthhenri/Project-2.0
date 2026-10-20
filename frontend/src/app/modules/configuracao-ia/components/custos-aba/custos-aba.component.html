@@ -1,7 +1,8 @@
 <section class="custos-aba">
   <p class="custos-aba__explicacao">
-    O custo é uma estimativa: os tokens que o provedor mediu em cada chamada, multiplicados pelo preço cadastrado do modelo (em dólar por milhão de
-    tokens). O uso é registrado a partir de agora; o que foi gasto antes desta aba não aparece. Modelo sem preço fica fora da soma do custo.
+    O custo é uma estimativa: os tokens que o provedor mediu em cada resposta do chat, multiplicados pelo preço cadastrado do modelo (em dólar por
+    milhão de tokens). Só entram as mensagens do chat, com as chamadas de ferramentas do turno somadas ao modelo da resposta: relatório, assistente
+    de descrição, nomeação e sugestões não aparecem aqui. Modelo sem preço fica fora da soma do custo.
   </p>
 
   <div class="custos-aba__navegacao">
@@ -41,8 +42,8 @@
             }
           </div>
           <div class="custos-aba__cartao custos-aba__cartao--resumo">
-            <span class="custos-aba__rotulo">Chamadas</span>
-            <strong class="custos-aba__valor">{{ dados.totais.chamadas }}</strong>
+            <span class="custos-aba__rotulo">Mensagens da IA</span>
+            <strong class="custos-aba__valor">{{ dados.totais.mensagens }}</strong>
           </div>
           <div class="custos-aba__cartao custos-aba__cartao--resumo">
             <span class="custos-aba__rotulo">Tokens de entrada</span>
@@ -65,7 +66,7 @@
           } @else {
             <div class="custos-aba__vazio">
               <i class="pi pi-chart-bar text-4xl text-muted-color"></i>
-              <p class="text-muted-color mt-3">Nenhuma chamada à IA em {{ rotuloDoRecorte() }}.</p>
+              <p class="text-muted-color mt-3">Nenhuma mensagem da IA em {{ rotuloDoRecorte() }}.</p>
             </div>
           }
         </section>
@@ -102,7 +103,7 @@
                             @if (modelo.emUso) {
                               <p-tag value="em uso" severity="info" [rounded]="true" />
                             }
-                            {{ modelo.chamadas }} {{ modelo.chamadas === 1 ? 'chamada' : 'chamadas' }}
+                            {{ modelo.mensagens }} {{ modelo.mensagens === 1 ? 'mensagem' : 'mensagens' }}
                           </span>
                         </div>
                       </th>

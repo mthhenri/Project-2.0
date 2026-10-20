@@ -180,6 +180,22 @@ test('listarConversas: só o contexto CHAT do dono, agregando por conversa da ma
   assert.deepEqual(consulta.aggs.conversas.terms.order, { _key: 'desc' });
 });
 
+test('somarTokens: pesquisa a soma por período e modelo e devolve uma linha por período e modelo', async () => {
+  const indice = new IndiceFalso();
+  indice.resultado = {
+    fontes: [],
+    baldes: [],
+    periodosDeTokens: [{ key_as_string: '2026-10-05', modelos: { buckets: [{ key: 'haiku', doc_count: 2, entrada: { value: 30 }, saida: { value: 4 }, cache: { value: 0 } }] } }],
+  };
+  const somados = await indice.somarTokens({ dataInicio: '2026-10-01', dataFim: '2026-10-31', porMes: false, fusoHorario: 'America/Sao_Paulo' });
+  assert.deepEqual(somados, [{ periodo: '2026-10-05', modelo: 'haiku', mensagens: 2, tokensEntrada: 30, tokensSaida: 4, tokensCache: 0 }]);
+  assert.equal(indice.pesquisas[0].indice, INDICE_CHAT_MENSAGEM);
+  assert.equal(indice.pesquisas[0].consulta.size, 0);
+
+  indice.resultado = { fontes: [], baldes: [] };
+  assert.deepEqual(await indice.somarTokens({ dataInicio: '2026-10-01', dataFim: '2026-10-31', porMes: false, fusoHorario: 'America/Sao_Paulo' }), []);
+});
+
 test('falha ao gravar, pesquisar ou conferir o índice vira a mensagem clara de chat indisponível, sem vazar o erro do serviço', async () => {
   const comFalha = (ajuste: (indice: IndiceFalso) => void) => { const indice = new IndiceFalso(); ajuste(indice); return indice; };
   const mensagemDe = (erro: unknown) => JSON.stringify((erro as BusinessException).getResponse());
@@ -189,6 +205,7 @@ test('falha ao gravar, pesquisar ou conferir o índice vira a mensagem clara de 
     ['listarConversa', comFalha((indice) => { indice.falhaAoPesquisar = new Error('segredo-interno'); }), (indice) => indice.listarConversa({ conversaId: 'c', usuarioId: 7 })],
     ['buscar', comFalha((indice) => { indice.falhaAoPesquisar = new Error('segredo-interno'); }), (indice) => indice.buscar({ usuarioId: 7, texto: 'x' })],
     ['listarConversas', comFalha((indice) => { indice.falhaAoExistir = new Error('segredo-interno'); }), (indice) => indice.listarConversas({ usuarioId: 7 })],
+    ['somarTokens', comFalha((indice) => { indice.falhaAoPesquisar = new Error('segredo-interno'); }), (indice) => indice.somarTokens({ dataInicio: '2026-10-01', dataFim: '2026-10-31', porMes: true, fusoHorario: 'UTC' })],
   ];
   for (const [nome, indice, operacao] of casos) {
     await assert.rejects(() => operacao(indice), (erro: unknown) => erro instanceof BusinessException && /indisponível/.test(mensagemDe(erro)) && !/segredo-interno/.test(mensagemDe(erro)), nome);

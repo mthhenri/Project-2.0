@@ -70,13 +70,21 @@
 - **Correção:** precisa de uma captura da tela quebrada e do ambiente (sistema, navegador ou Project Desktop, largura da janela).
 - **Desde:** 2026-10-20.
 
-### P-028 — Custo da IA: consulta sem índice e DTO no backend · `ACEITO` · ia-custo
+### P-029 — Custos da IA: alias que não é prefixo do id datado aparece como modelo sem preço · `ACEITO` · ia-custo
 
-- **Sintoma:** `somarUso` usa `DATE(uso_data) BETWEEN`, que não aproveita o índice `ix_ia_uso_uso_data`; `IaUsoSomarDto` está em `backend/`, contra a regra de DTO só em `shared/`.
-- **Causa:** o critério de dia segue o do relatório de execuções (fuso da sessão), e o DTO é interno do repository.
-- **Contorno:** a tabela é pequena (uma linha por chamada de IA); a consulta é só do administrador.
-- **Correção:** consultar por intervalo (`uso_data >= :inicio AND uso_data < :fim + 1`) e mover o DTO para `shared/src/dtos/ia-custo/` quando a tabela crescer.
-- **Desde:** 2026-10-20 (task 201).
+- **Sintoma:** com um alias como `claude-sonnet-4-0` (o provedor devolve `claude-sonnet-4-20250514`), o uso aparece como um modelo à parte, "sem preço", mesmo com o alias precificado.
+- **Causa:** a mensagem guarda o modelo que o provedor devolveu, e `agruparPeloNomeConhecido` só junta `nome + - + data de 8 dígitos`. A task 201 gravava o modelo pedido, e a 202 passou a ler o da mensagem.
+- **Contorno:** precificar também o id datado na própria aba (aparece como linha na tabela por modelo). Os nomes usados hoje (`claude-haiku-5-5`, `claude-sonnet-5-5`, `claude-opus-5-5`) casam.
+- **Correção:** gravar também o modelo pedido na mensagem (junto da medição exata por modelo, `IDEAS.md` I-018).
+- **Desde:** 2026-10-20 (task 202).
+
+### P-030 — Soma de tokens do Postgres do chat lê a tabela inteira · `ACEITO` · chat/ia-custo
+
+- **Sintoma:** `ChatMensagemPostgresRepository.somarTokens` filtra por `created_date AT TIME ZONE ... AS date` e não usa índice (`chat_mensagem` só tem índice por usuário/conversa/data).
+- **Causa:** o recorte é por dia no fuso do sistema, e não há índice só em `created_date`.
+- **Contorno:** o armazenamento Postgres é provisório (só o ambiente de teste, `SCHEMA.md` "Tabelas provisórias"), e a consulta é só do administrador. OpenSearch e Elasticsearch filtram por `range` indexado.
+- **Correção:** índice em `created_date` e filtro por intervalo de `timestamptz`, se a tabela provisória crescer.
+- **Desde:** 2026-10-20 (task 202).
 
 ### P-001 — Projeto sem lint · `CONTORNADO` · repositório
 

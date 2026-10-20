@@ -3,7 +3,14 @@ import { Knex } from 'knex';
 import { BaseRepository } from '../../../core/base/base.repository';
 import { DATABASE_CONNECTION } from '../../../core/database/database.provider';
 import { ConfiguracaoIa } from '../domain/models/configuracao-ia.model';
-import { ConfiguracaoIaCriarDto, ConfiguracaoIaListarDto, ConfiguracaoIaResumoDto } from '@project20/shared';
+import {
+  ConfiguracaoIaCriarDto,
+  ConfiguracaoIaListarDto,
+  ConfiguracaoIaResumoDto,
+  IaModeloPrecoAlteradoDto,
+  IaModeloPrecoAlterarDto,
+  IaModeloPrecoDto,
+} from '@project20/shared';
 
 const COLUNAS_RESUMO = `
          configuracao_ia.id,
@@ -73,6 +80,55 @@ export class ConfiguracaoIaRepository extends BaseRepository<ConfiguracaoIa> {
     return { itens, total: parseInt(totais[0].total, 10) };
   }
 
+  /** Os preços por modelo (dólar por milhão de tokens) da versão ativa, em ordem de modelo. Vivem no JSONB `precos_modelo` (task 202). */
+  async listarPrecos(): Promise<IaModeloPrecoDto[]> {
+    return this.executarConsulta<IaModeloPrecoDto>(
+      `SELECT
+         preco.key                                                AS modelo,
+         CAST(preco.value ->> 'precoEntradaMilhao' AS float8)     AS "precoEntradaMilhao",
+         CAST(preco.value ->> 'precoSaidaMilhao' AS float8)       AS "precoSaidaMilhao",
+         CAST(preco.value ->> 'precoCacheMilhao' AS float8)       AS "precoCacheMilhao"
+       FROM jsonb_each((
+         SELECT configuracao_ia.precos_modelo
+         FROM configuracao_ia
+         WHERE configuracao_ia.is_deleted = false
+         ORDER BY configuracao_ia.versao DESC
+         LIMIT 1
+       )) AS preco
+       ORDER BY preco.key ASC`,
+    );
+  }
+
+  /**
+   * Define (ou troca) o preço de um modelo **na versão ativa, no lugar**, sem criar versão: o custo usa sempre o preço de hoje, então
+   * versionar o preço não mudaria nenhum número. Mesmo lock consultivo de `inserirNovaVersao`, para o preço não se perder numa versão
+   * nova gravada ao mesmo tempo (que copia os preços da anterior).
+   */
+  async alterarPrecoDaVersaoAtiva(dto: IaModeloPrecoAlterarDto): Promise<IaModeloPrecoAlteradoDto> {
+    await this.conexaoBancoDados.transaction(async (transacao) => {
+      await this.executarComando(`SELECT pg_advisory_xact_lock(hashtext('configuracao_ia'))`, {}, transacao);
+      const alteradas = await this.executarConsulta<{ id: number }>(
+        `UPDATE configuracao_ia
+         SET precos_modelo = jsonb_set(configuracao_ia.precos_modelo, ARRAY[CAST(:modelo AS text)], CAST(:preco AS jsonb), true)
+         WHERE configuracao_ia.id = (
+           SELECT ativa.id FROM configuracao_ia AS ativa WHERE ativa.is_deleted = false ORDER BY ativa.versao DESC LIMIT 1
+         )
+         RETURNING configuracao_ia.id`,
+        {
+          modelo: dto.modelo,
+          preco: JSON.stringify({
+            precoEntradaMilhao: dto.precoEntradaMilhao,
+            precoSaidaMilhao: dto.precoSaidaMilhao,
+            precoCacheMilhao: dto.precoCacheMilhao,
+          }),
+        },
+        transacao,
+      );
+      if (alteradas.length === 0) throw new Error('Nenhuma configuração da IA ativa');
+    });
+    return { modelo: dto.modelo, precoEntradaMilhao: dto.precoEntradaMilhao, precoSaidaMilhao: dto.precoSaidaMilhao, precoCacheMilhao: dto.precoCacheMilhao };
+  }
+
   /**
    * Grava a versão seguinte (`maior + 1`) numa transação que serializa as gravações (lock consultivo): duas gravações
    * simultâneas nunca geram a mesma versão. O índice único parcial é a rede de segurança.
@@ -86,13 +142,16 @@ export class ConfiguracaoIaRepository extends BaseRepository<ConfiguracaoIa> {
            versao, tipo_provedor_ia_id, modelo_rapido, modelo_padrao, modelo_analitico, esforco_analitico,
            checkin_minimo_minutos, checkin_maximo_minutos, duracao_recomendada_minutos,
            checkin_inteligente, rigor_proporcional, deteccao_automatica, duvidas_codigo, modo_contexto_chat, ia_desligada,
-           usuario_id, created_date, updated_date, is_deleted
+           precos_modelo, usuario_id, created_date, updated_date, is_deleted
          )
          SELECT
            COALESCE((SELECT MAX(configuracao_ia.versao) FROM configuracao_ia WHERE configuracao_ia.is_deleted = false), 0) + 1,
            tipo_provedor_ia.id, :modeloRapido, :modeloPadrao, :modeloAnalitico, :esforcoAnalitico,
            :checkinMinimoMinutos, :checkinMaximoMinutos, :duracaoRecomendadaMinutos,
            :checkinInteligente, :rigorProporcional, :deteccaoAutomatica, :duvidasCodigo, :modoContextoChat, :iaDesligada,
+           COALESCE(
+             (SELECT anterior.precos_modelo FROM configuracao_ia AS anterior WHERE anterior.is_deleted = false ORDER BY anterior.versao DESC LIMIT 1),
+             CAST('{}' AS jsonb)),
            :usuarioId, NOW(), NOW(), false
          FROM tipo_provedor_ia
          WHERE tipo_provedor_ia.codigo = :provedor

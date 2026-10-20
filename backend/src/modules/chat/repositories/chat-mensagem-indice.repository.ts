@@ -3,13 +3,17 @@ import { randomUUID } from 'node:crypto';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import {
   BaldeConversa,
+  BaldeTokensPorPeriodo,
   CAMPOS_POSTERIORES_DA_MENSAGEM,
   ConsultaBusca,
   ConsultaConversa,
   ConsultaConversas,
   ConsultaTitulos,
+  ConsultaTokens,
   TituloDaConversa,
   TituloParaGravar,
+  TokensSomados,
+  deBaldesDeTokens,
   INDICE_CHAT_CONVERSA,
   INDICE_CHAT_MENSAGEM,
   MAPEAMENTO_CHAT_CONVERSA,
@@ -18,6 +22,7 @@ import {
   montarConsultaConversa,
   montarConsultaConversas,
   montarConsultaTitulos,
+  montarConsultaTokens,
 } from '../domain/chat-consultas';
 import { ChatMensagemFonte, ChatMensagemLida, ChatMensagemNova, deFonte, paraFonte } from '../domain/chat-mensagem.documento';
 import { ArmazenamentoDeChat } from './armazenamento-de-chat';
@@ -34,6 +39,8 @@ export interface ChatConversaFonte {
 export interface ResultadoDaPesquisa {
   fontes: (ChatMensagemFonte & Partial<ChatConversaFonte>)[];
   baldes: BaldeConversa[];
+  /** Só na agregação de tokens (task 202). */
+  periodosDeTokens?: BaldeTokensPorPeriodo[];
 }
 
 /**
@@ -122,6 +129,14 @@ export abstract class ChatMensagemIndiceRepository implements ArmazenamentoDeCha
       await this.garantirIndice();
       const resultado = await this.pesquisar(INDICE_CHAT_MENSAGEM, montarConsultaBusca(consulta));
       return resultado.fontes.map(deFonte);
+    });
+  }
+
+  async somarTokens(consulta: ConsultaTokens): Promise<TokensSomados[]> {
+    return this.proteger(async () => {
+      await this.garantirIndice();
+      const resultado = await this.pesquisar(INDICE_CHAT_MENSAGEM, montarConsultaTokens(consulta));
+      return deBaldesDeTokens(resultado.periodosDeTokens ?? []);
     });
   }
 

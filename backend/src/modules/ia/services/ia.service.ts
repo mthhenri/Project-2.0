@@ -8,7 +8,6 @@ import {
   TipoProvedorIaEnum,
 } from '@project20/shared';
 import { ConfiguracaoIaService } from '../../configuracao-ia/services/configuracao-ia.service';
-import { IaCustoService } from '../../ia-custo/services/ia-custo.service';
 import { IaException } from '../domain/ia.exception';
 import { IaProvedor } from '../domain/ia-provedor';
 import { turnoAtual } from '../domain/turno-ia';
@@ -31,18 +30,17 @@ export class IaService {
 
   constructor(
     private readonly configuracaoIaService: ConfiguracaoIaService,
-    private readonly iaCustoService: IaCustoService,
     @Inject(IA_PROVEDORES) private readonly provedores: IaProvedores,
   ) {}
 
   async gerar(solicitacao: IaSolicitacao): Promise<IaResposta> {
     const { provedor, solicitacaoProvedor, deteccaoAutomatica } = await this.preparar(solicitacao);
-    return this.executar(solicitacao, solicitacaoProvedor.modelo, deteccaoAutomatica, () => provedor.gerar(solicitacaoProvedor));
+    return this.executar(solicitacao, deteccaoAutomatica, () => provedor.gerar(solicitacaoProvedor));
   }
 
   async transmitir(solicitacao: IaSolicitacao, aoTrecho: (trecho: string) => void): Promise<IaResposta> {
     const { provedor, solicitacaoProvedor, deteccaoAutomatica } = await this.preparar(solicitacao);
-    return this.executar(solicitacao, solicitacaoProvedor.modelo, deteccaoAutomatica, () => provedor.transmitir(solicitacaoProvedor, aoTrecho));
+    return this.executar(solicitacao, deteccaoAutomatica, () => provedor.transmitir(solicitacaoProvedor, aoTrecho));
   }
 
   /**
@@ -95,21 +93,13 @@ export class IaService {
     }
   }
 
-  private async executar(solicitacao: IaSolicitacao, modeloSolicitado: string, deteccaoAutomatica: boolean, chamada: () => Promise<IaRespostaProvedor>): Promise<IaResposta> {
+  private async executar(solicitacao: IaSolicitacao, deteccaoAutomatica: boolean, chamada: () => Promise<IaRespostaProvedor>): Promise<IaResposta> {
     try {
       const resposta = await chamada();
       this.ultimoResultado = EstadoIaEnum.NO_AR;
       const respondida = { ...resposta, nivel: solicitacao.nivel };
       // O ponto único da coleta do turno do chat (task 188): só chamada bem-sucedida entra, e fora de um turno nada muda.
       turnoAtual()?.registrar(respondida);
-      // O mesmo ponto único alimenta o custo (task 201): toda chamada bem-sucedida, de qualquer origem, entra em `ia_uso`.
-      await this.iaCustoService.registrarUso({
-        // O modelo da configuração (o que o administrador precifica), e não o id datado que o provedor pode devolver para um alias.
-        modelo: modeloSolicitado,
-        tokensEntrada: respondida.tokens.entrada,
-        tokensSaida: respondida.tokens.saida,
-        tokensCache: respondida.tokens.cache,
-      });
       return respondida;
     } catch (erro) {
       if (deteccaoAutomatica && erro instanceof IaException && erro.motivo === 'INDISPONIVEL') this.ultimoResultado = EstadoIaEnum.FORA_DO_AR;

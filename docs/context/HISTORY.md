@@ -12,6 +12,31 @@
 
 ---
 
+## 2026-10-20 — Task 202: custos da IA pelas mensagens do chat, preço na configuração (sem `ia_uso` nem `ia_modelo_preco`)
+
+Pedido do autor depois de comparar a aba Custos (US$ 0,02, 22 chamadas) com o Console da Anthropic (US$ 1,07, 8,3 mi de tokens de entrada): o combinado era gravar os tokens nas
+mensagens do chat, sem tabela própria; a task 201 tinha criado `ia_uso` por conta própria ("Decisão minha" na spec, nunca aprovada). O autor escolheu a opção "só mensagens", pediu para
+migrar os preços e para ser consultado antes de cada decisão; as decisões (preço em JSONB na `configuracao_ia`, `ia_uso` removida por migration nova, `somarTokens` no contrato do
+armazenamento, preço alterado na versão ativa no lugar, custo pelo modelo da mensagem) foram confirmadas uma a uma.
+
+- **O que mudou.** Migration `0048`: `configuracao_ia.precos_modelo` (JSONB, preenchido em todas as versões com `ia_modelo_preco`) e `DROP` de `ia_uso` e `ia_modelo_preco` (o `DOWN` as recria e
+  devolve os preços da versão ativa). `ArmazenamentoDeChat.somarTokens` nos três armazenamentos (SQL com `AT TIME ZONE` no Postgres; `date_histogram` com `time_zone` e `terms` por modelo
+  nos índices), `IaCustoService` lê tokens do armazenamento e preços da `ConfiguracaoIaService`, `IaService` não grava mais uso, `IaCustoModule` saiu do `IaModule` e entrou no `AppModule`.
+  Frontend: `chamadas` virou `mensagens` ("Mensagens da IA") e o texto da aba diz que só o chat entra. `IaUsoRegistrarDto` e `IaCustoRepository` foram removidos; P-028 saiu (a tabela não existe mais).
+- **Preço.** Versão nova copia os preços da anterior; editar um preço na aba é um `UPDATE` com `jsonb_set` na versão ativa, sob o mesmo lock consultivo (o preço já era retroativo, então
+  versionar não mudaria nenhum número).
+- **Id datado.** A mensagem guarda o modelo que o provedor devolveu (`claude-haiku-5-5-20261015`), e o preço é por nome da configuração: `agruparPeloNomeConhecido` junta `nome-AAAAMMDD` ao nome.
+  A revisão independente mostrou que a primeira versão (qualquer prefixo) juntava `claude-opus-5-5-…` em `claude-opus-5`; agora exige a data de 8 dígitos. Alias cujo id datado não é prefixo: P-029.
+- **Limites aceitos.** Só o chat entra (relatório, assistente, nomeação e sugestões não gravam tokens). Um turno com ferramentas em outro nível é precificado pelo modelo da mensagem (a
+  anotação da medição exata por modelo está em `IDEAS.md` I-018, como o autor pediu). O custo por dia do Postgres provisório lê a tabela inteira (P-030). Com o serviço de busca fora do ar a
+  aba inteira falha ("chat indisponível"). As 22 chamadas já gravadas em `ia_uso` foram descartadas com a tabela (decisão do autor).
+- **Sobre a diferença para o Console.** Console e aba nunca iam bater: o Console soma tudo o que a chave gastou (16 a 20/10, inclusive uso fora do chat e fora da aplicação), e a aba só
+  vê as mensagens do chat gravadas.
+- **Testes.** `shared` 171, `backend` unitários 1111, integração 247 (inclui `somarTokens` no Postgres e `alterarPrecoDaVersaoAtiva`/cópia de preços), `frontend` 131 arquivos / 1449 testes;
+  builds do backend e do frontend ok. Migration `0048` conferida em `up`/`down`/`up` sobre dados reais de preço. Sem lint (P-001).
+- **Ao vivo.** Aba nos três viewports com Postgres local e três mensagens semeadas: totais, custo por modelo e edição de preço batem com as contas à mão (`verificacao.md`).
+  **Não rodado:** o teste de contrato contra OpenSearch e Elasticsearch de verdade (`CHAT_INTEGRACAO=1`), por falta de Docker/serviço aqui.
+
 ## 2026-10-20 — Task 201: conversas dos desenvolvedores para a IA do gestor, aba Custos, esqueletos, cronômetro e overlay
 
 Pedido do autor, cinco pendências: dar à IA do gestor acesso às conversas dos desenvolvedores; ajustar os esqueletos de carregamento; telas de Ponto e Execuções quebrando visualmente com o horário correndo; aba "Custos" no menu da IA; e rever os loadings de aceitar proposta e salvar o pad (não deveriam travar a tela toda). Spec e verificação em `docs/specs/done/201-pendencias-ia-gestor-custos-e-telas.spec.md` e na pasta de mesmo nome.

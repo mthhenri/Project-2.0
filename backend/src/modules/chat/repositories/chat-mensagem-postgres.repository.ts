@@ -9,11 +9,13 @@ import {
   ConsultaConversa,
   ConsultaConversas,
   ConsultaTitulos,
+  ConsultaTokens,
   LIMITE_BUSCA,
   LIMITE_CONVERSA,
   LIMITE_CONVERSAS,
   TituloDaConversa,
   TituloParaGravar,
+  TokensSomados,
 } from '../domain/chat-consultas';
 import { ChatMensagemFonte, ChatMensagemLida, ChatMensagemNova, deFonte, paraFonte } from '../domain/chat-mensagem.documento';
 import { ArmazenamentoDeChat } from './armazenamento-de-chat';
@@ -176,6 +178,28 @@ export class ChatMensagemPostgresRepository extends BaseRepository<ChatMensagemF
       );
       return linhas.map(deLinha);
     });
+  }
+
+  /** O dia e o mês são os do fuso do sistema (`AT TIME ZONE`), como nos índices; só mensagem com modelo e tokens gravados entra. */
+  async somarTokens(consulta: ConsultaTokens): Promise<TokensSomados[]> {
+    return this.proteger(async () =>
+      this.executarConsulta<TokensSomados>(
+        `SELECT
+           TO_CHAR(chat_mensagem.created_date AT TIME ZONE CAST(:fusoHorario AS text), :formato) AS periodo,
+           chat_mensagem.modelo,
+           CAST(COUNT(*) AS float8)                                      AS mensagens,
+           CAST(SUM(chat_mensagem.tokens_entrada) AS float8)             AS "tokensEntrada",
+           CAST(COALESCE(SUM(chat_mensagem.tokens_saida), 0) AS float8)  AS "tokensSaida",
+           CAST(COALESCE(SUM(chat_mensagem.tokens_cache), 0) AS float8)  AS "tokensCache"
+         FROM chat_mensagem
+         WHERE chat_mensagem.is_deleted = false
+           AND chat_mensagem.modelo IS NOT NULL
+           AND chat_mensagem.tokens_entrada IS NOT NULL
+           AND CAST(chat_mensagem.created_date AT TIME ZONE CAST(:fusoHorario AS text) AS date) BETWEEN CAST(:dataInicio AS date) AND CAST(:dataFim AS date)
+         GROUP BY periodo, chat_mensagem.modelo`,
+        { fusoHorario: consulta.fusoHorario, formato: consulta.porMes ? 'YYYY-MM' : 'YYYY-MM-DD', dataInicio: consulta.dataInicio, dataFim: consulta.dataFim },
+      ),
+    );
   }
 
   private async proteger<T>(operacao: () => Promise<T>): Promise<T> {

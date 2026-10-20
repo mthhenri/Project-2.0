@@ -1,7 +1,10 @@
 import { describe, it } from 'node:test';
 import * as assert from 'node:assert/strict';
 import { AutorChatEnum, ContextoChatEnum, NivelIaEnum } from '@project20/shared';
-import { MAPEAMENTO_CHAT_MENSAGEM, montarConsultaBusca, montarConsultaConversa, montarConsultaConversas, limparTitulo, montarConsultaTitulos } from './chat-consultas';
+import {
+  MAPEAMENTO_CHAT_MENSAGEM, montarConsultaBusca, montarConsultaConversa, montarConsultaConversas, limparTitulo, montarConsultaTitulos,
+  deBaldesDeTokens, diaSeguinte, montarConsultaTokens,
+} from './chat-consultas';
 import { ChatMensagemNova, deFonte, paraFonte, paraResumo } from './chat-mensagem.documento';
 
 describe('consultas do chat', () => {
@@ -76,5 +79,48 @@ describe('documento da mensagem', () => {
   it('o resumo da API não leva o conteúdo bruto', () => {
     const resumo = paraResumo(deFonte(paraFonte(nova, 'abc', new Date())));
     assert.equal('conteudoBruto' in resumo, false);
+  });
+});
+
+describe('soma de tokens da aba Custos (task 202)', () => {
+  const RECORTE = { dataInicio: '2026-10-01', dataFim: '2026-10-31', fusoHorario: 'America/Sao_Paulo' };
+
+  it('o dia seguinte atravessa fim de mês e de ano', () => {
+    assert.equal(diaSeguinte('2026-10-31'), '2026-11-01');
+    assert.equal(diaSeguinte('2026-12-31'), '2027-01-01');
+    assert.equal(diaSeguinte('2028-02-28'), '2028-02-29');
+  });
+
+  it('a consulta filtra só mensagem com tokens e modelo, no intervalo e no fuso, e agrega por período e modelo', () => {
+    const consulta = montarConsultaTokens({ ...RECORTE, porMes: false });
+    assert.equal(consulta.size, 0);
+    assert.deepEqual(consulta.query.bool.filter, [
+      { exists: { field: 'tokens_entrada' } },
+      { exists: { field: 'modelo' } },
+      { range: { created_date: { gte: '2026-10-01', lt: '2026-11-01', format: 'yyyy-MM-dd', time_zone: 'America/Sao_Paulo' } } },
+    ]);
+    assert.deepEqual(consulta.aggs.periodos.date_histogram, { field: 'created_date', calendar_interval: 'day', format: 'yyyy-MM-dd', time_zone: 'America/Sao_Paulo', min_doc_count: 1 });
+    assert.equal(consulta.aggs.periodos.aggs.modelos.terms.field, 'modelo');
+    assert.deepEqual(Object.keys(consulta.aggs.periodos.aggs.modelos.aggs), ['entrada', 'saida', 'cache']);
+  });
+
+  it('por mês, o histograma é mensal', () => {
+    const { date_histogram: histograma } = montarConsultaTokens({ ...RECORTE, dataInicio: '2026-01-01', dataFim: '2026-12-31', porMes: true }).aggs.periodos;
+    assert.equal(histograma.calendar_interval, 'month');
+    assert.equal(histograma.format, 'yyyy-MM');
+  });
+
+  it('os baldes viram uma linha por período e modelo, com soma ausente valendo zero', () => {
+    assert.deepEqual(
+      deBaldesDeTokens([
+        { key_as_string: '2026-10-05', modelos: { buckets: [{ key: 'haiku', doc_count: 3, entrada: { value: 100 }, saida: { value: 20 }, cache: { value: null } }] } },
+        { key_as_string: '2026-10-06', modelos: { buckets: [{ key: 'sonnet', doc_count: 1, entrada: { value: 5 }, saida: { value: null }, cache: { value: 2 } }] } },
+      ]),
+      [
+        { periodo: '2026-10-05', modelo: 'haiku', mensagens: 3, tokensEntrada: 100, tokensSaida: 20, tokensCache: 0 },
+        { periodo: '2026-10-06', modelo: 'sonnet', mensagens: 1, tokensEntrada: 5, tokensSaida: 0, tokensCache: 2 },
+      ],
+    );
+    assert.deepEqual(deBaldesDeTokens([]), []);
   });
 });
