@@ -93,7 +93,10 @@
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    padding: 0.5rem 0 1rem;
+    // Fade nas bordas de cima e de baixo: a mensagem que rola para fora some aos poucos em vez de ser cortada seca. O respiro do
+    // padding tem a altura do fade, então a primeira e a última mensagem, paradas, aparecem inteiras.
+    padding: 2rem 0;
+    mask-image: linear-gradient(to bottom, transparent 0, #000 2rem, #000 calc(100% - 2rem), transparent 100%);
   }
 
   // O conteúdo que cresce (resposta chegando, cartões carregando): o que se observa para acompanhar o fim.
