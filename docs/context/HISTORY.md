@@ -12,6 +12,17 @@
 
 ---
 
+## 2026-10-19 — Atividades e pad liberados com a IA no ar (registro feito em 2026-10-20)
+
+Pedido do autor: "quando a IA estiver ativa, não precisa mais deixar desativado as atividades; só faz com que ela seja o start" e, depois, "o gerenciamento do pad pela IA tem que acontecer, mas em ambos os casos eu posso editar". Commit `fix(frontend): atividades e pad seguem liberados com a IA no ar`; o registro ficou faltando e foi feito só agora, junto da correção do `CONTEXT.md`.
+
+- **Menu e chip:** o item "Atividades" deixou de levar `substituidoPelaIa` (`navegacao.ts`), então a barra lateral não o desabilita com a IA no ar; o chip "Sem execução ativa" leva sempre a `/atividade` (saiu o `destinoSemExecucao`). O início no chat continua pelo login (`destino-pos-login.ts`, sem mudança).
+- **Pad:** `UsuarioAnotacoesDialogComponent` perdeu `somenteLeituraPelaIa` e o aviso "A IA cuida do seu pad"; `editavelAgora` virou o próprio `editavel` (editor, Salvar, Limpar e "Enviar para" valem com a IA no ar). O estilo `anotacoes-drawer__aviso-ia` saiu.
+- **Execução que não aparecia na barra:** a correção que eu tinha feito no interceptor (ressincronizar o chip ao confirmar, ajustar ou desfazer uma proposta) já existia no remoto (P-020); no `pull` os dois arquivos do interceptor deram conflito e valeu a versão do remoto. O stash com a minha cópia foi apagado em 2026-10-20.
+- **Testes:** frontend 1387 depois do pull (os de menu, chip e pad foram reescritos: Atividades com link e sem `aria-disabled` com a IA no ar; o pad editável com a IA no ar; saiu o teste do atalho `g a` bloqueado). Build ok.
+- **Verificado ao vivo** (conta de teste, IA no ar, 1366×768): login caiu no chat, "Atividades" com `href` `/atividade`, chip "Teste 01:15:58" na barra, pad abriu com editor e "Salvar" e sem o aviso.
+- **Achado depois:** a documentação ainda descrevia o menu desabilitado e o pad só leitura (`CONTEXT.md`, tasks 157, 158 e 146); corrigida em 2026-10-20.
+
 ## 2026-10-19 — Task 170 fechada: verificação ao vivo depois da correção do P-019
 
 Pedido do autor: "faça os testes e se tudo tiver certo só completar" e, depois da pergunta sobre o que faltava, promover o `dev.teste` a gestor só para rever os cartões do gestor e reverter. A 170 estava em `active/` desde a verificação de 167 a 170, só por causa do P-019 (participar por **nome**), corrigido no commit `459e8d9` sem verificação ao vivo.
