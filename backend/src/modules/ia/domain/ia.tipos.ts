@@ -3,7 +3,8 @@ import { EsforcoIaEnum, NivelIaEnum } from '@project20/shared';
 /** Trechos de uma mensagem: texto, pedido de ferramenta (vindo da IA) e resultado de ferramenta (devolvido a ela). */
 export type IaBloco =
   | { tipo: 'texto'; texto: string }
-  | { tipo: 'uso_ferramenta'; id: string; nome: string; entrada: Record<string, unknown> }
+  /** `assinatura` é opaca: o provedor a devolve e exige de volta na rodada seguinte (a `thoughtSignature` do Gemini). */
+  | { tipo: 'uso_ferramenta'; id: string; nome: string; entrada: Record<string, unknown>; assinatura?: string }
   | { tipo: 'resultado_ferramenta'; usoId: string; conteudo: string; erro?: boolean };
 
 export interface IaMensagem {

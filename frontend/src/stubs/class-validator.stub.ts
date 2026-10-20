@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const d = (..._args: any[]) => (_target: any, _key?: any): void => {};
 
+export const ArrayMaxSize = d;
 export const IsArray      = d;
 export const IsBoolean    = d;
 export const IsDate       = d;

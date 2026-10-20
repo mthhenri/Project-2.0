@@ -10,11 +10,12 @@ const ADMINISTRADOR = { sub: 1, tipo: TipoUsuarioEnum.ADMINISTRADOR } as never;
 const GESTOR = { sub: 2, tipo: TipoUsuarioEnum.GESTOR } as never;
 const DESENVOLVEDOR = { sub: 3, tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
 
+const ANTHROPIC = { modeloRapido: 'claude-haiku-5-5', modeloPadrao: 'claude-sonnet-5-5', modeloAnalitico: 'claude-opus-5-5' };
+
 const BASE: ConfiguracaoIaCriarDto = {
   provedor: TipoProvedorIaEnum.ANTHROPIC,
-  modeloRapido: 'rapido',
-  modeloPadrao: 'padrao',
-  modeloAnalitico: 'analitico',
+  fallbacks: [],
+  modelosProvedor: { [TipoProvedorIaEnum.ANTHROPIC]: ANTHROPIC },
   esforcoAnalitico: EsforcoIaEnum.MEDIO,
   checkinMinimoMinutos: 30,
   checkinMaximoMinutos: 80,
@@ -57,11 +58,11 @@ test('criar grava a versão seguinte sem alterar a anterior e renova o cache', a
   const servico = new ConfiguracaoIaService(repositorio);
 
   assert.equal((await servico.obterAtiva()).versao, 1);
-  const resposta = await servico.criar({ ...BASE, modeloPadrao: 'outro', iaDesligada: false }, ADMINISTRADOR);
+  const resposta = await servico.criar({ ...BASE, modelosProvedor: { [TipoProvedorIaEnum.ANTHROPIC]: { ...ANTHROPIC, modeloPadrao: 'claude-sonnet-5-5-novo' } }, iaDesligada: false }, ADMINISTRADOR);
 
   assert.equal(resposta.dados.versao, 2);
-  assert.equal(versoes[0].modeloPadrao, 'padrao', 'a versão 1 não muda');
-  assert.equal((await servico.obterAtiva()).modeloPadrao, 'outro');
+  assert.equal(versoes[0].modelosProvedor.ANTHROPIC?.modeloPadrao, 'claude-sonnet-5-5', 'a versão 1 não muda');
+  assert.equal((await servico.obterAtiva()).modelosProvedor.ANTHROPIC?.modeloPadrao, 'claude-sonnet-5-5-novo');
   assert.equal(estado.leiturasDaAtiva, 1, 'a leitura seguinte vem do cache, sem ir ao banco');
 });
 
@@ -95,6 +96,68 @@ test('intervalo de check-in invertido ou igual é recusado e nada é gravado', a
   await assert.rejects(() => servico.criar({ ...BASE, checkinMinimoMinutos: 80, checkinMaximoMinutos: 30 }, ADMINISTRADOR), BusinessException);
   await assert.rejects(() => servico.criar({ ...BASE, checkinMinimoMinutos: 50, checkinMaximoMinutos: 50 }, ADMINISTRADOR), BusinessException);
   assert.equal(versoes.length, 1);
+});
+
+const mensagemDe = (erro: BusinessException): string => (erro.getResponse() as { mensagem: string }).mensagem;
+
+const GEMINI = { modeloRapido: 'gemini-flash', modeloPadrao: 'gemini-pro', modeloAnalitico: 'gemini-pro' };
+const OPENAI = { modeloRapido: 'gpt-mini', modeloPadrao: 'gpt-5', modeloAnalitico: 'o3' };
+const TODOS = { [TipoProvedorIaEnum.ANTHROPIC]: ANTHROPIC, [TipoProvedorIaEnum.GOOGLE]: GEMINI, [TipoProvedorIaEnum.OPENAI]: OPENAI };
+
+test('criar grava a cadeia de fallback na ordem dada, com o mapa de modelos', async () => {
+  const { repositorio } = criarRepositorio();
+  const servico = new ConfiguracaoIaService(repositorio);
+  const resposta = await servico.criar({ ...BASE, fallbacks: [TipoProvedorIaEnum.GOOGLE, TipoProvedorIaEnum.OPENAI], modelosProvedor: TODOS }, ADMINISTRADOR);
+  assert.deepEqual(resposta.dados.fallbacks, [TipoProvedorIaEnum.GOOGLE, TipoProvedorIaEnum.OPENAI]);
+  assert.deepEqual(resposta.dados.modelosProvedor, TODOS);
+});
+
+test('trocar o padrão para o Gemini e voltar: o trio da Anthropic continua no mapa e volta preenchido', async () => {
+  const { repositorio } = criarRepositorio();
+  const servico = new ConfiguracaoIaService(repositorio);
+  const noGemini = await servico.criar({ ...BASE, provedor: TipoProvedorIaEnum.GOOGLE, modelosProvedor: { ...BASE.modelosProvedor, [TipoProvedorIaEnum.GOOGLE]: GEMINI } }, ADMINISTRADOR);
+  const deVolta = await servico.criar({ ...BASE, modelosProvedor: noGemini.dados.modelosProvedor }, ADMINISTRADOR);
+  assert.equal(deVolta.dados.provedor, TipoProvedorIaEnum.ANTHROPIC);
+  assert.deepEqual(deVolta.dados.modelosProvedor.ANTHROPIC, ANTHROPIC);
+});
+
+test('provedor padrão com modelo de outro provedor, ou sem modelos, é recusado e nada é gravado', async () => {
+  const { repositorio, versoes } = criarRepositorio();
+  const servico = new ConfiguracaoIaService(repositorio);
+  await assert.rejects(
+    () => servico.criar({ ...BASE, provedor: TipoProvedorIaEnum.OPENAI, modelosProvedor: { [TipoProvedorIaEnum.OPENAI]: ANTHROPIC } }, ADMINISTRADOR),
+    (erro: unknown) => erro instanceof BusinessException && /não é de OpenAI/.test(mensagemDe(erro)),
+  );
+  await assert.rejects(
+    () => servico.criar({ ...BASE, provedor: TipoProvedorIaEnum.GOOGLE }, ADMINISTRADOR),
+    (erro: unknown) => erro instanceof BusinessException && /Google está na cadeia, mas não tem os modelos/.test(mensagemDe(erro)),
+  );
+  assert.equal(versoes.length, 1);
+});
+
+test('fallback com modelo de outro provedor e provedor repetido na cadeia são recusados', async () => {
+  const { repositorio, versoes } = criarRepositorio();
+  const servico = new ConfiguracaoIaService(repositorio);
+  await assert.rejects(
+    () => servico.criar({ ...BASE, fallbacks: [TipoProvedorIaEnum.GOOGLE], modelosProvedor: { ...TODOS, [TipoProvedorIaEnum.GOOGLE]: { ...GEMINI, modeloPadrao: 'gpt-5' } } }, ADMINISTRADOR),
+    BusinessException,
+  );
+  await assert.rejects(() => servico.criar({ ...BASE, fallbacks: [TipoProvedorIaEnum.GOOGLE, TipoProvedorIaEnum.GOOGLE], modelosProvedor: TODOS }, ADMINISTRADOR), BusinessException);
+  await assert.rejects(
+    () => servico.criar({ ...BASE, fallbacks: [TipoProvedorIaEnum.ANTHROPIC] }, ADMINISTRADOR),
+    (erro: unknown) => erro instanceof BusinessException && /mais de uma vez/.test(mensagemDe(erro)),
+  );
+  assert.equal(versoes.length, 1);
+});
+
+test('os nomes de modelo são gravados sem espaço nas pontas', async () => {
+  const { repositorio } = criarRepositorio();
+  const servico = new ConfiguracaoIaService(repositorio);
+  const resposta = await servico.criar(
+    { ...BASE, modelosProvedor: { [TipoProvedorIaEnum.ANTHROPIC]: { modeloRapido: ' claude-haiku-5-5 ', modeloPadrao: 'claude-sonnet-5-5\n', modeloAnalitico: ' Claude-Opus-5-5' } } },
+    ADMINISTRADOR,
+  );
+  assert.deepEqual(resposta.dados.modelosProvedor.ANTHROPIC, { modeloRapido: 'claude-haiku-5-5', modeloPadrao: 'claude-sonnet-5-5', modeloAnalitico: 'Claude-Opus-5-5' });
 });
 
 test('só administrador lê, lista e grava; gestor e desenvolvedor são recusados', async () => {

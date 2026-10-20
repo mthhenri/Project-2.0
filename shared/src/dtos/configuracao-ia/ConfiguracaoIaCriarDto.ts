@@ -1,27 +1,23 @@
-import { IsBoolean, IsEnum, IsInt, IsNotEmpty, IsString, MaxLength, Min } from 'class-validator';
+import { ArrayMaxSize, IsArray, IsBoolean, IsEnum, IsInt, IsObject, Min } from 'class-validator';
 import { EsforcoIaEnum } from '../../enums/esforco-ia.enum';
 import { ModoContextoChatEnum } from '../../enums/modo-contexto-chat.enum';
 import { TipoProvedorIaEnum } from '../../enums/tipo-provedor-ia.enum';
+import { ConfiguracaoIaModelosPorProvedorDto } from './ConfiguracaoIaModelosDto';
 
-/** Grava uma **versão nova** da configuração (a antiga nunca é alterada). O intervalo mínimo < máximo é conferido na service. */
+/** Grava uma **versão nova** da configuração (a antiga nunca é alterada). O intervalo mínimo < máximo e a coerência provedor × modelo são conferidos na service. */
 export class ConfiguracaoIaCriarDto {
   @IsEnum(TipoProvedorIaEnum)
   provedor: TipoProvedorIaEnum;
 
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(100)
-  modeloRapido: string;
+  /** Cadeia de contingência, em ordem (no máximo dois, sem repetir o provedor padrão). */
+  @IsArray()
+  @ArrayMaxSize(2)
+  @IsEnum(TipoProvedorIaEnum, { each: true })
+  fallbacks: TipoProvedorIaEnum[];
 
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(100)
-  modeloPadrao: string;
-
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(100)
-  modeloAnalitico: string;
+  /** Os modelos por provedor. O formato do mapa e a coerência modelo × provedor são conferidos na service (`validarProvedoresDaConfiguracaoIa`). */
+  @IsObject()
+  modelosProvedor: ConfiguracaoIaModelosPorProvedorDto;
 
   @IsEnum(EsforcoIaEnum)
   esforcoAnalitico: EsforcoIaEnum;

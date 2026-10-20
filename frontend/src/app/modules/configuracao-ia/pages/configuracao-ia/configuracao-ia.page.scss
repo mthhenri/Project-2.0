@@ -151,6 +151,11 @@
       align-items: end;
     }
 
+    // Campos com texto de ajuda de tamanhos diferentes (os modelos) alinham pelo topo, não pelo fim.
+    &--alinhada-ao-topo {
+      align-items: start;
+    }
+
     // O campo numérico tem largura mínima própria; sem isto ele vaza da coluna estreita.
     p-inputnumber {
       min-width: 0;
@@ -160,6 +165,51 @@
         min-width: 0;
       }
     }
+  }
+
+  &__provedores {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  &__provedor {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+    padding: 0.875rem 1rem;
+    border: 1px solid var(--app-surface-200);
+    border-radius: 8px;
+  }
+
+  &__provedor-titulo {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 600;
+  }
+
+  &__provedor-papel {
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--p-text-muted-color);
+  }
+
+  // No detalhe do histórico (coluna estreita): um modelo por linha, quebrando no meio do nome só se não couber.
+  &__modelo-linha {
+    display: block;
+    color: var(--p-text-muted-color);
+    overflow-wrap: anywhere;
+  }
+
+  &__erros-provedor {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin: 0;
+    padding-left: 1.125rem;
   }
 
   &__campo {
@@ -314,6 +364,15 @@
     dd {
       margin: 0;
       overflow-wrap: anywhere;
+    }
+
+    // Provedor com os três modelos: ocupa a linha inteira (o rótulo em cima), senão os nomes quebram em 2 ou 3 linhas na coluna estreita.
+    .configuracao-ia__valores-provedor {
+      grid-column: 1 / -1;
+    }
+
+    dt.configuracao-ia__valores-provedor {
+      margin-top: 0.25rem;
     }
   }
 }

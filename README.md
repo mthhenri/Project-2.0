@@ -165,6 +165,7 @@ O projeto é um monorepo com quatro pacotes independentes conectados via npm wor
 | `JWT_EXPIRACAO` | Tempo de expiração do token | `8h` |
 | `INTERVALO_MINIMO_MINUTOS` | Gap mínimo entre execuções para ser considerado intervalo | `15` |
 | `ANTHROPIC_API_KEY` | Chave da API Anthropic (opcional: sem ela a IA fica "fora do ar"). O modelo de cada nível e o resto da configuração da IA ficam na tela Configurações da IA, não no `.env` | `sk-ant-...` |
+| `GOOGLE_API_KEY` / `OPENAI_API_KEY` | Chaves do Gemini e da OpenAI (opcionais): só servem para o fallback entre provedores, escolhido em Configurações da IA. Sem a chave, o provedor é pulado na cadeia | `sk-...` |
 | `CHAT_ARMAZENAMENTO` | Onde ficam as mensagens do chat: `opensearch` (desenvolvimento, padrão) ou `postgres` (tabelas **provisórias** para a produção de teste, sem serviço de busca) ou `elasticsearch` (produção de verdade) | `opensearch` |
 | `OPENSEARCH_URL` | Endereço do OpenSearch (sobe com `npm run db:up`); obrigatório só com `CHAT_ARMAZENAMENTO=opensearch` | `http://localhost:9200` |
 | `OPENSEARCH_USUARIO` / `OPENSEARCH_SENHA` | Opcionais: só se o servidor tiver segurança ligada | — |

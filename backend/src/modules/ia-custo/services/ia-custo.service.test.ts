@@ -22,7 +22,7 @@ function montar(opcoes: { usos?: TokensSomados[] } = {}) {
     },
   } as unknown as ArmazenamentoDeChat;
   const configuracao = {
-    obterAtiva: async () => ({ modeloRapido: 'haiku', modeloPadrao: 'sonnet', modeloAnalitico: 'sonnet' }) as ConfiguracaoIaResumoDto,
+    obterAtiva: async () => ({ provedor: 'ANTHROPIC', modelosProvedor: { ANTHROPIC: { modeloRapido: 'haiku', modeloPadrao: 'sonnet', modeloAnalitico: 'sonnet' } } }) as unknown as ConfiguracaoIaResumoDto,
     listarPrecos: async () => [PRECO],
     alterarPreco: async (dto: unknown) => {
       precosAlterados.push(dto);

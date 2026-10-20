@@ -1,6 +1,6 @@
 import { IaRespostaProvedor, IaSolicitacaoProvedor } from './ia.tipos';
 
-/** Contrato de um provedor de IA. Hoje só o da Anthropic; Google e OpenAI entram implementando isto. */
+/** Contrato de um provedor de IA. Anthropic, Google (Gemini) e OpenAI o implementam; cada um traduz o contrato neutro do projeto para o do seu SDK. */
 export interface IaProvedor {
   /** Tem o que precisa para chamar (por exemplo, a chave de API)? */
   estaDisponivel(): boolean;

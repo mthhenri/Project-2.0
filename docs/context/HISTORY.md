@@ -12,6 +12,32 @@
 
 ---
 
+## 2026-10-20 — Task 203: conexões com Gemini e OpenAI, fallback entre provedores e modelos por provedor na configuração da IA
+
+Pedido do autor: deixar preparadas as conexões com os outros provedores de IA, com fallback entre eles escolhido pela configuração versionada (padrão Anthropic; se cair, Gemini; se cair, OpenAI) e a regra
+de que o modelo (rápido, padrão, analítico) nunca seja de outro provedor que o do trio em que está. O autor pediu para ser avisado antes de qualquer mudança de modelagem.
+
+- **Modelagem (decidida com o autor, opção C).** A primeira versão (tabela `configuracao_ia_fallback`) foi descartada por duas razões: o autor queria JSONB e, ao analisar "trocar para o Gemini e voltar para a
+  Anthropic", viu que o trio do provedor que saía do padrão se perdia. Migration `0049` (nunca aplicada em outro ambiente): `configuracao_ia.modelos_provedor` (JSONB: provedor → trio, de todo provedor já
+  configurado) e `fallbacks` (JSONB: array ordenado de provedores); as colunas `modelo_rapido/padrao/analitico` saíram, sem segunda fonte da verdade. A nova versão copia o mapa; o provedor padrão segue em
+  `tipo_provedor_ia_id`.
+- **Provedores.** `GoogleProvedor` (`@google/genai`) e `OpenAiProvedor` (`openai`, Chat Completions) ao lado do `AnthropicProvedor`; cada um traduz mensagens, ferramentas, esforço e tokens (o cache entra em `cache`
+  e sai da `entrada`, como na Anthropic). O bloco `uso_ferramenta` ganhou `assinatura` (a `thoughtSignature` do Gemini). A tradução de erro por status virou `traduzirErroDeProvedor`. Chaves: `GOOGLE_API_KEY` e
+  `OPENAI_API_KEY`, opcionais.
+- **Fallback.** `IaService` percorre a cadeia (padrão + até 2): provedor sem chave é pulado, falha de provedor passa ao próximo com os modelos dele, se todos falham vale a falha do **padrão**; no streaming, depois de um
+  trecho entregue não há fallback (repetiria a resposta). `FORA_DO_AR` só se nenhum provedor da cadeia tem chave ou a cadeia inteira cai (detecção automática).
+- **Regra do modelo.** `validarProvedoresDaConfiguracaoIa` (shared, usada pela service e pela tela): cada modelo guardado é do provedor em que está pelo prefixo (`claude-`, `gemini-`/`gemma-`, `gpt-`/`chatgpt-`/`o<n>`),
+  todo provedor da cadeia tem o trio completo, sem repetição e no máximo 2 fallbacks.
+- **Tela.** Configurações da IA: provedor padrão e dois seletores de fallback, um cartão com o trio por provedor da cadeia (o trio de quem sai da cadeia fica guardado), erros da regra ao salvar e o detalhe do histórico
+  com a cadeia. `ArrayMaxSize` entrou no stub de `class-validator` do frontend.
+- **Revisão independente (subagente `revisor`, só leitura).** Achou e foi corrigido: o id de ferramenta do Gemini sem id repetia a cada volta (`gemini-sintetico-1`) e misturava resultados — agora único (`randomUUID`);
+  provedor pulado por falta de chave contava como falha do padrão (motivo errado e estado `FORA_DO_AR` indevido) — agora não conta; trio incoerente de provedor fora da cadeia, que a tela não mostra, bloqueava o salvar —
+  agora só vai o trio completo e coerente; a service apara os nomes dos modelos antes de validar e gravar; chave herdada (`constructor`) no mapa. **Não corrigido (precisa de chave real):** fallback para o Gemini 3 no
+  meio de uma volta de ferramenta, cujo `functionCall` vem sem `thoughtSignature` (anotado na spec).
+- **Testes.** `shared` 180, `backend` unitários 1146, integração 250 (Postgres 16 local), `frontend` 131 arquivos / 1462 testes (módulo da IA 116 depois das correções); builds ok; migration `0049` conferida em `up`/`down`/`up` sobre a versão 1 do seed; tela
+  verificada ao vivo nos três viewports (`docs/specs/done/203-ia-provedores-e-fallback/verificacao.md`). O `package-lock.json` teve ruído de metadados (npm mais novo) além das duas dependências novas.
+- **Não verificado.** Chamada real ao Gemini e à OpenAI (sem chave): teto de tokens consumido pelo raciocínio, `thoughtSignature` e `reasoning_effort` pedem conferência com chave. O Gemini ignora o esforço do nível analítico.
+
 ## 2026-10-20 — Task 202: custos da IA pelas mensagens do chat, preço na configuração (sem `ia_uso` nem `ia_modelo_preco`)
 
 Pedido do autor depois de comparar a aba Custos (US$ 0,02, 22 chamadas) com o Console da Anthropic (US$ 1,07, 8,3 mi de tokens de entrada): o combinado era gravar os tokens nas

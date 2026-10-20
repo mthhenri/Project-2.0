@@ -101,6 +101,7 @@ com `--include=dev`** (ver abaixo). Não use `tsx`/esbuild: ele não emite
    | `APP_CORS_ORIGEM`         | a URL do Cloudflare Pages — **preencha no passo 3** |
    | `CHAT_ARMAZENAMENTO`      | `postgres` — onde ficam as mensagens do chat (tabelas provisórias no Supabase). **Obrigatória na prática:** sem ela o padrão é `opensearch` e o backend não sobe sem `OPENSEARCH_URL`. Na produção de verdade: `elasticsearch` com `ELASTICSEARCH_URL` e `ELASTICSEARCH_API_KEY` |
    | `ANTHROPIC_API_KEY`       | *(opcional — deixe vazio por enquanto; sem ela o auxílio de descrições por IA fica indisponível, o resto funciona)* |
+   | `GOOGLE_API_KEY` / `OPENAI_API_KEY` | *(opcionais — só para o fallback entre provedores de IA escolhido em Configurações da IA; sem a chave o provedor é pulado)* |
 
    > **Não** defina `NODE_ENV=production` — isso faria o `npm install` pular `ts-node`/`typescript`.
    > Use `APP_AMBIENTE=production` para o ambiente lógico da aplicação.

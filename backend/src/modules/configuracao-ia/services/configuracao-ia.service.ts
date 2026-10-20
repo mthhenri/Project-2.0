@@ -11,6 +11,7 @@ import {
   PaginatedResult,
   StandardResponse,
   temPermissaoDeAdministrador,
+  validarProvedoresDaConfiguracaoIa,
 } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
@@ -81,7 +82,10 @@ export class ConfiguracaoIaService implements OnModuleInit {
     if (dto.checkinMinimoMinutos >= dto.checkinMaximoMinutos) {
       throw new BusinessException('O intervalo mínimo do check-in deve ser menor que o máximo');
     }
-    const criada = await this.configuracaoIaRepositorio.inserirNovaVersao(dto, usuarioAtivo.sub);
+    const aparada = { ...dto, modelosProvedor: this.aparar(dto) };
+    const errosDeProvedor = validarProvedoresDaConfiguracaoIa(aparada);
+    if (errosDeProvedor.length > 0) throw new BusinessException(errosDeProvedor[0]);
+    const criada = await this.configuracaoIaRepositorio.inserirNovaVersao(aparada, usuarioAtivo.sub);
     this.ativaEmCache = criada;
     return { sucesso: true, dados: criada, mensagem: `Versão ${criada.versao} da configuração da IA salva com sucesso` };
   }
@@ -94,6 +98,17 @@ export class ConfiguracaoIaService implements OnModuleInit {
   /** Para a aba "Custos" (que confere a permissão): grava o preço de um modelo na versão ativa, no lugar. */
   async alterarPreco(dto: IaModeloPrecoAlterarDto): Promise<IaModeloPrecoAlteradoDto> {
     return this.configuracaoIaRepositorio.alterarPrecoDaVersaoAtiva(dto);
+  }
+
+  /** Os nomes de modelo gravados sem espaço nas pontas (a regra confere o prefixo ignorando-os, então o que vai ao provedor é o nome limpo). */
+  private aparar(dto: ConfiguracaoIaCriarDto): ConfiguracaoIaCriarDto['modelosProvedor'] {
+    const aparados: Record<string, unknown> = {};
+    for (const [provedor, modelos] of Object.entries(dto.modelosProvedor ?? {})) {
+      aparados[provedor] = Object.fromEntries(
+        Object.entries((modelos ?? {}) as Record<string, unknown>).map(([campo, valor]) => [campo, typeof valor === 'string' ? valor.trim() : valor]),
+      );
+    }
+    return aparados as ConfiguracaoIaCriarDto['modelosProvedor'];
   }
 
   /** Defesa em profundidade: o `AdministradorGuard` já barra a rota. */

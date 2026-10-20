@@ -47,61 +47,101 @@
                 <section class="configuracao-ia__secao">
                   <h2 class="configuracao-ia__secao-titulo">Provedor e modelos</h2>
 
-                  <div class="configuracao-ia__campo">
-                    <label class="configuracao-ia__label" for="ia-provedor">Provedor</label>
-                    <p-select
-                      inputId="ia-provedor"
-                      formControlName="provedor"
-                      [options]="opcoesProvedor"
-                      optionLabel="rotulo"
-                      optionValue="valor"
-                      optionDisabled="desabilitada"
-                      class="w-full"
-                    />
-                  </div>
-
-                  <div class="configuracao-ia__linha configuracao-ia__linha--dupla">
+                  <div class="configuracao-ia__linha configuracao-ia__linha--alinhada-ao-topo">
                     <div class="configuracao-ia__campo">
-                      <label class="configuracao-ia__label" for="ia-modelo-rapido">Modelo rápido</label>
-                      <input id="ia-modelo-rapido" pInputText list="ia-sugestoes-modelos" formControlName="modeloRapido" maxlength="100" class="w-full" />
-                      <small class="configuracao-ia__ajuda">Conversa, listar, iniciar e pausar.</small>
-                      @if (campoInvalido('modeloRapido')) {
-                        <small class="configuracao-ia__erro-campo">Informe o modelo (até 100 caracteres)</small>
-                      }
-                    </div>
-                    <div class="configuracao-ia__campo">
-                      <label class="configuracao-ia__label" for="ia-modelo-padrao">Modelo padrão</label>
-                      <input id="ia-modelo-padrao" pInputText list="ia-sugestoes-modelos" formControlName="modeloPadrao" maxlength="100" class="w-full" />
-                      <small class="configuracao-ia__ajuda">Descrições, rigor, pad e prioridade.</small>
-                      @if (campoInvalido('modeloPadrao')) {
-                        <small class="configuracao-ia__erro-campo">Informe o modelo (até 100 caracteres)</small>
-                      }
-                    </div>
-                    <div class="configuracao-ia__campo">
-                      <label class="configuracao-ia__label" for="ia-modelo-analitico">Modelo analítico</label>
-                      <input id="ia-modelo-analitico" pInputText list="ia-sugestoes-modelos" formControlName="modeloAnalitico" maxlength="100" class="w-full" />
-                      <small class="configuracao-ia__ajuda">Analisar demanda, quebrar em atividades, sugerir conexões.</small>
-                      @if (campoInvalido('modeloAnalitico')) {
-                        <small class="configuracao-ia__erro-campo">Informe o modelo (até 100 caracteres)</small>
-                      }
-                    </div>
-                    <div class="configuracao-ia__campo">
-                      <label class="configuracao-ia__label" for="ia-esforco">Esforço do nível analítico</label>
+                      <label class="configuracao-ia__label" for="ia-provedor">Provedor padrão</label>
                       <p-select
-                        inputId="ia-esforco"
-                        formControlName="esforcoAnalitico"
-                        [options]="opcoesEsforco"
+                        inputId="ia-provedor"
+                        formControlName="provedor"
+                        [options]="opcoesProvedor"
                         optionLabel="rotulo"
                         optionValue="valor"
                         class="w-full"
                       />
                     </div>
+                    <div class="configuracao-ia__campo">
+                      <label class="configuracao-ia__label" for="ia-fallback-primeiro">Se cair, tentar</label>
+                      <p-select
+                        inputId="ia-fallback-primeiro"
+                        formControlName="fallbackPrimeiro"
+                        [options]="opcoesDoPrimeiroFallback()"
+                        optionLabel="rotulo"
+                        optionValue="valor"
+                        optionDisabled="desabilitada"
+                        class="w-full"
+                      />
+                    </div>
+                    <div class="configuracao-ia__campo">
+                      <label class="configuracao-ia__label" for="ia-fallback-segundo">Se também cair, tentar</label>
+                      <p-select
+                        inputId="ia-fallback-segundo"
+                        formControlName="fallbackSegundo"
+                        [options]="opcoesDoSegundoFallback()"
+                        optionLabel="rotulo"
+                        optionValue="valor"
+                        optionDisabled="desabilitada"
+                        class="w-full"
+                      />
+                    </div>
                   </div>
-                  <datalist id="ia-sugestoes-modelos">
-                    @for (sugestao of sugestoesModelos; track sugestao) {
-                      <option [value]="sugestao"></option>
+                  <small class="configuracao-ia__ajuda">
+                    A chamada que falha segue para o próximo provedor da lista, com os modelos dele. Provedor sem chave no servidor é pulado.
+                    Os modelos de um provedor que sai da lista ficam guardados para quando ele voltar.
+                  </small>
+
+                  <div formGroupName="modelos" class="configuracao-ia__provedores">
+                    @for (provedor of provedoresDaCadeia(); track provedor; let indice = $index) {
+                      <div [formGroupName]="provedor" class="configuracao-ia__provedor">
+                        <h3 class="configuracao-ia__provedor-titulo">
+                          {{ rotuloDoProvedor(provedor) }}
+                          <span class="configuracao-ia__provedor-papel">{{ indice === 0 ? 'padrão' : 'fallback ' + indice }}</span>
+                        </h3>
+                        <div class="configuracao-ia__linha configuracao-ia__linha--alinhada-ao-topo">
+                          <div class="configuracao-ia__campo">
+                            <label class="configuracao-ia__label" [for]="'ia-modelo-rapido-' + provedor">Modelo rápido</label>
+                            <input [id]="'ia-modelo-rapido-' + provedor" pInputText [attr.list]="'ia-sugestoes-' + provedor" formControlName="modeloRapido" maxlength="100" class="w-full" />
+                            <small class="configuracao-ia__ajuda">Conversa, listar, iniciar e pausar.</small>
+                          </div>
+                          <div class="configuracao-ia__campo">
+                            <label class="configuracao-ia__label" [for]="'ia-modelo-padrao-' + provedor">Modelo padrão</label>
+                            <input [id]="'ia-modelo-padrao-' + provedor" pInputText [attr.list]="'ia-sugestoes-' + provedor" formControlName="modeloPadrao" maxlength="100" class="w-full" />
+                            <small class="configuracao-ia__ajuda">Descrições, rigor, pad e prioridade.</small>
+                          </div>
+                          <div class="configuracao-ia__campo">
+                            <label class="configuracao-ia__label" [for]="'ia-modelo-analitico-' + provedor">Modelo analítico</label>
+                            <input [id]="'ia-modelo-analitico-' + provedor" pInputText [attr.list]="'ia-sugestoes-' + provedor" formControlName="modeloAnalitico" maxlength="100" class="w-full" />
+                            <small class="configuracao-ia__ajuda">Analisar demanda, quebrar em atividades, sugerir conexões.</small>
+                          </div>
+                        </div>
+                        <datalist [id]="'ia-sugestoes-' + provedor">
+                          @for (sugestao of sugestoesDe(provedor); track sugestao) {
+                            <option [value]="sugestao"></option>
+                          }
+                        </datalist>
+                      </div>
                     }
-                  </datalist>
+                  </div>
+
+                  @if (tentouSalvar() && errosDeProvedor().length > 0) {
+                    <ul class="configuracao-ia__erros-provedor" role="alert">
+                      @for (mensagem of errosDeProvedor(); track mensagem) {
+                        <li class="configuracao-ia__erro-campo">{{ mensagem }}</li>
+                      }
+                    </ul>
+                  }
+
+                  <div class="configuracao-ia__campo">
+                    <label class="configuracao-ia__label" for="ia-esforco">Esforço do nível analítico</label>
+                    <p-select
+                      inputId="ia-esforco"
+                      formControlName="esforcoAnalitico"
+                      [options]="opcoesEsforco"
+                      optionLabel="rotulo"
+                      optionValue="valor"
+                      class="w-full"
+                    />
+                    <small class="configuracao-ia__ajuda">Vale na Anthropic e nos modelos de raciocínio da OpenAI; o Gemini ainda ignora.</small>
+                  </div>
                 </section>
 
                 <section class="configuracao-ia__secao">
@@ -242,10 +282,19 @@
                       @if (selecionada()?.id === versao.id) {
                         <div class="configuracao-ia__detalhe">
                           <dl class="configuracao-ia__valores">
-                            <dt>Provedor</dt><dd>{{ rotuloDoProvedor(versao.provedor) }}</dd>
-                            <dt>Rápido</dt><dd>{{ versao.modeloRapido }}</dd>
-                            <dt>Padrão</dt><dd>{{ versao.modeloPadrao }}</dd>
-                            <dt>Analítico</dt><dd>{{ versao.modeloAnalitico }} · esforço {{ rotuloDoEsforco(versao.esforcoAnalitico) | lowercase }}</dd>
+                            @for (provedor of cadeiaDaVersao(versao); track provedor; let indice = $index) {
+                              <dt class="configuracao-ia__valores-provedor">{{ indice === 0 ? 'Provedor' : 'Fallback ' + indice }}</dt>
+                              <dd class="configuracao-ia__valores-provedor">
+                                {{ rotuloDoProvedor(provedor) }}
+                                <span class="configuracao-ia__modelo-linha">rápido: {{ versao.modelosProvedor[provedor]?.modeloRapido }}</span>
+                                <span class="configuracao-ia__modelo-linha">padrão: {{ versao.modelosProvedor[provedor]?.modeloPadrao }}</span>
+                                <span class="configuracao-ia__modelo-linha">analítico: {{ versao.modelosProvedor[provedor]?.modeloAnalitico }}</span>
+                              </dd>
+                            }
+                            @if (versao.fallbacks.length === 0) {
+                              <dt>Fallback</dt><dd>Nenhum</dd>
+                            }
+                            <dt>Esforço</dt><dd>{{ rotuloDoEsforco(versao.esforcoAnalitico) | lowercase }} (analítico)</dd>
                             <dt>Check-in</dt><dd>{{ versao.checkinMinimoMinutos }} a {{ versao.checkinMaximoMinutos }} min</dd>
                             <dt>Duração</dt><dd>{{ versao.duracaoRecomendadaMinutos }} min</dd>
                             <dt>Inteligente</dt><dd>{{ versao.checkinInteligente ? 'Sim' : 'Não' }}</dd>

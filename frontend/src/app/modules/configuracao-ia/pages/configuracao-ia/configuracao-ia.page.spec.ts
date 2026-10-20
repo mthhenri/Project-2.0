@@ -15,10 +15,13 @@ import { ConfiguracaoIaPage } from './configuracao-ia.page';
 
 type Montado = ComponenteMontado<ConfiguracaoIaPage>;
 
+const ANTHROPIC = { modeloRapido: 'claude-haiku-5-5', modeloPadrao: 'claude-sonnet-5-5', modeloAnalitico: 'claude-opus-5-5' };
+const GEMINI = { modeloRapido: 'gemini-2.5-flash', modeloPadrao: 'gemini-2.5-pro', modeloAnalitico: 'gemini-2.5-pro' };
+
 function versao(numero: number, sobrescrita: Partial<ConfiguracaoIaResumoDto> = {}): ConfiguracaoIaResumoDto {
   return {
     id: numero, versao: numero, provedor: TipoProvedorIaEnum.ANTHROPIC,
-    modeloRapido: 'claude-haiku-5-5', modeloPadrao: 'claude-sonnet-5-5', modeloAnalitico: 'claude-opus-5-5',
+    fallbacks: [], modelosProvedor: { [TipoProvedorIaEnum.ANTHROPIC]: ANTHROPIC },
     esforcoAnalitico: EsforcoIaEnum.MEDIO, checkinMinimoMinutos: 20, checkinMaximoMinutos: 40, duracaoRecomendadaMinutos: 90,
     checkinInteligente: true, rigorProporcional: true, deteccaoAutomatica: true,
     duvidasCodigo: false, modoContextoChat: ModoContextoChatEnum.MISTURADO, iaDesligada: false,
@@ -28,7 +31,7 @@ function versao(numero: number, sobrescrita: Partial<ConfiguracaoIaResumoDto> = 
 }
 
 const ATIVA = versao(3);
-const HISTORICO = [versao(3), versao(2, { modeloRapido: 'claude-haiku-4', iaDesligada: true, checkinMaximoMinutos: 50 }), versao(1)];
+const HISTORICO = [versao(3), versao(2, { modelosProvedor: { [TipoProvedorIaEnum.ANTHROPIC]: { ...ANTHROPIC, modeloRapido: 'claude-haiku-4' } }, iaDesligada: true, checkinMaximoMinutos: 50 }), versao(1)];
 
 function responderCarga(montado: Montado, opcoes: { ativa?: ConfiguracaoIaResumoDto; historico?: ConfiguracaoIaResumoDto[]; estado?: EstadoIaEnum | 'ERRO' } = {}): void {
   responderSucesso(esperarRequisicao(montado.http, 'GET', '/configuracao-ia'), opcoes.ativa ?? ATIVA);
@@ -90,9 +93,11 @@ describe('ConfiguracaoIaPage — carregar', () => {
   it('o formulário nasce com os valores da versão ativa e sem nada a salvar', async () => {
     const montado = await abrir();
     expect(montado.componente.formulario.getRawValue()).toMatchObject({
-      modeloRapido: 'claude-haiku-5-5', modeloAnalitico: 'claude-opus-5-5', checkinMinimoMinutos: 20, iaDesligada: false,
+      provedor: TipoProvedorIaEnum.ANTHROPIC, fallbackPrimeiro: null, fallbackSegundo: null, checkinMinimoMinutos: 20, iaDesligada: false,
     });
-    expect((document.body.querySelector('#ia-modelo-rapido') as HTMLInputElement).value).toBe('claude-haiku-5-5');
+    expect(montado.componente.formulario.getRawValue().modelos.ANTHROPIC).toEqual(ANTHROPIC);
+    expect((document.body.querySelector('#ia-modelo-rapido-ANTHROPIC') as HTMLInputElement).value).toBe('claude-haiku-5-5');
+    expect(document.body.querySelector('#ia-modelo-rapido-GOOGLE'), 'provedor fora da cadeia não mostra o trio').toBeNull();
     expect(textoDaTela()).toContain('Nada a salvar: o formulário é igual à versão 3.');
     expect(botao('Salvar nova versão').disabled).toBe(true);
     expect(botao('Descartar alterações').disabled).toBe(true);
@@ -118,7 +123,7 @@ describe('ConfiguracaoIaPage — carregar', () => {
 describe('ConfiguracaoIaPage — editar e salvar', () => {
   it('digitar no campo de modelo habilita salvar e avisa que cria a versão seguinte (a ativa continua no histórico)', async () => {
     const montado = await abrir();
-    const campo = document.body.querySelector('#ia-modelo-rapido') as HTMLInputElement;
+    const campo = document.body.querySelector('#ia-modelo-rapido-ANTHROPIC') as HTMLInputElement;
     campo.value = 'claude-haiku-5-6';
     campo.dispatchEvent(new Event('input'));
     await montado.atualizar();
@@ -141,15 +146,72 @@ describe('ConfiguracaoIaPage — editar e salvar', () => {
 
   it('modelo em branco mostra o erro ao tentar salvar e não envia nada', async () => {
     const montado = await abrir();
-    montado.componente.formulario.controls.modeloPadrao.setValue('   ');
-    montado.componente.formulario.controls.modeloAnalitico.setValue('');
+    montado.componente.formulario.controls.modelos.controls.ANTHROPIC.patchValue({ modeloPadrao: '   ', modeloAnalitico: '' });
     await montado.atualizar();
     montado.componente.salvar();
     await montado.atualizar();
 
     expect(document.body.querySelectorAll('.configuracao-ia__erro-campo').length).toBeGreaterThan(0);
-    expect(textoDaTela()).toContain('Informe o modelo (até 100 caracteres)');
+    expect(textoDaTela()).toContain('Anthropic está na cadeia, mas o modelo padrão não foi informado');
+    expect(textoDaTela()).toContain('Anthropic está na cadeia, mas o modelo analítico não foi informado');
     montado.http.expectNone((requisicao) => requisicao.method === 'POST');
+  });
+
+  it('modelo de outro provedor no provedor padrão mostra o erro e não envia', async () => {
+    const montado = await abrir();
+    montado.componente.formulario.controls.modelos.controls.ANTHROPIC.patchValue({ modeloRapido: 'gemini-2.5-flash' });
+    await montado.atualizar();
+    montado.componente.salvar();
+    await montado.atualizar();
+
+    expect(textoDaTela()).toContain('O modelo rápido "gemini-2.5-flash" não é de Anthropic');
+    montado.http.expectNone((requisicao) => requisicao.method === 'POST');
+  });
+
+  it('escolher um fallback mostra o trio dele; sem os modelos informados o erro aparece ao salvar, e com eles o POST leva a cadeia', async () => {
+    const montado = await abrir();
+    montado.componente.formulario.patchValue({ fallbackPrimeiro: TipoProvedorIaEnum.GOOGLE });
+    await montado.atualizar();
+    expect(document.body.querySelector('#ia-modelo-rapido-GOOGLE')).not.toBeNull();
+    expect(textoDaTela()).toContain('fallback 1');
+
+    montado.componente.salvar();
+    await montado.atualizar();
+    expect(textoDaTela()).toContain('Google está na cadeia, mas o modelo rápido não foi informado');
+    montado.http.expectNone((requisicao) => requisicao.method === 'POST');
+
+    montado.componente.formulario.controls.modelos.controls.GOOGLE.patchValue(GEMINI);
+    await montado.atualizar();
+    botao('Salvar nova versão').click();
+    const requisicao = esperarRequisicao(montado.http, 'POST', '/configuracao-ia');
+    expect(requisicao.request.body).toMatchObject({
+      provedor: TipoProvedorIaEnum.ANTHROPIC,
+      fallbacks: [TipoProvedorIaEnum.GOOGLE],
+      modelosProvedor: { ANTHROPIC, GOOGLE: GEMINI },
+    });
+  });
+
+  it('o provedor padrão e o outro fallback ficam desabilitados nas opções de cada fallback', async () => {
+    const montado = await abrir();
+    montado.componente.formulario.patchValue({ fallbackPrimeiro: TipoProvedorIaEnum.GOOGLE });
+    await montado.atualizar();
+
+    const desabilitadas = (opcoes: { valor: unknown; desabilitada?: boolean }[]) => opcoes.filter((opcao) => opcao.desabilitada).map((opcao) => opcao.valor);
+    expect(desabilitadas(montado.componente.opcoesDoPrimeiroFallback())).toEqual([TipoProvedorIaEnum.ANTHROPIC]);
+    expect(desabilitadas(montado.componente.opcoesDoSegundoFallback())).toEqual([TipoProvedorIaEnum.ANTHROPIC, TipoProvedorIaEnum.GOOGLE]);
+  });
+
+  it('trocar o padrão para o Gemini e voltar reaproveita o trio da Anthropic que já estava no formulário', async () => {
+    const montado = await abrir();
+    montado.componente.formulario.patchValue({ provedor: TipoProvedorIaEnum.GOOGLE });
+    montado.componente.formulario.controls.modelos.controls.GOOGLE.patchValue(GEMINI);
+    await montado.atualizar();
+    expect(document.body.querySelector('#ia-modelo-rapido-ANTHROPIC')).toBeNull();
+
+    montado.componente.formulario.patchValue({ provedor: TipoProvedorIaEnum.ANTHROPIC });
+    await montado.atualizar();
+    expect((document.body.querySelector('#ia-modelo-rapido-ANTHROPIC') as HTMLInputElement).value).toBe('claude-haiku-5-5');
+    expect(montado.componente.provedoresDaCadeia()).toEqual([TipoProvedorIaEnum.ANTHROPIC]);
   });
 
   it('check-in com mínimo maior ou igual ao máximo mostra o erro do intervalo e não envia', async () => {
@@ -177,19 +239,21 @@ describe('ConfiguracaoIaPage — editar e salvar', () => {
   it('salvar faz POST em /configuracao-ia com os nomes aparados, avisa o sucesso e recarrega mostrando a versão nova', async () => {
     const montado = await abrir();
     const avisos = avisosDe(montado);
-    montado.componente.formulario.patchValue({ modeloPadrao: '  claude-sonnet-5-6 ', iaDesligada: true });
+    montado.componente.formulario.controls.modelos.controls.ANTHROPIC.patchValue({ modeloPadrao: '  claude-sonnet-5-6 ' });
+    montado.componente.formulario.patchValue({ iaDesligada: true });
     await montado.atualizar();
 
     botao('Salvar nova versão').click();
     const requisicao = esperarRequisicao(montado.http, 'POST', '/configuracao-ia');
     expect(requisicao.request.body).toMatchObject({
-      modeloPadrao: 'claude-sonnet-5-6', iaDesligada: true, modeloRapido: 'claude-haiku-5-5', checkinMinimoMinutos: 20, checkinMaximoMinutos: 40,
+      iaDesligada: true, fallbacks: [], checkinMinimoMinutos: 20, checkinMaximoMinutos: 40,
+      modelosProvedor: { ANTHROPIC: { ...ANTHROPIC, modeloPadrao: 'claude-sonnet-5-6' } },
     });
     responderSucesso(requisicao, { id: 4, versao: 4 });
     await montado.atualizar();
     expect(avisos.some((aviso) => aviso.severity === 'success')).toBe(true);
 
-    const nova = versao(4, { modeloPadrao: 'claude-sonnet-5-6', iaDesligada: true });
+    const nova = versao(4, { modelosProvedor: { [TipoProvedorIaEnum.ANTHROPIC]: { ...ANTHROPIC, modeloPadrao: 'claude-sonnet-5-6' } }, iaDesligada: true });
     responderCarga(montado, { ativa: nova, historico: [nova, ...HISTORICO] });
     await montado.atualizar();
 
@@ -330,7 +394,7 @@ describe('ConfiguracaoIaPage — histórico', () => {
     botao('Usar como base').click();
     await montado.atualizar();
 
-    expect(montado.componente.formulario.controls.modeloRapido.value).toBe('claude-haiku-4');
+    expect(montado.componente.formulario.controls.modelos.controls.ANTHROPIC.controls.modeloRapido.value).toBe('claude-haiku-4');
     expect(montado.componente.formulario.controls.iaDesligada.value).toBe(true);
     expect(avisos.some((aviso) => aviso.severity === 'info' && aviso.detail === 'Valores da versão 2 no formulário. Salvar cria a versão 4.')).toBe(true);
     expect(textoDaTela()).toContain('Salvar cria a versão 4; a versão 3 continua no histórico.');

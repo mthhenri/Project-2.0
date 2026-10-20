@@ -17,6 +17,15 @@ export interface ConfiguracaoAnthropic {
   apiKey: string | undefined;
 }
 
+export interface ConfiguracaoGoogle {
+  /** Chave da API do Gemini. Sem ela, o provedor Google fica indisponível. */
+  apiKey: string | undefined;
+}
+
+export interface ConfiguracaoOpenAi {
+  apiKey: string | undefined;
+}
+
 export interface ConfiguracaoChat {
   armazenamento: ArmazenamentoDoChat;
 }
@@ -57,6 +66,8 @@ export interface Configuracao {
   bancoDados:  ConfiguracaoBancoDados;
   jwt:         ConfiguracaoJwt;
   anthropic:   ConfiguracaoAnthropic;
+  google:      ConfiguracaoGoogle;
+  openAi:      ConfiguracaoOpenAi;
   chat:        ConfiguracaoChat;
   openSearch:  ConfiguracaoOpenSearch;
   elasticsearch: ConfiguracaoElasticsearch;

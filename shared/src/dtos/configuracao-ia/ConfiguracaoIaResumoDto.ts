@@ -1,15 +1,17 @@
 import { EsforcoIaEnum } from '../../enums/esforco-ia.enum';
 import { ModoContextoChatEnum } from '../../enums/modo-contexto-chat.enum';
 import { TipoProvedorIaEnum } from '../../enums/tipo-provedor-ia.enum';
+import { ConfiguracaoIaModelosPorProvedorDto } from './ConfiguracaoIaModelosDto';
 
 /** Uma versão da configuração da IA. A ativa é a de maior `versao`. */
 export interface ConfiguracaoIaResumoDto {
   id: number;
   versao: number;
   provedor: TipoProvedorIaEnum;
-  modeloRapido: string;
-  modeloPadrao: string;
-  modeloAnalitico: string;
+  /** Contingência, em ordem: se o provedor padrão falha, tenta o primeiro, depois o segundo. Vazia: sem fallback. */
+  fallbacks: TipoProvedorIaEnum[];
+  /** Os três modelos de cada provedor já configurado (da cadeia ou guardado de versões anteriores). */
+  modelosProvedor: ConfiguracaoIaModelosPorProvedorDto;
   esforcoAnalitico: EsforcoIaEnum;
   checkinMinimoMinutos: number;
   checkinMaximoMinutos: number;

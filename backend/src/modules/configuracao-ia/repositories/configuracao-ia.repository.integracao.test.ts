@@ -11,8 +11,15 @@ import { ConfiguracaoIaRepository } from './configuracao-ia.repository';
 
 const repositorioDe = (conexao: ConexaoTeste) => criarRepositorio(ConfiguracaoIaRepository, conexao);
 
+/** A criação com outro modelo padrão do provedor Anthropic (o repositório não confere o prefixo: isso é da service). */
+const comModeloPadrao = (modeloPadrao: string): ConfiguracaoIaCriarDto => ({
+  ...NOVA,
+  modelosProvedor: { [TipoProvedorIaEnum.ANTHROPIC]: { ...NOVA.modelosProvedor.ANTHROPIC!, modeloPadrao } },
+});
+
 const NOVA: ConfiguracaoIaCriarDto = {
-  provedor: TipoProvedorIaEnum.ANTHROPIC, modeloRapido: 'modelo-rapido', modeloPadrao: 'modelo-padrao', modeloAnalitico: 'modelo-analitico',
+  provedor: TipoProvedorIaEnum.ANTHROPIC, fallbacks: [],
+  modelosProvedor: { [TipoProvedorIaEnum.ANTHROPIC]: { modeloRapido: 'modelo-rapido', modeloPadrao: 'modelo-padrao', modeloAnalitico: 'modelo-analitico' } },
   esforcoAnalitico: EsforcoIaEnum.ALTO, checkinMinimoMinutos: 20, checkinMaximoMinutos: 60, duracaoRecomendadaMinutos: 45,
   checkinInteligente: false, rigorProporcional: false, deteccaoAutomatica: false,
   duvidasCodigo: true, modoContextoChat: ModoContextoChatEnum.SEPARADO, iaDesligada: true,
@@ -27,7 +34,7 @@ testarComBanco('recuperarAtiva: a versão de maior número, com provedor e nome 
   assert.equal(ativa?.id, gravada.id);
   assert.equal(ativa?.versao, (anterior?.versao ?? 0) + 1);
   assert.equal(ativa?.provedor, TipoProvedorIaEnum.ANTHROPIC);
-  assert.equal(ativa?.modeloPadrao, 'modelo-padrao');
+  assert.equal(ativa?.modelosProvedor.ANTHROPIC?.modeloPadrao, 'modelo-padrao');
   assert.equal(ativa?.esforcoAnalitico, EsforcoIaEnum.ALTO);
   assert.equal(ativa?.duvidasCodigo, true);
   assert.equal(ativa?.modoContextoChat, ModoContextoChatEnum.SEPARADO);
@@ -54,16 +61,16 @@ testarComBanco('inserirNovaVersao: a anterior continua intacta e o histórico li
   assert.equal(total >= 2, true);
   assert.deepEqual(itens.slice(0, 2).map((item) => item.id), [nova.id, anterior.id]);
   const anteriorDepois = itens.find((item) => item.id === anterior.id)!;
-  assert.equal(anteriorDepois.modeloPadrao, anterior.modeloPadrao);
+  assert.equal(anteriorDepois.modelosProvedor.ANTHROPIC?.modeloPadrao, anterior.modelosProvedor.ANTHROPIC?.modeloPadrao);
   assert.equal(anteriorDepois.versao, anterior.versao);
 });
 
 testarComBanco('inserirNovaVersao: duas gravações em sequência geram versões consecutivas', async (conexao) => {
   const administrador = await criarAdministrador(conexao);
   const primeira = await repositorioDe(conexao).inserirNovaVersao(NOVA, administrador.id);
-  const segunda = await repositorioDe(conexao).inserirNovaVersao({ ...NOVA, modeloPadrao: 'outro' }, administrador.id);
+  const segunda = await repositorioDe(conexao).inserirNovaVersao(comModeloPadrao('outro'), administrador.id);
   assert.equal(segunda.versao, primeira.versao + 1);
-  assert.equal((await repositorioDe(conexao).recuperarAtiva())?.modeloPadrao, 'outro');
+  assert.equal((await repositorioDe(conexao).recuperarAtiva())?.modelosProvedor.ANTHROPIC?.modeloPadrao, 'outro');
 });
 
 testarComBanco('inserirNovaVersao: provedor inexistente falha e não grava versão', async (conexao) => {
@@ -108,8 +115,8 @@ test('inserirNovaVersao: duas gravações concorrentes geram versões consecutiv
   const gravadas: number[] = [];
   try {
     const resultados = await Promise.all([
-      repositorio.inserirNovaVersao({ ...NOVA, modeloPadrao: 'concorrente-a' }, usuarioId),
-      repositorio.inserirNovaVersao({ ...NOVA, modeloPadrao: 'concorrente-b' }, usuarioId),
+      repositorio.inserirNovaVersao(comModeloPadrao('concorrente-a'), usuarioId),
+      repositorio.inserirNovaVersao(comModeloPadrao('concorrente-b'), usuarioId),
     ]);
     gravadas.push(...resultados.map((resultado) => resultado.id));
     const versoes = resultados.map((resultado) => resultado.versao).sort((a, b) => a - b);
@@ -133,7 +140,7 @@ test('inserirNovaVersao espera o lock consultivo e só grava depois que a outra 
   try {
     await banco.transaction(async (segurando) => {
       await segurando.raw(`SELECT pg_advisory_xact_lock(hashtext('configuracao_ia'))`);
-      pendente = repositorio.inserirNovaVersao({ ...NOVA, modeloPadrao: 'esperou' }, usuarioId).then((gravada) => { terminou = true; return gravada; });
+      pendente = repositorio.inserirNovaVersao(comModeloPadrao('esperou'), usuarioId).then((gravada) => { terminou = true; return gravada; });
       await esperar(300);
       assert.equal(terminou, false, 'a gravação não deveria passar enquanto outra transação segura o lock');
     });
@@ -181,4 +188,46 @@ testarComBanco('inserirNovaVersao copia os preços da versão anterior; a anteri
   const { rows } = await conexao.raw('SELECT precos_modelo -> \'modelo-preco-a\' ->> \'precoSaidaMilhao\' AS saida FROM configuracao_ia WHERE id = :id', { id: anterior.id });
   assert.equal(Number(rows[0].saida), 15);
   assert.equal(doModelo(await repositorio.listarPrecos(), 'modelo-preco-a')?.precoSaidaMilhao, 20);
+});
+
+const GEMINI = { modeloRapido: 'gemini-flash', modeloPadrao: 'gemini-pro', modeloAnalitico: 'gemini-pro-max' };
+const OPENAI = { modeloRapido: 'gpt-mini', modeloPadrao: 'gpt-5', modeloAnalitico: 'o3' };
+const MODELOS = { ...NOVA.modelosProvedor, [TipoProvedorIaEnum.GOOGLE]: GEMINI, [TipoProvedorIaEnum.OPENAI]: OPENAI };
+
+testarComBanco('migration 0049: a cadeia e o mapa de modelos voltam como foram gravados, na criada, na ativa e na listagem', async (conexao) => {
+  const administrador = await criarAdministrador(conexao);
+  const fallbacks = [TipoProvedorIaEnum.GOOGLE, TipoProvedorIaEnum.OPENAI];
+  const criada = await repositorioDe(conexao).inserirNovaVersao({ ...NOVA, fallbacks, modelosProvedor: MODELOS }, administrador.id);
+  assert.deepEqual(criada.fallbacks, fallbacks);
+  assert.deepEqual(criada.modelosProvedor, MODELOS);
+
+  const ativa = await repositorioDe(conexao).recuperarAtiva();
+  assert.deepEqual(ativa?.fallbacks, fallbacks);
+  assert.deepEqual(ativa?.modelosProvedor, MODELOS);
+
+  const { itens } = await repositorioDe(conexao).listar({});
+  assert.deepEqual(itens[0].fallbacks, fallbacks);
+});
+
+testarComBanco('trocar o padrão para o Google e voltar: o trio da Anthropic fica no mapa de cada versão e a ordem do fallback é a gravada', async (conexao) => {
+  const administrador = await criarAdministrador(conexao);
+  const noGoogle = await repositorioDe(conexao).inserirNovaVersao(
+    { ...NOVA, provedor: TipoProvedorIaEnum.GOOGLE, fallbacks: [TipoProvedorIaEnum.OPENAI, TipoProvedorIaEnum.ANTHROPIC], modelosProvedor: MODELOS },
+    administrador.id,
+  );
+  assert.equal(noGoogle.provedor, TipoProvedorIaEnum.GOOGLE);
+  assert.deepEqual(noGoogle.fallbacks, [TipoProvedorIaEnum.OPENAI, TipoProvedorIaEnum.ANTHROPIC]);
+
+  const deVolta = await repositorioDe(conexao).inserirNovaVersao({ ...NOVA, modelosProvedor: noGoogle.modelosProvedor }, administrador.id);
+  assert.equal(deVolta.provedor, TipoProvedorIaEnum.ANTHROPIC);
+  assert.deepEqual(deVolta.modelosProvedor.ANTHROPIC, NOVA.modelosProvedor.ANTHROPIC);
+  assert.deepEqual(deVolta.fallbacks, []);
+});
+
+testarComBanco('migration 0049: a versão 1 do seed ganhou o mapa com o trio da Anthropic e nenhum fallback', async (conexao) => {
+  const { itens } = await repositorioDe(conexao).listar({});
+  const versaoUm = itens.find((item) => item.versao === 1);
+  assert.deepEqual(versaoUm?.fallbacks, []);
+  assert.deepEqual(Object.keys(versaoUm?.modelosProvedor ?? {}), [TipoProvedorIaEnum.ANTHROPIC]);
+  assert.equal(versaoUm?.modelosProvedor.ANTHROPIC?.modeloPadrao, 'claude-sonnet-5-5');
 });

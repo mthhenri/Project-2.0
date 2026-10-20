@@ -81,7 +81,7 @@ As tabelas devem ser criadas nessa ordem para respeitar as dependências de FK:
 10. execucao
 11. dia_nao_util
 12. tipo_anotacao, anotacao (migration `0030`)
-13. tipo_provedor_ia, configuracao_ia (migration `0033`)
+13. tipo_provedor_ia, configuracao_ia (migration `0033`; `0049` troca as colunas `modelo_*` por `modelos_provedor` e `fallbacks`)
 14. tipo_prompt, prompt (migration `0034`)
 15. tipo_proposta_ia, tipo_proposta_ia_status, proposta_ia (migration `0035`)
 16. tipo_atividade_prioridade e `atividade.tipo_atividade_prioridade_id` (migration `0036`)
@@ -580,7 +580,7 @@ CREATE UNIQUE INDEX uix_anotacao_usuario_tipo_ativa
 ### configuracao_ia — configuração da IA, uma linha por versão (migration `0033`)
 
 A versão ativa é a de maior `versao`; versão antiga nunca é alterada (editar é gravar a seguinte). A chave de API do provedor **não** fica no banco
-(`.env`). A versão 1 vem por seed (Anthropic, IA **desligada**, check-in entre 30 e 80 minutos, duração recomendada de 90). A migration `0044` acrescentou `duvidas_codigo` e `modo_contexto_chat` (as versões que já existiam ficaram `false` e `MISTURADO`).
+(`.env`). A versão 1 vem por seed (Anthropic, IA **desligada**, check-in entre 30 e 80 minutos, duração recomendada de 90). A migration `0044` acrescentou `duvidas_codigo` e `modo_contexto_chat` (as versões que já existiam ficaram `false` e `MISTURADO`). A `0049` (task 203) moveu os três modelos para `modelos_provedor` (o trio de cada versão foi para a chave do provedor dela) e criou `fallbacks` (`[]` nas versões antigas); o provedor padrão continua em `tipo_provedor_ia_id`. A coerência modelo × provedor (prefixo do nome) e a regra de cadeia sem repetição são da **service**, não do banco: o nome do modelo é texto livre.
 
 ```sql
 CREATE TABLE configuracao_ia (
@@ -592,9 +592,8 @@ CREATE TABLE configuracao_ia (
 
   versao                       INTEGER      NOT NULL,
   tipo_provedor_ia_id          INTEGER      NOT NULL CONSTRAINT fk_configuracao_ia_tipo_provedor_ia REFERENCES tipo_provedor_ia(id),
-  modelo_rapido                VARCHAR(100) NOT NULL,
-  modelo_padrao                VARCHAR(100) NOT NULL,
-  modelo_analitico             VARCHAR(100) NOT NULL,
+  modelos_provedor             JSONB        NOT NULL,   -- migration 0049: provedor → { modeloRapido, modeloPadrao, modeloAnalitico }, de todo provedor já configurado (da cadeia ou não); a nova versão copia o mapa inteiro
+  fallbacks                    JSONB        NOT NULL,   -- migration 0049: array com os códigos dos provedores de contingência, na ordem em que são tentados (até 2; [] = sem fallback)
   esforco_analitico            VARCHAR(20)  NOT NULL,   -- BAIXO/MEDIO/ALTO (EsforcoIaEnum do shared; sem tabela nem CHECK)
   checkin_minimo_minutos       INTEGER      NOT NULL,
   checkin_maximo_minutos       INTEGER      NOT NULL,
@@ -608,7 +607,9 @@ CREATE TABLE configuracao_ia (
   precos_modelo                JSONB        NOT NULL,   -- migration 0048: modelo → { precoEntradaMilhao, precoSaidaMilhao, precoCacheMilhao } em dólar por milhão de tokens; a nova versão copia os da anterior e editar um preço na aba Custos altera a versão ativa no lugar
   usuario_id                   INTEGER      NOT NULL CONSTRAINT fk_configuracao_ia_usuario REFERENCES usuario(id),  -- quem salvou
 
-  CONSTRAINT chk_configuracao_ia_intervalo_checkin CHECK (checkin_minimo_minutos < checkin_maximo_minutos)
+  CONSTRAINT chk_configuracao_ia_intervalo_checkin CHECK (checkin_minimo_minutos < checkin_maximo_minutos),
+  CONSTRAINT chk_configuracao_ia_modelos_provedor CHECK (jsonb_typeof(modelos_provedor) = 'object'),
+  CONSTRAINT chk_configuracao_ia_fallbacks CHECK (jsonb_typeof(fallbacks) = 'array')
 );
 
 CREATE UNIQUE INDEX uix_configuracao_ia_versao ON configuracao_ia(versao) WHERE is_deleted = false;
@@ -718,7 +719,7 @@ Seeds (`codigo` → `descricao`):
 | `tipo_proposta_ia` | INICIAR_EXECUCAO, PAUSAR_EXECUCAO, CRIAR_ATIVIDADE, DESCREVER_EXECUCAO, SUSPENDER_CHECKIN, ANOTAR_PAD, CRIAR_DEMANDA, DESCREVER_DEMANDA, CONECTAR_DEMANDA (migration `0035`; `CRIAR_PROJETO` na `0037`; `ALTERAR_ATIVIDADE` na `0039`; `REGISTRAR_EXECUCAO` e `CORRIGIR_EXECUCAO` na `0040`; `ALTERAR_DEMANDA` na `0041`; `ATRIBUIR_MEMBRO` e `ATRIBUIR_TAG` na `0042`; sem tipo de exclusão) |
 | `tipo_proposta_ia_status` | PENDENTE, CONFIRMADA, AJUSTADA, EXPIRADA (também a recusada), DESFEITA (migration `0035`) |
 | `tipo_prompt` | CONVERSA, CHECKIN, DESCRICAO_EXECUCAO, PAD, PRIORIDADE, ENTREVISTA_DEMANDA, CONEXAO_DEMANDA (migration `0034`), DUVIDA_CODIGO (migration `0044`, com a versão 1 semeada; a lista cresce por migration) |
-| `tipo_provedor_ia` | ANTHROPIC→"Anthropic", GOOGLE→"Google", OPENAI→"OpenAI" (migration `0033`; só ANTHROPIC terá implementação) |
+| `tipo_provedor_ia` | ANTHROPIC→"Anthropic", GOOGLE→"Google", OPENAI→"OpenAI" (migration `0033`; os três têm implementação desde a task 203) |
 | `tipo_anotacao` | EM_ANDAMENTO→"Em andamento", FEITO→"Feito", PENDENCIA→"Pendências", LEMBRETE→"Lembretes", PESSOAL→"Pessoal" (migration `0030`, com `ordem` 1 a 5) |
 
 ### Tabelas provisórias — migration `0038` (task 162)

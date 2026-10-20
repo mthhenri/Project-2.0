@@ -24,6 +24,12 @@ export class ConfigService {
       anthropic: {
         apiKey: this.opcional('ANTHROPIC_API_KEY'),
       },
+      google: {
+        apiKey: this.opcional('GOOGLE_API_KEY'),
+      },
+      openAi: {
+        apiKey: this.opcional('OPENAI_API_KEY'),
+      },
       chat: { armazenamento: armazenamentoDoChat },
       openSearch: {
         url:     armazenamentoDoChat === 'opensearch' ? this.obrigatoria('OPENSEARCH_URL') : this.opcional('OPENSEARCH_URL'),

@@ -16,6 +16,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.135.0",
     "@elastic/elasticsearch": "^9.5.1",
+    "@google/genai": "^2.30.0",
     "@nestjs/common": "^10.0.0",
     "@nestjs/core": "^10.0.0",
     "@nestjs/jwt": "^10.0.0",
@@ -31,6 +32,7 @@
     "cron": "3.2.1",
     "dotenv": "^17.4.2",
     "knex": "^3.1.0",
+    "openai": "^7.39.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "pg": "^8.11.0",

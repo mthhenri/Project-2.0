@@ -39,10 +39,12 @@ export class IaCustoService {
       this.configuracaoIaService.listarPrecos(),
       this.configuracaoIaService.obterAtiva(),
     ]);
+    // Os níveis são atribuídos aos modelos do provedor padrão; o que um fallback respondeu entra pelo nome do modelo gravado na mensagem.
+    const modelosDoPadrao = configuracao.modelosProvedor[configuracao.provedor];
     const modelosPorNivel = {
-      [NivelIaEnum.RAPIDO]: configuracao.modeloRapido,
-      [NivelIaEnum.PADRAO]: configuracao.modeloPadrao,
-      [NivelIaEnum.ANALITICO]: configuracao.modeloAnalitico,
+      [NivelIaEnum.RAPIDO]: modelosDoPadrao?.modeloRapido ?? '',
+      [NivelIaEnum.PADRAO]: modelosDoPadrao?.modeloPadrao ?? '',
+      [NivelIaEnum.ANALITICO]: modelosDoPadrao?.modeloAnalitico ?? '',
     };
     const modelosEmUso = [...new Set(Object.values(modelosPorNivel))];
     const usos = agruparPeloNomeConhecido(usosPorId, [...new Set([...precos.map((preco) => preco.modelo), ...modelosEmUso])]);

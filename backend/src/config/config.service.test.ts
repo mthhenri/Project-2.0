@@ -105,6 +105,18 @@ test('ANTHROPIC_API_KEY é opcional', () => {
   assert.equal(new ConfigService().obter().anthropic.apiKey, undefined);
 });
 
+test('GOOGLE_API_KEY e OPENAI_API_KEY são opcionais e chegam à configuração', () => {
+  definirAmbiente({ GOOGLE_API_KEY: undefined, OPENAI_API_KEY: undefined });
+  const semChaves = new ConfigService().obter();
+  assert.equal(semChaves.google.apiKey, undefined);
+  assert.equal(semChaves.openAi.apiKey, undefined);
+
+  definirAmbiente({ GOOGLE_API_KEY: 'chave-google', OPENAI_API_KEY: 'chave-openai' });
+  const comChaves = new ConfigService().obter();
+  assert.equal(comChaves.google.apiKey, 'chave-google');
+  assert.equal(comChaves.openAi.apiKey, 'chave-openai');
+});
+
 test('o .env.example sozinho (com os valores que ele traz) é uma configuração válida e os padrões documentados valem', () => {
   const exemplo = dotenv.parse(fs.readFileSync(path.resolve(__dirname, '../../../.env.example')));
   definirAmbiente({}, exemplo as Record<string, string>);

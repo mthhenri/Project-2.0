@@ -1,3 +1,4 @@
+export * from './ConfiguracaoIaModelosDto';
 export * from './ConfiguracaoIaResumoDto';
 export * from './ConfiguracaoIaListarDto';
 export * from './ConfiguracaoIaCriarDto';

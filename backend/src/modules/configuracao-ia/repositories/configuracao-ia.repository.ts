@@ -16,9 +16,8 @@ const COLUNAS_RESUMO = `
          configuracao_ia.id,
          configuracao_ia.versao,
          tipo_provedor_ia.codigo                     AS provedor,
-         configuracao_ia.modelo_rapido               AS "modeloRapido",
-         configuracao_ia.modelo_padrao               AS "modeloPadrao",
-         configuracao_ia.modelo_analitico            AS "modeloAnalitico",
+         configuracao_ia.fallbacks,
+         configuracao_ia.modelos_provedor            AS "modelosProvedor",
          configuracao_ia.esforco_analitico           AS "esforcoAnalitico",
          configuracao_ia.checkin_minimo_minutos      AS "checkinMinimoMinutos",
          configuracao_ia.checkin_maximo_minutos      AS "checkinMaximoMinutos",
@@ -139,14 +138,14 @@ export class ConfiguracaoIaRepository extends BaseRepository<ConfiguracaoIa> {
 
       const inseridas = await this.executarConsulta<{ id: number }>(
         `INSERT INTO configuracao_ia (
-           versao, tipo_provedor_ia_id, modelo_rapido, modelo_padrao, modelo_analitico, esforco_analitico,
+           versao, tipo_provedor_ia_id, fallbacks, modelos_provedor, esforco_analitico,
            checkin_minimo_minutos, checkin_maximo_minutos, duracao_recomendada_minutos,
            checkin_inteligente, rigor_proporcional, deteccao_automatica, duvidas_codigo, modo_contexto_chat, ia_desligada,
            precos_modelo, usuario_id, created_date, updated_date, is_deleted
          )
          SELECT
            COALESCE((SELECT MAX(configuracao_ia.versao) FROM configuracao_ia WHERE configuracao_ia.is_deleted = false), 0) + 1,
-           tipo_provedor_ia.id, :modeloRapido, :modeloPadrao, :modeloAnalitico, :esforcoAnalitico,
+           tipo_provedor_ia.id, CAST(:fallbacks AS jsonb), CAST(:modelosProvedor AS jsonb), :esforcoAnalitico,
            :checkinMinimoMinutos, :checkinMaximoMinutos, :duracaoRecomendadaMinutos,
            :checkinInteligente, :rigorProporcional, :deteccaoAutomatica, :duvidasCodigo, :modoContextoChat, :iaDesligada,
            COALESCE(
@@ -157,7 +156,7 @@ export class ConfiguracaoIaRepository extends BaseRepository<ConfiguracaoIa> {
          WHERE tipo_provedor_ia.codigo = :provedor
            AND tipo_provedor_ia.is_deleted = false
          RETURNING id`,
-        { ...dto, usuarioId },
+        { ...dto, fallbacks: JSON.stringify(dto.fallbacks), modelosProvedor: JSON.stringify(dto.modelosProvedor), usuarioId },
         transacao,
       );
       if (inseridas.length === 0) throw new Error('Provedor de IA inexistente');

@@ -1,5 +1,6 @@
 import { EsforcoIaEnum } from '@project20/shared';
 import { IaException } from '../domain/ia.exception';
+import { traduzirErroDeProvedor } from '../domain/ia-erro-provedor';
 import { IaProvedor } from '../domain/ia-provedor';
 import { IaBloco, IaMensagem, IaMotivoParada, IaRespostaProvedor, IaSolicitacaoProvedor } from '../domain/ia.tipos';
 
@@ -50,7 +51,7 @@ export class AnthropicProvedor implements IaProvedor {
     try {
       return this.traduzirResposta(await cliente.messages.create(this.montarParametros(solicitacao)));
     } catch (erro) {
-      throw this.traduzirErro(erro);
+      throw traduzirErroDeProvedor(erro);
     }
   }
 
@@ -61,7 +62,7 @@ export class AnthropicProvedor implements IaProvedor {
       fluxo.on('text', aoTrecho);
       return this.traduzirResposta(await fluxo.finalMessage());
     } catch (erro) {
-      throw this.traduzirErro(erro);
+      throw traduzirErroDeProvedor(erro);
     }
   }
 
@@ -125,16 +126,5 @@ export class AnthropicProvedor implements IaProvedor {
       },
       motivoParada: MOTIVOS_DE_PARADA[mensagem.stop_reason ?? ''] ?? 'outro',
     };
-  }
-
-  /** Erro do SDK → exceção do projeto (pelo status HTTP, sem depender das classes do SDK). */
-  private traduzirErro(erro: unknown): IaException {
-    if (erro instanceof IaException) return erro;
-    const status = (erro as { status?: number } | null)?.status;
-    if (status === 429) return new IaException('LIMITE', 'Limite de uso da IA atingido');
-    if (status === 401 || status === 403 || status === 404) {
-      return new IaException('CONFIGURACAO', 'Configuração da IA inválida (chave ou modelo recusados pelo provedor)');
-    }
-    return new IaException('INDISPONIVEL', 'Serviço de IA temporariamente indisponível');
   }
 }

@@ -11,7 +11,7 @@ import { IaProvedores, IaService } from './ia.service';
 function configuracao(parcial: Partial<ConfiguracaoIaResumoDto> = {}): ConfiguracaoIaResumoDto {
   return {
     id: 1, versao: 1, provedor: TipoProvedorIaEnum.ANTHROPIC,
-    modeloRapido: 'haiku', modeloPadrao: 'sonnet', modeloAnalitico: 'opus', esforcoAnalitico: EsforcoIaEnum.MEDIO,
+    fallbacks: [], modelosProvedor: { [TipoProvedorIaEnum.ANTHROPIC]: { modeloRapido: 'haiku', modeloPadrao: 'sonnet', modeloAnalitico: 'opus' } }, esforcoAnalitico: EsforcoIaEnum.MEDIO,
     checkinMinimoMinutos: 30, checkinMaximoMinutos: 80, duracaoRecomendadaMinutos: 90,
     checkinInteligente: true, rigorProporcional: true, deteccaoAutomatica: true,
     duvidasCodigo: false, modoContextoChat: ModoContextoChatEnum.MISTURADO, iaDesligada: false,
@@ -63,7 +63,7 @@ test('cada nível usa o modelo da configuração; o esforço só vale no analít
 test('trocar o modelo na configuração vale na chamada seguinte, sem reiniciar', async () => {
   const { servico, estado, chamadas } = criar();
   await servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.PADRAO });
-  estado.atual = configuracao({ modeloPadrao: 'sonnet-novo', versao: 2 });
+  estado.atual = configuracao({ modelosProvedor: { [TipoProvedorIaEnum.ANTHROPIC]: { modeloRapido: 'haiku', modeloPadrao: 'sonnet-novo', modeloAnalitico: 'opus' } }, versao: 2 });
   await servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.PADRAO });
   assert.deepEqual(chamadas.map((c) => c.modelo), ['sonnet', 'sonnet-novo']);
 });
@@ -79,11 +79,11 @@ test('IA desligada recusa antes de chamar o provedor', async () => {
   assert.equal(await servico.obterEstado(), EstadoIaEnum.DESLIGADA);
 });
 
-test('provedor sem implementação (Google) falha com erro de configuração', async () => {
-  const { servico } = criar({ provedor: TipoProvedorIaEnum.GOOGLE });
+test('provedor sem chave (ou sem implementação) é pulado; sozinho na cadeia, a chamada falha como indisponível', async () => {
+  const { servico } = criar({ provedor: TipoProvedorIaEnum.GOOGLE, modelosProvedor: { [TipoProvedorIaEnum.GOOGLE]: { modeloRapido: 'g', modeloPadrao: 'g', modeloAnalitico: 'g' } } });
   await assert.rejects(
     () => servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.RAPIDO }),
-    (erro: unknown) => erro instanceof IaException && erro.motivo === 'CONFIGURACAO',
+    (erro: unknown) => erro instanceof IaException && erro.motivo === 'INDISPONIVEL',
   );
   assert.equal(await servico.obterEstado(), EstadoIaEnum.FORA_DO_AR);
 });
@@ -172,4 +172,175 @@ test('turnos simultâneos pelo mesmo serviço não misturam o que cada um gastou
   ]);
   assert.deepEqual([primeiro.nivel, primeiro.tokens.entrada], [NivelIaEnum.ANALITICO, 1]);
   assert.deepEqual([segundo.nivel, segundo.tokens.entrada], [NivelIaEnum.RAPIDO, 2]);
+});
+
+// Task 203: fallback entre provedores.
+
+const MODELOS_POR_PROVEDOR = {
+  [TipoProvedorIaEnum.ANTHROPIC]: { modeloRapido: 'haiku', modeloPadrao: 'sonnet', modeloAnalitico: 'opus' },
+  [TipoProvedorIaEnum.GOOGLE]: { modeloRapido: 'gemini-flash', modeloPadrao: 'gemini-pro', modeloAnalitico: 'gemini-pro-max' },
+  [TipoProvedorIaEnum.OPENAI]: { modeloRapido: 'gpt-mini', modeloPadrao: 'gpt-5', modeloAnalitico: 'o3' },
+};
+
+interface ComportamentoDoProvedor {
+  disponivel?: boolean;
+  falha?: unknown;
+  /** Emite um trecho antes de falhar (só no streaming). */
+  trechoAntesDaFalha?: string;
+}
+
+function criarCadeia(parcial: Partial<ConfiguracaoIaResumoDto>, comportamentos: Partial<Record<TipoProvedorIaEnum, ComportamentoDoProvedor>>) {
+  const chamadas: Array<{ provedor: TipoProvedorIaEnum; solicitacao: IaSolicitacaoProvedor }> = [];
+  const provedores: IaProvedores = {};
+  for (const tipo of Object.values(TipoProvedorIaEnum)) {
+    const comportamento = comportamentos[tipo] ?? {};
+    provedores[tipo] = {
+      estaDisponivel: () => comportamento.disponivel ?? true,
+      async gerar(solicitacao) {
+        chamadas.push({ provedor: tipo, solicitacao });
+        if (comportamento.falha) throw comportamento.falha;
+        return resposta(solicitacao.modelo);
+      },
+      async transmitir(solicitacao, aoTrecho) {
+        chamadas.push({ provedor: tipo, solicitacao });
+        if (comportamento.trechoAntesDaFalha) aoTrecho(comportamento.trechoAntesDaFalha);
+        if (comportamento.falha) throw comportamento.falha;
+        aoTrecho('ok');
+        return resposta(solicitacao.modelo);
+      },
+    };
+  }
+  const configuracaoIaService = { obterAtiva: async () => configuracao(parcial) } as unknown as ConfiguracaoIaService;
+  return { servico: new IaService(configuracaoIaService, provedores), chamadas };
+}
+
+const CADEIA = { fallbacks: [TipoProvedorIaEnum.GOOGLE, TipoProvedorIaEnum.OPENAI], modelosProvedor: MODELOS_POR_PROVEDOR };
+const CAIU = new IaException('INDISPONIVEL', 'caiu');
+
+test('fallback: sem falha, só o provedor padrão é chamado', async () => {
+  const { servico, chamadas } = criarCadeia(CADEIA, {});
+  await servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.PADRAO });
+  assert.deepEqual(chamadas.map((chamada) => chamada.provedor), [TipoProvedorIaEnum.ANTHROPIC]);
+});
+
+test('fallback: se o padrão cai, vai ao Gemini com os modelos do Gemini; se o Gemini cai também, vai à OpenAI', async () => {
+  const { servico, chamadas } = criarCadeia(CADEIA, {
+    [TipoProvedorIaEnum.ANTHROPIC]: { falha: CAIU },
+    [TipoProvedorIaEnum.GOOGLE]: { falha: new IaException('LIMITE', 'limite') },
+  });
+  const resultado = await servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.ANALITICO });
+
+  assert.deepEqual(chamadas.map((chamada) => [chamada.provedor, chamada.solicitacao.modelo]), [
+    [TipoProvedorIaEnum.ANTHROPIC, 'opus'],
+    [TipoProvedorIaEnum.GOOGLE, 'gemini-pro-max'],
+    [TipoProvedorIaEnum.OPENAI, 'o3'],
+  ]);
+  assert.equal(resultado.modelo, 'o3');
+  assert.equal(chamadas[2].solicitacao.esforco, EsforcoIaEnum.MEDIO, 'o esforço do analítico acompanha a chamada de contingência');
+});
+
+test('fallback: a ordem é a da configuração, não a dos provedores', async () => {
+  const { servico, chamadas } = criarCadeia(
+    { fallbacks: [TipoProvedorIaEnum.OPENAI, TipoProvedorIaEnum.GOOGLE], modelosProvedor: MODELOS_POR_PROVEDOR },
+    { [TipoProvedorIaEnum.ANTHROPIC]: { falha: CAIU } },
+  );
+  await servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.RAPIDO });
+  assert.deepEqual(chamadas.map((chamada) => chamada.provedor), [TipoProvedorIaEnum.ANTHROPIC, TipoProvedorIaEnum.OPENAI]);
+});
+
+test('fallback: provedor sem chave é pulado sem ser chamado', async () => {
+  const { servico, chamadas } = criarCadeia(CADEIA, {
+    [TipoProvedorIaEnum.ANTHROPIC]: { disponivel: false },
+    [TipoProvedorIaEnum.GOOGLE]: { disponivel: false },
+  });
+  const resultado = await servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.RAPIDO });
+  assert.deepEqual(chamadas.map((chamada) => chamada.provedor), [TipoProvedorIaEnum.OPENAI]);
+  assert.equal(resultado.modelo, 'gpt-mini');
+});
+
+test('fallback: padrão sem chave e fallback com limite devolve o limite (provedor pulado não é falha) e não derruba o estado', async () => {
+  const { servico } = criarCadeia(CADEIA, {
+    [TipoProvedorIaEnum.ANTHROPIC]: { disponivel: false },
+    [TipoProvedorIaEnum.GOOGLE]: { falha: new IaException('LIMITE', 'limite do Gemini') },
+    [TipoProvedorIaEnum.OPENAI]: { disponivel: false },
+  });
+  await assert.rejects(
+    () => servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.RAPIDO }),
+    (erro: unknown) => erro instanceof IaException && erro.motivo === 'LIMITE',
+  );
+  assert.equal(await servico.obterEstado(), EstadoIaEnum.NO_AR);
+});
+
+test('fallback: cadeia inteira falhando devolve a falha do provedor padrão e marca fora do ar', async () => {
+  const { servico } = criarCadeia(CADEIA, {
+    [TipoProvedorIaEnum.ANTHROPIC]: { falha: new IaException('LIMITE', 'limite do padrão') },
+    [TipoProvedorIaEnum.GOOGLE]: { falha: CAIU },
+    [TipoProvedorIaEnum.OPENAI]: { falha: CAIU },
+  });
+  await assert.rejects(
+    () => servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.RAPIDO }),
+    (erro: unknown) => erro instanceof IaException && erro.motivo === 'LIMITE' && erro.mensagem === 'limite do padrão',
+  );
+  assert.equal(await servico.obterEstado(), EstadoIaEnum.NO_AR, 'a falha do padrão foi limite de uso, não queda');
+
+  const caidos = criarCadeia(CADEIA, {
+    [TipoProvedorIaEnum.ANTHROPIC]: { falha: CAIU },
+    [TipoProvedorIaEnum.GOOGLE]: { falha: CAIU },
+    [TipoProvedorIaEnum.OPENAI]: { falha: CAIU },
+  });
+  await assert.rejects(() => caidos.servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.RAPIDO }), IaException);
+  assert.equal(await caidos.servico.obterEstado(), EstadoIaEnum.FORA_DO_AR);
+});
+
+test('fallback: o padrão caído mas o fallback respondendo mantém a IA no ar', async () => {
+  const { servico } = criarCadeia(CADEIA, { [TipoProvedorIaEnum.ANTHROPIC]: { falha: CAIU } });
+  await servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.RAPIDO });
+  assert.equal(await servico.obterEstado(), EstadoIaEnum.NO_AR);
+});
+
+test('estado: fora do ar só quando nenhum provedor da cadeia tem chave', async () => {
+  const soOFallback = criarCadeia(CADEIA, { [TipoProvedorIaEnum.ANTHROPIC]: { disponivel: false }, [TipoProvedorIaEnum.GOOGLE]: { disponivel: false } });
+  assert.equal(await soOFallback.servico.obterEstado(), EstadoIaEnum.NO_AR);
+  const nenhum = criarCadeia(CADEIA, {
+    [TipoProvedorIaEnum.ANTHROPIC]: { disponivel: false },
+    [TipoProvedorIaEnum.GOOGLE]: { disponivel: false },
+    [TipoProvedorIaEnum.OPENAI]: { disponivel: false },
+  });
+  assert.equal(await nenhum.servico.obterEstado(), EstadoIaEnum.FORA_DO_AR);
+  // Provedor fora da cadeia não conta: o padrão sem chave e sem fallback está fora do ar mesmo com a OpenAI configurada no ambiente.
+  const foraDaCadeia = criarCadeia({}, { [TipoProvedorIaEnum.ANTHROPIC]: { disponivel: false } });
+  assert.equal(await foraDaCadeia.servico.obterEstado(), EstadoIaEnum.FORA_DO_AR);
+});
+
+test('fallback no streaming: falha antes de qualquer trecho passa ao próximo; depois de um trecho enviado, não repete a resposta', async () => {
+  const antes = criarCadeia(CADEIA, { [TipoProvedorIaEnum.ANTHROPIC]: { falha: CAIU } });
+  const trechos: string[] = [];
+  await antes.servico.transmitir({ ...PEDIDO, nivel: NivelIaEnum.PADRAO }, (trecho) => trechos.push(trecho));
+  assert.deepEqual(trechos, ['ok']);
+  assert.deepEqual(antes.chamadas.map((chamada) => chamada.provedor), [TipoProvedorIaEnum.ANTHROPIC, TipoProvedorIaEnum.GOOGLE]);
+
+  const depois = criarCadeia(CADEIA, { [TipoProvedorIaEnum.ANTHROPIC]: { falha: CAIU, trechoAntesDaFalha: 'meio' } });
+  const recebidos: string[] = [];
+  await assert.rejects(() => depois.servico.transmitir({ ...PEDIDO, nivel: NivelIaEnum.PADRAO }, (trecho) => recebidos.push(trecho)), IaException);
+  assert.deepEqual(recebidos, ['meio']);
+  assert.deepEqual(depois.chamadas.map((chamada) => chamada.provedor), [TipoProvedorIaEnum.ANTHROPIC]);
+});
+
+test('fallback: a chamada que respondeu no fallback é a que entra no turno', async () => {
+  const { servico } = criarCadeia(CADEIA, { [TipoProvedorIaEnum.ANTHROPIC]: { falha: CAIU } });
+  const turno = new TurnoIa();
+  await executarNoTurno(turno, async () => {
+    await servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.PADRAO });
+  });
+  assert.equal(turno.modelo, 'gemini-pro');
+});
+
+test('trocar o provedor padrão e voltar: cada versão usa o trio do provedor que está no ponteiro, e o trio guardado de outro provedor não é chamado', async () => {
+  const { servico, chamadas } = criarCadeia({ provedor: TipoProvedorIaEnum.GOOGLE, fallbacks: [], modelosProvedor: MODELOS_POR_PROVEDOR }, {});
+  await servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.PADRAO });
+  assert.deepEqual(chamadas.map((chamada) => [chamada.provedor, chamada.solicitacao.modelo]), [[TipoProvedorIaEnum.GOOGLE, 'gemini-pro']]);
+
+  const voltou = criarCadeia({ provedor: TipoProvedorIaEnum.ANTHROPIC, fallbacks: [], modelosProvedor: MODELOS_POR_PROVEDOR }, {});
+  await voltou.servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.PADRAO });
+  assert.deepEqual(voltou.chamadas.map((chamada) => [chamada.provedor, chamada.solicitacao.modelo]), [[TipoProvedorIaEnum.ANTHROPIC, 'sonnet']]);
 });

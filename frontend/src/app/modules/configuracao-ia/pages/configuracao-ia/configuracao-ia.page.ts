@@ -13,7 +13,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { TabsModule } from 'primeng/tabs';
 import { TagModule } from 'primeng/tag';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
-import { ConfiguracaoIaResumoDto, EsforcoIaEnum, EstadoIaEnum, ModoContextoChatEnum, TipoProvedorIaEnum } from '@project20/shared';
+import { ConfiguracaoIaResumoDto, EsforcoIaEnum, EstadoIaEnum, ModoContextoChatEnum, TipoProvedorIaEnum, cadeiaDeProvedoresIa } from '@project20/shared';
 import { PromptsAbaComponent } from '../../components/prompts-aba/prompts-aba.component';
 import { CustosAbaComponent } from '../../components/custos-aba/custos-aba.component';
 import { PrioridadesAbaComponent } from '../../components/prioridades-aba/prioridades-aba.component';
@@ -23,10 +23,14 @@ import {
   OPCOES_ESFORCO,
   OPCOES_MODO_CONTEXTO,
   OPCOES_PROVEDOR,
+  QUANTIDADE_DE_FALLBACKS,
   ROTULO_ESTADO_IA,
   SEVERIDADE_ESTADO_IA,
   SUGESTOES_MODELOS,
   ValorFormularioConfiguracaoIa,
+  errosDeProvedores,
+  fallbacksDoFormulario,
+  opcoesDeFallback,
   formularioIgualAVersao,
   intervaloDoCheckinValido,
   paraDtoDeCriacao,
@@ -69,10 +73,10 @@ export class ConfiguracaoIaPage implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   readonly opcoesProvedor = OPCOES_PROVEDOR;
+  readonly quantidadeDeFallbacks = QUANTIDADE_DE_FALLBACKS;
   readonly opcoesEsforco = OPCOES_ESFORCO;
   readonly opcoesModoContexto = OPCOES_MODO_CONTEXTO;
   readonly explicacaoModoContexto = EXPLICACAO_MODO_CONTEXTO;
-  readonly sugestoesModelos = SUGESTOES_MODELOS;
   readonly rotuloDoEsforco = rotuloDoEsforco;
   readonly rotuloDoModoContexto = rotuloDoModoContexto;
   readonly rotuloDoProvedor = rotuloDoProvedor;
@@ -97,9 +101,14 @@ export class ConfiguracaoIaPage implements OnInit {
   readonly formulario = this.formBuilder.nonNullable.group(
     {
       provedor: [TipoProvedorIaEnum.ANTHROPIC, Validators.required],
-      modeloRapido: ['', [Validators.required, Validators.maxLength(100)]],
-      modeloPadrao: ['', [Validators.required, Validators.maxLength(100)]],
-      modeloAnalitico: ['', [Validators.required, Validators.maxLength(100)]],
+      fallbackPrimeiro: [null as TipoProvedorIaEnum | null],
+      fallbackSegundo: [null as TipoProvedorIaEnum | null],
+      // Um trio por provedor, sempre presente: o de quem está fora da cadeia fica guardado. Quem pode estar vazio é decidido pela regra do shared.
+      modelos: this.formBuilder.nonNullable.group({
+        [TipoProvedorIaEnum.ANTHROPIC]: this.grupoDeModelos(),
+        [TipoProvedorIaEnum.GOOGLE]: this.grupoDeModelos(),
+        [TipoProvedorIaEnum.OPENAI]: this.grupoDeModelos(),
+      }),
       esforcoAnalitico: [EsforcoIaEnum.MEDIO, Validators.required],
       checkinMinimoMinutos: [null as number | null, [Validators.required, Validators.min(1)]],
       checkinMaximoMinutos: [null as number | null, [Validators.required, Validators.min(1)]],
@@ -121,6 +130,18 @@ export class ConfiguracaoIaPage implements OnInit {
     const ativa = this.ativa();
     return !ativa || formularioIgualAVersao(this.valorAtual(), ativa);
   });
+
+  /** Os provedores da cadeia, na ordem em que são tentados: cada um mostra o seu trio de modelos. */
+  readonly provedoresDaCadeia = computed(() => {
+    const valor = this.valorAtual();
+    return cadeiaDeProvedoresIa({ provedor: valor.provedor, fallbacks: fallbacksDoFormulario(valor) });
+  });
+
+  readonly opcoesDoPrimeiroFallback = computed(() => opcoesDeFallback([this.valorAtual().provedor, this.valorAtual().fallbackSegundo]));
+  readonly opcoesDoSegundoFallback = computed(() => opcoesDeFallback([this.valorAtual().provedor, this.valorAtual().fallbackPrimeiro]));
+
+  /** Erros de provedor e modelo (a regra do shared, a mesma da service): aparecem depois da primeira tentativa de salvar. */
+  readonly errosDeProvedor = computed(() => errosDeProvedores(this.valorAtual()));
 
   readonly proximaVersao = computed(() => (this.ativa()?.versao ?? 0) + 1);
 
@@ -174,7 +195,7 @@ export class ConfiguracaoIaPage implements OnInit {
 
   salvar(): void {
     this.tentouSalvar.set(true);
-    if (this.formulario.invalid || this.semAlteracoes() || this.salvando()) return;
+    if (this.formulario.invalid || this.errosDeProvedor().length > 0 || this.semAlteracoes() || this.salvando()) return;
 
     this.salvando.set(true);
     this.configuracaoIaService.criar(paraDtoDeCriacao(this.formulario.getRawValue())).subscribe({
@@ -216,6 +237,23 @@ export class ConfiguracaoIaPage implements OnInit {
 
   /** O texto que explica o modo de contexto escolhido no formulário. */
   readonly explicacaoDoModoEscolhido = computed(() => this.explicacaoModoContexto[this.valorAtual().modoContextoChat]);
+
+  /** Os campos do trio guardam texto livre de até 100 caracteres; se estão preenchidos, o que falta ou destoa do provedor vem da regra do shared. */
+  private grupoDeModelos() {
+    return this.formBuilder.nonNullable.group({
+      modeloRapido: ['', Validators.maxLength(100)],
+      modeloPadrao: ['', Validators.maxLength(100)],
+      modeloAnalitico: ['', Validators.maxLength(100)],
+    });
+  }
+
+  cadeiaDaVersao(versao: ConfiguracaoIaResumoDto): TipoProvedorIaEnum[] {
+    return cadeiaDeProvedoresIa(versao);
+  }
+
+  sugestoesDe(provedor: TipoProvedorIaEnum): readonly string[] {
+    return SUGESTOES_MODELOS[provedor];
+  }
 
   campoInvalido(nome: keyof ValorFormularioConfiguracaoIa): boolean {
     const controle = this.formulario.controls[nome];
