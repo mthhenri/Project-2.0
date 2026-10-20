@@ -45,6 +45,9 @@ export const FRASE_DA_FERRAMENTA: Readonly<Record<string, string>> = {
   listar_usuarios: 'ver quem está na equipe',
   listar_execucoes_da_equipe_no_dia: 'ver o que a equipe fez no dia',
   listar_atividades_paradas: 'ver atividades paradas da equipe',
+  listar_conversas_do_desenvolvedor: 'ver sobre o que um desenvolvedor tem conversado com a IA',
+  consultar_conversa_do_desenvolvedor: 'ler a conversa de um desenvolvedor num dia',
+  buscar_nas_conversas_do_desenvolvedor: 'procurar um assunto nas conversas de um desenvolvedor',
   consultar_relatorio_de_execucoes: 'ver quanto tempo um projeto consumiu num período',
 };
 

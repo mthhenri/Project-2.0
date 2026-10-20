@@ -6,6 +6,7 @@ import { segundosDecorridos, formatarRelogio } from '../../models/execucao.model
   standalone: true,
   imports: [],
   templateUrl: './execucao-timer.component.html',
+  styleUrl: './execucao-timer.component.scss',
 })
 export class ExecucaoTimerComponent implements OnInit, OnDestroy {
   @Input({ required: true }) inicioData!: Date;

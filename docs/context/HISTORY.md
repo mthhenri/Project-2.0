@@ -12,6 +12,18 @@
 
 ---
 
+## 2026-10-20 — Task 201: conversas dos desenvolvedores para a IA do gestor, aba Custos, esqueletos, cronômetro e overlay
+
+Pedido do autor, cinco pendências: dar à IA do gestor acesso às conversas dos desenvolvedores; ajustar os esqueletos de carregamento; telas de Ponto e Execuções quebrando visualmente com o horário correndo; aba "Custos" no menu da IA; e rever os loadings de aceitar proposta e salvar o pad (não deveriam travar a tela toda). Spec e verificação em `docs/specs/done/201-pendencias-ia-gestor-custos-e-telas.spec.md` e na pasta de mesmo nome.
+
+- **Overlay (5).** Causa: as rotas de proposta e do pad só usavam `comErroTratadoPelaTela()`, e toda mutação sem `comFeedbackProprio()` liga o overlay global. Havia também uma armadilha: `{ ...comFeedbackProprio(), ...comErroTratadoPelaTela() }` **substitui** o `context` do primeiro pelo do segundo (o download do Desktop tinha o defeito, escondido por ser GET). Novo `comFeedbackProprioEErroTratado()` em `loading.interceptor.ts`, usado em `PropostaIaService`, `AnotacaoService` e `DesktopDownloadService`. Ao vivo: o controle (salvar a cor de uma prioridade, PATCH atrasado 1,5 s) liga o overlay; salvar o preço de um modelo e o autosave do pad (PUT atrasado 2,5 s, texto gravado) não ligam. Confirmar proposta só por teste (IA desligada no ambiente).
+- **Conversas dos desenvolvedores (1).** `ChatDesenvolvedorService` + três ferramentas no `ChatModule` (listar, consultar um dia, buscar); permissão de gestor/administrador, só desenvolvedor como dono (como o pad, 195), só contexto `CHAT`, texto cortado, sem tokens/modelo/conteúdo bruto; limites 30 conversas, 60 mensagens, 20 achados. Frases novas em `FRASE_DA_FERRAMENTA`. O desenvolvedor não é avisado (decisão minha, a confirmar).
+- **Custos (4).** Migration `0047` (`ia_uso`, `ia_modelo_preco`); módulo `ia-custo`; `IaService.executar` grava o uso (falha ao gravar só vai ao log); aba "Custos" (mensal/anual, totais, gráfico por dia ou mês, tabela por modelo com preço editável). Escolha: medir por chamada e não somar o histórico do chat, que só guarda os tokens do próprio chat. Achados na verificação: eixo cortado, "Outubro De", cartão de tokens quebrando, tabela estourando em 1080 px.
+- **Esqueletos (2).** `app-skeleton-lista` imita a tela real (rótulos, larguras, altura da linha, cartões por largura); antes, Usuários tinha 6 colunas de 5, Atividades 7 de 9, Execuções 8 de 9, sem rótulos, e o Ponto da equipe 4 cartões por linha onde a tela tem 2. Projetos não mostra mais "0" nos contadores enquanto carrega.
+- **Cronômetro (3).** Achado real: no card de Ponto da equipe, com uma execução encerrada e uma em andamento, o nome da atividade começava em x diferentes (o cronômetro é mais largo que "05:00 –06:40"); corrigido com grade/subgrid. `app-execucao-timer` agora centraliza na linha. **Tremor com os dígitos mudando não foi reproduzido** (9 s, de 09:59:59 a 10:00:05, largura e vizinho constantes em 5 pontos); se o defeito era outro, falta captura.
+- **Não corrigido (anterior):** a tabela de Atividades do gestor tem 1081 px num conteúdo de 1030 px em 1366×768 e corta a coluna Ações.
+- **Testes.** Backend unitários, frontend 131 arquivos / 1449 testes passando, integração 247/247 (inclui `ia-custo.repository.integracao.test.ts`); builds do backend e do frontend ok. Sem lint no projeto (P-001).
+
 ## 2026-10-20 — Spec 200 no backlog: Project Desktop mostra e avisa que atualizou (ideia I-015) e envio ao remoto
 
 Pedido do autor: ao mexer no Project Desktop ele deveria mostrar e avisar que atualizou, mas isso fica para depois; "deixa anotado no backlog" e "envia esses commits que estão prontos para o remoto".

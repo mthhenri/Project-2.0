@@ -3,6 +3,8 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { esperarRequisicao, responderSucesso } from '../../../../testes/http-teste';
+import { ERRO_TRATADO_PELA_TELA } from '../../../core/interceptors/error-handler.interceptor';
+import { SEM_OVERLAY_GLOBAL } from '../../../core/interceptors/loading.interceptor';
 import { PropostaIaService } from './proposta-ia.service';
 
 // Resolução das propostas da IA: verbo, URL e corpo de cada chamada (só as próprias propostas do usuário, no backend).
@@ -48,5 +50,18 @@ describe('PropostaIaService', () => {
     const desfeito = esperarRequisicao(http, 'POST', '/proposta-ia/5/desfazer');
     expect(desfeito.request.body).toEqual({});
     responderSucesso(desfeito, {});
+  });
+
+  it('confirmar, ajustar, recusar e desfazer não ligam o overlay global (o cartão esmaece sozinho) e deixam o erro para o cartão', () => {
+    servico.confirmar(5).subscribe();
+    servico.ajustar(5, { dados: {} }).subscribe();
+    servico.recusar(5).subscribe();
+    servico.desfazer(5).subscribe();
+    for (const caminho of ['confirmar', 'ajustar', 'recusar', 'desfazer']) {
+      const requisicao = esperarRequisicao(http, 'POST', `/proposta-ia/5/${caminho}`);
+      expect(requisicao.request.context.get(SEM_OVERLAY_GLOBAL)).toBe(true);
+      expect(requisicao.request.context.get(ERRO_TRATADO_PELA_TELA)).toBe(true);
+      responderSucesso(requisicao, {});
+    }
   });
 });

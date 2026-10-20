@@ -8,6 +8,7 @@ import {
   TipoProvedorIaEnum,
 } from '@project20/shared';
 import { ConfiguracaoIaService } from '../../configuracao-ia/services/configuracao-ia.service';
+import { IaCustoService } from '../../ia-custo/services/ia-custo.service';
 import { IaException } from '../domain/ia.exception';
 import { IaProvedor } from '../domain/ia-provedor';
 import { turnoAtual } from '../domain/turno-ia';
@@ -30,6 +31,7 @@ export class IaService {
 
   constructor(
     private readonly configuracaoIaService: ConfiguracaoIaService,
+    private readonly iaCustoService: IaCustoService,
     @Inject(IA_PROVEDORES) private readonly provedores: IaProvedores,
   ) {}
 
@@ -100,6 +102,13 @@ export class IaService {
       const respondida = { ...resposta, nivel: solicitacao.nivel };
       // O ponto único da coleta do turno do chat (task 188): só chamada bem-sucedida entra, e fora de um turno nada muda.
       turnoAtual()?.registrar(respondida);
+      // O mesmo ponto único alimenta o custo (task 201): toda chamada bem-sucedida, de qualquer origem, entra em `ia_uso`.
+      await this.iaCustoService.registrarUso({
+        modelo: respondida.modelo,
+        tokensEntrada: respondida.tokens.entrada,
+        tokensSaida: respondida.tokens.saida,
+        tokensCache: respondida.tokens.cache,
+      });
       return respondida;
     } catch (erro) {
       if (deteccaoAutomatica && erro instanceof IaException && erro.motivo === 'INDISPONIVEL') this.ultimoResultado = EstadoIaEnum.FORA_DO_AR;

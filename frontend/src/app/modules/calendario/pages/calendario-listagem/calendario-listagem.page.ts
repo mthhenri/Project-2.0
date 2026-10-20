@@ -1,3 +1,4 @@
+import { montarEsqueletoDeTabela } from '../../../../shared/components/skeleton-lista/esqueleto-tabela';
 import { Component, computed, inject, signal, OnInit, ViewChild } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
@@ -68,6 +69,13 @@ import { DesfazerService } from '../../../../core/services/desfazer.service';
 export class CalendarioListagemPage implements OnInit {
   private readonly calendarioService = inject(CalendarioService);
   private readonly sessao = inject(UsuarioSessaoService);
+  /** Os rótulos e as larguras da tabela do mês, para o esqueleto não parecer outra tela. */
+  readonly esqueleto = montarEsqueletoDeTabela([
+    { rotulo: 'Data', peso: 91 },
+    { rotulo: 'Descrição', peso: 94 },
+    { rotulo: 'Tipo', peso: 100 },
+    { rotulo: '', peso: 80 },
+  ]);
   private readonly messageService = inject(MessageService);
   private readonly desfazerService = inject(DesfazerService);
   private readonly formBuilder = inject(FormBuilder);

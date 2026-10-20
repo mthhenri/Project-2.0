@@ -66,7 +66,7 @@
   }
 
   @if (primeiraCarga()) {
-    <app-skeleton-lista variante="cartoes" [quantidade]="12" />
+    <app-skeleton-lista variante="cartoes" [quantidade]="12" larguraMinima="250px" alturaCartao="3.25rem" />
   } @else {
     <div class="tag-listagem__conteudo" [class.conteudo-recarregando]="recarregando()">
       <app-barra-recarga [ativa]="recarregando()" />

@@ -40,3 +40,6 @@ export * from './DiasNaoUteisConsultarDto';
 export * from './TagsListarDto';
 export * from './UsuariosListarDto';
 export * from './RelatorioDeExecucoesConsultarDto';
+export * from './ConversasDoDesenvolvedorListarDto';
+export * from './ConversaDoDesenvolvedorConsultarDto';
+export * from './ConversasDoDesenvolvedorBuscarDto';

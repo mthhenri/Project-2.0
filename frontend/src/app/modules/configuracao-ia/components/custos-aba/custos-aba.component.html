@@ -1,0 +1,156 @@
+<section class="custos-aba">
+  <p class="custos-aba__explicacao">
+    O custo é uma estimativa: os tokens que o provedor mediu em cada chamada, multiplicados pelo preço cadastrado do modelo (em dólar por milhão de
+    tokens). O uso é registrado a partir de agora; o que foi gasto antes desta aba não aparece. Modelo sem preço fica fora da soma do custo.
+  </p>
+
+  <div class="custos-aba__navegacao">
+    <p-selectbutton [options]="opcoesRecorte" [formControl]="recorteControl" optionLabel="rotulo" optionValue="valor" [allowEmpty]="false" size="small" ariaLabelledBy="custos-aba-titulo" />
+    <p-button icon="pi pi-chevron-left" severity="secondary" [outlined]="true" [ariaLabel]="recorte() === 'MENSAL' ? 'Mês anterior' : 'Ano anterior'" (onClick)="anterior()" />
+    <span class="custos-aba__recorte" aria-live="polite">{{ rotuloDoRecorte() }}</span>
+    <p-button icon="pi pi-chevron-right" severity="secondary" [outlined]="true" [ariaLabel]="recorte() === 'MENSAL' ? 'Próximo mês' : 'Próximo ano'" [disabled]="noPeriodoAtual()" (onClick)="proximo()" />
+    <p-button [label]="recorte() === 'MENSAL' ? 'Mês atual' : 'Ano atual'" [text]="true" [disabled]="noPeriodoAtual()" (onClick)="irParaAtual()" />
+  </div>
+
+  @if (erro() && !consulta()) {
+    <div class="custos-aba__erro" role="alert">
+      <i class="pi pi-exclamation-triangle"></i>
+      <span>Não foi possível carregar os custos da IA.</span>
+      <p-button label="Tentar de novo" icon="pi pi-refresh" size="small" [outlined]="true" (onClick)="carregar()" />
+    </div>
+  } @else if (primeiraCarga() || !consulta()) {
+    <div class="custos-aba__esqueleto" aria-busy="true">
+      <div class="custos-aba__resumo">
+        @for (item of [1, 2, 3, 4, 5]; track item) {
+          <div class="custos-aba__cartao custos-aba__cartao--resumo"><span class="custos-aba__bloco custos-aba__bloco--rotulo"></span><span class="custos-aba__bloco custos-aba__bloco--valor"></span></div>
+        }
+      </div>
+      <app-skeleton-lista variante="cartoes" [quantidade]="2" />
+    </div>
+  } @else {
+    @if (consulta(); as dados) {
+      <div class="custos-aba__conteudo" [class.conteudo-recarregando]="recarregando()">
+        <app-barra-recarga [ativa]="recarregando()" />
+
+        <div class="custos-aba__resumo">
+          <div class="custos-aba__cartao custos-aba__cartao--resumo">
+            <span class="custos-aba__rotulo">Custo estimado</span>
+            <strong class="custos-aba__valor">{{ formatarDolar(dados.totais.custoDolar) }}</strong>
+            @if (dados.totais.modelosSemPreco > 0) {
+              <small class="custos-aba__aviso"><i class="pi pi-exclamation-triangle"></i> {{ dados.totais.modelosSemPreco }} {{ dados.totais.modelosSemPreco === 1 ? 'modelo sem preço' : 'modelos sem preço' }}</small>
+            }
+          </div>
+          <div class="custos-aba__cartao custos-aba__cartao--resumo">
+            <span class="custos-aba__rotulo">Chamadas</span>
+            <strong class="custos-aba__valor">{{ dados.totais.chamadas }}</strong>
+          </div>
+          <div class="custos-aba__cartao custos-aba__cartao--resumo">
+            <span class="custos-aba__rotulo">Tokens de entrada</span>
+            <strong class="custos-aba__valor">{{ formatarTokens(dados.totais.tokensEntrada) }}</strong>
+          </div>
+          <div class="custos-aba__cartao custos-aba__cartao--resumo">
+            <span class="custos-aba__rotulo">Tokens de saída</span>
+            <strong class="custos-aba__valor">{{ formatarTokens(dados.totais.tokensSaida) }}</strong>
+          </div>
+          <div class="custos-aba__cartao custos-aba__cartao--resumo">
+            <span class="custos-aba__rotulo">Tokens lidos do cache</span>
+            <strong class="custos-aba__valor">{{ formatarTokens(dados.totais.tokensCache) }}</strong>
+          </div>
+        </div>
+
+        <section class="custos-aba__cartao" aria-label="Custo ao longo do período">
+          <h2 class="custos-aba__titulo-secao">Custo {{ recorte() === 'MENSAL' ? 'por dia' : 'por mês' }} (US$)</h2>
+          @if (temUso()) {
+            <app-grafico-barras [categorias]="categorias()" [altura]="240" [descricaoGeral]="'Custo estimado da IA em ' + rotuloDoRecorte()" />
+          } @else {
+            <div class="custos-aba__vazio">
+              <i class="pi pi-chart-bar text-4xl text-muted-color"></i>
+              <p class="text-muted-color mt-3">Nenhuma chamada à IA em {{ rotuloDoRecorte() }}.</p>
+            </div>
+          }
+        </section>
+
+        <section class="custos-aba__cartao" aria-label="Uso e preço por modelo">
+          <h2 class="custos-aba__titulo-secao">Por modelo</h2>
+          <div class="custos-aba__tabela-rolagem">
+            <table class="custos-aba__tabela">
+              <thead>
+                <tr>
+                  <th scope="col" rowspan="2">Modelo</th>
+                  <th scope="colgroup" colspan="3" class="custos-aba__grupo">Tokens</th>
+                  <th scope="colgroup" colspan="3" class="custos-aba__grupo">Preço por milhão (US$)</th>
+                  <th scope="col" rowspan="2" class="custos-aba__numero">Custo</th>
+                  <th scope="col" rowspan="2" class="custos-aba__acoes-coluna"><span class="custos-aba__sr">Ações</span></th>
+                </tr>
+                <tr>
+                  <th scope="col" class="custos-aba__numero">Entrada</th>
+                  <th scope="col" class="custos-aba__numero">Saída</th>
+                  <th scope="col" class="custos-aba__numero">Cache</th>
+                  <th scope="col" class="custos-aba__preco-coluna">Entrada</th>
+                  <th scope="col" class="custos-aba__preco-coluna">Saída</th>
+                  <th scope="col" class="custos-aba__preco-coluna">Cache</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (modelo of dados.modelos; track modelo.modelo; let indice = $index) {
+                  @if (precos.at(indice); as grupo) {
+                    <tr [formGroup]="grupo">
+                      <th scope="row">
+                        <div class="custos-aba__modelo">
+                          <span class="custos-aba__modelo-nome">{{ modelo.modelo }}</span>
+                          <span class="custos-aba__modelo-detalhe">
+                            @if (modelo.emUso) {
+                              <p-tag value="em uso" severity="info" [rounded]="true" />
+                            }
+                            {{ modelo.chamadas }} {{ modelo.chamadas === 1 ? 'chamada' : 'chamadas' }}
+                          </span>
+                        </div>
+                      </th>
+                      <td class="custos-aba__numero">{{ formatarTokens(modelo.tokensEntrada) }}</td>
+                      <td class="custos-aba__numero">{{ formatarTokens(modelo.tokensSaida) }}</td>
+                      <td class="custos-aba__numero">{{ formatarTokens(modelo.tokensCache) }}</td>
+                      <td>
+                        <p-inputnumber formControlName="entrada" mode="decimal" [minFractionDigits]="2" [maxFractionDigits]="4" [min]="0" [max]="100000" styleClass="w-20" inputStyleClass="w-full text-right tabular-nums" [ariaLabel]="'Preço de entrada por milhão de tokens de ' + modelo.modelo" />
+                      </td>
+                      <td>
+                        <p-inputnumber formControlName="saida" mode="decimal" [minFractionDigits]="2" [maxFractionDigits]="4" [min]="0" [max]="100000" styleClass="w-20" inputStyleClass="w-full text-right tabular-nums" [ariaLabel]="'Preço de saída por milhão de tokens de ' + modelo.modelo" />
+                      </td>
+                      <td>
+                        <p-inputnumber formControlName="cache" mode="decimal" [minFractionDigits]="2" [maxFractionDigits]="4" [min]="0" [max]="100000" styleClass="w-20" inputStyleClass="w-full text-right tabular-nums" [ariaLabel]="'Preço do cache por milhão de tokens de ' + modelo.modelo" />
+                      </td>
+                      <td class="custos-aba__numero">
+                        @if (modelo.custoDolar !== null) {
+                          {{ formatarDolar(modelo.custoDolar) }}
+                        } @else {
+                          <span class="custos-aba__sem-preco" pTooltip="Cadastre o preço para estimar o custo" tooltipPosition="top">sem preço</span>
+                        }
+                      </td>
+                      <td class="custos-aba__acoes-coluna">
+                        <span class="custos-aba__acoes">
+                          @if (mudou(indice, modelo) && modelo.preco !== null) {
+                            <p-button icon="pi pi-times" severity="secondary" [text]="true" size="small" [disabled]="salvando() !== null" [ariaLabel]="'Descartar a alteração do preço de ' + modelo.modelo" pTooltip="Descartar" tooltipPosition="top" (onClick)="descartar(indice, modelo)" />
+                          }
+                          <p-button
+                            icon="pi pi-check"
+                            size="small"
+                            [outlined]="true"
+                            [ariaLabel]="(modelo.preco === null ? 'Definir' : 'Salvar') + ' o preço de ' + modelo.modelo"
+                            [pTooltip]="modelo.preco === null ? 'Definir preço' : 'Salvar preço'"
+                            tooltipPosition="top"
+                            [loading]="salvando() === modelo.modelo"
+                            [disabled]="!mudou(indice, modelo) || grupo.invalid || salvando() !== null"
+                            (onClick)="salvar(indice, modelo)"
+                          />
+                        </span>
+                      </td>
+                    </tr>
+                  }
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    }
+  }
+</section>

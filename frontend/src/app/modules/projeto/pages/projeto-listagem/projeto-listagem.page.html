@@ -52,7 +52,7 @@
       class="projeto-listagem__status"
     >
       <ng-template #item let-opcao>
-        {{ opcao.rotulo }} <span class="projeto-listagem__contagem">{{ opcao.contagem }}</span>
+        {{ opcao.rotulo }} @if (!primeiraCarga()) { <span class="projeto-listagem__contagem">{{ opcao.contagem }}</span> }
       </ng-template>
     </p-selectbutton>
 
@@ -62,7 +62,7 @@
   </div>
 
   @if (primeiraCarga()) {
-    <app-skeleton-lista variante="cartoes" [quantidade]="8" />
+    <app-skeleton-lista variante="cartoes" [quantidade]="8" larguraMinima="280px" alturaCartao="7.25rem" />
   } @else {
     <div class="projeto-listagem__conteudo" [class.conteudo-recarregando]="recarregando()">
       <app-barra-recarga [ativa]="recarregando()" />

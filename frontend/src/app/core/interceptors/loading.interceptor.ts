@@ -1,6 +1,7 @@
 import { HttpContext, HttpContextToken, HttpInterceptorFn } from '@angular/common/http';
 import { finalize } from 'rxjs';
 import { carregamento } from '../signals/carregamento.signal';
+import { ERRO_TRATADO_PELA_TELA } from './error-handler.interceptor';
 
 // Requisições rápidas não devem disparar o overlay: só mostramos o spinner se a
 // requisição passar deste limite. Isso elimina o "flicker" em chamadas curtas.
@@ -15,6 +16,14 @@ export const SEM_OVERLAY_GLOBAL = new HttpContextToken<boolean>(() => false);
 /** Opções de `HttpClient` para uma leitura com feedback próprio da tela. */
 export const comFeedbackProprio = (): { context: HttpContext } => ({
   context: new HttpContext().set(SEM_OVERLAY_GLOBAL, true),
+});
+
+/**
+ * Feedback próprio **e** erro tratado pela tela, no mesmo contexto. Não dá para espalhar
+ * `...comFeedbackProprio(), ...comErroTratadoPelaTela()`: o segundo `context` substitui o primeiro.
+ */
+export const comFeedbackProprioEErroTratado = (): { context: HttpContext } => ({
+  context: new HttpContext().set(SEM_OVERLAY_GLOBAL, true).set(ERRO_TRATADO_PELA_TELA, true),
 });
 
 let requisicoesAtivas = 0;

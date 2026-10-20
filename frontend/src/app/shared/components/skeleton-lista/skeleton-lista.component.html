@@ -5,11 +5,15 @@
     @case ('tabela') {
       <div class="skeleton-lista__linha skeleton-lista__linha--cabecalho" [style.grid-template-columns]="colunasCss()">
         @for (celula of celulas(); track celula) {
-          <p-skeleton height="0.75rem" width="55%" />
+          @if (rotulos().length === 0) {
+            <p-skeleton height="0.75rem" width="55%" />
+          } @else {
+            <span class="skeleton-lista__rotulo">{{ rotulos()[celula] }}</span>
+          }
         }
       </div>
       @for (item of itens(); track item) {
-        <div class="skeleton-lista__linha" [style.grid-template-columns]="colunasCss()">
+        <div class="skeleton-lista__linha" [style.grid-template-columns]="colunasCss()" [style.min-height]="alturaLinha || null">
           @for (celula of celulas(); track celula) {
             <p-skeleton height="1rem" [width]="celula === 0 ? '80%' : '60%'" />
           }
@@ -17,17 +21,17 @@
       }
     }
     @case ('cartoes') {
-      <div class="skeleton-lista__grade">
+      <div class="skeleton-lista__grade" [style.grid-template-columns]="grade()">
         @for (item of itens(); track item) {
-          <p-skeleton height="3.25rem" borderRadius="var(--p-border-radius-md, 6px)" />
+          <p-skeleton [height]="alturaCartao" borderRadius="var(--p-border-radius-md, 6px)" />
         }
       </div>
     }
     @case ('linhas') {
       @for (item of itens(); track item) {
-        <div class="skeleton-lista__item">
+        <div class="skeleton-lista__item" [style.min-height]="alturaLinha || null" [style.padding-block]="alturaLinha ? '0' : null">
           <p-skeleton height="1rem" width="40%" />
-          <p-skeleton height="1.5rem" width="5rem" />
+          <p-skeleton [height]="alturaLinha ? '1.1rem' : '1.5rem'" width="5rem" />
         </div>
       }
     }

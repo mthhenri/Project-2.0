@@ -56,7 +56,7 @@
   </div>
 
   @if (primeiraCarga()) {
-    <app-skeleton-lista variante="tabela" [quantidade]="8" [colunas]="6" />
+    <app-skeleton-lista variante="tabela" [quantidade]="6" [cabecalhos]="esqueleto().cabecalhos" [larguras]="esqueleto().larguras" alturaLinha="3.25rem" />
   }
   <div class="lista-recarga" [hidden]="primeiraCarga()" [class.conteudo-recarregando]="recarregando()">
     <app-barra-recarga [ativa]="recarregando()" />

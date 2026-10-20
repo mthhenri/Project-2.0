@@ -1,0 +1,224 @@
+.custos-aba {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  &__explicacao {
+    margin: 0;
+    max-width: 52rem;
+    color: var(--p-text-muted-color);
+    font-size: 0.875rem;
+  }
+
+  &__navegacao {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+
+    p-selectbutton {
+      margin-right: 0.75rem;
+    }
+  }
+
+  &__recorte {
+    display: inline-block;
+    min-width: 9rem;
+    text-align: center;
+    font-weight: 600;
+
+    // Só a primeira letra do mês em maiúscula ("Outubro de 2026"); `capitalize` poria também o "de".
+    &::first-letter {
+      text-transform: uppercase;
+    }
+  }
+
+  &__erro {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--app-surface-200);
+    border-radius: 8px;
+    color: var(--p-red-500);
+  }
+
+  &__conteudo,
+  &__esqueleto {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  &__resumo {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: 1rem;
+  }
+
+  &__cartao {
+    padding: 1rem 1.25rem;
+    background: var(--app-surface-0);
+    border: 1px solid var(--app-surface-200);
+    border-radius: 8px;
+
+    &--resumo {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      min-height: 5.5rem;
+    }
+  }
+
+  // Blocos cinza do esqueleto: mesma altura do rótulo e do valor reais, então o cartão não muda de tamanho quando os dados chegam.
+  &__bloco {
+    display: block;
+    border-radius: 4px;
+    background: var(--app-surface-200);
+    animation: custos-aba-pulso 1.2s ease-in-out infinite;
+
+    &--rotulo {
+      width: 55%;
+      height: 0.8125rem;
+    }
+
+    &--valor {
+      width: 40%;
+      height: 1.5rem;
+      margin-top: 0.4rem;
+    }
+  }
+
+  &__rotulo {
+    color: var(--p-text-muted-color);
+    font-size: 0.8125rem;
+  }
+
+  &__valor {
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.75rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__aviso {
+    color: var(--p-orange-500);
+  }
+
+  &__titulo-secao {
+    margin: 0 0 0.75rem;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  &__vazio {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 0;
+  }
+
+  &__tabela-rolagem {
+    overflow-x: auto;
+  }
+
+  &__tabela {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+
+    th,
+    td {
+      padding: 0.5rem 0.5rem;
+      border-bottom: 1px solid var(--app-surface-200);
+      text-align: left;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    thead th {
+      color: var(--p-text-muted-color);
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    tbody tr:last-child > * {
+      border-bottom: 0;
+    }
+  }
+
+  &__modelo {
+    font-weight: 600;
+  }
+
+  &__modelo {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  &__grupo {
+    text-align: center !important;
+    border-bottom-color: var(--app-surface-200);
+  }
+
+  &__modelo-detalhe {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--p-text-muted-color);
+    font-size: 0.75rem;
+    font-weight: 400;
+  }
+
+  &__modelo-nome {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-weight: 500;
+  }
+
+  &__numero {
+    text-align: right !important;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__preco-coluna {
+    min-width: 6.5rem;
+  }
+
+  &__sem-preco {
+    color: var(--p-orange-500);
+  }
+
+  &__acoes-coluna {
+    text-align: right !important;
+  }
+
+  &__acoes {
+    display: inline-flex;
+    gap: 0.5rem;
+  }
+
+  &__sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+
+@keyframes custos-aba-pulso {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .custos-aba__bloco {
+    animation: none;
+  }
+}
