@@ -7,9 +7,8 @@ import { PopoverModule, Popover } from 'primeng/popover';
 import { TextareaModule } from 'primeng/textarea';
 import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
-import { EstadoIaEnum, ExecucaoAtivaDto, ExecucaoEncerrarDto, REGEX_SEM_CARACTERES_PROIBIDOS } from '@project20/shared';
+import { ExecucaoAtivaDto, ExecucaoEncerrarDto, REGEX_SEM_CARACTERES_PROIBIDOS } from '@project20/shared';
 import { ExecucaoAtivaService } from '../../../../core/services/execucao-ativa.service';
-import { IaDisponibilidadeService } from '../../../../core/services/ia-disponibilidade.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { ExecucaoService } from '../../../../modules/execucao/services/execucao.service';
 import { MinutosParaHorasPipe } from '../../../pipes/minutos-para-horas.pipe';
@@ -39,16 +38,9 @@ export class ChipExecucaoAtivaComponent {
   private readonly execucaoService = inject(ExecucaoService);
   private readonly sessao = inject(UsuarioSessaoService);
   private readonly messageService = inject(MessageService);
-  private readonly iaDisponibilidade = inject(IaDisponibilidadeService);
 
   private readonly agora = signal<number>(Date.now());
   readonly pausando = signal<boolean>(false);
-
-  /**
-   * Para onde vai o "Sem execução ativa": com a IA no ar a tela de Atividades fica desabilitada (o chat a substitui), então o chip leva às
-   * Execuções, que seguem abertas para todos; sem a IA, às Atividades, onde se inicia uma execução.
-   */
-  readonly destinoSemExecucao = computed(() => (this.iaDisponibilidade.estado() === EstadoIaEnum.NO_AR ? '/execucao' : '/atividade'));
 
   /** Obrigatória para desenvolvedor, opcional para gestor (regra do `ExecucaoEncerrarDto`). */
   readonly descricaoObrigatoria = computed(() => !this.sessao.eGestor());

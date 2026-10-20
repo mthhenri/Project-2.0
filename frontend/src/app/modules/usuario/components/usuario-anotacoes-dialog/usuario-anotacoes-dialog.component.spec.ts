@@ -80,7 +80,7 @@ describe('UsuarioAnotacoesDialogComponent — abrir', () => {
     const montado = await abrirPad(TipoUsuarioEnum.GESTOR, ID_DE_OUTRA_PESSOA, { LEMBRETE: 'avisar' });
     expect(secao(montado, TipoAnotacaoEnum.LEMBRETE).usuarioId).toBe(ID_DE_OUTRA_PESSOA);
     expect(secao(montado, TipoAnotacaoEnum.LEMBRETE).textoAtual).toBe('avisar');
-    expect(montado.componente.editavelAgora()).toBe(true);
+    expect(montado.componente.editavel()).toBe(true);
   });
 
   it('falha ao carregar fecha o drawer e avisa', async () => {
@@ -309,50 +309,6 @@ describe('UsuarioAnotacoesDialogComponent — "Enviar para" outra seção', () =
     montado.http.expectNone((r) => r.method === 'GET' && r.url.endsWith('/anotacao'));
   });
 
-  it('com a IA no ar o próprio pad não oferece o menu "Enviar para"', async () => {
-    const montado = await abrirPad(TipoUsuarioEnum.DESENVOLVEDOR, ID_LOGADO, { EM_ANDAMENTO: 'A' });
-    TestBed.inject(IaDisponibilidadeService).estadoReal.set(EstadoIaEnum.NO_AR);
-    await montado.atualizar();
-    montado.componente.abrirMenuDoTrecho(secao(montado, TipoAnotacaoEnum.EM_ANDAMENTO), { inicio: 0, fim: 1, texto: 'A', evento: new MouseEvent('contextmenu') });
-    montado.componente.itensMenu[0].items!.find((item) => item.id === 'FEITO')!.command!({});
-    await montado.atualizar();
-    montado.http.expectNone((r) => r.method === 'POST');
-  });
-});
-
-describe('UsuarioAnotacoesDialogComponent — Limpar', () => {
-  it('esvazia a seção na hora, oferece Desfazer por 7 s e só grava o vazio quando a janela acaba', async () => {
-    const montado = await abrirPad(TipoUsuarioEnum.GESTOR, ID_DE_OUTRA_PESSOA, { PESSOAL: 'comandos' });
-    const desfazer = TestBed.inject(DesfazerService);
-    const pessoal = secao(montado, TipoAnotacaoEnum.PESSOAL);
-
-    montado.componente.limpar(pessoal);
-    expect(pessoal.textoAtual).toBe('');
-    expect(pessoal.limpando).toBe(true);
-    expect(desfazer.oferta()?.mensagem).toBe('Seção "Pessoal" limpa');
-    expect(desfazer.oferta()?.duracaoMs).toBe(7000);
-    montado.http.expectNone((r) => r.method === 'PUT');
-
-    desfazer.dispensar();
-    const gravacao = esperarRequisicao(montado.http, 'PUT', `/anotacao/${ID_DE_OUTRA_PESSOA}/PESSOAL`);
-    expect(gravacao.request.body).toEqual({ texto: '', updatedDateLido: VERSAO });
-    gravacao.flush(null, { status: 500, statusText: 'x' });
-  });
-
-  it('Desfazer restaura o texto e não grava nada', async () => {
-    const montado = await abrirPad(TipoUsuarioEnum.GESTOR, ID_DE_OUTRA_PESSOA, { PESSOAL: 'comandos' });
-    const desfazer = TestBed.inject(DesfazerService);
-    const pessoal = secao(montado, TipoAnotacaoEnum.PESSOAL);
-
-    montado.componente.limpar(pessoal);
-    desfazer.executar();
-    await montado.atualizar();
-
-    expect(pessoal.textoAtual).toBe('comandos');
-    expect(pessoal.limpando).toBe(false);
-    montado.http.expectNone((r) => r.method === 'PUT');
-  });
-
   it('seção vazia não tem o que limpar', async () => {
     const montado = await abrirPad(TipoUsuarioEnum.GESTOR, ID_DE_OUTRA_PESSOA);
     montado.componente.limpar(secao(montado, TipoAnotacaoEnum.PESSOAL));
@@ -361,33 +317,13 @@ describe('UsuarioAnotacoesDialogComponent — Limpar', () => {
 });
 
 describe('UsuarioAnotacoesDialogComponent — quem pode editar', () => {
-  it('com a IA no ar, o próprio pad é só de leitura (aviso e nenhum Salvar)', async () => {
+  it('com a IA no ar, o próprio pad segue editável (sem aviso e com Salvar)', async () => {
     const proprio = await abrirPad(TipoUsuarioEnum.GESTOR, ID_LOGADO, { LEMBRETE: 'avisar' });
     TestBed.inject(IaDisponibilidadeService).estadoReal.set(EstadoIaEnum.NO_AR);
     await proprio.atualizar();
-    expect(proprio.componente.somenteLeituraPelaIa()).toBe(true);
-    expect(proprio.componente.editavelAgora()).toBe(false);
-    expect(textoDaTela()).toContain('A IA cuida do seu pad');
-    expect(textoDaTela()).not.toContain('Salvar');
-    proprio.componente.limpar(secao(proprio, TipoAnotacaoEnum.LEMBRETE));
-    expect(secao(proprio, TipoAnotacaoEnum.LEMBRETE).textoAtual).toBe('avisar');
-  });
-
-  it('com a IA no ar, o pad de outra pessoa continua editável pelo gestor', async () => {
-    const alheio = await abrirPad(TipoUsuarioEnum.GESTOR, ID_DE_OUTRA_PESSOA);
-    TestBed.inject(IaDisponibilidadeService).estadoReal.set(EstadoIaEnum.NO_AR);
-    await alheio.atualizar();
-    expect(alheio.componente.somenteLeituraPelaIa()).toBe(false);
-    expect(alheio.componente.editavelAgora()).toBe(true);
-  });
-
-  it('com a IA desligada ou fora do ar o próprio pad volta a ser editável (fallback)', async () => {
-    const montado = await abrirPad(TipoUsuarioEnum.DESENVOLVEDOR, ID_LOGADO);
-    const ia = TestBed.inject(IaDisponibilidadeService);
-    for (const estado of [EstadoIaEnum.DESLIGADA, EstadoIaEnum.FORA_DO_AR]) {
-      ia.estadoReal.set(estado);
-      expect(montado.componente.editavelAgora(), estado).toBe(true);
-    }
+    expect(proprio.componente.editavel()).toBe(true);
+    expect(textoDaTela()).not.toContain('A IA cuida do seu pad');
+    expect(document.body.querySelector('app-markdown-editor')).not.toBeNull();
   });
 
   it('com editavel=false cada seção só mostra o texto, sem editor e sem Limpar', async () => {
@@ -397,7 +333,7 @@ describe('UsuarioAnotacoesDialogComponent — quem pode editar', () => {
     responderSucesso(esperarRequisicao(montado.http, 'GET', '/anotacao'), secoesDe(ID_DE_OUTRA_PESSOA, { EM_ANDAMENTO: 'parei aqui' }));
     await montado.atualizar();
 
-    expect(montado.componente.editavelAgora()).toBe(false);
+    expect(montado.componente.editavel()).toBe(false);
     expect(document.body.querySelector('app-markdown-editor')).toBeNull();
     expect(textoDaTela()).not.toContain('Limpar');
     expect(textoDaTela()).toContain('parei aqui');

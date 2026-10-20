@@ -40,7 +40,7 @@ test('item exclusivo do administrador também é de gestor (nunca aparece para o
   }
 });
 
-test('Atividades é substituída pela IA para todos e o Chat exige a IA', () => {
-  assert.equal(porRota('/atividade')?.substituidoPelaIa, 'TODOS');
+test('Atividades segue aberta com a IA no ar e o Chat exige a IA', () => {
+  assert.equal(porRota('/atividade')?.substituidoPelaIa, undefined);
   assert.equal(porRota('/chat')?.exigeIa, true);
 });

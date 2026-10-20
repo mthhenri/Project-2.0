@@ -75,11 +75,11 @@ describe('ChipExecucaoAtivaComponent — presença', () => {
     expect(botaoPausar(montado)).toBeNull();
   });
 
-  it('com a IA no ar (Atividades substituída pelo chat) o "Sem execução ativa" aponta para Execuções', async () => {
+  it('com a IA no ar o "Sem execução ativa" segue apontando para Atividades', async () => {
     const montado = await montarChip();
     TestBed.inject(IaDisponibilidadeService).estadoReal.set(EstadoIaEnum.NO_AR);
     await carregarAtiva(montado, null);
-    expect(montado.elemento.querySelector('.chip-execucao--vazio')?.getAttribute('href')).toBe('/execucao');
+    expect(montado.elemento.querySelector('.chip-execucao--vazio')?.getAttribute('href')).toBe('/atividade');
   });
 
   it('com execução ativa mostra a descrição, o cronômetro e o botão de pausar', async () => {

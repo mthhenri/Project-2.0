@@ -23,7 +23,7 @@
     />
   </div>
 } @else {
-  <a [routerLink]="destinoSemExecucao()" class="chip-execucao chip-execucao--vazio">Sem execução ativa</a>
+  <a routerLink="/atividade" class="chip-execucao chip-execucao--vazio">Sem execução ativa</a>
 }
 
 <p-popover #pausaPopover (onShow)="focarDescricao()">

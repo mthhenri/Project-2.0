@@ -81,12 +81,11 @@ describe('SidebarComponent — IA e telas substituídas pelo chat', () => {
     responderSucesso(esperarRequisicao(montado.http, 'GET', '/ia/disponibilidade'), { estado: EstadoIaEnum.NO_AR });
   });
 
-  it('com a IA no ar "Atividades" fica desabilitada (sem link) e explica por quê; os demais itens seguem ativos', async () => {
+  it('com a IA no ar "Atividades" segue com link e todos os itens ficam ativos', async () => {
     const montado = await montarBarra(TipoUsuarioEnum.DESENVOLVEDOR, EstadoIaEnum.NO_AR);
     const atividades = item(montado, 'Atividades')!;
-    expect(atividades.getAttribute('aria-disabled')).toBe('true');
-    expect(atividades.getAttribute('href')).toBeNull();
-    expect(atividades.getAttribute('aria-label')).toBe('Atividades (substituída pelo chat enquanto a IA está no ar)');
+    expect(atividades.getAttribute('aria-disabled')).toBeNull();
+    expect(atividades.getAttribute('href')).toBe('/atividade');
     expect(item(montado, 'Execuções')?.getAttribute('href')).toBe('/execucao');
     expect(item(montado, 'Chat')?.getAttribute('href')).toBe('/chat');
   });
@@ -168,14 +167,6 @@ describe('SidebarComponent — atalho g + letra (task 96)', () => {
     teclar('t');
     await montado.fixture.whenStable();
     expect(TestBed.inject(Router).url).toBe('/tag');
-  });
-
-  it('item desabilitado pela IA no ar não é alcançado pelo atalho', async () => {
-    const montado = await montarBarra(TipoUsuarioEnum.DESENVOLVEDOR, EstadoIaEnum.NO_AR);
-    teclar('g');
-    teclar('a');
-    await montado.fixture.whenStable();
-    expect(TestBed.inject(Router).url).toBe('/');
   });
 
   it('a sequência expira em 1,5 s: a segunda tecla depois disso é ignorada', async () => {

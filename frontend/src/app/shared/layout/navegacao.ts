@@ -22,7 +22,7 @@ export const ITENS_NAVEGACAO: readonly ItemNavegacao[] = [
   { label: 'Projetos',   icone: 'pi pi-folder',       rotaLink: '/projeto',    tecla: 'j', somenteGestor: true  },
   { label: 'Demandas',   icone: 'pi pi-sitemap',      rotaLink: '/demanda',    tecla: 'd', somenteGestor: false },
   { label: 'Chat',       icone: 'pi pi-comments',     rotaLink: '/chat',       tecla: 'h', somenteGestor: false, exigeIa: true },
-  { label: 'Atividades', icone: 'pi pi-check-square', rotaLink: '/atividade',  tecla: 'a', somenteGestor: false, substituidoPelaIa: 'TODOS' },
+  { label: 'Atividades', icone: 'pi pi-check-square', rotaLink: '/atividade',  tecla: 'a', somenteGestor: false },
   { label: 'Execuções',  icone: 'pi pi-play',         rotaLink: '/execucao',   tecla: 'e', somenteGestor: false },
   { label: 'Tags',       icone: 'pi pi-tag',          rotaLink: '/tag',        tecla: 't', somenteGestor: true  },
   { label: 'Usuários',   icone: 'pi pi-users',        rotaLink: '/usuario',    tecla: 'u', somenteGestor: true  },

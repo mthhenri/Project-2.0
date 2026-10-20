@@ -38,13 +38,6 @@
 
       <p-contextmenu #menuContexto [model]="itensMenu" appendTo="body" />
 
-      @if (somenteLeituraPelaIa()) {
-        <p class="anotacoes-drawer__aviso-ia" role="status">
-          <i class="pi pi-sparkles"></i>
-          <span>A IA cuida do seu pad enquanto está no ar: aqui você só lê. Peça a ela no chat para anotar ou ajustar algo.</span>
-        </p>
-      }
-
       @if (carregando()) {
         <div class="anotacoes-drawer__esqueleto" aria-busy="true">
           <p-skeleton height="2rem" />
@@ -77,7 +70,7 @@
                   </span>
                 </p-accordion-header>
                 <p-accordion-content>
-                  @if (editavelAgora()) {
+                  @if (editavel()) {
                     <app-markdown-editor
                       [formControl]="secao.controle"
                       [alturaMinima]="9"
@@ -109,7 +102,7 @@
         </div>
       }
 
-      @if (editavelAgora()) {
+      @if (editavel()) {
         <footer class="anotacoes-drawer__rodape">
           <span class="anotacoes-drawer__estado" role="status" aria-live="polite" [attr.data-estado]="estadoGeral()">
             @switch (estadoGeral()) {
