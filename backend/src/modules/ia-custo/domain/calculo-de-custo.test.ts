@@ -54,8 +54,8 @@ test('o período traz todos os dias do mês, mesmo sem uso, e ignora o que cai f
     dias,
   );
   assert.equal(periodos.length, 28);
-  assert.deepEqual(periodos[2], { periodo: '2026-02-03', mensagens: 2, tokens: 1_000_120, custoDolar: 3.001506 });
-  assert.deepEqual(periodos[0], { periodo: '2026-02-01', mensagens: 0, tokens: 0, custoDolar: 0 });
+  assert.deepEqual(periodos[2], { periodo: '2026-02-03', mensagens: 2, tokens: 1_000_120, custoDolar: 3.001506, modelos: [{ modelo: 'sonnet', mensagens: 2, tokens: 1_000_120, custoDolar: 3.001506 }] });
+  assert.deepEqual(periodos[0], { periodo: '2026-02-01', mensagens: 0, tokens: 0, custoDolar: 0, modelos: [] });
 });
 
 test('sem mês o período são os doze meses do ano', () => {

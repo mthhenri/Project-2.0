@@ -87,15 +87,19 @@ export function somarTotais(modelos: IaCustoModeloDto[]): IaCustoTotaisDto {
 /** O uso ao longo do período: todos os dias do mês (ou todos os meses do ano) aparecem, mesmo sem uso, para o gráfico não ter buracos. */
 export function montarPeriodos(usos: TokensSomados[], precos: IaModeloPrecoDto[], todosOsPeriodos: string[]): IaCustoPeriodoDto[] {
   const precoPorModelo = new Map(precos.map((preco) => [preco.modelo, preco]));
-  const porPeriodo = new Map<string, IaCustoPeriodoDto>(todosOsPeriodos.map((periodo) => [periodo, { periodo, mensagens: 0, tokens: 0, custoDolar: 0 }]));
+  const porPeriodo = new Map<string, IaCustoPeriodoDto>(todosOsPeriodos.map((periodo) => [periodo, { periodo, mensagens: 0, tokens: 0, custoDolar: 0, modelos: [] }]));
   for (const uso of usos) {
     const periodo = porPeriodo.get(uso.periodo);
     if (!periodo) continue;
     const preco = precoPorModelo.get(uso.modelo);
+    const tokens = uso.tokensEntrada + uso.tokensSaida + uso.tokensCache;
+    const custoDolar = preco ? calcularCustoDolar(uso, preco) : 0;
     periodo.mensagens += uso.mensagens;
-    periodo.tokens += uso.tokensEntrada + uso.tokensSaida + uso.tokensCache;
-    if (preco) periodo.custoDolar = Math.round((periodo.custoDolar + calcularCustoDolar(uso, preco)) * 1_000_000) / 1_000_000;
+    periodo.tokens += tokens;
+    periodo.custoDolar = Math.round((periodo.custoDolar + custoDolar) * 1_000_000) / 1_000_000;
+    periodo.modelos.push({ modelo: uso.modelo, mensagens: uso.mensagens, tokens, custoDolar });
   }
+  for (const periodo of porPeriodo.values()) periodo.modelos.sort((primeiro, segundo) => primeiro.modelo.localeCompare(segundo.modelo));
   return [...porPeriodo.values()];
 }
 

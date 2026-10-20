@@ -23,13 +23,22 @@ export interface IaCustoModeloDto {
   emUso: boolean;
 }
 
-/** O uso de um dia (recorte de mês) ou de um mês (recorte de ano). */
+/** A parte de um modelo no uso de um período (o gráfico empilha uma por modelo). `custoDolar` é 0 para modelo sem preço. */
+export interface IaCustoPeriodoModeloDto {
+  modelo: string;
+  mensagens: number;
+  tokens: number;
+  custoDolar: number;
+}
+
+/** O uso de um dia (recorte de mês) ou de um mês (recorte de ano). `modelos` traz só os modelos com uso no período, em ordem de nome. */
 export interface IaCustoPeriodoDto {
   /** `yyyy-mm-dd` no recorte de mês; `yyyy-mm` no de ano. */
   periodo: string;
   mensagens: number;
   tokens: number;
   custoDolar: number;
+  modelos: IaCustoPeriodoModeloDto[];
 }
 
 /** A aba "Custos": totais, uso por modelo (com o preço editável) e o uso ao longo do período. */

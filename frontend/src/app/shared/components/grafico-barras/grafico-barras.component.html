@@ -16,7 +16,7 @@
       <g class="grafico-barras__categoria">
         <title>{{ categoria.descricao }}</title>
         @for (barra of categoria.barras; track $index) {
-          <rect class="grafico-barras__barra" [class.grafico-barras__barra--destaque]="barra.destaque" [attr.x]="barra.x" [attr.y]="barra.y" [attr.width]="barra.largura" [attr.height]="barra.altura" [style.fill]="barra.cor" rx="2">
+          <rect class="grafico-barras__barra" [class.grafico-barras__barra--destaque]="barra.destaque" [class.grafico-barras__barra--empilhada]="empilhado()" [attr.x]="barra.x" [attr.y]="barra.y" [attr.width]="barra.largura" [attr.height]="barra.altura" [style.fill]="barra.cor" rx="2">
             <title>{{ barra.descricao }}</title>
           </rect>
           @if (cabeRotulo(barra) && barra.rotulo) {

@@ -44,6 +44,12 @@
       stroke: var(--p-red-900);
       stroke-width: 2;
     }
+
+    /* Um fio da cor da superfície separa os segmentos empilhados. */
+    &--empilhada {
+      stroke: var(--p-content-background);
+      stroke-width: 1;
+    }
   }
 
   &__referencia {

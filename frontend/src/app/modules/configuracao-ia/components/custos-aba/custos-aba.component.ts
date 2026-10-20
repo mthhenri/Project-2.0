@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
 import { MessageService } from 'primeng/api';
@@ -13,7 +13,7 @@ import { BarraRecargaComponent } from '../../../../shared/components/barra-recar
 import { GraficoBarrasComponent } from '../../../../shared/components/grafico-barras/grafico-barras.component';
 import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
 import { IaCustoService } from '../../services/ia-custo.service';
-import { formatarDolar, formatarTokens, montarCategoriasDeCusto, rotuloDoRecorte } from '../../utils/custos.util';
+import { formatarDolar, formatarTokens, montarCategoriasDeCusto, montarLegendaDeCusto, rotuloDoRecorte } from '../../utils/custos.util';
 
 type RecorteDeCusto = 'MENSAL' | 'ANUAL';
 type FormularioDePreco = FormGroup<{ entrada: FormControl<number>; saida: FormControl<number>; cache: FormControl<number> }>;
@@ -74,7 +74,15 @@ export class CustosAbaComponent implements OnInit {
       ? this.ano() === this.hoje.getFullYear() && this.mes() === this.hoje.getMonth() + 1
       : this.ano() === this.hoje.getFullYear(),
   );
-  readonly categorias = computed(() => montarCategoriasDeCusto(this.consulta()?.periodos ?? []));
+  private readonly nomesDosModelos = computed(() => (this.consulta()?.modelos ?? []).map((modelo) => modelo.modelo));
+  readonly categorias = computed(() => montarCategoriasDeCusto(this.consulta()?.periodos ?? [], this.nomesDosModelos()));
+  /** A legenda do gráfico: só os modelos com custo no recorte, nas cores que o gráfico usa. */
+  readonly legenda = computed(() => {
+    const comCusto = new Set(
+      (this.consulta()?.periodos ?? []).flatMap((periodo) => periodo.modelos.filter((parte) => parte.custoDolar > 0).map((parte) => parte.modelo)),
+    );
+    return montarLegendaDeCusto(this.nomesDosModelos()).filter((item) => comCusto.has(item.modelo));
+  });
   readonly temUso = computed(() => (this.consulta()?.totais.mensagens ?? 0) > 0);
 
   readonly formatarDolar = formatarDolar;
@@ -113,6 +121,14 @@ export class CustosAbaComponent implements OnInit {
   irParaAtual(): void {
     this.ano.set(this.hoje.getFullYear());
     this.mes.set(this.hoje.getMonth() + 1);
+    this.carregar();
+  }
+
+  /** Recarrega ao voltar para a janela (troca de aba do navegador ou Alt-Tab), como o histórico de Execuções. */
+  @HostListener('document:visibilitychange')
+  @HostListener('window:focus')
+  aoVoltarParaAJanela(): void {
+    if (document.visibilityState !== 'visible' || this.carregando()) return;
     this.carregar();
   }
 

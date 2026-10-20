@@ -79,6 +79,8 @@ export class ConfiguracaoIaPage implements OnInit {
   readonly rotuloEstado = ROTULO_ESTADO_IA;
   readonly severidadeEstado = SEVERIDADE_ESTADO_IA;
 
+  /** A aba aberta; a de custos só é montada enquanto está aberta, para recarregar a cada entrada. */
+  readonly abaAtiva = signal<string>('provedor');
   private readonly abaPrompts = viewChild(PromptsAbaComponent);
 
   readonly carregando = signal(true);
