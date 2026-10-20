@@ -84,6 +84,14 @@ test('o id datado que o provedor devolve (nome + data de 8 dígitos) conta no no
   ]);
 });
 
+test('o id datado da OpenAI (nome + AAAA-MM-DD) também conta no nome conhecido', () => {
+  const agrupado = agruparPeloNomeConhecido(
+    [uso('2026-10-01', 'gpt-5-mini', { mensagens: 1 }), uso('2026-10-01', 'gpt-5-mini-2025-08-07', { mensagens: 2 }), uso('2026-10-01', 'gpt-5-mini-2025-08', { mensagens: 1 })],
+    ['gpt-5-mini'],
+  );
+  assert.deepEqual(agrupado.map((linha) => [linha.modelo, linha.mensagens]), [['gpt-5-mini', 3], ['gpt-5-mini-2025-08', 1]]);
+});
+
 test('um nome que só é prefixo de outro modelo não o engole: claude-opus-5-5 sem preço não vira claude-opus-5', () => {
   const agrupado = agruparPeloNomeConhecido(
     [uso('2026-10-01', 'claude-opus-5-5-20261015', { mensagens: 1 }), uso('2026-10-01', 'claude-opus-5-5', { mensagens: 1 }), uso('2026-10-01', 'claude-opus-5-20261015', { mensagens: 1 })],

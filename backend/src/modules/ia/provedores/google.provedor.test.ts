@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
+import { EsforcoIaEnum } from '@project20/shared';
 import { IaException } from '../domain/ia.exception';
 import { IaSolicitacaoProvedor } from '../domain/ia.tipos';
 import { ClienteGoogle, GoogleProvedor, RespostaGoogle } from './google.provedor';
@@ -50,7 +51,7 @@ test('gerar monta os parâmetros (papel model, instruções na config) e devolve
       { role: 'model', parts: [{ text: 'olá' }] },
       { role: 'user', parts: [{ text: 'e aí' }] },
     ],
-    config: { maxOutputTokens: 500, systemInstruction: 'Seja breve.' },
+    config: { maxOutputTokens: 500, thinkingConfig: { thinkingBudget: 0 }, systemInstruction: 'Seja breve.' },
   });
   assert.equal(resposta.texto, 'olá mundo');
   assert.equal(resposta.modelo, 'gemini-2.5-flash-001');
@@ -115,6 +116,30 @@ test('chamada sem id ganha um id do projeto, que não volta ao Gemini; resultado
     { role: 'model', parts: [{ functionCall: { name: 'a', args: {} } }] },
     { role: 'user', parts: [{ functionResponse: { name: 'a', response: { error: 'quebrou' } } }] },
   ]);
+});
+
+test('o id do projeto cabe nos 40 caracteres que a OpenAI aceita em tool_call_id', async () => {
+  const resposta = await new GoogleProvedor(clienteFalso({ resposta: { candidates: [{ content: { parts: [{ functionCall: { name: 'a' } }] } }] } }).cliente).gerar(SOLICITACAO);
+  const bloco = resposta.blocos[0];
+  assert.ok(bloco.tipo === 'uso_ferramenta');
+  assert.ok(bloco.id.length <= 40, `id com ${bloco.id.length} caracteres`);
+});
+
+test('pensamento: sem esforço o modelo de raciocínio pensa o mínimo (com folga no teto quando não desliga); com esforço fica no padrão; modelo sem raciocínio não recebe nada', async () => {
+  const { cliente, chamadas } = clienteFalso();
+  const provedor = new GoogleProvedor(cliente);
+  await provedor.gerar({ ...SOLICITACAO, modelo: 'gemini-2.5-flash', maximoTokens: 10 });
+  await provedor.gerar({ ...SOLICITACAO, modelo: 'gemini-2.5-pro', maximoTokens: 10 });
+  await provedor.gerar({ ...SOLICITACAO, modelo: 'gemini-3-flash-preview', maximoTokens: 10 });
+  await provedor.gerar({ ...SOLICITACAO, modelo: 'gemini-2.5-pro', maximoTokens: 10, esforco: EsforcoIaEnum.ALTO });
+  await provedor.gerar({ ...SOLICITACAO, modelo: 'gemini-2.0-flash', maximoTokens: 10 });
+
+  const configuracao = (indice: number) => chamadas[indice]['config'] as Record<string, unknown>;
+  assert.deepEqual([configuracao(0)['thinkingConfig'], configuracao(0)['maxOutputTokens']], [{ thinkingBudget: 0 }, 10]);
+  assert.deepEqual([configuracao(1)['thinkingConfig'], configuracao(1)['maxOutputTokens']], [{ thinkingBudget: 128 }, 138]);
+  assert.deepEqual([configuracao(2)['thinkingConfig'], configuracao(2)['maxOutputTokens']], [{ thinkingLevel: 'low' }, 1034]);
+  assert.deepEqual(['thinkingConfig' in configuracao(3), configuracao(3)['maxOutputTokens']], [false, 10]);
+  assert.deepEqual(['thinkingConfig' in configuracao(4), configuracao(4)['maxOutputTokens']], [false, 10]);
 });
 
 test('duas voltas de ferramenta sem id do Gemini recebem ids diferentes (o chat reenvia as voltas do dia)', async () => {

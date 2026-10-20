@@ -67,6 +67,16 @@ test('esforço: só modelo de raciocínio recebe reasoning_effort (o analítico 
   assert.equal(chamadas[2]['reasoning_effort'], 'low');
 });
 
+test('teto: o modelo de raciocínio sem esforço ganha folga para o pensamento; com esforço ou sem raciocínio o teto é o pedido', async () => {
+  const { cliente, chamadas } = clienteFalso();
+  const provedor = new OpenAiProvedor(cliente);
+  await provedor.gerar({ ...SOLICITACAO, modelo: 'gpt-5-mini', maximoTokens: 10 });
+  await provedor.gerar({ ...SOLICITACAO, modelo: 'gpt-5', maximoTokens: 10, esforco: EsforcoIaEnum.ALTO });
+  await provedor.gerar({ ...SOLICITACAO, modelo: 'gpt-4.1', maximoTokens: 10 });
+
+  assert.deepEqual(chamadas.map((chamada) => chamada['max_completion_tokens']), [1034, 10, 10]);
+});
+
 test('ferramentas: definições, uso pela IA (com argumentos JSON) e resultados viram mensagens assistant/tool', async () => {
   const completude: CompletudeOpenAi = {
     model: 'gpt-4.1',

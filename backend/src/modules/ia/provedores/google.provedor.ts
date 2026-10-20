@@ -29,8 +29,25 @@ export interface RespostaGoogle {
   };
 }
 
-/** O Gemini nem sempre numera as chamadas de ferramenta; o projeto precisa de um id para casar o resultado, então cria um (único: o chat reenvia as voltas anteriores do dia) e não o devolve ao Gemini. */
-const PREFIXO_ID_SINTETICO = 'gemini-sintetico-';
+/**
+ * O Gemini nem sempre numera as chamadas de ferramenta; o projeto precisa de um id para casar o resultado, então cria um (único: o chat
+ * reenvia as voltas anteriores do dia) e não o devolve ao Gemini. Fica com 36 caracteres porque o chat também pode reenviá-lo à OpenAI,
+ * que recusa `tool_call_id` com mais de 40.
+ */
+const PREFIXO_ID_SINTETICO = 'gem_';
+
+/**
+ * Os modelos de raciocínio gastam o teto de tokens pensando, e as chamadas curtas (assunto, nome da conversa) voltariam vazias. Sem o
+ * nível analítico pedindo esforço, o pensamento é reduzido ao mínimo que o modelo aceita; `folga` reserva o que ainda assim ele gasta
+ * (o 2.5 Pro não desliga o pensamento; o 3 só tem níveis).
+ */
+function configurarPensamentoLeve(modelo: string): { thinkingConfig: Record<string, unknown>; folga: number } | null {
+  const nome = modelo.toLowerCase();
+  if (nome.startsWith('gemini-2.5-pro')) return { thinkingConfig: { thinkingBudget: 128 }, folga: 128 };
+  if (nome.startsWith('gemini-2.5')) return { thinkingConfig: { thinkingBudget: 0 }, folga: 0 };
+  if (nome.startsWith('gemini-3')) return { thinkingConfig: { thinkingLevel: 'low' }, folga: 1024 };
+  return null;
+}
 
 export class GoogleProvedor implements IaProvedor {
   /** `cliente` é `null` quando não há chave de API no ambiente. */
@@ -80,6 +97,11 @@ export class GoogleProvedor implements IaProvedor {
     }
 
     const configuracao: Record<string, unknown> = { maxOutputTokens: solicitacao.maximoTokens };
+    const pensamentoLeve = solicitacao.esforco ? null : configurarPensamentoLeve(solicitacao.modelo);
+    if (pensamentoLeve) {
+      configuracao['thinkingConfig'] = pensamentoLeve.thinkingConfig;
+      configuracao['maxOutputTokens'] = solicitacao.maximoTokens + pensamentoLeve.folga;
+    }
     if (solicitacao.instrucoes) configuracao['systemInstruction'] = solicitacao.instrucoes;
     if (solicitacao.ferramentas?.length) {
       configuracao['tools'] = [
@@ -144,7 +166,7 @@ export class GoogleProvedor implements IaProvedor {
           const { id, name, args } = parte.functionCall;
           blocos.push({
             tipo: 'uso_ferramenta',
-            id: id ?? `${PREFIXO_ID_SINTETICO}${randomUUID()}`,
+            id: id ?? `${PREFIXO_ID_SINTETICO}${randomUUID().replaceAll('-', '')}`,
             nome: name ?? '',
             entrada: args ?? {},
             ...(parte.thoughtSignature && { assinatura: parte.thoughtSignature }),

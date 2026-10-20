@@ -50,6 +50,9 @@ const ESFORCO_OPENAI: Record<EsforcoIaEnum, string> = {
 /** Só os modelos de raciocínio (série `o` e `gpt-5`) aceitam `reasoning_effort`; nos outros o parâmetro é recusado. */
 const MODELO_DE_RACIOCINIO = /^(o\d|gpt-5)/;
 
+/** Mesmo no esforço baixo o modelo de raciocínio pensa antes de responder, e isso sai do teto; as chamadas curtas (assunto, nome) voltariam vazias. */
+const FOLGA_DE_RACIOCINIO = 1024;
+
 const MOTIVOS_DE_PARADA: Record<string, IaMotivoParada> = {
   stop: 'fim',
   length: 'limite_de_tokens',
@@ -135,6 +138,7 @@ export class OpenAiProvedor implements IaProvedor {
     // Modelo de raciocínio gasta o teto de tokens pensando: sem o nível analítico pedindo mais, o esforço baixo preserva a resposta.
     if (MODELO_DE_RACIOCINIO.test(solicitacao.modelo.toLowerCase())) {
       parametros['reasoning_effort'] = solicitacao.esforco ? ESFORCO_OPENAI[solicitacao.esforco] : 'low';
+      if (!solicitacao.esforco) parametros['max_completion_tokens'] = solicitacao.maximoTokens + FOLGA_DE_RACIOCINIO;
     }
     return parametros;
   }

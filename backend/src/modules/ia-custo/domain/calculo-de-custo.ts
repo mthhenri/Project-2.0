@@ -6,11 +6,11 @@ const TOKENS_POR_MILHAO = 1_000_000;
 /**
  * A mensagem guarda o modelo que o provedor devolveu, e para um alias ele devolve o id datado (`claude-haiku-5-5-20261015` para
  * `claude-haiku-5-5`). O administrador precifica o nome que está na configuração, então o uso de um id datado conta no nome conhecido a que
- * ele só acrescenta `-` e uma data de 8 dígitos (sem exigir a data, `claude-opus-5-5` cairia em `claude-opus-5`). Modelo que não casa com
+ * ele só acrescenta `-` e uma data (`AAAAMMDD` da Anthropic ou `AAAA-MM-DD` da OpenAI; sem exigir a data, `claude-opus-5-5` cairia em `claude-opus-5`). Modelo que não casa com
  * nenhum nome conhecido fica como veio. Linhas que passam a ter o mesmo período e modelo são somadas.
  */
 export function agruparPeloNomeConhecido(usos: TokensSomados[], nomesConhecidos: string[]): TokensSomados[] {
-  const comDataDoProvedor = (modelo: string, nome: string): boolean => modelo.startsWith(`${nome}-`) && /^\d{8}$/.test(modelo.slice(nome.length + 1));
+  const comDataDoProvedor = (modelo: string, nome: string): boolean => modelo.startsWith(`${nome}-`) && /^(\d{8}|\d{4}-\d{2}-\d{2})$/.test(modelo.slice(nome.length + 1));
   const nomeConhecido = (modelo: string): string => nomesConhecidos.find((nome) => nome === modelo || comDataDoProvedor(modelo, nome)) ?? modelo;
 
   const somados = new Map<string, TokensSomados>();

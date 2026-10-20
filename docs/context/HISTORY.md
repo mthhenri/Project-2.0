@@ -12,6 +12,14 @@
 
 ---
 
+## 2026-10-20 — Task 203 (ajustes da revisão): id de ferramenta do Gemini, pensamento nas chamadas curtas e data AAAA-MM-DD nos custos
+
+Revisão independente da 203 (antes do merge) achou três pontos nos provedores novos, corrigidos com testes (backend 1146 → 1150 verdes; build ok):
+- **Id sintético do Gemini** tinha 53 caracteres e a OpenAI recusa `tool_call_id` > 40 (o chat reenvia as voltas de ferramenta do dia a qualquer provedor). Agora `gem_` + UUID sem traços (36).
+- **Pensamento nas chamadas curtas** (assunto 10 tokens, nome 40, sugestões 150): sem esforço pedido, Gemini 2.5 Flash recebe `thinkingBudget: 0`, 2.5 Pro `128` (+128 de folga no teto) e Gemini 3 `thinkingLevel: low` (+1024); modelos sem raciocínio não recebem nada. OpenAI de raciocínio sem esforço ganha +1024 no `max_completion_tokens`. O nível analítico (com esforço) não muda.
+- **Custos**: `agruparPeloNomeConhecido` aceita também o id datado `AAAA-MM-DD` da OpenAI (`gpt-5-mini-2025-08-07`).
+Seguem **não verificados com chave real**: os limites de 40 caracteres e de tokens, e os valores de `thinkingConfig`/folga (escolhidos pela documentação, não medidos). Achados baixos da revisão não corrigidos: chave inválida do Google (400) vira INDISPONIVEL, `gpt-5-chat-latest` casa o filtro de raciocínio, timeout/retentativas padrão dos SDKs (10 min/2), trios malformados fora da cadeia passam na validação.
+
 ## 2026-10-20 — Task 203: conexões com Gemini e OpenAI, fallback entre provedores e modelos por provedor na configuração da IA
 
 Pedido do autor: deixar preparadas as conexões com os outros provedores de IA, com fallback entre eles escolhido pela configuração versionada (padrão Anthropic; se cair, Gemini; se cair, OpenAI) e a regra
