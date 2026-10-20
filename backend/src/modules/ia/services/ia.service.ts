@@ -37,12 +37,12 @@ export class IaService {
 
   async gerar(solicitacao: IaSolicitacao): Promise<IaResposta> {
     const { provedor, solicitacaoProvedor, deteccaoAutomatica } = await this.preparar(solicitacao);
-    return this.executar(solicitacao, deteccaoAutomatica, () => provedor.gerar(solicitacaoProvedor));
+    return this.executar(solicitacao, solicitacaoProvedor.modelo, deteccaoAutomatica, () => provedor.gerar(solicitacaoProvedor));
   }
 
   async transmitir(solicitacao: IaSolicitacao, aoTrecho: (trecho: string) => void): Promise<IaResposta> {
     const { provedor, solicitacaoProvedor, deteccaoAutomatica } = await this.preparar(solicitacao);
-    return this.executar(solicitacao, deteccaoAutomatica, () => provedor.transmitir(solicitacaoProvedor, aoTrecho));
+    return this.executar(solicitacao, solicitacaoProvedor.modelo, deteccaoAutomatica, () => provedor.transmitir(solicitacaoProvedor, aoTrecho));
   }
 
   /**
@@ -95,7 +95,7 @@ export class IaService {
     }
   }
 
-  private async executar(solicitacao: IaSolicitacao, deteccaoAutomatica: boolean, chamada: () => Promise<IaRespostaProvedor>): Promise<IaResposta> {
+  private async executar(solicitacao: IaSolicitacao, modeloSolicitado: string, deteccaoAutomatica: boolean, chamada: () => Promise<IaRespostaProvedor>): Promise<IaResposta> {
     try {
       const resposta = await chamada();
       this.ultimoResultado = EstadoIaEnum.NO_AR;
@@ -104,7 +104,8 @@ export class IaService {
       turnoAtual()?.registrar(respondida);
       // O mesmo ponto único alimenta o custo (task 201): toda chamada bem-sucedida, de qualquer origem, entra em `ia_uso`.
       await this.iaCustoService.registrarUso({
-        modelo: respondida.modelo,
+        // O modelo da configuração (o que o administrador precifica), e não o id datado que o provedor pode devolver para um alias.
+        modelo: modeloSolicitado,
         tokensEntrada: respondida.tokens.entrada,
         tokensSaida: respondida.tokens.saida,
         tokensCache: respondida.tokens.cache,

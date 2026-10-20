@@ -130,3 +130,11 @@ test('a busca é no nome do desenvolvedor pedido e devolve o dia de cada achado'
   assert.deepEqual(consultas[0], { usuarioId: 7, texto: 'deploy' });
   assert.deepEqual(resultado.mensagens, [{ data: '2026-10-12', autor: AutorChatEnum.IA, texto: 'travei no deploy', truncada: false }]);
 });
+
+test('o texto total devolvido cabe no corte global: ficam as mensagens mais recentes e haMais avisa', async () => {
+  const longas = Array.from({ length: 30 }, (_, indice) => mensagem(indice + 100, { texto: `${indice}`.padEnd(LIMITE_CARACTERES_DA_MENSAGEM, 'x') }));
+  const resultado = await montar({ mensagens: longas }).service.consultarConversa({ usuarioId: 7, data: '2026-10-19' }, GESTOR);
+  assert.ok(JSON.stringify(resultado).length < 20_000);
+  assert.equal(resultado.mensagens.at(-1)?.texto.startsWith('29'), true);
+  assert.equal(resultado.haMais, true);
+});

@@ -5,7 +5,7 @@
   </p>
 
   <div class="custos-aba__navegacao">
-    <p-selectbutton [options]="opcoesRecorte" [formControl]="recorteControl" optionLabel="rotulo" optionValue="valor" [allowEmpty]="false" size="small" ariaLabelledBy="custos-aba-titulo" />
+    <p-selectbutton [options]="opcoesRecorte" [formControl]="recorteControl" optionLabel="rotulo" optionValue="valor" [allowEmpty]="false" size="small" ariaLabel="Recorte do custo" />
     <p-button icon="pi pi-chevron-left" severity="secondary" [outlined]="true" [ariaLabel]="recorte() === 'MENSAL' ? 'Mês anterior' : 'Ano anterior'" (onClick)="anterior()" />
     <span class="custos-aba__recorte" aria-live="polite">{{ rotuloDoRecorte() }}</span>
     <p-button icon="pi pi-chevron-right" severity="secondary" [outlined]="true" [ariaLabel]="recorte() === 'MENSAL' ? 'Próximo mês' : 'Próximo ano'" [disabled]="noPeriodoAtual()" (onClick)="proximo()" />

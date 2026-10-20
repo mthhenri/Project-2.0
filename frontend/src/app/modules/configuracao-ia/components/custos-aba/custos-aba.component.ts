@@ -170,9 +170,15 @@ export class CustosAbaComponent implements OnInit {
   }
 
   private aplicar(dados: IaCustoConsultadoDto): void {
+    // Uma edição ainda não salva de outro modelo sobrevive à recarga (salvar um preço recarrega a consulta).
+    const pendentes = new Map<string, FormularioDePreco>();
+    this.precos.controls.forEach((grupo, indice) => {
+      const nome = this.consulta()?.modelos[indice]?.modelo;
+      if (nome && grupo.dirty) pendentes.set(nome, grupo);
+    });
     this.consulta.set(dados);
     this.precos.clear();
-    for (const modelo of dados.modelos) this.precos.push(this.novoGrupo(modelo));
+    for (const modelo of dados.modelos) this.precos.push(pendentes.get(modelo.modelo) ?? this.novoGrupo(modelo));
   }
 
   private novoGrupo(modelo: IaCustoModeloDto): FormularioDePreco {

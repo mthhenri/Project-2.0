@@ -136,7 +136,6 @@
   &__execucoes {
     display: grid;
     grid-template-columns: max-content minmax(0, 1fr);
-    align-content: center;
     gap: 0.25rem 0.75rem;
     width: 100%;
     max-height: 7.5rem;

@@ -25,6 +25,25 @@ export function ultimasMensagens<T>(mensagens: T[], limite: number): { mensagens
   return mensagens.length > limite ? { mensagens: mensagens.slice(mensagens.length - limite), haMais: true } : { mensagens, haMais: false };
 }
 
+/**
+ * O que uma ferramenta devolve passa por um corte global (o registro corta o JSON em 20 000 caracteres, e cortar o JSON no meio perderia
+ * o fim e o aviso de `haMais`). Por isso a lista é limitada aqui, por orçamento de texto, deixando folga para os outros campos.
+ */
+export const ORCAMENTO_DE_CARACTERES_DA_LISTA = 14_000;
+
+/** Fica com os itens que cabem no orçamento de texto: do fim (os mais recentes) ou do começo (os mais relevantes). Diz se cortou. */
+export function dentroDoOrcamento<T extends { texto: string }>(itens: T[], orcamento: number, aPartirDoFim: boolean): { itens: T[]; cortou: boolean } {
+  const ordenados = aPartirDoFim ? [...itens].reverse() : itens;
+  const escolhidos: T[] = [];
+  let usado = 0;
+  for (const item of ordenados) {
+    if (usado + item.texto.length > orcamento && escolhidos.length > 0) break;
+    escolhidos.push(item);
+    usado += item.texto.length;
+  }
+  return { itens: aPartirDoFim ? escolhidos.reverse() : escolhidos, cortou: escolhidos.length < itens.length };
+}
+
 /** A mensagem do sistema é o aviso de falha que o chat grava ("serviço indisponível"): não é fala de ninguém e não vai ao gestor. */
 export function ehFalaDaConversa(mensagem: { autor: AutorChatEnum }): boolean {
   return mensagem.autor !== AutorChatEnum.SISTEMA;

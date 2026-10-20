@@ -16,12 +16,14 @@ import { UsuarioRepository } from '../../usuario/repositories/usuario.repository
 import { nomePadraoDaConversa } from '../domain/chat-conversa';
 import {
   cortarTexto,
+  dentroDoOrcamento,
   diaDentroDoIntervalo,
   ehFalaDaConversa,
   LIMITE_CARACTERES_DA_MENSAGEM,
   LIMITE_CONVERSAS_DO_DESENVOLVEDOR,
   LIMITE_MENSAGENS_DA_BUSCA,
   LIMITE_MENSAGENS_DA_CONVERSA,
+  ORCAMENTO_DE_CARACTERES_DA_LISTA,
   somenteMensagensDoChat,
   ultimasMensagens,
 } from '../domain/conversa-do-desenvolvedor';
@@ -63,17 +65,16 @@ export class ChatDesenvolvedorService {
     const conversaId = `${dto.usuarioId}-${dto.data}`;
     const mensagens = somenteMensagensDoChat(await this.chatMensagemRepositorio.listarConversa({ conversaId, usuarioId: dto.usuarioId })).filter(ehFalaDaConversa);
     const recentes = ultimasMensagens(mensagens, LIMITE_MENSAGENS_DA_CONVERSA);
+    const cortadas = recentes.mensagens.map((mensagem) => ({ mensagem, ...cortarTexto(mensagem.texto, LIMITE_CARACTERES_DA_MENSAGEM) }));
+    const noOrcamento = dentroDoOrcamento(cortadas, ORCAMENTO_DE_CARACTERES_DA_LISTA, true);
     const titulos = await this.chatMensagemRepositorio.listarTitulos({ usuarioId: dto.usuarioId, conversaIds: [conversaId] });
     return {
       usuarioId: desenvolvedor.id,
       usuario: desenvolvedor.nomeCompleto,
       data: dto.data,
       titulo: titulos[conversaId]?.titulo || nomePadraoDaConversa(conversaId),
-      mensagens: recentes.mensagens.map((mensagem) => {
-        const { texto, truncada } = cortarTexto(mensagem.texto, LIMITE_CARACTERES_DA_MENSAGEM);
-        return { autor: mensagem.autor, texto, truncada, data: mensagem.createdDate.toISOString() };
-      }),
-      haMais: recentes.haMais,
+      mensagens: noOrcamento.itens.map(({ mensagem, texto, truncada }) => ({ autor: mensagem.autor, texto, truncada, data: mensagem.createdDate.toISOString() })),
+      haMais: recentes.haMais || noOrcamento.cortou,
     };
   }
 
@@ -83,10 +84,11 @@ export class ChatDesenvolvedorService {
     return {
       usuarioId: desenvolvedor.id,
       usuario: desenvolvedor.nomeCompleto,
-      mensagens: achadas.slice(0, LIMITE_MENSAGENS_DA_BUSCA).map((mensagem) => {
-        const { texto, truncada } = cortarTexto(mensagem.texto, LIMITE_CARACTERES_DA_MENSAGEM);
-        return { data: mensagem.conversaId.slice(-10), autor: mensagem.autor, texto, truncada };
-      }),
+      mensagens: dentroDoOrcamento(
+        achadas.slice(0, LIMITE_MENSAGENS_DA_BUSCA).map((mensagem) => ({ mensagem, ...cortarTexto(mensagem.texto, LIMITE_CARACTERES_DA_MENSAGEM) })),
+        ORCAMENTO_DE_CARACTERES_DA_LISTA,
+        false,
+      ).itens.map(({ mensagem, texto, truncada }) => ({ data: mensagem.conversaId.slice(-10), autor: mensagem.autor, texto, truncada })),
     };
   }
 
