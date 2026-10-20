@@ -1,4 +1,4 @@
-import { IaCustoModeloDto, IaCustoPeriodoDto, IaCustoTotaisDto, IaModeloPrecoDto } from '@project20/shared';
+import { IaCustoModeloDto, IaCustoPeriodoDto, IaCustoTotaisDto, IaModeloPrecoDto, NivelIaEnum } from '@project20/shared';
 import { TokensSomados } from '../../chat/domain/chat-consultas';
 
 const TOKENS_POR_MILHAO = 1_000_000;
@@ -42,7 +42,8 @@ export function calcularCustoDolar(uso: Pick<TokensSomados, 'tokensEntrada' | 't
  * Uma linha por modelo: os que tiveram uso no recorte, os que têm preço cadastrado e os que a configuração ativa usa (assim o
  * administrador define o preço de um modelo antes de ele ser chamado). Ordem: em uso, depois mais custo/mais mensagens, depois nome.
  */
-export function montarModelos(usos: TokensSomados[], precos: IaModeloPrecoDto[], modelosEmUso: string[]): IaCustoModeloDto[] {
+export function montarModelos(usos: TokensSomados[], precos: IaModeloPrecoDto[], modelosPorNivel: Partial<Record<NivelIaEnum, string>>): IaCustoModeloDto[] {
+  const modelosEmUso = Object.values(modelosPorNivel);
   const precoPorModelo = new Map(precos.map((preco) => [preco.modelo, preco]));
   const somaPorModelo = new Map<string, Omit<TokensSomados, 'periodo' | 'modelo'>>();
   for (const uso of usos) {
@@ -59,7 +60,14 @@ export function montarModelos(usos: TokensSomados[], precos: IaModeloPrecoDto[],
   const modelos = [...nomes].map((modelo): IaCustoModeloDto => {
     const soma = somaPorModelo.get(modelo) ?? { mensagens: 0, tokensEntrada: 0, tokensSaida: 0, tokensCache: 0 };
     const preco = precoPorModelo.get(modelo) ?? null;
-    return { modelo, ...soma, preco, custoDolar: preco ? calcularCustoDolar(soma, preco) : null, emUso: modelosEmUso.includes(modelo) };
+    return {
+      modelo,
+      ...soma,
+      preco,
+      custoDolar: preco ? calcularCustoDolar(soma, preco) : null,
+      emUso: modelosEmUso.includes(modelo),
+      niveis: Object.values(NivelIaEnum).filter((nivel) => modelosPorNivel[nivel] === modelo),
+    };
   });
   return modelos.sort(
     (primeiro, segundo) =>

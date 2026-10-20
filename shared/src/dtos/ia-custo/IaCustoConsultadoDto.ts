@@ -1,3 +1,4 @@
+import { NivelIaEnum } from '../../enums';
 import { IaModeloPrecoDto } from './IaModeloPrecoDto';
 
 /** O total do recorte. `custoDolar` soma só os modelos com preço; `modelosSemPreco` diz quantos ficaram de fora. */
@@ -21,6 +22,8 @@ export interface IaCustoModeloDto {
   custoDolar: number | null;
   /** `true` para o modelo que a configuração ativa usa em algum nível. */
   emUso: boolean;
+  /** Os níveis que a configuração ativa atribui a este modelo (vazio fora de uso). Dá a cor no gráfico: quanto mais forte o nível, mais escuro o tom. */
+  niveis: NivelIaEnum[];
 }
 
 /** A parte de um modelo no uso de um período (o gráfico empilha uma por modelo). `custoDolar` é 0 para modelo sem preço. */

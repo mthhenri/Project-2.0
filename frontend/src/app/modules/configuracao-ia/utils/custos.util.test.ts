@@ -1,6 +1,6 @@
 import { test } from 'vitest';
 import * as assert from 'node:assert/strict';
-import { formatarDolar, formatarTokens, montarCategoriasDeCusto, montarLegendaDeCusto, provedorDoModelo, rotuloDoRecorte } from './custos.util';
+import { formatarDolar, formatarTokens, montarCategoriasDeCusto, ModeloDeCusto, montarLegendaDeCusto, provedorDoModelo, rotuloDoRecorte } from './custos.util';
 
 const normalizar = (texto: string) => texto.replace(/ /g, ' ');
 
@@ -46,13 +46,21 @@ test('provedorDoModelo reconhece Anthropic, Google e OpenAI pelo nome', () => {
   assert.equal(provedorDoModelo('outro-modelo'), 'OUTRO');
 });
 
-test('a legenda dá tons da família do provedor, na ordem de nome, e a cor de um modelo não depende do dia', () => {
-  const legenda = montarLegendaDeCusto(['gpt-5', 'claude-sonnet-5-5', 'gemini-pro', 'claude-haiku-5-5']);
-  assert.deepEqual(legenda.map((item) => item.modelo), ['claude-haiku-5-5', 'claude-sonnet-5-5', 'gemini-pro', 'gpt-5']);
-  assert.notEqual(legenda[0].cor, legenda[1].cor);
-  assert.match(legenda[0].cor, /^#c2410c$/i);
-  assert.match(legenda[2].cor, /^#1d4ed8$/i);
-  assert.match(legenda[3].cor, /^#374151$/i);
+test('a legenda dá o tom pelo nível do modelo: rápido claro, padrão médio, analítico escuro, e o nível mais forte vence', () => {
+  const legenda = montarLegendaDeCusto([
+    { modelo: 'gpt-5', niveis: ['ANALITICO'] },
+    { modelo: 'claude-sonnet-5-5', niveis: ['PADRAO', 'ANALITICO'] },
+    { modelo: 'gemini-pro', niveis: ['PADRAO'] },
+    { modelo: 'claude-haiku-5-5', niveis: ['RAPIDO'] },
+    { modelo: 'claude-antigo', niveis: [] },
+  ] as ModeloDeCusto[]);
+  const cores = Object.fromEntries(legenda.map((item) => [item.modelo, item.cor]));
+  assert.equal(cores['claude-haiku-5-5'], '#fdba74');
+  assert.equal(cores['claude-sonnet-5-5'], '#c2410c');
+  assert.equal(cores['claude-antigo'], '#f97316');
+  assert.equal(cores['gemini-pro'], '#3b82f6');
+  assert.equal(cores['gpt-5'], '#374151');
+  assert.deepEqual(legenda.map((item) => item.modelo), ['claude-antigo', 'claude-haiku-5-5', 'claude-sonnet-5-5', 'gemini-pro', 'gpt-5']);
 });
 
 test('o custo do dia é empilhado por modelo, o total fica no segmento do topo e modelo sem custo não vira segmento', () => {
@@ -70,9 +78,12 @@ test('o custo do dia é empilhado por modelo, o total fica no segmento do topo e
         ],
       },
     ],
-    ['claude-haiku-5-5', 'claude-sonnet-5-5'],
+    [
+      { modelo: 'claude-haiku-5-5', niveis: ['RAPIDO'] },
+      { modelo: 'claude-sonnet-5-5', niveis: ['ANALITICO'] },
+    ] as ModeloDeCusto[],
   );
   assert.deepEqual(dia.barras.map((barra) => barra.valor), [0.25, 0.5]);
   assert.deepEqual(dia.barras.map((barra) => normalizar(barra.rotulo)), ['', '0,75']);
-  assert.notEqual(dia.barras[0].cor, dia.barras[1].cor);
+  assert.deepEqual(dia.barras.map((barra) => barra.cor), ['#fdba74', '#c2410c']);
 });

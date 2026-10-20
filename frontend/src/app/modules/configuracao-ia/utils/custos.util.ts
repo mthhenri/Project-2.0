@@ -1,4 +1,4 @@
-import { IaCustoPeriodoDto } from '@project20/shared';
+import { IaCustoModeloDto, IaCustoPeriodoDto, NivelIaEnum } from '@project20/shared';
 import { GraficoBarrasCategoria } from '../../../shared/components/grafico-barras/grafico-barras.component';
 
 const MESES_ABREVIADOS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'] as const;
@@ -25,14 +25,15 @@ export function rotuloDoRecorte(ano: number, mes: number | null): string {
 
 export type ProvedorDeModelo = 'ANTHROPIC' | 'GOOGLE' | 'OPENAI' | 'OUTRO';
 
-/** Tons de cada provedor, do mais escuro ao mais claro: laranja para a Anthropic, azul para o Google (Gemini), cinza para a OpenAI. */
-const TONS_DO_PROVEDOR: Record<ProvedorDeModelo, readonly string[]> = {
-  ANTHROPIC: ['#c2410c', '#ea580c', '#f97316', '#fb923c', '#fdba74'],
-  GOOGLE: ['#1d4ed8', '#2563eb', '#3b82f6', '#60a5fa', '#93c5fd'],
-  OPENAI: ['#374151', '#4b5563', '#6b7280', '#9ca3af', '#d1d5db'],
-  OUTRO: ['#0f766e', '#14b8a6', '#5eead4'],
+/** Tons de cada provedor por nível do modelo: laranja para a Anthropic, azul para o Google (Gemini), cinza para a OpenAI. Quanto mais forte o nível, mais escuro. */
+const TONS_DO_PROVEDOR: Record<ProvedorDeModelo, Record<NivelIaEnum, string>> = {
+  ANTHROPIC: { RAPIDO: '#fdba74', PADRAO: '#f97316', ANALITICO: '#c2410c' },
+  GOOGLE: { RAPIDO: '#93c5fd', PADRAO: '#3b82f6', ANALITICO: '#1d4ed8' },
+  OPENAI: { RAPIDO: '#d1d5db', PADRAO: '#6b7280', ANALITICO: '#374151' },
+  OUTRO: { RAPIDO: '#5eead4', PADRAO: '#14b8a6', ANALITICO: '#0f766e' },
 };
 const ORDEM_DOS_PROVEDORES: readonly ProvedorDeModelo[] = ['ANTHROPIC', 'GOOGLE', 'OPENAI', 'OUTRO'];
+const FORCA_DO_NIVEL: Record<NivelIaEnum, number> = { RAPIDO: 0, PADRAO: 1, ANALITICO: 2 };
 
 /** O provedor pelo nome do modelo (`claude-*`, `gemini-*`, `gpt-*`/`o1`/`o3`...). */
 export function provedorDoModelo(modelo: string): ProvedorDeModelo {
@@ -48,28 +49,31 @@ export interface LegendaDeCusto {
   cor: string;
 }
 
+/** O modelo e os níveis que a configuração ativa lhe dá (como vêm na consulta de custos). */
+export type ModeloDeCusto = Pick<IaCustoModeloDto, 'modelo' | 'niveis'>;
+
 /**
- * Uma cor por modelo: o provedor dá a família e a posição do modelo entre os do mesmo provedor (ordem de nome) dá o tom. A lista é a de
- * todos os modelos da consulta, não a do dia, para a cor de um modelo não mudar de um dia para o outro.
+ * Uma cor por modelo: o provedor dá a família e o nível dá o tom (rápido mais claro, padrão médio, analítico mais escuro). Um modelo que serve
+ * a mais de um nível usa o mais forte; um modelo fora da configuração ativa (só histórico) usa o tom médio. A lista é a de todos os modelos
+ * da consulta, não a do dia, para a cor de um modelo não mudar de um dia para o outro.
  */
-export function montarLegendaDeCusto(modelos: readonly string[]): LegendaDeCusto[] {
-  const ordenados = [...new Set(modelos)].sort(
-    (primeiro, segundo) =>
-      ORDEM_DOS_PROVEDORES.indexOf(provedorDoModelo(primeiro)) - ORDEM_DOS_PROVEDORES.indexOf(provedorDoModelo(segundo)) || primeiro.localeCompare(segundo),
-  );
-  const contagemPorProvedor = new Map<ProvedorDeModelo, number>();
-  return ordenados.map((modelo) => {
-    const provedor = provedorDoModelo(modelo);
-    const posicao = contagemPorProvedor.get(provedor) ?? 0;
-    contagemPorProvedor.set(provedor, posicao + 1);
-    const tons = TONS_DO_PROVEDOR[provedor];
-    return { modelo, cor: tons[posicao % tons.length] };
-  });
+export function montarLegendaDeCusto(modelos: readonly ModeloDeCusto[]): LegendaDeCusto[] {
+  const unicos = [...new Map([...modelos].reverse().map((modelo) => [modelo.modelo, modelo])).values()];
+  return unicos
+    .sort(
+      (primeiro, segundo) =>
+        ORDEM_DOS_PROVEDORES.indexOf(provedorDoModelo(primeiro.modelo)) - ORDEM_DOS_PROVEDORES.indexOf(provedorDoModelo(segundo.modelo)) ||
+        primeiro.modelo.localeCompare(segundo.modelo),
+    )
+    .map(({ modelo, niveis }) => {
+      const maisForte = niveis.reduce<NivelIaEnum | null>((atual, nivel) => (atual === null || FORCA_DO_NIVEL[nivel] > FORCA_DO_NIVEL[atual] ? nivel : atual), null);
+      return { modelo, cor: TONS_DO_PROVEDOR[provedorDoModelo(modelo)][maisForte ?? NivelIaEnum.PADRAO] };
+    });
 }
 
 /** Uma coluna de custo por dia (recorte de mês) ou por mês (recorte de ano), empilhada: um segmento por modelo, com o total no topo. */
-export function montarCategoriasDeCusto(periodos: readonly IaCustoPeriodoDto[], modelosDaConsulta: readonly string[] = []): GraficoBarrasCategoria[] {
-  const legenda = montarLegendaDeCusto([...modelosDaConsulta, ...periodos.flatMap((periodo) => periodo.modelos.map((parte) => parte.modelo))]);
+export function montarCategoriasDeCusto(periodos: readonly IaCustoPeriodoDto[], modelosDaConsulta: readonly ModeloDeCusto[] = []): GraficoBarrasCategoria[] {
+  const legenda = montarLegendaDeCusto([...modelosDaConsulta, ...periodos.flatMap((periodo) => periodo.modelos.map((parte) => ({ modelo: parte.modelo, niveis: [] })))]);
   const coresPorModelo = new Map(legenda.map((item) => [item.modelo, item.cor]));
   const ordemDosModelos = legenda.map((item) => item.modelo);
   return periodos.map((periodo) => {

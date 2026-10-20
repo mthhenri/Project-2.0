@@ -74,14 +74,14 @@ export class CustosAbaComponent implements OnInit {
       ? this.ano() === this.hoje.getFullYear() && this.mes() === this.hoje.getMonth() + 1
       : this.ano() === this.hoje.getFullYear(),
   );
-  private readonly nomesDosModelos = computed(() => (this.consulta()?.modelos ?? []).map((modelo) => modelo.modelo));
-  readonly categorias = computed(() => montarCategoriasDeCusto(this.consulta()?.periodos ?? [], this.nomesDosModelos()));
+  private readonly modelosDaConsulta = computed(() => this.consulta()?.modelos ?? []);
+  readonly categorias = computed(() => montarCategoriasDeCusto(this.consulta()?.periodos ?? [], this.modelosDaConsulta()));
   /** A legenda do gráfico: só os modelos com custo no recorte, nas cores que o gráfico usa. */
   readonly legenda = computed(() => {
     const comCusto = new Set(
       (this.consulta()?.periodos ?? []).flatMap((periodo) => periodo.modelos.filter((parte) => parte.custoDolar > 0).map((parte) => parte.modelo)),
     );
-    return montarLegendaDeCusto(this.nomesDosModelos()).filter((item) => comCusto.has(item.modelo));
+    return montarLegendaDeCusto(this.modelosDaConsulta()).filter((item) => comCusto.has(item.modelo));
   });
   readonly temUso = computed(() => (this.consulta()?.totais.mensagens ?? 0) > 0);
 

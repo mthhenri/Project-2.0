@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { TipoUsuarioEnum } from '@project20/shared';
+import { NivelIaEnum, TipoUsuarioEnum } from '@project20/shared';
 import { montarComponente } from '../../../../../testes/montar-componente';
 import { esperarRequisicao, responderErro, responderSucesso } from '../../../../../testes/http-teste';
 import { CustosAbaComponent } from './custos-aba.component';
@@ -11,8 +11,8 @@ const consulta = {
   mes: 10,
   totais: { mensagens: 3, tokensEntrada: 1500, tokensSaida: 500, tokensCache: 0, custoDolar: 0.5, modelosSemPreco: 1 },
   modelos: [
-    { modelo: 'claude-haiku-5-5', mensagens: 3, tokensEntrada: 1500, tokensSaida: 500, tokensCache: 0, preco: { modelo: 'claude-haiku-5-5', precoEntradaMilhao: 1, precoSaidaMilhao: 5, precoCacheMilhao: 0.1 }, custoDolar: 0.5, emUso: true },
-    { modelo: 'claude-sonnet-5-5', mensagens: 0, tokensEntrada: 0, tokensSaida: 0, tokensCache: 0, preco: null, custoDolar: null, emUso: true },
+    { modelo: 'claude-haiku-5-5', mensagens: 3, tokensEntrada: 1500, tokensSaida: 500, tokensCache: 0, preco: { modelo: 'claude-haiku-5-5', precoEntradaMilhao: 1, precoSaidaMilhao: 5, precoCacheMilhao: 0.1 }, custoDolar: 0.5, emUso: true, niveis: [NivelIaEnum.RAPIDO] },
+    { modelo: 'claude-sonnet-5-5', mensagens: 0, tokensEntrada: 0, tokensSaida: 0, tokensCache: 0, preco: null, custoDolar: null, emUso: true, niveis: [NivelIaEnum.PADRAO, NivelIaEnum.ANALITICO] },
   ],
   periodos: Array.from({ length: 31 }, (_, indice) => ({ periodo: `2026-10-${String(indice + 1).padStart(2, '0')}`, mensagens: indice === 4 ? 3 : 0, tokens: indice === 4 ? 2000 : 0, custoDolar: indice === 4 ? 0.5 : 0, modelos: indice === 4 ? [{ modelo: 'claude-sonnet-5-5', mensagens: 3, tokens: 2000, custoDolar: 0.5 }] : [] })),
 };
