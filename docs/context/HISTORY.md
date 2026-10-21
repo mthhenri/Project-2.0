@@ -12,6 +12,16 @@
 
 ---
 
+## 2026-10-21 — Tasks 206 e 207: fecho com a suíte de contrato nos serviços reais
+
+Fecho das duas tasks de armazenamento do chat entre colaboradores, no ambiente de desenvolvimento (Docker no ar), que as sessões remotas não alcançavam. Specs movidas para `docs/specs/done/`.
+
+- **Suíte de contrato nos serviços reais:** OpenSearch 2 (`CHAT_INTEGRACAO=1`) 20/20, Elasticsearch 9.1.0 (perfil `elasticsearch` do compose, porta 9201) 20/20, cada um com os 12 cenários do contrato mais os testes
+  com cliente em dublê. Sem ajuste de código: as consultas (`search_after`, agregação por conversa, `filters`, `bucket_sort`, `cardinality`) funcionaram nos dois na primeira execução.
+- **PostgreSQL:** `npm run test:integracao` 272/272 (inclui o contrato da 207 e o esquema da `0051`). Migrations `0050` e `0051` aplicadas, revertidas e reaplicadas no banco de desenvolvimento (lote 12).
+- **Gates:** `npm run test --workspace=backend` 1221/1221, `shared` 213/213, `npm run build --workspace=backend` compila. Lint não existe (P-001).
+- **Limites:** sem service, rota nem tela (208+); o módulo segue fora do `AppModule`. Os 12 cenários rodam num índice/ banco só de desenvolvimento, não em cluster com várias instâncias.
+
 ## 2026-10-21 — Task 207: armazenamento PostgreSQL provisório das mensagens entre colaboradores (migration `0051`)
 
 Terceira task da guarda-chuva `chat-colaboradores`. Terceira implementação do `ArmazenamentoDeMensagemDireta`, para a produção de teste (`CHAT_ARMAZENAMENTO=postgres`). Spec:
