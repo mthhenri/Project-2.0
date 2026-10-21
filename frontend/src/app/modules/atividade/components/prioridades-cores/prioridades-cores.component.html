@@ -1,41 +1,41 @@
-<section class="prioridades-aba">
-  <p class="prioridades-aba__explicacao">
+<section class="prioridades-cores">
+  <p class="prioridades-cores__explicacao">
     A cor de cada prioridade aparece no selo das atividades, em todas as telas. O nome e a ordem são fixos; a IA e a listagem usam a ordem
     abaixo (da mais para a menos urgente).
   </p>
 
   @if (prioridades().length === 0) {
-    <div class="prioridades-aba__esqueleto" aria-busy="true">
+    <div class="prioridades-cores__esqueleto" aria-busy="true">
       <p-skeleton height="3rem" />
       <p-skeleton height="3rem" />
       <p-skeleton height="3rem" />
     </div>
   } @else {
-    <ul class="prioridades-aba__lista">
+    <ul class="prioridades-cores__lista">
       @for (prioridade of prioridades(); track prioridade.codigo; let indice = $index) {
         @if (cores.at(indice); as controle) {
-          <li class="prioridades-aba__linha">
-            <span class="prioridades-aba__ordem">{{ prioridade.ordem }}</span>
-            <app-prioridade-selo class="prioridades-aba__selo" [prioridade]="prioridade" [corForcada]="controle.valid ? controle.value : null" />
+          <li class="prioridades-cores__linha">
+            <span class="prioridades-cores__ordem">{{ prioridade.ordem }}</span>
+            <app-prioridade-selo class="prioridades-cores__selo" [prioridade]="prioridade" [corForcada]="controle.valid ? controle.value : null" />
             <input
               type="color"
-              class="prioridades-aba__seletor"
+              class="prioridades-cores__seletor"
               [formControl]="controle"
               [attr.aria-label]="'Cor da prioridade ' + prioridade.descricao"
             />
             <input
               pInputText
               type="text"
-              class="prioridades-aba__hex"
+              class="prioridades-cores__hex"
               maxlength="7"
               [formControl]="controle"
               [attr.aria-label]="'Código da cor da prioridade ' + prioridade.descricao"
               [class.ng-invalid]="controle.invalid"
             />
             @if (controle.invalid) {
-              <small class="prioridades-aba__erro">Use o formato #rrggbb</small>
+              <small class="prioridades-cores__erro">Use o formato #rrggbb</small>
             }
-            <span class="prioridades-aba__acoes">
+            <span class="prioridades-cores__acoes">
               @if (mudou(indice)) {
                 <p-button label="Descartar" severity="secondary" [text]="true" size="small" [disabled]="salvando() !== null" (onClick)="descartar(indice)" />
               }

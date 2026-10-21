@@ -6,13 +6,35 @@
         <span class="configuracao-ia__contador">versão {{ versaoAtiva.versao }} ativa</span>
       }
     </div>
-    @if (estado(); as estadoAtual) {
-      <p-tag
-        [value]="'IA ' + (rotuloEstado[estadoAtual] | lowercase)"
-        [severity]="severidadeEstado[estadoAtual]"
-        [rounded]="true"
-        class="configuracao-ia__estado"
-      />
+
+    @if (jaCarregou()) {
+      <!-- Enquanto salva ou recarrega a tela, o interruptor não aceita troca (o recarregamento descartaria o que fosse mudado agora). -->
+      <div class="configuracao-ia__liga" [attr.inert]="salvando() || carregando() ? '' : null">
+        @if (estado(); as estadoAtual) {
+          <p-tag [value]="'IA ' + (rotuloEstado[estadoAtual] | lowercase)" [severity]="severidadeEstado[estadoAtual]" [rounded]="true" class="configuracao-ia__estado" />
+        }
+        <label class="configuracao-ia__interruptor">
+          <!-- O dado gravado segue sendo `iaDesligada`; o interruptor mostra o contrário (aceso = IA ligada). -->
+          <p-toggleswitch [formControl]="formulario.controls.iaDesligada" [trueValue]="false" [falseValue]="true" />
+          @if (iaLigada()) {
+            <strong class="configuracao-ia__estado-ia configuracao-ia__estado-ia--ligada"><i class="pi pi-check-circle"></i>IA ligada</strong>
+          } @else {
+            <strong class="configuracao-ia__estado-ia"><i class="pi pi-ban"></i>IA desligada</strong>
+          }
+        </label>
+        <i
+          class="pi pi-info-circle configuracao-ia__info"
+          role="img"
+          tabindex="0"
+          [attr.aria-label]="iaLigada() ? 'IA ligada: o que isso significa' : 'IA desligada: o que isso significa'"
+          [pTooltip]="
+            iaLigada()
+              ? 'O chat responde às mensagens e os check-ins e as sugestões usam a IA. Sem a chave da API no ambiente ela fica fora do ar (a chave fica no .env, não nesta tela).'
+              : 'Nenhuma chamada à IA é feita: o chat não responde e o sistema usa as telas convencionais para todos.'
+          "
+          tooltipPosition="bottom"
+        ></i>
+      </div>
     }
   </div>
 
@@ -23,312 +45,92 @@
       <p-button label="Tentar de novo" icon="pi pi-refresh" size="small" [outlined]="true" (onClick)="carregar()" />
     </div>
   } @else {
-    <p-tabs [value]="abaAtiva()" (valueChange)="abaAtiva.set($any($event))">
-      <p-tablist>
-        <p-tab value="provedor"><i class="pi pi-sliders-h mr-2"></i>Provedor e modelos</p-tab>
-        <p-tab value="prompts"><i class="pi pi-file-edit mr-2"></i>Prompts</p-tab>
-        <p-tab value="prioridades"><i class="pi pi-flag mr-2"></i>Prioridades</p-tab>
-        <p-tab value="custos"><i class="pi pi-dollar mr-2"></i>Custos</p-tab>
-      </p-tablist>
+    <div class="configuracao-ia__grade" [class.configuracao-ia__grade--recarregando]="carregando()">
+      <div class="configuracao-ia__principal">
+        <p-tabs [value]="abaAtiva()" (valueChange)="abaAtiva.set($any($event))">
+          <p-tablist>
+            <p-tab value="provedor">
+              <i class="pi pi-sliders-h mr-2"></i>Provedor e modelos
+              @if (provedorComErro()) {
+                <i class="pi pi-exclamation-circle configuracao-ia__aba-erro" role="img" aria-label="Há erros nesta aba"></i>
+              }
+            </p-tab>
+            <p-tab value="comportamento">
+              <i class="pi pi-cog mr-2"></i>Comportamento
+              @if (comportamentoComErro()) {
+                <i class="pi pi-exclamation-circle configuracao-ia__aba-erro" role="img" aria-label="Há erros nesta aba"></i>
+              }
+            </p-tab>
+            <p-tab value="prompts"><i class="pi pi-file-edit mr-2"></i>Prompts</p-tab>
+            <p-tab value="custos"><i class="pi pi-dollar mr-2"></i>Custos</p-tab>
+          </p-tablist>
 
-      <p-tabpanels>
-        <p-tabpanel value="provedor">
-          @if (!jaCarregou()) {
-            <div class="configuracao-ia__esqueleto" aria-busy="true">
-              <p-skeleton height="2.5rem" />
-              <p-skeleton height="2.5rem" />
-              <p-skeleton height="2.5rem" />
-              <p-skeleton height="2.5rem" width="60%" />
-            </div>
-          } @else {
-            <div class="configuracao-ia__grade" [class.configuracao-ia__grade--recarregando]="carregando()">
-              <form [formGroup]="formulario" class="configuracao-ia__formulario" (ngSubmit)="salvar()">
-                <div class="configuracao-ia__secoes-lado">
-                <section class="configuracao-ia__secao">
-                  <h2 class="configuracao-ia__secao-titulo">Provedor e modelos</h2>
-
-                  <div class="configuracao-ia__linha configuracao-ia__linha--alinhada-ao-topo">
-                    <div class="configuracao-ia__campo">
-                      <label class="configuracao-ia__label" for="ia-provedor">Provedor padrão</label>
-                      <p-select
-                        inputId="ia-provedor"
-                        formControlName="provedor"
-                        [options]="opcoesProvedor"
-                        optionLabel="rotulo"
-                        optionValue="valor"
-                        class="w-full"
-                      />
-                    </div>
-                    <div class="configuracao-ia__campo">
-                      <label class="configuracao-ia__label" for="ia-fallback-primeiro">Se cair, tentar</label>
-                      <p-select
-                        inputId="ia-fallback-primeiro"
-                        formControlName="fallbackPrimeiro"
-                        [options]="opcoesDoPrimeiroFallback()"
-                        optionLabel="rotulo"
-                        optionValue="valor"
-                        optionDisabled="desabilitada"
-                        class="w-full"
-                      />
-                    </div>
-                    <div class="configuracao-ia__campo">
-                      <label class="configuracao-ia__label" for="ia-fallback-segundo">Se também cair, tentar</label>
-                      <p-select
-                        inputId="ia-fallback-segundo"
-                        formControlName="fallbackSegundo"
-                        [options]="opcoesDoSegundoFallback()"
-                        optionLabel="rotulo"
-                        optionValue="valor"
-                        optionDisabled="desabilitada"
-                        class="w-full"
-                      />
-                    </div>
-                  </div>
-                  <small class="configuracao-ia__ajuda">
-                    A chamada que falha segue para o próximo provedor da lista, com os modelos dele. Provedor sem chave no servidor é pulado.
-                    Os modelos de um provedor que sai da lista ficam guardados para quando ele voltar.
-                  </small>
-
-                  <div formGroupName="modelos" class="configuracao-ia__provedores">
-                    @for (provedor of provedoresDaCadeia(); track provedor; let indice = $index) {
-                      <div [formGroupName]="provedor" class="configuracao-ia__provedor">
-                        <h3 class="configuracao-ia__provedor-titulo">
-                          {{ rotuloDoProvedor(provedor) }}
-                          <span class="configuracao-ia__provedor-papel">{{ indice === 0 ? 'padrão' : 'fallback ' + indice }}</span>
-                        </h3>
-                        <div class="configuracao-ia__linha configuracao-ia__linha--alinhada-ao-topo">
-                          <div class="configuracao-ia__campo">
-                            <label class="configuracao-ia__label" [for]="'ia-modelo-rapido-' + provedor">Modelo rápido</label>
-                            <input [id]="'ia-modelo-rapido-' + provedor" pInputText [attr.list]="'ia-sugestoes-' + provedor" formControlName="modeloRapido" maxlength="100" class="w-full" />
-                            <small class="configuracao-ia__ajuda">Conversa, listar, iniciar e pausar.</small>
-                          </div>
-                          <div class="configuracao-ia__campo">
-                            <label class="configuracao-ia__label" [for]="'ia-modelo-padrao-' + provedor">Modelo padrão</label>
-                            <input [id]="'ia-modelo-padrao-' + provedor" pInputText [attr.list]="'ia-sugestoes-' + provedor" formControlName="modeloPadrao" maxlength="100" class="w-full" />
-                            <small class="configuracao-ia__ajuda">Descrições, rigor, pad e prioridade.</small>
-                          </div>
-                          <div class="configuracao-ia__campo">
-                            <label class="configuracao-ia__label" [for]="'ia-modelo-analitico-' + provedor">Modelo analítico</label>
-                            <input [id]="'ia-modelo-analitico-' + provedor" pInputText [attr.list]="'ia-sugestoes-' + provedor" formControlName="modeloAnalitico" maxlength="100" class="w-full" />
-                            <small class="configuracao-ia__ajuda">Analisar demanda, quebrar em atividades, sugerir conexões.</small>
-                          </div>
-                        </div>
-                        <datalist [id]="'ia-sugestoes-' + provedor">
-                          @for (sugestao of sugestoesDe(provedor); track sugestao) {
-                            <option [value]="sugestao"></option>
-                          }
-                        </datalist>
-                      </div>
-                    }
-                  </div>
-
-                  @if (tentouSalvar() && errosDeProvedor().length > 0) {
-                    <ul class="configuracao-ia__erros-provedor" role="alert">
-                      @for (mensagem of errosDeProvedor(); track mensagem) {
-                        <li class="configuracao-ia__erro-campo">{{ mensagem }}</li>
-                      }
-                    </ul>
-                  }
-
-                  <div class="configuracao-ia__campo">
-                    <label class="configuracao-ia__label" for="ia-esforco">Esforço do nível analítico</label>
-                    <p-select
-                      inputId="ia-esforco"
-                      formControlName="esforcoAnalitico"
-                      [options]="opcoesEsforco"
-                      optionLabel="rotulo"
-                      optionValue="valor"
-                      class="w-full"
-                    />
-                    <small class="configuracao-ia__ajuda">Vale na Anthropic e nos modelos de raciocínio da OpenAI; o Gemini ainda ignora.</small>
-                  </div>
-                </section>
-
-                <section class="configuracao-ia__secao">
-                  <h2 class="configuracao-ia__secao-titulo">Check-in e rigor</h2>
-                  <div class="configuracao-ia__linha configuracao-ia__linha--tripla">
-                    <div class="configuracao-ia__campo">
-                      <label class="configuracao-ia__label" for="ia-checkin-minimo">Check-in, mínimo</label>
-                      <p-inputnumber inputId="ia-checkin-minimo" formControlName="checkinMinimoMinutos" suffix=" min" [min]="1" [useGrouping]="false" class="w-full" />
-                      @if (campoInvalido('checkinMinimoMinutos')) {
-                        <small class="configuracao-ia__erro-campo">Informe um valor de 1 minuto ou mais</small>
-                      }
-                    </div>
-                    <div class="configuracao-ia__campo">
-                      <label class="configuracao-ia__label" for="ia-checkin-maximo">Check-in, máximo</label>
-                      <p-inputnumber inputId="ia-checkin-maximo" formControlName="checkinMaximoMinutos" suffix=" min" [min]="1" [useGrouping]="false" class="w-full" />
-                      @if (campoInvalido('checkinMaximoMinutos')) {
-                        <small class="configuracao-ia__erro-campo">Informe um valor de 1 minuto ou mais</small>
-                      }
-                    </div>
-                    <div class="configuracao-ia__campo">
-                      <label class="configuracao-ia__label" for="ia-duracao">Duração recomendada</label>
-                      <p-inputnumber inputId="ia-duracao" formControlName="duracaoRecomendadaMinutos" suffix=" min" [min]="1" [useGrouping]="false" class="w-full" />
-                      @if (campoInvalido('duracaoRecomendadaMinutos')) {
-                        <small class="configuracao-ia__erro-campo">Informe um valor de 1 minuto ou mais</small>
-                      }
-                    </div>
-                  </div>
-                  @if (intervaloInvalido()) {
-                    <small class="configuracao-ia__erro-campo">O mínimo do check-in deve ser menor que o máximo</small>
-                  }
-
-                  <label class="configuracao-ia__interruptor">
-                    <p-toggleswitch formControlName="checkinInteligente" />
-                    <span>
-                      <strong>Check-in inteligente</strong>
-                      <small>Suspende os check-ins quando o desenvolvedor avisa que vai entrar numa reunião.</small>
-                    </span>
-                  </label>
-                  <label class="configuracao-ia__interruptor">
-                    <p-toggleswitch formControlName="rigorProporcional" />
-                    <span>
-                      <strong>Rigor proporcional ao tempo</strong>
-                      <small>Pede mais detalhe quando a execução passa da duração recomendada.</small>
-                    </span>
-                  </label>
-                  <label class="configuracao-ia__interruptor">
-                    <p-toggleswitch formControlName="deteccaoAutomatica" />
-                    <span>
-                      <strong>Detecção automática de queda</strong>
-                      <small>Quando a IA cai, o sistema volta sozinho às telas convencionais.</small>
-                    </span>
-                  </label>
-                </section>
-
-                <section class="configuracao-ia__secao">
-                  <h2 class="configuracao-ia__secao-titulo">Chat</h2>
-                  <label class="configuracao-ia__interruptor">
-                    <p-toggleswitch formControlName="duvidasCodigo" />
-                    <span>
-                      <strong>Dúvidas de programação no chat</strong>
-                      <small>Desligado, o chat só trata do Project. Ligado, também responde dúvidas de programação, com o código em bloco.</small>
-                    </span>
-                  </label>
-                  <div class="configuracao-ia__campo">
-                    <label class="configuracao-ia__label" for="ia-modo-contexto">Contexto do chat</label>
-                    <p-select
-                      inputId="ia-modo-contexto"
-                      formControlName="modoContextoChat"
-                      [options]="opcoesModoContexto"
-                      optionLabel="rotulo"
-                      optionValue="valor"
-                      class="w-full"
-                    />
-                    <small class="configuracao-ia__ajuda">{{ explicacaoDoModoEscolhido() }}</small>
-                  </div>
-                </section>
-
+          <p-tabpanels>
+            <p-tabpanel value="provedor">
+              @if (!jaCarregou()) {
+                <div class="configuracao-ia__esqueleto" aria-busy="true">
+                  <p-skeleton height="6rem" />
+                  <p-skeleton height="10rem" />
+                  <p-skeleton height="4rem" width="60%" />
                 </div>
+              } @else {
+                <app-provedor-aba
+                  [formulario]="formulario"
+                  [valor]="valorAtual()"
+                  [provedoresComChave]="provedoresComChave()"
+                  [erros]="errosDeProvedorVisiveis()"
+                [errosPorProvedor]="errosPorProvedorVisiveis()"
+                />
+              }
+            </p-tabpanel>
 
-                <section class="configuracao-ia__secao configuracao-ia__secao--alerta configuracao-ia__secao--faixa">
-                  <h2 class="configuracao-ia__secao-titulo">Ligar a IA</h2>
-                  <label class="configuracao-ia__interruptor configuracao-ia__interruptor--centrado">
-                    <!-- O dado gravado segue sendo `iaDesligada`; o interruptor mostra o contrário (aceso = IA ligada). -->
-                    <p-toggleswitch formControlName="iaDesligada" [trueValue]="false" [falseValue]="true" />
-                    <span>
-                      @if (iaLigada()) {
-                        <strong class="configuracao-ia__estado-ia configuracao-ia__estado-ia--ligada"><i class="pi pi-check-circle"></i>IA ligada</strong>
-                        <small>
-                          O chat responde às mensagens e os check-ins e as sugestões usam a IA. Sem a chave da API no ambiente ela fica "fora do ar"
-                          (a chave fica no <code>.env</code>, não nesta tela).
-                        </small>
-                      } @else {
-                        <strong class="configuracao-ia__estado-ia"><i class="pi pi-ban"></i>IA desligada</strong>
-                        <small>Nenhuma chamada à IA é feita: o chat não responde e o sistema usa as telas convencionais para todos.</small>
-                      }
-                    </span>
-                  </label>
-                </section>
-
-                <div class="configuracao-ia__acoes">
-                  <span class="configuracao-ia__dica">
-                    @if (semAlteracoes()) {
-                      Nada a salvar: o formulário é igual à versão {{ ativa()?.versao }}.
-                    } @else {
-                      Salvar cria a versão {{ proximaVersao() }}; a versão {{ ativa()?.versao }} continua no histórico.
-                    }
-                  </span>
-                  <p-button label="Descartar alterações" severity="secondary" [outlined]="true" [disabled]="semAlteracoes() || salvando()" (onClick)="descartarAlteracoes()" />
-                  <p-button
-                    type="submit"
-                    label="Salvar nova versão"
-                    icon="pi pi-save"
-                    [disabled]="semAlteracoes() || salvando()"
-                    [loading]="salvando()"
-                  />
+            <p-tabpanel value="comportamento">
+              @if (!jaCarregou()) {
+                <div class="configuracao-ia__esqueleto" aria-busy="true">
+                  <p-skeleton height="14rem" />
                 </div>
-              </form>
+              } @else {
+                <app-comportamento-aba [formulario]="formulario" [valor]="valorAtual()" [tentouSalvar]="tentouSalvar()" />
+              }
+            </p-tabpanel>
 
-              <aside class="configuracao-ia__historico" aria-label="Histórico de versões">
-                <h2 class="configuracao-ia__secao-titulo">Histórico</h2>
-                <ul class="configuracao-ia__versoes">
-                  @for (versao of versoes(); track versao.id) {
-                    <li>
-                      <button
-                        type="button"
-                        class="configuracao-ia__versao"
-                        [class.configuracao-ia__versao--aberta]="selecionada()?.id === versao.id"
-                        [attr.aria-expanded]="selecionada()?.id === versao.id"
-                        (click)="selecionarVersao(versao)"
-                      >
-                        <span class="configuracao-ia__versao-numero">Versão {{ versao.versao }}</span>
-                        @if (versao.id === ativa()?.id) {
-                          <p-tag value="Ativa" severity="success" [rounded]="true" />
-                        }
-                        <span class="configuracao-ia__versao-meta">{{ versao.usuarioNome }} · {{ versao.createdDate | date: 'dd/MM/yyyy HH:mm' }}</span>
-                      </button>
+            <p-tabpanel value="prompts">
+              <app-prompts-aba />
+            </p-tabpanel>
 
-                      @if (selecionada()?.id === versao.id) {
-                        <div class="configuracao-ia__detalhe">
-                          <dl class="configuracao-ia__valores">
-                            @for (provedor of cadeiaDaVersao(versao); track provedor; let indice = $index) {
-                              <dt class="configuracao-ia__valores-provedor">{{ indice === 0 ? 'Provedor' : 'Fallback ' + indice }}</dt>
-                              <dd class="configuracao-ia__valores-provedor">
-                                {{ rotuloDoProvedor(provedor) }}
-                                <span class="configuracao-ia__modelo-linha">rápido: {{ versao.modelosProvedor[provedor]?.modeloRapido }}</span>
-                                <span class="configuracao-ia__modelo-linha">padrão: {{ versao.modelosProvedor[provedor]?.modeloPadrao }}</span>
-                                <span class="configuracao-ia__modelo-linha">analítico: {{ versao.modelosProvedor[provedor]?.modeloAnalitico }}</span>
-                              </dd>
-                            }
-                            @if (versao.fallbacks.length === 0) {
-                              <dt>Fallback</dt><dd>Nenhum</dd>
-                            }
-                            <dt>Esforço</dt><dd>{{ rotuloDoEsforco(versao.esforcoAnalitico) | lowercase }} (analítico)</dd>
-                            <dt>Check-in</dt><dd>{{ versao.checkinMinimoMinutos }} a {{ versao.checkinMaximoMinutos }} min</dd>
-                            <dt>Duração</dt><dd>{{ versao.duracaoRecomendadaMinutos }} min</dd>
-                            <dt>Inteligente</dt><dd>{{ versao.checkinInteligente ? 'Sim' : 'Não' }}</dd>
-                            <dt>Rigor</dt><dd>{{ versao.rigorProporcional ? 'Sim' : 'Não' }}</dd>
-                            <dt>Detecção</dt><dd>{{ versao.deteccaoAutomatica ? 'Sim' : 'Não' }}</dd>
-                            <dt>Dúvidas de código</dt><dd>{{ versao.duvidasCodigo ? 'Sim' : 'Não' }} · contexto {{ rotuloDoModoContexto(versao.modoContextoChat) | lowercase }}</dd>
-                            <dt>IA</dt><dd>{{ versao.iaDesligada ? 'Desligada' : 'Ligada' }}</dd>
-                          </dl>
-                          <p-button label="Usar como base" icon="pi pi-copy" size="small" [outlined]="true" (onClick)="usarComoBase(versao)" />
-                        </div>
-                      }
-                    </li>
-                  }
-                </ul>
-              </aside>
-            </div>
-          }
-        </p-tabpanel>
+            <!-- A aba só existe enquanto está aberta: cada vez que o administrador entra nela, a consulta de custos roda de novo. -->
+            <p-tabpanel value="custos">
+              @if (abaAtiva() === 'custos') {
+                <app-custos-aba />
+              }
+            </p-tabpanel>
+          </p-tabpanels>
+        </p-tabs>
 
-        <p-tabpanel value="prompts">
-          <app-prompts-aba />
-        </p-tabpanel>
+        @if (jaCarregou() && barraDeSalvarVisivel()) {
+          <div class="configuracao-ia__acoes">
+            <span class="configuracao-ia__dica">
+              @if (semAlteracoes()) {
+                Nada a salvar: o formulário é igual à versão {{ ativa()?.versao }}.
+              } @else {
+                Salvar cria a versão {{ proximaVersao() }}; a versão {{ ativa()?.versao }} continua no histórico.
+              }
+            </span>
+            <p-button label="Descartar alterações" severity="secondary" [outlined]="true" [disabled]="semAlteracoes() || salvando()" (onClick)="descartarAlteracoes()" />
+            <p-button label="Salvar nova versão" icon="pi pi-save" [disabled]="semAlteracoes() || salvando()" [loading]="salvando()" (onClick)="salvar()" />
+          </div>
+        }
+      </div>
 
-        <p-tabpanel value="prioridades">
-          <app-prioridades-aba />
-        </p-tabpanel>
-
-        <!-- A aba só existe enquanto está aberta: cada vez que o administrador entra nela, a consulta de custos roda de novo. -->
-        <p-tabpanel value="custos">
-          @if (abaAtiva() === 'custos') {
-            <app-custos-aba />
-          }
-        </p-tabpanel>
-      </p-tabpanels>
-    </p-tabs>
+      @if (jaCarregou()) {
+        <app-historico-versoes class="configuracao-ia__historico" [versoes]="versoes()" [ativa]="ativa()" (usarComoBase)="usarComoBase($event)" />
+      } @else {
+        <div class="configuracao-ia__historico configuracao-ia__esqueleto" aria-busy="true">
+          <p-skeleton height="2rem" />
+          <p-skeleton height="2rem" />
+          <p-skeleton height="2rem" />
+        </div>
+      }
+    </div>
   }
 </div>

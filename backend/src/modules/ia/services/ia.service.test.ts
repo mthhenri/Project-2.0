@@ -344,3 +344,18 @@ test('trocar o provedor padrão e voltar: cada versão usa o trio do provedor qu
   await voltou.servico.gerar({ ...PEDIDO, nivel: NivelIaEnum.PADRAO });
   assert.deepEqual(voltou.chamadas.map((chamada) => [chamada.provedor, chamada.solicitacao.modelo]), [[TipoProvedorIaEnum.ANTHROPIC, 'sonnet']]);
 });
+
+test('o estado completo (administrador) lista só os provedores com chave no ambiente, sem expor a chave; a disponibilidade de todos não os traz', async () => {
+  const provedor = (disponivel: boolean): IaProvedor => ({ estaDisponivel: () => disponivel }) as unknown as IaProvedor;
+  const configuracaoIaService = { obterAtiva: async () => configuracao() } as unknown as ConfiguracaoIaService;
+  const servico = new IaService(configuracaoIaService, {
+    [TipoProvedorIaEnum.ANTHROPIC]: provedor(true),
+    [TipoProvedorIaEnum.GOOGLE]: provedor(false),
+    [TipoProvedorIaEnum.OPENAI]: provedor(true),
+  });
+
+  const completo = await servico.recuperarEstadoCompleto();
+  assert.deepEqual(completo.dados.provedoresComChave, [TipoProvedorIaEnum.ANTHROPIC, TipoProvedorIaEnum.OPENAI]);
+  assert.equal(completo.dados.estado, EstadoIaEnum.NO_AR);
+  assert.deepEqual(Object.keys((await servico.recuperarEstado()).dados), ['estado']);
+});

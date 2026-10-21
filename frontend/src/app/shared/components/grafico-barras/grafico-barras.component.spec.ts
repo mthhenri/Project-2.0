@@ -33,13 +33,41 @@ describe('GraficoBarrasComponent', () => {
     expect(alturas[2]).toBeGreaterThan(alturas[1]);
   });
 
-  it('cada barra leva o tooltip e a cor recebida', async () => {
+  it('cada barra leva a cor recebida e mostra o tooltip do PrimeNG (nunca o <title> nativo) ao passar o mouse', async () => {
     const montado = await montar({ categorias: categorias([[10, 20]]) });
     await montado.atualizar();
     const [primeira, segunda] = Array.from(montado.elemento.querySelectorAll<SVGRectElement>('.grafico-barras__barra'));
-    expect(primeira.querySelector('title')?.textContent).toBe('Valor 10');
+    expect(montado.elemento.querySelector('title')).toBeNull();
     expect(primeira.style.fill).toContain('51, 102, 153');
-    expect(segunda.querySelector('title')?.textContent).toBe('Valor 20');
+    expect(segunda.style.fill).toContain('153, 153, 153');
+
+    // O tooltip fica numa área HTML do tamanho da barra (o PrimeNG mede o host; um <rect> de SVG não tem largura para isso).
+    const alvos = Array.from(montado.elemento.querySelectorAll<HTMLElement>('.grafico-barras__alvo'));
+    expect(alvos.map((alvo) => alvo.style.width)).toContain(`${primeira.getAttribute('width')}px`);
+    alvos[0].dispatchEvent(new MouseEvent('mouseenter'));
+    await montado.atualizar();
+    expect(document.body.querySelector('.p-tooltip')?.textContent).toContain('Valor 10');
+    alvos[0].dispatchEvent(new MouseEvent('mouseleave'));
+  });
+
+  it('uma barra zerada continua apontável (a área do tooltip tem altura mínima) e o rótulo do eixo mostra a descrição completa', async () => {
+    const montado = await montar({ categorias: categorias([[0]]) });
+    await montado.atualizar();
+    const [alvoDaBarra, alvoDoRotulo] = Array.from(montado.elemento.querySelectorAll<HTMLElement>('.grafico-barras__alvo'));
+    expect(Number.parseFloat(alvoDaBarra.style.height)).toBeGreaterThanOrEqual(8);
+    alvoDoRotulo.dispatchEvent(new MouseEvent('mouseenter'));
+    await montado.atualizar();
+    expect(document.body.querySelector('.p-tooltip')?.textContent).toContain('Categoria 1');
+    alvoDoRotulo.dispatchEvent(new MouseEvent('mouseleave'));
+  });
+
+  it('empilhado, um segmento fino no topo não ganha área extra sobre o rótulo do total', async () => {
+    const montado = await montar({ categorias: categorias([[100, 0.5]]), empilhado: true });
+    await montado.atualizar();
+    const alturas = Array.from(montado.elemento.querySelectorAll<HTMLElement>('.grafico-barras__alvo')).slice(0, 2).map((alvo) => Number.parseFloat(alvo.style.height));
+    const retangulos = Array.from(montado.elemento.querySelectorAll('.grafico-barras__barra')).map((barra) => Number(barra.getAttribute('height')));
+    expect(alturas[1]).toBeCloseTo(retangulos[1], 5);
+    expect(alturas[1]).toBeLessThan(8);
   });
 
   it('a linha de referência só é desenhada quando há valor, e o eixo a comporta mesmo acima das barras', async () => {

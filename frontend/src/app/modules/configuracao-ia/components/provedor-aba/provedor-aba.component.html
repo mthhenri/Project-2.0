@@ -1,0 +1,143 @@
+<div class="provedor-aba" [formGroup]="formulario()">
+  <section class="provedor-aba__secao">
+    <div class="provedor-aba__cabecalho">
+      <h2 class="provedor-aba__titulo">Ordem de tentativa</h2>
+      <i
+        class="pi pi-info-circle provedor-aba__info"
+        role="img"
+        tabindex="0"
+        aria-label="Como funciona a ordem de tentativa"
+        pTooltip="A chamada que falha segue para o próximo provedor, com os modelos dele. Provedor sem chave no servidor é pulado. Os modelos de um provedor que sai da ordem ficam guardados para quando ele voltar."
+        tooltipPosition="right"
+      ></i>
+    </div>
+
+    <div class="provedor-aba__cartoes">
+      @for (cartao of cartoes(); track cartao.posicao) {
+        @if (cartao.provedor; as provedor) {
+          <div
+            class="provedor-aba__cartao"
+            [class.provedor-aba__cartao--aberto]="posicaoAberta() === cartao.posicao"
+            [class.provedor-aba__cartao--erro]="temErro(provedor)"
+            (click)="abrir(cartao.posicao)"
+          >
+            <div class="provedor-aba__cartao-topo">
+              <button
+                type="button"
+                class="provedor-aba__papel"
+                [attr.aria-pressed]="posicaoAberta() === cartao.posicao"
+                [attr.aria-label]="'Ver os modelos do cartão ' + cartao.papel"
+                (click)="abrir(cartao.posicao)"
+              >
+                {{ cartao.papel }}
+              </button>
+              @if (cartao.posicao > 0) {
+                <button type="button" class="provedor-aba__remover" [attr.aria-label]="'Remover o ' + cartao.papel" (click)="removerFallback(cartao.posicao); $event.stopPropagation()">
+                  <i class="pi pi-times" aria-hidden="true"></i>
+                </button>
+              }
+            </div>
+            <p-select
+              [formControl]="controleDoCartao(cartao.posicao)"
+              (onChange)="abrir(cartao.posicao)"
+              [options]="opcoesDoCartao(cartao.posicao)"
+              optionLabel="rotulo"
+              optionValue="valor"
+              optionDisabled="desabilitada"
+              [ariaLabel]="'Provedor do cartão ' + cartao.papel"
+              class="w-full"
+            />
+            @if (temErro(provedor)) {
+              <small class="provedor-aba__erro"><i class="pi pi-exclamation-circle" aria-hidden="true"></i> Modelos incompletos ou de outro provedor</small>
+            }
+            @if (temChave(provedor) === true) {
+              <p-tag value="Chave configurada" severity="success" icon="pi pi-check" [rounded]="true" />
+            } @else if (temChave(provedor) === false) {
+              <p-tag value="Sem chave" severity="warn" icon="pi pi-exclamation-triangle" [rounded]="true" />
+            }
+          </div>
+        } @else if (cartao.disponivel) {
+          <div class="provedor-aba__cartao provedor-aba__cartao--vazio">
+            <span class="provedor-aba__papel provedor-aba__papel--vazio">{{ cartao.papel }}</span>
+            <p-select
+              [formControl]="controleDoCartao(cartao.posicao)"
+              (onChange)="abrir(cartao.posicao)"
+              [options]="opcoesDoCartao(cartao.posicao)"
+              optionLabel="rotulo"
+              optionValue="valor"
+              optionDisabled="desabilitada"
+              placeholder="+ adicionar"
+              [ariaLabel]="'Adicionar o ' + cartao.papel"
+              class="w-full"
+            />
+          </div>
+        } @else {
+          <div class="provedor-aba__cartao provedor-aba__cartao--bloqueado">
+            <span class="provedor-aba__papel provedor-aba__papel--vazio">{{ cartao.papel }}</span>
+            <span class="provedor-aba__ajuda">Escolha o fallback anterior primeiro.</span>
+          </div>
+        }
+      }
+    </div>
+  </section>
+
+  <section class="provedor-aba__secao">
+    <div class="provedor-aba__cabecalho">
+      <h2 class="provedor-aba__titulo">Modelos: {{ rotuloDoProvedor(provedorAberto()) }}</h2>
+      <div class="provedor-aba__esforco">
+        <span class="provedor-aba__label" id="ia-esforco-titulo">Esforço do nível analítico</span>
+        <i
+          class="pi pi-info-circle provedor-aba__info"
+          role="img"
+          tabindex="0"
+          aria-label="Onde o esforço vale"
+          pTooltip="Vale na Anthropic e nos modelos de raciocínio da OpenAI; o Gemini ainda ignora."
+          tooltipPosition="left"
+        ></i>
+        <p-selectbutton
+          formControlName="esforcoAnalitico"
+          [options]="opcoesEsforco"
+          optionLabel="rotulo"
+          optionValue="valor"
+          [allowEmpty]="false"
+          size="small"
+          ariaLabelledBy="ia-esforco-titulo"
+        />
+      </div>
+    </div>
+    <div formGroupName="modelos">
+      @for (provedor of [provedorAberto()]; track provedor) {
+        <div [formGroupName]="provedor" class="provedor-aba__modelos">
+          <div class="provedor-aba__campo">
+            <label class="provedor-aba__label" [for]="'ia-modelo-rapido-' + provedor">Modelo rápido</label>
+            <input [id]="'ia-modelo-rapido-' + provedor" pInputText [attr.list]="'ia-sugestoes-' + provedor" formControlName="modeloRapido" maxlength="100" class="w-full" />
+            <small class="provedor-aba__ajuda">Conversa, listar, iniciar e pausar.</small>
+          </div>
+          <div class="provedor-aba__campo">
+            <label class="provedor-aba__label" [for]="'ia-modelo-padrao-' + provedor">Modelo padrão</label>
+            <input [id]="'ia-modelo-padrao-' + provedor" pInputText [attr.list]="'ia-sugestoes-' + provedor" formControlName="modeloPadrao" maxlength="100" class="w-full" />
+            <small class="provedor-aba__ajuda">Descrições, rigor, pad e prioridade.</small>
+          </div>
+          <div class="provedor-aba__campo">
+            <label class="provedor-aba__label" [for]="'ia-modelo-analitico-' + provedor">Modelo analítico</label>
+            <input [id]="'ia-modelo-analitico-' + provedor" pInputText [attr.list]="'ia-sugestoes-' + provedor" formControlName="modeloAnalitico" maxlength="100" class="w-full" />
+            <small class="provedor-aba__ajuda">Analisar demanda, quebrar em atividades, sugerir conexões.</small>
+          </div>
+          <datalist [id]="'ia-sugestoes-' + provedor">
+            @for (sugestao of sugestoesDe(provedor); track sugestao) {
+              <option [value]="sugestao"></option>
+            }
+          </datalist>
+        </div>
+      }
+    </div>
+
+    @if (erros().length > 0) {
+      <ul class="provedor-aba__erros" role="alert">
+        @for (mensagem of erros(); track mensagem) {
+          <li class="provedor-aba__erro">{{ mensagem }}</li>
+        }
+      </ul>
+    }
+  </section>
+</div>

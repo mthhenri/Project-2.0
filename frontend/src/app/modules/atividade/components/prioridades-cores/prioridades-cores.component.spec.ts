@@ -2,11 +2,11 @@ import { describe, it, expect } from 'vitest';
 import { TipoAtividadePrioridadeEnum, TipoUsuarioEnum } from '@project20/shared';
 import { montarComponente, ComponenteMontado } from '../../../../../testes/montar-componente';
 import { esperarRequisicao, responderErro, responderSucesso } from '../../../../../testes/http-teste';
-import { PrioridadesAbaComponent } from './prioridades-aba.component';
+import { PrioridadesCoresComponent } from './prioridades-cores.component';
 
 // Task 143: o administrador troca a cor de cada prioridade (#rrggbb); nome e ordem são fixos.
 
-type Montado = ComponenteMontado<PrioridadesAbaComponent>;
+type Montado = ComponenteMontado<PrioridadesCoresComponent>;
 
 const PRIORIDADES = [
   { codigo: TipoAtividadePrioridadeEnum.URGENTE, descricao: 'Urgente', ordem: 1, cor: '#dc2626' },
@@ -15,7 +15,7 @@ const PRIORIDADES = [
 ];
 
 async function abrir(): Promise<Montado> {
-  const montado = await montarComponente(PrioridadesAbaComponent, { usuario: TipoUsuarioEnum.ADMINISTRADOR });
+  const montado = await montarComponente(PrioridadesCoresComponent, { usuario: TipoUsuarioEnum.ADMINISTRADOR });
   responderSucesso(esperarRequisicao(montado.http, 'GET', '/atividade-prioridade'), PRIORIDADES);
   await montado.atualizar();
   return montado;
@@ -35,9 +35,9 @@ async function digitar(montado: Montado, descricao: string, valor: string): Prom
   await montado.atualizar();
 }
 
-describe('PrioridadesAbaComponent', () => {
+describe('PrioridadesCoresComponent', () => {
   it('enquanto a lista não chega mostra o esqueleto', async () => {
-    const montado = await montarComponente(PrioridadesAbaComponent, { usuario: TipoUsuarioEnum.ADMINISTRADOR });
+    const montado = await montarComponente(PrioridadesCoresComponent, { usuario: TipoUsuarioEnum.ADMINISTRADOR });
     expect(montado.elemento.querySelector('[aria-busy="true"]')).not.toBeNull();
     expect(montado.elemento.querySelector('ul')).toBeNull();
     responderSucesso(esperarRequisicao(montado.http, 'GET', '/atividade-prioridade'), PRIORIDADES);

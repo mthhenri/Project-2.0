@@ -1,5 +1,6 @@
 import { Component, ElementRef, computed, effect, input, signal, viewChild } from '@angular/core';
 import { max, scaleBand, scaleLinear } from 'd3';
+import { TooltipModule } from 'primeng/tooltip';
 
 /** Uma barra do gráfico. `valor` e a linha de referência estão na mesma unidade (o eixo mostra o número como vem). */
 export interface GraficoBarrasBarra {
@@ -33,6 +34,9 @@ interface CategoriaDesenhada {
   rotulo: string;
   descricao: string;
   centroX: number;
+  /** Faixa horizontal da categoria (do início da primeira barra ao fim da última): a área do tooltip do rótulo do eixo. */
+  esquerdaX: number;
+  larguraX: number;
   barras: BarraDesenhada[];
 }
 
@@ -40,14 +44,16 @@ const MARGEM = { superior: 22, direita: 12, inferior: 34, esquerda: 44 };
 const LARGURA_PADRAO = 640;
 /** Abaixo desta largura de barra o rótulo de valor não cabe e fica só no tooltip. */
 const LARGURA_MINIMA_DO_ROTULO = 34;
+const ALTURA_MINIMA_DO_ALVO = 8;
 
 /**
  * Gráfico de barras agrupadas em SVG (task 199): as escalas vêm do d3 e o desenho é do próprio template, sem manipular o DOM. Responde à
- * largura do contêiner, mostra o eixo em números como chegam, uma linha de referência tracejada opcional e tooltip nativo (`<title>`) em cada barra.
+ * largura do contêiner, mostra o eixo em números como chegam, uma linha de referência tracejada opcional e tooltip do PrimeNG (com seta) em cada barra e no rótulo do eixo.
  */
 @Component({
   selector: 'app-grafico-barras',
   standalone: true,
+  imports: [TooltipModule],
   templateUrl: './grafico-barras.component.html',
   styleUrl: './grafico-barras.component.scss',
 })
@@ -125,6 +131,8 @@ export class GraficoBarrasComponent {
         rotulo: categoria.rotulo,
         descricao: categoria.descricao ?? categoria.rotulo,
         centroX: inicio + larguraDaCategoria / 2,
+        esquerdaX: inicio,
+        larguraX: larguraDaCategoria,
         barras: categoria.barras.map((barra, posicao) => {
           if (empilhado) {
             const baseDoSegmento = escalaY(acumulado);
@@ -144,6 +152,15 @@ export class GraficoBarrasComponent {
       };
     });
   });
+
+  /**
+   * A área do tooltip da barra: a barra, com no mínimo 8px de altura para que uma barra zerada ainda possa ser apontada. Empilhado não leva o mínimo:
+   * um segmento fino no topo da pilha subiria sobre o rótulo do total.
+   */
+  alvoDaBarra(barra: BarraDesenhada): { topo: number; altura: number } {
+    const altura = Math.max(barra.altura, this.empilhado() ? 0 : ALTURA_MINIMA_DO_ALVO);
+    return { topo: barra.y + barra.altura - altura, altura };
+  }
 
   /** Se a barra é larga o bastante para o rótulo de valor acima dela. */
   cabeRotulo(barra: BarraDesenhada): boolean {

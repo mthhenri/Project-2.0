@@ -14,11 +14,8 @@
 
     @for (categoria of categoriasDesenhadas(); track $index) {
       <g class="grafico-barras__categoria">
-        <title>{{ categoria.descricao }}</title>
         @for (barra of categoria.barras; track $index) {
-          <rect class="grafico-barras__barra" [class.grafico-barras__barra--destaque]="barra.destaque" [class.grafico-barras__barra--empilhada]="empilhado()" [attr.x]="barra.x" [attr.y]="barra.y" [attr.width]="barra.largura" [attr.height]="barra.altura" [style.fill]="barra.cor" rx="2">
-            <title>{{ barra.descricao }}</title>
-          </rect>
+          <rect class="grafico-barras__barra" [class.grafico-barras__barra--destaque]="barra.destaque" [class.grafico-barras__barra--empilhada]="empilhado()" [attr.x]="barra.x" [attr.y]="barra.y" [attr.width]="barra.largura" [attr.height]="barra.altura" [style.fill]="barra.cor" rx="2" />
           @if (cabeRotulo(barra) && barra.rotulo) {
             <text class="grafico-barras__valor" [class.grafico-barras__valor--destaque]="barra.destaque" [attr.x]="barra.x + barra.largura / 2" [attr.y]="barra.y - 5" text-anchor="middle">{{ barra.rotulo }}</text>
           }
@@ -34,4 +31,31 @@
       }
     }
   </svg>
+
+  <!-- O tooltip do PrimeNG mede o elemento que o hospeda (offsetWidth), e um <rect> de SVG não tem isso: a seta apontaria para a borda esquerda da barra.
+       Estas áreas HTML, do tamanho exato das barras e dos rótulos, hospedam o tooltip. -->
+  @for (categoria of categoriasDesenhadas(); track $index) {
+    @for (barra of categoria.barras; track $index) {
+      <div
+        class="grafico-barras__alvo"
+        [style.left.px]="barra.x"
+        [style.top.px]="alvoDaBarra(barra).topo"
+        [style.width.px]="barra.largura"
+        [style.height.px]="alvoDaBarra(barra).altura"
+        [pTooltip]="barra.descricao"
+        tooltipPosition="top"
+        tooltipStyleClass="grafico-barras__tooltip"
+      ></div>
+    }
+    <div
+      class="grafico-barras__alvo"
+      [style.left.px]="categoria.esquerdaX"
+      [style.top.px]="altura() - margem.inferior + 4"
+      [style.width.px]="categoria.larguraX"
+      [style.height.px]="20"
+      [pTooltip]="categoria.descricao"
+      tooltipPosition="top"
+      tooltipStyleClass="grafico-barras__tooltip"
+    ></div>
+  }
 </div>

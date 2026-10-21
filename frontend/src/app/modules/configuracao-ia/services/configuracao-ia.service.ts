@@ -6,7 +6,7 @@ import {
   ConfiguracaoIaCriarDto,
   ConfiguracaoIaRecuperadaDto,
   ConfiguracaoIaResumoDto,
-  IaEstadoRecuperadoDto,
+  IaEstadoCompletoRecuperadoDto,
   PaginatedResult,
   StandardResponse,
 } from '@project20/shared';
@@ -36,7 +36,7 @@ export class ConfiguracaoIaService {
     return this.httpClient.post<StandardResponse<ConfiguracaoIaCriadaDto>>(this.urlBase, dto);
   }
 
-  recuperarEstado(): Observable<StandardResponse<IaEstadoRecuperadoDto>> {
-    return this.httpClient.get<StandardResponse<IaEstadoRecuperadoDto>>(`${ambiente.apiUrl}/ia/estado`, comFeedbackProprio());
+  recuperarEstado(): Observable<StandardResponse<IaEstadoCompletoRecuperadoDto>> {
+    return this.httpClient.get<StandardResponse<IaEstadoCompletoRecuperadoDto>>(`${ambiente.apiUrl}/ia/estado`, comFeedbackProprio());
   }
 }

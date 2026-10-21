@@ -1,13 +1,24 @@
 <div class="atividade-listagem" [class.atividade-listagem--com-barra]="quantidadeSelecionada() > 0">
   <div class="atividade-listagem__cabecalho">
     <h1 class="atividade-listagem__titulo">Atividades</h1>
-    <p-button
-      label="Nova Atividade"
-      icon="pi pi-plus"
-      pTooltip="Atalho: C"
-      tooltipPosition="left"
-      (onClick)="novaDialog.abrir(demandaId())"
-    />
+    <div class="atividade-listagem__cabecalho-acoes">
+      @if (sessao.eAdministrador()) {
+        <p-button
+          label="Alterar prioridades"
+          icon="pi pi-flag"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="prioridadesDialog.abrir()"
+        />
+      }
+      <p-button
+        label="Nova Atividade"
+        icon="pi pi-plus"
+        pTooltip="Atalho: C"
+        tooltipPosition="left"
+        (onClick)="novaDialog.abrir(demandaId())"
+      />
+    </div>
   </div>
 
   @if (sessao.eGestor() || demandaId()) {
@@ -337,6 +348,7 @@
 </div>
 
 <app-atividade-nova-dialog #novaDialog (aoCriar)="aoMudarFiltro()" />
+<app-atividade-prioridades-dialog #prioridadesDialog />
 
 <app-atividade-visualizar-dialog #visualizarDialog (aoAlterar)="buscarAtividades()" (alternarExecucao)="alternarExecucao($event)" />
 

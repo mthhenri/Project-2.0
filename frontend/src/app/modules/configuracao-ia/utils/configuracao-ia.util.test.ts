@@ -4,9 +4,12 @@ import { FormControl, FormGroup } from '@angular/forms';
 import { ConfiguracaoIaResumoDto, EsforcoIaEnum, EstadoIaEnum, ModoContextoChatEnum, TipoProvedorIaEnum } from '@project20/shared';
 import {
   OPCOES_PROVEDOR,
+  cadeiaDoFormulario,
+  camposDaCadeia,
+  removerProvedorDoCartao,
   errosDeProvedores,
+  errosPorProvedor,
   fallbacksDoFormulario,
-  opcoesDeFallback,
   ROTULO_ESTADO_IA,
   SEVERIDADE_ESTADO_IA,
   formularioIgualAVersao,
@@ -34,12 +37,6 @@ test('os três provedores podem ser escolhidos', () => {
   assert.deepEqual(OPCOES_PROVEDOR.filter((opcao) => !opcao.desabilitada).map((opcao) => opcao.valor), [
     TipoProvedorIaEnum.ANTHROPIC, TipoProvedorIaEnum.GOOGLE, TipoProvedorIaEnum.OPENAI,
   ]);
-});
-
-test('opcoesDeFallback: "Nenhum" primeiro e os provedores já usados na cadeia desabilitados', () => {
-  const opcoes = opcoesDeFallback([TipoProvedorIaEnum.ANTHROPIC, null]);
-  assert.equal(opcoes[0].valor, null);
-  assert.deepEqual(opcoes.filter((opcao) => opcao.desabilitada).map((opcao) => opcao.valor), [TipoProvedorIaEnum.ANTHROPIC]);
 });
 
 test('rotuloDoProvedor devolve o nome de cada provedor', () => {
@@ -161,4 +158,30 @@ test('errosDeProvedores aponta provedor da cadeia sem modelos e modelo de outro 
     errosDeProvedores({ ...base, modelos: { ...base.modelos, ANTHROPIC: { ...base.modelos.ANTHROPIC, modeloRapido: 'gpt-5' } } }),
     ['O modelo rápido "gpt-5" não é de Anthropic'],
   );
+});
+
+const { ANTHROPIC, GOOGLE, OPENAI } = TipoProvedorIaEnum;
+
+test('cadeiaDoFormulario e camposDaCadeia: ida e volta, com a cadeia contígua (o que não existe vira null)', () => {
+  assert.deepEqual(cadeiaDoFormulario({ provedor: ANTHROPIC, fallbackPrimeiro: null, fallbackSegundo: GOOGLE }), [ANTHROPIC, GOOGLE]);
+  assert.deepEqual(camposDaCadeia([OPENAI]), { provedor: OPENAI, fallbackPrimeiro: null, fallbackSegundo: null });
+  assert.deepEqual(camposDaCadeia([ANTHROPIC, GOOGLE, OPENAI]), { provedor: ANTHROPIC, fallbackPrimeiro: GOOGLE, fallbackSegundo: OPENAI });
+});
+
+test('removerProvedorDoCartao: tirar o 1º fallback sobe o 2º; o padrão nunca sai', () => {
+  assert.deepEqual(removerProvedorDoCartao([ANTHROPIC, GOOGLE, OPENAI], 1), [ANTHROPIC, OPENAI]);
+  assert.deepEqual(removerProvedorDoCartao([ANTHROPIC, GOOGLE, OPENAI], 2), [ANTHROPIC, GOOGLE]);
+  assert.deepEqual(removerProvedorDoCartao([ANTHROPIC, GOOGLE], 0), [ANTHROPIC, GOOGLE]);
+  assert.deepEqual(removerProvedorDoCartao([ANTHROPIC], 1), [ANTHROPIC]);
+});
+
+test('errosPorProvedor: só os provedores da cadeia com problema, cada um com as suas mensagens', () => {
+  const base = valoresDaVersao({ ...VERSAO, fallbacks: [TipoProvedorIaEnum.GOOGLE], modelosProvedor: { ...VERSAO.modelosProvedor, [TipoProvedorIaEnum.GOOGLE]: { modeloRapido: 'gemini-2.5-flash', modeloPadrao: 'gemini-2.5-pro', modeloAnalitico: 'gemini-2.5-pro' } } });
+  assert.deepEqual(errosPorProvedor(base), {});
+
+  const quebrado = { ...base, modelos: { ...base.modelos, [TipoProvedorIaEnum.GOOGLE]: { ...base.modelos[TipoProvedorIaEnum.GOOGLE], modeloRapido: '' } } };
+  assert.deepEqual(errosPorProvedor(quebrado), { [TipoProvedorIaEnum.GOOGLE]: ['Google está na cadeia, mas o modelo rápido não foi informado'] });
+
+  const deOutro = { ...base, modelos: { ...base.modelos, [TipoProvedorIaEnum.ANTHROPIC]: { ...base.modelos[TipoProvedorIaEnum.ANTHROPIC], modeloPadrao: 'gpt-5' } } };
+  assert.deepEqual(Object.keys(errosPorProvedor(deOutro)), [TipoProvedorIaEnum.ANTHROPIC]);
 });

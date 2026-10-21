@@ -1,4 +1,4 @@
-import { AbstractControl, ValidationErrors } from '@angular/forms';
+import { AbstractControl, FormBuilder, ValidationErrors, Validators } from '@angular/forms';
 import {
   ConfiguracaoIaCriarDto,
   ConfiguracaoIaModelosDto,
@@ -26,14 +26,6 @@ export const OPCOES_PROVEDOR: OpcaoDoSelect<TipoProvedorIaEnum>[] = [
   { valor: TipoProvedorIaEnum.GOOGLE, rotulo: 'Google (Gemini)' },
   { valor: TipoProvedorIaEnum.OPENAI, rotulo: 'OpenAI' },
 ];
-
-/** Opções de um fallback: os provedores já usados na cadeia (o padrão e o outro fallback) ficam desabilitados; "Nenhum" limpa o campo. */
-export function opcoesDeFallback(usados: Array<TipoProvedorIaEnum | null>): OpcaoDoSelect<TipoProvedorIaEnum | null>[] {
-  return [
-    { valor: null, rotulo: 'Nenhum' },
-    ...OPCOES_PROVEDOR.map((opcao) => ({ ...opcao, desabilitada: usados.includes(opcao.valor) })),
-  ];
-}
 
 export const OPCOES_ESFORCO: OpcaoDoSelect<EsforcoIaEnum>[] = [
   { valor: EsforcoIaEnum.BAIXO, rotulo: 'Baixo' },
@@ -127,6 +119,20 @@ function modelosParaGravar(valor: ValorFormularioConfiguracaoIa): ConfiguracaoIa
   return mapa;
 }
 
+/**
+ * Os erros de modelo de cada provedor da cadeia, pela mesma regra do `shared` aplicada a um provedor por vez (a cadeia em si não repete provedor na tela).
+ * Só entram provedores com erro: a tela marca o cartão deles e abre o primeiro.
+ */
+export function errosPorProvedor(valor: ValorFormularioConfiguracaoIa): Partial<Record<TipoProvedorIaEnum, string[]>> {
+  const modelos = modelosParaGravar(valor);
+  const porProvedor: Partial<Record<TipoProvedorIaEnum, string[]>> = {};
+  for (const provedor of cadeiaDoFormulario(valor)) {
+    const erros = validarProvedoresDaConfiguracaoIa({ provedor, fallbacks: [], modelosProvedor: { [provedor]: modelos[provedor] } });
+    if (erros.length > 0) porProvedor[provedor] = erros;
+  }
+  return porProvedor;
+}
+
 /** Os erros de provedor e modelo da regra do `shared` (a mesma da service), para mostrar antes de salvar. */
 export function errosDeProvedores(valor: ValorFormularioConfiguracaoIa): string[] {
   return validarProvedoresDaConfiguracaoIa({
@@ -190,3 +196,57 @@ export function paraDtoDeCriacao(valor: ValorFormularioConfiguracaoIa): Configur
 
 /** Quantos fallbacks a tela oferece (o máximo da regra do `shared`). */
 export const QUANTIDADE_DE_FALLBACKS = MAXIMO_FALLBACKS_IA;
+
+/** O trio de modelos de um provedor: texto livre de até 100 caracteres; se estão preenchidos, o que falta ou destoa do provedor vem da regra do shared. */
+function grupoDeModelos(formBuilder: FormBuilder) {
+  return formBuilder.nonNullable.group({
+    modeloRapido: ['', Validators.maxLength(100)],
+    modeloPadrao: ['', Validators.maxLength(100)],
+    modeloAnalitico: ['', Validators.maxLength(100)],
+  });
+}
+
+/** O formulário da configuração da IA (compartilhado pela página e pelas abas dela). Um trio por provedor, sempre presente: o de quem está fora da cadeia fica guardado. */
+export function criarFormularioConfiguracaoIa(formBuilder: FormBuilder) {
+  return formBuilder.nonNullable.group(
+    {
+      provedor: [TipoProvedorIaEnum.ANTHROPIC, Validators.required],
+      fallbackPrimeiro: [null as TipoProvedorIaEnum | null],
+      fallbackSegundo: [null as TipoProvedorIaEnum | null],
+      modelos: formBuilder.nonNullable.group({
+        [TipoProvedorIaEnum.ANTHROPIC]: grupoDeModelos(formBuilder),
+        [TipoProvedorIaEnum.GOOGLE]: grupoDeModelos(formBuilder),
+        [TipoProvedorIaEnum.OPENAI]: grupoDeModelos(formBuilder),
+      }),
+      esforcoAnalitico: [EsforcoIaEnum.MEDIO, Validators.required],
+      checkinMinimoMinutos: [null as number | null, [Validators.required, Validators.min(1)]],
+      checkinMaximoMinutos: [null as number | null, [Validators.required, Validators.min(1)]],
+      duracaoRecomendadaMinutos: [null as number | null, [Validators.required, Validators.min(1)]],
+      checkinInteligente: [true],
+      rigorProporcional: [true],
+      deteccaoAutomatica: [true],
+      duvidasCodigo: [false],
+      modoContextoChat: [ModoContextoChatEnum.MISTURADO, Validators.required],
+      iaDesligada: [true],
+    },
+    { validators: intervaloDoCheckinValido },
+  );
+}
+
+export type FormularioConfiguracaoIa = ReturnType<typeof criarFormularioConfiguracaoIa>;
+
+/** A cadeia (padrão e fallbacks) do formulário, na ordem em que os provedores são tentados. */
+export function cadeiaDoFormulario(valor: Pick<ValorFormularioConfiguracaoIa, 'provedor' | 'fallbackPrimeiro' | 'fallbackSegundo'>): TipoProvedorIaEnum[] {
+  return cadeiaDeProvedoresIa({ provedor: valor.provedor, fallbacks: fallbacksDoFormulario(valor) });
+}
+
+/** A cadeia como os três campos do formulário (o que não existe vira `null`: a cadeia é contígua). */
+export function camposDaCadeia(cadeia: TipoProvedorIaEnum[]): Pick<ValorFormularioConfiguracaoIa, 'provedor' | 'fallbackPrimeiro' | 'fallbackSegundo'> {
+  return { provedor: cadeia[0], fallbackPrimeiro: cadeia[1] ?? null, fallbackSegundo: cadeia[2] ?? null };
+}
+
+/** Tira um fallback da cadeia (o seguinte sobe um lugar); o padrão (posição 0) nunca sai. */
+export function removerProvedorDoCartao(cadeia: TipoProvedorIaEnum[], posicao: number): TipoProvedorIaEnum[] {
+  if (posicao <= 0 || posicao >= cadeia.length) return cadeia;
+  return cadeia.filter((_, indice) => indice !== posicao);
+}

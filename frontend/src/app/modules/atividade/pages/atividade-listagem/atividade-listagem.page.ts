@@ -61,6 +61,7 @@ import {
 } from '../../models/atividade.model';
 import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
 import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
+import { AtividadePrioridadesDialogComponent } from '../../components/atividade-prioridades-dialog/atividade-prioridades-dialog.component';
 import { AtividadeNovaDialogComponent } from '../../components/atividade-nova-dialog/atividade-nova-dialog.component';
 import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
 import { BarraRecargaComponent } from '../../../../shared/components/barra-recarga/barra-recarga.component';
@@ -93,6 +94,7 @@ type CampoDescricaoDemanda = 'descricaoCliente' | 'descricaoTecnica' | 'document
     DialogFormularioDirective,
     DialogDicaAtalhosComponent,
     AtividadeNovaDialogComponent,
+    AtividadePrioridadesDialogComponent,
     ReactiveFormsModule,
     TableModule,
     ButtonModule,

@@ -65,7 +65,11 @@ describe('ProjetoVolumeComponent — mensal', () => {
     await carregarMensal(montado, [item(1, 150, 2)]);
     const gastas = barras(montado)[0] as SVGRectElement;
     expect(gastas.style.fill).toContain('--p-red-500');
-    expect(gastas.querySelector('title')?.textContent).toContain('acima do esperado');
+    const alvo = montado.elemento.querySelector('.grafico-barras__alvo') as HTMLElement;
+    alvo.dispatchEvent(new MouseEvent('mouseenter'));
+    await montado.atualizar();
+    expect(document.body.querySelector('.p-tooltip')?.textContent).toContain('acima do esperado');
+    alvo.dispatchEvent(new MouseEvent('mouseleave'));
   });
 
   it('mês sem execução: barra de altura zero, sem erro', async () => {
@@ -156,7 +160,12 @@ describe('ProjetoVolumeComponent — anual', () => {
     expect(barras(montado)).toHaveLength(24);
     expect(texto(montado)).toContain('Jan');
     expect(texto(montado)).toContain('Dez');
-    expect(texto(montado)).toContain('15h 18min');
+    // Cada categoria tem a área da barra e a do rótulo do eixo: a de outubro (10ª categoria) é a de índice 18.
+    const outubro = montado.elemento.querySelectorAll('.grafico-barras__alvo')[18] as HTMLElement;
+    outubro.dispatchEvent(new MouseEvent('mouseenter'));
+    await montado.atualizar();
+    expect(document.body.querySelector('.p-tooltip')?.textContent).toContain('15h 18min');
+    outubro.dispatchEvent(new MouseEvent('mouseleave'));
   });
 
   it('a linha tracejada do esperado só aparece no projeto que tem volume definido', async () => {

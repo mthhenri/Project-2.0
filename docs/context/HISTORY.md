@@ -12,6 +12,25 @@
 
 ---
 
+## 2026-10-21 — Task 204: redesenho da tela de Configurações da IA, cores das prioridades em Atividades e tooltip PrimeNG no sistema inteiro
+
+Pedido do autor depois da 203: a tela estava longa e misturada (check-in, chat e liga/desliga dentro de "Provedor e modelos"; histórico dividindo a largura; cor das prioridades numa aba da IA) e o `title` nativo do HTML
+era feio. Decisões em conversa com mockups (histórico fixo à direita; cartões de provedor com um provedor por vez; "Comportamento" como nome da aba de check-in e chat), registradas em `docs/specs/done/204-*.spec.md`.
+
+- **Tela:** liga/desliga no cabeçalho, histórico em coluna fixa, barra de salvar na base (nas abas Prompts e Custos só com alteração pendente); abas Provedor e modelos, Comportamento, Prompts e Custos.
+  Componentes novos `app-provedor-aba` (cartões padrão/1º/2º fallback com estado da chave, modelos do cartão aberto, esforço), `app-comportamento-aba` e `app-historico-versoes`; o formulário virou
+  `criarFormularioConfiguracaoIa` (util) e continua da página. Erro numa aba que não é a aberta: indicador na aba e o salvar leva a ela; erro de modelo marca o cartão do provedor e abre o primeiro com problema.
+- **Chave por provedor:** `GET /ia/estado` (só administrador) devolve `provedoresComChave` (`IaEstadoCompletoRecuperadoDto`, nunca a chave); a `disponibilidade` aberta a todos segue só com o estado. Sem migration.
+- **Prioridades:** a aba saiu; `app-prioridades-cores` (o componente antigo, movido) vive no dialog "Alterar prioridades" da listagem de Atividades, só para administrador.
+- **Tooltip:** regra em `docs/CONVENTIONS.md` (nunca `title`/`<title>`, sempre `pTooltip`). Trocados o card do Ponto e o gráfico de barras (compartilhado: Custos e as duas visões de `projeto-volume`).
+- **Testes:** backend 1146 → 1151 (`IaService.recuperarEstadoCompleto`), frontend 1463 → 1481 (cartões, barra de salvar, erro por cartão, liga/desliga, dialog de prioridades, tooltip do gráfico, util de cadeia), `shared`
+  180, builds verdes. Sem lint (P-001).
+- **Verificação ao vivo** (1366×768, 1920×1080, 1080×1920, claro e escuro) em `docs/specs/done/204-*/verificacao.md`. **Achados só da verificação:** a tela passava de 1500 px (histórico sem limite de altura: `height: 100%` num
+  pai sem altura) e foi compactada para caber em 1366×768; o `pTooltip` num `<rect>` de SVG saía centrado na borda esquerda porque o PrimeNG mede `offsetWidth` (SVG não tem), então o tooltip foi para áreas HTML sobre as
+  barras, com `max-width` global para não quebrar "15h 18min" no meio.
+- **Revisão independente** (`revisor`): 7 achados, todos tratados (ver o fecho da spec). A regra do `CONVENTIONS.md` chegou a dizer para pôr `pTooltip` no `<rect>`; foi corrigida antes do commit.
+- **Pendente:** chamada real ao Gemini e à OpenAI (sem chave, como na 203); testes de integração não foram repetidos (nenhum repository mudou); os achados 4–7 da revisão da 203 seguem abertos.
+
 ## 2026-10-20 — Task 203 (ajustes da revisão): id de ferramenta do Gemini, pensamento nas chamadas curtas e data AAAA-MM-DD nos custos
 
 Revisão independente da 203 (antes do merge) achou três pontos nos provedores novos, corrigidos com testes (backend 1146 → 1150 verdes; build ok):

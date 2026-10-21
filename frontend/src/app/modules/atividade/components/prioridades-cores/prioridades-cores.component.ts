@@ -9,17 +9,17 @@ import { AtividadePrioridadeService } from '../../../../core/services/atividade-
 import { PrioridadeSeloComponent } from '../../../../shared/components/prioridade-selo/prioridade-selo.component';
 
 /**
- * Aba "Prioridades" das Configurações da IA (task 143, exclusiva de administrador): a cor de cada prioridade da atividade, com o selo
- * ao vivo. Nome e ordem são fixos; só a cor muda. Análogo visual: a aba Provedor e modelos (cartões com borda).
+ * Cores das prioridades da atividade (task 143, exclusiva de administrador; task 204 moveu da aba "Prioridades" da IA para o dialog da
+ * listagem de atividades): a cor de cada prioridade, com o selo ao vivo. Nome e ordem são fixos; só a cor muda.
  */
 @Component({
-  selector: 'app-prioridades-aba',
+  selector: 'app-prioridades-cores',
   standalone: true,
   imports: [ReactiveFormsModule, ButtonModule, InputTextModule, SkeletonModule, PrioridadeSeloComponent],
-  templateUrl: './prioridades-aba.component.html',
-  styleUrl: './prioridades-aba.component.scss',
+  templateUrl: './prioridades-cores.component.html',
+  styleUrl: './prioridades-cores.component.scss',
 })
-export class PrioridadesAbaComponent implements OnInit {
+export class PrioridadesCoresComponent implements OnInit {
   private readonly prioridadeService = inject(AtividadePrioridadeService);
   private readonly messageService = inject(MessageService);
 

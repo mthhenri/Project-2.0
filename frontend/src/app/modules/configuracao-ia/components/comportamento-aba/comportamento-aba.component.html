@@ -1,0 +1,76 @@
+<div class="comportamento-aba" [formGroup]="formulario()">
+  <section class="comportamento-aba__secao">
+    <h2 class="comportamento-aba__titulo">Check-in e rigor</h2>
+    <div class="comportamento-aba__linha">
+      <div class="comportamento-aba__campo">
+        <label class="comportamento-aba__label" for="ia-checkin-minimo">Check-in, mínimo</label>
+        <p-inputnumber inputId="ia-checkin-minimo" formControlName="checkinMinimoMinutos" suffix=" min" [min]="1" [useGrouping]="false" class="w-full" />
+        @if (campoInvalido('checkinMinimoMinutos')) {
+          <small class="comportamento-aba__erro">Informe um valor de 1 minuto ou mais</small>
+        }
+      </div>
+      <div class="comportamento-aba__campo">
+        <label class="comportamento-aba__label" for="ia-checkin-maximo">Check-in, máximo</label>
+        <p-inputnumber inputId="ia-checkin-maximo" formControlName="checkinMaximoMinutos" suffix=" min" [min]="1" [useGrouping]="false" class="w-full" />
+        @if (campoInvalido('checkinMaximoMinutos')) {
+          <small class="comportamento-aba__erro">Informe um valor de 1 minuto ou mais</small>
+        }
+      </div>
+      <div class="comportamento-aba__campo">
+        <label class="comportamento-aba__label" for="ia-duracao">Duração recomendada</label>
+        <p-inputnumber inputId="ia-duracao" formControlName="duracaoRecomendadaMinutos" suffix=" min" [min]="1" [useGrouping]="false" class="w-full" />
+        @if (campoInvalido('duracaoRecomendadaMinutos')) {
+          <small class="comportamento-aba__erro">Informe um valor de 1 minuto ou mais</small>
+        }
+      </div>
+    </div>
+    @if (intervaloInvalido()) {
+      <small class="comportamento-aba__erro">O mínimo do check-in deve ser menor que o máximo</small>
+    }
+
+    <label class="comportamento-aba__interruptor">
+      <p-toggleswitch formControlName="checkinInteligente" />
+      <span>
+        <strong>Check-in inteligente</strong>
+        <small>Suspende os check-ins quando o desenvolvedor avisa que vai entrar numa reunião.</small>
+      </span>
+    </label>
+    <label class="comportamento-aba__interruptor">
+      <p-toggleswitch formControlName="rigorProporcional" />
+      <span>
+        <strong>Rigor proporcional ao tempo</strong>
+        <small>Pede mais detalhe quando a execução passa da duração recomendada.</small>
+      </span>
+    </label>
+    <label class="comportamento-aba__interruptor">
+      <p-toggleswitch formControlName="deteccaoAutomatica" />
+      <span>
+        <strong>Detecção automática de queda</strong>
+        <small>Quando a IA cai, o sistema volta sozinho às telas convencionais.</small>
+      </span>
+    </label>
+  </section>
+
+  <section class="comportamento-aba__secao">
+    <h2 class="comportamento-aba__titulo">Chat</h2>
+    <label class="comportamento-aba__interruptor">
+      <p-toggleswitch formControlName="duvidasCodigo" />
+      <span>
+        <strong>Dúvidas de programação no chat</strong>
+        <small>Desligado, o chat só trata do Project. Ligado, também responde dúvidas de programação, com o código em bloco.</small>
+      </span>
+    </label>
+    <div class="comportamento-aba__campo">
+      <label class="comportamento-aba__label" for="ia-modo-contexto">Contexto do chat</label>
+      <p-select
+        inputId="ia-modo-contexto"
+        formControlName="modoContextoChat"
+        [options]="opcoesModoContexto"
+        optionLabel="rotulo"
+        optionValue="valor"
+        class="w-full"
+      />
+      <small class="comportamento-aba__ajuda">{{ explicacaoDoModoEscolhido() }}</small>
+    </div>
+  </section>
+</div>

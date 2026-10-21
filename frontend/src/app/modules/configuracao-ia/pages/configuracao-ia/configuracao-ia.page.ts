@@ -1,66 +1,56 @@
 import { Component, DestroyRef, OnInit, computed, inject, signal, viewChild } from '@angular/core';
-import { DatePipe, LowerCasePipe } from '@angular/common';
+import { LowerCasePipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
-import { InputNumberModule } from 'primeng/inputnumber';
-import { InputTextModule } from 'primeng/inputtext';
-import { SelectModule } from 'primeng/select';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TabsModule } from 'primeng/tabs';
 import { TagModule } from 'primeng/tag';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
-import { ConfiguracaoIaResumoDto, EsforcoIaEnum, EstadoIaEnum, ModoContextoChatEnum, TipoProvedorIaEnum, cadeiaDeProvedoresIa } from '@project20/shared';
+import { TooltipModule } from 'primeng/tooltip';
+import { ConfiguracaoIaResumoDto, EstadoIaEnum, TipoProvedorIaEnum } from '@project20/shared';
 import { PromptsAbaComponent } from '../../components/prompts-aba/prompts-aba.component';
 import { CustosAbaComponent } from '../../components/custos-aba/custos-aba.component';
-import { PrioridadesAbaComponent } from '../../components/prioridades-aba/prioridades-aba.component';
+import { ComportamentoAbaComponent } from '../../components/comportamento-aba/comportamento-aba.component';
+import { HistoricoVersoesComponent } from '../../components/historico-versoes/historico-versoes.component';
+import { ProvedorAbaComponent } from '../../components/provedor-aba/provedor-aba.component';
 import { ConfiguracaoIaService } from '../../services/configuracao-ia.service';
 import {
-  EXPLICACAO_MODO_CONTEXTO,
-  OPCOES_ESFORCO,
-  OPCOES_MODO_CONTEXTO,
-  OPCOES_PROVEDOR,
-  QUANTIDADE_DE_FALLBACKS,
   ROTULO_ESTADO_IA,
   SEVERIDADE_ESTADO_IA,
-  SUGESTOES_MODELOS,
   ValorFormularioConfiguracaoIa,
+  criarFormularioConfiguracaoIa,
   errosDeProvedores,
-  fallbacksDoFormulario,
-  opcoesDeFallback,
+  errosPorProvedor,
   formularioIgualAVersao,
-  intervaloDoCheckinValido,
   paraDtoDeCriacao,
-  rotuloDoEsforco,
-  rotuloDoModoContexto,
-  rotuloDoProvedor,
   valoresDaVersao,
 } from '../../utils/configuracao-ia.util';
 
 /**
- * Configurações da IA (task 132, exclusiva de administrador). Cada gravação cria uma versão nova (a antiga nunca muda); o histórico
- * mostra as versões e "Usar como base" só preenche o formulário. Análogo visual: a tela de Tags (página com título e conteúdo em cartões).
+ * Configurações da IA (task 132, exclusiva de administrador; redesenhada na task 204). Cada gravação cria uma versão nova (a antiga nunca
+ * muda). Fora das abas ficam o liga/desliga da IA, o histórico (coluna fixa) e a barra de salvar; as abas são Provedor e modelos,
+ * Comportamento (check-in e chat), Prompts e Custos. "Usar como base" só preenche o formulário. Análogo visual: a tela de Tags.
  */
 @Component({
   selector: 'app-configuracao-ia-page',
   standalone: true,
   imports: [
-    DatePipe,
     LowerCasePipe,
     ReactiveFormsModule,
     ButtonModule,
-    InputNumberModule,
-    InputTextModule,
-    SelectModule,
     SkeletonModule,
     TabsModule,
     TagModule,
     ToggleSwitchModule,
+    TooltipModule,
+    ProvedorAbaComponent,
+    ComportamentoAbaComponent,
+    HistoricoVersoesComponent,
     PromptsAbaComponent,
-    PrioridadesAbaComponent,
     CustosAbaComponent,
   ],
   templateUrl: './configuracao-ia.page.html',
@@ -72,14 +62,6 @@ export class ConfiguracaoIaPage implements OnInit {
   private readonly messageService = inject(MessageService);
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly opcoesProvedor = OPCOES_PROVEDOR;
-  readonly quantidadeDeFallbacks = QUANTIDADE_DE_FALLBACKS;
-  readonly opcoesEsforco = OPCOES_ESFORCO;
-  readonly opcoesModoContexto = OPCOES_MODO_CONTEXTO;
-  readonly explicacaoModoContexto = EXPLICACAO_MODO_CONTEXTO;
-  readonly rotuloDoEsforco = rotuloDoEsforco;
-  readonly rotuloDoModoContexto = rotuloDoModoContexto;
-  readonly rotuloDoProvedor = rotuloDoProvedor;
   readonly rotuloEstado = ROTULO_ESTADO_IA;
   readonly severidadeEstado = SEVERIDADE_ESTADO_IA;
 
@@ -94,36 +76,13 @@ export class ConfiguracaoIaPage implements OnInit {
   readonly ativa = signal<ConfiguracaoIaResumoDto | null>(null);
   readonly versoes = signal<ConfiguracaoIaResumoDto[]>([]);
   readonly estado = signal<EstadoIaEnum | null>(null);
-  /** Versão do histórico aberta em leitura. */
-  readonly selecionada = signal<ConfiguracaoIaResumoDto | null>(null);
+  /** Provedores com chave de API no ambiente; `null` quando o estado não pôde ser lido. */
+  readonly provedoresComChave = signal<TipoProvedorIaEnum[] | null>(null);
   readonly tentouSalvar = signal(false);
 
-  readonly formulario = this.formBuilder.nonNullable.group(
-    {
-      provedor: [TipoProvedorIaEnum.ANTHROPIC, Validators.required],
-      fallbackPrimeiro: [null as TipoProvedorIaEnum | null],
-      fallbackSegundo: [null as TipoProvedorIaEnum | null],
-      // Um trio por provedor, sempre presente: o de quem está fora da cadeia fica guardado. Quem pode estar vazio é decidido pela regra do shared.
-      modelos: this.formBuilder.nonNullable.group({
-        [TipoProvedorIaEnum.ANTHROPIC]: this.grupoDeModelos(),
-        [TipoProvedorIaEnum.GOOGLE]: this.grupoDeModelos(),
-        [TipoProvedorIaEnum.OPENAI]: this.grupoDeModelos(),
-      }),
-      esforcoAnalitico: [EsforcoIaEnum.MEDIO, Validators.required],
-      checkinMinimoMinutos: [null as number | null, [Validators.required, Validators.min(1)]],
-      checkinMaximoMinutos: [null as number | null, [Validators.required, Validators.min(1)]],
-      duracaoRecomendadaMinutos: [null as number | null, [Validators.required, Validators.min(1)]],
-      checkinInteligente: [true],
-      rigorProporcional: [true],
-      deteccaoAutomatica: [true],
-      duvidasCodigo: [false],
-      modoContextoChat: [ModoContextoChatEnum.MISTURADO, Validators.required],
-      iaDesligada: [true],
-    },
-    { validators: intervaloDoCheckinValido },
-  );
+  readonly formulario = criarFormularioConfiguracaoIa(this.formBuilder);
 
-  private readonly valorAtual = signal<ValorFormularioConfiguracaoIa>(this.formulario.getRawValue());
+  readonly valorAtual = signal<ValorFormularioConfiguracaoIa>(this.formulario.getRawValue());
 
   /** Nada a salvar: o formulário é igual à versão ativa. */
   readonly semAlteracoes = computed(() => {
@@ -131,17 +90,24 @@ export class ConfiguracaoIaPage implements OnInit {
     return !ativa || formularioIgualAVersao(this.valorAtual(), ativa);
   });
 
-  /** Os provedores da cadeia, na ordem em que são tentados: cada um mostra o seu trio de modelos. */
-  readonly provedoresDaCadeia = computed(() => {
-    const valor = this.valorAtual();
-    return cadeiaDeProvedoresIa({ provedor: valor.provedor, fallbacks: fallbacksDoFormulario(valor) });
-  });
-
-  readonly opcoesDoPrimeiroFallback = computed(() => opcoesDeFallback([this.valorAtual().provedor, this.valorAtual().fallbackSegundo]));
-  readonly opcoesDoSegundoFallback = computed(() => opcoesDeFallback([this.valorAtual().provedor, this.valorAtual().fallbackPrimeiro]));
-
   /** Erros de provedor e modelo (a regra do shared, a mesma da service): aparecem depois da primeira tentativa de salvar. */
   readonly errosDeProvedor = computed(() => errosDeProvedores(this.valorAtual()));
+  readonly errosDeProvedorVisiveis = computed(() => (this.tentouSalvar() ? this.errosDeProvedor() : []));
+  readonly errosPorProvedorVisiveis = computed(() => (this.tentouSalvar() ? errosPorProvedor(this.valorAtual()) : {}));
+
+  /** Algum campo da aba Comportamento inválido (minutos ou intervalo do check-in). */
+  readonly comportamentoInvalido = computed(() => {
+    this.valorAtual();
+    const { checkinMinimoMinutos, checkinMaximoMinutos, duracaoRecomendadaMinutos } = this.formulario.controls;
+    return checkinMinimoMinutos.invalid || checkinMaximoMinutos.invalid || duracaoRecomendadaMinutos.invalid || this.formulario.hasError('intervaloInvalido');
+  });
+
+  /** As abas com erro depois de uma tentativa de salvar ganham um indicador. */
+  readonly provedorComErro = computed(() => this.tentouSalvar() && this.errosDeProvedor().length > 0);
+  readonly comportamentoComErro = computed(() => this.tentouSalvar() && this.comportamentoInvalido());
+
+  /** A barra de salvar é da configuração versionada: fica nas abas dela e, nas outras, só enquanto há algo pendente (o liga/desliga mexe nela de qualquer aba). */
+  readonly barraDeSalvarVisivel = computed(() => ['provedor', 'comportamento'].includes(this.abaAtiva()) || !this.semAlteracoes());
 
   readonly proximaVersao = computed(() => (this.ativa()?.versao ?? 0) + 1);
 
@@ -180,6 +146,7 @@ export class ConfiguracaoIaPage implements OnInit {
         this.ativa.set(ativa.dados);
         this.versoes.set(versoes.dados.itens);
         this.estado.set(estado?.dados?.estado ?? null);
+        this.provedoresComChave.set(estado?.dados?.provedoresComChave ?? null);
         this.formulario.reset(valoresDaVersao(ativa.dados));
         this.valorAtual.set(this.formulario.getRawValue());
         this.tentouSalvar.set(false);
@@ -195,14 +162,19 @@ export class ConfiguracaoIaPage implements OnInit {
 
   salvar(): void {
     this.tentouSalvar.set(true);
-    if (this.formulario.invalid || this.errosDeProvedor().length > 0 || this.semAlteracoes() || this.salvando()) return;
+    if (this.formulario.invalid || this.errosDeProvedor().length > 0) {
+      // O erro pode estar numa aba que não é a aberta: leva à primeira com problema.
+      if (this.errosDeProvedor().length > 0) this.abaAtiva.set('provedor');
+      else if (this.comportamentoInvalido()) this.abaAtiva.set('comportamento');
+      return;
+    }
+    if (this.semAlteracoes() || this.salvando()) return;
 
     this.salvando.set(true);
     this.configuracaoIaService.criar(paraDtoDeCriacao(this.formulario.getRawValue())).subscribe({
       next: (resposta) => {
         this.salvando.set(false);
         this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: resposta.mensagem });
-        this.selecionada.set(null);
         this.carregar();
       },
       error: () => this.salvando.set(false),
@@ -218,49 +190,15 @@ export class ConfiguracaoIaPage implements OnInit {
     this.tentouSalvar.set(false);
   }
 
-  selecionarVersao(versao: ConfiguracaoIaResumoDto): void {
-    this.selecionada.set(this.selecionada()?.id === versao.id ? null : versao);
-  }
-
   /** Preenche o formulário com os valores da versão; nada é gravado até salvar. */
   usarComoBase(versao: ConfiguracaoIaResumoDto): void {
     this.formulario.reset(valoresDaVersao(versao));
     this.valorAtual.set(this.formulario.getRawValue());
     this.formulario.markAsDirty();
-    this.selecionada.set(null);
     this.messageService.add({
       severity: 'info',
       summary: 'Valores carregados',
       detail: `Valores da versão ${versao.versao} no formulário. Salvar cria a versão ${this.proximaVersao()}.`,
     });
-  }
-
-  /** O texto que explica o modo de contexto escolhido no formulário. */
-  readonly explicacaoDoModoEscolhido = computed(() => this.explicacaoModoContexto[this.valorAtual().modoContextoChat]);
-
-  /** Os campos do trio guardam texto livre de até 100 caracteres; se estão preenchidos, o que falta ou destoa do provedor vem da regra do shared. */
-  private grupoDeModelos() {
-    return this.formBuilder.nonNullable.group({
-      modeloRapido: ['', Validators.maxLength(100)],
-      modeloPadrao: ['', Validators.maxLength(100)],
-      modeloAnalitico: ['', Validators.maxLength(100)],
-    });
-  }
-
-  cadeiaDaVersao(versao: ConfiguracaoIaResumoDto): TipoProvedorIaEnum[] {
-    return cadeiaDeProvedoresIa(versao);
-  }
-
-  sugestoesDe(provedor: TipoProvedorIaEnum): readonly string[] {
-    return SUGESTOES_MODELOS[provedor];
-  }
-
-  campoInvalido(nome: keyof ValorFormularioConfiguracaoIa): boolean {
-    const controle = this.formulario.controls[nome];
-    return controle.invalid && (controle.touched || this.tentouSalvar());
-  }
-
-  intervaloInvalido(): boolean {
-    return this.formulario.hasError('intervaloInvalido') && (this.tentouSalvar() || this.formulario.controls.checkinMaximoMinutos.touched);
   }
 }

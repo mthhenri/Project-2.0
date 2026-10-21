@@ -427,6 +427,7 @@ frontend nunca veem o id.
 - **Signals** (`signal`/`computed`/`effect`) para estado reativo — evitar `Subject`/`BehaviorSubject`
 - **Reactive Forms** em **todos** os formulários — **sem template-driven forms**, **sem `ngModel`/`FormsModule`**
 - **Lazy loading** por rota via `loadComponent`/`loadChildren`
+- **Tooltip** é sempre o do PrimeNG (`pTooltip` + `tooltipPosition`, com `TooltipModule` em `imports`) — **nunca** o atributo `title` do HTML nem `<title>` de SVG (sem seta, feio e fora do tema). Em SVG o `pTooltip` **não** vai no elemento (`<rect>`, `<text>`): o PrimeNG mede o host por `offsetWidth`, que SVG não tem, e a seta aponta para a borda esquerda; use uma área HTML posicionada sobre o elemento (ver `app-grafico-barras`).
 
 **Testes de componente (task 172).** O frontend roda no Vitest pelo `ng test` (builder
 `@angular/build:unit-test`, jsdom); `npm test` da raiz o inclui. Nome do arquivo: `<nome>.spec.ts` ao
@@ -506,6 +507,7 @@ var(--p-primary-600)  // ícone/texto ativo, títulos em destaque
 | Duas execuções ativas no mesmo usuário | Validar na service antes de iniciar |
 | Extrapolar escopo da task | Implementar exatamente o que a spec define |
 | DTO dentro de `backend/` ou `frontend/` | Sempre em `shared/src/dtos/` |
+| `title="…"`/`[title]` em HTML ou `<title>` em SVG para tooltip | `pTooltip` do PrimeNG |
 | NgModule em componentes Angular | Sempre standalone components |
 | Arquivo `.css` | Sempre `.scss` |
 | `style=""` inline no HTML | SCSS ou classe Tailwind |

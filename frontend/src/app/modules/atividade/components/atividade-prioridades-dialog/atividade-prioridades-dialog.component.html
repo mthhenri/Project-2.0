@@ -1,0 +1,18 @@
+<p-dialog
+  [visible]="visivel()"
+  (visibleChange)="visivel.set($event)"
+  header="Alterar prioridades"
+  [modal]="true"
+  [style]="{ width: '56rem' }"
+  [draggable]="false"
+  [dismissableMask]="true"
+>
+  <!-- O conteúdo do p-dialog é projetado e nasceria com o componente; o @if o cria (e carrega as cores) a cada abertura. -->
+  @if (visivel()) {
+    <app-prioridades-cores />
+  }
+
+  <ng-template pTemplate="footer">
+    <p-button label="Fechar" [text]="true" (onClick)="visivel.set(false)" />
+  </ng-template>
+</p-dialog>

@@ -1,0 +1,50 @@
+<aside class="historico-versoes" aria-label="Histórico de versões">
+  <h2 class="historico-versoes__titulo">Histórico</h2>
+  <ul class="historico-versoes__lista">
+    @for (versao of versoes(); track versao.id) {
+      <li>
+        <button
+          type="button"
+          class="historico-versoes__versao"
+          [class.historico-versoes__versao--aberta]="selecionada()?.id === versao.id"
+          [attr.aria-expanded]="selecionada()?.id === versao.id"
+          (click)="selecionar(versao)"
+        >
+          <span class="historico-versoes__numero">Versão {{ versao.versao }}</span>
+          @if (versao.id === ativa()?.id) {
+            <p-tag value="Ativa" severity="success" [rounded]="true" />
+          }
+          <span class="historico-versoes__meta">{{ versao.usuarioNome }} · {{ versao.createdDate | date: 'dd/MM/yyyy HH:mm' }}</span>
+        </button>
+
+        @if (selecionada()?.id === versao.id) {
+          <div class="historico-versoes__detalhe">
+            <dl class="historico-versoes__valores">
+              @for (provedor of cadeiaDaVersao(versao); track provedor; let indice = $index) {
+                <dt class="historico-versoes__valores-provedor">{{ indice === 0 ? 'Provedor' : 'Fallback ' + indice }}</dt>
+                <dd class="historico-versoes__valores-provedor">
+                  {{ rotuloDoProvedor(provedor) }}
+                  <span class="historico-versoes__modelo-linha">rápido: {{ versao.modelosProvedor[provedor]?.modeloRapido }}</span>
+                  <span class="historico-versoes__modelo-linha">padrão: {{ versao.modelosProvedor[provedor]?.modeloPadrao }}</span>
+                  <span class="historico-versoes__modelo-linha">analítico: {{ versao.modelosProvedor[provedor]?.modeloAnalitico }}</span>
+                </dd>
+              }
+              @if (versao.fallbacks.length === 0) {
+                <dt>Fallback</dt><dd>Nenhum</dd>
+              }
+              <dt>Esforço</dt><dd>{{ rotuloDoEsforco(versao.esforcoAnalitico) | lowercase }} (analítico)</dd>
+              <dt>Check-in</dt><dd>{{ versao.checkinMinimoMinutos }} a {{ versao.checkinMaximoMinutos }} min</dd>
+              <dt>Duração</dt><dd>{{ versao.duracaoRecomendadaMinutos }} min</dd>
+              <dt>Inteligente</dt><dd>{{ versao.checkinInteligente ? 'Sim' : 'Não' }}</dd>
+              <dt>Rigor</dt><dd>{{ versao.rigorProporcional ? 'Sim' : 'Não' }}</dd>
+              <dt>Detecção</dt><dd>{{ versao.deteccaoAutomatica ? 'Sim' : 'Não' }}</dd>
+              <dt>Dúvidas de código</dt><dd>{{ versao.duvidasCodigo ? 'Sim' : 'Não' }} · contexto {{ rotuloDoModoContexto(versao.modoContextoChat) | lowercase }}</dd>
+              <dt>IA</dt><dd>{{ versao.iaDesligada ? 'Desligada' : 'Ligada' }}</dd>
+            </dl>
+            <p-button label="Usar como base" icon="pi pi-copy" size="small" [outlined]="true" (onClick)="usar(versao)" />
+          </div>
+        }
+      </li>
+    }
+  </ul>
+</aside>

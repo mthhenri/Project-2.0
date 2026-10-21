@@ -4,6 +4,7 @@ import {
   ConfiguracaoIaModelosDto,
   ConfiguracaoIaResumoDto,
   EstadoIaEnum,
+  IaEstadoCompletoRecuperadoDto,
   IaEstadoRecuperadoDto,
   NivelIaEnum,
   StandardResponse,
@@ -77,6 +78,12 @@ export class IaService {
   /** Para a rota de leitura do estado (administrador). */
   async recuperarEstado(): Promise<StandardResponse<IaEstadoRecuperadoDto>> {
     return { sucesso: true, dados: { estado: await this.obterEstado() }, mensagem: 'Estado da IA recuperado com sucesso' };
+  }
+
+  /** Para a tela de configurações (administrador): o estado e quais provedores têm chave no ambiente, sem nunca expor a chave. */
+  async recuperarEstadoCompleto(): Promise<StandardResponse<IaEstadoCompletoRecuperadoDto>> {
+    const provedoresComChave = Object.values(TipoProvedorIaEnum).filter((tipo) => this.provedores[tipo]?.estaDisponivel());
+    return { sucesso: true, dados: { estado: await this.obterEstado(), provedoresComChave }, mensagem: 'Estado da IA recuperado com sucesso' };
   }
 
   /** O padrão e depois cada fallback, na ordem da configuração, com os modelos de cada um (um provedor sem modelos na cadeia é pulado). */

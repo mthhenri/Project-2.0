@@ -587,3 +587,27 @@ describe('AtividadeListagemPage: descrições da demanda', () => {
     montado.http.expectNone((r) => r.method === 'PUT');
   });
 });
+
+describe('AtividadeListagemPage: alterar prioridades (task 204)', () => {
+  it('o administrador vê "Alterar prioridades" e o botão abre o dialog das cores', async () => {
+    const { montado } = await montarPagina({ usuario: TipoUsuarioEnum.ADMINISTRADOR });
+    await carregar(montado, []);
+    const botao = botoes(montado).find((candidato) => candidato.textContent?.includes('Alterar prioridades'));
+    expect(botao).toBeDefined();
+
+    botao!.click();
+    await montado.atualizar();
+    for (const requisicao of montado.http.match((r) => r.method === 'GET' && r.url.endsWith('/atividade-prioridade'))) responderSucesso(requisicao, [PRIORIDADE]);
+    await montado.atualizar();
+    expect(document.body.querySelector('.p-dialog')?.textContent).toContain('Alterar prioridades');
+    expect(document.body.querySelector('[aria-label="Código da cor da prioridade Média"]')).not.toBeNull();
+  });
+
+  it('gestor e desenvolvedor não veem o botão (só o administrador troca as cores)', async () => {
+    for (const usuario of [TipoUsuarioEnum.GESTOR, TipoUsuarioEnum.DESENVOLVEDOR]) {
+      const { montado } = await montarPagina({ usuario });
+      await carregar(montado, []);
+      expect(texto(montado), usuario).not.toContain('Alterar prioridades');
+    }
+  });
+});

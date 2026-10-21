@@ -10,7 +10,7 @@ export class IaController {
   @AdministradorOnly()
   @Get('estado')
   recuperarEstado() {
-    return this.iaService.recuperarEstado();
+    return this.iaService.recuperarEstadoCompleto();
   }
 
   /** Só o `EstadoIaEnum` (desligada, fora do ar, no ar): nenhum dado de configuração. Para qualquer usuário autenticado. */

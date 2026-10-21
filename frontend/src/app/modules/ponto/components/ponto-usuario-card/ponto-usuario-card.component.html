@@ -55,7 +55,8 @@
             <button
               type="button"
               class="ponto-usuario-card__atividade"
-              [title]="execucao.nomeAtividade"
+              [pTooltip]="execucao.nomeAtividade"
+              tooltipPosition="top"
               (click)="atividadeSelecionada.emit(execucao.atividadeId)"
             >
               {{ execucao.nomeAtividade }}

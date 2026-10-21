@@ -1,0 +1,160 @@
+.provedor-aba {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  &__secao {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--app-surface-200);
+    border-radius: 8px;
+    background: var(--app-surface-0);
+  }
+
+  &__cabecalho {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+  }
+
+  &__info {
+    color: var(--p-text-muted-color);
+    cursor: help;
+  }
+
+  &__esforco {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__titulo {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  &__ajuda {
+    margin: 0;
+    color: var(--p-text-muted-color);
+    font-size: 0.75rem;
+  }
+
+  // Padrão e até dois fallbacks lado a lado; o cartão aberto (cujos modelos aparecem abaixo) leva a borda de destaque.
+  &__cartoes {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+
+    @media (max-width: 900px) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  &__cartao {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--app-surface-300);
+    border-radius: 8px;
+    cursor: pointer;
+
+    &--aberto {
+      border-color: var(--p-primary-500);
+      // Um toque do primário sobre a superfície: funciona nos temas claro e escuro.
+      background: color-mix(in srgb, var(--p-primary-500) 10%, var(--app-surface-0));
+    }
+
+    &--erro {
+      border-color: var(--p-red-500);
+    }
+
+    &--vazio,
+    &--bloqueado {
+      border-style: dashed;
+    }
+
+    &--bloqueado {
+      opacity: 0.6;
+    }
+
+    p-select {
+      width: 100%;
+    }
+  }
+
+  &__cartao-topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  &__papel {
+    padding: 0;
+    color: var(--p-text-muted-color);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    cursor: pointer;
+
+    &--vazio {
+      cursor: default;
+    }
+  }
+
+  &__remover {
+    padding: 0.125rem 0.375rem;
+    color: var(--p-text-muted-color);
+    border-radius: 4px;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--p-red-500);
+      background: var(--app-surface-100);
+    }
+  }
+
+  &__modelos {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    align-items: start;
+
+    @media (max-width: 1000px) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  &__campo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    min-width: 0;
+  }
+
+  &__label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+  }
+
+  &__erros {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin: 0;
+    padding-left: 1.125rem;
+  }
+
+  &__erro {
+    color: var(--p-red-500);
+    font-size: 0.75rem;
+  }
+}

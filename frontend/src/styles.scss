@@ -227,3 +227,9 @@ body {
 body:has(.anotacoes-drawer) .toast-desfazer {
   right: calc(520px + 1.25rem);
 }
+
+// Tooltip do gráfico de barras: as descrições (data, modelo, gasto, tokens) são longas e o limite padrão do PrimeNG as quebra no meio de um valor.
+// O tooltip vai para o <body>, por isso o estilo é global.
+.p-tooltip.grafico-barras__tooltip {
+  max-width: 24rem;
+}
