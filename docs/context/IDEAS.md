@@ -100,6 +100,13 @@
 - **Por quê:** descrições saem com marcas de tempo ("hoje", "nesta sprint") e misturam o que é da atividade com o da demanda.
 - **Custo aparente:** só texto de prompt (versão nova do prompt na tela de configuração), mais um teste manual com entrevistas reais.
 
+### I-019 — Teste que garanta o stub de `class-validator` do frontend · frontend/shared
+
+- **Ideia:** um teste que confere que todo decorator de `class-validator` (e de `class-transformer`) usado nos DTOs do `shared` existe no stub do frontend (`frontend/src/stubs/`).
+- **Origem:** task 205 (2026-10-21): o build do frontend quebrou por `IsUUID` e `ValidateNested` faltarem no stub. Já tinha acontecido com `IsDate` e `ArrayMaxSize`.
+- **Por quê:** o frontend lê os DTOs do `shared` com um stub, então todo decorator novo só aparece como erro no `ng build`, depois de o `shared` e o backend já estarem verdes.
+- **Custo aparente:** um teste pequeno que lê os imports dos DTOs e o stub; mora no `shared` (ou no frontend) sem ligar os dois workspaces em tempo de execução.
+
 ## Promovidas
 
 ### I-004 — Chat IA como tira-dúvidas de programação, com bloco de código copiável · chat IA/frontend

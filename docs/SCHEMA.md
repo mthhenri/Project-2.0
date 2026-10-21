@@ -85,6 +85,7 @@ As tabelas devem ser criadas nessa ordem para respeitar as dependências de FK:
 14. tipo_prompt, prompt (migration `0034`)
 15. tipo_proposta_ia, tipo_proposta_ia_status, proposta_ia (migration `0035`)
 16. tipo_atividade_prioridade e `atividade.tipo_atividade_prioridade_id` (migration `0036`)
+17. mensagem_direta_leitura, mensagem_direta_preferencia, mensagem_direta_supervisao (migration `0050`; só dependem de `usuario`)
 ```
 
 ---
@@ -722,6 +723,34 @@ Seeds (`codigo` → `descricao`):
 | `tipo_provedor_ia` | ANTHROPIC→"Anthropic", GOOGLE→"Google", OPENAI→"OpenAI" (migration `0033`; os três têm implementação desde a task 203) |
 | `tipo_anotacao` | EM_ANDAMENTO→"Em andamento", FEITO→"Feito", PENDENCIA→"Pendências", LEMBRETE→"Lembretes", PESSOAL→"Pessoal" (migration `0030`, com `ordem` 1 a 5) |
 
+### Chat entre colaboradores — migration `0050` (task 205)
+
+> As **mensagens não ficam no PostgreSQL**: são gravadas uma vez e nunca reescritas, num índice (OpenSearch no desenvolvimento, Elasticsearch na produção final) ou,
+> na produção de teste, numa tabela provisória (task 207). Estas três tabelas guardam o **estado que muda**. Modelagem completa em
+> `docs/specs/backlog/chat-colaboradores/modelagem.md` (anexo da guarda-chuva `chat-colaboradores.spec.md`; os dois vão para `done/` com a última task, a 215).
+>
+> `conversa_id` é `<menorUsuarioId>-<maiorUsuarioId>` (ex.: `4-9`): o par sempre cai na mesma conversa e por isso não existe tabela de conversa. Um `CHECK` em cada tabela
+> garante que o texto bate com os dois ids da própria linha. Todas têm os campos de `BaseEntity`, nenhum `DEFAULT` e o trigger `trg_*_updated_date`.
+
+#### `mensagem_direta_leitura`
+Até onde cada pessoa leu cada conversa e se silenciou os avisos dela. Uma linha por pessoa e conversa, criada na primeira leitura ou no primeiro silêncio. Colunas de `BaseEntity` mais:
+`conversa_id` (`VARCHAR(21)`), `usuario_id` e `outro_usuario_id` (FKs para `usuario`, diferentes entre si), `lida_ate_date` (anulável) e `silenciada`.
+`lida_ate_date` é o `created_date` da **última mensagem que a pessoa viu**, não o instante da leitura: uma mensagem que chega entre a busca e a marcação nunca é dada como lida sem
+ter sido vista. As **não lidas** são as mensagens do outro mais novas que esse ponto; o **"Lida"** de uma mensagem minha vale quando a linha do outro tem `lida_ate_date` maior ou
+igual à data dela. Índice único parcial em (`conversa_id`, `usuario_id`) e índice em `usuario_id`.
+
+#### `mensagem_direta_preferencia`
+As preferências do chat, uma linha por usuário, criada na primeira alteração: `usuario_id` (FK, único entre as linhas ativas), `avisos_ativos`, `aviso_desktop_ativo`, `som_ativo`,
+`silenciado_ate_date` (anulável) e `atalho_global` (`VARCHAR(40)`, formato do Electron). Sem linha, a service devolve `PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA`, do `shared`
+(nunca um `DEFAULT`). "Silenciar por 1 hora" grava o instante final em `silenciado_ate_date`; quem decide se um aviso aparece é a service, comparando com a hora atual, então não
+há tarefa agendada para reativar.
+
+#### `mensagem_direta_supervisao`
+Auditoria: cada abertura, por gestor ou administrador, de uma conversa que não é dele. Só conversas entre desenvolvedores podem ser abertas (a service confere pelo tipo atual dos
+dois usuários). Colunas de `BaseEntity` mais: `leitor_usuario_id`, `conversa_id`, `usuario_menor_id`, `usuario_maior_id` (FKs para `usuario`; `usuario_menor_id < usuario_maior_id`) e
+`participantes_avisados` (esta abertura gerou o aviso na conversa; o aviso sai uma vez por leitor, conversa e dia). `created_date` é o instante da abertura. Índice em
+(`leitor_usuario_id`, `conversa_id`, `created_date`).
+
 ### Tabelas provisórias — migration `0038` (task 162)
 
 > **Não fazem parte do modelo definitivo.** Existem só para o ambiente de teste (`CHAT_ARMAZENAMENTO=postgres`) guardar as mensagens do
@@ -761,6 +790,9 @@ projeto ─── demanda
             [acesso via demanda_usuario — sem projeto_usuario]
 
 dia_nao_util  [standalone, consultado pelo módulo ponto]
+
+usuario ─── mensagem_direta_leitura, mensagem_direta_preferencia, mensagem_direta_supervisao
+            [chat entre colaboradores; as mensagens ficam no índice, não no PostgreSQL]
 ```
 
 ---

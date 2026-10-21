@@ -46,12 +46,12 @@ Um documento por mensagem, em `snake_case`. Sem edição nem exclusão na primei
 | `conversa_id` | keyword | Identidade determinística da conversa |
 | `participantes` | integer[2] | Os dois ids; lista as conversas de uma pessoa |
 | `autor_usuario_id` | integer, nulo | Quem escreveu; nulo quando o autor é o sistema |
-| `tipo` | keyword | `USUARIO` ou `SISTEMA` (o aviso de leitura pelo gestor) |
+| `autor` | keyword | `USUARIO` ou `SISTEMA` (`AutorMensagemDiretaEnum`; o sistema escreve o aviso de leitura pelo gestor) |
 | `texto` | text | Markdown; o código colado entra como bloco cercado; analisado em português sem acento, como o chat da IA |
 | `contem_codigo` | boolean | Filtro "Com código" e etiqueta na busca |
 | `mencoes` | integer[] | Ids mencionados, para gerar aviso |
 | `referencias` | keyword[] | `DEMANDA:212`, `ATIVIDADE:57`; viram cartão clicável |
-| `criada_date` | date | Instante de gravação, definido pelo servidor; ordena a conversa |
+| `created_date` | date | Instante de gravação, definido pelo servidor; ordena a conversa |
 
 Exemplo:
 
@@ -61,12 +61,12 @@ Exemplo:
   "conversa_id": "4-9",
   "participantes": [4, 9],
   "autor_usuario_id": 9,
-  "tipo": "USUARIO",
+  "autor": "USUARIO",
   "texto": "Vi isso ontem. O signal é zerado no ngOnInit.\n\n```ts\nthis.filtro.set(this.filtroSalvo() ?? '');\n```",
   "contem_codigo": true,
   "mencoes": [4],
   "referencias": ["DEMANDA:212"],
-  "criada_date": "2026-10-21T14:05:11.482Z"
+  "created_date": "2026-10-21T14:05:11.482Z"
 }
 ```
 
@@ -74,7 +74,7 @@ Regras que decidem o desenho:
 
 - **Idempotência:** a gravação usa `mensagem_id` como `_id` e falha se já existir; a repetição devolve a
   mensagem que já está lá. Reenviar depois de uma queda nunca duplica.
-- **Ordem:** por `criada_date`, com `mensagem_id` como desempate. O índice não tem sequência; duas
+- **Ordem:** por `created_date`, com `mensagem_id` como desempate. O índice não tem sequência; duas
   pessoas escrevendo no mesmo milissegundo é um caso aceito.
 - **Visibilidade logo após gravar:** o índice é quase em tempo real. A gravação pede
   `refresh=wait_for` e o cliente também recebe a mensagem pelo stream, sem reler o índice.
@@ -91,7 +91,7 @@ mesma task da migration.
 ### `mensagem_direta_leitura`: até onde cada pessoa leu
 
 Uma linha por pessoa e conversa, criada na primeira leitura ou na primeira vez que a conversa é
-silenciada. `lida_ate_date` guarda o `criada_date` da **última mensagem vista**, não o instante da
+silenciada. `lida_ate_date` guarda o `created_date` da **última mensagem vista**, não o instante da
 leitura: uma mensagem que chega entre a busca e a marcação nunca é dada como lida sem ter sido vista.
 
 ```sql
@@ -101,7 +101,7 @@ CREATE TABLE mensagem_direta_leitura (
   updated_date      TIMESTAMPTZ  NOT NULL,
   is_deleted        BOOLEAN      NOT NULL,
   deleted_date      TIMESTAMPTZ,
-  conversa_id       VARCHAR(40)  NOT NULL,
+  conversa_id       VARCHAR(21)  NOT NULL,
   usuario_id        INTEGER      NOT NULL,
   outro_usuario_id  INTEGER      NOT NULL,
   lida_ate_date     TIMESTAMPTZ,
@@ -116,7 +116,7 @@ CREATE UNIQUE INDEX uix_mensagem_direta_leitura_conversa_usuario
 CREATE INDEX ix_mensagem_direta_leitura_usuario ON mensagem_direta_leitura (usuario_id);
 ```
 
-- **Não lidas:** mensagens do outro com `criada_date` maior que `lida_ate_date`, contadas por uma
+- **Não lidas:** mensagens do outro com `created_date` maior que `lida_ate_date`, contadas por uma
   agregação no índice para a lista inteira de uma vez.
 - **"Lida":** uma mensagem minha está lida quando a linha do outro tem `lida_ate_date` maior ou igual
   à data dela.
@@ -154,7 +154,7 @@ e dia** no fuso `APP_TIMEZONE`, para não inundar a conversa.
 CREATE TABLE mensagem_direta_supervisao (
   -- campos de BaseEntity
   leitor_usuario_id       INTEGER      NOT NULL,
-  conversa_id             VARCHAR(40)  NOT NULL,
+  conversa_id             VARCHAR(21)  NOT NULL,
   usuario_menor_id        INTEGER      NOT NULL,
   usuario_maior_id        INTEGER      NOT NULL,
   participantes_avisados  BOOLEAN      NOT NULL
@@ -165,7 +165,7 @@ CREATE TABLE mensagem_direta_supervisao (
 ### Tabela provisória (só produção de teste)
 
 `mensagem_direta`, no molde da `chat_mensagem` provisória (migration `0038`): uma linha por mensagem,
-`mensagem_id` UUID único, `conversa_id`, os dois participantes, autor, tipo, texto, `contem_codigo`,
+`mensagem_id` UUID único, `conversa_id`, os dois participantes, autor, texto, `contem_codigo`,
 menções e referências, com `created_date` como data da mensagem. Busca por `tsvector` reaproveitando
 `fn_chat_texto_busca`/`fn_chat_texto_consulta`. Sai **junto** com as tabelas provisórias do chat da IA,
 na mesma migration de remoção, com `COMMENT ON TABLE` avisando.
@@ -222,7 +222,7 @@ explícitos.
 | Método | O que faz |
 |---|---|
 | `gravar` | Grava de forma idempotente pelo `mensagem_id` e devolve a que ficou gravada |
-| `listarConversa` | Da mais nova para a mais antiga, com cursor (`antesDe`) e limite; a conversa é contínua, não por dia |
+| `listarConversa` | Da mais nova para a mais antiga, com cursor opaco (que o armazenamento monta e lê) e limite; a conversa é contínua, não por dia |
 | `listarConversasDoUsuario` | Uma linha por conversa da pessoa: última mensagem e data |
 | `contarNaoLidas` | Dado o marcador de cada conversa, quantas mensagens do outro vieram depois (uma agregação para a lista) |
 | `buscar` | Texto, período e `somenteCodigo`, sempre restrito a uma pessoa |
@@ -246,7 +246,7 @@ recebe primitivo solto.
 | Rota | Quem | O que faz |
 |---|---|---|
 | `GET /mensagem-direta/conversas` | Usuário | A lista: pessoa, última mensagem, não lidas, silenciada e presença |
-| `GET /mensagem-direta/conversa/:usuarioId` | Usuário | Mensagens com `antes` e `limite`, mais o marcador de leitura do outro |
+| `GET /mensagem-direta/conversa/:usuarioId` | Usuário | Mensagens com `cursor` (opaco) e `limite`, mais o marcador de leitura do outro |
 | `POST /mensagem-direta/mensagem` | Usuário | Destinatário, texto, `idCliente`, menções e referências |
 | `PUT /mensagem-direta/conversa/:usuarioId/leitura` | Usuário | Data da última mensagem vista |
 | `PUT /mensagem-direta/conversa/:usuarioId/silencio` | Usuário | Silencia ou reativa uma conversa |
@@ -322,9 +322,9 @@ IA é o análogo aprovado para a verificação visual.
 |---|---|
 | Módulo do backend e do front | `mensagem-direta` (não colide com o `chat` da IA) |
 | Contrato | `ArmazenamentoDeMensagemDireta` e token `ARMAZENAMENTO_DE_MENSAGEM_DIRETA` |
-| DTOs de entrada | `MensagemDiretaEnviarDto`, `MensagemDiretaLeituraAlterarDto`, `MensagemDiretaSilencioAlterarDto`, `MensagemDiretaPreferenciaAlterarDto` |
-| DTOs de saída | `MensagemDiretaEnviadaDto`, `MensagemDiretaResumoDto`, `ConversaDiretaResumoDto`, `MensagemDiretaPreferenciaDto` |
-| Enums | `TipoMensagemDiretaEnum` (`USUARIO`, `SISTEMA`) e `ReferenciaMensagemDiretaEnum` (`DEMANDA`, `ATIVIDADE`) |
+| DTOs de entrada | `MensagemDiretaEnviarDto`, `MensagemDiretaListarDto`, `MensagemDiretaBuscarDto`, `MensagemDiretaLeituraAlterarDto`, `MensagemDiretaSilencioAlterarDto`, `MensagemDiretaPreferenciaAlterarDto` e o value-object `ReferenciaMensagemDto` |
+| DTOs de saída | `MensagemDiretaResumoDto`, `MensagemDiretaEnviadaDto`, `MensagemDiretaListadasDto`, `MensagemDiretaBuscadoDto`, `ConversaDiretaResumoDto`, `ConversaDiretaListadasDto`, `MensagemDiretaPreferenciaRecuperadaDto`, `MensagemDiretaPreferenciaAlteradaDto`, `MensagemDiretaLeituraAlteradaDto`, `MensagemDiretaSilencioAlteradoDto` (task 205; os de evento e de supervisão entram nas tasks 209 e 214) |
+| Enums | `AutorMensagemDiretaEnum` (`USUARIO`, `SISTEMA`) e `ReferenciaMensagemDiretaEnum` (`DEMANDA`, `ATIVIDADE`) |
 | Tabelas | `mensagem_direta_leitura`, `mensagem_direta_preferencia`, `mensagem_direta_supervisao` e a provisória `mensagem_direta` |
 
 Tudo o que é contrato (DTOs, enums, limites, padrões de preferência) vive em `shared/`.

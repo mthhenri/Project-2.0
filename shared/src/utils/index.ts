@@ -4,3 +4,4 @@ export * from './nivel-do-tipo-de-prompt';
 export * from './prazo-para-desfazer-proposta';
 export * from './versao';
 export * from './provedor-ia';
+export * from './mensagem-direta';

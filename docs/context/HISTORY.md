@@ -12,6 +12,29 @@
 
 ---
 
+## 2026-10-21 — Task 205: fundação do chat entre colaboradores (enums, regras puras e DTOs no `shared`, migration `0050`)
+
+Primeira task da guarda-chuva `chat-colaboradores` (205–215). Só contrato e schema: sem repository, service, rota nem tela. Spec: `docs/specs/done/205-mensagem-direta-fundacao.spec.md`.
+
+- **`shared`:** enums `AutorMensagemDiretaEnum` (`USUARIO`/`SISTEMA`) e `ReferenciaMensagemDiretaEnum` (`DEMANDA`/`ATIVIDADE`); `utils/mensagem-direta.ts` com os limites, a preferência padrão, o id determinístico da
+  conversa (`<menor>-<maior>`, `montarConversaDiretaId`/`lerConversaDiretaId`/`outroParticipanteDaConversaDireta`), o codec das referências (`DEMANDA:212`), o silêncio (`estaSilenciado`,
+  `silenciarAteDeReuniao`), `contemBlocoDeCodigo` (pelo interpretador de Markdown, inclusive dentro de citação) e `REGEX_ATALHO_GLOBAL`; 17 DTOs em `dtos/mensagem-direta/` (7 de entrada com `class-validator`, 10 de saída).
+  O `usuarioId` da rota é campo sem decorator: com `forbidNonWhitelisted` o corpo que o enviar é recusado. A paginação da conversa usa cursor opaco (`cursor`/`proximoCursor`), que o armazenamento da 206 monta e lê.
+- **Migration `0050`:** `mensagem_direta_leitura` (até onde cada pessoa leu e silêncio por conversa), `mensagem_direta_preferencia` e `mensagem_direta_supervisao` (auditoria da leitura pelo gestor). `BaseEntity` explícita, sem
+  `DEFAULT`, FKs para `usuario`, únicos parciais, trigger `updated_date` e `CHECK`s que obrigam `conversa_id` a bater com os dois ids da linha. As mensagens não ficam no PostgreSQL (índice, ou a tabela provisória da 207).
+  `docs/SCHEMA.md` atualizado (seção nova, ordem de criação 17 e resumo de relacionamentos).
+- **Mudanças em relação à modelagem:** o campo `tipo` da mensagem virou `autor` (mesmo molde do `AutorChatEnum`, e para não lembrar as tabelas `tipo_*`); `conversa_id` é `VARCHAR(21)` (dois ids de até 10 dígitos e o hífen),
+  não 40; os DTOs de preferência ficaram `...PreferenciaRecuperadaDto`/`...AlteradaDto`. `modelagem.md` e a guarda-chuva ajustados.
+- **Achados na verificação:** (1) o teste do atalho global pegou um furo da regex: `Ctrl+Shift` passava porque "Shift" era aceito como a tecla; a regex agora exclui modificador no lugar da tecla. (2) O `ng build` quebrou porque o
+  frontend lê os DTOs do `shared` com um stub de `class-validator` (`frontend/src/stubs/class-validator.stub.ts`) e faltavam `IsUUID` e `ValidateNested`; acrescentados (mesma armadilha de `IsDate` e `ArrayMaxSize`, registrada
+  como `IDEAS.md` I-019). (3) A numeração: o `CLAUDE.md` dizia que o maior número em uso era 202, mas a 203 e a 204 já estavam em `done/`; a guarda-chuva foi renumerada para 205–215.
+- **Testes:** `shared` 213 passando (15 de regras puras e 16 de validação dos DTOs, novos); integração 256 passando, 6 deles novos (`mensagem-direta.integracao.test.ts`: unicidade, `CHECK`s, FKs, trigger e ausência de `DEFAULT`);
+  backend unitário 1151, desktop 24, frontend 1481 (132 arquivos) e `repo:test` 13 passando (14 no total), todos sem falha. Build do backend e do frontend compilam (avisos preexistentes: orçamento de `chat.page.scss` e módulo
+  CommonJS do `unified`).
+- **Migration:** aplicada, revertida e reaplicada num PostgreSQL 16 real, de duas formas: `DOWN` e `UP` da `0050` executados à mão pelo `psql` (3 tabelas, 0, 3) e `db:rollback` e `db:migrate` pelo Knex (50 migrations).
+  Sem Docker no ambiente da sessão, a verificação usou um PostgreSQL 16 local na porta 5433.
+- **Não verificado:** não há lint no projeto (`PROBLEMS.md` P-001); sem tela nesta task, então sem verificação visual; os DTOs ainda não têm consumidor, e o primeiro uso real é a 206.
+
 ## 2026-10-21 — Guarda-chuva `chat-colaboradores` no backlog: chat entre colaboradores, modelagem e tasks 205–215
 
 Conversa com o autor sobre um chat interno entre colaboradores (o "zap" do Project), pensado para conversa em silêncio durante reunião e dúvida de código: o usuário copia um trecho

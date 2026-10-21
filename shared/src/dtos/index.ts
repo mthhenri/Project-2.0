@@ -20,3 +20,4 @@ export * from './ferramenta-ia/index';
 export * from './checkin/index';
 export * from './desktop/index';
 export * from './ia-custo/index';
+export * from './mensagem-direta/index';

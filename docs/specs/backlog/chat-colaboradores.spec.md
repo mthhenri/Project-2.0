@@ -47,7 +47,7 @@ administrador leem as conversas dos desenvolvedores numa área separada, com avi
 - O desenvolvedor só vê projetos por `demanda_usuario` e o gestor tem acesso por tipo (total). A supervisão do chat segue o tipo de
   usuário, não `demanda_usuario`.
 - As ferramentas do gestor que leem o chat da IA (task 201) leem só o de **desenvolvedor**; a regra já existe para o pad (task 195).
-- A última migration é a `0049`; a próxima livre é a `0050`. As tabelas provisórias do chat da IA (`0038`) saem numa migration de remoção
+- A última migration era a `0049`; a `0050` (task 205) cria as tabelas do chat e a próxima livre é a `0051`. As tabelas provisórias do chat da IA (`0038`) saem numa migration de remoção
   futura, e a provisória das mensagens diretas sai junto.
 
 ## Modelagem
@@ -55,8 +55,8 @@ administrador leem as conversas dos desenvolvedores numa área separada, com avi
 Resumo (detalhes, DDL, campos, API e fluxos em [`chat-colaboradores/modelagem.md`](chat-colaboradores/modelagem.md)):
 
 - **Conversa:** `conversa_id = <menorUsuarioId>-<maiorUsuarioId>`, sem tabela de conversa.
-- **Mensagem:** documento imutável num **índice próprio** (`mensagem_id` gerado pelo cliente, `conversa_id`, `participantes`, autor, tipo
-  `USUARIO`/`SISTEMA`, `texto` em Markdown, `contem_codigo`, `mencoes`, `referencias`, `criada_date`).
+- **Mensagem:** documento imutável num **índice próprio** (`mensagem_id` gerado pelo cliente, `conversa_id`, `participantes`, autor
+  `USUARIO`/`SISTEMA`, `texto` em Markdown, `contem_codigo`, `mencoes`, `referencias`, `created_date`).
 - **PostgreSQL:** `mensagem_direta_leitura` (até onde cada pessoa leu e silêncio por conversa), `mensagem_direta_preferencia` (avisos, Desktop,
   som, silêncio temporário e atalho) e `mensagem_direta_supervisao` (auditoria da leitura pelo gestor).
 - **Contrato:** `ArmazenamentoDeMensagemDireta` com `gravar` idempotente, `listarConversa` paginada, `listarConversasDoUsuario`,
@@ -67,7 +67,7 @@ Resumo (detalhes, DDL, campos, API e fluxos em [`chat-colaboradores/modelagem.md
 
 | # | Task | Escopo | Depende de |
 |---|---|---|---|
-| 205 | Fundação | `shared` (enums, DTOs, limites e padrões), migration `0050` com as três tabelas, `docs/SCHEMA.md` | — |
+| 205 | [Fundação](../done/205-mensagem-direta-fundacao.spec.md) | `shared` (enums, DTOs, limites e padrões), migration `0050` com as três tabelas, `docs/SCHEMA.md` | — |
 | 206 | Contrato e armazenamento em índice | `ArmazenamentoDeMensagemDireta`, OpenSearch e Elasticsearch, suíte de contrato | 205 |
 | 207 | Armazenamento PostgreSQL provisório | tabela provisória, implementação na suíte de contrato e plano de remoção | 206 |
 | 208 | Service e API | enviar, listar, ler, silenciar, buscar, preferências, permissões; testes de service e de repository | 205, 206 |
