@@ -40,7 +40,7 @@ export interface MensagemDiretaFonte {
   created_date: string;
 }
 
-const REGEX_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+export const REGEX_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * Confere que o documento a gravar é coerente. A service valida o pedido do usuário; isto é a defesa do armazenamento, para nunca
@@ -58,6 +58,11 @@ export function validarMensagemDiretaNova(mensagem: MensagemDiretaNova): void {
   } else if (mensagem.autorUsuarioId !== null) {
     throw new BusinessException('A mensagem do sistema não tem autor');
   }
+}
+
+/** O reenvio de um `mensagemId` só devolve o que já estava gravado se for o mesmo autor, na mesma conversa; senão vazaria a mensagem de outra pessoa. */
+export function mesmaOrigemDaMensagem(existente: Pick<MensagemDiretaFonte, 'conversa_id' | 'autor' | 'autor_usuario_id'>, mensagem: MensagemDiretaNova): boolean {
+  return existente.conversa_id === mensagem.conversaId && existente.autor === mensagem.autor && (existente.autor_usuario_id ?? null) === mensagem.autorUsuarioId;
 }
 
 export function paraFonteDireta(mensagem: MensagemDiretaNova, criadaEm: Date): MensagemDiretaFonte {

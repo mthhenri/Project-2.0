@@ -1,4 +1,4 @@
-import { AutorMensagemDiretaEnum, MensagemDiretaResumoDto } from '@project20/shared';
+import { AutorMensagemDiretaEnum, LIMITE_MAXIMO_DA_CONVERSA_DIRETA, MensagemDiretaResumoDto, lerConversaDiretaId } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { MAPEAMENTO_CHAT_MENSAGEM } from '../../chat/domain/chat-consultas';
 import { MensagemDiretaFonte } from './mensagem-direta.documento';
@@ -132,6 +132,54 @@ export function decodificarCursor(cursor: string): ValoresDoCursor {
 }
 
 // ---------------------------------------------------------------------------
+// Validação das consultas, igual para todo armazenamento
+// ---------------------------------------------------------------------------
+
+/** A conversa é válida e o limite cabe na faixa. O cursor é conferido por quem o lê (`decodificarCursor`). */
+export function validarConsultaConversaDireta(consulta: ConsultaConversaDireta): void {
+  if (!lerConversaDiretaId(consulta.conversaId)) throw new BusinessException('Conversa direta inválida');
+  if (!Number.isInteger(consulta.limite) || consulta.limite < 1 || consulta.limite > LIMITE_MAXIMO_DA_CONVERSA_DIRETA) {
+    throw new BusinessException(`O limite da conversa deve ficar entre 1 e ${LIMITE_MAXIMO_DA_CONVERSA_DIRETA}`);
+  }
+}
+
+export function validarConsultaNaoLidas(consulta: ConsultaNaoLidas): void {
+  if (consulta.marcadores.length > LIMITE_MARCADORES_DE_LEITURA) {
+    throw new BusinessException(`Só dá para contar as não lidas de até ${LIMITE_MARCADORES_DE_LEITURA} conversas de uma vez`);
+  }
+}
+
+export function validarConsultaBuscaDireta(consulta: ConsultaBuscaDireta): void {
+  if (!consulta.texto.trim()) throw new BusinessException('Informe o texto da busca');
+}
+
+/** A página pedida cabe no que a supervisão agrega; devolve quantas conversas pular (`from`). */
+export function validarPaginaDaSupervisao(consulta: ConsultaSupervisao): number {
+  if (consulta.pagina < 1 || consulta.porPagina < 1 || consulta.porPagina > LIMITE_POR_PAGINA_DA_SUPERVISAO) {
+    throw new BusinessException('Página da supervisão inválida');
+  }
+  const inicio = (consulta.pagina - 1) * consulta.porPagina;
+  if (inicio + consulta.porPagina > LIMITE_CONVERSAS_DA_SUPERVISAO) {
+    throw new BusinessException('A supervisão lista até as primeiras 1.000 conversas; refine a busca');
+  }
+  return inicio;
+}
+
+/**
+ * A página da conversa a partir do que a consulta devolveu (pediu-se `limite + 1`): o excedente nunca sai, só prova que há página mais
+ * antiga, e o cursor aponta a última mensagem devolvida.
+ */
+export function montarPaginaDeMensagens(
+  fontes: MensagemDiretaFonte[],
+  limite: number,
+  deFonte: (fonte: MensagemDiretaFonte) => MensagemDiretaResumoDto,
+): PaginaDeMensagensDiretas {
+  const pagina = fontes.slice(0, limite);
+  const haMais = fontes.length > limite;
+  return { mensagens: pagina.map(deFonte), proximoCursor: haMais ? codificarCursor(pagina[pagina.length - 1]) : null };
+}
+
+// ---------------------------------------------------------------------------
 // Consultas
 // ---------------------------------------------------------------------------
 
@@ -238,13 +286,7 @@ export function montarConsultaBuscaDireta(consulta: ConsultaBuscaDireta) {
  * (`bucket_sort`); `total` conta todas as que casam.
  */
 export function montarConsultaSupervisao(consulta: ConsultaSupervisao) {
-  if (consulta.pagina < 1 || consulta.porPagina < 1 || consulta.porPagina > LIMITE_POR_PAGINA_DA_SUPERVISAO) {
-    throw new BusinessException('Página da supervisão inválida');
-  }
-  const inicio = (consulta.pagina - 1) * consulta.porPagina;
-  if (inicio + consulta.porPagina > LIMITE_CONVERSAS_DA_SUPERVISAO) {
-    throw new BusinessException('A supervisão lista até as primeiras 1.000 conversas; refine a busca');
-  }
+  const inicio = validarPaginaDaSupervisao(consulta);
   return {
     size: 0,
     query: {

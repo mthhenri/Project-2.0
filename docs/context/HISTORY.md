@@ -12,6 +12,28 @@
 
 ---
 
+## 2026-10-21 — Task 207: armazenamento PostgreSQL provisório das mensagens entre colaboradores (migration `0051`)
+
+Terceira task da guarda-chuva `chat-colaboradores`. Terceira implementação do `ArmazenamentoDeMensagemDireta`, para a produção de teste (`CHAT_ARMAZENAMENTO=postgres`). Spec:
+`docs/specs/active/207-mensagem-direta-armazenamento-postgres-provisorio.spec.md` (continua em `active/` junto com a 206, que ainda espera a suíte contra o OpenSearch e o Elasticsearch reais).
+
+- **Migration `0051`:** tabela `mensagem_direta` (um documento do índice vira uma linha, mesmos nomes), `BaseEntity` explícita, sem `DEFAULT`, `mensagem_id` UUID único, `CHECK`s de menor < maior e de
+  `conversa_id` batendo com os ids, `mencoes INTEGER[]`, `referencias TEXT[]`, GIN em `fn_chat_texto_busca(texto)` e `COMMENT ON TABLE` de "provisória". **Sem FK** para `usuario`, como `chat_mensagem` e como
+  o índice (a suíte de contrato usa ids que não existem). Plano de remoção em `docs/SCHEMA.md`: derrubar `mensagem_direta`, `chat_conversa` e `chat_mensagem` e só depois as funções da `0038`.
+- **`MensagemDiretaPostgresRepository`:** os seis métodos do contrato em SQL puro. `gravar` com `ON CONFLICT (mensagem_id) DO NOTHING RETURNING` e a mesma regra de origem dos índices; cursor opaco
+  **o mesmo** dos índices (`created_date` em ms e `mensagem_id`), comparado por linha; última mensagem por conversa com `ROW_NUMBER`/`COUNT` em janela; não lidas numa consulta só (`UNNEST` dos marcadores com
+  `LEFT JOIN`); busca por `tsvector` sem acento; supervisão com a lista de excluídos, filtros e página, mais uma contagem de conversas para o total. Provider `postgres` agora instancia o repository.
+- **Refatoração na 206:** as validações das consultas, a montagem da página e a regra de "mesma origem" saíram do `MensagemDiretaIndiceRepository` para `domain/` (`validarConsultaConversaDireta`,
+  `validarConsultaNaoLidas`, `validarConsultaBuscaDireta`, `validarPaginaDaSupervisao`, `montarPaginaDeMensagens`, `mesmaOrigemDaMensagem`), para os três armazenamentos não duplicarem regra. Comportamento
+  dos dois índices inalterado (os testes da 206 passaram sem mudança de expectativa).
+- **Verificação:** a suíte de contrato (12 cenários) roda no PostgreSQL 16 real em `mensagem-direta-postgres.repository.integracao.test.ts`, numa transação descartada; `opcoes.sempreLigado` do contrato
+  a liga sem `CHAT_INTEGRACAO`. Esta é a primeira execução real do contrato inteiro: provou paginação sem repetir nem pular, não lidas, busca sem acento e supervisão com página e total. Migration aplicada,
+  revertida e reaplicada no banco de teste.
+- **Achado na verificação:** o contrato falhou nos dois cenários da supervisão com `date/time field value out of range: "0"`: o parâmetro de deslocamento da página se chamava `inicio`, o mesmo nome do
+  filtro de período, e o objeto de parâmetros o sobrescrevia (o `OFFSET` valia `0` e virava a data). Renomeado para `deslocamento`. Lição: parâmetros nomeados de uma consulta com fragmentos compartilhados
+  precisam de nomes que não colidam.
+- **Limites:** a 206 segue aberta (índices reais não alcançados nesta sessão). Um `mensagem_id` em maiúsculas volta em minúsculas do Postgres; a service (208) grava em minúsculas.
+
 ## 2026-10-21 — Task 205: fundação do chat entre colaboradores (enums, regras puras e DTOs no `shared`, migration `0050`)
 
 Primeira task da guarda-chuva `chat-colaboradores` (205–215). Só contrato e schema: sem repository, service, rota nem tela. Spec: `docs/specs/done/205-mensagem-direta-fundacao.spec.md`.

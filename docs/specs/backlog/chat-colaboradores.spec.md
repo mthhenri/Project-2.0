@@ -68,8 +68,8 @@ Resumo (detalhes, DDL, campos, API e fluxos em [`chat-colaboradores/modelagem.md
 | # | Task | Escopo | Depende de |
 |---|---|---|---|
 | 205 | [Fundação](../done/205-mensagem-direta-fundacao.spec.md) | `shared` (enums, DTOs, limites e padrões), migration `0050` com as três tabelas, `docs/SCHEMA.md` | — |
-| 206 | Contrato e armazenamento em índice | `ArmazenamentoDeMensagemDireta`, OpenSearch e Elasticsearch, suíte de contrato | 205 |
-| 207 | Armazenamento PostgreSQL provisório | tabela provisória, implementação na suíte de contrato e plano de remoção | 206 |
+| 206 | [Contrato e armazenamento em índice](../active/206-mensagem-direta-armazenamento-em-indice.spec.md) | `ArmazenamentoDeMensagemDireta`, OpenSearch e Elasticsearch, suíte de contrato | 205 |
+| 207 | [Armazenamento PostgreSQL provisório](../active/207-mensagem-direta-armazenamento-postgres-provisorio.spec.md) | tabela provisória, implementação na suíte de contrato e plano de remoção | 206 |
 | 208 | Service e API | enviar, listar, ler, silenciar, buscar, preferências, permissões; testes de service e de repository | 205, 206 |
 | 209 | Tempo real | stream de eventos, publicador compartilhado (`LISTEN/NOTIFY`) e em memória, presença, encerramento ordenado | 208 |
 | 210 | Popup no Project | lista, conversa, nova mensagem, busca, vazio, erro e tema escuro; reconexão com recuperação | 208, 209 |

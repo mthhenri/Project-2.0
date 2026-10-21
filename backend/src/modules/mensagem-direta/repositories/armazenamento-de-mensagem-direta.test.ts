@@ -1,9 +1,11 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
+import { Knex } from 'knex';
 import { ConfigService } from '../../../config/config.service';
 import { ARMAZENAMENTO_DE_MENSAGEM_DIRETA, armazenamentoDeMensagemDiretaProvider } from './armazenamento-de-mensagem-direta';
 import { MensagemDiretaElasticsearchRepository } from './mensagem-direta-elasticsearch.repository';
 import { MensagemDiretaOpenSearchRepository } from './mensagem-direta-opensearch.repository';
+import { MensagemDiretaPostgresRepository } from './mensagem-direta-postgres.repository';
 
 // O provider escolhe a implementação por CHAT_ARMAZENAMENTO, a mesma variável do chat da IA, e só instancia a escolhida.
 
@@ -21,11 +23,10 @@ test('o token do provider é o do armazenamento das mensagens diretas, distinto 
   assert.notEqual(ARMAZENAMENTO_DE_MENSAGEM_DIRETA, 'ARMAZENAMENTO_DE_CHAT');
 });
 
-test('opensearch (o padrão) e elasticsearch instanciam cada um a sua implementação', () => {
-  assert.ok(armazenamentoDeMensagemDiretaProvider.useFactory(configuracao('opensearch')) instanceof MensagemDiretaOpenSearchRepository);
-  assert.ok(armazenamentoDeMensagemDiretaProvider.useFactory(configuracao('elasticsearch')) instanceof MensagemDiretaElasticsearchRepository);
-});
+const conexao = {} as Knex;
 
-test('postgres ainda não tem armazenamento das mensagens diretas e falha na subida apontando a task 207', () => {
-  assert.throws(() => armazenamentoDeMensagemDiretaProvider.useFactory(configuracao('postgres')), /task 207/);
+test('opensearch (o padrão), elasticsearch e postgres instanciam cada um a sua implementação', () => {
+  assert.ok(armazenamentoDeMensagemDiretaProvider.useFactory(configuracao('opensearch'), conexao) instanceof MensagemDiretaOpenSearchRepository);
+  assert.ok(armazenamentoDeMensagemDiretaProvider.useFactory(configuracao('elasticsearch'), conexao) instanceof MensagemDiretaElasticsearchRepository);
+  assert.ok(armazenamentoDeMensagemDiretaProvider.useFactory(configuracao('postgres'), conexao) instanceof MensagemDiretaPostgresRepository);
 });

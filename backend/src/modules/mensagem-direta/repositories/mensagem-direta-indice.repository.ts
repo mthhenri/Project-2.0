@@ -1,5 +1,5 @@
 import { Logger, OnModuleInit } from '@nestjs/common';
-import { LIMITE_MAXIMO_DA_CONVERSA_DIRETA, MensagemDiretaEnviadaDto, MensagemDiretaResumoDto, lerConversaDiretaId } from '@project20/shared';
+import { MensagemDiretaEnviadaDto, MensagemDiretaResumoDto } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import {
   BaldeConversaDireta,
@@ -9,12 +9,10 @@ import {
   ConsultaNaoLidas,
   ConsultaSupervisao,
   INDICE_MENSAGEM_DIRETA,
-  LIMITE_MARCADORES_DE_LEITURA,
   MAPEAMENTO_MENSAGEM_DIRETA,
   PaginaDeConversasSupervisionadas,
   PaginaDeMensagensDiretas,
   ResumoDeConversaDireta,
-  codificarCursor,
   deBaldesDeConversas,
   deBaldesDeNaoLidas,
   montarConsultaBuscaDireta,
@@ -22,11 +20,16 @@ import {
   montarConsultaConversasDoUsuario,
   montarConsultaNaoLidas,
   montarConsultaSupervisao,
+  montarPaginaDeMensagens,
+  validarConsultaBuscaDireta,
+  validarConsultaConversaDireta,
+  validarConsultaNaoLidas,
 } from '../domain/mensagem-direta-consultas';
 import {
   MensagemDiretaFonte,
   MensagemDiretaNova,
   deFonteDireta,
+  mesmaOrigemDaMensagem,
   paraFonteDireta,
   validarMensagemDiretaNova,
 } from '../domain/mensagem-direta.documento';
@@ -84,25 +87,18 @@ export abstract class MensagemDiretaIndiceRepository implements ArmazenamentoDeM
       // `mensagemId` alheio devolveria a mensagem de outra pessoa.
       const existente = await this.lerDocumento(INDICE_MENSAGEM_DIRETA, mensagem.mensagemId);
       if (!existente) throw new Error('O documento existia na gravação e não foi encontrado na leitura');
-      const mesmaOrigem =
-        existente.conversa_id === mensagem.conversaId && existente.autor === mensagem.autor && (existente.autor_usuario_id ?? null) === mensagem.autorUsuarioId;
-      if (!mesmaOrigem) throw new BusinessException('Esse identificador de mensagem já foi usado');
+      if (!mesmaOrigemDaMensagem(existente, mensagem)) throw new BusinessException('Esse identificador de mensagem já foi usado');
       return { mensagem: deFonteDireta(existente), jaExistia: true };
     });
   }
 
   async listarConversa(consulta: ConsultaConversaDireta): Promise<PaginaDeMensagensDiretas> {
-    if (!lerConversaDiretaId(consulta.conversaId)) throw new BusinessException('Conversa direta inválida');
-    if (!Number.isInteger(consulta.limite) || consulta.limite < 1 || consulta.limite > LIMITE_MAXIMO_DA_CONVERSA_DIRETA) {
-      throw new BusinessException(`O limite da conversa deve ficar entre 1 e ${LIMITE_MAXIMO_DA_CONVERSA_DIRETA}`);
-    }
+    validarConsultaConversaDireta(consulta);
     const montada = montarConsultaConversaDireta(consulta);
     return this.proteger(async () => {
       await this.garantirIndice();
       const { fontes } = await this.pesquisar(INDICE_MENSAGEM_DIRETA, montada);
-      const pagina = fontes.slice(0, consulta.limite);
-      const haMais = fontes.length > consulta.limite;
-      return { mensagens: pagina.map(deFonteDireta), proximoCursor: haMais ? codificarCursor(pagina[pagina.length - 1]) : null };
+      return montarPaginaDeMensagens(fontes, consulta.limite, deFonteDireta);
     });
   }
 
@@ -116,9 +112,7 @@ export abstract class MensagemDiretaIndiceRepository implements ArmazenamentoDeM
 
   async contarNaoLidas(consulta: ConsultaNaoLidas): Promise<Record<string, number>> {
     if (consulta.marcadores.length === 0) return {};
-    if (consulta.marcadores.length > LIMITE_MARCADORES_DE_LEITURA) {
-      throw new BusinessException(`Só dá para contar as não lidas de até ${LIMITE_MARCADORES_DE_LEITURA} conversas de uma vez`);
-    }
+    validarConsultaNaoLidas(consulta);
     return this.proteger(async () => {
       await this.garantirIndice();
       const { naoLidas } = await this.pesquisar(INDICE_MENSAGEM_DIRETA, montarConsultaNaoLidas(consulta));
@@ -130,7 +124,7 @@ export abstract class MensagemDiretaIndiceRepository implements ArmazenamentoDeM
   }
 
   async buscar(consulta: ConsultaBuscaDireta): Promise<MensagemDiretaResumoDto[]> {
-    if (!consulta.texto.trim()) throw new BusinessException('Informe o texto da busca');
+    validarConsultaBuscaDireta(consulta);
     return this.proteger(async () => {
       await this.garantirIndice();
       const { fontes } = await this.pesquisar(INDICE_MENSAGEM_DIRETA, montarConsultaBuscaDireta(consulta));

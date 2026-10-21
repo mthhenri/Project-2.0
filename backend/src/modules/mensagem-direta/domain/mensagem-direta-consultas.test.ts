@@ -18,6 +18,11 @@ import {
   montarConsultaConversasDoUsuario,
   montarConsultaNaoLidas,
   montarConsultaSupervisao,
+  montarPaginaDeMensagens,
+  validarConsultaBuscaDireta,
+  validarConsultaConversaDireta,
+  validarConsultaNaoLidas,
+  validarPaginaDaSupervisao,
 } from './mensagem-direta-consultas';
 import { deFonteDireta, MensagemDiretaFonte } from './mensagem-direta.documento';
 
@@ -184,4 +189,48 @@ test('a supervisão recusa página inválida e o que passa do limite agregado', 
   for (const porPagina of [0, 101]) recusaCom(() => montarConsultaSupervisao({ usuarioIdsExcluidos: [], pagina: 1, porPagina }), /Página/);
   recusaCom(() => montarConsultaSupervisao({ usuarioIdsExcluidos: [], pagina: 11, porPagina: 100 }), /1\.000/);
   assert.doesNotThrow(() => montarConsultaSupervisao({ usuarioIdsExcluidos: [], pagina: 10, porPagina: 100 }));
+});
+
+// Validação comum aos três armazenamentos (task 207)
+
+test('validarConsultaConversaDireta recusa conversa inválida e limite fora da faixa, e aceita as pontas', () => {
+  validarConsultaConversaDireta({ conversaId: '4-9', limite: 1 });
+  validarConsultaConversaDireta({ conversaId: '4-9', limite: 100 });
+  recusaCom(() => validarConsultaConversaDireta({ conversaId: '9-4', limite: 10 }), /Conversa direta inválida/);
+  recusaCom(() => validarConsultaConversaDireta({ conversaId: '4-9', limite: 0 }), /limite da conversa/);
+  recusaCom(() => validarConsultaConversaDireta({ conversaId: '4-9', limite: 101 }), /limite da conversa/);
+  recusaCom(() => validarConsultaConversaDireta({ conversaId: '4-9', limite: 1.5 }), /limite da conversa/);
+});
+
+test('validarConsultaNaoLidas aceita até o limite de conversas e recusa acima dele', () => {
+  const marcadores = (quantidade: number) => Array.from({ length: quantidade }, (_, indice) => ({ conversaId: `1-${indice + 2}`, lidaAteDate: null }));
+  validarConsultaNaoLidas({ usuarioId: 1, marcadores: marcadores(LIMITE_CONVERSAS_DO_USUARIO) });
+  recusaCom(() => validarConsultaNaoLidas({ usuarioId: 1, marcadores: marcadores(LIMITE_CONVERSAS_DO_USUARIO + 1) }), /até 200 conversas/);
+});
+
+test('validarConsultaBuscaDireta recusa texto vazio ou só de espaços', () => {
+  validarConsultaBuscaDireta({ usuarioId: 1, texto: 'filtro' });
+  recusaCom(() => validarConsultaBuscaDireta({ usuarioId: 1, texto: '   ' }), /texto da busca/);
+});
+
+test('validarPaginaDaSupervisao devolve quantas conversas pular e recusa página inválida ou além do que se agrega', () => {
+  assert.equal(validarPaginaDaSupervisao({ usuarioIdsExcluidos: [], pagina: 1, porPagina: 10 }), 0);
+  assert.equal(validarPaginaDaSupervisao({ usuarioIdsExcluidos: [], pagina: 3, porPagina: 10 }), 20);
+  recusaCom(() => validarPaginaDaSupervisao({ usuarioIdsExcluidos: [], pagina: 0, porPagina: 10 }), /inválida/);
+  recusaCom(() => validarPaginaDaSupervisao({ usuarioIdsExcluidos: [], pagina: 1, porPagina: 101 }), /inválida/);
+  recusaCom(() => validarPaginaDaSupervisao({ usuarioIdsExcluidos: [], pagina: LIMITE_CONVERSAS_DA_SUPERVISAO / 100 + 1, porPagina: 100 }), /1\.000 conversas/);
+});
+
+test('montarPaginaDeMensagens corta o excedente, que só prova a página seguinte, e aponta o cursor para a última devolvida', () => {
+  const fonte = (indice: number): MensagemDiretaFonte => ({ ...FONTE, mensagem_id: `7f0c2b9e-4c1a-4e6a-9d55-2f6c0d1b8a1${indice}`, created_date: `2026-10-21T14:00:0${indice}.000Z` });
+  const tres = [fonte(3), fonte(2), fonte(1)];
+
+  const comMais = montarPaginaDeMensagens(tres, 2, deFonteDireta);
+  assert.deepEqual(comMais.mensagens.map((mensagem) => mensagem.mensagemId), [tres[0].mensagem_id, tres[1].mensagem_id]);
+  assert.deepEqual(decodificarCursor(comMais.proximoCursor!), [new Date(tres[1].created_date).getTime(), tres[1].mensagem_id]);
+
+  const exata = montarPaginaDeMensagens(tres, 3, deFonteDireta);
+  assert.equal(exata.mensagens.length, 3);
+  assert.equal(exata.proximoCursor, null);
+  assert.deepEqual(montarPaginaDeMensagens([], 2, deFonteDireta), { mensagens: [], proximoCursor: null });
 });

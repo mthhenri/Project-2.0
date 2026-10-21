@@ -1,5 +1,7 @@
+import { Knex } from 'knex';
 import { MensagemDiretaEnviadaDto, MensagemDiretaResumoDto } from '@project20/shared';
 import { ConfigService } from '../../../config/config.service';
+import { DATABASE_CONNECTION } from '../../../core/database/database.provider';
 import {
   ConsultaBuscaDireta,
   ConsultaConversaDireta,
@@ -13,11 +15,12 @@ import {
 import { MensagemDiretaNova } from '../domain/mensagem-direta.documento';
 import { criarClienteElasticsearchMensagemDireta, MensagemDiretaElasticsearchRepository } from './mensagem-direta-elasticsearch.repository';
 import { criarClienteOpenSearchMensagemDireta, MensagemDiretaOpenSearchRepository } from './mensagem-direta-opensearch.repository';
+import { MensagemDiretaPostgresRepository } from './mensagem-direta-postgres.repository';
 
 /**
  * O contrato do armazenamento das mensagens entre colaboradores (task 206). A service (task 208) só conhece isto; a implementação vem de
  * `CHAT_ARMAZENAMENTO`, a mesma variável do chat da IA: OpenSearch no desenvolvimento, Elasticsearch na produção final e, na produção de
- * teste, as tabelas provisórias do Postgres (task 207). Não há exclusão nem alteração de mensagem: elas são gravadas uma vez.
+ * teste, a tabela provisória do Postgres (task 207). Não há exclusão nem alteração de mensagem: elas são gravadas uma vez.
  *
  * Quem pode ler o quê é decidido na service: o armazenamento recebe filtros explícitos e não conhece permissão.
  */
@@ -44,13 +47,12 @@ export const ARMAZENAMENTO_DE_MENSAGEM_DIRETA = 'ARMAZENAMENTO_DE_MENSAGEM_DIRET
 /** Cria só o armazenamento escolhido: o outro nem é instanciado (não tenta conectar, não loga aviso). */
 export const armazenamentoDeMensagemDiretaProvider = {
   provide: ARMAZENAMENTO_DE_MENSAGEM_DIRETA,
-  inject: [ConfigService],
-  useFactory: (configService: ConfigService): ArmazenamentoDeMensagemDireta => {
+  inject: [ConfigService, DATABASE_CONNECTION],
+  useFactory: (configService: ConfigService, conexaoBancoDados: Knex): ArmazenamentoDeMensagemDireta => {
     const configuracao = configService.obter();
     switch (configuracao.chat.armazenamento) {
       case 'postgres':
-        // O armazenamento provisório em Postgres das mensagens diretas é a task 207; até lá o módulo não é registrado no AppModule.
-        throw new Error('As mensagens entre colaboradores ainda não têm armazenamento em Postgres (task 207): use CHAT_ARMAZENAMENTO=opensearch ou elasticsearch.');
+        return new MensagemDiretaPostgresRepository(conexaoBancoDados);
       case 'elasticsearch':
         return new MensagemDiretaElasticsearchRepository(criarClienteElasticsearchMensagemDireta(configuracao.elasticsearch));
       default:

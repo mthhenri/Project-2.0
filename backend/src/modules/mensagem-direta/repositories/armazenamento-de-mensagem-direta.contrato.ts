@@ -12,7 +12,7 @@ const espera = (milissegundos: number) => new Promise((resolver) => setTimeout(r
 /**
  * A mesma lista de cenários para toda implementação de `ArmazenamentoDeMensagemDireta` (task 206): é o que garante que trocar o armazenamento
  * (OpenSearch no desenvolvimento, Postgres na produção de teste, Elasticsearch na de verdade) não muda o que o chat enxerga. Roda contra o
- * serviço real e fica desligada por padrão (`CHAT_INTEGRACAO=1` a liga). É ela, e não os testes com cliente em dublê, que prova as consultas:
+ * serviço real e fica desligada por padrão (`CHAT_INTEGRACAO=1` a liga); a do Postgres, que usa o banco de teste local, roda sempre. É ela, e não os testes com cliente em dublê, que prova as consultas:
  * ordenação com `search_after`, agregação por conversa, `filters`, `bucket_sort` e `cardinality`.
  *
  * Cada execução usa usuários próprios (números altos e aleatórios) e uma palavra única (`marca`) em todo texto, para a supervisão, que lê
@@ -22,8 +22,11 @@ export function registrarContratoDeArmazenamentoDeMensagemDireta(
   nome: string,
   criar: () => Promise<ArmazenamentoDeMensagemDireta>,
   limpar: (usuarioIds: number[]) => Promise<void>,
+  /** `sempreLigado`: o armazenamento roda no banco de teste local (Postgres), sem serviço externo, então não espera `CHAT_INTEGRACAO=1`. */
+  opcoes: { sempreLigado?: boolean } = {},
 ): void {
-  describe(`contrato do armazenamento das mensagens diretas: ${nome}`, { skip: !CONTRATO_LIGADO && 'defina CHAT_INTEGRACAO=1 (usa o serviço real)' }, () => {
+  const pular = !CONTRATO_LIGADO && !opcoes.sempreLigado && 'defina CHAT_INTEGRACAO=1 (usa o serviço real)';
+  describe(`contrato do armazenamento das mensagens diretas: ${nome}`, { skip: pular }, () => {
     const base = 900_000_000 + Math.floor(Math.random() * 90_000_000);
     const ana = base;
     const bruno = base + 1;

@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
 import { AutorMensagemDiretaEnum, ReferenciaMensagemDiretaEnum } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
-import { MensagemDiretaFonte, MensagemDiretaNova, deFonteDireta, paraFonteDireta, validarMensagemDiretaNova } from './mensagem-direta.documento';
+import { MensagemDiretaFonte, MensagemDiretaNova, deFonteDireta, mesmaOrigemDaMensagem, paraFonteDireta, validarMensagemDiretaNova } from './mensagem-direta.documento';
 
 const UUID = '7f0c2b9e-4c1a-4e6a-9d55-2f6c0d1b8a10';
 
@@ -95,4 +95,14 @@ test('ler tolera documento sem autor, sem menções e com referência que não s
   assert.equal(resumo.autorUsuarioId, null);
   assert.deepEqual(resumo.mencoes, []);
   assert.deepEqual(resumo.referencias, [{ tipo: ReferenciaMensagemDiretaEnum.ATIVIDADE, id: 57 }]);
+});
+
+test('mesmaOrigemDaMensagem só vale para o mesmo autor na mesma conversa', () => {
+  const gravada = paraFonteDireta(NOVA, new Date('2026-10-21T14:00:00.000Z'));
+  assert.equal(mesmaOrigemDaMensagem(gravada, NOVA), true);
+  assert.equal(mesmaOrigemDaMensagem(gravada, { ...NOVA, texto: 'outro texto no reenvio' }), true, 'o texto do reenvio não conta: vale o já gravado');
+  assert.equal(mesmaOrigemDaMensagem(gravada, { ...NOVA, autorUsuarioId: 4 }), false, 'outro autor');
+  assert.equal(mesmaOrigemDaMensagem(gravada, { ...NOVA, conversaId: '9-12' }), false, 'outra conversa');
+  assert.equal(mesmaOrigemDaMensagem(gravada, { ...NOVA, autor: AutorMensagemDiretaEnum.SISTEMA, autorUsuarioId: null }), false, 'o sistema não é a pessoa');
+  assert.equal(mesmaOrigemDaMensagem({ ...gravada, autor: 'SISTEMA', autor_usuario_id: null }, { ...NOVA, autor: AutorMensagemDiretaEnum.SISTEMA, autorUsuarioId: null }), true);
 });

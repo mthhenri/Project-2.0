@@ -86,6 +86,7 @@ As tabelas devem ser criadas nessa ordem para respeitar as dependências de FK:
 15. tipo_proposta_ia, tipo_proposta_ia_status, proposta_ia (migration `0035`)
 16. tipo_atividade_prioridade e `atividade.tipo_atividade_prioridade_id` (migration `0036`)
 17. mensagem_direta_leitura, mensagem_direta_preferencia, mensagem_direta_supervisao (migration `0050`; só dependem de `usuario`)
+18. mensagem_direta (migration `0051`, provisória; sem FK, depende só das funções `fn_chat_texto_*` da `0038`)
 ```
 
 ---
@@ -751,16 +752,24 @@ dois usuários). Colunas de `BaseEntity` mais: `leitor_usuario_id`, `conversa_id
 `participantes_avisados` (esta abertura gerou o aviso na conversa; o aviso sai uma vez por leitor, conversa e dia). `created_date` é o instante da abertura. Índice em
 (`leitor_usuario_id`, `conversa_id`, `created_date`).
 
-### Tabelas provisórias — migration `0038` (task 162)
+### Tabelas provisórias — migrations `0038` (task 162) e `0051` (task 207)
 
 > **Não fazem parte do modelo definitivo.** Existem só para o ambiente de teste (`CHAT_ARMAZENAMENTO=postgres`) guardar as mensagens do
-> chat sem um serviço de busca. Na produção de verdade o histórico fica no Elasticsearch. **Remoção:** uma migration nova derruba
-> `chat_conversa`, `chat_mensagem` e as funções `fn_chat_texto_busca` e `fn_chat_texto_consulta`; junto saem `ChatMensagemPostgresRepository` e o ramo `postgres` do
-> provider em `armazenamento-de-chat.ts`. As tabelas trazem `COMMENT ON TABLE` com o aviso.
+> chat com a IA (`0038`) e as do chat entre colaboradores (`0051`) sem um serviço de busca. Na produção de verdade o histórico fica no Elasticsearch. **Remoção:** uma migration nova
+> derruba, **nesta ordem**, `mensagem_direta`, `chat_conversa`, `chat_mensagem` e só então as funções `fn_chat_texto_busca` e `fn_chat_texto_consulta` (o índice de busca das duas
+> tabelas de mensagem depende delas); junto saem `ChatMensagemPostgresRepository` e `MensagemDiretaPostgresRepository` e o ramo `postgres` dos dois providers
+> (`armazenamento-de-chat.ts` e `armazenamento-de-mensagem-direta.ts`). As tabelas trazem `COMMENT ON TABLE` com o aviso.
 
 #### `chat_mensagem`
 Uma linha por mensagem do chat, gravada uma vez e nunca reescrita (sem exclusão nem alteração pela aplicação). Colunas de `BaseEntity` mais:
 `mensagem_id` (UUID, único), `conversa_id` (`<usuarioId>-<yyyy-mm-dd>`), `usuario_id`, `contexto` (`CHAT`/`CHECKIN`), `autor` (`USUARIO`/`IA`/`SISTEMA`), `assunto` (`SISTEMA`/`CODIGO`, anulável: mensagem antiga, do sistema ou do check-in fica sem marca e é lida como `SISTEMA`; migration `0045`), `texto`, `nivel`, `modelo`, `tokens_entrada`, `tokens_saida`, `tokens_cache`, `proposta_id`, `execucao_id`, `atividade_id`, `demanda_id` (referências opcionais, sem FK) e `conteudo_bruto` (JSONB). `created_date` é a data da mensagem. Índices: (`usuario_id`, `conversa_id`, `created_date`) e GIN em `fn_chat_texto_busca(texto)`, que é `to_tsvector('portuguese', unaccent(texto))` (busca sem acento; exige a extensão `unaccent`). `fn_chat_texto_consulta(texto)` normaliza o texto digitado do mesmo jeito (`plainto_tsquery`). As duas fixam `search_path = public, extensions, pg_catalog`: no Supabase as extensões vivem no schema `extensions`, que a conexão da aplicação não enxerga por padrão, e o SQL da aplicação nunca chama `unaccent` diretamente.
+
+#### `mensagem_direta` (task 207)
+Uma linha por mensagem entre colaboradores, com os mesmos campos e nomes do documento do índice `mensagem-direta`; gravada uma vez e nunca reescrita. Colunas de `BaseEntity` mais:
+`mensagem_id` (UUID, único, vem do cliente e dá idempotência ao reenvio), `conversa_id` (`VARCHAR(21)`, `<menorId>-<maiorId>`), `usuario_menor_id` e `usuario_maior_id` (os dois
+participantes, **sem FK** para `usuario`, como `chat_mensagem`; `CHECK` de menor < maior e de que `conversa_id` bate com os dois), `autor_usuario_id` (anulável: mensagem do sistema),
+`autor` (`USUARIO`/`SISTEMA`), `texto` (Markdown), `contem_codigo`, `mencoes` (`INTEGER[]`) e `referencias` (`TEXT[]`, `DEMANDA:212`). `created_date` é a data da mensagem, definida pela
+aplicação em milissegundos (é o que o cursor de paginação compara). Índices: (`conversa_id`, `created_date`, `mensagem_id`), um por participante e GIN em `fn_chat_texto_busca(texto)`.
 
 #### `chat_conversa`
 O nome da conversa: `conversa_id` (único), `usuario_id`, `titulo` (vazio = sem nome gravado; vale o padrão "Chat do dia ...") e `titulo_editado` (verdadeiro quando o usuário renomeou; a renomeação automática da IA deixa essa conversa em paz), mais as colunas de `BaseEntity`.
