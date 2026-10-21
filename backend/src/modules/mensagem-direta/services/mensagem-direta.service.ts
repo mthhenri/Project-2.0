@@ -37,6 +37,7 @@ import { lerPeriodoDaBusca, limitarLeituraAoAgora, normalizarMencoes, normalizar
 import { ARMAZENAMENTO_DE_MENSAGEM_DIRETA, ArmazenamentoDeMensagemDireta } from '../repositories/armazenamento-de-mensagem-direta';
 import { MensagemDiretaLeituraRepository } from '../repositories/mensagem-direta-leitura.repository';
 import { MensagemDiretaPreferenciaRepository } from '../repositories/mensagem-direta-preferencia.repository';
+import { MensagemDiretaEventosService } from './mensagem-direta-eventos.service';
 
 const NOME_DE_USUARIO_REMOVIDO = 'Usuário removido';
 
@@ -45,7 +46,7 @@ const NOME_DE_USUARIO_REMOVIDO = 'Usuário removido';
  * mensagens (OpenSearch, Elasticsearch ou o Postgres provisório) recebe filtros explícitos e não conhece permissão.
  *
  * A pessoa que age é sempre a do token: remetente, dono do marcador de leitura, da preferência e do filtro da busca. O que chega pela rota
- * ou pelo corpo é só a **outra** pessoa da conversa. Supervisão (gestor lendo conversa de terceiros) é a task 214, e o stream de eventos, a 209.
+ * ou pelo corpo é só a **outra** pessoa da conversa. Supervisão (gestor lendo conversa de terceiros) é a task 214. Depois de gravar, a service avisa os streams pelo `MensagemDiretaEventosService` (task 209).
  */
 @Injectable()
 export class MensagemDiretaService {
@@ -56,6 +57,7 @@ export class MensagemDiretaService {
     private readonly usuarioRepositorio: UsuarioRepository,
     private readonly demandaRepositorio: DemandaRepository,
     private readonly atividadeRepositorio: AtividadeRepository,
+    private readonly eventosService: MensagemDiretaEventosService,
   ) {}
 
   // ---------------------------------------------------------------------------
@@ -81,6 +83,11 @@ export class MensagemDiretaService {
       mencoes,
       referencias,
     });
+
+    // O reenvio de uma mensagem que já estava gravada não avisa de novo. As duas pontas recebem (a do remetente cobre as outras abas dele).
+    if (!enviada.jaExistia) {
+      await this.eventosService.publicarParaUsuarios({ usuarioIds: [usuarioAtivo.sub, dto.destinatarioId], evento: { tipo: 'MENSAGEM', mensagem: enviada.mensagem } });
+    }
 
     return {
       sucesso: true,
@@ -129,6 +136,7 @@ export class MensagemDiretaService {
     const usuarioIds = [...new Set([...outroPorConversa.values()].filter((outroId): outroId is number => outroId !== null))];
     const nomes = new Map((await this.usuarioRepositorio.listarNomesPorIds({ usuarioIds })).map((usuario) => [usuario.id, usuario.nomeCompleto]));
 
+    const online = this.eventosService.listarUsuariosOnline();
     const conversas: ConversaDiretaResumoDto[] = [];
     for (const resumo of resumos) {
       const outroId = outroPorConversa.get(resumo.conversaId);
@@ -140,6 +148,7 @@ export class MensagemDiretaService {
         ultimaMensagem: resumo.ultimaMensagem,
         naoLidas: naoLidas[resumo.conversaId] ?? 0,
         silenciada: marcadorPorConversa.get(resumo.conversaId)?.silenciada ?? false,
+        online: online.has(outroId),
       });
     }
 
@@ -174,9 +183,14 @@ export class MensagemDiretaService {
       outroUsuarioId: dto.usuarioId,
       lidaAteDate: limitarLeituraAoAgora(dto.lidaAteDate, new Date()),
     });
+    const lidaAteDate = marcador.lidaAteDate as Date;
+    await this.eventosService.publicarParaUsuarios({
+      usuarioIds: [usuarioAtivo.sub, dto.usuarioId],
+      evento: { tipo: 'LEITURA', conversaId, usuarioId: usuarioAtivo.sub, lidaAteDate },
+    });
     return {
       sucesso: true,
-      dados: { conversaId, lidaAteDate: marcador.lidaAteDate as Date },
+      dados: { conversaId, lidaAteDate },
       mensagem: 'Leitura registrada com sucesso',
     };
   }

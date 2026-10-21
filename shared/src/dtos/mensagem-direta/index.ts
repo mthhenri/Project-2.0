@@ -21,3 +21,5 @@ export * from './MensagemDiretaLeituraInternoAlterarDto';
 export * from './MensagemDiretaSilencioInternoAlterarDto';
 export * from './MensagemDiretaPreferenciaInternoRecuperarDto';
 export * from './MensagemDiretaPreferenciaInternoAlterarDto';
+export * from './MensagemDiretaEventoDto';
+export * from './MensagemDiretaEventoPublicarDto';

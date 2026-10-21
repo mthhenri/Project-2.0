@@ -10,7 +10,13 @@ import { AppModule } from './app.module';
 import { ConfigService } from './config/config.service';
 
 async function inicializar(): Promise<void> {
-  const aplicacao = await NestFactory.create(AppModule);
+  const aplicacao = await NestFactory.create(AppModule, {
+    // Na parada o servidor não espera conexões que ainda estejam abertas (os streams do chat são longos); os clientes reconectam em outra instância.
+    forceCloseConnections: true,
+  });
+
+  // Parada ordenada: SIGTERM/SIGINT chamam os ganchos de encerramento (os streams do chat avisam os clientes e fecham).
+  aplicacao.enableShutdownHooks();
 
   const configService = aplicacao.get(ConfigService);
   const corsOrigem = configService.obter().aplicacao.corsOrigem;

@@ -9,11 +9,12 @@ import { MensagemDiretaController } from './mensagem-direta.controller';
 
 const USUARIO = { sub: 4, login: 'ana', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
 
-test('verbos e caminhos das oito rotas', () => {
+test('verbos e caminhos das nove rotas', () => {
   assert.deepEqual(
     Object.values(rotasPorNome(MensagemDiretaController)).map((rota) => `${rota.verbo} ${rota.caminho}`).sort(),
     [
       'GET busca',
+      'GET eventos',
       'GET conversa/:usuarioId',
       'GET conversas',
       'GET preferencia',
@@ -36,11 +37,10 @@ test('nenhuma rota é pública, de gestor ou de administrador', () => {
 test('o usuarioId da rota entra no DTO e vence qualquer valor vindo da query ou do corpo', async () => {
   const chamadas: Record<string, unknown[]> = {};
   const registrar = (nome: string) => async (...argumentos: unknown[]) => { chamadas[nome] = argumentos; return null; };
-  const controller = new MensagemDiretaController({
-    listarConversa: registrar('listarConversa'),
-    alterarLeitura: registrar('alterarLeitura'),
-    alterarSilencio: registrar('alterarSilencio'),
-  } as never);
+  const controller = new MensagemDiretaController(
+    { listarConversa: registrar('listarConversa'), alterarLeitura: registrar('alterarLeitura'), alterarSilencio: registrar('alterarSilencio') } as never,
+    {} as never,
+  );
 
   await controller.listarConversa(9, { usuarioId: 1000, limite: 10 } as never, USUARIO);
   await controller.alterarLeitura(9, { usuarioId: 1000, lidaAteDate: '2026-10-21T10:00:00.000Z' } as never, USUARIO);
@@ -54,13 +54,16 @@ test('o usuarioId da rota entra no DTO e vence qualquer valor vindo da query ou 
 test('as demais rotas repassam o DTO e o usuário do token', async () => {
   const chamadas: Record<string, unknown[]> = {};
   const registrar = (nome: string) => async (...argumentos: unknown[]) => { chamadas[nome] = argumentos; return null; };
-  const controller = new MensagemDiretaController({
-    listarConversas: registrar('listarConversas'),
-    enviarMensagem: registrar('enviarMensagem'),
-    buscar: registrar('buscar'),
-    recuperarPreferencia: registrar('recuperarPreferencia'),
-    alterarPreferencia: registrar('alterarPreferencia'),
-  } as never);
+  const controller = new MensagemDiretaController(
+    {
+      listarConversas: registrar('listarConversas'),
+      enviarMensagem: registrar('enviarMensagem'),
+      buscar: registrar('buscar'),
+      recuperarPreferencia: registrar('recuperarPreferencia'),
+      alterarPreferencia: registrar('alterarPreferencia'),
+    } as never,
+    {} as never,
+  );
 
   const envio = { destinatarioId: 9, mensagemId: 'x', texto: 'oi' } as never;
   const preferencia = { avisosAtivos: true } as never;
@@ -75,4 +78,39 @@ test('as demais rotas repassam o DTO e o usuário do token', async () => {
   assert.deepEqual(chamadas.buscar, [{ texto: 'cadastro' }, USUARIO]);
   assert.deepEqual(chamadas.recuperarPreferencia, [USUARIO]);
   assert.deepEqual(chamadas.alterarPreferencia, [preferencia, USUARIO]);
+});
+
+test('eventos: abre o stream do usuário do token, com os cabeçalhos de event-stream, e fecha ao desconectar', () => {
+  const cabecalhos: Record<string, string> = {};
+  const escritas: string[] = [];
+  const ouvintes: Record<string, () => void> = {};
+  let encerrada = false;
+  const resposta = {
+    status: () => resposta,
+    setHeader: (nome: string, valor: string) => { cabecalhos[nome] = valor; },
+    flushHeaders: () => undefined,
+    write: (texto: string) => { escritas.push(texto); return true; },
+    end: () => { encerrada = true; },
+    on: (evento: string, ouvinte: () => void) => { ouvintes[evento] = ouvinte; },
+    writableEnded: false,
+    destroyed: false,
+  };
+  const abertas: { usuarioId: number; conexao: { enviar(e: unknown): void; encerrar(): void } }[] = [];
+  let fechada = 0;
+  const controller = new MensagemDiretaController({} as never, {
+    abrir: (usuarioAtivo: { sub: number }, conexao: { enviar(e: unknown): void; encerrar(): void }) => { abertas.push({ usuarioId: usuarioAtivo.sub, conexao }); return () => { fechada++; }; },
+  } as never);
+
+  controller.abrirEventos(USUARIO, resposta as never);
+
+  assert.equal(abertas[0].usuarioId, 4);
+  assert.match(cabecalhos['Content-Type'], /text\/event-stream/);
+  assert.equal(cabecalhos['X-Accel-Buffering'], 'no');
+  abertas[0].conexao.enviar({ tipo: 'BATIMENTO' });
+  assert.deepEqual(escritas, ['data: {"tipo":"BATIMENTO"}\n\n']);
+  assert.equal(fechada, 0);
+  ouvintes.close();
+  assert.equal(fechada, 1);
+  abertas[0].conexao.encerrar();
+  assert.equal(encerrada, true);
 });

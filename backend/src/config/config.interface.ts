@@ -1,4 +1,5 @@
 import { ArmazenamentoDoChat } from './armazenamento-do-chat';
+import { EventosDoChat } from './eventos-do-chat';
 export interface ConfiguracaoBancoDados {
   host: string;
   porta: number;
@@ -28,6 +29,8 @@ export interface ConfiguracaoOpenAi {
 
 export interface ConfiguracaoChat {
   armazenamento: ArmazenamentoDoChat;
+  /** Barramento dos eventos do chat entre colaboradores (task 209). */
+  eventos: EventosDoChat;
 }
 
 export interface ConfiguracaoOpenSearch {

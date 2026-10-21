@@ -50,6 +50,7 @@ interface Cenario {
   conversas?: { conversaId: string; participantes: number[]; totalMensagens: number; ultimaMensagem: MensagemDiretaResumoDto }[];
   naoLidas?: Record<string, number>;
   preferencia?: unknown;
+  online?: number[];
 }
 
 function montar(cenario: Cenario = {}) {
@@ -97,7 +98,14 @@ function montar(cenario: Cenario = {}) {
     validarAcessoDemanda: async (dto: unknown) => { registrar('acessoDemanda', dto); return cenario.atividadeComAcesso ?? true; },
   };
 
-  const service = new MensagemDiretaService(armazenamento as never, leitura as never, preferencia as never, usuario as never, demanda as never, atividade as never);
+  const eventos = {
+    publicarParaUsuarios: async (dto: unknown) => { registrar('publicar', dto); },
+    listarUsuariosOnline: () => new Set(cenario.online ?? []),
+  };
+
+  const service = new MensagemDiretaService(
+    armazenamento as never, leitura as never, preferencia as never, usuario as never, demanda as never, atividade as never, eventos as never,
+  );
   return { service, chamadas };
 }
 
@@ -304,4 +312,49 @@ test('pessoa excluída: a conversa continua abrindo, lendo e silenciando; só en
   assert.equal((await service.alterarSilencio({ usuarioId: BRUNO_ID, silenciada: true }, ANA)).sucesso, true);
   await assert.rejects(service.enviarMensagem(envio(), ANA), ResourceNotFoundException);
   assert.equal(chamadas.gravar, undefined);
+});
+
+// --- tempo real (task 209) -----------------------------------------------------
+
+test('enviarMensagem: avisa o remetente e o destinatário com a mensagem gravada, uma vez', async () => {
+  const { service, chamadas } = montar();
+  const resposta = await service.enviarMensagem(envio(), ANA);
+
+  assert.equal(chamadas.publicar.length, 1);
+  assert.deepEqual(chamadas.publicar[0], { usuarioIds: [4, BRUNO_ID], evento: { tipo: 'MENSAGEM', mensagem: resposta.dados!.mensagem } });
+});
+
+test('enviarMensagem: o reenvio de uma mensagem que já estava gravada não avisa de novo', async () => {
+  const { service, chamadas } = montar({ jaExistia: true });
+  await service.enviarMensagem(envio(), ANA);
+  assert.equal(chamadas.publicar, undefined);
+});
+
+test('enviarMensagem recusada não avisa ninguém', async () => {
+  const { service, chamadas } = montar({ usuarios: {} });
+  await assert.rejects(service.enviarMensagem(envio(), ANA));
+  assert.equal(chamadas.publicar, undefined);
+});
+
+test('alterarLeitura: avisa as duas pontas com quem leu e até quando ficou gravado', async () => {
+  const { service, chamadas } = montar();
+  const resposta = await service.alterarLeitura({ usuarioId: BRUNO_ID, lidaAteDate: '2026-10-21T10:00:00.000Z' }, ANA);
+
+  assert.deepEqual(chamadas.publicar[0], {
+    usuarioIds: [4, BRUNO_ID],
+    evento: { tipo: 'LEITURA', conversaId: '4-9', usuarioId: 4, lidaAteDate: resposta.dados!.lidaAteDate },
+  });
+});
+
+test('listarConversas: online vem da presença global', async () => {
+  const { service } = montar({
+    online: [BRUNO_ID],
+    usuarios: { [BRUNO_ID]: {}, 15: {} },
+    conversas: [
+      { conversaId: '4-9', participantes: [4, 9], totalMensagens: 1, ultimaMensagem: mensagem() },
+      { conversaId: '4-15', participantes: [4, 15], totalMensagens: 1, ultimaMensagem: mensagem({ conversaId: '4-15' }) },
+    ],
+  });
+  const { conversas } = (await service.listarConversas(ANA)).dados!;
+  assert.deepEqual(conversas.map((c) => [c.usuarioId, c.online]), [[9, true], [15, false]]);
 });

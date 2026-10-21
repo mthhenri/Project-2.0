@@ -10,6 +10,8 @@ import { UsuarioRepository } from '../../usuario/repositories/usuario.repository
 import { MensagemDiretaLeituraRepository } from '../repositories/mensagem-direta-leitura.repository';
 import { MensagemDiretaPostgresRepository } from '../repositories/mensagem-direta-postgres.repository';
 import { MensagemDiretaPreferenciaRepository } from '../repositories/mensagem-direta-preferencia.repository';
+import { PublicadorEmMemoria } from '../publicadores/publicador-em-memoria';
+import { MensagemDiretaEventosService } from './mensagem-direta-eventos.service';
 import { MensagemDiretaService } from './mensagem-direta.service';
 
 // A service do chat entre colaboradores ponta a ponta (task 208): usuários reais no banco de teste e o armazenamento Postgres provisório (207),
@@ -23,6 +25,7 @@ function montar(conexao: ConexaoTeste) {
     criarRepositorio(UsuarioRepository, conexao),
     criarRepositorio(DemandaRepository, conexao),
     criarRepositorio(AtividadeRepository, conexao),
+    new MensagemDiretaEventosService(new PublicadorEmMemoria()),
   );
 }
 

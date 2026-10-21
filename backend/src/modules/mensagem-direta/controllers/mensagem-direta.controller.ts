@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, Query, Res } from '@nestjs/common';
+import type { Response } from 'express';
 import {
   MensagemDiretaBuscarDto,
   MensagemDiretaEnviarDto,
@@ -9,15 +10,20 @@ import {
 } from '@project20/shared';
 import { ActiveUser } from '../../autenticacao/decorators/active-user.decorator';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
+import { MensagemDiretaEventosService } from '../services/mensagem-direta-eventos.service';
 import { MensagemDiretaService } from '../services/mensagem-direta.service';
+import { FluxoDeEventosDiretos } from './fluxo-de-eventos-diretos';
 
 /**
  * Chat entre colaboradores (task 208): qualquer usuário autenticado, sempre como a pessoa do token. O `usuarioId` da rota é a OUTRA pessoa da
- * conversa e entra no DTO aqui; nunca vem do corpo ou da query. O stream de eventos é a task 209 e a supervisão, a 214.
+ * conversa e entra no DTO aqui; nunca vem do corpo ou da query. A supervisão é a task 214.
  */
 @Controller('mensagem-direta')
 export class MensagemDiretaController {
-  constructor(private readonly mensagemDiretaService: MensagemDiretaService) {}
+  constructor(
+    private readonly mensagemDiretaService: MensagemDiretaService,
+    private readonly eventosService: MensagemDiretaEventosService,
+  ) {}
 
   @Get('conversas')
   listarConversas(@ActiveUser() usuarioAtivo: JwtPayload) {
@@ -69,5 +75,15 @@ export class MensagemDiretaController {
   @Put('preferencia')
   alterarPreferencia(@Body() dto: MensagemDiretaPreferenciaAlterarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
     return this.mensagemDiretaService.alterarPreferencia(dto, usuarioAtivo);
+  }
+
+  /**
+   * O stream de eventos (`text/event-stream`, task 209): mensagem nova, leitura e presença. A resposta fica aberta até o cliente
+   * desconectar ou a API parar (`ENCERRANDO`); o cliente reconecta e relê o que perdeu.
+   */
+  @Get('eventos')
+  abrirEventos(@ActiveUser() usuarioAtivo: JwtPayload, @Res() resposta: Response) {
+    const fechar = this.eventosService.abrir(usuarioAtivo, new FluxoDeEventosDiretos(resposta));
+    resposta.on('close', fechar);
   }
 }

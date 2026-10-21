@@ -1,6 +1,6 @@
 import { MensagemDiretaResumoDto } from './MensagemDiretaResumoDto';
 
-/** Uma conversa do usuário com outra pessoa, para a lista do popup. A presença (online) entra com o stream, na task 209. */
+/** Uma conversa do usuário com outra pessoa, para a lista do popup. */
 export interface ConversaDiretaResumoDto {
   /** `<menorUsuarioId>-<maiorUsuarioId>`. */
   conversaId: string;
@@ -12,4 +12,6 @@ export interface ConversaDiretaResumoDto {
   /** Mensagens da outra pessoa mais novas que o ponto em que o usuário leu. */
   naoLidas: number;
   silenciada: boolean;
+  /** A outra pessoa tem o stream de eventos aberto agora (em qualquer instância da API). */
+  online: boolean;
 }

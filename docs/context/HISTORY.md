@@ -12,6 +12,27 @@
 
 ---
 
+## 2026-10-21 — Task 209: tempo real do chat entre colaboradores (stream, barramento entre instâncias e presença)
+
+Quinta task da guarda-chuva `chat-colaboradores`. Spec: `docs/specs/done/209-mensagem-direta-tempo-real.spec.md` (escrita nesta task).
+
+- **Contrato (`shared`):** `MensagemDiretaEventoDto` (`ABERTURA`, `MENSAGEM`, `LEITURA`, `PRESENCA`, `SINCRONIZAR`, `BATIMENTO`, `ENCERRANDO`); `ConversaDiretaResumoDto` ganhou `online`.
+- **Barramento (`CHAT_EVENTOS`, padrão `memoria`):** porta `PublicadorDeEventosDiretos` com `PublicadorEmMemoria` e `PublicadorPostgres` (`LISTEN`/`NOTIFY` no canal `mensagem_direta_eventos`, `pg.Client` dedicado de escuta, reconexão com espera de 1 a 30 s e
+  `SINCRONIZAR` geral ao voltar). `NOTIFY` aceita 8.000 bytes e a mensagem pode ter 10.000 caracteres: acima de 7.500 bytes vai um `SINCRONIZAR` da conversa e o cliente relê; a mensagem nunca é truncada.
+- **Presença:** cada instância publica o conjunto de usuários com stream aberto nela; todas guardam o último conjunto de cada uma por 75 s (3 batimentos). Online é a união; instância que cai deixa de contar sozinha.
+- **Stream:** `GET /mensagem-direta/eventos`, `ABERTURA` primeiro, batimento a cada 25 s. A service publica `MENSAGEM` (as duas pontas, só na primeira gravação) e `LEITURA`; falha do barramento vira log e não falha o envio.
+  `enableShutdownHooks` no `main.ts`; ao parar, `ENCERRANDO`, fecha os streams e sai da presença.
+- **Testes:** backend 1277 unitários e 297 de integração (todos passam) (inclui **duas instâncias do publicador Postgres** num banco real, mensagem grande, carga inválida e reconexão da escuta derrubada com `pg_terminate_backend`); shared 213/213; build compila. Sem lint (P-001).
+- **Verificação ao vivo, duas instâncias da API (portas 3101 e 3102, `CHAT_EVENTOS=postgres`):** 17/17 — Ana na instância 1, Bruno na 2: a mensagem enviada por uma chega à outra, `LEITURA`, presença (inclusive a segunda aba, que não
+  põe offline), `online` na lista, mensagem de 9.000 caracteres como `SINCRONIZAR`, reenvio sem segundo evento, 401 sem token. **Instância 2 morta de repente (`taskkill /F`): o Bruno saiu de online na instância 1 em 81 s** (validade de 75 s + batimento).
+  Parada ordenada: `app.close()` com um stream aberto entregou `ENCERRANDO`, fechou o stream e terminou em 6 ms. Com `CHAT_EVENTOS=memoria` (uma instância): 16/17, a que falha é a checagem do `NOTIFY` (sem esse limite a mensagem grande chega inteira).
+- **Revisão independente (subagente `revisor`):** sem vazamento de evento nem erro que derrube o processo. Corrigido: (1) durante a parada a API ainda aceitava stream novo (o cliente que recebia `ENCERRANDO` reconectava na mesma instância e o `server.close()`
+  esperava para sempre) e esperava a saída da presença pelo pool (até 60 s com o banco fora): agora há a flag `encerrando` (stream novo recebe `ENCERRANDO` e fecha), a publicação final não é aguardada e o `main.ts` usa `forceCloseConnections`; (2) a conexão de escuta
+  meio aberta (NAT, host que cai sem RST) nunca era detectada: `keepAlive`, tempo limite de conexão e um vigia que envia `PING` a si mesmo a cada 20 s e recicla a escuta sem eco em 60 s; (3) `abrir` recebe o `JwtPayload`, `publicarParaUsuarios` recebe
+  `MensagemDiretaEventoPublicarDto` e `usuariosOnline` virou `listarUsuariosOnline`; (4) a expiração da presença é verificada a cada 5 s (pior caso ~80 s, não ~100 s). Decisão registrada: o `pg_notify`/`LISTEN` ficam no publicador (infraestrutura de barramento), não em repository.
+- **Limites:** o sinal `SIGTERM` não foi enviado de verdade (no Windows `process.kill` mata sem gancho); a ligação sinal→`close()` é a do Nest com `enableShutdownHooks`. O proxy reverso precisa de tempo de leitura maior que 25 s e de tempo de graça do contêiner maior que a reconexão do cliente.
+  O cliente do stream (reconexão e recuperação) é a 210.
+
 ## 2026-10-21 — Task 208: service e API do chat entre colaboradores
 
 Quarta task da guarda-chuva `chat-colaboradores`. A spec não existia: foi escrita e fechada no mesmo dia (`docs/specs/done/208-mensagem-direta-service-e-api.spec.md`). O módulo `mensagem-direta` entrou no `AppModule`.

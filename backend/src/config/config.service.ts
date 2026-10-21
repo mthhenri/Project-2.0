@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { lerArmazenamentoDoChat } from './armazenamento-do-chat';
+import { lerEventosDoChat } from './eventos-do-chat';
 import { Configuracao } from './config.interface';
 
 @Injectable()
@@ -30,7 +31,7 @@ export class ConfigService {
       openAi: {
         apiKey: this.opcional('OPENAI_API_KEY'),
       },
-      chat: { armazenamento: armazenamentoDoChat },
+      chat: { armazenamento: armazenamentoDoChat, eventos: lerEventosDoChat(this.opcional('CHAT_EVENTOS')) },
       openSearch: {
         url:     armazenamentoDoChat === 'opensearch' ? this.obrigatoria('OPENSEARCH_URL') : this.opcional('OPENSEARCH_URL'),
         usuario: this.opcional('OPENSEARCH_USUARIO'),
