@@ -12,6 +12,26 @@
 
 ---
 
+## 2026-10-21 — Guarda-chuva `chat-colaboradores` no backlog: chat entre colaboradores, modelagem e tasks 205–215
+
+Conversa com o autor sobre um chat interno entre colaboradores (o "zap" do Project), pensado para conversa em silêncio durante reunião e dúvida de código: o usuário copia um trecho
+em qualquer programa, aperta um atalho global e manda para alguém, com o código já em bloco. Só documentação; **nada foi implementado**.
+
+- **Entregue:** `docs/specs/backlog/chat-colaboradores.spec.md` (decisões do autor, fatos do código, tasks 205–215, aceite, riscos) e o anexo `docs/specs/backlog/chat-colaboradores/modelagem.md`
+  (índice de mensagens, três tabelas permanentes, contrato de armazenamento, API, tempo real, contêineres, Desktop e nomes). As tasks individuais ainda não têm spec.
+- **Decisões do autor:** conversa um a um entre quaisquer usuários; popup no Project e janela do Project Desktop por atalho global, com leitura da área de transferência só ao apertar o atalho;
+  avisos desativáveis; gestor e administrador leem só as conversas **entre desenvolvedores**, numa área separada e com aviso aos envolvidos (conversa que envolve gestor ou administrador, mesmo com um
+  desenvolvedor, é privada; a regra da IA da task 201); armazenamento no padrão do chat da IA (OpenSearch no desenvolvimento, PostgreSQL provisório na produção de teste, Elasticsearch na final); produção em
+  contêineres, então várias instâncias da API.
+- **Escolhas de modelagem registradas:** mensagens num **índice próprio** (o do chat da IA assume um dono por conversa e o contexto `CHAT`/`CHECKIN`); `conversa_id` determinístico
+  (`<menorId>-<maiorId>`); `mensagem_id` UUID do cliente como `_id` (idempotência no "Tentar de novo"); o que muda (marcador de leitura, preferências, auditoria da supervisão) no PostgreSQL, para que
+  enviar e ler não dependam de transação entre os dois armazenamentos; elegibilidade da supervisão decidida na leitura, pelo tipo atual dos usuários; publicador de eventos compartilhado
+  (`LISTEN/NOTIFY`) desde o início.
+- **Correção de numeração:** a guarda-chuva reservava 203–213 porque o `CLAUDE.md` dizia que o maior número em uso era 202, mas as **203** e **204** já estavam em `done/`. Renumerada para **205–215**; o `CLAUDE.md`
+  e o `AGENTS.md` (idênticos) agora citam 215 e as duas tasks anteriores.
+- **Material fora do repositório:** mockups (10 telas estáticas e uma versão clicável) e a página de modelagem foram feitos em artefatos privados do claude.ai e estão só como referência na spec; a fonte durável é o `modelagem.md`.
+- **Verificação:** `npm run repo:verificar` aprovado; `CLAUDE.md` e `AGENTS.md` sem diferença. Nenhum teste rodado (sem código). Lacuna de lint (P-001) inalterada.
+
 ## 2026-10-21 — Task 204: redesenho da tela de Configurações da IA, cores das prioridades em Atividades e tooltip PrimeNG no sistema inteiro
 
 Pedido do autor depois da 203: a tela estava longa e misturada (check-in, chat e liga/desliga dentro de "Provedor e modelos"; histórico dividindo a largura; cor das prioridades numa aba da IA) e o `title` nativo do HTML
