@@ -190,3 +190,26 @@ testarComBanco('listarAtivosComMeta devolve só ativos não excluídos, ordenado
   const meus = (await repositorio.listarAtivosComMeta()).filter((linha) => linha.nomeCompleto.startsWith(marca));
   assert.deepEqual(meus.map((linha) => [linha.id, linha.horasDiariasNecessarias]), [[a.id, 8], [b.id, 6]]);
 });
+
+testarComBanco('listarNomesPorIds: o nome de cada um numa consulta; excluído, inexistente e lista vazia não voltam', async (conexao) => {
+  const repositorio = criarRepositorio(UsuarioRepository, conexao);
+  const ana = await criarDesenvolvedor(conexao, { nomeCompleto: 'Ana Nomes' });
+  const bruno = await criarGestor(conexao, { nomeCompleto: 'Bruno Nomes' });
+  const removido = await criarDesenvolvedor(conexao, { nomeCompleto: 'Removido Nomes' });
+  await repositorio.excluir({ id: removido.id });
+
+  const nomes = await repositorio.listarNomesPorIds({ usuarioIds: [ana.id, bruno.id, removido.id, 987654321] });
+  assert.deepEqual(nomes.map((n) => n.nomeCompleto).sort(), ['Ana Nomes', 'Bruno Nomes']);
+  assert.deepEqual(await repositorio.listarNomesPorIds({ usuarioIds: [] }), []);
+});
+
+testarComBanco('validarExistenciaIncluindoExcluido: vale para ativo e excluído; só o id que nunca existiu retorna false', async (conexao) => {
+  const repositorio = criarRepositorio(UsuarioRepository, conexao);
+  const ativo = await criarDesenvolvedor(conexao);
+  const removido = await criarDesenvolvedor(conexao);
+  await repositorio.excluir({ id: removido.id });
+
+  assert.equal(await repositorio.validarExistenciaIncluindoExcluido({ id: ativo.id }), true);
+  assert.equal(await repositorio.validarExistenciaIncluindoExcluido({ id: removido.id }), true);
+  assert.equal(await repositorio.validarExistenciaIncluindoExcluido({ id: 987654321 }), false);
+});

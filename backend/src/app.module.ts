@@ -19,6 +19,7 @@ import { AnotacaoModule } from './modules/anotacao/anotacao.module';
 import { ConfiguracaoIaModule } from './modules/configuracao-ia/configuracao-ia.module';
 import { PromptModule } from './modules/prompt/prompt.module';
 import { ChatModule } from './modules/chat/chat.module';
+import { MensagemDiretaModule } from './modules/mensagem-direta/mensagem-direta.module';
 import { PropostaIaModule } from './modules/proposta-ia/proposta-ia.module';
 import { FerramentaIaModule } from './modules/ferramenta-ia/ferramenta-ia.module';
 import { AssistenteModule } from './modules/assistente/assistente.module';
@@ -27,6 +28,6 @@ import { RelatorioModule } from './modules/relatorio/relatorio.module';
 import { DesktopModule } from './modules/desktop/desktop.module';
 
 @Module({
-  imports: [ScheduleModule.forRoot(), ConfigModule, DatabaseModule, CoreModule, AutenticacaoModule, UsuarioModule, TagModule, ProjetoModule, DemandaModule, AtividadeModule, AtividadePrioridadeModule, CheckinModule, ExecucaoModule, CalendarioModule, PontoModule, PontoJustificativaModule, AnotacaoModule, ConfiguracaoIaModule, PromptModule, ChatModule, PropostaIaModule, FerramentaIaModule, AssistenteModule, RelatorioModule, DesktopModule, IaCustoModule],
+  imports: [ScheduleModule.forRoot(), ConfigModule, DatabaseModule, CoreModule, AutenticacaoModule, UsuarioModule, TagModule, ProjetoModule, DemandaModule, AtividadeModule, AtividadePrioridadeModule, CheckinModule, ExecucaoModule, CalendarioModule, PontoModule, PontoJustificativaModule, AnotacaoModule, ConfiguracaoIaModule, PromptModule, ChatModule, MensagemDiretaModule, PropostaIaModule, FerramentaIaModule, AssistenteModule, RelatorioModule, DesktopModule, IaCustoModule],
 })
 export class AppModule {}

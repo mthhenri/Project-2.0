@@ -1,12 +1,21 @@
 import { Module } from '@nestjs/common';
+import { AtividadeModule } from '../atividade/atividade.module';
+import { DemandaModule } from '../demanda/demanda.module';
+import { UsuarioModule } from '../usuario/usuario.module';
+import { MensagemDiretaController } from './controllers/mensagem-direta.controller';
 import { ARMAZENAMENTO_DE_MENSAGEM_DIRETA, armazenamentoDeMensagemDiretaProvider } from './repositories/armazenamento-de-mensagem-direta';
+import { MensagemDiretaLeituraRepository } from './repositories/mensagem-direta-leitura.repository';
+import { MensagemDiretaPreferenciaRepository } from './repositories/mensagem-direta-preferencia.repository';
+import { MensagemDiretaService } from './services/mensagem-direta.service';
 
 /**
- * Mensagens entre colaboradores (chat um a um). Por enquanto só o armazenamento (tasks 206 e 207); a service e as rotas entram na task 208, que
- * também registra este módulo no `AppModule`: sem consumidor ele não sobe.
+ * Chat entre colaboradores (conversa um a um). Armazenamento das mensagens (tasks 206 e 207) mais a service e as rotas (task 208). O stream de
+ * eventos entra na task 209 e a supervisão, na 214.
  */
 @Module({
-  providers: [armazenamentoDeMensagemDiretaProvider],
-  exports: [ARMAZENAMENTO_DE_MENSAGEM_DIRETA],
+  imports:     [UsuarioModule, DemandaModule, AtividadeModule],
+  controllers: [MensagemDiretaController],
+  providers:   [armazenamentoDeMensagemDiretaProvider, MensagemDiretaLeituraRepository, MensagemDiretaPreferenciaRepository, MensagemDiretaService],
+  exports:     [ARMAZENAMENTO_DE_MENSAGEM_DIRETA, MensagemDiretaService],
 })
 export class MensagemDiretaModule {}

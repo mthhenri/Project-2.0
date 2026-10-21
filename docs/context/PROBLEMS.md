@@ -16,7 +16,15 @@
 > número de item removido**:
 >
 > ```markdown
-> ### P-0NN — <título curto> · `ABERTO|CONTORNADO|ACEITO` · <área>
+> ### P-031 — Token continua valendo depois que o usuário é desativado ou excluído · `ABERTO` · autenticacao
+
+- **Sintoma:** quem foi desativado ou excluído continua chamando a API (inclusive enviando mensagem no chat entre colaboradores) até o token expirar; a modelagem do chat pede "remetente ativo".
+- **Causa:** `JwtStrategy.validate` só devolve o payload; o status do usuário é conferido apenas no login (`autenticacao.service.ts`).
+- **Contorno:** o token vence sozinho; a service do chat confere o **destinatário**, não o remetente.
+- **Correção:** conferir o usuário (existe, ativo) na estratégia JWT ou num guard global, com o custo de uma consulta por requisição (ou cache curto).
+- **Desde:** achado na revisão da task 208 (2026-10-21); a lacuna é do projeto inteiro, não do chat.
+
+### P-0NN — <título curto> · `ABERTO|CONTORNADO|ACEITO` · <área>
 >
 > - **Sintoma:** o que se observa.
 > - **Causa:** a raiz, se conhecida — ou "não investigada".

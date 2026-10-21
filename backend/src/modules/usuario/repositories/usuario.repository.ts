@@ -15,7 +15,7 @@ import {
   UsuarioSenhaInternoAlterarDto,
   UsuarioExcluirDto,
 } from '@project20/shared';
-import { TipoUsuarioEnum, TipoUsuarioStatusEnum } from '@project20/shared';
+import { TipoUsuarioEnum, TipoUsuarioStatusEnum, UsuarioExistenciaVerificarDto, UsuarioNomeListadoDto, UsuarioNomeListarDto } from '@project20/shared';
 import { UsuarioRestaurarDto, UsuarioRestauradoDto } from '@project20/shared';
 
 @Injectable()
@@ -333,6 +333,33 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
       { id: dto.id },
     );
     return resultado[0];
+  }
+
+  /**
+   * O nome de cada usuário (não excluído) da lista, numa consulta só — usado pela lista de conversas do chat entre colaboradores.
+   * Id que não existe, ou foi excluído, simplesmente não volta.
+   */
+  async listarNomesPorIds(dto: UsuarioNomeListarDto): Promise<UsuarioNomeListadoDto[]> {
+    if (dto.usuarioIds.length === 0) return [];
+    return this.executarConsulta<UsuarioNomeListadoDto>(
+      `SELECT usuario.id, usuario.nome_completo AS "nomeCompleto"
+       FROM usuario
+       WHERE usuario.id = ANY(CAST(:usuarioIds AS integer[]))
+         AND usuario.is_deleted = false`,
+      { usuarioIds: dto.usuarioIds },
+    );
+  }
+
+  /**
+   * O usuário existe, mesmo excluído? Quem tem conversa com uma pessoa depois removida continua podendo ler, marcar como lida e silenciar
+   * (a FK das tabelas do chat aceita a linha excluída). Só um id que nunca existiu retorna `false`.
+   */
+  async validarExistenciaIncluindoExcluido(dto: UsuarioExistenciaVerificarDto): Promise<boolean> {
+    const resultado = await this.executarConsulta<{ existe: boolean }>(
+      `SELECT EXISTS(SELECT 1 FROM usuario WHERE usuario.id = :id) AS existe`,
+      { id: dto.id },
+    );
+    return resultado[0].existe;
   }
 
   /**

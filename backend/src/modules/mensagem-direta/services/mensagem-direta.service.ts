@@ -1,0 +1,270 @@
+import { Inject, Injectable } from '@nestjs/common';
+import {
+  AutorMensagemDiretaEnum,
+  ConversaDiretaListadasDto,
+  ConversaDiretaResumoDto,
+  LIMITE_PADRAO_DA_CONVERSA_DIRETA,
+  MensagemDiretaBuscadoDto,
+  MensagemDiretaBuscarDto,
+  MensagemDiretaEnviadaDto,
+  MensagemDiretaEnviarDto,
+  MensagemDiretaLeituraAlteradaDto,
+  MensagemDiretaLeituraAlterarDto,
+  MensagemDiretaListadasDto,
+  MensagemDiretaListarDto,
+  MensagemDiretaPreferenciaAlteradaDto,
+  MensagemDiretaPreferenciaAlterarDto,
+  MensagemDiretaPreferenciaRecuperadaDto,
+  MensagemDiretaSilencioAlteradoDto,
+  MensagemDiretaSilencioAlterarDto,
+  PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA,
+  ReferenciaMensagemDiretaEnum,
+  ReferenciaMensagemDto,
+  StandardResponse,
+  TipoUsuarioEnum,
+  TipoUsuarioStatusEnum,
+  contemBlocoDeCodigo,
+  montarConversaDiretaId,
+  outroParticipanteDaConversaDireta,
+} from '@project20/shared';
+import { BusinessException } from '../../../core/exceptions/business.exception';
+import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
+import { AtividadeRepository } from '../../atividade/repositories/atividade.repository';
+import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
+import { DemandaRepository } from '../../demanda/repositories/demanda.repository';
+import { UsuarioRepository } from '../../usuario/repositories/usuario.repository';
+import { lerPeriodoDaBusca, limitarLeituraAoAgora, normalizarMencoes, normalizarReferencias } from '../domain/mensagem-direta-regras';
+import { ARMAZENAMENTO_DE_MENSAGEM_DIRETA, ArmazenamentoDeMensagemDireta } from '../repositories/armazenamento-de-mensagem-direta';
+import { MensagemDiretaLeituraRepository } from '../repositories/mensagem-direta-leitura.repository';
+import { MensagemDiretaPreferenciaRepository } from '../repositories/mensagem-direta-preferencia.repository';
+
+const NOME_DE_USUARIO_REMOVIDO = 'Usuário removido';
+
+/**
+ * Chat entre colaboradores (task 208): conversa um a um entre quaisquer usuários. Toda regra e permissão mora aqui; o armazenamento das
+ * mensagens (OpenSearch, Elasticsearch ou o Postgres provisório) recebe filtros explícitos e não conhece permissão.
+ *
+ * A pessoa que age é sempre a do token: remetente, dono do marcador de leitura, da preferência e do filtro da busca. O que chega pela rota
+ * ou pelo corpo é só a **outra** pessoa da conversa. Supervisão (gestor lendo conversa de terceiros) é a task 214, e o stream de eventos, a 209.
+ */
+@Injectable()
+export class MensagemDiretaService {
+  constructor(
+    @Inject(ARMAZENAMENTO_DE_MENSAGEM_DIRETA) private readonly armazenamento: ArmazenamentoDeMensagemDireta,
+    private readonly leituraRepositorio: MensagemDiretaLeituraRepository,
+    private readonly preferenciaRepositorio: MensagemDiretaPreferenciaRepository,
+    private readonly usuarioRepositorio: UsuarioRepository,
+    private readonly demandaRepositorio: DemandaRepository,
+    private readonly atividadeRepositorio: AtividadeRepository,
+  ) {}
+
+  // ---------------------------------------------------------------------------
+  // Enviar
+  // ---------------------------------------------------------------------------
+
+  async enviarMensagem(dto: MensagemDiretaEnviarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<MensagemDiretaEnviadaDto>> {
+    await this.validarDestinatarioAtivo(dto.destinatarioId, usuarioAtivo);
+    const conversaId = montarConversaDiretaId(usuarioAtivo.sub, dto.destinatarioId);
+    const mencoes = normalizarMencoes(dto.mencoes, [usuarioAtivo.sub, dto.destinatarioId]);
+    const referencias = normalizarReferencias(dto.referencias);
+    for (const referencia of referencias) {
+      await this.validarReferencia(referencia, usuarioAtivo);
+    }
+
+    const enviada = await this.armazenamento.gravar({
+      mensagemId: dto.mensagemId.toLowerCase(),
+      conversaId,
+      autor: AutorMensagemDiretaEnum.USUARIO,
+      autorUsuarioId: usuarioAtivo.sub,
+      texto: dto.texto,
+      contemCodigo: contemBlocoDeCodigo(dto.texto),
+      mencoes,
+      referencias,
+    });
+
+    return {
+      sucesso: true,
+      dados: enviada,
+      mensagem: enviada.jaExistia ? 'Mensagem já enviada' : 'Mensagem enviada com sucesso',
+    };
+  }
+
+  // ---------------------------------------------------------------------------
+  // Ler
+  // ---------------------------------------------------------------------------
+
+  async listarConversa(dto: MensagemDiretaListarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<MensagemDiretaListadasDto>> {
+    await this.validarOutraPessoa(dto.usuarioId, usuarioAtivo);
+    const conversaId = montarConversaDiretaId(usuarioAtivo.sub, dto.usuarioId);
+
+    const pagina = await this.armazenamento.listarConversa({
+      conversaId,
+      cursor: dto.cursor,
+      limite: dto.limite ?? LIMITE_PADRAO_DA_CONVERSA_DIRETA,
+    });
+    const marcadorDoOutro = await this.leituraRepositorio.recuperarMarcador({ conversaId, usuarioId: dto.usuarioId });
+
+    return {
+      sucesso: true,
+      dados: { mensagens: pagina.mensagens, proximoCursor: pagina.proximoCursor, lidaAteDate: marcadorDoOutro?.lidaAteDate ?? null },
+      mensagem: 'Conversa recuperada com sucesso',
+    };
+  }
+
+  async listarConversas(usuarioAtivo: JwtPayload): Promise<StandardResponse<ConversaDiretaListadasDto>> {
+    const usuarioId = usuarioAtivo.sub;
+    const resumos = await this.armazenamento.listarConversasDoUsuario({ usuarioId });
+    if (resumos.length === 0) {
+      return { sucesso: true, dados: { conversas: [] }, mensagem: 'Conversas listadas com sucesso' };
+    }
+
+    const marcadores = await this.leituraRepositorio.listarMarcadores({ usuarioId });
+    const marcadorPorConversa = new Map(marcadores.map((marcador) => [marcador.conversaId, marcador]));
+    const naoLidas = await this.armazenamento.contarNaoLidas({
+      usuarioId,
+      marcadores: resumos.map((resumo) => ({ conversaId: resumo.conversaId, lidaAteDate: marcadorPorConversa.get(resumo.conversaId)?.lidaAteDate ?? null })),
+    });
+
+    const outroPorConversa = new Map(resumos.map((resumo) => [resumo.conversaId, outroParticipanteDaConversaDireta(resumo.conversaId, usuarioId)]));
+    const usuarioIds = [...new Set([...outroPorConversa.values()].filter((outroId): outroId is number => outroId !== null))];
+    const nomes = new Map((await this.usuarioRepositorio.listarNomesPorIds({ usuarioIds })).map((usuario) => [usuario.id, usuario.nomeCompleto]));
+
+    const conversas: ConversaDiretaResumoDto[] = [];
+    for (const resumo of resumos) {
+      const outroId = outroPorConversa.get(resumo.conversaId);
+      if (outroId === null || outroId === undefined) continue;
+      conversas.push({
+        conversaId: resumo.conversaId,
+        usuarioId: outroId,
+        usuarioNome: nomes.get(outroId) ?? NOME_DE_USUARIO_REMOVIDO,
+        ultimaMensagem: resumo.ultimaMensagem,
+        naoLidas: naoLidas[resumo.conversaId] ?? 0,
+        silenciada: marcadorPorConversa.get(resumo.conversaId)?.silenciada ?? false,
+      });
+    }
+
+    return { sucesso: true, dados: { conversas }, mensagem: 'Conversas listadas com sucesso' };
+  }
+
+  async buscar(dto: MensagemDiretaBuscarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<MensagemDiretaBuscadoDto>> {
+    const periodo = lerPeriodoDaBusca(dto.inicio, dto.fim);
+    const mensagens = await this.armazenamento.buscar({
+      usuarioId: usuarioAtivo.sub,
+      texto: dto.texto,
+      inicio: periodo.inicio,
+      fim: periodo.fim,
+      somenteCodigo: dto.somenteCodigo,
+    });
+    return { sucesso: true, dados: { mensagens }, mensagem: 'Busca realizada com sucesso' };
+  }
+
+  // ---------------------------------------------------------------------------
+  // Leitura e silêncio
+  // ---------------------------------------------------------------------------
+
+  async alterarLeitura(
+    dto: MensagemDiretaLeituraAlterarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<StandardResponse<MensagemDiretaLeituraAlteradaDto>> {
+    await this.validarOutraPessoa(dto.usuarioId, usuarioAtivo);
+    const conversaId = montarConversaDiretaId(usuarioAtivo.sub, dto.usuarioId);
+    const marcador = await this.leituraRepositorio.alterarLeitura({
+      conversaId,
+      usuarioId: usuarioAtivo.sub,
+      outroUsuarioId: dto.usuarioId,
+      lidaAteDate: limitarLeituraAoAgora(dto.lidaAteDate, new Date()),
+    });
+    return {
+      sucesso: true,
+      dados: { conversaId, lidaAteDate: marcador.lidaAteDate as Date },
+      mensagem: 'Leitura registrada com sucesso',
+    };
+  }
+
+  async alterarSilencio(
+    dto: MensagemDiretaSilencioAlterarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<StandardResponse<MensagemDiretaSilencioAlteradoDto>> {
+    await this.validarOutraPessoa(dto.usuarioId, usuarioAtivo);
+    const conversaId = montarConversaDiretaId(usuarioAtivo.sub, dto.usuarioId);
+    const marcador = await this.leituraRepositorio.alterarSilencio({
+      conversaId,
+      usuarioId: usuarioAtivo.sub,
+      outroUsuarioId: dto.usuarioId,
+      silenciada: dto.silenciada,
+    });
+    return {
+      sucesso: true,
+      dados: { conversaId, silenciada: marcador.silenciada },
+      mensagem: marcador.silenciada ? 'Conversa silenciada' : 'Conversa reativada',
+    };
+  }
+
+  // ---------------------------------------------------------------------------
+  // Preferências
+  // ---------------------------------------------------------------------------
+
+  async recuperarPreferencia(usuarioAtivo: JwtPayload): Promise<StandardResponse<MensagemDiretaPreferenciaRecuperadaDto>> {
+    const gravada = await this.preferenciaRepositorio.recuperar({ usuarioId: usuarioAtivo.sub });
+    return {
+      sucesso: true,
+      dados: gravada ?? { ...PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA },
+      mensagem: 'Preferências recuperadas com sucesso',
+    };
+  }
+
+  async alterarPreferencia(
+    dto: MensagemDiretaPreferenciaAlterarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<StandardResponse<MensagemDiretaPreferenciaAlteradaDto>> {
+    const silenciadoAteDate = dto.silenciadoAteDate ? new Date(dto.silenciadoAteDate) : null;
+    if (silenciadoAteDate && Number.isNaN(silenciadoAteDate.getTime())) throw new BusinessException('Data do silêncio inválida');
+
+    const gravada = await this.preferenciaRepositorio.alterar({
+      usuarioId: usuarioAtivo.sub,
+      avisosAtivos: dto.avisosAtivos,
+      avisoDesktopAtivo: dto.avisoDesktopAtivo,
+      somAtivo: dto.somAtivo,
+      silenciadoAteDate,
+      atalhoGlobal: dto.atalhoGlobal,
+    });
+    return { sucesso: true, dados: gravada, mensagem: 'Preferências alteradas com sucesso' };
+  }
+
+  // ---------------------------------------------------------------------------
+  // Validações
+  // ---------------------------------------------------------------------------
+
+  /** A outra pessoa da conversa é diferente de quem age e existe, **mesmo excluída**: o histórico continua dos dois e a lista a mostra como "Usuário removido". */
+  private async validarOutraPessoa(outroUsuarioId: number, usuarioAtivo: JwtPayload): Promise<void> {
+    if (outroUsuarioId === usuarioAtivo.sub) throw new BusinessException('A conversa precisa ser com outra pessoa');
+    if (!(await this.usuarioRepositorio.validarExistenciaIncluindoExcluido({ id: outroUsuarioId }))) throw new ResourceNotFoundException('Usuário');
+  }
+
+  /** Para enviar o destinatário precisa, além disso, existir sem exclusão e estar **ativo**. */
+  private async validarDestinatarioAtivo(destinatarioId: number, usuarioAtivo: JwtPayload): Promise<void> {
+    if (destinatarioId === usuarioAtivo.sub) throw new BusinessException('A conversa precisa ser com outra pessoa');
+    const encontrado = await this.usuarioRepositorio.recuperar({ id: destinatarioId });
+    if (!encontrado) throw new ResourceNotFoundException('Usuário');
+    if (encontrado.status !== TipoUsuarioStatusEnum.ATIVO) throw new BusinessException('Não é possível enviar mensagem para um usuário inativo');
+  }
+
+  /**
+   * A demanda ou a atividade existe e, para o desenvolvedor, é uma que ele mesmo vê (as mesmas regras de `DemandaService` e
+   * `AtividadeService`). Gestor e administrador veem tudo. O destinatário pode não ver o cartão; a tela mostra o cartão bloqueado.
+   */
+  private async validarReferencia(referencia: ReferenciaMensagemDto, usuarioAtivo: JwtPayload): Promise<void> {
+    const ehDesenvolvedor = usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR;
+    if (referencia.tipo === ReferenciaMensagemDiretaEnum.DEMANDA) {
+      const demanda = await this.demandaRepositorio.recuperar({ id: referencia.id }, ehDesenvolvedor ? { usuarioId: usuarioAtivo.sub } : undefined);
+      if (!demanda) throw new BusinessException(`A demanda ${referencia.id} não existe ou você não tem acesso a ela`);
+      return;
+    }
+
+    const atividade = await this.atividadeRepositorio.recuperar({ id: referencia.id });
+    const temAcesso =
+      atividade !== null &&
+      (!ehDesenvolvedor || (await this.atividadeRepositorio.validarAcessoDemanda({ demandaId: atividade.demandaId, usuarioId: usuarioAtivo.sub })));
+    if (!temAcesso) throw new BusinessException(`A atividade ${referencia.id} não existe ou você não tem acesso a ela`);
+  }
+}

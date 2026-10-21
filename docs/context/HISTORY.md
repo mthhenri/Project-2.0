@@ -12,6 +12,28 @@
 
 ---
 
+## 2026-10-21 — Task 208: service e API do chat entre colaboradores
+
+Quarta task da guarda-chuva `chat-colaboradores`. A spec não existia: foi escrita e fechada no mesmo dia (`docs/specs/done/208-mensagem-direta-service-e-api.spec.md`). O módulo `mensagem-direta` entrou no `AppModule`.
+
+- **Estado no PostgreSQL:** `MensagemDiretaLeituraRepository` (marcador por pessoa e conversa; `GREATEST` no `ON CONFLICT` faz a leitura **nunca recuar**; silenciar não apaga até onde a pessoa leu e ler não desfaz o
+  silêncio) e `MensagemDiretaPreferenciaRepository` (upsert do conjunto inteiro; sem linha, `null`, e a service devolve o padrão do `shared`). `UsuarioRepository.listarNomesPorIds` dá os nomes da lista numa consulta.
+- **`MensagemDiretaService`:** remetente, dono do marcador, da preferência e do filtro da busca são sempre o token. Enviar exige destinatário existente, **ativo** e outra pessoa; `mensagemId` em minúsculas; `contemCodigo` calculado
+  no servidor; menções só dos dois participantes (o aviso a um terceiro vazaria a conversa); referência a demanda ou atividade que o **desenvolvedor remetente** vê (gestor e administrador veem tudo; o destinatário pode não ver o
+  cartão, e a tela 211 mostra bloqueado). Ler, marcar como lida e silenciar valem também com pessoa inativa. A data de leitura é limitada ao instante atual.
+- **Rotas** (`/api/v1/mensagem-direta`): `conversas`, `conversa/:usuarioId`, `mensagem`, `conversa/:usuarioId/leitura`, `conversa/:usuarioId/silencio`, `busca`, `preferencia` (GET e PUT). O `usuarioId` da rota entra no DTO pela controller.
+- **Testes:** unitários +25 (regras puras, service com dublês, controller): backend 1246/1246. Integração +18 (marcadores, preferência, `listarNomesPorIds`, `validarExistenciaIncluindoExcluido` e a service ponta a ponta com usuários reais e o armazenamento Postgres): 290/290.
+  Build do backend compila. Sem lint (P-001).
+- **Verificação ao vivo:** API real na porta 3100 com três usuários e um inativo criados no banco de desenvolvimento (removidos ao fim): 28 conferências, **idênticas com `CHAT_ARMAZENAMENTO=opensearch` e `postgres`** — A envia a B,
+  B vê 1 não lida, lê, A vê o "Lida"; reenvio com `jaExistia` sem duplicar; `mensagemId` de outra conversa recusado; recusas (a si mesmo, inexistente, inativo, só espaços, menção alheia); bloco de código; busca com e sem
+  acento, com e sem "Com código"; terceira pessoa sem nada na busca nem na lista; silêncio; preferências; 401 sem token.
+- **Achado na verificação:** a porta 3000 e a 3100 já tinham outros processos (um deles, de outro projeto, escutava a 3100 em IPv6): `localhost` resolvia para ele e o login "não existia". O script passou a usar `127.0.0.1`.
+- **Revisão independente (subagente `revisor`):** sem falha de permissão nem de SQL. Corrigido: (1) conversa com pessoa **excluída** aparecia na lista como "Usuário removido" mas dava 404 ao abrir, marcar e silenciar, deixando o contador
+  preso; agora ler, marcar e silenciar aceitam pessoa excluída (`UsuarioRepository.validarExistenciaIncluindoExcluido`) e só enviar exige destinatário ativo; (2) os DTOs internos dos repositories foram para `shared/`
+  (`MensagemDireta*Interno*Dto`, `UsuarioNome*Dto`), sem herança; (3) `validarDestinatario` com booleano virou dois métodos; (4) a spec passou a descrever `listarMarcadores`. Registrado em `PROBLEMS.md` P-031: token de usuário desativado
+  continua valendo até expirar (lacuna do projeto, não do chat). Aceito: reenviar um `mensagemId` já gravado depois de o destinatário ser desativado dá 400, não `jaExistia` (caso raro).
+- **Limites:** sem stream, presença nem aviso de menção (209 e 212); a supervisão é a 214. Menção só aos participantes e referência pelo acesso do remetente são decisões da task (autor pode reverter).
+
 ## 2026-10-21 — Tasks 206 e 207: fecho com a suíte de contrato nos serviços reais
 
 Fecho das duas tasks de armazenamento do chat entre colaboradores, no ambiente de desenvolvimento (Docker no ar), que as sessões remotas não alcançavam. Specs movidas para `docs/specs/done/`.
