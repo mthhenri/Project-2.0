@@ -14,6 +14,7 @@ import {
   MensagemDiretaListarDto,
   MensagemDiretaPreferenciaAlteradaDto,
   MensagemDiretaPreferenciaAlterarDto,
+  MensagemDiretaPessoasListadasDto,
   MensagemDiretaPreferenciaRecuperadaDto,
   MensagemDiretaSilencioAlteradoDto,
   MensagemDiretaSilencioAlterarDto,
@@ -153,6 +154,16 @@ export class MensagemDiretaService {
     }
 
     return { sucesso: true, dados: { conversas }, mensagem: 'Conversas listadas com sucesso' };
+  }
+
+  /** As pessoas ativas com quem se pode conversar (qualquer uma, menos quem pergunta), com a presença. O desenvolvedor não pode usar `GET /usuario`, que é do gestor. */
+  async listarPessoas(usuarioAtivo: JwtPayload): Promise<StandardResponse<MensagemDiretaPessoasListadasDto>> {
+    const online = this.eventosService.listarUsuariosOnline();
+    const ativos = await this.usuarioRepositorio.listarAtivos();
+    const pessoas = ativos
+      .filter((usuario) => usuario.id !== usuarioAtivo.sub)
+      .map((usuario) => ({ usuarioId: usuario.id, usuarioNome: usuario.nomeCompleto, tipo: usuario.tipo, online: online.has(usuario.id) }));
+    return { sucesso: true, dados: { pessoas }, mensagem: 'Pessoas listadas com sucesso' };
   }
 
   async buscar(dto: MensagemDiretaBuscarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<MensagemDiretaBuscadoDto>> {

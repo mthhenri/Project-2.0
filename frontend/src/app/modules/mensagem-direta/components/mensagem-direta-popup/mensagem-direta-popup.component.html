@@ -1,0 +1,19 @@
+@if (estado.aberto()) {
+  <section class="popup-direto" role="dialog" aria-label="Chat com colegas" (keydown.escape)="estado.fechar()">
+    <!-- As telas só carregam quando o popup é aberto pela primeira vez: ficam fora do pacote inicial do layout. -->
+    @defer (on immediate) {
+      @switch (estado.visao()) {
+        @case ('CONVERSA') {
+          <app-mensagem-direta-conversa />
+        }
+        @case ('NOVA') {
+          <app-mensagem-direta-nova />
+        }
+        @default {
+          <app-mensagem-direta-lista />
+        }
+      }
+    }
+    <p class="popup-direto__aviso"><i class="pi pi-info-circle" aria-hidden="true"></i>Gestores e administradores podem ler as conversas entre desenvolvedores.</p>
+  </section>
+}

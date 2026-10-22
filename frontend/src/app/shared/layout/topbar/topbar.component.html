@@ -30,6 +30,20 @@
 
     @if (sessao.usuarioAtual()) {
       <p-button
+        icon="pi pi-comments"
+        [text]="true"
+        [rounded]="true"
+        size="small"
+        [badge]="mensagemDireta.naoLidas() > 0 ? (mensagemDireta.naoLidas() > 99 ? '99+' : '' + mensagemDireta.naoLidas()) : undefined"
+        badgeSeverity="danger"
+        pTooltip="Chat com colegas"
+        tooltipPosition="bottom"
+        [ariaLabel]="mensagemDireta.naoLidas() > 0 ? 'Chat com colegas, ' + mensagemDireta.naoLidas() + ' não lidas' : 'Chat com colegas'"
+        [attr.aria-expanded]="mensagemDireta.aberto()"
+        (onClick)="mensagemDireta.alternar()"
+      />
+
+      <p-button
         icon="pi pi-file-edit"
         [text]="true"
         [rounded]="true"

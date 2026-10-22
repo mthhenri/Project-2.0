@@ -1,0 +1,42 @@
+<div class="nova-direta">
+  <div class="nova-direta__cabecalho">
+    <p-button icon="pi pi-angle-left" severity="secondary" [text]="true" [rounded]="true" size="small" ariaLabel="Voltar para as conversas" pTooltip="Voltar" tooltipPosition="bottom" (onClick)="voltar()" />
+    <h2 class="nova-direta__titulo">Nova conversa</h2>
+    <p-button icon="pi pi-minus" severity="secondary" [text]="true" [rounded]="true" size="small" ariaLabel="Ocultar o chat" pTooltip="Ocultar" tooltipPosition="bottom" (onClick)="estado.fechar()" />
+  </div>
+
+  <div class="nova-direta__busca">
+    <i class="pi pi-search nova-direta__busca-icone" aria-hidden="true"></i>
+    <input pInputText type="text" class="nova-direta__busca-campo" [formControl]="controleBusca" placeholder="Para quem? Digite o nome" aria-label="Buscar pessoa pelo nome" maxlength="100" />
+  </div>
+
+  <div class="nova-direta__corpo">
+    @if (estado.carregandoPessoas() && estado.pessoas() === null) {
+      <div class="nova-direta__esqueleto" aria-busy="true">
+        <p-skeleton height="2.75rem" />
+        <p-skeleton height="2.75rem" />
+        <p-skeleton height="2.75rem" />
+      </div>
+    } @else if (estado.erroNasPessoas()) {
+      <div class="nova-direta__estado" role="alert">
+        <i class="pi pi-exclamation-triangle nova-direta__estado-icone" aria-hidden="true"></i>
+        <p class="nova-direta__estado-texto">Não foi possível carregar as pessoas.</p>
+        <p-button label="Tentar de novo" icon="pi pi-refresh" size="small" [outlined]="true" (onClick)="estado.carregarPessoas()" />
+      </div>
+    } @else if (pessoas().length === 0) {
+      <div class="nova-direta__estado">
+        <p class="nova-direta__estado-texto">{{ controleBusca.value.trim() ? 'Ninguém com esse nome.' : 'Não há outras pessoas ativas.' }}</p>
+      </div>
+    } @else {
+      @for (pessoa of pessoas(); track pessoa.usuarioId) {
+        <button type="button" class="nova-direta__linha" (click)="escolher(pessoa.usuarioId, pessoa.usuarioNome)">
+          <app-mensagem-direta-avatar [nome]="pessoa.usuarioNome" [online]="estado.online().has(pessoa.usuarioId)" [pequeno]="true" />
+          <span class="nova-direta__miolo">
+            <span class="nova-direta__nome">{{ pessoa.usuarioNome }}</span>
+            <span class="nova-direta__tipo">{{ rotuloTipo(pessoa.tipo) }}</span>
+          </span>
+        </button>
+      }
+    }
+  </div>
+</div>

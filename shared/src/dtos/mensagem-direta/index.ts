@@ -23,3 +23,5 @@ export * from './MensagemDiretaPreferenciaInternoRecuperarDto';
 export * from './MensagemDiretaPreferenciaInternoAlterarDto';
 export * from './MensagemDiretaEventoDto';
 export * from './MensagemDiretaEventoPublicarDto';
+export * from './MensagemDiretaPessoaResumoDto';
+export * from './MensagemDiretaPessoasListadasDto';

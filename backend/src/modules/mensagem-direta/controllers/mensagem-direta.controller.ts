@@ -30,6 +30,12 @@ export class MensagemDiretaController {
     return this.mensagemDiretaService.listarConversas(usuarioAtivo);
   }
 
+  /** As pessoas com quem conversar (o seletor "Para"): qualquer usuário autenticado, ao contrário de `GET /usuario`. */
+  @Get('pessoas')
+  listarPessoas(@ActiveUser() usuarioAtivo: JwtPayload) {
+    return this.mensagemDiretaService.listarPessoas(usuarioAtivo);
+  }
+
   @Get('conversa/:usuarioId')
   listarConversa(
     @Param('usuarioId', ParseIntPipe) usuarioId: number,

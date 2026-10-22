@@ -2,10 +2,11 @@ import { ChatEventoDto, NivelIaEnum, StatusPropostaIaEnum, TipoPropostaIaEnum } 
 
 /**
  * Lê o fluxo `text/event-stream` do chat: cada evento é uma linha `data: {json}` terminada por uma linha em branco. Recebe o texto
- * acumulado (os pedaços chegam cortados em qualquer ponto) e devolve os eventos completos e o resto ainda incompleto.
+ * acumulado (os pedaços chegam cortados em qualquer ponto) e devolve os eventos completos e o resto ainda incompleto. O tipo do evento é
+ * o do chat com a IA por padrão; o chat entre colaboradores (task 210) lê o mesmo formato com o seu.
  */
-export function extrairEventos(acumulado: string): { eventos: ChatEventoDto[]; resto: string } {
-  const eventos: ChatEventoDto[] = [];
+export function extrairEventos<TEvento = ChatEventoDto>(acumulado: string): { eventos: TEvento[]; resto: string } {
+  const eventos: TEvento[] = [];
   const blocos = acumulado.split('\n\n');
   const resto = blocos.pop() ?? '';
   for (const bloco of blocos) {
@@ -16,7 +17,7 @@ export function extrairEventos(acumulado: string): { eventos: ChatEventoDto[]; r
       .join('\n');
     if (!dados) continue;
     try {
-      eventos.push(JSON.parse(dados) as ChatEventoDto);
+      eventos.push(JSON.parse(dados) as TEvento);
     } catch {
       // Evento malformado: ignora, o fluxo continua.
     }

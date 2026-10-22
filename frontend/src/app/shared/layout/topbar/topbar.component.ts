@@ -24,6 +24,7 @@ import { CORES_SUGERIDAS, COR_PRIMARIA_PADRAO_HEX } from '../../../core/models/t
 import { focoEmCampo, haSobreposicaoAberta } from '../../../core/utils/atalhos';
 import { ExecucaoAtivaService } from '../../../core/services/execucao-ativa.service';
 import { IaDisponibilidadeService } from '../../../core/services/ia-disponibilidade.service';
+import { MensagemDiretaEstadoService } from '../../../modules/mensagem-direta/services/mensagem-direta-estado.service';
 import { ChipExecucaoAtivaComponent } from './chip-execucao-ativa/chip-execucao-ativa.component';
 import { UsuarioAnotacoesDialogComponent } from '../../../modules/usuario/components/usuario-anotacoes-dialog/usuario-anotacoes-dialog.component';
 
@@ -48,6 +49,7 @@ import { UsuarioAnotacoesDialogComponent } from '../../../modules/usuario/compon
 export class TopbarComponent {
   private readonly autenticacaoService = inject(AutenticacaoService);
   readonly sessao = inject(UsuarioSessaoService);
+  readonly mensagemDireta = inject(MensagemDiretaEstadoService);
   readonly tema = inject(TemaService);
   readonly temaPersonalizado = inject(TemaPersonalizadoService);
   readonly unidadeTempo = inject(VisualizacaoTempoService);

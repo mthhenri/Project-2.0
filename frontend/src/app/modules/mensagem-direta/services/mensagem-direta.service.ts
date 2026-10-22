@@ -1,0 +1,58 @@
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import {
+  ConversaDiretaListadasDto,
+  MensagemDiretaBuscadoDto,
+  MensagemDiretaEnviadaDto,
+  MensagemDiretaEnviarDto,
+  MensagemDiretaLeituraAlteradaDto,
+  MensagemDiretaListadasDto,
+  MensagemDiretaPessoasListadasDto,
+  StandardResponse,
+} from '@project20/shared';
+import { ambiente } from '../../../../environments/environment';
+import { comFeedbackProprioEErroTratado } from '../../../core/interceptors/loading.interceptor';
+
+/**
+ * Chat entre colaboradores (task 210), a parte HTTP. O popup mostra os próprios erros e estados de carga, por isso as chamadas não acionam o
+ * overlay global nem o aviso global de erro. O stream de eventos é do `MensagemDiretaEventosService`.
+ */
+@Injectable({ providedIn: 'root' })
+export class MensagemDiretaService {
+  private readonly httpClient = inject(HttpClient);
+  private readonly urlBase = `${ambiente.apiUrl}/mensagem-direta`;
+
+  listarConversas(): Observable<StandardResponse<ConversaDiretaListadasDto>> {
+    return this.httpClient.get<StandardResponse<ConversaDiretaListadasDto>>(`${this.urlBase}/conversas`, comFeedbackProprioEErroTratado());
+  }
+
+  /** Uma página da conversa com uma pessoa, da mais nova para a mais antiga; `cursor` é o `proximoCursor` da página anterior. */
+  listarConversa(usuarioId: number, cursor?: string | null): Observable<StandardResponse<MensagemDiretaListadasDto>> {
+    let params = new HttpParams();
+    if (cursor) params = params.set('cursor', cursor);
+    return this.httpClient.get<StandardResponse<MensagemDiretaListadasDto>>(`${this.urlBase}/conversa/${usuarioId}`, { params, ...comFeedbackProprioEErroTratado() });
+  }
+
+  enviarMensagem(dto: MensagemDiretaEnviarDto): Observable<StandardResponse<MensagemDiretaEnviadaDto>> {
+    return this.httpClient.post<StandardResponse<MensagemDiretaEnviadaDto>>(`${this.urlBase}/mensagem`, dto, comFeedbackProprioEErroTratado());
+  }
+
+  /** Marca a conversa como lida até a data da última mensagem que a pessoa viu. */
+  alterarLeitura(usuarioId: number, lidaAteDate: Date): Observable<StandardResponse<MensagemDiretaLeituraAlteradaDto>> {
+    return this.httpClient.put<StandardResponse<MensagemDiretaLeituraAlteradaDto>>(
+      `${this.urlBase}/conversa/${usuarioId}/leitura`,
+      { lidaAteDate: lidaAteDate.toISOString() },
+      comFeedbackProprioEErroTratado(),
+    );
+  }
+
+  buscar(texto: string): Observable<StandardResponse<MensagemDiretaBuscadoDto>> {
+    const params = new HttpParams().set('texto', texto);
+    return this.httpClient.get<StandardResponse<MensagemDiretaBuscadoDto>>(`${this.urlBase}/busca`, { params, ...comFeedbackProprioEErroTratado() });
+  }
+
+  listarPessoas(): Observable<StandardResponse<MensagemDiretaPessoasListadasDto>> {
+    return this.httpClient.get<StandardResponse<MensagemDiretaPessoasListadasDto>>(`${this.urlBase}/pessoas`, comFeedbackProprioEErroTratado());
+  }
+}

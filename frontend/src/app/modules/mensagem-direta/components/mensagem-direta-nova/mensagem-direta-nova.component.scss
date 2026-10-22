@@ -1,0 +1,128 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.nova-direta {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+
+  &__cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.625rem 0.75rem 0.5rem 0.5rem;
+  }
+
+  &__titulo {
+    flex: 1;
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--p-text-color);
+  }
+
+  &__busca {
+    position: relative;
+    padding: 0 0.875rem 0.625rem;
+  }
+
+  &__busca-icone {
+    position: absolute;
+    left: 1.5rem;
+    top: calc(50% - 0.3125rem);
+    transform: translateY(-50%);
+    font-size: 0.8125rem;
+    color: var(--p-text-muted-color);
+    pointer-events: none;
+  }
+
+  &__busca-campo {
+    width: 100%;
+    padding-left: 2.125rem;
+    font-size: 0.8125rem;
+  }
+
+  &__corpo {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    border-top: 1px solid var(--app-surface-200);
+  }
+
+  &__esqueleto {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+
+  &__linha {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.625rem 1rem;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    font: inherit;
+
+    &:hover {
+      background: var(--app-surface-50);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--p-primary-color);
+      outline-offset: -2px;
+    }
+  }
+
+  &__miolo {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__nome {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--p-text-color);
+  }
+
+  &__tipo {
+    font-size: 0.6875rem;
+    color: var(--p-text-muted-color);
+  }
+
+  &__estado {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: 100%;
+    padding: 0 2rem;
+    text-align: center;
+  }
+
+  &__estado-icone {
+    font-size: 1.5rem;
+    color: var(--p-red-500);
+  }
+
+  &__estado-texto {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--p-text-muted-color);
+  }
+}

@@ -213,3 +213,19 @@ testarComBanco('validarExistenciaIncluindoExcluido: vale para ativo e excluído;
   assert.equal(await repositorio.validarExistenciaIncluindoExcluido({ id: removido.id }), true);
   assert.equal(await repositorio.validarExistenciaIncluindoExcluido({ id: 987654321 }), false);
 });
+
+testarComBanco('listarAtivos: só os ativos e não excluídos, com nome e tipo, em ordem alfabética', async (conexao) => {
+  const repositorio = criarRepositorio(UsuarioRepository, conexao);
+  const dev = await criarDesenvolvedor(conexao, { nomeCompleto: 'AAA Ativo Dev' });
+  const gestor = await criarGestor(conexao, { nomeCompleto: 'AAB Ativo Gestor' });
+  await criarUsuario(conexao, { nomeCompleto: 'AAC Inativo', statusCodigo: 'INATIVO' });
+  const removido = await criarDesenvolvedor(conexao, { nomeCompleto: 'AAD Removido' });
+  await repositorio.excluir({ id: removido.id });
+
+  const ativos = await repositorio.listarAtivos();
+  const nossos = ativos.filter((u) => u.nomeCompleto.startsWith('AA'));
+  assert.deepEqual(nossos.map((u) => [u.id, u.nomeCompleto, u.tipo]), [
+    [dev.id, 'AAA Ativo Dev', TipoUsuarioEnum.DESENVOLVEDOR],
+    [gestor.id, 'AAB Ativo Gestor', TipoUsuarioEnum.GESTOR],
+  ]);
+});

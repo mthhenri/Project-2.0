@@ -1,0 +1,99 @@
+@if (aberta(); as conversa) {
+  <div class="conversa-direta">
+    <div class="conversa-direta__cabecalho">
+      <p-button icon="pi pi-angle-left" severity="secondary" [text]="true" [rounded]="true" size="small" ariaLabel="Voltar para as conversas" pTooltip="Voltar" tooltipPosition="bottom" (onClick)="voltar()" />
+      <app-mensagem-direta-avatar [nome]="conversa.usuarioNome" [online]="estaOnline()" [pequeno]="true" />
+      <div class="conversa-direta__identidade">
+        <div class="conversa-direta__nome">{{ conversa.usuarioNome }}</div>
+        <div class="conversa-direta__status">{{ estado.conexao() ? (estaOnline() ? 'Online' : 'Offline') : 'Status indisponível' }}</div>
+      </div>
+      <p-button icon="pi pi-minus" severity="secondary" [text]="true" [rounded]="true" size="small" ariaLabel="Ocultar o chat" pTooltip="Ocultar" tooltipPosition="bottom" (onClick)="estado.fechar()" />
+    </div>
+
+    @if (estado.semConexao()) {
+      <p class="conversa-direta__faixa" role="status"><i class="pi pi-exclamation-triangle" aria-hidden="true"></i><span>Sem conexão com o servidor. Tentando reconectar…</span></p>
+    }
+
+    <div #rolagem class="conversa-direta__mensagens" role="log" aria-live="polite" [attr.aria-label]="'Conversa com ' + conversa.usuarioNome" (scroll)="aoRolar()">
+      @if (conversa.carregando && conversa.mensagens.length === 0) {
+        <div class="conversa-direta__esqueleto" aria-busy="true">
+          <p-skeleton height="2.5rem" width="55%" />
+          <div class="conversa-direta__esqueleto-meu"><p-skeleton height="3.5rem" width="75%" /></div>
+          <p-skeleton height="2.5rem" width="40%" />
+        </div>
+      } @else if (conversa.erro && conversa.mensagens.length === 0) {
+        <div class="conversa-direta__estado" role="alert">
+          <i class="pi pi-exclamation-triangle conversa-direta__estado-icone" aria-hidden="true"></i>
+          <p class="conversa-direta__estado-texto">Não foi possível carregar a conversa.</p>
+          <p-button label="Tentar de novo" icon="pi pi-refresh" size="small" [outlined]="true" (onClick)="estado.carregarConversaAberta()" />
+        </div>
+      } @else if (conversa.mensagens.length === 0) {
+        <div class="conversa-direta__estado">
+          <p class="conversa-direta__estado-titulo">Nenhuma mensagem ainda</p>
+          <p class="conversa-direta__estado-texto">Diga olá para {{ conversa.usuarioNome }}.</p>
+        </div>
+      } @else {
+        @if (conversa.carregandoMais) {
+          <div class="conversa-direta__mais" aria-busy="true"><i class="pi pi-spinner pi-spin" aria-hidden="true"></i> Carregando mensagens anteriores…</div>
+        }
+        @for (grupo of grupos(); track grupo.rotulo) {
+          <div class="conversa-direta__dia">{{ grupo.rotulo }}</div>
+          @for (mensagem of grupo.mensagens; track mensagem.mensagemId) {
+            @let minha = mensagem.autorUsuarioId === meuId();
+            <div class="conversa-direta__linha" [class.conversa-direta__linha--minha]="minha">
+              <div
+                class="conversa-direta__balao"
+                [class.conversa-direta__balao--minha]="minha"
+                [class.conversa-direta__balao--enviando]="mensagem.situacao === 'ENVIANDO'"
+                [class.conversa-direta__balao--falhou]="mensagem.situacao === 'FALHOU'"
+              >
+                <app-markdown-visualizador [texto]="mensagem.texto" />
+              </div>
+              <div class="conversa-direta__rodape" [class.conversa-direta__rodape--falhou]="mensagem.situacao === 'FALHOU'">
+                @switch (mensagem.situacao) {
+                  @case ('FALHOU') {
+                    <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+                    <span class="conversa-direta__rodape-forte">Não enviada</span>
+                    <button type="button" class="conversa-direta__link" (click)="tentarDeNovo(mensagem.mensagemId)">Tentar de novo</button>
+                    <button type="button" class="conversa-direta__link conversa-direta__link--discreto" (click)="excluir(mensagem.mensagemId)">Excluir</button>
+                  }
+                  @case ('ENVIANDO') {
+                    <i class="pi pi-clock" aria-hidden="true"></i>
+                    <span>Enviando…</span>
+                  }
+                  @default {
+                    <span>{{ hora(mensagem.createdDate) }}</span>
+                    @if (minha && mensagem.mensagemId === lidaId()) {
+                      <span class="conversa-direta__lida"><i class="pi pi-check" aria-hidden="true"></i><i class="pi pi-check conversa-direta__lida-segundo" aria-hidden="true"></i> Lida</span>
+                    } @else if (minha && mensagem.mensagemId === ultimaMinhaId()) {
+                      <span>· Enviada</span>
+                    }
+                  }
+                }
+              </div>
+            </div>
+          }
+        }
+      }
+    </div>
+
+    <form class="conversa-direta__entrada" (submit)="$event.preventDefault(); enviar()">
+      <div class="conversa-direta__campo-caixa">
+        <textarea
+          #campoTexto
+          pTextarea
+          class="conversa-direta__campo"
+          rows="1"
+          [autoResize]="true"
+          [formControl]="controleTexto"
+          placeholder="Escreva uma mensagem"
+          aria-label="Mensagem"
+          [attr.maxlength]="limiteDoTexto"
+          (keydown)="aoTeclar($event)"
+        ></textarea>
+        <button type="submit" class="conversa-direta__enviar" aria-label="Enviar mensagem" [disabled]="!podeEnviar()"><i class="pi pi-send" aria-hidden="true"></i></button>
+      </div>
+      <span class="conversa-direta__legenda">Markdown. Enter envia, Shift+Enter quebra a linha.</span>
+    </form>
+  </div>
+}

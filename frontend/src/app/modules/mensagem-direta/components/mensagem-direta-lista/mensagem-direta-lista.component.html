@@ -1,0 +1,115 @@
+<div class="lista-direta">
+  <div class="lista-direta__cabecalho">
+    <h2 class="lista-direta__titulo">Conversas</h2>
+    <p-button icon="pi pi-pencil" severity="secondary" [text]="true" [rounded]="true" size="small" ariaLabel="Nova conversa" pTooltip="Nova conversa" tooltipPosition="bottom" (onClick)="novaConversa()" />
+    <p-button icon="pi pi-minus" severity="secondary" [text]="true" [rounded]="true" size="small" ariaLabel="Ocultar o chat" pTooltip="Ocultar" tooltipPosition="bottom" (onClick)="estado.fechar()" />
+  </div>
+
+  <div class="lista-direta__busca">
+    <i class="pi pi-search lista-direta__busca-icone" aria-hidden="true"></i>
+    <input pInputText type="text" class="lista-direta__busca-campo" [formControl]="controleBusca" placeholder="Buscar pessoa ou mensagem" aria-label="Buscar pessoa ou mensagem" maxlength="200" />
+    @if (controleBusca.value) {
+      <button type="button" class="lista-direta__busca-limpar" aria-label="Limpar a busca" (click)="limparBusca()"><i class="pi pi-times" aria-hidden="true"></i></button>
+    }
+  </div>
+
+  @if (estado.semConexao()) {
+    <p class="lista-direta__faixa" role="status"><i class="pi pi-exclamation-triangle" aria-hidden="true"></i><span>Sem conexão com o servidor. Tentando reconectar…</span></p>
+  }
+
+  <div class="lista-direta__corpo" aria-live="polite">
+    @if (buscaAtiva()) {
+      @if (estado.buscando() || digitando()) {
+        <div class="lista-direta__esqueleto" aria-busy="true">
+          <p-skeleton height="2.75rem" />
+          <p-skeleton height="2.75rem" />
+          <p-skeleton height="2.75rem" />
+        </div>
+      } @else if (estado.erroNaBusca()) {
+        <div class="lista-direta__estado" role="alert">
+          <i class="pi pi-exclamation-triangle lista-direta__estado-icone lista-direta__estado-icone--erro" aria-hidden="true"></i>
+          <p class="lista-direta__estado-texto">Não foi possível buscar.</p>
+          <p-button label="Tentar de novo" icon="pi pi-refresh" size="small" [outlined]="true" (onClick)="estado.buscar(termo())" />
+        </div>
+      } @else {
+        @let resultado = estado.resultadoDaBusca();
+        @let mensagens = resultado?.mensagens ?? [];
+        <p class="lista-direta__secao">Mensagens · {{ mensagens.length === 0 ? 'nenhuma com “' + termo().trim() + '”' : mensagens.length + (mensagens.length === 1 ? ' resultado' : ' resultados') }}</p>
+        @for (mensagem of mensagens; track mensagem.mensagemId) {
+          @let pessoa = nomeDaOutraPessoa(mensagem);
+          <button type="button" class="lista-direta__linha lista-direta__linha--achado" (click)="abrir(pessoa.usuarioId, pessoa.nome)">
+            <app-mensagem-direta-avatar [nome]="pessoa.nome" [pequeno]="true" />
+            <span class="lista-direta__miolo">
+              <span class="lista-direta__topo">
+                <span class="lista-direta__nome">{{ pessoa.nome }}</span>
+                <span class="lista-direta__hora">{{ hora(mensagem.createdDate) }}</span>
+              </span>
+              <span class="lista-direta__achado">
+                @if (souEu(mensagem)) { <span>Você: </span> }
+                @for (trecho of trechos(mensagem.texto); track $index) {
+                  @if (trecho.realce) { <mark class="lista-direta__realce">{{ trecho.texto }}</mark> } @else { {{ trecho.texto }} }
+                }
+                @if (mensagem.contemCodigo) { <span class="lista-direta__selo-codigo">código</span> }
+              </span>
+            </span>
+          </button>
+        }
+
+        <p class="lista-direta__secao">Pessoas · {{ pessoasEncontradas().length === 0 ? 'nenhuma com “' + termo().trim() + '”' : pessoasEncontradas().length }}</p>
+        @for (pessoa of pessoasEncontradas(); track pessoa.usuarioId) {
+          <button type="button" class="lista-direta__linha" (click)="abrir(pessoa.usuarioId, pessoa.usuarioNome)">
+            <app-mensagem-direta-avatar [nome]="pessoa.usuarioNome" [online]="estado.online().has(pessoa.usuarioId)" [pequeno]="true" />
+            <span class="lista-direta__miolo"><span class="lista-direta__nome">{{ pessoa.usuarioNome }}</span></span>
+          </button>
+        }
+      }
+    } @else if (!estado.jaCarregouConversas() && estado.carregandoConversas()) {
+      <div class="lista-direta__esqueleto" aria-busy="true">
+        <p-skeleton height="3rem" />
+        <p-skeleton height="3rem" />
+        <p-skeleton height="3rem" />
+        <p-skeleton height="3rem" />
+      </div>
+    } @else if (estado.erroNasConversas()) {
+      <div class="lista-direta__estado" role="alert">
+        <i class="pi pi-exclamation-triangle lista-direta__estado-icone lista-direta__estado-icone--erro" aria-hidden="true"></i>
+        <p class="lista-direta__estado-texto">Não foi possível carregar as conversas.</p>
+        <p-button label="Tentar de novo" icon="pi pi-refresh" size="small" [outlined]="true" (onClick)="estado.carregarConversas()" />
+      </div>
+    } @else if (estado.conversas().length === 0) {
+      <div class="lista-direta__estado">
+        <span class="lista-direta__estado-icone"><i class="pi pi-comments" aria-hidden="true"></i></span>
+        <h3 class="lista-direta__estado-titulo">Nenhuma conversa ainda</h3>
+        <p class="lista-direta__estado-texto">Escolha alguém do time para tirar uma dúvida de código ou combinar algo sem sair da reunião.</p>
+        <p-button label="Nova conversa" size="small" (onClick)="novaConversa()" />
+      </div>
+    } @else {
+      @for (conversa of estado.conversas(); track conversa.conversaId) {
+        <button type="button" class="lista-direta__linha" [class.lista-direta__linha--nao-lida]="conversa.naoLidas > 0" (click)="abrir(conversa.usuarioId, conversa.usuarioNome)">
+          <app-mensagem-direta-avatar [nome]="conversa.usuarioNome" [online]="estado.online().has(conversa.usuarioId)" />
+          <span class="lista-direta__miolo">
+            <span class="lista-direta__topo">
+              <span class="lista-direta__nome">{{ conversa.usuarioNome }}</span>
+              @if (conversa.ultimaMensagem) {
+                <span class="lista-direta__hora">{{ hora(conversa.ultimaMensagem.createdDate) }}</span>
+              }
+            </span>
+            <span class="lista-direta__rodape">
+              <span class="lista-direta__previa">
+                @if (conversa.ultimaMensagem; as ultima) {
+                  {{ previa(ultima.texto, ultima.contemCodigo, ultima.autorUsuarioId) }}
+                }
+              </span>
+              @if (conversa.naoLidas > 0) {
+                <span class="lista-direta__contador" [attr.aria-label]="conversa.naoLidas + (conversa.naoLidas === 1 ? ' mensagem não lida' : ' mensagens não lidas')">{{ conversa.naoLidas > 99 ? '99+' : conversa.naoLidas }}</span>
+              }
+              @if (conversa.silenciada) {
+                <i class="pi pi-bell-slash lista-direta__silenciada" aria-label="Silenciada" pTooltip="Silenciada" tooltipPosition="left"></i>
+              }
+            </span>
+          </span>
+        </button>
+      }
+    }
+  </div>
+</div>

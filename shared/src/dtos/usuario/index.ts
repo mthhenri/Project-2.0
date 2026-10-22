@@ -17,3 +17,4 @@ export * from './UsuarioRestauradoDto';
 export * from './UsuarioNomeListarDto';
 export * from './UsuarioNomeListadoDto';
 export * from './UsuarioExistenciaVerificarDto';
+export * from './UsuarioAtivoListadoDto';

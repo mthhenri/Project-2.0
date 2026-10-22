@@ -51,6 +51,7 @@ interface Cenario {
   naoLidas?: Record<string, number>;
   preferencia?: unknown;
   online?: number[];
+  ativos?: { id: number; nome: string; tipo?: TipoUsuarioEnum }[];
 }
 
 function montar(cenario: Cenario = {}) {
@@ -87,6 +88,7 @@ function montar(cenario: Cenario = {}) {
       const encontrado = usuarios[id];
       return encontrado ? { id, status: encontrado.status ?? TipoUsuarioStatusEnum.ATIVO, nomeCompleto: encontrado.nomeCompleto ?? `Pessoa ${id}` } : null;
     },
+    listarAtivos: async () => (cenario.ativos ?? []).map((a) => ({ id: a.id, nomeCompleto: a.nome, tipo: a.tipo ?? TipoUsuarioEnum.DESENVOLVEDOR })),
     listarNomesPorIds: async ({ usuarioIds }: { usuarioIds: number[] }) =>
       usuarioIds.filter((id) => usuarios[id]).map((id) => ({ id, nomeCompleto: usuarios[id].nomeCompleto ?? `Pessoa ${id}` })),
   };
@@ -357,4 +359,20 @@ test('listarConversas: online vem da presença global', async () => {
   });
   const { conversas } = (await service.listarConversas(ANA)).dados!;
   assert.deepEqual(conversas.map((c) => [c.usuarioId, c.online]), [[9, true], [15, false]]);
+});
+
+test('listarPessoas: as ativas, menos quem pergunta, com tipo e presença — para qualquer tipo de usuário', async () => {
+  const { service } = montar({
+    online: [9],
+    ativos: [{ id: 4, nome: 'Ana' }, { id: 9, nome: 'Bruno' }, { id: 15, nome: 'Carla', tipo: TipoUsuarioEnum.GESTOR }],
+  });
+  for (const quem of [ANA, GESTOR]) {
+    const { pessoas } = (await service.listarPessoas(quem)).dados!;
+    assert.equal(pessoas.some((pessoa) => pessoa.usuarioId === (quem as { sub: number }).sub), false);
+  }
+  const { pessoas } = (await service.listarPessoas(ANA)).dados!;
+  assert.deepEqual(pessoas, [
+    { usuarioId: 9, usuarioNome: 'Bruno', tipo: TipoUsuarioEnum.DESENVOLVEDOR, online: true },
+    { usuarioId: 15, usuarioNome: 'Carla', tipo: TipoUsuarioEnum.GESTOR, online: false },
+  ]);
 });

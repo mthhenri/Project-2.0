@@ -1,0 +1,6 @@
+<span class="avatar-direto" [class.avatar-direto--pequeno]="pequeno()" aria-hidden="true">
+  {{ iniciais() }}
+  @if (online() !== null) {
+    <span class="avatar-direto__presenca" [class.avatar-direto__presenca--online]="online()"></span>
+  }
+</span>

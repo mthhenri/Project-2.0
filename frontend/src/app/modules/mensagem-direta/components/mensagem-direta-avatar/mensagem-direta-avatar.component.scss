@@ -1,0 +1,41 @@
+:host {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.avatar-direto {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: var(--app-avatar-fundo);
+  color: var(--app-avatar-cor);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1;
+  user-select: none;
+
+  &--pequeno {
+    width: 2.25rem;
+    height: 2.25rem;
+    font-size: 0.8125rem;
+  }
+
+  &__presenca {
+    position: absolute;
+    right: -1px;
+    bottom: -1px;
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    background: var(--app-surface-400);
+    border: 2px solid var(--app-surface-0);
+
+    &--online {
+      background: var(--p-green-500);
+    }
+  }
+}

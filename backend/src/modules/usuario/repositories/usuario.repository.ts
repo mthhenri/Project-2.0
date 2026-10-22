@@ -15,7 +15,7 @@ import {
   UsuarioSenhaInternoAlterarDto,
   UsuarioExcluirDto,
 } from '@project20/shared';
-import { TipoUsuarioEnum, TipoUsuarioStatusEnum, UsuarioExistenciaVerificarDto, UsuarioNomeListadoDto, UsuarioNomeListarDto } from '@project20/shared';
+import { TipoUsuarioEnum, TipoUsuarioStatusEnum, UsuarioAtivoListadoDto, UsuarioExistenciaVerificarDto, UsuarioNomeListadoDto, UsuarioNomeListarDto } from '@project20/shared';
 import { UsuarioRestaurarDto, UsuarioRestauradoDto } from '@project20/shared';
 
 @Injectable()
@@ -360,6 +360,24 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
       { id: dto.id },
     );
     return resultado[0].existe;
+  }
+
+  /** Os usuários ativos (nome e tipo), em ordem alfabética: a lista de pessoas do chat entre colaboradores, aberta a qualquer usuário. */
+  async listarAtivos(): Promise<UsuarioAtivoListadoDto[]> {
+    return this.executarConsulta<UsuarioAtivoListadoDto>(
+      `SELECT usuario.id, usuario.nome_completo AS "nomeCompleto", tipo_usuario.codigo AS tipo
+       FROM usuario
+       INNER JOIN tipo_usuario
+         ON tipo_usuario.id = usuario.tipo_usuario_id
+         AND tipo_usuario.is_deleted = false
+       WHERE usuario.tipo_usuario_status_id = (
+               SELECT tipo_usuario_status.id FROM tipo_usuario_status
+               WHERE tipo_usuario_status.codigo = :status AND tipo_usuario_status.is_deleted = false
+             )
+         AND usuario.is_deleted = false
+       ORDER BY usuario.nome_completo ASC, usuario.id ASC`,
+      { status: TipoUsuarioStatusEnum.ATIVO },
+    );
   }
 
   /**
