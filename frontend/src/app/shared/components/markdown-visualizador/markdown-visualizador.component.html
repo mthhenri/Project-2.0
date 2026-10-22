@@ -90,7 +90,13 @@
   @for (trecho of listaTrechos; track $index) {
     @switch (trecho.tipo) {
       @case ('texto') {
-        <ng-container>{{ trecho.valor }}</ng-container>
+        @for (pedaco of partir(trecho.valor); track $index) {
+          @if (pedaco.destaque) {
+            <span class="markdown__destaque">{{ pedaco.valor }}</span>
+          } @else {
+            <ng-container>{{ pedaco.valor }}</ng-container>
+          }
+        }
       }
       @case ('quebra') {
         <br />

@@ -82,4 +82,18 @@ describe('MarkdownVisualizadorComponent', () => {
     expect(montado.elemento.querySelector('h1')).toBeNull();
     expect(montado.elemento.querySelector('h2')?.textContent).toContain('Depois');
   });
+
+  it('destaca só as menções e referências conhecidas, em elemento nativo', async () => {
+    const montado = await montarComponente(MarkdownVisualizadorComponent, {
+      entradas: { texto: '@Gabriel Zimmermann teste #Relatório novo', destaques: ['@Gabriel Zimmermann', '#Relatório novo'] },
+    });
+    const destaques = Array.from(montado.elemento.querySelectorAll('.markdown__destaque')).map((el) => el.textContent);
+    expect(destaques).toEqual(['@Gabriel Zimmermann', '#Relatório novo']);
+    expect(montado.elemento.querySelector('p')?.textContent).toBe('@Gabriel Zimmermann teste #Relatório novo');
+  });
+
+  it('sem destaques informados nada ganha destaque', async () => {
+    const montado = await renderizar('@Gabriel Zimmermann teste');
+    expect(montado.elemento.querySelector('.markdown__destaque')).toBeNull();
+  });
 });
