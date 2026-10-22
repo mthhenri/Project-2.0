@@ -35,6 +35,25 @@
       <p-toggleswitch [formControl]="controleSom" ariaLabel="Som" />
     </label>
 
+    @if (noDesktop) {
+      <hr class="menu-notificacoes__divisor" />
+      <p class="menu-notificacoes__secao">Chat no Project Desktop</p>
+      <div class="menu-notificacoes__linha menu-notificacoes__linha--atalho">
+        <span class="menu-notificacoes__rotulo">Atalho global</span>
+        @if (gravandoAtalho()) {
+          <input #campoDoAtalho type="text" readonly class="menu-notificacoes__tecla menu-notificacoes__tecla--gravando" placeholder="Aperte as teclas" aria-label="Gravar o novo atalho: aperte as teclas, ou Esc para desistir" (keydown)="aoTeclarAtalho($event)" (blur)="gravandoAtalho.set(false)" />
+        } @else {
+          <kbd class="menu-notificacoes__tecla">{{ atalho() }}</kbd>
+          <button type="button" class="menu-notificacoes__reativar" (click)="comecarAGravarAtalho()">Alterar</button>
+        }
+      </div>
+      @if (estadoDoAtalho() === 'indisponivel') {
+        <p class="menu-notificacoes__erro" role="alert"><i class="pi pi-exclamation-triangle" aria-hidden="true"></i> Outro programa já usa este atalho. Escolha outro.</p>
+      } @else if (estadoDoAtalho() === 'pendente') {
+        <p class="menu-notificacoes__detalhe menu-notificacoes__nota" role="status">O novo atalho vale em até 1 minuto.</p>
+      }
+    }
+
     <hr class="menu-notificacoes__divisor" />
     <p class="menu-notificacoes__secao">Silenciar tudo</p>
     @if (silenciado()) {

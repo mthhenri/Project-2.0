@@ -7,6 +7,7 @@ import {
   ReferenciaMensagemDto,
   montarConversaDiretaId,
 } from '@project20/shared';
+import { ProjectDesktopService } from '../../../core/services/project-desktop.service';
 import { UsuarioSessaoService } from '../../../core/services/usuario-sessao.service';
 import {
   ConversaNaLista,
@@ -22,6 +23,7 @@ import {
   totalNaoLidas,
   zerarNaoLidas,
 } from '../utils/mensagem-direta.util';
+import { pareceCodigo } from '../utils/compositor.util';
 import { MensagemDiretaAvisosService } from './mensagem-direta-avisos.service';
 import { MensagemDiretaEventosService } from './mensagem-direta-eventos.service';
 import { MensagemDiretaReferenciaService } from './mensagem-direta-referencia.service';
@@ -69,6 +71,7 @@ export class MensagemDiretaEstadoService {
   private readonly sessao = inject(UsuarioSessaoService);
   private readonly referencias = inject(MensagemDiretaReferenciaService);
   private readonly avisos = inject(MensagemDiretaAvisosService);
+  private readonly desktop = inject(ProjectDesktopService);
 
   readonly aberto = signal(false);
   readonly visao = signal<VisaoDoPopup>('LISTA');
@@ -82,6 +85,8 @@ export class MensagemDiretaEstadoService {
   readonly conexao = this.stream.conectado;
 
   readonly conversaAberta = signal<ConversaAberta | null>(null);
+  /** O código que o usuário copiou antes de apertar o atalho do Desktop (task 213): vira bloco no campo da próxima conversa aberta e some. */
+  readonly rascunhoDoDesktop = signal<string | null>(null);
 
   readonly pessoas = signal<MensagemDiretaPessoaResumoDto[] | null>(null);
   readonly carregandoPessoas = signal(false);
@@ -175,6 +180,7 @@ export class MensagemDiretaEstadoService {
     this.pessoas.set(null);
     this.jaCarregouConversas.set(false);
     this.aberto.set(false);
+    this.rascunhoDoDesktop.set(null);
     this.visao.set('LISTA');
     this.ultimaLeituraMarcada.clear();
   }
@@ -190,10 +196,26 @@ export class MensagemDiretaEstadoService {
   }
 
   fechar(): void {
+    this.rascunhoDoDesktop.set(null);
     this.aberto.set(false);
   }
 
+  /**
+   * O atalho do Desktop (task 213): abre o popup com o que estava na área de transferência. Se parece código, vai direto a escolher a pessoa e o código
+   * fica esperando o campo da conversa; senão (texto comum, vazio) abre a lista como o botão do topbar e o que foi copiado é descartado.
+   */
+  abrirPeloDesktop(areaDeTransferencia: string | null): void {
+    const codigo = areaDeTransferencia !== null && pareceCodigo(areaDeTransferencia) ? areaDeTransferencia : null;
+    this.rascunhoDoDesktop.set(codigo);
+    this.abrir();
+    if (codigo === null) return;
+    this.conversaAberta.set(null);
+    this.visao.set('NOVA');
+    void this.carregarPessoas();
+  }
+
   voltarParaALista(): void {
+    this.rascunhoDoDesktop.set(null);
     this.conversaAberta.set(null);
     this.resultadoDaBusca.set(null);
     this.visao.set('LISTA');
@@ -229,6 +251,8 @@ export class MensagemDiretaEstadoService {
   async abrirConversa(usuarioId: number, usuarioNome: string): Promise<void> {
     const meuId = this.sessao.id();
     if (meuId === undefined || meuId === usuarioId) return;
+    // O código copiado só vai à conversa escolhida na tela de nova conversa; qualquer outro caminho até uma conversa o descarta.
+    if (this.visao() !== 'NOVA') this.rascunhoDoDesktop.set(null);
     this.aberto.set(true);
     this.visao.set('CONVERSA');
     this.conversaAberta.set({
@@ -290,7 +314,7 @@ export class MensagemDiretaEstadoService {
 
   /** A conversa está mesmo à vista de quem usa: o popup aberto nela e a página visível (aba em primeiro plano, janela não minimizada). */
   private aVista(): boolean {
-    return this.aberto() && this.visao() === 'CONVERSA' && document.visibilityState === 'visible';
+    return this.aberto() && this.visao() === 'CONVERSA' && document.visibilityState === 'visible' && !this.desktop.oculto();
   }
 
   /** Marca a conversa aberta como lida até a mensagem mais nova do outro, se o popup está à vista e ainda há o que marcar. */
@@ -572,6 +596,7 @@ export class MensagemDiretaEstadoService {
   /** O clique no aviso: abre a conversa com quem escreveu e tira o cartão. */
   async abrirConversaDoAviso(usuarioId: number, usuarioNome: string, avisoId: string): Promise<void> {
     this.avisos.fechar(avisoId);
+    this.rascunhoDoDesktop.set(null);
     await this.abrirConversa(usuarioId, usuarioNome);
   }
 

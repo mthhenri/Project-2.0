@@ -1,5 +1,9 @@
 @if (estado.aberto()) {
-  <section class="popup-direto" role="dialog" aria-label="Chat com colegas" (keydown.escape)="estado.fechar()">
+  <section class="popup-direto" [class.popup-direto--janela]="emJanela()" role="dialog" aria-label="Chat com colegas" (keydown.escape)="estado.fechar()">
+    @if (emJanela()) {
+      <!-- A janela do Desktop não tem moldura: esta faixa é por onde se arrasta. -->
+      <div class="popup-direto__arrasto" aria-hidden="true"><span class="popup-direto__alca"></span></div>
+    }
     <!-- As telas só carregam quando o popup é aberto pela primeira vez: ficam fora do pacote inicial do layout. -->
     @defer (on immediate) {
       @switch (estado.visao()) {

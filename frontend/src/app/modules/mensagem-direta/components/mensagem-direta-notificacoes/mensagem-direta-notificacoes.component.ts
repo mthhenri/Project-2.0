@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, NgZone, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, inject, NgZone, signal, viewChild } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { PopoverModule } from 'primeng/popover';
@@ -6,8 +6,9 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TooltipModule } from 'primeng/tooltip';
 import { estaSilenciado } from '@project20/shared';
 import { ambiente } from '../../../../../environments/environment';
+import { ProjectDesktopService } from '../../../../core/services/project-desktop.service';
 import { MensagemDiretaAvisosService } from '../../services/mensagem-direta-avisos.service';
-import { OpcaoDeSilencio, rotuloDoSilencio } from '../../utils/avisos.util';
+import { OpcaoDeSilencio, atalhoDoTeclado, rotuloDoSilencio } from '../../utils/avisos.util';
 
 interface OpcaoDoMenu {
   opcao: OpcaoDeSilencio;
@@ -33,6 +34,16 @@ const LIMITE_DO_TEMPORIZADOR_MS = 2_147_483_647;
 export class MensagemDiretaNotificacoesComponent {
   private readonly servico = inject(MensagemDiretaAvisosService);
   private readonly zona = inject(NgZone);
+  private readonly desktop = inject(ProjectDesktopService);
+
+  /** Dentro do Project Desktop o menu também mostra e grava o atalho global do chat (task 213). */
+  /** O atalho se muda no Project; a janela de chat do Desktop não tem esta seção (apertar teclas ali dispararia o atalho e fecharia a janela). */
+  protected readonly noDesktop = this.desktop.disponivel && !this.desktop.naJanelaDeChat;
+  protected readonly atalho = computed(() => this.preferencia().atalhoGlobal);
+  protected readonly gravandoAtalho = signal(false);
+  /** O que o Desktop disse do atalho: em uso por outro programa, ou ainda não aplicado (ele relê a preferência a cada minuto). */
+  protected readonly estadoDoAtalho = signal<'ok' | 'indisponivel' | 'pendente'>('ok');
+  private readonly campoDoAtalho = viewChild<ElementRef<HTMLInputElement>>('campoDoAtalho');
 
   protected readonly preferencia = this.servico.preferencia;
   protected readonly erro = this.servico.erroNaPreferencia;
@@ -76,6 +87,35 @@ export class MensagemDiretaNotificacoesComponent {
 
   protected atualizarRelogio(): void {
     this.agora.set(new Date());
+    void this.conferirAtalho();
+  }
+
+  private async conferirAtalho(): Promise<void> {
+    if (!this.noDesktop) return;
+    const situacao = await this.desktop.situacaoDoAtalho();
+    if (situacao === null) return;
+    if (situacao.atalho !== this.atalho()) this.estadoDoAtalho.set('pendente');
+    else this.estadoDoAtalho.set(situacao.registrado ? 'ok' : 'indisponivel');
+  }
+
+  protected comecarAGravarAtalho(): void {
+    this.gravandoAtalho.set(true);
+    setTimeout(() => this.campoDoAtalho()?.nativeElement.focus(), 0);
+  }
+
+  /** Grava o atalho tecla a tecla: Esc desiste, e só uma combinação válida (modificador + tecla) é gravada. */
+  protected aoTeclarAtalho(evento: KeyboardEvent): void {
+    evento.preventDefault();
+    evento.stopPropagation();
+    if (evento.key === 'Escape') {
+      this.gravandoAtalho.set(false);
+      return;
+    }
+    const atalho = atalhoDoTeclado(evento);
+    if (!atalho) return;
+    this.gravandoAtalho.set(false);
+    this.estadoDoAtalho.set(atalho === this.atalho() ? this.estadoDoAtalho() : 'pendente');
+    void this.servico.alterarPreferencia({ atalhoGlobal: atalho });
   }
 
   protected async silenciar(opcao: OpcaoDeSilencio): Promise<void> {

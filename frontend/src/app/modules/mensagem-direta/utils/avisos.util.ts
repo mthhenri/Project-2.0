@@ -1,5 +1,6 @@
 import {
   MensagemDiretaPreferenciaRecuperadaDto,
+  REGEX_ATALHO_GLOBAL,
   estaSilenciado,
   instanteParaRelogioLocal,
   relogioLocalParaInstante,
@@ -140,4 +141,39 @@ export function somarAviso(avisos: AvisoNaTela[], nova: NovaMensagemParaAviso): 
 
 export function rotuloDaQuantidade(quantidade: number): string {
   return quantidade <= 1 ? '' : `${quantidade} mensagens novas`;
+}
+
+// --- Atalho global do chat (task 213) ------------------------------------------------------------------------------------------------------------
+
+/** O que o menu lê de um `KeyboardEvent` para gravar o atalho (os campos de que a regra precisa). */
+export interface TeclaApertada {
+  key: string;
+  code: string;
+  ctrlKey: boolean;
+  altKey: boolean;
+  shiftKey: boolean;
+  metaKey: boolean;
+}
+
+const TECLAS_NOMEADAS: Readonly<Record<string, string>> = {
+  ' ': 'Space', Enter: 'Enter', Tab: 'Tab', Backspace: 'Backspace', Delete: 'Delete', Insert: 'Insert', Home: 'Home', End: 'End',
+  PageUp: 'PageUp', PageDown: 'PageDown', ArrowUp: 'Up', ArrowDown: 'Down', ArrowLeft: 'Left', ArrowRight: 'Right',
+};
+
+/**
+ * O atalho no formato do Electron (`Ctrl+Shift+Space`) a partir da tecla apertada, ou `null` quando ainda não é um atalho: só modificadores, nenhum
+ * modificador (uma tecla solta tomaria a tecla de todos os programas) ou uma tecla que o formato não aceita. Letras e dígitos vêm da posição da
+ * tecla (`code`), então `Shift+2` não vira `Shift+@`. A mesma regex do servidor (`REGEX_ATALHO_GLOBAL`) confere o resultado.
+ */
+export function atalhoDoTeclado(tecla: TeclaApertada): string | null {
+  const modificadores = [tecla.ctrlKey ? 'Ctrl' : null, tecla.altKey ? 'Alt' : null, tecla.shiftKey ? 'Shift' : null, tecla.metaKey ? 'Super' : null].filter((nome): nome is string => nome !== null);
+  if (modificadores.length === 0) return null;
+  let nome: string | undefined;
+  if (/^Key[A-Z]$/.test(tecla.code)) nome = tecla.code.slice(3);
+  else if (/^Digit[0-9]$/.test(tecla.code)) nome = tecla.code.slice(5);
+  else if (/^F(?:[1-9]|1[0-9]|2[0-4])$/.test(tecla.key)) nome = tecla.key;
+  else nome = TECLAS_NOMEADAS[tecla.key];
+  if (!nome) return null;
+  const atalho = [...modificadores, nome].join('+');
+  return REGEX_ATALHO_GLOBAL.test(atalho) ? atalho : null;
 }

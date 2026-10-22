@@ -35,5 +35,11 @@ export const rotas: Routes = [
     canActivate: [autenticacaoGuard],
     loadChildren: () => import('./modules/checkin/checkin.routes').then((m) => m.checkinRotas),
   },
+  // A janela de chat do Project Desktop (task 213): também sem menu lateral nem barra superior.
+  {
+    path: 'chat-popup',
+    canActivate: [autenticacaoGuard],
+    loadComponent: () => import('./modules/mensagem-direta/pages/chat-popup/chat-popup.page').then((m) => m.ChatPopupPage),
+  },
   { path: '**', redirectTo: 'autenticacao' },
 ];

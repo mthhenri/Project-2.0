@@ -94,6 +94,35 @@
     cursor: pointer;
   }
 
+  &__linha--atalho {
+    cursor: default;
+
+    &:hover {
+      background: transparent;
+    }
+  }
+
+  &__tecla {
+    margin-left: auto;
+    padding: 0.1875rem 0.5rem;
+    border: 1px solid var(--app-surface-300);
+    border-radius: 6px;
+    background: var(--app-surface-50);
+    font: inherit;
+    font-size: 0.75rem;
+    color: var(--p-text-color);
+
+    &--gravando {
+      width: 8rem;
+      border-color: var(--p-primary-color);
+      outline: none;
+    }
+  }
+
+  &__nota {
+    margin: 0.25rem 0.5rem 0;
+  }
+
   &__erro {
     display: flex;
     align-items: center;

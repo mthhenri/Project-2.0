@@ -62,6 +62,9 @@ export class MensagemDiretaCompositorComponent {
   /** Muda ao abrir outra conversa: o campo recebe o foco (depois disso o foco é de quem usa a página, o popup não é modal). */
   readonly chave = input<number | null>(null);
   readonly enviar = output<EnvioDoCompositor>();
+  /** Código a pôr no campo como bloco (o que o usuário copiou antes do atalho do Desktop, task 213); `textoAplicado` avisa que já foi usado. */
+  readonly codigoInicial = input<string | null>(null);
+  readonly textoAplicado = output<void>();
 
   protected readonly limiteDoTexto = LIMITE_TEXTO_MENSAGEM_DIRETA;
   readonly controleTexto = new FormControl('', { nonNullable: true });
@@ -140,6 +143,25 @@ export class MensagemDiretaCompositorComponent {
 
     effect(() => {
       if (this.chave() !== null && this.campo()) setTimeout(() => this.campo()?.nativeElement.focus(), 0);
+    });
+
+    // O código do Desktop entra uma vez como bloco, com o cursor depois dele; o usuário confere e envia (nada é enviado sozinho).
+    effect(() => {
+      const codigo = this.codigoInicial();
+      const campo = this.campo()?.nativeElement;
+      if (codigo === null || !campo) return;
+      untracked(() => {
+        const resultado = inserirBlocoDeCodigo(campo.value, campo.value.length, campo.value.length, codigo);
+        if (resultado.texto.length <= LIMITE_TEXTO_MENSAGEM_DIRETA) {
+          this.controleTexto.setValue(resultado.texto);
+          setTimeout(() => {
+            campo.focus();
+            campo.setSelectionRange(resultado.cursor, resultado.fimDaSelecao);
+            this.atualizarCursor();
+          }, 0);
+        }
+        this.textoAplicado.emit();
+      });
     });
 
     // O gatilho que o usuário dispensou (Esc, clique fora ou item já escolhido) volta a valer quando o texto passa a ter OUTRO gatilho (ou nenhum).

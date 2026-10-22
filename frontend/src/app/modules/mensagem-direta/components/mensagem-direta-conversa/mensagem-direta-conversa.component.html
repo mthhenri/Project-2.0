@@ -91,6 +91,6 @@
       }
     </div>
 
-    <app-mensagem-direta-compositor [pessoas]="pessoasMencionaveis()" [chave]="pessoaAberta()" (enviar)="aoEnviar($event)" />
+    <app-mensagem-direta-compositor [pessoas]="pessoasMencionaveis()" [chave]="pessoaAberta()" [codigoInicial]="estado.rascunhoDoDesktop()" (textoAplicado)="estado.rascunhoDoDesktop.set(null)" (enviar)="aoEnviar($event)" />
   </div>
 }

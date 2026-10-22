@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { TipoUsuarioEnum } from '@project20/shared';
 import { montarComponente, ComponenteMontado } from '../../../../../testes/montar-componente';
 import { esperarRequisicao, responderErro, responderSucesso } from '../../../../../testes/http-teste';
+import { ProjectDesktopService } from '../../../../core/services/project-desktop.service';
 import { MensagemDiretaAvisosService } from '../../services/mensagem-direta-avisos.service';
 import { MensagemDiretaNotificacoesComponent } from './mensagem-direta-notificacoes.component';
 
@@ -161,5 +162,85 @@ describe('MensagemDiretaNotificacoesComponent', () => {
     await tela.atualizar();
     expect(menu()!.textContent).toContain('Silenciado até você reativar');
     expect(sino().innerHTML).toContain('p-button-warn');
+  });
+});
+
+describe('MensagemDiretaNotificacoesComponent: atalho do chat no Project Desktop (task 213)', () => {
+  let tela: ComponenteMontado<MensagemDiretaNotificacoesComponent>;
+  let situacao: { atalho: string | null; registrado: boolean };
+
+  async function montarNoDesktop(disponivel: boolean) {
+    situacao = { atalho: 'Ctrl+Shift+Space', registrado: true };
+    tela = await montarComponente(MensagemDiretaNotificacoesComponent, {
+      usuario: TipoUsuarioEnum.DESENVOLVEDOR,
+      provedores: [{ provide: ProjectDesktopService, useValue: { disponivel, situacaoDoAtalho: () => Promise.resolve(situacao) } }],
+    });
+    const leitura = TestBed.inject(MensagemDiretaAvisosService).carregarPreferencia();
+    responderSucesso(esperarRequisicao(tela.http, 'GET', '/mensagem-direta/preferencia'), PREFERENCIA);
+    await leitura;
+    await tela.atualizar();
+  }
+
+  const abrir = async () => {
+    tela.elemento.querySelector<HTMLButtonElement>('button[aria-label="Configurar notificações"]')!.click();
+    await tela.atualizar();
+    await new Promise((resolver) => setTimeout(resolver, 0));
+    await tela.atualizar();
+  };
+  const menu = () => document.body.querySelector('.menu-notificacoes') as HTMLElement;
+  const botaoAlterar = () => Array.from(menu().querySelectorAll<HTMLButtonElement>('button')).find((b) => b.textContent?.includes('Alterar'));
+  const campo = () => menu().querySelector<HTMLInputElement>('input[aria-label^="Gravar o novo atalho"]')!;
+  const teclar = (parcial: KeyboardEventInit) => campo().dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, ...parcial }));
+
+  afterEach(() => document.body.querySelectorAll('.p-popover').forEach((elemento) => elemento.remove()));
+
+  it('no navegador o menu não mostra o atalho', async () => {
+    await montarNoDesktop(false);
+    await abrir();
+    expect(menu().textContent).not.toContain('Atalho global');
+    expect(botaoAlterar()).toBeUndefined();
+  });
+
+  it('no Desktop mostra o atalho atual e grava o novo tecla a tecla (a combinação inteira, com a preferência completa)', async () => {
+    await montarNoDesktop(true);
+    await abrir();
+    expect(menu().textContent).toContain('Atalho global');
+    expect(menu().querySelector('kbd')?.textContent).toContain('Ctrl+Shift+Space');
+
+    botaoAlterar()!.click();
+    await tela.atualizar();
+    await new Promise((resolver) => setTimeout(resolver, 0));
+    teclar({ key: 'Control', code: 'ControlLeft', ctrlKey: true });
+    teclar({ key: 'k', code: 'KeyK', ctrlKey: true, altKey: true });
+    await tela.atualizar();
+
+    const requisicao = esperarRequisicao(tela.http, 'PUT', '/mensagem-direta/preferencia');
+    expect(requisicao.request.body).toMatchObject({ atalhoGlobal: 'Ctrl+Alt+K', avisosAtivos: true });
+    responderSucesso(requisicao, { ...PREFERENCIA, atalhoGlobal: 'Ctrl+Alt+K' });
+    await tela.atualizar();
+    expect(menu().querySelector('kbd')?.textContent).toContain('Ctrl+Alt+K');
+    expect(menu().textContent).toContain('O novo atalho vale em até 1 minuto.');
+  });
+
+  it('Esc desiste da gravação, e tecla sem modificador não é atalho', async () => {
+    await montarNoDesktop(true);
+    await abrir();
+    botaoAlterar()!.click();
+    await tela.atualizar();
+    await new Promise((resolver) => setTimeout(resolver, 0));
+    teclar({ key: 'k', code: 'KeyK' });
+    await tela.atualizar();
+    expect(campo()).not.toBeNull();
+    teclar({ key: 'Escape', code: 'Escape' });
+    await tela.atualizar();
+    expect(menu().querySelector('kbd')?.textContent).toContain('Ctrl+Shift+Space');
+    tela.http.expectNone((requisicao) => requisicao.method === 'PUT');
+  });
+
+  it('avisa quando o sistema recusou o atalho (outro programa já o usa)', async () => {
+    await montarNoDesktop(true);
+    situacao = { atalho: 'Ctrl+Shift+Space', registrado: false };
+    await abrir();
+    expect(menu().textContent).toContain('Outro programa já usa este atalho.');
   });
 });

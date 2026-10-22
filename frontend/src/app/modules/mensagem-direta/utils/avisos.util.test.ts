@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  atalhoDoTeclado,
   AvisoNaTela,
   EntradaDaDecisaoDeAviso,
   MAXIMO_DE_AVISOS_NA_TELA,
@@ -131,5 +132,33 @@ describe('somarAviso', () => {
   it('rotuloDaQuantidade só aparece a partir de duas mensagens', () => {
     expect(rotuloDaQuantidade(1)).toBe('');
     expect(rotuloDaQuantidade(3)).toBe('3 mensagens novas');
+  });
+});
+
+describe('atalhoDoTeclado', () => {
+  const tecla = (parcial: Partial<{ key: string; code: string; ctrlKey: boolean; altKey: boolean; shiftKey: boolean; metaKey: boolean }>) => ({
+    key: '', code: '', ctrlKey: false, altKey: false, shiftKey: false, metaKey: false, ...parcial,
+  });
+
+  it('monta o atalho no formato do Electron, com os modificadores sempre na mesma ordem', () => {
+    expect(atalhoDoTeclado(tecla({ key: ' ', code: 'Space', ctrlKey: true, shiftKey: true }))).toBe('Ctrl+Shift+Space');
+    expect(atalhoDoTeclado(tecla({ key: 'k', code: 'KeyK', shiftKey: true, ctrlKey: true, altKey: true }))).toBe('Ctrl+Alt+Shift+K');
+    expect(atalhoDoTeclado(tecla({ key: 'F1', code: 'F1', altKey: true }))).toBe('Alt+F1');
+    expect(atalhoDoTeclado(tecla({ key: '1', code: 'Digit1', metaKey: true }))).toBe('Super+1');
+    expect(atalhoDoTeclado(tecla({ key: 'ArrowUp', code: 'ArrowUp', ctrlKey: true }))).toBe('Ctrl+Up');
+  });
+
+  it('letras e dígitos vêm da posição da tecla, não do caractere (Shift+2 não vira Shift+@)', () => {
+    expect(atalhoDoTeclado(tecla({ key: '@', code: 'Digit2', ctrlKey: true, shiftKey: true }))).toBe('Ctrl+Shift+2');
+    expect(atalhoDoTeclado(tecla({ key: 'Ç', code: 'KeyC', altKey: true }))).toBe('Alt+C');
+  });
+
+  it('sem modificador, só modificadores ou tecla que o formato não aceita não é atalho', () => {
+    expect(atalhoDoTeclado(tecla({ key: 'k', code: 'KeyK' }))).toBeNull();
+    expect(atalhoDoTeclado(tecla({ key: 'Control', code: 'ControlLeft', ctrlKey: true }))).toBeNull();
+    expect(atalhoDoTeclado(tecla({ key: 'Shift', code: 'ShiftLeft', shiftKey: true }))).toBeNull();
+    expect(atalhoDoTeclado(tecla({ key: 'Escape', code: 'Escape', ctrlKey: true }))).toBeNull();
+    expect(atalhoDoTeclado(tecla({ key: ';', code: 'Semicolon', ctrlKey: true }))).toBeNull();
+    expect(atalhoDoTeclado(tecla({ key: 'F25', code: 'F25', ctrlKey: true }))).toBeNull();
   });
 });

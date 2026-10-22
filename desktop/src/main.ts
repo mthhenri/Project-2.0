@@ -1,9 +1,13 @@
 import * as path from 'node:path';
-import { app, BrowserWindow, ipcMain, Menu, nativeImage, nativeTheme, screen, shell, Tray } from 'electron';
+import { app, BrowserWindow, clipboard, globalShortcut, ipcMain, IpcMainEvent, IpcMainInvokeEvent, Menu, nativeImage, nativeTheme, Notification, screen, shell, Tray } from 'electron';
 import { NOME_DO_APP, URL_DO_PROJECT } from './config';
 import { montarPaginaDoDialogoDeSaida, RespostaDaSaida, respostaDaNavegacao } from './dialogo-de-saida';
 import { decidirFechamento, destinoDaNavegacao, EstadoDeEncerramento, janelaForaDoLugar, limitarAoMonitor, resolverUrlDoProject, textoDoProximoCheckin } from './politica-da-janela';
 import { deveConferirVersao, enderecoParaBaixar, lerVersaoPublicada, textoDaAtualizacao, VersaoPublicada } from './politica-da-versao';
+import {
+  AvisoDoChat, ConversaDoChat, decidirAtalho, enderecoDaJanelaDeChat, lerAvisoDoChat, lerCaminhoDoProject, lerConversaAbertaDoChat, lerPreferenciaDoChat, planoDoAtalho,
+  posicaoDaJanelaDeChat, prepararAreaDeTransferencia, textoDoItemDoChat,
+} from './politica-do-chat';
 import { deveAbrirJanelinha, deveFecharJanelinha, enderecoDaApi, lerEstadoDaIa, lerSituacao, segundosAteOCheckin, SituacaoDoCheckin } from './politica-do-checkin';
 
 const urlDoProject = resolverUrlDoProject(URL_DO_PROJECT, process.env);
@@ -32,6 +36,22 @@ let reajustando = false;
 /** Trazer o Project para a frente minimiza e restaura de propósito; enquanto isso, o minimizar não pode ocultar a janela. */
 let trazendoParaAFrente = false;
 let tentativaDeReabrir: NodeJS.Timeout | null = null;
+
+/** O chat entre colaboradores (task 213): a janela flutuante, o texto copiado que espera a página pedir e o atalho global. */
+const CONFERENCIA_DO_CHAT_MS = 60_000;
+const PRIMEIRA_CONFERENCIA_DO_CHAT_MS = 4_000;
+const LARGURA_DO_CHAT = 420;
+const ALTURA_DO_CHAT = 640;
+let janelaDeChat: BrowserWindow | null = null;
+let rascunhoPendente: string | null = null;
+/** A conversa que a janela de chat está mostrando: o aviso dela não vira notificação (o usuário já está lendo). */
+let conversaDaJanelaDeChat: number | null = null;
+/** O atalho que a preferência do usuário pede e o que o sistema de fato registrou (diferem quando outro programa já usa a combinação). */
+let atalhoDesejado: string | null = null;
+let atalhoRegistrado: string | null = null;
+let conferenciaDoChat: NodeJS.Timeout | null = null;
+/** As notificações do sistema ainda na tela: sem a referência o coletor de lixo as descartaria antes do clique. */
+const notificacoesNaTela = new Set<Notification>();
 
 if (!app.requestSingleInstanceLock()) {
   // Já existe um Project Desktop aberto: ele é quem vai para a frente (evento `second-instance`).
@@ -84,6 +104,12 @@ function trazerParaAFrente(): void {
   }
 }
 
+/** Diz à página do Project se a janela está oculta ou minimizada (ver `ProjectDesktopService.oculto`). */
+function avisarVisibilidade(): void {
+  if (!janela || janela.isDestroyed()) return;
+  janela.webContents.send('janela:visibilidade', { oculta: !janela.isVisible() || janela.isMinimized() });
+}
+
 function paginaDeFalha(): string {
   const html = `<!doctype html><meta charset="utf-8"><title>${NOME_DO_APP}</title><body style="font-family:system-ui,sans-serif;display:grid;place-items:center;height:100vh;margin:0;color:#1c2330;background:#f3f5f8"><div style="text-align:center;max-width:32rem;padding:1rem"><h1 style="font-size:1.25rem">Não foi possível abrir o Project</h1><p>Confira a rede e o endereço do sistema. O app tenta de novo a cada poucos segundos.</p><p style="color:#5d6877;font-size:.875rem">${urlDoProject}</p></div></body>`;
   return `data:text/html;charset=utf-8,${encodeURIComponent(html)}`;
@@ -105,7 +131,7 @@ function criarJanela(): void {
     minimizable: true,
     closable: true,
     autoHideMenuBar: true,
-    webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true, devTools: !app.isPackaged },
+    webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true, devTools: !app.isPackaged },
   });
 
   janela.once('ready-to-show', () => {
@@ -129,6 +155,12 @@ function criarJanela(): void {
     reajustarJanela();
     fecharJanelinha();
   });
+  // A página não percebe sozinha que a janela sumiu (o Electron mantém `visibilityState` em `visible`): o desktop avisa, e é daí que sai a notificação.
+  janela.on('show', avisarVisibilidade);
+  janela.on('hide', avisarVisibilidade);
+  janela.on('minimize', avisarVisibilidade);
+  janela.on('restore', avisarVisibilidade);
+  janela.webContents.on('did-finish-load', avisarVisibilidade);
   janela.on('session-end', () => {
     encerramento.encerramentoDoSistema = true;
   });
@@ -181,6 +213,7 @@ function montarMenuDaBandeja(): Menu {
   return Menu.buildFromTemplate([
     { label: 'Abrir o Project', click: trazerParaAFrente },
     { label: textoDoProximoCheckin(segundosAteOCheckin(ultimaSituacao, Date.now())), enabled: false },
+    { label: textoDoItemDoChat(atalhoDesejado, atalhoRegistrado !== null), enabled: atalhoDesejado !== null, click: acionarChat },
     // Há executável mais novo no servidor (task 198): abre o Project no navegador, que inicia o download com o login do usuário.
     ...(atualizacao ? [{ label: atualizacao, click: () => void shell.openExternal(enderecoParaBaixar(urlDoProject)) }] : []),
     { type: 'separator' },
@@ -377,17 +410,211 @@ function agendarConferencia(): void {
   }, espera);
 }
 
+// ---------------------------------------------------------------------------
+// Chat entre colaboradores (task 213)
+// ---------------------------------------------------------------------------
+
+function janelaDeChatViva(): BrowserWindow | null {
+  return janelaDeChat && !janelaDeChat.isDestroyed() ? janelaDeChat : null;
+}
+
+/** Só aceita o que veio da janela esperada: a página do Project ou a de chat, nunca outra coisa que carregue a ponte. */
+function veioDe(evento: IpcMainEvent | IpcMainInvokeEvent, alvo: BrowserWindow | null): boolean {
+  return alvo !== null && !alvo.isDestroyed() && evento.sender === alvo.webContents;
+}
+
+/**
+ * O atalho global (e o item da bandeja): com o Project à vista abre o popup interno, com ele fora da tela abre a janela de chat, e com a janela
+ * aberta a fecha. A área de transferência é lida aqui, no instante do atalho, e só vai à página; quem decide se é código é o front.
+ */
+function acionarChat(): void {
+  const acao = decidirAtalho({ janelaDeChatAberta: janelaDeChatViva() !== null, principalVisivel: !principalMinimizada() });
+  if (acao === 'FECHAR_JANELA') {
+    fecharJanelaDeChat();
+    return;
+  }
+  const texto = prepararAreaDeTransferencia(clipboard.readText());
+  if (acao === 'ABRIR_POPUP_INTERNO') {
+    janela?.focus();
+    janela?.webContents.send('chat:atalho', { areaDeTransferencia: texto });
+    return;
+  }
+  rascunhoPendente = texto;
+  abrirJanelaDeChat(null);
+}
+
+/** A janela flutuante do chat: pequena, sem moldura, sempre por cima, no canto do monitor onde está o cursor; carrega a rota `/chat-popup`. */
+function abrirJanelaDeChat(conversa: ConversaDoChat | null): void {
+  const existente = janelaDeChatViva();
+  if (existente) {
+    if (conversa) existente.webContents.send('chat:abrir-conversa', conversa);
+    existente.show();
+    existente.focus();
+    return;
+  }
+  const lugar = posicaoDaJanelaDeChat(screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).workArea, LARGURA_DO_CHAT, ALTURA_DO_CHAT);
+  const nova = new BrowserWindow({
+    ...lugar,
+    title: 'Chat com colegas',
+    icon: caminhoDoIcone,
+    show: false,
+    frame: false,
+    alwaysOnTop: true,
+    resizable: false,
+    movable: true,
+    minimizable: false,
+    maximizable: false,
+    fullscreenable: false,
+    skipTaskbar: true,
+    autoHideMenuBar: true,
+    backgroundColor: nativeTheme.shouldUseDarkColors ? '#18181b' : '#ffffff',
+    webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true, devTools: !app.isPackaged },
+  });
+  janelaDeChat = nova;
+  // Acima de qualquer outra janela, inclusive de programas em tela cheia.
+  nova.setAlwaysOnTop(true, 'screen-saver');
+  nova.once('ready-to-show', () => {
+    nova.show();
+    nova.focus();
+  });
+  // Arrasta à vontade, mas sem sair do monitor.
+  nova.on('moved', () => {
+    if (nova.isDestroyed()) return;
+    const atual = nova.getBounds();
+    const dentro = limitarAoMonitor(atual, screen.getDisplayMatching(atual).workArea);
+    if (dentro.x !== atual.x || dentro.y !== atual.y) nova.setBounds(dentro);
+  });
+  nova.webContents.setWindowOpenHandler(({ url }) => {
+    if (destinoDaNavegacao(url, urlDoProject) === 'navegador') void shell.openExternal(url);
+    return { action: 'deny' };
+  });
+  nova.webContents.on('will-navigate', (evento, url) => {
+    evento.preventDefault();
+    if (destinoDaNavegacao(url, urlDoProject) === 'navegador') void shell.openExternal(url);
+  });
+  // Com o front fora do ar a janela ficaria em branco e sem moldura: fecha, e o atalho abre de novo quando ele voltar.
+  nova.webContents.on('did-fail-load', (_evento, _codigo, _descricao, _url, principal) => {
+    if (principal) fecharJanelaDeChat();
+  });
+  nova.on('closed', () => {
+    janelaDeChat = null;
+    rascunhoPendente = null;
+    conversaDaJanelaDeChat = null;
+  });
+  void nova.loadURL(enderecoDaJanelaDeChat(urlDoProject, conversa));
+}
+
+/** Destrói a janela de chat: ela não fica escondida com uma sessão do chat aberta. */
+function fecharJanelaDeChat(): void {
+  const viva = janelaDeChatViva();
+  if (viva) viva.destroy();
+  janelaDeChat = null;
+  rascunhoPendente = null;
+  conversaDaJanelaDeChat = null;
+}
+
+/** Notificação do sistema de uma mensagem nova com o Project oculto; o clique abre a janela de chat naquela conversa. */
+function mostrarNotificacao(aviso: AvisoDoChat): void {
+  if (!Notification.isSupported()) return;
+  const notificacao = new Notification({
+    title: aviso.mencionaVoce ? `${aviso.usuarioNome} mencionou você` : aviso.usuarioNome,
+    body: aviso.texto,
+    icon: caminhoDoIcone,
+    silent: !aviso.som,
+  });
+  notificacoesNaTela.add(notificacao);
+  const soltar = () => notificacoesNaTela.delete(notificacao);
+  notificacao.on('click', () => {
+    soltar();
+    abrirJanelaDeChat({ usuarioId: aviso.usuarioId, usuarioNome: aviso.usuarioNome });
+  });
+  notificacao.on('close', soltar);
+  notificacao.on('failed', soltar);
+  notificacao.show();
+}
+
+/** Põe o atalho global como a preferência manda; o que o sistema recusa (em uso por outro programa) fica "indisponível" e é tentado de novo na próxima conferência. */
+function sincronizarAtalho(desejado: string | null): void {
+  atalhoDesejado = desejado;
+  const plano = planoDoAtalho(atalhoRegistrado, desejado);
+  if (plano.soltar) {
+    globalShortcut.unregister(plano.soltar);
+    atalhoRegistrado = null;
+  }
+  if (!plano.registrar) return;
+  try {
+    if (globalShortcut.register(plano.registrar, acionarChat)) atalhoRegistrado = plano.registrar;
+  } catch {
+    // Combinação que o Electron não entende: fica indisponível.
+  }
+}
+
+/** Lê a preferência do usuário no backend e ajusta o atalho; sem login o atalho sai e a janela de chat fecha (outro usuário pode entrar). */
+async function conferirChat(): Promise<void> {
+  // Sem o Project carregado (página de falha, recarregando) não dá para saber se há login: nada muda até ele voltar.
+  if (!janela || janela.isDestroyed() || janela.webContents.getURL() === '' || janela.webContents.getURL().startsWith('data:')) return;
+  const token = await lerTokenDoLogin();
+  if (!token) {
+    sincronizarAtalho(null);
+    fecharJanelaDeChat();
+    return;
+  }
+  const preferencia = lerPreferenciaDoChat(await chamarApi('mensagem-direta/preferencia', token));
+  if (preferencia) sincronizarAtalho(preferencia.atalhoGlobal);
+}
+
+function agendarConferenciaDoChat(espera: number): void {
+  if (conferenciaDoChat) clearTimeout(conferenciaDoChat);
+  conferenciaDoChat = setTimeout(() => {
+    void conferirChat().finally(() => agendarConferenciaDoChat(CONFERENCIA_DO_CHAT_MS));
+  }, espera);
+}
+
+ipcMain.on('chat:avisar', (evento, corpo) => {
+  if (!veioDe(evento, janela)) return;
+  const aviso = lerAvisoDoChat(corpo);
+  if (!aviso) return;
+  if (janelaDeChatViva() && conversaDaJanelaDeChat === aviso.usuarioId) return;
+  mostrarNotificacao(aviso);
+});
+ipcMain.on('chat:conversa', (evento, valor) => {
+  if (!veioDe(evento, janelaDeChat)) return;
+  conversaDaJanelaDeChat = lerConversaAbertaDoChat(valor);
+});
+ipcMain.handle('chat:pegar-rascunho', (evento) => {
+  if (!veioDe(evento, janelaDeChat)) return null;
+  const rascunho = rascunhoPendente;
+  rascunhoPendente = null;
+  return rascunho;
+});
+ipcMain.on('chat:fechar', (evento) => {
+  if (veioDe(evento, janelaDeChat)) fecharJanelaDeChat();
+});
+ipcMain.on('chat:abrir-no-project', (evento, valor) => {
+  if (!veioDe(evento, janelaDeChat)) return;
+  const caminho = lerCaminhoDoProject(valor);
+  if (!caminho) return;
+  fecharJanelaDeChat();
+  trazerParaAFrente();
+  janela?.webContents.send('chat:navegar', { caminho });
+});
+ipcMain.handle('chat:situacao-do-atalho', (evento) => (veioDe(evento, janela) ? { atalho: atalhoDesejado, registrado: atalhoRegistrado !== null } : { atalho: null, registrado: false }));
+
 ipcMain.on('checkin:encerrar', (evento) => {
   if (janelinha && !janelinha.isDestroyed() && evento.sender === janelinha.webContents) fecharJanelinha();
 });
 
 app.on('second-instance', trazerParaAFrente);
+app.on('will-quit', () => globalShortcut.unregisterAll());
+
+app.setAppUserModelId('br.com.project20.desktop');
 
 app.whenReady().then(() => {
   Menu.setApplicationMenu(null);
   criarJanela();
   criarBandeja();
   agendarConferencia();
+  agendarConferenciaDoChat(PRIMEIRA_CONFERENCIA_DO_CHAT_MS);
 });
 
 // Fechar a janela não encerra o app: ele fica na bandeja até "Fechar completamente".

@@ -2,6 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA } from '@project20/shared';
 import { ambiente } from '../../../../environments/environment';
+import { ProjectDesktopService } from '../../../core/services/project-desktop.service';
 import {
   AvisoNaTela,
   EntradaDaDecisaoDeAviso,
@@ -33,11 +34,14 @@ export interface MensagemParaAvisar extends Omit<EntradaDaDecisaoDeAviso, 'prefe
 export class MensagemDiretaAvisosService {
   private readonly api = inject(MensagemDiretaService);
   private readonly som = inject(MensagemDiretaSomService);
+  private readonly desktop = inject(ProjectDesktopService);
 
   readonly preferencia = signal<PreferenciaNaTela>(normalizarPreferencia(PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA));
   /** A última gravação da preferência falhou (a tela voltou ao valor anterior). */
   readonly erroNaPreferencia = signal(false);
   readonly avisos = signal<AvisoNaTela[]>([]);
+  /** A janela de chat do Desktop (task 213) é o próprio chat: ela não avisa de mensagem nenhuma. */
+  readonly suprimido = signal(false);
 
   private geracaoDaSessao = 0;
   private geracaoDaGravacao = 0;
@@ -105,11 +109,26 @@ export class MensagemDiretaAvisosService {
     return this.alterarPreferencia({ silenciadoAteDate: null });
   }
 
-  /** Mostra o aviso (e toca o som, se ligado) quando a regra manda. Devolve se avisou. */
+  /**
+   * Mostra o aviso (e toca o som, se ligado) quando a regra manda. Devolve se avisou. Com o Project oculto no Desktop (a página segue carregada, sem
+   * janela), o aviso vira notificação do sistema, se o usuário não desligou o aviso do Desktop; o cartão e o tom ficam para a página à vista.
+   */
   avisar(mensagem: MensagemParaAvisar): boolean {
+    if (this.suprimido()) return false;
     const agora = new Date();
     const decisao = decidirAviso({ ...mensagem, preferencia: this.preferencia(), agora });
     if (!decisao.avisar) return false;
+    if (this.desktop.disponivel && this.desktop.paginaOculta()) {
+      if (!this.preferencia().avisoDesktopAtivo) return false;
+      this.desktop.avisarMensagem({
+        usuarioId: mensagem.usuarioId,
+        usuarioNome: mensagem.usuarioNome,
+        texto: mensagem.texto,
+        mencionaVoce: mensagem.mencionaVoce,
+        som: this.preferencia().somAtivo,
+      });
+      return true;
+    }
     this.avisos.update((atuais) =>
       somarAviso(atuais, {
         conversaId: mensagem.conversaId,

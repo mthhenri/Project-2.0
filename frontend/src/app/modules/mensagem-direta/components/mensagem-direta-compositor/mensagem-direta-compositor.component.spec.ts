@@ -299,4 +299,16 @@ describe('MensagemDiretaCompositorComponent', () => {
     expect(codigo.defaultPrevented).toBe(false);
     expect(campo().value.includes('```')).toBe(false);
   });
+
+  it('o código do Desktop entra uma vez como bloco, com o cursor depois dele, e nada é enviado sozinho', async () => {
+    let usados = 0;
+    tela.componente.textoAplicado.subscribe(() => usados++);
+    tela.fixture.componentRef.setInput('codigoInicial', ['const a = 1;', 'const b = 2;'].join('\n'));
+    await tela.atualizar();
+    await pausa(5);
+    expect(campo().value).toBe(['```', 'const a = 1;', 'const b = 2;', '```'].join('\n'));
+    expect(campo().selectionStart).toBe(campo().value.length);
+    expect(usados).toBe(1);
+    expect(envios).toEqual([]);
+  });
 });

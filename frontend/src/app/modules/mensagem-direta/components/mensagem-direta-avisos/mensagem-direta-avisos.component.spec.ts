@@ -4,6 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { AutorMensagemDiretaEnum, TipoUsuarioEnum } from '@project20/shared';
 import { montarComponente, ComponenteMontado } from '../../../../../testes/montar-componente';
 import { esperarRequisicao, responderSucesso } from '../../../../../testes/http-teste';
+import { ProjectDesktopService } from '../../../../core/services/project-desktop.service';
 import { MensagemDiretaAvisosService } from '../../services/mensagem-direta-avisos.service';
 import { MensagemDiretaEstadoService } from '../../services/mensagem-direta-estado.service';
 import { MensagemDiretaEventosService } from '../../services/mensagem-direta-eventos.service';
@@ -243,5 +244,100 @@ describe('MensagemDiretaAvisosComponent', () => {
     await tela.atualizar();
     expect(cartoes().length).toBe(0);
     expect(avisos.avisos().length).toBe(0);
+  });
+});
+
+describe('MensagemDiretaAvisosComponent no Project Desktop (task 213)', () => {
+  const avisosDoDesktop: unknown[] = [];
+  const projetoOculto = signal(false);
+  const desktopFalso = {
+    disponivel: true,
+    oculto: projetoOculto,
+    paginaOculta: () => document.visibilityState === 'hidden' || projetoOculto(),
+    avisarMensagem: (aviso: unknown) => avisosDoDesktop.push(aviso),
+  };
+  let tela: ComponenteMontado<MensagemDiretaAvisosComponent>;
+  let estado: MensagemDiretaEstadoService;
+  let avisos: MensagemDiretaAvisosService;
+  let som: SomFalso;
+
+  function esconderAPagina(oculta: boolean) {
+    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue(oculta ? 'hidden' : 'visible');
+  }
+
+  beforeEach(async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'Date'] });
+    avisosDoDesktop.length = 0;
+    projetoOculto.set(false);
+    tela = await montarComponente(MensagemDiretaAvisosComponent, {
+      usuario: TipoUsuarioEnum.DESENVOLVEDOR,
+      provedores: [
+        { provide: MensagemDiretaEventosService, useClass: EventosFalso },
+        { provide: MensagemDiretaSomService, useClass: SomFalso },
+        { provide: ProjectDesktopService, useValue: desktopFalso },
+      ],
+    });
+    estado = TestBed.inject(MensagemDiretaEstadoService);
+    avisos = TestBed.inject(MensagemDiretaAvisosService);
+    som = TestBed.inject(MensagemDiretaSomService) as unknown as SomFalso;
+    estado.conversas.set([conversaDaLista(9, 'Camila Duarte')]);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
+
+  const chegar = async (texto: string, parcial: Record<string, unknown> = {}) => {
+    estado.aplicarEvento({ tipo: 'MENSAGEM', mensagem: mensagemDe(9, texto, parcial) as never });
+    await vi.advanceTimersByTimeAsync(0);
+    await tela.atualizar();
+  };
+
+  it('com o Project oculto, o aviso vai ao Desktop (notificação do sistema) e não vira cartão nem toca o tom da página', async () => {
+    esconderAPagina(true);
+    avisos.preferencia.update((p) => ({ ...p, somAtivo: true }));
+    await chegar('oi, oculto', { mencoes: [1] });
+    expect(avisosDoDesktop).toEqual([{ usuarioId: 9, usuarioNome: 'Camila Duarte', texto: 'oi, oculto', mencionaVoce: true, som: true }]);
+    expect(tela.elemento.querySelectorAll('.aviso-direto').length).toBe(0);
+    expect(som.toques).toBe(0);
+  });
+
+  it('com a janela do Project oculta pelo Desktop (a página segue "visible"), o aviso também vai ao sistema', async () => {
+    esconderAPagina(false);
+    projetoOculto.set(true);
+    await chegar('oi, janela oculta');
+    expect(avisosDoDesktop.length).toBe(1);
+    expect(tela.elemento.querySelectorAll('.aviso-direto').length).toBe(0);
+  });
+
+  it('com o aviso do Desktop desligado, nada aparece nem no sistema nem na página', async () => {
+    esconderAPagina(true);
+    avisos.preferencia.update((p) => ({ ...p, avisoDesktopAtivo: false }));
+    await chegar('oi, calado');
+    expect(avisosDoDesktop).toEqual([]);
+    expect(tela.elemento.querySelectorAll('.aviso-direto').length).toBe(0);
+  });
+
+  it('as regras de silêncio valem também para a notificação do sistema', async () => {
+    esconderAPagina(true);
+    avisos.preferencia.update((p) => ({ ...p, silenciadoAteDate: new Date(Date.now() + 3_600_000) }));
+    await chegar('oi, silêncio', { mencoes: [1] });
+    expect(avisosDoDesktop).toEqual([]);
+  });
+
+  it('com o Project à vista o Desktop não é acionado: vale o cartão', async () => {
+    esconderAPagina(false);
+    await chegar('oi, à vista');
+    expect(avisosDoDesktop).toEqual([]);
+    expect(tela.elemento.querySelectorAll('.aviso-direto').length).toBe(1);
+  });
+
+  it('a janela de chat do Desktop (avisos suprimidos) não avisa de nada', async () => {
+    esconderAPagina(false);
+    avisos.suprimido.set(true);
+    await chegar('oi, suprimido');
+    expect(avisosDoDesktop).toEqual([]);
+    expect(tela.elemento.querySelectorAll('.aviso-direto').length).toBe(0);
   });
 });
