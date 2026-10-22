@@ -48,6 +48,9 @@
                 [class.conversa-direta__balao--falhou]="mensagem.situacao === 'FALHOU'"
               >
                 <app-markdown-visualizador [texto]="mensagem.texto" />
+                @for (referencia of mensagem.referencias; track referencia.tipo + referencia.id) {
+                  <app-mensagem-direta-referencia-cartao [tipo]="referencia.tipo" [id]="referencia.id" />
+                }
               </div>
               <div class="conversa-direta__rodape" [class.conversa-direta__rodape--falhou]="mensagem.situacao === 'FALHOU'">
                 @switch (mensagem.situacao) {
@@ -77,23 +80,6 @@
       }
     </div>
 
-    <form class="conversa-direta__entrada" (submit)="$event.preventDefault(); enviar()">
-      <div class="conversa-direta__campo-caixa">
-        <textarea
-          #campoTexto
-          pTextarea
-          class="conversa-direta__campo"
-          rows="1"
-          [autoResize]="true"
-          [formControl]="controleTexto"
-          placeholder="Escreva uma mensagem"
-          aria-label="Mensagem"
-          [attr.maxlength]="limiteDoTexto"
-          (keydown)="aoTeclar($event)"
-        ></textarea>
-        <button type="submit" class="conversa-direta__enviar" aria-label="Enviar mensagem" [disabled]="!podeEnviar()"><i class="pi pi-send" aria-hidden="true"></i></button>
-      </div>
-      <span class="conversa-direta__legenda">Markdown. Enter envia, Shift+Enter quebra a linha.</span>
-    </form>
+    <app-mensagem-direta-compositor [pessoas]="pessoasMencionaveis()" [chave]="pessoaAberta()" (enviar)="aoEnviar($event)" />
   </div>
 }

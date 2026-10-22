@@ -47,3 +47,5 @@ export * from './ExecutorAtivoDto';
 export * from './DemandaPlanejamentoListarDto';
 export * from './DemandaRestaurarDto';
 export * from './DemandaRestauradaDto';
+export * from './DemandaNomeBuscarDto';
+export * from './DemandaNomeResumoDto';

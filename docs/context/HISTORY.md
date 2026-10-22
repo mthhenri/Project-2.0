@@ -12,6 +12,29 @@
 
 ---
 
+## 2026-10-21 — Task 211: compositor do chat entre colaboradores (código, @menção e #referência)
+
+Sétima task da guarda-chuva `chat-colaboradores`. Spec: `docs/specs/done/211-mensagem-direta-compositor.spec.md` (escrita nesta task, a partir dos mockups 1 e 6).
+
+- **Backend, duas rotas que faltavam:** `GET /mensagem-direta/referencias?texto=` (até 8 demandas e atividades pelo **nome**, mínimo de 2 letras) e `GET /mensagem-direta/referencia/:tipo/:id` (o cartão para quem está olhando; sem acesso ou inexistente: `acessivel: false` e nenhum dado).
+  Não havia busca de demanda por nome (a listagem exige `projetoId`). `DemandaRepository.buscarPorNome` e `AtividadeRepository.buscarPorNome` (`ILIKE` com `%`, `_` e `\` escapados; `usuarioId` restringe ao que o desenvolvedor vê, `null` para gestor e administrador). A validação de referência da 208 virou
+  `resolverReferencia`, **uma regra só** para envio, busca e cartão. Tipo da rota validado por `ParseEnumPipe`.
+- **Front:** `app-mensagem-direta-compositor` (Enter envia, Shift+Enter quebra; botão Código com e sem seleção; colagem de várias linhas com cara de código vira bloco, desfazível com Ctrl+Z; `@` abre as pessoas da conversa; `#` + 2 letras busca demandas e atividades com pausa de 250 ms e só a resposta mais nova vale;
+  setas, Enter, Tab, clique e Esc; pontuação logo depois da escolha consome o espaço automático) e `app-mensagem-direta-referencia-cartao` (carregando, link, bloqueado, erro com "Tentar de novo"; cache por sessão, falha não guardada). Lógica pura em `utils/compositor.util.ts`. O envio leva só as menções e referências cujo `@Nome` / `#Nome` ainda está no texto.
+- **Decisões:** mencionar quem não participa da conversa continua recusado (regra da 208; os mockups mostravam colegas na lista: **decisão do autor a confirmar**). O cartão da demanda leva ao projeto dela (`/demanda?projetoId=`), porque a página do projeto ainda não abre uma demanda por parâmetro.
+- **Testes:** backend 1283 unitários e 302 de integração (busca com acesso, escape dos curingas, demanda e atividade excluídas, limite), shared 213; frontend 1585 antes e depois da revisão (a mensagem-direta tem 104 no compositor, no cartão, na lógica pura e no popup); builds compilam. Sem lint (P-001).
+- **Verificação ao vivo** (API e front do ambiente de desenvolvimento; usuários, projetos, demandas e atividade temporários): API — a Camila (desenvolvedora do projeto A) acha a demanda e a atividade por `#filtro`, **não** acha a do projeto B, o cartão da demanda B volta bloqueado e sem nome, texto de 1 letra e tipo inválido dão 400;
+  tela — digitando de verdade, `#filtro` abre as sugestões, Enter e Tab escolhem, `@Raf` abre a pessoa, a mensagem sai com 2 cartões; **Rafael (sem acesso) vê 2 cartões bloqueados e nenhum link; Thiago (gestor) vê os dois links**; clicar no cartão da atividade abre `/atividade/17` e o popup continua aberto;
+  1366×768, 1920×1080 e 1080×1920 (lista de sugestões dentro do popup, sem rolagem horizontal) e tema escuro (cores computadas pelos tokens).
+- **Achados na verificação:** (1) a escolha de uma sugestão deixava o gatilho aberto (o termo passou a terminar em espaço): `detectarGatilho` agora encerra com espaço no fim do termo; (2) a escolha deixa um espaço depois do nome, e "@Rafael Lima , que acha?" ficava feio: pontuação digitada logo depois o consome;
+  (3) o `#Nome` que o compositor insere é **texto da mensagem**: o destinatário sem acesso lê o título que o remetente escolheu. O bloqueio do cartão protege o cartão e as referências forjadas pela API, não o texto que o próprio remetente escreveu.
+- **Revisão independente (subagente `revisor`):** nenhum vazamento pelas rotas, SQL injection ou XSS. Corrigido: (1) a lista do `#` não fechava com espaço e reabria sobre texto comum ("o PR #12 quebrou a build", ou "#Corrigir filtro está pronto" depois de escolher): o item escolhido fica guardado (`escolhido`) e
+  ignorado enquanto continua no texto, e `#` com espaço e nenhum resultado fecha e não reabre naquele gatilho; (2) depois de um Esc o gatilho na mesma posição não reabria: o gatilho dispensado volta a valer quando o texto passa a ter outro (ou nenhum); (3) o Esc era engolido sem lista visível: agora só com a lista aberta; (4) clicar fora (blur) fecha a lista;
+  (5) as setas rolam a lista até o item ativo; (6) resposta atrasada de um termo antigo era aplicada: toda mudança do termo invalida a busca anterior e limpa as sugestões; (8) `@MinLength(2)` olhava o texto antes do `trim` (`texto=%20%20` devolvia tudo): `@Transform` apara antes de validar; (9) colar código perto do limite de 10.000 caracteres não vira bloco (a cerca não caberia);
+  (10) `role="combobox"` num `textarea` saiu (ficam `aria-controls`, `aria-activedescendant`, `aria-autocomplete`), erro do cartão é `status` e não `alert`, DTOs de saída da busca renomeados para `...NomeResumoDto`, tipo do retorno de `resolverReferencia` nomeado; a escolha não gera espaço duplicado quando o texto adiante já começa com espaço.
+  **Aceito:** (7) a atividade de uma demanda **excluída** não aparece na sugestão (a busca filtra a demanda excluída), mas `AtividadeRepository.recuperar`, que o envio e o cartão usam, não filtra: é o mesmo critério da página da atividade; alinhar mudaria SQL compartilhado e fica fora da task. Testes depois da revisão: frontend 1585/1585, backend 1283 e 302 de integração, shared 214.
+- **Limites:** a `@menção` não ganha realce dentro do balão (o visualizador de Markdown só desenha texto) e o aviso de menção é da 212; o painel de verificação captura ~480 px, então a comparação com os mockups foi estrutural (DOM, medidas e cores) mais capturas pequenas.
+
 ## 2026-10-21 — Task 210: popup do chat entre colaboradores no Project
 
 Sexta task da guarda-chuva `chat-colaboradores`. Spec: `docs/specs/done/210-mensagem-direta-popup-no-project.spec.md` (escrita nesta task, a partir dos mockups do autor: telas 1, 2, 7, 8, 9 e 10).

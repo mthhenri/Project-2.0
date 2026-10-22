@@ -73,7 +73,7 @@ Resumo (detalhes, DDL, campos, API e fluxos em [`chat-colaboradores/modelagem.md
 | 208 | [Service e API](../done/208-mensagem-direta-service-e-api.spec.md) | enviar, listar, ler, silenciar, buscar, preferências, permissões; testes de service e de repository | 205, 206 |
 | 209 | [Tempo real](../done/209-mensagem-direta-tempo-real.spec.md) | stream de eventos, publicador compartilhado (`LISTEN/NOTIFY`) e em memória, presença, encerramento ordenado | 208 |
 | 210 | [Popup no Project](../done/210-mensagem-direta-popup-no-project.spec.md) | lista, conversa, nova mensagem, busca, vazio, erro e tema escuro; reconexão com recuperação | 208, 209 |
-| 211 | Composer | Markdown, bloco de código, menção e referência a demanda | 210 |
+| 211 | [Composer](../done/211-mensagem-direta-compositor.spec.md) | Markdown, bloco de código, menção e referência a demanda | 210 |
 | 212 | Avisos no Project | notificação, contador, silêncio e desligar | 210 |
 | 213 | Project Desktop | janela de chat, atalho global, área de transferência, aviso com o app oculto; versão nova do executável | 209, 210 |
 | 214 | Supervisão | rotas, auditoria, aviso aos envolvidos e a tela do gestor | 208, 210 |

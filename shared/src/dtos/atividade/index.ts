@@ -14,3 +14,5 @@ export * from './AtividadeTagsListarDto';
 export * from './AtividadeTagsAlterarDto';
 export * from './AtividadeRestaurarDto';
 export * from './AtividadeRestauradaDto';
+export * from './AtividadeNomeBuscarDto';
+export * from './AtividadeNomeResumoDto';

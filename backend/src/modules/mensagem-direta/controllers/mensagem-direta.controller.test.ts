@@ -9,13 +9,15 @@ import { MensagemDiretaController } from './mensagem-direta.controller';
 
 const USUARIO = { sub: 4, login: 'ana', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
 
-test('verbos e caminhos das dez rotas', () => {
+test('verbos e caminhos das doze rotas', () => {
   assert.deepEqual(
     Object.values(rotasPorNome(MensagemDiretaController)).map((rota) => `${rota.verbo} ${rota.caminho}`).sort(),
     [
       'GET busca',
       'GET eventos',
       'GET pessoas',
+      'GET referencia/:tipo/:id',
+      'GET referencias',
       'GET conversa/:usuarioId',
       'GET conversas',
       'GET preferencia',
@@ -61,6 +63,8 @@ test('as demais rotas repassam o DTO e o usuário do token', async () => {
       enviarMensagem: registrar('enviarMensagem'),
       buscar: registrar('buscar'),
       listarPessoas: registrar('listarPessoas'),
+      buscarReferencias: registrar('buscarReferencias'),
+      recuperarReferencia: registrar('recuperarReferencia'),
       recuperarPreferencia: registrar('recuperarPreferencia'),
       alterarPreferencia: registrar('alterarPreferencia'),
     } as never,
@@ -71,6 +75,8 @@ test('as demais rotas repassam o DTO e o usuário do token', async () => {
   const preferencia = { avisosAtivos: true } as never;
   await controller.listarConversas(USUARIO);
   await controller.listarPessoas(USUARIO);
+  await controller.buscarReferencias({ texto: 'filtro' }, USUARIO);
+  await controller.recuperarReferencia('DEMANDA' as never, 212, USUARIO);
   await controller.enviarMensagem(envio, USUARIO);
   await controller.buscar({ texto: 'cadastro' }, USUARIO);
   await controller.recuperarPreferencia(USUARIO);
@@ -78,6 +84,8 @@ test('as demais rotas repassam o DTO e o usuário do token', async () => {
 
   assert.deepEqual(chamadas.listarConversas, [USUARIO]);
   assert.deepEqual(chamadas.listarPessoas, [USUARIO]);
+  assert.deepEqual(chamadas.buscarReferencias, [{ texto: 'filtro' }, USUARIO]);
+  assert.deepEqual(chamadas.recuperarReferencia, [{ tipo: 'DEMANDA', id: 212 }, USUARIO]);
   assert.deepEqual(chamadas.enviarMensagem, [envio, USUARIO]);
   assert.deepEqual(chamadas.buscar, [{ texto: 'cadastro' }, USUARIO]);
   assert.deepEqual(chamadas.recuperarPreferencia, [USUARIO]);

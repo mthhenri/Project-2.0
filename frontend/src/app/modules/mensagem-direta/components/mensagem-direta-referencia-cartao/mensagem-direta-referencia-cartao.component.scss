@@ -1,0 +1,86 @@
+:host {
+  display: block;
+  margin-top: 0.5rem;
+}
+
+.cartao-referencia {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 0.625rem;
+  border: 1px solid var(--app-surface-200);
+  border-radius: 10px;
+  background: var(--app-surface-50);
+  color: inherit;
+  text-decoration: none;
+
+  &--link:hover {
+    border-color: color-mix(in srgb, var(--p-primary-color) 45%, var(--app-surface-200));
+  }
+
+  &--link:focus-visible {
+    outline: 2px solid var(--p-primary-color);
+    outline-offset: 2px;
+  }
+
+  &--bloqueado,
+  &--erro {
+    border-style: dashed;
+  }
+
+  &__icone {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 7px;
+    background: var(--app-avatar-fundo);
+    color: var(--app-avatar-cor);
+    font-size: 0.8125rem;
+
+    &--erro {
+      background: color-mix(in srgb, var(--p-red-500) 14%, var(--app-surface-0));
+      color: var(--p-red-500);
+    }
+  }
+
+  &__texto {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__titulo {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--p-primary-color);
+  }
+
+  &--bloqueado &__titulo,
+  &--erro &__titulo {
+    color: var(--p-text-color);
+  }
+
+  &__detalhe {
+    font-size: 0.6875rem;
+    color: var(--p-text-muted-color);
+  }
+
+  &__tentar {
+    align-self: flex-start;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font: inherit;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-decoration: underline;
+    color: var(--p-primary-color);
+    cursor: pointer;
+  }
+}

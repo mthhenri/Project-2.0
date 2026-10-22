@@ -25,3 +25,8 @@ export * from './MensagemDiretaEventoDto';
 export * from './MensagemDiretaEventoPublicarDto';
 export * from './MensagemDiretaPessoaResumoDto';
 export * from './MensagemDiretaPessoasListadasDto';
+export * from './MensagemDiretaReferenciaBuscarDto';
+export * from './MensagemDiretaReferenciaResumoDto';
+export * from './MensagemDiretaReferenciasBuscadasDto';
+export * from './MensagemDiretaReferenciaRecuperarDto';
+export * from './MensagemDiretaReferenciaRecuperadaDto';

@@ -15,6 +15,11 @@ import {
   MensagemDiretaPreferenciaAlteradaDto,
   MensagemDiretaPreferenciaAlterarDto,
   MensagemDiretaPessoasListadasDto,
+  MensagemDiretaReferenciaBuscarDto,
+  MensagemDiretaReferenciaRecuperadaDto,
+  MensagemDiretaReferenciaRecuperarDto,
+  MensagemDiretaReferenciaResumoDto,
+  MensagemDiretaReferenciasBuscadasDto,
   MensagemDiretaPreferenciaRecuperadaDto,
   MensagemDiretaSilencioAlteradoDto,
   MensagemDiretaSilencioAlterarDto,
@@ -34,13 +39,23 @@ import { AtividadeRepository } from '../../atividade/repositories/atividade.repo
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { DemandaRepository } from '../../demanda/repositories/demanda.repository';
 import { UsuarioRepository } from '../../usuario/repositories/usuario.repository';
-import { lerPeriodoDaBusca, limitarLeituraAoAgora, normalizarMencoes, normalizarReferencias } from '../domain/mensagem-direta-regras';
+import {
+  LIMITE_DE_SUGESTOES_DE_REFERENCIA,
+  combinarSugestoesDeReferencia,
+  lerPeriodoDaBusca,
+  limitarLeituraAoAgora,
+  normalizarMencoes,
+  normalizarReferencias,
+} from '../domain/mensagem-direta-regras';
 import { ARMAZENAMENTO_DE_MENSAGEM_DIRETA, ArmazenamentoDeMensagemDireta } from '../repositories/armazenamento-de-mensagem-direta';
 import { MensagemDiretaLeituraRepository } from '../repositories/mensagem-direta-leitura.repository';
 import { MensagemDiretaPreferenciaRepository } from '../repositories/mensagem-direta-preferencia.repository';
 import { MensagemDiretaEventosService } from './mensagem-direta-eventos.service';
 
 const NOME_DE_USUARIO_REMOVIDO = 'Usuário removido';
+
+/** O que o cartão mostra de uma referência a que **quem pergunta** tem acesso. */
+type ReferenciaResolvida = Omit<MensagemDiretaReferenciaRecuperadaDto, 'tipo' | 'id' | 'acessivel'>;
 
 /**
  * Chat entre colaboradores (task 208): conversa um a um entre quaisquer usuários. Toda regra e permissão mora aqui; o armazenamento das
@@ -166,6 +181,34 @@ export class MensagemDiretaService {
     return { sucesso: true, dados: { pessoas }, mensagem: 'Pessoas listadas com sucesso' };
   }
 
+  /** As sugestões do `#`: demandas e atividades que **quem digita** pode referenciar, pelo nome (a mesma regra de acesso do envio). */
+  async buscarReferencias(dto: MensagemDiretaReferenciaBuscarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<MensagemDiretaReferenciasBuscadasDto>> {
+    const texto = dto.texto.trim();
+    const usuarioId = usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR ? usuarioAtivo.sub : null;
+    const limite = LIMITE_DE_SUGESTOES_DE_REFERENCIA;
+    const [demandas, atividades] = await Promise.all([
+      this.demandaRepositorio.buscarPorNome({ texto, usuarioId, limite }),
+      this.atividadeRepositorio.buscarPorNome({ texto, usuarioId, limite }),
+    ]);
+    const referencias = combinarSugestoesDeReferencia(
+      demandas.map((demanda): MensagemDiretaReferenciaResumoDto => ({ tipo: ReferenciaMensagemDiretaEnum.DEMANDA, id: demanda.id, nome: demanda.nome, situacao: demanda.status, demandaNome: null })),
+      atividades.map((atividade): MensagemDiretaReferenciaResumoDto => ({ tipo: ReferenciaMensagemDiretaEnum.ATIVIDADE, id: atividade.id, nome: atividade.nome, situacao: atividade.status, demandaNome: atividade.nomeDemanda })),
+    );
+    return { sucesso: true, dados: { referencias }, mensagem: 'Referências listadas com sucesso' };
+  }
+
+  /**
+   * O cartão de uma referência **para quem está olhando**, que pode não ser quem escreveu: a mesma regra de acesso do envio. Sem acesso (ou inexistente)
+   * devolve `acessivel: false` e nenhum dado, para o cartão aparecer bloqueado sem vazar o título.
+   */
+  async recuperarReferencia(dto: MensagemDiretaReferenciaRecuperarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<MensagemDiretaReferenciaRecuperadaDto>> {
+    const resolvida = await this.resolverReferencia({ tipo: dto.tipo, id: dto.id }, usuarioAtivo);
+    const dados: MensagemDiretaReferenciaRecuperadaDto = resolvida
+      ? { tipo: dto.tipo, id: dto.id, acessivel: true, ...resolvida }
+      : { tipo: dto.tipo, id: dto.id, acessivel: false, nome: null, situacao: null, projetoId: null, demandaId: null, demandaNome: null };
+    return { sucesso: true, dados, mensagem: 'Referência recuperada com sucesso' };
+  }
+
   async buscar(dto: MensagemDiretaBuscarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<MensagemDiretaBuscadoDto>> {
     const periodo = lerPeriodoDaBusca(dto.inicio, dto.fim);
     const mensagens = await this.armazenamento.buscar({
@@ -275,21 +318,29 @@ export class MensagemDiretaService {
   }
 
   /**
-   * A demanda ou a atividade existe e, para o desenvolvedor, é uma que ele mesmo vê (as mesmas regras de `DemandaService` e
-   * `AtividadeService`). Gestor e administrador veem tudo. O destinatário pode não ver o cartão; a tela mostra o cartão bloqueado.
+   * A demanda ou a atividade existe e, para o desenvolvedor, é uma que ele mesmo vê (as mesmas regras de `DemandaService` e `AtividadeService`).
+   * Gestor e administrador veem tudo. Devolve os dados do cartão, ou `null` quando não existe ou **quem pergunta** não tem acesso. Uma regra só, para o
+   * envio (quem escreve) e o cartão (quem lê, que pode ser o destinatário sem acesso).
    */
-  private async validarReferencia(referencia: ReferenciaMensagemDto, usuarioAtivo: JwtPayload): Promise<void> {
+  private async resolverReferencia(
+    referencia: ReferenciaMensagemDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<ReferenciaResolvida | null> {
     const ehDesenvolvedor = usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR;
     if (referencia.tipo === ReferenciaMensagemDiretaEnum.DEMANDA) {
       const demanda = await this.demandaRepositorio.recuperar({ id: referencia.id }, ehDesenvolvedor ? { usuarioId: usuarioAtivo.sub } : undefined);
-      if (!demanda) throw new BusinessException(`A demanda ${referencia.id} não existe ou você não tem acesso a ela`);
-      return;
+      return demanda ? { nome: demanda.nome, situacao: demanda.status, projetoId: demanda.projetoId, demandaId: null, demandaNome: null } : null;
     }
 
     const atividade = await this.atividadeRepositorio.recuperar({ id: referencia.id });
-    const temAcesso =
-      atividade !== null &&
-      (!ehDesenvolvedor || (await this.atividadeRepositorio.validarAcessoDemanda({ demandaId: atividade.demandaId, usuarioId: usuarioAtivo.sub })));
-    if (!temAcesso) throw new BusinessException(`A atividade ${referencia.id} não existe ou você não tem acesso a ela`);
+    if (!atividade) return null;
+    if (ehDesenvolvedor && !(await this.atividadeRepositorio.validarAcessoDemanda({ demandaId: atividade.demandaId, usuarioId: usuarioAtivo.sub }))) return null;
+    return { nome: atividade.nome, situacao: atividade.status, projetoId: atividade.projetoId, demandaId: atividade.demandaId, demandaNome: atividade.nomeDemanda };
+  }
+
+  private async validarReferencia(referencia: ReferenciaMensagemDto, usuarioAtivo: JwtPayload): Promise<void> {
+    if (await this.resolverReferencia(referencia, usuarioAtivo)) return;
+    const rotulo = referencia.tipo === ReferenciaMensagemDiretaEnum.DEMANDA ? 'A demanda' : 'A atividade';
+    throw new BusinessException(`${rotulo} ${referencia.id} não existe ou você não tem acesso a ela`);
   }
 }

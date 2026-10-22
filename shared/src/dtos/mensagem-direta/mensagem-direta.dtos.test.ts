@@ -167,3 +167,18 @@ test('preferência: recusa tipos errados, data de silêncio inválida e atalho q
     assert.deepEqual(await erros(MensagemDiretaPreferenciaAlterarDto, { ...PREFERENCIA_VALIDA, atalhoGlobal }), ['atalhoGlobal'], atalhoGlobal);
   }
 });
+
+// --- busca de referências (task 211) ---------------------------------------------------------------
+
+import { MensagemDiretaReferenciaBuscarDto } from './MensagemDiretaReferenciaBuscarDto';
+
+test('MensagemDiretaReferenciaBuscarDto: aparar os espaços vem ANTES do mínimo de 2 letras', async () => {
+  const validar = async (texto: unknown) => validate(plainToInstance(MensagemDiretaReferenciaBuscarDto, { texto }));
+  assert.equal((await validar('  filtro ')).length, 0);
+  assert.equal((await validar('fi')).length, 0);
+  assert.ok((await validar('  ')).length > 0, 'só espaços não passa');
+  assert.ok((await validar(' f ')).length > 0, 'uma letra com espaços em volta não passa');
+  assert.ok((await validar('x'.repeat(101))).length > 0);
+  assert.ok((await validar(undefined)).length > 0);
+  assert.equal(plainToInstance(MensagemDiretaReferenciaBuscarDto, { texto: '  filtro ' }).texto, 'filtro');
+});

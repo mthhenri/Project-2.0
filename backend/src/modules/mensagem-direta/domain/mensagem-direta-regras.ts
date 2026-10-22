@@ -1,4 +1,4 @@
-import { ReferenciaMensagemDto, formatarReferenciaDireta } from '@project20/shared';
+import { MensagemDiretaReferenciaResumoDto, ReferenciaMensagemDto, formatarReferenciaDireta } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 
 /**
@@ -52,4 +52,22 @@ export function lerPeriodoDaBusca(inicio: string | undefined, fim: string | unde
     throw new BusinessException('O início do período deve ser anterior ao fim');
   }
   return periodo;
+}
+
+/** Quantas sugestões o `#` mostra no máximo. */
+export const LIMITE_DE_SUGESTOES_DE_REFERENCIA = 8;
+
+/**
+ * As sugestões do `#`: demandas e atividades juntas, no máximo oito. Cada tipo entra com até metade das vagas, e o que sobrar de um tipo é preenchido
+ * pelo outro (quem digita pouco de um tipo não fica com a lista meio vazia).
+ */
+export function combinarSugestoesDeReferencia(
+  demandas: MensagemDiretaReferenciaResumoDto[],
+  atividades: MensagemDiretaReferenciaResumoDto[],
+  limite: number = LIMITE_DE_SUGESTOES_DE_REFERENCIA,
+): MensagemDiretaReferenciaResumoDto[] {
+  const metade = Math.floor(limite / 2);
+  const escolhidas = [...demandas.slice(0, metade), ...atividades.slice(0, metade)];
+  const sobras = [...demandas.slice(metade), ...atividades.slice(metade)];
+  return [...escolhidas, ...sobras.slice(0, Math.max(0, limite - escolhidas.length))];
 }

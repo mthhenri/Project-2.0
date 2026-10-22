@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, Query, Res } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseEnumPipe, ParseIntPipe, Post, Put, Query, Res } from '@nestjs/common';
 import type { Response } from 'express';
 import {
   MensagemDiretaBuscarDto,
@@ -6,7 +6,9 @@ import {
   MensagemDiretaLeituraAlterarDto,
   MensagemDiretaListarDto,
   MensagemDiretaPreferenciaAlterarDto,
+  MensagemDiretaReferenciaBuscarDto,
   MensagemDiretaSilencioAlterarDto,
+  ReferenciaMensagemDiretaEnum,
 } from '@project20/shared';
 import { ActiveUser } from '../../autenticacao/decorators/active-user.decorator';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
@@ -34,6 +36,22 @@ export class MensagemDiretaController {
   @Get('pessoas')
   listarPessoas(@ActiveUser() usuarioAtivo: JwtPayload) {
     return this.mensagemDiretaService.listarPessoas(usuarioAtivo);
+  }
+
+  /** As sugestões do `#` do compositor: demandas e atividades que o usuário pode referenciar, pelo nome. */
+  @Get('referencias')
+  buscarReferencias(@Query() dto: MensagemDiretaReferenciaBuscarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
+    return this.mensagemDiretaService.buscarReferencias(dto, usuarioAtivo);
+  }
+
+  /** O cartão de uma referência para quem está olhando: sem acesso, `acessivel: false` e nenhum dado. */
+  @Get('referencia/:tipo/:id')
+  recuperarReferencia(
+    @Param('tipo', new ParseEnumPipe(ReferenciaMensagemDiretaEnum)) tipo: ReferenciaMensagemDiretaEnum,
+    @Param('id', ParseIntPipe) id: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ) {
+    return this.mensagemDiretaService.recuperarReferencia({ tipo, id }, usuarioAtivo);
   }
 
   @Get('conversa/:usuarioId')

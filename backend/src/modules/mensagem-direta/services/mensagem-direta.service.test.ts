@@ -52,6 +52,8 @@ interface Cenario {
   preferencia?: unknown;
   online?: number[];
   ativos?: { id: number; nome: string; tipo?: TipoUsuarioEnum }[];
+  demandasAchadas?: { id: number; projetoId: number; nome: string; status: string }[];
+  atividadesAchadas?: { id: number; nome: string; status: string; demandaId: number; nomeDemanda: string; projetoId: number }[];
 }
 
 function montar(cenario: Cenario = {}) {
@@ -93,10 +95,12 @@ function montar(cenario: Cenario = {}) {
       usuarioIds.filter((id) => usuarios[id]).map((id) => ({ id, nomeCompleto: usuarios[id].nomeCompleto ?? `Pessoa ${id}` })),
   };
   const demanda = {
-    recuperar: async (dto: unknown, filtro: unknown) => { registrar('demanda', { dto, filtro }); return cenario.demandaVisivel === false ? null : { id: 1 }; },
+    recuperar: async (dto: unknown, filtro: unknown) => { registrar('demanda', { dto, filtro }); return cenario.demandaVisivel === false ? null : { id: 1, nome: 'Corrigir filtro', status: 'DESENVOLVENDO', projetoId: 5 }; },
+    buscarPorNome: async (consulta: unknown) => { registrar('buscaDemanda', consulta); return cenario.demandasAchadas ?? []; },
   };
   const atividade = {
-    recuperar: async () => (cenario.atividadeDemandaId === null ? null : { demandaId: cenario.atividadeDemandaId ?? 77 }),
+    recuperar: async () => (cenario.atividadeDemandaId === null ? null : { demandaId: cenario.atividadeDemandaId ?? 77, nome: 'Tela de login', status: 'PENDENTE', projetoId: 5, nomeDemanda: 'Autenticação' }),
+    buscarPorNome: async (consulta: unknown) => { registrar('buscaAtividade', consulta); return cenario.atividadesAchadas ?? []; },
     validarAcessoDemanda: async (dto: unknown) => { registrar('acessoDemanda', dto); return cenario.atividadeComAcesso ?? true; },
   };
 
@@ -375,4 +379,50 @@ test('listarPessoas: as ativas, menos quem pergunta, com tipo e presença — pa
     { usuarioId: 9, usuarioNome: 'Bruno', tipo: TipoUsuarioEnum.DESENVOLVEDOR, online: true },
     { usuarioId: 15, usuarioNome: 'Carla', tipo: TipoUsuarioEnum.GESTOR, online: false },
   ]);
+});
+
+// --- referências: sugestões e cartão (task 211) ----------------------------------------------------
+
+test('buscarReferencias: o desenvolvedor busca só no que vê (usuarioId); gestor e administrador, sem restrição; demandas e atividades juntas', async () => {
+  const cenario = {
+    demandasAchadas: [{ id: 212, projetoId: 5, nome: 'Corrigir filtro', status: 'DESENVOLVENDO' }],
+    atividadesAchadas: [{ id: 57, nome: 'Filtro de tags', status: 'PENDENTE', demandaId: 212, nomeDemanda: 'Corrigir filtro', projetoId: 5 }],
+  };
+  const dev = montar(cenario);
+  const resposta = await dev.service.buscarReferencias({ texto: '  filtro ' }, ANA);
+  assert.deepEqual(dev.chamadas.buscaDemanda[0], { texto: 'filtro', usuarioId: 4, limite: 8 });
+  assert.deepEqual(dev.chamadas.buscaAtividade[0], { texto: 'filtro', usuarioId: 4, limite: 8 });
+  assert.deepEqual(resposta.dados!.referencias, [
+    { tipo: ReferenciaMensagemDiretaEnum.DEMANDA, id: 212, nome: 'Corrigir filtro', situacao: 'DESENVOLVENDO', demandaNome: null },
+    { tipo: ReferenciaMensagemDiretaEnum.ATIVIDADE, id: 57, nome: 'Filtro de tags', situacao: 'PENDENTE', demandaNome: 'Corrigir filtro' },
+  ]);
+
+  const gestor = montar(cenario);
+  await gestor.service.buscarReferencias({ texto: 'filtro' }, GESTOR);
+  assert.equal((gestor.chamadas.buscaDemanda[0] as { usuarioId: number | null }).usuarioId, null);
+  assert.equal((gestor.chamadas.buscaAtividade[0] as { usuarioId: number | null }).usuarioId, null);
+});
+
+test('recuperarReferencia: quem tem acesso recebe o cartão; sem acesso ou inexistente, acessivel=false e NENHUM dado (o título não vaza)', async () => {
+  const demanda = await montar().service.recuperarReferencia({ tipo: ReferenciaMensagemDiretaEnum.DEMANDA, id: 212 }, ANA);
+  assert.deepEqual(demanda.dados, {
+    tipo: ReferenciaMensagemDiretaEnum.DEMANDA, id: 212, acessivel: true, nome: 'Corrigir filtro', situacao: 'DESENVOLVENDO', projetoId: 5, demandaId: null, demandaNome: null,
+  });
+
+  const atividade = await montar().service.recuperarReferencia({ tipo: ReferenciaMensagemDiretaEnum.ATIVIDADE, id: 57 }, ANA);
+  assert.deepEqual(atividade.dados, {
+    tipo: ReferenciaMensagemDiretaEnum.ATIVIDADE, id: 57, acessivel: true, nome: 'Tela de login', situacao: 'PENDENTE', projetoId: 5, demandaId: 77, demandaNome: 'Autenticação',
+  });
+
+  const bloqueada = { acessivel: false, nome: null, situacao: null, projetoId: null, demandaId: null, demandaNome: null };
+  assert.deepEqual((await montar({ demandaVisivel: false }).service.recuperarReferencia({ tipo: ReferenciaMensagemDiretaEnum.DEMANDA, id: 212 }, ANA)).dados, { tipo: ReferenciaMensagemDiretaEnum.DEMANDA, id: 212, ...bloqueada });
+  assert.deepEqual((await montar({ atividadeComAcesso: false }).service.recuperarReferencia({ tipo: ReferenciaMensagemDiretaEnum.ATIVIDADE, id: 57 }, ANA)).dados, { tipo: ReferenciaMensagemDiretaEnum.ATIVIDADE, id: 57, ...bloqueada });
+  assert.deepEqual((await montar({ atividadeDemandaId: null }).service.recuperarReferencia({ tipo: ReferenciaMensagemDiretaEnum.ATIVIDADE, id: 9 }, ANA)).dados, { tipo: ReferenciaMensagemDiretaEnum.ATIVIDADE, id: 9, ...bloqueada });
+});
+
+test('recuperarReferencia: o gestor vê a atividade mesmo sem atribuição à demanda', async () => {
+  const { service, chamadas } = montar({ atividadeComAcesso: false });
+  const { dados } = await service.recuperarReferencia({ tipo: ReferenciaMensagemDiretaEnum.ATIVIDADE, id: 57 }, GESTOR);
+  assert.equal(dados!.acessivel, true);
+  assert.equal(chamadas.acessoDemanda, undefined);
 });

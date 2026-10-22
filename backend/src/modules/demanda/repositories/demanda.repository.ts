@@ -2,6 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { Knex } from 'knex';
 import { BaseRepository } from '../../../core/base/base.repository';
 import { DATABASE_CONNECTION } from '../../../core/database/database.provider';
+import { DemandaNomeResumoDto, DemandaNomeBuscarDto } from '@project20/shared';
 import { Demanda } from '../domain/models/demanda.model';
 import {
   DemandaCriadaDto,
@@ -140,6 +141,43 @@ export class DemandaRepository extends BaseRepository<Demanda> {
 
       return demandaCriada;
     });
+  }
+
+  /**
+   * Busca demandas pelo nome (contém, sem diferenciar maiúsculas), para a lista de sugestões do `#` do chat entre colaboradores. Com `usuarioId` só
+   * entram as demandas de projetos em que a pessoa tem ao menos uma demanda atribuída (a mesma regra de `recuperar` com filtro); `null` não restringe.
+   * O texto vira padrão de `ILIKE` com `%` e `_` escapados: o que a pessoa digita é texto, nunca curinga.
+   */
+  async buscarPorNome(dto: DemandaNomeBuscarDto): Promise<DemandaNomeResumoDto[]> {
+    return this.executarConsulta<DemandaNomeResumoDto>(
+      `SELECT
+         demanda.id,
+         demanda.projeto_id         AS "projetoId",
+         demanda.nome,
+         tipo_demanda_status.codigo AS status
+       FROM demanda
+       INNER JOIN tipo_demanda_status
+         ON tipo_demanda_status.id = demanda.tipo_demanda_status_id
+         AND tipo_demanda_status.is_deleted = false
+       WHERE demanda.is_deleted = false
+         AND demanda.nome ILIKE :padrao
+         AND (
+           CAST(:usuarioId AS integer) IS NULL
+           OR EXISTS (
+             SELECT 1
+             FROM demanda demanda_do_projeto
+             INNER JOIN demanda_usuario
+               ON demanda_usuario.demanda_id = demanda_do_projeto.id
+               AND demanda_usuario.usuario_id = :usuarioId
+               AND demanda_usuario.is_deleted = false
+             WHERE demanda_do_projeto.projeto_id = demanda.projeto_id
+               AND demanda_do_projeto.is_deleted = false
+           )
+         )
+       ORDER BY demanda.nome ASC, demanda.id ASC
+       LIMIT :limite`,
+      { padrao: `%${dto.texto.replace(/[\\%_]/g, '\\$&')}%`, usuarioId: dto.usuarioId, limite: dto.limite },
+    );
   }
 
   /**

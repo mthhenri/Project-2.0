@@ -9,6 +9,9 @@ import {
   MensagemDiretaLeituraAlteradaDto,
   MensagemDiretaListadasDto,
   MensagemDiretaPessoasListadasDto,
+  MensagemDiretaReferenciaRecuperadaDto,
+  MensagemDiretaReferenciasBuscadasDto,
+  ReferenciaMensagemDiretaEnum,
   StandardResponse,
 } from '@project20/shared';
 import { ambiente } from '../../../../environments/environment';
@@ -50,6 +53,17 @@ export class MensagemDiretaService {
   buscar(texto: string): Observable<StandardResponse<MensagemDiretaBuscadoDto>> {
     const params = new HttpParams().set('texto', texto);
     return this.httpClient.get<StandardResponse<MensagemDiretaBuscadoDto>>(`${this.urlBase}/busca`, { params, ...comFeedbackProprioEErroTratado() });
+  }
+
+  /** As sugestões do `#`: demandas e atividades que o usuário pode referenciar, pelo nome (pelo menos duas letras). */
+  buscarReferencias(texto: string): Observable<StandardResponse<MensagemDiretaReferenciasBuscadasDto>> {
+    const params = new HttpParams().set('texto', texto);
+    return this.httpClient.get<StandardResponse<MensagemDiretaReferenciasBuscadasDto>>(`${this.urlBase}/referencias`, { params, ...comFeedbackProprioEErroTratado() });
+  }
+
+  /** O cartão de uma referência para quem está olhando: sem acesso, `acessivel: false` e nenhum dado. */
+  recuperarReferencia(tipo: ReferenciaMensagemDiretaEnum, id: number): Observable<StandardResponse<MensagemDiretaReferenciaRecuperadaDto>> {
+    return this.httpClient.get<StandardResponse<MensagemDiretaReferenciaRecuperadaDto>>(`${this.urlBase}/referencia/${tipo}/${id}`, comFeedbackProprioEErroTratado());
   }
 
   listarPessoas(): Observable<StandardResponse<MensagemDiretaPessoasListadasDto>> {

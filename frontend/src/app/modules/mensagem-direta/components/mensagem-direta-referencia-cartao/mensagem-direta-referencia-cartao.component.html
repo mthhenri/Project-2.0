@@ -1,0 +1,43 @@
+@switch (estado()) {
+  @case ('carregando') {
+    <div class="cartao-referencia cartao-referencia--carregando" aria-busy="true"><p-skeleton height="2.25rem" /></div>
+  }
+  @case ('erro') {
+    <div class="cartao-referencia cartao-referencia--erro" role="status">
+      <span class="cartao-referencia__icone cartao-referencia__icone--erro"><i class="pi pi-exclamation-triangle" aria-hidden="true"></i></span>
+      <span class="cartao-referencia__texto">
+        <span class="cartao-referencia__titulo">Não foi possível carregar {{ rotuloDoTipo() === 'Demanda' ? 'a demanda' : 'a atividade' }}</span>
+        <button type="button" class="cartao-referencia__tentar" (click)="carregar()">Tentar de novo</button>
+      </span>
+    </div>
+  }
+  @default {
+    @if (dados(); as cartao) {
+      @if (!cartao.acessivel) {
+        <div class="cartao-referencia cartao-referencia--bloqueado" role="note">
+          <span class="cartao-referencia__icone"><i class="pi pi-lock" aria-hidden="true"></i></span>
+          <span class="cartao-referencia__texto">
+            <span class="cartao-referencia__titulo">Sem acesso {{ rotuloDoTipo() === 'Demanda' ? 'a esta demanda' : 'a esta atividade' }}</span>
+            <span class="cartao-referencia__detalhe">{{ rotuloDoTipo() }}</span>
+          </span>
+        </div>
+      } @else if (destino(); as rota) {
+        <a class="cartao-referencia cartao-referencia--link" [routerLink]="rota.caminho" [queryParams]="rota.parametros ?? null">
+          <span class="cartao-referencia__icone"><i class="pi" [class]="icone()" aria-hidden="true"></i></span>
+          <span class="cartao-referencia__texto">
+            <span class="cartao-referencia__titulo">{{ cartao.nome }}</span>
+            <span class="cartao-referencia__detalhe">{{ detalhe() }}</span>
+          </span>
+        </a>
+      } @else {
+        <div class="cartao-referencia">
+          <span class="cartao-referencia__icone"><i class="pi" [class]="icone()" aria-hidden="true"></i></span>
+          <span class="cartao-referencia__texto">
+            <span class="cartao-referencia__titulo">{{ cartao.nome }}</span>
+            <span class="cartao-referencia__detalhe">{{ detalhe() }}</span>
+          </span>
+        </div>
+      }
+    }
+  }
+}

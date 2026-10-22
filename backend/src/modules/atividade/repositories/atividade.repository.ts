@@ -2,6 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { Knex } from 'knex';
 import { BaseRepository } from '../../../core/base/base.repository';
 import { DATABASE_CONNECTION } from '../../../core/database/database.provider';
+import { AtividadeNomeResumoDto, AtividadeNomeBuscarDto } from '@project20/shared';
 import { Atividade } from '../domain/models/atividade.model';
 import {
   AtividadeCriadaDto,
@@ -69,6 +70,44 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
       },
     );
     return resultado[0];
+  }
+
+  /**
+   * Busca atividades pelo nome (contém, sem diferenciar maiúsculas), para a lista de sugestões do `#` do chat entre colaboradores. Com `usuarioId` só
+   * entram as atividades de demandas em que a pessoa está atribuída (a regra de `validarAcessoDemanda`); `null` não restringe. Demanda excluída não entra.
+   */
+  async buscarPorNome(dto: AtividadeNomeBuscarDto): Promise<AtividadeNomeResumoDto[]> {
+    return this.executarConsulta<AtividadeNomeResumoDto>(
+      `SELECT
+         atividade.id,
+         atividade.nome,
+         tipo_atividade_status.codigo AS status,
+         atividade.demanda_id         AS "demandaId",
+         demanda.nome                 AS "nomeDemanda",
+         demanda.projeto_id           AS "projetoId"
+       FROM atividade
+       INNER JOIN tipo_atividade_status
+         ON tipo_atividade_status.id = atividade.tipo_atividade_status_id
+         AND tipo_atividade_status.is_deleted = false
+       INNER JOIN demanda
+         ON demanda.id = atividade.demanda_id
+         AND demanda.is_deleted = false
+       WHERE atividade.is_deleted = false
+         AND atividade.nome ILIKE :padrao
+         AND (
+           CAST(:usuarioId AS integer) IS NULL
+           OR EXISTS (
+             SELECT 1
+             FROM demanda_usuario
+             WHERE demanda_usuario.demanda_id = atividade.demanda_id
+               AND demanda_usuario.usuario_id = :usuarioId
+               AND demanda_usuario.is_deleted = false
+           )
+         )
+       ORDER BY atividade.nome ASC, atividade.id ASC
+       LIMIT :limite`,
+      { padrao: `%${dto.texto.replace(/[\\%_]/g, '\\$&')}%`, usuarioId: dto.usuarioId, limite: dto.limite },
+    );
   }
 
   /**

@@ -446,3 +446,40 @@ testarComBanco('contarAtividadesEmAberto não conta atividade excluída', async 
   await excluirLinha(conexao, 'atividade', atividade.id);
   assert.equal(await repositorio.contarAtividadesEmAberto({ id: demanda.id }), antes);
 });
+
+// --- busca pelo nome, para as sugestões do `#` do chat entre colaboradores (task 211) -----------------
+
+testarComBanco('buscarPorNome: acha pelo nome sem diferenciar maiúsculas, ignora excluída, e escapa % e _ (o texto digitado não é curinga)', async (conexao) => {
+  const repositorio = criarRepositorio(DemandaRepository, conexao);
+  const projeto = await criarProjeto(conexao);
+  const alvo = await criarDemanda(conexao, { projetoId: projeto.id, nome: 'Corrigir FILTRO das execuções 100%' });
+  await criarDemanda(conexao, { projetoId: projeto.id, nome: 'Outra coisa' });
+  const excluida = await criarDemanda(conexao, { projetoId: projeto.id, nome: 'Filtro excluído' });
+  await excluirLinha(conexao, 'demanda', excluida.id);
+
+  const achadas = await repositorio.buscarPorNome({ texto: 'filtro', usuarioId: null, limite: 8 });
+  assert.deepEqual(achadas.filter((demanda) => demanda.projetoId === projeto.id).map((demanda) => demanda.id), [alvo.id]);
+  assert.equal(achadas.find((demanda) => demanda.id === alvo.id)?.status, 'PENDENTE');
+
+  assert.equal((await repositorio.buscarPorNome({ texto: '100%', usuarioId: null, limite: 8 })).some((demanda) => demanda.id === alvo.id), true);
+  assert.equal((await repositorio.buscarPorNome({ texto: '%', usuarioId: null, limite: 8 })).some((demanda) => demanda.id === alvo.id), true, 'só quem tem % no nome');
+  assert.equal((await repositorio.buscarPorNome({ texto: 'Outr_ coisa', usuarioId: null, limite: 8 })).length, 0, '_ não é curinga');
+});
+
+testarComBanco('buscarPorNome: com usuarioId só entram demandas de projetos em que a pessoa tem demanda atribuída; respeita o limite', async (conexao) => {
+  const repositorio = criarRepositorio(DemandaRepository, conexao);
+  const dev = await criarDesenvolvedor(conexao);
+  const projetoDele = await criarProjeto(conexao);
+  const demandaDele = await criarDemanda(conexao, { projetoId: projetoDele.id, nome: 'Zq Visivel' });
+  const irma = await criarDemanda(conexao, { projetoId: projetoDele.id, nome: 'Zq Irma no mesmo projeto' });
+  await criarDemandaUsuario(conexao, { demandaId: demandaDele.id, usuarioId: dev.id });
+  const alheia = await criarDemanda(conexao, { nome: 'Zq Alheia' });
+
+  const dele = await repositorio.buscarPorNome({ texto: 'zq', usuarioId: dev.id, limite: 8 });
+  assert.deepEqual(dele.map((demanda) => demanda.id).sort(), [demandaDele.id, irma.id].sort());
+  assert.equal(dele.some((demanda) => demanda.id === alheia.id), false, 'projeto sem atribuição não aparece');
+
+  const todas = await repositorio.buscarPorNome({ texto: 'zq', usuarioId: null, limite: 8 });
+  assert.equal(todas.some((demanda) => demanda.id === alheia.id), true);
+  assert.equal((await repositorio.buscarPorNome({ texto: 'zq', usuarioId: null, limite: 1 })).length, 1);
+});

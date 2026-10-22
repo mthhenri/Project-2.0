@@ -4,6 +4,7 @@ import {
   AutorMensagemDiretaEnum,
   MensagemDiretaEventoDto,
   MensagemDiretaPessoaResumoDto,
+  ReferenciaMensagemDto,
   montarConversaDiretaId,
 } from '@project20/shared';
 import { UsuarioSessaoService } from '../../../core/services/usuario-sessao.service';
@@ -20,6 +21,7 @@ import {
   zerarNaoLidas,
 } from '../utils/mensagem-direta.util';
 import { MensagemDiretaEventosService } from './mensagem-direta-eventos.service';
+import { MensagemDiretaReferenciaService } from './mensagem-direta-referencia.service';
 import { MensagemDiretaService } from './mensagem-direta.service';
 
 const ESPERA_ATE_AVISAR_SEM_CONEXAO_MS = 2_500;
@@ -40,6 +42,13 @@ export interface ConversaAberta {
   erro: boolean;
 }
 
+/** O que o compositor entrega ao enviar: o texto e só as menções e referências que ainda estão nele. */
+export interface EnvioDoCompositor {
+  texto: string;
+  mencoes: number[];
+  referencias: ReferenciaMensagemDto[];
+}
+
 export interface ResultadoDaBusca {
   texto: string;
   mensagens: MensagemNaConversa[];
@@ -55,6 +64,7 @@ export class MensagemDiretaEstadoService {
   private readonly api = inject(MensagemDiretaService);
   private readonly stream = inject(MensagemDiretaEventosService);
   private readonly sessao = inject(UsuarioSessaoService);
+  private readonly referencias = inject(MensagemDiretaReferenciaService);
 
   readonly aberto = signal(false);
   readonly visao = signal<VisaoDoPopup>('LISTA');
@@ -138,6 +148,7 @@ export class MensagemDiretaEstadoService {
     this.stream.parar();
     document.removeEventListener('visibilitychange', this.aoVoltarVisivel);
     this.geracaoDaSessao++;
+    this.referencias.limpar();
     this.iniciado.set(false);
     this.carregandoConversas.set(false);
     this.erroNasConversas.set(false);
@@ -299,10 +310,14 @@ export class MensagemDiretaEstadoService {
   // Envio
   // ---------------------------------------------------------------------------
 
-  /** Envia o texto na conversa aberta: a mensagem aparece na hora (`ENVIANDO`) e vira `ENVIADA` ou `FALHOU`. */
-  async enviar(texto: string): Promise<void> {
+  /**
+   * Envia o texto (com as menções e referências que ainda valem nele) na conversa aberta: a mensagem aparece na hora (`ENVIANDO`) e vira `ENVIADA`
+   * ou `FALHOU`. O reenvio leva os mesmos `mencoes` e `referencias`, porque eles ficam guardados na mensagem local.
+   */
+  async enviar(envio: EnvioDoCompositor): Promise<void> {
     const aberta = this.conversaAberta();
     const meuId = this.sessao.id();
+    const texto = envio.texto;
     if (!aberta || meuId === undefined || !texto.trim()) return;
 
     const local: MensagemNaConversa = {
@@ -312,8 +327,8 @@ export class MensagemDiretaEstadoService {
       autorUsuarioId: meuId,
       texto,
       contemCodigo: false,
-      mencoes: [],
-      referencias: [],
+      mencoes: envio.mencoes,
+      referencias: envio.referencias,
       createdDate: new Date(),
       situacao: 'ENVIANDO',
     };
@@ -360,7 +375,7 @@ export class MensagemDiretaEstadoService {
   private async transmitir(usuarioId: number, local: MensagemNaConversa): Promise<void> {
     const sessao = this.geracaoDaSessao;
     try {
-      const resposta = await firstValueFrom(this.api.enviarMensagem({ destinatarioId: usuarioId, mensagemId: local.mensagemId, texto: local.texto }));
+      const resposta = await firstValueFrom(this.api.enviarMensagem({ destinatarioId: usuarioId, mensagemId: local.mensagemId, texto: local.texto, mencoes: local.mencoes, referencias: local.referencias }));
       if (sessao !== this.geracaoDaSessao) return;
       this.receberMensagem(normalizarMensagem(resposta.dados!.mensagem));
     } catch {

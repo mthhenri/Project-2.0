@@ -39,3 +39,25 @@ test('lerPeriodoDaBusca: converte as duas pontas, aceita uma só e recusa data i
   assert.throws(() => lerPeriodoDaBusca('nunca', undefined), BusinessException);
   assert.throws(() => lerPeriodoDaBusca('2026-11-01T00:00:00.000Z', '2026-10-01T00:00:00.000Z'), BusinessException);
 });
+
+// --- sugestões do `#` (task 211) ---------------------------------------------------------------
+
+import { ReferenciaMensagemDiretaEnum as TipoDeReferencia } from '@project20/shared';
+import { combinarSugestoesDeReferencia } from './mensagem-direta-regras';
+
+const sugestao = (tipo: TipoDeReferencia, id: number) => ({ tipo, id, nome: `${tipo} ${id}`, situacao: 'PLANEJADA', demandaNome: null });
+const demandas = (quantidade: number) => Array.from({ length: quantidade }, (_, i) => sugestao(TipoDeReferencia.DEMANDA, i + 1));
+const atividades = (quantidade: number) => Array.from({ length: quantidade }, (_, i) => sugestao(TipoDeReferencia.ATIVIDADE, i + 1));
+
+test('combinarSugestoesDeReferencia: cada tipo entra com até metade das vagas, demandas primeiro', () => {
+  const lista = combinarSugestoesDeReferencia(demandas(8), atividades(8));
+  assert.equal(lista.length, 8);
+  assert.deepEqual(lista.map((s) => `${s.tipo[0]}${s.id}`), ['D1', 'D2', 'D3', 'D4', 'A1', 'A2', 'A3', 'A4']);
+});
+
+test('combinarSugestoesDeReferencia: o que sobra de um tipo é preenchido pelo outro, sem passar de oito', () => {
+  assert.deepEqual(combinarSugestoesDeReferencia(demandas(1), atividades(8)).map((s) => `${s.tipo[0]}${s.id}`), ['D1', 'A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7']);
+  assert.equal(combinarSugestoesDeReferencia(demandas(8), atividades(0)).length, 8);
+  assert.equal(combinarSugestoesDeReferencia(demandas(3), atividades(2)).length, 5);
+  assert.deepEqual(combinarSugestoesDeReferencia([], []), []);
+});

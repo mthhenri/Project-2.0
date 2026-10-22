@@ -1,15 +1,14 @@
-import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, inject, viewChild } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { SkeletonModule } from 'primeng/skeleton';
-import { TextareaModule } from 'primeng/textarea';
 import { TooltipModule } from 'primeng/tooltip';
-import { LIMITE_TEXTO_MENSAGEM_DIRETA } from '@project20/shared';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
-import { MensagemDiretaEstadoService } from '../../services/mensagem-direta-estado.service';
+import { EnvioDoCompositor, MensagemDiretaEstadoService } from '../../services/mensagem-direta-estado.service';
 import { agruparPorDia, formatarHora, idDaUltimaLidaPelaOutraPessoa } from '../../utils/mensagem-direta.util';
 import { MensagemDiretaAvatarComponent } from '../mensagem-direta-avatar/mensagem-direta-avatar.component';
+import { MensagemDiretaCompositorComponent } from '../mensagem-direta-compositor/mensagem-direta-compositor.component';
+import { MensagemDiretaReferenciaCartaoComponent } from '../mensagem-direta-referencia-cartao/mensagem-direta-referencia-cartao.component';
 
 /** Distância do fim (px) até a qual a conversa continua acompanhando as mensagens que chegam. */
 const MARGEM_DO_FIM_PX = 80;
@@ -20,7 +19,7 @@ const MARGEM_DO_TOPO_PX = 40;
 @Component({
   selector: 'app-mensagem-direta-conversa',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonModule, SkeletonModule, TextareaModule, TooltipModule, MarkdownVisualizadorComponent, MensagemDiretaAvatarComponent],
+  imports: [ButtonModule, SkeletonModule, TooltipModule, MarkdownVisualizadorComponent, MensagemDiretaAvatarComponent, MensagemDiretaCompositorComponent, MensagemDiretaReferenciaCartaoComponent],
   templateUrl: './mensagem-direta-conversa.component.html',
   styleUrl: './mensagem-direta-conversa.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -29,15 +28,14 @@ export class MensagemDiretaConversaComponent {
   protected readonly estado = inject(MensagemDiretaEstadoService);
   private readonly sessao = inject(UsuarioSessaoService);
   private readonly rolagem = viewChild<ElementRef<HTMLElement>>('rolagem');
-  private readonly campo = viewChild<ElementRef<HTMLTextAreaElement>>('campoTexto');
-
-  protected readonly limiteDoTexto = LIMITE_TEXTO_MENSAGEM_DIRETA;
-  readonly controleTexto = new FormControl('', { nonNullable: true });
-  private readonly texto = signal('');
 
   protected readonly aberta = this.estado.conversaAberta;
   protected readonly meuId = this.sessao.id;
-  protected readonly podeEnviar = computed(() => this.texto().trim().length > 0 && this.texto().length <= LIMITE_TEXTO_MENSAGEM_DIRETA);
+  /** Só a outra pessoa da conversa pode ser mencionada (a regra do servidor: quem não lê a conversa não é avisado dela). */
+  protected readonly pessoasMencionaveis = computed(() => {
+    const aberta = this.aberta();
+    return aberta ? [{ usuarioId: aberta.usuarioId, nome: aberta.usuarioNome }] : [];
+  });
   protected readonly estaOnline = computed(() => {
     const aberta = this.aberta();
     return aberta ? this.estado.online().has(aberta.usuarioId) : false;
@@ -56,8 +54,8 @@ export class MensagemDiretaConversaComponent {
     return [...aberta.mensagens].reverse().find((mensagem) => mensagem.autorUsuarioId === meuId && mensagem.situacao === 'ENVIADA')?.mensagemId ?? null;
   });
 
-  /** Só muda quando se abre OUTRA pessoa: o foco no campo não pode voltar a cada mensagem, leitura ou releitura. */
-  private readonly pessoaAberta = computed(() => this.aberta()?.usuarioId ?? null);
+  /** Só muda quando se abre OUTRA pessoa: o compositor foca o campo por ela, e o foco não pode voltar a cada mensagem, leitura ou releitura. */
+  protected readonly pessoaAberta = computed(() => this.aberta()?.usuarioId ?? null);
   private readonly totalDeMensagens = computed(() => this.aberta()?.mensagens.length ?? 0);
 
   private colarNoFim = true;
@@ -67,17 +65,12 @@ export class MensagemDiretaConversaComponent {
   private totalVisto = 0;
 
   constructor() {
-    this.controleTexto.valueChanges.subscribe((valor) => this.texto.set(valor));
-
     // Quando o NÚMERO de mensagens muda: acompanha o fim se o usuário está lá, ou mantém o ponto que ele lia quando chega uma página mais antiga.
     effect(() => {
       this.totalDeMensagens();
       setTimeout(() => this.ajustarRolagem(), 0);
     });
-    // Ao abrir a conversa o campo recebe o foco; depois disso o foco é de quem usa a página (o popup não é modal).
-    effect(() => {
-      if (this.pessoaAberta() !== null && this.campo()) setTimeout(() => this.campo()?.nativeElement.focus(), 0);
-    });
+
   }
 
   protected voltar(): void {
@@ -120,19 +113,9 @@ export class MensagemDiretaConversaComponent {
     if (this.colarNoFim && cresceu) el.scrollTop = el.scrollHeight;
   }
 
-  protected aoTeclar(evento: KeyboardEvent): void {
-    // Enter envia; Shift+Enter quebra a linha. Durante a composição (IME) o Enter confirma o caractere e não envia.
-    if (evento.key !== 'Enter' || evento.shiftKey || evento.isComposing) return;
-    evento.preventDefault();
-    this.enviar();
-  }
-
-  protected enviar(): void {
-    if (!this.podeEnviar()) return;
-    const texto = this.controleTexto.value;
-    this.controleTexto.setValue('');
+  protected aoEnviar(envio: EnvioDoCompositor): void {
     this.colarNoFim = true;
-    void this.estado.enviar(texto);
+    void this.estado.enviar(envio);
   }
 
   protected tentarDeNovo(mensagemId: string): void {
