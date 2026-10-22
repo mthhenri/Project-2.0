@@ -1,9 +1,11 @@
-import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, inject, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
+import { ReferenciaMensagemDiretaEnum } from '@project20/shared';
 import { ButtonModule } from 'primeng/button';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TooltipModule } from 'primeng/tooltip';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
+import { MensagemDiretaReferenciaService } from '../../services/mensagem-direta-referencia.service';
 import { EnvioDoCompositor, MensagemDiretaEstadoService } from '../../services/mensagem-direta-estado.service';
 import { agruparPorDia, formatarHora, idDaUltimaLidaPelaOutraPessoa } from '../../utils/mensagem-direta.util';
 import { MensagemDiretaAvatarComponent } from '../mensagem-direta-avatar/mensagem-direta-avatar.component';
@@ -27,6 +29,7 @@ const MARGEM_DO_TOPO_PX = 40;
 export class MensagemDiretaConversaComponent {
   protected readonly estado = inject(MensagemDiretaEstadoService);
   private readonly sessao = inject(UsuarioSessaoService);
+  private readonly referencias = inject(MensagemDiretaReferenciaService);
   private readonly rolagem = viewChild<ElementRef<HTMLElement>>('rolagem');
 
   protected readonly aberta = this.estado.conversaAberta;
@@ -58,6 +61,9 @@ export class MensagemDiretaConversaComponent {
   protected readonly pessoaAberta = computed(() => this.aberta()?.usuarioId ?? null);
   private readonly totalDeMensagens = computed(() => this.aberta()?.mensagens.length ?? 0);
 
+  /** Nome de cada demanda/atividade citada (`TIPO:id`), conforme chega do servidor; só as acessíveis têm nome. */
+  private readonly nomesDasReferencias = signal<ReadonlyMap<string, string>>(new Map());
+
   private colarNoFim = true;
   private alturaAntes: number | null = null;
   private topoAntes = 0;
@@ -71,6 +77,41 @@ export class MensagemDiretaConversaComponent {
       setTimeout(() => this.ajustarRolagem(), 0);
     });
 
+    // Os nomes das referências vêm da consulta dos cartões (guardada por sessão, então não repete a chamada).
+    effect(() => {
+      for (const mensagem of this.aberta()?.mensagens ?? []) {
+        for (const referencia of mensagem.referencias) void this.guardarNomeDaReferencia(referencia.tipo, referencia.id);
+      }
+    });
+
+  }
+
+  /** `@Nome` das pessoas mencionadas e `#Nome` das referências da mensagem: o que o texto mostra com destaque. */
+  protected destaquesDe(mensagem: { mencoes: number[]; referencias: { tipo: ReferenciaMensagemDiretaEnum; id: number }[] }): string[] {
+    const aberta = this.aberta();
+    const nomes = new Map<number, string>();
+    if (aberta) nomes.set(aberta.usuarioId, aberta.usuarioNome);
+    const meuId = this.sessao.id();
+    const meuNome = this.sessao.nomeCompleto();
+    if (meuId !== undefined && meuNome) nomes.set(meuId, meuNome);
+    const destaques: string[] = [];
+    for (const usuarioId of mensagem.mencoes) {
+      const nome = nomes.get(usuarioId);
+      if (nome) destaques.push(`@${nome}`);
+    }
+    for (const referencia of mensagem.referencias) {
+      const nome = this.nomesDasReferencias().get(`${referencia.tipo}:${referencia.id}`);
+      if (nome) destaques.push(`#${nome}`);
+    }
+    return destaques;
+  }
+
+  private async guardarNomeDaReferencia(tipo: ReferenciaMensagemDiretaEnum, id: number): Promise<void> {
+    const chave = `${tipo}:${id}`;
+    if (this.nomesDasReferencias().has(chave)) return;
+    const dados = await this.referencias.recuperar(tipo, id);
+    if (!dados?.acessivel || !dados.nome) return;
+    this.nomesDasReferencias.update((atuais) => new Map(atuais).set(chave, dados.nome as string));
   }
 
   protected voltar(): void {

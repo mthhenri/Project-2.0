@@ -101,4 +101,13 @@
     color: var(--p-primary-color);
     text-decoration: underline;
   }
+
+  // Menção a pessoa e referência a demanda/atividade (chat entre colaboradores).
+  &__destaque {
+    padding: 0.05em 0.3em;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--p-primary-color) 14%, transparent);
+    color: var(--p-primary-color);
+    font-weight: 600;
+  }
 }

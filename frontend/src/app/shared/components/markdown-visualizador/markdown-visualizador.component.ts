@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { interpretarMarkdown } from '@project20/shared';
+import { partirPorDestaques } from './destaques.util';
 import { MarkdownBlocoCodigoComponent } from '../markdown-bloco-codigo/markdown-bloco-codigo.component';
 
 /**
@@ -20,5 +21,12 @@ import { MarkdownBlocoCodigoComponent } from '../markdown-bloco-codigo/markdown-
 export class MarkdownVisualizadorComponent {
   readonly texto = input<string | null | undefined>('');
 
+  /** Menções (`@Nome`) e referências (`#Nome`) conhecidas, que ganham um destaque no texto. Vazio, nada muda. */
+  readonly destaques = input<readonly string[]>([]);
+
   readonly blocos = computed(() => interpretarMarkdown(this.texto() ?? ''));
+
+  protected partir(valor: string) {
+    return partirPorDestaques(valor, this.destaques());
+  }
 }

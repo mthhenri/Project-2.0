@@ -58,7 +58,7 @@
                 [class.conversa-direta__balao--enviando]="mensagem.situacao === 'ENVIANDO'"
                 [class.conversa-direta__balao--falhou]="mensagem.situacao === 'FALHOU'"
               >
-                <app-markdown-visualizador [texto]="mensagem.texto" />
+                <app-markdown-visualizador [texto]="mensagem.texto" [destaques]="destaquesDe(mensagem)" />
                 @for (referencia of mensagem.referencias; track referencia.tipo + referencia.id) {
                   <app-mensagem-direta-referencia-cartao [tipo]="referencia.tipo" [id]="referencia.id" />
                 }
