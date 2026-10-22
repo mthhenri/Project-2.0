@@ -190,6 +190,21 @@ describe('MensagemDiretaNotificacoesComponent: atalho do chat no Project Desktop
   const menu = () => document.body.querySelector('.menu-notificacoes') as HTMLElement;
   const botaoAlterar = () => Array.from(menu().querySelectorAll<HTMLButtonElement>('button')).find((b) => b.textContent?.includes('Alterar'));
   const campo = () => menu().querySelector<HTMLInputElement>('input[aria-label^="Gravar o novo atalho"]')!;
+  /**
+   * Clica em "Alterar" e espera o campo de gravação existir **e continuar existindo**: o campo fecha no `blur`, e o popover do PrimeNG pode mexer no foco
+   * logo depois de abrir. Se ele sumir nesse intervalo, o botão volta e o clique é repetido.
+   */
+  const iniciarGravacao = async () => {
+    const campoPresente = () => menu().querySelector('input[aria-label^="Gravar o novo atalho"]') !== null;
+    for (let tentativa = 0; tentativa < 10; tentativa++) {
+      if (!campoPresente()) botaoAlterar()?.click();
+      await tela.atualizar();
+      await new Promise((resolver) => setTimeout(resolver, 30));
+      await tela.atualizar();
+      if (campoPresente()) return;
+    }
+    throw new Error('O campo de gravação do atalho não abriu.');
+  };
   const teclar = (parcial: KeyboardEventInit) => campo().dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, ...parcial }));
 
   afterEach(() => document.body.querySelectorAll('.p-popover').forEach((elemento) => elemento.remove()));
@@ -207,9 +222,7 @@ describe('MensagemDiretaNotificacoesComponent: atalho do chat no Project Desktop
     expect(menu().textContent).toContain('Atalho global');
     expect(menu().querySelector('kbd')?.textContent).toContain('Ctrl+Shift+Space');
 
-    botaoAlterar()!.click();
-    await tela.atualizar();
-    await new Promise((resolver) => setTimeout(resolver, 0));
+    await iniciarGravacao();
     teclar({ key: 'Control', code: 'ControlLeft', ctrlKey: true });
     teclar({ key: 'k', code: 'KeyK', ctrlKey: true, altKey: true });
     await tela.atualizar();
@@ -225,9 +238,7 @@ describe('MensagemDiretaNotificacoesComponent: atalho do chat no Project Desktop
   it('Esc desiste da gravação, e tecla sem modificador não é atalho', async () => {
     await montarNoDesktop(true);
     await abrir();
-    botaoAlterar()!.click();
-    await tela.atualizar();
-    await new Promise((resolver) => setTimeout(resolver, 0));
+    await iniciarGravacao();
     teclar({ key: 'k', code: 'KeyK' });
     await tela.atualizar();
     expect(campo()).not.toBeNull();
