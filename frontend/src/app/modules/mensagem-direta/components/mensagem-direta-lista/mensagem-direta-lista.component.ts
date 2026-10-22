@@ -17,6 +17,7 @@ import {
   trechosComRealce,
 } from '../../utils/mensagem-direta.util';
 import { MensagemDiretaAvatarComponent } from '../mensagem-direta-avatar/mensagem-direta-avatar.component';
+import { MensagemDiretaNotificacoesComponent } from '../mensagem-direta-notificacoes/mensagem-direta-notificacoes.component';
 
 const ATRASO_DA_BUSCA_MS = 300;
 
@@ -24,7 +25,7 @@ const ATRASO_DA_BUSCA_MS = 300;
 @Component({
   selector: 'app-mensagem-direta-lista',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonModule, InputTextModule, SkeletonModule, TooltipModule, MensagemDiretaAvatarComponent],
+  imports: [ReactiveFormsModule, ButtonModule, InputTextModule, SkeletonModule, TooltipModule, MensagemDiretaAvatarComponent, MensagemDiretaNotificacoesComponent],
   templateUrl: './mensagem-direta-lista.component.html',
   styleUrl: './mensagem-direta-lista.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

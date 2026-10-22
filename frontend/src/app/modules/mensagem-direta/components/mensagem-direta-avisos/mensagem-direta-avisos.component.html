@@ -1,0 +1,32 @@
+<div class="avisos-diretos" role="status" aria-live="polite">
+  @for (aviso of avisos(); track aviso.id) {
+    <section
+      class="aviso-direto"
+      [attr.aria-label]="'Mensagem nova de ' + aviso.usuarioNome"
+      (mouseenter)="pausar(aviso.id, 'mouse')"
+      (mouseleave)="retomar(aviso.id, 'mouse')"
+      (focusin)="pausar(aviso.id, 'foco')"
+      (focusout)="retomar(aviso.id, 'foco')"
+    >
+      <button type="button" class="aviso-direto__conteudo" (click)="abrir(aviso)">
+        <app-mensagem-direta-avatar [nome]="aviso.usuarioNome" [pequeno]="true" />
+        <span class="aviso-direto__corpo">
+          <span class="aviso-direto__nome">{{ aviso.usuarioNome }}</span>
+          <span class="aviso-direto__texto">
+            @if (aviso.mencionaVoce) {
+              <span class="aviso-direto__mencao">&#64;você</span>
+            }
+            {{ aviso.texto }}
+          </span>
+          @if (rotuloDaQuantidade(aviso.quantidade); as quantidade) {
+            <span class="aviso-direto__quantidade">{{ quantidade }}</span>
+          }
+        </span>
+      </button>
+      <p-button class="aviso-direto__fechar" icon="pi pi-times" severity="secondary" [text]="true" [rounded]="true" size="small" ariaLabel="Fechar aviso" pTooltip="Fechar" tooltipPosition="left" (onClick)="fechar(aviso.id)" />
+      <div class="aviso-direto__acoes">
+        <p-button label="Responder" size="small" (onClick)="abrir(aviso)" />
+      </div>
+    </section>
+  }
+</div>

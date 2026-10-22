@@ -1,0 +1,55 @@
+<p-button
+  icon="pi pi-bell"
+  [severity]="silenciado() || !preferencia().avisosAtivos ? 'warn' : 'secondary'"
+  [text]="true"
+  [rounded]="true"
+  size="small"
+  ariaLabel="Configurar notificações"
+  pTooltip="Notificações"
+  tooltipPosition="bottom"
+  (onClick)="atualizarRelogio(); menu.toggle($event)"
+/>
+
+<p-popover #menu>
+  <div class="menu-notificacoes">
+    <p class="menu-notificacoes__titulo">Notificações</p>
+
+    <label class="menu-notificacoes__linha">
+      <span class="menu-notificacoes__texto">
+        <span class="menu-notificacoes__rotulo">Avisos de mensagem</span>
+        <span class="menu-notificacoes__detalhe">Popup dentro do Project</span>
+      </span>
+      <p-toggleswitch [formControl]="controleAvisos" ariaLabel="Avisos de mensagem" />
+    </label>
+    <label class="menu-notificacoes__linha">
+      <span class="menu-notificacoes__texto">
+        <span class="menu-notificacoes__rotulo">Aviso no Project Desktop</span>
+        <span class="menu-notificacoes__detalhe">Também com o app minimizado</span>
+      </span>
+      <p-toggleswitch [formControl]="controleDesktop" ariaLabel="Aviso no Project Desktop" />
+    </label>
+    <label class="menu-notificacoes__linha">
+      <span class="menu-notificacoes__texto">
+        <span class="menu-notificacoes__rotulo">Som</span>
+      </span>
+      <p-toggleswitch [formControl]="controleSom" ariaLabel="Som" />
+    </label>
+
+    <hr class="menu-notificacoes__divisor" />
+    <p class="menu-notificacoes__secao">Silenciar tudo</p>
+    @if (silenciado()) {
+      <p class="menu-notificacoes__status" role="status">
+        <i class="pi pi-bell-slash" aria-hidden="true"></i>
+        <span>{{ rotuloDoSilencio() }}</span>
+        <button type="button" class="menu-notificacoes__reativar" (click)="reativar()">Reativar</button>
+      </p>
+    }
+    @for (item of opcoes; track item.opcao) {
+      <button type="button" class="menu-notificacoes__opcao" (click)="silenciar(item.opcao)">{{ item.rotulo }}</button>
+    }
+
+    @if (erro()) {
+      <p class="menu-notificacoes__erro" role="alert"><i class="pi pi-exclamation-triangle" aria-hidden="true"></i> Não foi possível salvar. Tente de novo.</p>
+    }
+  </div>
+</p-popover>

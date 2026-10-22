@@ -7,6 +7,17 @@
         <div class="conversa-direta__nome">{{ conversa.usuarioNome }}</div>
         <div class="conversa-direta__status">{{ estado.conexao() ? (estaOnline() ? 'Online' : 'Offline') : 'Status indisponível' }}</div>
       </div>
+      <p-button
+        [icon]="estado.estaSilenciada(conversa.usuarioId) ? 'pi pi-bell-slash' : 'pi pi-bell'"
+        [severity]="estado.estaSilenciada(conversa.usuarioId) ? 'warn' : 'secondary'"
+        [text]="true"
+        [rounded]="true"
+        size="small"
+        [ariaLabel]="estado.estaSilenciada(conversa.usuarioId) ? 'Reativar os avisos desta conversa' : 'Silenciar os avisos desta conversa'"
+        [pTooltip]="estado.estaSilenciada(conversa.usuarioId) ? 'Reativar avisos' : 'Silenciar avisos'"
+        tooltipPosition="bottom"
+        (onClick)="estado.alternarSilencioDaConversa(conversa.usuarioId)"
+      />
       <p-button icon="pi pi-minus" severity="secondary" [text]="true" [rounded]="true" size="small" ariaLabel="Ocultar o chat" pTooltip="Ocultar" tooltipPosition="bottom" (onClick)="estado.fechar()" />
     </div>
 

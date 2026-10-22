@@ -86,6 +86,8 @@ describe('LayoutComponent', () => {
     const montado = await montarLayout();
     TestBed.inject(DesfazerService).oferecer({ mensagem: 'Projeto excluído', desfazer: () => of(null) });
     montado.fixture.detectChanges();
-    expect(montado.elemento.querySelector('[role="status"]')?.textContent).toContain('Projeto excluído');
+    // O layout tem mais de uma região de aviso (a dos avisos do chat também é `status`); procura a que carrega o texto.
+    const textos = Array.from(montado.elemento.querySelectorAll('[role="status"]')).map((regiao) => regiao.textContent);
+    expect(textos.join(' ')).toContain('Projeto excluído');
   });
 });

@@ -459,4 +459,64 @@ describe('MensagemDiretaPopupComponent', () => {
     expect(estado.aberto()).toBe(false);
   });
 
+  // --- silêncio por conversa e contador (task 212) ----------------------------------------------
+
+  it('o sino da conversa silencia e reativa: muda na hora, grava o silêncio e a lista mostra o sino cortado', async () => {
+    await abrirConversaVazia();
+    const sino = () => tela.elemento.querySelector<HTMLButtonElement>('button[aria-label$="os avisos desta conversa"]')!;
+    expect(sino().getAttribute('aria-label')).toBe('Silenciar os avisos desta conversa');
+
+    sino().click();
+    await tela.atualizar();
+    expect(sino().getAttribute('aria-label')).toBe('Reativar os avisos desta conversa');
+    expect(estado.estaSilenciada(9)).toBe(true);
+    const silenciar = esperarRequisicao(tela.http, 'PUT', '/mensagem-direta/conversa/9/silencio');
+    expect(silenciar.request.body).toEqual({ silenciada: true });
+    responderSucesso(silenciar, { conversaId: '1-9', silenciada: true });
+    await tela.atualizar();
+
+    sino().click();
+    await tela.atualizar();
+    const reativar = esperarRequisicao(tela.http, 'PUT', '/mensagem-direta/conversa/9/silencio');
+    expect(reativar.request.body).toEqual({ silenciada: false });
+    responderSucesso(reativar, { conversaId: '1-9', silenciada: false });
+    await tela.atualizar();
+    expect(estado.estaSilenciada(9)).toBe(false);
+  });
+
+  it('se o servidor recusar o silêncio da conversa, a tela volta ao estado anterior', async () => {
+    await abrirConversaVazia();
+    tela.elemento.querySelector<HTMLButtonElement>('button[aria-label="Silenciar os avisos desta conversa"]')!.click();
+    await tela.atualizar();
+    expect(estado.estaSilenciada(9)).toBe(true);
+    responderErro(esperarRequisicao(tela.http, 'PUT', '/mensagem-direta/conversa/9/silencio'), 500, 'falhou');
+    await tela.atualizar();
+    expect(estado.estaSilenciada(9)).toBe(false);
+    expect(tela.elemento.querySelector('button[aria-label="Silenciar os avisos desta conversa"]')).not.toBeNull();
+  });
+
+  it('conversa silenciada NÃO conta no contador do topbar, mas a linha dela na lista continua mostrando as suas não lidas', async () => {
+    await montar([
+      { ...conversaDaLista(9, 'Camila Duarte', 2), silenciada: true },
+      conversaDaLista(15, 'Rafael Lima', 3),
+    ]);
+    expect(estado.naoLidas()).toBe(3);
+    expect(tela.elemento.querySelector('[aria-label="2 mensagens não lidas"]')).not.toBeNull();
+    expect(tela.elemento.querySelector('[aria-label="3 mensagens não lidas"]')).not.toBeNull();
+  });
+
+  it('silenciar uma conversa que ainda não tem mensagem lembra a escolha (e ela vale quando a primeira mensagem chegar)', async () => {
+    await montar([]);
+    void estado.abrirConversa(20, 'Thiago Mendes');
+    await tela.atualizar();
+    responderSucesso(esperarRequisicao(tela.http, 'GET', '/mensagem-direta/conversa/20'), { mensagens: [], proximoCursor: null, lidaAteDate: null });
+    await tela.atualizar();
+
+    tela.elemento.querySelector<HTMLButtonElement>('button[aria-label="Silenciar os avisos desta conversa"]')!.click();
+    await tela.atualizar();
+    responderSucesso(esperarRequisicao(tela.http, 'PUT', '/mensagem-direta/conversa/20/silencio'), { conversaId: '1-20', silenciada: true });
+    await tela.atualizar();
+    expect(estado.estaSilenciada(20)).toBe(true);
+    expect(tela.elemento.querySelector('button[aria-label="Reativar os avisos desta conversa"]')).not.toBeNull();
+  });
 });

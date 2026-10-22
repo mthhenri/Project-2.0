@@ -17,9 +17,12 @@ import {
   mesclarMensagens,
   normalizarConversa,
   normalizarMensagem,
+  outraPessoaDaConversa,
+  previaDaMensagem,
   totalNaoLidas,
   zerarNaoLidas,
 } from '../utils/mensagem-direta.util';
+import { MensagemDiretaAvisosService } from './mensagem-direta-avisos.service';
 import { MensagemDiretaEventosService } from './mensagem-direta-eventos.service';
 import { MensagemDiretaReferenciaService } from './mensagem-direta-referencia.service';
 import { MensagemDiretaService } from './mensagem-direta.service';
@@ -65,6 +68,7 @@ export class MensagemDiretaEstadoService {
   private readonly stream = inject(MensagemDiretaEventosService);
   private readonly sessao = inject(UsuarioSessaoService);
   private readonly referencias = inject(MensagemDiretaReferenciaService);
+  private readonly avisos = inject(MensagemDiretaAvisosService);
 
   readonly aberto = signal(false);
   readonly visao = signal<VisaoDoPopup>('LISTA');
@@ -87,7 +91,11 @@ export class MensagemDiretaEstadoService {
   readonly buscando = signal(false);
   readonly erroNaBusca = signal(false);
 
-  readonly naoLidas = computed(() => totalNaoLidas(this.conversas()));
+  /** O contador do topbar: as não lidas das conversas que **não** estão silenciadas (a linha de cada conversa na lista mostra a sua mesmo assim). */
+  readonly naoLidas = computed(() => totalNaoLidas(this.conversas().filter((conversa) => !conversa.silenciada)));
+
+  /** Conversas silenciadas que ainda não estão na lista (sem mensagem): o sino do cabeçalho precisa lembrar a escolha. */
+  private readonly silenciadasSemLinha = signal<ReadonlySet<number>>(new Set());
 
   private readonly _semConexao = signal(false);
   /** O stream está fora do ar há um tempo (não o piscar do primeiro connect): é quando as telas mostram a faixa de conexão. */
@@ -142,6 +150,7 @@ export class MensagemDiretaEstadoService {
       aoReconectar: () => this.recuperar(),
     });
     void this.carregarConversas();
+    void this.avisos.carregarPreferencia();
   }
 
   parar(): void {
@@ -149,6 +158,8 @@ export class MensagemDiretaEstadoService {
     document.removeEventListener('visibilitychange', this.aoVoltarVisivel);
     this.geracaoDaSessao++;
     this.referencias.limpar();
+    this.avisos.limpar();
+    this.silenciadasSemLinha.set(new Set());
     this.iniciado.set(false);
     this.carregandoConversas.set(false);
     this.erroNasConversas.set(false);
@@ -377,7 +388,7 @@ export class MensagemDiretaEstadoService {
     try {
       const resposta = await firstValueFrom(this.api.enviarMensagem({ destinatarioId: usuarioId, mensagemId: local.mensagemId, texto: local.texto, mencoes: local.mencoes, referencias: local.referencias }));
       if (sessao !== this.geracaoDaSessao) return;
-      this.receberMensagem(normalizarMensagem(resposta.dados!.mensagem));
+      this.receberMensagem(normalizarMensagem(resposta.dados!.mensagem), false);
     } catch {
       // Se o evento do servidor já trouxe a mensagem (o POST falhou depois de gravar), ela deixou de ser pendente e não volta a "Não enviada".
       if (sessao !== this.geracaoDaSessao) return;
@@ -451,7 +462,7 @@ export class MensagemDiretaEstadoService {
         break;
       }
       case 'MENSAGEM':
-        this.receberMensagem(normalizarMensagem(evento.mensagem));
+        this.receberMensagem(normalizarMensagem(evento.mensagem), true);
         break;
       case 'LEITURA': {
         const aberta = this.conversaAberta();
@@ -480,7 +491,8 @@ export class MensagemDiretaEstadoService {
     if (this.conversaAberta()) void this.carregarConversaAberta();
   }
 
-  private receberMensagem(mensagem: MensagemNaConversa): void {
+  /** `pelaStream`: veio do stream (de outra pessoa ou de outra aba minha). Só ela pode virar aviso; a resposta do meu envio nunca. */
+  private receberMensagem(mensagem: MensagemNaConversa, pelaStream: boolean): void {
     const meuId = this.sessao.id();
     if (meuId === undefined) return;
     const aberta = this.conversaAberta();
@@ -492,12 +504,75 @@ export class MensagemDiretaEstadoService {
       this.atualizarConversaAberta(aberta.usuarioId, (atual) => ({ mensagens: mesclarMensagens(atual.mensagens, [mensagem]) }));
     }
     const resultado = aplicarMensagemNaLista(this.conversas(), mensagem, meuId, naConversaAberta && this.aVista() ? mensagem.conversaId : null);
+    let recarga: Promise<void> | null = null;
     if (resultado.conversaDesconhecida) {
-      void this.carregarConversas();
+      recarga = this.carregarConversas();
     } else {
       this.conversas.set(resultado.conversas);
     }
     if (naConversaAberta && mensagem.autorUsuarioId !== meuId) void this.marcarComoLida();
+    if (pelaStream) void this.avisarDaMensagem(mensagem, meuId, naConversaAberta && this.aVista(), recarga);
+  }
+
+  /** Entrega ao serviço de avisos os fatos da mensagem (quem é, se a conversa está silenciada ou à vista, se cita o usuário); ele decide e mostra. */
+  private async avisarDaMensagem(mensagem: MensagemNaConversa, meuId: number, conversaAVista: boolean, recarga: Promise<void> | null): Promise<void> {
+    const usuarioId = outraPessoaDaConversa(mensagem.conversaId, meuId);
+    if (usuarioId === null) return;
+    const nomeNaLista = () => this.conversas().find((conversa) => conversa.conversaId === mensagem.conversaId)?.usuarioNome;
+    // Conversa nova: o nome só chega com a lista recarregada (a que `receberMensagem` já pediu; não se pede outra).
+    const sessao = this.geracaoDaSessao;
+    if (recarga) await recarga;
+    if (sessao !== this.geracaoDaSessao) return;
+    this.avisos.avisar({
+      conversaId: mensagem.conversaId,
+      usuarioId,
+      usuarioNome: nomeNaLista() ?? 'Nova mensagem',
+      texto: previaDaMensagem(mensagem.texto, mensagem.contemCodigo, false),
+      mensagemMinha: mensagem.autorUsuarioId === meuId,
+      mencionaVoce: mensagem.mencoes.includes(meuId),
+      conversaSilenciada: this.estaSilenciada(usuarioId),
+      conversaAVista,
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Silêncio por conversa e avisos
+  // ---------------------------------------------------------------------------
+
+  /** A conversa com a pessoa está silenciada? (A linha da lista, ou a escolha feita antes de ela ter mensagens.) */
+  estaSilenciada(usuarioId: number): boolean {
+    const naLista = this.conversas().find((conversa) => conversa.usuarioId === usuarioId);
+    return naLista ? naLista.silenciada : this.silenciadasSemLinha().has(usuarioId);
+  }
+
+  /** Silencia ou reativa os avisos da conversa: muda na hora e volta se o servidor recusar. */
+  async alternarSilencioDaConversa(usuarioId: number): Promise<void> {
+    const silenciada = !this.estaSilenciada(usuarioId);
+    const sessao = this.geracaoDaSessao;
+    this.aplicarSilencio(usuarioId, silenciada);
+    try {
+      await firstValueFrom(this.api.alterarSilencio(usuarioId, silenciada));
+    } catch {
+      if (sessao === this.geracaoDaSessao) this.aplicarSilencio(usuarioId, !silenciada);
+    }
+  }
+
+  private aplicarSilencio(usuarioId: number, silenciada: boolean): void {
+    const naLista = this.conversas().some((conversa) => conversa.usuarioId === usuarioId);
+    if (naLista) {
+      this.conversas.update((lista) => lista.map((conversa) => (conversa.usuarioId === usuarioId ? { ...conversa, silenciada } : conversa)));
+      return;
+    }
+    const proximo = new Set(this.silenciadasSemLinha());
+    if (silenciada) proximo.add(usuarioId);
+    else proximo.delete(usuarioId);
+    this.silenciadasSemLinha.set(proximo);
+  }
+
+  /** O clique no aviso: abre a conversa com quem escreveu e tira o cartão. */
+  async abrirConversaDoAviso(usuarioId: number, usuarioNome: string, avisoId: string): Promise<void> {
+    this.avisos.fechar(avisoId);
+    await this.abrirConversa(usuarioId, usuarioNome);
   }
 
   private atualizarConversaAberta(usuarioId: number, alteracao: Partial<ConversaAberta> | ((atual: ConversaAberta) => Partial<ConversaAberta>)): void {

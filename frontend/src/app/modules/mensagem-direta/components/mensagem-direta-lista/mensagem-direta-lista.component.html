@@ -2,6 +2,7 @@
   <div class="lista-direta__cabecalho">
     <h2 class="lista-direta__titulo">Conversas</h2>
     <p-button icon="pi pi-pencil" severity="secondary" [text]="true" [rounded]="true" size="small" ariaLabel="Nova conversa" pTooltip="Nova conversa" tooltipPosition="bottom" (onClick)="novaConversa()" />
+    <app-mensagem-direta-notificacoes />
     <p-button icon="pi pi-minus" severity="secondary" [text]="true" [rounded]="true" size="small" ariaLabel="Ocultar o chat" pTooltip="Ocultar" tooltipPosition="bottom" (onClick)="estado.fechar()" />
   </div>
 

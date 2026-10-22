@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { ToastModule } from 'primeng/toast';
+import { MensagemDiretaAvisosComponent } from '../../modules/mensagem-direta/components/mensagem-direta-avisos/mensagem-direta-avisos.component';
 import { MensagemDiretaPopupComponent } from '../../modules/mensagem-direta/components/mensagem-direta-popup/mensagem-direta-popup.component';
 import { CheckinJanelinhaComponent } from '../../modules/checkin/components/checkin-janelinha/checkin-janelinha.component';
 import { ToastDesfazerComponent } from '../components/toast-desfazer/toast-desfazer.component';
@@ -12,7 +13,7 @@ import { LoadingSpinnerComponent } from '../components/loading-spinner/loading-s
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [RouterOutlet, SidebarComponent, TopbarComponent, LoadingSpinnerComponent, ToastModule, ToastDesfazerComponent, CheckinJanelinhaComponent, IaRetornoAvisoComponent, MensagemDiretaPopupComponent],
+  imports: [RouterOutlet, SidebarComponent, TopbarComponent, LoadingSpinnerComponent, ToastModule, ToastDesfazerComponent, CheckinJanelinhaComponent, IaRetornoAvisoComponent, MensagemDiretaPopupComponent, MensagemDiretaAvisosComponent],
   templateUrl: './layout.component.html',
 })
 export class LayoutComponent {}

@@ -9,6 +9,9 @@
   </div>
   <app-checkin-janelinha />
   <app-mensagem-direta-popup />
+  @defer (on immediate) {
+    <app-mensagem-direta-avisos />
+  }
   <app-loading-spinner />
   <p-toast position="bottom-right" />
   <app-toast-desfazer />

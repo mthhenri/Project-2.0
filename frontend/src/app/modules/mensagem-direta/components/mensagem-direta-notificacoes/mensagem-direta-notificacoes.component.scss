@@ -1,0 +1,105 @@
+.menu-notificacoes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 17rem;
+
+  &__titulo,
+  &__secao {
+    margin: 0;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.6875rem;
+    color: var(--p-text-muted-color);
+  }
+
+  &__linha {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--app-surface-50);
+    }
+  }
+
+  &__texto {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__rotulo {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--p-text-color);
+  }
+
+  &__detalhe {
+    font-size: 0.6875rem;
+    color: var(--p-text-muted-color);
+  }
+
+  &__divisor {
+    margin: 0.375rem 0.25rem;
+    border: 0;
+    border-top: 1px solid var(--app-surface-200);
+  }
+
+  &__opcao {
+    padding: 0.4375rem 0.5rem;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--p-text-color);
+    text-align: left;
+    font: inherit;
+    font-size: 0.8125rem;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--app-surface-50);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--p-primary-color);
+      outline-offset: -2px;
+    }
+  }
+
+  &__status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0.25rem 0.25rem;
+    padding: 0.4375rem 0.5rem;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--p-orange-500) 12%, var(--app-surface-0));
+    font-size: 0.75rem;
+    color: var(--p-text-color);
+  }
+
+  &__reativar {
+    margin-left: auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font: inherit;
+    font-weight: 600;
+    text-decoration: underline;
+    color: var(--p-primary-color);
+    cursor: pointer;
+  }
+
+  &__erro {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin: 0.375rem 0.25rem 0;
+    font-size: 0.75rem;
+    color: var(--p-red-500);
+  }
+}

@@ -9,6 +9,10 @@ import {
   MensagemDiretaLeituraAlteradaDto,
   MensagemDiretaListadasDto,
   MensagemDiretaPessoasListadasDto,
+  MensagemDiretaPreferenciaAlterarDto,
+  MensagemDiretaPreferenciaAlteradaDto,
+  MensagemDiretaPreferenciaRecuperadaDto,
+  MensagemDiretaSilencioAlteradoDto,
   MensagemDiretaReferenciaRecuperadaDto,
   MensagemDiretaReferenciasBuscadasDto,
   ReferenciaMensagemDiretaEnum,
@@ -64,6 +68,21 @@ export class MensagemDiretaService {
   /** O cartão de uma referência para quem está olhando: sem acesso, `acessivel: false` e nenhum dado. */
   recuperarReferencia(tipo: ReferenciaMensagemDiretaEnum, id: number): Observable<StandardResponse<MensagemDiretaReferenciaRecuperadaDto>> {
     return this.httpClient.get<StandardResponse<MensagemDiretaReferenciaRecuperadaDto>>(`${this.urlBase}/referencia/${tipo}/${id}`, comFeedbackProprioEErroTratado());
+  }
+
+  /** As preferências de aviso do usuário; sem linha gravada o servidor devolve o padrão. */
+  recuperarPreferencia(): Observable<StandardResponse<MensagemDiretaPreferenciaRecuperadaDto>> {
+    return this.httpClient.get<StandardResponse<MensagemDiretaPreferenciaRecuperadaDto>>(`${this.urlBase}/preferencia`, comFeedbackProprioEErroTratado());
+  }
+
+  /** Troca o conjunto inteiro de preferências (a rota não aceita parcial). */
+  alterarPreferencia(dto: MensagemDiretaPreferenciaAlterarDto): Observable<StandardResponse<MensagemDiretaPreferenciaAlteradaDto>> {
+    return this.httpClient.put<StandardResponse<MensagemDiretaPreferenciaAlteradaDto>>(`${this.urlBase}/preferencia`, dto, comFeedbackProprioEErroTratado());
+  }
+
+  /** Silencia (ou reativa) os avisos da conversa com uma pessoa. */
+  alterarSilencio(usuarioId: number, silenciada: boolean): Observable<StandardResponse<MensagemDiretaSilencioAlteradoDto>> {
+    return this.httpClient.put<StandardResponse<MensagemDiretaSilencioAlteradoDto>>(`${this.urlBase}/conversa/${usuarioId}/silencio`, { silenciada }, comFeedbackProprioEErroTratado());
   }
 
   listarPessoas(): Observable<StandardResponse<MensagemDiretaPessoasListadasDto>> {
