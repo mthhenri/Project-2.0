@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modelagem Project 2.0</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: canvas de diagrama em tela cheia, barra de busca/filtros no topo, painel de detalhe à direita. */
+:root{
+  --bg:#f5f6f8; --surface:#ffffff; --fg:#1b2230; --muted:#5d677a; --line:#8792a6; --line-hi:#1d4ed8; --border:#d6dae3;
+  --dom:#2563eb; --usr:#15803d; --cal:#b45309; --ia:#7c3aed; --chat:#be123c; --ref:#64748b;
+  --pk:#b45309; --fk:#1d4ed8; --shadow:0 6px 20px rgba(20,30,50,.14);
+  --sans:'IBM Plex Sans',system-ui,sans-serif; --mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#10141c; --surface:#1a202c; --fg:#e6eaf2; --muted:#9aa5b8; --line:#6b768b; --line-hi:#7aa2ff; --border:#2e3748;
+  --dom:#5b8cff; --usr:#4ade80; --cal:#f0a43a; --ia:#a78bfa; --chat:#fb7185; --ref:#94a3b8;
+  --pk:#f0a43a; --fk:#7aa2ff; --shadow:0 6px 20px rgba(0,0,0,.5); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#10141c; --surface:#1a202c; --fg:#e6eaf2; --muted:#9aa5b8; --line:#6b768b; --line-hi:#7aa2ff; --border:#2e3748;
+  --dom:#5b8cff; --usr:#4ade80; --cal:#f0a43a; --ia:#a78bfa; --chat:#fb7185; --ref:#94a3b8;
+  --pk:#f0a43a; --fk:#7aa2ff; --shadow:0 6px 20px rgba(0,0,0,.5); color-scheme:dark}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:14px;overflow:hidden}
+.app{display:grid;grid-template-columns:1fr 320px;grid-template-rows:auto 1fr;height:100%}
+.bar{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:10px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));background:var(--surface);border-bottom:1px solid var(--border)}
+.bar h1{font-size:16px;margin:0;font-weight:700;margin-right:6px}
+.bar input[type=search]{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 10px;width:230px;max-width:100%}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:inherit;font-size:12px;display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;border:1px solid var(--border);background:var(--bg);color:var(--fg);cursor:pointer}
+.chip i{width:10px;height:10px;border-radius:50%;background:var(--c)}
+.chip[aria-pressed=false]{opacity:.45}
+.btn{font:inherit;font-size:12px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--fg);cursor:pointer}
+.btn:hover,.chip:hover{border-color:var(--line-hi)}
+:focus-visible{outline:2px solid var(--line-hi);outline-offset:2px}
+.stage{position:relative;min-width:0;min-height:0;overflow:hidden;cursor:grab;touch-action:none}
+.stage.pan{cursor:grabbing}
+svg{width:100%;height:100%;display:block}
+.hint{position:absolute;left:12px;bottom:10px;font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:4px 8px;pointer-events:none}
+.group-box{fill:color-mix(in srgb,var(--c) 9%,transparent);stroke:color-mix(in srgb,var(--c) 40%,transparent);stroke-width:1.5}
+.group-title{font-size:15px;font-weight:700;fill:var(--c)}
+.edge{fill:none;stroke:var(--line);stroke-width:1.5;transition:opacity .15s}
+.edge.hi{stroke:var(--line-hi);stroke-width:2.6}
+.edge.logical{stroke-dasharray:5 5}
+.end{fill:var(--line)} .end.hi{fill:var(--line-hi)}
+.tbl{cursor:pointer;transition:opacity .15s}
+.tbl .box{fill:var(--surface);stroke:var(--c);stroke-width:1.8}
+.tbl .head{fill:var(--c)}
+.tbl .name{font-size:14px;font-weight:700;fill:#fff;font-family:var(--sans)}
+.tbl text.c{font-size:12px;fill:var(--fg);font-family:var(--mono)}
+.tbl text.t{font-size:10.5px;fill:var(--muted);font-family:var(--mono);text-anchor:end}
+.tbl text.f{font-size:9.5px;font-weight:700;font-family:var(--sans)}
+.tbl text.f.pk{fill:var(--pk)} .tbl text.f.fk{fill:var(--fk)} .tbl text.f.lg{fill:var(--muted)}
+.tbl.sel .box{stroke-width:3.4}
+.dim{opacity:.13}
+.match .box{stroke-width:3.4}
+.row-hi{fill:color-mix(in srgb,var(--c) 22%,transparent)}
+aside{min-width:0;overflow:auto;background:var(--surface);border-left:1px solid var(--border);padding:16px max(16px,env(safe-area-inset-right,0px)) 16px 16px}
+aside h2{margin:0 0 2px;font-size:18px;font-family:var(--mono);overflow-wrap:anywhere}
+aside .g{color:var(--muted);font-size:12px;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+aside .g i{width:10px;height:10px;border-radius:50%;background:var(--c)}
+aside h3{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:16px 0 6px}
+aside ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+aside li{font-family:var(--mono);font-size:12px;display:flex;justify-content:space-between;gap:8px;padding:3px 6px;border-radius:4px}
+aside li .ty{color:var(--muted)}
+aside li .k{color:var(--fk);font-weight:700;font-family:var(--sans);font-size:10px;margin-right:6px}
+aside li .k.pk{color:var(--pk)}
+aside .rel{font:inherit;font-family:var(--mono);font-size:12px;text-align:left;background:var(--bg);border:1px solid var(--border);color:var(--fg);border-radius:6px;padding:5px 8px;cursor:pointer}
+aside .rel:hover{border-color:var(--line-hi)}
+aside .rel small{color:var(--muted);font-family:var(--sans)}
+aside .empty{color:var(--muted);line-height:1.5}
+aside .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+aside .stats div{background:var(--bg);border-radius:6px;padding:8px;text-align:center}
+aside .stats b{display:block;font-size:20px}
+@media (max-width:820px){
+  body{overflow:auto}
+  .app{grid-template-columns:1fr;grid-template-rows:auto 62vh auto;height:auto;min-height:100%}
+  aside{border-left:0;border-top:1px solid var(--border)}
+}
+@media (prefers-reduced-motion:reduce){.tbl,.edge{transition:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="bar">
+    <h1>Modelagem Project 2.0</h1>
+    <input type="search" id="busca" placeholder="Buscar tabela ou coluna" aria-label="Buscar tabela ou coluna" autocomplete="off">
+    <div class="chips" id="chips"></div>
+    <button class="btn" id="ajustar" type="button">Ajustar à tela</button>
+    <button class="btn" id="reorganizar" type="button">Restaurar posições</button>
+  </div>
+  <div class="stage" id="stage">
+    <svg id="svg" role="img" aria-label="Diagrama entidade-relacionamento do banco de dados"><g id="vp"><g id="gg"></g><g id="ee"></g><g id="tt"></g></g></svg>
+    <div class="hint">Arraste o fundo para mover · roda do mouse para zoom · arraste uma tabela para reposicioná-la · clique para ver as relações</div>
+  </div>
+  <aside id="painel" aria-live="polite"></aside>
+</div>
+<script>
+const DATA={"tipo_projeto_status": {"x": 40, "y": 60, "w": 200, "g": "dom", "cols": [["id", "serial", "pk"], ["codigo", "varchar", ""], ["descricao", "varchar", ""]]}, "tipo_demanda_status": {"x": 40, "y": 190, "w": 200, "g": "dom", "cols": [["id", "serial", "pk"], ["codigo", "varchar", ""], ["descricao", "varchar", ""]]}, "projeto": {"x": 420, "y": 60, "w": 250, "g": "dom", "cols": [["id", "serial", "pk"], ["nome", "varchar", ""], ["codigo", "varchar", ""], ["cor", "varchar", ""], ["tipo_projeto_status_id", "int", "fk:tipo_projeto_status"], ["inicio_data", "date", ""], ["previsao_fim_data", "date", ""], ["volume_esperado_horas_mes", "int", ""]]}, "demanda": {"x": 420, "y": 320, "w": 250, "g": "dom", "cols": [["id", "serial", "pk"], ["projeto_id", "int", "fk:projeto"], ["demanda_pai_id", "int", "fk:demanda"], ["nome", "varchar", ""], ["descricao_tecnica", "text", ""], ["descricao_cliente", "text", ""], ["documentacao", "text", ""], ["horas_estimadas", "int", ""], ["tipo_demanda_status_id", "int", "fk:tipo_demanda_status"], ["is_estrutural", "bool", ""], ["previsao_fim_data", "date", ""]]}, "demanda_conexao": {"x": 40, "y": 340, "w": 270, "g": "dom", "cols": [["id", "serial", "pk"], ["demanda_origem_id", "int", "fk:demanda"], ["demanda_destino_id", "int", "fk:demanda"], ["eh_bidirecional", "bool", ""]]}, "demanda_usuario": {"x": 40, "y": 540, "w": 250, "g": "dom", "cols": [["id", "serial", "pk"], ["demanda_id", "int", "fk:demanda"], ["usuario_id", "int", "fk:usuario"]]}, "demanda_tag": {"x": 420, "y": 640, "w": 250, "g": "dom", "cols": [["id", "serial", "pk"], ["demanda_id", "int", "fk:demanda"], ["tag_id", "int", "fk:tag"]]}, "tag": {"x": 420, "y": 800, "w": 250, "g": "dom", "cols": [["id", "serial", "pk"], ["nome", "varchar", ""], ["cor", "varchar", ""]]}, "atividade": {"x": 800, "y": 320, "w": 250, "g": "dom", "cols": [["id", "serial", "pk"], ["demanda_id", "int", "fk:demanda"], ["usuario_id", "int", "fk:usuario"], ["nome", "varchar", ""], ["tipo_atividade_status_id", "int", "fk:tipo_atividade_status"], ["tipo_atividade_prioridade_id", "int", "fk:tipo_atividade_prioridade"]]}, "execucao": {"x": 800, "y": 60, "w": 250, "g": "dom", "cols": [["id", "serial", "pk"], ["atividade_id", "int", "fk:atividade"], ["descricao", "text", ""], ["inicio_data", "timestamptz", ""], ["fim_data", "timestamptz", ""]]}, "atividade_tag": {"x": 800, "y": 640, "w": 250, "g": "dom", "cols": [["id", "serial", "pk"], ["atividade_id", "int", "fk:atividade"], ["tag_id", "int", "fk:tag"]]}, "tipo_atividade_status": {"x": 1090, "y": 420, "w": 200, "g": "dom", "cols": [["id", "serial", "pk"], ["codigo", "varchar", ""], ["descricao", "varchar", ""]]}, "tipo_atividade_prioridade": {"x": 1090, "y": 550, "w": 200, "g": "dom", "cols": [["id", "serial", "pk"], ["codigo", "varchar", ""], ["descricao", "varchar", ""], ["ordem", "int", ""], ["cor", "varchar", ""]]}, "usuario": {"x": 1360, "y": 320, "w": 250, "g": "usr", "cols": [["id", "serial", "pk"], ["login", "varchar", ""], ["senha_encriptada", "varchar", ""], ["nome_completo", "varchar", ""], ["cargo_titulo", "varchar", ""], ["horas_diarias_necessarias", "int", ""], ["tipo_usuario_id", "int", "fk:tipo_usuario"], ["tipo_usuario_status_id", "int", "fk:tipo_usuario_status"]]}, "tipo_usuario": {"x": 1090, "y": 60, "w": 200, "g": "usr", "cols": [["id", "serial", "pk"], ["codigo", "varchar", ""], ["descricao", "varchar", ""]]}, "tipo_usuario_status": {"x": 1090, "y": 190, "w": 200, "g": "usr", "cols": [["id", "serial", "pk"], ["codigo", "varchar", ""], ["descricao", "varchar", ""]]}, "ponto_justificativa": {"x": 1360, "y": 60, "w": 250, "g": "usr", "cols": [["id", "serial", "pk"], ["usuario_id", "int", "fk:usuario"], ["gestor_id", "int", "fk:usuario"], ["dia_data", "date", ""], ["nome", "varchar", ""], ["descricao", "text", ""]]}, "anotacao": {"x": 1360, "y": 600, "w": 250, "g": "usr", "cols": [["id", "serial", "pk"], ["usuario_id", "int", "fk:usuario"], ["tipo_anotacao_id", "int", "fk:tipo_anotacao"], ["texto", "text", ""]]}, "tipo_anotacao": {"x": 1360, "y": 740, "w": 200, "g": "usr", "cols": [["id", "serial", "pk"], ["codigo", "varchar", ""], ["descricao", "varchar", ""]]}, "dia_nao_util": {"x": 40, "y": 1000, "w": 270, "g": "cal", "cols": [["id", "serial", "pk"], ["dia_data", "date", ""], ["descricao", "varchar", ""], ["tipo_dia_nao_util_id", "int", "fk:tipo_dia_nao_util"], ["tipo_dia_nao_util_duracao_id", "int", "fk:tipo_dia_nao_util_duracao"], ["recorrente", "bool", ""]]}, "tipo_dia_nao_util": {"x": 380, "y": 1000, "w": 200, "g": "cal", "cols": [["id", "serial", "pk"], ["codigo", "varchar", ""], ["descricao", "varchar", ""]]}, "tipo_dia_nao_util_duracao": {"x": 380, "y": 1130, "w": 200, "g": "cal", "cols": [["id", "serial", "pk"], ["codigo", "varchar", ""], ["descricao", "varchar", ""]]}, "configuracao_ia": {"x": 1730, "y": 60, "w": 270, "g": "ia", "cols": [["id", "serial", "pk"], ["versao", "int", ""], ["tipo_provedor_ia_id", "int", "fk:tipo_provedor_ia"], ["modelos_provedor", "jsonb", ""], ["fallbacks", "jsonb", ""], ["esforco_analitico", "varchar", ""], ["checkin_minimo_minutos", "int", ""], ["checkin_maximo_minutos", "int", ""], ["duracao_recomendada_minutos", "int", ""], ["checkin_inteligente", "bool", ""], ["rigor_proporcional", "bool", ""], ["deteccao_automatica", "bool", ""], ["duvidas_codigo", "bool", ""], ["modo_contexto_chat", "varchar", ""], ["ia_desligada", "bool", ""], ["precos_modelo", "jsonb", ""], ["usuario_id", "int", "fk:usuario"]]}, "prompt": {"x": 1730, "y": 430, "w": 270, "g": "ia", "cols": [["id", "serial", "pk"], ["tipo_prompt_id", "int", "fk:tipo_prompt"], ["versao", "int", ""], ["conteudo", "text", ""], ["ativo", "bool", ""], ["rascunho", "bool", ""], ["usuario_id", "int", "fk:usuario"]]}, "proposta_ia": {"x": 1730, "y": 640, "w": 270, "g": "ia", "cols": [["id", "serial", "pk"], ["usuario_id", "int", "fk:usuario"], ["tipo_proposta_ia_id", "int", "fk:tipo_proposta_ia"], ["tipo_proposta_ia_status_id", "int", "fk:tipo_proposta_ia_status"], ["dados", "jsonb", ""], ["resolucao_data", "timestamptz", ""], ["resultado", "jsonb", ""]]}, "tipo_provedor_ia": {"x": 2090, "y": 60, "w": 200, "g": "ia", "cols": [["id", "serial", "pk"], ["codigo", "varchar", ""], ["descricao", "varchar", ""]]}, "tipo_prompt": {"x": 2090, "y": 430, "w": 200, "g": "ia", "cols": [["id", "serial", "pk"], ["codigo", "varchar", ""], ["descricao", "varchar", ""]]}, "tipo_proposta_ia": {"x": 2090, "y": 640, "w": 200, "g": "ia", "cols": [["id", "serial", "pk"], ["codigo", "varchar", ""], ["descricao", "varchar", ""]]}, "tipo_proposta_ia_status": {"x": 2090, "y": 770, "w": 200, "g": "ia", "cols": [["id", "serial", "pk"], ["codigo", "varchar", ""], ["descricao", "varchar", ""]]}, "chat_conversa": {"x": 800, "y": 1000, "w": 250, "g": "chat", "cols": [["id", "serial", "pk"], ["conversa_id", "varchar", ""], ["usuario_id", "int", "lógico"], ["titulo", "varchar", ""]]}, "chat_mensagem": {"x": 800, "y": 1130, "w": 250, "g": "chat", "cols": [["id", "serial", "pk"], ["mensagem_id", "uuid", ""], ["conversa_id", "varchar", ""], ["usuario_id", "int", "lógico"], ["contexto", "varchar", ""], ["autor", "varchar", ""], ["texto", "text", ""], ["nivel", "varchar", ""], ["modelo", "varchar", ""], ["tokens_entrada", "int", ""], ["tokens_saida", "int", ""], ["tokens_cache", "int", ""], ["proposta_id", "int", "lógico"], ["execucao_id", "int", "lógico"], ["atividade_id", "int", "lógico"], ["demanda_id", "int", "lógico"], ["conteudo_bruto", "jsonb", ""]]}, "mensagem_direta": {"x": 1100, "y": 1000, "w": 250, "g": "chat", "cols": [["id", "serial", "pk"], ["mensagem_id", "uuid", ""], ["conversa_id", "varchar", ""], ["usuario_menor_id", "int", "lógico"], ["usuario_maior_id", "int", "lógico"], ["autor_usuario_id", "int", "lógico"], ["autor", "varchar", ""], ["texto", "text", ""], ["contem_codigo", "bool", ""], ["mencoes", "int[]", ""], ["referencias", "text[]", ""]]}, "mensagem_direta_leitura": {"x": 1400, "y": 1000, "w": 270, "g": "chat", "cols": [["id", "serial", "pk"], ["conversa_id", "varchar", ""], ["usuario_id", "int", "fk:usuario"], ["outro_usuario_id", "int", "fk:usuario"], ["lida_ate_date", "timestamptz", ""], ["silenciada", "bool", ""]]}, "mensagem_direta_preferencia": {"x": 1400, "y": 1180, "w": 270, "g": "chat", "cols": [["id", "serial", "pk"], ["usuario_id", "int", "fk:usuario"], ["avisos_ativos", "bool", ""], ["aviso_desktop_ativo", "bool", ""], ["som_ativo", "bool", ""], ["silenciado_ate_date", "timestamptz", ""], ["atalho_global", "varchar", ""]]}, "mensagem_direta_supervisao": {"x": 1730, "y": 1000, "w": 270, "g": "chat", "cols": [["id", "serial", "pk"], ["leitor_usuario_id", "int", "fk:usuario"], ["conversa_id", "varchar", ""], ["usuario_menor_id", "int", "fk:usuario"], ["usuario_maior_id", "int", "fk:usuario"], ["participantes_avisados", "bool", ""]]}};
+const GRUPOS={dom:'Domínio',usr:'Usuários e ponto',cal:'Calendário',ia:'IA',chat:'Chat (provisório)',ref:'Referência'};
+const HH=28,RH=18,NS='http://www.w3.org/2000/svg';
+const T={};const ORIG={};
+for(const n in DATA){const b=DATA[n];T[n]={n,x:b.x,y:b.y,w:b.w,g:b.g,cols:b.cols,h:HH+RH*b.cols.length+6};ORIG[n]=[b.x,b.y]}
+const svg=document.getElementById('svg'),vp=document.getElementById('vp'),stage=document.getElementById('stage');
+const gg=document.getElementById('gg'),ee=document.getElementById('ee'),tt=document.getElementById('tt');
+const el=(tag,attrs={},parent)=>{const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e};
+const cssVar=g=>`var(--${g==='ref'?'ref':g})`;
+// relações
+const edges=[];
+for(const n in T)for(const [c,ty,f] of T[n].cols){if(f.startsWith('fk:'))edges.push({a:n,col:c,b:f.slice(3)})}
+// agrupamento visual: cada tipo_* herda o grupo da tabela que o referencia (já no dado)
+const visivel=new Set(Object.keys(GRUPOS).filter(g=>g!=='ref'));visivel.add('ref');
+let sel=null,hov=null,termo='';
+// grupos (caixas)
+const gruposDeCaixa=[['dom','dom'],['usr','usr'],['cal','cal'],['ia','ia'],['chat','chat']];
+const caixaEls={};
+for(const [g] of gruposDeCaixa){const c=el('g',{style:`--c:${cssVar(g)}`},gg);caixaEls[g]={g:c,rect:el('rect',{class:'group-box',rx:14},c),title:el('text',{class:'group-title'},c)};}
+const TITULOS={dom:'Domínio: projetos, demandas, atividades e execuções',usr:'Usuários, ponto e anotações',cal:'Calendário',ia:'IA',chat:'Chat (armazenamento provisório; sem FK para o domínio)'};
+function atualizaCaixas(){for(const [g] of gruposDeCaixa){const ns=Object.values(T).filter(t=>t.g===g&&visivel.has(g));const c=caixaEls[g];c.g.style.display=ns.length?'':'none';if(!ns.length)continue;
+ const x0=Math.min(...ns.map(t=>t.x))-18,y0=Math.min(...ns.map(t=>t.y))-36,x1=Math.max(...ns.map(t=>t.x+t.w))+18,y1=Math.max(...ns.map(t=>t.y+t.h))+18;
+ c.rect.setAttribute('x',x0);c.rect.setAttribute('y',y0);c.rect.setAttribute('width',x1-x0);c.rect.setAttribute('height',y1-y0);c.title.setAttribute('x',x0+14);c.title.setAttribute('y',y0+22);c.title.textContent=TITULOS[g]}}
+// tabelas
+for(const n in T){const t=T[n];const g=el('g',{class:'tbl',tabindex:0,'data-n':n,style:`--c:${cssVar(t.g)}`,role:'button','aria-label':`Tabela ${n}`},tt);t.el=g;
+ el('rect',{class:'box',width:t.w,height:t.h,rx:8},g);
+ el('path',{class:'head',d:`M0,${HH} V8 a8,8 0 0 1 8,-8 H${t.w-8} a8,8 0 0 1 8,8 V${HH} Z`},g);
+ const nm=el('text',{class:'name',x:10,y:19},g);nm.textContent=n;
+ t.rows=[];
+ t.cols.forEach(([c,ty,f],i)=>{const y=HH+RH*i;const r=el('rect',{class:'rowbg',x:2,y:y,width:t.w-4,height:RH,fill:'none'},g);t.rows.push(r);
+  const tg=f==='pk'?'PK':f.startsWith('fk:')?'FK':f==='lógico'?'··':'';
+  if(tg){const a=el('text',{class:'f '+(f==='pk'?'pk':f==='lógico'?'lg':'fk'),x:8,y:y+13},g);a.textContent=tg}
+  const b=el('text',{class:'c',x:30,y:y+13},g);b.textContent=c;
+  const d=el('text',{class:'t',x:t.w-8,y:y+13},g);d.textContent=ty});
+ g.addEventListener('mouseenter',()=>{hov=n;pinta()});g.addEventListener('mouseleave',()=>{hov=null;pinta()});
+ g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();seleciona(n)}});
+}
+// arestas
+function rowY(n,col){const t=T[n];const i=t.cols.findIndex(c=>c[0]===col);return t.y+HH+RH*i+RH/2}
+for(const e of edges){e.p=el('path',{class:'edge'},ee);e.d1=el('circle',{class:'end',r:4},ee);e.d2=el('path',{class:'end',stroke:'var(--line)','stroke-width':2,fill:'none'},ee)}
+function desenhaArestas(){for(const e of edges){const A=T[e.a],B=T[e.b];const y1=rowY(e.a,e.col),y2=rowY(e.b,'id');let d;
+ if(e.a===e.b){const x=A.x+A.w,y0=rowY(e.a,'id');d=`M${x},${y1} C${x+60},${y1} ${x+60},${y0-50} ${x},${y0}`;e.p.setAttribute('d',d);e.d1.setAttribute('cx',x);e.d1.setAttribute('cy',y1);e.d2.setAttribute('d','');continue}
+ const ax1=A.x+A.w,bx1=B.x+B.w;let x1,x2,d1,d2;
+ if(ax1<=B.x-10){x1=ax1;x2=B.x;d1=1;d2=-1}else if(bx1<=A.x-10){x1=A.x;x2=bx1;d1=-1;d2=1}else{x1=A.x;x2=B.x;d1=-1;d2=-1}
+ const k=d1!==d2?Math.max(50,Math.abs(x2-x1)*.45):70;
+ e.p.setAttribute('d',`M${x1},${y1} C${x1+d1*k},${y1} ${x2+d2*k},${y2} ${x2},${y2}`);
+ e.d1.setAttribute('cx',x1);e.d1.setAttribute('cy',y1);e.d2.setAttribute('d',`M${x2},${y2-5} L${x2},${y2+5}`)}}
+function posiciona(){for(const n in T){T[n].el.setAttribute('transform',`translate(${T[n].x},${T[n].y})`)}desenhaArestas();atualizaCaixas()}
+// foco / destaque
+const vizinhos=n=>{const s=new Set([n]);for(const e of edges){if(e.a===n)s.add(e.b);if(e.b===n)s.add(e.a)}return s};
+const casa=(t,q)=>t.n.includes(q)||t.cols.some(c=>c[0].includes(q));
+function pinta(){const foco=hov||sel;const viz=foco?vizinhos(foco):null;const q=termo.trim().toLowerCase();
+ for(const n in T){const t=T[n];const oculto=!visivel.has(t.g);t.el.style.display=oculto?'none':'';
+  let dim=false;if(viz)dim=!viz.has(n);else if(q)dim=!casa(t,q);
+  t.el.classList.toggle('dim',dim);t.el.classList.toggle('sel',n===sel);t.el.classList.toggle('match',!!q&&!viz&&casa(t,q));
+  t.rows.forEach((r,i)=>{const c=t.cols[i];const hit=q&&c[0].includes(q);r.setAttribute('fill',hit?'color-mix(in srgb,var(--line-hi) 28%,transparent)':'none')})}
+ for(const e of edges){const oculto=!visivel.has(T[e.a].g)||!visivel.has(T[e.b].g);const hi=foco&&(e.a===foco||e.b===foco);
+  const v=oculto?'none':'';e.p.style.display=v;e.d1.style.display=v;e.d2.style.display=v;
+  e.p.classList.toggle('hi',!!hi);e.d1.classList.toggle('hi',!!hi);e.d2.setAttribute('stroke',hi?'var(--line-hi)':'var(--line)');
+  const dim=foco?!hi:!!q;e.p.style.opacity=dim?(foco?.08:.25):1;e.d1.style.opacity=e.p.style.opacity;e.d2.style.opacity=e.p.style.opacity}}
+// painel
+const painel=document.getElementById('painel');
+function painelVazio(){const nt=Object.keys(T).length,nf=edges.length,nc=Object.values(T).reduce((s,t)=>s+t.cols.length,0);
+ painel.innerHTML=`<h2>Banco de dados</h2><div class="g">PostgreSQL 16 · migrations 0001–0051</div><p class="empty">Clique em uma tabela para ver colunas, o que ela referencia e quem a referencia. Passe o mouse sobre uma tabela para destacar só as ligações dela.</p><div class="stats"><div><b>${nt}</b>tabelas</div><div><b>${nf}</b>FKs</div><div><b>${nc}</b>colunas</div></div><h3>Em todas as tabelas</h3><p class="empty">Também existem <code>created_date</code>, <code>updated_date</code>, <code>is_deleted</code> e <code>deleted_date</code> (BaseEntity), fora do desenho. Tabelas <code>tipo_*</code> guardam os enums (código e descrição). As tabelas de chat não têm FK no banco; as colunas marcadas com ·· são referências lógicas.</p>`}
+function painelTabela(n){const t=T[n];const sai=edges.filter(e=>e.a===n),entra=edges.filter(e=>e.b===n&&e.a!==n);
+ const li=t.cols.map(([c,ty,f])=>`<li><span>${f==='pk'?'<span class="k pk">PK</span>':f.startsWith('fk:')?'<span class="k">FK</span>':f==='lógico'?'<span class="k" style="color:var(--muted)">··</span>':''}${c}</span><span class="ty">${ty}</span></li>`).join('');
+ const rel=(lista,qual)=>lista.length?`<ul>${lista.map(e=>{const alvo=qual==='sai'?e.b:e.a;return`<li style="padding:0"><button type="button" class="rel" style="flex:1" data-go="${alvo}">${alvo} <small>${qual==='sai'?'via '+e.col:'via '+e.col}</small></button></li>`}).join('')}</ul>`:'<p class="empty">Nenhuma.</p>';
+ painel.innerHTML=`<h2>${n}</h2><div class="g" style="--c:${cssVar(t.g)}"><i></i>${GRUPOS[t.g]||''}${t.cols.some(c=>c[2]==='lógico')?' · sem FK no banco':''}</div><h3>Colunas (${t.cols.length})</h3><ul>${li}</ul><h3>Referencia (${sai.length})</h3>${rel(sai,'sai')}<h3>Referenciada por (${entra.length})</h3>${rel(entra,'entra')}`;
+ painel.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>{seleciona(b.dataset.go,true)}))}
+function seleciona(n,centra){sel=(sel===n&&!centra)?null:n;if(sel){painelTabela(sel);if(centra)centraEm(sel)}else painelVazio();pinta()}
+// câmera
+let cam={x:0,y:0,k:1};
+const aplica=()=>vp.setAttribute('transform',`translate(${cam.x},${cam.y}) scale(${cam.k})`);
+function caixaTotal(){const ns=Object.values(T).filter(t=>visivel.has(t.g));if(!ns.length)return{x0:0,y0:0,x1:100,y1:100};return{x0:Math.min(...ns.map(t=>t.x))-40,y0:Math.min(...ns.map(t=>t.y))-60,x1:Math.max(...ns.map(t=>t.x+t.w))+40,y1:Math.max(...ns.map(t=>t.y+t.h))+40}}
+function ajusta(){const r=stage.getBoundingClientRect(),b=caixaTotal();const k=Math.min(r.width/(b.x1-b.x0),r.height/(b.y1-b.y0));cam.k=k;cam.x=(r.width-(b.x1-b.x0)*k)/2-b.x0*k;cam.y=(r.height-(b.y1-b.y0)*k)/2-b.y0*k;aplica()}
+function centraEm(n){const t=T[n],r=stage.getBoundingClientRect();const k=Math.max(cam.k,.9);cam.k=k;cam.x=r.width/2-(t.x+t.w/2)*k;cam.y=r.height/2-(t.y+t.h/2)*k;aplica()}
+stage.addEventListener('wheel',e=>{e.preventDefault();const r=stage.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top;const f=Math.exp(-e.deltaY*.0015);const k=Math.min(3,Math.max(.15,cam.k*f));cam.x=mx-(mx-cam.x)*(k/cam.k);cam.y=my-(my-cam.y)*(k/cam.k);cam.k=k;aplica()},{passive:false});
+// arrasto (fundo ou tabela)
+let drag=null,moveu=false;
+svg.addEventListener('pointerdown',e=>{const tg=e.target.closest('.tbl');moveu=false;
+ drag=tg?{tipo:'t',n:tg.dataset.n,sx:e.clientX,sy:e.clientY,ox:T[tg.dataset.n].x,oy:T[tg.dataset.n].y}:{tipo:'p',sx:e.clientX,sy:e.clientY,ox:cam.x,oy:cam.y};
+ try{svg.setPointerCapture(e.pointerId)}catch(_){}if(!tg)stage.classList.add('pan')});
+svg.addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-drag.sx,dy=e.clientY-drag.sy;if(Math.abs(dx)+Math.abs(dy)>4)moveu=true;if(!moveu)return;
+ if(drag.tipo==='p'){cam.x=drag.ox+dx;cam.y=drag.oy+dy;aplica()}else{T[drag.n].x=drag.ox+dx/cam.k;T[drag.n].y=drag.oy+dy/cam.k;posiciona()}});
+svg.addEventListener('pointerup',e=>{const d=drag;drag=null;stage.classList.remove('pan');
+ if(!moveu&&d){if(d.tipo==='t')seleciona(d.n);else if(sel){sel=null;painelVazio();pinta()}}});
+// controles
+const chips=document.getElementById('chips');
+for(const g of Object.keys(GRUPOS)){if(g==='ref')continue;const b=document.createElement('button');b.type='button';b.className='chip';b.style.setProperty('--c',cssVar(g));b.setAttribute('aria-pressed','true');b.innerHTML=`<i></i>${GRUPOS[g]}`;
+ b.addEventListener('click',()=>{const on=b.getAttribute('aria-pressed')==='true';b.setAttribute('aria-pressed',on?'false':'true');on?visivel.delete(g):visivel.add(g);if(sel&&!visivel.has(T[sel].g)){sel=null;painelVazio()}atualizaCaixas();pinta()});chips.appendChild(b)}
+document.getElementById('busca').addEventListener('input',e=>{termo=e.target.value;pinta()});
+document.getElementById('busca').addEventListener('keydown',e=>{if(e.key==='Enter'){const q=termo.trim().toLowerCase();const t=Object.values(T).find(t=>visivel.has(t.g)&&q&&casa(t,q));if(t){seleciona(t.n,true)}}});
+document.getElementById('ajustar').addEventListener('click',ajusta);
+document.getElementById('reorganizar').addEventListener('click',()=>{for(const n in T){T[n].x=ORIG[n][0];T[n].y=ORIG[n][1]}posiciona();ajusta()});
+window.addEventListener('resize',ajusta);
+posiciona();painelVazio();pinta();ajusta();
+</script>
+
+</body>
+</html>
