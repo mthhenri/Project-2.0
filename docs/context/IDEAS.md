@@ -107,6 +107,20 @@
 - **Por quê:** o frontend lê os DTOs do `shared` com um stub, então todo decorator novo só aparece como erro no `ng build`, depois de o `shared` e o backend já estarem verdes.
 - **Custo aparente:** um teste pequeno que lê os imports dos DTOs e o stub; mora no `shared` (ou no frontend) sem ligar os dois workspaces em tempo de execução.
 
+### I-020 — Quem sai da demanda continua vendo o histórico do canal · chat entre colaboradores
+
+- **Ideia:** no canal de demanda, quem foi removido de `demanda_usuario` perde só o acesso daqui para frente e segue vendo o que já tinha visto.
+- **Origem:** conversa de 2026-10-23 sobre grupos (`chat-grupos.spec.md`); por ora vale a regra mais restritiva (perde o canal inteiro).
+- **Por quê:** quem participou de uma decisão pode precisar rever o que foi combinado.
+- **Custo aparente:** guardar a data de saída do membro e filtrar o histórico por ela; avaliar o conflito com a regra "o acesso acompanha `demanda_usuario`".
+
+### I-021 — Resumo da IA com opção de citar os autores · chat entre colaboradores/IA
+
+- **Ideia:** o resumo do chat citaria o nome de quem disse cada coisa, como opção a cada resumo.
+- **Origem:** conversa de 2026-10-23 sobre grupos; a decisão atual é resumir sem nomes.
+- **Por quê:** documentação com autoria ("Ana decidiu usar a fila") tem mais valor de consulta.
+- **Custo aparente:** só prompt e uma opção na confirmação do resumo; os nomes passariam a ir ao provedor de IA, o que pede aviso de consentimento.
+
 ## Promovidas
 
 ### I-004 — Chat IA como tira-dúvidas de programação, com bloco de código copiável · chat IA/frontend

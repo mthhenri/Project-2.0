@@ -27,6 +27,7 @@ propor gravar o resumo na documentação da demanda.
 
 5. **Criação sob demanda**, por botão "Criar chat", por qualquer pessoa com acesso ao projeto ou à demanda; um canal por projeto ou demanda.
 6. **Membros derivados** de `demanda_usuario` (fonte da verdade), sem lista própria. Cada demanda tem o seu canal, sem incluir as filhas.
+   Quem sai de `demanda_usuario` **perde o canal inteiro, inclusive o histórico** (decisão por ora; alternativa em `IDEAS.md` I-020).
 7. **Gestor e administrador** leem como supervisor (canal sempre legível por eles) e só viram membros se escreverem.
 
 ### Supervisão e mensagens
@@ -39,8 +40,11 @@ propor gravar o resumo na documentação da demanda.
 
 ### Resumo com a IA
 
-12. Ação explícita de um membro. **Período livre**, com a data do último resumo à vista. O resumo roda em **etapas** (blocos
-    resumidos e depois resumidos entre si), sem limite visível de mensagens; antes de rodar mostra uma **estimativa** e pede confirmação.
+12. Ação explícita de um membro. **Período livre**, com a data do último resumo à vista. O servidor pega **todas** as mensagens do
+    período, resume **em blocos** e manda os resumos dos blocos para fechar num **único** texto, sem limite visível de mensagens; antes
+    de rodar mostra uma **estimativa** e pede confirmação. O texto termina com uma linha dizendo que **foi gerado por IA** (no espírito
+    do trailer de coautoria dos commits).
+    **Sem nomes:** o resumo não cita os autores (opção de citar em `IDEAS.md` I-021).
 13. **Consentimento:** aviso a quem aciona de que as mensagens vão ao provedor de IA configurado. Os demais membros **não** são
     avisados por mensagem (decisão do autor: só um aviso).
 14. **Código:** a cada resumo, escolher se envia código; se não, os blocos viram `[trecho de código omitido]` **antes** de sair do
@@ -53,8 +57,6 @@ propor gravar o resumo na documentação da demanda.
 
 ## Pontos em aberto (padrão proposto; confirmar na spec de cada task)
 
-- **Saída de `demanda_usuario`:** padrão = a pessoa perde o canal por inteiro, inclusive o histórico (alternativa: perde só o acesso futuro).
-- **Autores no resumo:** padrão = citar o nome (alternativa: opção de omitir).
 - Quem entra num grupo que já tinha histórico lido pela supervisão: padrão = o estado atual vale (grupo com gestor fica privado).
 - Limite de membros do grupo livre: padrão 50.
 - Aviso permanente no compositor de canal: "este chat pode ser resumido por IA", por causa de dados sensíveis que não são código.

@@ -42,11 +42,12 @@ gestor entrou, resumo gravado). A suíte de contrato ganha cenários de grupo na
 
 1. Membro escolhe o período (a data do último resumo aparece), se envia código e vê a estimativa; confirma.
 2. O servidor lê as mensagens, troca os blocos de código por `[trecho de código omitido]` se necessário, divide em blocos, resume cada
-   um e resume os resumos. Cada chamada entra nos custos da IA.
+   um e junta os resumos num único texto, sem nomes dos autores. O texto termina com uma linha dizendo que foi gerado por IA.
+   Cada chamada entra nos custos da IA.
 3. Canal de demanda ou de projeto com destino: cria **proposta** de alterar `documentacao` (acrescentar ao fim, com data e período);
    ao confirmar, o canal recebe a mensagem do sistema com o cartão da demanda. Grupo livre: devolve o texto.
 
 ## 6. Pontos para decidir na spec de cada task
 
-Limite de membros, saída de `demanda_usuario`, autores no resumo, retenção de `grupo_resumo`, e a mudança no seletor do Desktop (task 213
+Limite de membros, retenção de `grupo_resumo`, e a mudança no seletor do Desktop (task 213
 está em `done/`: a alteração vira task nova).
