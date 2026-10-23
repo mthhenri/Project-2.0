@@ -20,7 +20,7 @@ Estas são as fontes da verdade. Em conflito entre código e documento, **o docu
 | Nomenclatura de DTO (fórmula, verbos, `Resumo`, relatórios) | `SYSTEM.SPEC.md` §5.1 e skill `project20-dto-conventions` | criar ou nomear DTO |
 | Regras de negócio (acesso, demanda, intervalos, dias não úteis, grafo) | `SYSTEM.SPEC.md` §14 | alterar permissão ou regra de domínio |
 | Esquema do banco (tabelas, constraints, histórico de migrations) | [`docs/SCHEMA.md`](../SCHEMA.md) e `SYSTEM.SPEC.md` §9 | tocar schema ou SQL |
-| Diagrama do banco (35 tabelas): HTML interativo com busca e relações, e PNG estático; desenhado à mão a partir das migrations, não gerado | `docs/assets/modelagem/modelagem.html` e `modelagem.png` | visão geral do modelo; atualizar ao mudar tabela ou FK |
+| Diagrama do banco: HTML interativo **gerado do banco migrado** (`npm run modelagem`); entrada em `modelagem.config.json` (grupos, posições, referências sem FK), lógica pura e teste em `backend/src/database/scripts/modelagem.ts` e `.test.ts`, molde em `modelagem.template.html` | `docs/assets/modelagem/modelagem.html` e `modelagem.config.json` | regerar ao mudar tabela ou FK (depois de `db:migrate`) |
 | Deploy e ambientes | [`docs/DEPLOY.md`](../DEPLOY.md) | publicar ou mexer em infraestrutura |
 | Auditoria de conformidade (relatório de 2026-06-19) | [`AUDITORIA.md`](../specs/done/44-auditoria-conformidade-padroes/AUDITORIA.md) | investigar divergência de padrão antiga |
 | Política de specs e artefatos | `SYSTEM.SPEC.md` §3.1 | criar, mover ou anexar spec |

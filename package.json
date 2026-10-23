@@ -17,6 +17,7 @@
     "db:down": "docker compose down",
     "db:migrate": "npm run db:migrate --workspace=backend",
     "db:rollback": "npm run db:rollback --workspace=backend",
+    "modelagem": "npm run db:modelagem --workspace=backend",
     "db:seed-dev": "npm run db:seed-dev --workspace=backend",
     "repo:verificar": "node scripts/verificar-organizacao.mjs",
     "repo:test": "node --test scripts/verificar-organizacao.test.mjs scripts/impacto.test.mjs",

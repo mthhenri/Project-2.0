@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modelagem Project 2.0</title>
+<!-- GERADO por `npm run modelagem` a partir do banco migrado. Não edite: o molde é backend/src/database/scripts/modelagem.template.html. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: canvas de diagrama em tela cheia, barra de busca/filtros no topo, painel de detalhe à direita. */
+:root{
+  --bg:#f5f6f8; --surface:#ffffff; --fg:#1b2230; --muted:#5d677a; --line:#8792a6; --line-hi:#1d4ed8; --border:#d6dae3;
+  --g0:#2563eb; --g1:#15803d; --g2:#b45309; --g3:#7c3aed; --g4:#be123c; --g5:#0f766e; --g6:#c026d3; --g7:#475569; --goutros:#64748b;
+  --pk:#b45309; --fk:#1d4ed8; --sans:'IBM Plex Sans',system-ui,sans-serif; --mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#10141c; --surface:#1a202c; --fg:#e6eaf2; --muted:#9aa5b8; --line:#6b768b; --line-hi:#7aa2ff; --border:#2e3748;
+  --g0:#5b8cff; --g1:#4ade80; --g2:#f0a43a; --g3:#a78bfa; --g4:#fb7185; --g5:#2dd4bf; --g6:#e879f9; --g7:#94a3b8; --goutros:#94a3b8;
+  --pk:#f0a43a; --fk:#7aa2ff; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#10141c; --surface:#1a202c; --fg:#e6eaf2; --muted:#9aa5b8; --line:#6b768b; --line-hi:#7aa2ff; --border:#2e3748;
+  --g0:#5b8cff; --g1:#4ade80; --g2:#f0a43a; --g3:#a78bfa; --g4:#fb7185; --g5:#2dd4bf; --g6:#e879f9; --g7:#94a3b8; --goutros:#94a3b8;
+  --pk:#f0a43a; --fk:#7aa2ff; color-scheme:dark}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:14px;overflow:hidden}
+.app{display:grid;grid-template-columns:1fr 320px;grid-template-rows:auto 1fr;height:100%}
+.bar{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border)}
+.bar h1{font-size:16px;margin:0;font-weight:700;margin-right:6px}
+.bar input[type=search]{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 10px;width:230px;max-width:100%}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:inherit;font-size:12px;display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;border:1px solid var(--border);background:var(--bg);color:var(--fg);cursor:pointer}
+.chip i{width:10px;height:10px;border-radius:50%;background:var(--c)}
+.chip[aria-pressed=false]{opacity:.45}
+.btn{font:inherit;font-size:12px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--fg);cursor:pointer}
+.btn:hover,.chip:hover{border-color:var(--line-hi)}
+:focus-visible{outline:2px solid var(--line-hi);outline-offset:2px}
+.stage{position:relative;min-width:0;min-height:0;overflow:hidden;cursor:grab;touch-action:none}
+.stage.pan{cursor:grabbing}
+svg{width:100%;height:100%;display:block}
+.hint{position:absolute;left:12px;bottom:10px;font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:4px 8px;pointer-events:none}
+.group-box{fill:color-mix(in srgb,var(--c) 9%,transparent);stroke:color-mix(in srgb,var(--c) 40%,transparent);stroke-width:1.5}
+.group-title{font-size:15px;font-weight:700;fill:var(--c)}
+.edge{fill:none;stroke:var(--line);stroke-width:1.5;transition:opacity .15s}
+.edge.hi{stroke:var(--line-hi);stroke-width:2.6}
+.edge.logical{stroke-dasharray:5 5}
+.end{fill:var(--line)} .end.hi{fill:var(--line-hi)}
+.tbl{cursor:pointer;transition:opacity .15s}
+.tbl .box{fill:var(--surface);stroke:var(--c);stroke-width:1.8}
+.tbl .head{fill:var(--c)}
+.tbl .name{font-size:14px;font-weight:700;fill:#fff;font-family:var(--sans)}
+.tbl text.c{font-size:12px;fill:var(--fg);font-family:var(--mono)}
+.tbl text.t{font-size:10.5px;fill:var(--muted);font-family:var(--mono);text-anchor:end}
+.tbl text.f{font-size:9.5px;font-weight:700;font-family:var(--sans)}
+.tbl text.f.pk{fill:var(--pk)} .tbl text.f.fk{fill:var(--fk)} .tbl text.f.lg{fill:var(--muted)}
+.tbl.sel .box{stroke-width:3.4}
+.dim{opacity:.13}
+.match .box{stroke-width:3.4}
+aside{min-width:0;overflow:auto;background:var(--surface);border-left:1px solid var(--border);padding:16px}
+aside h2{margin:0 0 2px;font-size:18px;font-family:var(--mono);overflow-wrap:anywhere}
+aside .g{color:var(--muted);font-size:12px;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+aside .g i{width:10px;height:10px;border-radius:50%;background:var(--c)}
+aside h3{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:16px 0 6px}
+aside ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+aside li{font-family:var(--mono);font-size:12px;display:flex;justify-content:space-between;gap:8px;padding:3px 6px;border-radius:4px}
+aside li .ty{color:var(--muted)}
+aside li .k{color:var(--fk);font-weight:700;font-family:var(--sans);font-size:10px;margin-right:6px}
+aside li .k.pk{color:var(--pk)} aside li .k.lg{color:var(--muted)}
+aside .rel{font:inherit;font-family:var(--mono);font-size:12px;text-align:left;background:var(--bg);border:1px solid var(--border);color:var(--fg);border-radius:6px;padding:5px 8px;cursor:pointer;flex:1}
+aside .rel:hover{border-color:var(--line-hi)}
+aside .rel small{color:var(--muted);font-family:var(--sans)}
+aside li.relacao{padding:0}
+aside .empty{color:var(--muted);line-height:1.5}
+aside .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+aside .stats div{background:var(--bg);border-radius:6px;padding:8px;text-align:center}
+aside .stats b{display:block;font-size:20px}
+aside .avisos{border:1px solid var(--border);border-radius:6px;padding:8px;margin-top:12px;color:var(--muted);font-size:12px}
+aside textarea{width:100%;box-sizing:border-box;height:160px;font-family:var(--mono);font-size:11px;background:var(--bg);color:var(--fg);border:1px solid var(--border);border-radius:6px}
+@media (max-width:820px){
+  body{overflow:auto}
+  .app{grid-template-columns:1fr;grid-template-rows:auto 62vh auto;height:auto;min-height:100%}
+  aside{border-left:0;border-top:1px solid var(--border)}
+}
+@media (prefers-reduced-motion:reduce){.tbl,.edge{transition:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="bar">
+    <h1>Modelagem Project 2.0</h1>
+    <input type="search" id="busca" placeholder="Buscar tabela ou coluna" aria-label="Buscar tabela ou coluna" autocomplete="off">
+    <div class="chips" id="chips"></div>
+    <button class="btn" id="ajustar" type="button">Ajustar à tela</button>
+    <button class="btn" id="reorganizar" type="button">Restaurar posições</button>
+    <button class="btn" id="copiar" type="button">Copiar posições</button>
+  </div>
+  <div class="stage" id="stage">
+    <svg id="svg" role="img" aria-label="Diagrama entidade-relacionamento do banco de dados"><g id="vp"><g id="gg"></g><g id="ee"></g><g id="tt"></g></g></svg>
+    <div class="hint">Arraste o fundo para mover · roda do mouse para zoom · arraste uma tabela para reposicioná-la · clique para ver as relações</div>
+  </div>
+  <aside id="painel" aria-live="polite"></aside>
+</div>
+<script>
+const DADOS=__DADOS__;
+const GRUPOS=DADOS.grupos;
+const HH=28,RH=18,NS='http://www.w3.org/2000/svg';
+const T={};const ORIG={};
+for(const t of DADOS.tabelas){T[t.n]={n:t.n,x:t.x,y:t.y,w:t.w,g:t.g,cols:t.cols,h:HH+RH*t.cols.length+6};ORIG[t.n]=[t.x,t.y]}
+const svg=document.getElementById('svg'),vp=document.getElementById('vp'),stage=document.getElementById('stage');
+const gg=document.getElementById('gg'),ee=document.getElementById('ee'),tt=document.getElementById('tt');
+const el=(tag,attrs={},parent)=>{const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e};
+const cssVar=g=>GRUPOS[g]?`var(${GRUPOS[g].cor})`:'var(--goutros)';
+const edges=[];
+for(const n in T)for(const [c,ty,marca,destino] of T[n].cols){if(destino&&T[destino])edges.push({a:n,col:c,b:destino,logico:marca==='lg'})}
+const visivel=new Set(Object.keys(GRUPOS));
+let sel=null,hov=null,termo='';
+const caixaEls={};
+for(const g in GRUPOS){const c=el('g',{style:`--c:${cssVar(g)}`},gg);caixaEls[g]={g:c,rect:el('rect',{class:'group-box',rx:14},c),title:el('text',{class:'group-title'},c)}}
+function atualizaCaixas(){for(const g in GRUPOS){const ns=Object.values(T).filter(t=>t.g===g&&visivel.has(g));const c=caixaEls[g];c.g.style.display=ns.length?'':'none';if(!ns.length)continue;
+ const x0=Math.min(...ns.map(t=>t.x))-18,y0=Math.min(...ns.map(t=>t.y))-36,x1=Math.max(...ns.map(t=>t.x+t.w))+18,y1=Math.max(...ns.map(t=>t.y+t.h))+18;
+ c.rect.setAttribute('x',x0);c.rect.setAttribute('y',y0);c.rect.setAttribute('width',x1-x0);c.rect.setAttribute('height',y1-y0);c.title.setAttribute('x',x0+14);c.title.setAttribute('y',y0+22);c.title.textContent=GRUPOS[g].titulo}}
+for(const n in T){const t=T[n];const g=el('g',{class:'tbl',tabindex:0,'data-n':n,style:`--c:${cssVar(t.g)}`,role:'button','aria-label':`Tabela ${n}`},tt);t.el=g;
+ el('rect',{class:'box',width:t.w,height:t.h,rx:8},g);
+ el('path',{class:'head',d:`M0,${HH} V8 a8,8 0 0 1 8,-8 H${t.w-8} a8,8 0 0 1 8,8 V${HH} Z`},g);
+ const nm=el('text',{class:'name',x:10,y:19},g);nm.textContent=n;
+ t.rows=[];
+ t.cols.forEach(([c,ty,marca],i)=>{const y=HH+RH*i;const r=el('rect',{x:2,y:y,width:t.w-4,height:RH,fill:'none'},g);t.rows.push(r);
+  const tg=marca==='pk'?'PK':marca==='fk'?'FK':marca==='lg'?'··':'';
+  if(tg){const a=el('text',{class:'f '+marca,x:8,y:y+13},g);a.textContent=tg}
+  const b=el('text',{class:'c',x:30,y:y+13},g);b.textContent=c;
+  const d=el('text',{class:'t',x:t.w-8,y:y+13},g);d.textContent=ty});
+ g.addEventListener('mouseenter',()=>{hov=n;pinta()});g.addEventListener('mouseleave',()=>{hov=null;pinta()});
+ g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();seleciona(n)}});
+}
+function rowY(n,col){const t=T[n];const i=t.cols.findIndex(c=>c[0]===col);return t.y+HH+RH*(i<0?0:i)+RH/2}
+for(const e of edges){e.p=el('path',{class:'edge'+(e.logico?' logical':'')},ee);e.d1=el('circle',{class:'end',r:4},ee);e.d2=el('path',{class:'end',stroke:'var(--line)','stroke-width':2,fill:'none'},ee)}
+function desenhaArestas(){for(const e of edges){const A=T[e.a],B=T[e.b];const y1=rowY(e.a,e.col),y2=rowY(e.b,'id');
+ if(e.a===e.b){const x=A.x+A.w,y0=rowY(e.a,'id');e.p.setAttribute('d',`M${x},${y1} C${x+60},${y1} ${x+60},${y0-50} ${x},${y0}`);e.d1.setAttribute('cx',x);e.d1.setAttribute('cy',y1);e.d2.setAttribute('d','');continue}
+ const ax1=A.x+A.w,bx1=B.x+B.w;let x1,x2,d1,d2;
+ if(ax1<=B.x-10){x1=ax1;x2=B.x;d1=1;d2=-1}else if(bx1<=A.x-10){x1=A.x;x2=bx1;d1=-1;d2=1}else{x1=A.x;x2=B.x;d1=-1;d2=-1}
+ const k=d1!==d2?Math.max(50,Math.abs(x2-x1)*.45):70;
+ e.p.setAttribute('d',`M${x1},${y1} C${x1+d1*k},${y1} ${x2+d2*k},${y2} ${x2},${y2}`);
+ e.d1.setAttribute('cx',x1);e.d1.setAttribute('cy',y1);e.d2.setAttribute('d',`M${x2},${y2-5} L${x2},${y2+5}`)}}
+function posiciona(){for(const n in T){T[n].el.setAttribute('transform',`translate(${T[n].x},${T[n].y})`)}desenhaArestas();atualizaCaixas()}
+const vizinhos=n=>{const s=new Set([n]);for(const e of edges){if(e.a===n)s.add(e.b);if(e.b===n)s.add(e.a)}return s};
+const casa=(t,q)=>t.n.includes(q)||t.cols.some(c=>c[0].includes(q));
+function pinta(){const foco=hov||sel;const viz=foco?vizinhos(foco):null;const q=termo.trim().toLowerCase();
+ for(const n in T){const t=T[n];t.el.style.display=visivel.has(t.g)?'':'none';
+  let dim=false;if(viz)dim=!viz.has(n);else if(q)dim=!casa(t,q);
+  t.el.classList.toggle('dim',dim);t.el.classList.toggle('sel',n===sel);t.el.classList.toggle('match',!!q&&!viz&&casa(t,q));
+  t.rows.forEach((r,i)=>{const hit=q&&t.cols[i][0].includes(q);r.setAttribute('fill',hit?'color-mix(in srgb,var(--line-hi) 28%,transparent)':'none')})}
+ for(const e of edges){const oculto=!visivel.has(T[e.a].g)||!visivel.has(T[e.b].g);const hi=foco&&(e.a===foco||e.b===foco);
+  const v=oculto?'none':'';e.p.style.display=v;e.d1.style.display=v;e.d2.style.display=v;
+  e.p.classList.toggle('hi',!!hi);e.d1.classList.toggle('hi',!!hi);e.d2.setAttribute('stroke',hi?'var(--line-hi)':'var(--line)');
+  const dim=foco?!hi:!!q;e.p.style.opacity=dim?(foco?.08:.25):1;e.d1.style.opacity=e.p.style.opacity;e.d2.style.opacity=e.p.style.opacity}}
+const painel=document.getElementById('painel');
+const escapa=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function painelVazio(){const nt=Object.keys(T).length,nf=edges.filter(e=>!e.logico).length,nc=Object.values(T).reduce((s,t)=>s+t.cols.length,0);
+ const ocultas=DADOS.colunasOcultas.length?`Também existem <code>${DADOS.colunasOcultas.map(escapa).join('</code>, <code>')}</code> nas tabelas, fora do desenho. `:'';
+ const avisos=DADOS.avisos.length?`<div class="avisos"><b>Avisos da geração</b><br>${DADOS.avisos.map(escapa).join('<br>')}</div>`:'';
+ painel.innerHTML=`<h2>Banco de dados</h2><div class="g">${escapa(DADOS.origem)}</div><p class="empty">Clique em uma tabela para ver colunas, o que ela referencia e quem a referencia. Passe o mouse sobre uma tabela para destacar só as ligações dela.</p><div class="stats"><div><b>${nt}</b>tabelas</div><div><b>${nf}</b>FKs</div><div><b>${nc}</b>colunas</div></div><h3>Como ler</h3><p class="empty">${ocultas}<code>?</code> depois do tipo aceita nulo. Linha tracejada e <code>··</code> são referências sem FK no banco (o nome da coluna aponta para a tabela).</p>${avisos}`}
+function painelTabela(n){const t=T[n];const sai=edges.filter(e=>e.a===n),entra=edges.filter(e=>e.b===n&&e.a!==n);
+ const li=t.cols.map(([c,ty,marca])=>`<li><span>${marca==='pk'?'<span class="k pk">PK</span>':marca==='fk'?'<span class="k">FK</span>':marca==='lg'?'<span class="k lg">··</span>':''}${escapa(c)}</span><span class="ty">${escapa(ty)}</span></li>`).join('');
+ const rel=(lista,qual)=>lista.length?`<ul>${lista.map(e=>{const alvo=qual==='sai'?e.b:e.a;return`<li class="relacao"><button type="button" class="rel" data-go="${escapa(alvo)}">${escapa(alvo)} <small>via ${escapa(e.col)}${e.logico?' (sem FK)':''}</small></button></li>`}).join('')}</ul>`:'<p class="empty">Nenhuma.</p>';
+ painel.innerHTML=`<h2>${escapa(n)}</h2><div class="g" style="--c:${cssVar(t.g)}"><i></i>${escapa(GRUPOS[t.g]?GRUPOS[t.g].rotulo:t.g)}</div><h3>Colunas (${t.cols.length})</h3><ul>${li}</ul><h3>Referencia (${sai.length})</h3>${rel(sai,'sai')}<h3>Referenciada por (${entra.length})</h3>${rel(entra,'entra')}`;
+ painel.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>{seleciona(b.dataset.go,true)}))}
+function seleciona(n,centra){sel=(sel===n&&!centra)?null:n;if(sel){painelTabela(sel);if(centra)centraEm(sel)}else painelVazio();pinta()}
+let cam={x:0,y:0,k:1};
+const aplica=()=>vp.setAttribute('transform',`translate(${cam.x},${cam.y}) scale(${cam.k})`);
+function caixaTotal(){const ns=Object.values(T).filter(t=>visivel.has(t.g));if(!ns.length)return{x0:0,y0:0,x1:100,y1:100};return{x0:Math.min(...ns.map(t=>t.x))-40,y0:Math.min(...ns.map(t=>t.y))-60,x1:Math.max(...ns.map(t=>t.x+t.w))+40,y1:Math.max(...ns.map(t=>t.y+t.h))+40}}
+function ajusta(){const r=stage.getBoundingClientRect(),b=caixaTotal();const k=Math.min(r.width/(b.x1-b.x0),r.height/(b.y1-b.y0));cam.k=k;cam.x=(r.width-(b.x1-b.x0)*k)/2-b.x0*k;cam.y=(r.height-(b.y1-b.y0)*k)/2-b.y0*k;aplica()}
+function centraEm(n){const t=T[n],r=stage.getBoundingClientRect();const k=Math.max(cam.k,.9);cam.k=k;cam.x=r.width/2-(t.x+t.w/2)*k;cam.y=r.height/2-(t.y+t.h/2)*k;aplica()}
+stage.addEventListener('wheel',e=>{e.preventDefault();const r=stage.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top;const f=Math.exp(-e.deltaY*.0015);const k=Math.min(3,Math.max(.15,cam.k*f));cam.x=mx-(mx-cam.x)*(k/cam.k);cam.y=my-(my-cam.y)*(k/cam.k);cam.k=k;aplica()},{passive:false});
+let drag=null,moveu=false;
+svg.addEventListener('pointerdown',e=>{const tg=e.target.closest('.tbl');moveu=false;
+ drag=tg?{tipo:'t',n:tg.dataset.n,sx:e.clientX,sy:e.clientY,ox:T[tg.dataset.n].x,oy:T[tg.dataset.n].y}:{tipo:'p',sx:e.clientX,sy:e.clientY,ox:cam.x,oy:cam.y};
+ try{svg.setPointerCapture(e.pointerId)}catch(_){}if(!tg)stage.classList.add('pan')});
+svg.addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-drag.sx,dy=e.clientY-drag.sy;if(Math.abs(dx)+Math.abs(dy)>4)moveu=true;if(!moveu)return;
+ if(drag.tipo==='p'){cam.x=drag.ox+dx;cam.y=drag.oy+dy;aplica()}else{T[drag.n].x=Math.round(drag.ox+dx/cam.k);T[drag.n].y=Math.round(drag.oy+dy/cam.k);posiciona()}});
+svg.addEventListener('pointerup',()=>{const d=drag;drag=null;stage.classList.remove('pan');
+ if(!moveu&&d){if(d.tipo==='t')seleciona(d.n);else if(sel){sel=null;painelVazio();pinta()}}});
+const chips=document.getElementById('chips');
+for(const g in GRUPOS){const b=document.createElement('button');b.type='button';b.className='chip';b.style.setProperty('--c',cssVar(g));b.setAttribute('aria-pressed','true');
+ const i=document.createElement('i');b.appendChild(i);b.appendChild(document.createTextNode(GRUPOS[g].rotulo));
+ b.addEventListener('click',()=>{const on=b.getAttribute('aria-pressed')==='true';b.setAttribute('aria-pressed',on?'false':'true');on?visivel.delete(g):visivel.add(g);if(sel&&!visivel.has(T[sel].g)){sel=null;painelVazio()}atualizaCaixas();pinta()});chips.appendChild(b)}
+document.getElementById('busca').addEventListener('input',e=>{termo=e.target.value;pinta()});
+document.getElementById('busca').addEventListener('keydown',e=>{if(e.key==='Enter'){const q=termo.trim().toLowerCase();const t=Object.values(T).find(t=>visivel.has(t.g)&&q&&casa(t,q));if(t)seleciona(t.n,true)}});
+document.getElementById('ajustar').addEventListener('click',ajusta);
+document.getElementById('reorganizar').addEventListener('click',()=>{for(const n in T){T[n].x=ORIG[n][0];T[n].y=ORIG[n][1]}posiciona();ajusta()});
+document.getElementById('copiar').addEventListener('click',async()=>{
+ const posicoes={};for(const n of Object.keys(T).sort())posicoes[n]=[T[n].x,T[n].y];
+ const texto=JSON.stringify(posicoes,null,1).replace(/\n\s*(\d|-|\])/g,' $1').replace(/\[\s+/g,'[');
+ const instrucao='<p class="empty">Cole este bloco no campo <code>posicoes</code> de <code>docs/assets/modelagem/modelagem.config.json</code> e rode <code>npm run modelagem</code>.</p>';
+ let copiou=false;try{await navigator.clipboard.writeText(texto);copiou=true}catch(_){}
+ sel=null;pinta();painel.innerHTML=`<h2>Posições</h2><div class="g">${copiou?'Copiadas para a área de transferência':'Copie o texto abaixo'}</div>${instrucao}<textarea id="saida" readonly></textarea>`;
+ const area=document.getElementById('saida');area.value=texto;if(!copiou)area.select()});
+window.addEventListener('resize',ajusta);
+posiciona();painelVazio();pinta();ajusta();
+</script>
+</body>
+</html>

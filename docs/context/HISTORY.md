@@ -12,6 +12,13 @@
 
 ---
 
+## 2026-10-23 — Diagrama interativo da modelagem, gerado do banco (ferramenta, sem spec)
+
+- **O que mudou:** `npm run modelagem` lê colunas, PKs e FKs do catálogo do PostgreSQL migrado (`DB_NOME`; `-- --teste` usa o banco de teste) e escreve `docs/assets/modelagem/modelagem.html`: SVG com busca por tabela/coluna, filtro por grupo, zoom/arrasto, arrasto de tabelas e painel de relações. Entrada humana em `docs/assets/modelagem/modelagem.config.json` (grupos, `tabelaGrupo`, posições, referências sem FK). Lógica pura em `backend/src/database/scripts/modelagem.ts` (testada), I/O em `gerar-modelagem.ts`, molde em `modelagem.template.html`. Saída determinística (sem data): o diff do HTML só muda quando a modelagem muda.
+- **Decisões:** tabelas `tipo_*` herdam o grupo de quem as referencia; coluna inteira `*_id` sem FK vira referência lógica tracejada (as tabelas do chat provisório); tabela nova sem posição é posta abaixo do grupo e a geração avisa; posições são ajustadas arrastando na página e colando o bloco de "Copiar posições" no config (a página não grava arquivo). O PNG estático foi removido para não ficar desatualizado.
+- **Achado:** o primeiro desenho, feito à mão, já estava defasado: faltavam `chat_conversa.titulo_editado`, `chat_mensagem.assunto`, `ponto_justificativa.horas_cobertas`, `tipo_anotacao.ordem` e `usuario_id` em tabelas lógicas; o gerador pegou tudo na primeira execução.
+- **Verificação:** 14 testes novos do módulo puro passando; gerado contra um PostgreSQL 16 local com as 51 migrations aplicadas (35 tabelas, sem avisos) e aberto no Chromium sem erro de console; sem sobreposição de tabelas (conferido por script). Sem lint no projeto (P-001). Não verificado: 1366×768 e 1080×1920 (ferramenta de documentação, não tela do app).
+
 ## 2026-10-23 — Task 219 (CI do PR): falha de carga do realce de código ficava em cache
 
 - **Sintoma:** o job "Organização e build" do PR falhou com 3 testes de `carregador-realce.test.ts` (typescript, javascript, "mesma linguagem duas vezes") e `EnvironmentTeardownError` vindo do spec do painel de código. Não reproduziu localmente (1757/1757, e o par de arquivos 3 vezes seguidas).
