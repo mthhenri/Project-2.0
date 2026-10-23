@@ -40,6 +40,28 @@
     color: var(--p-text-muted-color);
   }
 
+  &__status--digitando {
+    color: var(--p-primary-color);
+    font-style: italic;
+  }
+
+  &__pontos {
+    display: inline-flex;
+    gap: 0.125rem;
+    margin-left: 0.25rem;
+
+    span {
+      width: 0.25rem;
+      height: 0.25rem;
+      border-radius: 50%;
+      background: currentColor;
+      animation: conversa-direta-ponto 1.2s infinite ease-in-out;
+
+      &:nth-child(2) { animation-delay: 0.2s; }
+      &:nth-child(3) { animation-delay: 0.4s; }
+    }
+  }
+
   &__faixa {
     display: flex;
     align-items: center;
@@ -143,6 +165,42 @@
     }
   }
 
+  // O botão de copiar só aparece com o mouse sobre a mensagem (ou com o foco nele): senão cada balão ganharia um ícone fixo.
+  &__copiar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--p-text-muted-color);
+    font-size: 0.6875rem;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s, background-color 0.15s;
+
+    &:hover {
+      background: var(--p-content-hover-background);
+    }
+
+    &:focus-visible {
+      opacity: 1;
+      outline: 2px solid var(--p-primary-color);
+      outline-offset: 1px;
+    }
+
+    &--copiado {
+      opacity: 1;
+      color: var(--p-primary-color);
+    }
+  }
+
+  &__linha:hover &__copiar {
+    opacity: 1;
+  }
+
   &__rodape-forte {
     font-weight: 500;
   }
@@ -212,4 +270,13 @@
     font-size: 0.8125rem;
     color: var(--p-text-muted-color);
   }
+}
+
+@keyframes conversa-direta-ponto {
+  0%, 80%, 100% { opacity: 0.25; }
+  40% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .conversa-direta__pontos span { animation: none; opacity: 0.6; }
 }

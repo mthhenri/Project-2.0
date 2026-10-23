@@ -12,6 +12,8 @@ export type MensagemDiretaEventoDto =
   /** Alguém marcou a conversa como lida até `lidaAteDate` (a data da última mensagem que viu): é daí que sai o "Lida". */
   | { tipo: 'LEITURA'; conversaId: string; usuarioId: number; lidaAteDate: Date }
   | { tipo: 'PRESENCA'; usuarioId: number; online: boolean }
+  /** `usuarioId` está digitando para quem recebe, na conversa `conversaId`. Efêmero: não é gravado nem recuperado; o cliente o deixa expirar em poucos segundos. */
+  | { tipo: 'DIGITANDO'; conversaId: string; usuarioId: number }
   /** Reler a conversa (ou todas, com `conversaId: null`): o evento não coube no barramento ou a API perdeu o fio. */
   | { tipo: 'SINCRONIZAR'; conversaId: string | null }
   | { tipo: 'BATIMENTO' }

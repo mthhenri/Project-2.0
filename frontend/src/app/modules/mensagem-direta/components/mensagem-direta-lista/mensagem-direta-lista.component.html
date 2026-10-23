@@ -96,11 +96,22 @@
               }
             </span>
             <span class="lista-direta__rodape">
-              <span class="lista-direta__previa">
+              @if (estado.digitando().has(conversa.usuarioId)) {
+                <span class="lista-direta__previa lista-direta__previa--digitando">digitando…</span>
+              } @else {
                 @if (conversa.ultimaMensagem; as ultima) {
-                  {{ previa(ultima.texto, ultima.contemCodigo, ultima.autorUsuarioId) }}
+                  @if (ultima.contemCodigo) {
+                    <span class="lista-direta__previa">{{ previa(ultima.texto, ultima.contemCodigo, ultima.autorUsuarioId) }}</span>
+                  } @else {
+                    <span class="lista-direta__previa lista-direta__previa--markdown">
+                      @if (ultima.autorUsuarioId === meuId()) { <span class="lista-direta__voce">Você:</span> }
+                      <app-markdown-visualizador class="lista-direta__markdown" [texto]="ultima.texto" />
+                    </span>
+                  }
+                } @else {
+                  <span class="lista-direta__previa"></span>
                 }
-              </span>
+              }
               @if (conversa.naoLidas > 0) {
                 <span class="lista-direta__contador" [attr.aria-label]="conversa.naoLidas + (conversa.naoLidas === 1 ? ' mensagem não lida' : ' mensagens não lidas')">{{ conversa.naoLidas > 99 ? '99+' : conversa.naoLidas }}</span>
               }

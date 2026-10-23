@@ -26,7 +26,7 @@ function ehListaDeIds(valor: unknown): valor is number[] {
   return Array.isArray(valor) && valor.every((item) => Number.isInteger(item));
 }
 
-const TIPOS_SEM_DATA = new Set(['SINCRONIZAR', 'PRESENCA', 'BATIMENTO', 'ENCERRANDO', 'ABERTURA']);
+const TIPOS_SEM_DATA = new Set(['SINCRONIZAR', 'PRESENCA', 'BATIMENTO', 'ENCERRANDO', 'ABERTURA', 'DIGITANDO']);
 
 /** Lê o que `codificarMensagemDoBarramento` escreveu (as datas voltam a ser `Date`); texto estranho devolve `null` em vez de derrubar a escuta. */
 export function decodificarMensagemDoBarramento(texto: string): MensagemDoBarramento | null {

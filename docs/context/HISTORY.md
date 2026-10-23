@@ -12,6 +12,29 @@
 
 ---
 
+## 2026-10-23 — Task 219: "digitando…" no chat entre colaboradores, e ajustes de acabamento pedidos no mesmo dia
+
+- **O que mudou:** evento efêmero `DIGITANDO` (nada gravado): `POST /mensagem-direta/conversa/:usuarioId/digitando` valida a outra pessoa e publica só para ela;
+  o barramento (`memoria` e `postgres`) passou a decodificar `DIGITANDO` (sem isso o evento sumiria entre instâncias). No front, o estado avisa no máximo a cada 3 s
+  por pessoa, mostra por 5 s com renovação, apaga na hora quando a mensagem chega e limpa ao reconectar; o cabeçalho da conversa e a linha da lista mostram
+  "digitando…". Só tecla do usuário e colagem avisam: a primeira versão avisava a cada mudança do texto e o teste do popup do Desktop (código copiado entra no
+  campo "sem enviar") mostrou que o código inserido por programa contava como digitação; passou para o `keydown`.
+- **Ajustes pedidos junto:** tooltips da barra do campo com o atalho (todos conferidos nas keymaps do Milkdown instalado: Mod-b, Mod-i, Mod-Alt-x, Mod-e, Mod-Alt-8,
+  Mod-Alt-7, Mod-Shift-b), `</>` que quebrava em duas linhas, separador de grupos; aviso de mensagem nova e prévia da lista renderizam o Markdown (a notificação do
+  sistema no Desktop continua em texto); som do aviso de 0,12 para 0,30; botão Copiar por mensagem.
+- **Achado no build, não antes dele:** o cartão de aviso renderizando Markdown estourou o orçamento inicial (já a 0,6 kB do limite, P-032). Medindo com
+  `--stats-json` e o metafile do esbuild, o peso não era o chat: o diálogo de anotações do topbar (importado estaticamente) arrastava o editor de Markdown e o
+  visualizador (~40 kB) para o pacote inicial. Passou a `@defer (on immediate)`: inicial 1099 kB para 962,6 kB. **Fecha o P-032.** Efeito colateral: componentes
+  com `@defer` exigem `TestBed.compileComponents()` em teste; `montarComponente` passou a chamá-lo (a barra do topo, com 13 testes, falhava sem isso).
+- **Testes:** shared 214/214, backend 1285/1285 (novos: `avisarDigitacao` e a recusa, a rota, `DIGITANDO` no barramento), frontend 150 arquivos, 1757/1757 (novos:
+  spec da conversa com aparece/expira/renova/some com a mensagem/uma vez por 3 s e copiar; teclas do compositor; Markdown no aviso; util e HTTP). Builds do backend e
+  do front passam. `npm run repo:verificar` passa. **Testes de integração (`test:integracao`) não rodados:** sem Docker neste ambiente; não houve mudança em repository.
+  Sem lint (P-001). O erro `Context "editorView" not found` do `focar` do compositor aparece no fim da suíte já no `HEAD` (não é desta task).
+- **Não verificado:** a aplicação real não foi levantada (sem banco neste ambiente): o "digitando" entre duas sessões, a aparência da barra, do cartão de aviso e da prévia
+  nos três tamanhos, e o som continuam **abertos**; a task só fecha depois disso.
+- **Backlog novo:** 220 (responder mensagem: mexe em documento, três armazenamentos e migration) e 221 (posição, arrasto e tamanho do popup, com preferência no perfil),
+  ambas como rascunho a aprovar.
+
 ## 2026-10-23 — Task 218: campo de mensagem do chat entre colaboradores com o editor que escreve formatado e barra sobre a seleção
 
 Task solta, segunda de duas pedidas pelo autor (a 217 enxugou o rodapé). Spec: `docs/specs/done/218-mensagem-direta-editor-formatado.spec.md`. Só o front mudou. Decisões do autor: editor que escreve já formatado como o Pad, com a barra só sobre o texto selecionado; **sem sublinhado** (o Markdown não tem; o renderizador compartilhado não mudou).

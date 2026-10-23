@@ -7,6 +7,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TooltipModule } from 'primeng/tooltip';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
+import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
 import { MensagemDiretaEstadoService } from '../../services/mensagem-direta-estado.service';
 import {
   MensagemNaConversa,
@@ -25,7 +26,7 @@ const ATRASO_DA_BUSCA_MS = 300;
 @Component({
   selector: 'app-mensagem-direta-lista',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonModule, InputTextModule, SkeletonModule, TooltipModule, MensagemDiretaAvatarComponent, MensagemDiretaNotificacoesComponent],
+  imports: [ReactiveFormsModule, ButtonModule, InputTextModule, SkeletonModule, TooltipModule, MarkdownVisualizadorComponent, MensagemDiretaAvatarComponent, MensagemDiretaNotificacoesComponent],
   templateUrl: './mensagem-direta-lista.component.html',
   styleUrl: './mensagem-direta-lista.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -33,6 +34,7 @@ const ATRASO_DA_BUSCA_MS = 300;
 export class MensagemDiretaListaComponent {
   protected readonly estado = inject(MensagemDiretaEstadoService);
   private readonly sessao = inject(UsuarioSessaoService);
+  protected readonly meuId = this.sessao.id;
 
   readonly controleBusca = new FormControl('', { nonNullable: true });
   private readonly textoDigitado = toSignal(this.controleBusca.valueChanges, { initialValue: '' });

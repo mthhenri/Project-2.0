@@ -100,8 +100,12 @@ export class TopbarComponent {
 
     if (evento.key.toLowerCase() === 'n' && this.sessao.usuarioAtual()) {
       evento.preventDefault();
-      this.anotacoesDialog?.abrir(this.sessao.id()!, this.sessao.nomeCompleto()!);
+      this.abrirMinhasAnotacoes();
     }
+  }
+
+  protected abrirMinhasAnotacoes(): void {
+    this.anotacoesDialog?.abrir(this.sessao.id()!, this.sessao.nomeCompleto()!);
   }
 
   constructor() {

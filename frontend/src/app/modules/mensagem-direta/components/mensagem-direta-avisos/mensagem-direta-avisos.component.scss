@@ -53,15 +53,22 @@
     color: var(--p-text-color);
   }
 
+  // O texto é Markdown renderizado (blocos, listas, código): o corte é por altura (cerca de três linhas), com o fim esmaecido.
   &__texto {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
+    display: block;
+    max-height: 4.25rem;
     overflow: hidden;
+    -webkit-mask-image: linear-gradient(to bottom, #000 70%, transparent);
+    mask-image: linear-gradient(to bottom, #000 70%, transparent);
     overflow-wrap: anywhere;
     font-size: 0.8125rem;
     line-height: 1.4;
     color: var(--p-text-color);
+
+    ::ng-deep .markdown {
+      font-size: inherit;
+      line-height: inherit;
+    }
   }
 
   &__mencao {

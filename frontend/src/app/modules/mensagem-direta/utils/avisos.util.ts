@@ -109,8 +109,10 @@ export interface AvisoNaTela {
   id: string;
   usuarioId: number;
   usuarioNome: string;
-  /** A prévia da última mensagem, sem marcação. */
+  /** A prévia da última mensagem, sem marcação (leitor de tela e notificação do sistema). */
   texto: string;
+  /** O Markdown da última mensagem, que o cartão renderiza; ausente, o cartão mostra `texto`. */
+  markdown?: string;
   mencionaVoce: boolean;
   /** Quantas mensagens novas esse cartão resume. */
   quantidade: number;
@@ -123,6 +125,7 @@ export interface NovaMensagemParaAviso {
   usuarioId: number;
   usuarioNome: string;
   texto: string;
+  markdown?: string;
   mencionaVoce: boolean;
   agora: number;
 }
@@ -134,8 +137,8 @@ export interface NovaMensagemParaAviso {
 export function somarAviso(avisos: AvisoNaTela[], nova: NovaMensagemParaAviso): AvisoNaTela[] {
   const existente = avisos.find((aviso) => aviso.id === nova.conversaId);
   const atualizado: AvisoNaTela = existente
-    ? { ...existente, usuarioNome: nova.usuarioNome, texto: nova.texto, mencionaVoce: existente.mencionaVoce || nova.mencionaVoce, quantidade: existente.quantidade + 1, atualizadoEm: nova.agora }
-    : { id: nova.conversaId, usuarioId: nova.usuarioId, usuarioNome: nova.usuarioNome, texto: nova.texto, mencionaVoce: nova.mencionaVoce, quantidade: 1, atualizadoEm: nova.agora };
+    ? { ...existente, usuarioNome: nova.usuarioNome, texto: nova.texto, markdown: nova.markdown, mencionaVoce: existente.mencionaVoce || nova.mencionaVoce, quantidade: existente.quantidade + 1, atualizadoEm: nova.agora }
+    : { id: nova.conversaId, usuarioId: nova.usuarioId, usuarioNome: nova.usuarioNome, texto: nova.texto, markdown: nova.markdown, mencionaVoce: nova.mencionaVoce, quantidade: 1, atualizadoEm: nova.agora };
   return [atualizado, ...avisos.filter((aviso) => aviso.id !== nova.conversaId)].slice(0, MAXIMO_DE_AVISOS_NA_TELA);
 }
 

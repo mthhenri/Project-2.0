@@ -21,8 +21,10 @@ export interface MensagemParaAvisar extends Omit<EntradaDaDecisaoDeAviso, 'prefe
   conversaId: string;
   usuarioId: number;
   usuarioNome: string;
-  /** A prévia da mensagem, sem marcação. */
+  /** A prévia da mensagem, sem marcação (a notificação do sistema não renderiza Markdown). */
   texto: string;
+  /** O Markdown da mensagem, que o cartão do Project renderiza. */
+  markdown?: string;
 }
 
 /**
@@ -135,6 +137,7 @@ export class MensagemDiretaAvisosService {
         usuarioId: mensagem.usuarioId,
         usuarioNome: mensagem.usuarioNome,
         texto: mensagem.texto,
+        markdown: mensagem.markdown,
         mencionaVoce: mensagem.mencionaVoce,
         agora: agora.getTime(),
       }),

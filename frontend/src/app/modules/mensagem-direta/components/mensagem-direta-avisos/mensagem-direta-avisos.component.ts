@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, effect, inject } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
+import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
 import { MensagemDiretaAvisosService } from '../../services/mensagem-direta-avisos.service';
 import { MensagemDiretaEstadoService } from '../../services/mensagem-direta-estado.service';
 import { AvisoNaTela, DURACAO_DO_AVISO_MS, rotuloDaQuantidade } from '../../utils/avisos.util';
@@ -25,7 +26,7 @@ interface Temporizador {
 @Component({
   selector: 'app-mensagem-direta-avisos',
   standalone: true,
-  imports: [ButtonModule, TooltipModule, MensagemDiretaAvatarComponent],
+  imports: [ButtonModule, TooltipModule, MarkdownVisualizadorComponent, MensagemDiretaAvatarComponent],
   templateUrl: './mensagem-direta-avisos.component.html',
   styleUrl: './mensagem-direta-avisos.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

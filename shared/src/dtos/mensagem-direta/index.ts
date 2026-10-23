@@ -4,6 +4,7 @@ export * from './MensagemDiretaListarDto';
 export * from './MensagemDiretaBuscarDto';
 export * from './MensagemDiretaLeituraAlterarDto';
 export * from './MensagemDiretaSilencioAlterarDto';
+export * from './MensagemDiretaDigitacaoAvisarDto';
 export * from './MensagemDiretaPreferenciaAlterarDto';
 export * from './MensagemDiretaResumoDto';
 export * from './MensagemDiretaEnviadaDto';

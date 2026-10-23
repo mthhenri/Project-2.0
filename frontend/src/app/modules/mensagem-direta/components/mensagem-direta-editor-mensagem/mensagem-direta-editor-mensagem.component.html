@@ -6,6 +6,7 @@
       <button
         type="button"
         class="editor-mensagem__botao"
+        [class.editor-mensagem__botao--grupo]="botao.novoGrupo"
         [class.editor-mensagem__botao--ativo]="ativos().has(botao.acao)"
         [attr.aria-label]="botao.rotulo"
         [attr.aria-pressed]="ativos().has(botao.acao)"

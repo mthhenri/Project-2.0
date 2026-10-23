@@ -190,8 +190,55 @@
     color: var(--p-text-muted-color);
   }
 
+  // A prévia renderiza o Markdown em uma linha só: o primeiro bloco, cortado com reticências.
+  &__previa--markdown {
+    display: flex;
+    gap: 0.25rem;
+  }
+
+  &__voce {
+    flex: none;
+  }
+
+  &__markdown {
+    flex: 1;
+    min-width: 0;
+
+    ::ng-deep .markdown {
+      font-size: inherit;
+      line-height: inherit;
+      color: inherit;
+
+      > :not(:first-child) {
+        display: none;
+      }
+
+      > :first-child {
+        margin: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      // Lista: só o primeiro item, sem o recuo do marcador.
+      ul, ol {
+        padding-left: 1rem;
+      }
+
+      li:not(:first-child) {
+        display: none;
+      }
+    }
+  }
+
   &__linha--nao-lida &__previa {
     color: var(--p-text-color);
+  }
+
+  &__previa--digitando,
+  &__linha--nao-lida &__previa--digitando {
+    color: var(--p-primary-color);
+    font-style: italic;
   }
 
   &__achado {

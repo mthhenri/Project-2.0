@@ -54,6 +54,11 @@ export class MensagemDiretaService {
     );
   }
 
+  /** Avisa a outra pessoa de que o usuário está digitando (nada é gravado). */
+  avisarDigitacao(usuarioId: number): Observable<StandardResponse<null>> {
+    return this.httpClient.post<StandardResponse<null>>(`${this.urlBase}/conversa/${usuarioId}/digitando`, {}, comFeedbackProprioEErroTratado());
+  }
+
   buscar(texto: string): Observable<StandardResponse<MensagemDiretaBuscadoDto>> {
     const params = new HttpParams().set('texto', texto);
     return this.httpClient.get<StandardResponse<MensagemDiretaBuscadoDto>>(`${this.urlBase}/busca`, { params, ...comFeedbackProprioEErroTratado() });

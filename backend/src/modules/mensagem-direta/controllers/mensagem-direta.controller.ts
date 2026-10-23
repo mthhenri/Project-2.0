@@ -2,6 +2,7 @@ import { Body, Controller, Get, Param, ParseEnumPipe, ParseIntPipe, Post, Put, Q
 import type { Response } from 'express';
 import {
   MensagemDiretaBuscarDto,
+  MensagemDiretaDigitacaoAvisarDto,
   MensagemDiretaEnviarDto,
   MensagemDiretaLeituraAlterarDto,
   MensagemDiretaListarDto,
@@ -75,6 +76,13 @@ export class MensagemDiretaController {
     @ActiveUser() usuarioAtivo: JwtPayload,
   ) {
     return this.mensagemDiretaService.alterarLeitura({ ...dto, usuarioId }, usuarioAtivo);
+  }
+
+  /** O aviso de que o usuário está digitando para a outra pessoa; nada é gravado. */
+  @Post('conversa/:usuarioId/digitando')
+  avisarDigitacao(@Param('usuarioId', ParseIntPipe) usuarioId: number, @ActiveUser() usuarioAtivo: JwtPayload) {
+    const dto: MensagemDiretaDigitacaoAvisarDto = { usuarioId };
+    return this.mensagemDiretaService.avisarDigitacao(dto, usuarioAtivo);
   }
 
   @Put('conversa/:usuarioId/silencio')
