@@ -5,9 +5,9 @@
  *   npm run modelagem -- --teste         # banco de teste (<DB_NOME>_teste, criado por `npm run test:integracao`)
  *
  * Lê colunas, chaves primárias e estrangeiras do catálogo do PostgreSQL, junta com
- * `docs/assets/modelagem/modelagem.config.json` (grupos, posições, referências sem FK) e escreve
- * `docs/assets/modelagem/modelagem.html`. Só lê o banco. A saída é determinística (sem data), então o
- * `git diff` do HTML mostra só mudanças reais de modelagem.
+ * `modelagem.config.json` (grupos, posições, referências sem FK) e escreve o contrato `ModelagemDiagrama`
+ * em `frontend/src/app/modules/modelagem/data/modelagem.dados.ts`, que a tela Modelagem lê. Só lê o banco. A saída é
+ * determinística (sem data), então o `git diff` do JSON mostra só mudanças reais de modelagem.
  */
 import * as fs from 'fs';
 import * as path from 'path';
@@ -18,17 +18,15 @@ import {
   ChaveBanco,
   ColunaBanco,
   ConfiguracaoModelagem,
-  montarDados,
+  montarDiagrama,
   montarModelo,
   posicionar,
-  renderizarHtml,
+  serializarDiagrama,
 } from './modelagem';
 
 const RAIZ = path.resolve(__dirname, '../../../..');
-const PASTA_SAIDA = path.join(RAIZ, 'docs/assets/modelagem');
-const ARQUIVO_CONFIGURACAO = path.join(PASTA_SAIDA, 'modelagem.config.json');
-const ARQUIVO_SAIDA = path.join(PASTA_SAIDA, 'modelagem.html');
-const ARQUIVO_MOLDE = path.join(__dirname, 'modelagem.template.html');
+const ARQUIVO_CONFIGURACAO = path.join(__dirname, 'modelagem.config.json');
+const ARQUIVO_SAIDA = path.join(RAIZ, 'frontend/src/app/modules/modelagem/data/modelagem.dados.ts');
 
 async function lerColunas(conexao: Knex): Promise<ColunaBanco[]> {
   const resultado = await conexao.raw(
@@ -84,12 +82,12 @@ async function gerarModelagem(): Promise<void> {
     const modelo = montarModelo(colunas, primarias, estrangeiras, configuracao);
     const posicionado = posicionar(modelo, configuracao.posicoes, Object.keys(configuracao.grupos));
     const origem = `PostgreSQL · última migration: ${ultimaMigration}`;
-    const dados = montarDados(posicionado.tabelas, configuracao, origem, [...modelo.avisos, ...posicionado.avisos]);
+    const diagrama = montarDiagrama(posicionado.tabelas, configuracao, origem, [...modelo.avisos, ...posicionado.avisos]);
 
-    fs.mkdirSync(PASTA_SAIDA, { recursive: true });
-    fs.writeFileSync(ARQUIVO_SAIDA, renderizarHtml(fs.readFileSync(ARQUIVO_MOLDE, 'utf8'), dados));
-    console.log(`Diagrama gerado: ${path.relative(RAIZ, ARQUIVO_SAIDA)} (${dados.tabelas.length} tabelas, ${origem}).`);
-    for (const aviso of dados.avisos) console.warn(`  aviso: ${aviso}`);
+    fs.mkdirSync(path.dirname(ARQUIVO_SAIDA), { recursive: true });
+    fs.writeFileSync(ARQUIVO_SAIDA, serializarDiagrama(diagrama));
+    console.log(`Diagrama gerado: ${path.relative(RAIZ, ARQUIVO_SAIDA)} (${diagrama.tabelas.length} tabelas, ${origem}).`);
+    for (const aviso of diagrama.avisos) console.warn(`  aviso: ${aviso}`);
   } finally {
     await conexao.destroy();
   }

@@ -6,10 +6,10 @@ import {
   ColunaBanco,
   ConfiguracaoModelagem,
   inferirReferenciaLogica,
-  montarDados,
+  montarDiagrama,
   montarModelo,
   posicionar,
-  renderizarHtml,
+  serializarDiagrama,
 } from './modelagem';
 
 function coluna(tabela: string, nome: string, tipo = 'integer', extras: Partial<ColunaBanco> = {}): ColunaBanco {
@@ -72,34 +72,34 @@ describe('inferirReferenciaLogica', () => {
 
 describe('montarModelo', () => {
   const { tabelas, avisos } = montarModelo(colunas, primarias, estrangeiras, configuracao);
-  const porNome = (nome: string) => tabelas.find((tabela) => tabela.n === nome)!;
+  const porNome = (nome: string) => tabelas.find((tabela) => tabela.nome === nome)!;
 
   it('ignora as tabelas do Knex e oculta as colunas de BaseEntity (menos o id)', () => {
-    assert.ok(!tabelas.some((tabela) => tabela.n.startsWith('knex_')));
-    assert.deepEqual(porNome('projeto').cols.map(([nome]) => nome), ['id', 'nome', 'tipo_projeto_status_id']);
+    assert.ok(!tabelas.some((tabela) => tabela.nome.startsWith('knex_')));
+    assert.deepEqual(porNome('projeto').colunas.map((coluna) => coluna.nome), ['id', 'nome', 'tipo_projeto_status_id']);
   });
 
   it('marca PK, FK e a tabela referenciada', () => {
-    assert.deepEqual(porNome('projeto').cols[0], ['id', 'serial', 'pk', null]);
-    assert.deepEqual(porNome('demanda').cols[1], ['projeto_id', 'int', 'fk', 'projeto']);
+    assert.deepEqual(porNome('projeto').colunas[0], { nome: 'id', tipo: 'serial', marca: 'pk', tabelaReferenciada: null });
+    assert.deepEqual(porNome('demanda').colunas[1], { nome: 'projeto_id', tipo: 'int', marca: 'fk', tabelaReferenciada: 'projeto' });
   });
 
   it('infere referência lógica pelo nome e aceita a explícita da configuração', () => {
-    assert.deepEqual(porNome('chat_mensagem').cols[1], ['demanda_id', 'int?', 'lg', 'demanda']);
-    assert.deepEqual(porNome('chat_mensagem').cols[2], ['proposta_id', 'int?', 'lg', 'proposta_ia']);
-    assert.equal(porNome('chat_mensagem').cols[3][2], '');
+    assert.deepEqual(porNome('chat_mensagem').colunas[1], { nome: 'demanda_id', tipo: 'int?', marca: 'lg', tabelaReferenciada: 'demanda' });
+    assert.deepEqual(porNome('chat_mensagem').colunas[2], { nome: 'proposta_id', tipo: 'int?', marca: 'lg', tabelaReferenciada: 'proposta_ia' });
+    assert.equal(porNome('chat_mensagem').colunas[3].marca, '');
   });
 
   it('tabela tipo_* herda o grupo de quem a referencia e tabela solta vai para "outros" com aviso', () => {
-    assert.equal(porNome('tipo_projeto_status').g, 'dom');
-    assert.equal(porNome('proposta_ia').g, 'outros');
+    assert.equal(porNome('tipo_projeto_status').grupo, 'dom');
+    assert.equal(porNome('proposta_ia').grupo, 'outros');
     assert.equal(avisos.length, 1);
     assert.match(avisos[0], /proposta_ia/);
   });
 
   it('dimensiona a largura pelo conteúdo, com mínimo de 200', () => {
-    assert.ok(porNome('demanda').w >= 200);
-    assert.ok(porNome('chat_mensagem').w >= porNome('demanda').w);
+    assert.ok(porNome('demanda').largura >= 200);
+    assert.ok(porNome('chat_mensagem').largura >= porNome('demanda').largura);
   });
 });
 
@@ -108,7 +108,7 @@ describe('posicionar', () => {
 
   it('mantém as posições da configuração e avisa de posições obsoletas', () => {
     const resultado = posicionar(modelo, { projeto: [10, 20], demanda: [300, 20], proposta_ia: [0, 0], chat_mensagem: [0, 900], tipo_projeto_status: [0, 200], fantasma: [1, 1] }, ['dom', 'chat']);
-    const projeto = resultado.tabelas.find((tabela) => tabela.n === 'projeto')!;
+    const projeto = resultado.tabelas.find((tabela) => tabela.nome === 'projeto')!;
     assert.deepEqual([projeto.x, projeto.y], [10, 20]);
     assert.ok(resultado.avisos.some((aviso) => aviso.includes('fantasma')));
     assert.ok(!resultado.avisos.some((aviso) => aviso.includes('Sem posição')));
@@ -116,7 +116,7 @@ describe('posicionar', () => {
 
   it('põe a tabela nova abaixo do grupo, sem sobrepor', () => {
     const resultado = posicionar(modelo, { projeto: [10, 20], demanda: [300, 20], chat_mensagem: [0, 900], proposta_ia: [0, 1500] }, ['dom', 'chat']);
-    const nova = resultado.tabelas.find((tabela) => tabela.n === 'tipo_projeto_status')!;
+    const nova = resultado.tabelas.find((tabela) => tabela.nome === 'tipo_projeto_status')!;
     const maisBaixaDoGrupo = Math.max(20 + alturaDaTabela(3), 20 + alturaDaTabela(2));
     assert.ok(nova.y > maisBaixaDoGrupo);
     assert.ok(resultado.avisos.some((aviso) => aviso.includes('tipo_projeto_status')));
@@ -127,25 +127,26 @@ describe('posicionar', () => {
   });
 });
 
-describe('montarDados e renderizarHtml', () => {
-  it('atribui as cores pela ordem dos grupos e cria o grupo "outros" quando preciso', () => {
-    const modelo = montarModelo(colunas, primarias, estrangeiras, configuracao);
-    const { tabelas } = posicionar(modelo, {}, ['dom', 'chat']);
-    const dados = montarDados(tabelas, configuracao, 'origem', []);
-    assert.equal(dados.grupos.dom.cor, '--g0');
-    assert.equal(dados.grupos.chat.cor, '--g1');
-    assert.equal(dados.grupos.outros.cor, '--goutros');
+describe('montarDiagrama e serializarDiagrama', () => {
+  const modelo = montarModelo(colunas, primarias, estrangeiras, configuracao);
+  const { tabelas } = posicionar(modelo, {}, ['dom', 'chat']);
+
+  it('lista os grupos na ordem da configuração, só os que têm tabela, e cria "outros" quando preciso', () => {
+    const diagrama = montarDiagrama(tabelas, configuracao, 'origem', []);
+    assert.deepEqual(diagrama.grupos.map((grupo) => grupo.id), ['dom', 'chat', 'outros']);
+    assert.equal(diagrama.grupos[2].rotulo, 'Sem grupo');
+    const semChat = montarDiagrama(tabelas.filter((tabela) => tabela.grupo !== 'chat'), configuracao, 'origem', []);
+    assert.deepEqual(semChat.grupos.map((grupo) => grupo.id), ['dom', 'outros']);
   });
 
-  it('injeta o JSON no molde sem deixar um "</script>" do banco fechar a tag', () => {
-    const dados = montarDados([], configuracao, 'a </script><b> $& origem', []);
-    const html = renderizarHtml('<script>const DADOS=__DADOS__;</script>', dados);
-    assert.ok(!html.slice(8, -9).includes('</script>'));
-    assert.ok(html.includes('\\u003c/script>'));
-    assert.ok(html.includes('$&'));
-  });
-
-  it('recusa um molde sem o marcador', () => {
-    assert.throws(() => renderizarHtml('<html></html>', montarDados([], configuracao, '', [])), /__DADOS__/);
+  it('serializa como fonte TypeScript estável e a releitura do literal devolve o mesmo diagrama', () => {
+    const diagrama = montarDiagrama(tabelas, configuracao, 'origem', ['aviso']);
+    const texto = serializarDiagrama(diagrama);
+    assert.ok(texto.startsWith('// GERADO'));
+    assert.ok(texto.includes('export const DIAGRAMA_MODELAGEM: ModelagemDiagrama = {'));
+    assert.ok(texto.endsWith('};\n'));
+    assert.equal(texto, serializarDiagrama(montarDiagrama(tabelas, configuracao, 'origem', ['aviso'])));
+    const literal = texto.slice(texto.indexOf('= {') + 2, texto.lastIndexOf(';'));
+    assert.deepEqual(JSON.parse(literal), diagrama);
   });
 });

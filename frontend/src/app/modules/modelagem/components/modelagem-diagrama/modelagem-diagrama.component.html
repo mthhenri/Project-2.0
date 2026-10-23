@@ -1,0 +1,121 @@
+<svg #svg class="modelagem-diagrama__svg" role="img" aria-label="Diagrama da modelagem do banco de dados" (click)="aoClicarNoFundo($event)">
+  <g [attr.transform]="transformacao()">
+    @for (caixa of caixasDeGrupo(); track caixa.grupo.id) {
+      <g [class]="'modelagem-diagrama__grupo modelagem-diagrama--cor-' + caixa.cor">
+        <rect
+          class="modelagem-diagrama__grupo-caixa"
+          rx="14"
+          [attr.x]="caixa.retangulo.x"
+          [attr.y]="caixa.retangulo.y"
+          [attr.width]="caixa.retangulo.largura"
+          [attr.height]="caixa.retangulo.altura"
+        />
+        <text class="modelagem-diagrama__grupo-titulo" [attr.x]="caixa.retangulo.x + 14" [attr.y]="caixa.retangulo.y + 22">{{ caixa.grupo.titulo }}</text>
+      </g>
+    }
+
+    @for (ligacao of ligacoes(); track ligacao.chave) {
+      <g
+        class="modelagem-diagrama__ligacao"
+        [class.modelagem-diagrama__ligacao--foco]="ligacao.emFoco"
+        [class.modelagem-diagrama__ligacao--logica]="ligacao.logica"
+        [class.modelagem-diagrama__ligacao--apagada]="ligacao.apagada"
+        [class.modelagem-diagrama__ligacao--muito-apagada]="ligacao.forteApagada"
+      >
+        <path class="modelagem-diagrama__linha" [attr.d]="ligacao.caminho" />
+        <circle class="modelagem-diagrama__ponta" r="4" [attr.cx]="ligacao.origemX" [attr.cy]="ligacao.origemY" />
+        @if (ligacao.destinoX !== null) {
+          <path class="modelagem-diagrama__traco" [attr.d]="'M' + ligacao.destinoX + ',' + (ligacao.destinoY! - 5) + ' L' + ligacao.destinoX + ',' + (ligacao.destinoY! + 5)" />
+        }
+      </g>
+    }
+
+    @for (item of tabelasVisiveis(); track item.tabela.nome) {
+      <g
+        [class]="'modelagem-diagrama__tabela modelagem-diagrama--cor-' + item.cor"
+        [class.modelagem-diagrama__tabela--apagada]="item.apagada"
+        [class.modelagem-diagrama__tabela--selecionada]="item.selecionada"
+        [class.modelagem-diagrama__tabela--achada]="item.achadaNaBusca"
+        [attr.transform]="'translate(' + item.tabela.x + ',' + item.tabela.y + ')'"
+        role="button"
+        tabindex="0"
+        [attr.aria-label]="'Tabela ' + item.tabela.nome"
+        [attr.aria-pressed]="item.selecionada"
+        (pointerenter)="aoEntrarNaTabela(item.tabela.nome)"
+        (pointerleave)="aoSairDaTabela()"
+        (pointerdown)="aoPressionarTabela($event, item.tabela)"
+        (pointermove)="aoMoverTabela($event)"
+        (pointerup)="aoSoltarTabela()"
+        (pointercancel)="aoSoltarTabela()"
+        (keydown.enter)="aoTeclarTabela($event, item.tabela.nome)"
+        (keydown.space)="aoTeclarTabela($event, item.tabela.nome)"
+      >
+        <rect class="modelagem-diagrama__tabela-caixa" rx="8" [attr.width]="item.tabela.largura" [attr.height]="item.altura" />
+        <path
+          class="modelagem-diagrama__tabela-cabecalho"
+          [attr.d]="'M0,' + alturaCabecalho + ' V8 a8,8 0 0 1 8,-8 H' + (item.tabela.largura - 8) + ' a8,8 0 0 1 8,8 V' + alturaCabecalho + ' Z'"
+        />
+        <text class="modelagem-diagrama__tabela-nome" x="10" y="19">{{ item.tabela.nome }}</text>
+        @for (linha of item.linhas; track linha.coluna.nome; let indice = $index) {
+          @if (linha.achada) {
+            <rect
+              class="modelagem-diagrama__linha-achada"
+              x="2"
+              [attr.y]="alturaCabecalho + alturaLinha * indice"
+              [attr.width]="item.tabela.largura - 4"
+              [attr.height]="alturaLinha"
+            />
+          }
+          @switch (linha.coluna.marca) {
+            @case ('pk') { <text class="modelagem-diagrama__marca modelagem-diagrama__marca--pk" x="8" [attr.y]="alturaCabecalho + alturaLinha * indice + 13">PK</text> }
+            @case ('fk') { <text class="modelagem-diagrama__marca modelagem-diagrama__marca--fk" x="8" [attr.y]="alturaCabecalho + alturaLinha * indice + 13">FK</text> }
+            @case ('lg') { <text class="modelagem-diagrama__marca" x="8" [attr.y]="alturaCabecalho + alturaLinha * indice + 13">··</text> }
+          }
+          <text class="modelagem-diagrama__coluna" x="30" [attr.y]="alturaCabecalho + alturaLinha * indice + 13">{{ linha.coluna.nome }}</text>
+          <text class="modelagem-diagrama__tipo" [attr.x]="item.tabela.largura - 8" [attr.y]="alturaCabecalho + alturaLinha * indice + 13">{{ linha.coluna.tipo }}</text>
+        }
+      </g>
+    }
+  </g>
+</svg>
+
+<!-- Controles flutuantes: legenda (ⓘ), zoom e posições -->
+<div class="modelagem-diagrama__controles">
+  <p-button
+    icon="pi pi-info-circle"
+    severity="secondary"
+    [outlined]="true"
+    size="small"
+    ariaLabel="Como ler o diagrama"
+    pTooltip="Como ler o diagrama"
+    tooltipPosition="left"
+    (onClick)="alternarLegenda($event, legenda)"
+  />
+  <div class="modelagem-diagrama__grupo-botoes" role="group" aria-label="Zoom">
+    <p-button icon="pi pi-plus" severity="secondary" [outlined]="true" size="small" ariaLabel="Aproximar" pTooltip="Aproximar" tooltipPosition="left" (onClick)="aproximar()" />
+    <p-button icon="pi pi-minus" severity="secondary" [outlined]="true" size="small" ariaLabel="Afastar" pTooltip="Afastar" tooltipPosition="left" (onClick)="afastar()" />
+    <p-button icon="pi pi-home" severity="secondary" [outlined]="true" size="small" ariaLabel="Enquadrar tudo" pTooltip="Enquadrar tudo" tooltipPosition="left" (onClick)="enquadrarTudo()" />
+  </div>
+  <div class="modelagem-diagrama__grupo-botoes" role="group" aria-label="Posições das tabelas">
+    <p-button icon="pi pi-replay" severity="secondary" [outlined]="true" size="small" ariaLabel="Restaurar posições" pTooltip="Restaurar as posições do arquivo" tooltipPosition="left" (onClick)="restaurarPosicoes()" />
+    <p-button icon="pi pi-copy" severity="secondary" [outlined]="true" size="small" ariaLabel="Copiar posições" pTooltip="Copiar as posições atuais (para o modelagem.config.json)" tooltipPosition="left" (onClick)="copiarPosicoes()" />
+  </div>
+</div>
+
+<p-popover #legenda>
+  <div class="modelagem-diagrama__legenda">
+    <h3 class="modelagem-diagrama__legenda-titulo">Colunas</h3>
+    <div class="modelagem-diagrama__legenda-item"><span class="modelagem-diagrama__marca modelagem-diagrama__marca--pk">PK</span> chave primária</div>
+    <div class="modelagem-diagrama__legenda-item"><span class="modelagem-diagrama__marca modelagem-diagrama__marca--fk">FK</span> chave estrangeira</div>
+    <div class="modelagem-diagrama__legenda-item"><span class="modelagem-diagrama__marca">··</span> referência sem FK no banco</div>
+    <div class="modelagem-diagrama__legenda-item"><code>tipo?</code> aceita nulo</div>
+
+    <h3 class="modelagem-diagrama__legenda-titulo">Ligações</h3>
+    <div class="modelagem-diagrama__legenda-item"><span class="modelagem-diagrama__legenda-linha"></span> FK (a bolinha fica na coluna, o traço na tabela referenciada)</div>
+    <div class="modelagem-diagrama__legenda-item"><span class="modelagem-diagrama__legenda-linha modelagem-diagrama__legenda-linha--logica"></span> referência sem FK</div>
+
+    <h3 class="modelagem-diagrama__legenda-titulo">Mouse</h3>
+    <div class="modelagem-diagrama__legenda-item">Arraste o fundo para mover e use a roda para o zoom.</div>
+    <div class="modelagem-diagrama__legenda-item">Arraste uma tabela para reposicioná-la; clique para ver as relações.</div>
+  </div>
+</p-popover>

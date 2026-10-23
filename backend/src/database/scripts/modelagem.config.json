@@ -1,5 +1,5 @@
 {
-  "_comentario": "Entrada do gerador do diagrama (npm run modelagem). posicoes: arraste na página e use Copiar posições. tabelaGrupo: tabelas tipo_* herdam o grupo da tabela que as referencia.",
+  "_comentario": "Entrada do gerador do diagrama (npm run modelagem). posicoes: arraste na tela Modelagem e use Copiar posições. tabelaGrupo: tabelas tipo_* herdam o grupo da tabela que as referencia.",
   "grupos": {
     "dom": {"titulo": "Domínio: projetos, demandas, atividades e execuções", "rotulo": "Domínio"},
     "usr": {"titulo": "Usuários, ponto e anotações", "rotulo": "Usuários e ponto"},

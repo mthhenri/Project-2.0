@@ -27,4 +27,5 @@ export const ITENS_NAVEGACAO: readonly ItemNavegacao[] = [
   { label: 'Tags',       icone: 'pi pi-tag',          rotaLink: '/tag',        tecla: 't', somenteGestor: true  },
   { label: 'Usuários',   icone: 'pi pi-users',        rotaLink: '/usuario',    tecla: 'u', somenteGestor: true  },
   { label: 'IA',         icone: 'pi pi-sparkles',     rotaLink: '/configuracao-ia', tecla: 'i', somenteGestor: true, somenteAdministrador: true },
+  { label: 'Modelagem',  icone: 'pi pi-database',     rotaLink: '/modelagem',  tecla: 'm', somenteGestor: false },
 ];

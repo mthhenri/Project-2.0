@@ -1,0 +1,169 @@
+@use '../../styles/cores-de-grupo' as cores;
+
+:host {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+@include cores.cores-de-grupo('modelagem-diagrama');
+
+.modelagem-diagrama {
+  &__svg {
+    width: 100%;
+    height: 100%;
+    background-color: var(--app-surface-50);
+    background-image: radial-gradient(circle, var(--app-surface-200) 1.5px, transparent 1.5px);
+    background-size: 28px 28px;
+    cursor: grab;
+
+    &:active { cursor: grabbing; }
+  }
+
+  &__grupo-caixa {
+    fill: color-mix(in srgb, var(--cor-grupo) 9%, transparent);
+    stroke: color-mix(in srgb, var(--cor-grupo) 40%, transparent);
+    stroke-width: 1.5;
+  }
+
+  &__grupo-titulo {
+    fill: var(--cor-grupo);
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  &__ligacao {
+    transition: opacity 0.15s;
+    --linha: var(--app-surface-400);
+
+    &--foco { --linha: var(--p-primary-500); }
+    &--apagada { opacity: 0.25; }
+    &--muito-apagada { opacity: 0.08; }
+  }
+
+  &__linha {
+    fill: none;
+    stroke: var(--linha);
+    stroke-width: 1.5;
+    pointer-events: none;
+  }
+
+  &__ligacao--foco &__linha { stroke-width: 2.6; }
+  &__ligacao--logica &__linha { stroke-dasharray: 5 5; }
+
+  &__ponta {
+    fill: var(--linha);
+    pointer-events: none;
+  }
+
+  &__traco {
+    fill: none;
+    stroke: var(--linha);
+    stroke-width: 2;
+    pointer-events: none;
+  }
+
+  &__tabela {
+    cursor: pointer;
+    transition: opacity 0.15s;
+    outline: none;
+
+    &--apagada { opacity: 0.13; }
+    &--selecionada &-caixa,
+    &--achada &-caixa { stroke-width: 3.4; }
+    &:focus-visible &-caixa { stroke: var(--p-primary-500); stroke-width: 3.4; }
+  }
+
+  &__tabela-caixa {
+    fill: var(--app-surface-0);
+    stroke: var(--cor-grupo);
+    stroke-width: 1.8;
+  }
+
+  &__tabela-cabecalho { fill: var(--cor-grupo); }
+
+  &__tabela-nome {
+    fill: #fff;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  &__coluna {
+    fill: var(--p-text-color);
+    font-size: 12px;
+    font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  }
+
+  &__tipo {
+    fill: var(--p-text-muted-color);
+    font-size: 10.5px;
+    font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+    text-anchor: end;
+  }
+
+  &__marca {
+    fill: var(--p-text-muted-color);
+    color: var(--p-text-muted-color);
+    font-size: 9.5px;
+    font-weight: 700;
+
+    &--pk { fill: var(--p-orange-600); color: var(--p-orange-600); }
+    &--fk { fill: var(--p-primary-600); color: var(--p-primary-600); }
+  }
+
+  &__linha-achada {
+    fill: color-mix(in srgb, var(--p-primary-500) 28%, transparent);
+  }
+
+  &__controles {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+  }
+
+  &__grupo-botoes {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  &__legenda {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    max-width: 17rem;
+  }
+
+  &__legenda-titulo {
+    margin: 0.5rem 0 0.25rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--p-text-muted-color);
+
+    &:first-child { margin-top: 0; }
+  }
+
+  &__legenda-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--p-text-color);
+  }
+
+  &__legenda-linha {
+    flex: none;
+    width: 1.5rem;
+    height: 0;
+    border-top: 2px solid var(--app-surface-400);
+
+    &--logica { border-top-style: dashed; }
+  }
+}

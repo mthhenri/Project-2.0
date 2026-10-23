@@ -1,0 +1,68 @@
+<aside class="modelagem-detalhe" aria-live="polite">
+  @if (tabela(); as tabelaAtual) {
+    <h2 class="modelagem-detalhe__nome">{{ tabelaAtual.nome }}</h2>
+    <p class="modelagem-detalhe__grupo">{{ rotuloDoGrupo() }}</p>
+
+    <h3 class="modelagem-detalhe__secao">Colunas ({{ tabelaAtual.colunas.length }})</h3>
+    <ul class="modelagem-detalhe__lista">
+      @for (coluna of tabelaAtual.colunas; track coluna.nome) {
+        <li class="modelagem-detalhe__coluna">
+          <span class="modelagem-detalhe__coluna-nome">
+            @if (coluna.marca === 'pk') { <span class="modelagem-detalhe__marca modelagem-detalhe__marca--pk">PK</span> }
+            @else if (coluna.marca === 'fk') { <span class="modelagem-detalhe__marca modelagem-detalhe__marca--fk">FK</span> }
+            @else if (coluna.marca === 'lg') { <span class="modelagem-detalhe__marca">··</span> }
+            {{ coluna.nome }}
+          </span>
+          <span class="modelagem-detalhe__tipo">{{ coluna.tipo }}</span>
+        </li>
+      }
+    </ul>
+
+    <h3 class="modelagem-detalhe__secao">Referencia ({{ referencia().length }})</h3>
+    @for (aresta of referencia(); track aresta.coluna) {
+      <button type="button" class="modelagem-detalhe__relacao" (click)="tabelaEscolhida.emit(aresta.destino)">
+        {{ aresta.destino }}
+        <small class="modelagem-detalhe__relacao-via">via {{ aresta.coluna }}{{ aresta.logica ? ' (sem FK)' : '' }}</small>
+      </button>
+    } @empty {
+      <p class="modelagem-detalhe__vazio">Nenhuma.</p>
+    }
+
+    <h3 class="modelagem-detalhe__secao">Referenciada por ({{ referenciadaPor().length }})</h3>
+    @for (aresta of referenciadaPor(); track aresta.origem + aresta.coluna) {
+      <button type="button" class="modelagem-detalhe__relacao" (click)="tabelaEscolhida.emit(aresta.origem)">
+        {{ aresta.origem }}
+        <small class="modelagem-detalhe__relacao-via">via {{ aresta.coluna }}{{ aresta.logica ? ' (sem FK)' : '' }}</small>
+      </button>
+    } @empty {
+      <p class="modelagem-detalhe__vazio">Nenhuma.</p>
+    }
+  } @else {
+    <h2 class="modelagem-detalhe__nome">Banco de dados</h2>
+    <p class="modelagem-detalhe__grupo">{{ diagrama().origem }}</p>
+    <p class="modelagem-detalhe__vazio">
+      Clique em uma tabela para ver as colunas e as relações. Passe o mouse sobre uma tabela para destacar só as ligações dela.
+    </p>
+
+    <div class="modelagem-detalhe__resumo">
+      <div class="modelagem-detalhe__numero"><strong>{{ resumo().tabelas }}</strong>tabelas</div>
+      <div class="modelagem-detalhe__numero"><strong>{{ resumo().chavesEstrangeiras }}</strong>FKs</div>
+      <div class="modelagem-detalhe__numero"><strong>{{ resumo().colunas }}</strong>colunas</div>
+    </div>
+
+    <h3 class="modelagem-detalhe__secao">Em todas as tabelas</h3>
+    <p class="modelagem-detalhe__vazio">
+      Também existem <code>{{ diagrama().colunasOcultas.join(', ') }}</code> (BaseEntity), fora do desenho. As tabelas
+      <code>tipo_*</code> guardam os enums (código e descrição).
+    </p>
+
+    @if (diagrama().avisos.length) {
+      <div class="modelagem-detalhe__avisos" role="status">
+        <strong>Avisos da geração</strong>
+        @for (aviso of diagrama().avisos; track aviso) {
+          <p>{{ aviso }}</p>
+        }
+      </div>
+    }
+  }
+</aside>
