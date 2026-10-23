@@ -108,14 +108,15 @@ export interface SelecaoNoTexto extends TextoComCursor {
 /**
  * Troca `[inicio, fim)` por um bloco de código cercado com `conteudo`. A cerca começa e termina na própria linha: se o trecho está no meio de uma
  * linha, entra quebra antes e depois. Com `conteudo` vazio o cursor fica **dentro** do bloco, pronto para digitar; com conteúdo, depois do bloco.
+ * `linguagem` (o nome curto da cerca, como `ts`) vai logo depois das crases de abertura; sem ela a cerca fica pura (task 216).
  */
-export function inserirBlocoDeCodigo(texto: string, inicio: number, fim: number, conteudo: string): SelecaoNoTexto {
+export function inserirBlocoDeCodigo(texto: string, inicio: number, fim: number, conteudo: string, linguagem?: string | null): SelecaoNoTexto {
   const antes = texto.slice(0, inicio);
   const depois = texto.slice(fim);
   const prefixo = antes.length > 0 && !antes.endsWith('\n') ? '\n' : '';
   const sufixo = depois.length > 0 && !depois.startsWith('\n') ? '\n' : '';
   const corpo = conteudo.replace(/\s+$/, '');
-  const abertura = `${prefixo}\`\`\`\n`;
+  const abertura = `${prefixo}\`\`\`${linguagem ?? ''}\n`;
   // Bloco vazio ganha uma linha em branco entre as cercas: é nela que o cursor fica, e o que for digitado não gruda na cerca de baixo.
   const bloco = `${abertura}${corpo}\n\`\`\`${sufixo}`;
   const novo = antes + bloco + depois;

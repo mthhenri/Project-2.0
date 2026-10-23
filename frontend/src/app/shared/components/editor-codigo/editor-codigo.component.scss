@@ -1,0 +1,98 @@
+@use '../markdown-bloco-codigo/realce';
+
+// A altura vem de quem usa o editor (ele preenche o espaço); a largura também.
+:host {
+  display: block;
+  min-height: 0;
+
+  @include realce.variaveis-do-realce;
+}
+
+:host-context(.app-escuro) {
+  @include realce.variaveis-do-realce-escuro;
+}
+
+// As três camadas (números, realce e campo) precisam ter exatamente a mesma fonte e o mesmo espaçamento vertical, senão o texto "dobra".
+// A folga de 1rem embaixo e à direita nas duas camadas de trás deixa elas rolarem até onde o campo rola, mesmo com as barras de rolagem dele.
+.editor-codigo {
+  --editor-codigo-linha: 1.25rem;
+  --editor-codigo-folga: 1rem;
+
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--app-surface-200);
+  border-radius: 6px;
+  background: var(--app-surface-100);
+  font-family: var(--font-mono, monospace);
+  font-size: 0.8125rem;
+  line-height: var(--editor-codigo-linha);
+
+  &:focus-within {
+    border-color: var(--p-primary-color);
+  }
+
+  &__numeros {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    overflow: hidden;
+    padding: 0.5rem 0.5rem calc(0.5rem + var(--editor-codigo-folga)) 0.625rem;
+    border-right: 1px solid var(--app-surface-200);
+    background: var(--app-surface-50, var(--app-surface-100));
+    color: var(--p-text-muted-color);
+    user-select: none;
+  }
+
+  &__numero {
+    display: block;
+    height: var(--editor-codigo-linha);
+  }
+
+  &__area {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__realce,
+  &__campo {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    padding: 0.5rem 0.75rem;
+    border: 0;
+    font: inherit;
+    letter-spacing: normal;
+    tab-size: 2;
+    white-space: pre;
+    word-break: normal;
+    overflow-wrap: normal;
+  }
+
+  &__realce {
+    overflow: hidden;
+    padding-right: calc(0.75rem + var(--editor-codigo-folga));
+    padding-bottom: calc(0.5rem + var(--editor-codigo-folga));
+    color: var(--p-text-color);
+    pointer-events: none;
+  }
+
+  &__campo {
+    overflow: auto;
+    resize: none;
+    background: transparent;
+    // O texto de verdade é o da camada de trás; o campo só recebe o teclado, o cursor e a seleção.
+    color: transparent;
+    caret-color: var(--p-text-color);
+    outline: none;
+
+    &::selection {
+      background: color-mix(in srgb, var(--p-primary-color) 28%, transparent);
+    }
+  }
+
+  @include realce.classes-dos-tokens;
+}

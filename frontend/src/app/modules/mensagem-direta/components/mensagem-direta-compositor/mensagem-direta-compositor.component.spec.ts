@@ -158,19 +158,68 @@ describe('MensagemDiretaCompositorComponent', () => {
     expect(campo().value).toBe('#err');
   });
 
-  it('o botão Código abre um bloco com o cursor dentro (sem seleção) e envolve o trecho (com seleção)', async () => {
-    const botao = tela.elemento.querySelector<HTMLButtonElement>('button[aria-label="Inserir bloco de código"]')!;
-    await digitar('');
-    botao.click();
+  // O botão `</>` abre o mini editor (task 216); o bloco só entra no campo quando o usuário insere.
+  const botaoDeCodigo = () => tela.elemento.querySelector<HTMLButtonElement>('button[aria-label="Inserir bloco de código"]')!;
+  const painel = () => tela.elemento.querySelector('app-mensagem-direta-codigo-painel');
+  const editorDeCodigo = () => tela.elemento.querySelector<HTMLTextAreaElement>('textarea[aria-label="Código do bloco"]')!;
+  const botaoDoPainel = (rotulo: string) => Array.from(tela.elemento.querySelectorAll<HTMLButtonElement>('app-mensagem-direta-codigo-painel p-button button')).find((item) => item.textContent?.includes(rotulo))!;
+  async function digitarNoEditor(codigo: string) {
+    editorDeCodigo().value = codigo;
+    editorDeCodigo().dispatchEvent(new Event('input'));
     await tela.atualizar();
-    expect(campo().value).toBe('```\n\n```');
-    expect(campo().selectionStart).toBe(4);
+  }
 
+  it('o botão Código abre o mini editor sem mexer no campo; Esc fecha e devolve o foco ao campo', async () => {
+    await digitar('antes');
+    botaoDeCodigo().click();
+    await tela.atualizar();
+    expect(painel()).not.toBeNull();
+    expect(editorDeCodigo().value).toBe('');
+    expect(campo().value).toBe('antes');
+    expect(tela.elemento.querySelector('.compositor-direto__caixa')!.hasAttribute('inert')).toBe(true);
+
+    editorDeCodigo().dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+    await tela.atualizar();
+    expect(painel()).toBeNull();
+    expect(campo().value).toBe('antes');
+    expect(tela.elemento.querySelector('.compositor-direto__caixa')!.hasAttribute('inert')).toBe(false);
+  });
+
+  it('Inserir põe o bloco no campo (cerca sem linguagem) e fecha o painel; nada é enviado sozinho', async () => {
+    await digitar('');
+    botaoDeCodigo().click();
+    await tela.atualizar();
+    await digitarNoEditor('const a = 1;');
+    botaoDoPainel('Inserir').click();
+    await tela.atualizar();
+    expect(painel()).toBeNull();
+    expect(campo().value).toBe('```\nconst a = 1;\n```');
+    expect(envios).toEqual([]);
+  });
+
+  it('com a linguagem escolhida, o nome curto vai na cerca', async () => {
+    await digitar('veja:');
+    botaoDeCodigo().click();
+    await tela.atualizar();
+    await digitarNoEditor('print(1)');
+    const painelAberto = tela.fixture.debugElement.query((elemento) => elemento.name === 'app-mensagem-direta-codigo-painel');
+    painelAberto.componentInstance['controleLinguagem'].setValue('py');
+    await tela.atualizar();
+    botaoDoPainel('Inserir').click();
+    await tela.atualizar();
+    expect(campo().value).toBe('veja:\n```py\nprint(1)\n```');
+  });
+
+  it('o trecho selecionado já vem no editor e é trocado pelo bloco', async () => {
     await digitar('antes\nconst a = 1;\nfim', 22);
     campo().setSelectionRange(6, 18);
-    botao.click();
+    botaoDeCodigo().click();
     await tela.atualizar();
-    expect(campo().value).toBe('antes\n```\nconst a = 1;\n```\nfim');
+    expect(editorDeCodigo().value).toBe('const a = 1;');
+    await digitarNoEditor('const a = 2;');
+    botaoDoPainel('Inserir').click();
+    await tela.atualizar();
+    expect(campo().value).toBe('antes\n```\nconst a = 2;\n```\nfim');
   });
 
   it('colar várias linhas com cara de código vira bloco; colar prosa segue o caminho normal', async () => {

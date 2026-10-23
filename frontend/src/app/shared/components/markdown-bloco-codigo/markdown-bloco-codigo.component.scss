@@ -1,28 +1,14 @@
-// Cores dos tokens: um conjunto para o tema claro e outro para o escuro, como variáveis do bloco (nunca `--p-surface-N` direto).
-// O escuro é escolhido pelo mesmo seletor que o resto do sistema usa para o tema (`.app-escuro` na raiz).
+@use 'realce';
+
 :host {
   display: block;
   margin: 0 0 0.6em;
 
-  --bloco-codigo-comentario: #6b7280;
-  --bloco-codigo-pontuacao: #4b5563;
-  --bloco-codigo-palavra: #7c3aed;
-  --bloco-codigo-texto: #0f766e;
-  --bloco-codigo-numero: #b45309;
-  --bloco-codigo-funcao: #1d4ed8;
-  --bloco-codigo-tipo: #be185d;
-  --bloco-codigo-variavel: #0369a1;
+  @include realce.variaveis-do-realce;
 }
 
 :host-context(.app-escuro) {
-  --bloco-codigo-comentario: #9ca3af;
-  --bloco-codigo-pontuacao: #cbd5e1;
-  --bloco-codigo-palavra: #c4b5fd;
-  --bloco-codigo-texto: #5eead4;
-  --bloco-codigo-numero: #fcd34d;
-  --bloco-codigo-funcao: #93c5fd;
-  --bloco-codigo-tipo: #f9a8d4;
-  --bloco-codigo-variavel: #7dd3fc;
+  @include realce.variaveis-do-realce-escuro;
 }
 
 .bloco-codigo {
@@ -60,61 +46,5 @@
     overflow-wrap: normal;
   }
 
-  &__token {
-    &--comment,
-    &--prolog,
-    &--doctype,
-    &--cdata {
-      color: var(--bloco-codigo-comentario);
-      font-style: italic;
-    }
-
-    &--punctuation,
-    &--operator {
-      color: var(--bloco-codigo-pontuacao);
-    }
-
-    &--keyword,
-    &--atrule,
-    &--important,
-    &--boolean,
-    &--tag {
-      color: var(--bloco-codigo-palavra);
-    }
-
-    &--string,
-    &--char,
-    &--attr-value,
-    &--template-string,
-    &--regex,
-    &--url,
-    &--inserted {
-      color: var(--bloco-codigo-texto);
-    }
-
-    &--number,
-    &--constant,
-    &--symbol,
-    &--deleted {
-      color: var(--bloco-codigo-numero);
-    }
-
-    &--function,
-    &--class-name,
-    &--builtin,
-    &--selector {
-      color: var(--bloco-codigo-funcao);
-    }
-
-    &--property,
-    &--attr-name,
-    &--namespace {
-      color: var(--bloco-codigo-tipo);
-    }
-
-    &--variable,
-    &--parameter {
-      color: var(--bloco-codigo-variavel);
-    }
-  }
+  @include realce.classes-dos-tokens;
 }

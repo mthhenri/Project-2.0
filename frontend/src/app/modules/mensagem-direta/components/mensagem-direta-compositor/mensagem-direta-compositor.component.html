@@ -39,7 +39,19 @@
     </div>
   }
 
-  <div class="compositor-direto__caixa">
+  @if (painelDeCodigo(); as painel) {
+    <app-mensagem-direta-codigo-painel
+      class="compositor-direto__painel"
+      [texto]="texto()"
+      [inicio]="painel.inicio"
+      [fim]="painel.fim"
+      [codigoInicial]="painel.selecionado"
+      (inserir)="inserirDoPainel($event)"
+      (cancelar)="fecharPainelDeCodigo()"
+    />
+  }
+
+  <div class="compositor-direto__caixa" [attr.inert]="painelDeCodigo() ? '' : null">
     <textarea
       #campoTexto
       pTextarea

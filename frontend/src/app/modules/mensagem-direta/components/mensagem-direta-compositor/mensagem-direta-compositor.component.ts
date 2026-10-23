@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, computed, effect, inject, input, output, signal, untracked, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, ElementRef, computed, effect, inject, input, output, signal, untracked, viewChild } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
@@ -21,6 +21,7 @@ import {
 } from '../../utils/compositor.util';
 import { filtrarPessoasPorNome } from '../../utils/mensagem-direta.util';
 import { MensagemDiretaAvatarComponent } from '../mensagem-direta-avatar/mensagem-direta-avatar.component';
+import { CodigoEscolhido, MensagemDiretaCodigoPainelComponent } from '../mensagem-direta-codigo-painel/mensagem-direta-codigo-painel.component';
 
 const ATRASO_DA_BUSCA_MS = 250;
 const MINIMO_DE_LETRAS_DA_REFERENCIA = 2;
@@ -48,13 +49,14 @@ type SituacaoDaBusca = 'ocioso' | 'carregando' | 'pronto' | 'erro';
 @Component({
   selector: 'app-mensagem-direta-compositor',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonModule, TextareaModule, TooltipModule, MensagemDiretaAvatarComponent],
+  imports: [ReactiveFormsModule, ButtonModule, TextareaModule, TooltipModule, MensagemDiretaAvatarComponent, MensagemDiretaCodigoPainelComponent],
   templateUrl: './mensagem-direta-compositor.component.html',
   styleUrl: './mensagem-direta-compositor.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MensagemDiretaCompositorComponent {
   private readonly api = inject(MensagemDiretaService);
+  private readonly detectorDeMudancas = inject(ChangeDetectorRef);
   private readonly campo = viewChild<ElementRef<HTMLTextAreaElement>>('campoTexto');
 
   /** Quem pode ser mencionado: só os participantes da conversa (a regra do servidor). */
@@ -68,7 +70,9 @@ export class MensagemDiretaCompositorComponent {
 
   protected readonly limiteDoTexto = LIMITE_TEXTO_MENSAGEM_DIRETA;
   readonly controleTexto = new FormControl('', { nonNullable: true });
-  private readonly texto = signal('');
+  protected readonly texto = signal('');
+  /** O painel do mini editor de código (task 216), aberto pelo botão `</>`: guarda o trecho do campo que o bloco vai substituir. `null` = fechado. */
+  protected readonly painelDeCodigo = signal<{ inicio: number; fim: number; selecionado: string } | null>(null);
   private readonly cursor = signal(0);
   /** O `inicio` do gatilho que o usuário dispensou com Esc ou clicando fora: ele não reabre até o texto passar a ter OUTRO gatilho (ou nenhum). */
   private readonly dispensadoEm = signal<number | null>(null);
@@ -293,19 +297,40 @@ export class MensagemDiretaCompositorComponent {
     return resultado.texto.length <= LIMITE_TEXTO_MENSAGEM_DIRETA;
   }
 
+  /** O botão `</>` abre o mini editor; o trecho selecionado no campo (se houver) já vem nele. */
   protected inserirCodigo(): void {
     const campo = this.campo()?.nativeElement;
     if (!campo) return;
-    const selecionado = campo.value.slice(campo.selectionStart, campo.selectionEnd);
-    if (this.caberiaOBloco(campo, selecionado)) this.aplicarBloco(campo, selecionado);
-    campo.focus();
+    const { selectionStart: inicio, selectionEnd: fim } = campo;
+    this.painelDeCodigo.set({ inicio, fim, selecionado: campo.value.slice(inicio, fim) });
+  }
+
+  /** Fecha o painel e já atualiza a tela: com o painel aberto o campo está `inert`, e só depois disso ele aceita o foco de volta. */
+  private fecharPainel(): void {
+    this.painelDeCodigo.set(null);
+    this.detectorDeMudancas.detectChanges();
+  }
+
+  protected fecharPainelDeCodigo(): void {
+    this.fecharPainel();
+    this.campo()?.nativeElement.focus();
+  }
+
+  /** O código do mini editor entra no lugar do trecho que estava selecionado quando o painel abriu, já com a linguagem na cerca. */
+  protected inserirDoPainel(escolhido: CodigoEscolhido): void {
+    const campo = this.campo()?.nativeElement;
+    const painel = this.painelDeCodigo();
+    this.fecharPainel();
+    if (!campo || !painel) return;
+    campo.setSelectionRange(painel.inicio, painel.fim);
+    this.aplicarBloco(campo, escolhido.codigo, escolhido.linguagem);
   }
 
   /** Troca a seleção por um bloco de código. Usa `insertText` quando o navegador deixa (o Ctrl+Z desfaz) e `setRangeText` quando não. */
-  private aplicarBloco(campo: HTMLTextAreaElement, conteudo: string): void {
+  private aplicarBloco(campo: HTMLTextAreaElement, conteudo: string, linguagem?: string | null): void {
     const inicio = campo.selectionStart;
     const fim = campo.selectionEnd;
-    const resultado = inserirBlocoDeCodigo(campo.value, inicio, fim, conteudo);
+    const resultado = inserirBlocoDeCodigo(campo.value, inicio, fim, conteudo, linguagem);
     const inserido = resultado.texto.slice(inicio, resultado.texto.length - (campo.value.length - fim));
     campo.focus();
     const desfazivel = typeof document.execCommand === 'function' && document.execCommand('insertText', false, inserido);

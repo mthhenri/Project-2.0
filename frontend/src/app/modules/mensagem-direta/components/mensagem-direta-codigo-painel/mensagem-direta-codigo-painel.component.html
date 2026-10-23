@@ -1,0 +1,25 @@
+<section class="painel-codigo" role="group" aria-label="Bloco de código" (keydown)="aoTeclar($event)">
+  <header class="painel-codigo__cabecalho">
+    <span class="painel-codigo__titulo"><i class="pi pi-code" aria-hidden="true"></i> Bloco de código</span>
+    <p-select
+      class="painel-codigo__linguagem"
+      [formControl]="controleLinguagem"
+      [options]="opcoes"
+      optionLabel="rotulo"
+      optionValue="cerca"
+      placeholder="Sem linguagem"
+      [showClear]="true"
+      size="small"
+      ariaLabel="Linguagem do código"
+      appendTo="body"
+    />
+  </header>
+  <app-editor-codigo class="painel-codigo__editor" [(valor)]="codigo" [linguagem]="linguagem()" rotulo="Código do bloco" />
+  <footer class="painel-codigo__rodape">
+    <span class="painel-codigo__contador" [class.painel-codigo__contador--excedeu]="excedeu()" [attr.role]="excedeu() ? 'alert' : null">
+      @if (excedeu()) { Passou do limite da mensagem: } {{ contador() }}
+    </span>
+    <p-button label="Cancelar" severity="secondary" [text]="true" size="small" (onClick)="cancelar.emit()" />
+    <p-button label="Inserir" icon="pi pi-check" size="small" [disabled]="!podeInserir()" pTooltip="Ctrl+Enter" tooltipPosition="top" (onClick)="confirmar()" />
+  </footer>
+</section>

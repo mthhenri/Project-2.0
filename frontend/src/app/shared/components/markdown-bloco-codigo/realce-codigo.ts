@@ -33,6 +33,30 @@ export const ROTULO_DA_LINGUAGEM: Record<string, string> = {
   yaml: 'YAML',
 };
 
+/** Uma linguagem oferecida pelo editor de código: a gramática do realce, o nome curto que vai na cerca (` ```ts `) e o rótulo mostrado. */
+export interface LinguagemDoEditor {
+  gramatica: string;
+  cerca: string;
+  rotulo: string;
+}
+
+/** As linguagens do seletor do editor (task 216), na ordem em que aparecem. Todo `cerca` é um apelido que `linguagemDoRealce` resolve para a `gramatica`. */
+export const LINGUAGENS_DO_EDITOR: LinguagemDoEditor[] = [
+  { gramatica: 'typescript', cerca: 'ts', rotulo: ROTULO_DA_LINGUAGEM['typescript'] },
+  { gramatica: 'javascript', cerca: 'js', rotulo: ROTULO_DA_LINGUAGEM['javascript'] },
+  { gramatica: 'php', cerca: 'php', rotulo: ROTULO_DA_LINGUAGEM['php'] },
+  { gramatica: 'csharp', cerca: 'cs', rotulo: ROTULO_DA_LINGUAGEM['csharp'] },
+  { gramatica: 'java', cerca: 'java', rotulo: ROTULO_DA_LINGUAGEM['java'] },
+  { gramatica: 'python', cerca: 'py', rotulo: ROTULO_DA_LINGUAGEM['python'] },
+  { gramatica: 'sql', cerca: 'sql', rotulo: ROTULO_DA_LINGUAGEM['sql'] },
+  { gramatica: 'markup', cerca: 'html', rotulo: ROTULO_DA_LINGUAGEM['markup'] },
+  { gramatica: 'css', cerca: 'css', rotulo: ROTULO_DA_LINGUAGEM['css'] },
+  { gramatica: 'scss', cerca: 'scss', rotulo: ROTULO_DA_LINGUAGEM['scss'] },
+  { gramatica: 'json', cerca: 'json', rotulo: ROTULO_DA_LINGUAGEM['json'] },
+  { gramatica: 'bash', cerca: 'bash', rotulo: ROTULO_DA_LINGUAGEM['bash'] },
+  { gramatica: 'yaml', cerca: 'yaml', rotulo: ROTULO_DA_LINGUAGEM['yaml'] },
+];
+
 const APELIDOS: Record<string, string> = {
   ts: 'typescript',
   typescript: 'typescript',

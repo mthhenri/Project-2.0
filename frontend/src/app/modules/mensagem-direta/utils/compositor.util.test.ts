@@ -106,6 +106,13 @@ describe('inserirBlocoDeCodigo', () => {
     expect(resultado.texto).toBe('antes \n```\nx\n```\n depois');
   });
 
+  it('com linguagem, o nome curto vai na cerca de abertura (task 216); vazia ou nula não muda a cerca', () => {
+    expect(inserirBlocoDeCodigo('', 0, 0, 'const a = 1;', 'ts').texto).toBe('```ts\nconst a = 1;\n```');
+    expect(inserirBlocoDeCodigo('veja', 4, 4, 'x', 'py').texto).toBe('veja\n```py\nx\n```');
+    expect(inserirBlocoDeCodigo('', 0, 0, 'x', null).texto).toBe('```\nx\n```');
+    expect(inserirBlocoDeCodigo('', 0, 0, 'x', '').texto).toBe('```\nx\n```');
+  });
+
   it('tira a quebra de linha sobrando do fim do conteúdo colado', () => {
     expect(inserirBlocoDeCodigo('', 0, 0, 'a();\nb();\n\n').texto).toBe('```\na();\nb();\n```');
   });

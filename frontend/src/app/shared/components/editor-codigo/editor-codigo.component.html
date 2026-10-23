@@ -1,0 +1,22 @@
+<div class="editor-codigo">
+  <div #numeros class="editor-codigo__numeros" aria-hidden="true">
+    @for (numero of numerosDasLinhas(); track numero) {
+      <span class="editor-codigo__numero">{{ numero }}</span>
+    }
+  </div>
+  <div class="editor-codigo__area">
+    <pre #camadaDeRealce class="editor-codigo__realce" aria-hidden="true"><code>@for (trecho of exibicao(); track $index) {<span [class]="trecho.tipo ? 'editor-codigo__token editor-codigo__token--' + trecho.tipo : ''">{{ trecho.texto }}</span>}</code></pre>
+    <textarea
+      #campo
+      class="editor-codigo__campo"
+      wrap="off"
+      spellcheck="false"
+      autocomplete="off"
+      autocapitalize="off"
+      [attr.aria-label]="rotulo()"
+      (input)="aoDigitar()"
+      (keydown)="aoTeclar($event)"
+      (scroll)="sincronizarRolagem()"
+    ></textarea>
+  </div>
+</div>

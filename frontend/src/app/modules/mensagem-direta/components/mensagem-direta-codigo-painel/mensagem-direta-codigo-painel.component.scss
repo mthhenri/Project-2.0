@@ -1,0 +1,56 @@
+:host {
+  display: block;
+  min-height: 0;
+}
+
+// O painel mora dentro do compositor, acima do campo: a lista de mensagens encolhe para dar lugar a ele, nada fica por cima.
+.painel-codigo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  height: 15rem;
+  padding: 0.625rem 0.75rem 0;
+
+  &__cabecalho {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  &__titulo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--p-text-color);
+  }
+
+  &__linguagem {
+    min-width: 9.5rem;
+  }
+
+  &__editor {
+    flex: 1;
+    min-height: 0;
+  }
+
+  &__rodape {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.25rem;
+  }
+
+  &__contador {
+    margin-right: auto;
+    font-size: 0.6875rem;
+    color: var(--p-text-muted-color);
+
+    &--excedeu {
+      color: var(--p-red-500);
+      font-weight: 600;
+    }
+  }
+}

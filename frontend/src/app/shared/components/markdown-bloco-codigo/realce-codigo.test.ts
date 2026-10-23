@@ -1,5 +1,19 @@
 import { describe, it, expect } from 'vitest';
-import { linguagemDoRealce, rotuloDoBloco, ROTULO_DA_LINGUAGEM, TokenDeRealce, tokensParaTrechos } from './realce-codigo';
+import { LINGUAGENS_DO_EDITOR, linguagemDoRealce, rotuloDoBloco, ROTULO_DA_LINGUAGEM, TokenDeRealce, tokensParaTrechos } from './realce-codigo';
+
+describe('LINGUAGENS_DO_EDITOR', () => {
+  it('cada nome de cerca volta para a própria gramática e para o rótulo do bloco (o que o editor insere é o que o bloco mostra)', () => {
+    for (const linguagem of LINGUAGENS_DO_EDITOR) {
+      expect(linguagemDoRealce(linguagem.cerca), linguagem.cerca).toBe(linguagem.gramatica);
+      expect(rotuloDoBloco(linguagem.cerca), linguagem.cerca).toBe(linguagem.rotulo);
+    }
+  });
+
+  it('cobre todas as linguagens com realce, sem repetir', () => {
+    expect(LINGUAGENS_DO_EDITOR.map((linguagem) => linguagem.gramatica).sort()).toEqual(Object.keys(ROTULO_DA_LINGUAGEM).sort());
+    expect(new Set(LINGUAGENS_DO_EDITOR.map((linguagem) => linguagem.cerca)).size).toBe(LINGUAGENS_DO_EDITOR.length);
+  });
+});
 
 // Lógica pura do realce (task 189): que linguagem é e como os tokens viram os trechos do template.
 
