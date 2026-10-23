@@ -1,9 +1,8 @@
 /**
- * Lógica pura do diagrama da modelagem (`npm run modelagem`): transforma o que o PostgreSQL informa sobre
- * colunas e chaves em um modelo posicionado, no contrato `ModelagemDiagrama` lido pela tela Modelagem do
- * frontend. Não toca no banco nem no disco.
+ * Lógica pura do diagrama da modelagem (`GET /modelagem`): transforma o que o catálogo do PostgreSQL informa sobre colunas e
+ * chaves em um modelo posicionado, no contrato `ModelagemDiagramaDto` lido pela tela Modelagem. Não toca no banco.
  */
-import type { ModelagemColuna, ModelagemDiagrama, ModelagemGrupo, ModelagemTabela } from '@project20/shared';
+import type { ModelagemColunaDto, ModelagemDiagramaDto, ModelagemGrupoDto, ModelagemTabelaDto } from '@project20/shared';
 
 export interface ColunaBanco {
   tabela: string;
@@ -21,7 +20,7 @@ export interface ChaveBanco {
   colunaDestino?: string;
 }
 
-export type GrupoConfiguracao = Omit<ModelagemGrupo, 'id'>;
+export type GrupoConfiguracao = Omit<ModelagemGrupoDto, 'id'>;
 
 export interface ConfiguracaoModelagem {
   /** Ordem do objeto = ordem dos filtros e da paleta de cores. */
@@ -73,7 +72,7 @@ export function inferirReferenciaLogica(nomeColuna: string, nomesTabelas: string
   return candidatas.sort((a, b) => b.length - a.length)[0];
 }
 
-function larguraDaTabela(nome: string, colunas: ModelagemColuna[]): number {
+function larguraDaTabela(nome: string, colunas: ModelagemColunaDto[]): number {
   const larguraDoNome = 22 + nome.length * 8.6;
   const maiorColuna = Math.max(0, ...colunas.map((coluna) => coluna.nome.length));
   const maiorTipo = Math.max(0, ...colunas.map((coluna) => coluna.tipo.length));
@@ -86,7 +85,7 @@ export function alturaDaTabela(quantidadeColunas: number): number {
 }
 
 export interface ModeloSemPosicao {
-  tabelas: Omit<ModelagemTabela, 'x' | 'y'>[];
+  tabelas: Omit<ModelagemTabelaDto, 'x' | 'y'>[];
   avisos: string[];
 }
 
@@ -124,7 +123,7 @@ export function montarModelo(
   const tabelas = nomesTabelas.map((nome) => {
     const colunasDaTabela = colunas
       .filter((coluna) => coluna.tabela === nome && (coluna.coluna === 'id' || !configuracao.colunasOcultas.includes(coluna.coluna)))
-      .map((coluna): ModelagemColuna => {
+      .map((coluna): ModelagemColunaDto => {
         const chave = `${nome}.${coluna.coluna}`;
         const tipo = abreviarTipo(coluna);
         if (primarias.has(chave)) return { nome: coluna.coluna, tipo, marca: 'pk', tabelaReferenciada: null };
@@ -145,13 +144,13 @@ export function posicionar(
   modelo: ModeloSemPosicao,
   posicoes: Record<string, [number, number]>,
   ordemDosGrupos: string[],
-): { tabelas: ModelagemTabela[]; avisos: string[] } {
+): { tabelas: ModelagemTabelaDto[]; avisos: string[] } {
   const avisos: string[] = [];
   const nomes = new Set(modelo.tabelas.map((tabela) => tabela.nome));
   const obsoletas = Object.keys(posicoes).filter((nome) => !nomes.has(nome));
   if (obsoletas.length) avisos.push(`Posições de tabelas que não existem mais (apague de posicoes): ${obsoletas.join(', ')}.`);
 
-  const posicionadas: ModelagemTabela[] = modelo.tabelas
+  const posicionadas: ModelagemTabelaDto[] = modelo.tabelas
     .filter((tabela) => posicoes[tabela.nome])
     .map((tabela) => ({ ...tabela, x: posicoes[tabela.nome][0], y: posicoes[tabela.nome][1] }));
   const novas = modelo.tabelas.filter((tabela) => !posicoes[tabela.nome]).sort((a, b) => a.nome.localeCompare(b.nome));
@@ -182,26 +181,16 @@ export function posicionar(
 }
 
 export function montarDiagrama(
-  tabelas: ModelagemTabela[],
+  tabelas: ModelagemTabelaDto[],
   configuracao: ConfiguracaoModelagem,
   origem: string,
   avisos: string[],
-): ModelagemDiagrama {
-  const grupos: ModelagemGrupo[] = Object.entries(configuracao.grupos)
+): ModelagemDiagramaDto {
+  const grupos: ModelagemGrupoDto[] = Object.entries(configuracao.grupos)
     .filter(([id]) => tabelas.some((tabela) => tabela.grupo === id))
     .map(([id, grupo]) => ({ id, ...grupo }));
   if (tabelas.some((tabela) => tabela.grupo === GRUPO_SEM_CONFIGURACAO) && !grupos.some((grupo) => grupo.id === GRUPO_SEM_CONFIGURACAO)) {
     grupos.push({ id: GRUPO_SEM_CONFIGURACAO, titulo: 'Sem grupo na configuração', rotulo: 'Sem grupo' });
   }
   return { origem, colunasOcultas: configuracao.colunasOcultas, avisos, grupos, tabelas };
-}
-
-const CABECALHO_DO_ARQUIVO_GERADO = [
-  '// GERADO por `npm run modelagem` (backend/src/database/scripts/gerar-modelagem.ts) a partir do banco migrado.',
-  '// Não edite à mão: grupos e posições ficam em backend/src/database/scripts/modelagem.config.json.',
-].join('\n');
-
-/** Fonte TypeScript do diagrama, estável (sem data) para o `git diff` mostrar só mudança real de modelagem. */
-export function serializarDiagrama(diagrama: ModelagemDiagrama): string {
-  return `${CABECALHO_DO_ARQUIVO_GERADO}\nimport type { ModelagemDiagrama } from '@project20/shared';\n\nexport const DIAGRAMA_MODELAGEM: ModelagemDiagrama = ${JSON.stringify(diagrama, null, 2)};\n`;
 }

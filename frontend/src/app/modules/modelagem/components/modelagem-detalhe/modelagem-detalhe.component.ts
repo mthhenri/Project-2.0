@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
-import type { ModelagemDiagrama } from '@project20/shared';
+import type { ModelagemDiagramaDto } from '@project20/shared';
 import { montarArestas } from '../../utils/modelagem.util';
 
 /**
@@ -14,7 +14,7 @@ import { montarArestas } from '../../utils/modelagem.util';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ModelagemDetalheComponent {
-  readonly diagrama = input.required<ModelagemDiagrama>();
+  readonly diagrama = input.required<ModelagemDiagramaDto>();
   readonly selecionada = input<string | null>(null);
   readonly tabelaEscolhida = output<string>();
 

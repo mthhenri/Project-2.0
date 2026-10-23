@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import type { ModelagemDiagrama } from '@project20/shared';
+import type { ModelagemDiagramaDto } from '@project20/shared';
 import { montarComponente } from '../../../../../testes/montar-componente';
 import { ModelagemDiagramaComponent } from './modelagem-diagrama.component';
 
-const DIAGRAMA: ModelagemDiagrama = {
+const DIAGRAMA: ModelagemDiagramaDto = {
   origem: 'teste',
   colunasOcultas: [],
   avisos: [],

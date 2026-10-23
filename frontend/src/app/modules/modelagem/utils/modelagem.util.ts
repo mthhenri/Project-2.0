@@ -1,4 +1,4 @@
-import type { ModelagemColuna, ModelagemTabela } from '@project20/shared';
+import type { ModelagemColunaDto, ModelagemTabelaDto } from '@project20/shared';
 
 export const ALTURA_CABECALHO_TABELA = 28;
 export const ALTURA_LINHA_TABELA = 18;
@@ -33,11 +33,11 @@ export interface Enquadramento {
   escala: number;
 }
 
-export function alturaDaTabela(tabela: Pick<ModelagemTabela, 'colunas'>): number {
+export function alturaDaTabela(tabela: Pick<ModelagemTabelaDto, 'colunas'>): number {
   return ALTURA_CABECALHO_TABELA + ALTURA_LINHA_TABELA * tabela.colunas.length + 6;
 }
 
-export function montarArestas(tabelas: readonly ModelagemTabela[]): ModelagemAresta[] {
+export function montarArestas(tabelas: readonly ModelagemTabelaDto[]): ModelagemAresta[] {
   const nomes = new Set(tabelas.map((tabela) => tabela.nome));
   return tabelas.flatMap((tabela) =>
     tabela.colunas
@@ -61,24 +61,24 @@ export function vizinhasDe(nome: string, arestas: readonly ModelagemAresta[]): S
   return vizinhas;
 }
 
-export function tabelaCasaBusca(tabela: ModelagemTabela, termo: string): boolean {
+export function tabelaCasaBusca(tabela: ModelagemTabelaDto, termo: string): boolean {
   const busca = termo.trim().toLowerCase();
   if (!busca) return true;
   return tabela.nome.toLowerCase().includes(busca) || tabela.colunas.some((coluna) => coluna.nome.toLowerCase().includes(busca));
 }
 
-export function colunaCasaBusca(coluna: ModelagemColuna, termo: string): boolean {
+export function colunaCasaBusca(coluna: ModelagemColunaDto, termo: string): boolean {
   const busca = termo.trim().toLowerCase();
   return !!busca && coluna.nome.toLowerCase().includes(busca);
 }
 
-function yDaColuna(tabela: ModelagemTabela, nomeColuna: string): number {
+function yDaColuna(tabela: ModelagemTabelaDto, nomeColuna: string): number {
   const indice = Math.max(0, tabela.colunas.findIndex((coluna) => coluna.nome === nomeColuna));
   return tabela.y + ALTURA_CABECALHO_TABELA + ALTURA_LINHA_TABELA * indice + ALTURA_LINHA_TABELA / 2;
 }
 
 /** Curva da linha da FK, da linha da coluna de origem até a linha `id` da tabela referenciada. */
-export function caminhoDaAresta(origem: ModelagemTabela, coluna: string, destino: ModelagemTabela): CaminhoAresta {
+export function caminhoDaAresta(origem: ModelagemTabelaDto, coluna: string, destino: ModelagemTabelaDto): CaminhoAresta {
   const origemY = yDaColuna(origem, coluna);
   if (origem.nome === destino.nome) {
     const x = origem.x + origem.largura;
@@ -105,7 +105,7 @@ export function caminhoDaAresta(origem: ModelagemTabela, coluna: string, destino
 }
 
 /** Retângulo que envolve as tabelas, com a folga pedida (a caixa do grupo usa mais folga em cima, para o título). */
-export function retanguloDasTabelas(tabelas: readonly ModelagemTabela[], folga: { lados: number; topo: number; base: number }): Retangulo | null {
+export function retanguloDasTabelas(tabelas: readonly ModelagemTabelaDto[], folga: { lados: number; topo: number; base: number }): Retangulo | null {
   if (!tabelas.length) return null;
   const esquerda = Math.min(...tabelas.map((tabela) => tabela.x)) - folga.lados;
   const topo = Math.min(...tabelas.map((tabela) => tabela.y)) - folga.topo;
@@ -124,8 +124,8 @@ export function enquadrar(retangulo: Retangulo, larguraVisivel: number, alturaVi
   };
 }
 
-/** Texto para colar em `posicoes` de `modelagem.config.json`: uma tabela por linha, em ordem alfabética. */
-export function posicoesParaConfiguracao(tabelas: readonly ModelagemTabela[]): string {
+/** Texto para colar em `posicoes` de `modelagem.configuracao.ts` (backend): uma tabela por linha, em ordem alfabética. */
+export function posicoesParaConfiguracao(tabelas: readonly ModelagemTabelaDto[]): string {
   const linhas = [...tabelas]
     .sort((a, b) => a.nome.localeCompare(b.nome))
     .map((tabela) => `    ${JSON.stringify(tabela.nome)}: [${Math.round(tabela.x)}, ${Math.round(tabela.y)}]`);

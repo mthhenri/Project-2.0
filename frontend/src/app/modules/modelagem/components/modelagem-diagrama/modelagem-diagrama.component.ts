@@ -4,7 +4,7 @@ import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { Popover, PopoverModule } from 'primeng/popover';
 import { TooltipModule } from 'primeng/tooltip';
-import type { ModelagemDiagrama, ModelagemTabela } from '@project20/shared';
+import type { ModelagemDiagramaDto, ModelagemTabelaDto } from '@project20/shared';
 import {
   ALTURA_CABECALHO_TABELA,
   ALTURA_LINHA_TABELA,
@@ -38,7 +38,7 @@ interface ArrastoDeTabela {
 /**
  * Diagrama entidade-relacionamento em SVG: zoom e deslocamento por d3-zoom (como o grafo de demandas), tabelas
  * arrastáveis, foco por passagem do mouse ou seleção e realce da busca. Não consulta nada: desenha o
- * `ModelagemDiagrama` gerado por `npm run modelagem`.
+ * `ModelagemDiagramaDto` que o backend monta do catálogo do banco (`GET /modelagem`).
  */
 @Component({
   selector: 'app-modelagem-diagrama',
@@ -49,7 +49,7 @@ interface ArrastoDeTabela {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ModelagemDiagramaComponent {
-  readonly diagrama = input.required<ModelagemDiagrama>();
+  readonly diagrama = input.required<ModelagemDiagramaDto>();
   /** Grupos exibidos; o resto some junto com as ligações que chegam a ele. */
   readonly gruposVisiveis = input.required<ReadonlySet<string>>();
   readonly busca = input<string>('');
@@ -72,7 +72,7 @@ export class ModelagemDiagramaComponent {
   private readonly posicoes = signal<Record<string, { x: number; y: number }>>({});
   private readonly emHover = signal<string | null>(null);
 
-  readonly tabelas = computed<ModelagemTabela[]>(() => {
+  readonly tabelas = computed<ModelagemTabelaDto[]>(() => {
     const movidas = this.posicoes();
     return this.diagrama().tabelas.map((tabela) => (movidas[tabela.nome] ? { ...tabela, ...movidas[tabela.nome] } : tabela));
   });
@@ -190,7 +190,7 @@ export class ModelagemDiagramaComponent {
     const texto = posicoesParaConfiguracao(this.tabelas());
     try {
       await navigator.clipboard.writeText(texto);
-      this.messageService.add({ severity: 'success', summary: 'Posições copiadas', detail: 'Cole no campo "posicoes" de modelagem.config.json e rode npm run modelagem.' });
+      this.messageService.add({ severity: 'success', summary: 'Posições copiadas', detail: 'Cole no campo "posicoes" de backend/src/modules/modelagem/domain/modelagem.configuracao.ts.' });
     } catch {
       this.messageService.add({ severity: 'warn', summary: 'Não foi possível copiar', detail: 'O navegador recusou o acesso à área de transferência.' });
     }
@@ -204,7 +204,7 @@ export class ModelagemDiagramaComponent {
     this.emHover.set(null);
   }
 
-  aoPressionarTabela(evento: PointerEvent, tabela: ModelagemTabela): void {
+  aoPressionarTabela(evento: PointerEvent, tabela: ModelagemTabelaDto): void {
     if (evento.button !== 0) return;
     this.arrasto = { nome: tabela.nome, clienteX: evento.clientX, clienteY: evento.clientY, origemX: tabela.x, origemY: tabela.y, moveu: false };
     (evento.currentTarget as Element).setPointerCapture?.(evento.pointerId);

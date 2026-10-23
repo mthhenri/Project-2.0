@@ -9,7 +9,6 @@ import {
   montarDiagrama,
   montarModelo,
   posicionar,
-  serializarDiagrama,
 } from './modelagem';
 
 function coluna(tabela: string, nome: string, tipo = 'integer', extras: Partial<ColunaBanco> = {}): ColunaBanco {
@@ -127,7 +126,7 @@ describe('posicionar', () => {
   });
 });
 
-describe('montarDiagrama e serializarDiagrama', () => {
+describe('montarDiagrama', () => {
   const modelo = montarModelo(colunas, primarias, estrangeiras, configuracao);
   const { tabelas } = posicionar(modelo, {}, ['dom', 'chat']);
 
@@ -137,16 +136,5 @@ describe('montarDiagrama e serializarDiagrama', () => {
     assert.equal(diagrama.grupos[2].rotulo, 'Sem grupo');
     const semChat = montarDiagrama(tabelas.filter((tabela) => tabela.grupo !== 'chat'), configuracao, 'origem', []);
     assert.deepEqual(semChat.grupos.map((grupo) => grupo.id), ['dom', 'outros']);
-  });
-
-  it('serializa como fonte TypeScript estável e a releitura do literal devolve o mesmo diagrama', () => {
-    const diagrama = montarDiagrama(tabelas, configuracao, 'origem', ['aviso']);
-    const texto = serializarDiagrama(diagrama);
-    assert.ok(texto.startsWith('// GERADO'));
-    assert.ok(texto.includes('export const DIAGRAMA_MODELAGEM: ModelagemDiagrama = {'));
-    assert.ok(texto.endsWith('};\n'));
-    assert.equal(texto, serializarDiagrama(montarDiagrama(tabelas, configuracao, 'origem', ['aviso'])));
-    const literal = texto.slice(texto.indexOf('= {') + 2, texto.lastIndexOf(';'));
-    assert.deepEqual(JSON.parse(literal), diagrama);
   });
 });

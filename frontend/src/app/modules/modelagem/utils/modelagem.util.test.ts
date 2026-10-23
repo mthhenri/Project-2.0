@@ -1,6 +1,6 @@
 import { describe, it } from 'vitest';
 import * as assert from 'node:assert/strict';
-import type { ModelagemColuna, ModelagemTabela } from '@project20/shared';
+import type { ModelagemColunaDto, ModelagemTabelaDto } from '@project20/shared';
 import {
   alturaDaTabela,
   caminhoDaAresta,
@@ -13,11 +13,11 @@ import {
   vizinhasDe,
 } from './modelagem.util';
 
-function coluna(nome: string, marca: ModelagemColuna['marca'] = '', tabelaReferenciada: string | null = null): ModelagemColuna {
+function coluna(nome: string, marca: ModelagemColunaDto['marca'] = '', tabelaReferenciada: string | null = null): ModelagemColunaDto {
   return { nome, tipo: 'int', marca, tabelaReferenciada };
 }
 
-function tabela(nome: string, x: number, y: number, colunas: ModelagemColuna[], largura = 200): ModelagemTabela {
+function tabela(nome: string, x: number, y: number, colunas: ModelagemColunaDto[], largura = 200): ModelagemTabelaDto {
   return { nome, grupo: 'dom', x, y, largura, colunas };
 }
 

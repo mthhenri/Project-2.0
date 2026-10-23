@@ -3,7 +3,8 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
-import type { ModelagemDiagrama } from '@project20/shared';
+import type { ModelagemDiagramaDto } from '@project20/shared';
+import { ModelagemService } from '../../services/modelagem.service';
 import { ModelagemDetalheComponent } from '../../components/modelagem-detalhe/modelagem-detalhe.component';
 import { ModelagemDiagramaComponent } from '../../components/modelagem-diagrama/modelagem-diagrama.component';
 import { tabelaCasaBusca } from '../../utils/modelagem.util';
@@ -11,9 +12,9 @@ import { tabelaCasaBusca } from '../../utils/modelagem.util';
 const QUANTIDADE_DE_CORES = 8;
 
 /**
- * Tela Modelagem: o diagrama do banco (`npm run modelagem` o regera a partir das migrations), aberto a todos os
+ * Tela Modelagem: o diagrama do banco (sempre o schema atual, lido do catálogo do PostgreSQL), aberto a todos os
  * usuários autenticados. Análoga ao grafo de demandas (zoom e controles flutuantes) com o cabeçalho das telas de
- * configuração. Os dados são um módulo gerado, carregado só quando a tela abre.
+ * configuração. Os dados vêm do backend (`GET /modelagem`), montados do catálogo do banco: não há nada a regerar.
  */
 @Component({
   selector: 'app-modelagem-page',
@@ -24,9 +25,10 @@ const QUANTIDADE_DE_CORES = 8;
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ModelagemPage implements OnInit {
+  private readonly modelagemService = inject(ModelagemService);
   private readonly diagramaComponente = viewChild(ModelagemDiagramaComponent);
 
-  readonly diagrama = signal<ModelagemDiagrama | null>(null);
+  readonly diagrama = signal<ModelagemDiagramaDto | null>(null);
   readonly erro = signal(false);
   readonly selecionada = signal<string | null>(null);
   readonly gruposVisiveis = signal<ReadonlySet<string>>(new Set());
@@ -49,12 +51,17 @@ export class ModelagemPage implements OnInit {
 
   carregar(): void {
     this.erro.set(false);
-    import('../../data/modelagem.dados')
-      .then((modulo) => {
-        this.diagrama.set(modulo.DIAGRAMA_MODELAGEM);
-        this.gruposVisiveis.set(new Set(modulo.DIAGRAMA_MODELAGEM.grupos.map((grupo) => grupo.id)));
-      })
-      .catch(() => this.erro.set(true));
+    this.modelagemService.obterDiagrama().subscribe({
+      next: (resposta) => {
+        if (!resposta.dados) {
+          this.erro.set(true);
+          return;
+        }
+        this.diagrama.set(resposta.dados);
+        this.gruposVisiveis.set(new Set(resposta.dados.grupos.map((grupo) => grupo.id)));
+      },
+      error: () => this.erro.set(true),
+    });
   }
 
   alternarGrupo(id: string): void {
