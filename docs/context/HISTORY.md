@@ -12,6 +12,12 @@
 
 ---
 
+## 2026-10-23 — Task 219 (CI do PR): falha de carga do realce de código ficava em cache
+
+- **Sintoma:** o job "Organização e build" do PR falhou com 3 testes de `carregador-realce.test.ts` (typescript, javascript, "mesma linguagem duas vezes") e `EnvironmentTeardownError` vindo do spec do painel de código. Não reproduziu localmente (1757/1757, e o par de arquivos 3 vezes seguidas).
+- **Causa:** `carregador-realce.ts` guardava a promessa de cada gramática mesmo quando ela **rejeitava**. O spec do painel termina com o `import()` da gramática ainda em voo; o ambiente é desmontado, o import falha e a rejeição fica no cache compartilhado do worker, que os testes do Prism lidos depois recebem. Em produção o mesmo defeito deixaria uma falha de rede no carregamento de uma gramática gravada até recarregar a página.
+- **Correção:** carga que falha sai do cache (núcleo e gramáticas); a próxima tentativa recomeça. Sem teste novo da falha: não há como simular a falha de um `import()` dinâmico neste executor sem mexer na infraestrutura. Frontend 150 arquivos, 1757/1757 depois da mudança; a confirmação definitiva é o CI do PR.
+
 ## 2026-10-23 — Task 219: "digitando…" no chat entre colaboradores, e ajustes de acabamento pedidos no mesmo dia
 
 - **O que mudou:** evento efêmero `DIGITANDO` (nada gravado): `POST /mensagem-direta/conversa/:usuarioId/digitando` valida a outra pessoa e publica só para ela;
