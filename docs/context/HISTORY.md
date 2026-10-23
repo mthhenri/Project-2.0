@@ -12,6 +12,12 @@
 
 ---
 
+## 2026-10-23 — CI do PR da Modelagem: foco adiado do compositor do chat caía num editor desmontado
+
+- **Sintoma:** o job "Organização e build" do PR falhou com os 1791 testes do frontend passando, mas com um erro não tratado do Vitest: `MilkdownError: Context "editorView" not found` vindo de `EditorFormatado.focar` chamado pelo `setTimeout` do `MensagemDiretaCompositorComponent` (linha do efeito do foco), atribuído ao spec do `chat-popup`. Não reproduziu localmente (a suíte inteira passou).
+- **Causa:** o efeito que foca o campo agenda `setTimeout(() => editor.focar(), 0)` e ninguém cancelava o temporizador. Se o compositor era destruído antes de ele disparar (o fim de um teste na CI mais lenta; em produção, fechar o popup logo ao abrir), o `focar` rodava num editor já desmontado e o contexto do ProseMirror não existia mais. Nada a ver com a tela Modelagem.
+- **Correção:** o compositor guarda o temporizador do foco, troca o anterior ao reagendar e o cancela ao ser destruído. Teste novo (reproduzido sem a correção: falha; com ela: passa) em `mensagem-direta-compositor.component.spec.ts`. Frontend completo e `repo:verificar` passando; a confirmação definitiva é o CI do PR.
+
 ## 2026-10-23 — Tela Modelagem lê o banco ao vivo: sai o gerador e o arquivo commitado
 
 - **O que mudou (substitui a geração por `npm run modelagem` do bloco anterior):** o autor queria o ajuste da modelagem automático no Render. Como o front compila no Cloudflare Pages e o Render só roda a API, o arquivo gerado nunca se atualizaria sozinho. Passou a existir o módulo `backend/src/modules/modelagem/` com `GET /modelagem` (qualquer usuário autenticado), que monta o diagrama do catálogo do PostgreSQL (`ModelagemRepository`, `ModelagemService` com cache de 60 s, controller fino) pela lógica pura `domain/modelagem.ts` (movida de `database/scripts/`). O Render já migra no Build Command, então o diagrama acompanha cada deploy sem configuração nova. A tela busca por `ModelagemService` (HTTP) e ganhou os estados carregando e erro com "Tentar de novo". Saíram `gerar-modelagem.ts`, os scripts `npm run modelagem` e `db:modelagem` e o `data/modelagem.dados.ts`; o contrato virou DTOs em `shared/src/dtos/modelagem/` (`ModelagemDiagramaDto` e filhos). A configuração (grupos, posições, referências sem FK) é agora `domain/modelagem.configuracao.ts`.
