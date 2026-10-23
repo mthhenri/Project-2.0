@@ -7,6 +7,7 @@
         <div class="conversa-direta__nome">{{ conversa.usuarioNome }}</div>
         <div class="conversa-direta__status">{{ estado.conexao() ? (estaOnline() ? 'Online' : 'Offline') : 'Status indisponível' }}</div>
       </div>
+      <p-button icon="pi pi-info-circle" severity="secondary" [text]="true" [rounded]="true" size="small" [ariaLabel]="avisoDeLeitura" [pTooltip]="avisoDeLeitura" tooltipPosition="bottom" />
       <p-button
         [icon]="estado.estaSilenciada(conversa.usuarioId) ? 'pi pi-bell-slash' : 'pi pi-bell'"
         [severity]="estado.estaSilenciada(conversa.usuarioId) ? 'warn' : 'secondary'"

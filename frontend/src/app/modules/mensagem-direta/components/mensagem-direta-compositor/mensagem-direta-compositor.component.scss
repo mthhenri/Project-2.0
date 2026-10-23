@@ -17,13 +17,21 @@
     gap: 0.25rem;
   }
 
+  // O campo é o editor formatado (task 218): ocupa o que sobra da linha e encolhe até 0, então os botões de código e de enviar nunca saem dela.
   &__campo {
     flex: 1;
     min-width: 0;
-    max-height: 9rem;
-    resize: none;
-    font-size: 0.875rem;
-    line-height: 1.45;
+  }
+
+  &__contador {
+    padding: 0 0.125rem;
+    font-size: 0.6875rem;
+    color: var(--p-text-muted-color);
+
+    &--excedeu {
+      color: var(--p-red-500);
+      font-weight: 600;
+    }
   }
 
   &__enviar {
@@ -52,12 +60,6 @@
       outline: 2px solid var(--p-primary-color);
       outline-offset: 2px;
     }
-  }
-
-  &__legenda {
-    padding: 0 0.125rem;
-    font-size: 0.6875rem;
-    color: var(--p-text-muted-color);
   }
 
   // As sugestões de @ e #: um painel acima do campo, dentro do popup.

@@ -14,6 +14,11 @@ if (typeof window !== 'undefined') {
       dispatchEvent: () => false,
     })) as typeof window.matchMedia;
   }
+  // O ProseMirror mede o texto com um `Range` para rolar o cursor à vista (task 218); o jsdom não implementa a medição, então ela devolve retângulos vazios.
+  if (typeof Range !== 'undefined' && !Range.prototype.getClientRects) {
+    Range.prototype.getClientRects = () => ({ length: 0, item: () => null, [Symbol.iterator]: [][Symbol.iterator] }) as unknown as DOMRectList;
+    Range.prototype.getBoundingClientRect = () => new DOMRect(0, 0, 0, 0);
+  }
   if (!('ResizeObserver' in window)) {
     (window as unknown as Record<string, unknown>)['ResizeObserver'] = class {
       observe(): void {}

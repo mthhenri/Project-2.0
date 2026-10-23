@@ -43,8 +43,8 @@
     <app-mensagem-direta-codigo-painel
       class="compositor-direto__painel"
       [texto]="texto()"
-      [inicio]="painel.inicio"
-      [fim]="painel.fim"
+      [inicio]="texto().length - painel.selecionado.length"
+      [fim]="texto().length"
       [codigoInicial]="painel.selecionado"
       (inserir)="inserirDoPainel($event)"
       (cancelar)="fecharPainelDeCodigo()"
@@ -52,29 +52,24 @@
   }
 
   <div class="compositor-direto__caixa" [attr.inert]="painelDeCodigo() ? '' : null">
-    <textarea
-      #campoTexto
-      pTextarea
+    <app-mensagem-direta-editor-mensagem
       class="compositor-direto__campo"
-      rows="1"
-      [autoResize]="true"
-      [formControl]="controleTexto"
-      placeholder="Escreva uma mensagem"
-      aria-label="Mensagem"
-      aria-autocomplete="list"
-      [attr.aria-controls]="listaAberta() ? 'sugestoes-do-compositor' : null"
-      [attr.aria-activedescendant]="listaAberta() && itens().length > 0 ? 'sugestao-' + indice() : null"
-      [attr.maxlength]="limiteDoTexto"
-      (input)="aoDigitar()"
-      (click)="atualizarCursor()"
-      (keyup)="atualizarCursor()"
-      (select)="atualizarCursor()"
-      (keydown)="aoTeclar($event)"
-      (blur)="aoPerderOFoco()"
-      (paste)="aoColar($event)"
-    ></textarea>
+      placeholder="Mensagem — @ pessoa, # demanda"
+      rotulo="Mensagem"
+      [listaControlada]="listaAberta() ? 'sugestoes-do-compositor' : null"
+      [opcaoAtiva]="listaAberta() && itens().length > 0 ? 'sugestao-' + indice() : null"
+      (mudou)="aoMudar($event)"
+      (atualizou)="aoAtualizar()"
+      (teclou)="aoTeclar($event)"
+      (colou)="aoColar($event)"
+      (perdeuFoco)="aoPerderOFoco()"
+    />
     <p-button icon="pi pi-code" severity="secondary" [text]="true" [rounded]="true" size="small" ariaLabel="Inserir bloco de código" pTooltip="Bloco de código" tooltipPosition="top" (onClick)="inserirCodigo()" />
-    <button type="submit" class="compositor-direto__enviar" aria-label="Enviar mensagem" [disabled]="!podeEnviar()"><i class="pi pi-send" aria-hidden="true"></i></button>
+    <button type="submit" class="compositor-direto__enviar" aria-label="Enviar mensagem" pTooltip="Enviar (Enter) · Shift+Enter nova linha · Ctrl+Enter envia em lista e código" tooltipPosition="top" [disabled]="!podeEnviar()"><i class="pi pi-send" aria-hidden="true"></i></button>
   </div>
-  <span class="compositor-direto__legenda">Markdown, &#64; para mencionar, # para uma demanda. Enter envia, Shift+Enter quebra a linha.</span>
+  @if (mostrarContador()) {
+    <span class="compositor-direto__contador" [class.compositor-direto__contador--excedeu]="excedeu()" [attr.role]="excedeu() ? 'alert' : null">
+      @if (excedeu()) { Passou do limite da mensagem: } {{ contador() }}
+    </span>
+  }
 </form>

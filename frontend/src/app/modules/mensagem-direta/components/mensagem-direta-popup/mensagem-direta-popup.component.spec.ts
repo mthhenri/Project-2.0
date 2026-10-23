@@ -4,6 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { AutorMensagemDiretaEnum, MensagemDiretaEventoDto, TipoUsuarioEnum } from '@project20/shared';
 import { montarComponente, ComponenteMontado } from '../../../../../testes/montar-componente';
 import { esperarRequisicao, responderErro, responderSucesso } from '../../../../../testes/http-teste';
+import { campoDeMensagem, digitarNaMensagem, esperarCampoDeMensagem, teclarNaMensagem } from '../../../../../testes/campo-mensagem';
 import { MensagemDiretaEstadoService } from '../../services/mensagem-direta-estado.service';
 import { MensagemDiretaEventosService, OuvintesDoStream } from '../../services/mensagem-direta-eventos.service';
 import { MensagemDiretaPopupComponent } from './mensagem-direta-popup.component';
@@ -33,14 +34,6 @@ function conversaDaLista(usuarioId: number, nome: string, naoLidas = 0, texto = 
   };
 }
 
-const DIGITAR = (elemento: HTMLElement, texto: string) => {
-  const campo = elemento.querySelector<HTMLTextAreaElement>('textarea[aria-label="Mensagem"]')!;
-  campo.value = texto;
-  campo.dispatchEvent(new Event('input'));
-};
-const TECLAR_ENTER = (elemento: HTMLElement) =>
-  elemento.querySelector<HTMLTextAreaElement>('textarea[aria-label="Mensagem"]')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
-
 /** O `@defer` do template exige resolver os metadados do componente antes de criá-lo (o `montarComponente` não o faz). */
 async function montarPopup(): Promise<ComponenteMontado<MensagemDiretaPopupComponent>> {
   TestBed.configureTestingModule({ imports: [MensagemDiretaPopupComponent] });
@@ -53,6 +46,10 @@ async function montarPopup(): Promise<ComponenteMontado<MensagemDiretaPopupCompo
 
 describe('MensagemDiretaPopupComponent', () => {
   let tela: ComponenteMontado<MensagemDiretaPopupComponent>;
+
+  // O campo de mensagem é o editor formatado (task 218): escreve-se pela API dele e as teclas chegam no elemento editável.
+  const DIGITAR = (_elemento: HTMLElement, texto: string) => digitarNaMensagem(tela.fixture, texto);
+  const TECLAR_ENTER = (_elemento: HTMLElement) => teclarNaMensagem(tela.fixture, 'Enter');
   let estado: MensagemDiretaEstadoService;
   let eventos: EventosFalso;
 
@@ -137,7 +134,33 @@ describe('MensagemDiretaPopupComponent', () => {
     await tela.atualizar();
     responderSucesso(esperarRequisicao(tela.http, 'GET', '/mensagem-direta/conversa/9'), { mensagens: [], proximoCursor: null, lidaAteDate: null });
     await tela.atualizar();
+    await esperarCampoDeMensagem(tela.fixture, () => tela.atualizar());
   }
+
+  // --- rodapé enxuto (task 217) -----------------------------------------------------------------
+
+  const AVISO = 'Gestores e administradores podem ler as conversas entre desenvolvedores.';
+
+  it('na conversa o aviso de leitura vira um ícone no cabeçalho (texto no aria-label) e não ocupa o rodapé', async () => {
+    await abrirConversaVazia();
+    expect(tela.elemento.querySelector('.popup-direto__aviso')).toBeNull();
+    expect(tela.elemento.querySelector(`.conversa-direta__cabecalho button[aria-label="${AVISO}"]`)).not.toBeNull();
+    expect(tela.elemento.querySelector('.compositor-direto__legenda')).toBeNull();
+  });
+
+  it('o campo da conversa traz a dica de @ e # no placeholder, e o botão de enviar a dica do Enter', async () => {
+    await abrirConversaVazia();
+    expect(tela.elemento.querySelector('.editor-mensagem')!.getAttribute('data-placeholder')).toBe('Mensagem — @ pessoa, # demanda');
+    expect(tela.elemento.textContent).not.toContain('Shift+Enter quebra a linha.');
+  });
+
+  it('o rodapé do aviso continua na lista de conversas e na nova conversa', async () => {
+    await montar();
+    expect(tela.elemento.querySelector('.popup-direto__aviso')?.textContent).toContain(AVISO);
+    estado.visao.set('NOVA');
+    await tela.atualizar();
+    expect(tela.elemento.querySelector('.popup-direto__aviso')?.textContent).toContain(AVISO);
+  });
 
   it('enviar com Enter: a mensagem aparece na hora, vai com um mensagemId e vira "Enviada"', async () => {
     await abrirConversaVazia();
@@ -163,7 +186,7 @@ describe('MensagemDiretaPopupComponent', () => {
     await abrirConversaVazia();
     DIGITAR(tela.elemento, '   ');
     TECLAR_ENTER(tela.elemento);
-    tela.elemento.querySelector<HTMLTextAreaElement>('textarea')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', shiftKey: true, bubbles: true, cancelable: true }));
+    teclarNaMensagem(tela.fixture, 'Enter', { shiftKey: true });
     await tela.atualizar();
     tela.http.expectNone((r) => r.method === 'POST');
     expect(tela.elemento.querySelector<HTMLButtonElement>('button[aria-label="Enviar mensagem"]')!.disabled).toBe(true);
@@ -338,6 +361,7 @@ describe('MensagemDiretaPopupComponent', () => {
       responderSucesso(esperarRequisicao(tela.http, 'PUT', '/mensagem-direta/conversa/9/leitura'), { conversaId: '1-9', lidaAteDate: mensagensIniciais[0].createdDate });
       await tela.atualizar();
     }
+    await esperarCampoDeMensagem(tela.fixture, () => tela.atualizar());
   }
 
   function definirVisibilidade(estadoDaPagina: 'visible' | 'hidden') {

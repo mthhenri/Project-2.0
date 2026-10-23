@@ -94,6 +94,22 @@
 - **Correção:** índice em `created_date` e filtro por intervalo de `timestamptz`, se a tabela provisória crescer.
 - **Desde:** 2026-10-20 (task 202).
 
+### P-032 — Bundle inicial do front a menos de 1 kB do limite de erro do orçamento · `ABERTO` · frontend
+
+- **Sintoma:** o build do front informa o inicial em 1099,4 kB contra o orçamento de erro de 1,1 MB (`angular.json`); o aviso de 500 kB também aparece. Qualquer código novo carregado de imediato quebra o build.
+- **Causa:** crescimento acumulado (o popup do chat entra no layout; a 213 já registrou 1,08 MB). Medido na task 218: `HEAD` (task 216) 1099,24 kB, árvore com a 217 e a 218 1099,42 kB (+0,18 kB).
+- **Contorno:** nenhum; cada task confere o total no build.
+- **Correção:** tirar mais do popup, dos avisos e do layout do carregamento inicial (`@defer`, rotas), ou subir o orçamento de forma consciente.
+- **Desde:** 2026-10-23 (medido na task 218; vem de antes).
+
+### P-033 — Editor formatado: o valor do formulário só chega 200 ms depois da última tecla · `ABERTO` · frontend/markdown
+
+- **Sintoma:** não observado ao vivo. Na leitura do código, confirmar um dialog com `Ctrl+Enter` (ou fechar) em menos de 200 ms depois de digitar no `app-markdown-editor` usaria o valor anterior do controle.
+- **Causa:** o `aoMudar` do `EditorFormatado` vem do ouvinte `updated` do Milkdown, que tem `debounce` de 200 ms (`@milkdown/plugin-listener`). O comentário antigo de `OuvintesEditor` dizia "sem espera"; foi corrigido na task 218.
+- **Contorno:** nenhum conhecido; quase ninguém confirma tão rápido.
+- **Correção:** o `app-markdown-editor` passar a sincronizar o valor por `aoAplicar` (depois de cada transação, criado na task 218 e usado pelo chat) ou ler `obterMarkdown()` na hora de confirmar. Confirmar o sintoma antes (teste de componente digitando e confirmando em seguida).
+- **Desde:** 2026-10-23 (achado na task 218).
+
 ### P-001 — Projeto sem lint · `CONTORNADO` · repositório
 
 - **Sintoma:** não há ESLint nem Prettier em nenhum workspace; o gate de qualidade do `CLAUDE.md` pede lint e hoje a lacuna é só declarada no fecho de cada task.

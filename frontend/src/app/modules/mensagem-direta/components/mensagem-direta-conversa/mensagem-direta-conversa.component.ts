@@ -7,7 +7,7 @@ import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.s
 import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
 import { MensagemDiretaReferenciaService } from '../../services/mensagem-direta-referencia.service';
 import { EnvioDoCompositor, MensagemDiretaEstadoService } from '../../services/mensagem-direta-estado.service';
-import { agruparPorDia, formatarHora, idDaUltimaLidaPelaOutraPessoa } from '../../utils/mensagem-direta.util';
+import { AVISO_DE_LEITURA_DAS_CONVERSAS, agruparPorDia, formatarHora, idDaUltimaLidaPelaOutraPessoa } from '../../utils/mensagem-direta.util';
 import { MensagemDiretaAvatarComponent } from '../mensagem-direta-avatar/mensagem-direta-avatar.component';
 import { MensagemDiretaCompositorComponent } from '../mensagem-direta-compositor/mensagem-direta-compositor.component';
 import { MensagemDiretaReferenciaCartaoComponent } from '../mensagem-direta-referencia-cartao/mensagem-direta-referencia-cartao.component';
@@ -28,6 +28,7 @@ const MARGEM_DO_TOPO_PX = 40;
 })
 export class MensagemDiretaConversaComponent {
   protected readonly estado = inject(MensagemDiretaEstadoService);
+  protected readonly avisoDeLeitura = AVISO_DE_LEITURA_DAS_CONVERSAS;
   private readonly sessao = inject(UsuarioSessaoService);
   private readonly referencias = inject(MensagemDiretaReferenciaService);
   private readonly rolagem = viewChild<ElementRef<HTMLElement>>('rolagem');

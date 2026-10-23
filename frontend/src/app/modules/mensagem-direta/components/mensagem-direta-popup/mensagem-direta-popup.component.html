@@ -18,6 +18,9 @@
         }
       }
     }
-    <p class="popup-direto__aviso"><i class="pi pi-info-circle" aria-hidden="true"></i>Gestores e administradores podem ler as conversas entre desenvolvedores.</p>
+    <!-- Na conversa o aviso vira o ícone do cabeçalho (task 217): o rodapé ficaria com a altura que a lista de mensagens precisa. -->
+    @if (estado.visao() !== 'CONVERSA') {
+      <p class="popup-direto__aviso"><i class="pi pi-info-circle" aria-hidden="true"></i>{{ avisoDeLeitura }}</p>
+    }
   </section>
 }

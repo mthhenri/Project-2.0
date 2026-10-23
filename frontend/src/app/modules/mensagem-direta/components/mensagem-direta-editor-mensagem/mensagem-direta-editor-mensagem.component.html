@@ -1,0 +1,21 @@
+<div #hospede class="editor-mensagem" [class.editor-mensagem--vazio]="texto() === ''" [attr.data-placeholder]="placeholder()"></div>
+
+@if (barra(); as posicao) {
+  <div class="editor-mensagem__barra" role="toolbar" aria-label="Formatação do texto selecionado" [style.left.px]="posicao.esquerda" [style.top.px]="posicao.topo">
+    @for (botao of botoes; track botao.acao) {
+      <button
+        type="button"
+        class="editor-mensagem__botao"
+        [class.editor-mensagem__botao--ativo]="ativos().has(botao.acao)"
+        [attr.aria-label]="botao.rotulo"
+        [attr.aria-pressed]="ativos().has(botao.acao)"
+        [pTooltip]="botao.dica"
+        tooltipPosition="top"
+        (mousedown)="$event.preventDefault()"
+        (click)="executarBotao(botao.acao)"
+      >
+        <span [class]="botao.classe">{{ botao.glifo }}</span>
+      </button>
+    }
+  </div>
+}

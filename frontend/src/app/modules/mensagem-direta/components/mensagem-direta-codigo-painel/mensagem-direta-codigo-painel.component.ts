@@ -72,12 +72,15 @@ export class MensagemDiretaCodigoPainelComponent implements OnInit {
       this.confirmar();
       return;
     }
-    // O Esc do seletor de linguagem fecha só a lista dele; em qualquer outro lugar do painel, cancela (e não chega ao Esc do popup).
-    const noSeletor = evento.target instanceof Element && evento.target.closest('p-select') !== null;
-    if (evento.key === 'Escape' && !noSeletor && this.elemento.nativeElement.contains(evento.target as Node)) {
-      evento.preventDefault();
+    // Com o painel aberto o Esc nunca chega ao do popup (que o oculta). O do seletor de linguagem fecha só a lista dele (o PrimeNG já tratou o
+    // evento antes de ele chegar aqui); em qualquer outro lugar do painel, o Esc cancela o painel.
+    if (evento.key === 'Escape' && this.elemento.nativeElement.contains(evento.target as Node)) {
       evento.stopPropagation();
-      this.cancelar.emit();
+      const noSeletor = evento.target instanceof Element && evento.target.closest('p-select') !== null;
+      if (!noSeletor) {
+        evento.preventDefault();
+        this.cancelar.emit();
+      }
     }
   }
 }

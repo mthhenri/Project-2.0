@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, OnDestroy, OnInit, effe
 import { Router } from '@angular/router';
 import { ProjectDesktopService } from '../../../../core/services/project-desktop.service';
 import { MensagemDiretaEstadoService } from '../../services/mensagem-direta-estado.service';
+import { AVISO_DE_LEITURA_DAS_CONVERSAS } from '../../utils/mensagem-direta.util';
 import { MensagemDiretaConversaComponent } from '../mensagem-direta-conversa/mensagem-direta-conversa.component';
 import { MensagemDiretaListaComponent } from '../mensagem-direta-lista/mensagem-direta-lista.component';
 import { MensagemDiretaNovaComponent } from '../mensagem-direta-nova/mensagem-direta-nova.component';
@@ -23,6 +24,7 @@ import { MensagemDiretaNovaComponent } from '../mensagem-direta-nova/mensagem-di
 })
 export class MensagemDiretaPopupComponent implements OnInit, OnDestroy {
   protected readonly estado = inject(MensagemDiretaEstadoService);
+  protected readonly avisoDeLeitura = AVISO_DE_LEITURA_DAS_CONVERSAS;
   private readonly desktop = inject(ProjectDesktopService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);

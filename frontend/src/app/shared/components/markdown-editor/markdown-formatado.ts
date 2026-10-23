@@ -12,10 +12,11 @@ import {
 import { gfm, toggleStrikethroughCommand } from '@milkdown/kit/preset/gfm';
 import { history, redoCommand, undoCommand } from '@milkdown/kit/plugin/history';
 import { listener, listenerCtx } from '@milkdown/kit/plugin/listener';
-import { callCommand, getMarkdown, replaceAll } from '@milkdown/kit/utils';
+import { $prose, callCommand, getMarkdown, replaceAll } from '@milkdown/kit/utils';
 import { toggleLinkCommand, turnIntoTextCommand } from '@milkdown/kit/preset/commonmark';
-import { lift } from '@milkdown/kit/prose/commands';
-import { liftListItem } from '@milkdown/kit/prose/schema-list';
+import { lift, liftEmptyBlock, splitBlock } from '@milkdown/kit/prose/commands';
+import { liftListItem, splitListItem } from '@milkdown/kit/prose/schema-list';
+import { Plugin, TextSelection } from '@milkdown/kit/prose/state';
 import type { EditorState } from '@milkdown/kit/prose/state';
 import type { MilkdownPlugin } from '@milkdown/kit/ctx';
 import type { Node as NoProse, ResolvedPos } from '@milkdown/kit/prose/model';
@@ -67,12 +68,46 @@ export function semQuebraFinal(markdown: string): string {
   return markdown.replace(/\n+$/, '');
 }
 
+/**
+ * O bloco de texto onde está o cursor (parágrafo, título, item), para quem precisa reconhecer o que foi digitado antes dele (`@`, `#`).
+ * `texto` é o texto do bloco com cada nó que não é texto (quebra, imagem) valendo um caractere, `cursor` é o deslocamento dentro dele e
+ * `base` é a posição do começo do bloco no documento (para guardar um ponto do texto que continue valendo enquanto o bloco não muda).
+ */
+export interface BlocoAtual {
+  texto: string;
+  cursor: number;
+  base: number;
+}
+
+/** Em que tipo de bloco o cursor está (quem usa decide, por exemplo, se o `Enter` envia ou continua o bloco). */
+export interface ContextoDoCursor {
+  emLista: boolean;
+  emCodigo: boolean;
+  emCitacao: boolean;
+}
+
+/** O retângulo da seleção na tela, em coordenadas da janela. */
+export interface RetanguloDaSelecao {
+  esquerda: number;
+  direita: number;
+  topo: number;
+  base: number;
+}
+
 export interface OuvintesEditor {
-  /** Markdown atual depois de cada mudança no documento (sem espera: o Milkdown atrasa o `markdownUpdated`). */
+  /**
+   * Markdown atual depois de uma mudança no documento. O Milkdown chama este ouvinte com **atraso de 200 ms** (debounce do plugin de
+   * ouvintes): quem precisa do texto na hora (o `Enter` que envia) usa `aoAplicar` ou lê `obterMarkdown()`.
+   */
   aoMudar: (markdown: string) => void;
-  /** Documento ou seleção mudou (a barra reavalia os botões acesos). */
+  /** Documento ou seleção mudou (a barra reavalia os botões acesos). Roda **durante** a aplicação da transação: `obterMarkdown()` ainda devolve o estado antigo. */
   aoAtualizar: () => void;
   aoSair: () => void;
+  /**
+   * Depois de **cada** transação aplicada, sem espera e já com o estado novo (documento e seleção): para quem precisa ler o texto e o cursor a
+   * cada tecla (o compositor do chat, task 218).
+   */
+  aoAplicar?: () => void;
 }
 
 function montar(raiz: HTMLElement | null, markdown: string, ouvintes?: OuvintesEditor): Editor {
@@ -98,11 +133,35 @@ function montar(raiz: HTMLElement | null, markdown: string, ouvintes?: OuvintesE
         .blur(() => ouvintes.aoSair());
     }
   });
-  return editor
+  const montado = editor
     .use(dentroDoSubconjunto(commonmark.flat()))
     .use(dentroDoSubconjunto(gfm.flat()))
     .use(history)
     .use(listener);
+  const aoAplicar = ouvintes?.aoAplicar;
+  if (aoAplicar) {
+    // O `update` da visão de um plugin roda depois de o estado novo ser instalado, a cada transação (o ouvinte do Milkdown atrasa 200 ms).
+    // Um erro de quem escuta não pode interromper a aplicação da transação (o editor deixaria de atualizar): ele é relançado fora dela.
+    montado.use(
+      $prose(
+        () =>
+          new Plugin({
+            view: () => ({
+              update: () => {
+                try {
+                  aoAplicar();
+                } catch (erro) {
+                  queueMicrotask(() => {
+                    throw erro;
+                  });
+                }
+              },
+            }),
+          }),
+      ),
+    );
+  }
+  return montado;
 }
 
 /** Devolve o Markdown na forma que o editor gravaria (a única fonte da forma "normalizada"). */
@@ -371,6 +430,137 @@ export class EditorFormatado {
         return true;
       }
       return false;
+    });
+  }
+
+  // --- Capacidades para quem escreve em cima do editor (o compositor do chat, task 218) -------------
+
+  /** O bloco de texto do cursor; `null` com trecho selecionado, em bloco de código ou fora de um bloco de texto. */
+  blocoAtual(): BlocoAtual | null {
+    return this.editor.action((contexto) => {
+      const { state } = contexto.get(editorViewCtx);
+      const { $from, empty } = state.selection;
+      if (!empty || !$from.parent.isTextblock || $from.parent.type.name === 'code_block') return null;
+      const texto = $from.parent.textBetween(0, $from.parent.content.size, undefined, '￼');
+      return { texto, cursor: $from.parentOffset, base: $from.start() };
+    });
+  }
+
+  /** Troca `[inicio, fim)` do texto do bloco atual (os deslocamentos de `blocoAtual`) por `texto` e põe o cursor depois dele. */
+  substituirNoBlocoAtual(inicio: number, fim: number, texto: string): void {
+    this.editor.action((contexto) => {
+      const view = contexto.get(editorViewCtx);
+      const { state } = view;
+      const base = state.selection.$from.start();
+      const transacao = texto === '' ? state.tr.delete(base + inicio, base + fim) : state.tr.insertText(texto, base + inicio, base + fim);
+      transacao.setSelection(TextSelection.create(transacao.doc, base + inicio + texto.length));
+      view.dispatch(transacao.scrollIntoView());
+    });
+  }
+
+  /** Troca a seleção (ou insere no cursor) por texto comum. */
+  inserirTexto(texto: string): void {
+    this.editor.action((contexto) => {
+      const view = contexto.get(editorViewCtx);
+      view.dispatch(view.state.tr.insertText(texto).scrollIntoView());
+    });
+  }
+
+  /**
+   * Põe um bloco de código com a linguagem na posição do cursor: no lugar do trecho selecionado e, se o parágrafo do cursor já tem texto, logo
+   * depois dele. O cursor fica depois do bloco (ou dentro dele, quando o código é vazio).
+   */
+  inserirBlocoDeCodigo(codigo: string, linguagem: string | null): void {
+    this.editor.action((contexto) => {
+      const view = contexto.get(editorViewCtx);
+      const { state } = view;
+      const tipoDoBloco = state.schema.nodes['code_block'];
+      const tipoDoParagrafo = state.schema.nodes['paragraph'];
+      if (!tipoDoBloco || !tipoDoParagrafo) return;
+      const corpo = codigo.replace(/\s+$/, '');
+      const bloco = tipoDoBloco.create({ language: linguagem ?? '' }, corpo === '' ? undefined : state.schema.text(corpo));
+
+      let transacao = state.tr;
+      if (!state.selection.empty) transacao = transacao.deleteSelection();
+      const $cursor = transacao.selection.$from;
+      const paragrafoVazio = $cursor.parent.type === tipoDoParagrafo && $cursor.parent.content.size === 0 && $cursor.depth === 1;
+      const de = paragrafoVazio ? $cursor.before() : $cursor.after(1);
+      if (paragrafoVazio) transacao = transacao.replaceWith(de, $cursor.after(), bloco);
+      else transacao = transacao.insert(de, bloco);
+
+      const fimDoBloco = de + bloco.nodeSize;
+      if (!transacao.doc.nodeAt(fimDoBloco)) transacao = transacao.insert(fimDoBloco, tipoDoParagrafo.create());
+      const cursorFinal = corpo === '' ? de + 1 : fimDoBloco + 1;
+      view.dispatch(transacao.setSelection(TextSelection.create(transacao.doc, cursorFinal)).scrollIntoView());
+    });
+  }
+
+  /** Em que bloco o cursor está (só o cursor da seleção: o começo dela). */
+  contextoDoCursor(): ContextoDoCursor {
+    return this.editor.action((contexto) => {
+      const { $from } = contexto.get(editorViewCtx).state.selection;
+      const resultado: ContextoDoCursor = { emLista: false, emCodigo: false, emCitacao: false };
+      for (let profundidade = $from.depth; profundidade > 0; profundidade--) {
+        const nome = $from.node(profundidade).type.name;
+        if (nome === 'list_item') resultado.emLista = true;
+        else if (nome === 'code_block') resultado.emCodigo = true;
+        else if (nome === 'blockquote') resultado.emCitacao = true;
+      }
+      return resultado;
+    });
+  }
+
+  /**
+   * `Shift+Enter`: um novo parágrafo, ou um novo item dentro de lista (item vazio sai da lista). Nunca uma quebra dura: o texto guardado não
+   * leva barra invertida mais quebra de linha, que o renderizador do sistema não entende.
+   */
+  dividirBloco(): void {
+    const emLista = this.contextoDoCursor().emLista;
+    this.editor.action((contexto) => {
+      const view = contexto.get(editorViewCtx);
+      const { state } = view;
+      const item = state.schema.nodes['list_item'];
+      // Item vazio: o `splitListItem` desiste e deixa o `liftEmptyBlock` tirar o item da lista (a ordem das teclas do ProseMirror).
+      if (emLista && item && (splitListItem(item)(state, view.dispatch) || liftEmptyBlock(state, view.dispatch))) return;
+      splitBlock(state, view.dispatch);
+    });
+  }
+
+  /** O texto (sem formatação) do trecho selecionado. */
+  textoSelecionado(): string {
+    return this.editor.action((contexto) => {
+      const { state } = contexto.get(editorViewCtx);
+      const { from, to } = state.selection;
+      return state.doc.textBetween(from, to, '\n');
+    });
+  }
+
+  /** Esvazia o documento. */
+  limpar(): void {
+    this.editor.action(replaceAll(''));
+  }
+
+  temFoco(): boolean {
+    return this.editor.action((contexto) => contexto.get(editorViewCtx).hasFocus());
+  }
+
+  /** Onde a seleção está na tela (para posicionar a barra flutuante); `null` se não houver como medir (jsdom, editor fora da tela). */
+  retanguloDaSelecao(): RetanguloDaSelecao | null {
+    return this.editor.action((contexto) => {
+      const view = contexto.get(editorViewCtx);
+      const { from, to } = view.state.selection;
+      try {
+        const inicio = view.coordsAtPos(from);
+        const fim = view.coordsAtPos(to);
+        return {
+          esquerda: Math.min(inicio.left, fim.left),
+          direita: Math.max(inicio.right, fim.right),
+          topo: Math.min(inicio.top, fim.top),
+          base: Math.max(inicio.bottom, fim.bottom),
+        };
+      } catch {
+        return null;
+      }
     });
   }
 

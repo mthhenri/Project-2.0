@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import { AutorMensagemDiretaEnum, TipoUsuarioEnum } from '@project20/shared';
 import { montarComponente, ComponenteMontado } from '../../../../../testes/montar-componente';
 import { esperarRequisicao, responderSucesso } from '../../../../../testes/http-teste';
+import { esperarCampoDeMensagem, textoDaMensagem } from '../../../../../testes/campo-mensagem';
 import { ProjectDesktopService } from '../../../../core/services/project-desktop.service';
 import { MensagemDiretaPopupComponent } from '../../components/mensagem-direta-popup/mensagem-direta-popup.component';
 import { MensagemDiretaAvisosService } from '../../services/mensagem-direta-avisos.service';
@@ -109,10 +110,9 @@ describe('ChatPopupPage (janela de chat do Desktop)', () => {
     await tela.atualizar();
     responderSucesso(esperarRequisicao(tela.http, 'GET', '/mensagem-direta/conversa/9'), { mensagens: [], proximoCursor: null, lidaAteDate: null });
     await tela.atualizar();
-    await new Promise((resolver) => setTimeout(resolver, 5));
-
-    const campo = tela.elemento.querySelector<HTMLTextAreaElement>('textarea[aria-label="Mensagem"]')!;
-    expect(campo.value).toBe('```\n' + CODIGO + '\n```');
+    await esperarCampoDeMensagem(tela.fixture, () => tela.atualizar());
+    // O código entra como bloco assim que o editor monta (o editor carrega por `import()`).
+    await vi.waitFor(() => expect(textoDaMensagem(tela.fixture)).toBe('```\n' + CODIGO + '\n```'), { timeout: 5000 });
     expect(TestBed.inject(MensagemDiretaEstadoService).rascunhoDoDesktop()).toBeNull();
     tela.http.expectNone((requisicao) => requisicao.method === 'POST');
   });

@@ -84,10 +84,17 @@ describe('MensagemDiretaCodigoPainelComponent', () => {
     expect(painel.inseridos).toEqual([]);
   });
 
-  it('o Esc dentro do seletor de linguagem não cancela o painel', async () => {
+  it('o Esc dentro do seletor de linguagem não cancela o painel, mas também não sobe ao Esc do popup', async () => {
     const painel = await montar();
+    let chegouAoPopup = false;
+    painel.elemento.parentElement!.addEventListener('keydown', () => (chegouAoPopup = true));
     painel.teclar('Escape', {}, painel.elemento.querySelector('p-select')!);
     expect(painel.cancelamentos()).toBe(0);
+    expect(chegouAoPopup).toBe(false);
+
+    painel.teclar('Escape');
+    expect(painel.cancelamentos()).toBe(1);
+    expect(chegouAoPopup).toBe(false);
   });
 
   it('o contador mede a mensagem inteira, cerca e linguagem incluídas', async () => {
