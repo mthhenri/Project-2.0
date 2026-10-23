@@ -17,15 +17,15 @@ test('as rotas e os rótulos são únicos e as rotas começam com /', () => {
   for (const rota of rotas) assert.ok(rota.startsWith('/'), rota);
 });
 
-test('o desenvolvedor vê Ponto, Demandas, Chat, Atividades e Execuções', () => {
+test('o desenvolvedor vê Ponto, Demandas, Chat, Atividades, Execuções e Modelagem', () => {
   const visiveis = ITENS_NAVEGACAO.filter((item) => !item.somenteGestor).map((item) => item.rotaLink);
-  assert.deepEqual(visiveis, ['/ponto', '/demanda', '/chat', '/atividade', '/execucao']);
+  assert.deepEqual(visiveis, ['/ponto', '/demanda', '/chat', '/atividade', '/execucao', '/modelagem']);
 });
 
 test('o gestor vê tudo menos o que é só do administrador', () => {
   const visiveis = ITENS_NAVEGACAO.filter((item) => !item.somenteAdministrador).map((item) => item.rotaLink);
   assert.deepEqual(visiveis, [
-    '/ponto', '/calendario', '/projeto', '/demanda', '/chat', '/atividade', '/execucao', '/tag', '/usuario',
+    '/ponto', '/calendario', '/projeto', '/demanda', '/chat', '/atividade', '/execucao', '/tag', '/usuario', '/modelagem',
   ]);
 });
 
@@ -43,4 +43,12 @@ test('item exclusivo do administrador também é de gestor (nunca aparece para o
 test('Atividades segue aberta com a IA no ar e o Chat exige a IA', () => {
   assert.equal(porRota('/atividade')?.substituidoPelaIa, undefined);
   assert.equal(porRota('/chat')?.exigeIa, true);
+});
+
+test('Modelagem fica logo abaixo de IA e qualquer usuário a vê', () => {
+  const rotas = ITENS_NAVEGACAO.map((item) => item.rotaLink);
+  assert.equal(rotas.indexOf('/modelagem'), rotas.indexOf('/configuracao-ia') + 1);
+  const modelagem = porRota('/modelagem');
+  assert.equal(modelagem?.somenteGestor, false);
+  assert.equal(modelagem?.somenteAdministrador, undefined);
 });

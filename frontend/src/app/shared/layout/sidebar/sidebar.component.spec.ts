@@ -14,12 +14,13 @@ import { SidebarComponent } from './sidebar.component';
 @Component({ standalone: true, template: '' })
 class PaginaFalsaComponent {}
 
-const ROTAS = ['/ponto', '/calendario', '/projeto', '/demanda', '/chat', '/atividade', '/execucao', '/tag', '/usuario', '/configuracao-ia']
+const ROTAS = ['/ponto', '/calendario', '/projeto', '/demanda', '/chat', '/atividade', '/execucao', '/tag', '/usuario', '/configuracao-ia', '/modelagem']
   .map((caminho) => ({ path: caminho.slice(1), component: PaginaFalsaComponent }));
 
-const ITENS_DESENVOLVEDOR = ['Ponto', 'Demandas', 'Chat', 'Atividades', 'Execuções'];
-const ITENS_GESTOR = ['Ponto', 'Calendário', 'Projetos', 'Demandas', 'Chat', 'Atividades', 'Execuções', 'Tags', 'Usuários'];
-const ITENS_ADMINISTRADOR = [...ITENS_GESTOR, 'IA'];
+const ITENS_DESENVOLVEDOR = ['Ponto', 'Demandas', 'Chat', 'Atividades', 'Execuções', 'Modelagem'];
+const ITENS_GESTOR = ['Ponto', 'Calendário', 'Projetos', 'Demandas', 'Chat', 'Atividades', 'Execuções', 'Tags', 'Usuários', 'Modelagem'];
+// A IA é exclusiva do administrador e a Modelagem, de todos: para ele, a Modelagem vem logo abaixo da IA.
+const ITENS_ADMINISTRADOR = [...ITENS_GESTOR.slice(0, -1), 'IA', 'Modelagem'];
 
 type Montado = ComponenteMontado<SidebarComponent>;
 
@@ -50,7 +51,7 @@ function teclar(tecla: string, alvo: EventTarget = document.body, init: Keyboard
 afterEach(() => vi.useRealTimers());
 
 describe('SidebarComponent — itens por tipo de usuário', () => {
-  it('desenvolvedor vê só Ponto, Demandas, Chat, Atividades e Execuções', async () => {
+  it('desenvolvedor vê só Ponto, Demandas, Chat, Atividades, Execuções e Modelagem', async () => {
     const montado = await montarBarra(TipoUsuarioEnum.DESENVOLVEDOR);
     expect(rotulosNavegacao(montado)).toEqual(ITENS_DESENVOLVEDOR);
   });
@@ -71,6 +72,7 @@ describe('SidebarComponent — itens por tipo de usuário', () => {
     expect(item(montado, 'Projetos')?.getAttribute('href')).toBe('/projeto');
     expect(item(montado, 'Execuções')?.getAttribute('href')).toBe('/execucao');
     expect(item(montado, 'IA')?.getAttribute('href')).toBe('/configuracao-ia');
+    expect(item(montado, 'Modelagem')?.getAttribute('href')).toBe('/modelagem');
   });
 });
 

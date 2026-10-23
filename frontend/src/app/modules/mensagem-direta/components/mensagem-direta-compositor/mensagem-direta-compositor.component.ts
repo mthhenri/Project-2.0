@@ -166,15 +166,19 @@ export class MensagemDiretaCompositorComponent {
   /** Onde está o espaço que a escolha de uma sugestão acrescentou: uma pontuação digitada logo depois o consome ("@Nome, que acha?" e não "@Nome , que acha?"). */
   private espacoAutomaticoEm: { base: number; deslocamento: number } | null = null;
   private temporizadorDaBusca: ReturnType<typeof setTimeout> | null = null;
+  /** O foco do campo é adiado um ciclo (o editor acabou de aparecer); destruir o compositor antes disso cancela o foco, que cairia num editor já desmontado. */
+  private temporizadorDoFoco: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
     inject(DestroyRef).onDestroy(() => {
       if (this.temporizadorDaBusca) clearTimeout(this.temporizadorDaBusca);
+      if (this.temporizadorDoFoco) clearTimeout(this.temporizadorDoFoco);
     });
 
     effect(() => {
       const editor = this.campo().editor();
-      if (this.chave() !== null && editor) setTimeout(() => editor.focar(), 0);
+      if (this.temporizadorDoFoco) clearTimeout(this.temporizadorDoFoco);
+      this.temporizadorDoFoco = this.chave() !== null && editor ? setTimeout(() => editor.focar(), 0) : null;
     });
 
     // O código do Desktop entra uma vez como bloco, no cursor; o usuário confere e envia (nada é enviado sozinho).

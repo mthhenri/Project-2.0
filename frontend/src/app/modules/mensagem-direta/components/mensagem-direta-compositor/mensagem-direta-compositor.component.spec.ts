@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { editorViewCtx } from '@milkdown/kit/core';
 import { TextSelection } from '@milkdown/kit/prose/state';
 import { ReferenciaMensagemDiretaEnum, TipoUsuarioEnum } from '@project20/shared';
@@ -56,6 +56,16 @@ describe('MensagemDiretaCompositorComponent', () => {
     tela = await montarComponente(MensagemDiretaCompositorComponent, { usuario: TipoUsuarioEnum.DESENVOLVEDOR, entradas: { pessoas: PESSOAS, chave: 9 } });
     tela.componente.enviar.subscribe((envio) => envios.push(envio));
     await esperarCampoDeMensagem(tela.fixture, () => tela.atualizar());
+  });
+
+  it('não tenta focar o campo depois de o compositor ser destruído (o foco adiado é cancelado)', async () => {
+    const focar = vi.spyOn(editor(), 'focar');
+    // Uma chave nova agenda o foco adiado (setTimeout 0); destruir logo em seguida não pode deixá-lo cair num editor já desmontado.
+    tela.fixture.componentRef.setInput('chave', 10);
+    tela.fixture.detectChanges();
+    tela.fixture.destroy();
+    await pausa(30);
+    expect(focar).not.toHaveBeenCalled();
   });
 
   it('avisa que está digitando só pelas teclas do usuário; texto posto por programa, Enter e teclas de controle não avisam', async () => {

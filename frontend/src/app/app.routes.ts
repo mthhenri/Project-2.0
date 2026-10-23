@@ -26,6 +26,7 @@ export const rotas: Routes = [
       { path: 'tag',        loadChildren: () => import('./modules/tag/tag.routes').then((m) => m.tagRotas) },
       { path: 'chat',       loadChildren: () => import('./modules/chat/chat.routes').then((m) => m.chatRotas) },
       { path: 'configuracao-ia', loadChildren: () => import('./modules/configuracao-ia/configuracao-ia.routes').then((m) => m.configuracaoIaRotas) },
+      { path: 'modelagem', loadChildren: () => import('./modules/modelagem/modelagem.routes').then((m) => m.modelagemRotas) },
       { path: '', redirectTo: 'ponto', pathMatch: 'full' },
     ],
   },

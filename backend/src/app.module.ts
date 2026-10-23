@@ -24,10 +24,11 @@ import { PropostaIaModule } from './modules/proposta-ia/proposta-ia.module';
 import { FerramentaIaModule } from './modules/ferramenta-ia/ferramenta-ia.module';
 import { AssistenteModule } from './modules/assistente/assistente.module';
 import { IaCustoModule } from './modules/ia-custo/ia-custo.module';
+import { ModelagemModule } from './modules/modelagem/modelagem.module';
 import { RelatorioModule } from './modules/relatorio/relatorio.module';
 import { DesktopModule } from './modules/desktop/desktop.module';
 
 @Module({
-  imports: [ScheduleModule.forRoot(), ConfigModule, DatabaseModule, CoreModule, AutenticacaoModule, UsuarioModule, TagModule, ProjetoModule, DemandaModule, AtividadeModule, AtividadePrioridadeModule, CheckinModule, ExecucaoModule, CalendarioModule, PontoModule, PontoJustificativaModule, AnotacaoModule, ConfiguracaoIaModule, PromptModule, ChatModule, MensagemDiretaModule, PropostaIaModule, FerramentaIaModule, AssistenteModule, RelatorioModule, DesktopModule, IaCustoModule],
+  imports: [ScheduleModule.forRoot(), ConfigModule, DatabaseModule, CoreModule, AutenticacaoModule, UsuarioModule, TagModule, ProjetoModule, DemandaModule, AtividadeModule, AtividadePrioridadeModule, CheckinModule, ExecucaoModule, CalendarioModule, PontoModule, PontoJustificativaModule, AnotacaoModule, ConfiguracaoIaModule, PromptModule, ChatModule, MensagemDiretaModule, PropostaIaModule, FerramentaIaModule, AssistenteModule, RelatorioModule, DesktopModule, IaCustoModule, ModelagemModule],
 })
 export class AppModule {}
