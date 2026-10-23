@@ -79,6 +79,8 @@ export class MensagemDiretaCompositorComponent {
   /** Muda ao abrir outra conversa: o campo recebe o foco (depois disso o foco é de quem usa a página, o popup não é modal). */
   readonly chave = input<number | null>(null);
   readonly enviar = output<EnvioDoCompositor>();
+  /** O usuário está escrevendo (tecla que insere ou apaga texto, ou colagem): só ação dele, nunca o texto posto por programa (código do Desktop, limpar após enviar). Quem usa o compositor decide quando avisar a outra pessoa. */
+  readonly digitando = output<void>();
   /** Código a pôr no campo como bloco (o que o usuário copiou antes do atalho do Desktop, task 213); `textoAplicado` avisa que já foi usado. */
   readonly codigoInicial = input<string | null>(null);
   readonly textoAplicado = output<void>();
@@ -262,7 +264,16 @@ export class MensagemDiretaCompositorComponent {
     if (gatilho) this.dispensadoEm.set(gatilho.inicioNoDocumento);
   }
 
+  /** Tecla que insere texto (inclusive a de composição de acento/IME) ou apaga o que já está escrito. */
+  private sinalizarDigitacao(evento: KeyboardEvent): void {
+    const comControle = evento.ctrlKey || evento.metaKey || evento.altKey;
+    const insere = (evento.key.length === 1 && !comControle) || evento.isComposing;
+    const apaga = (evento.key === 'Backspace' || evento.key === 'Delete') && this.texto().length > 0;
+    if (insere || apaga) this.digitando.emit();
+  }
+
   protected aoTeclar(evento: KeyboardEvent): void {
+    this.sinalizarDigitacao(evento);
     if (evento.isComposing) return;
     const editor = this.campo().editor();
     if (!editor) return;
@@ -327,6 +338,7 @@ export class MensagemDiretaCompositorComponent {
   protected aoColar(evento: ClipboardEvent): void {
     const editor = this.campo().editor();
     const colado = evento.clipboardData?.getData('text') ?? '';
+    if (colado !== '') this.digitando.emit();
     if (!editor || !pareceCodigo(colado) || editor.contextoDoCursor().emCodigo) return;
     // Perto do limite de 10.000 caracteres a cerca não cabe: a colagem segue o caminho normal (e o contador avisa).
     if (this.texto().length + colado.length + FOLGA_DA_CERCA_DO_CODIGO > LIMITE_TEXTO_MENSAGEM_DIRETA) return;

@@ -12,7 +12,9 @@ import { UsuarioSessaoService } from '../../../core/services/usuario-sessao.serv
 import {
   ConversaNaLista,
   MensagemNaConversa,
+  VALIDADE_DO_DIGITANDO_MS,
   aplicarMensagemNaLista,
+  devePublicarDigitacao,
   dataDaUltimaDoOutro,
   gerarMensagemId,
   mesclarMensagens,
@@ -83,6 +85,8 @@ export class MensagemDiretaEstadoService {
 
   readonly online = signal<ReadonlySet<number>>(new Set());
   readonly conexao = this.stream.conectado;
+  /** Quem está digitando para o usuário agora (o "digitando…"). Cada aviso vale `VALIDADE_DO_DIGITANDO_MS`; mensagem da pessoa e queda do stream o apagam antes. */
+  readonly digitando = signal<ReadonlySet<number>>(new Set());
 
   readonly conversaAberta = signal<ConversaAberta | null>(null);
   /** O código que o usuário copiou antes de apertar o atalho do Desktop (task 213): vira bloco no campo da próxima conversa aberta e some. */
@@ -110,6 +114,9 @@ export class MensagemDiretaEstadoService {
   private temporizadorSemConexao: ReturnType<typeof setTimeout> | null = null;
   /** A data da última mensagem do outro já marcada como lida, por pessoa: evita marcar duas vezes a mesma. */
   private ultimaLeituraMarcada = new Map<number, number>();
+  /** Quando o usuário avisou, por pessoa, que está digitando (para não avisar a cada tecla). */
+  private ultimoAvisoDeDigitacao = new Map<number, number>();
+  private temporizadoresDoDigitando = new Map<number, ReturnType<typeof setTimeout>>();
   /**
    * As mensagens que ainda não chegaram (`ENVIANDO`) ou falharam (`FALHOU`), por pessoa. Moram aqui, e não na conversa aberta, para não se perderem
    * quando o usuário volta para a lista ou abre outra pessoa: ao reabrir a conversa elas voltam, com "Tentar de novo".
@@ -177,6 +184,8 @@ export class MensagemDiretaEstadoService {
     this.conversas.set([]);
     this.conversaAberta.set(null);
     this.online.set(new Set());
+    this.limparDigitando();
+    this.ultimoAvisoDeDigitacao.clear();
     this.pessoas.set(null);
     this.jaCarregouConversas.set(false);
     this.aberto.set(false);
@@ -354,6 +363,8 @@ export class MensagemDiretaEstadoService {
     const meuId = this.sessao.id();
     const texto = envio.texto;
     if (!aberta || meuId === undefined || !texto.trim()) return;
+    // Enviou: a próxima digitação avisa de novo na hora, sem esperar o intervalo.
+    this.ultimoAvisoDeDigitacao.delete(aberta.usuarioId);
 
     const local: MensagemNaConversa = {
       mensagemId: gerarMensagemId(),
@@ -485,6 +496,9 @@ export class MensagemDiretaEstadoService {
         this.online.set(proximo);
         break;
       }
+      case 'DIGITANDO':
+        this.marcarDigitando(evento.usuarioId);
+        break;
       case 'MENSAGEM':
         this.receberMensagem(normalizarMensagem(evento.mensagem), true);
         break;
@@ -511,6 +525,7 @@ export class MensagemDiretaEstadoService {
 
   /** O stream voltou depois de uma queda: relê o que a tela mostra. */
   private recuperar(): void {
+    this.limparDigitando();
     void this.carregarConversas();
     if (this.conversaAberta()) void this.carregarConversaAberta();
   }
@@ -523,6 +538,8 @@ export class MensagemDiretaEstadoService {
     const naConversaAberta = aberta?.conversaId === mensagem.conversaId;
     // A mensagem que o servidor devolveu (resposta ou evento) deixa de ser pendente.
     this.removerPendente(mensagem.mensagemId);
+    // Quem mandou a mensagem terminou de digitar.
+    if (mensagem.autorUsuarioId !== null && mensagem.autorUsuarioId !== meuId) this.removerDigitando(mensagem.autorUsuarioId);
 
     if (naConversaAberta && aberta) {
       this.atualizarConversaAberta(aberta.usuarioId, (atual) => ({ mensagens: mesclarMensagens(atual.mensagens, [mensagem]) }));
@@ -552,11 +569,50 @@ export class MensagemDiretaEstadoService {
       usuarioId,
       usuarioNome: nomeNaLista() ?? 'Nova mensagem',
       texto: previaDaMensagem(mensagem.texto, mensagem.contemCodigo, false),
+      markdown: mensagem.texto,
       mensagemMinha: mensagem.autorUsuarioId === meuId,
       mencionaVoce: mensagem.mencoes.includes(meuId),
       conversaSilenciada: this.estaSilenciada(usuarioId),
       conversaAVista,
     });
+  }
+
+  // ---------------------------------------------------------------------------
+  // "Digitando…"
+  // ---------------------------------------------------------------------------
+
+  /** O usuário digitou na conversa com `usuarioId`: avisa a pessoa, no máximo a cada `ESPERA_ENTRE_AVISOS_DE_DIGITACAO_MS`. Falha de rede é ignorada (o próximo aviso refaz). */
+  avisarDigitacao(usuarioId: number): void {
+    const agora = Date.now();
+    if (!devePublicarDigitacao(this.ultimoAvisoDeDigitacao.get(usuarioId) ?? null, agora)) return;
+    this.ultimoAvisoDeDigitacao.set(usuarioId, agora);
+    const sessao = this.geracaoDaSessao;
+    firstValueFrom(this.api.avisarDigitacao(usuarioId)).catch(() => {
+      // Sem o aviso a pessoa só deixa de ver o "digitando…"; tentar de novo já na próxima tecla.
+      if (sessao === this.geracaoDaSessao) this.ultimoAvisoDeDigitacao.delete(usuarioId);
+    });
+  }
+
+  private marcarDigitando(usuarioId: number): void {
+    if (usuarioId === this.sessao.id()) return;
+    clearTimeout(this.temporizadoresDoDigitando.get(usuarioId));
+    this.temporizadoresDoDigitando.set(usuarioId, setTimeout(() => this.removerDigitando(usuarioId), VALIDADE_DO_DIGITANDO_MS));
+    if (!this.digitando().has(usuarioId)) this.digitando.set(new Set(this.digitando()).add(usuarioId));
+  }
+
+  private removerDigitando(usuarioId: number): void {
+    clearTimeout(this.temporizadoresDoDigitando.get(usuarioId));
+    this.temporizadoresDoDigitando.delete(usuarioId);
+    if (!this.digitando().has(usuarioId)) return;
+    const proximo = new Set(this.digitando());
+    proximo.delete(usuarioId);
+    this.digitando.set(proximo);
+  }
+
+  private limparDigitando(): void {
+    for (const temporizador of this.temporizadoresDoDigitando.values()) clearTimeout(temporizador);
+    this.temporizadoresDoDigitando.clear();
+    this.digitando.set(new Set());
   }
 
   // ---------------------------------------------------------------------------

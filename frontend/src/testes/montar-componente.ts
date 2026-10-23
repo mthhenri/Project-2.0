@@ -67,6 +67,8 @@ export async function montarComponente<T>(componente: Type<T>, opcoes: OpcoesMon
       ...(opcoes.provedores ?? []),
     ],
   });
+  // Componentes com `@defer` (como a barra do topo e o popup do chat) só montam depois de resolvidas as dependências adiadas.
+  await TestBed.compileComponents();
 
   if (opcoes.usuario) TestBed.inject(UsuarioSessaoService).definirUsuario(criarUsuarioTeste(opcoes.usuario));
 

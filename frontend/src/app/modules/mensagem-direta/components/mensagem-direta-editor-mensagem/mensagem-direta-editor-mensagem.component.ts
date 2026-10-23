@@ -6,6 +6,8 @@ interface BotaoDaBarra {
   acao: AcaoFormatada;
   rotulo: string;
   dica: string;
+  /** Começa um novo grupo na barra (ganha um separador à esquerda). */
+  novoGrupo?: boolean;
   glifo: string;
   classe: string;
 }
@@ -55,13 +57,13 @@ export class MensagemDiretaEditorMensagemComponent {
   protected readonly barra = signal<{ esquerda: number; topo: number } | null>(null);
 
   protected readonly botoes: readonly BotaoDaBarra[] = [
-    { acao: 'negrito', rotulo: 'Negrito', dica: 'Negrito (Ctrl+B)', glifo: 'B', classe: 'editor-mensagem__glifo--negrito' },
-    { acao: 'italico', rotulo: 'Itálico', dica: 'Itálico (Ctrl+I)', glifo: 'I', classe: 'editor-mensagem__glifo--italico' },
-    { acao: 'tachado', rotulo: 'Tachado', dica: 'Tachado', glifo: 'S', classe: 'editor-mensagem__glifo--tachado' },
-    { acao: 'codigo', rotulo: 'Código em linha', dica: 'Código em linha', glifo: '</>', classe: 'editor-mensagem__glifo--codigo' },
-    { acao: 'lista', rotulo: 'Lista', dica: 'Lista', glifo: '•', classe: '' },
-    { acao: 'numerada', rotulo: 'Lista numerada', dica: 'Lista numerada', glifo: '1.', classe: '' },
-    { acao: 'citacao', rotulo: 'Citação', dica: 'Citação', glifo: '❝', classe: '' },
+    { acao: 'negrito', rotulo: 'Negrito', dica: 'Negrito (CTRL+B)', glifo: 'B', classe: 'editor-mensagem__glifo--negrito' },
+    { acao: 'italico', rotulo: 'Itálico', dica: 'Itálico (CTRL+I)', glifo: 'I', classe: 'editor-mensagem__glifo--italico' },
+    { acao: 'tachado', rotulo: 'Tachado', dica: 'Tachado (CTRL+ALT+X)', glifo: 'S', classe: 'editor-mensagem__glifo--tachado' },
+    { acao: 'codigo', rotulo: 'Código em linha', dica: 'Código em linha (CTRL+E)', glifo: '</>', classe: 'editor-mensagem__glifo--codigo' },
+    { acao: 'lista', rotulo: 'Lista', dica: 'Lista (CTRL+ALT+8)', glifo: '•', classe: '', novoGrupo: true },
+    { acao: 'numerada', rotulo: 'Lista numerada', dica: 'Lista numerada (CTRL+ALT+7)', glifo: '1.', classe: '' },
+    { acao: 'citacao', rotulo: 'Citação', dica: 'Citação (CTRL+SHIFT+B)', glifo: '❝', classe: '' },
   ];
 
   private readonly raiz = inject<ElementRef<HTMLElement>>(ElementRef);

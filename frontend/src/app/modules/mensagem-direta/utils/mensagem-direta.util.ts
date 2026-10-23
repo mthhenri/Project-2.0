@@ -64,6 +64,20 @@ export function semSinalHaMuito(ultimoDadoEm: number, agora: number): boolean {
 }
 
 // ---------------------------------------------------------------------------
+// "Digitando…"
+// ---------------------------------------------------------------------------
+
+/** Quem digita avisa a outra pessoa no máximo a cada tanto: o aviso é só um sinal, não precisa acompanhar cada tecla. */
+export const ESPERA_ENTRE_AVISOS_DE_DIGITACAO_MS = 3_000;
+/** O "digitando…" some sozinho depois disto sem novo aviso (parou de digitar, apagou o texto ou a rede caiu). Maior que o intervalo entre avisos, para não piscar. */
+export const VALIDADE_DO_DIGITANDO_MS = 5_000;
+
+/** Já passou tempo suficiente desde o último aviso (`null` = nunca avisou) para avisar de novo? */
+export function devePublicarDigitacao(ultimoAvisoEm: number | null, agora: number): boolean {
+  return ultimoAvisoEm === null || agora - ultimoAvisoEm >= ESPERA_ENTRE_AVISOS_DE_DIGITACAO_MS;
+}
+
+// ---------------------------------------------------------------------------
 // Mensagens
 // ---------------------------------------------------------------------------
 

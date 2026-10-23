@@ -6,6 +6,7 @@ import {
   LIMITE_PADRAO_DA_CONVERSA_DIRETA,
   MensagemDiretaBuscadoDto,
   MensagemDiretaBuscarDto,
+  MensagemDiretaDigitacaoAvisarDto,
   MensagemDiretaEnviadaDto,
   MensagemDiretaEnviarDto,
   MensagemDiretaLeituraAlteradaDto,
@@ -247,6 +248,19 @@ export class MensagemDiretaService {
       dados: { conversaId, lidaAteDate },
       mensagem: 'Leitura registrada com sucesso',
     };
+  }
+
+  /**
+   * O "digitando…": só repassa o aviso ao stream da outra pessoa (nunca a quem digita) e não grava nada. Falhar em publicar é ignorado pelo
+   * publicador: o aviso vale poucos segundos e o próximo toque de tecla manda outro.
+   */
+  async avisarDigitacao(dto: MensagemDiretaDigitacaoAvisarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<void>> {
+    await this.validarOutraPessoa(dto.usuarioId, usuarioAtivo);
+    await this.eventosService.publicarParaUsuarios({
+      usuarioIds: [dto.usuarioId],
+      evento: { tipo: 'DIGITANDO', conversaId: montarConversaDiretaId(usuarioAtivo.sub, dto.usuarioId), usuarioId: usuarioAtivo.sub },
+    });
+    return { sucesso: true, dados: null, mensagem: 'Aviso enviado' };
   }
 
   async alterarSilencio(

@@ -49,7 +49,7 @@
         [rounded]="true"
         size="small"
         aria-label="Minhas anotações"
-        (onClick)="anotacoesDialog.abrir(sessao.id()!, sessao.nomeCompleto()!)"
+        (onClick)="abrirMinhasAnotacoes()"
       />
 
       <button
@@ -141,4 +141,7 @@
   </div>
 </header>
 
-<app-usuario-anotacoes-dialog #anotacoesDialog />
+<!-- O diálogo de anotações traz o editor de Markdown inteiro: fica fora do pacote inicial (P-032) e carrega logo depois da primeira tela. -->
+@defer (on immediate) {
+  <app-usuario-anotacoes-dialog #anotacoesDialog />
+}

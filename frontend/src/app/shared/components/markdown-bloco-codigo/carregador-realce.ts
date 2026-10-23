@@ -48,6 +48,10 @@ function carregarNucleo(): Promise<NucleoDoPrism> {
     (globalThis as { Prism?: unknown }).Prism = prism;
     return prism;
   })();
+  // Carga que falhou (rede, página fechando) não fica guardada: a próxima tentativa recomeça em vez de repetir o erro até recarregar a página.
+  nucleo.catch(() => {
+    nucleo = null;
+  });
   return nucleo;
 }
 
@@ -60,6 +64,7 @@ function carregarGramatica(nome: string): Promise<void> {
       await GRAMATICAS[nome]();
     })();
     gramaticasCarregadas.set(nome, carga);
+    carga.catch(() => gramaticasCarregadas.delete(nome));
   }
   return carga;
 }

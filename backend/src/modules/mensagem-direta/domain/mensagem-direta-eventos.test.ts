@@ -41,6 +41,7 @@ test('barramento: LEITURA volta com Date; os eventos sem data e a PRESENCA passa
   const eventos: MensagemDiretaEventoDto[] = [
     { tipo: 'SINCRONIZAR', conversaId: null },
     { tipo: 'PRESENCA', usuarioId: 4, online: true },
+    { tipo: 'DIGITANDO', conversaId: '4-9', usuarioId: 4 },
     { tipo: 'BATIMENTO' },
     { tipo: 'ENCERRANDO' },
     { tipo: 'ABERTURA', onlineUsuarioIds: [1, 2] },

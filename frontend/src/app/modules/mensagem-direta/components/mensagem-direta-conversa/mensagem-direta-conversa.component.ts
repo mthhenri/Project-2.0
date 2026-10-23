@@ -1,9 +1,11 @@
-import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { ReferenciaMensagemDiretaEnum } from '@project20/shared';
+import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TooltipModule } from 'primeng/tooltip';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
+import { TEMPO_DO_COPIADO_MS } from '../../../../shared/components/markdown-bloco-codigo/markdown-bloco-codigo.component';
 import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
 import { MensagemDiretaReferenciaService } from '../../services/mensagem-direta-referencia.service';
 import { EnvioDoCompositor, MensagemDiretaEstadoService } from '../../services/mensagem-direta-estado.service';
@@ -31,6 +33,7 @@ export class MensagemDiretaConversaComponent {
   protected readonly avisoDeLeitura = AVISO_DE_LEITURA_DAS_CONVERSAS;
   private readonly sessao = inject(UsuarioSessaoService);
   private readonly referencias = inject(MensagemDiretaReferenciaService);
+  private readonly messageService = inject(MessageService);
   private readonly rolagem = viewChild<ElementRef<HTMLElement>>('rolagem');
 
   protected readonly aberta = this.estado.conversaAberta;
@@ -39,6 +42,10 @@ export class MensagemDiretaConversaComponent {
   protected readonly pessoasMencionaveis = computed(() => {
     const aberta = this.aberta();
     return aberta ? [{ usuarioId: aberta.usuarioId, nome: aberta.usuarioNome }] : [];
+  });
+  protected readonly estaDigitando = computed(() => {
+    const aberta = this.aberta();
+    return aberta ? this.estado.digitando().has(aberta.usuarioId) : false;
   });
   protected readonly estaOnline = computed(() => {
     const aberta = this.aberta();
@@ -65,6 +72,10 @@ export class MensagemDiretaConversaComponent {
   /** Nome de cada demanda/atividade citada (`TIPO:id`), conforme chega do servidor; só as acessíveis têm nome. */
   private readonly nomesDasReferencias = signal<ReadonlyMap<string, string>>(new Map());
 
+  /** A mensagem cujo texto acabou de ser copiado (o botão mostra "Copiado" por um instante). */
+  protected readonly copiadaId = signal<string | null>(null);
+  private temporizadorDoCopiado: ReturnType<typeof setTimeout> | null = null;
+
   private colarNoFim = true;
   private alturaAntes: number | null = null;
   private topoAntes = 0;
@@ -76,6 +87,10 @@ export class MensagemDiretaConversaComponent {
     effect(() => {
       this.totalDeMensagens();
       setTimeout(() => this.ajustarRolagem(), 0);
+    });
+
+    inject(DestroyRef).onDestroy(() => {
+      if (this.temporizadorDoCopiado) clearTimeout(this.temporizadorDoCopiado);
     });
 
     // Os nomes das referências vêm da consulta dos cartões (guardada por sessão, então não repete a chamada).
@@ -113,6 +128,19 @@ export class MensagemDiretaConversaComponent {
     const dados = await this.referencias.recuperar(tipo, id);
     if (!dados?.acessivel || !dados.nome) return;
     this.nomesDasReferencias.update((atuais) => new Map(atuais).set(chave, dados.nome as string));
+  }
+
+  /** Copia o texto da mensagem como foi escrito (o Markdown), inclusive blocos de código. */
+  protected async copiar(mensagemId: string, texto: string): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(texto);
+    } catch {
+      this.messageService.add({ severity: 'warn', summary: 'Mensagem', detail: 'Não foi possível copiar a mensagem' });
+      return;
+    }
+    this.copiadaId.set(mensagemId);
+    if (this.temporizadorDoCopiado) clearTimeout(this.temporizadorDoCopiado);
+    this.temporizadorDoCopiado = setTimeout(() => this.copiadaId.set(null), TEMPO_DO_COPIADO_MS);
   }
 
   protected voltar(): void {
@@ -153,6 +181,11 @@ export class MensagemDiretaConversaComponent {
       return;
     }
     if (this.colarNoFim && cresceu) el.scrollTop = el.scrollHeight;
+  }
+
+  protected aoDigitar(): void {
+    const aberta = this.aberta();
+    if (aberta) this.estado.avisarDigitacao(aberta.usuarioId);
   }
 
   protected aoEnviar(envio: EnvioDoCompositor): void {

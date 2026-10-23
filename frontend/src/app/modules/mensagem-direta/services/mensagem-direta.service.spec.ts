@@ -53,6 +53,11 @@ describe('MensagemDiretaService', () => {
     responderSucesso(requisicao, {});
   });
 
+  it('avisarDigitacao é um POST em /conversa/:usuarioId/digitando', () => {
+    servico.avisarDigitacao(9).subscribe();
+    responderSucesso(esperarRequisicao(http, 'POST', '/mensagem-direta/conversa/9/digitando'), null);
+  });
+
   it('buscar é um GET em /busca com o texto na query', () => {
     servico.buscar('filtro de tags').subscribe();
     const requisicao = esperarRequisicao(http, 'GET', '/mensagem-direta/busca');

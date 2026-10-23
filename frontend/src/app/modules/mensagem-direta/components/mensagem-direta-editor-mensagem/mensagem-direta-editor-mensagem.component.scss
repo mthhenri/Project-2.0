@@ -75,6 +75,8 @@
     border-radius: 5px;
     color: var(--p-text-color);
     font-size: 0.8125rem;
+    line-height: 1;
+    white-space: nowrap;
     cursor: pointer;
     transition: background-color 0.15s;
 
@@ -85,6 +87,22 @@
     &:focus-visible {
       outline: 2px solid var(--p-primary-color);
       outline-offset: 1px;
+    }
+
+    // Separador entre os grupos (texto, lista); a margem separa o botão do traço.
+    &--grupo {
+      margin-left: 0.3125rem;
+      position: relative;
+
+      &::before {
+        content: '';
+        position: absolute;
+        left: -0.25rem;
+        top: 0.25rem;
+        bottom: 0.25rem;
+        width: 1px;
+        background: var(--app-surface-200);
+      }
     }
 
     &--ativo {

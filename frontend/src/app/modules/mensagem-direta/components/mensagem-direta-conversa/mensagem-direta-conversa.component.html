@@ -5,7 +5,11 @@
       <app-mensagem-direta-avatar [nome]="conversa.usuarioNome" [online]="estaOnline()" [pequeno]="true" />
       <div class="conversa-direta__identidade">
         <div class="conversa-direta__nome">{{ conversa.usuarioNome }}</div>
-        <div class="conversa-direta__status">{{ estado.conexao() ? (estaOnline() ? 'Online' : 'Offline') : 'Status indisponível' }}</div>
+        @if (estaDigitando()) {
+          <div class="conversa-direta__status conversa-direta__status--digitando" role="status">digitando<span class="conversa-direta__pontos" aria-hidden="true"><span></span><span></span><span></span></span></div>
+        } @else {
+          <div class="conversa-direta__status">{{ estado.conexao() ? (estaOnline() ? 'Online' : 'Offline') : 'Status indisponível' }}</div>
+        }
       </div>
       <p-button icon="pi pi-info-circle" severity="secondary" [text]="true" [rounded]="true" size="small" [ariaLabel]="avisoDeLeitura" [pTooltip]="avisoDeLeitura" tooltipPosition="bottom" />
       <p-button
@@ -83,6 +87,17 @@
                     } @else if (minha && mensagem.mensagemId === ultimaMinhaId()) {
                       <span>· Enviada</span>
                     }
+                    <button
+                      type="button"
+                      class="conversa-direta__copiar"
+                      [class.conversa-direta__copiar--copiado]="copiadaId() === mensagem.mensagemId"
+                      [attr.aria-label]="copiadaId() === mensagem.mensagemId ? 'Mensagem copiada' : 'Copiar a mensagem'"
+                      [pTooltip]="copiadaId() === mensagem.mensagemId ? 'Copiado' : 'Copiar texto'"
+                      tooltipPosition="top"
+                      (click)="copiar(mensagem.mensagemId, mensagem.texto)"
+                    >
+                      <i [class]="copiadaId() === mensagem.mensagemId ? 'pi pi-check' : 'pi pi-copy'" aria-hidden="true"></i>
+                    </button>
                   }
                 }
               </div>
@@ -92,6 +107,6 @@
       }
     </div>
 
-    <app-mensagem-direta-compositor [pessoas]="pessoasMencionaveis()" [chave]="pessoaAberta()" [codigoInicial]="estado.rascunhoDoDesktop()" (textoAplicado)="estado.rascunhoDoDesktop.set(null)" (enviar)="aoEnviar($event)" />
+    <app-mensagem-direta-compositor [pessoas]="pessoasMencionaveis()" [chave]="pessoaAberta()" [codigoInicial]="estado.rascunhoDoDesktop()" (textoAplicado)="estado.rascunhoDoDesktop.set(null)" (enviar)="aoEnviar($event)" (digitando)="aoDigitar()" />
   </div>
 }

@@ -86,6 +86,8 @@ describe('MensagemDiretaAvisosComponent', () => {
     expect(cartoes().length).toBe(1);
     expect(texto()).toContain('Camila Duarte');
     expect(texto()).toContain('Oi, dá uma olhada?');
+    // O cartão renderiza o Markdown (negrito vira elemento), em vez de mostrar a marcação ou só o texto cru.
+    expect(tela.elemento.querySelector('.aviso-direto__texto strong')?.textContent).toBe('Oi');
     expect(tela.elemento.querySelector('.aviso-direto')?.getAttribute('aria-label')).toBe('Mensagem nova de Camila Duarte');
   });
 

@@ -7,6 +7,9 @@ import {
   agruparPorDia,
   aplicarMensagemNaLista,
   dataDaUltimaDoOutro,
+  devePublicarDigitacao,
+  ESPERA_ENTRE_AVISOS_DE_DIGITACAO_MS,
+  VALIDADE_DO_DIGITANDO_MS,
   esperaDaReconexao,
   filtrarPessoasPorNome,
   gerarMensagemId,
@@ -255,5 +258,17 @@ describe('busca', () => {
     expect(filtrarPessoasPorNome(pessoas, 'jose ant')).toEqual([pessoas[0]]);
     expect(filtrarPessoasPorNome(pessoas, '')).toBe(pessoas);
     expect(filtrarPessoasPorNome(pessoas, 'zzz')).toEqual([]);
+  });
+});
+
+describe('devePublicarDigitacao', () => {
+  it('avisa na primeira vez e só de novo depois da espera', () => {
+    expect(devePublicarDigitacao(null, 1_000)).toBe(true);
+    expect(devePublicarDigitacao(1_000, 1_000 + ESPERA_ENTRE_AVISOS_DE_DIGITACAO_MS - 1)).toBe(false);
+    expect(devePublicarDigitacao(1_000, 1_000 + ESPERA_ENTRE_AVISOS_DE_DIGITACAO_MS)).toBe(true);
+  });
+
+  it('o "digitando…" dura mais que o intervalo entre avisos, para não piscar enquanto a pessoa digita', () => {
+    expect(VALIDADE_DO_DIGITANDO_MS).toBeGreaterThan(ESPERA_ENTRE_AVISOS_DE_DIGITACAO_MS);
   });
 });

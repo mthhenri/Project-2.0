@@ -58,6 +58,26 @@ describe('MensagemDiretaCompositorComponent', () => {
     await esperarCampoDeMensagem(tela.fixture, () => tela.atualizar());
   });
 
+  it('avisa que está digitando só pelas teclas do usuário; texto posto por programa, Enter e teclas de controle não avisam', async () => {
+    let avisos = 0;
+    tela.componente.digitando.subscribe(() => avisos++);
+    await digitar('Oi');
+    expect(avisos).toBe(0);
+
+    teclar('o');
+    expect(avisos).toBe(1);
+    teclar('Backspace');
+    expect(avisos).toBe(2);
+    teclar('Shift');
+    teclar('ArrowLeft');
+    teclar('b', { ctrlKey: true });
+    expect(avisos).toBe(2);
+    teclar('Enter');
+    expect(avisos).toBe(2);
+    teclar('Backspace');
+    expect(avisos).toBe(2);
+  });
+
   // --- enviar e quebrar linha -----------------------------------------------------------------------------------------
 
   it('Enter envia o texto; texto em branco não envia; depois de enviar o campo esvazia', async () => {

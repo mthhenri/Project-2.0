@@ -352,6 +352,21 @@ test('alterarLeitura: avisa as duas pontas com quem leu e até quando ficou grav
   });
 });
 
+test('avisarDigitacao: só a outra pessoa recebe o aviso, com quem digita e a conversa', async () => {
+  const { service, chamadas } = montar();
+  const resposta = await service.avisarDigitacao({ usuarioId: BRUNO_ID }, ANA);
+
+  assert.equal(resposta.sucesso, true);
+  assert.deepEqual(chamadas.publicar, [{ usuarioIds: [BRUNO_ID], evento: { tipo: 'DIGITANDO', conversaId: '4-9', usuarioId: 4 } }]);
+});
+
+test('avisarDigitacao: para si mesmo ou para quem não existe é recusado e não avisa ninguém', async () => {
+  const { service, chamadas } = montar({ usuarios: {} });
+  await assert.rejects(service.avisarDigitacao({ usuarioId: 4 }, ANA));
+  await assert.rejects(service.avisarDigitacao({ usuarioId: 999 }, ANA));
+  assert.equal(chamadas.publicar, undefined);
+});
+
 test('listarConversas: online vem da presença global', async () => {
   const { service } = montar({
     online: [BRUNO_ID],

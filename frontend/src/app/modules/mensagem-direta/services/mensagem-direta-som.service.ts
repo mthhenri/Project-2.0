@@ -1,5 +1,8 @@
 import { Injectable } from '@angular/core';
 
+/** O volume de pico do toque (0 a 1; era 0,12, baixo demais perto de música e reunião). */
+const PICO_DO_VOLUME = 0.3;
+
 /**
  * O som do aviso de mensagem nova (task 212): um toque curto gerado pelo próprio navegador, sem arquivo de áudio. O navegador só libera o áudio depois de
  * o usuário ter interagido com a página; antes disso (ou se o áudio não existir) a falha é engolida e o aviso aparece sem som.
@@ -22,7 +25,7 @@ export class MensagemDiretaSomService {
       oscilador.frequency.setValueAtTime(880, inicio);
       oscilador.frequency.setValueAtTime(1175, inicio + 0.09);
       volume.gain.setValueAtTime(0.0001, inicio);
-      volume.gain.exponentialRampToValueAtTime(0.12, inicio + 0.02);
+      volume.gain.exponentialRampToValueAtTime(PICO_DO_VOLUME, inicio + 0.02);
       volume.gain.exponentialRampToValueAtTime(0.0001, inicio + 0.24);
       oscilador.connect(volume).connect(contexto.destination);
       oscilador.start(inicio);
