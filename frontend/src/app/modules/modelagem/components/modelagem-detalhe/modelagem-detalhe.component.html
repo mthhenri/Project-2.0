@@ -1,7 +1,24 @@
 <aside class="modelagem-detalhe" aria-live="polite">
   @if (tabela(); as tabelaAtual) {
     <h2 class="modelagem-detalhe__nome">{{ tabelaAtual.nome }}</h2>
-    <p class="modelagem-detalhe__grupo">{{ rotuloDoGrupo() }}</p>
+    @if (podeEditar()) {
+      <label class="modelagem-detalhe__campo-grupo" for="modelagem-grupo-da-tabela">
+        <span class="modelagem-detalhe__rotulo-campo">Grupo</span>
+        <p-select
+          inputId="modelagem-grupo-da-tabela"
+          [options]="opcoesDeGrupo()"
+          optionLabel="rotulo"
+          optionValue="id"
+          [formControl]="controleGrupo"
+          [filter]="false"
+          appendTo="body"
+          styleClass="w-full"
+          ariaLabel="Grupo da tabela"
+        />
+      </label>
+    } @else {
+      <p class="modelagem-detalhe__grupo">{{ rotuloDoGrupo() }}</p>
+    }
 
     <h3 class="modelagem-detalhe__secao">Colunas ({{ tabelaAtual.colunas.length }})</h3>
     <ul class="modelagem-detalhe__lista">

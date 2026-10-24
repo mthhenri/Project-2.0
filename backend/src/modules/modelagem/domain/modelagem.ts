@@ -1,6 +1,6 @@
 /**
- * Lógica pura do diagrama da modelagem (`GET /modelagem`): transforma o que o catálogo do PostgreSQL informa sobre colunas e
- * chaves em um modelo posicionado, no contrato `ModelagemDiagramaDto` lido pela tela Modelagem. Não toca no banco.
+ * Lógica pura do diagrama da modelagem (`GET /modelagem`): junta o que o catálogo do PostgreSQL informa sobre colunas e chaves
+ * com os grupos e as posições que o gestor guardou, no contrato `ModelagemDiagramaDto` lido pela tela Modelagem. Não toca no banco.
  */
 import type { ModelagemColunaDto, ModelagemDiagramaDto, ModelagemGrupoDto, ModelagemTabelaDto } from '@project20/shared';
 
@@ -20,19 +20,20 @@ export interface ChaveBanco {
   colunaDestino?: string;
 }
 
-export type GrupoConfiguracao = Omit<ModelagemGrupoDto, 'id'>;
+/** Grupo e posição de uma tabela, como estão em `modelagem_tabela`. */
+export interface ColocacaoDeTabela {
+  nomeTabela: string;
+  grupoId: number | null;
+  x: number;
+  y: number;
+}
 
 export interface ConfiguracaoModelagem {
-  /** Ordem do objeto = ordem dos filtros e da paleta de cores. */
-  grupos: Record<string, GrupoConfiguracao>;
-  tabelaGrupo: Record<string, string>;
   colunasOcultas: string[];
   /** "tabela.coluna" → tabela referenciada, para colunas sem FK que o nome não revela. */
   referenciasLogicas: Record<string, string>;
-  posicoes: Record<string, [number, number]>;
 }
 
-export const GRUPO_SEM_CONFIGURACAO = 'outros';
 const PREFIXO_REFERENCIA = 'tipo_';
 const TABELAS_DO_KNEX = ['knex_migrations', 'knex_migrations_lock'];
 const TIPOS_INTEIROS = ['integer', 'bigint', 'smallint'];
@@ -84,43 +85,23 @@ export function alturaDaTabela(quantidadeColunas: number): number {
   return ALTURA_CABECALHO + ALTURA_LINHA * quantidadeColunas + 6;
 }
 
-export interface ModeloSemPosicao {
-  tabelas: Omit<ModelagemTabelaDto, 'x' | 'y'>[];
-  avisos: string[];
-}
+/** A tabela do catálogo (colunas e largura), ainda sem grupo nem posição. */
+export type TabelaDoCatalogo = Pick<ModelagemTabelaDto, 'nome' | 'largura' | 'colunas'>;
 
-/** Junta colunas e chaves do banco no modelo (grupos, marcas PK/FK/lógica, larguras), ainda sem posição. */
+/** Colunas e chaves do banco no modelo (marcas PK/FK/lógica, larguras). Ignora as tabelas do Knex e oculta as colunas de BaseEntity. */
 export function montarModelo(
   colunas: ColunaBanco[],
   chavesPrimarias: ChaveBanco[],
   chavesEstrangeiras: ChaveBanco[],
   configuracao: ConfiguracaoModelagem,
-): ModeloSemPosicao {
-  const avisos: string[] = [];
+): TabelaDoCatalogo[] {
   const nomesTabelas = [...new Set(colunas.map((coluna) => coluna.tabela))]
     .filter((tabela) => !TABELAS_DO_KNEX.includes(tabela))
     .sort();
   const primarias = new Set(chavesPrimarias.map((chave) => `${chave.tabela}.${chave.coluna}`));
   const estrangeiras = new Map(chavesEstrangeiras.map((chave) => [`${chave.tabela}.${chave.coluna}`, chave.tabelaDestino as string]));
 
-  const grupoDe = new Map<string, string>();
-  for (const tabela of nomesTabelas) {
-    if (configuracao.tabelaGrupo[tabela]) grupoDe.set(tabela, configuracao.tabelaGrupo[tabela]);
-  }
-  for (const tabela of nomesTabelas.filter((nome) => nome.startsWith(PREFIXO_REFERENCIA) && !grupoDe.has(nome))) {
-    const referenciadora = chavesEstrangeiras
-      .filter((chave) => chave.tabelaDestino === tabela && grupoDe.has(chave.tabela))
-      .map((chave) => chave.tabela)
-      .sort()[0];
-    if (referenciadora) grupoDe.set(tabela, grupoDe.get(referenciadora) as string);
-  }
-  const semGrupo = nomesTabelas.filter((tabela) => !grupoDe.has(tabela));
-  if (semGrupo.length) {
-    avisos.push(`Sem grupo em tabelaGrupo (foram para "${GRUPO_SEM_CONFIGURACAO}"): ${semGrupo.join(', ')}.`);
-    for (const tabela of semGrupo) grupoDe.set(tabela, GRUPO_SEM_CONFIGURACAO);
-  }
-
-  const tabelas = nomesTabelas.map((nome) => {
+  return nomesTabelas.map((nome) => {
     const colunasDaTabela = colunas
       .filter((coluna) => coluna.tabela === nome && (coluna.coluna === 'id' || !configuracao.colunasOcultas.includes(coluna.coluna)))
       .map((coluna): ModelagemColunaDto => {
@@ -134,39 +115,64 @@ export function montarModelo(
         if (destino && nomesTabelas.includes(destino) && destino !== nome) return { nome: coluna.coluna, tipo, marca: 'lg', tabelaReferenciada: destino };
         return { nome: coluna.coluna, tipo, marca: '', tabelaReferenciada: null };
       });
-    return { nome, grupo: grupoDe.get(nome) as string, largura: larguraDaTabela(nome, colunasDaTabela), colunas: colunasDaTabela };
+    return { nome, largura: larguraDaTabela(nome, colunasDaTabela), colunas: colunasDaTabela };
   });
-  return { tabelas, avisos };
 }
 
-/** Aplica as posições da configuração; as tabelas novas ficam abaixo do grupo (ou de tudo, se o grupo é novo). */
+/**
+ * Grupo de cada tabela: o guardado (se o grupo ainda existe); sem linha guardada, a tabela `tipo_*` herda o grupo de quem a
+ * referencia (a primeira por nome, entre as que têm grupo); o resto fica sem grupo (`null`).
+ */
+export function resolverGrupos(
+  tabelas: TabelaDoCatalogo[],
+  colocacoes: ColocacaoDeTabela[],
+  chavesEstrangeiras: ChaveBanco[],
+  gruposExistentes: ReadonlySet<number>,
+): Map<string, number | null> {
+  const guardadas = new Map(colocacoes.map((colocacao) => [colocacao.nomeTabela, colocacao]));
+  const grupoDe = new Map<string, number | null>();
+  for (const tabela of tabelas) {
+    const guardada = guardadas.get(tabela.nome);
+    if (guardada) grupoDe.set(tabela.nome, guardada.grupoId !== null && gruposExistentes.has(guardada.grupoId) ? guardada.grupoId : null);
+  }
+  for (const tabela of tabelas.filter((candidata) => !guardadas.has(candidata.nome))) {
+    const referenciadora = tabela.nome.startsWith(PREFIXO_REFERENCIA)
+      ? chavesEstrangeiras
+          .filter((chave) => chave.tabelaDestino === tabela.nome && grupoDe.get(chave.tabela) !== undefined && grupoDe.get(chave.tabela) !== null)
+          .map((chave) => chave.tabela)
+          .sort()[0]
+      : undefined;
+    grupoDe.set(tabela.nome, referenciadora ? (grupoDe.get(referenciadora) as number) : null);
+  }
+  return grupoDe;
+}
+
+/** Aplica as posições guardadas; as tabelas sem posição ficam abaixo do grupo (ou de tudo, se o grupo ainda não tem tabela posicionada). */
 export function posicionar(
-  modelo: ModeloSemPosicao,
-  posicoes: Record<string, [number, number]>,
-  ordemDosGrupos: string[],
-): { tabelas: ModelagemTabelaDto[]; avisos: string[] } {
-  const avisos: string[] = [];
-  const nomes = new Set(modelo.tabelas.map((tabela) => tabela.nome));
-  const obsoletas = Object.keys(posicoes).filter((nome) => !nomes.has(nome));
-  if (obsoletas.length) avisos.push(`Posições de tabelas que não existem mais (apague de posicoes): ${obsoletas.join(', ')}.`);
+  tabelas: TabelaDoCatalogo[],
+  grupoDe: ReadonlyMap<string, number | null>,
+  colocacoes: ColocacaoDeTabela[],
+  ordemDosGrupos: number[],
+): ModelagemTabelaDto[] {
+  const guardadas = new Map(colocacoes.map((colocacao) => [colocacao.nomeTabela, colocacao]));
+  const comGrupo = (tabela: TabelaDoCatalogo) => ({ ...tabela, grupoId: grupoDe.get(tabela.nome) ?? null });
 
-  const posicionadas: ModelagemTabelaDto[] = modelo.tabelas
-    .filter((tabela) => posicoes[tabela.nome])
-    .map((tabela) => ({ ...tabela, x: posicoes[tabela.nome][0], y: posicoes[tabela.nome][1] }));
-  const novas = modelo.tabelas.filter((tabela) => !posicoes[tabela.nome]).sort((a, b) => a.nome.localeCompare(b.nome));
-  if (novas.length) avisos.push(`Sem posição em posicoes (usei posição automática; arraste e use "Copiar posições"): ${novas.map((tabela) => tabela.nome).join(', ')}.`);
+  const resultado: ModelagemTabelaDto[] = tabelas
+    .filter((tabela) => guardadas.has(tabela.nome))
+    .map((tabela) => ({ ...comGrupo(tabela), x: (guardadas.get(tabela.nome) as ColocacaoDeTabela).x, y: (guardadas.get(tabela.nome) as ColocacaoDeTabela).y }));
+  const novas = tabelas.filter((tabela) => !guardadas.has(tabela.nome)).map(comGrupo).sort((a, b) => a.nome.localeCompare(b.nome));
 
-  const resultado = [...posicionadas];
   const limiteInferior = () => (resultado.length ? Math.max(...resultado.map((tabela) => tabela.y + alturaDaTabela(tabela.colunas.length))) : MARGEM);
-  const gruposComNovas = [...new Set(novas.map((tabela) => tabela.grupo))].sort((a, b) => ordemDosGrupos.indexOf(a) - ordemDosGrupos.indexOf(b));
-  for (const grupo of gruposComNovas) {
-    const doGrupo = resultado.filter((tabela) => tabela.grupo === grupo);
+  const posicaoDoGrupo = (grupoId: number | null) => (grupoId === null ? Number.MAX_SAFE_INTEGER : ordemDosGrupos.indexOf(grupoId));
+  const gruposComNovas = [...new Set(novas.map((tabela) => tabela.grupoId))].sort((a, b) => posicaoDoGrupo(a) - posicaoDoGrupo(b));
+  for (const grupoId of gruposComNovas) {
+    const doGrupo = resultado.filter((tabela) => tabela.grupoId === grupoId);
     const esquerda = doGrupo.length ? Math.min(...doGrupo.map((tabela) => tabela.x)) : MARGEM;
     const largura = doGrupo.length ? Math.max(700, Math.max(...doGrupo.map((tabela) => tabela.x + tabela.largura)) - esquerda) : LARGURA_MAXIMA_LINHA;
     let cursorX = esquerda;
     let cursorY = (doGrupo.length ? Math.max(...doGrupo.map((tabela) => tabela.y + alturaDaTabela(tabela.colunas.length))) : limiteInferior()) + AFASTAMENTO_ABAIXO;
     let alturaDaLinha = 0;
-    for (const nova of novas.filter((tabela) => tabela.grupo === grupo)) {
+    for (const nova of novas.filter((tabela) => tabela.grupoId === grupoId)) {
       if (cursorX > esquerda && cursorX + nova.largura > esquerda + largura) {
         cursorX = esquerda;
         cursorY += alturaDaLinha + AFASTAMENTO_ABAIXO;
@@ -177,20 +183,16 @@ export function posicionar(
       alturaDaLinha = Math.max(alturaDaLinha, alturaDaTabela(nova.colunas.length));
     }
   }
-  return { tabelas: resultado.sort((a, b) => a.nome.localeCompare(b.nome)), avisos };
+  return resultado.sort((a, b) => a.nome.localeCompare(b.nome));
 }
 
 export function montarDiagrama(
   tabelas: ModelagemTabelaDto[],
+  grupos: ModelagemGrupoDto[],
   configuracao: ConfiguracaoModelagem,
   origem: string,
-  avisos: string[],
 ): ModelagemDiagramaDto {
-  const grupos: ModelagemGrupoDto[] = Object.entries(configuracao.grupos)
-    .filter(([id]) => tabelas.some((tabela) => tabela.grupo === id))
-    .map(([id, grupo]) => ({ id, ...grupo }));
-  if (tabelas.some((tabela) => tabela.grupo === GRUPO_SEM_CONFIGURACAO) && !grupos.some((grupo) => grupo.id === GRUPO_SEM_CONFIGURACAO)) {
-    grupos.push({ id: GRUPO_SEM_CONFIGURACAO, titulo: 'Sem grupo na configuração', rotulo: 'Sem grupo' });
-  }
+  const semGrupo = tabelas.filter((tabela) => tabela.grupoId === null).map((tabela) => tabela.nome);
+  const avisos = semGrupo.length ? [`Tabelas sem grupo (escolha um no painel da tabela): ${semGrupo.join(', ')}.`] : [];
   return { origem, colunasOcultas: configuracao.colunasOcultas, avisos, grupos, tabelas };
 }

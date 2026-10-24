@@ -87,6 +87,7 @@ As tabelas devem ser criadas nessa ordem para respeitar as dependências de FK:
 16. tipo_atividade_prioridade e `atividade.tipo_atividade_prioridade_id` (migration `0036`)
 17. mensagem_direta_leitura, mensagem_direta_preferencia, mensagem_direta_supervisao (migration `0050`; só dependem de `usuario`)
 18. mensagem_direta (migration `0051`, provisória; sem FK, depende só das funções `fn_chat_texto_*` da `0038`)
+19. modelagem_grupo, modelagem_tabela (migration `0052`; `modelagem_tabela` referencia `modelagem_grupo`)
 ```
 
 ---
@@ -672,6 +673,47 @@ CREATE INDEX ix_proposta_ia_usuario ON proposta_ia(usuario_id) WHERE is_deleted 
 ```
 
 ---
+
+### Modelagem — grupos e posições do diagrama (migration `0052`)
+
+Alimentam a tela Modelagem (`GET /modelagem`). O catálogo do PostgreSQL diz quais tabelas e colunas existem; estas duas tabelas guardam o que só o gestor decide: os grupos (caixas coloridas) e o grupo e a posição de cada tabela no desenho.
+
+```sql
+CREATE TABLE modelagem_grupo (
+  id            SERIAL      PRIMARY KEY,
+  created_date  TIMESTAMPTZ NOT NULL,
+  updated_date  TIMESTAMPTZ NOT NULL,
+  is_deleted    BOOLEAN     NOT NULL,
+  deleted_date  TIMESTAMPTZ,
+
+  titulo     VARCHAR(150) NOT NULL,   -- texto da caixa no diagrama
+  rotulo     VARCHAR(60)  NOT NULL,   -- nome curto do botão de filtro; único entre os ativos, sem diferenciar maiúsculas
+  ordem      INTEGER      NOT NULL,
+  cor_indice INTEGER      NOT NULL,   -- 0 a 6 na paleta do diagrama (o 7 é do "Sem grupo", que não é linha)
+
+  CONSTRAINT chk_modelagem_grupo_cor_indice CHECK (cor_indice BETWEEN 0 AND 6)
+);
+CREATE UNIQUE INDEX uix_modelagem_grupo_rotulo_ativo ON modelagem_grupo (LOWER(rotulo)) WHERE is_deleted = false;
+
+CREATE TABLE modelagem_tabela (
+  id            SERIAL      PRIMARY KEY,
+  created_date  TIMESTAMPTZ NOT NULL,
+  updated_date  TIMESTAMPTZ NOT NULL,
+  is_deleted    BOOLEAN     NOT NULL,
+  deleted_date  TIMESTAMPTZ,
+
+  nome_tabela        VARCHAR(100) NOT NULL,   -- nome no catálogo do banco (não é FK: a tabela nasce e some por migration)
+  modelagem_grupo_id INTEGER,                 -- nulo = "Sem grupo"
+  posicao_x          INTEGER      NOT NULL,
+  posicao_y          INTEGER      NOT NULL,
+
+  CONSTRAINT fk_modelagem_tabela_modelagem_grupo FOREIGN KEY (modelagem_grupo_id) REFERENCES modelagem_grupo(id)
+);
+CREATE UNIQUE INDEX uix_modelagem_tabela_nome_tabela_ativa ON modelagem_tabela (nome_tabela) WHERE is_deleted = false;
+CREATE INDEX ix_modelagem_tabela_modelagem_grupo ON modelagem_tabela (modelagem_grupo_id);
+```
+
+A migration semeia os 6 grupos (Domínio, Usuários e ponto, Calendário, IA, Chat, Modelagem) e as 37 posições que a tela tinha. Tabela sem linha aparece em posição automática, no grupo de quem a referencia (se for `tipo_*`) ou em "Sem grupo". Excluir um grupo só é permitido vazio (a service confere pelo diagrama resolvido).
 
 ### Tabelas de referência (enums) — migration `20240025`
 

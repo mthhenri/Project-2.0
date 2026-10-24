@@ -3,13 +3,28 @@ import * as assert from 'node:assert/strict';
 import { rotasPorNome } from '../../../testes/rotas-do-controller';
 import { ModelagemController } from './modelagem.controller';
 
-// A tela Modelagem é de todos: desenvolvedor, gestor e administrador.
+// A tela Modelagem é de todos (desenvolvedor, gestor e administrador); só o gestor (e o administrador) mexe em grupos e posições.
 
-test('o diagrama é aberto a qualquer usuário autenticado (nem público, nem de gestor, nem de administrador)', () => {
-  const rotas = Object.values(rotasPorNome(ModelagemController));
-  assert.equal(rotas.length, 1);
-  assert.equal(`${rotas[0].verbo} ${rotas[0].caminho}`, 'GET /');
-  assert.equal(rotas[0].publica, false);
-  assert.equal(rotas[0].gestorOnly, false);
-  assert.equal(rotas[0].administradorOnly, false);
+const rotas = () => rotasPorNome(ModelagemController);
+
+test('ver o diagrama é aberto a qualquer usuário autenticado', () => {
+  assert.equal(rotas()['obterDiagrama'].gestorOnly, false);
+});
+
+test('criar, alterar e excluir grupo e alterar a tabela são @GestorOnly', () => {
+  for (const nome of ['criarGrupo', 'alterarGrupo', 'excluirGrupo', 'alterarTabela']) assert.equal(rotas()[nome].gestorOnly, true, nome);
+});
+
+test('nenhuma rota é pública nem exclusiva de administrador', () => {
+  for (const rota of Object.values(rotas())) {
+    assert.equal(rota.publica, false, rota.nome);
+    assert.equal(rota.administradorOnly, false, rota.nome);
+  }
+});
+
+test('verbos e caminhos de todas as rotas', () => {
+  assert.deepEqual(
+    Object.values(rotas()).map((rota) => `${rota.verbo} ${rota.caminho}`).sort(),
+    ['DELETE grupo/:id', 'GET /', 'POST grupo', 'PUT grupo/:id', 'PUT tabela/:nome'].sort(),
+  );
 });

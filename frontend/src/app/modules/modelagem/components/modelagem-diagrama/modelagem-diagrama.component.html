@@ -82,6 +82,7 @@
 <!-- Controles flutuantes: legenda (ⓘ), zoom e posições -->
 <div class="modelagem-diagrama__controles">
   <p-button
+    styleClass="modelagem-diagrama__botao"
     icon="pi pi-info-circle"
     severity="secondary"
     [outlined]="true"
@@ -92,13 +93,12 @@
     (onClick)="alternarLegenda($event, legenda)"
   />
   <div class="modelagem-diagrama__grupo-botoes" role="group" aria-label="Zoom">
-    <p-button icon="pi pi-plus" severity="secondary" [outlined]="true" size="small" ariaLabel="Aproximar" pTooltip="Aproximar" tooltipPosition="left" (onClick)="aproximar()" />
-    <p-button icon="pi pi-minus" severity="secondary" [outlined]="true" size="small" ariaLabel="Afastar" pTooltip="Afastar" tooltipPosition="left" (onClick)="afastar()" />
-    <p-button icon="pi pi-home" severity="secondary" [outlined]="true" size="small" ariaLabel="Enquadrar tudo" pTooltip="Enquadrar tudo" tooltipPosition="left" (onClick)="enquadrarTudo()" />
+    <p-button styleClass="modelagem-diagrama__botao" icon="pi pi-plus" severity="secondary" [outlined]="true" size="small" ariaLabel="Aproximar" pTooltip="Aproximar" tooltipPosition="left" (onClick)="aproximar()" />
+    <p-button styleClass="modelagem-diagrama__botao" icon="pi pi-minus" severity="secondary" [outlined]="true" size="small" ariaLabel="Afastar" pTooltip="Afastar" tooltipPosition="left" (onClick)="afastar()" />
+    <p-button styleClass="modelagem-diagrama__botao" icon="pi pi-home" severity="secondary" [outlined]="true" size="small" ariaLabel="Enquadrar tudo" pTooltip="Enquadrar tudo" tooltipPosition="left" (onClick)="enquadrarTudo()" />
   </div>
   <div class="modelagem-diagrama__grupo-botoes" role="group" aria-label="Posições das tabelas">
-    <p-button icon="pi pi-replay" severity="secondary" [outlined]="true" size="small" ariaLabel="Restaurar posições" pTooltip="Restaurar as posições do arquivo" tooltipPosition="left" (onClick)="restaurarPosicoes()" />
-    <p-button icon="pi pi-copy" severity="secondary" [outlined]="true" size="small" ariaLabel="Copiar posições" pTooltip="Copiar as posições atuais (para modelagem.configuracao.ts)" tooltipPosition="left" (onClick)="copiarPosicoes()" />
+    <p-button styleClass="modelagem-diagrama__botao" icon="pi pi-replay" severity="secondary" [outlined]="true" size="small" ariaLabel="Restaurar posições" pTooltip="Desfazer o que ainda não foi salvo e voltar às posições salvas" tooltipPosition="left" (onClick)="restaurarPosicoes()" />
   </div>
 </div>
 
@@ -117,5 +117,8 @@
     <h3 class="modelagem-diagrama__legenda-titulo">Mouse</h3>
     <div class="modelagem-diagrama__legenda-item">Arraste o fundo para mover e use a roda para o zoom.</div>
     <div class="modelagem-diagrama__legenda-item">Arraste uma tabela para reposicioná-la; clique para ver as relações.</div>
+    @if (podeEditar()) {
+      <div class="modelagem-diagrama__legenda-item">Ao soltar a tabela, a nova posição fica salva para todo mundo.</div>
+    }
   </div>
 </p-popover>

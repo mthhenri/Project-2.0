@@ -2,7 +2,8 @@ import { ModelagemColunaDto } from './ModelagemColunaDto';
 
 export interface ModelagemTabelaDto {
   nome: string;
-  grupo: string;
+  /** `null` = "Sem grupo". */
+  grupoId: number | null;
   x: number;
   y: number;
   largura: number;

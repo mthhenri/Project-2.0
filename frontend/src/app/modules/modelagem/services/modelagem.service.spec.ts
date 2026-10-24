@@ -20,4 +20,32 @@ describe('ModelagemService', () => {
     responderSucesso(requisicao, diagrama);
     expect(recebido).toEqual(diagrama);
   });
+
+  it('cria, altera e exclui grupo pelas rotas de grupo', async () => {
+    TestBed.resetTestingModule();
+    const { http } = await montarComponente(HospedeiroComponent);
+    const servico = TestBed.inject(ModelagemService);
+
+    servico.criarGrupo({ titulo: 'Ponto', rotulo: 'Ponto' }).subscribe();
+    const criacao = esperarRequisicao(http, 'POST', '/modelagem/grupo');
+    expect(criacao.request.body).toEqual({ titulo: 'Ponto', rotulo: 'Ponto' });
+    responderSucesso(criacao, { id: 7, titulo: 'Ponto', rotulo: 'Ponto', corIndice: 2 });
+
+    servico.alterarGrupo(7, { titulo: 'Ponto do dia', rotulo: 'Ponto' }).subscribe();
+    const alteracao = esperarRequisicao(http, 'PUT', '/modelagem/grupo/7');
+    expect(alteracao.request.body).toEqual({ titulo: 'Ponto do dia', rotulo: 'Ponto' });
+    responderSucesso(alteracao, { id: 7, titulo: 'Ponto do dia', rotulo: 'Ponto', corIndice: 2 });
+
+    servico.excluirGrupo(7).subscribe();
+    responderSucesso(esperarRequisicao(http, 'DELETE', '/modelagem/grupo/7'), null);
+  });
+
+  it('grava o grupo e a posição de uma tabela em PUT /modelagem/tabela/:nome', async () => {
+    TestBed.resetTestingModule();
+    const { http } = await montarComponente(HospedeiroComponent);
+    TestBed.inject(ModelagemService).alterarTabela('ponto_justificativa', { grupoId: null, x: 10, y: 20 }).subscribe();
+    const requisicao = esperarRequisicao(http, 'PUT', '/modelagem/tabela/ponto_justificativa');
+    expect(requisicao.request.body).toEqual({ grupoId: null, x: 10, y: 20 });
+    responderSucesso(requisicao, { nome: 'ponto_justificativa', grupoId: null, x: 10, y: 20 });
+  });
 });

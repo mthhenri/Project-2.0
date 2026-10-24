@@ -1,0 +1,19 @@
+@use '../../../../shared/styles/form' as *;
+
+.modelagem-grupo-dialog {
+  &__form        { @include form-dialog-form(1.25rem); }
+  &__campo       { @include form-campo; }
+  &__label       { @include form-label; }
+  &__obrigatorio { @include form-obrigatorio; }
+  &__erro        { @include form-erro; }
+
+  &__dica {
+    font-size: 0.75rem;
+    color: var(--p-text-muted-color);
+  }
+
+  // Empurra o "Excluir" para a esquerda do rodapé, longe de "Salvar".
+  &__excluir {
+    margin-right: auto;
+  }
+}

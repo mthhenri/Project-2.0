@@ -1,0 +1,63 @@
+<p-dialog
+  [header]="grupoEmEdicao() ? 'Editar grupo' : 'Novo grupo'"
+  dialogFormulario
+  [dialogSemAutofocus]="true"
+  [dialogBloqueado]="carregando()"
+  (dialogEnviar)="salvar()"
+  (onShow)="aoMostrar()"
+  [(visible)]="mostrarDialog"
+  [modal]="true"
+  [style]="{ width: '34rem' }"
+  [draggable]="false"
+>
+  <form [formGroup]="formulario" class="modelagem-grupo-dialog__form">
+    <div class="modelagem-grupo-dialog__campo">
+      <label for="modelagem-grupo-titulo" class="modelagem-grupo-dialog__label">Título da caixa <span class="modelagem-grupo-dialog__obrigatorio">*</span></label>
+      <input #campoTitulo id="modelagem-grupo-titulo" pInputText spellcheck="true" appBloquearCaracteresProibidos formControlName="titulo" maxlength="150" class="w-full" placeholder="Ex.: Ponto e justificativas" />
+      @if (campoInvalido('titulo')) {
+        <small class="modelagem-grupo-dialog__erro">
+          @if (formulario.controls.titulo.hasError('required')) {
+            O título é obrigatório
+          } @else if (formulario.controls.titulo.hasError('pattern')) {
+            {{ mensagemCaracteresProibidos }}
+          }
+        </small>
+      }
+    </div>
+
+    <div class="modelagem-grupo-dialog__campo">
+      <label for="modelagem-grupo-rotulo" class="modelagem-grupo-dialog__label">Rótulo do filtro <span class="modelagem-grupo-dialog__obrigatorio">*</span></label>
+      <input id="modelagem-grupo-rotulo" pInputText spellcheck="true" appBloquearCaracteresProibidos formControlName="rotulo" maxlength="60" class="w-full" placeholder="Ex.: Ponto" />
+      @if (campoInvalido('rotulo')) {
+        <small class="modelagem-grupo-dialog__erro">
+          @if (formulario.controls.rotulo.hasError('required')) {
+            O rótulo é obrigatório
+          } @else if (formulario.controls.rotulo.hasError('pattern')) {
+            {{ mensagemCaracteresProibidos }}
+          }
+        </small>
+      }
+      <small class="modelagem-grupo-dialog__dica">O rótulo é o nome curto do botão que mostra e esconde o grupo; cada grupo tem um rótulo só.</small>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    @if (grupoEmEdicao()) {
+      <span class="modelagem-grupo-dialog__excluir" [pTooltip]="tabelasNoGrupo() > 0 ? 'Mova as tabelas do grupo para outro antes de excluí-lo' : ''" tooltipPosition="top">
+        <p-button
+          label="Excluir"
+          icon="pi pi-trash"
+          severity="danger"
+          [outlined]="true"
+          [disabled]="tabelasNoGrupo() > 0 || carregando()"
+          (onClick)="confirmarExclusao($event)"
+        />
+      </span>
+    }
+    <app-dialog-dica-atalhos />
+    <p-button label="Cancelar" severity="secondary" [outlined]="true" (onClick)="mostrarDialog.set(false)" />
+    <p-button label="Salvar" icon="pi pi-check" [loading]="carregando()" (onClick)="salvar()" />
+  </ng-template>
+</p-dialog>
+
+<p-confirmpopup />

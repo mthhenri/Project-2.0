@@ -7,7 +7,10 @@ import {
   colunaCasaBusca,
   enquadrar,
   montarArestas,
-  posicoesParaConfiguracao,
+  contarTabelasPorGrupo,
+  grupoDaTabela,
+  gruposDoDiagrama,
+  GRUPO_SEM_GRUPO,
   retanguloDasTabelas,
   tabelaCasaBusca,
   vizinhasDe,
@@ -18,7 +21,7 @@ function coluna(nome: string, marca: ModelagemColunaDto['marca'] = '', tabelaRef
 }
 
 function tabela(nome: string, x: number, y: number, colunas: ModelagemColunaDto[], largura = 200): ModelagemTabelaDto {
-  return { nome, grupo: 'dom', x, y, largura, colunas };
+  return { nome, grupoId: 1, x, y, largura, colunas };
 }
 
 const projeto = tabela('projeto', 0, 0, [coluna('id', 'pk'), coluna('nome')]);
@@ -95,9 +98,26 @@ describe('retanguloDasTabelas e enquadrar', () => {
   });
 });
 
-describe('posicoesParaConfiguracao', () => {
-  it('gera o campo posicoes em ordem alfabética com coordenadas inteiras', () => {
-    const texto = posicoesParaConfiguracao([{ ...demanda, x: 400.4, y: 0.6 }, projeto]);
-    assert.equal(texto, '"posicoes": {\n    "demanda": [400, 1],\n    "projeto": [0, 0]\n  }');
+describe('grupos', () => {
+  const diagrama = (semGrupo: boolean) => ({
+    grupos: [{ id: 1, titulo: 'Domínio', rotulo: 'Domínio', corIndice: 0 }],
+    tabelas: [{ ...projeto, grupoId: 1 }, { ...demanda, grupoId: semGrupo ? null : 1 }],
+  });
+
+  it('grupoDaTabela usa o id do grupo ou o do "Sem grupo"', () => {
+    assert.equal(grupoDaTabela({ grupoId: 5 }), 5);
+    assert.equal(grupoDaTabela({ grupoId: null }), GRUPO_SEM_GRUPO.id);
+  });
+
+  it('gruposDoDiagrama só acrescenta o "Sem grupo" quando alguma tabela está sem grupo', () => {
+    assert.deepEqual(gruposDoDiagrama(diagrama(false)).map((grupo) => grupo.rotulo), ['Domínio']);
+    assert.deepEqual(gruposDoDiagrama(diagrama(true)).map((grupo) => grupo.rotulo), ['Domínio', 'Sem grupo']);
+  });
+
+  it('contarTabelasPorGrupo conta as tabelas de cada grupo, inclusive as sem grupo', () => {
+    const contagem = contarTabelasPorGrupo(diagrama(true).tabelas);
+    assert.equal(contagem.get(1), 1);
+    assert.equal(contagem.get(GRUPO_SEM_GRUPO.id), 1);
+    assert.equal(contagem.get(99), undefined);
   });
 });

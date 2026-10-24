@@ -1,12 +1,12 @@
 import * as assert from 'node:assert/strict';
 import { testarComBanco } from '../../../testes/banco-teste';
 import { criarRepositorio } from '../../../testes/criar-repositorio';
-import { ModelagemRepository } from './modelagem.repository';
+import { ModelagemCatalogoRepository } from './modelagem-catalogo.repository';
 
 // O catálogo do banco de teste é o das migrations: tabelas conhecidas desde as primeiras migrations servem de referência.
 
 testarComBanco('listarColunas traz as colunas do schema public, sem as tabelas de outros schemas', async (conexao) => {
-  const repositorio = criarRepositorio(ModelagemRepository, conexao);
+  const repositorio = criarRepositorio(ModelagemCatalogoRepository, conexao);
   const colunas = await repositorio.listarColunas();
   const doProjeto = colunas.filter((coluna) => coluna.tabela === 'projeto').map((coluna) => coluna.coluna);
   assert.ok(doProjeto.includes('id') && doProjeto.includes('nome'));
@@ -17,14 +17,14 @@ testarComBanco('listarColunas traz as colunas do schema public, sem as tabelas d
 });
 
 testarComBanco('listarChavesPrimarias devolve o id de cada tabela', async (conexao) => {
-  const repositorio = criarRepositorio(ModelagemRepository, conexao);
+  const repositorio = criarRepositorio(ModelagemCatalogoRepository, conexao);
   const chaves = await repositorio.listarChavesPrimarias();
   assert.ok(chaves.some((chave) => chave.tabela === 'demanda' && chave.coluna === 'id'));
   assert.ok(chaves.every((chave) => chave.coluna.length > 0));
 });
 
 testarComBanco('listarChavesEstrangeiras devolve origem e destino de cada FK', async (conexao) => {
-  const repositorio = criarRepositorio(ModelagemRepository, conexao);
+  const repositorio = criarRepositorio(ModelagemCatalogoRepository, conexao);
   const chaves = await repositorio.listarChavesEstrangeiras();
   const demandaParaProjeto = chaves.find((chave) => chave.tabela === 'demanda' && chave.coluna === 'projeto_id');
   assert.equal(demandaParaProjeto?.tabelaDestino, 'projeto');
@@ -33,7 +33,7 @@ testarComBanco('listarChavesEstrangeiras devolve origem e destino de cada FK', a
 });
 
 testarComBanco('obterUltimaMigration devolve o nome da migration mais recente aplicada', async (conexao) => {
-  const repositorio = criarRepositorio(ModelagemRepository, conexao);
+  const repositorio = criarRepositorio(ModelagemCatalogoRepository, conexao);
   const nome = await repositorio.obterUltimaMigration();
   assert.match(nome ?? '', /^\d{4} - /);
 });

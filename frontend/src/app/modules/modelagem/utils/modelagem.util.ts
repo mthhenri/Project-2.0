@@ -1,4 +1,10 @@
-import type { ModelagemColunaDto, ModelagemTabelaDto } from '@project20/shared';
+import type { ModelagemColunaDto, ModelagemDiagramaDto, ModelagemGrupoDto, ModelagemTabelaDto } from '@project20/shared';
+
+/** Id do grupo que a tela cria sozinha para as tabelas sem grupo (`grupoId` nulo); os grupos do banco começam em 1. */
+export const ID_SEM_GRUPO = 0;
+/** Cor reservada ao "Sem grupo" (a paleta de grupos vai de 0 a 6). */
+export const COR_SEM_GRUPO = 7;
+export const GRUPO_SEM_GRUPO: ModelagemGrupoDto = { id: ID_SEM_GRUPO, titulo: 'Sem grupo', rotulo: 'Sem grupo', corIndice: COR_SEM_GRUPO };
 
 export const ALTURA_CABECALHO_TABELA = 28;
 export const ALTURA_LINHA_TABELA = 18;
@@ -124,10 +130,20 @@ export function enquadrar(retangulo: Retangulo, larguraVisivel: number, alturaVi
   };
 }
 
-/** Texto para colar em `posicoes` de `modelagem.configuracao.ts` (backend): uma tabela por linha, em ordem alfabética. */
-export function posicoesParaConfiguracao(tabelas: readonly ModelagemTabelaDto[]): string {
-  const linhas = [...tabelas]
-    .sort((a, b) => a.nome.localeCompare(b.nome))
-    .map((tabela) => `    ${JSON.stringify(tabela.nome)}: [${Math.round(tabela.x)}, ${Math.round(tabela.y)}]`);
-  return `"posicoes": {\n${linhas.join(',\n')}\n  }`;
+/** Id do grupo na tela: o `grupoId` da tabela, ou o do "Sem grupo" quando ela não tem grupo. */
+export function grupoDaTabela(tabela: Pick<ModelagemTabelaDto, 'grupoId'>): number {
+  return tabela.grupoId ?? ID_SEM_GRUPO;
+}
+
+/** Os grupos do diagrama na ordem do banco, mais o "Sem grupo" no fim quando alguma tabela está sem grupo. */
+export function gruposDoDiagrama(diagrama: Pick<ModelagemDiagramaDto, 'grupos' | 'tabelas'>): ModelagemGrupoDto[] {
+  const haSemGrupo = diagrama.tabelas.some((tabela) => tabela.grupoId === null);
+  return haSemGrupo ? [...diagrama.grupos, GRUPO_SEM_GRUPO] : diagrama.grupos;
+}
+
+/** Quantas tabelas há em cada grupo (as sem grupo contam no `ID_SEM_GRUPO`). */
+export function contarTabelasPorGrupo(tabelas: readonly Pick<ModelagemTabelaDto, 'grupoId'>[]): Map<number, number> {
+  const contagem = new Map<number, number>();
+  for (const tabela of tabelas) contagem.set(grupoDaTabela(tabela), (contagem.get(grupoDaTabela(tabela)) ?? 0) + 1);
+  return contagem;
 }

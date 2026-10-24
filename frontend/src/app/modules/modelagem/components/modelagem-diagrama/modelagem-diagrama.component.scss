@@ -126,6 +126,16 @@
     gap: 0.5rem;
   }
 
+  // Os botões flutuam sobre o diagrama: o fundo tem de ser sempre opaco (o botão "outlined" do PrimeNG só pinta no hover) e o
+  // hover continua opaco, senão as tabelas por baixo aparecem através dele.
+  &__controles ::ng-deep .p-button.modelagem-diagrama__botao {
+    background: var(--app-surface-0);
+
+    &:not(:disabled):hover {
+      background: var(--app-surface-100);
+    }
+  }
+
   &__grupo-botoes {
     display: flex;
     flex-direction: column;
