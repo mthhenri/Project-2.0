@@ -1,4 +1,10 @@
-import type { ModelagemColunaDto, ModelagemTabelaDto } from '@project20/shared';
+import type { ModelagemColunaDto, ModelagemDiagramaDto, ModelagemGrupoDto, ModelagemTabelaDto } from '@project20/shared';
+
+/** Id do grupo que a tela cria sozinha para as tabelas que estão no banco mas não na modelagem (`grupoId` nulo); os grupos do banco começam em 1. */
+export const ID_FORA_DA_MODELAGEM = 0;
+/** Cor reservada ao "Fora da modelagem" (a paleta de grupos vai de 0 a 6). */
+export const COR_FORA_DA_MODELAGEM = 7;
+export const GRUPO_FORA_DA_MODELAGEM: ModelagemGrupoDto = { id: ID_FORA_DA_MODELAGEM, titulo: 'Fora da modelagem', rotulo: 'Fora da modelagem', corIndice: COR_FORA_DA_MODELAGEM };
 
 export const ALTURA_CABECALHO_TABELA = 28;
 export const ALTURA_LINHA_TABELA = 18;
@@ -124,10 +130,32 @@ export function enquadrar(retangulo: Retangulo, larguraVisivel: number, alturaVi
   };
 }
 
-/** Texto para colar em `posicoes` de `modelagem.configuracao.ts` (backend): uma tabela por linha, em ordem alfabética. */
-export function posicoesParaConfiguracao(tabelas: readonly ModelagemTabelaDto[]): string {
-  const linhas = [...tabelas]
-    .sort((a, b) => a.nome.localeCompare(b.nome))
-    .map((tabela) => `    ${JSON.stringify(tabela.nome)}: [${Math.round(tabela.x)}, ${Math.round(tabela.y)}]`);
-  return `"posicoes": {\n${linhas.join(',\n')}\n  }`;
+/** Id do grupo na tela: o `grupoId` da tabela, ou o do "Fora da modelagem" quando ela não está na modelagem. */
+export function grupoDaTabela(tabela: Pick<ModelagemTabelaDto, 'grupoId'>): number {
+  return tabela.grupoId ?? ID_FORA_DA_MODELAGEM;
+}
+
+/** Os grupos do diagrama na ordem do banco, mais o "Fora da modelagem" no fim quando alguma tabela está fora dela. */
+export function gruposDoDiagrama(diagrama: Pick<ModelagemDiagramaDto, 'grupos' | 'tabelas'>): ModelagemGrupoDto[] {
+  const haSemGrupo = diagrama.tabelas.some((tabela) => tabela.grupoId === null);
+  return haSemGrupo ? [...diagrama.grupos, GRUPO_FORA_DA_MODELAGEM] : diagrama.grupos;
+}
+
+/** Quantas tabelas há em cada grupo (as de fora da modelagem contam no `ID_FORA_DA_MODELAGEM`). */
+export function contarTabelasPorGrupo(tabelas: readonly Pick<ModelagemTabelaDto, 'grupoId'>[]): Map<number, number> {
+  const contagem = new Map<number, number>();
+  for (const tabela of tabelas) contagem.set(grupoDaTabela(tabela), (contagem.get(grupoDaTabela(tabela)) ?? 0) + 1);
+  return contagem;
+}
+
+/** O grupo sob um ponto do desenho: entre as caixas que o contêm, a menor (as caixas se sobrepõem quando as tabelas de dois grupos se misturam). */
+export function grupoSobOPonto(
+  caixas: readonly { grupo: Pick<ModelagemGrupoDto, 'id'>; retangulo: Retangulo }[],
+  ponto: { x: number; y: number },
+): number | null {
+  const contendo = caixas.filter(
+    ({ retangulo }) => ponto.x >= retangulo.x && ponto.x <= retangulo.x + retangulo.largura && ponto.y >= retangulo.y && ponto.y <= retangulo.y + retangulo.altura,
+  );
+  if (!contendo.length) return null;
+  return contendo.reduce((menor, caixa) => (caixa.retangulo.largura * caixa.retangulo.altura < menor.retangulo.largura * menor.retangulo.altura ? caixa : menor)).grupo.id;
 }

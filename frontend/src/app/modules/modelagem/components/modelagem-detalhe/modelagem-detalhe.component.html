@@ -1,7 +1,45 @@
 <aside class="modelagem-detalhe" aria-live="polite">
   @if (tabela(); as tabelaAtual) {
     <h2 class="modelagem-detalhe__nome">{{ tabelaAtual.nome }}</h2>
-    <p class="modelagem-detalhe__grupo">{{ rotuloDoGrupo() }}</p>
+    @if (podeEditar()) {
+      <label class="modelagem-detalhe__campo-grupo" for="modelagem-grupo-da-tabela">
+        <span class="modelagem-detalhe__rotulo-campo">Grupo</span>
+        <p-select
+          inputId="modelagem-grupo-da-tabela"
+          [options]="opcoesDeGrupo()"
+          optionLabel="rotulo"
+          optionValue="id"
+          [formControl]="controleGrupo"
+          [filter]="false"
+          appendTo="body"
+          styleClass="w-full"
+          ariaLabel="Grupo da tabela"
+        />
+      </label>
+      @if (!foraDaModelagem()) {
+        <p-button
+          label="Tirar da modelagem"
+          icon="pi pi-eye-slash"
+          size="small"
+          severity="secondary"
+          [outlined]="true"
+          pTooltip="Só tira do desenho: a tabela continua no banco e vai para o canto, em Fora da modelagem."
+          tooltipPosition="left"
+          (onClick)="tirarDaModelagem()"
+        />
+      }
+    } @else {
+      <p class="modelagem-detalhe__grupo">{{ rotuloDoGrupo() }}</p>
+    }
+    @if (foraDaModelagem()) {
+      <p class="modelagem-detalhe__dica">
+        @if (podeEditar()) {
+          Esta tabela está no banco, mas ainda não está na modelagem. Escolha um grupo acima, ou arraste-a para dentro de um grupo, para trazê-la.
+        } @else {
+          Esta tabela está no banco, mas ainda não está na modelagem: fica no canto até um gestor colocá-la num grupo.
+        }
+      </p>
+    }
 
     <h3 class="modelagem-detalhe__secao">Colunas ({{ tabelaAtual.colunas.length }})</h3>
     <ul class="modelagem-detalhe__lista">

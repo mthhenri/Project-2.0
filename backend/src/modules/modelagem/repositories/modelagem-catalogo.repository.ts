@@ -9,7 +9,7 @@ import { ChaveBanco, ColunaBanco } from '../domain/modelagem';
  * `is_deleted` (o catálogo não tem soft delete) nem parâmetros (nada vem do usuário).
  */
 @Injectable()
-export class ModelagemRepository extends BaseRepository<ColunaBanco> {
+export class ModelagemCatalogoRepository extends BaseRepository<ColunaBanco> {
   constructor(
     @Inject(DATABASE_CONNECTION)
     conexaoBancoDados: Knex,

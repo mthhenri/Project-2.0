@@ -11,15 +11,34 @@
       <div class="modelagem__filtros">
         <div class="modelagem__grupos" role="group" aria-label="Grupos de tabelas">
           @for (grupo of gruposDoFiltro(); track grupo.id) {
-            <button
-              type="button"
-              class="modelagem__grupo modelagem--cor-{{ grupo.cor }}"
-              [class.modelagem__grupo--oculto]="!grupo.visivel"
-              [attr.aria-pressed]="grupo.visivel"
-              (click)="alternarGrupo(grupo.id)"
-            >
-              <span class="modelagem__grupo-cor"></span>{{ grupo.rotulo }}
-            </button>
+            <span class="modelagem__grupo-item modelagem--cor-{{ grupo.corIndice }}">
+              <button
+                type="button"
+                class="modelagem__grupo"
+                [class.modelagem__grupo--oculto]="!grupo.visivel"
+                [class.modelagem__grupo--com-edicao]="podeEditar() && grupo.editavel"
+                [attr.aria-pressed]="grupo.visivel"
+                (click)="alternarGrupo(grupo.id)"
+              >
+                <span class="modelagem__grupo-cor"></span>{{ grupo.rotulo }}
+                <span class="modelagem__grupo-total">{{ grupo.tabelas }}</span>
+              </button>
+              @if (podeEditar() && grupo.editavel) {
+                <button
+                  type="button"
+                  class="modelagem__grupo-editar"
+                  [attr.aria-label]="'Editar o grupo ' + grupo.rotulo"
+                  pTooltip="Editar ou excluir o grupo"
+                  tooltipPosition="bottom"
+                  (click)="editarGrupo(grupo)"
+                >
+                  <i class="pi pi-pencil"></i>
+                </button>
+              }
+            </span>
+          }
+          @if (podeEditar()) {
+            <p-button label="Novo grupo" icon="pi pi-plus" size="small" severity="secondary" [outlined]="true" (onClick)="novoGrupo()" />
           }
         </div>
 
@@ -53,12 +72,24 @@
           [diagrama]="diagramaAtual"
           [gruposVisiveis]="gruposVisiveis()"
           [busca]="busca()"
+          [podeEditar]="podeEditar()"
           [(selecionada)]="selecionada"
+          (tabelaSolta)="salvarPosicao($event)"
         />
       </div>
-      <app-modelagem-detalhe [diagrama]="diagramaAtual" [selecionada]="selecionada()" (tabelaEscolhida)="escolherTabela($event)" />
+      <app-modelagem-detalhe
+        [diagrama]="diagramaAtual"
+        [selecionada]="selecionada()"
+        [podeEditar]="podeEditar()"
+        (tabelaEscolhida)="escolherTabela($event)"
+        (grupoEscolhido)="moverParaGrupo($event)"
+      />
     </div>
   } @else {
     <div class="modelagem__carregando" role="status"><i class="pi pi-spin pi-spinner"></i>Carregando o diagrama…</div>
+  }
+
+  @if (podeEditar()) {
+    <app-modelagem-grupo-dialog (aoSalvar)="aoSalvarGrupo($event)" (aoExcluir)="aoExcluirGrupo($event)" />
   }
 </div>

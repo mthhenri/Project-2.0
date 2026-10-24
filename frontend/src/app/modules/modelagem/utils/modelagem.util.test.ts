@@ -7,7 +7,11 @@ import {
   colunaCasaBusca,
   enquadrar,
   montarArestas,
-  posicoesParaConfiguracao,
+  contarTabelasPorGrupo,
+  grupoDaTabela,
+  gruposDoDiagrama,
+  GRUPO_FORA_DA_MODELAGEM,
+  grupoSobOPonto,
   retanguloDasTabelas,
   tabelaCasaBusca,
   vizinhasDe,
@@ -18,7 +22,7 @@ function coluna(nome: string, marca: ModelagemColunaDto['marca'] = '', tabelaRef
 }
 
 function tabela(nome: string, x: number, y: number, colunas: ModelagemColunaDto[], largura = 200): ModelagemTabelaDto {
-  return { nome, grupo: 'dom', x, y, largura, colunas };
+  return { nome, grupoId: 1, x, y, largura, colunas };
 }
 
 const projeto = tabela('projeto', 0, 0, [coluna('id', 'pk'), coluna('nome')]);
@@ -95,9 +99,44 @@ describe('retanguloDasTabelas e enquadrar', () => {
   });
 });
 
-describe('posicoesParaConfiguracao', () => {
-  it('gera o campo posicoes em ordem alfabética com coordenadas inteiras', () => {
-    const texto = posicoesParaConfiguracao([{ ...demanda, x: 400.4, y: 0.6 }, projeto]);
-    assert.equal(texto, '"posicoes": {\n    "demanda": [400, 1],\n    "projeto": [0, 0]\n  }');
+describe('grupos', () => {
+  const diagrama = (semGrupo: boolean) => ({
+    grupos: [{ id: 1, titulo: 'Domínio', rotulo: 'Domínio', corIndice: 0 }],
+    tabelas: [{ ...projeto, grupoId: 1 }, { ...demanda, grupoId: semGrupo ? null : 1 }],
+  });
+
+  it('grupoDaTabela usa o id do grupo ou o do "Fora da modelagem"', () => {
+    assert.equal(grupoDaTabela({ grupoId: 5 }), 5);
+    assert.equal(grupoDaTabela({ grupoId: null }), GRUPO_FORA_DA_MODELAGEM.id);
+  });
+
+  it('gruposDoDiagrama só acrescenta o "Fora da modelagem" quando alguma tabela está fora dela', () => {
+    assert.deepEqual(gruposDoDiagrama(diagrama(false)).map((grupo) => grupo.rotulo), ['Domínio']);
+    assert.deepEqual(gruposDoDiagrama(diagrama(true)).map((grupo) => grupo.rotulo), ['Domínio', 'Fora da modelagem']);
+  });
+
+  it('contarTabelasPorGrupo conta as tabelas de cada grupo, inclusive as de fora da modelagem', () => {
+    const contagem = contarTabelasPorGrupo(diagrama(true).tabelas);
+    assert.equal(contagem.get(1), 1);
+    assert.equal(contagem.get(GRUPO_FORA_DA_MODELAGEM.id), 1);
+    assert.equal(contagem.get(99), undefined);
+  });
+});
+
+describe('grupoSobOPonto', () => {
+  const caixa = (id: number, x: number, y: number, largura: number, altura: number) => ({ grupo: { id }, retangulo: { x, y, largura, altura } });
+  const caixas = [caixa(1, 0, 0, 1000, 1000), caixa(2, 100, 100, 200, 200)];
+
+  it('devolve o grupo da caixa que contém o ponto; fora de qualquer caixa, nulo', () => {
+    assert.equal(grupoSobOPonto(caixas, { x: 900, y: 900 }), 1);
+    assert.equal(grupoSobOPonto(caixas, { x: 2000, y: 2000 }), null);
+  });
+
+  it('com caixas sobrepostas escolhe a menor, a mais específica', () => {
+    assert.equal(grupoSobOPonto(caixas, { x: 150, y: 150 }), 2);
+  });
+
+  it('sem caixas devolve nulo', () => {
+    assert.equal(grupoSobOPonto([], { x: 0, y: 0 }), null);
   });
 });
