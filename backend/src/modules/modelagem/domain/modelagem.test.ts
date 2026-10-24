@@ -11,6 +11,7 @@ import {
   montarDiagrama,
   montarModelo,
   posicionar,
+  posicionarTabelaNova,
   resolverGrupos,
 } from './modelagem';
 
@@ -96,71 +97,106 @@ describe('montarModelo', () => {
 });
 
 describe('resolverGrupos', () => {
-  const colocacao = (nomeTabela: string, grupoId: number | null, x = 0, y = 0): ColocacaoDeTabela => ({ nomeTabela, grupoId, x, y });
+  const colocacao = (nomeTabela: string, grupoId: number, x = 0, y = 0): ColocacaoDeTabela => ({ nomeTabela, grupoId, x, y });
 
-  it('usa o grupo guardado; se o grupo não existe mais, a tabela fica sem grupo', () => {
-    const grupoDe = resolverGrupos(catalogo, [colocacao('projeto', 1), colocacao('demanda', 99), colocacao('chat_mensagem', null)], estrangeiras, new Set([1]));
+  it('usa o grupo guardado; se o grupo não existe mais, a tabela fica fora da modelagem', () => {
+    const grupoDe = resolverGrupos(catalogo, [colocacao('projeto', 1), colocacao('demanda', 99)], new Set([1]));
     assert.equal(grupoDe.get('projeto'), 1);
     assert.equal(grupoDe.get('demanda'), null);
+  });
+
+  it('tabela sem linha guardada (nova no banco ou tirada da modelagem) fica fora, sem herdar grupo de ninguém, nem a tipo_*', () => {
+    const grupoDe = resolverGrupos(catalogo, [colocacao('projeto', 1)], new Set([1]));
+    assert.equal(grupoDe.get('tipo_projeto_status'), null);
     assert.equal(grupoDe.get('chat_mensagem'), null);
-  });
-
-  it('tabela tipo_* sem linha guardada herda o grupo de quem a referencia', () => {
-    const grupoDe = resolverGrupos(catalogo, [colocacao('projeto', 1)], estrangeiras, new Set([1]));
-    assert.equal(grupoDe.get('tipo_projeto_status'), 1);
-  });
-
-  it('tipo_* já guardada mantém o grupo dela e a tabela comum sem linha fica sem grupo', () => {
-    const grupoDe = resolverGrupos(catalogo, [colocacao('projeto', 1), colocacao('tipo_projeto_status', 2)], estrangeiras, new Set([1, 2]));
-    assert.equal(grupoDe.get('tipo_projeto_status'), 2);
-    assert.equal(grupoDe.get('proposta_ia'), null);
   });
 });
 
 describe('posicionar', () => {
-  const colocacao = (nomeTabela: string, grupoId: number | null, x: number, y: number): ColocacaoDeTabela => ({ nomeTabela, grupoId, x, y });
-  const grupoDe = new Map<string, number | null>([['projeto', 1], ['tipo_projeto_status', 1], ['demanda', 1], ['chat_mensagem', 2], ['proposta_ia', null]]);
+  const colocacao = (nomeTabela: string, grupoId: number, x: number, y: number): ColocacaoDeTabela => ({ nomeTabela, grupoId, x, y });
+  const grupoDe = new Map<string, number | null>([['projeto', 1], ['demanda', 1], ['chat_mensagem', 2], ['tipo_projeto_status', null], ['proposta_ia', null]]);
+  const colocacoes = [colocacao('projeto', 1, 10, 20), colocacao('demanda', 1, 300, 20), colocacao('chat_mensagem', 2, 0, 900)];
+  const resultado = posicionar(catalogo, grupoDe, colocacoes);
+  const tabela = (nome: string) => resultado.find((candidata) => candidata.nome === nome)!;
 
-  it('mantém as posições guardadas', () => {
-    const resultado = posicionar(catalogo, grupoDe, [colocacao('projeto', 1, 10, 20), colocacao('demanda', 1, 300, 20)], [1, 2]);
-    const projeto = resultado.find((tabela) => tabela.nome === 'projeto')!;
-    assert.deepEqual([projeto.x, projeto.y, projeto.grupoId], [10, 20, 1]);
+  it('mantém as posições guardadas das tabelas da modelagem', () => {
+    assert.deepEqual([tabela('projeto').x, tabela('projeto').y, tabela('projeto').grupoId], [10, 20, 1]);
+    assert.deepEqual([tabela('chat_mensagem').x, tabela('chat_mensagem').y], [0, 900]);
   });
 
-  it('põe a tabela sem posição abaixo do grupo, sem sobrepor', () => {
-    const resultado = posicionar(catalogo, grupoDe, [colocacao('projeto', 1, 10, 20), colocacao('demanda', 1, 300, 20), colocacao('chat_mensagem', 2, 0, 900)], [1, 2]);
-    const nova = resultado.find((tabela) => tabela.nome === 'tipo_projeto_status')!;
-    assert.ok(nova.y > 20 + Math.max(alturaDaTabela(3), alturaDaTabela(2)));
-    assert.equal(nova.x, 10);
+  it('as tabelas fora da modelagem ficam no canto de baixo, embaixo de tudo e alinhadas à esquerda, sem grupo e em grade', () => {
+    const abaixoDeTudo = Math.max(...['projeto', 'demanda', 'chat_mensagem'].map((nome) => tabela(nome).y + alturaDaTabela(tabela(nome).colunas.length)));
+    for (const nome of ['tipo_projeto_status', 'proposta_ia']) {
+      assert.equal(tabela(nome).grupoId, null);
+      assert.ok(tabela(nome).y > abaixoDeTudo, nome);
+    }
+    assert.equal(tabela('proposta_ia').x, 0);
+    assert.ok(tabela('tipo_projeto_status').x > tabela('proposta_ia').x);
+    assert.equal(tabela('tipo_projeto_status').y, tabela('proposta_ia').y);
   });
 
-  it('as tabelas sem grupo e sem posição vão para o fim, abaixo de tudo', () => {
-    const resultado = posicionar(catalogo, grupoDe, [colocacao('projeto', 1, 10, 20), colocacao('chat_mensagem', 2, 0, 900)], [1, 2]);
-    const solta = resultado.find((tabela) => tabela.nome === 'proposta_ia')!;
-    const maisBaixa = Math.max(...resultado.filter((tabela) => tabela.nome !== 'proposta_ia' && tabela.grupoId !== 1).map((tabela) => tabela.y));
-    assert.ok(solta.y > maisBaixa);
+  it('tabela com linha guardada mas sem grupo existente também vai para o canto', () => {
+    const semGrupo = posicionar(catalogo, new Map([['projeto', null]]), [colocacao('projeto', 1, 10, 20)]);
+    assert.equal(semGrupo.find((candidata) => candidata.nome === 'projeto')!.grupoId, null);
+  });
+
+  it('sem nenhuma tabela na modelagem o canto começa na margem', () => {
+    const tudoFora = posicionar(catalogo, new Map(), []);
+    assert.ok(tudoFora.every((candidata) => candidata.grupoId === null));
+    assert.equal(Math.min(...tudoFora.map((candidata) => candidata.x)), 40);
   });
 
   it('é determinística: mesma entrada, mesma saída', () => {
-    assert.deepEqual(posicionar(catalogo, grupoDe, [], [1, 2]), posicionar(catalogo, grupoDe, [], [1, 2]));
+    assert.deepEqual(posicionar(catalogo, grupoDe, colocacoes), posicionar(catalogo, grupoDe, colocacoes));
+  });
+});
+
+describe('posicionarTabelaNova', () => {
+  const naModelagem = [
+    { nome: 'projeto', grupoId: 1, x: 10, y: 20, largura: 200, colunas: catalogo[0].colunas },
+    { nome: 'demanda', grupoId: 1, x: 300, y: 20, largura: 200, colunas: catalogo[0].colunas },
+    { nome: 'chat_mensagem', grupoId: 2, x: 0, y: 900, largura: 200, colunas: catalogo[0].colunas },
+  ];
+
+  it('cai embaixo das tabelas do grupo, alinhada à esquerda delas', () => {
+    const posicao = posicionarTabelaNova(1, { nome: 'nova' }, naModelagem);
+    assert.equal(posicao.x, 10);
+    assert.equal(posicao.y, 20 + alturaDaTabela(catalogo[0].colunas.length) + 50);
+  });
+
+  it('num grupo ainda sem tabela cai embaixo de todo o desenho', () => {
+    const posicao = posicionarTabelaNova(3, { nome: 'nova' }, naModelagem);
+    assert.equal(posicao.x, 40);
+    assert.equal(posicao.y, 900 + alturaDaTabela(catalogo[0].colunas.length) + 50);
+  });
+
+  it('sem nenhuma tabela na modelagem cai na margem', () => {
+    assert.deepEqual(posicionarTabelaNova(1, { nome: 'nova' }, []), { x: 40, y: 40 });
+  });
+
+  it('ignora a própria tabela (mover de grupo não conta ela mesma)', () => {
+    const posicao = posicionarTabelaNova(1, { nome: 'projeto' }, naModelagem);
+    assert.equal(posicao.x, 300);
   });
 });
 
 describe('montarDiagrama', () => {
   const grupos = [{ id: 1, titulo: 'Domínio', rotulo: 'Domínio', corIndice: 0 }];
 
-  it('avisa das tabelas sem grupo e leva as colunas ocultas e a origem', () => {
-    const tabelas = posicionar(catalogo, new Map([['projeto', 1], ['proposta_ia', null]]), [], [1]);
+  it('avisa das tabelas fora da modelagem e leva as colunas ocultas e a origem', () => {
+    const tabelas = posicionar(catalogo, new Map([['projeto', 1]]), [{ nomeTabela: 'projeto', grupoId: 1, x: 0, y: 0 }]);
     const diagrama = montarDiagrama(tabelas, grupos, configuracao, 'origem');
     assert.equal(diagrama.origem, 'origem');
     assert.deepEqual(diagrama.colunasOcultas, configuracao.colunasOcultas);
     assert.equal(diagrama.avisos.length, 1);
+    assert.match(diagrama.avisos[0], /fora da modelagem/);
     assert.match(diagrama.avisos[0], /proposta_ia/);
     assert.deepEqual(diagrama.grupos, grupos);
   });
 
-  it('sem tabela sem grupo não há aviso', () => {
-    const tabelas = posicionar(catalogo, new Map(catalogo.map((tabela) => [tabela.nome, 1])), [], [1]);
+  it('com tudo na modelagem não há aviso', () => {
+    const grupoDe = new Map(catalogo.map((tabela) => [tabela.nome, 1]));
+    const tabelas = posicionar(catalogo, grupoDe, catalogo.map((tabela) => ({ nomeTabela: tabela.nome, grupoId: 1, x: 0, y: 0 })));
     assert.deepEqual(montarDiagrama(tabelas, grupos, configuracao, 'origem').avisos, []);
   });
 });

@@ -11,8 +11,8 @@ test('ver o diagrama é aberto a qualquer usuário autenticado', () => {
   assert.equal(rotas()['obterDiagrama'].gestorOnly, false);
 });
 
-test('criar, alterar e excluir grupo e alterar a tabela são @GestorOnly', () => {
-  for (const nome of ['criarGrupo', 'alterarGrupo', 'excluirGrupo', 'alterarTabela']) assert.equal(rotas()[nome].gestorOnly, true, nome);
+test('criar, alterar e excluir grupo e alterar e tirar a tabela da modelagem são @GestorOnly', () => {
+  for (const nome of ['criarGrupo', 'alterarGrupo', 'excluirGrupo', 'alterarTabela', 'removerTabela']) assert.equal(rotas()[nome].gestorOnly, true, nome);
 });
 
 test('nenhuma rota é pública nem exclusiva de administrador', () => {
@@ -25,6 +25,6 @@ test('nenhuma rota é pública nem exclusiva de administrador', () => {
 test('verbos e caminhos de todas as rotas', () => {
   assert.deepEqual(
     Object.values(rotas()).map((rota) => `${rota.verbo} ${rota.caminho}`).sort(),
-    ['DELETE grupo/:id', 'GET /', 'POST grupo', 'PUT grupo/:id', 'PUT tabela/:nome'].sort(),
+    ['DELETE grupo/:id', 'DELETE tabela/:nome', 'GET /', 'POST grupo', 'PUT grupo/:id', 'PUT tabela/:nome'].sort(),
   );
 });

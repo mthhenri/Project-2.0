@@ -3,7 +3,7 @@ import { ModelagemGrupoAlterarDto, ModelagemGrupoCriarDto, ModelagemTabelaAltera
 import { GestorOnly } from '../../autenticacao/decorators/gestor-only.decorator';
 import { ModelagemService } from '../services/modelagem.service';
 
-/** O diagrama da modelagem do banco: qualquer usuário autenticado vê; só o gestor (e o administrador) altera grupos e posições. */
+/** O diagrama da modelagem do banco: qualquer usuário autenticado vê; só o gestor (e o administrador) altera grupos, põe e tira tabelas da modelagem e muda posições. */
 @Controller('modelagem')
 export class ModelagemController {
   constructor(private readonly modelagemService: ModelagemService) {}
@@ -29,6 +29,12 @@ export class ModelagemController {
   @Delete('grupo/:id')
   excluirGrupo(@Param('id', ParseIntPipe) id: number) {
     return this.modelagemService.excluirGrupo({ id });
+  }
+
+  @GestorOnly()
+  @Delete('tabela/:nome')
+  removerTabela(@Param('nome') nomeTabela: string) {
+    return this.modelagemService.removerTabela({ nomeTabela });
   }
 
   @GestorOnly()

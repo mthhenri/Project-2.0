@@ -81,7 +81,7 @@ describe('ModelagemDetalheComponent', () => {
     const { elemento, componente } = await montar('demanda', true);
     expect(elemento.querySelector('p-select')).not.toBeNull();
     expect(componente.controleGrupo.value).toBe(1);
-    expect(componente.opcoesDeGrupo().map((opcao) => opcao.rotulo)).toEqual(['Domínio de teste', 'Chat de teste', 'Sem grupo']);
+    expect(componente.opcoesDeGrupo().map((opcao) => opcao.rotulo)).toEqual(['Domínio de teste', 'Chat de teste', 'Fora da modelagem']);
   });
 
   it('trocar o grupo no seletor pede a mudança; trocar de tabela escolhida não pede nada', async () => {
@@ -96,7 +96,7 @@ describe('ModelagemDetalheComponent', () => {
     expect(componente.controleGrupo.value).toBe(1);
   });
 
-  it('escolher "Sem grupo" pede grupoId nulo, e a gravação que falha devolve o seletor ao grupo real', async () => {
+  it('escolher "Fora da modelagem" pede grupoId nulo (tirar da modelagem), e a gravação que falha devolve o seletor ao grupo real', async () => {
     const { componente } = await montar('demanda', true);
     const pedidos: { nome: string; grupoId: number | null }[] = [];
     componente.grupoEscolhido.subscribe((pedido) => pedidos.push(pedido));
@@ -105,5 +105,32 @@ describe('ModelagemDetalheComponent', () => {
     componente.redefinirGrupo();
     expect(componente.controleGrupo.value).toBe(1);
     expect(pedidos.length).toBe(1);
+  });
+
+  it('o botão "Tirar da modelagem" pede grupoId nulo e só aparece para quem edita e para tabela que está na modelagem', async () => {
+    const { elemento, componente } = await montar('demanda', true);
+    const pedidos: { nome: string; grupoId: number | null }[] = [];
+    componente.grupoEscolhido.subscribe((pedido) => pedidos.push(pedido));
+    const botao = Array.from(elemento.querySelectorAll<HTMLButtonElement>('button')).find((candidato) => candidato.textContent?.includes('Tirar da modelagem'))!;
+    botao.click();
+    expect(pedidos).toEqual([{ nome: 'demanda', grupoId: null }]);
+
+    const somenteLeitura = await montar('demanda', false);
+    expect(somenteLeitura.elemento.textContent).not.toContain('Tirar da modelagem');
+  });
+
+  it('tabela fora da modelagem mostra a dica (para quem edita, como trazê-la), sem o botão de tirar', async () => {
+    TestBed.resetTestingModule();
+    const fora = { ...DIAGRAMA, tabelas: DIAGRAMA.tabelas.map((tabela) => (tabela.nome === 'chat' ? { ...tabela, grupoId: null } : tabela)) };
+    const editor = await montarComponente(ModelagemDetalheComponent, { entradas: { diagrama: fora, selecionada: 'chat', podeEditar: true } });
+    expect(editor.elemento.textContent).toContain('ainda não está na modelagem');
+    expect(editor.elemento.textContent).toContain('arraste-a para dentro de um grupo');
+    expect(editor.elemento.textContent).not.toContain('Tirar da modelagem');
+    expect(editor.componente.controleGrupo.value).toBeNull();
+
+    TestBed.resetTestingModule();
+    const leitor = await montarComponente(ModelagemDetalheComponent, { entradas: { diagrama: fora, selecionada: 'chat', podeEditar: false } });
+    expect(leitor.elemento.textContent).toContain('até um gestor colocá-la num grupo');
+    expect(leitor.elemento.textContent).toContain('Fora da modelagem');
   });
 });

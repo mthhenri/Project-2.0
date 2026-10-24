@@ -12,7 +12,9 @@ import {
   colunaCasaBusca,
   enquadrar,
   grupoDaTabela,
+  grupoSobOPonto,
   gruposDoDiagrama,
+  ID_FORA_DA_MODELAGEM,
   montarArestas,
   retanguloDasTabelas,
   tabelaCasaBusca,
@@ -51,12 +53,17 @@ export class ModelagemDiagramaComponent {
   readonly diagrama = input.required<ModelagemDiagramaDto>();
   /** Grupos exibidos; o resto some junto com as ligações que chegam a ele. */
   readonly gruposVisiveis = input.required<ReadonlySet<number>>();
-  /** Gestor e administrador: soltar uma tabela depois de arrastá-la a grava. Para os outros o arrasto é só da vista, local. */
+  /** Gestor e administrador: soltar uma tabela depois de arrastá-la a grava (e, se ela estava fora da modelagem, a põe no grupo onde caiu). Para os outros o arrasto é só da vista, local. */
   readonly podeEditar = input<boolean>(false);
   readonly busca = input<string>('');
   readonly selecionada = model<string | null>(null);
-  /** Emitido ao soltar uma tabela arrastada (só quando `podeEditar`): a tela grava a posição. */
-  readonly posicaoSalva = output<{ nome: string; x: number; y: number }>();
+  /**
+   * Emitido ao soltar uma tabela arrastada (só quando `podeEditar`): a tela grava a posição. `grupoId` é o grupo em cuja caixa uma
+   * tabela que estava fora da modelagem caiu (ela entra nele); para tabela que já está na modelagem é sempre `null` (mudar de grupo é
+   * pelo painel, porque as caixas se sobrepõem e soltar na caixa errada por acidente não pode regrupar).
+   */
+  readonly tabelaSolta = output<{ nome: string; x: number; y: number; grupoId: number | null }>();
+  readonly idForaDaModelagem = ID_FORA_DA_MODELAGEM;
 
   private readonly elementoSvg = viewChild.required<ElementRef<SVGSVGElement>>('svg');
   private readonly destroyRef = inject(DestroyRef);
@@ -245,7 +252,12 @@ export class ModelagemDiagramaComponent {
       return;
     }
     const posicao = this.posicoes()[arrasto.nome];
-    if (this.podeEditar() && posicao) this.posicaoSalva.emit({ nome: arrasto.nome, x: posicao.x, y: posicao.y });
+    if (!this.podeEditar() || !posicao) return;
+    const tabela = this.tabelaPorNome().get(arrasto.nome);
+    const estavaFora = tabela?.grupoId === null;
+    const centro = { x: posicao.x + (tabela?.largura ?? 0) / 2, y: posicao.y + (tabela ? alturaDaTabela(tabela) : 0) / 2 };
+    const caixasDeOutrosGrupos = this.caixasDeGrupo().filter((caixa) => caixa.grupo.id !== ID_FORA_DA_MODELAGEM);
+    this.tabelaSolta.emit({ nome: arrasto.nome, x: posicao.x, y: posicao.y, grupoId: estavaFora ? grupoSobOPonto(caixasDeOutrosGrupos, centro) : null });
   }
 
   aoTeclarTabela(evento: Event, nome: string): void {

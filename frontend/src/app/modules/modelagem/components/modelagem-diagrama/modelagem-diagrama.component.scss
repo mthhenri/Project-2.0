@@ -27,6 +27,11 @@
     stroke-width: 1.5;
   }
 
+  // O canto das tabelas que o banco tem e a modelagem ainda não: caixa tracejada, para não parecer um grupo de verdade.
+  &__grupo--fora &__grupo-caixa {
+    stroke-dasharray: 8 6;
+  }
+
   &__grupo-titulo {
     fill: var(--cor-grupo);
     font-size: 15px;

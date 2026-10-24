@@ -87,7 +87,7 @@ As tabelas devem ser criadas nessa ordem para respeitar as dependências de FK:
 16. tipo_atividade_prioridade e `atividade.tipo_atividade_prioridade_id` (migration `0036`)
 17. mensagem_direta_leitura, mensagem_direta_preferencia, mensagem_direta_supervisao (migration `0050`; só dependem de `usuario`)
 18. mensagem_direta (migration `0051`, provisória; sem FK, depende só das funções `fn_chat_texto_*` da `0038`)
-19. modelagem_grupo, modelagem_tabela (migration `0052`; `modelagem_tabela` referencia `modelagem_grupo`)
+19. modelagem_grupo, modelagem_tabela (migrations `0052` e `0053`; `modelagem_tabela` referencia `modelagem_grupo`)
 ```
 
 ---
@@ -674,9 +674,9 @@ CREATE INDEX ix_proposta_ia_usuario ON proposta_ia(usuario_id) WHERE is_deleted 
 
 ---
 
-### Modelagem — grupos e posições do diagrama (migration `0052`)
+### Modelagem — grupos e posições do diagrama (migrations `0052` e `0053`)
 
-Alimentam a tela Modelagem (`GET /modelagem`). O catálogo do PostgreSQL diz quais tabelas e colunas existem; estas duas tabelas guardam o que só o gestor decide: os grupos (caixas coloridas) e o grupo e a posição de cada tabela no desenho.
+Alimentam a tela Modelagem (`GET /modelagem`). O catálogo do PostgreSQL diz quais tabelas e colunas existem (o visual); estas duas tabelas guardam a **organização**, que é do gestor e vale mais que o banco: os grupos (caixas coloridas) e quais tabelas estão na modelagem, em que grupo e em que posição. Uma tabela está **na modelagem** quando tem linha ativa em `modelagem_tabela`; tirá-la da modelagem é só excluir (soft delete) essa linha, a tabela do banco nunca é tocada. Tabela do banco sem linha (nova, ou tirada) aparece no canto de baixo do desenho, em "Fora da modelagem".
 
 ```sql
 CREATE TABLE modelagem_grupo (
@@ -703,7 +703,7 @@ CREATE TABLE modelagem_tabela (
   deleted_date  TIMESTAMPTZ,
 
   nome_tabela        VARCHAR(100) NOT NULL,   -- nome no catálogo do banco (não é FK: a tabela nasce e some por migration)
-  modelagem_grupo_id INTEGER,                 -- nulo = "Sem grupo"
+  modelagem_grupo_id INTEGER      NOT NULL,   -- toda tabela na modelagem tem grupo (NOT NULL desde a 0053; a 0052 permitia nulo)
   posicao_x          INTEGER      NOT NULL,
   posicao_y          INTEGER      NOT NULL,
 
@@ -713,7 +713,7 @@ CREATE UNIQUE INDEX uix_modelagem_tabela_nome_tabela_ativa ON modelagem_tabela (
 CREATE INDEX ix_modelagem_tabela_modelagem_grupo ON modelagem_tabela (modelagem_grupo_id);
 ```
 
-A migration semeia os 6 grupos (Domínio, Usuários e ponto, Calendário, IA, Chat, Modelagem) e as 37 posições que a tela tinha. Tabela sem linha aparece em posição automática, no grupo de quem a referencia (se for `tipo_*`) ou em "Sem grupo". Excluir um grupo só é permitido vazio (a service confere pelo diagrama resolvido).
+A `0052` semeia os 6 grupos (Domínio, Usuários e ponto, Calendário, IA, Chat, Modelagem) e as 37 posições que a tela tinha; a `0053` tira da modelagem (soft delete) as linhas sem grupo e passa a coluna a `NOT NULL`. Tabela sem linha ativa não herda grupo de ninguém (nem a `tipo_*`) e não tem posição guardada. Excluir um grupo só é permitido vazio (a service confere pelo diagrama resolvido).
 
 ### Tabelas de referência (enums) — migration `20240025`
 

@@ -22,6 +22,7 @@ function montar(opcoes: { ultimaMigration?: string | null; grupos?: ModelagemGru
     excluidos: [] as number[],
     inseridos: [] as unknown[],
     falhaDoBanco: null as unknown,
+    removidas: [] as string[],
   };
   const catalogo = {
     listarColunas: async () => {
@@ -58,7 +59,11 @@ function montar(opcoes: { ultimaMigration?: string | null; grupos?: ModelagemGru
   } as unknown as ModelagemGrupoRepository;
   const tabelaRepository = {
     listar: async () => estado.colocacoes,
-    gravar: async (dto: { nomeTabela: string; grupoId: number | null; x: number; y: number }) => {
+    remover: async (dto: { nomeTabela: string }) => {
+      estado.removidas.push(dto.nomeTabela);
+      estado.colocacoes = estado.colocacoes.filter((colocacao) => colocacao.nomeTabela !== dto.nomeTabela);
+    },
+    gravar: async (dto: { nomeTabela: string; grupoId: number; x: number; y: number }) => {
       estado.colocacoes = [...estado.colocacoes.filter((colocacao) => colocacao.nomeTabela !== dto.nomeTabela), { ...dto }];
       return { nomeTabela: dto.nomeTabela, grupoId: dto.grupoId, x: dto.x, y: dto.y };
     },
@@ -66,7 +71,7 @@ function montar(opcoes: { ultimaMigration?: string | null; grupos?: ModelagemGru
   return { service: new ModelagemService(catalogo, grupoRepository, tabelaRepository), estado };
 }
 
-test('monta o diagrama com a origem, os grupos do banco e a posição guardada de cada tabela', async () => {
+test('monta o diagrama com a origem, os grupos do banco e a posição guardada de cada tabela da modelagem', async () => {
   const { service } = montar();
   const diagrama = (await service.obterDiagrama()).dados!;
   assert.equal(diagrama.origem, 'PostgreSQL · última migration: 0099 - Teste');
@@ -74,7 +79,16 @@ test('monta o diagrama com a origem, os grupos do banco e a posição guardada d
   const projeto = diagrama.tabelas.find((tabela) => tabela.nome === 'projeto')!;
   assert.deepEqual([projeto.grupoId, projeto.x, projeto.y], [1, 10, 20]);
   assert.deepEqual(projeto.colunas.map((coluna) => [coluna.nome, coluna.marca]), [['id', 'pk'], ['tipo_projeto_status_id', 'fk']]);
-  assert.equal(diagrama.tabelas.find((tabela) => tabela.nome === 'tipo_projeto_status')!.grupoId, 1);
+});
+
+test('tabela do banco sem linha guardada fica fora da modelagem, no canto, sem herdar grupo, e o diagrama avisa', async () => {
+  const { service } = montar();
+  const diagrama = (await service.obterDiagrama()).dados!;
+  const fora = diagrama.tabelas.find((tabela) => tabela.nome === 'tipo_projeto_status')!;
+  assert.equal(fora.grupoId, null);
+  assert.ok(fora.y > 20);
+  assert.equal(diagrama.avisos.length, 1);
+  assert.match(diagrama.avisos[0], /tipo_projeto_status/);
 });
 
 test('sem migration aplicada a origem diz isso', async () => {
@@ -129,10 +143,10 @@ test('excluir grupo: só vazio e que exista', async () => {
   assert.deepEqual(estado.excluidos, [2]);
 });
 
-test('alterar tabela grava grupo e posição; recusa tabela que não existe, grupo que não existe e pedido vazio', async () => {
-  const { service } = montar();
-  const resposta = await service.alterarTabela({ nomeTabela: 'demanda', grupoId: null, x: 5, y: 6 });
-  assert.deepEqual(resposta.dados, { nome: 'demanda', grupoId: null, x: 5, y: 6 });
+test('alterar tabela da modelagem grava grupo e posição; recusa tabela que não existe, grupo que não existe e pedido vazio', async () => {
+  const { service } = montar({ grupos: [{ id: 1, titulo: 'A', rotulo: 'A', corIndice: 0 }, { id: 2, titulo: 'B', rotulo: 'B', corIndice: 1 }] });
+  const resposta = await service.alterarTabela({ nomeTabela: 'demanda', grupoId: 2, x: 5, y: 6 });
+  assert.deepEqual(resposta.dados, { nome: 'demanda', grupoId: 2, x: 5, y: 6 });
   await assert.rejects(service.alterarTabela({ nomeTabela: 'fantasma', grupoId: 1, x: 0, y: 0 }), ResourceNotFoundException);
   await assert.rejects(service.alterarTabela({ nomeTabela: 'demanda', grupoId: 77, x: 0, y: 0 }), ResourceNotFoundException);
   await assert.rejects(service.alterarTabela({ nomeTabela: 'demanda' }), BusinessException);
@@ -147,11 +161,28 @@ test('alterar só a posição mantém o grupo que está gravado agora; alterar s
   assert.deepEqual((await service.alterarTabela({ nomeTabela: 'projeto', grupoId: 1 })).dados, { nome: 'projeto', grupoId: 1, x: 1, y: 2 });
 });
 
-test('tabela sem linha guardada ganha a linha com a posição automática quando só o grupo muda', async () => {
-  const { service } = montar({ colocacoes: [] });
-  const resposta = await service.alterarTabela({ nomeTabela: 'projeto', grupoId: 1 });
-  assert.equal(resposta.dados!.grupoId, 1);
-  assert.equal(typeof resposta.dados!.x, 'number');
+test('pôr uma tabela de fora na modelagem exige um grupo; sem posição ela cai embaixo das do grupo; com posição, onde foi solta', async () => {
+  const { service, estado } = montar();
+  await assert.rejects(service.alterarTabela({ nomeTabela: 'tipo_projeto_status', x: 5, y: 5 }), BusinessException);
+
+  const automatica = (await service.alterarTabela({ nomeTabela: 'tipo_projeto_status', grupoId: 1 })).dados!;
+  assert.equal(automatica.grupoId, 1);
+  assert.equal(automatica.x, 10);
+  assert.ok(automatica.y > 20);
+  assert.ok(estado.colocacoes.some((colocacao) => colocacao.nomeTabela === 'tipo_projeto_status'));
+
+  const { service: outro } = montar();
+  assert.deepEqual((await outro.alterarTabela({ nomeTabela: 'tipo_projeto_status', grupoId: 1, x: 700, y: 800 })).dados, { nome: 'tipo_projeto_status', grupoId: 1, x: 700, y: 800 });
+});
+
+test('tirar da modelagem só remove a linha da tabela (nunca a do banco) e conta como feito para tabela que já estava fora', async () => {
+  const { service, estado } = montar();
+  assert.equal((await service.removerTabela({ nomeTabela: 'demanda' })).sucesso, true);
+  assert.deepEqual(estado.removidas, ['demanda']);
+  const depois = (await service.obterDiagrama()).dados!.tabelas.find((tabela) => tabela.nome === 'demanda')!;
+  assert.equal(depois.grupoId, null);
+  assert.equal((await service.removerTabela({ nomeTabela: 'tipo_projeto_status' })).sucesso, true);
+  await assert.rejects(service.removerTabela({ nomeTabela: 'fantasma' }), ResourceNotFoundException);
 });
 
 test('rótulo repetido pego só pelo índice único do banco (pedidos ao mesmo tempo) vira a mesma recusa de negócio', async () => {
@@ -166,6 +197,6 @@ test('rótulo repetido pego só pelo índice único do banco (pedidos ao mesmo t
 test('tabela que não está no cache é conferida de novo no banco antes de ser recusada', async () => {
   const { service, estado } = montar();
   await service.obterDiagrama();
-  await assert.rejects(service.alterarTabela({ nomeTabela: 'fantasma', grupoId: null, x: 0, y: 0 }), ResourceNotFoundException);
+  await assert.rejects(service.alterarTabela({ nomeTabela: 'fantasma', grupoId: 1, x: 0, y: 0 }), ResourceNotFoundException);
   assert.equal(estado.leiturasDoCatalogo, 2);
 });

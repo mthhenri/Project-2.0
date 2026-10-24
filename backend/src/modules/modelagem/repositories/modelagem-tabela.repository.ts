@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Knex } from 'knex';
-import { ModelagemTabelaInternoAlterarDto } from '@project20/shared';
+import { ModelagemTabelaInternoGravarDto, ModelagemTabelaRemoverDto } from '@project20/shared';
 import { BaseRepository } from '../../../core/base/base.repository';
 import { DATABASE_CONNECTION } from '../../../core/database/database.provider';
 import { ColocacaoDeTabela } from '../domain/modelagem';
@@ -29,11 +29,11 @@ export class ModelagemTabelaRepository extends BaseRepository<ColocacaoDeTabela>
     );
   }
 
-  /** Grava o grupo e a posição da tabela: cria a linha na primeira vez e altera nas seguintes. */
-  async gravar(dto: ModelagemTabelaInternoAlterarDto): Promise<ColocacaoDeTabela> {
+  /** Põe a tabela na modelagem ou muda o grupo e a posição dela: cria a linha na primeira vez e altera nas seguintes. */
+  async gravar(dto: ModelagemTabelaInternoGravarDto): Promise<ColocacaoDeTabela> {
     const [gravada] = await this.executarConsulta<ColocacaoDeTabela>(
       `INSERT INTO modelagem_tabela (nome_tabela, modelagem_grupo_id, posicao_x, posicao_y, created_date, updated_date, is_deleted)
-       SELECT :nomeTabela, CAST(:grupoId AS INTEGER), :x, :y, NOW(), NOW(), false
+       SELECT :nomeTabela, :grupoId, :x, :y, NOW(), NOW(), false
        ON CONFLICT (nome_tabela) WHERE is_deleted = false
        DO UPDATE SET modelagem_grupo_id = EXCLUDED.modelagem_grupo_id,
                      posicao_x = EXCLUDED.posicao_x,
@@ -42,5 +42,17 @@ export class ModelagemTabelaRepository extends BaseRepository<ColocacaoDeTabela>
       { nomeTabela: dto.nomeTabela, grupoId: dto.grupoId, x: dto.x, y: dto.y },
     );
     return gravada;
+  }
+
+  /** Tira a tabela da modelagem: soft delete da linha. A tabela do banco não é tocada; sem linha ativa, não faz nada. */
+  async remover(dto: ModelagemTabelaRemoverDto): Promise<void> {
+    await this.executarComando(
+      `UPDATE modelagem_tabela
+          SET is_deleted = true,
+              deleted_date = NOW()
+        WHERE modelagem_tabela.nome_tabela = :nomeTabela
+          AND modelagem_tabela.is_deleted = false`,
+      { nomeTabela: dto.nomeTabela },
+    );
   }
 }

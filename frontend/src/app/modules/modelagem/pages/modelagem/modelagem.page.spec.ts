@@ -232,15 +232,59 @@ describe('ModelagemPage', () => {
       expect(botoesDeGrupo(elemento)[2].getAttribute('aria-pressed')).toBe('true');
     });
 
-    it('mover a tabela para "Sem grupo" cria o botão "Sem grupo" (sem lápis) com ela dentro', async () => {
+    it('tirar a tabela da modelagem só tira do desenho: avisa que ela continua no banco, relê o diagrama e cria o botão "Fora da modelagem" (sem lápis)', async () => {
       const { elemento, http, atualizar, componente } = await montar(TipoUsuarioEnum.GESTOR);
       componente.moverParaGrupo({ nome: 'usuario', grupoId: null });
-      responderSucesso(esperarRequisicao(http, 'PUT', '/modelagem/tabela/usuario'), { nome: 'usuario', grupoId: null, x: 1200, y: 0 });
-      responderSucesso(esperarRequisicao(http, 'GET', '/modelagem'), { ...DIAGRAMA, tabelas: DIAGRAMA.tabelas.map((candidata) => (candidata.nome === 'usuario' ? { ...candidata, grupoId: null } : candidata)) });
+      responderSucesso(esperarRequisicao(http, 'DELETE', '/modelagem/tabela/usuario'), null);
+      responderSucesso(esperarRequisicao(http, 'GET', '/modelagem'), { ...DIAGRAMA, tabelas: DIAGRAMA.tabelas.map((candidata) => (candidata.nome === 'usuario' ? { ...candidata, grupoId: null, x: 2000 } : candidata)) });
       await atualizar();
       const rotulos = botoesDeGrupo(elemento).map((botao) => botao.textContent?.replace(/\s+/g, ' ').trim());
-      expect(rotulos).toEqual(['Domínio 3', 'Usuários 0', 'Vazio 0', 'Sem grupo 1']);
+      expect(rotulos).toEqual(['Domínio 3', 'Usuários 0', 'Vazio 0', 'Fora da modelagem 1']);
       expect(elemento.querySelectorAll('.modelagem__grupo-editar').length).toBe(3);
+    });
+
+    it('se tirar da modelagem falha, nada muda e o seletor volta ao grupo da tabela', async () => {
+      const { elemento, http, atualizar, componente } = await montar(TipoUsuarioEnum.GESTOR);
+      componente.moverParaGrupo({ nome: 'usuario', grupoId: null });
+      responderErro(esperarRequisicao(http, 'DELETE', '/modelagem/tabela/usuario'), 500, 'Falha');
+      await atualizar();
+      http.expectNone((requisicao) => requisicao.method === 'GET');
+      expect(botoesDeGrupo(elemento).map((botao) => botao.textContent?.replace(/\s+/g, ' ').trim())).toEqual(['Domínio 3', 'Usuários 1', 'Vazio 0']);
+    });
+
+    describe('com uma tabela do banco fora da modelagem', () => {
+      const comTabelaDeFora: ModelagemDiagramaDto = { ...DIAGRAMA, tabelas: [...DIAGRAMA.tabelas, tabela('nova_tabela', null, 2000, [pk, simples('nome')])] };
+
+      it('mostra o botão "Fora da modelagem" com ela e o diagrama avisa; não tem lápis nem aviso para quem só vê', async () => {
+        const { elemento } = await montar(TipoUsuarioEnum.GESTOR, comTabelaDeFora);
+        expect(botoesDeGrupo(elemento).map((botao) => botao.textContent?.replace(/\s+/g, ' ').trim())).toEqual(['Domínio 3', 'Usuários 1', 'Vazio 0', 'Fora da modelagem 1']);
+        expect(elemento.querySelectorAll('.modelagem__grupo-editar').length).toBe(3);
+        expect(tabelas(elemento).map(nome)).toContain('nova_tabela');
+      });
+
+      it('escolher um grupo para ela a põe na modelagem (PUT só com o grupo) e relê o diagrama', async () => {
+        const { elemento, http, atualizar, componente } = await montar(TipoUsuarioEnum.GESTOR, comTabelaDeFora);
+        componente.moverParaGrupo({ nome: 'nova_tabela', grupoId: 2 });
+        const requisicao = esperarRequisicao(http, 'PUT', '/modelagem/tabela/nova_tabela');
+        expect(requisicao.request.body).toEqual({ grupoId: 2 });
+        responderSucesso(requisicao, { nome: 'nova_tabela', grupoId: 2, x: 1200, y: 400 });
+        responderSucesso(esperarRequisicao(http, 'GET', '/modelagem'), { ...DIAGRAMA, tabelas: [...DIAGRAMA.tabelas, tabela('nova_tabela', 2, 1200, [pk, simples('nome')])] });
+        await atualizar();
+        expect(botoesDeGrupo(elemento).map((botao) => botao.textContent?.replace(/\s+/g, ' ').trim())).toEqual(['Domínio 3', 'Usuários 2', 'Vazio 0']);
+      });
+
+      it('soltar a tabela de fora dentro de um grupo a põe nele, com a posição onde caiu', async () => {
+        const { http, componente } = await montar(TipoUsuarioEnum.GESTOR, comTabelaDeFora);
+        componente.salvarPosicao({ nome: 'nova_tabela', x: 300, y: 40, grupoId: 1 });
+        const requisicao = esperarRequisicao(http, 'PUT', '/modelagem/tabela/nova_tabela');
+        expect(requisicao.request.body).toEqual({ grupoId: 1, x: 300, y: 40 });
+      });
+
+      it('soltar a tabela de fora fora de qualquer grupo não grava nada (posição só existe na modelagem)', async () => {
+        const { http, componente } = await montar(TipoUsuarioEnum.GESTOR, comTabelaDeFora);
+        componente.salvarPosicao({ nome: 'nova_tabela', x: 9000, y: 9000, grupoId: null });
+        http.expectNone((requisicao) => requisicao.method === 'PUT');
+      });
     });
   });
 });

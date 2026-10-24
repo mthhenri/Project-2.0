@@ -1,6 +1,6 @@
 export interface ModelagemTabelaAlteradaDto {
   nome: string;
-  grupoId: number | null;
+  grupoId: number;
   x: number;
   y: number;
 }

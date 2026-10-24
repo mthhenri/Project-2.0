@@ -28,6 +28,13 @@
     margin: 0.5rem 0 0.25rem;
   }
 
+  &__dica {
+    margin: 0.5rem 0 0;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: var(--p-text-muted-color);
+  }
+
   &__rotulo-campo {
     font-size: 0.7rem;
     font-weight: 600;

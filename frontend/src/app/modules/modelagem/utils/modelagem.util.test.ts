@@ -10,7 +10,8 @@ import {
   contarTabelasPorGrupo,
   grupoDaTabela,
   gruposDoDiagrama,
-  GRUPO_SEM_GRUPO,
+  GRUPO_FORA_DA_MODELAGEM,
+  grupoSobOPonto,
   retanguloDasTabelas,
   tabelaCasaBusca,
   vizinhasDe,
@@ -104,20 +105,38 @@ describe('grupos', () => {
     tabelas: [{ ...projeto, grupoId: 1 }, { ...demanda, grupoId: semGrupo ? null : 1 }],
   });
 
-  it('grupoDaTabela usa o id do grupo ou o do "Sem grupo"', () => {
+  it('grupoDaTabela usa o id do grupo ou o do "Fora da modelagem"', () => {
     assert.equal(grupoDaTabela({ grupoId: 5 }), 5);
-    assert.equal(grupoDaTabela({ grupoId: null }), GRUPO_SEM_GRUPO.id);
+    assert.equal(grupoDaTabela({ grupoId: null }), GRUPO_FORA_DA_MODELAGEM.id);
   });
 
-  it('gruposDoDiagrama só acrescenta o "Sem grupo" quando alguma tabela está sem grupo', () => {
+  it('gruposDoDiagrama só acrescenta o "Fora da modelagem" quando alguma tabela está fora dela', () => {
     assert.deepEqual(gruposDoDiagrama(diagrama(false)).map((grupo) => grupo.rotulo), ['Domínio']);
-    assert.deepEqual(gruposDoDiagrama(diagrama(true)).map((grupo) => grupo.rotulo), ['Domínio', 'Sem grupo']);
+    assert.deepEqual(gruposDoDiagrama(diagrama(true)).map((grupo) => grupo.rotulo), ['Domínio', 'Fora da modelagem']);
   });
 
-  it('contarTabelasPorGrupo conta as tabelas de cada grupo, inclusive as sem grupo', () => {
+  it('contarTabelasPorGrupo conta as tabelas de cada grupo, inclusive as de fora da modelagem', () => {
     const contagem = contarTabelasPorGrupo(diagrama(true).tabelas);
     assert.equal(contagem.get(1), 1);
-    assert.equal(contagem.get(GRUPO_SEM_GRUPO.id), 1);
+    assert.equal(contagem.get(GRUPO_FORA_DA_MODELAGEM.id), 1);
     assert.equal(contagem.get(99), undefined);
+  });
+});
+
+describe('grupoSobOPonto', () => {
+  const caixa = (id: number, x: number, y: number, largura: number, altura: number) => ({ grupo: { id }, retangulo: { x, y, largura, altura } });
+  const caixas = [caixa(1, 0, 0, 1000, 1000), caixa(2, 100, 100, 200, 200)];
+
+  it('devolve o grupo da caixa que contém o ponto; fora de qualquer caixa, nulo', () => {
+    assert.equal(grupoSobOPonto(caixas, { x: 900, y: 900 }), 1);
+    assert.equal(grupoSobOPonto(caixas, { x: 2000, y: 2000 }), null);
+  });
+
+  it('com caixas sobrepostas escolhe a menor, a mais específica', () => {
+    assert.equal(grupoSobOPonto(caixas, { x: 150, y: 150 }), 2);
+  });
+
+  it('sem caixas devolve nulo', () => {
+    assert.equal(grupoSobOPonto([], { x: 0, y: 0 }), null);
   });
 });

@@ -16,8 +16,29 @@
           ariaLabel="Grupo da tabela"
         />
       </label>
+      @if (!foraDaModelagem()) {
+        <p-button
+          label="Tirar da modelagem"
+          icon="pi pi-eye-slash"
+          size="small"
+          severity="secondary"
+          [outlined]="true"
+          pTooltip="Só tira do desenho: a tabela continua no banco e vai para o canto, em Fora da modelagem."
+          tooltipPosition="left"
+          (onClick)="tirarDaModelagem()"
+        />
+      }
     } @else {
       <p class="modelagem-detalhe__grupo">{{ rotuloDoGrupo() }}</p>
+    }
+    @if (foraDaModelagem()) {
+      <p class="modelagem-detalhe__dica">
+        @if (podeEditar()) {
+          Esta tabela está no banco, mas ainda não está na modelagem. Escolha um grupo acima, ou arraste-a para dentro de um grupo, para trazê-la.
+        } @else {
+          Esta tabela está no banco, mas ainda não está na modelagem: fica no canto até um gestor colocá-la num grupo.
+        }
+      </p>
     }
 
     <h3 class="modelagem-detalhe__secao">Colunas ({{ tabelaAtual.colunas.length }})</h3>

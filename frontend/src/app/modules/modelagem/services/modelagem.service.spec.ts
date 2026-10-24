@@ -43,9 +43,16 @@ describe('ModelagemService', () => {
   it('grava o grupo e a posição de uma tabela em PUT /modelagem/tabela/:nome', async () => {
     TestBed.resetTestingModule();
     const { http } = await montarComponente(HospedeiroComponent);
-    TestBed.inject(ModelagemService).alterarTabela('ponto_justificativa', { grupoId: null, x: 10, y: 20 }).subscribe();
+    TestBed.inject(ModelagemService).alterarTabela('ponto_justificativa', { grupoId: 3, x: 10, y: 20 }).subscribe();
     const requisicao = esperarRequisicao(http, 'PUT', '/modelagem/tabela/ponto_justificativa');
-    expect(requisicao.request.body).toEqual({ grupoId: null, x: 10, y: 20 });
-    responderSucesso(requisicao, { nome: 'ponto_justificativa', grupoId: null, x: 10, y: 20 });
+    expect(requisicao.request.body).toEqual({ grupoId: 3, x: 10, y: 20 });
+    responderSucesso(requisicao, { nome: 'ponto_justificativa', grupoId: 3, x: 10, y: 20 });
+  });
+
+  it('tira uma tabela da modelagem em DELETE /modelagem/tabela/:nome (o nome vai codificado na rota)', async () => {
+    TestBed.resetTestingModule();
+    const { http } = await montarComponente(HospedeiroComponent);
+    TestBed.inject(ModelagemService).removerTabela('ponto justificativa').subscribe();
+    responderSucesso(esperarRequisicao(http, 'DELETE', '/modelagem/tabela/ponto%20justificativa'), null);
   });
 });

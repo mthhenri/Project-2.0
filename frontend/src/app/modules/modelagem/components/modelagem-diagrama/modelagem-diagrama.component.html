@@ -1,7 +1,7 @@
 <svg #svg class="modelagem-diagrama__svg" role="img" aria-label="Diagrama da modelagem do banco de dados" (click)="aoClicarNoFundo($event)">
   <g [attr.transform]="transformacao()">
     @for (caixa of caixasDeGrupo(); track caixa.grupo.id) {
-      <g [class]="'modelagem-diagrama__grupo modelagem-diagrama--cor-' + caixa.cor">
+      <g [class]="'modelagem-diagrama__grupo modelagem-diagrama--cor-' + caixa.cor" [class.modelagem-diagrama__grupo--fora]="caixa.grupo.id === idForaDaModelagem">
         <rect
           class="modelagem-diagrama__grupo-caixa"
           rx="14"
@@ -117,8 +117,9 @@
     <h3 class="modelagem-diagrama__legenda-titulo">Mouse</h3>
     <div class="modelagem-diagrama__legenda-item">Arraste o fundo para mover e use a roda para o zoom.</div>
     <div class="modelagem-diagrama__legenda-item">Arraste uma tabela para reposicioná-la; clique para ver as relações.</div>
+    <div class="modelagem-diagrama__legenda-item">As tabelas do banco que ainda não estão na modelagem ficam no canto, em "Fora da modelagem".</div>
     @if (podeEditar()) {
-      <div class="modelagem-diagrama__legenda-item">Ao soltar a tabela, a nova posição fica salva para todo mundo.</div>
+      <div class="modelagem-diagrama__legenda-item">Ao soltar a tabela, a nova posição fica salva para todo mundo. Solte uma tabela de fora dentro de um grupo para trazê-la para a modelagem.</div>
     }
   </div>
 </p-popover>

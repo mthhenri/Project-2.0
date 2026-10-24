@@ -14,3 +14,5 @@ export * from './ModelagemTabelaAlteradaDto';
 export * from './ModelagemGrupoRecuperarDto';
 export * from './ModelagemGrupoInternoCriarDto';
 export * from './ModelagemGrupoValidarRotuloDto';
+export * from './ModelagemTabelaInternoGravarDto';
+export * from './ModelagemTabelaRemoverDto';

@@ -138,11 +138,12 @@ describe('ModelagemDiagramaComponent', () => {
     expect(componente.selecionada()).toBe('chat_mensagem');
   });
 
-  it('a tabela sem grupo ganha a caixa "Sem grupo", com a cor reservada', async () => {
+  it('a tabela fora da modelagem ganha a caixa tracejada "Fora da modelagem", com a cor reservada', async () => {
     const semGrupo: ModelagemDiagramaDto = { ...DIAGRAMA, tabelas: [...DIAGRAMA.tabelas, { nome: 'solta', grupoId: null, x: 800, y: 0, largura: 200, colunas: [DIAGRAMA.tabelas[0].colunas[0]] }] };
     const { elemento } = await montar({ diagrama: semGrupo });
     const titulos = Array.from(elemento.querySelectorAll('.modelagem-diagrama__grupo-titulo')).map((titulo) => titulo.textContent?.trim());
-    expect(titulos).toEqual(['Domínio', 'Chat', 'Sem grupo']);
+    expect(titulos).toEqual(['Domínio', 'Chat', 'Fora da modelagem']);
+    expect(elemento.querySelectorAll('.modelagem-diagrama__grupo--fora').length).toBe(1);
     const solta = tabelas(elemento).find((tabela) => tabela.getAttribute('aria-label') === 'Tabela solta')!;
     expect(solta.classList.contains('modelagem-diagrama--cor-7')).toBe(true);
   });
@@ -155,21 +156,21 @@ describe('ModelagemDiagramaComponent', () => {
 
   it('quem edita grava a posição ao soltar a tabela arrastada; clicar sem arrastar não grava', async () => {
     const { elemento, componente, atualizar } = await montar({ podeEditar: true });
-    const salvas: { nome: string; x: number; y: number }[] = [];
-    componente.posicaoSalva.subscribe((posicao) => salvas.push(posicao));
+    const salvas: { nome: string; x: number; y: number; grupoId: number | null }[] = [];
+    componente.tabelaSolta.subscribe((posicao) => salvas.push(posicao));
     const alvo = tabelas(elemento)[0];
     clicarSemArrastar(alvo);
     expect(salvas).toEqual([]);
     arrastar(alvo, 50, 30);
     await atualizar();
     const escala = componente.camera().escala;
-    expect(salvas).toEqual([{ nome: 'projeto', x: Math.round(50 / escala), y: Math.round(30 / escala) }]);
+    expect(salvas).toEqual([{ nome: 'projeto', x: Math.round(50 / escala), y: Math.round(30 / escala), grupoId: null }]);
   });
 
   it('quem só vê arrasta a tabela na própria vista, sem gravar nada', async () => {
     const { elemento, componente, atualizar } = await montar({ podeEditar: false });
     const salvas: unknown[] = [];
-    componente.posicaoSalva.subscribe((posicao) => salvas.push(posicao));
+    componente.tabelaSolta.subscribe((posicao) => salvas.push(posicao));
     arrastar(tabelas(elemento)[0], 50, 30);
     await atualizar();
     expect(salvas).toEqual([]);
@@ -202,5 +203,32 @@ describe('ModelagemDiagramaComponent', () => {
     const { elemento } = await montar();
     const botoes = elemento.querySelectorAll('.modelagem-diagrama__controles button.modelagem-diagrama__botao');
     expect(botoes.length).toBe(5);
+  });
+
+  it('soltar uma tabela de fora dentro da caixa de um grupo a leva para ele; solta fora de qualquer caixa, não pede nada', async () => {
+    const fora: ModelagemDiagramaDto = { ...DIAGRAMA, tabelas: [...DIAGRAMA.tabelas, { nome: 'solta', grupoId: null, x: 3000, y: 0, largura: 200, colunas: [DIAGRAMA.tabelas[0].colunas[0]] }] };
+    const { elemento, componente, atualizar } = await montar({ diagrama: fora, podeEditar: true });
+    const soltas: { nome: string; x: number; y: number; grupoId: number | null }[] = [];
+    componente.tabelaSolta.subscribe((solta) => soltas.push(solta));
+    const alvo = tabelas(elemento).find((tabela) => tabela.getAttribute('aria-label') === 'Tabela solta')!;
+    const escala = componente.camera().escala;
+    // Arrasta da posição (3000,0) para dentro da caixa do grupo 1 (projeto e demanda ocupam x de 0 a 600).
+    arrastar(alvo, (-2700 * escala), (60 * escala));
+    await atualizar();
+    expect(soltas.length).toBe(1);
+    expect(soltas[0].grupoId).toBe(1);
+    arrastar(alvo, 5, 5);
+    await atualizar();
+    expect(soltas[1].grupoId).toBeNull();
+  });
+
+  it('tabela que já está na modelagem nunca troca de grupo só por ser solta em outra caixa', async () => {
+    const { elemento, componente, atualizar } = await montar({ podeEditar: true });
+    const soltas: { grupoId: number | null }[] = [];
+    componente.tabelaSolta.subscribe((solta) => soltas.push(solta));
+    const escala = componente.camera().escala;
+    arrastar(tabelas(elemento)[0], 400 * escala, 400 * escala);
+    await atualizar();
+    expect(soltas).toEqual([expect.objectContaining({ grupoId: null })]);
   });
 });

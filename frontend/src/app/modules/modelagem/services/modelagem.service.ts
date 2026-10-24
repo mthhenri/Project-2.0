@@ -36,8 +36,13 @@ export class ModelagemService {
     return this.httpClient.delete<StandardResponse<void>>(`${this.urlBase}/grupo/${id}`);
   }
 
-  /** Grava o grupo e a posição de uma tabela. Sem feedback global: o arrasto salva a cada solta e não deve piscar o carregando. */
+  /** Põe a tabela na modelagem ou muda o grupo e/ou a posição dela. Sem feedback global: o arrasto salva a cada solta e não deve piscar o carregando. */
   alterarTabela(nomeTabela: string, dto: ModelagemTabelaAlterarDto): Observable<StandardResponse<ModelagemTabelaAlteradaDto>> {
     return this.httpClient.put<StandardResponse<ModelagemTabelaAlteradaDto>>(`${this.urlBase}/tabela/${encodeURIComponent(nomeTabela)}`, dto, comFeedbackProprio());
+  }
+
+  /** Tira a tabela da modelagem: só o desenho muda, a tabela do banco continua e vai para o canto ("Fora da modelagem"). */
+  removerTabela(nomeTabela: string): Observable<StandardResponse<void>> {
+    return this.httpClient.delete<StandardResponse<void>>(`${this.urlBase}/tabela/${encodeURIComponent(nomeTabela)}`);
   }
 }
