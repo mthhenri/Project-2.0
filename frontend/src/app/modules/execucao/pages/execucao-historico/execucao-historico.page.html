@@ -118,8 +118,6 @@
       <ng-template #header>
         <tr>
           @if (sessao.eGestor()) { <th>Usuário</th> }
-          <th>Projeto</th>
-          <th>Demanda</th>
           <th>Atividade</th>
           <th>Início</th>
           <th>Fim</th>
@@ -131,36 +129,39 @@
 
       <ng-template #body let-execucao>
         <tr class="execucao-historico__linha" [class.execucao-historico__linha--ativa]="!execucao.fimData">
-          @if (sessao.eGestor()) { <td>{{ execucao.nomeUsuario }}</td> }
-          <td>{{ execucao.nomeProjeto }}</td>
-          <td>{{ execucao.nomeDemanda }}</td>
+          @if (sessao.eGestor()) {
+            <td class="execucao-historico__usuario">{{ execucao.nomeUsuario }}</td>
+          }
           <td>
-            <button
-              type="button"
-              class="execucao-historico__atividade-link"
-              (click)="visualizarDialog.abrir(execucao.atividadeId)"
-            >
-              {{ execucao.nomeAtividade }}
-            </button>
-          </td>
-          <td>
-            <div class="execucao-historico__momento">
-              @if (foraDoDiaListado(execucao.inicioData)) {
-                <span class="execucao-historico__momento-data">{{ diaMes(execucao.inicioData) }}</span>
-              }
-              <span class="execucao-historico__momento-hora">{{ hora(execucao.inicioData) }}</span>
+            <div class="execucao-historico__contexto">
+              <button
+                type="button"
+                class="execucao-historico__atividade-link"
+                (click)="visualizarDialog.abrir(execucao.atividadeId)"
+              >
+                {{ execucao.nomeAtividade }}
+              </button>
+              <span class="execucao-historico__contexto-caminho">{{ execucao.nomeProjeto }} › {{ execucao.nomeDemanda }}</span>
             </div>
           </td>
           <td>
-            @if (execucao.fimData) {
-              <div class="execucao-historico__momento">
-                @if (foraDoDiaListado(execucao.fimData) && diaMes(execucao.fimData) !== diaMes(execucao.inicioData)) {
-                  <span class="execucao-historico__momento-data">{{ diaMes(execucao.fimData) }}</span>
-                }
-                <span class="execucao-historico__momento-hora">{{ hora(execucao.fimData) }}</span>
-              </div>
+            @if (editando(execucao, 'inicio')) {
+              <ng-container *ngTemplateOutlet="editorData" />
             } @else {
+              <ng-container
+                *ngTemplateOutlet="momento; context: { $implicit: execucao.inicioData, execucao: execucao, campo: 'inicio' }"
+              />
+            }
+          </td>
+          <td>
+            @if (!execucao.fimData) {
               <span class="execucao-historico__em-andamento"><i class="pi pi-circle-fill"></i> Em andamento</span>
+            } @else if (editando(execucao, 'fim')) {
+              <ng-container *ngTemplateOutlet="editorData" />
+            } @else {
+              <ng-container
+                *ngTemplateOutlet="momento; context: { $implicit: execucao.fimData, execucao: execucao, campo: 'fim' }"
+              />
             }
           </td>
           <td>
@@ -171,11 +172,31 @@
             }
           </td>
           <td class="execucao-historico__descricao">
-            @if (sessao.eGestor()) {
+            @if (editando(execucao, 'descricao')) {
+              <div class="execucao-historico__editor">
+                <textarea
+                  pTextarea
+                  appBloquearCaracteresProibidos
+                  class="execucao-historico__editor-texto"
+                  [formControl]="rascunhoDescricao"
+                  [autoResize]="true"
+                  rows="2"
+                  spellcheck="true"
+                  lang="pt-BR"
+                  aria-label="Descrição da execução"
+                  (blur)="aoSairDaEdicao()"
+                ></textarea>
+                @if (confirmandoEdicao()) {
+                  <ng-container *ngTemplateOutlet="confirmar" />
+                }
+              </div>
+            } @else if (sessao.eGestor()) {
               <button
                 type="button"
                 class="execucao-historico__descricao-botao"
-                (click)="abrirEdicao(execucao)"
+                pTooltip="Clique para editar"
+                tooltipPosition="top"
+                (click)="iniciarEdicao(execucao, 'descricao')"
               >
                 <span class="execucao-historico__descricao-texto">{{ execucao.descricao }}</span>
               </button>
@@ -186,14 +207,14 @@
           @if (sessao.eGestor()) {
             <td class="execucao-historico__coluna-acoes">
               <p-button
-                icon="pi pi-pencil"
-                severity="secondary"
+                icon="pi pi-trash"
+                severity="danger"
                 [text]="true"
                 [rounded]="true"
-                ariaLabel="Editar execução"
-                pTooltip="Editar execução"
+                ariaLabel="Excluir execução"
+                pTooltip="Excluir execução"
                 tooltipPosition="top"
-                (onClick)="abrirEdicao(execucao)"
+                (onClick)="confirmarExclusao($event, execucao)"
               />
             </td>
           }
@@ -203,7 +224,7 @@
       <ng-template #footer>
         @if (totalRegistros() > 0) {
           <tr class="execucao-historico__rodape">
-            <td [attr.colspan]="sessao.eGestor() ? 6 : 5" class="execucao-historico__rodape-rotulo">
+            <td [attr.colspan]="sessao.eGestor() ? 4 : 3" class="execucao-historico__rodape-rotulo">
               Total do dia
             </td>
             <td class="execucao-historico__rodape-valor">{{ totalMinutosDia() | minutosParagHoras }}</td>
@@ -214,7 +235,7 @@
 
       <ng-template #emptymessage>
         <tr>
-          <td [attr.colspan]="sessao.eGestor() ? 9 : 7" class="execucao-historico__vazio">
+          <td [attr.colspan]="sessao.eGestor() ? 7 : 5" class="execucao-historico__vazio">
             <i class="pi pi-clock text-3xl"></i>
             <p class="execucao-historico__vazio-titulo">Nenhuma execução em {{ rotuloDiaVazio() }}</p>
             <div class="execucao-historico__vazio-acoes">
@@ -233,103 +254,52 @@
   </div>
 </div>
 
-<p-dialog
-  header="Editar execução"
-  dialogFormulario
-  [dialogSemAutofocus]="true"
-  [dialogBloqueado]="salvandoDescricao()"
-  (dialogEnviar)="salvarEdicao()"
-  [visible]="mostrarDialogEditar()"
-  (visibleChange)="mostrarDialogEditar.set($event)"
-  [modal]="true"
-  [draggable]="false"
-  [resizable]="false"
-  [style]="{ width: '34rem' }"
-  [dismissableMask]="true"
-  [focusOnShow]="false"
-  (onShow)="focarDescricaoEdicao()"
->
-  <form [formGroup]="formularioEdicao" class="execucao-historico__dialog-form" (ngSubmit)="salvarEdicao()">
-    <div class="execucao-historico__dialog-periodo">
-      <div class="execucao-historico__filtro-campo">
-        <label class="execucao-historico__filtro-label" for="editar-inicio">Início</label>
-        <p-datepicker
-          inputId="editar-inicio"
-          formControlName="inicioData"
-          dateFormat="dd/mm/yy"
-          [showTime]="true"
-          [showSeconds]="true"
-          hourFormat="24"
-          [stepMinute]="1"
-          [stepSecond]="1"
-          [maxDate]="dataMaximaEdicao()"
-          appendTo="body"
-          [class.ng-invalid]="campoInvalidoInicio()"
-        />
-        @if (campoInvalidoInicio()) {
-          <small class="execucao-historico__erro">O início é obrigatório.</small>
-        }
-      </div>
-
-      <div class="execucao-historico__filtro-campo">
-        <label class="execucao-historico__filtro-label" for="editar-fim">Fim</label>
-        <p-datepicker
-          inputId="editar-fim"
-          formControlName="fimData"
-          dateFormat="dd/mm/yy"
-          [showTime]="true"
-          [showSeconds]="true"
-          hourFormat="24"
-          [stepMinute]="1"
-          [stepSecond]="1"
-          [maxDate]="dataMaximaEdicao()"
-          [showClear]="true"
-          appendTo="body"
-          [class.ng-invalid]="formularioEdicao.hasError('periodo')"
-        />
-        @if (formularioEdicao.hasError('periodo')) {
-          <small class="execucao-historico__erro">O fim precisa ser depois do início.</small>
-        }
-      </div>
+<!-- Horário em cima e dia/mês embaixo, em cinza; para o gestor, clicar abre a edição no lugar. -->
+<ng-template #momento let-instante let-execucao="execucao" let-campo="campo">
+  @if (sessao.eGestor()) {
+    <button type="button" class="execucao-historico__momento execucao-historico__momento--editavel" (click)="iniciarEdicao(execucao, campo)">
+      <span class="execucao-historico__momento-hora">{{ hora(instante) }}</span>
+      <span class="execucao-historico__momento-data">{{ diaMes(instante) }}</span>
+    </button>
+  } @else {
+    <div class="execucao-historico__momento">
+      <span class="execucao-historico__momento-hora">{{ hora(instante) }}</span>
+      <span class="execucao-historico__momento-data">{{ diaMes(instante) }}</span>
     </div>
+  }
+</ng-template>
 
-    <div class="execucao-historico__filtro-campo">
-      <label class="execucao-historico__filtro-label" for="editar-descricao">Descrição</label>
-      <textarea
-        #descricaoEdicao
-        id="editar-descricao"
-        pTextarea
-        appBloquearCaracteresProibidos
-        formControlName="descricao"
-        rows="5"
-        spellcheck="true"
-        lang="pt-BR"
-        [class.ng-invalid]="campoInvalidoDescricao()"
-      ></textarea>
-      @if (campoInvalidoDescricao()) {
-        <small class="execucao-historico__erro">
-          @if (formularioEdicao.controls.descricao.hasError('pattern')) {
-            {{ mensagemCaracteresProibidos }}
-          } @else {
-            A descrição é obrigatória.
-          }
-        </small>
-      }
-    </div>
+<ng-template #editorData>
+  <div class="execucao-historico__editor">
+    <p-datepicker
+      #seletor
+      [formControl]="rascunhoData"
+      dateFormat="dd/mm/yy"
+      [showTime]="true"
+      [showSeconds]="true"
+      hourFormat="24"
+      [stepMinute]="1"
+      [stepSecond]="1"
+      [maxDate]="dataMaximaEdicao()"
+      appendTo="body"
+      (onShow)="registrarSeletor(seletor)"
+      (onClose)="aoSairDaEdicao()"
+      (onBlur)="aoSairDoSeletor(seletor)"
+    />
+    @if (confirmandoEdicao()) {
+      <ng-container *ngTemplateOutlet="confirmar" />
+    }
+  </div>
+</ng-template>
 
-    <div class="execucao-historico__dialog-acoes">
-      <app-dialog-dica-atalhos />
-      <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="mostrarDialogEditar.set(false)" />
-      <p-button
-        type="submit"
-        label="Salvar"
-        icon="pi pi-check"
-        [loading]="salvandoDescricao()"
-        [disabled]="formularioEdicao.hasError('periodo')"
-      />
-    </div>
-  </form>
-</p-dialog>
+<ng-template #confirmar>
+  <div class="execucao-historico__confirmar" role="group" aria-label="Confirmar alteração">
+    <span class="execucao-historico__confirmar-texto">Salvar alteração?</span>
+    <p-button label="Sim" size="small" [loading]="salvandoEdicao()" (onClick)="confirmarEdicao()" />
+    <p-button label="Não" size="small" severity="secondary" [text]="true" [disabled]="salvandoEdicao()" (onClick)="descartarEdicao()" />
+  </div>
+</ng-template>
 
+<p-confirmpopup />
 <app-atividade-visualizar-dialog #visualizarDialog />
 <app-relatorio-execucao-dialog #relatorioDialog />

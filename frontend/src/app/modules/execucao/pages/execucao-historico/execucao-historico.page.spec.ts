@@ -2,6 +2,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
+import { ConfirmationService } from 'primeng/api';
 import { ExecucaoItemDto, TipoUsuarioEnum } from '@project20/shared';
 import { montarComponente, ComponenteMontado } from '../../../../../testes/montar-componente';
 import { esperarRequisicao, responderErro, responderSucesso } from '../../../../../testes/http-teste';
@@ -220,7 +221,7 @@ describe('ExecucaoHistoricoPage: gestor x desenvolvedor', () => {
     expect(cabecalhos(montado)).toContain('Usuário');
     expect(cabecalhos(montado)).toContain('Ações');
     expect(texto(montado)).toContain('Maria Souza');
-    expect(botaoPorRotulo(montado, 'Editar execução').length).toBe(1);
+    expect(botaoPorRotulo(montado, 'Excluir execução').length).toBe(1);
   });
 
   it('desenvolvedor não vê filtro de usuário, Minhas, Relatório, colunas de usuário e ações, e não carrega usuários', async () => {
@@ -232,7 +233,7 @@ describe('ExecucaoHistoricoPage: gestor x desenvolvedor', () => {
     expect(montado.elemento.querySelector('p-select')).toBeNull();
     expect(cabecalhos(montado)).not.toContain('Usuário');
     expect(cabecalhos(montado)).not.toContain('Ações');
-    expect(botaoPorRotulo(montado, 'Editar execução').length).toBe(0);
+    expect(botaoPorRotulo(montado, 'Excluir execução').length).toBe(0);
     expect(montado.elemento.querySelector('.execucao-historico__descricao-botao')).toBeNull();
     expect(texto(montado)).toContain('Descrição 1');
   });
@@ -246,94 +247,192 @@ describe('ExecucaoHistoricoPage: gestor x desenvolvedor', () => {
   it('desenvolvedor não consegue abrir a edição, nem programaticamente', async () => {
     const { montado } = await montarPagina({ usuario: TipoUsuarioEnum.DESENVOLVEDOR });
     await carregar(montado, [criarExecucao(1)]);
-    montado.componente.abrirEdicao(montado.componente.execucoes()[0]);
-    expect(montado.componente.mostrarDialogEditar()).toBe(false);
-    expect(montado.componente.execucaoEmEdicao()).toBeNull();
+    montado.componente.iniciarEdicao(montado.componente.execucoes()[0], 'descricao');
+    expect(montado.componente.edicao()).toBeNull();
+    expect(montado.elemento.querySelector('.execucao-historico__momento--editavel')).toBeNull();
   });
 });
 
-describe('ExecucaoHistoricoPage: edição (gestor)', () => {
-  async function abrirEdicao() {
+describe('ExecucaoHistoricoPage: edição inline (gestor)', () => {
+  async function carregada(itens: ExecucaoItemDto[] = [criarExecucao(1, { usuarioId: 3, nomeUsuario: 'João Lima' })]) {
     const contexto = await montarPagina();
-    await carregar(contexto.montado, [criarExecucao(1, { usuarioId: 3, nomeUsuario: 'João Lima' })], 90);
-    botaoPorRotulo(contexto.montado, 'Editar execução')[0].click();
-    await contexto.montado.atualizar();
+    await carregar(contexto.montado, itens, 90);
     return contexto;
   }
+  const execucaoUm = (montado: Montado) => montado.componente.execucoes()[0];
 
-  it('o gestor edita a execução de outro usuário: o lápis abre o dialog com os dados da execução', async () => {
-    const { montado } = await abrirEdicao();
-    expect(montado.componente.mostrarDialogEditar()).toBe(true);
-    expect(montado.componente.execucaoEmEdicao()?.id).toBe(1);
-    expect(montado.componente.formularioEdicao.value.descricao).toBe('Descrição 1');
-    expect(montado.componente.formularioEdicao.value.inicioData).toBeInstanceOf(Date);
-  });
-
-  it('a descrição também abre a edição ao clicar', async () => {
-    const { montado } = await montarPagina();
-    await carregar(montado, [criarExecucao(1)]);
+  it('clicar na descrição troca o texto por um campo de edição já com o valor atual', async () => {
+    const { montado } = await carregada();
     (montado.elemento.querySelector('.execucao-historico__descricao-botao') as HTMLButtonElement).click();
-    expect(montado.componente.mostrarDialogEditar()).toBe(true);
+    await montado.atualizar();
+    expect(montado.componente.editando(execucaoUm(montado), 'descricao')).toBe(true);
+    expect(montado.componente.rascunhoDescricao.value).toBe('Descrição 1');
+    expect(montado.elemento.querySelector('textarea')).not.toBeNull();
   });
 
-  it('salvar envia PUT /execucao/:id com descrição aparada, início e fim em ISO, e atualiza a linha', async () => {
-    const { montado } = await abrirEdicao();
-    montado.componente.formularioEdicao.patchValue({ descricao: '  Nova descrição  ' });
-    montado.componente.salvarEdicao();
+  it('clicar no início ou no fim abre o seletor de data daquele campo', async () => {
+    const { montado } = await carregada();
+    const [inicio, fim] = Array.from(montado.elemento.querySelectorAll<HTMLButtonElement>('.execucao-historico__momento--editavel'));
+    inicio.click();
+    await montado.atualizar();
+    expect(montado.componente.editando(execucaoUm(montado), 'inicio')).toBe(true);
+    expect(montado.componente.rascunhoData.value).toBeInstanceOf(Date);
+    expect(montado.elemento.querySelector('p-datepicker')).not.toBeNull();
+
+    montado.componente.iniciarEdicao(execucaoUm(montado), 'fim');
+    expect(montado.componente.editando(execucaoUm(montado), 'fim')).toBe(true);
+    expect(montado.componente.editando(execucaoUm(montado), 'inicio')).toBe(false);
+    expect(fim).toBeDefined();
+  });
+
+  it('o horário aparece em cima e o dia/mês embaixo', async () => {
+    const { montado } = await carregada();
+    const momento = montado.elemento.querySelector('.execucao-historico__momento') as HTMLElement;
+    expect(momento.children[0].classList).toContain('execucao-historico__momento-hora');
+    expect(momento.children[1].classList).toContain('execucao-historico__momento-data');
+  });
+
+  it('sair sem alterar nada fecha o campo em silêncio, sem pergunta nem requisição', async () => {
+    const { montado } = await carregada();
+    montado.componente.iniciarEdicao(execucaoUm(montado), 'descricao');
+    montado.componente.aoSairDaEdicao();
+    expect(montado.componente.edicao()).toBeNull();
+    expect(montado.componente.confirmandoEdicao()).toBe(false);
+    montado.http.expectNone((r) => r.method === 'PUT');
+  });
+
+  it('sair com alteração pergunta "Salvar alteração?" e "Não" descarta o rascunho', async () => {
+    const { montado } = await carregada();
+    montado.componente.iniciarEdicao(execucaoUm(montado), 'descricao');
+    montado.componente.rascunhoDescricao.setValue('Outra coisa');
+    montado.componente.aoSairDaEdicao();
+    await montado.atualizar();
+    expect(montado.componente.confirmandoEdicao()).toBe(true);
+    expect(texto(montado)).toContain('Salvar alteração?');
+
+    montado.componente.descartarEdicao();
+    await montado.atualizar();
+    expect(montado.componente.edicao()).toBeNull();
+    expect(execucaoUm(montado).descricao).toBe('Descrição 1');
+    montado.http.expectNone((r) => r.method === 'PUT');
+  });
+
+  it('"Sim" envia PUT /execucao/:id com a descrição aparada e os demais valores intactos, e atualiza a linha', async () => {
+    const { montado } = await carregada();
+    const original = execucaoUm(montado);
+    montado.componente.iniciarEdicao(original, 'descricao');
+    montado.componente.rascunhoDescricao.setValue('  Nova descrição  ');
+    montado.componente.aoSairDaEdicao();
+    montado.componente.confirmarEdicao();
+
     const requisicao = esperarRequisicao(montado.http, 'PUT', '/execucao/1');
     expect(requisicao.request.body.descricao).toBe('Nova descrição');
-    expect(typeof requisicao.request.body.inicioData).toBe('string');
-    expect(requisicao.request.body.fimData).toEqual(expect.any(String));
-    expect(montado.componente.salvandoDescricao()).toBe(true);
+    expect(requisicao.request.body.inicioData).toBe(original.inicioData.toISOString());
+    expect(requisicao.request.body.fimData).toBe(original.fimData!.toISOString());
+    expect(montado.componente.salvandoEdicao()).toBe(true);
 
-    const alterada = montado.componente.execucoes()[0];
     responderSucesso(requisicao, {
-      ...alterada, descricao: 'Nova descrição', inicioData: alterada.inicioData.toISOString(),
-      fimData: alterada.fimData!.toISOString(), duracaoMinutos: 45,
+      ...original, descricao: 'Nova descrição', inicioData: original.inicioData.toISOString(),
+      fimData: original.fimData!.toISOString(), duracaoMinutos: 45,
     });
     await montado.atualizar();
-    expect(montado.componente.salvandoDescricao()).toBe(false);
-    expect(montado.componente.mostrarDialogEditar()).toBe(false);
-    expect(montado.componente.execucoes()[0].descricao).toBe('Nova descrição');
-    expect(montado.componente.execucoes()[0].duracaoMinutos).toBe(45);
+    expect(montado.componente.salvandoEdicao()).toBe(false);
+    expect(montado.componente.edicao()).toBeNull();
+    expect(execucaoUm(montado).descricao).toBe('Nova descrição');
+    expect(execucaoUm(montado).duracaoMinutos).toBe(45);
   });
 
-  it('execução ainda em andamento é editável e o fim fica vazio (null) no envio', async () => {
-    const { montado } = await montarPagina();
-    await carregar(montado, [criarExecucao(1, { fimData: null, duracaoMinutos: null })]);
-    botaoPorRotulo(montado, 'Editar execução')[0].click();
-    montado.componente.salvarEdicao();
-    expect(esperarRequisicao(montado.http, 'PUT', '/execucao/1').request.body.fimData).toBeNull();
+  it('alterar o início envia só o início novo; o fim e a descrição seguem como estavam', async () => {
+    const { montado } = await carregada();
+    const original = execucaoUm(montado);
+    montado.componente.iniciarEdicao(original, 'inicio');
+    const rascunho = montado.componente.rascunhoData.value as Date;
+    montado.componente.rascunhoData.setValue(new Date(rascunho.getTime() - 10 * 60_000));
+    montado.componente.aoSairDaEdicao();
+    montado.componente.confirmarEdicao();
+
+    const corpo = esperarRequisicao(montado.http, 'PUT', '/execucao/1').request.body;
+    expect(new Date(corpo.inicioData).getTime()).toBe(original.inicioData.getTime() - 10 * 60_000);
+    expect(corpo.fimData).toBe(original.fimData!.toISOString());
+    expect(corpo.descricao).toBe('Descrição 1');
   });
 
-  it('descrição vazia ou fim anterior ao início impedem o envio', async () => {
-    const { montado } = await abrirEdicao();
-    montado.componente.formularioEdicao.patchValue({ descricao: '' });
-    montado.componente.salvarEdicao();
+  it('fim igual ou anterior ao início avisa e mantém o campo aberto, sem enviar', async () => {
+    const { montado } = await carregada();
+    const original = execucaoUm(montado);
+    montado.componente.iniciarEdicao(original, 'fim');
+    montado.componente.rascunhoData.setValue(new Date(montado.componente.rascunhoData.value!.getTime() - 3 * 3_600_000));
+    montado.componente.aoSairDaEdicao();
+    montado.componente.confirmarEdicao();
     montado.http.expectNone((r) => r.method === 'PUT');
-
-    const formulario = montado.componente.formularioEdicao;
-    const inicio = formulario.value.inicioData as Date;
-    formulario.patchValue({ descricao: 'ok', fimData: new Date(inicio.getTime() - 60_000) });
-    expect(formulario.hasError('periodo')).toBe(true);
-    montado.componente.salvarEdicao();
-    montado.http.expectNone((r) => r.method === 'PUT');
+    expect(montado.componente.edicao()).not.toBeNull();
+    expect(montado.componente.confirmandoEdicao()).toBe(false);
   });
 
-  it('descrição com caracteres proibidos é inválida', async () => {
-    const { montado } = await abrirEdicao();
-    montado.componente.formularioEdicao.patchValue({ descricao: 'texto com "aspas"' });
-    montado.componente.salvarEdicao();
-    montado.http.expectNone((r) => r.method === 'PUT');
+  it('descrição vazia ou com caracteres proibidos não é enviada e o campo continua aberto', async () => {
+    const { montado } = await carregada();
+    montado.componente.iniciarEdicao(execucaoUm(montado), 'descricao');
+    for (const valor of ['', 'texto com "aspas"']) {
+      montado.componente.rascunhoDescricao.setValue(valor);
+      montado.componente.aoSairDaEdicao();
+      montado.componente.confirmarEdicao();
+      montado.http.expectNone((r) => r.method === 'PUT');
+      expect(montado.componente.edicao()).not.toBeNull();
+      expect(montado.componente.confirmandoEdicao()).toBe(false);
+    }
   });
 
-  it('erro do servidor na edição mantém o dialog aberto e a linha como estava', async () => {
-    const { montado } = await abrirEdicao();
-    montado.componente.salvarEdicao();
+  it('erro do servidor mantém o campo aberto com o rascunho e a linha como estava', async () => {
+    const { montado } = await carregada();
+    montado.componente.iniciarEdicao(execucaoUm(montado), 'descricao');
+    montado.componente.rascunhoDescricao.setValue('Vai falhar');
+    montado.componente.aoSairDaEdicao();
+    montado.componente.confirmarEdicao();
     responderErro(esperarRequisicao(montado.http, 'PUT', '/execucao/1'), 400, 'Sobreposição');
     await montado.atualizar();
-    expect(montado.componente.mostrarDialogEditar()).toBe(true);
-    expect(montado.componente.salvandoDescricao()).toBe(false);
-    expect(montado.componente.execucoes()[0].descricao).toBe('Descrição 1');
+    expect(montado.componente.salvandoEdicao()).toBe(false);
+    expect(montado.componente.edicao()).not.toBeNull();
+    expect(montado.componente.rascunhoDescricao.value).toBe('Vai falhar');
+    expect(execucaoUm(montado).descricao).toBe('Descrição 1');
+  });
+
+  it('Esc sai da edição; com a pergunta aberta, Esc descarta', async () => {
+    const { montado } = await carregada();
+    montado.componente.iniciarEdicao(execucaoUm(montado), 'descricao');
+    montado.componente.rascunhoDescricao.setValue('Mudou');
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(montado.componente.confirmandoEdicao()).toBe(true);
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(montado.componente.edicao()).toBeNull();
+  });
+
+  it('execução em andamento não abre edição do fim', async () => {
+    const { montado } = await carregada([criarExecucao(1, { fimData: null, duracaoMinutos: null })]);
+    montado.componente.iniciarEdicao(execucaoUm(montado), 'fim');
+    expect(montado.componente.edicao()).toBeNull();
+  });
+});
+
+describe('ExecucaoHistoricoPage: exclusão (gestor)', () => {
+  it('a lixeira pede confirmação e só então envia DELETE /execucao/:id e recarrega a lista', async () => {
+    const { montado } = await montarPagina();
+    await carregar(montado, [criarExecucao(1)], 90);
+    const confirmacao = montado.fixture.debugElement.injector.get(ConfirmationService);
+    const confirmar = vi.spyOn(confirmacao, 'confirm');
+    botaoPorRotulo(montado, 'Excluir execução')[0].click();
+    expect(confirmar).toHaveBeenCalledTimes(1);
+    montado.http.expectNone((r) => r.method === 'DELETE');
+
+    confirmar.mock.calls[0][0].accept!();
+    responderSucesso(esperarRequisicao(montado.http, 'DELETE', '/execucao/1'), null);
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/execucao'), pagina([]));
+    await montado.atualizar();
+    expect(montado.componente.execucoes()).toEqual([]);
+  });
+
+  it('o desenvolvedor não vê a lixeira', async () => {
+    const { montado } = await montarPagina({ usuario: TipoUsuarioEnum.DESENVOLVEDOR });
+    await carregar(montado, [criarExecucao(1)]);
+    expect(botaoPorRotulo(montado, 'Excluir execução').length).toBe(0);
   });
 });

@@ -104,6 +104,8 @@ project-2.0/
   fonte do estado e cada mudança recarrega; atalhos ←/→/Home reutilizam os guardas de `core/utils/atalhos.ts`. O dialog de
   relatório abre carregado, recarrega a cada filtro (debounce 400 ms) e só exporta/revisa os parâmetros do relatório
   exibido; `abrir(id)` fixa o projeto (detalhe do projeto), `abrir()` lembra o último em `localStorage` `relatorio.projeto`.
+  A tabela é a mesma para gestor e desenvolvedor (Atividade com "Projeto › Demanda" embaixo; horário em cima e dia/mês embaixo). O
+  gestor edita descrição, início e fim inline na célula (confirma com Sim/Não) e exclui pela lixeira; não há mais dialog de edição.
 - **[tasks 97–99]** Todo dialog de formulário usa `p-dialog[dialogFormulario]` (autofocus no primeiro campo
   vazio, Enter envia, Ctrl+Enter envia a partir de textarea, Esc cancela) e a dica
   `app-dialog-dica-atalhos` no footer; criar fecha o dialog, e "Criar e adicionar outra" mantém o

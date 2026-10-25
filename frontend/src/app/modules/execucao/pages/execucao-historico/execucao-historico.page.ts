@@ -6,22 +6,23 @@ import {
   computed,
   OnInit,
   HostListener,
-  ViewChild,
-  ElementRef,
   DestroyRef,
+  Injector,
+  afterNextRender,
 } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormControl, Validators } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { TableModule, TableLazyLoadEvent } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
-import { DatePickerModule } from 'primeng/datepicker';
+import { DatePickerModule, DatePicker } from 'primeng/datepicker';
 import { Select } from 'primeng/select';
-import { DialogModule } from 'primeng/dialog';
 import { TextareaModule } from 'primeng/textarea';
 import { TooltipModule } from 'primeng/tooltip';
-import { MessageService } from 'primeng/api';
+import { ConfirmPopupModule } from 'primeng/confirmpopup';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import {
   ExecucaoListarDto,
   ExecucaoItemDto,
@@ -48,19 +49,12 @@ import { BloquearCaracteresProibidosDirective } from '../../../../shared/directi
 import { AtividadeVisualizarDialogComponent } from '../../../atividade/components/atividade-visualizar-dialog/atividade-visualizar-dialog.component';
 import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
 import { BarraRecargaComponent } from '../../../../shared/components/barra-recarga/barra-recarga.component';
-import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
-import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
 import { focoEmCampo, haSobreposicaoAberta } from '../../../../core/utils/atalhos';
 import { RelatorioExecucaoDialogComponent } from '../../../relatorio/components/relatorio-execucao-dialog/relatorio-execucao-dialog.component';
 import { ExecucaoTimerComponent } from '../../components/execucao-timer/execucao-timer.component';
 import { dataParaIso, isoParaData, mesmoDia, resumoDoDia } from '../../utils/execucao.util';
 
-/** O fim, quando informado, precisa ser posterior ao início (mensagem inline, sem toast). */
-function periodoValido(grupo: AbstractControl): ValidationErrors | null {
-  const inicio = grupo.get('inicioData')?.value as Date | null;
-  const fim = grupo.get('fimData')?.value as Date | null;
-  return inicio && fim && fim <= inicio ? { periodo: true } : null;
-}
+type CampoEdicao = 'descricao' | 'inicio' | 'fim';
 
 @Component({
   selector: 'app-execucao-historico',
@@ -73,25 +67,26 @@ function periodoValido(grupo: AbstractControl): ValidationErrors | null {
     ButtonModule,
     DatePickerModule,
     Select,
-    DialogModule,
     TextareaModule,
     TooltipModule,
+    ConfirmPopupModule,
+    NgTemplateOutlet,
     MinutosParaHorasPipe,
     AtividadeVisualizarDialogComponent,
     BloquearCaracteresProibidosDirective,
-    DialogFormularioDirective,
-    DialogDicaAtalhosComponent,
     RelatorioExecucaoDialogComponent,
     ExecucaoTimerComponent,
   ],
   templateUrl: './execucao-historico.page.html',
   styleUrl: './execucao-historico.page.scss',
+  providers: [ConfirmationService],
 })
 export class ExecucaoHistoricoPage implements OnInit {
   private readonly execucaoService = inject(ExecucaoService);
   private readonly usuarioService = inject(UsuarioService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly messageService = inject(MessageService);
+  private readonly confirmationService = inject(ConfirmationService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
@@ -100,13 +95,11 @@ export class ExecucaoHistoricoPage implements OnInit {
   readonly esqueleto = computed(() =>
     montarEsqueletoDeTabela([
       ...(this.sessao.eGestor() ? [{ rotulo: 'Usuário', peso: 103 }] : []),
-      { rotulo: 'Projeto', peso: 101 },
-      { rotulo: 'Demanda', peso: 136 },
-      { rotulo: 'Atividade', peso: 154 },
+      { rotulo: 'Atividade', peso: 260 },
       { rotulo: 'Início', peso: 76 },
       { rotulo: 'Fim', peso: 132 },
       { rotulo: 'Duração', peso: 119 },
-      { rotulo: 'Descrição', peso: 128 },
+      { rotulo: 'Descrição', peso: 300 },
       ...(this.sessao.eGestor() ? [{ rotulo: 'Ações', peso: 81 }] : []),
     ]),
   );
@@ -149,25 +142,23 @@ export class ExecucaoHistoricoPage implements OnInit {
     return [...lista.filter((item) => !item.fimData), ...lista.filter((item) => !!item.fimData)];
   });
 
-  // --- Dialog: editar execução (gestor) ---
-  readonly mostrarDialogEditar = signal<boolean>(false);
-  readonly salvandoDescricao = signal<boolean>(false);
-  readonly execucaoEmEdicao = signal<ExecucaoItemDto | null>(null);
+  // --- Edição inline (gestor): descrição, início e fim direto na célula ---
+  readonly edicao = signal<{ execucaoId: number; campo: CampoEdicao } | null>(null);
+  /** Houve saída do campo com alteração: a célula pergunta "Salvar alteração?" antes de enviar. */
+  readonly confirmandoEdicao = signal<boolean>(false);
+  readonly salvandoEdicao = signal<boolean>(false);
   /** Limite máximo (momento atual) para os campos de data/hora da edição. */
   readonly dataMaximaEdicao = signal<Date>(new Date());
-  readonly formularioEdicao = this.formBuilder.group(
-    {
-      descricao:  ['', [Validators.required, Validators.pattern(REGEX_SEM_CARACTERES_PROIBIDOS)]],
-      inicioData: [null as Date | null, [Validators.required]],
-      fimData:    [null as Date | null],
-    },
-    { validators: periodoValido },
-  );
+  readonly rascunhoDescricao = new FormControl('', {
+    nonNullable: true,
+    validators: [Validators.required, Validators.pattern(REGEX_SEM_CARACTERES_PROIBIDOS)],
+  });
+  readonly rascunhoData = new FormControl<Date | null>(null, [Validators.required]);
 
   readonly mensagemCaracteresProibidos = MENSAGEM_CARACTERES_PROIBIDOS;
-
-  /** Textarea de descrição; recebe o foco ao abrir o dialog, não o campo de início. */
-  @ViewChild('descricaoEdicao') private descricaoEdicao?: ElementRef<HTMLTextAreaElement>;
+  private readonly injector = inject(Injector);
+  /** Seletor de data aberto na edição inline: o Esc e a confirmação precisam fechar o painel dele. */
+  private seletorAtivo: DatePicker | null = null;
 
   /** Dia e usuário vêm da URL (`?data=&usuario=`), que é a fonte do estado; cada mudança de URL recarrega. */
   ngOnInit(): void {
@@ -187,9 +178,15 @@ export class ExecucaoHistoricoPage implements OnInit {
     });
   }
 
-  /** ←/→ trocam o dia, Home volta a hoje. Quietos em campo de texto e com dialog/popover aberto. */
+  /** Esc sai da edição inline. ←/→ trocam o dia, Home volta a hoje, quietos em campo de texto e com dialog/popover aberto. */
   @HostListener('document:keydown', ['$event'])
   aoTeclar(evento: KeyboardEvent): void {
+    if (evento.key === 'Escape' && this.edicao()) {
+      if (this.confirmandoEdicao()) this.descartarEdicao();
+      else this.aoSairDaEdicao();
+      evento.preventDefault();
+      return;
+    }
     if (evento.defaultPrevented || evento.ctrlKey || evento.metaKey || evento.altKey || evento.shiftKey) return;
     if (focoEmCampo(evento.target) || haSobreposicaoAberta()) return;
     if (evento.key === 'ArrowLeft') this.retornarDia();
@@ -320,44 +317,101 @@ export class ExecucaoHistoricoPage implements OnInit {
   }
 
   // ---------------------------------------------------------------------------
-  // Edição de descrição (apenas gestor)
+  // Edição inline (apenas gestor)
   // ---------------------------------------------------------------------------
 
-  abrirEdicao(execucao: ExecucaoItemDto): void {
-    if (!this.sessao.eGestor()) return;
-    this.execucaoEmEdicao.set(execucao);
-    this.dataMaximaEdicao.set(instanteParaRelogioLocal(new Date(), ambiente.fusoHorario));
-    this.formularioEdicao.reset({
-      descricao:  execucao.descricao,
-      inicioData: instanteParaRelogioLocal(new Date(execucao.inicioData), ambiente.fusoHorario),
-      fimData:    execucao.fimData ? instanteParaRelogioLocal(new Date(execucao.fimData), ambiente.fusoHorario) : null,
+  editando(execucao: ExecucaoItemDto, campo: CampoEdicao): boolean {
+    const atual = this.edicao();
+    return atual?.execucaoId === execucao.id && atual.campo === campo;
+  }
+
+  /** Clique na descrição, no início ou no fim: a célula vira campo de edição já com o foco. */
+  iniciarEdicao(execucao: ExecucaoItemDto, campo: CampoEdicao): void {
+    if (!this.sessao.eGestor() || this.salvandoEdicao()) return;
+    if (this.editando(execucao, campo)) return;
+    this.encerrarEdicao();
+    if (campo === 'descricao') {
+      this.rascunhoDescricao.reset(execucao.descricao);
+    } else {
+      const instante = campo === 'inicio' ? execucao.inicioData : execucao.fimData;
+      if (!instante) return;
+      this.rascunhoData.reset(instanteParaRelogioLocal(new Date(instante), ambiente.fusoHorario));
+      this.dataMaximaEdicao.set(instanteParaRelogioLocal(new Date(), ambiente.fusoHorario));
+    }
+    this.edicao.set({ execucaoId: execucao.id, campo });
+    this.focarEditor();
+  }
+
+  /** Esc, clique fora ou saída do campo: sem alteração fecha em silêncio; com alteração pergunta antes de salvar. */
+  aoSairDaEdicao(): void {
+    if (!this.edicao() || this.confirmandoEdicao() || this.salvandoEdicao()) return;
+    if (!this.edicaoAlterada()) {
+      this.encerrarEdicao();
+      return;
+    }
+    this.confirmandoEdicao.set(true);
+    this.rascunhoDescricao.disable({ emitEvent: false });
+    this.rascunhoData.disable({ emitEvent: false });
+    this.seletorAtivo?.hideOverlay();
+  }
+
+  registrarSeletor(seletor: DatePicker): void {
+    this.seletorAtivo = seletor;
+  }
+
+  /** O seletor de data perde o foco ao clicar no próprio painel: só sai quando o painel não está aberto. */
+  aoSairDoSeletor(seletor: DatePicker): void {
+    setTimeout(() => {
+      if (!seletor.overlayVisible) this.aoSairDaEdicao();
     });
-    this.mostrarDialogEditar.set(true);
   }
 
-  /** Foca a descrição ao abrir o dialog — em vez do primeiro campo (início). */
-  focarDescricaoEdicao(): void {
-    this.descricaoEdicao?.nativeElement.focus();
+  /** "Não" na pergunta: descarta o rascunho. */
+  descartarEdicao(): void {
+    this.encerrarEdicao();
   }
 
-  salvarEdicao(): void {
-    const execucao = this.execucaoEmEdicao();
-    if (!execucao) return;
-    if (this.formularioEdicao.invalid) {
-      this.formularioEdicao.markAllAsTouched();
+  /** "Sim" na pergunta: envia a alteração do campo editado, mantendo os outros valores da execução. */
+  confirmarEdicao(): void {
+    const atual = this.edicao();
+    const execucao = this.execucoes().find((item) => item.id === atual?.execucaoId);
+    if (!atual || !execucao) {
+      this.encerrarEdicao();
       return;
     }
 
-    const { descricao, inicioData, fimData } = this.formularioEdicao.value;
+    // Controle desabilitado conta como válido: reabilita só para validar e trava de novo se passou.
+    this.rascunhoDescricao.enable({ emitEvent: false });
+    this.rascunhoData.enable({ emitEvent: false });
+    const invalido = atual.campo === 'descricao' ? this.rascunhoDescricao.invalid : this.rascunhoData.invalid;
+    if (!invalido) {
+      this.rascunhoDescricao.disable({ emitEvent: false });
+      this.rascunhoData.disable({ emitEvent: false });
+    }
+    if (invalido) {
+      this.voltarAEditar(
+        atual.campo === 'descricao' ? `A descrição é obrigatória. ${MENSAGEM_CARACTERES_PROIBIDOS}` : 'A data e a hora são obrigatórias.',
+      );
+      return;
+    }
+
+    const novoInstante = atual.campo === 'descricao' ? null : relogioLocalParaInstante(this.rascunhoData.getRawValue()!, ambiente.fusoHorario);
+    const inicio = atual.campo === 'inicio' ? novoInstante! : new Date(execucao.inicioData);
+    const fim = atual.campo === 'fim' ? novoInstante! : execucao.fimData ? new Date(execucao.fimData) : null;
+    if (fim && fim <= inicio) {
+      this.voltarAEditar('O fim precisa ser depois do início.');
+      return;
+    }
+
     const dto: ExecucaoAlterarDto = {
-      descricao:  descricao!.trim(),
-      inicioData: relogioLocalParaInstante(inicioData!, ambiente.fusoHorario).toISOString(),
-      fimData:    fimData ? relogioLocalParaInstante(fimData, ambiente.fusoHorario).toISOString() : null,
+      descricao:  atual.campo === 'descricao' ? this.rascunhoDescricao.getRawValue().trim() : execucao.descricao,
+      inicioData: inicio.toISOString(),
+      fimData:    fim ? fim.toISOString() : null,
     };
-    this.salvandoDescricao.set(true);
+    this.salvandoEdicao.set(true);
     this.execucaoService
       .alterar(execucao.id, dto)
-      .pipe(finalize(() => this.salvandoDescricao.set(false)))
+      .pipe(finalize(() => this.salvandoEdicao.set(false)))
       .subscribe({
         next: (resposta) => {
           if (resposta.sucesso && resposta.dados) {
@@ -376,20 +430,70 @@ export class ExecucaoHistoricoPage implements OnInit {
               ),
             );
             this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Execução alterada com sucesso' });
-            this.mostrarDialogEditar.set(false);
+            this.encerrarEdicao();
           }
         },
+        error: () => this.voltarAEditar(),
       });
   }
 
-  campoInvalidoDescricao(): boolean {
-    const controle = this.formularioEdicao.get('descricao');
-    return !!(controle?.invalid && controle?.touched);
+  private edicaoAlterada(): boolean {
+    const atual = this.edicao();
+    const execucao = this.execucoes().find((item) => item.id === atual?.execucaoId);
+    if (!atual || !execucao) return false;
+    if (atual.campo === 'descricao') return this.rascunhoDescricao.getRawValue().trim() !== execucao.descricao;
+    const original = atual.campo === 'inicio' ? execucao.inicioData : execucao.fimData;
+    const rascunho = this.rascunhoData.getRawValue();
+    if (!original || !rascunho) return false;
+    const segundos = (instante: Date) => Math.floor(instante.getTime() / 1000);
+    return segundos(relogioLocalParaInstante(rascunho, ambiente.fusoHorario)) !== segundos(new Date(original));
   }
 
-  campoInvalidoInicio(): boolean {
-    const controle = this.formularioEdicao.get('inicioData');
-    return !!(controle?.invalid && controle?.touched);
+  /** Recusa ou falha ao salvar: o campo continua aberto para corrigir, sem perder o que foi digitado. */
+  private voltarAEditar(aviso?: string): void {
+    if (aviso) this.messageService.add({ severity: 'warn', summary: 'Atenção', detail: aviso });
+    this.confirmandoEdicao.set(false);
+    this.rascunhoDescricao.enable({ emitEvent: false });
+    this.rascunhoData.enable({ emitEvent: false });
+    this.focarEditor();
+  }
+
+  private encerrarEdicao(): void {
+    this.seletorAtivo = null;
+    this.edicao.set(null);
+    this.confirmandoEdicao.set(false);
+    this.rascunhoDescricao.enable({ emitEvent: false });
+    this.rascunhoData.enable({ emitEvent: false });
+  }
+
+  private focarEditor(): void {
+    afterNextRender(
+      () => document.querySelector<HTMLElement>('.execucao-historico__editor textarea, .execucao-historico__editor input')?.focus(),
+      { injector: this.injector },
+    );
+  }
+
+  confirmarExclusao(evento: Event, execucao: ExecucaoItemDto): void {
+    if (!this.sessao.eGestor()) return;
+    this.confirmationService.confirm({
+      target:      evento.currentTarget ?? evento.target ?? undefined,
+      message:     'Excluir esta execução? O tempo dela deixa de contar no dia.',
+      icon:        'pi pi-exclamation-triangle',
+      acceptLabel: 'Excluir',
+      rejectLabel: 'Cancelar',
+      acceptButtonProps: { severity: 'danger' },
+      accept: () => this.excluirExecucao(execucao),
+    });
+  }
+
+  private excluirExecucao(execucao: ExecucaoItemDto): void {
+    this.execucaoService.excluir(execucao.id).subscribe({
+      next: (resposta) => {
+        if (!resposta.sucesso) return;
+        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Execução excluída com sucesso' });
+        this.buscarExecucoes();
+      },
+    });
   }
 
   private carregarUsuarios(): void {

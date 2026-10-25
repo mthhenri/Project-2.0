@@ -53,7 +53,11 @@ export class ExecucaoService {
     return this.httpClient.put<StandardResponse<ExecucaoAlteradaDto>>(`${this.urlBase}/${id}`, dto);
   }
 
-  buscarAtiva(): Observable<StandardResponse<ExecucaoAtivaDto | null>> {
+  excluir(id: number): Observable<StandardResponse<void>> {
+    return this.httpClient.delete<StandardResponse<void>>(`${this.urlBase}/${id}`);
+  }
+
+  buscarAtiva():Observable<StandardResponse<ExecucaoAtivaDto | null>> {
     return this.httpClient.get<StandardResponse<ExecucaoAtivaDto | null>>(`${this.urlBase}/ativa`);
   }
 }

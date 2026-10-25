@@ -100,18 +100,41 @@
   &__momento {
     display: flex;
     flex-direction: column;
+    align-items: flex-start;
     line-height: 1.2;
-  }
+    text-align: left;
 
-  &__momento-data {
-    font-size: 0.75rem;
-    color: var(--p-text-muted-color);
+    // Gestor: o horário é um botão que abre a edição no lugar.
+    &--editavel {
+      padding: 0.125rem 0.25rem;
+      margin: -0.125rem -0.25rem;
+      border: none;
+      border-radius: 0.25rem;
+      background: none;
+      font: inherit;
+      color: inherit;
+      cursor: pointer;
+
+      &:hover .execucao-historico__momento-hora {
+        color: var(--p-primary-600);
+      }
+
+      &:focus-visible {
+        outline: 2px solid var(--p-primary-color);
+        outline-offset: 2px;
+      }
+    }
   }
 
   &__momento-hora {
     font-size: 0.9375rem;
     font-weight: 600;
     color: var(--p-text-color);
+  }
+
+  &__momento-data {
+    font-size: 0.75rem;
+    color: var(--p-text-muted-color);
   }
 
   &__em-andamento {
@@ -132,12 +155,32 @@
     background: color-mix(in srgb, var(--p-primary-color) 8%, transparent);
   }
 
+  // A descrição ocupa o espaço que sobra da tabela.
   &__descricao {
-    min-width: 14rem;
-    max-width: 360px;
+    min-width: 18rem;
+    width: 100%;
     white-space: normal;
     overflow-wrap: anywhere;
     word-break: break-word;
+  }
+
+  &__usuario {
+    white-space: nowrap;
+  }
+
+  &__contexto {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    min-width: 18rem;
+    max-width: 30rem;
+    line-height: 1.25;
+  }
+
+  &__contexto-caminho {
+    font-size: 0.75rem;
+    color: var(--p-text-muted-color);
+    overflow-wrap: anywhere;
   }
 
   // A descrição aparece sempre por inteiro: quebra de linha, sem reticências.
@@ -196,33 +239,27 @@
     white-space: nowrap;
   }
 
-  &__dialog-form {
+  // Edição inline: o campo ocupa a célula e a pergunta de confirmação fica logo abaixo.
+  &__editor {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    padding-top: 0.25rem;
+    gap: 0.5rem;
+    min-width: 12rem;
   }
 
-  &__dialog-periodo {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-
-    .execucao-historico__filtro-campo {
-      flex: 1 1 0;
-      min-width: 12rem;
-    }
+  &__editor-texto {
+    width: 100%;
   }
 
-  &__dialog-acoes {
+  &__confirmar {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
     gap: 0.5rem;
   }
 
-  &__erro {
-    font-size: 0.75rem;
-    color: var(--p-red-500);
+  &__confirmar-texto {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--p-text-color);
   }
 }

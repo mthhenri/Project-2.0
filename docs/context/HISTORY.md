@@ -12,6 +12,27 @@
 
 ---
 
+## 2026-10-25 — Execuções: edição inline, exclusão na tela e coluna de atividade única
+
+Pedido do autor, sem spec: otimizar o espaço da tela de Execuções (gestor) e achar por que o gestor não via "excluir execução".
+
+- **Exclusão:** o botão nunca existiu no frontend; só o backend tinha `DELETE /execucao/:id` (`@GestorOnly`). Entrou `ExecucaoService.excluir`
+  e a lixeira por linha, com `p-confirmpopup`, só para gestor/administrador; depois de excluir a lista recarrega.
+- **Layout (gestor e desenvolvedor, mesma tabela):** Projeto e Demanda deixaram de ser colunas e viraram a linha cinza "Projeto › Demanda"
+  sob o nome da atividade; Início e Fim mostram o horário em cima e o dia/mês em cinza embaixo; a descrição ocupa o espaço que sobra
+  (mínimo 18rem). A coluna Atividade subiu 50% (18rem a 30rem); 75% estourava a tabela em 1366×768.
+- **Edição inline (só gestor/administrador):** o dialog "Editar execução" e o lápis saíram. Clicar na descrição, no início ou no fim abre o
+  campo na própria célula; Esc ou clique fora, **com alteração**, mostra "Salvar alteração? Sim/Não" na célula (Não e Esc na pergunta
+  descartam; sem alteração fecha em silêncio). Validação (descrição vazia ou com caracteres proibidos, fim <= início) avisa e mantém o campo
+  aberto. O fim de execução em andamento não é editável (o dialog antigo deixava encerrar por ali).
+- **Achado nos testes:** controle desabilitado conta como válido no Angular; a validação rodava com a pergunta aberta (controles
+  desabilitados) e deixava passar descrição vazia/com aspas. Corrigido reabilitando só para validar.
+- **Testes:** frontend, Execuções: 46 (32 da página, com 14 novos de edição inline e exclusão no lugar dos 7 do dialog). Build do frontend ok.
+  Ao vivo, como gestor, em 1366×768 e 1920×1080: descrição, seletor de horário, Esc com e sem alteração e "Não". Não verificado ao vivo:
+  visão do desenvolvedor (só por teste de componente), 1080×1920 e o "Sim"/exclusão de verdade. Sem lint (P-001).
+
+---
+
 ## 2026-10-25 — Task 223: barra lateral em grupos e specs do modo planejamento
 
 Conversa com o autor sobre o chat com a IA e a navegação. Saíram, nesta ordem:
