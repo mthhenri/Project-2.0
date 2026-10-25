@@ -454,11 +454,15 @@ export class DemandaService {
   /**
    * Cria uma conexão entre demandas com prevenção de ciclos via CTE recursivo.
    * Verifica existência de origem e destino, auto-referência e duplicidade antes de inserir.
-   * Restrito a gestores.
+   * Restrito a gestores: a regra mora aqui, além do `@GestorOnly` da rota, porque a IA conecta demandas pelo executor (task 228).
    */
   async criarConexao(
     dto: DemandaConexaoCriarDto & { demandaOrigemId: number },
+    usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<DemandaConexaoCriadaDto>> {
+    if (!temPermissaoDeGestor(usuarioAtivo.tipo)) {
+      throw new UnauthorizedAccessException('Apenas gestores conectam demandas');
+    }
     const demandaOrigemId = dto.demandaOrigemId;
 
     const demandaOrigemEncontrada = await this.demandaRepositorio.recuperar(
@@ -538,11 +542,15 @@ export class DemandaService {
 
   /**
    * Remove uma conexão via soft delete. Verifica que a conexão pertence à demanda.
-   * Restrito a gestores.
+   * Restrito a gestores (a regra mora aqui, além do `@GestorOnly` da rota, porque a IA desfaz a conexão pelo executor).
    */
   async excluirConexao(
     dto: DemandaConexaoExcluirDto,
+    usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<void>> {
+    if (!temPermissaoDeGestor(usuarioAtivo.tipo)) {
+      throw new UnauthorizedAccessException('Apenas gestores desconectam demandas');
+    }
     const demandaEncontrada = await this.demandaRepositorio.recuperar({ id: dto.demandaId });
     if (!demandaEncontrada) {
       throw new ResourceNotFoundException('Demanda');

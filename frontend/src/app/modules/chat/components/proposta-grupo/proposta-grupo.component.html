@@ -1,4 +1,18 @@
 <section class="proposta-grupo" [class.proposta-grupo--operando]="operando()" [attr.aria-label]="'Grupo de ' + propostaIds().length + ' propostas'">
+  @if (resumo().misto) {
+    <!-- A IA já fez parte (nível "Faz e avisa"): a linha azul vem em cima e o cabeçalho abaixo trata só do que espera o usuário. -->
+    <div class="proposta-grupo__aviso" role="status">
+      <i class="pi pi-sparkles proposta-grupo__aviso-icone" aria-hidden="true"></i>
+      <span class="proposta-grupo__aviso-texto">
+        <strong>A IA já fez {{ resumo().feitasPelaIa.length }} de {{ propostaIds().length }}</strong>
+        <span>e deixou o resto para você decidir.</span>
+      </span>
+      @if (resumo().desfaziveisPelaIa.length > 0) {
+        <p-button label="Desfazer" icon="pi pi-undo" severity="secondary" size="small" [text]="true" [disabled]="operando()" (onClick)="desfazerDaIa()" />
+      }
+    </div>
+  }
+
   <header class="proposta-grupo__cabecalho">
     <div class="proposta-grupo__titulo">
       <strong>{{ propostaIds().length }} propostas</strong>

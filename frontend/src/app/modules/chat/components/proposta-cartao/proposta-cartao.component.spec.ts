@@ -238,6 +238,47 @@ describe('PropostaCartaoComponent — prazo para desfazer (task 194)', () => {
   });
 });
 
+describe('PropostaCartaoComponent — feita pela IA (task 228)', () => {
+  const confirmada = (aplicadaPelaIa: boolean, minutos = 2) => ({
+    ...proposta(TipoPropostaIaEnum.CRIAR_ATIVIDADE, StatusPropostaIaEnum.CONFIRMADA, CRIAR_ATIVIDADE.dados),
+    aplicadaPelaIa,
+    resolucaoData: new Date(Date.now() - minutos * 60_000).toISOString(),
+  });
+
+  it('a proposta que a IA executou sozinha vira a linha azul de aviso, com o ícone da IA, a ação e Desfazer', async () => {
+    const montado = await montarCartao(confirmada(true));
+    const linha = montado.elemento.querySelector('.proposta-linha--ia');
+    expect(linha).not.toBeNull();
+    expect(linha?.querySelector('.pi-sparkles')).not.toBeNull();
+    expect(texto(montado)).toContain('Feito pela IA');
+    expect(texto(montado)).toContain('Montar o formulário');
+    expect(botao(montado, 'Desfazer')).toBeDefined();
+  });
+
+  it('a que o usuário confirmou segue como a linha verde de "feito", sem o ícone da IA', async () => {
+    const montado = await montarCartao(confirmada(false));
+    expect(montado.elemento.querySelector('.proposta-linha--feita')).not.toBeNull();
+    expect(montado.elemento.querySelector('.proposta-linha--ia')).toBeNull();
+    expect(montado.elemento.querySelector('.pi-sparkles')).toBeNull();
+    expect(texto(montado)).not.toContain('Feito pela IA');
+  });
+
+  it('Desfazer do aviso da IA desfaz no servidor como o de qualquer proposta feita', async () => {
+    const montado = await montarCartao(confirmada(true));
+    botao(montado, 'Desfazer')!.click();
+    const pedido = esperarRequisicao(montado.http, 'POST', `/proposta-ia/${ID}/desfazer`);
+    responderSucesso(pedido, { ...confirmada(true), status: StatusPropostaIaEnum.DESFEITA });
+    detectar(montado);
+    expect(montado.elemento.querySelector('.proposta-linha--ia')).toBeNull();
+  });
+
+  it('depois do prazo o aviso da IA continua, sem o botão Desfazer', async () => {
+    const montado = await montarCartao(confirmada(true, 40));
+    expect(montado.elemento.querySelector('.proposta-linha--ia')).not.toBeNull();
+    expect(botao(montado, 'Desfazer')).toBeUndefined();
+  });
+});
+
 describe('PropostaCartaoComponent — Recusar e Desfazer', () => {
   it('Recusar faz POST em /recusar e o cartão fica sem botões, sem oferecer desfazer no toast', async () => {
     const montado = await montarCartao();

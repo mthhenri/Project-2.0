@@ -76,7 +76,7 @@ function montarFerramenta(opcoes: { resposta?: string } = {}) {
   const geradas: { nivel: NivelIaEnum; instrucoes: string; mensagens: { conteudo: unknown }[] }[] = [];
   const tiposDePrompt: TipoPromptEnum[] = [];
   const propostaIaService = {
-    criar: async (dto: { tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }) => {
+    criarComAutonomia: async (dto: { tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }) => {
       propostas.push(dto);
       return { id: 70, status: 'PENDENTE' };
     },

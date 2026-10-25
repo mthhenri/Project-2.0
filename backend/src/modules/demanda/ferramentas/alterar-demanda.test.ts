@@ -54,7 +54,7 @@ function criarServico(inicial: typeof INICIAL = INICIAL) {
 
 function criarFerramenta(abertas = 0, inicial: typeof INICIAL = INICIAL) {
   const propostas: { tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }[] = [];
-  const propostaIaService = { criar: async (dto: { tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }) => { propostas.push(dto); return { id: 77, status: 'PENDENTE' }; } };
+  const propostaIaService = { criarComAutonomia: async (dto: { tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }) => { propostas.push(dto); return { id: 77, status: 'PENDENTE' }; } };
   const repositorio = { ...repositorioDeDemanda, contarAtividadesEmAberto: async () => abertas };
   const projetoService = { recuperar: async () => ({ dados: { id: 1, nome: 'Projeto Demo' } }) };
   const { servico } = criarServico(inicial);

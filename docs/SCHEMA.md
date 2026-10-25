@@ -81,9 +81,9 @@ As tabelas devem ser criadas nessa ordem para respeitar as dependências de FK:
 10. execucao
 11. dia_nao_util
 12. tipo_anotacao, anotacao (migration `0030`)
-13. tipo_provedor_ia, configuracao_ia (migration `0033`; `0049` troca as colunas `modelo_*` por `modelos_provedor` e `fallbacks`)
+13. tipo_provedor_ia, configuracao_ia (migration `0033`; `0049` troca as colunas `modelo_*` por `modelos_provedor` e `fallbacks`; `0055` acrescenta `niveis_proposta`)
 14. tipo_prompt, prompt (migration `0034`)
-15. tipo_proposta_ia, tipo_proposta_ia_status, proposta_ia (migration `0035`)
+15. tipo_proposta_ia, tipo_proposta_ia_status, proposta_ia (migration `0035`; `0055` acrescenta `aplicada_pela_ia`)
 16. tipo_atividade_prioridade e `atividade.tipo_atividade_prioridade_id` (migration `0036`)
 17. mensagem_direta_leitura, mensagem_direta_preferencia, mensagem_direta_supervisao (migration `0050`; só dependem de `usuario`)
 18. mensagem_direta (migration `0051`, provisória; sem FK, depende só das funções `fn_chat_texto_*` da `0038`)
@@ -583,7 +583,7 @@ CREATE UNIQUE INDEX uix_anotacao_usuario_tipo_ativa
 ### configuracao_ia — configuração da IA, uma linha por versão (migration `0033`)
 
 A versão ativa é a de maior `versao`; versão antiga nunca é alterada (editar é gravar a seguinte). A chave de API do provedor **não** fica no banco
-(`.env`). A versão 1 vem por seed (Anthropic, IA **desligada**, check-in entre 30 e 80 minutos, duração recomendada de 90). A migration `0044` acrescentou `duvidas_codigo` e `modo_contexto_chat` (as versões que já existiam ficaram `false` e `MISTURADO`). A `0049` (task 203) moveu os três modelos para `modelos_provedor` (o trio de cada versão foi para a chave do provedor dela) e criou `fallbacks` (`[]` nas versões antigas); o provedor padrão continua em `tipo_provedor_ia_id`. A coerência modelo × provedor (prefixo do nome) e a regra de cadeia sem repetição são da **service**, não do banco: o nome do modelo é texto livre.
+(`.env`). A versão 1 vem por seed (Anthropic, IA **desligada**, check-in entre 30 e 80 minutos, duração recomendada de 90). A migration `0044` acrescentou `duvidas_codigo` e `modo_contexto_chat` (as versões que já existiam ficaram `false` e `MISTURADO`). A `0049` (task 203) moveu os três modelos para `modelos_provedor` (o trio de cada versão foi para a chave do provedor dela) e criou `fallbacks` (`[]` nas versões antigas); o provedor padrão continua em `tipo_provedor_ia_id`. A `0055` (task 228) acrescentou `niveis_proposta` (anulável: as versões que já existiam ficaram sem o mapa e valem o padrão do `shared`). A coerência modelo × provedor (prefixo do nome) e a regra de cadeia sem repetição são da **service**, não do banco: o nome do modelo é texto livre.
 
 ```sql
 CREATE TABLE configuracao_ia (
@@ -607,12 +607,14 @@ CREATE TABLE configuracao_ia (
   duvidas_codigo               BOOLEAN      NOT NULL,   -- migration 0044: o chat também responde dúvidas de programação (false: só o Project)
   modo_contexto_chat           VARCHAR(20)  NOT NULL,   -- migration 0044: MISTURADO/SEPARADO (ModoContextoChatEnum do shared; sem tabela nem CHECK)
   ia_desligada                 BOOLEAN      NOT NULL,
+  niveis_proposta              JSONB,                   -- migration 0055: regra de proposta → FAZ_E_AVISA/PERGUNTA (autonomia da IA); nulo = padrão do shared; a nova versão sem o campo copia o da anterior
   precos_modelo                JSONB        NOT NULL,   -- migration 0048: modelo → { precoEntradaMilhao, precoSaidaMilhao, precoCacheMilhao } em dólar por milhão de tokens; a nova versão copia os da anterior e editar um preço na aba Custos altera a versão ativa no lugar
   usuario_id                   INTEGER      NOT NULL CONSTRAINT fk_configuracao_ia_usuario REFERENCES usuario(id),  -- quem salvou
 
   CONSTRAINT chk_configuracao_ia_intervalo_checkin CHECK (checkin_minimo_minutos < checkin_maximo_minutos),
   CONSTRAINT chk_configuracao_ia_modelos_provedor CHECK (jsonb_typeof(modelos_provedor) = 'object'),
-  CONSTRAINT chk_configuracao_ia_fallbacks CHECK (jsonb_typeof(fallbacks) = 'array')
+  CONSTRAINT chk_configuracao_ia_fallbacks CHECK (jsonb_typeof(fallbacks) = 'array'),
+  CONSTRAINT chk_configuracao_ia_niveis_proposta CHECK (niveis_proposta IS NULL OR jsonb_typeof(niveis_proposta) = 'object')
 );
 
 CREATE UNIQUE INDEX uix_configuracao_ia_versao ON configuracao_ia(versao) WHERE is_deleted = false;
@@ -651,7 +653,7 @@ CREATE UNIQUE INDEX uix_prompt_tipo_versao ON prompt(tipo_prompt_id, versao) WHE
 
 Uma linha por proposta. A IA só **propõe**; a ação roda quando o usuário confirma (uma vez), pela service do domínio. A troca de situação é um `UPDATE` condicional
 (só `PENDENTE` passa), o que impede duas confirmações simultâneas de executar duas vezes. `resultado` guarda o que a ação criou ou alterou (base do "desfazer").
-Não existe tipo de exclusão: a IA não exclui dados.
+Não existe tipo de exclusão: a IA não exclui dados. A exceção à "confirmação do usuário" é a autonomia da IA (task 228): no nível "Faz e avisa" a própria IA confirma a proposta na hora e ela fica marcada em `aplicada_pela_ia`.
 
 ```sql
 CREATE TABLE proposta_ia (
@@ -666,7 +668,8 @@ CREATE TABLE proposta_ia (
   tipo_proposta_ia_status_id  INTEGER NOT NULL CONSTRAINT fk_proposta_ia_tipo_proposta_ia_status REFERENCES tipo_proposta_ia_status(id),
   dados                       JSONB   NOT NULL,   -- argumentos da ação, validados pelo executor do tipo
   resolucao_data              TIMESTAMPTZ,
-  resultado                   JSONB               -- ids do que foi criado ou alterado
+  resultado                   JSONB,              -- ids do que foi criado ou alterado
+  aplicada_pela_ia            BOOLEAN NOT NULL    -- migration 0055: a IA executou sozinha (nível "Faz e avisa"); as anteriores foram todas do usuário (false)
 );
 
 CREATE INDEX ix_proposta_ia_usuario ON proposta_ia(usuario_id) WHERE is_deleted = false;

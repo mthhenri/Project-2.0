@@ -8,6 +8,13 @@ import { gerarEsquemaDeClasse } from '../domain/esquema-da-classe';
 import { FerramentaIa, ResultadoFerramentaIa, usuarioPodeUsar } from '../domain/ferramenta-ia';
 import { sugereExclusao } from '../domain/sem-exclusao';
 
+/**
+ * Acrescentada à descrição de toda ferramenta de proposta: o nível de autonomia (task 228) é decidido pelo sistema, não pelo modelo, e muda com a
+ * configuração. Algumas ações o sistema executa na hora; o resultado da ferramenta é que diz se já foi feito ou se espera o usuário.
+ */
+export const NOTA_DO_RESULTADO_DA_PROPOSTA =
+  ' O sistema decide se a ação roda na hora ou espera o usuário: leia o resultado. "Feito" quer dizer já executada (não peça confirmação nem proponha de novo); "Proposta criada" quer dizer que aguarda o usuário.';
+
 /** O que volta ao modelo não passa disto (listas longas estouram o contexto); cada ferramenta deve limitar o que devolve. */
 export const LIMITE_RESULTADO_CARACTERES = 20_000;
 
@@ -42,7 +49,7 @@ export class FerramentaIaRegistro {
       .filter((ferramenta) => usuarioPodeUsar(ferramenta.permissao, usuarioAtivo.tipo) && (ferramenta.habilitada?.() ?? true))
       .map((ferramenta) => ({
         nome: ferramenta.nome,
-        descricao: ferramenta.descricao,
+        descricao: ferramenta.tipo === 'PROPOSTA' ? ferramenta.descricao + NOTA_DO_RESULTADO_DA_PROPOSTA : ferramenta.descricao,
         esquemaEntrada: gerarEsquemaDeClasse(ferramenta.classeDeEntrada) as unknown as Record<string, unknown>,
       }));
   }

@@ -28,7 +28,7 @@ const USUARIO = { sub: 9, login: 'dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as
 function criarServicoDeProposta() {
   const criadas: Record<string, unknown>[] = [];
   const servico = {
-    criar: async (dto: Record<string, unknown>) => { criadas.push(dto); return { id: 55, status: StatusPropostaIaEnum.PENDENTE }; },
+    criarComAutonomia: async (dto: Record<string, unknown>) => { criadas.push(dto); return { id: 55, status: StatusPropostaIaEnum.PENDENTE }; },
   };
   return { servico: servico as unknown as PropostaIaService, criadas };
 }
@@ -58,6 +58,27 @@ test('a ferramenta pode montar dados próprios (com os nomes para o cartão)', a
 
 test('se a criação da proposta falha, a falha sobe (o registro a devolve ao modelo) e nada mais é chamado', async () => {
   const falha = new Error('tipo recusado');
-  const ferramenta = new FerramentaFicticia({ criar: async () => { throw falha; } } as unknown as PropostaIaService);
+  const ferramenta = new FerramentaFicticia({ criarComAutonomia: async () => { throw falha; } } as unknown as PropostaIaService);
   await assert.rejects(() => ferramenta.executar({ atividadeId: 3 }, USUARIO), falha);
 });
+
+test('proposta que o serviço já confirmou (nível "Faz e avisa") volta ao modelo como feita, sem pedir confirmação (task 228)', async () => {
+  const ferramenta = new FerramentaFicticia({
+    criarComAutonomia: async () => ({ id: 56, status: StatusPropostaIaEnum.CONFIRMADA }),
+  } as unknown as PropostaIaService);
+  const resultado = (await ferramenta.executar({ atividadeId: 3 }, USUARIO)) as Record<string, unknown>;
+  assert.equal(resultado.propostaId, 56);
+  assert.equal(resultado.situacao, StatusPropostaIaEnum.CONFIRMADA);
+  assert.match(String(resultado.mensagem), /^Feito/);
+  assert.doesNotMatch(String(resultado.mensagem), /Nada foi feito ainda/);
+});
+
+test('a ferramenta entrega o usuário do token ao serviço, que decide o nível e confirma em nome dele (task 228)', async () => {
+  const recebidos: unknown[][] = [];
+  const ferramenta = new FerramentaFicticia({
+    criarComAutonomia: async (...argumentos: unknown[]) => { recebidos.push(argumentos); return { id: 57, status: StatusPropostaIaEnum.PENDENTE }; },
+  } as unknown as PropostaIaService);
+  await ferramenta.executar({ atividadeId: 3 }, USUARIO);
+  assert.deepEqual(recebidos[0], [{ usuarioId: 9, tipo: TipoPropostaIaEnum.INICIAR_EXECUCAO, dados: { atividadeId: 3 } }, USUARIO]);
+});
+

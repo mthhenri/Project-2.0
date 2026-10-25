@@ -3,7 +3,17 @@ import { By } from '@angular/platform-browser';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { describe, it, expect } from 'vitest';
-import { ConfiguracaoIaResumoDto, EsforcoIaEnum, EstadoIaEnum, ModoContextoChatEnum, TipoProvedorIaEnum, TipoUsuarioEnum } from '@project20/shared';
+import {
+  ConfiguracaoIaResumoDto,
+  EsforcoIaEnum,
+  EstadoIaEnum,
+  ModoContextoChatEnum,
+  NIVEIS_PADRAO_DA_PROPOSTA,
+  PropostaIaNivelEnum,
+  TipoProvedorIaEnum,
+  TipoPropostaIaEnum,
+  TipoUsuarioEnum,
+} from '@project20/shared';
 import { montarComponente, ComponenteMontado } from '../../../../../testes/montar-componente';
 import { esperarRequisicao, responderErro, responderSucesso } from '../../../../../testes/http-teste';
 import { PromptsAbaComponent } from '../../components/prompts-aba/prompts-aba.component';
@@ -25,7 +35,7 @@ function versao(numero: number, sobrescrita: Partial<ConfiguracaoIaResumoDto> = 
     fallbacks: [], modelosProvedor: { [TipoProvedorIaEnum.ANTHROPIC]: ANTHROPIC },
     esforcoAnalitico: EsforcoIaEnum.MEDIO, checkinMinimoMinutos: 20, checkinMaximoMinutos: 40, duracaoRecomendadaMinutos: 90,
     checkinInteligente: true, rigorProporcional: true, deteccaoAutomatica: true,
-    duvidasCodigo: false, modoContextoChat: ModoContextoChatEnum.MISTURADO, iaDesligada: false,
+    duvidasCodigo: false, modoContextoChat: ModoContextoChatEnum.MISTURADO, iaDesligada: false, niveisProposta: {},
     usuarioId: 1, usuarioNome: 'Ana Admin', createdDate: new Date('2026-10-01T12:00:00Z'),
     ...sobrescrita,
   };
@@ -352,10 +362,10 @@ describe('ConfiguracaoIaPage — liga/desliga da IA (fora das abas)', () => {
 describe('ConfiguracaoIaPage — abas, barra de salvar e cartões de provedor (task 204)', () => {
   const GPT = { modeloRapido: 'gpt-5-mini', modeloPadrao: 'gpt-5', modeloAnalitico: 'gpt-5' };
 
-  it('as abas são Provedor e modelos, Comportamento, Prompts e Custos (sem Prioridades)', async () => {
+  it('as abas são Provedor e modelos, Comportamento, Autonomia, Prompts e Custos (sem Prioridades)', async () => {
     await abrir();
     const abas = Array.from(document.body.querySelectorAll('p-tab')).map((aba) => aba.textContent?.trim());
-    expect(abas).toEqual(['Provedor e modelos', 'Comportamento', 'Prompts', 'Custos']);
+    expect(abas).toEqual(['Provedor e modelos', 'Comportamento', 'Autonomia', 'Prompts', 'Custos']);
   });
 
   it('check-in e chat ficam na aba Comportamento, não na de provedor', async () => {
@@ -577,5 +587,76 @@ describe('Rota de configuração da IA — acesso', () => {
 
   it('o desenvolvedor é mandado para a raiz', async () => {
     expect(await navegarComo(TipoUsuarioEnum.DESENVOLVEDOR)).toBe('/');
+  });
+});
+
+describe('ConfiguracaoIaPage — aba Autonomia (task 228)', () => {
+  const painel = () => document.body.querySelector('p-tabpanel[value="autonomia"]') as HTMLElement;
+  const linhaDa = (rotulo: string) =>
+    Array.from(painel().querySelectorAll('.autonomia-aba__regra')).find((linha) => linha.textContent?.includes(rotulo)) as HTMLElement;
+  /** O botão do nível dentro da linha da regra. */
+  const nivelDa = (rotulo: string, nivel: string) =>
+    Array.from(linhaDa(rotulo).querySelectorAll<HTMLElement>('[role="radio"], button, .p-togglebutton')).find((botaoDoNivel) => botaoDoNivel.textContent?.trim() === nivel) as HTMLElement;
+  const totalDeRegras = Object.keys(NIVEIS_PADRAO_DA_PROPOSTA).length;
+
+  it('lista as regras configuráveis com o nível da versão ativa e as fixas com o escudo, fora da escolha', async () => {
+    await abrir();
+    expect(painel().textContent).toContain('O que a IA faz sozinha');
+    expect(painel().querySelectorAll('.autonomia-aba__regra:not(.autonomia-aba__regra--fixa)')).toHaveLength(totalDeRegras);
+    expect(linhaDa('Anotar no pad').textContent).toContain('Faz e avisa');
+    expect(linhaDa('Alterar atividade').querySelector('.p-togglebutton-checked')?.textContent?.trim()).toBe('Pergunta');
+    const fixas = Array.from(painel().querySelectorAll('.autonomia-aba__regra--fixa'));
+    expect(fixas.map((linha) => linha.querySelector('strong')?.textContent?.trim())).toEqual([
+      'Registrar execução', 'Corrigir execução', 'Criar projeto', 'Qualquer ação em nome de outra pessoa', 'Anotar na seção Pessoal do pad',
+    ]);
+    for (const fixa of fixas) {
+      expect(fixa.querySelector('.pi-shield'), 'escudo, não cadeado').not.toBeNull();
+      expect(fixa.querySelector('.pi-lock')).toBeNull();
+      expect(fixa.querySelector('button, input')).toBeNull();
+    }
+  });
+
+  it('versão que não guardou o mapa (nulo) abre com o padrão do shared e nada a salvar', async () => {
+    const antiga = versao(3, { niveisProposta: null as never });
+    const montado = await montarComponente(ConfiguracaoIaPage, { usuario: TipoUsuarioEnum.ADMINISTRADOR });
+    responderCarga(montado, { ativa: antiga, historico: [antiga] });
+    await montado.atualizar();
+    expect(montado.componente.formulario.getRawValue().niveisProposta).toEqual(NIVEIS_PADRAO_DA_PROPOSTA);
+    expect(textoDaTela()).toContain('Nada a salvar');
+  });
+
+  it('trocar o nível de uma regra habilita salvar e o POST leva o mapa completo com a escolha', async () => {
+    const montado = await abrir();
+    expect(montado.componente.semAlteracoes()).toBe(true);
+    nivelDa('Anotar no pad', 'Pergunta').click();
+    await montado.atualizar();
+    expect(montado.componente.formulario.controls.niveisProposta.getRawValue()[TipoPropostaIaEnum.ANOTAR_PAD]).toBe(PropostaIaNivelEnum.PERGUNTA);
+    expect(botao('Salvar nova versão').disabled).toBe(false);
+    expect(painel().textContent).toContain(`de ${totalDeRegras} fazem e avisam`);
+
+    botao('Salvar nova versão').click();
+    const requisicao = esperarRequisicao(montado.http, 'POST', '/configuracao-ia');
+    expect(requisicao.request.body.niveisProposta).toEqual({ ...NIVEIS_PADRAO_DA_PROPOSTA, [TipoPropostaIaEnum.ANOTAR_PAD]: PropostaIaNivelEnum.PERGUNTA });
+  });
+
+  it('"Descartar alterações" devolve os níveis da versão ativa', async () => {
+    const montado = await abrir();
+    nivelDa('Criar atividade', 'Pergunta').click();
+    await montado.atualizar();
+    expect(montado.componente.semAlteracoes()).toBe(false);
+    botao('Descartar alterações').click();
+    await montado.atualizar();
+    expect(montado.componente.formulario.controls.niveisProposta.getRawValue()[TipoPropostaIaEnum.CRIAR_ATIVIDADE]).toBe(PropostaIaNivelEnum.FAZ_E_AVISA);
+    expect(montado.componente.semAlteracoes()).toBe(true);
+  });
+
+  it('"Usar como base" de uma versão antiga traz os níveis dela', async () => {
+    const comNivel = versao(2, { niveisProposta: { [TipoPropostaIaEnum.ANOTAR_PAD]: PropostaIaNivelEnum.PERGUNTA } });
+    const montado = await abrir({ historico: [versao(3), comNivel, versao(1)] });
+    botao('Versão 2').click();
+    await montado.atualizar();
+    botao('Usar como base').click();
+    await montado.atualizar();
+    expect(montado.componente.formulario.controls.niveisProposta.getRawValue()[TipoPropostaIaEnum.ANOTAR_PAD]).toBe(PropostaIaNivelEnum.PERGUNTA);
   });
 });

@@ -5,7 +5,7 @@ import { posicoesDeQueDepende, PropostasDoGrupo, resumirGrupo } from './proposta
 
 const AGORA = new Date('2026-10-25T15:00:00Z');
 const proposta = (id: number, status: StatusPropostaIaEnum, extras: Partial<PropostaIaResumoDto> = {}): PropostaIaResumoDto => ({
-  id, usuarioId: 1, tipo: TipoPropostaIaEnum.CRIAR_ATIVIDADE, status, dados: {}, resultado: null, resolucaoData: null, createdDate: new Date('2026-10-25T12:00:00Z'), ...extras,
+  id, usuarioId: 1, tipo: TipoPropostaIaEnum.CRIAR_ATIVIDADE, status, dados: {}, resultado: null, resolucaoData: null, aplicadaPelaIa: false, createdDate: new Date('2026-10-25T12:00:00Z'), ...extras,
 });
 const doGrupo = (...propostas: PropostaIaResumoDto[]): PropostasDoGrupo => Object.fromEntries(propostas.map((item) => [item.id, item]));
 const resolvidaHa = (minutos: number) => new Date(AGORA.getTime() - minutos * 60_000);
@@ -71,4 +71,52 @@ test('dependência de uma proposta que não está no grupo (ou ainda não carreg
   const filha = proposta(11, StatusPropostaIaEnum.PENDENTE, { tipo: TipoPropostaIaEnum.CRIAR_DEMANDA, dados: { demandaPaiPropostaId: 10 } });
   assert.deepEqual(posicoesDeQueDepende(11, [11, 12], doGrupo(filha)), []);
   assert.deepEqual(posicoesDeQueDepende(11, [10, 11], {}), []);
+});
+
+test('a IA já fez parte (task 228): o grupo é misto, o resumo conta só o resto e a linha azul sabe o que dá para desfazer', () => {
+  const feitaPelaIa = (id: number, minutos: number) => proposta(id, StatusPropostaIaEnum.CONFIRMADA, { aplicadaPelaIa: true, resolucaoData: resolvidaHa(minutos) });
+  const resumo = resumirGrupo(
+    [1, 2, 3, 4],
+    doGrupo(feitaPelaIa(1, 5), feitaPelaIa(2, 45), proposta(3, StatusPropostaIaEnum.PENDENTE), proposta(4, StatusPropostaIaEnum.PENDENTE)),
+    SEM_FORA,
+    AGORA,
+  );
+  assert.deepEqual(resumo.feitasPelaIa, [1, 2]);
+  assert.deepEqual(resumo.desfaziveisPelaIa, [1], 'a de 45 minutos já passou do prazo');
+  assert.equal(resumo.misto, true);
+  assert.equal(resumo.texto, '2 esperando você', 'o que a IA fez está na linha azul, não no resumo');
+});
+
+test('feita pela IA sem nada esperando não é grupo misto: o resumo diz que foi a IA', () => {
+  const feitaPelaIa = (id: number) => proposta(id, StatusPropostaIaEnum.CONFIRMADA, { aplicadaPelaIa: true, resolucaoData: resolvidaHa(1) });
+  const resumo = resumirGrupo([1, 2], doGrupo(feitaPelaIa(1), feitaPelaIa(2)), SEM_FORA, AGORA);
+  assert.equal(resumo.misto, false);
+  assert.equal(resumo.resolvido, true);
+  assert.equal(resumo.texto, '2 feitas pela IA');
+});
+
+test('pendente tirada do grupo também conta como o que sobra para o usuário no grupo misto', () => {
+  const resumo = resumirGrupo(
+    [1, 2],
+    doGrupo(proposta(1, StatusPropostaIaEnum.CONFIRMADA, { aplicadaPelaIa: true, resolucaoData: resolvidaHa(1) }), proposta(2, StatusPropostaIaEnum.PENDENTE)),
+    new Set([2]),
+    AGORA,
+  );
+  assert.equal(resumo.misto, true);
+  assert.equal(resumo.texto, '1 fora do grupo');
+});
+
+test('feitas pelo usuário e pela IA no mesmo grupo: a linha azul cobre a IA e o resumo, as do usuário', () => {
+  const resumo = resumirGrupo(
+    [1, 2, 3],
+    doGrupo(
+      proposta(1, StatusPropostaIaEnum.CONFIRMADA, { aplicadaPelaIa: true, resolucaoData: resolvidaHa(1) }),
+      proposta(2, StatusPropostaIaEnum.CONFIRMADA, { resolucaoData: resolvidaHa(1) }),
+      proposta(3, StatusPropostaIaEnum.PENDENTE),
+    ),
+    SEM_FORA,
+    AGORA,
+  );
+  assert.equal(resumo.misto, true);
+  assert.equal(resumo.texto, '1 feita · 1 esperando você');
 });

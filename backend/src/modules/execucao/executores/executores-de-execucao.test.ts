@@ -155,7 +155,9 @@ test('iniciar: os dados são validados (descrição curta, campo desconhecido)',
   assert.doesNotThrow(() => executor.validar({ atividadeId: 9, descricao: 'Validar e-mail', atividadeNome: 'Login' }));
   assert.throws(() => executor.validar({ atividadeId: 9, descricao: 'ab' }), BusinessException);
   assert.throws(() => executor.validar({ atividadeId: 0, descricao: 'Validar e-mail' }), BusinessException);
-  assert.throws(() => executor.validar({ atividadeId: 9, descricao: 'Validar e-mail', usuarioId: 1 }), BusinessException);
+  assert.throws(() => executor.validar({ atividadeId: 9, descricao: 'Validar e-mail', campoInventado: 1 }), BusinessException);
+  // o dono da atividade, quando o gestor age por ele, é um campo que a proposta guarda (a regra de nível da task 228 lê dele)
+  assert.doesNotThrow(() => executor.validar({ atividadeId: 9, descricao: 'Validar e-mail', usuarioId: 1 }));
 });
 
 // ------------------------------------------------------------------ pausar

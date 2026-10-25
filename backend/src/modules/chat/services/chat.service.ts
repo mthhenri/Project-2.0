@@ -566,7 +566,7 @@ export class ChatService {
       ids.map(async (propostaId) => {
         try {
           const proposta = (await this.propostaIaService.recuperarPorId(propostaId, usuarioAtivo)).dados;
-          if (proposta) situacoes.set(propostaId, { status: proposta.status, resultado: proposta.resultado });
+          if (proposta) situacoes.set(propostaId, { status: proposta.status, resultado: proposta.resultado, aplicadaPelaIa: proposta.aplicadaPelaIa });
         } catch {
           // proposta ilegível: a IA segue com o resultado gravado no turno
         }

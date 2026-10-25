@@ -16,7 +16,7 @@ const USUARIO = { sub: 7, login: 'dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as
 function montar(opcoes: { ativa?: { id: number; atividadeId: number; descricao: string } | null; demandaExiste?: boolean } = {}) {
   const propostas: { usuarioId: number; tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }[] = [];
   const propostaIaService = {
-    criar: async (dto: { usuarioId: number; tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }) => {
+    criarComAutonomia: async (dto: { usuarioId: number; tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }) => {
       propostas.push(dto);
       return { id: 77, status: 'PENDENTE' };
     },

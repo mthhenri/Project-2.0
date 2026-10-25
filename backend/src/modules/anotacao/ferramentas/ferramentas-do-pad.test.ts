@@ -59,7 +59,7 @@ test('seção grande é cortada e avisada', async () => {
 function propor(textos: Partial<Record<TipoAnotacaoEnum, string>>) {
   const propostas: { usuarioId: number; tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }[] = [];
   const propostaIaService = {
-    criar: async (dto: { usuarioId: number; tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }) => {
+    criarComAutonomia: async (dto: { usuarioId: number; tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }) => {
       propostas.push(dto);
       return { id: 5, status: 'PENDENTE' };
     },

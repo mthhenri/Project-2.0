@@ -179,3 +179,15 @@ test('transitar espera a linha travada por outra resolução e, vendo a proposta
     await banco.raw('DELETE FROM proposta_ia WHERE id = :id', { id: proposta.id });
   }
 });
+
+testarComBanco('criar: por padrão a proposta não é da IA; com aplicadaPelaIa ela nasce marcada (task 228)', async (conexao) => {
+  const dono = await criarDesenvolvedor(conexao);
+  const doUsuario = await proporPara(conexao, dono.id);
+  assert.equal(doUsuario.aplicadaPelaIa, false);
+
+  const daIa = await repositorioDe(conexao).criar({ usuarioId: dono.id, tipo: TipoPropostaIaEnum.INICIAR_EXECUCAO, dados: { atividadeId: 1 }, aplicadaPelaIa: true });
+  assert.equal(daIa.aplicadaPelaIa, true);
+  const confirmada = await repositorioDe(conexao).transitar({ id: daIa.id, usuarioId: dono.id, de: [PENDENTE], para: CONFIRMADA });
+  assert.equal(confirmada?.aplicadaPelaIa, true, 'a marca acompanha a proposta depois de confirmada');
+  assert.equal((await repositorioDe(conexao).recuperarPorId(daIa.id))?.aplicadaPelaIa, true);
+});

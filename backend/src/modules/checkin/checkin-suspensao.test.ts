@@ -77,7 +77,7 @@ test('o executor recusa retomar o que não estava suspenso e valida os dados', a
 function montarFerramentas(checkinInteligente: boolean | null) {
   const propostas: { usuarioId: number; tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }[] = [];
   const propostaIaService = {
-    criar: async (dto: { usuarioId: number; tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }) => {
+    criarComAutonomia: async (dto: { usuarioId: number; tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }) => {
       propostas.push(dto);
       return { id: 3, status: 'PENDENTE' };
     },

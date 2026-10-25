@@ -19,7 +19,7 @@ function montar(opcoes: { ativa?: boolean; redigida?: string; rigor?: boolean } 
   const geradas: IaSolicitacao[] = [];
   const tiposDePrompt: TipoPromptEnum[] = [];
   const propostaIaService = {
-    criar: async (dto: { usuarioId: number; tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }) => {
+    criarComAutonomia: async (dto: { usuarioId: number; tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }) => {
       propostas.push(dto);
       return { id: 9, status: 'PENDENTE' };
     },

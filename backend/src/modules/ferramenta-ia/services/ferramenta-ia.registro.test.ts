@@ -8,7 +8,7 @@ import { DescricaoCampoIa } from '../domain/esquema-da-classe';
 import { ClasseDeEntrada, FerramentaIa, PermissaoFerramentaIa } from '../domain/ferramenta-ia';
 import { sugereExclusao } from '../domain/sem-exclusao';
 import { FerramentaPropostaIa } from '../ferramentas/ferramenta-proposta-ia';
-import { FerramentaIaRegistro, LIMITE_RESULTADO_CARACTERES } from './ferramenta-ia.registro';
+import { FerramentaIaRegistro, LIMITE_RESULTADO_CARACTERES, NOTA_DO_RESULTADO_DA_PROPOSTA } from './ferramenta-ia.registro';
 
 const DESENVOLVEDOR = { sub: 1, login: 'dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
 const GESTOR = { sub: 2, login: 'gestor', tipo: TipoUsuarioEnum.GESTOR } as never;
@@ -151,7 +151,7 @@ class EntradaPropostaDto {
 test('ferramenta de proposta cria a proposta pendente e devolve o id, sem executar a ação', async () => {
   const criadas: { usuarioId: number; tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }[] = [];
   const propostaIaService = {
-    criar: async (dto: (typeof criadas)[number]) => {
+    criarComAutonomia: async (dto: (typeof criadas)[number]) => {
       criadas.push(dto);
       return { id: 77, status: StatusPropostaIaEnum.PENDENTE };
     },
@@ -177,7 +177,7 @@ test('ferramenta de proposta cria a proposta pendente e devolve o id, sem execut
 
 test('ferramenta de proposta cuja criação falha devolve o motivo ao modelo', async () => {
   const propostaIaService = {
-    criar: async () => {
+    criarComAutonomia: async () => {
       throw new BusinessException('A ação "CRIAR_ATIVIDADE" ainda não está disponível para a IA');
     },
   } as unknown as PropostaIaService;
@@ -212,4 +212,22 @@ test('classe de entrada vazia gera esquema sem campos e aceita {}', async () => 
   );
   assert.deepEqual(registro.listarParaUsuario(DESENVOLVEDOR)[0].esquemaEntrada, { type: 'object', properties: {}, required: [], additionalProperties: false });
   assert.equal((await registro.executar('sem_entrada', {}, DESENVOLVEDOR)).erro, false);
+});
+
+test('a descrição de toda ferramenta de proposta ganha a nota de que o sistema decide se roda na hora; a de leitura fica como está (task 228)', () => {
+  const registro = new FerramentaIaRegistro();
+  registro.registrar(ferramentaDeLeitura('QUALQUER', 'leitura').ferramenta);
+  const proposta = new (class extends FerramentaPropostaIa<EntradaPropostaDto> {
+    readonly nome = 'propor_nota';
+    readonly descricao = 'Propõe algo';
+    readonly permissao = 'QUALQUER' as const;
+    readonly classeDeEntrada = EntradaPropostaDto;
+    readonly tipoProposta = TipoPropostaIaEnum.CRIAR_ATIVIDADE;
+  })({} as unknown as PropostaIaService);
+  registro.registrar(proposta);
+  const descricoes = Object.fromEntries(registro.listarParaUsuario(DESENVOLVEDOR).map((ferramenta) => [ferramenta.nome, ferramenta.descricao]));
+  assert.equal(descricoes['propor_nota'], 'Propõe algo' + NOTA_DO_RESULTADO_DA_PROPOSTA);
+  assert.match(descricoes['propor_nota'], /Feito/);
+  assert.doesNotMatch(descricoes['leitura'], /Feito/);
+  assert.equal(proposta.descricao, 'Propõe algo', 'a descrição da própria ferramenta não muda: a nota entra só na lista enviada ao modelo');
 });

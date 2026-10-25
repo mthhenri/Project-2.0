@@ -13,7 +13,7 @@ const GESTOR = { sub: 1, login: 'gestor', tipo: TipoUsuarioEnum.GESTOR } as neve
 function montar(codigosEmUso: string[] = []) {
   const propostas: { tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }[] = [];
   const propostaIaService = {
-    criar: async (dto: { tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }) => {
+    criarComAutonomia: async (dto: { tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }) => {
       propostas.push(dto);
       return { id: 40, status: 'PENDENTE' };
     },

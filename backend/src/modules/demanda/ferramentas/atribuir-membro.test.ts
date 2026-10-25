@@ -41,7 +41,7 @@ function criarServico(membrosIniciais: number[]) {
 
 function criarFerramenta(membrosIniciais: number[]) {
   const propostas: { tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }[] = [];
-  const propostaIaService = { criar: async (dto: { tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }) => { propostas.push(dto); return { id: 77, status: 'PENDENTE' }; } };
+  const propostaIaService = { criarComAutonomia: async (dto: { tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }) => { propostas.push(dto); return { id: 77, status: 'PENDENTE' }; } };
   const usuarioService = { recuperar: async ({ id }: { id: number }) => ({ dados: { id, ...USUARIOS[id] } }) };
   const projetoService = { recuperar: async () => ({ dados: { id: 1, nome: 'Projeto Demo' } }) };
   const { servico } = criarServico(membrosIniciais);

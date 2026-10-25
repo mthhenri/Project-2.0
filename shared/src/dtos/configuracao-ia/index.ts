@@ -1,4 +1,5 @@
 export * from './ConfiguracaoIaModelosDto';
+export * from './PropostaIaNiveisDto';
 export * from './ConfiguracaoIaResumoDto';
 export * from './ConfiguracaoIaListarDto';
 export * from './ConfiguracaoIaCriarDto';

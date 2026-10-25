@@ -352,23 +352,23 @@ test('listarPlanejamento: devolve o que o repository calcula (a restrição ao g
 
 test('criarConexao: origem e destino precisam existir', async () => {
   const semOrigem = repositorio({ recuperar: async () => null });
-  await assert.rejects(() => criarServico(semOrigem).criarConexao({ demandaOrigemId: 1, demandaDestinoId: 2, ehBidirecional: false }), ResourceNotFoundException);
+  await assert.rejects(() => criarServico(semOrigem).criarConexao({ demandaOrigemId: 1, demandaDestinoId: 2, ehBidirecional: false }, GESTOR), ResourceNotFoundException);
   const semDestino = repositorio({ recuperar: async ({ id }: { id: number }) => (id === 1 ? DEMANDA : null) });
-  await assert.rejects(() => criarServico(semDestino).criarConexao({ demandaOrigemId: 1, demandaDestinoId: 2, ehBidirecional: false }), ResourceNotFoundException);
+  await assert.rejects(() => criarServico(semDestino).criarConexao({ demandaOrigemId: 1, demandaDestinoId: 2, ehBidirecional: false }, GESTOR), ResourceNotFoundException);
   assert.equal(gravou(semOrigem) || gravou(semDestino), false);
 });
 
 test('criarConexao: auto-conexão e conexão repetida no mesmo sentido são recusadas', async () => {
   const repo = repositorio();
-  await assert.rejects(() => criarServico(repo).criarConexao({ demandaOrigemId: 1, demandaDestinoId: 1, ehBidirecional: false }), BusinessException);
+  await assert.rejects(() => criarServico(repo).criarConexao({ demandaOrigemId: 1, demandaDestinoId: 1, ehBidirecional: false }, GESTOR), BusinessException);
   const repetida = repositorio({ validarConexao: async () => true });
-  await assert.rejects(() => criarServico(repetida).criarConexao({ demandaOrigemId: 1, demandaDestinoId: 2, ehBidirecional: false }), BusinessException);
+  await assert.rejects(() => criarServico(repetida).criarConexao({ demandaOrigemId: 1, demandaDestinoId: 2, ehBidirecional: false }, GESTOR), BusinessException);
   assert.equal(gravou(repo) || gravou(repetida), false);
 });
 
 test('criarConexao: ciclo é recusado com BusinessException explicativa e nada é gravado', async () => {
   const repo = repositorio({ verificarCriariaCiclo: async () => true });
-  await assert.rejects(() => criarServico(repo).criarConexao({ demandaOrigemId: 1, demandaDestinoId: 2, ehBidirecional: false }), (erro: BusinessException) => {
+  await assert.rejects(() => criarServico(repo).criarConexao({ demandaOrigemId: 1, demandaDestinoId: 2, ehBidirecional: false }, GESTOR), (erro: BusinessException) => {
     assert.ok(erro instanceof BusinessException);
     assert.match(mensagem(erro), /ciclo/i);
     return true;
@@ -378,21 +378,33 @@ test('criarConexao: ciclo é recusado com BusinessException explicativa e nada �
 
 test('criarConexao: conexão válida é gravada com origem, destino e bidirecionalidade', async () => {
   const repo = repositorio();
-  const resposta = await criarServico(repo).criarConexao({ demandaOrigemId: 1, demandaDestinoId: 2, ehBidirecional: true });
+  const resposta = await criarServico(repo).criarConexao({ demandaOrigemId: 1, demandaDestinoId: 2, ehBidirecional: true }, GESTOR);
   assert.deepEqual(repo.gravacoes, [{ metodo: 'inserirConexao', argumento: { demandaOrigemId: 1, demandaDestinoId: 2, ehBidirecional: true } }]);
   assert.equal(resposta.sucesso, true);
 });
 
 test('excluirConexao: a conexão precisa pertencer à demanda; senão 404 e nada é excluído', async () => {
   const alheia = repositorio({ validarConexaoDemanda: async () => false });
-  await assert.rejects(() => criarServico(alheia).excluirConexao({ demandaId: 1, conexaoId: 9 }), ResourceNotFoundException);
+  await assert.rejects(() => criarServico(alheia).excluirConexao({ demandaId: 1, conexaoId: 9 }, GESTOR), ResourceNotFoundException);
   const semDemanda = repositorio({ recuperar: async () => null });
-  await assert.rejects(() => criarServico(semDemanda).excluirConexao({ demandaId: 1, conexaoId: 9 }), ResourceNotFoundException);
+  await assert.rejects(() => criarServico(semDemanda).excluirConexao({ demandaId: 1, conexaoId: 9 }, GESTOR), ResourceNotFoundException);
   assert.equal(gravou(alheia) || gravou(semDemanda), false);
 
   const repo = repositorio();
-  await criarServico(repo).excluirConexao({ demandaId: 1, conexaoId: 9 });
+  await criarServico(repo).excluirConexao({ demandaId: 1, conexaoId: 9 }, GESTOR);
   assert.deepEqual(repo.gravacoes, [{ metodo: 'excluirConexao', argumento: { demandaId: 1, conexaoId: 9 } }]);
+});
+
+test('conexões do grafo: só o gestor conecta e desconecta (a regra é da service, não só da rota), e nada é gravado', async () => {
+  const repo = repositorio();
+  const desenvolvedor = { sub: 7, login: 'dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
+  await assert.rejects(() => criarServico(repo).criarConexao({ demandaOrigemId: 1, demandaDestinoId: 2, ehBidirecional: false }, desenvolvedor), UnauthorizedAccessException);
+  await assert.rejects(() => criarServico(repo).excluirConexao({ demandaId: 1, conexaoId: 9 }, desenvolvedor), UnauthorizedAccessException);
+  assert.equal(gravou(repo), false);
+
+  await criarServico(repo).criarConexao({ demandaOrigemId: 1, demandaDestinoId: 2, ehBidirecional: false }, ADMINISTRADOR);
+  await criarServico(repo).excluirConexao({ demandaId: 1, conexaoId: 9 }, ADMINISTRADOR);
+  assert.deepEqual(repo.gravacoes.map((gravacao) => gravacao.metodo), ['inserirConexao', 'excluirConexao']);
 });
 
 // ---------------------------------------------------------------------------

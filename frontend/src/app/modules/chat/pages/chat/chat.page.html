@@ -48,7 +48,7 @@
                 <span class="chat__avatar chat__avatar--grande" aria-hidden="true">IA</span>
                 <p>Nenhuma mensagem {{ somenteLeitura() ? 'neste dia' : 'hoje ainda' }}.</p>
                 @if (!somenteLeitura()) {
-                  <small>Conte o que vai fazer ou pergunte o que precisar; a IA sempre pede confirmação antes de gravar algo.</small>
+                  <small>Conte o que vai fazer ou pergunte o que precisar; a IA pergunta antes do que é difícil de desfazer e avisa o que faz sozinha.</small>
                   @if (podeSugerir()) {
                     <div class="chat__sugestoes chat__sugestoes--centro" role="group" aria-label="Sugestões de mensagem">
                       @for (sugestao of sugestoes(); track sugestao) {
@@ -171,7 +171,7 @@
               <i class="pi" [class.pi-arrow-right]="!enviando()" [class.pi-spin]="enviando()" [class.pi-spinner]="enviando()"></i>
             </button>
           </form>
-          <span class="chat__legenda">A IA sempre pede confirmação antes de criar, iniciar, pausar ou anotar. Enter envia, Shift+Enter quebra a linha.</span>
+          <span class="chat__legenda">A IA pergunta antes do que é difícil de desfazer e avisa o que faz sozinha. Enter envia, Shift+Enter quebra a linha.</span>
         </div>
       } @else {
         <div class="chat__rodape">

@@ -48,6 +48,13 @@ export class PropostaIniciarExecucaoDadosDto extends ProporIniciarExecucaoDto {
   @IsString()
   usuarioNome?: string;
 
+  /** O dono da atividade, quando não é quem confirma: a regra de nível (task 228) vê aqui que é em nome de outra pessoa. */
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Type(() => Number)
+  usuarioId?: number;
+
   /** Status da atividade antes de a proposta mudá-lo (só presente quando muda); serve ao cartão e ao desfazer. */
   @IsOptional()
   @IsEnum(TipoAtividadeStatusEnum)

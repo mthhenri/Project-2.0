@@ -18,6 +18,35 @@
     transition: opacity 0.15s ease;
   }
 
+  // A IA já fez parte do grupo (task 228): linha azul em cima, a mesma cor do aviso de cada proposta feita por ela.
+  &__aviso {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.5rem 0.25rem 0.75rem;
+    border: 1px solid color-mix(in srgb, var(--p-primary-color) 45%, var(--app-surface-200));
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--p-primary-color) 12%, var(--app-surface-0));
+    font-size: 0.875rem;
+    min-height: 2.5rem;
+  }
+
+  &__aviso-icone {
+    color: var(--p-primary-color);
+  }
+
+  &__aviso-texto {
+    display: flex;
+    flex: 1 1 0;
+    flex-wrap: wrap;
+    gap: 0.125rem 0.375rem;
+    min-width: 0;
+
+    span {
+      color: var(--p-text-muted-color);
+    }
+  }
+
   &__cabecalho {
     display: flex;
     flex-wrap: wrap;

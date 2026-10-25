@@ -9,4 +9,5 @@ export interface PropostaIa extends BaseEntity {
   dados: Record<string, unknown>;
   resultado: Record<string, unknown> | null;
   resolucaoData: Date | null;
+  aplicadaPelaIa: boolean;
 }

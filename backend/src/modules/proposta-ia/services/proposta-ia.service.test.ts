@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
 import { PropostaIaCriarDto, PropostaIaGrupoSituacaoEnum, PropostaIaResumoDto, StatusPropostaIaEnum, TipoPropostaIaEnum, TipoUsuarioEnum } from '@project20/shared';
 import { ConfigService } from '../../../config/config.service';
+import { ConfiguracaoIaService } from '../../configuracao-ia/services/configuracao-ia.service';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { ConflictException } from '../../../core/exceptions/conflict.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
@@ -31,6 +32,7 @@ function criarRepositorio() {
         dados: dto.dados,
         resultado: null,
         resolucaoData: null,
+        aplicadaPelaIa: dto.aplicadaPelaIa === true,
         createdDate: new Date(),
       };
       propostas.push(proposta);
@@ -85,13 +87,23 @@ function criarExecutor(opcoes: { falharAoExecutar?: boolean; falharAoDesfazer?: 
   return { executor, chamadas };
 }
 
-function criarServico(opcoesExecutor: Parameters<typeof criarExecutor>[0] = {}, registrarExecutor = true) {
+/** A configuração da IA com os níveis dados (sem eles, o padrão do `shared`); `indisponivel` simula o banco fora do ar. */
+function criarConfiguracao(niveis: Record<string, string> = {}, indisponivel = false) {
+  return {
+    obterAtiva: async () => {
+      if (indisponivel) throw new Error('banco fora do ar');
+      return { niveisProposta: niveis };
+    },
+  } as unknown as ConfiguracaoIaService;
+}
+
+function criarServico(opcoesExecutor: Parameters<typeof criarExecutor>[0] = {}, registrarExecutor = true, configuracao = criarConfiguracao()) {
   const { repositorio, propostas } = criarRepositorio();
   const registro = new ExecutorPropostaIaRegistro();
   const { executor, chamadas } = criarExecutor(opcoesExecutor);
   if (registrarExecutor) registro.registrar(executor);
   const configService = { obter: () => ({ aplicacao: { fusoHorario: 'America/Sao_Paulo' } }) } as unknown as ConfigService;
-  const servico = new PropostaIaService(repositorio as unknown as PropostaIaRepository, registro, configService);
+  const servico = new PropostaIaService(repositorio as unknown as PropostaIaRepository, registro, configService, configuracao);
   return { servico, propostas, chamadas };
 }
 
@@ -289,7 +301,7 @@ function criarServicoDeGrupo() {
   registro.registrar(atividade);
   registro.registrar(demanda);
   const configService = { obter: () => ({ aplicacao: { fusoHorario: 'America/Sao_Paulo' } }) } as unknown as ConfigService;
-  const servico = new PropostaIaService(repositorio as unknown as PropostaIaRepository, registro, configService);
+  const servico = new PropostaIaService(repositorio as unknown as PropostaIaRepository, registro, configService, criarConfiguracao());
   const criarAtividade = (nome: string, extras: Record<string, unknown> = {}, usuarioId = 1) =>
     servico.criar({ usuarioId, tipo: TipoPropostaIaEnum.CRIAR_ATIVIDADE, dados: { nome, ...extras } });
   const criarDemanda = (nome: string, extras: Record<string, unknown> = {}) =>
@@ -421,4 +433,71 @@ test('o grupo com o mesmo id repetido não executa duas vezes', async () => {
   const resposta = await servico.confirmarGrupo({ propostaIds: [unica.id, unica.id] }, DONO);
   assert.equal(resposta.dados.itens.length, 1);
   assert.deepEqual(ordem, ['executar:Única']);
+});
+
+// --- Autonomia da IA (task 228) ---
+
+test('autonomia: no nível "Faz e avisa" a proposta é criada e confirmada na hora, marcada como aplicada pela IA', async () => {
+  const { servico, chamadas } = criarServico();
+  const proposta = await servico.criarComAutonomia({ usuarioId: 1, tipo: TIPO, dados: DADOS }, DONO);
+  assert.equal(proposta.status, StatusPropostaIaEnum.CONFIRMADA);
+  assert.equal(proposta.aplicadaPelaIa, true);
+  assert.deepEqual(proposta.resultado, { atividadeId: 99 });
+  assert.equal(chamadas.executar.length, 1, 'o executor roda uma vez, com os dados da proposta');
+  assert.deepEqual(chamadas.executar[0], DADOS);
+});
+
+test('autonomia: no nível "Pergunta" a proposta fica pendente e nada é executado', async () => {
+  const { servico, chamadas } = criarServico({}, true, criarConfiguracao({ [TIPO]: 'PERGUNTA' }));
+  const proposta = await servico.criarComAutonomia({ usuarioId: 1, tipo: TIPO, dados: DADOS }, DONO);
+  assert.equal(proposta.status, StatusPropostaIaEnum.PENDENTE);
+  assert.equal(proposta.aplicadaPelaIa, false);
+  assert.equal(chamadas.executar.length, 0);
+});
+
+test('autonomia: em nome de outra pessoa sempre pergunta, mesmo com o tipo em "Faz e avisa"', async () => {
+  const { servico, chamadas } = criarServico({}, true, criarConfiguracao({ [TIPO]: 'FAZ_E_AVISA' }));
+  const proposta = await servico.criarComAutonomia({ usuarioId: 1, tipo: TIPO, dados: { ...DADOS, usuarioId: 2 } }, DONO);
+  assert.equal(proposta.status, StatusPropostaIaEnum.PENDENTE);
+  assert.equal(proposta.aplicadaPelaIa, false);
+  assert.equal(chamadas.executar.length, 0);
+});
+
+test('autonomia: sem a configuração da IA, a IA pergunta em vez de agir', async () => {
+  const { servico, chamadas } = criarServico({}, true, criarConfiguracao({}, true));
+  const proposta = await servico.criarComAutonomia({ usuarioId: 1, tipo: TIPO, dados: DADOS }, DONO);
+  assert.equal(proposta.status, StatusPropostaIaEnum.PENDENTE);
+  assert.equal(chamadas.executar.length, 0);
+});
+
+test('autonomia: falha do executor volta ao modelo como erro com o motivo e a proposta não fica pendente', async () => {
+  const { servico, propostas, chamadas } = criarServico({ falharAoExecutar: true });
+  await assert.rejects(
+    () => servico.criarComAutonomia({ usuarioId: 1, tipo: TIPO, dados: DADOS }, DONO),
+    (erro: unknown) => erro instanceof BusinessException && /Já existe uma execução ativa/.test(mensagemDe(erro)) && /Nada foi alterado/.test(mensagemDe(erro)),
+  );
+  assert.equal(chamadas.executar.length, 1);
+  assert.equal(propostas[0].status, StatusPropostaIaEnum.EXPIRADA, 'não sobra cartão pendente de uma ação que a IA tentou e não conseguiu');
+});
+
+test('autonomia: dados que o executor recusa não criam proposta nenhuma', async () => {
+  const { servico, propostas } = criarServico();
+  await assert.rejects(() => servico.criarComAutonomia({ usuarioId: 1, tipo: TIPO, dados: {} }, DONO), BusinessException);
+  assert.equal(propostas.length, 0);
+});
+
+test('autonomia: a proposta feita pela IA se desfaz como a confirmada no cartão, dentro do prazo', async () => {
+  const { servico, chamadas } = criarServico();
+  const proposta = await servico.criarComAutonomia({ usuarioId: 1, tipo: TIPO, dados: DADOS }, DONO);
+  const desfeita = await servico.desfazer(proposta.id, DONO);
+  assert.equal(desfeita.dados.status, StatusPropostaIaEnum.DESFEITA);
+  assert.equal(chamadas.desfazer, 1);
+});
+
+test('autonomia: desfazer recusado porque o estado mudou depois deixa a proposta feita como estava', async () => {
+  const { servico, propostas } = criarServico({ falharAoDesfazer: true });
+  const proposta = await servico.criarComAutonomia({ usuarioId: 1, tipo: TIPO, dados: DADOS }, DONO);
+  await assert.rejects(() => servico.desfazer(proposta.id, DONO), BusinessException);
+  assert.equal(propostas[0].status, StatusPropostaIaEnum.CONFIRMADA);
+  assert.equal(propostas[0].aplicadaPelaIa, true);
 });

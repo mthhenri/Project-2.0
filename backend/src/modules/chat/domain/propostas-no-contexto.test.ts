@@ -60,3 +60,17 @@ test('proposta fora do mapa, texto e chamadas de ferramenta ficam como estavam; 
   assert.deepEqual([atualizado[0], atualizado[1], atualizado[3]], [original[0], original[1], original[3]]);
   assert.equal(JSON.stringify(original), copiaAntes);
 });
+
+test('feita pela própria IA (task 228): o aviso não diz que o usuário confirmou, mas que a IA executou sozinha e que dá para desfazer', () => {
+  const situacoes = new Map([[7, { status: StatusPropostaIaEnum.CONFIRMADA, resultado: { atividadeId: 12 }, aplicadaPelaIa: true }]]);
+  const lido = conteudoDoResultado(atualizarPropostasNoContexto(contexto(), situacoes));
+  assert.equal(lido['situacao'], 'CONFIRMADA');
+  assert.match(String(lido['mensagem']), /você \(a IA\) executou esta ação sozinha/i);
+  assert.match(String(lido['mensagem']), /JÁ FOI FEITA/);
+  assert.doesNotMatch(String(lido['mensagem']), /O usuário CONFIRMOU/);
+});
+
+test('feita pela IA e depois desfeita pelo usuário: vale o aviso de desfeita', () => {
+  const situacoes = new Map([[7, { status: StatusPropostaIaEnum.DESFEITA, resultado: null, aplicadaPelaIa: true }]]);
+  assert.match(String(conteudoDoResultado(atualizarPropostasNoContexto(contexto(), situacoes))['mensagem']), /DESFEZ.*NÃO vale mais/);
+});

@@ -1,13 +1,17 @@
 <div
   class="proposta-linha"
   [class.proposta-linha--feita]="modo() === 'FEITA'"
+  [class.proposta-linha--ia]="avisoDaIa()"
   [class.proposta-linha--encerrada]="modo() === 'ENCERRADA'"
   [class.proposta-linha--operando]="operando()"
   role="group"
   [attr.aria-label]="rotuloDaLinha()"
 >
   <span class="proposta-linha__corpo">
-    @if (modo() === 'FEITA') {
+    @if (avisoDaIa()) {
+      <i class="pi pi-sparkles proposta-linha__icone" aria-hidden="true"></i>
+      <span class="proposta-linha__feito">Feito pela IA</span>
+    } @else if (modo() === 'FEITA') {
       <i class="pi pi-check-circle proposta-linha__icone" aria-hidden="true"></i>
       <span class="proposta-linha__feito">Feito</span>
     }

@@ -45,7 +45,7 @@ function criarServicos(tagsDaDemanda: number[], tagsDaAtividade: number[]) {
 
 function criarFerramenta(tagsDaDemanda: number[] = [1], tagsDaAtividade: number[] = []) {
   const propostas: { tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }[] = [];
-  const propostaIaService = { criar: async (dto: { tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }) => { propostas.push(dto); return { id: 77, status: 'PENDENTE' }; } };
+  const propostaIaService = { criarComAutonomia: async (dto: { tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }) => { propostas.push(dto); return { id: 77, status: 'PENDENTE' }; } };
   const tagService = { listar: async () => ({ dados: TAGS }) };
   const { demandaService, atividadeService } = criarServicos(tagsDaDemanda, tagsDaAtividade);
   const ferramenta = new ProporAtribuirTagFerramenta(propostaIaService as unknown as PropostaIaService, demandaService, atividadeService, tagService as unknown as TagService);

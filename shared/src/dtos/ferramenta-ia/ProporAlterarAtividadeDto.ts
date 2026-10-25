@@ -41,6 +41,13 @@ export class PropostaAlterarAtividadeDadosDto extends ProporAlterarAtividadeDto 
   @IsString()
   demandaNome?: string;
 
+  /** O dono da atividade: a regra de nível (task 228) só deixa a IA marcar como desenvolvida a atividade do próprio usuário. */
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Type(() => Number)
+  atividadeUsuarioId?: number;
+
   /** Só presentes nos campos que a proposta muda. */
   @IsOptional()
   @IsEnum(TipoAtividadeStatusEnum)

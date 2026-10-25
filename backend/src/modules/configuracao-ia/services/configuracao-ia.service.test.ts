@@ -1,6 +1,16 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { ConfiguracaoIaCriarDto, ConfiguracaoIaResumoDto, EsforcoIaEnum, ModoContextoChatEnum, TipoProvedorIaEnum, TipoUsuarioEnum } from '@project20/shared';
+import {
+  ConfiguracaoIaCriarDto,
+  ConfiguracaoIaResumoDto,
+  EsforcoIaEnum,
+  ModoContextoChatEnum,
+  NIVEIS_PADRAO_DA_PROPOSTA,
+  PropostaIaNivelEnum,
+  TipoProvedorIaEnum,
+  TipoPropostaIaEnum,
+  TipoUsuarioEnum,
+} from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { UnauthorizedAccessException } from '../../../core/exceptions/unauthorized-access.exception';
 import { ConfiguracaoIaRepository } from '../repositories/configuracao-ia.repository';
@@ -29,13 +39,13 @@ const BASE: ConfiguracaoIaCriarDto = {
 };
 
 function resumoDe(versao: number, dto: ConfiguracaoIaCriarDto): ConfiguracaoIaResumoDto {
-  return { id: versao, versao, usuarioId: 1, usuarioNome: 'Admin', createdDate: new Date(), ...dto };
+  return { id: versao, versao, usuarioId: 1, usuarioNome: 'Admin', createdDate: new Date(), ...dto, niveisProposta: dto.niveisProposta ?? {} };
 }
 
 /** Repositório em memória: guarda as versões e conta as leituras da ativa. */
 function criarRepositorio() {
   const versoes: ConfiguracaoIaResumoDto[] = [resumoDe(1, BASE)];
-  const estado = { leiturasDaAtiva: 0 };
+  const estado = { leiturasDaAtiva: 0, recebidos: [] as ConfiguracaoIaCriarDto[] };
   const repositorio = {
     async recuperarAtiva() {
       estado.leiturasDaAtiva++;
@@ -45,6 +55,7 @@ function criarRepositorio() {
       return { itens: [...versoes].reverse(), total: versoes.length };
     },
     async inserirNovaVersao(dto: ConfiguracaoIaCriarDto) {
+      estado.recebidos.push(dto);
       const nova = resumoDe(versoes[versoes.length - 1].versao + 1, dto);
       versoes.push(nova);
       return nova;
@@ -180,4 +191,45 @@ test('listar devolve o histórico paginado, mais nova primeiro', async () => {
   assert.equal(resposta.dados.itens[0].versao, 2);
   assert.equal(resposta.dados.totalItens, 2);
   assert.equal(resposta.dados.totalPaginas, 2);
+});
+
+// --- Autonomia da IA por tipo de proposta (task 228) ---
+
+test('criar com níveis grava o mapa completo: a regra que faltou vem com o padrão', async () => {
+  const { repositorio, estado } = criarRepositorio();
+  const servico = new ConfiguracaoIaService(repositorio);
+  const resposta = await servico.criar({ ...BASE, niveisProposta: { [TipoPropostaIaEnum.ANOTAR_PAD]: PropostaIaNivelEnum.PERGUNTA } }, ADMINISTRADOR);
+
+  assert.deepEqual(estado.recebidos[0].niveisProposta, { ...NIVEIS_PADRAO_DA_PROPOSTA, [TipoPropostaIaEnum.ANOTAR_PAD]: PropostaIaNivelEnum.PERGUNTA });
+  assert.equal(resposta.dados.niveisProposta[TipoPropostaIaEnum.ANOTAR_PAD], PropostaIaNivelEnum.PERGUNTA);
+  assert.equal((await servico.obterAtiva()).niveisProposta[TipoPropostaIaEnum.ANOTAR_PAD], PropostaIaNivelEnum.PERGUNTA, 'o cache já traz o mapa novo');
+});
+
+test('criar recusa regra que não se configura e nível fixo, sem gravar versão', async () => {
+  const { repositorio, estado, versoes } = criarRepositorio();
+  const servico = new ConfiguracaoIaService(repositorio);
+  for (const niveisProposta of [
+    { [TipoPropostaIaEnum.CRIAR_PROJETO]: PropostaIaNivelEnum.FAZ_E_AVISA },
+    { INVENTADA: PropostaIaNivelEnum.PERGUNTA },
+    { [TipoPropostaIaEnum.ANOTAR_PAD]: PropostaIaNivelEnum.SEMPRE_PERGUNTA },
+  ]) {
+    await assert.rejects(() => servico.criar({ ...BASE, niveisProposta }, ADMINISTRADOR), BusinessException);
+  }
+  assert.equal(estado.recebidos.length, 0);
+  assert.equal(versoes.length, 1);
+});
+
+test('criar sem níveis deixa o repositório copiar os da versão anterior', async () => {
+  const { repositorio, estado } = criarRepositorio();
+  const servico = new ConfiguracaoIaService(repositorio);
+  await servico.criar(BASE, ADMINISTRADOR);
+  assert.equal(estado.recebidos[0].niveisProposta, undefined);
+});
+
+test('uma versão anterior à autonomia (níveis nulos) é lida com o padrão, na ativa e no histórico', async () => {
+  const { repositorio, versoes } = criarRepositorio();
+  versoes[0] = { ...versoes[0], niveisProposta: null as never };
+  const servico = new ConfiguracaoIaService(repositorio);
+  assert.deepEqual((await servico.obterAtiva()).niveisProposta, NIVEIS_PADRAO_DA_PROPOSTA);
+  assert.deepEqual((await servico.listar({}, ADMINISTRADOR)).dados.itens[0].niveisProposta, NIVEIS_PADRAO_DA_PROPOSTA);
 });

@@ -61,6 +61,7 @@
                 <i class="pi pi-exclamation-circle configuracao-ia__aba-erro" role="img" aria-label="Há erros nesta aba"></i>
               }
             </p-tab>
+            <p-tab value="autonomia"><i class="pi pi-sparkles mr-2"></i>Autonomia</p-tab>
             <p-tab value="prompts"><i class="pi pi-file-edit mr-2"></i>Prompts</p-tab>
             <p-tab value="custos"><i class="pi pi-dollar mr-2"></i>Custos</p-tab>
           </p-tablist>
@@ -91,6 +92,16 @@
                 </div>
               } @else {
                 <app-comportamento-aba [formulario]="formulario" [valor]="valorAtual()" [tentouSalvar]="tentouSalvar()" />
+              }
+            </p-tabpanel>
+
+            <p-tabpanel value="autonomia">
+              @if (!jaCarregou()) {
+                <div class="configuracao-ia__esqueleto" aria-busy="true">
+                  <p-skeleton height="20rem" />
+                </div>
+              } @else {
+                <app-autonomia-aba [formulario]="formulario" [valor]="valorAtual()" />
               }
             </p-tabpanel>
 

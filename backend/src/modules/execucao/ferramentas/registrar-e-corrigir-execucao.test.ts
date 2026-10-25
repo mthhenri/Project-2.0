@@ -27,7 +27,7 @@ const demandaRepositorio = { recuperar: async () => ({ id: 3, nome: 'Autenticaç
 function criarFerramentas(opcoes: { sobreposicao?: boolean } = {}) {
   const propostas: { tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }[] = [];
   const consultasDeSobreposicao: Record<string, unknown>[] = [];
-  const propostaIaService = { criar: async (dto: { tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }) => { propostas.push(dto); return { id: 77, status: 'PENDENTE' }; } } as unknown as PropostaIaService;
+  const propostaIaService = { criarComAutonomia: async (dto: { tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }) => { propostas.push(dto); return { id: 77, status: 'PENDENTE' }; } } as unknown as PropostaIaService;
   const repositorio = { validarSobreposicao: async (dto: Record<string, unknown>) => { consultasDeSobreposicao.push(dto); return opcoes.sobreposicao ?? false; } } as unknown as ExecucaoRepository;
   const execucaoAtual = { id: 5, atividadeId: 9, descricao: 'Ajustes do login', inicioData: new Date('2026-10-17T17:00:00Z'), fimData: new Date('2026-10-17T19:00:00Z') };
   const execucaoService = { recuperar: async () => ({ dados: execucaoAtual }) } as unknown as ExecucaoService;

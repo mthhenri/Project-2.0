@@ -5,6 +5,8 @@ import { IaBloco, IaMensagem } from '../../ia/domain/ia.tipos';
 export interface SituacaoDaProposta {
   status: StatusPropostaIaEnum;
   resultado: Record<string, unknown> | null;
+  /** A IA executou sozinha (nível "Faz e avisa", task 228): o aviso não pode dizer que o usuário confirmou. */
+  aplicadaPelaIa?: boolean;
 }
 
 const LIMITE_DO_RESULTADO = 400;
@@ -16,6 +18,14 @@ const AVISO_POR_STATUS: Record<StatusPropostaIaEnum, string> = {
   [StatusPropostaIaEnum.EXPIRADA]: 'Esta proposta foi RECUSADA ou EXPIROU: NADA foi feito. Só proponha de novo se o usuário pedir.',
   [StatusPropostaIaEnum.DESFEITA]: 'O usuário confirmou esta proposta e depois a DESFEZ: o efeito foi revertido e a ação NÃO vale mais.',
 };
+
+/** O aviso da situação: a proposta confirmada pela própria IA não foi "confirmada pelo usuário". */
+function avisoDaSituacao(situacao: SituacaoDaProposta): string {
+  if (situacao.aplicadaPelaIa && situacao.status === StatusPropostaIaEnum.CONFIRMADA) {
+    return 'Você (a IA) executou esta ação sozinha, no nível "faz e avisa": ela JÁ FOI FEITA. O usuário viu o aviso na conversa e pode desfazer em 30 minutos. Não proponha de novo; se precisar de certeza, consulte o estado com as ferramentas de leitura.';
+  }
+  return AVISO_POR_STATUS[situacao.status];
+}
 
 function lerPropostaId(conteudo: string): number | null {
   try {
@@ -66,7 +76,7 @@ export function atualizarPropostasNoContexto(mensagens: readonly IaMensagem[], s
           conteudo: JSON.stringify({
             propostaId,
             situacao: situacao.status,
-            mensagem: AVISO_POR_STATUS[situacao.status],
+            mensagem: avisoDaSituacao(situacao),
             ...(resultado && resultado.length <= LIMITE_DO_RESULTADO ? { resultado: situacao.resultado } : {}),
           }),
         };

@@ -17,10 +17,10 @@ function prioridade(codigo: TipoAtividadePrioridadeEnum) {
 
 /** `AtividadeService` em memória com uma atividade (9) e o registro das alterações pedidas. */
 function criarServico(inicial: { status: TipoAtividadeStatusEnum; prioridade: TipoAtividadePrioridadeEnum; nome: string }) {
-  const atividade = { id: 9, demandaId: 3, ...inicial };
+  const atividade = { id: 9, demandaId: 3, usuarioId: 4, ...inicial };
   const alteracoes: AtividadeInternoAlterarDto[] = [];
   const servico = {
-    recuperar: async () => ({ dados: { id: atividade.id, demandaId: atividade.demandaId, nome: atividade.nome, status: atividade.status, prioridade: prioridade(atividade.prioridade) } }),
+    recuperar: async () => ({ dados: { id: atividade.id, demandaId: atividade.demandaId, usuarioId: atividade.usuarioId, nome: atividade.nome, status: atividade.status, prioridade: prioridade(atividade.prioridade) } }),
     alterar: async (dto: AtividadeInternoAlterarDto) => {
       alteracoes.push(dto);
       if (dto.status !== undefined) atividade.status = dto.status;
@@ -34,7 +34,7 @@ function criarServico(inicial: { status: TipoAtividadeStatusEnum; prioridade: Ti
 
 function criarFerramenta(inicial: Parameters<typeof criarServico>[0], comExecucaoAtiva = false) {
   const propostas: { tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }[] = [];
-  const propostaIaService = { criar: async (dto: { tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }) => { propostas.push(dto); return { id: 77, status: 'PENDENTE' }; } };
+  const propostaIaService = { criarComAutonomia: async (dto: { tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }) => { propostas.push(dto); return { id: 77, status: 'PENDENTE' }; } };
   const repositorio = { possuiExecucaoAtiva: async () => comExecucaoAtiva };
   const demandaRepositorio = { recuperar: async () => ({ id: 3, nome: 'Autenticação' }) };
   const { servico } = criarServico(inicial);
@@ -51,7 +51,7 @@ test('propor alterar guarda só o que muda, com os valores de antes e os nomes p
   await ferramenta.executar({ atividadeId: 9, status: TipoAtividadeStatusEnum.DESENVOLVIDA, prioridade: TipoAtividadePrioridadeEnum.MEDIA }, USUARIO);
   assert.equal(propostas[0].tipo, TipoPropostaIaEnum.ALTERAR_ATIVIDADE);
   assert.deepEqual(propostas[0].dados, {
-    atividadeId: 9, atividadeNome: 'Ajustar login', demandaNome: 'Autenticação',
+    atividadeId: 9, atividadeNome: 'Ajustar login', demandaNome: 'Autenticação', atividadeUsuarioId: 4,
     status: 'DESENVOLVIDA', statusAnterior: 'DESENVOLVENDO',
   });
 });

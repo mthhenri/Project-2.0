@@ -60,7 +60,7 @@ export class ProporIniciarExecucaoFerramenta extends FerramentaPropostaIa<Propor
       ...entrada,
       atividadeNome: atividade?.nome,
       demandaNome: demanda?.nome,
-      ...(donoId !== usuarioAtivo.sub && atividade ? { usuarioNome: atividade.nomeUsuario } : {}),
+      ...(donoId !== usuarioAtivo.sub && atividade ? { usuarioNome: atividade.nomeUsuario, usuarioId: donoId } : {}),
       ...(statusMuda ? { statusAnterior: atividade.status as TipoAtividadeStatusEnum } : {}),
       ...(aPausar ? { pausaraAtividadeNome: aPausar.nome } : {}),
     };

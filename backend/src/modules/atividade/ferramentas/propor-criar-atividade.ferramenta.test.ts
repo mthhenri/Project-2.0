@@ -15,7 +15,7 @@ const GESTOR = { sub: 1, login: 'gestor', tipo: TipoUsuarioEnum.GESTOR } as neve
 
 function montar(opcoes: { demanda?: unknown; dono?: Record<string, unknown> | null } = {}) {
   const propostas: { usuarioId: number; tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }[] = [];
-  const propostaIaService = { criar: async (dto: (typeof propostas)[number]) => { propostas.push(dto); return { id: 55, status: 'PENDENTE' }; } };
+  const propostaIaService = { criarComAutonomia: async (dto: (typeof propostas)[number]) => { propostas.push(dto); return { id: 55, status: 'PENDENTE' }; } };
   const demandaRepositorio = { recuperar: async () => (opcoes.demanda === undefined ? { id: 9, nome: 'Autenticação' } : opcoes.demanda) };
   const usuarioService = {
     recuperar: async () => ({ dados: opcoes.dono === undefined ? { id: 12, nomeCompleto: 'Bia', status: TipoUsuarioStatusEnum.ATIVO } : opcoes.dono }),

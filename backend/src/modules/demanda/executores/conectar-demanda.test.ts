@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
 import { NivelIaEnum, TipoPropostaIaEnum, TipoPromptEnum, TipoUsuarioEnum } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
-import { UnauthorizedAccessException } from '../../../core/exceptions/unauthorized-access.exception';
+import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
 import { IaService } from '../../ia/services/ia.service';
 import { ProjetoService } from '../../projeto/services/projeto.service';
 import { PromptService } from '../../prompt/services/prompt.service';
@@ -16,20 +16,25 @@ import { SugerirConexoesELugarFerramenta } from '../ferramentas/sugerir-conexoes
 const GESTOR = { sub: 1, login: 'gestor', tipo: TipoUsuarioEnum.GESTOR } as never;
 const DESENVOLVEDOR = { sub: 7, login: 'dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
 
-function executorComServico(opcoes: { falhaAoCriar?: string } = {}) {
+function executorComServico(opcoes: { falhaAoCriar?: string; conexaoJaRemovida?: boolean } = {}) {
   const criadas: Record<string, unknown>[] = [];
   const excluidas: Record<string, unknown>[] = [];
+  /** Quem a service recebeu: é ela que recusa quem não é gestor (task 228), então o executor só precisa entregar o usuário. */
+  const usuarios: unknown[] = [];
   const servico = {
-    criarConexao: async (dto: Record<string, unknown>) => {
+    criarConexao: async (dto: Record<string, unknown>, usuarioAtivo: unknown) => {
+      usuarios.push(usuarioAtivo);
       if (opcoes.falhaAoCriar) throw new BusinessException(opcoes.falhaAoCriar);
       criadas.push(dto);
       return { dados: { id: 44 } };
     },
-    excluirConexao: async (dto: Record<string, unknown>) => {
+    excluirConexao: async (dto: Record<string, unknown>, usuarioAtivo: unknown) => {
+      usuarios.push(usuarioAtivo);
+      if (opcoes.conexaoJaRemovida) throw new ResourceNotFoundException('Conexão');
       excluidas.push(dto);
     },
   };
-  return { executor: new ConectarDemandaExecutor(servico as unknown as DemandaService), criadas, excluidas };
+  return { executor: new ConectarDemandaExecutor(servico as unknown as DemandaService), criadas, excluidas, usuarios };
 }
 
 test('cria a conexão pela service (sentido único por padrão) e guarda o que desfaz', async () => {
@@ -46,13 +51,19 @@ test('o erro de ciclo (ou conexão repetida) da service chega ao cartão e nada 
   assert.equal(criadas.length, 0);
 });
 
-test('desfazer remove a conexão criada; só o gestor cria ou desfaz', async () => {
-  const { executor, excluidas } = executorComServico();
+test('desfazer remove a conexão criada; criar e desfazer entregam o usuário à service, que recusa quem não é gestor', async () => {
+  const { executor, excluidas, usuarios } = executorComServico();
+  await executor.executar({ demandaOrigemId: 3, demandaDestinoId: 5, motivo: 'tentativa' }, DESENVOLVEDOR);
   await executor.desfazer({ conexaoId: 44, demandaOrigemId: 3 }, GESTOR);
   assert.deepEqual(excluidas, [{ demandaId: 3, conexaoId: 44 }]);
-  await assert.rejects(executor.executar({ demandaOrigemId: 3, demandaDestinoId: 5, motivo: 'tentativa' }, DESENVOLVEDOR), UnauthorizedAccessException);
-  await assert.rejects(executor.desfazer({ conexaoId: 44, demandaOrigemId: 3 }, DESENVOLVEDOR), UnauthorizedAccessException);
+  assert.deepEqual(usuarios, [DESENVOLVEDOR, GESTOR]);
   await assert.rejects(executor.desfazer({}, GESTOR), BusinessException);
+});
+
+test('desfazer com a conexão já removida (o estado mudou depois) propaga o erro da service e não remove nada (task 228)', async () => {
+  const { executor, excluidas } = executorComServico({ conexaoJaRemovida: true });
+  await assert.rejects(executor.desfazer({ conexaoId: 44, demandaOrigemId: 3 }, GESTOR), ResourceNotFoundException);
+  assert.deepEqual(excluidas, []);
 });
 
 test('os dados são validados (motivo curto, campo desconhecido)', () => {
@@ -64,7 +75,7 @@ test('os dados são validados (motivo curto, campo desconhecido)', () => {
 function ferramentaDeProposta(opcoes: { jaExiste?: boolean; ciclo?: boolean } = {}) {
   const propostas: { tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }[] = [];
   const propostaIaService = {
-    criar: async (dto: { tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }) => {
+    criarComAutonomia: async (dto: { tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }) => {
       propostas.push(dto);
       return { id: 80, status: 'PENDENTE' };
     },

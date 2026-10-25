@@ -28,6 +28,7 @@ const COLUNAS_RESUMO = `
          configuracao_ia.duvidas_codigo              AS "duvidasCodigo",
          configuracao_ia.modo_contexto_chat          AS "modoContextoChat",
          configuracao_ia.ia_desligada                AS "iaDesligada",
+         configuracao_ia.niveis_proposta             AS "niveisProposta",
          configuracao_ia.usuario_id                  AS "usuarioId",
          usuario.nome_completo                       AS "usuarioNome",
          configuracao_ia.created_date                AS "createdDate"`;
@@ -130,7 +131,8 @@ export class ConfiguracaoIaRepository extends BaseRepository<ConfiguracaoIa> {
 
   /**
    * Grava a versão seguinte (`maior + 1`) numa transação que serializa as gravações (lock consultivo): duas gravações
-   * simultâneas nunca geram a mesma versão. O índice único parcial é a rede de segurança.
+   * simultâneas nunca geram a mesma versão. O índice único parcial é a rede de segurança. Sem `niveisProposta`, o mapa da versão
+   * anterior é copiado.
    */
   async inserirNovaVersao(dto: ConfiguracaoIaCriarDto, usuarioId: number): Promise<ConfiguracaoIaResumoDto> {
     return this.conexaoBancoDados.transaction(async (transacao) => {
@@ -141,13 +143,16 @@ export class ConfiguracaoIaRepository extends BaseRepository<ConfiguracaoIa> {
            versao, tipo_provedor_ia_id, fallbacks, modelos_provedor, esforco_analitico,
            checkin_minimo_minutos, checkin_maximo_minutos, duracao_recomendada_minutos,
            checkin_inteligente, rigor_proporcional, deteccao_automatica, duvidas_codigo, modo_contexto_chat, ia_desligada,
-           precos_modelo, usuario_id, created_date, updated_date, is_deleted
+           niveis_proposta, precos_modelo, usuario_id, created_date, updated_date, is_deleted
          )
          SELECT
            COALESCE((SELECT MAX(configuracao_ia.versao) FROM configuracao_ia WHERE configuracao_ia.is_deleted = false), 0) + 1,
            tipo_provedor_ia.id, CAST(:fallbacks AS jsonb), CAST(:modelosProvedor AS jsonb), :esforcoAnalitico,
            :checkinMinimoMinutos, :checkinMaximoMinutos, :duracaoRecomendadaMinutos,
            :checkinInteligente, :rigorProporcional, :deteccaoAutomatica, :duvidasCodigo, :modoContextoChat, :iaDesligada,
+           COALESCE(
+             CAST(:niveisProposta AS jsonb),
+             (SELECT anterior.niveis_proposta FROM configuracao_ia AS anterior WHERE anterior.is_deleted = false ORDER BY anterior.versao DESC LIMIT 1)),
            COALESCE(
              (SELECT anterior.precos_modelo FROM configuracao_ia AS anterior WHERE anterior.is_deleted = false ORDER BY anterior.versao DESC LIMIT 1),
              CAST('{}' AS jsonb)),
@@ -156,7 +161,13 @@ export class ConfiguracaoIaRepository extends BaseRepository<ConfiguracaoIa> {
          WHERE tipo_provedor_ia.codigo = :provedor
            AND tipo_provedor_ia.is_deleted = false
          RETURNING id`,
-        { ...dto, fallbacks: JSON.stringify(dto.fallbacks), modelosProvedor: JSON.stringify(dto.modelosProvedor), usuarioId },
+        {
+          ...dto,
+          fallbacks: JSON.stringify(dto.fallbacks),
+          modelosProvedor: JSON.stringify(dto.modelosProvedor),
+          niveisProposta: dto.niveisProposta ? JSON.stringify(dto.niveisProposta) : null,
+          usuarioId,
+        },
         transacao,
       );
       if (inseridas.length === 0) throw new Error('Provedor de IA inexistente');

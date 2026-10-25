@@ -1,8 +1,9 @@
-import { ArrayMaxSize, IsArray, IsBoolean, IsEnum, IsInt, IsObject, Min } from 'class-validator';
+import { ArrayMaxSize, IsArray, IsBoolean, IsEnum, IsInt, IsObject, IsOptional, Min } from 'class-validator';
 import { EsforcoIaEnum } from '../../enums/esforco-ia.enum';
 import { ModoContextoChatEnum } from '../../enums/modo-contexto-chat.enum';
 import { TipoProvedorIaEnum } from '../../enums/tipo-provedor-ia.enum';
 import { ConfiguracaoIaModelosPorProvedorDto } from './ConfiguracaoIaModelosDto';
+import { PropostaIaNiveisDto } from './PropostaIaNiveisDto';
 
 /** Grava uma **versão nova** da configuração (a antiga nunca é alterada). O intervalo mínimo < máximo e a coerência provedor × modelo são conferidos na service. */
 export class ConfiguracaoIaCriarDto {
@@ -51,4 +52,12 @@ export class ConfiguracaoIaCriarDto {
 
   @IsBoolean()
   iaDesligada: boolean;
+
+  /**
+   * O nível de autonomia da IA por regra de proposta (task 228). Quem não envia mantém o da versão ativa. As chaves e os valores são
+   * conferidos na service (`validarNiveisDaProposta`).
+   */
+  @IsOptional()
+  @IsObject()
+  niveisProposta?: PropostaIaNiveisDto;
 }

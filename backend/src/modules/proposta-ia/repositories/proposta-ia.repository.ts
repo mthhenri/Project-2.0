@@ -13,6 +13,7 @@ const COLUNAS_RESUMO = `
          proposta_ia.dados,
          proposta_ia.resultado,
          proposta_ia.resolucao_data           AS "resolucaoData",
+         proposta_ia.aplicada_pela_ia         AS "aplicadaPelaIa",
          proposta_ia.created_date             AS "createdDate"`;
 
 const JUNCOES_RESUMO = `
@@ -43,14 +44,14 @@ export class PropostaIaRepository extends BaseRepository<PropostaIa> {
 
   async criar(dto: PropostaIaCriarDto): Promise<PropostaIaResumoDto> {
     const inseridas = await this.executarConsulta<{ id: number }>(
-      `INSERT INTO proposta_ia (usuario_id, tipo_proposta_ia_id, tipo_proposta_ia_status_id, dados, created_date, updated_date, is_deleted)
-       SELECT :usuarioId, tipo_proposta_ia.id, tipo_proposta_ia_status.id, CAST(:dados AS jsonb), NOW(), NOW(), false
+      `INSERT INTO proposta_ia (usuario_id, tipo_proposta_ia_id, tipo_proposta_ia_status_id, dados, aplicada_pela_ia, created_date, updated_date, is_deleted)
+       SELECT :usuarioId, tipo_proposta_ia.id, tipo_proposta_ia_status.id, CAST(:dados AS jsonb), :aplicadaPelaIa, NOW(), NOW(), false
        FROM tipo_proposta_ia
        CROSS JOIN tipo_proposta_ia_status
        WHERE tipo_proposta_ia.codigo = :tipo AND tipo_proposta_ia.is_deleted = false
          AND tipo_proposta_ia_status.codigo = :status AND tipo_proposta_ia_status.is_deleted = false
        RETURNING id`,
-      { usuarioId: dto.usuarioId, tipo: dto.tipo, dados: JSON.stringify(dto.dados), status: StatusPropostaIaEnum.PENDENTE },
+      { usuarioId: dto.usuarioId, tipo: dto.tipo, dados: JSON.stringify(dto.dados), aplicadaPelaIa: dto.aplicadaPelaIa === true, status: StatusPropostaIaEnum.PENDENTE },
     );
     return (await this.recuperarPorId(inseridas[0].id)) as PropostaIaResumoDto;
   }

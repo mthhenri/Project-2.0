@@ -1,7 +1,16 @@
 import { test } from 'vitest';
 import * as assert from 'node:assert/strict';
 import { FormControl, FormGroup } from '@angular/forms';
-import { ConfiguracaoIaResumoDto, EsforcoIaEnum, EstadoIaEnum, ModoContextoChatEnum, TipoProvedorIaEnum } from '@project20/shared';
+import {
+  ConfiguracaoIaResumoDto,
+  EsforcoIaEnum,
+  EstadoIaEnum,
+  ModoContextoChatEnum,
+  NIVEIS_PADRAO_DA_PROPOSTA,
+  PropostaIaNivelEnum,
+  TipoProvedorIaEnum,
+  TipoPropostaIaEnum,
+} from '@project20/shared';
 import {
   OPCOES_PROVEDOR,
   cadeiaDoFormulario,
@@ -26,7 +35,7 @@ const VERSAO: ConfiguracaoIaResumoDto = {
   modelosProvedor: { [TipoProvedorIaEnum.ANTHROPIC]: { modeloRapido: 'claude-haiku-5-5', modeloPadrao: 'claude-sonnet-5-5', modeloAnalitico: 'claude-opus-5-5' } },
   esforcoAnalitico: EsforcoIaEnum.ALTO, checkinMinimoMinutos: 20, checkinMaximoMinutos: 40, duracaoRecomendadaMinutos: 90,
   checkinInteligente: true, rigorProporcional: false, deteccaoAutomatica: true,
-  duvidasCodigo: false, modoContextoChat: ModoContextoChatEnum.MISTURADO, iaDesligada: false,
+  duvidasCodigo: false, modoContextoChat: ModoContextoChatEnum.MISTURADO, iaDesligada: false, niveisProposta: {},
   usuarioId: 1, usuarioNome: 'Admin', createdDate: new Date('2026-10-01T12:00:00Z'),
 };
 
@@ -79,8 +88,8 @@ test('valoresDaVersao copia só os campos do formulário (sem id, versão, autor
   const valores = valoresDaVersao(VERSAO);
   assert.deepEqual(Object.keys(valores).sort(), [
     'checkinInteligente', 'checkinMaximoMinutos', 'checkinMinimoMinutos', 'deteccaoAutomatica', 'duracaoRecomendadaMinutos',
-    'duvidasCodigo', 'esforcoAnalitico', 'fallbackPrimeiro', 'fallbackSegundo', 'iaDesligada', 'modelos', 'modoContextoChat', 'provedor',
-    'rigorProporcional',
+    'duvidasCodigo', 'esforcoAnalitico', 'fallbackPrimeiro', 'fallbackSegundo', 'iaDesligada', 'modelos', 'modoContextoChat', 'niveisProposta',
+    'provedor', 'rigorProporcional',
   ]);
   assert.equal(valores.modelos.ANTHROPIC.modeloAnalitico, 'claude-opus-5-5');
   assert.deepEqual(valores.modelos.GOOGLE, { modeloRapido: '', modeloPadrao: '', modeloAnalitico: '' }, 'provedor sem modelos guardados volta vazio');
@@ -184,4 +193,18 @@ test('errosPorProvedor: só os provedores da cadeia com problema, cada um com as
 
   const deOutro = { ...base, modelos: { ...base.modelos, [TipoProvedorIaEnum.ANTHROPIC]: { ...base.modelos[TipoProvedorIaEnum.ANTHROPIC], modeloPadrao: 'gpt-5' } } };
   assert.deepEqual(Object.keys(errosPorProvedor(deOutro)), [TipoProvedorIaEnum.ANTHROPIC]);
+});
+
+test('níveis de autonomia (task 228): a versão sem o mapa, ou com o mapa incompleto, abre no formulário com o padrão do shared', () => {
+  assert.deepEqual(valoresDaVersao({ ...VERSAO, niveisProposta: null as never }).niveisProposta, NIVEIS_PADRAO_DA_PROPOSTA);
+  const parcial = valoresDaVersao({ ...VERSAO, niveisProposta: { [TipoPropostaIaEnum.ANOTAR_PAD]: PropostaIaNivelEnum.PERGUNTA } }).niveisProposta;
+  assert.equal(parcial[TipoPropostaIaEnum.ANOTAR_PAD], PropostaIaNivelEnum.PERGUNTA);
+  assert.equal(parcial[TipoPropostaIaEnum.CRIAR_ATIVIDADE], PropostaIaNivelEnum.FAZ_E_AVISA);
+});
+
+test('níveis de autonomia: o DTO de criação leva o mapa completo e o formulário com o padrão explícito é igual à versão sem o mapa', () => {
+  const valor = valoresDaVersao(VERSAO);
+  assert.deepEqual(paraDtoDeCriacao(valor).niveisProposta, NIVEIS_PADRAO_DA_PROPOSTA);
+  assert.equal(formularioIgualAVersao(valor, VERSAO), true);
+  assert.equal(formularioIgualAVersao({ ...valor, niveisProposta: { ...valor.niveisProposta, [TipoPropostaIaEnum.ANOTAR_PAD]: PropostaIaNivelEnum.PERGUNTA } }, VERSAO), false);
 });

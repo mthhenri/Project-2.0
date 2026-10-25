@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { ConfiguracaoIaCriarDto, EsforcoIaEnum, IaModeloPrecoDto, ModoContextoChatEnum, TipoProvedorIaEnum } from '@project20/shared';
+import { ConfiguracaoIaCriarDto, EsforcoIaEnum, IaModeloPrecoDto, ModoContextoChatEnum, PropostaIaNivelEnum, TipoProvedorIaEnum, TipoPropostaIaEnum } from '@project20/shared';
 import { testarComBanco, obterConexaoBancoTeste, ConexaoTeste } from '../../../testes/banco-teste';
 import { criarRepositorio } from '../../../testes/criar-repositorio';
 import { criarAdministrador } from '../../../testes/fabricas';
@@ -230,4 +230,29 @@ testarComBanco('migration 0049: a versão 1 do seed ganhou o mapa com o trio da 
   assert.deepEqual(versaoUm?.fallbacks, []);
   assert.deepEqual(Object.keys(versaoUm?.modelosProvedor ?? {}), [TipoProvedorIaEnum.ANTHROPIC]);
   assert.equal(versaoUm?.modelosProvedor.ANTHROPIC?.modeloPadrao, 'claude-sonnet-5-5');
+});
+
+testarComBanco('migration 0055: as versões que já existiam ficam sem o mapa de níveis (nulo = padrão do shared)', async (conexao) => {
+  const { itens } = await repositorioDe(conexao).listar({});
+  const versaoUm = itens.find((item) => item.versao === 1);
+  assert.equal(versaoUm?.niveisProposta, null);
+});
+
+testarComBanco('inserirNovaVersao grava o mapa de níveis e uma versão sem mapa copia o da anterior (task 228)', async (conexao) => {
+  const administrador = await criarAdministrador(conexao);
+  const niveis = { [TipoPropostaIaEnum.ANOTAR_PAD]: PropostaIaNivelEnum.PERGUNTA, [TipoPropostaIaEnum.CRIAR_ATIVIDADE]: PropostaIaNivelEnum.FAZ_E_AVISA };
+  const comMapa = await repositorioDe(conexao).inserirNovaVersao({ ...NOVA, niveisProposta: niveis }, administrador.id);
+  assert.deepEqual(comMapa.niveisProposta, niveis);
+
+  const semMapa = await repositorioDe(conexao).inserirNovaVersao(NOVA, administrador.id);
+  assert.deepEqual(semMapa.niveisProposta, niveis, 'a versão nova sem o mapa herda o da anterior');
+  assert.deepEqual((await repositorioDe(conexao).recuperarAtiva())?.niveisProposta, niveis);
+  const { itens } = await repositorioDe(conexao).listar({ itensPorPagina: 100 });
+  assert.deepEqual(itens.find((item) => item.id === comMapa.id)?.niveisProposta, niveis, 'a versão anterior continua com o mapa dela');
+});
+
+testarComBanco('inserirNovaVersao sem mapa depois de uma versão antiga (nula) segue nula', async (conexao) => {
+  const administrador = await criarAdministrador(conexao);
+  const nova = await repositorioDe(conexao).inserirNovaVersao(NOVA, administrador.id);
+  assert.equal(nova.niveisProposta, null);
 });

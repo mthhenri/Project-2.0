@@ -8,9 +8,11 @@ import {
   IaModeloPrecoAlteradoDto,
   IaModeloPrecoAlterarDto,
   IaModeloPrecoDto,
+  normalizarNiveisDaProposta,
   PaginatedResult,
   StandardResponse,
   temPermissaoDeAdministrador,
+  validarNiveisDaProposta,
   validarProvedoresDaConfiguracaoIa,
 } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
@@ -42,8 +44,9 @@ export class ConfiguracaoIaService implements OnModuleInit {
     if (this.ativaEmCache) return this.ativaEmCache;
     const ativa = await this.configuracaoIaRepositorio.recuperarAtiva();
     if (!ativa) throw new ResourceNotFoundException('Configuração da IA');
-    this.ativaEmCache = ativa;
-    return ativa;
+    const comNiveis = this.comNiveis(ativa);
+    this.ativaEmCache = comNiveis;
+    return comNiveis;
   }
 
   /** A configuração ativa só se já estiver no cache (leitura síncrona, para quem decide na hora, como as ferramentas); `null` antes da primeira. */
@@ -66,7 +69,7 @@ export class ConfiguracaoIaService implements OnModuleInit {
     return {
       sucesso: true,
       dados: {
-        itens,
+        itens: itens.map((item) => this.comNiveis(item)),
         totalItens: total,
         paginaAtual: dto.pagina ?? 1,
         itensPorPagina,
@@ -85,7 +88,11 @@ export class ConfiguracaoIaService implements OnModuleInit {
     const aparada = { ...dto, modelosProvedor: this.aparar(dto) };
     const errosDeProvedor = validarProvedoresDaConfiguracaoIa(aparada);
     if (errosDeProvedor.length > 0) throw new BusinessException(errosDeProvedor[0]);
-    const criada = await this.configuracaoIaRepositorio.inserirNovaVersao(aparada, usuarioAtivo.sub);
+    const errosDeNiveis = dto.niveisProposta ? validarNiveisDaProposta(dto.niveisProposta) : [];
+    if (errosDeNiveis.length > 0) throw new BusinessException(errosDeNiveis[0]);
+    // O mapa gravado é sempre completo; sem ele no pedido, o repositório copia o da versão anterior.
+    const completa = { ...aparada, niveisProposta: dto.niveisProposta ? normalizarNiveisDaProposta(dto.niveisProposta) : undefined };
+    const criada = this.comNiveis(await this.configuracaoIaRepositorio.inserirNovaVersao(completa, usuarioAtivo.sub));
     this.ativaEmCache = criada;
     return { sucesso: true, dados: criada, mensagem: `Versão ${criada.versao} da configuração da IA salva com sucesso` };
   }
@@ -98,6 +105,11 @@ export class ConfiguracaoIaService implements OnModuleInit {
   /** Para a aba "Custos" (que confere a permissão): grava o preço de um modelo na versão ativa, no lugar. */
   async alterarPreco(dto: IaModeloPrecoAlterarDto): Promise<IaModeloPrecoAlteradoDto> {
     return this.configuracaoIaRepositorio.alterarPrecoDaVersaoAtiva(dto);
+  }
+
+  /** O mapa de níveis sempre completo: uma versão anterior à task 228 (nulo) ou com regra faltando vale o padrão do `shared`. */
+  private comNiveis(configuracao: ConfiguracaoIaResumoDto): ConfiguracaoIaResumoDto {
+    return { ...configuracao, niveisProposta: normalizarNiveisDaProposta(configuracao.niveisProposta) };
   }
 
   /** Os nomes de modelo gravados sem espaço nas pontas (a regra confere o prefixo ignorando-os, então o que vai ao provedor é o nome limpo). */

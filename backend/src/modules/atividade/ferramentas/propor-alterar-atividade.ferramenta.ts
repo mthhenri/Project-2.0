@@ -57,6 +57,7 @@ export class ProporAlterarAtividadeFerramenta extends FerramentaPropostaIa<Propo
       atividadeId: atividade.id,
       atividadeNome: atividade.nome,
       demandaNome: demanda?.nome,
+      atividadeUsuarioId: atividade.usuarioId,
       ...(muda.status ? { status: entrada.status, statusAnterior: atividade.status } : {}),
       ...(muda.prioridade ? { prioridade: entrada.prioridade, prioridadeAnterior: atividade.prioridade.codigo } : {}),
       ...(muda.nome ? { nome: entrada.nome } : {}),

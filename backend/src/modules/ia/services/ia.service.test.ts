@@ -14,7 +14,7 @@ function configuracao(parcial: Partial<ConfiguracaoIaResumoDto> = {}): Configura
     fallbacks: [], modelosProvedor: { [TipoProvedorIaEnum.ANTHROPIC]: { modeloRapido: 'haiku', modeloPadrao: 'sonnet', modeloAnalitico: 'opus' } }, esforcoAnalitico: EsforcoIaEnum.MEDIO,
     checkinMinimoMinutos: 30, checkinMaximoMinutos: 80, duracaoRecomendadaMinutos: 90,
     checkinInteligente: true, rigorProporcional: true, deteccaoAutomatica: true,
-    duvidasCodigo: false, modoContextoChat: ModoContextoChatEnum.MISTURADO, iaDesligada: false,
+    duvidasCodigo: false, modoContextoChat: ModoContextoChatEnum.MISTURADO, iaDesligada: false, niveisProposta: {},
     usuarioId: 1, usuarioNome: 'Admin', createdDate: new Date(),
     ...parcial,
   };

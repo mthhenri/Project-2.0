@@ -13,14 +13,14 @@ type Montado = ComponenteMontado<PropostaGrupoComponent>;
 
 interface PropostaDeTeste {
   id: number; usuarioId: number; tipo: TipoPropostaIaEnum; status: StatusPropostaIaEnum; dados: Record<string, unknown>;
-  resultado: Record<string, unknown> | null; resolucaoData: string | null; createdDate: string;
+  resultado: Record<string, unknown> | null; resolucaoData: string | null; aplicadaPelaIa: boolean; createdDate: string;
 }
 
 function proposta(id: number, status = StatusPropostaIaEnum.PENDENTE, extras: Record<string, unknown> = {}): PropostaDeTeste {
   return {
     id, usuarioId: 1, tipo: TipoPropostaIaEnum.CRIAR_ATIVIDADE, status, dados: { nome: `Atividade ${id}`, demandaNome: 'Login', prioridade: 'INDEFINIDA' },
     resultado: status === StatusPropostaIaEnum.PENDENTE ? null : { atividadeId: id }, resolucaoData: status === StatusPropostaIaEnum.PENDENTE ? null : new Date().toISOString(),
-    createdDate: '2026-10-25T12:00:00.000Z', ...extras,
+    aplicadaPelaIa: false, createdDate: '2026-10-25T12:00:00.000Z', ...extras,
   };
 }
 const feita = (id: number) => proposta(id, StatusPropostaIaEnum.CONFIRMADA);
@@ -257,5 +257,66 @@ describe('PropostaGrupoComponent', () => {
     botao(montado, 'Confirmar todas')!.click();
     botao(montado, 'Confirmar todas')!.click();
     expect(montado.http.match((requisicao) => requisicao.url.endsWith('/grupo/confirmar'))).toHaveLength(1);
+  });
+
+  describe('a IA já fez parte (task 228)', () => {
+    const feitaPelaIa = (id: number) => proposta(id, StatusPropostaIaEnum.CONFIRMADA, { aplicadaPelaIa: true });
+    const avisoDaIa = (montado: Montado) => montado.elemento.querySelector('.proposta-grupo__aviso');
+
+    it('grupo misto: a linha azul vem em cima, o cabeçalho trata só do que espera o usuário e a lista mostra tudo', async () => {
+      const montado = await montarGrupo([11, 12, 13], { 11: feitaPelaIa(11) });
+      expect(avisoDaIa(montado)?.textContent?.replace(/\s+/g, ' ')).toContain('A IA já fez 1 de 3');
+      expect(cabecalho(montado)).toContain('2 esperando você');
+      expect(cabecalho(montado)).not.toContain('feita');
+      // "Todas" seria mentira: uma já foi feita, o botão diz quantas ainda esperam.
+      expect(botao(montado, 'Confirmar 2')).toBeDefined();
+      expect(botao(montado, 'Recusar 2')).toBeDefined();
+      expect(botao(montado, 'Confirmar todas')).toBeUndefined();
+      expect(linhas(montado)).toHaveLength(3);
+      expect(montado.elemento.querySelectorAll('.proposta-linha--ia')).toHaveLength(1);
+      expect(texto(montado)).toContain('Feito pela IA');
+    });
+
+    it('Confirmar, no grupo misto, leva só as pendentes: o que a IA fez não entra de novo', async () => {
+      const montado = await montarGrupo([11, 12, 13], { 11: feitaPelaIa(11) });
+      botao(montado, 'Confirmar 2')!.click();
+      const pedido = esperarRequisicao(montado.http, 'POST', '/proposta-ia/grupo/confirmar');
+      expect(pedido.request.body).toEqual({ propostaIds: [12, 13] });
+      responderSucesso(pedido, { itens: [12, 13].map((id) => item(id, PropostaIaGrupoSituacaoEnum.RESOLVIDA, feita(id))) });
+      detectar(montado);
+      expect(avisoDaIa(montado)).toBeNull();
+      expect(cabecalho(montado)).toContain('3 feitas');
+    });
+
+    it('sem nada feito pela IA não há linha azul', async () => {
+      const montado = await montarGrupo([11, 12]);
+      expect(avisoDaIa(montado)).toBeNull();
+    });
+
+    it('tudo feito pela IA não é misto: sem linha azul, o cabeçalho resume como feito pela IA', async () => {
+      const montado = await montarGrupo([11, 12], { 11: feitaPelaIa(11), 12: feitaPelaIa(12) });
+      expect(avisoDaIa(montado)).toBeNull();
+      expect(cabecalho(montado)).toContain('2 feitas pela IA');
+      expect(botao(montado, 'Desfazer todas')).toBeDefined();
+    });
+
+    it('Desfazer, na linha azul, desfaz só o que a IA fez e deixa a pendente como está', async () => {
+      const montado = await montarGrupo([11, 12, 13], { 11: feitaPelaIa(11), 12: feitaPelaIa(12) });
+      botao(montado, 'Desfazer')!.click();
+      const pedido = esperarRequisicao(montado.http, 'POST', '/proposta-ia/grupo/desfazer');
+      expect(pedido.request.body).toEqual({ propostaIds: [11, 12] });
+      responderSucesso(pedido, { itens: [11, 12].map((id) => item(id, PropostaIaGrupoSituacaoEnum.RESOLVIDA, proposta(id, StatusPropostaIaEnum.DESFEITA, { aplicadaPelaIa: true }))) });
+      detectar(montado);
+      expect(avisoDaIa(montado)).toBeNull();
+      expect(cabecalho(montado)).toContain('1 esperando você');
+      expect(cabecalho(montado)).toContain('2 desfeitas');
+    });
+
+    it('Desfazer some da linha azul quando passou o prazo da que a IA fez', async () => {
+      const velha = proposta(11, StatusPropostaIaEnum.CONFIRMADA, { aplicadaPelaIa: true, resolucaoData: new Date(Date.now() - 45 * 60_000).toISOString() });
+      const montado = await montarGrupo([11, 12], { 11: velha });
+      expect(avisoDaIa(montado)).not.toBeNull();
+      expect(avisoDaIa(montado)?.querySelector('button')).toBeNull();
+    });
   });
 });

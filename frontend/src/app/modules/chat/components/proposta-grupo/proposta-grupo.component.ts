@@ -84,8 +84,10 @@ export class PropostaGrupoComponent {
     }
     return textos;
   });
-  readonly rotuloConfirmar = computed(() => (this.resumo().foraDoGrupo.length > 0 ? `Confirmar ${this.resumo().pendentes.length}` : 'Confirmar todas'));
-  readonly rotuloRecusar = computed(() => (this.resumo().foraDoGrupo.length > 0 ? `Recusar ${this.resumo().pendentes.length}` : 'Recusar todas'));
+  /** "Todas" só quando todas do grupo estão em jogo: com uma fora do grupo, ou parte já feita pela IA (grupo misto), o botão diz quantas. */
+  private readonly contaAsPendentes = computed(() => this.resumo().foraDoGrupo.length > 0 || this.resumo().misto);
+  readonly rotuloConfirmar = computed(() => (this.contaAsPendentes() ? `Confirmar ${this.resumo().pendentes.length}` : 'Confirmar todas'));
+  readonly rotuloRecusar = computed(() => (this.contaAsPendentes() ? `Recusar ${this.resumo().pendentes.length}` : 'Recusar todas'));
 
   constructor() {
     effect(() => {
@@ -175,6 +177,11 @@ export class PropostaGrupoComponent {
 
   desfazerTodas(): void {
     this.executar(this.propostaIaService.desfazerGrupo({ propostaIds: this.resumo().desfaziveis }));
+  }
+
+  /** No grupo misto: desfaz só o que a IA fez sozinha, deixando o que o usuário ainda decide como está. */
+  desfazerDaIa(): void {
+    this.executar(this.propostaIaService.desfazerGrupo({ propostaIds: this.resumo().desfaziveisPelaIa }));
   }
 
   /** Roda uma ação em grupo, aplica o resultado por proposta e avisa quando alguma não deu certo (o motivo fica na linha). */

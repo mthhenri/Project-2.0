@@ -44,7 +44,7 @@ const USUARIOS: Record<number, { nomeCompleto: string; status: TipoUsuarioStatus
 
 function criarFerramentaDeCriar() {
   const propostas: { tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }[] = [];
-  const propostaIaService = { criar: async (dto: { tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }) => { propostas.push(dto); return { id: 77, status: 'PENDENTE' }; } };
+  const propostaIaService = { criarComAutonomia: async (dto: { tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }) => { propostas.push(dto); return { id: 77, status: 'PENDENTE' }; } };
   const demandaRepositorio = { recuperar: async ({ id }: { id: number }) => ({ id, nome: 'Tela de login' }) };
   const usuarioService = { recuperar: async ({ id }: { id: number }) => ({ dados: { id, ...USUARIOS[id] } }) };
   const ferramenta = new ProporCriarAtividadeFerramenta(
@@ -87,7 +87,7 @@ interface Ativa { id: number; atividadeId: number; descricao: string; inicioData
 function montarCenario(ativas: Record<number, Ativa | undefined>) {
   const chamadas: string[] = [];
   const propostas: { tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }[] = [];
-  const propostaIaService = { criar: async (dto: { tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }) => { propostas.push(dto); return { id: 77, status: 'PENDENTE' }; } };
+  const propostaIaService = { criarComAutonomia: async (dto: { tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }) => { propostas.push(dto); return { id: 77, status: 'PENDENTE' }; } };
   const atividades: Record<number, { nome: string; demandaId: number; status: string; usuarioId: number; nomeUsuario: string }> = {
     9: { nome: 'Ajustar login', demandaId: 3, status: 'PLANEJADA', usuarioId: 8, nomeUsuario: 'Matheus Henrique' },
     5: { nome: 'Layout do carrinho', demandaId: 4, status: 'PLANEJADA', usuarioId: 8, nomeUsuario: 'Matheus Henrique' },
@@ -134,6 +134,7 @@ test('iniciar para outra pessoa: lê e pausa a execução ativa DELA, nunca a do
   await iniciarTool.executar({ atividadeId: 9, descricao: 'Ajustar o login do Matheus' }, GESTOR);
   assert.deepEqual(chamadas, ['ativa-de:8']);
   assert.equal(propostas[0].dados['usuarioNome'], 'Matheus Henrique');
+  assert.equal(propostas[0].dados['usuarioId'], 8, 'o dono fica nos dados: a regra de nível vê que é em nome de outra pessoa');
   assert.equal(propostas[0].dados['pausaraAtividadeNome'], 'Layout do carrinho');
 });
 
@@ -141,6 +142,7 @@ test('iniciar a própria atividade não mostra pessoa; desenvolvedor numa ativid
   const { iniciarTool, propostas } = montarCenario({});
   await iniciarTool.executar({ atividadeId: 6, descricao: 'Trabalho do próprio gestor' }, DESENVOLVEDOR);
   assert.equal(propostas[0].dados['usuarioNome'], undefined);
+  assert.equal(propostas[0].dados['usuarioId'], undefined);
   await assert.rejects(iniciarTool.executar({ atividadeId: 9, descricao: 'Ajustar o login do Matheus' }, DESENVOLVEDOR), contem('Só o gestor'));
   assert.equal(propostas.length, 1);
 });

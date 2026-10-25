@@ -19,7 +19,7 @@ function montar() {
     53: { tipo: TipoPropostaIaEnum.CRIAR_DEMANDA, status: StatusPropostaIaEnum.EXPIRADA, dados: { nome: 'Recusada', isEstrutural: true } },
   };
   const propostaIaService = {
-    criar: async (dto: { tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }) => {
+    criarComAutonomia: async (dto: { tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }) => {
       propostas.push(dto);
       return { id: 60, status: 'PENDENTE' };
     },

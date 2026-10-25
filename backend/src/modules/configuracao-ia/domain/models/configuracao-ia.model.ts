@@ -1,5 +1,5 @@
 import { BaseEntity } from '../../../../core/base/base.entity';
-import { ConfiguracaoIaModelosPorProvedorDto, EsforcoIaEnum, ModoContextoChatEnum, TipoProvedorIaEnum } from '@project20/shared';
+import { ConfiguracaoIaModelosPorProvedorDto, EsforcoIaEnum, ModoContextoChatEnum, PropostaIaNiveisDto, TipoProvedorIaEnum } from '@project20/shared';
 
 /** Uma versão da configuração da IA. */
 export interface ConfiguracaoIa extends BaseEntity {
@@ -17,5 +17,7 @@ export interface ConfiguracaoIa extends BaseEntity {
   duvidasCodigo: boolean;
   modoContextoChat: ModoContextoChatEnum;
   iaDesligada: boolean;
+  /** Nulo nas versões anteriores à task 228: vale o padrão do `shared`. */
+  niveisProposta: PropostaIaNiveisDto | null;
   usuarioId: number;
 }

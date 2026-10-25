@@ -14,6 +14,8 @@ import {
   PropostaIaGrupoRecusarDto,
   PropostaIaGrupoSituacaoEnum,
   idsDasPropostasDeQueDepende,
+  nivelDaProposta,
+  PropostaIaNivelEnum,
   PropostaIaRecuperadaDto,
   PropostaIaRecusadaDto,
   podeDesfazerProposta,
@@ -28,6 +30,7 @@ import { ConflictException } from '../../../core/exceptions/conflict.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
 import { UnauthorizedAccessException } from '../../../core/exceptions/unauthorized-access.exception';
 import { dataNoFuso } from '../../chat/domain/chat-conversa';
+import { ConfiguracaoIaService } from '../../configuracao-ia/services/configuracao-ia.service';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { ExecutorPropostaIaRegistro } from '../domain/executor-proposta-ia';
 import { PropostaIaRepository } from '../repositories/proposta-ia.repository';
@@ -36,6 +39,9 @@ import { PropostaIaRepository } from '../repositories/proposta-ia.repository';
  * Propostas da IA (task 136): a IA propõe, o usuário resolve. **Nada roda sem confirmação**, e a confirmação roda uma única vez: a
  * troca de situação é um comparar-e-trocar no SQL (só `PENDENTE` passa) feito **antes** do executor. Se o executor falha, a proposta
  * volta a `PENDENTE` (compensação) e o usuário vê o motivo. Só o dono resolve a proposta, nem o administrador resolve a de outro.
+ *
+ * A exceção é a autonomia da IA (task 228): quando o nível da proposta é "Faz e avisa" (`criarComAutonomia`), a própria criação confirma a
+ * proposta na hora, pelo mesmo caminho do cartão (mesmo executor, mesmas permissões, mesmo desfazer), e ela fica marcada como `aplicadaPelaIa`.
  */
 @Injectable()
 export class PropostaIaService {
@@ -45,6 +51,7 @@ export class PropostaIaService {
     private readonly propostaIaRepositorio: PropostaIaRepository,
     private readonly executores: ExecutorPropostaIaRegistro,
     private readonly configService: ConfigService,
+    private readonly configuracaoIaService: ConfiguracaoIaService,
   ) {}
 
   /** Uso interno (ferramentas da IA): não há rota para criar. O tipo precisa ter executor e os dados precisam servir a ele. */
@@ -52,6 +59,35 @@ export class PropostaIaService {
     const executor = this.executores.obter(dto.tipo);
     executor.validar(dto.dados);
     return this.propostaIaRepositorio.criar(dto);
+  }
+
+  /**
+   * Cria a proposta de uma ferramenta da IA e, se o nível dela é "Faz e avisa", a **confirma na hora** em nome do usuário do token. O nível é
+   * decidido aqui, no backend, pelos dados da proposta e pela configuração ativa (`nivelDaProposta`), nunca pelo modelo. Se a ação falha, a
+   * proposta não fica solta como pendente: expira e o erro volta ao modelo, que avisa o usuário.
+   */
+  async criarComAutonomia(dto: PropostaIaCriarDto, usuarioAtivo: JwtPayload): Promise<PropostaIaResumoDto> {
+    const nivel = await this.decidirNivel(dto);
+    if (nivel !== PropostaIaNivelEnum.FAZ_E_AVISA) return this.criar(dto);
+
+    const criada = await this.criar({ ...dto, aplicadaPelaIa: true });
+    try {
+      return (await this.confirmar(criada.id, usuarioAtivo)).dados as PropostaIaResumoDto;
+    } catch (erro) {
+      await this.propostaIaRepositorio.transitar({ id: criada.id, usuarioId: criada.usuarioId, de: [StatusPropostaIaEnum.PENDENTE], para: StatusPropostaIaEnum.EXPIRADA });
+      throw new BusinessException(`Não foi possível fazer isto: ${this.motivoDoErro(erro, criada.id)}. Nada foi alterado: avise o usuário e, se fizer sentido, proponha de novo.`);
+    }
+  }
+
+  /** Sem a configuração (banco indisponível, por exemplo), a IA pergunta: o erro de uma pergunta a mais custa menos que o de uma ação sozinha. */
+  private async decidirNivel(dto: PropostaIaCriarDto): Promise<PropostaIaNivelEnum> {
+    try {
+      const { niveisProposta } = await this.configuracaoIaService.obterAtiva();
+      return nivelDaProposta({ tipo: dto.tipo, dados: dto.dados, usuarioId: dto.usuarioId, niveis: niveisProposta });
+    } catch (erro) {
+      this.logger.warn(`Sem a configuração da IA para decidir o nível da proposta ${dto.tipo}: a IA vai perguntar. ${erro instanceof Error ? erro.message : String(erro)}`);
+      return PropostaIaNivelEnum.PERGUNTA;
+    }
   }
 
   async recuperarPorId(id: number, usuarioAtivo: JwtPayload): Promise<StandardResponse<PropostaIaRecuperadaDto>> {

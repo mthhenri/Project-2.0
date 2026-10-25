@@ -2,6 +2,7 @@ import { EsforcoIaEnum } from '../../enums/esforco-ia.enum';
 import { ModoContextoChatEnum } from '../../enums/modo-contexto-chat.enum';
 import { TipoProvedorIaEnum } from '../../enums/tipo-provedor-ia.enum';
 import { ConfiguracaoIaModelosPorProvedorDto } from './ConfiguracaoIaModelosDto';
+import { PropostaIaNiveisDto } from './PropostaIaNiveisDto';
 
 /** Uma versão da configuração da IA. A ativa é a de maior `versao`. */
 export interface ConfiguracaoIaResumoDto {
@@ -23,6 +24,8 @@ export interface ConfiguracaoIaResumoDto {
   duvidasCodigo: boolean;
   modoContextoChat: ModoContextoChatEnum;
   iaDesligada: boolean;
+  /** O nível de autonomia da IA por regra de proposta (task 228), sempre completo: a regra que a versão não guardou vem com o padrão. */
+  niveisProposta: PropostaIaNiveisDto;
   usuarioId: number;
   /** Quem salvou a versão. */
   usuarioNome: string;

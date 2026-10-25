@@ -1,0 +1,55 @@
+<div class="autonomia-aba" [formGroup]="formulario()">
+  <section class="autonomia-aba__secao">
+    <div class="autonomia-aba__cabecalho">
+      <h2 class="autonomia-aba__titulo">O que a IA faz sozinha</h2>
+      <span class="autonomia-aba__contador">{{ quantasFazemEAvisam() }} de {{ regras.length }} fazem e avisam</span>
+    </div>
+    <p class="autonomia-aba__ajuda">
+      <strong>Faz e avisa:</strong> {{ explicacao[Nivel.FAZ_E_AVISA] }}
+      <strong>Pergunta:</strong> {{ explicacao[Nivel.PERGUNTA] }}
+      Vale para todos os usuários. A IA segue as permissões de quem conversa com ela.
+    </p>
+
+    <ul class="autonomia-aba__lista" formGroupName="niveisProposta">
+      @for (regra of regras; track regra.chave) {
+        <li class="autonomia-aba__regra">
+          <span class="autonomia-aba__texto">
+            <strong id="autonomia-{{ regra.chave }}">{{ regra.rotulo }}</strong>
+            <small>{{ regra.descricao }}</small>
+          </span>
+          <p-selectbutton
+            [formControlName]="regra.chave"
+            [options]="opcoes"
+            optionLabel="rotulo"
+            optionValue="valor"
+            [allowEmpty]="false"
+            size="small"
+            [ariaLabelledBy]="'autonomia-' + regra.chave"
+          />
+        </li>
+      }
+    </ul>
+  </section>
+
+  <section class="autonomia-aba__secao">
+    <h2 class="autonomia-aba__titulo">Sempre pergunta</h2>
+    <p class="autonomia-aba__ajuda">{{ explicacao[Nivel.SEMPRE_PERGUNTA] }}</p>
+
+    <ul class="autonomia-aba__lista">
+      @for (regra of regrasFixas; track regra.rotulo) {
+        <li class="autonomia-aba__regra autonomia-aba__regra--fixa">
+          <span class="autonomia-aba__texto">
+            <strong>{{ regra.rotulo }}</strong>
+            @if (regra.descricao) {
+              <small>{{ regra.descricao }}</small>
+            }
+          </span>
+          <span class="autonomia-aba__fixo" role="img" tabindex="0" [attr.aria-label]="'Sempre pergunta: ' + regra.motivo" [pTooltip]="regra.motivo" tooltipPosition="left">
+            <i class="pi pi-shield" aria-hidden="true"></i>
+            Sempre pergunta
+          </span>
+        </li>
+      }
+    </ul>
+  </section>
+</div>

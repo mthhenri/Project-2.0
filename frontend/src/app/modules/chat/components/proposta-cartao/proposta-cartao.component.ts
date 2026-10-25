@@ -140,16 +140,18 @@ export class PropostaCartaoComponent {
   });
   /**
    * A linha em que a proposta se mostra, ou `null` quando o que vale é o cartão grande. Pendente e pequena: linha com ✓, lápis e ×;
-   * confirmada (qualquer tipo): linha verde de "feito"; recusada, expirada ou desfeita e pequena: linha sem botões. Ajustando ou com
+   * confirmada (qualquer tipo): linha verde de "feito" (azul, com o ícone da IA, se ela executou sozinha, task 228); recusada, expirada ou desfeita e pequena: linha sem botões. Ajustando ou com
    * os detalhes abertos, sempre o cartão grande, que também é o de toda proposta que não cabe numa linha.
    */
   readonly linha = computed(() => {
     const atual = this.proposta();
     const resumo = this.resumo();
     if (!atual || !resumo || this.ajustando() || this.expandido()) return null;
-    if (atual.status === StatusPropostaIaEnum.PENDENTE) return resumo.compacto ? { resumo, modo: 'PENDENTE' as const, status: atual.status } : null;
-    if (atual.status === StatusPropostaIaEnum.CONFIRMADA || atual.status === StatusPropostaIaEnum.AJUSTADA) return { resumo, modo: 'FEITA' as const, status: atual.status };
-    return resumo.compacto ? { resumo, modo: 'ENCERRADA' as const, status: atual.status } : null;
+    if (atual.status === StatusPropostaIaEnum.PENDENTE) return resumo.compacto ? { resumo, modo: 'PENDENTE' as const, status: atual.status, feitaPelaIa: false } : null;
+    if (atual.status === StatusPropostaIaEnum.CONFIRMADA || atual.status === StatusPropostaIaEnum.AJUSTADA) {
+      return { resumo, modo: 'FEITA' as const, status: atual.status, feitaPelaIa: atual.aplicadaPelaIa === true };
+    }
+    return resumo.compacto ? { resumo, modo: 'ENCERRADA' as const, status: atual.status, feitaPelaIa: false } : null;
   });
 
   /**

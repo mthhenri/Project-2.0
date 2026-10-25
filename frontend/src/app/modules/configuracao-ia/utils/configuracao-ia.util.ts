@@ -8,9 +8,11 @@ import {
   EstadoIaEnum,
   MAXIMO_FALLBACKS_IA,
   ModoContextoChatEnum,
+  PropostaIaNivelEnum,
   TipoProvedorIaEnum,
   cadeiaDeProvedoresIa,
   modeloPertenceAoProvedor,
+  normalizarNiveisDaProposta,
   validarProvedoresDaConfiguracaoIa,
 } from '@project20/shared';
 
@@ -94,6 +96,8 @@ export interface ValorFormularioConfiguracaoIa {
   duvidasCodigo: boolean;
   modoContextoChat: ModoContextoChatEnum;
   iaDesligada: boolean;
+  /** O nível de autonomia da IA por regra de proposta (task 228), sempre completo. */
+  niveisProposta: Record<string, PropostaIaNivelEnum>;
 }
 
 /** Os fallbacks do formulário em ordem, sem os campos em "Nenhum" (um fallback só no segundo campo sobe para o primeiro). */
@@ -168,6 +172,7 @@ export function valoresDaVersao(versao: ConfiguracaoIaResumoDto): ValorFormulari
     duvidasCodigo: versao.duvidasCodigo,
     modoContextoChat: versao.modoContextoChat,
     iaDesligada: versao.iaDesligada,
+    niveisProposta: normalizarNiveisDaProposta(versao.niveisProposta),
   };
 }
 
@@ -191,6 +196,7 @@ export function paraDtoDeCriacao(valor: ValorFormularioConfiguracaoIa): Configur
     duvidasCodigo: valor.duvidasCodigo,
     modoContextoChat: valor.modoContextoChat,
     iaDesligada: valor.iaDesligada,
+    niveisProposta: normalizarNiveisDaProposta(valor.niveisProposta),
   };
 }
 
@@ -228,6 +234,11 @@ export function criarFormularioConfiguracaoIa(formBuilder: FormBuilder) {
       duvidasCodigo: [false],
       modoContextoChat: [ModoContextoChatEnum.MISTURADO, Validators.required],
       iaDesligada: [true],
+      niveisProposta: formBuilder.nonNullable.group(
+        Object.fromEntries(
+          Object.entries(normalizarNiveisDaProposta(null)).map(([chave, nivel]) => [chave, formBuilder.nonNullable.control(nivel)]),
+        ),
+      ),
     },
     { validators: intervaloDoCheckinValido },
   );

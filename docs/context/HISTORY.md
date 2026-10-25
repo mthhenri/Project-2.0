@@ -12,6 +12,43 @@
 
 ---
 
+## 2026-10-25 — Task 228: autonomia da IA por tipo de proposta (Faz e avisa, Pergunta, Sempre pergunta)
+
+Quinta task das propostas da IA (`chat-propostas.spec.md`). A IA passa a **executar sozinha** o que é fácil de desfazer, deixando uma linha azul na conversa com Desfazer por 30 minutos; pergunta
+nas demais e **sempre** pergunta no que mexe em horas, projeto ou outra pessoa. O administrador ajusta o que não é fixo numa aba nova da IA Config.
+
+- **Regra pura no `shared`** (`utils/proposta-nivel.ts`, enum `PropostaIaNivelEnum`): o padrão por tipo implementa a tabela "Nível por tipo" da guarda-chuva como está (inclusive as linhas que vieram de
+  `chat-execucao-por-demanda.spec.md`), `nivelDaProposta` decide o nível de **uma proposta** a partir do tipo, dos dados e da configuração, e `normalizarNiveisDaProposta`/`validarNiveisDaProposta` leem e conferem o mapa.
+  Fixos (ignoram a configuração e não aparecem no painel): `REGISTRAR_EXECUCAO`, `CORRIGIR_EXECUCAO`, `CRIAR_PROJETO`; e, de qualquer tipo, o que é em nome de outra pessoa (`dados.usuarioId` diferente de quem confirma) e a seção Pessoal do pad.
+  Um tipo novo sem entrada no padrão não compila (`Record<TipoPropostaIaEnum, …>`): as tasks 229 a 231 não conseguem esquecer o nível.
+- **Decisões do agente** (o autor ainda não confirmou; ficam registradas): (1) "marcar a própria atividade como desenvolvida" é um caso de `ALTERAR_ATIVIDADE` com **regra de nível própria**
+  (`MARCAR_ATIVIDADE_DESENVOLVIDA`, padrão Faz e avisa) e só vale com a atividade do próprio usuário, sem outra mudança junto — por isso `PropostaAlterarAtividadeDadosDto` ganhou `atividadeUsuarioId`;
+  o resto de Alterar atividade pergunta. (2) `INICIAR_EXECUCAO` passou a guardar `usuarioId` (o dono) quando o gestor age por outra pessoa, porque a regra "em nome de outra pessoa" lê o dado, não o nome.
+  (3) O painel é uma **aba própria "Autonomia"** (não uma seção da Comportamento): são 14 regras e 5 fixas. (4) Sem a configuração (banco fora do ar), a IA **pergunta**.
+- **Banco** (migration `0055`, aplicada e revertida com `db:migrate`/`db:rollback`): `configuracao_ia.niveis_proposta` (JSONB anulável; versão antiga nula = padrão do `shared`; a versão nova sem o campo **copia** o da anterior)
+  e `proposta_ia.aplicada_pela_ia` (BOOLEAN, preenchida com `false` nas existentes e só então `NOT NULL`, sem `DEFAULT`).
+- **Backend:** `PropostaIaService.criarComAutonomia` (a ferramenta continua sem enxergar service de domínio) cria a proposta marcada e a confirma **pelo mesmo caminho do cartão** (mesmo executor, mesmas permissões,
+  mesmo desfazer); se o executor falha, a proposta expira (não sobra cartão pendente) e o erro volta ao modelo com o motivo. `ConfiguracaoIaService` lê sempre o mapa completo, valida na gravação e só o administrador altera.
+  `DemandaService.criarConexao`/`excluirConexao` receberam o usuário e recusam quem não é gestor (a regra deixou de morar só no controller; o executor de conectar não confere mais por conta própria).
+  O aviso que o contexto dá ao modelo (`propostas-no-contexto`) deixou de dizer "o usuário CONFIRMOU" para o que a IA fez sozinha, e o registro acrescenta à descrição de toda ferramenta de proposta uma nota para ler "Feito" × "Proposta criada".
+- **Frontend:** aba `app-autonomia-aba` (um `p-selectbutton` por regra; os fixos com escudo, não cadeado, e o motivo no `pTooltip`); a linha de "feito" do cartão vira o **aviso azul "Feito pela IA"** (ícone `pi-sparkles`, cor primária do tema);
+  o grupo misto ganha a **linha azul de cima** ("A IA já fez N de M", com Desfazer só do que ela fez), o cabeçalho passa a contar só o que espera ("N esperando você") e os botões viram "Confirmar N"/"Recusar N".
+- **Achados na própria task:** (1) o rodapé do chat dizia "A IA sempre pede confirmação antes de criar, iniciar, pausar ou anotar" e a abertura da conversa "sempre pede confirmação antes de gravar algo": os dois textos ficaram falsos e foram reescritos;
+  (2) com `--p-blue-*` o texto da linha azul quase sumia no tema escuro: a linha usa `--p-primary-color`, que clareia sozinho; (3) com uma proposta já feita pela IA o "Confirmar todas" mentia: ficou "Confirmar N";
+  (4) a coluna das regras fixas ficava estreita demais em 1366×768 e o painel passa a uma coluna só abaixo de 1500 px; (5) um teste antigo tratava `usuarioId` em `INICIAR_EXECUCAO` como campo desconhecido: agora é campo válido.
+- **Impacto** (`npm run impacto`): `PropostaIaResumoDto` ganhou `aplicadaPelaIa` (7 consumidores no `shared`, 3 no backend, 4 no frontend, 2 testes; só fixtures de teste precisaram do campo) e `ConfiguracaoIaResumoDto` ganhou `niveisProposta` (4 consumidores no backend,
+  4 no frontend, 5 testes); as 16 ferramentas de proposta passam a ser tratadas pelo nível (um teste de cada ferramenta que simulava `criar` agora simula `criarComAutonomia`). O check-in usa o mesmo cartão e não depende do clique do usuário, então segue funcionando.
+- **Testes:** `shared` 245 (14 da regra de nível); `backend` 1366 unitários (8 da autonomia no serviço de propostas, 4 da configuração, 2 da base da ferramenta, 1 do registro, 2 do contexto, 1 do desfazer da conexão, 1 das conexões do gestor/administrador × desenvolvedor)
+  e **321 de integração** (4 novos: a `0055` deixa a versão 1 sem mapa, níveis gravados e copiados, versão sem mapa seguindo nula, `aplicada_pela_ia`); `frontend` 161 arquivos e 1951 testes (aba, cartão, grupo misto, util do grupo, util e página da configuração); `desktop` 33; `repo:test` 13 (1 ignorado, preexistente).
+  Builds de `backend` e `frontend` ok. Sem lint (`PROBLEMS.md` P-001).
+- **Ao vivo** (administrador, IA de verdade — Anthropic —, backend e frontend reais): "Anota no meu pad, na seção Lembrete…" virou a linha **"Feito pela IA"** e a anotação **entrou no pad** (conferido pela API); "anota em Pendência e cria um projeto" gerou o grupo
+  misto (a anotação feita, **criar projeto esperando**, fixo); o Desfazer da linha azul e o Desfazer do grupo desfizeram e o pad voltou a ficar vazio; as pendentes foram recusadas. No painel: 3 tamanhos × 2 temas sem rolagem horizontal e sem erro de console;
+  o escudo mostra o motivo no tooltip; trocar Anotar no pad para "Pergunta" e salvar gravou a **versão 22**, releu "Pergunta" depois de recarregar e **a IA passou a propor e esperar o cartão** (nada gravado); o painel voltou para "Faz e avisa" na **versão 23**.
+- **Limites:** só o administrador foi exercitado ao vivo (a regra é a mesma para todos, e o que depende do tipo de usuário — conexões, executores, "em nome de outra pessoa" — está em teste); os casos fixos "em nome de outra pessoa" e seção Pessoal só em teste (ao vivo o fixo provado foi criar projeto);
+  as outras regras "Faz e avisa" (tags, iniciar/pausar, criar atividade…) só em teste de serviço e de ferramenta. A verificação deixou **duas versões de configuração (22 e 23, iguais ao padrão)** e mensagens da conversa de hoje do `gestor.inicial`; a anotação do pad foi desfeita e nenhum projeto foi criado.
+
+---
+
 ## 2026-10-25 — Task 227: propostas em grupo (Confirmar todas, Recusar todas e Desfazer todas)
 
 Quarta task das propostas da IA (`chat-propostas.spec.md`). Quando a IA propõe várias coisas numa resposta, o usuário vê **um grupo** e resolve tudo de uma vez ou linha por linha.

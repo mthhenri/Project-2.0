@@ -14,6 +14,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { ConfiguracaoIaResumoDto, EstadoIaEnum, TipoProvedorIaEnum } from '@project20/shared';
 import { PromptsAbaComponent } from '../../components/prompts-aba/prompts-aba.component';
 import { CustosAbaComponent } from '../../components/custos-aba/custos-aba.component';
+import { AutonomiaAbaComponent } from '../../components/autonomia-aba/autonomia-aba.component';
 import { ComportamentoAbaComponent } from '../../components/comportamento-aba/comportamento-aba.component';
 import { HistoricoVersoesComponent } from '../../components/historico-versoes/historico-versoes.component';
 import { ProvedorAbaComponent } from '../../components/provedor-aba/provedor-aba.component';
@@ -33,7 +34,7 @@ import {
 /**
  * Configurações da IA (task 132, exclusiva de administrador; redesenhada na task 204). Cada gravação cria uma versão nova (a antiga nunca
  * muda). Fora das abas ficam o liga/desliga da IA, o histórico (coluna fixa) e a barra de salvar; as abas são Provedor e modelos,
- * Comportamento (check-in e chat), Prompts e Custos. "Usar como base" só preenche o formulário. Análogo visual: a tela de Tags.
+ * Comportamento (check-in e chat), Autonomia (o que a IA faz sozinha, task 228), Prompts e Custos. "Usar como base" só preenche o formulário. Análogo visual: a tela de Tags.
  */
 @Component({
   selector: 'app-configuracao-ia-page',
@@ -49,6 +50,7 @@ import {
     TooltipModule,
     ProvedorAbaComponent,
     ComportamentoAbaComponent,
+    AutonomiaAbaComponent,
     HistoricoVersoesComponent,
     PromptsAbaComponent,
     CustosAbaComponent,
@@ -107,7 +109,7 @@ export class ConfiguracaoIaPage implements OnInit {
   readonly comportamentoComErro = computed(() => this.tentouSalvar() && this.comportamentoInvalido());
 
   /** A barra de salvar é da configuração versionada: fica nas abas dela e, nas outras, só enquanto há algo pendente (o liga/desliga mexe nela de qualquer aba). */
-  readonly barraDeSalvarVisivel = computed(() => ['provedor', 'comportamento'].includes(this.abaAtiva()) || !this.semAlteracoes());
+  readonly barraDeSalvarVisivel = computed(() => ['provedor', 'comportamento', 'autonomia'].includes(this.abaAtiva()) || !this.semAlteracoes());
 
   readonly proximaVersao = computed(() => (this.ativa()?.versao ?? 0) + 1);
 

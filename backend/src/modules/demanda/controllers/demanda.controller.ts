@@ -175,8 +175,9 @@ export class DemandaController {
   criarConexao(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: DemandaConexaoCriarDto,
+    @ActiveUser() usuarioAtivo: JwtPayload,
   ) {
-    return this.demandaService.criarConexao({ ...dto, demandaOrigemId: id });
+    return this.demandaService.criarConexao({ ...dto, demandaOrigemId: id }, usuarioAtivo);
   }
 
   @ApiOperation({ summary: 'Listar conexões de uma demanda (saída, entrada bidirecional)' })
@@ -201,8 +202,9 @@ export class DemandaController {
   excluirConexao(
     @Param('id', ParseIntPipe) id: number,
     @Param('conexaoId', ParseIntPipe) conexaoId: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
   ) {
-    return this.demandaService.excluirConexao({ demandaId: id, conexaoId });
+    return this.demandaService.excluirConexao({ demandaId: id, conexaoId }, usuarioAtivo);
   }
 
   @ApiOperation({ summary: 'Sincronizar tags da demanda (gestor ou desenvolvedor membro)' })

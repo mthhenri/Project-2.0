@@ -21,6 +21,11 @@ export interface ResumoDoGrupo {
   feitas: number[];
   /** Feitas que ainda estão dentro do prazo de desfazer (as que o "Desfazer todas" alcança). */
   desfaziveis: number[];
+  /** Feitas que a IA executou sozinha (nível "Faz e avisa", task 228), e as que ainda dá para desfazer. */
+  feitasPelaIa: number[];
+  desfaziveisPelaIa: number[];
+  /** O grupo mistura níveis: a IA já fez alguma e ainda há o que o usuário decide (pendente ou tirada do grupo). A tela mostra a linha azul em cima. */
+  misto: boolean;
   recusadas: number[];
   desfeitas: number[];
   /** Nenhuma pendente no grupo e ao menos uma feita: o cabeçalho mostra "N feitas · Ver · Desfazer todas". */
@@ -34,7 +39,8 @@ const concordar = (quantidade: number, singular: string, plural: string): string
 /** Conta as propostas do grupo por situação e monta o texto do cabeçalho. */
 export function resumirGrupo(ids: readonly number[], propostas: PropostasDoGrupo, foraDoGrupo: ReadonlySet<number>, agora: Date = new Date()): ResumoDoGrupo {
   const resumo: ResumoDoGrupo = {
-    total: ids.length, carregando: false, pendentes: [], foraDoGrupo: [], feitas: [], desfaziveis: [], recusadas: [], desfeitas: [], resolvido: false, texto: '',
+    total: ids.length, carregando: false, pendentes: [], foraDoGrupo: [], feitas: [], desfaziveis: [], feitasPelaIa: [], desfaziveisPelaIa: [], misto: false,
+    recusadas: [], desfeitas: [], resolvido: false, texto: '',
   };
   for (const id of ids) {
     const proposta = propostas[id];
@@ -44,14 +50,23 @@ export function resumirGrupo(ids: readonly number[], propostas: PropostasDoGrupo
     }
     if (proposta.status === StatusPropostaIaEnum.PENDENTE) (foraDoGrupo.has(id) ? resumo.foraDoGrupo : resumo.pendentes).push(id);
     else if (proposta.status === StatusPropostaIaEnum.CONFIRMADA || proposta.status === StatusPropostaIaEnum.AJUSTADA) {
+      const desfazivel = podeDesfazerProposta(proposta.resolucaoData, agora);
       resumo.feitas.push(id);
-      if (podeDesfazerProposta(proposta.resolucaoData, agora)) resumo.desfaziveis.push(id);
+      if (desfazivel) resumo.desfaziveis.push(id);
+      if (proposta.aplicadaPelaIa) {
+        resumo.feitasPelaIa.push(id);
+        if (desfazivel) resumo.desfaziveisPelaIa.push(id);
+      }
     } else if (proposta.status === StatusPropostaIaEnum.EXPIRADA) resumo.recusadas.push(id);
     else resumo.desfeitas.push(id);
   }
   resumo.resolvido = !resumo.carregando && resumo.pendentes.length === 0 && resumo.feitas.length > 0;
+  resumo.misto = resumo.feitasPelaIa.length > 0 && resumo.pendentes.length + resumo.foraDoGrupo.length > 0;
+  // No grupo misto o que a IA fez já está na linha azul de cima: o resumo conta só o resto. Todas feitas pela IA: o resumo diz isso.
+  const feitasDoResumo = resumo.misto ? resumo.feitas.length - resumo.feitasPelaIa.length : resumo.feitas.length;
+  const todasPelaIa = resumo.feitasPelaIa.length === resumo.feitas.length;
   const partes = [
-    resumo.feitas.length > 0 ? concordar(resumo.feitas.length, 'feita', 'feitas') : '',
+    feitasDoResumo > 0 ? `${concordar(feitasDoResumo, 'feita', 'feitas')}${todasPelaIa ? ' pela IA' : ''}` : '',
     resumo.pendentes.length > 0 ? `${resumo.pendentes.length} esperando você` : '',
     resumo.foraDoGrupo.length > 0 ? `${resumo.foraDoGrupo.length} fora do grupo` : '',
     resumo.recusadas.length > 0 ? concordar(resumo.recusadas.length, 'recusada', 'recusadas') : '',
