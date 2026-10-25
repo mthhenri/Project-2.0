@@ -60,7 +60,7 @@ describe('documento da mensagem', () => {
     modelo: 'claude-haiku-5-5',
     tokensEntrada: 10,
     tokensSaida: 4,
-    propostaId: 3,
+    propostaIds: [3],
     conteudoBruto: [{ type: 'text', text: 'Bom dia!' }],
   };
 

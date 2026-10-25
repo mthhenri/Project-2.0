@@ -14,7 +14,8 @@ export interface ChatMensagemNova {
   tokensEntrada?: number | null;
   tokensSaida?: number | null;
   tokensCache?: number | null;
-  propostaId?: number | null;
+  /** As propostas do turno, na ordem em que nasceram (task 225). */
+  propostaIds?: number[];
   execucaoId?: number | null;
   atividadeId?: number | null;
   demandaId?: number | null;
@@ -42,7 +43,10 @@ export interface ChatMensagemFonte {
   tokens_entrada: number | null;
   tokens_saida: number | null;
   tokens_cache: number | null;
+  /** A primeira proposta do turno: o campo antigo, que as mensagens anteriores à task 225 têm sozinho. */
   proposta_id: number | null;
+  /** Todas as propostas do turno (task 225); ausente nas mensagens antigas, que contam como `[proposta_id]`. */
+  propostas_ids?: number[] | null;
   execucao_id: number | null;
   atividade_id: number | null;
   demanda_id: number | null;
@@ -64,13 +68,20 @@ export function paraFonte(mensagem: ChatMensagemNova, id: string, criadaEm: Date
     tokens_entrada: mensagem.tokensEntrada ?? null,
     tokens_saida: mensagem.tokensSaida ?? null,
     tokens_cache: mensagem.tokensCache ?? null,
-    proposta_id: mensagem.propostaId ?? null,
+    proposta_id: mensagem.propostaIds?.[0] ?? null,
+    propostas_ids: mensagem.propostaIds ?? [],
     execucao_id: mensagem.execucaoId ?? null,
     atividade_id: mensagem.atividadeId ?? null,
     demanda_id: mensagem.demandaId ?? null,
     conteudo_bruto: mensagem.conteudoBruto ?? null,
     created_date: criadaEm.toISOString(),
   };
+}
+
+/** A lista de propostas da mensagem; a gravada antes da task 225 só tem `proposta_id` e vira uma lista de um. */
+export function propostaIdsDaFonte(fonte: Pick<ChatMensagemFonte, 'proposta_id' | 'propostas_ids'>): number[] {
+  if (fonte.propostas_ids && fonte.propostas_ids.length > 0) return fonte.propostas_ids;
+  return fonte.proposta_id !== null && fonte.proposta_id !== undefined ? [fonte.proposta_id] : [];
 }
 
 export function deFonte(fonte: ChatMensagemFonte): ChatMensagemLida {
@@ -87,7 +98,7 @@ export function deFonte(fonte: ChatMensagemFonte): ChatMensagemLida {
     tokensEntrada: fonte.tokens_entrada,
     tokensSaida: fonte.tokens_saida,
     tokensCache: fonte.tokens_cache,
-    propostaId: fonte.proposta_id,
+    propostaIds: propostaIdsDaFonte(fonte),
     execucaoId: fonte.execucao_id,
     atividadeId: fonte.atividade_id,
     demandaId: fonte.demanda_id,

@@ -31,7 +31,7 @@ testarComBanco('gravar e listarConversa: ordem crescente, campos opcionais e con
   await espera(15);
   const segunda = await repositorio.gravar(mensagem('Claro, aqui está', {
     autor: AutorChatEnum.IA, assunto: AssuntoChatEnum.CODIGO, nivel: NivelIaEnum.RAPIDO, modelo: 'modelo-x', tokensEntrada: 10, tokensSaida: 20, tokensCache: 0,
-    propostaId: 7, conteudoBruto: [{ type: 'text', text: 'Claro' }],
+    propostaIds: [7, 8], conteudoBruto: [{ type: 'text', text: 'Claro' }],
   }));
 
   const lida = await repositorio.listarConversa({ conversaId, usuarioId: dono.id });
@@ -41,8 +41,8 @@ testarComBanco('gravar e listarConversa: ordem crescente, campos opcionais e con
   assert.equal(lida[1].modelo, 'modelo-x');
   assert.equal(lida[1].tokensEntrada, 10);
   assert.equal(lida[1].tokensCache, 0);
-  assert.equal(lida[1].propostaId, 7);
-  assert.equal(lida[0].propostaId, null);
+  assert.deepEqual(lida[1].propostaIds, [7, 8]);
+  assert.deepEqual(lida[0].propostaIds, []);
   assert.equal(lida[1].assunto, AssuntoChatEnum.CODIGO);
   assert.equal(lida[0].assunto, null);
   assert.deepEqual(lida[1].conteudoBruto, [{ type: 'text', text: 'Claro' }]);

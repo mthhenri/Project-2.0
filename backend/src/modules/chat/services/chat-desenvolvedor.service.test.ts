@@ -27,7 +27,7 @@ function mensagem(indice: number, parcial: Partial<ChatMensagemLida> = {}): Chat
     tokensEntrada: 10,
     tokensSaida: 5,
     tokensCache: 0,
-    propostaId: null,
+    propostaIds: [],
     execucaoId: null,
     atividadeId: null,
     demandaId: null,

@@ -20,15 +20,26 @@ import { dataDaConversa, ROTULO_NIVEL, sugestoesAposProposta, sugestoesIniciais 
 /** Uma mensagem como a tela a mostra: as da conversa do dia mais as locais (otimistas), com os cartões de proposta ligados a ela. */
 interface MensagemNaTela {
   id: string;
+  /**
+   * Identidade do item na lista: a resposta em andamento e a mensagem gravada que a substitui têm a **mesma** chave, então o `@for` mantém o
+   * mesmo elemento (e os cartões de proposta já carregados) em vez de apagar a bolha e criar tudo de novo.
+   */
+  chave: string;
   autor: AutorChatEnum;
   texto: string;
   nivel: NivelIaEnum | null;
   propostaIds: number[];
   criadaEm: Date | null;
+  /** Só na resposta em andamento: ainda chegando (sem rodapé, com o "consultando…"). */
+  aoVivo?: boolean;
+  /** Só na resposta em andamento: a ferramenta que a IA está usando agora. */
+  ferramenta?: string | null;
 }
 
 /** A resposta que está chegando: cresce a cada `trecho` e vira uma mensagem da conversa no `fim`. */
 interface RespostaAoVivo {
+  /** A chave do item na lista; a mensagem gravada no `fim` a herda. */
+  chave: string;
   texto: string;
   ferramenta: string | null;
   propostaIds: number[];
@@ -36,6 +47,8 @@ interface RespostaAoVivo {
 
 /** Distância do fim (px) até a qual a conversa continua acompanhando a resposta que chega. */
 const MARGEM_DO_FIM_PX = 80;
+/** Quanto tempo (ms) depois de uma roda, toque, tecla ou clique na barra um evento de rolagem ainda conta como do usuário. */
+const JANELA_DA_INTERACAO_MS = 400;
 
 /**
  * Chat do dia com a IA (task 139). Mostra a conversa de hoje, envia mensagens (`Enter` envia, `Shift+Enter` quebra linha), mostra a
@@ -80,6 +93,23 @@ export class ChatPage implements OnInit {
   readonly enviando = signal(false);
   readonly mensagens = signal<MensagemNaTela[]>([]);
   readonly aoVivo = signal<RespostaAoVivo | null>(null);
+  /** O que a conversa mostra: as mensagens e, no fim, a resposta em andamento como mais um item (que vira a mensagem gravada sem sumir). */
+  readonly itens = computed<MensagemNaTela[]>(() => {
+    const resposta = this.aoVivo();
+    if (!resposta) return this.mensagens();
+    const emAndamento: MensagemNaTela = {
+      id: resposta.chave,
+      chave: resposta.chave,
+      autor: AutorChatEnum.IA,
+      texto: resposta.texto,
+      nivel: null,
+      propostaIds: resposta.propostaIds,
+      criadaEm: null,
+      aoVivo: true,
+      ferramenta: resposta.ferramenta,
+    };
+    return [...this.mensagens(), emAndamento];
+  });
   readonly conversaId = signal<string>('');
   /** O dia de hoje no servidor (`yyyy-mm-dd`, do id da conversa de hoje); vazio até a primeira carga. */
   readonly hoje = signal('');
@@ -119,6 +149,8 @@ export class ChatPage implements OnInit {
   private contadorLocal = 0;
   /** O bom dia é tentado uma vez por abertura da tela (o servidor garante uma vez por dia). */
   private bomDiaTentado = false;
+  /** O instante da última roda, toque, tecla ou clique na área de rolagem: é o que distingue "o usuário subiu" de "a conversa cresceu". */
+  private ultimaInteracaoDoUsuario = 0;
 
   constructor() {
     this.controleTexto.valueChanges.pipe(takeUntilDestroyed()).subscribe((valor) => this.textoDigitado.set(valor));
@@ -204,10 +236,10 @@ export class ChatPage implements OnInit {
     const idLocal = `local-${++this.contadorLocal}`;
     this.mensagens.update((lista) => [
       ...lista,
-      { id: idLocal, autor: AutorChatEnum.USUARIO, texto, nivel: null, propostaIds: [], criadaEm: new Date() },
+      { id: idLocal, chave: idLocal, autor: AutorChatEnum.USUARIO, texto, nivel: null, propostaIds: [], criadaEm: new Date() },
     ]);
     if (textoReenvio === undefined) this.controleTexto.setValue('', { emitEvent: true });
-    this.aoVivo.set({ texto: '', ferramenta: null, propostaIds: [] });
+    this.aoVivo.set(this.novaRespostaAoVivo());
 
     let terminou = false;
     try {
@@ -264,7 +296,7 @@ export class ChatPage implements OnInit {
   private async executarFluxoDoServidor(iniciar: (aoEvento: (evento: ChatEventoDto) => void) => Promise<void>): Promise<void> {
     this.enviando.set(true);
     this.longeDoFim.set(false);
-    this.aoVivo.set({ texto: '', ferramenta: null, propostaIds: [] });
+    this.aoVivo.set(this.novaRespostaAoVivo());
     let terminou = false;
     try {
       await iniciar((evento) => {
@@ -292,10 +324,26 @@ export class ChatPage implements OnInit {
     void this.enviar();
   }
 
+  /** O usuário mexeu na área de rolagem (roda, toque, tecla ou clique na barra): o próximo evento de rolagem é dele. */
+  aoInteragirComARolagem(): void {
+    this.ultimaInteracaoDoUsuario = Date.now();
+  }
+
+  /**
+   * Decide se o usuário está lendo mais acima (aparece "Ir para o fim" e a conversa deixa de acompanhar). Só conta como "subiu" a rolagem
+   * que veio de uma interação dele: um cartão que carrega e cresce a conversa também faz o fim ficar longe, e aí a conversa continua
+   * acompanhando em vez de largar o usuário no meio do caminho.
+   */
   aoRolar(): void {
     const area = this.areaDeRolagem()?.nativeElement;
     if (!area) return;
-    this.longeDoFim.set(area.scrollHeight - area.scrollTop - area.clientHeight > MARGEM_DO_FIM_PX);
+    const distanciaDoFim = area.scrollHeight - area.scrollTop - area.clientHeight;
+    if (distanciaDoFim <= MARGEM_DO_FIM_PX) {
+      this.longeDoFim.set(false);
+      return;
+    }
+    if (Date.now() - this.ultimaInteracaoDoUsuario < JANELA_DA_INTERACAO_MS) this.longeDoFim.set(true);
+    else if (!this.longeDoFim()) this.rolarParaOFim();
   }
 
   irParaOFim(): void {
@@ -370,11 +418,13 @@ export class ChatPage implements OnInit {
         this.aoVivo.update((atual) => atual && { ...atual, propostaIds: [...atual.propostaIds, evento.propostaId] });
         break;
       case 'fim': {
-        const propostasDoFluxo = this.aoVivo()?.propostaIds ?? [];
+        const resposta = this.aoVivo();
         const mensagem = this.paraTela(evento.mensagem);
-        mensagem.propostaIds = [...new Set([...propostasDoFluxo, ...mensagem.propostaIds])];
-        this.aoVivo.set(null);
+        mensagem.propostaIds = [...new Set([...(resposta?.propostaIds ?? []), ...mensagem.propostaIds])];
+        // A mesma chave faz a lista trocar a resposta em andamento pela gravada sem recriar o elemento nem os cartões.
+        if (resposta) mensagem.chave = resposta.chave;
         this.mensagens.update((lista) => [...lista, mensagem]);
+        this.aoVivo.set(null);
         this.atualizarDisponibilidade();
         break;
       }
@@ -390,10 +440,15 @@ export class ChatPage implements OnInit {
   }
 
   private mostrarFalhaLocal(texto: string): void {
+    const idLocal = `local-${++this.contadorLocal}`;
     this.mensagens.update((lista) => [
       ...lista,
-      { id: `local-${++this.contadorLocal}`, autor: AutorChatEnum.SISTEMA, texto, nivel: null, propostaIds: [], criadaEm: new Date() },
+      { id: idLocal, chave: idLocal, autor: AutorChatEnum.SISTEMA, texto, nivel: null, propostaIds: [], criadaEm: new Date() },
     ]);
+  }
+
+  private novaRespostaAoVivo(): RespostaAoVivo {
+    return { chave: `ao-vivo-${++this.contadorLocal}`, texto: '', ferramenta: null, propostaIds: [] };
   }
 
   private atualizarDisponibilidade(): void {
@@ -403,10 +458,11 @@ export class ChatPage implements OnInit {
   private paraTela(mensagem: ChatMensagemResumoDto): MensagemNaTela {
     return {
       id: mensagem.id,
+      chave: mensagem.id,
       autor: mensagem.autor,
       texto: mensagem.texto,
       nivel: mensagem.nivel,
-      propostaIds: mensagem.propostaId !== null ? [mensagem.propostaId] : [],
+      propostaIds: mensagem.propostaIds,
       criadaEm: new Date(mensagem.createdDate),
     };
   }

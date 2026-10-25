@@ -72,11 +72,11 @@ describe('ChatMensagemElasticsearchRepository', () => {
     assert.equal(existente.chamadas.create.length, 0);
   });
 
-  it('um índice que já existe ganha o campo `assunto` (keyword) sem ser recriado', async () => {
+  it('um índice que já existe ganha os campos posteriores (`assunto` e `propostas_ids`) sem ser recriado', async () => {
     const { cliente, chamadas } = criarClienteFalso({ indiceExiste: true });
     await new ChatMensagemElasticsearchRepository(cliente).gravar(nova);
     assert.equal(chamadas.create.length, 0);
-    assert.deepEqual(chamadas.putMapping, [{ index: 'chat-mensagem', properties: { assunto: { type: 'keyword' } } }]);
+    assert.deepEqual(chamadas.putMapping, [{ index: 'chat-mensagem', properties: { assunto: { type: 'keyword' }, propostas_ids: { type: 'integer' } } }]);
   });
 
   it('tolera outra instância criando o índice ao mesmo tempo', async () => {

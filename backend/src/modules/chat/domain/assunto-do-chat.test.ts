@@ -17,7 +17,7 @@ import { ChatMensagemLida } from './chat-mensagem.documento';
 function mensagem(autor: AutorChatEnum, texto: string, assunto: AssuntoChatEnum | null = null): ChatMensagemLida {
   return {
     id: texto, conversaId: '7-2026-10-19', usuarioId: 7, contexto: ContextoChatEnum.CHAT, autor, assunto, texto, nivel: null, modelo: null,
-    tokensEntrada: null, tokensSaida: null, tokensCache: null, propostaId: null, execucaoId: null, atividadeId: null, demandaId: null,
+    tokensEntrada: null, tokensSaida: null, tokensCache: null, propostaIds: [], execucaoId: null, atividadeId: null, demandaId: null,
     conteudoBruto: null, createdDate: new Date('2026-10-19T12:00:00Z'),
   };
 }

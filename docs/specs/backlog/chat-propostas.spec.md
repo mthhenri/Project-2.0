@@ -135,7 +135,7 @@ administrador.
 | # | Task | Escopo | Depende de |
 |---|---|---|---|
 | 224 | [Diff sobreposto por palavra](../done/224-diff-sobreposto-por-palavra.spec.md) | regra pura no `shared`, componente de exibição, troca nos cartões da decisão 3 e no pad; **é também a fase 1 de `chat-planejamento.spec.md`** (uma task só para as duas guarda-chuvas) | — |
-| 225 | [Sumiço, scroll e várias propostas](225-chat-sumico-scroll-e-varias-propostas.spec.md) | item único para resposta em andamento e gravada, cartão sem recriar, rolagem, lista de propostas nos três armazenamentos, separador entre voltas | — |
+| 225 | [Sumiço, scroll e várias propostas](../done/225-chat-sumico-scroll-e-varias-propostas.spec.md) | item único para resposta em andamento e gravada, cartão sem recriar, rolagem, lista de propostas nos três armazenamentos, separador entre voltas | — |
 | 226 | [Cartão compacto](226-proposta-cartao-compacto.spec.md) | cartão de uma linha para mudança pequena e a linha de "feito" com Desfazer | 224, 225 |
 | 227 | [Propostas em grupo](227-propostas-em-grupo.spec.md) | grupo no fim da resposta, Confirmar todas, Recusar todas e Desfazer todas, dependência entre linhas | 225, 226 |
 | 228 | [Autonomia por tipo](228-propostas-autonomia-por-tipo.spec.md) | regra de níveis no `shared`, campo na `configuracao_ia`, painel na IA Config., "faz e avisa", linha azul, gestor nas conexões | 226, 227 |

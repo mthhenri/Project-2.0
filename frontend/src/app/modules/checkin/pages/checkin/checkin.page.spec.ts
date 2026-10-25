@@ -44,7 +44,7 @@ function situacao(opcoes: OpcoesSituacao = {}): CheckinSituacaoConsultadaDto {
 function mensagemDaIa(texto: string, sobrescrita: Record<string, unknown> = {}) {
   return {
     id: `m-${texto}`, conversaId: '1-2026-10-19', usuarioId: 1, contexto: ContextoChatEnum.CHECKIN, autor: AutorChatEnum.IA, texto,
-    nivel: NivelIaEnum.RAPIDO, modelo: null, tokensEntrada: null, tokensSaida: null, assunto: null, tokensCache: null, propostaId: null,
+    nivel: NivelIaEnum.RAPIDO, modelo: null, tokensEntrada: null, tokensSaida: null, assunto: null, tokensCache: null, propostaIds: [],
     execucaoId: null, atividadeId: null, demandaId: null, createdDate: '2026-10-19T12:00:00.000Z', ...sobrescrita,
   };
 }
@@ -370,7 +370,7 @@ describe('CheckinPage — conversa', () => {
     expect(conversaDa(montado)).toContain('Tela de login');
     expect(botao(montado, 'Confirmar')).toBeDefined();
 
-    fluxo.emitir({ tipo: 'fim', mensagem: mensagemDaIa('Posso registrar?', { propostaId: 31 }) as never });
+    fluxo.emitir({ tipo: 'fim', mensagem: mensagemDaIa('Posso registrar?', { propostaIds: [31] }) as never });
     fluxo.terminar();
     await montado.atualizar();
 

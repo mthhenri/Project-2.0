@@ -12,6 +12,41 @@
 
 ---
 
+## 2026-10-25 — Task 225: a resposta da IA com proposta não some, a rolagem acompanha e a mensagem guarda todas as propostas
+
+Segunda task das propostas da IA (`chat-propostas.spec.md`). Os três defeitos (achados na leitura do código) foram **reproduzidos ao vivo antes de mexer**, num
+script Playwright com o stream de `POST /chat/mensagem` simulado no navegador (eventos espaçados no tempo) e as propostas e a conversa de hoje interceptadas
+(o banco de desenvolvimento só recebeu a migration):
+
+- **Sumiço:** no `fim` os 2 cartões da resposta eram destruídos e recriados (2 removidos, "Carregando proposta…" visto 3 vezes depois do fim). **Corrigido:** a
+  `chat.page` passou a ter `itens` (as mensagens mais a resposta em andamento como mais um item, `track` por `chave`); a mensagem gravada herda a chave da
+  `aoVivo`, então o mesmo elemento, o corpo da resposta e os cartões continuam, sem nova leitura da proposta. O rodapé (hora, nível, copiar) só aparece depois do fim.
+- **Rolagem:** 118 px curta no 1366×768 e no 1080×1920 por causa da recriação. Depois de corrigida a recriação, um **segundo** defeito apareceu só na
+  verificação com o cartão carregando depois do `fim` (206 ou 475 px curta, intermitente): `aoRolar` decidia "o usuário subiu" só pela distância do fim, e um
+  evento de rolagem depois de dois cartões crescerem 681 px de uma vez ligava o "Ir para o fim" e parava de acompanhar. Agora só conta como "subiu" a rolagem
+  que veio de uma interação do usuário (roda, toque, tecla ou clique na barra, janela de 400 ms); o resto, quando já está acompanhando, segue o fim.
+- **Várias propostas:** a mensagem gravava só `propostasDoTurno[0]`. `ChatMensagemResumoDto.propostaId` virou `propostaIds: number[]`; o documento ganhou
+  `propostas_ids` (`proposta_id` segue com a primeira; mensagem antiga é lida como lista de um) nos três armazenamentos: campo posterior no mapeamento do índice
+  (`CAMPOS_POSTERIORES_DA_MENSAGEM`, acrescentado ao índice existente ao subir) e coluna `chat_mensagem.propostas_ids INTEGER[]` (migration `0054`, aplicada no banco
+  de desenvolvimento e no de teste).
+- **Texto colado:** o texto de cada volta do laço de ferramentas vem separado do anterior por um parágrafo em branco (`separadorEntreVoltas`), no `trecho` ao
+  vivo e no gravado, e só quando a volta tem texto.
+- **Achado fora do escopo:** a `checkin.page` tem o mesmo padrão de bolha trocada no `fim` (P-035). Só ganhou o ajuste do contrato (`propostaIds`).
+- **Testes:** `shared` 224; `backend` unitários com o `ChatService` (duas propostas na ordem, lista vazia, separador ao vivo e gravado, volta sem texto sem
+  separador), o documento (ida e volta, mensagem antiga) e o separador; integração do repositório Postgres do chat 13 (lista de duas propostas gravada e lida);
+  `frontend` chat.page 43 (5 do item único: uma e duas propostas, reabrir com duas, sem proposta e falha no meio; 4 da regra de rolagem). O contrato dos
+  armazenamentos (`CHAT_INTEGRACAO=1`) foi atualizado mas **não rodou**: não há OpenSearch nem Elasticsearch neste ambiente. Sem lint (`PROBLEMS.md` P-001).
+  Suíte completa no fim: `shared` 224, `backend` 1333 (a primeira rodada falhou em 3 testes do mapeamento do índice, que afirmavam só o campo `assunto`; atualizados
+  para `assunto` e `propostas_ids`), `frontend` 1877 em 157 arquivos, `desktop` 33, `repo:test` 13; builds do backend e do frontend ok.
+- **Ao vivo** (1920×1080, 1366×768 e 1080×1920): com a resposta de duas propostas, 0 cartões removidos, 0 "Carregando" depois do fim, 0 px do fim, conversa
+  reaberta com 2 cartões, sem erro de console; com o cartão chegando 2,5 s depois do fim, 0 px do fim em 9 de 9 rodadas (antes 206 e 475 px em parte delas);
+  com o usuário subindo a conversa com a roda do mouse, a tela não o puxa de volta e o "Ir para o fim" aparece; o bom dia (mesmo caminho) com o mesmo resultado.
+- **Limites:** o stream e as propostas foram simulados no navegador (o backend em execução não emitiu esses eventos de verdade); retomada e check-in não foram
+  exercitados ao vivo, só por teste de componente (a retomada passa pela mesma `executarFluxoDoServidor` do bom dia). O índice existente do OpenSearch/Elasticsearch
+  não foi tocado.
+
+---
+
 ## 2026-10-25 — Task 224: diff sobreposto por palavra nos cartões de proposta
 
 Primeira task das propostas da IA (`chat-propostas.spec.md`) e fase 1 do modo planejamento: toda mudança de texto mostrada no cartão passa a ser um

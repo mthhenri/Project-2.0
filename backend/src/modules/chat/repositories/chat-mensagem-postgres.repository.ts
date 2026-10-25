@@ -37,7 +37,7 @@ interface LinhaDeTitulo {
 }
 
 const COLUNAS_DA_MENSAGEM = `mensagem_id, conversa_id, usuario_id, contexto, autor, assunto, texto, nivel, modelo, tokens_entrada, tokens_saida,
-  tokens_cache, proposta_id, execucao_id, atividade_id, demanda_id, conteudo_bruto, created_date`;
+  tokens_cache, proposta_id, propostas_ids, execucao_id, atividade_id, demanda_id, conteudo_bruto, created_date`;
 
 function deLinha(linha: LinhaDeMensagem): ChatMensagemLida {
   return deFonte({ ...linha, created_date: linha.created_date.toISOString() });
@@ -61,11 +61,11 @@ export class ChatMensagemPostgresRepository extends BaseRepository<ChatMensagemF
       const fonte = paraFonte(mensagem, randomUUID(), new Date());
       await this.executarConsulta(
         `INSERT INTO chat_mensagem (created_date, updated_date, is_deleted, mensagem_id, conversa_id, usuario_id, contexto, autor, assunto,
-                                    texto, nivel, modelo, tokens_entrada, tokens_saida, tokens_cache, proposta_id, execucao_id, atividade_id,
-                                    demanda_id, conteudo_bruto)
+                                    texto, nivel, modelo, tokens_entrada, tokens_saida, tokens_cache, proposta_id, propostas_ids,
+                                    execucao_id, atividade_id, demanda_id, conteudo_bruto)
          SELECT :criadaEm, :criadaEm, false, CAST(:mensagemId AS uuid), :conversaId, :usuarioId, :contexto, :autor, :assunto,
-                :texto, :nivel, :modelo, :tokensEntrada, :tokensSaida, :tokensCache, :propostaId, :execucaoId, :atividadeId,
-                :demandaId, CAST(:conteudoBruto AS jsonb)
+                :texto, :nivel, :modelo, :tokensEntrada, :tokensSaida, :tokensCache, :propostaId, CAST(:propostasIds AS integer[]),
+                :execucaoId, :atividadeId, :demandaId, CAST(:conteudoBruto AS jsonb)
          RETURNING id`,
         {
           criadaEm: fonte.created_date,
@@ -82,6 +82,8 @@ export class ChatMensagemPostgresRepository extends BaseRepository<ChatMensagemF
           tokensSaida: fonte.tokens_saida,
           tokensCache: fonte.tokens_cache,
           propostaId: fonte.proposta_id,
+          // Literal de array do Postgres (`{1,2}`): o driver não converte um array JS de forma portável para `integer[]`.
+          propostasIds: `{${(fonte.propostas_ids ?? []).join(',')}}`,
           execucaoId: fonte.execucao_id,
           atividadeId: fonte.atividade_id,
           demandaId: fonte.demanda_id,

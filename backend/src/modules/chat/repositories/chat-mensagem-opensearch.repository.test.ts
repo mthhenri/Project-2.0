@@ -74,11 +74,11 @@ describe('ChatMensagemOpenSearchRepository', () => {
     assert.equal(chamadas.exists, 2);
   });
 
-  it('um índice que já existe ganha o campo `assunto` (keyword) sem ser recriado', async () => {
+  it('um índice que já existe ganha os campos posteriores (`assunto` e `propostas_ids`) sem ser recriado', async () => {
     const { cliente, chamadas } = criarClienteFalso({ indiceExiste: true });
     await new ChatMensagemOpenSearchRepository(cliente).gravar(nova);
     assert.equal(chamadas.create, 0);
-    assert.deepEqual(chamadas.putMapping, [{ index: 'chat-mensagem', body: { properties: { assunto: { type: 'keyword' } } } }]);
+    assert.deepEqual(chamadas.putMapping, [{ index: 'chat-mensagem', body: { properties: { assunto: { type: 'keyword' }, propostas_ids: { type: 'integer' } } } }]);
   });
 
   it('não recria um índice que já existe', async () => {

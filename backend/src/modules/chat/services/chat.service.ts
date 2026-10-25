@@ -45,6 +45,7 @@ import { montarAberturaDoDia } from '../domain/abertura-do-dia';
 import { atualizarPropostasNoContexto, idsDePropostasNoContexto, SituacaoDaProposta } from '../domain/propostas-no-contexto';
 import { montarRetomadaAposQueda } from '../domain/retomada-apos-queda';
 import { interpretarSugestoes, montarInstrucoesDeSugestoes } from '../domain/sugestoes';
+import { separadorEntreVoltas } from '../domain/separador-entre-voltas';
 import { instanteDoDiaUtilAnterior, montarConversaId, nomePadraoDaConversa } from '../domain/chat-conversa';
 import { ChatMensagemLida, paraResumo } from '../domain/chat-mensagem.documento';
 import { ARMAZENAMENTO_DE_CHAT, ArmazenamentoDeChat } from '../repositories/armazenamento-de-chat';
@@ -334,11 +335,21 @@ export class ChatService {
     let texto = '';
 
     for (let volta = 1; volta <= MAXIMO_DE_VOLTAS; volta++) {
+      // O texto de uma volta nova vem separado do anterior por um parágrafo em branco, tanto no que chega ao vivo quanto no gravado.
+      const separador = separadorEntreVoltas(texto);
+      let separadorEmitido = separador === '';
       const resposta = await this.iaService.transmitir(
         { nivel: NivelIaEnum.RAPIDO, instrucoes, mensagens, ferramentas, maximoTokens: MAXIMO_TOKENS_DO_CHAT },
-        (trecho) => emitir({ tipo: 'trecho', texto: trecho }),
+        (trecho) => {
+          if (trecho === '') return;
+          if (!separadorEmitido) {
+            emitir({ tipo: 'trecho', texto: separador });
+            separadorEmitido = true;
+          }
+          emitir({ tipo: 'trecho', texto: trecho });
+        },
       );
-      texto += resposta.texto;
+      if (resposta.texto !== '') texto += separador + resposta.texto;
 
       const mensagemDaIa: IaMensagem = { papel: 'ia', conteudo: resposta.blocos };
       mensagens.push(mensagemDaIa);
@@ -367,7 +378,7 @@ export class ChatService {
       tokensEntrada: tokens.entrada,
       tokensSaida: tokens.saida,
       tokensCache: tokens.cache,
-      propostaId: propostasDoTurno[0] ?? null,
+      propostaIds: propostasDoTurno,
       conteudoBruto,
     });
     emitir({ tipo: 'fim', mensagem: paraResumo(gravada) });

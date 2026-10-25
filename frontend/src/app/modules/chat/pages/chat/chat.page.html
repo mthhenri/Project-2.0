@@ -24,7 +24,18 @@
       }
 
       <div class="chat__conversa">
-        <div #rolagem class="chat__mensagens" role="log" aria-live="polite" aria-label="Conversa" (scroll)="aoRolar()">
+        <div
+          #rolagem
+          class="chat__mensagens"
+          role="log"
+          aria-live="polite"
+          aria-label="Conversa"
+          (scroll)="aoRolar()"
+          (wheel)="aoInteragirComARolagem()"
+          (touchmove)="aoInteragirComARolagem()"
+          (pointerdown)="aoInteragirComARolagem()"
+          (keydown)="aoInteragirComARolagem()"
+        >
           <div #fluxo class="chat__fluxo">
             @if (!jaCarregou()) {
               <div class="chat__esqueleto" aria-busy="true">
@@ -48,7 +59,7 @@
                 }
               </div>
             } @else {
-              @for (mensagem of mensagens(); track mensagem.id; let ultima = $last) {
+              @for (mensagem of itens(); track mensagem.chave; let ultima = $last) {
                 @switch (mensagem.autor) {
                   @case (Autor.USUARIO) {
                     <div class="chat__linha chat__linha--usuario" [attr.data-mensagem-id]="mensagem.id">
@@ -68,22 +79,33 @@
                   @case (Autor.IA) {
                     <div class="chat__linha chat__linha--ia" [attr.data-mensagem-id]="mensagem.id">
                       <span class="chat__avatar" aria-hidden="true">IA</span>
-                      <div class="chat__ia-conteudo">
-                        <app-markdown-visualizador [texto]="mensagem.texto" />
+                      <div class="chat__ia-conteudo" [attr.aria-busy]="mensagem.aoVivo ? true : null">
+                        @if (mensagem.texto) {
+                          <app-markdown-visualizador [texto]="mensagem.texto" />
+                        }
+                        @if (mensagem.aoVivo) {
+                          @if (mensagem.ferramenta) {
+                            <span class="chat__ferramenta"><span class="chat__pontos" aria-hidden="true"><i></i><i></i><i></i></span>consultando</span>
+                          } @else if (!mensagem.texto) {
+                            <span class="chat__ferramenta" role="status" aria-label="A IA está pensando"><span class="chat__pontos" aria-hidden="true"><i></i><i></i><i></i></span></span>
+                          }
+                        }
                         @for (propostaId of mensagem.propostaIds; track propostaId) {
                           <app-chat-proposta-cartao [propostaId]="propostaId" (resolvida)="aoResolverProposta($event)" />
                         }
-                        <div class="chat__rodape-mensagem">
-                          @if (mensagem.criadaEm) {
-                            <span class="chat__hora">{{ mensagem.criadaEm | date: 'dd/MM/yyyy HH:mm' }}</span>
-                          }
-                          @if (mensagem.nivel) {
-                            <span class="chat__nivel" [attr.aria-label]="'Nível usado: ' + rotuloNivel[mensagem.nivel]">{{ rotuloNivel[mensagem.nivel] }}</span>
-                          }
-                          <button type="button" class="chat__copiar" aria-label="Copiar a resposta" pTooltip="Copiar" tooltipPosition="bottom" (click)="copiar(mensagem.texto)">
-                            <i class="pi pi-copy"></i>
-                          </button>
-                        </div>
+                        @if (!mensagem.aoVivo) {
+                          <div class="chat__rodape-mensagem">
+                            @if (mensagem.criadaEm) {
+                              <span class="chat__hora">{{ mensagem.criadaEm | date: 'dd/MM/yyyy HH:mm' }}</span>
+                            }
+                            @if (mensagem.nivel) {
+                              <span class="chat__nivel" [attr.aria-label]="'Nível usado: ' + rotuloNivel[mensagem.nivel]">{{ rotuloNivel[mensagem.nivel] }}</span>
+                            }
+                            <button type="button" class="chat__copiar" aria-label="Copiar a resposta" pTooltip="Copiar" tooltipPosition="bottom" (click)="copiar(mensagem.texto)">
+                              <i class="pi pi-copy"></i>
+                            </button>
+                          </div>
+                        }
                       </div>
                     </div>
                   }
@@ -99,25 +121,6 @@
                     </div>
                   }
                 }
-              }
-
-              @if (aoVivo(); as resposta) {
-                <div class="chat__linha chat__linha--ia">
-                  <span class="chat__avatar" aria-hidden="true">IA</span>
-                  <div class="chat__ia-conteudo" aria-busy="true">
-                    @if (resposta.texto) {
-                      <app-markdown-visualizador [texto]="resposta.texto" />
-                    }
-                    @if (resposta.ferramenta) {
-                      <span class="chat__ferramenta"><span class="chat__pontos" aria-hidden="true"><i></i><i></i><i></i></span>consultando</span>
-                    } @else if (!resposta.texto) {
-                      <span class="chat__ferramenta" role="status" aria-label="A IA está pensando"><span class="chat__pontos" aria-hidden="true"><i></i><i></i><i></i></span></span>
-                    }
-                    @for (propostaId of resposta.propostaIds; track propostaId) {
-                      <app-chat-proposta-cartao [propostaId]="propostaId" (resolvida)="aoResolverProposta($event)" />
-                    }
-                  </div>
-                </div>
               }
             }
           </div>

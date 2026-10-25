@@ -110,6 +110,14 @@
 - **Correção:** medir o tempo desses testes na suíte inteira e decidir entre limite de tempo maior para eles e montagem mais leve do editor.
 - **Desde:** 2026-10-25 (visto no fecho da task 223, que não toca esses componentes).
 
+### P-035 — Check-in: a resposta da IA com proposta some e volta no fim do fluxo · `ABERTO` · frontend/checkin
+
+- **Sintoma:** igual ao que a task 225 corrigiu no chat: no evento `fim` a bolha da resposta é apagada e a mensagem gravada entra no lugar, então os cartões de proposta são destruídos e recriados (piscam em "Carregando proposta…") e a rolagem pode parar antes do cartão terminar de crescer.
+- **Causa:** `checkin.page` mantém `aoVivo` num bloco separado da lista de mensagens (`@if (aoVivo(); as resposta)`), sem a chave comum que a `chat.page` passou a usar.
+- **Contorno:** nenhum; o cartão volta a aparecer sozinho em instantes.
+- **Correção:** aplicar à `checkin.page` o mesmo item único (`itens` com `track` por `chave`) e a mesma regra de rolagem por interação do usuário, com teste de componente.
+- **Desde:** achado na task 225 (2026-10-25); não reproduzido ao vivo, só visto no código.
+
 ### P-001 — Projeto sem lint · `CONTORNADO` · repositório
 
 - **Sintoma:** não há ESLint nem Prettier em nenhum workspace; o gate de qualidade do `CLAUDE.md` pede lint e hoje a lacuna é só declarada no fecho de cada task.

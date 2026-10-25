@@ -23,7 +23,7 @@ function mensagem(autor: AutorChatEnum, texto: string, sobrescrita: Record<strin
   return {
     id: `m-${texto}`, conversaId: CONVERSA_DE_HOJE, usuarioId: 1, contexto: ContextoChatEnum.CHAT, autor, texto,
     nivel: autor === AutorChatEnum.IA ? NivelIaEnum.RAPIDO : null, modelo: null, tokensEntrada: null, tokensSaida: null,
-    assunto: null, tokensCache: null, propostaId: null, execucaoId: null, atividadeId: null, demandaId: null,
+    assunto: null, tokensCache: null, propostaIds: [], execucaoId: null, atividadeId: null, demandaId: null,
     createdDate: '2026-10-19T12:00:00.000Z', ...sobrescrita,
   };
 }
@@ -293,9 +293,186 @@ describe('ChatPage — enviar e receber a resposta', () => {
     expect(montado.elemento.querySelector('[data-mensagem-id="m-prop"] app-chat-proposta-cartao')).not.toBeNull();
   });
 
+  // Task 225: a resposta em andamento e a mensagem gravada são o mesmo item da lista, então nada some nem pisca no `fim`.
+  describe('a resposta que chega vira a mensagem gravada sem sumir', () => {
+    const proposta = (id: number) => ({
+      id, usuarioId: 1, tipo: TipoPropostaIaEnum.CRIAR_ATIVIDADE, status: StatusPropostaIaEnum.PENDENTE,
+      dados: { nome: `Atividade ${id}`, prioridade: 'INDEFINIDA' }, resultado: null, resolucaoData: null, createdDate: '2026-10-19T12:00:00.000Z',
+    });
+    const cartoes = (montado: Montado) => Array.from(montado.elemento.querySelectorAll('app-chat-proposta-cartao'));
+    const conteudoDaUltimaIa = (montado: Montado) => Array.from(montado.elemento.querySelectorAll('.chat__linha--ia .chat__ia-conteudo')).at(-1) as HTMLElement | undefined;
+
+    /** Responde as leituras que os cartões fazem ao nascer (prioridades uma vez, e cada proposta). */
+    function carregarCartoes(montado: Montado, ids: number[]): void {
+      for (const pedido of montado.http.match((requisicao) => requisicao.url.endsWith('/atividade-prioridade'))) responderSucesso(pedido, []);
+      for (const id of ids) responderSucesso(esperarRequisicao(montado.http, 'GET', `/proposta-ia/${id}`), proposta(id));
+    }
+
+    it('com uma proposta: o cartão e o corpo da resposta são os mesmos elementos depois do fim, e a proposta não é pedida de novo', async () => {
+      const montado = await montarChat({ mensagens: [DA_IA('Olá!')] });
+      const fluxo = controlarFluxo(enviarMensagemEspiao, 1);
+      await enviarPeloTeclado(montado, 'Cria uma atividade');
+
+      fluxo.emitir({ tipo: 'trecho', texto: 'Preparei a proposta.' });
+      fluxo.emitir({ tipo: 'proposta', propostaId: 31 });
+      montado.fixture.detectChanges();
+      carregarCartoes(montado, [31]);
+      montado.fixture.detectChanges();
+      const cartaoAoVivo = cartoes(montado)[0];
+      const conteudoAoVivo = conteudoDaUltimaIa(montado);
+      expect(cartaoAoVivo).toBeDefined();
+      expect(conteudoAoVivo?.getAttribute('aria-busy')).toBe('true');
+
+      fluxo.emitir({ tipo: 'fim', mensagem: DA_IA('Preparei a proposta.', { id: 'm-gravada', propostaIds: [31] }) as never });
+      fluxo.terminar();
+      montado.fixture.detectChanges();
+
+      expect(cartoes(montado)).toHaveLength(1);
+      expect(cartoes(montado)[0]).toBe(cartaoAoVivo);
+      expect(cartaoAoVivo.isConnected).toBe(true);
+      expect(conteudoDaUltimaIa(montado)).toBe(conteudoAoVivo);
+      expect(conteudoDaUltimaIa(montado)?.hasAttribute('aria-busy')).toBe(false);
+      expect(montado.elemento.querySelector('[data-mensagem-id="m-gravada"]')).not.toBeNull();
+      expect(texto(montado)).not.toContain('Carregando proposta');
+      // Nenhuma leitura nova da proposta: o cartão já carregado foi reaproveitado.
+      montado.http.expectNone((requisicao) => requisicao.url.includes('/proposta-ia/31'));
+      await montado.atualizar();
+    });
+
+    it('com duas propostas: os dois cartões aparecem ao vivo e continuam os mesmos depois do fim', async () => {
+      const montado = await montarChat({ mensagens: [DA_IA('Olá!')] });
+      const fluxo = controlarFluxo(enviarMensagemEspiao, 1);
+      await enviarPeloTeclado(montado, 'Cria duas atividades');
+
+      fluxo.emitir({ tipo: 'proposta', propostaId: 31 });
+      fluxo.emitir({ tipo: 'proposta', propostaId: 32 });
+      montado.fixture.detectChanges();
+      carregarCartoes(montado, [31, 32]);
+      montado.fixture.detectChanges();
+      const aoVivo = cartoes(montado);
+      expect(aoVivo).toHaveLength(2);
+
+      fluxo.emitir({ tipo: 'fim', mensagem: DA_IA('Duas propostas.', { id: 'm-duas', propostaIds: [31, 32] }) as never });
+      fluxo.terminar();
+      montado.fixture.detectChanges();
+
+      const depois = cartoes(montado);
+      expect(depois).toHaveLength(2);
+      expect(depois[0]).toBe(aoVivo[0]);
+      expect(depois[1]).toBe(aoVivo[1]);
+      expect(montado.elemento.querySelectorAll('[data-mensagem-id="m-duas"] app-chat-proposta-cartao')).toHaveLength(2);
+      await montado.atualizar();
+    });
+
+    it('ao reabrir a conversa, a mensagem com duas propostas mostra as duas', async () => {
+      const montado = await montarChat({ mensagens: [DA_IA('Duas propostas.', { id: 'm-duas', propostaIds: [31, 32] })] });
+      carregarCartoes(montado, [31, 32]);
+      await montado.atualizar();
+      expect(montado.elemento.querySelectorAll('[data-mensagem-id="m-duas"] app-chat-proposta-cartao')).toHaveLength(2);
+    });
+
+    it('sem proposta: a resposta em andamento vira a mensagem gravada no mesmo elemento, com rodapé só depois do fim', async () => {
+      const montado = await montarChat({ mensagens: [DA_IA('Olá!')] });
+      const fluxo = controlarFluxo(enviarMensagemEspiao, 1);
+      await enviarPeloTeclado(montado, 'Bom dia');
+
+      fluxo.emitir({ tipo: 'trecho', texto: 'Bom dia!' });
+      montado.fixture.detectChanges();
+      const conteudoAoVivo = conteudoDaUltimaIa(montado);
+      expect(conteudoAoVivo?.querySelector('[aria-label="Copiar a resposta"]')).toBeNull();
+
+      fluxo.emitir({ tipo: 'fim', mensagem: DA_IA('Bom dia!', { id: 'm-sem-proposta' }) as never });
+      fluxo.terminar();
+      montado.fixture.detectChanges();
+
+      expect(conteudoDaUltimaIa(montado)).toBe(conteudoAoVivo);
+      expect(cartoes(montado)).toHaveLength(0);
+      expect(conteudoAoVivo?.querySelector('[aria-label="Copiar a resposta"]')).not.toBeNull();
+      expect(montado.elemento.querySelectorAll('[data-mensagem-id="m-sem-proposta"]')).toHaveLength(1);
+      await montado.atualizar();
+    });
+
+    it('com falha no meio: o erro tira a resposta em andamento e mostra o aviso do sistema, sem deixar elemento solto', async () => {
+      const montado = await montarChat({ mensagens: [DA_IA('Olá!')] });
+      const fluxo = controlarFluxo(enviarMensagemEspiao, 1);
+      await enviarPeloTeclado(montado, 'Cria uma atividade');
+
+      fluxo.emitir({ tipo: 'trecho', texto: 'Vou criar' });
+      fluxo.emitir({ tipo: 'proposta', propostaId: 31 });
+      montado.fixture.detectChanges();
+      carregarCartoes(montado, [31]);
+      fluxo.emitir({ tipo: 'erro', mensagem: 'A IA não conseguiu responder agora.' });
+      fluxo.terminar();
+      await montado.atualizar();
+
+      expect(conversaDa(montado)).toContain('A IA não conseguiu responder agora.');
+      expect(montado.elemento.querySelector('[aria-label="Conversa"] [aria-busy="true"]')).toBeNull();
+      expect(montado.elemento.querySelectorAll('.chat__linha--ia')).toHaveLength(1);
+    });
+  });
+
+  // Task 225: só a rolagem que veio de uma interação do usuário conta como "subiu para ler"; a conversa que cresce (cartão que carrega)
+  // também deixa o fim longe, e aí ela continua acompanhando.
+  describe('rolagem da conversa', () => {
+    /** A área de rolagem com a medida de layout que o jsdom não calcula. */
+    function medirArea(montado: Montado, medidas: { scrollHeight: number; clientHeight: number; scrollTop: number }): HTMLElement {
+      const area = montado.elemento.querySelector<HTMLElement>('[aria-label="Conversa"]')!;
+      for (const [propriedade, valor] of Object.entries(medidas)) Object.defineProperty(area, propriedade, { configurable: true, writable: true, value: valor });
+      return area;
+    }
+    const irParaOFimVisivel = (montado: Montado) => montado.elemento.querySelector('.chat__ir-para-o-fim') !== null;
+
+    it('rolagem que o usuário fez (roda) longe do fim mostra "Ir para o fim" e para de acompanhar', async () => {
+      const montado = await montarChat({ mensagens: [DA_IA('Olá!')] });
+      const area = medirArea(montado, { scrollHeight: 2000, clientHeight: 400, scrollTop: 300 });
+      area.dispatchEvent(new WheelEvent('wheel'));
+      area.dispatchEvent(new Event('scroll'));
+      await montado.atualizar();
+      expect(montado.componente.longeDoFim()).toBe(true);
+      expect(irParaOFimVisivel(montado)).toBe(true);
+    });
+
+    it('evento de rolagem sem interação do usuário (a conversa cresceu) não vira "subiu": continua acompanhando', async () => {
+      const montado = await montarChat({ mensagens: [DA_IA('Olá!')] });
+      const area = medirArea(montado, { scrollHeight: 2000, clientHeight: 400, scrollTop: 300 });
+      area.dispatchEvent(new Event('scroll'));
+      await montado.atualizar();
+      expect(montado.componente.longeDoFim()).toBe(false);
+      expect(irParaOFimVisivel(montado)).toBe(false);
+    });
+
+    it('depois que o usuário subiu, o crescimento da conversa não o puxa de volta', async () => {
+      const montado = await montarChat({ mensagens: [DA_IA('Olá!')] });
+      const area = medirArea(montado, { scrollHeight: 2000, clientHeight: 400, scrollTop: 300 });
+      area.dispatchEvent(new WheelEvent('wheel'));
+      area.dispatchEvent(new Event('scroll'));
+      expect(montado.componente.longeDoFim()).toBe(true);
+      // A conversa cresce e chega outro evento de rolagem, agora sem interação: segue lendo onde estava.
+      medirArea(montado, { scrollHeight: 2700, clientHeight: 400, scrollTop: 300 });
+      vi.useFakeTimers();
+      vi.setSystemTime(Date.now() + 5000);
+      area.dispatchEvent(new Event('scroll'));
+      vi.useRealTimers();
+      expect(montado.componente.longeDoFim()).toBe(true);
+    });
+
+    it('chegar perto do fim volta a acompanhar e esconde "Ir para o fim"', async () => {
+      const montado = await montarChat({ mensagens: [DA_IA('Olá!')] });
+      const area = medirArea(montado, { scrollHeight: 2000, clientHeight: 400, scrollTop: 300 });
+      area.dispatchEvent(new WheelEvent('wheel'));
+      area.dispatchEvent(new Event('scroll'));
+      expect(montado.componente.longeDoFim()).toBe(true);
+      medirArea(montado, { scrollHeight: 2000, clientHeight: 400, scrollTop: 1580 });
+      area.dispatchEvent(new Event('scroll'));
+      await montado.atualizar();
+      expect(montado.componente.longeDoFim()).toBe(false);
+      expect(irParaOFimVisivel(montado)).toBe(false);
+    });
+  });
+
   it('resolver o cartão (Confirmar) troca os botões de sugestão pelos próximos passos da proposta', async () => {
     const montado = await montarChat({
-      mensagens: [DA_IA('Posso criar?', { propostaId: 31 })],
+      mensagens: [DA_IA('Posso criar?', { propostaIds: [31] })],
     });
     responderSucesso(esperarRequisicao(montado.http, 'GET', '/atividade-prioridade'), []);
     responderSucesso(esperarRequisicao(montado.http, 'GET', '/proposta-ia/31'), {

@@ -210,12 +210,20 @@ test('a primeira chamada leva o prompt CONVERSA, as ferramentas do usuário, o n
 
 test('laço de ferramentas: executa, devolve o resultado ao modelo e guarda as trocas do turno', async () => {
   const { servico, gravadas, solicitacoes } = montar({
-    chamadas: [async () => pedidoDeFerramenta('t1'), async (_s, aoTrecho) => { aoTrecho('Hoje é sábado.'); return resposta({ texto: 'Hoje é sábado.' }); }],
+    chamadas: [
+      async (_s, aoTrecho) => { aoTrecho('Vou consultar. '); return pedidoDeFerramenta('t1'); },
+      async (_s, aoTrecho) => { aoTrecho('Hoje é sábado.'); return resposta({ texto: 'Hoje é sábado.' }); },
+    ],
   });
   const eventos = await enviar(servico, 'Que dia é hoje?');
   assert.deepEqual(
     eventos.map((evento) => (evento.tipo === 'ferramenta' ? `ferramenta:${evento.situacao}` : evento.tipo)),
-    ['ferramenta:EXECUTANDO', 'ferramenta:CONCLUIDA', 'trecho', 'fim'],
+    ['trecho', 'ferramenta:EXECUTANDO', 'ferramenta:CONCLUIDA', 'trecho', 'trecho', 'fim'],
+  );
+  // O texto de cada volta vem separado do anterior por um parágrafo em branco, ao vivo e no gravado (task 225).
+  assert.deepEqual(
+    eventos.filter((evento) => evento.tipo === 'trecho').map((evento) => (evento as { texto: string }).texto),
+    ['Vou consultar. ', '\n\n', 'Hoje é sábado.'],
   );
   const segundaChamada = solicitacoes[1].mensagens;
   assert.equal(segundaChamada.length, 3);
@@ -225,7 +233,7 @@ test('laço de ferramentas: executa, devolve o resultado ao modelo e guarda as t
     conteudo: [{ tipo: 'resultado_ferramenta', usoId: 't1', conteudo: '{"data":"2026-10-17"}', erro: false }],
   });
   const ia = gravadas[1];
-  assert.equal(ia.texto, 'Vou consultar. Hoje é sábado.');
+  assert.equal(ia.texto, 'Vou consultar. \n\nHoje é sábado.');
   assert.equal(((ia.conteudoBruto as { mensagens: unknown[] }).mensagens).length, 3);
   assert.equal(ia.tokensEntrada, 20);
 });
@@ -249,7 +257,43 @@ test('proposta criada por uma ferramenta emite o evento e fica ligada à mensage
   });
   const eventos = await enviar(servico);
   assert.deepEqual(eventos.find((evento) => evento.tipo === 'proposta'), { tipo: 'proposta', propostaId: 42 });
-  assert.equal(gravadas[1].propostaId, 42);
+  assert.deepEqual(gravadas[1].propostaIds, [42]);
+});
+
+test('uma volta sem texto não ganha separador, nem ao vivo nem no gravado (task 225)', async () => {
+  const { servico, gravadas } = montar({
+    chamadas: [async () => pedidoDeFerramenta('t1'), async () => resposta({ texto: '' })],
+  });
+  const eventos = await enviar(servico, 'Que dia é hoje?');
+  assert.deepEqual(eventos.filter((evento) => evento.tipo === 'trecho'), []);
+  assert.equal(gravadas[1].texto, 'Vou consultar. ');
+});
+
+test('duas propostas na mesma resposta ficam as duas na mensagem, na ordem em que nasceram (task 225)', async () => {
+  const propostas = [42, 43];
+  let proxima = 0;
+  const { servico, gravadas } = montar({
+    chamadas: [
+      async () => pedidoDeFerramenta('t1', 'propor_atividade'),
+      async () => pedidoDeFerramenta('t2', 'propor_atividade'),
+      async () => resposta({ texto: 'Duas propostas.' }),
+    ],
+    ferramenta: () => {
+      const propostaId = propostas[proxima++];
+      return { conteudo: `{"propostaId":${propostaId}}`, erro: false, propostaId };
+    },
+  });
+  const eventos = await enviar(servico);
+  assert.deepEqual(eventos.filter((evento) => evento.tipo === 'proposta'), [{ tipo: 'proposta', propostaId: 42 }, { tipo: 'proposta', propostaId: 43 }]);
+  assert.deepEqual(gravadas[1].propostaIds, [42, 43]);
+  const fim = eventos.find((evento) => evento.tipo === 'fim');
+  assert.deepEqual(fim?.tipo === 'fim' ? fim.mensagem.propostaIds : null, [42, 43], 'o fim leva a lista inteira para a tela');
+});
+
+test('resposta sem proposta grava a lista vazia (task 225)', async () => {
+  const { servico, gravadas } = montar({ chamadas: [async () => resposta({ texto: 'Oi.' })] });
+  await enviar(servico);
+  assert.deepEqual(gravadas[1].propostaIds, []);
 });
 
 // P-022: o resultado gravado da ferramenta diz "nada foi feito ainda"; o usuário confirma no cartão e a IA, na mensagem seguinte, precisa saber.

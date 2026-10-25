@@ -246,7 +246,7 @@ export class CheckinPage implements OnInit {
         this.aoVivo.update((atual) => atual && { ...atual, propostaIds: [...atual.propostaIds, evento.propostaId] });
         break;
       case 'fim': {
-        const propostas = [...new Set([...(this.aoVivo()?.propostaIds ?? []), ...(evento.mensagem.propostaId !== null ? [evento.mensagem.propostaId] : [])])];
+        const propostas = [...new Set([...(this.aoVivo()?.propostaIds ?? []), ...evento.mensagem.propostaIds])];
         this.aoVivo.set(null);
         this.mensagens.update((lista) => [...lista, { id: ++this.contadorLocal, autor: 'IA', texto: evento.mensagem.texto, propostaIds: propostas }]);
         break;

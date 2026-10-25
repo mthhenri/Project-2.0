@@ -21,7 +21,8 @@ export interface ChatMensagemResumoDto {
   tokensEntrada: number | null;
   tokensSaida: number | null;
   tokensCache: number | null;
-  propostaId: number | null;
+  /** As propostas da IA ligadas à mensagem, na ordem em que nasceram (vazio se não houve; a mensagem antiga com uma só vem como lista de um). */
+  propostaIds: number[];
   execucaoId: number | null;
   atividadeId: number | null;
   demandaId: number | null;

@@ -53,12 +53,12 @@ class IndiceFalso extends ChatMensagemIndiceRepository {
 
 const NOVA = { conversaId: '7-2026-10-17', usuarioId: 7, contexto: ContextoChatEnum.CHAT, autor: AutorChatEnum.USUARIO, texto: 'Oi' };
 
-test('um índice de mensagens que já existe ganha os campos posteriores (assunto) a cada subida, sem ser recriado', async () => {
+test('um índice de mensagens que já existe ganha os campos posteriores (assunto e propostas_ids) a cada subida, sem ser recriado', async () => {
   const indice = new IndiceFalso();
   indice.existentes.add(INDICE_CHAT_MENSAGEM);
   await indice.gravar(NOVA);
   assert.deepEqual(indice.criados.map((criado) => criado.indice), [INDICE_CHAT_CONVERSA]);
-  assert.deepEqual(indice.camposAcrescentados, [{ indice: INDICE_CHAT_MENSAGEM, propriedades: { assunto: { type: 'keyword' } } }]);
+  assert.deepEqual(indice.camposAcrescentados, [{ indice: INDICE_CHAT_MENSAGEM, propriedades: { assunto: { type: 'keyword' }, propostas_ids: { type: 'integer' } } }]);
 });
 
 test('a primeira operação cria os dois índices com os mapeamentos compartilhados; as seguintes não conferem de novo', async () => {
