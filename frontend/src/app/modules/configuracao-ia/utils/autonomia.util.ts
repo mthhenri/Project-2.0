@@ -51,6 +51,7 @@ const DESCRICAO_DA_REGRA: Record<ChaveDeNivelDaProposta, Pick<RegraDeAutonomia, 
   [TipoPropostaIaEnum.REGISTRAR_EXECUCAO]: { rotulo: 'Registrar execução', descricao: '' },
   [TipoPropostaIaEnum.CORRIGIR_EXECUCAO]: { rotulo: 'Corrigir execução', descricao: '' },
   [TipoPropostaIaEnum.CRIAR_PROJETO]: { rotulo: 'Criar projeto', descricao: '' },
+  [TipoPropostaIaEnum.JUSTIFICAR_PONTO]: { rotulo: 'Justificar ponto', descricao: '' },
 };
 
 /** As regras configuráveis, na ordem do `shared`. */
@@ -61,6 +62,7 @@ const MOTIVO_HORAS = 'Mexe em horas trabalhadas: a IA sempre pergunta.';
 const REGRAS_FIXAS_POR_TIPO: Partial<Record<TipoPropostaIaEnum, Pick<RegraFixaDeAutonomia, 'descricao' | 'motivo'>>> = {
   [TipoPropostaIaEnum.REGISTRAR_EXECUCAO]: { descricao: 'Lançar horas que não foram cronometradas. Só gestor.', motivo: MOTIVO_HORAS },
   [TipoPropostaIaEnum.CORRIGIR_EXECUCAO]: { descricao: 'Mudar horário e duração de uma execução já registrada.', motivo: MOTIVO_HORAS },
+  [TipoPropostaIaEnum.JUSTIFICAR_PONTO]: { descricao: 'Justificar o ponto de outra pessoa num dia. Só gestor.', motivo: 'Mexe em ponto: a IA sempre pergunta.' },
   [TipoPropostaIaEnum.CRIAR_PROJETO]: { descricao: 'Um projeto novo, com código próprio. Só gestor.', motivo: 'Cria um projeto: a IA sempre pergunta.' },
 };
 

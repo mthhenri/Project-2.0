@@ -55,6 +55,7 @@ const PROXIMOS_PASSOS_DA_PROPOSTA: Partial<Record<TipoPropostaIaEnum, { todos?: 
   [TipoPropostaIaEnum.CONCLUIR_DEMANDA]: { todos: ['O que eu tenho pra fazer hoje?', 'Concluir outra demanda'] },
   [TipoPropostaIaEnum.MOVER_ATIVIDADE]: { todos: ['Começar essa atividade', 'Mover outra atividade'] },
   [TipoPropostaIaEnum.DESCONECTAR_DEMANDA]: { todos: ['Mostrar como as demandas se conectam'], gestor: ['Conectar outras duas demandas'] },
+  [TipoPropostaIaEnum.JUSTIFICAR_PONTO]: { todos: ['Justificar outro dia', 'Mostrar o ponto dele no mês'] },
   [TipoPropostaIaEnum.EXCLUIR_ATIVIDADE]: { todos: ['O que eu tenho pra fazer hoje?', 'Criar outra atividade'] },
   [TipoPropostaIaEnum.ATRIBUIR_MEMBRO]: { todos: ['O que eu tenho pra fazer hoje?'], gestor: ['Criar uma atividade para ele', 'Marcar tags nessa demanda'] },
   [TipoPropostaIaEnum.ATRIBUIR_TAG]: { todos: ['Marcar outra atividade'], gestor: ['Marcar outra demanda', 'Quanto tempo o projeto consumiu este mês?'] },
@@ -94,6 +95,7 @@ export const ROTULO_TIPO_PROPOSTA: Record<TipoPropostaIaEnum, string> = {
   [TipoPropostaIaEnum.MOVER_ATIVIDADE]: 'Mover atividade',
   [TipoPropostaIaEnum.DESCONECTAR_DEMANDA]: 'Desconectar demandas',
   [TipoPropostaIaEnum.EXCLUIR_ATIVIDADE]: 'Excluir atividade',
+  [TipoPropostaIaEnum.JUSTIFICAR_PONTO]: 'Justificar ponto',
 };
 
 export const ROTULO_STATUS_PROPOSTA: Record<StatusPropostaIaEnum, string> = {

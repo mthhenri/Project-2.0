@@ -30,7 +30,7 @@ test('todo tipo de proposta tem um nível: ou é fixo, ou é configurável', () 
 test('os fixos são os que mexem em horas, em ponto ou em projeto', () => {
   assert.deepEqual(
     [...TIPOS_COM_NIVEL_FIXO].sort(),
-    [TipoPropostaIaEnum.CORRIGIR_EXECUCAO, TipoPropostaIaEnum.CRIAR_PROJETO, TipoPropostaIaEnum.REGISTRAR_EXECUCAO].sort(),
+    [TipoPropostaIaEnum.CORRIGIR_EXECUCAO, TipoPropostaIaEnum.CRIAR_PROJETO, TipoPropostaIaEnum.JUSTIFICAR_PONTO, TipoPropostaIaEnum.REGISTRAR_EXECUCAO].sort(),
   );
 });
 

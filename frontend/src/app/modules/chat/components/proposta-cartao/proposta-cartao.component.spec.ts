@@ -340,6 +340,22 @@ describe('PropostaCartaoComponent — desconectar demandas e excluir atividade (
   });
 });
 
+describe('PropostaCartaoComponent — justificar ponto (task 231)', () => {
+  it('mostra a pessoa, o dia, as horas e o motivo, também nos detalhes', async () => {
+    const montado = await montarCartao(proposta(TipoPropostaIaEnum.JUSTIFICAR_PONTO, StatusPropostaIaEnum.PENDENTE, {
+      usuarioId: 7, usuarioNome: 'Ana', diaData: '2026-10-20', nome: 'Consulta médica', descricao: 'Combinado com o gestor', horasCobertas: 4,
+    }));
+    expect(texto(montado)).toContain('Justificar ponto para Ana');
+    expect(texto(montado)).toContain('20/10/2026');
+    botao(montado, 'Ver detalhes')!.click();
+    detectar(montado);
+    expect(texto(montado)).toContain('Pessoa: Ana');
+    expect(texto(montado)).toContain('Dia: 20/10/2026');
+    expect(texto(montado)).toContain('Horas que não contam na meta: 4 h');
+    expect(texto(montado)).toContain('Motivo: Combinado com o gestor');
+  });
+});
+
 describe('PropostaCartaoComponent — Recusar e Desfazer', () => {
   it('Recusar faz POST em /recusar e o cartão fica sem botões, sem oferecer desfazer no toast', async () => {
     const montado = await montarCartao();

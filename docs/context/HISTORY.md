@@ -12,6 +12,21 @@
 
 ---
 
+## 2026-10-25 — Task 231: proposta da IA de justificar o ponto
+
+Oitava e última task das propostas da IA (`chat-propostas.spec.md`, tasks 224–231 todas implementadas). O gestor pede à IA que justifique o ponto de **outra pessoa** e confirma; é a mesma ação da tela de justificativas, sem regra nova.
+
+- **Decisões do agente** (a spec não fixava; o autor ainda não confirmou): (1) a regra "só gestor" mora no **executor** (como `REGISTRAR_EXECUCAO`): a `PontoJustificativaService` não confere o tipo, quem barra é o `@GestorOnly` da controller, e mudar a service não foi preciso; (2) "outra pessoa" é recusada na ferramenta e no executor (o gestor não justifica o próprio ponto); (3) a ferramenta já confere a pessoa, as horas até a jornada e a duplicidade no dia, para o cartão não nascer impossível, e a service confere de novo ao confirmar; (4) o desfazer recusa se a justificativa já foi excluída ou mudou (título, motivo ou horas).
+- **Shared:** `TipoPropostaIaEnum.JUSTIFICAR_PONTO`, `ProporJustificarPontoDto` (estende `PontoJustificativaCriarDto`, reaproveitando as validações) e `PropostaJustificarPontoDadosDto`; nível fixo `SEMPRE_PERGUNTA`, o que a põe no escudo do painel sem código extra. **Banco:** migration `0058` (só a linha de `tipo_proposta_ia`; aplica, reverte e reaplica).
+- **Backend:** `ProporJustificarPontoFerramenta` (permissão `GESTOR`: a lista do desenvolvedor não a traz e a execução direta é recusada) e `JustificarPontoExecutor`, registrados no `PontoModule`, que passou a importar o `PropostaIaModule`. Nenhuma consulta nova: sem teste de integração novo.
+- **Frontend:** rótulo, próximos passos, resumo ("Justificar ponto para Ana", dia, "N h cobertas" e o motivo), cartão grande e a regra fixa no painel de autonomia.
+- **Testes:** `shared` 245; `backend` 1410 (7 novos: ferramenta invisível ao desenvolvedor, executor, desfazer, estado mudado e sem permissão); integração 323 (nada novo); `frontend` 1962 (2 novos, mais o do painel atualizado para a regra fixa nova). Sem lint (`PROBLEMS.md` P-001).
+- **Ao vivo** (administrador, IA de verdade, backend reiniciado): "Justifica o ponto do Dev de Teste no dia 2026-10-14: 4 horas…" gerou o cartão e **nada foi gravado** até confirmar; a confirmação criou a justificativa (conferida na API) e o Desfazer a excluiu. Três tamanhos e dois temas, sem erro de console nem rolagem horizontal.
+- **Limites:** só o administrador foi exercitado ao vivo. **"Desenvolvedor pede e a IA recusa" só em teste** (a ferramenta não aparece na lista dele e a execução direta volta erro de permissão): não há credencial de desenvolvedor para entrar na tela. Dia, horas e motivo extremos (jornada, duplicidade) só em teste.
+- **Fecho da guarda-chuva:** com a 231 as oito tasks de `chat-propostas.spec.md` estão feitas.
+
+---
+
 ## 2026-10-25 — Task 230: propostas de desconectar demandas e excluir atividade sem execução
 
 Sétima task das propostas da IA (`chat-propostas.spec.md`). A IA passa a propor **desconectar duas demandas** (conexão do grafo, só gestor, nível Faz e avisa) e **excluir uma atividade que nunca teve execução** (dono e gestor, nível Pergunta). São as **duas únicas exclusões** que a IA pode propor; qualquer outra continua proibida.

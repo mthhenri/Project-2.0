@@ -263,6 +263,12 @@ const RESUMIDORES: Record<TipoPropostaIaEnum, (dados: Dados) => ResumoBruto> = {
     contexto: texto(dados, 'demandaNome'),
     campos: [{ tipo: 'chip', texto: 'Sem execuções' }],
   }),
+  [TipoPropostaIaEnum.JUSTIFICAR_PONTO]: (dados) => ({
+    acao: comPessoa('Justificar ponto', dados),
+    nome: texto(dados, 'nome'),
+    contexto: dataBr(texto(dados, 'diaData')),
+    campos: [{ tipo: 'chip', texto: `${numero(dados, 'horasCobertas')} h cobertas` }, ...citacao(texto(dados, 'descricao'))],
+  }),
   [TipoPropostaIaEnum.CONECTAR_DEMANDA]: (dados) => ({
     acao: 'Conectar',
     nome: `${nomeOu(dados, 'demandaOrigemNome', 'Demanda', 'demandaOrigemId')} ${dados['ehBidirecional'] === true ? '↔' : '→'} ${nomeOu(dados, 'demandaDestinoNome', 'Demanda', 'demandaDestinoId')}`,

@@ -27,6 +27,7 @@ const TIPICAS: [TipoPropostaIaEnum, Record<string, unknown>, boolean][] = [
   [Tipo.MOVER_ATIVIDADE, { atividadeNome: 'Montar o formulário', demandaOrigemNome: 'Login', demandaDestinoNome: 'Relatórios' }, true],
   [Tipo.DESCONECTAR_DEMANDA, { demandaOrigemNome: 'API de relatórios', demandaDestinoNome: 'Exportar PDF', ehBidirecional: false }, true],
   [Tipo.EXCLUIR_ATIVIDADE, { atividadeNome: 'Montar o formulário', demandaNome: 'Login' }, true],
+  [Tipo.JUSTIFICAR_PONTO, { usuarioNome: 'Ana', diaData: '2026-10-20', nome: 'Consulta médica', descricao: 'Combinado com o gestor', horasCobertas: 4 }, true],
 ];
 
 test('todos os tipos de proposta têm resumo e a regra decide cada um', () => {
@@ -158,4 +159,12 @@ test('excluir atividade mostra o nome, a demanda e que ela não tem execuções 
   assert.equal(resumo.acao, 'Excluir atividade');
   assert.equal(resumo.contexto, 'Login');
   assert.deepEqual(resumo.campos, [{ tipo: 'chip', texto: 'Sem execuções' }]);
+});
+
+test('justificar ponto mostra a pessoa, o dia, as horas cobertas e o motivo (task 231)', () => {
+  const resumo = resumirProposta(Tipo.JUSTIFICAR_PONTO, { usuarioNome: 'Ana', diaData: '2026-10-20', nome: 'Consulta médica', descricao: 'Combinado com o gestor', horasCobertas: 4 });
+  assert.equal(resumo.acao, 'Justificar ponto para Ana');
+  assert.equal(resumo.nome, 'Consulta médica');
+  assert.equal(resumo.contexto, '20/10/2026');
+  assert.deepEqual(resumo.campos, [{ tipo: 'chip', texto: '4 h cobertas' }, { tipo: 'citacao', texto: 'Combinado com o gestor' }]);
 });

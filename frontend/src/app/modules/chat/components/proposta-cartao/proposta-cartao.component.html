@@ -165,6 +165,17 @@
           <span class="proposta-cartao__linha">Esta atividade não tem execuções.</span>
         </div>
       }
+      @case (Tipo.JUSTIFICAR_PONTO) {
+        <div class="proposta-cartao__resumo">
+          <strong class="proposta-cartao__destaque">{{ texto('nome') }}</strong>
+          @if (texto('usuarioNome')) {
+            <span class="proposta-cartao__linha">Pessoa: {{ texto('usuarioNome') }}</span>
+          }
+          <span class="proposta-cartao__linha">Dia: {{ dataBr(texto('diaData')) }}</span>
+          <span class="proposta-cartao__linha">Horas que não contam na meta: {{ numero('horasCobertas') }} h</span>
+          <span class="proposta-cartao__linha">Motivo: {{ texto('descricao') }}</span>
+        </div>
+      }
       @case (Tipo.ATRIBUIR_MEMBRO) {
         <div class="proposta-cartao__resumo">
           <strong class="proposta-cartao__destaque">{{ texto('usuarioNome') || 'Usuário ' + propostaAtual.dados['usuarioId'] }}</strong>

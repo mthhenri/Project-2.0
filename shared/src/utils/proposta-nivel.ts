@@ -34,6 +34,7 @@ const NIVEL_PADRAO_POR_TIPO: Readonly<Record<TipoPropostaIaEnum, PropostaIaNivel
   [TipoPropostaIaEnum.ATRIBUIR_MEMBRO]:    PropostaIaNivelEnum.PERGUNTA,
   [TipoPropostaIaEnum.REGISTRAR_EXECUCAO]: PropostaIaNivelEnum.SEMPRE_PERGUNTA,
   [TipoPropostaIaEnum.CORRIGIR_EXECUCAO]:  PropostaIaNivelEnum.SEMPRE_PERGUNTA,
+  [TipoPropostaIaEnum.JUSTIFICAR_PONTO]:   PropostaIaNivelEnum.SEMPRE_PERGUNTA,
   [TipoPropostaIaEnum.CRIAR_PROJETO]:      PropostaIaNivelEnum.SEMPRE_PERGUNTA,
 };
 
