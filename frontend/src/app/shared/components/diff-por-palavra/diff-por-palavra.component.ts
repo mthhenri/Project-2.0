@@ -17,6 +17,8 @@ export class DiffPorPalavraComponent {
   readonly depois = input<string | null | undefined>('');
   /** Texto de código: fonte monoespaçada, indentação e quebras de linha mantidas. */
   readonly codigo = input(false);
+  /** Dentro de uma linha de texto (a proposta compacta): corre junto das palavras em volta, sem caixa nem rolagem própria. */
+  readonly emLinha = input(false);
 
   readonly Tipo = TrechoDiffTipoEnum;
   readonly trechos = computed<TrechoDiff[]>(() => compararPorPalavra(this.antes() ?? '', this.depois() ?? ''));

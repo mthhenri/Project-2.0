@@ -6,6 +6,13 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 
+  &--em-linha {
+    display: inline;
+    max-height: none;
+    overflow: visible;
+    font-size: inherit;
+  }
+
   &--codigo {
     font-family: var(--font-mono, monospace);
     tab-size: 2;

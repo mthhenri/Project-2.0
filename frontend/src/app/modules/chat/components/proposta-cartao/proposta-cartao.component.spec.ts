@@ -38,8 +38,9 @@ function detectar(montado: Montado): void {
 }
 
 const texto = (montado: Montado) => montado.elemento.textContent ?? '';
+/** O botão pelo texto (cartão grande) ou pelo rótulo de acessibilidade (os ícones da linha compacta). */
 const botao = (montado: Montado, rotulo: string) =>
-  Array.from(montado.elemento.querySelectorAll<HTMLButtonElement>('button')).find((candidato) => candidato.textContent?.trim() === rotulo);
+  Array.from(montado.elemento.querySelectorAll<HTMLButtonElement>('button')).find((candidato) => candidato.textContent?.trim() === rotulo || candidato.getAttribute('aria-label') === rotulo);
 const avisosDe = (montado: Montado) => {
   const avisos: { severity?: string; detail?: string }[] = [];
   montado.mensagens.messageObserver.subscribe((mensagem) => avisos.push(...[mensagem].flat()));
@@ -59,10 +60,12 @@ describe('PropostaCartaoComponent — carregar', () => {
     await montado.atualizar();
 
     expect(montado.elemento.querySelector('.proposta-cartao__carregando')).toBeNull();
-    expect(texto(montado)).toContain('Proposta · Criar atividade');
+    // Criar atividade cabe numa linha (task 226): ação, nome, demanda e prioridade, com ✓, lápis e × em vez do cartão grande.
+    expect(montado.elemento.querySelector('.proposta-cartao')).toBeNull();
+    expect(texto(montado)).toContain('Criar atividade para Ana');
     expect(texto(montado)).toContain('Montar o formulário');
-    expect(texto(montado)).toContain('Demanda: Login');
-    expect(texto(montado)).toContain('Aguardando você');
+    expect(texto(montado)).toContain('Login');
+    expect(texto(montado)).toContain('Alta');
     expect(botao(montado, 'Confirmar')).toBeDefined();
     expect(botao(montado, 'Ajustar')).toBeDefined();
     expect(botao(montado, 'Recusar')).toBeDefined();
@@ -87,16 +90,17 @@ describe('PropostaCartaoComponent — carregar', () => {
   it('proposta já resolvida não oferece Confirmar nem Recusar; confirmada oferece só Desfazer', async () => {
     const montado = await montarCartao(proposta(TipoPropostaIaEnum.CRIAR_ATIVIDADE, StatusPropostaIaEnum.CONFIRMADA, CRIAR_ATIVIDADE.dados));
 
-    expect(texto(montado)).toContain('Confirmada');
+    // Confirmada vira a linha verde de "feito", sem Confirmar nem Recusar, só com Desfazer (e os detalhes).
+    expect(texto(montado)).toContain('Feito');
     expect(botao(montado, 'Confirmar')).toBeUndefined();
     expect(botao(montado, 'Recusar')).toBeUndefined();
     expect(botao(montado, 'Desfazer')).toBeDefined();
   });
 
-  it('proposta recusada/expirada ou desfeita fica sem botões', async () => {
+  it('proposta recusada/expirada ou desfeita fica sem ação: só a situação e o botão de detalhes', async () => {
     const expirada = await montarCartao(proposta(TipoPropostaIaEnum.CRIAR_ATIVIDADE, StatusPropostaIaEnum.EXPIRADA, CRIAR_ATIVIDADE.dados));
     expect(texto(expirada)).toContain('Recusada ou expirada');
-    expect(expirada.elemento.querySelectorAll('button')).toHaveLength(0);
+    expect(Array.from(expirada.elemento.querySelectorAll('button')).map((item) => item.getAttribute('aria-label'))).toEqual(['Ver detalhes']);
   });
 
   it('só os tipos que sabem ser ajustados mostram "Ajustar"; os demais só Confirmar e Recusar', async () => {
@@ -123,7 +127,7 @@ describe('PropostaCartaoComponent — Confirmar', () => {
     responderSucesso(pedido, proposta(TipoPropostaIaEnum.CRIAR_ATIVIDADE, StatusPropostaIaEnum.CONFIRMADA, CRIAR_ATIVIDADE.dados));
     detectar(montado);
 
-    expect(texto(montado)).toContain('Confirmada');
+    expect(texto(montado)).toContain('Feito');
     expect(botao(montado, 'Desfazer')).toBeDefined();
     expect(botao(montado, 'Confirmar')).toBeUndefined();
     expect(resolvidas).toEqual([StatusPropostaIaEnum.CONFIRMADA]);
@@ -202,25 +206,35 @@ describe('PropostaCartaoComponent — prazo para desfazer (task 194)', () => {
     resolucaoData: new Date(Date.now() - minutos * 60_000 + segundosExtra * 1000).toISOString(),
   });
 
-  it('Desfazer fica no lado oposto (direita) e ativo dentro dos 30 minutos', async () => {
+  it('a linha de "feito" mostra Desfazer à direita e ativo dentro dos 30 minutos', async () => {
     const montado = await montarCartao(confirmadaHa(5));
-    expect(montado.elemento.querySelector('.proposta-cartao__acoes--desfazer')).not.toBeNull();
+    expect(montado.elemento.querySelector('.proposta-linha--feita .proposta-linha__acoes')).not.toBeNull();
     expect(botao(montado, 'Desfazer')!.disabled).toBe(false);
   });
 
-  it('depois dos 30 minutos o botão fica desativado e não chama a API', async () => {
+  it('depois dos 30 minutos a linha de "feito" fica sem o botão Desfazer', async () => {
     const montado = await montarCartao(confirmadaHa(40));
-    expect(botao(montado, 'Desfazer')!.disabled).toBe(true);
-    botao(montado, 'Desfazer')!.click();
+    expect(texto(montado)).toContain('Feito');
+    expect(botao(montado, 'Desfazer')).toBeUndefined();
     montado.http.expectNone((requisicao) => requisicao.url.endsWith('/desfazer'));
   });
 
-  it('o prazo vence com o cartão aberto: o botão desativa sozinho', async () => {
+  it('o prazo vence com a linha aberta: o botão some sozinho', async () => {
     const montado = await montarCartao(confirmadaHa(30, 1));
     expect(botao(montado, 'Desfazer')!.disabled).toBe(false);
     await new Promise((resolver) => setTimeout(resolver, 2600));
     detectar(montado);
+    expect(botao(montado, 'Desfazer')).toBeUndefined();
+  });
+
+  it('nos detalhes abertos o prazo vencido segue como antes: botão desativado e sem chamar a API', async () => {
+    const montado = await montarCartao(confirmadaHa(40));
+    botao(montado, 'Ver detalhes')!.click();
+    detectar(montado);
+    expect(montado.elemento.querySelector('.proposta-cartao__acoes--desfazer')).not.toBeNull();
     expect(botao(montado, 'Desfazer')!.disabled).toBe(true);
+    botao(montado, 'Desfazer')!.click();
+    montado.http.expectNone((requisicao) => requisicao.url.endsWith('/desfazer'));
   });
 });
 
@@ -236,7 +250,8 @@ describe('PropostaCartaoComponent — Recusar e Desfazer', () => {
     detectar(montado);
 
     expect(texto(montado)).toContain('Recusada ou expirada');
-    expect(montado.elemento.querySelectorAll('button')).toHaveLength(0);
+    expect(botao(montado, 'Confirmar')).toBeUndefined();
+    expect(botao(montado, 'Recusar')).toBeUndefined();
     expect(TestBed.inject(DesfazerService).oferta()).toBeNull();
   });
 
@@ -251,7 +266,8 @@ describe('PropostaCartaoComponent — Recusar e Desfazer', () => {
     detectar(montado);
 
     expect(texto(montado)).toContain('Desfeita');
-    expect(montado.elemento.querySelectorAll('button')).toHaveLength(0);
+    expect(botao(montado, 'Desfazer')).toBeUndefined();
+    expect(botao(montado, 'Confirmar')).toBeUndefined();
   });
 
   it('409 ao desfazer (já desfeita em outro lugar) recarrega o cartão', async () => {
@@ -337,7 +353,7 @@ describe('PropostaCartaoComponent — Ajustar', () => {
     detectar(montado);
 
     expect(montado.elemento.querySelector('form')).toBeNull();
-    expect(texto(montado)).toContain('Ajustada e confirmada');
+    expect(texto(montado)).toContain('Feito');
     expect(texto(montado)).toContain('Montar o formulário de cadastro');
     expect(resolvidas).toEqual([StatusPropostaIaEnum.AJUSTADA]);
     expect(TestBed.inject(DesfazerService).oferta()?.mensagem).toBe('Proposta ajustada e confirmada');
@@ -437,7 +453,7 @@ describe('PropostaCartaoComponent — diff por palavra', () => {
     const montado = await montarCartao(pendente(TipoPropostaIaEnum.ANOTAR_PAD, { secao: 'FEITO', operacao: 'TROCAR', trechoAntigo: 'revisar o contrato', trechoNovo: 'revisar o aditivo' }));
     expect(removidos(montado)).toEqual(['contrato']);
     expect(adicionados(montado)).toEqual(['aditivo']);
-    expect(texto(montado)).toContain('Trecho trocado');
+    expect(texto(montado)).toContain('Trocar no pad');
   });
 
   it('Anotar no pad acrescentando não ganha diff: continua mostrando o texto a acrescentar', async () => {
@@ -477,5 +493,106 @@ describe('PropostaCartaoComponent — diff por palavra', () => {
   it('os tipos que não mudaram seguem sem diff (regressão)', async () => {
     const montado = await montarCartao();
     expect(montado.elemento.querySelector('app-diff-por-palavra')).toBeNull();
+  });
+});
+
+// A linha compacta (task 226): mudança pequena em uma linha, "feito" com Desfazer e o cartão grande para o que não cabe.
+describe('PropostaCartaoComponent — linha compacta', () => {
+  const pendente = (tipo: TipoPropostaIaEnum, dados: Record<string, unknown>) => proposta(tipo, StatusPropostaIaEnum.PENDENTE, dados);
+  const rotulosDosBotoes = (montado: Montado) => Array.from(montado.elemento.querySelectorAll('button')).map((item) => item.getAttribute('aria-label') ?? item.textContent?.trim());
+  const GRANDE = pendente(TipoPropostaIaEnum.DESCREVER_DEMANDA, { demandaId: 3, demandaNome: 'Cadastro', descricaoCliente: 'O cliente quer um cadastro.' });
+
+  it('pendente e pequena: uma linha com ✓, lápis e ×, cada um com rótulo de acessibilidade', async () => {
+    const montado = await montarCartao();
+    expect(montado.elemento.querySelector('.proposta-linha')).not.toBeNull();
+    expect(montado.elemento.querySelector('.proposta-cartao')).toBeNull();
+    expect(rotulosDosBotoes(montado)).toEqual(['Confirmar', 'Ajustar', 'Recusar', 'Ver detalhes']);
+  });
+
+  it('os tipos que não sabem ser ajustados não têm o lápis', async () => {
+    const montado = await montarCartao(pendente(TipoPropostaIaEnum.ALTERAR_ATIVIDADE, { atividadeNome: 'Formulário', atividadeId: 4, statusAnterior: 'PLANEJADA', status: 'DESENVOLVENDO' }));
+    expect(rotulosDosBotoes(montado)).toEqual(['Confirmar', 'Recusar', 'Ver detalhes']);
+  });
+
+  it('a proposta que não cabe numa linha continua no cartão grande, com os botões por extenso', async () => {
+    const montado = await montarCartao(GRANDE);
+    expect(montado.elemento.querySelector('.proposta-linha')).toBeNull();
+    expect(texto(montado)).toContain('Proposta · Descrever demanda');
+    expect(texto(montado)).toContain('Aguardando você');
+    expect(rotulosDosBotoes(montado)).toContain('Confirmar');
+  });
+
+  it('o texto longo manda a proposta para o cartão grande', async () => {
+    const montado = await montarCartao(pendente(TipoPropostaIaEnum.PAUSAR_EXECUCAO, { atividadeNome: 'Ajustar', descricao: 'a'.repeat(81) }));
+    expect(montado.elemento.querySelector('.proposta-linha')).toBeNull();
+    expect(montado.elemento.querySelector('.proposta-cartao')).not.toBeNull();
+  });
+
+  it('"Ver detalhes" abre o cartão grande no mesmo lugar e "Resumir" volta para a linha', async () => {
+    const montado = await montarCartao();
+    botao(montado, 'Ver detalhes')!.click();
+    detectar(montado);
+    expect(montado.elemento.querySelector('.proposta-linha')).toBeNull();
+    expect(texto(montado)).toContain('Proposta · Criar atividade');
+    expect(texto(montado)).toContain('Aguardando você');
+
+    botao(montado, 'Resumir')!.click();
+    detectar(montado);
+    expect(montado.elemento.querySelector('.proposta-linha')).not.toBeNull();
+    expect(montado.elemento.querySelector('.proposta-cartao')).toBeNull();
+  });
+
+  it('o lápis abre o formulário no cartão grande e Cancelar devolve a linha', async () => {
+    const montado = await montarCartao();
+    botao(montado, 'Ajustar')!.click();
+    detectar(montado);
+    expect(montado.elemento.querySelector('form')).not.toBeNull();
+    expect(montado.elemento.querySelector('.proposta-linha')).toBeNull();
+
+    botao(montado, 'Cancelar')!.click();
+    detectar(montado);
+    expect(montado.elemento.querySelector('form')).toBeNull();
+    expect(montado.elemento.querySelector('.proposta-linha')).not.toBeNull();
+  });
+
+  it('o × recusa e deixa uma linha apagada com a situação e sem botões de ação', async () => {
+    const montado = await montarCartao();
+    botao(montado, 'Recusar')!.click();
+    responderSucesso(
+      esperarRequisicao(montado.http, 'POST', `/proposta-ia/${ID}/recusar`),
+      proposta(TipoPropostaIaEnum.CRIAR_ATIVIDADE, StatusPropostaIaEnum.EXPIRADA, CRIAR_ATIVIDADE.dados),
+    );
+    detectar(montado);
+    expect(montado.elemento.querySelector('.proposta-linha--encerrada')).not.toBeNull();
+    expect(rotulosDosBotoes(montado)).toEqual(['Ver detalhes']);
+  });
+
+  it('confirmada, até a proposta grande vira a linha verde de "feito" com Desfazer', async () => {
+    const montado = await montarCartao(proposta(TipoPropostaIaEnum.DESCREVER_DEMANDA, StatusPropostaIaEnum.CONFIRMADA, GRANDE.dados));
+    expect(montado.elemento.querySelector('.proposta-linha--feita')).not.toBeNull();
+    expect(texto(montado)).toContain('Descrever demanda');
+    expect(texto(montado)).toContain('Cadastro');
+    expect(botao(montado, 'Desfazer')).toBeDefined();
+  });
+
+  it('a proposta grande recusada segue no cartão grande, com a situação por extenso', async () => {
+    const montado = await montarCartao(proposta(TipoPropostaIaEnum.DESCREVER_DEMANDA, StatusPropostaIaEnum.EXPIRADA, GRANDE.dados));
+    expect(montado.elemento.querySelector('.proposta-linha')).toBeNull();
+    expect(texto(montado)).toContain('Recusada ou expirada');
+  });
+
+  it('o nome que muda aparece como diff por palavra dentro da linha', async () => {
+    const montado = await montarCartao(
+      pendente(TipoPropostaIaEnum.ALTERAR_ATIVIDADE, { atividadeId: 3, atividadeNome: 'Ajustar filtros', nome: 'Ajustar filtros e ordenação' }),
+    );
+    expect(Array.from(montado.elemento.querySelectorAll('.proposta-linha ins')).map((item) => item.textContent?.trim())).toEqual(['e ordenação']);
+  });
+
+  it('enquanto a chamada está em andamento a linha esmaece e o clique não repete o POST', async () => {
+    const montado = await montarCartao();
+    botao(montado, 'Confirmar')!.click();
+    detectar(montado);
+    expect(montado.elemento.querySelector('.proposta-linha--operando')).not.toBeNull();
+    montado.http.expectOne((requisicao) => requisicao.url.endsWith('/confirmar'));
   });
 });

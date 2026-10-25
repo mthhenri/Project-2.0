@@ -99,8 +99,9 @@ const texto = (montado: Montado) => montado.elemento.textContent ?? '';
 const conversaDa = (montado: Montado) => montado.elemento.querySelector('[aria-label="Conversa do check-in"]')?.textContent ?? '';
 const campo = (montado: Montado) => montado.elemento.querySelector<HTMLTextAreaElement>('[aria-label="Resposta do check-in"]')!;
 const botaoEnviar = (montado: Montado) => montado.elemento.querySelector<HTMLButtonElement>('[aria-label="Enviar"]')!;
+/** O botão pelo texto ou pelo rótulo de acessibilidade (os ícones da linha compacta da proposta). */
 const botao = (montado: Montado, rotulo: string) =>
-  Array.from(montado.elemento.querySelectorAll<HTMLButtonElement>('button')).find((candidato) => candidato.textContent?.trim() === rotulo);
+  Array.from(montado.elemento.querySelectorAll<HTMLButtonElement>('button')).find((candidato) => candidato.textContent?.trim() === rotulo || candidato.getAttribute('aria-label') === rotulo);
 const sugestoesVisiveis = (montado: Montado) =>
   Array.from(montado.elemento.querySelectorAll<HTMLButtonElement>('[aria-label="Sugestões de resposta"] button')).map((item) => item.textContent?.trim());
 const avisosDe = (montado: Montado) => {

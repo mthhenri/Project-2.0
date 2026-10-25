@@ -12,6 +12,40 @@
 
 ---
 
+## 2026-10-25 — Task 226: cartão compacto das propostas da IA
+
+Terceira task das propostas da IA (`chat-propostas.spec.md`). Mudança pequena ocupa uma linha no chat e o que foi confirmado vira uma linha verde com Desfazer.
+
+- **Ponto em aberto da spec, decidido com o autor ao abrir a task:** "texto longo" é **mais de 80 caracteres** por texto (as opções eram 50, 80 e 120).
+- **Regra pura** (`proposta-compacta.util.ts`): `resumirProposta(tipo, dados)` tem um resumidor para cada um dos 16 tipos (ação, nome, contexto e campos: chip, antes → depois com
+  ou sem diff, prioridade e citação) e marca `compacto` quando há até 3 campos, todo texto tem até 80 caracteres e nenhum tem quebra de linha, e o tipo não exige o cartão
+  grande. Exigem o grande: Descrever demanda (sempre: as descrições são o que se confere no diff), Alterar demanda com documentação acrescentada ou atividades em aberto
+  (o aviso precisa ser lido) e Criar demanda que depende de outra proposta do turno. Na dúvida, grande. O cálculo de período e duração da correção de execução mudou do
+  componente para a regra, e o cartão grande o usa de lá.
+- **Componente novo** `app-chat-proposta-linha` (pendente com ✓, lápis e ×, cada um com `pTooltip` e `aria-label`; feita; encerrada) e `[emLinha]` no
+  `app-diff-por-palavra`. O cartão (`linha` computado) escolhe: pendente e pequena = linha; confirmada ou ajustada, **de qualquer tipo** = linha verde "Feito" com
+  Desfazer dentro do prazo de 30 min e sem o botão depois dele; recusada, expirada ou desfeita e pequena = linha apagada com a situação; o resto, cartão grande. "Ver
+  detalhes" abre o grande no mesmo lugar ("Resumir" volta) e o lápis abre o formulário no grande ("Cancelar" devolve a linha). O lápis só aparece nos tipos que sabem ser
+  ajustados, como o botão "Ajustar" de antes.
+- **Decisão que a spec deixava solta:** a linha "feita" vale para todos os tipos, inclusive os que não cabem numa linha; o detalhe segue a um clique ("Ver detalhes"), e o
+  prazo vencido no cartão aberto mantém o botão desativado com a explicação, como na task 194.
+- **Impacto** (`npm run impacto`): o cartão tem 4 consumidores (`chat.page` e `checkin.page`, importação e seletor; as duas só passam o `propostaId`) e o diff por
+  palavra, 2 (o cartão e a linha). Os specs das duas páginas passaram a achar os botões também pelo `aria-label`.
+- **Testes:** `shared` 224, `backend` 1333, `frontend` 158 arquivos e 1903 testes (14 novos da regra, um por tipo, os limites exatos de 80 caracteres e de 3 campos e cada
+  motivo de cartão grande; 12 novos do cartão para a linha: pendente, sem lápis, grande, texto longo, detalhes e resumir, lápis e cancelar, ×, feita de tipo grande, grande
+  recusada, diff do nome e operando; 11 testes antigos do cartão reescritos para a linha, entre eles o prazo vencido, que agora some com o botão), `desktop` 33, `repo:test` 13
+  (1 ignorado, preexistente). Builds de `backend` e `frontend` ok. Sem lint (`PROBLEMS.md` P-001).
+- **Ao vivo** (1920×1080, 1366×768 e 1080×1920, tema claro e escuro): 22 propostas simuladas no chat real (os 15 tipos que cabem numa linha, 3 que não cabem, 2 confirmadas
+  recentes, 1 confirmada há 50 min, 1 expirada): 19 linhas e 3 cartões grandes em todos os cenários, nenhum erro de console e nenhuma rolagem horizontal; as interações
+  (ver detalhes, resumir, lápis, cancelar, ✓ e Desfazer) funcionaram nos três tamanhos. **Achado só na verificação:** com o texto quebrando, os botões caíam sozinhos numa
+  segunda linha (14 de 19 linhas no 1080×1920); o corpo da linha passou a ser uma coluna flexível e os botões uma coluna fixa à direita (no 1920×1080 e no 1366×768 só 1
+  linha ainda quebra, a mais longa; no 1080×1920, 7).
+- **Limites:** as propostas e as respostas de confirmar e desfazer foram simuladas no navegador (o backend em execução não as criou); o canvas do autor foi usado como
+  referência de desenho, mas a linha não é cópia pixel a pixel dele; a linha azul de "faz e avisa" e a autonomia são da 228, e o grupo da 227. Não foi verificado o
+  estado de erro de carregamento da proposta em linha (continua o do cartão, com o teste existente).
+
+---
+
 ## 2026-10-25 — Task 225: a resposta da IA com proposta não some, a rolagem acompanha e a mensagem guarda todas as propostas
 
 Segunda task das propostas da IA (`chat-propostas.spec.md`). Os três defeitos (achados na leitura do código) foram **reproduzidos ao vivo antes de mexer**, num

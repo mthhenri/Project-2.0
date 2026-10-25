@@ -1,8 +1,27 @@
-@if (proposta(); as propostaAtual) {
+@if (linha(); as linhaAtual) {
+  <app-chat-proposta-linha
+    [resumo]="linhaAtual.resumo"
+    [modo]="linhaAtual.modo"
+    [status]="linhaAtual.status"
+    [podeAjustar]="podeAjustar()"
+    [operando]="operando()"
+    [desfazerDisponivel]="desfazerDisponivel()"
+    (confirmar)="confirmar()"
+    (ajustar)="abrirAjuste()"
+    (recusar)="recusar()"
+    (desfazer)="desfazer()"
+    (detalhar)="expandido.set(true)"
+  />
+} @else if (proposta(); as propostaAtual) {
   <article class="proposta-cartao" [class.proposta-cartao--operando]="operando()" [attr.aria-label]="'Proposta: ' + rotuloTipo[propostaAtual.tipo]">
     <header class="proposta-cartao__cabecalho">
       <span class="proposta-cartao__titulo">Proposta · {{ rotuloTipo[propostaAtual.tipo] }}</span>
-      <p-tag [value]="rotuloStatus[propostaAtual.status]" [severity]="severidade[propostaAtual.status]" [rounded]="true" />
+      <span class="proposta-cartao__situacao">
+        @if (expandido() && !ajustando()) {
+          <p-button label="Resumir" icon="pi pi-angle-up" severity="secondary" size="small" [text]="true" (onClick)="expandido.set(false)" />
+        }
+        <p-tag [value]="rotuloStatus[propostaAtual.status]" [severity]="severidade[propostaAtual.status]" [rounded]="true" />
+      </span>
     </header>
 
     @switch (propostaAtual.tipo) {

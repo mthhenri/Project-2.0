@@ -31,6 +31,12 @@
     color: var(--p-primary-600);
   }
 
+  &__situacao {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
   &__resumo {
     display: flex;
     flex-direction: column;

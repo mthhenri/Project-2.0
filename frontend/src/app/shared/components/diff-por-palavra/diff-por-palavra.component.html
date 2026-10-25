@@ -1,4 +1,4 @@
-<div class="diff-por-palavra" [class.diff-por-palavra--codigo]="codigo()" role="group" aria-label="Diferença entre o texto atual e o proposto">
+<div class="diff-por-palavra" [class.diff-por-palavra--codigo]="codigo()" [class.diff-por-palavra--em-linha]="emLinha()" role="group" aria-label="Diferença entre o texto atual e o proposto">
   @for (trecho of trechos(); track $index) {
     @switch (trecho.tipo) {
       @case (Tipo.REMOVIDO) {

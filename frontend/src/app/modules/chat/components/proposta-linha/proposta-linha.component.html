@@ -1,0 +1,121 @@
+<div
+  class="proposta-linha"
+  [class.proposta-linha--feita]="modo() === 'FEITA'"
+  [class.proposta-linha--encerrada]="modo() === 'ENCERRADA'"
+  [class.proposta-linha--operando]="operando()"
+  role="group"
+  [attr.aria-label]="rotuloDaLinha()"
+>
+  <span class="proposta-linha__corpo">
+    @if (modo() === 'FEITA') {
+      <i class="pi pi-check-circle proposta-linha__icone" aria-hidden="true"></i>
+      <span class="proposta-linha__feito">Feito</span>
+    }
+
+    <span class="proposta-linha__acao">{{ resumo().acao }}</span>
+
+    <span class="proposta-linha__nome">
+      @if (resumo().nomeAnterior) {
+        <app-diff-por-palavra [antes]="resumo().nomeAnterior" [depois]="resumo().nome" [emLinha]="true" />
+      } @else {
+        {{ resumo().nome }}
+      }
+    </span>
+
+    @if (resumo().contexto) {
+      <span class="proposta-linha__contexto">{{ resumo().contexto }}</span>
+    }
+
+    @for (campo of resumo().campos; track $index) {
+      @switch (campo.tipo) {
+        @case ('chip') {
+          <span class="proposta-linha__chip">
+            @if (campo.cor) {
+              <span class="proposta-linha__cor" [style.background-color]="campo.cor" aria-hidden="true"></span>
+            }
+            {{ campo.texto }}
+          </span>
+        }
+        @case ('mudanca') {
+          @if (campo.diff) {
+            <span class="proposta-linha__chip"><app-diff-por-palavra [antes]="campo.antes" [depois]="campo.depois" [emLinha]="true" /></span>
+          } @else {
+            <span class="proposta-linha__chip">{{ campo.antes }} <i class="pi pi-arrow-right" aria-hidden="true"></i> {{ campo.depois }}</span>
+          }
+        }
+        @case ('prioridade') {
+          <span class="proposta-linha__chip proposta-linha__chip--selo">
+            @if (campo.antes) {
+              <app-prioridade-selo [prioridade]="prioridadeDe(campo.antes)" />
+              <i class="pi pi-arrow-right" aria-hidden="true"></i>
+            }
+            <app-prioridade-selo [prioridade]="prioridadeDe(campo.depois)" />
+          </span>
+        }
+        @case ('citacao') {
+          <span class="proposta-linha__citacao">“{{ campo.texto }}”</span>
+        }
+      }
+    }
+  </span>
+
+  <span class="proposta-linha__acoes">
+    @if (modo() === 'ENCERRADA') {
+      <p-tag [value]="rotuloStatus[status()]" [severity]="severidade[status()]" [rounded]="true" />
+    }
+    @if (modo() === 'PENDENTE') {
+      <p-button
+        icon="pi pi-check"
+        severity="success"
+        size="small"
+        [rounded]="true"
+        [text]="true"
+        ariaLabel="Confirmar"
+        pTooltip="Confirmar"
+        tooltipPosition="top"
+        [disabled]="operando()"
+        (onClick)="confirmar.emit()"
+      />
+      @if (podeAjustar()) {
+        <p-button
+          icon="pi pi-pencil"
+          severity="secondary"
+          size="small"
+          [rounded]="true"
+          [text]="true"
+          ariaLabel="Ajustar"
+          pTooltip="Ajustar"
+          tooltipPosition="top"
+          [disabled]="operando()"
+          (onClick)="ajustar.emit()"
+        />
+      }
+      <p-button
+        icon="pi pi-times"
+        severity="secondary"
+        size="small"
+        [rounded]="true"
+        [text]="true"
+        ariaLabel="Recusar"
+        pTooltip="Recusar"
+        tooltipPosition="top"
+        [disabled]="operando()"
+        (onClick)="recusar.emit()"
+      />
+    }
+    @if (modo() === 'FEITA' && desfazerDisponivel()) {
+      <p-button label="Desfazer" icon="pi pi-undo" severity="secondary" size="small" [text]="true" [disabled]="operando()" (onClick)="desfazer.emit()" />
+    }
+    <p-button
+      icon="pi pi-angle-down"
+      severity="secondary"
+      size="small"
+      [rounded]="true"
+      [text]="true"
+      ariaLabel="Ver detalhes"
+      pTooltip="Ver detalhes"
+      tooltipPosition="top"
+      (onClick)="detalhar.emit()"
+    />
+  </span>
+</div>

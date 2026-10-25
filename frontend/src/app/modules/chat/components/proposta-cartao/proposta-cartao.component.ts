@@ -16,6 +16,7 @@ import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.s
 import { AtividadePrioridadeService } from '../../../../core/services/atividade-prioridade.service';
 import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
 import { DiffPorPalavraComponent } from '../../../../shared/components/diff-por-palavra/diff-por-palavra.component';
+import { PropostaLinhaComponent } from '../proposta-linha/proposta-linha.component';
 import { PrioridadeSeloComponent } from '../../../../shared/components/prioridade-selo/prioridade-selo.component';
 import { ROTULO_SECAO_ANOTACAO } from '../../../usuario/utils/anotacoes.util';
 import { DesfazerService } from '../../../../core/services/desfazer.service';
@@ -27,6 +28,7 @@ import {
   formatarDuracao,
   paresDosDados,
 } from '../../utils/chat.util';
+import { periodoAnteriorDaExecucao, periodoNovoDaExecucao, resumirProposta, ROTULO_STATUS_DA_DEMANDA } from '../../utils/proposta-compacta.util';
 
 /**
  * Cartão de uma proposta da IA no chat (task 139): o que a IA quer fazer, em que situação está e os botões coerentes com ela.
@@ -34,14 +36,6 @@ import {
  * dados como pares e só oferecem Confirmar e Recusar até ganharem o resumo deles.
  * Nada roda sem o clique de Confirmar. Um 409 (já resolvida em outro lugar) recarrega o cartão.
  */
-/** Status de demanda como as telas os mostram. */
-const ROTULO_STATUS_DA_DEMANDA: Record<string, string> = {
-  PENDENTE: 'Pendente',
-  PLANEJADA: 'Planejada',
-  CONCLUIDA: 'Concluída',
-  CANCELADA: 'Cancelada',
-};
-
 type VisaoDosTextos = 'MUDANCAS' | 'ANTES' | 'DEPOIS';
 
 /** Quanto do fim da documentação de antes o cartão mostra como contexto do que será acrescentado. */
@@ -50,7 +44,7 @@ const CONTEXTO_DA_DOCUMENTACAO = 240;
 @Component({
   selector: 'app-chat-proposta-cartao',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, TooltipModule, TagModule, TextareaModule, PrioridadeSeloComponent, MarkdownVisualizadorComponent, DiffPorPalavraComponent],
+  imports: [ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, TooltipModule, TagModule, TextareaModule, PrioridadeSeloComponent, MarkdownVisualizadorComponent, DiffPorPalavraComponent, PropostaLinhaComponent],
   templateUrl: './proposta-cartao.component.html',
   styleUrl: './proposta-cartao.component.scss',
 })
@@ -129,17 +123,28 @@ export class PropostaCartaoComponent {
   });
 
   /** Período e duração da execução corrigida, antes e depois, em texto, para o diff por palavra da correção. */
-  readonly periodoAnteriorDaExecucao = computed(() => {
-    const dados = this.proposta()?.dados;
-    if (!dados) return '';
-    const inicio = typeof dados['inicioAnteriorData'] === 'string' ? Date.parse(dados['inicioAnteriorData']) : NaN;
-    const fim = typeof dados['fimAnteriorData'] === 'string' ? Date.parse(dados['fimAnteriorData']) : NaN;
-    const duracao = Number.isNaN(inicio) || Number.isNaN(fim) ? 0 : Math.round((fim - inicio) / 60000);
-    return duracao > 0 ? `${this.texto('periodoAnteriorTexto')} (${formatarDuracao(duracao)})` : this.texto('periodoAnteriorTexto');
+  readonly periodoAnteriorDaExecucao = computed(() => periodoAnteriorDaExecucao(this.proposta()?.dados ?? {}));
+  readonly periodoNovoDaExecucao = computed(() => periodoNovoDaExecucao(this.proposta()?.dados ?? {}));
+
+  /** O usuário pediu os detalhes de uma proposta que cabia numa linha: o cartão grande aparece no mesmo lugar (task 226). */
+  readonly expandido = signal(false);
+  /** O resumo de uma linha da proposta e se ela cabe numa linha só. */
+  readonly resumo = computed(() => {
+    const atual = this.proposta();
+    return atual ? resumirProposta(atual.tipo, atual.dados) : null;
   });
-  readonly periodoNovoDaExecucao = computed(() => {
-    const duracao = this.numero('duracaoNovaMinutos');
-    return duracao > 0 ? `${this.texto('periodoNovoTexto')} (${formatarDuracao(duracao)})` : this.texto('periodoNovoTexto');
+  /**
+   * A linha em que a proposta se mostra, ou `null` quando o que vale é o cartão grande. Pendente e pequena: linha com ✓, lápis e ×;
+   * confirmada (qualquer tipo): linha verde de "feito"; recusada, expirada ou desfeita e pequena: linha sem botões. Ajustando ou com
+   * os detalhes abertos, sempre o cartão grande, que também é o de toda proposta que não cabe numa linha.
+   */
+  readonly linha = computed(() => {
+    const atual = this.proposta();
+    const resumo = this.resumo();
+    if (!atual || !resumo || this.ajustando() || this.expandido()) return null;
+    if (atual.status === StatusPropostaIaEnum.PENDENTE) return resumo.compacto ? { resumo, modo: 'PENDENTE' as const, status: atual.status } : null;
+    if (atual.status === StatusPropostaIaEnum.CONFIRMADA || atual.status === StatusPropostaIaEnum.AJUSTADA) return { resumo, modo: 'FEITA' as const, status: atual.status };
+    return resumo.compacto ? { resumo, modo: 'ENCERRADA' as const, status: atual.status } : null;
   });
 
   /**
