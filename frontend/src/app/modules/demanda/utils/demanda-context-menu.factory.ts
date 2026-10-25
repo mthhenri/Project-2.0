@@ -31,6 +31,7 @@ function estiloIconeDescricao(tokenCor: string, preenchido: boolean): { [klass: 
     color: `var(${tokenCor})`,
     fontWeight: '700',
     textShadow: '0 0 4px color-mix(in srgb, currentColor 45%, transparent)',
+    filter: 'drop-shadow(0 0 2px color-mix(in srgb, currentColor 55%, transparent))',
   };
 }
 
@@ -92,7 +93,7 @@ export function construirMenuDemanda(
     { separator: true },
     {
       label: 'Desc. Técnica',
-      icon: 'pi pi-code',
+      icon: 'icone-descricao icone-descricao--tecnica',
       iconStyle: estiloIconeDescricao('--app-icone-tecnica', alvo.temDescricaoTecnica),
       command: () => acoes.aoDescricao(alvo.id, 'descricaoTecnica'),
     },
@@ -104,7 +105,7 @@ export function construirMenuDemanda(
     },
     {
       label: 'Documentação',
-      icon: 'pi pi-book',
+      icon: 'icone-descricao icone-descricao--doc',
       iconStyle: estiloIconeDescricao('--app-icone-doc', alvo.temDocumentacao),
       command: () => acoes.aoDescricao(alvo.id, 'documentacao'),
     },

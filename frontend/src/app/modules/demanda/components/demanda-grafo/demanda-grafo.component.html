@@ -23,7 +23,7 @@
 @if (cartao(); as c) {
   <div class="demanda-grafo__cartao" [style.left.px]="c.esquerda" [style.top.px]="c.topo">
     <div class="demanda-grafo__cartao-nome">{{ c.no.nome }}</div>
-    <app-demanda-status-chip [status]="c.no.status" />
+    <app-demanda-status [status]="c.no.status" />
     @if (c.no.horasEstimadas > 0) {
       <div class="demanda-grafo__cartao-progresso">
         <span class="demanda-grafo__cartao-barra" [class.demanda-grafo__cartao-barra--estouro]="percentual(c.no) >= 100">
@@ -59,7 +59,7 @@
         [attr.aria-pressed]="statusEstaVisivel(item.status)"
         (click)="statusAlternado.emit(item.status)"
       >
-        <span class="demanda-grafo__legenda-cor" [style.background-color]="item.cor"></span>
+        <app-demanda-status-marca [status]="item.status" [tamanho]="16" />
         <span class="demanda-grafo__legenda-texto">{{ item.rotulo }}</span>
         <i class="pi" [class.pi-eye]="statusEstaVisivel(item.status)" [class.pi-eye-slash]="!statusEstaVisivel(item.status)"></i>
       </button>

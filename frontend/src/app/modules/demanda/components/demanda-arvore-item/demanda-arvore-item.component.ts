@@ -4,7 +4,7 @@ import { ContextMenu } from 'primeng/contextmenu';
 import { TooltipModule } from 'primeng/tooltip';
 import { MenuItem } from 'primeng/api';
 import { DemandaArvoreItemDto, TipoDemandaStatusEnum } from '@project20/shared';
-import { DemandaStatusChipComponent } from '../demanda-status-chip/demanda-status-chip.component';
+import { DemandaStatusComponent } from '../demanda-status/demanda-status.component';
 import { dividirDestaque } from '../../utils/demanda-filtro.util';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { VisualizacaoTempoService } from '../../../../core/services/visualizacao-tempo.service';
@@ -16,7 +16,7 @@ type CampoDescricao = CampoDescricaoDemanda;
 @Component({
   selector: 'app-demanda-arvore-item',
   standalone: true,
-  imports: [ButtonModule, DemandaStatusChipComponent, ContextMenu, TooltipModule, TempoExibicaoPipe, forwardRef(() => DemandaArvoreItemComponent)],
+  imports: [ButtonModule, DemandaStatusComponent, ContextMenu, TooltipModule, TempoExibicaoPipe, forwardRef(() => DemandaArvoreItemComponent)],
   templateUrl: './demanda-arvore-item.component.html',
   styleUrl: './demanda-arvore-item.component.scss',
 })
@@ -47,9 +47,9 @@ export class DemandaArvoreItemComponent implements OnChanges {
 
   /** Ícones de descrição da linha: ícone, nome do campo e o tipo que escolhe a cor (tokens de ícone de descrição). */
   readonly descricoes: Array<{ campo: CampoDescricao; icone: string; rotulo: string; tipo: string }> = [
-    { campo: 'descricaoTecnica', icone: 'pi pi-code', rotulo: 'Descrição técnica',   tipo: 'tecnica' },
+    { campo: 'descricaoTecnica', icone: 'icone-descricao icone-descricao--tecnica', rotulo: 'Descrição técnica',   tipo: 'tecnica' },
     { campo: 'descricaoCliente', icone: 'pi pi-user', rotulo: 'Descrição do cliente', tipo: 'cliente' },
-    { campo: 'documentacao',     icone: 'pi pi-book', rotulo: 'Documentação',        tipo: 'doc' },
+    { campo: 'documentacao',     icone: 'icone-descricao icone-descricao--doc', rotulo: 'Documentação',        tipo: 'doc' },
   ];
 
   descricaoPreenchida(campo: CampoDescricao): boolean {

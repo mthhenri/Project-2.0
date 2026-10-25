@@ -163,6 +163,10 @@
       font-weight: 700;
       // Preenchida: ícone colorido com glow (mesmo tratamento das anotações em Usuários).
       text-shadow: 0 0 4px color-mix(in srgb, currentColor 45%, transparent);
+
+      .icone-descricao {
+        filter: drop-shadow(0 0 2px color-mix(in srgb, currentColor 55%, transparent));
+      }
     }
 
     &--tecnica.demanda-arvore-item__descricao--preenchida { color: var(--app-icone-tecnica); }

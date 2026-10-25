@@ -12,9 +12,9 @@ interface Documento {
 }
 
 const DOCUMENTOS: readonly Documento[] = [
-  { campo: 'descricaoCliente', rotulo: 'Descrição do cliente', tipo: 'cliente', icone: 'pi-user' },
-  { campo: 'descricaoTecnica', rotulo: 'Descrição técnica', tipo: 'tecnica', icone: 'pi-code' },
-  { campo: 'documentacao', rotulo: 'Documentação', tipo: 'doc', icone: 'pi-book' },
+  { campo: 'descricaoCliente', rotulo: 'Descrição do cliente', tipo: 'cliente', icone: 'pi pi-user' },
+  { campo: 'descricaoTecnica', rotulo: 'Descrição técnica', tipo: 'tecnica', icone: 'icone-descricao icone-descricao--tecnica' },
+  { campo: 'documentacao', rotulo: 'Documentação', tipo: 'doc', icone: 'icone-descricao icone-descricao--doc' },
 ];
 
 /**

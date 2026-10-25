@@ -1,0 +1,28 @@
+:host {
+  display: inline-flex;
+  line-height: 0;
+}
+
+.demanda-status-marca {
+  flex-shrink: 0;
+
+  &__traco {
+    fill: none;
+    stroke: var(--cor-status);
+    stroke-width: 2.2;
+    stroke-linecap: round;
+  }
+
+  &__cheio {
+    fill: var(--cor-status);
+    stroke: none;
+  }
+
+  // O ✓ da concluída: a cor da superfície do tema sobre o verde cheio.
+  &__visto {
+    fill: none;
+    stroke: var(--app-surface-0);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+  }
+}

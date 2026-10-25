@@ -21,10 +21,11 @@ import {
   DemandaGrafoArestaDto,
   TipoDemandaStatusEnum,
 } from '@project20/shared';
-import { COR_NO_BORDA, corPreenchimentoNo } from '../../constants/demanda-cores.constants';
+import { COR_NO_BORDA, OPCOES_STATUS_DEMANDA, corPreenchimentoNo } from '../../constants/demanda-cores.constants';
 import { VisualizacaoTempoService } from '../../../../core/services/visualizacao-tempo.service';
 import { TempoExibicaoPipe } from '../../../../shared/pipes/tempo-exibicao.pipe';
-import { DemandaStatusChipComponent } from '../demanda-status-chip/demanda-status-chip.component';
+import { DemandaStatusComponent } from '../demanda-status/demanda-status.component';
+import { DemandaStatusMarcaComponent } from '../demanda-status-marca/demanda-status-marca.component';
 
 /** Nó sob o mouse: posição do cartão flutuante em coordenadas do componente. */
 interface CartaoNo {
@@ -42,7 +43,7 @@ const TODOS_OS_STATUS = Object.values(TipoDemandaStatusEnum);
 @Component({
   selector: 'app-demanda-grafo',
   standalone: true,
-  imports: [ButtonModule, PopoverModule, TooltipModule, TempoExibicaoPipe, DemandaStatusChipComponent],
+  imports: [ButtonModule, PopoverModule, TooltipModule, TempoExibicaoPipe, DemandaStatusComponent, DemandaStatusMarcaComponent],
   templateUrl: './demanda-grafo.component.html',
   styleUrls: ['./demanda-grafo.component.scss'],
 })
@@ -62,12 +63,7 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
 
   readonly cartao = signal<CartaoNo | null>(null);
 
-  readonly itensLegenda = [
-    { status: TipoDemandaStatusEnum.PENDENTE,  rotulo: 'Pendente',  cor: COR_NO_BORDA[TipoDemandaStatusEnum.PENDENTE] },
-    { status: TipoDemandaStatusEnum.PLANEJADA, rotulo: 'Planejada', cor: COR_NO_BORDA[TipoDemandaStatusEnum.PLANEJADA] },
-    { status: TipoDemandaStatusEnum.CONCLUIDA, rotulo: 'Concluída', cor: COR_NO_BORDA[TipoDemandaStatusEnum.CONCLUIDA] },
-    { status: TipoDemandaStatusEnum.CANCELADA, rotulo: 'Cancelada', cor: COR_NO_BORDA[TipoDemandaStatusEnum.CANCELADA] },
-  ];
+  readonly itensLegenda = OPCOES_STATUS_DEMANDA;
 
   statusEstaVisivel(status: TipoDemandaStatusEnum): boolean {
     return this.statusVisiveis.includes(status);

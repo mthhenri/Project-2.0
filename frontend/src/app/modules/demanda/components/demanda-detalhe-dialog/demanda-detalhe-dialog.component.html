@@ -119,7 +119,7 @@
 
     <!-- Status, tags e membros -->
     <div class="demanda-detalhe-dialog__meta">
-      <app-demanda-status-chip
+      <app-demanda-status
         [status]="demanda()!.status"
         [editavel]="sessao.eGestor()"
         (statusEscolhido)="aoStatusEscolhido($event)"

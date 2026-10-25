@@ -6,6 +6,10 @@
     text-shadow: 0 0 4px color-mix(in srgb, currentColor 45%, transparent);
   }
 
+  .btn-desc--ativo .icone-descricao {
+    filter: drop-shadow(0 0 2px color-mix(in srgb, currentColor 55%, transparent));
+  }
+
   .btn-desc--cliente.btn-desc--ativo .p-button-icon { color: var(--app-icone-cliente); }
   .btn-desc--tecnica.btn-desc--ativo .p-button-icon { color: var(--app-icone-tecnica); }
   .btn-desc--doc.btn-desc--ativo     .p-button-icon { color: var(--app-icone-doc); }

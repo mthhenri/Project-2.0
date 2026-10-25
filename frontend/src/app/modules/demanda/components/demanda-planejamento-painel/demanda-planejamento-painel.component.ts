@@ -1,16 +1,15 @@
 import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { TableModule } from 'primeng/table';
-import { Tag } from 'primeng/tag';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { TooltipModule } from 'primeng/tooltip';
 import { ContextMenu } from 'primeng/contextmenu';
-import { Popover, PopoverModule } from 'primeng/popover';
 import { MenuItem, MessageService } from 'primeng/api';
 import { DemandaPlanejamentoDto, TipoDemandaStatusEnum } from '@project20/shared';
 import { TempoExibicaoPipe } from '../../../../shared/pipes/tempo-exibicao.pipe';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { VisualizacaoTempoService } from '../../../../core/services/visualizacao-tempo.service';
 import { DemandaService } from '../../services/demanda.service';
+import { DemandaStatusComponent } from '../demanda-status/demanda-status.component';
 import {
   construirMenuDemanda,
   CampoDescricaoDemanda,
@@ -32,16 +31,10 @@ interface LinhaPlanejamento extends DemandaPlanejamentoDto {
   corBarra: string;
 }
 
-/** Opção do seletor rápido de status (popover). */
-interface StatusOpcao {
-  value: TipoDemandaStatusEnum;
-  label: string;
-}
-
 @Component({
   selector: 'app-demanda-planejamento-painel',
   standalone: true,
-  imports: [TableModule, Tag, ProgressBarModule, TooltipModule, ContextMenu, PopoverModule, TempoExibicaoPipe],
+  imports: [TableModule, ProgressBarModule, TooltipModule, ContextMenu, DemandaStatusComponent, TempoExibicaoPipe],
   templateUrl: './demanda-planejamento-painel.component.html',
   styleUrl: './demanda-planejamento-painel.component.scss',
 })
@@ -74,15 +67,7 @@ export class DemandaPlanejamentoPainelComponent {
   private readonly ancoraVermelho: [number, number, number] = [239, 68, 68];
   private readonly ancoraVermelhoForte: [number, number, number] = [185, 28, 28];
 
-  readonly statusOpcoes: StatusOpcao[] = [
-    { value: TipoDemandaStatusEnum.PENDENTE,  label: 'Pendente' },
-    { value: TipoDemandaStatusEnum.PLANEJADA, label: 'Planejada' },
-    { value: TipoDemandaStatusEnum.CONCLUIDA, label: 'Concluída' },
-    { value: TipoDemandaStatusEnum.CANCELADA, label: 'Cancelada' },
-  ];
-
   itensMenu: MenuItem[] = [];
-  readonly linhaStatusEdicao = signal<LinhaPlanejamento | null>(null);
 
   readonly linhas = computed<LinhaPlanejamento[]>(() =>
     this.itens().map((item) => {
@@ -130,18 +115,11 @@ export class DemandaPlanejamentoPainelComponent {
   }
 
   // ---------------------------------------------------------------------------
-  // Troca de status (popover no chip)
+  // Troca de status (a bolinha editável abre o popover; aqui só a persistência)
   // ---------------------------------------------------------------------------
 
-  abrirSeletorStatus(evento: Event, linha: LinhaPlanejamento, popover: Popover): void {
-    this.linhaStatusEdicao.set(linha);
-    popover.toggle(evento);
-  }
-
-  alterarStatus(novoStatus: TipoDemandaStatusEnum, popover: Popover): void {
-    const linha = this.linhaStatusEdicao();
-    popover.hide();
-    if (!linha || novoStatus === linha.status) return;
+  alterarStatus(linha: LinhaPlanejamento, novoStatus: TipoDemandaStatusEnum): void {
+    if (novoStatus === linha.status) return;
 
     const statusAnterior = linha.status;
     this.statusAlterado.emit({ demandaId: linha.demandaId, status: novoStatus });
@@ -159,26 +137,6 @@ export class DemandaPlanejamentoPainelComponent {
   // ---------------------------------------------------------------------------
   // Apresentação
   // ---------------------------------------------------------------------------
-
-  severidadeStatus(status: TipoDemandaStatusEnum): 'secondary' | 'info' | 'success' | 'danger' {
-    const mapa: Record<TipoDemandaStatusEnum, 'secondary' | 'info' | 'success' | 'danger'> = {
-      [TipoDemandaStatusEnum.PENDENTE]:  'secondary',
-      [TipoDemandaStatusEnum.PLANEJADA]: 'info',
-      [TipoDemandaStatusEnum.CONCLUIDA]: 'success',
-      [TipoDemandaStatusEnum.CANCELADA]: 'danger',
-    };
-    return mapa[status];
-  }
-
-  rotuloStatus(status: TipoDemandaStatusEnum): string {
-    const mapa: Record<TipoDemandaStatusEnum, string> = {
-      [TipoDemandaStatusEnum.PENDENTE]:  'Pendente',
-      [TipoDemandaStatusEnum.PLANEJADA]: 'Planejada',
-      [TipoDemandaStatusEnum.CONCLUIDA]: 'Concluída',
-      [TipoDemandaStatusEnum.CANCELADA]: 'Cancelada',
-    };
-    return mapa[status];
-  }
 
   /** Nomes dos executores ativos concatenados, para o tooltip. */
   nomesExecutores(linha: LinhaPlanejamento): string {

@@ -399,13 +399,12 @@ describe('DemandaPlanejamentoPainelComponent', () => {
 
   it('escolher outro status emite na hora e confirma; recusa emite o status anterior; o mesmo status não faz nada', async () => {
     const { montado, status } = await montar([criarLinha(8)]);
-    const popover = { toggle: () => undefined, hide: () => undefined } as never;
-    montado.componente.abrirSeletorStatus({} as Event, montado.componente.linhas()[0], popover);
+    const linha = montado.componente.linhas()[0];
 
-    montado.componente.alterarStatus(TipoDemandaStatusEnum.PLANEJADA, popover);
+    montado.componente.alterarStatus(linha, TipoDemandaStatusEnum.PLANEJADA);
     montado.http.expectNone(() => true);
 
-    montado.componente.alterarStatus(TipoDemandaStatusEnum.CONCLUIDA, popover);
+    montado.componente.alterarStatus(linha, TipoDemandaStatusEnum.CONCLUIDA);
     expect(status).toEqual([{ demandaId: 8, status: TipoDemandaStatusEnum.CONCLUIDA }]);
     const requisicao = esperarRequisicao(montado.http, 'PUT', '/demanda/8');
     expect(requisicao.request.body).toEqual({ status: TipoDemandaStatusEnum.CONCLUIDA });
@@ -414,10 +413,8 @@ describe('DemandaPlanejamentoPainelComponent', () => {
     expect(status[1]).toEqual({ demandaId: 8, status: TipoDemandaStatusEnum.PLANEJADA });
   });
 
-  it('rótulo, severidade e nomes dos executores', async () => {
+  it('nomes dos executores', async () => {
     const { montado } = await montar([criarLinha(1, { executoresAtivos: [{ usuarioId: 1, nomeCompleto: 'Ana' }, { usuarioId: 2, nomeCompleto: 'Bia' }] as never })]);
-    expect(montado.componente.rotuloStatus(TipoDemandaStatusEnum.CANCELADA)).toBe('Cancelada');
-    expect(montado.componente.severidadeStatus(TipoDemandaStatusEnum.CONCLUIDA)).toBe('success');
     expect(montado.componente.nomesExecutores(montado.componente.linhas()[0])).toBe('Ana, Bia');
   });
 });

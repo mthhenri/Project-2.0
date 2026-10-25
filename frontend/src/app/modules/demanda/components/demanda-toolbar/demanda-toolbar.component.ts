@@ -5,7 +5,8 @@ import { InputTextModule } from 'primeng/inputtext';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { TooltipModule } from 'primeng/tooltip';
 import { TagResumoDto, TipoDemandaStatusEnum } from '@project20/shared';
-import { COR_NO_BORDA } from '../../constants/demanda-cores.constants';
+import { OPCOES_STATUS_DEMANDA } from '../../constants/demanda-cores.constants';
+import { DemandaStatusMarcaComponent } from '../demanda-status-marca/demanda-status-marca.component';
 import { DemandaFiltro, alternarStatusVisivel, filtroAtivo, statusVisiveis } from '../../utils/demanda-filtro.util';
 
 /**
@@ -15,7 +16,7 @@ import { DemandaFiltro, alternarStatusVisivel, filtroAtivo, statusVisiveis } fro
 @Component({
   selector: 'app-demanda-toolbar',
   standalone: true,
-  imports: [FormsModule, ButtonModule, InputTextModule, MultiSelectModule, TooltipModule],
+  imports: [FormsModule, ButtonModule, InputTextModule, MultiSelectModule, TooltipModule, DemandaStatusMarcaComponent],
   templateUrl: './demanda-toolbar.component.html',
   styleUrl: './demanda-toolbar.component.scss',
 })
@@ -35,12 +36,7 @@ export class DemandaToolbarComponent {
 
   readonly ativo = computed(() => filtroAtivo(this.filtro()));
 
-  readonly chips = [
-    { status: TipoDemandaStatusEnum.PENDENTE,  rotulo: 'Pendente',  cor: COR_NO_BORDA[TipoDemandaStatusEnum.PENDENTE] },
-    { status: TipoDemandaStatusEnum.PLANEJADA, rotulo: 'Planejada', cor: COR_NO_BORDA[TipoDemandaStatusEnum.PLANEJADA] },
-    { status: TipoDemandaStatusEnum.CONCLUIDA, rotulo: 'Concluída', cor: COR_NO_BORDA[TipoDemandaStatusEnum.CONCLUIDA] },
-    { status: TipoDemandaStatusEnum.CANCELADA, rotulo: 'Cancelada', cor: COR_NO_BORDA[TipoDemandaStatusEnum.CANCELADA] },
-  ];
+  readonly chips = OPCOES_STATUS_DEMANDA;
 
   focarBusca(): void {
     const campo = this.campoBusca()?.nativeElement;

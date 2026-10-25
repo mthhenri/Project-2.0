@@ -2,7 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { TipoDemandaStatusEnum, TipoUsuarioEnum } from '@project20/shared';
 import { montarComponente } from '../../../../testes/montar-componente';
 import { esperarRequisicao, responderErro, responderSucesso } from '../../../../testes/http-teste';
-import { DemandaStatusChipComponent } from './demanda-status-chip/demanda-status-chip.component';
+import { DemandaStatusComponent } from './demanda-status/demanda-status.component';
+import { DemandaStatusMarcaComponent } from './demanda-status-marca/demanda-status-marca.component';
+import { COR_NO_BORDA, OPCOES_STATUS_DEMANDA, ROTULO_STATUS_DEMANDA, corPreenchimentoNo } from '../constants/demanda-cores.constants';
 import { DemandaTagsCabecalhoComponent } from './demanda-tags-cabecalho/demanda-tags-cabecalho.component';
 import { DemandaToolbarComponent } from './demanda-toolbar/demanda-toolbar.component';
 import { DemandaMetricasComponent } from './demanda-metricas/demanda-metricas.component';
@@ -15,26 +17,73 @@ const CATALOGO = [
 ];
 
 // ---------------------------------------------------------------------------
-// demanda-status-chip
+// demanda-status e demanda-status-marca (task 238)
 // ---------------------------------------------------------------------------
 
-describe('DemandaStatusChipComponent', () => {
+describe('DemandaStatusMarcaComponent', () => {
+  async function marca(status: TipoDemandaStatusEnum) {
+    return (await montarComponente(DemandaStatusMarcaComponent, { entradas: { status } })).elemento;
+  }
+
+  // Cada status é o mesmo círculo visto de um jeito: vazio, com ponto no meio, cheio com visto e com risco.
+  const DESENHOS: Array<[TipoDemandaStatusEnum, number, boolean, boolean]> = [
+    [TipoDemandaStatusEnum.PENDENTE, 1, false, false],
+    [TipoDemandaStatusEnum.PLANEJADA, 2, false, false],
+    [TipoDemandaStatusEnum.CONCLUIDA, 1, true, false],
+    [TipoDemandaStatusEnum.CANCELADA, 1, false, true],
+  ];
+  for (const [status, circulos, comVisto, comRisco] of DESENHOS) {
+    it(`desenha ${status}`, async () => {
+      const elemento = await marca(status);
+      expect(elemento.querySelectorAll('circle').length).toBe(circulos);
+      expect(elemento.querySelector('.demanda-status-marca__visto') !== null).toBe(comVisto);
+      expect(elemento.querySelector('path.demanda-status-marca__traco') !== null).toBe(comRisco);
+    });
+  }
+
+  it('a cor da marca vem da constante única e o tamanho é configurável', async () => {
+    const montado = await montarComponente(DemandaStatusMarcaComponent, { entradas: { status: TipoDemandaStatusEnum.PLANEJADA, tamanho: 24 } });
+    const svg = montado.elemento.querySelector('svg')!;
+    expect(svg.getAttribute('width')).toBe('24');
+    expect(svg.style.getPropertyValue('--cor-status')).toBe(COR_NO_BORDA[TipoDemandaStatusEnum.PLANEJADA]);
+  });
+});
+
+describe('cores e rótulos dos status (fonte única)', () => {
+  it('a planejada tem uma cor só, lida por todos os leitores, e cada status tem rótulo e cor', () => {
+    expect(COR_NO_BORDA[TipoDemandaStatusEnum.PLANEJADA]).toBe('var(--p-sky-500)');
+    expect(corPreenchimentoNo(TipoDemandaStatusEnum.PLANEJADA)).toContain(COR_NO_BORDA[TipoDemandaStatusEnum.PLANEJADA]);
+    expect(OPCOES_STATUS_DEMANDA.map((opcao) => opcao.rotulo)).toEqual(['Pendente', 'Planejada', 'Concluída', 'Cancelada']);
+    for (const opcao of OPCOES_STATUS_DEMANDA) {
+      expect(opcao.cor).toBe(COR_NO_BORDA[opcao.status]);
+      expect(opcao.rotulo).toBe(ROTULO_STATUS_DEMANDA[opcao.status]);
+    }
+  });
+});
+
+describe('DemandaStatusComponent', () => {
   async function montar(status: TipoDemandaStatusEnum, editavel: boolean) {
-    const montado = await montarComponente(DemandaStatusChipComponent, { entradas: { status, editavel } });
+    const montado = await montarComponente(DemandaStatusComponent, { entradas: { status, editavel } });
     const escolhidos: TipoDemandaStatusEnum[] = [];
     montado.componente.statusEscolhido.subscribe((valor) => escolhidos.push(valor));
     return { montado, escolhidos };
   }
 
-  it('mostra o rótulo do status; cada status tem uma severidade e um rótulo próprios', async () => {
+  it('mostra só a bolinha, com o nome do status como rótulo acessível, e sem texto', async () => {
     const { montado } = await montar(TipoDemandaStatusEnum.CONCLUIDA, false);
-    expect(montado.elemento.textContent).toContain('Concluída');
-    expect(montado.componente.opcoes.map((opcao) => opcao.label)).toEqual(['Pendente', 'Planejada', 'Concluída', 'Cancelada']);
-    expect(Object.values(TipoDemandaStatusEnum).map((status) => montado.componente.severidade(status))).toEqual(['secondary', 'info', 'success', 'danger']);
+    expect(montado.elemento.querySelector('app-demanda-status-marca')).not.toBeNull();
+    expect(montado.elemento.querySelector('[aria-label="Concluída"]')).not.toBeNull();
+    expect(montado.elemento.textContent?.trim()).toBe('');
   });
 
-  it('somente leitura não mostra o botão de troca; editável mostra', async () => {
+  it('somente leitura não mostra o botão de troca', async () => {
     expect((await montar(TipoDemandaStatusEnum.PENDENTE, false)).montado.elemento.querySelector('button')).toBeNull();
+  });
+
+  it('editável mostra o botão de troca com o nome do status', async () => {
+    const botao = (await montar(TipoDemandaStatusEnum.PENDENTE, true)).montado.elemento.querySelector('button');
+    expect(botao?.getAttribute('aria-label')).toContain('Pendente');
+    expect(botao?.getAttribute('aria-label')).toContain('Trocar status');
   });
 
   it('escolher outro status emite; escolher o mesmo não emite', async () => {

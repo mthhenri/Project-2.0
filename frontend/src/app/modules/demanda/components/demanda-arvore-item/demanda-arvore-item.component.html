@@ -75,11 +75,11 @@
       }
 
       <span class="demanda-arvore-item__coluna-status">
-        <app-demanda-status-chip
-        [status]="arvoreItem.status"
-        [editavel]="statusEditavel && eGestor"
-        (statusEscolhido)="aoEscolherStatus($event)"
-      />
+        <app-demanda-status
+          [status]="arvoreItem.status"
+          [editavel]="statusEditavel && eGestor"
+          (statusEscolhido)="aoEscolherStatus($event)"
+        />
       </span>
       <!-- Ícones de técnica, cliente e documentação; brilham quando preenchidos (clique abre a descrição) -->
       <span class="demanda-arvore-item__descricoes" role="group" aria-label="Descrições da demanda">

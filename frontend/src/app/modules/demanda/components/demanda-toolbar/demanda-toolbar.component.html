@@ -20,13 +20,12 @@
         type="button"
         class="demanda-toolbar__chip"
         [class.demanda-toolbar__chip--oculto]="!statusAtivo(chip.status)"
-        [style.--cor-chip]="chip.cor"
         [attr.aria-pressed]="statusAtivo(chip.status)"
         [pTooltip]="statusAtivo(chip.status) ? 'Esconder ' + chip.rotulo : 'Mostrar ' + chip.rotulo"
         tooltipPosition="top"
         (click)="alternarStatus(chip.status)"
       >
-        <span class="demanda-toolbar__chip-cor"></span>
+        <app-demanda-status-marca [status]="chip.status" [tamanho]="14" />
         {{ chip.rotulo }}
         <span class="demanda-toolbar__chip-contagem">{{ contagem()[chip.status] }}</span>
       </button>

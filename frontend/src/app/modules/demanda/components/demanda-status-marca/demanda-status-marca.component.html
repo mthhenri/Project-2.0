@@ -1,0 +1,26 @@
+<svg
+  class="demanda-status-marca"
+  viewBox="0 0 24 24"
+  [attr.width]="tamanho()"
+  [attr.height]="tamanho()"
+  [style.--cor-status]="cor()"
+  aria-hidden="true"
+>
+  @switch (status()) {
+    @case (Status.CONCLUIDA) {
+      <circle class="demanda-status-marca__cheio" cx="12" cy="12" r="10" />
+      <path class="demanda-status-marca__visto" d="M7.5 12.5l3 3 6-6.5" />
+    }
+    @case (Status.PLANEJADA) {
+      <circle class="demanda-status-marca__traco" cx="12" cy="12" r="8.5" />
+      <circle class="demanda-status-marca__cheio" cx="12" cy="12" r="3.6" />
+    }
+    @case (Status.CANCELADA) {
+      <circle class="demanda-status-marca__traco" cx="12" cy="12" r="8.5" />
+      <path class="demanda-status-marca__traco" d="M6 18L18 6" />
+    }
+    @default {
+      <circle class="demanda-status-marca__traco" cx="12" cy="12" r="8.5" />
+    }
+  }
+</svg>

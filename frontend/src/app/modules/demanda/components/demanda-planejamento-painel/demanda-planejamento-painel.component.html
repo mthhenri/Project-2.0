@@ -29,20 +29,7 @@
         </td>
 
         <td class="demanda-planejamento__col-status">
-          @if (sessao.eGestor()) {
-            <button
-              type="button"
-              class="demanda-planejamento__status-gatilho"
-              aria-label="Trocar status"
-              pTooltip="Trocar status"
-              tooltipPosition="top"
-              (click)="abrirSeletorStatus($event, linha, statusPopover)"
-            >
-              <p-tag [value]="rotuloStatus(linha.status)" [severity]="severidadeStatus(linha.status)" />
-            </button>
-          } @else {
-            <p-tag [value]="rotuloStatus(linha.status)" [severity]="severidadeStatus(linha.status)" />
-          }
+          <app-demanda-status [status]="linha.status" [editavel]="sessao.eGestor()" (statusEscolhido)="alterarStatus(linha, $event)" />
         </td>
 
         <td class="demanda-planejamento__col-progresso">
@@ -133,21 +120,4 @@
   </p-table>
 </div>
 
-<!-- Popover: troca rápida de status -->
-<p-popover #statusPopover>
-  <div class="demanda-planejamento__status-opcoes">
-    @for (opcao of statusOpcoes; track opcao.value) {
-      <button
-        type="button"
-        class="demanda-planejamento__status-opcao"
-        [class.demanda-planejamento__status-opcao--ativo]="opcao.value === linhaStatusEdicao()?.status"
-        (click)="alterarStatus(opcao.value, statusPopover)"
-      >
-        <p-tag [value]="opcao.label" [severity]="severidadeStatus(opcao.value)" />
-        @if (opcao.value === linhaStatusEdicao()?.status) {
-          <i class="pi pi-check demanda-planejamento__status-opcao-check"></i>
-        }
-      </button>
-    }
-  </div>
-</p-popover>
+

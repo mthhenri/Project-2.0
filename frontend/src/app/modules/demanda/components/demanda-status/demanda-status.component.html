@@ -1,0 +1,34 @@
+@if (editavel()) {
+  <button
+    type="button"
+    class="demanda-status__gatilho"
+    [attr.aria-label]="'Status: ' + rotulo(status()) + '. Trocar status'"
+    [pTooltip]="rotulo(status()) + ' (clique para trocar)'"
+    tooltipPosition="top"
+    (click)="abrir($event, popover)"
+  >
+    <app-demanda-status-marca [status]="status()" [tamanho]="tamanho()" />
+  </button>
+  <p-popover #popover>
+    <div class="demanda-status__opcoes">
+      @for (opcao of opcoes; track opcao.status) {
+        <button
+          type="button"
+          class="demanda-status__opcao"
+          [class.demanda-status__opcao--ativo]="opcao.status === status()"
+          (click)="escolher(opcao.status, popover)"
+        >
+          <app-demanda-status-marca [status]="opcao.status" [tamanho]="16" />
+          <span class="demanda-status__opcao-nome">{{ opcao.rotulo }}</span>
+          @if (opcao.status === status()) {
+            <i class="pi pi-check demanda-status__opcao-check"></i>
+          }
+        </button>
+      }
+    </div>
+  </p-popover>
+} @else {
+  <span class="demanda-status" role="img" [attr.aria-label]="rotulo(status())" [pTooltip]="rotulo(status())" tooltipPosition="top">
+    <app-demanda-status-marca [status]="status()" [tamanho]="tamanho()" />
+  </span>
+}

@@ -233,3 +233,36 @@ body:has(.anotacoes-drawer) .toast-desfazer {
 .p-tooltip.grafico-barras__tooltip {
   max-width: 24rem;
 }
+
+// Ícones das descrições da demanda que o PrimeIcons não tem (task 238): terminal para a técnica e folha com texto para a documentação. São
+// desenhados por máscara SVG na cor do texto (`currentColor`), então herdam o `--app-icone-*` e o brilho de quem os usa. O desenho está no
+// `::before` para o `filter: drop-shadow` do brilho (descrição preenchida) enxergar o ícone já recortado.
+.icone-descricao {
+  display: inline-block;
+  position: relative;
+  width: 1.1em;
+  height: 1.1em;
+  vertical-align: -0.2em;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: currentColor;
+    mask: var(--icone-descricao-mascara) center / contain no-repeat;
+    -webkit-mask: var(--icone-descricao-mascara) center / contain no-repeat;
+  }
+
+  &--tecnica {
+    --icone-descricao-mascara: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='2 2 20 20' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='4' width='18' height='16' rx='2'/><path d='M7 9l3 3-3 3M12 15h5'/></svg>");
+  }
+
+  &--doc {
+    --icone-descricao-mascara: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='2 2 20 20' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 3h9l4 4v14H6z'/><path d='M9 12h7M9 16h7M14 3v5h5'/></svg>");
+  }
+
+  // Brilho de uma descrição preenchida.
+  &--brilho {
+    filter: drop-shadow(0 0 2px color-mix(in srgb, currentColor 55%, transparent));
+  }
+}

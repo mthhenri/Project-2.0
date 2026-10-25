@@ -39,7 +39,7 @@ import {
 } from '../../../atividade/models/atividade.model';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { DemandaArvoreItemComponent } from '../demanda-arvore-item/demanda-arvore-item.component';
-import { DemandaStatusChipComponent } from '../demanda-status-chip/demanda-status-chip.component';
+import { DemandaStatusComponent } from '../demanda-status/demanda-status.component';
 import { DemandaTagsCabecalhoComponent } from '../demanda-tags-cabecalho/demanda-tags-cabecalho.component';
 import { DemandaMembrosCabecalhoComponent } from '../demanda-membros-cabecalho/demanda-membros-cabecalho.component';
 import { DemandaMetricasComponent } from '../demanda-metricas/demanda-metricas.component';
@@ -81,7 +81,7 @@ interface EstadoDetalhe {
     ConfirmDialogModule,
     DemandaArvoreItemComponent,
     DemandaConexaoListaComponent,
-    DemandaStatusChipComponent,
+    DemandaStatusComponent,
     DemandaTagsCabecalhoComponent,
     DemandaMembrosCabecalhoComponent,
     DemandaMetricasComponent,
@@ -154,9 +154,9 @@ export class DemandaDetalheDialogComponent implements OnChanges {
   readonly erroTitulo = signal<string | null>(null);
 
   readonly descricoes: Array<{ campo: CampoDescricao; rotulo: string; icone: string; classe: string }> = [
-    { campo: 'descricaoTecnica', rotulo: 'Descrição técnica',  icone: 'pi pi-code', classe: 'btn-desc--tecnica' },
+    { campo: 'descricaoTecnica', rotulo: 'Descrição técnica',  icone: 'icone-descricao icone-descricao--tecnica', classe: 'btn-desc--tecnica' },
     { campo: 'descricaoCliente', rotulo: 'Descrição do cliente', icone: 'pi pi-user', classe: 'btn-desc--cliente' },
-    { campo: 'documentacao',     rotulo: 'Documentação',       icone: 'pi pi-book', classe: 'btn-desc--doc' },
+    { campo: 'documentacao',     rotulo: 'Documentação',       icone: 'icone-descricao icone-descricao--doc', classe: 'btn-desc--doc' },
   ];
   readonly atividades = signal<AtividadeResumoDto[]>([]);
   readonly carregandoAtividades = signal<boolean>(false);

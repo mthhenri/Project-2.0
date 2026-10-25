@@ -21,7 +21,8 @@
       background: var(--app-surface-100);
     }
 
-    .pi {
+    .pi,
+    .icone-descricao {
       font-size: 0.875rem;
     }
 
@@ -29,6 +30,10 @@
     &--ativo .pi {
       font-weight: 700;
       text-shadow: 0 0 4px color-mix(in srgb, currentColor 45%, transparent);
+    }
+
+    &--ativo .icone-descricao {
+      filter: drop-shadow(0 0 2px color-mix(in srgb, currentColor 55%, transparent));
     }
 
     &--cliente.atividade-documentos__icone--ativo {

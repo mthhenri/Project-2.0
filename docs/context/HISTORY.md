@@ -12,6 +12,22 @@
 
 ---
 
+## 2026-10-25 — Task 238: status da demanda em bolinha e ícones novos das descrições
+
+Primeira das quatro tasks da reorganização da tela de demandas (`demanda-tela.spec.md`; 238–241). Ainda na tela atual: o status deixa de ser texto e vira uma bolinha única, e a técnica e a documentação ganham ícone próprio.
+
+- **Decisões do autor, já no canvas** (lidas dele): planejada = círculo com ponto no meio (opção A); técnica = terminal, cliente = pessoa (a de hoje), documentação = folha com texto. **Decisão do agente, para o autor confirmar:** a cor única da planejada é o **azul-céu** do canvas (`--p-sky-500`), não o ciano de antes; o `info` do chip antigo era azul-céu e o ciano ficava perto demais do verde da concluída.
+- **Componentes:** `app-demanda-status-marca` (só o desenho, reaproveitável pelo grafo na 241) e `app-demanda-status` (tooltip com o nome; com `editavel`, o popover de troca com a bolinha e o nome de cada status). `demanda-status-chip` foi **removido** (componente, html, scss e spec). O Planejamento perdeu o seletor e o `p-tag` próprios e usa o componente novo.
+- **Fonte única:** `constants/demanda-cores.constants.ts` tem `COR_NO_BORDA` (a planejada mudou aqui), `ROTULO_STATUS_DEMANDA` e `OPCOES_STATUS_DEMANDA`; a toolbar, a legenda do grafo, o popover e o Planejamento leem daí e as cópias de rótulo e severidade sumiram.
+- **Ícones:** classe global `icone-descricao` (máscara SVG em `styles.scss`, na cor do texto, com variante de brilho) para terminal e folha com texto; vale na Árvore, no detalhe, no menu de contexto e no indicador das atividades (`atividade-documentos-indicador`). PrimeIcons não tem esses dois, e a máscara evita biblioteca nova.
+- **Impacto** (`npm run impacto`): `demanda-status-chip` tinha 3 consumidores (Árvore, detalhe, grafo) e `demanda-cores.constants` 2 (grafo e toolbar), todos tratados; os ícones mudam também na tela de Atividades, que é o desejado (um ícone por descrição em todo o sistema) e foi conferida.
+- **Testes:** frontend 1969 (7 novos: a marca em quatro desenhos, a cor e o tamanho, a fonte única, o componente de status em leitura e editável); os specs que citavam o chip e o seletor do Planejamento foram ajustados. Sem backend nem `shared` mexidos. Sem lint (`PROBLEMS.md` P-001). O build passa; os avisos de orçamento de estilo são os que já existiam (o do `demanda-arvore-item.scss` passou de 4 kB por 498 bytes por causa do brilho do ícone novo).
+- **Ao vivo** (administrador): Lista, detalhe, grafo (cartão e legenda), Planejamento, toolbar, menu de contexto e Atividades, em 1920×1080, 1366×768 e 1080×1920, nos temas claro e escuro, sem erro de console nem rolagem horizontal. O gestor trocou o status pela bolinha (Pendente → Cancelada → Pendente) e o dado voltou ao que era.
+- **Achado só na verificação:** os dois ícones novos saíam ~30% menores que o da pessoa (o desenho não ocupa o quadro todo); recortei o `viewBox` e subi o tamanho para 1.1em.
+- **Limites:** o desenvolvedor vendo a bolinha sem editar está só em teste de componente (não há credencial de desenvolvedor para entrar na tela); a cancelada na Árvore foi verificada ao vivo e nas demais telas só pela legenda e pelos chips.
+
+---
+
 ## 2026-10-25 — Task 231: proposta da IA de justificar o ponto
 
 Oitava e última task das propostas da IA (`chat-propostas.spec.md`, tasks 224–231 todas implementadas). O gestor pede à IA que justifique o ponto de **outra pessoa** e confirma; é a mesma ação da tela de justificativas, sem regra nova.
