@@ -175,20 +175,12 @@
               <button
                 type="button"
                 class="execucao-historico__descricao-botao"
-                [pTooltip]="execucao.descricao"
-                tooltipPosition="top"
-                [showDelay]="400"
                 (click)="abrirEdicao(execucao)"
               >
                 <span class="execucao-historico__descricao-texto">{{ execucao.descricao }}</span>
               </button>
             } @else {
-              <span
-                class="execucao-historico__descricao-texto"
-                [pTooltip]="execucao.descricao"
-                tooltipPosition="top"
-                [showDelay]="400"
-              >{{ execucao.descricao }}</span>
+              <span class="execucao-historico__descricao-texto">{{ execucao.descricao }}</span>
             }
           </td>
           @if (sessao.eGestor()) {

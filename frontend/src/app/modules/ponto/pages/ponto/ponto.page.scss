@@ -3,8 +3,6 @@
   flex-direction: column;
   gap: 1.5rem;
   padding: 1.5rem;
-  max-width: 1100px;
-  margin: 0 auto;
 
   &__cabecalho {
     display: flex;
@@ -59,12 +57,9 @@
 
   &__grid {
     display: grid;
-    grid-template-columns: repeat(1, minmax(0, 1fr));
     gap: 1rem;
-
-    @media (min-width: 768px) {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
+    // Colunas de no mínimo 24rem (o card tem resumo + execuções) e no máximo 3: o `max()` impede a quarta coluna em telas largas.
+    grid-template-columns: repeat(auto-fill, minmax(max(24rem, calc((100% - 2rem) / 3)), 1fr));
   }
 
   &__mes-titulo {
