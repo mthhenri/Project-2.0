@@ -2,7 +2,7 @@
 
 > Conversa com o autor em 2026-10-25 (ideia I-027). Mockup aprovado no canvas privado do autor:
 > https://claude.ai/artifact/TTg49kss7oQH5e1xMJHhdV (quatro barras lado a lado: desenvolvedor, gestor, administrador e recolhida).
-> **Não foi implementada.**
+> **Implementada em 2026-10-25**; verificação em [`223-barra-lateral-em-grupos/verificacao.md`](223-barra-lateral-em-grupos/verificacao.md).
 
 ## Objetivo
 

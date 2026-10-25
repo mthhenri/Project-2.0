@@ -8,7 +8,7 @@ import { esperarRequisicao, responderSucesso } from '../../../../testes/http-tes
 import { SidebarComponent } from './sidebar.component';
 
 // Barra lateral (SYSTEM.SPEC.md §8, navegação por tipo de usuário): o desenvolvedor vê os itens dele, o gestor os de gestão e só o
-// administrador vê "IA". Com a IA no ar, "Atividades" (que o chat substitui) fica desabilitada; sem ela, o "Chat" ganha o selo de
+// administrador vê "IA Config.". Os itens vêm em grupos (task 223), grupo vazio some e a Modelagem fica sozinha no fundo. Com a IA no ar, "Atividades" (que o chat substitui) fica desabilitada; sem ela, o "Chat" ganha o selo de
 // proibido. O atalho `g` + letra navega (task 96). A barra entra recolhida em tela estreita e lembra a escolha.
 
 @Component({ standalone: true, template: '' })
@@ -17,10 +17,10 @@ class PaginaFalsaComponent {}
 const ROTAS = ['/ponto', '/calendario', '/projeto', '/demanda', '/chat', '/atividade', '/execucao', '/tag', '/usuario', '/configuracao-ia', '/modelagem']
   .map((caminho) => ({ path: caminho.slice(1), component: PaginaFalsaComponent }));
 
-const ITENS_DESENVOLVEDOR = ['Ponto', 'Demandas', 'Chat', 'Atividades', 'Execuções', 'Modelagem'];
-const ITENS_GESTOR = ['Ponto', 'Calendário', 'Projetos', 'Demandas', 'Chat', 'Atividades', 'Execuções', 'Tags', 'Usuários', 'Modelagem'];
-// A IA é exclusiva do administrador e a Modelagem, de todos: para ele, a Modelagem vem logo abaixo da IA.
-const ITENS_ADMINISTRADOR = [...ITENS_GESTOR.slice(0, -1), 'IA', 'Modelagem'];
+const ITENS_DESENVOLVEDOR = ['Chat', 'Atividades', 'Execuções', 'Ponto', 'Demandas', 'Modelagem'];
+const ITENS_GESTOR = ['Chat', 'Atividades', 'Execuções', 'Ponto', 'Projetos', 'Demandas', 'Calendário', 'Tags', 'Usuários', 'Modelagem'];
+// IA Config. é exclusiva do administrador e a Modelagem, de todos: ela fica sempre por último, no fundo.
+const ITENS_ADMINISTRADOR = [...ITENS_GESTOR.slice(0, -1), 'IA Config.', 'Modelagem'];
 
 type Montado = ComponenteMontado<SidebarComponent>;
 
@@ -39,6 +39,14 @@ const rotulosNavegacao = (montado: Montado) =>
   Array.from(montado.elemento.querySelectorAll('nav [aria-label]')).map((item) => (item.getAttribute('aria-label') ?? '').replace(/ \(.*\)$/, ''));
 const item = (montado: Montado, rotulo: string) =>
   Array.from(montado.elemento.querySelectorAll<HTMLElement>('nav [aria-label]')).find((candidato) => (candidato.getAttribute('aria-label') ?? '').startsWith(rotulo));
+const titulosDosGrupos = (montado: Montado) =>
+  Array.from(montado.elemento.querySelectorAll('.sidebar__grupo-titulo')).map((titulo) => titulo.textContent?.trim());
+const itensDoGrupo = (montado: Montado, titulo: string) => {
+  const grupo = Array.from(montado.elemento.querySelectorAll('nav [role="group"]')).find(
+    (candidato) => candidato.querySelector('.sidebar__grupo-titulo')?.textContent?.trim() === titulo,
+  );
+  return Array.from(grupo?.querySelectorAll('[aria-label]') ?? []).map((itemDoGrupo) => itemDoGrupo.getAttribute('aria-label'));
+};
 const alternar = (montado: Montado) =>
   montado.elemento.querySelector<HTMLButtonElement>('button[aria-label="Recolher barra lateral"], button[aria-label="Expandir barra lateral"]')!;
 
@@ -59,7 +67,7 @@ describe('SidebarComponent — itens por tipo de usuário', () => {
   it('gestor vê também Calendário, Projetos, Tags e Usuários, mas não a IA', async () => {
     const montado = await montarBarra(TipoUsuarioEnum.GESTOR);
     expect(rotulosNavegacao(montado)).toEqual(ITENS_GESTOR);
-    expect(item(montado, 'IA')).toBeUndefined();
+    expect(item(montado, 'IA Config.')).toBeUndefined();
   });
 
   it('administrador vê todos os itens, inclusive a IA', async () => {
@@ -71,8 +79,51 @@ describe('SidebarComponent — itens por tipo de usuário', () => {
     const montado = await montarBarra(TipoUsuarioEnum.ADMINISTRADOR);
     expect(item(montado, 'Projetos')?.getAttribute('href')).toBe('/projeto');
     expect(item(montado, 'Execuções')?.getAttribute('href')).toBe('/execucao');
-    expect(item(montado, 'IA')?.getAttribute('href')).toBe('/configuracao-ia');
+    expect(item(montado, 'IA Config.')?.getAttribute('href')).toBe('/configuracao-ia');
     expect(item(montado, 'Modelagem')?.getAttribute('href')).toBe('/modelagem');
+  });
+});
+
+describe('SidebarComponent — grupos (task 223)', () => {
+  it('desenvolvedor vê só Dia a dia e Projetos: Gestão e IA ficam vazios e somem', async () => {
+    const montado = await montarBarra(TipoUsuarioEnum.DESENVOLVEDOR, null, { 'sidebar.recolhida': 'false' });
+    expect(titulosDosGrupos(montado)).toEqual(['Dia a dia', 'Projetos']);
+    expect(itensDoGrupo(montado, 'Projetos')).toEqual(['Demandas']);
+  });
+
+  it('gestor vê Dia a dia, Projetos e Gestão, mas não o grupo IA', async () => {
+    const montado = await montarBarra(TipoUsuarioEnum.GESTOR, null, { 'sidebar.recolhida': 'false' });
+    expect(titulosDosGrupos(montado)).toEqual(['Dia a dia', 'Projetos', 'Gestão']);
+    expect(itensDoGrupo(montado, 'Gestão')).toEqual(['Calendário', 'Tags', 'Usuários']);
+  });
+
+  it('administrador vê os quatro grupos, com IA Config. no grupo IA', async () => {
+    const montado = await montarBarra(TipoUsuarioEnum.ADMINISTRADOR, null, { 'sidebar.recolhida': 'false' });
+    expect(titulosDosGrupos(montado)).toEqual(['Dia a dia', 'Projetos', 'Gestão', 'IA']);
+    expect(itensDoGrupo(montado, 'Dia a dia')).toEqual(['Chat', 'Atividades', 'Execuções', 'Ponto']);
+    expect(itensDoGrupo(montado, 'IA')).toEqual(['IA Config.']);
+  });
+
+  it('a Modelagem fica fora dos grupos, no fundo da barra', async () => {
+    const montado = await montarBarra(TipoUsuarioEnum.DESENVOLVEDOR, null, { 'sidebar.recolhida': 'false' });
+    const fundo = montado.elemento.querySelector('.sidebar__fundo');
+    expect(Array.from(fundo?.querySelectorAll('[aria-label]') ?? []).map((itemDoFundo) => itemDoFundo.getAttribute('aria-label'))).toEqual(['Modelagem']);
+    expect(item(montado, 'Modelagem')?.closest('[role="group"]')).toBeNull();
+  });
+
+  it('recolhida, o título do grupo vira só para leitor de tela e a linha continua', async () => {
+    const montado = await montarBarra(TipoUsuarioEnum.GESTOR);
+    const titulos = Array.from(montado.elemento.querySelectorAll('.sidebar__grupo-titulo'));
+    expect(titulos.length).toBe(3);
+    for (const titulo of titulos) expect(titulo.classList.contains('sr-only')).toBe(true);
+    expect(montado.elemento.querySelectorAll('.sidebar__grupo-linha').length).toBe(3);
+  });
+
+  it('cada grupo se anuncia pelo título', async () => {
+    const montado = await montarBarra(TipoUsuarioEnum.DESENVOLVEDOR, null, { 'sidebar.recolhida': 'false' });
+    const grupo = montado.elemento.querySelector('nav [role="group"]')!;
+    const titulo = montado.elemento.querySelector(`#${grupo.getAttribute('aria-labelledby')}`);
+    expect(titulo?.textContent?.trim()).toBe('Dia a dia');
   });
 });
 

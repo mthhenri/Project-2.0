@@ -49,6 +49,40 @@
     overflow-y: auto;
   }
 
+  // Separador de grupo (task 223): título pequeno em cinza e uma linha fina logo abaixo, sem moldura em volta do grupo.
+  &__grupo-cabecalho {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    padding: 0.875rem 0.75rem 0.25rem;
+  }
+
+  &__grupo-titulo {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--p-text-muted-color);
+  }
+
+  &__grupo-linha {
+    height: 1px;
+    background: var(--app-surface-200);
+  }
+
+  // Recolhida, o título fica só para o leitor de tela e sobra a linha entre os grupos.
+  &--recolhida &__grupo-cabecalho {
+    padding: 0.75rem 0.5rem 0.25rem;
+  }
+
+  // O item sem grupo (Modelagem) desce para o fundo da barra, com um respiro a mais acima.
+  &__fundo {
+    margin-top: auto;
+    padding-top: 1.5rem;
+  }
+
   &__item {
     text-decoration: none;
 

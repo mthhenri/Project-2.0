@@ -1,11 +1,12 @@
 import { Component, DestroyRef, HostListener, OnInit, computed, inject, signal } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { TooltipModule } from 'primeng/tooltip';
 import { EstadoIaEnum } from '@project20/shared';
 import { IaDisponibilidadeService } from '../../../core/services/ia-disponibilidade.service';
 import { UsuarioSessaoService } from '../../../core/services/usuario-sessao.service';
 import { focoEmCampo, haSobreposicaoAberta } from '../../../core/utils/atalhos';
-import { ITENS_NAVEGACAO, ItemNavegacao } from '../navegacao';
+import { ITENS_NAVEGACAO, ItemNavegacao, agruparItensNavegacao } from '../navegacao';
 
 const CHAVE_RECOLHIDA = 'sidebar.recolhida';
 /** Abaixo desta largura a barra entra recolhida, para sobrar espaço ao conteúdo. */
@@ -16,7 +17,7 @@ const INTERVALO_DISPONIBILIDADE_MS = 60_000;
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [RouterModule, TooltipModule],
+  imports: [RouterModule, TooltipModule, NgTemplateOutlet],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss',
 })
@@ -39,6 +40,9 @@ export class SidebarComponent implements OnInit {
       return { ...item, semIa, desabilitado: this.estaDesabilitado(item) };
     }),
   );
+
+  /** Os itens visíveis nos grupos da barra (grupo vazio some) e o que fica sozinho no fundo (task 223). */
+  readonly navegacaoAgrupada = computed(() => agruparItensNavegacao(this.itensNavegacao()));
 
   ngOnInit(): void {
     this.iaDisponibilidade.carregar();

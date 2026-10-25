@@ -12,6 +12,27 @@
 
 ---
 
+## 2026-10-25 — Task 223: barra lateral em grupos e specs do modo planejamento
+
+Conversa com o autor sobre o chat com a IA e a navegação. Saíram, nesta ordem:
+
+- **Guarda-chuva do modo planejamento** (`backlog/chat-planejamento.spec.md` e `chat-planejamento/modelagem.md`, commit `469600a`):
+  plano com conversa própria e documento ao lado, diff sobreposto por palavra, pontos em aberto soltos, material de fora, publicação na
+  demanda e regras de acesso (público no projeto, solo invisível, descrição do cliente só do gestor). As ideias que ficaram de fora
+  entraram em `IDEAS.md` (I-022 a I-027). Mockups no canvas privado do autor, citado em `chat-planejamento/referencias.md`.
+- **Spec 223** (commit `eb41f4b`), já implementada nesta mesma sessão: os itens da barra lateral em grupos de itens parecidos, **iguais
+  para todos os perfis** (o autor descartou grupos por perfil): Dia a dia (Chat, Atividades, Execuções, Ponto), Projetos, Gestão e IA.
+  Cada perfil continua vendo só o que já via e o grupo vazio some. A Modelagem fica sozinha no fundo, para não ser clicada sem querer, e
+  o item "IA" virou "IA Config." (o autor preferiu manter "IA" no nome). A supervisão do chat entre colaboradores (task 214) passa a
+  entrar no grupo IA (`chat-colaboradores.spec.md` ajustada).
+
+Implementação: `navegacao.ts` ganhou o grupo de cada item, a ordem nova e `agruparItensNavegacao` (pura); o `sidebar.component` desenha
+cada grupo com um título cinza e uma linha (recolhida, o título vira `sr-only` e sobra a linha) e reaproveita o mesmo `ng-template` para
+o item nos grupos e no fundo. Testes: 13 de lógica e 25 de componente (6 novos), 38 de 38. Suíte do frontend: 1839 passaram, 6
+falharam fora da task, e esses passam à parte (P-034). Build verde. Ao vivo nos três perfis, em 1920×1080, 1366×768 e 1080×1920,
+claro, escuro e recolhida: em 1366×768 o administrador cabe sem rolagem por pouco (Modelagem em 647 px, rodapé em 715 px). Detalhes e
+limites em `done/223-barra-lateral-em-grupos/verificacao.md`.
+
 ## 2026-10-24 — Modelagem: a organização é nossa e o banco só traz o visual (tabelas "fora da modelagem")
 
 - **Pedido do autor:** tirar uma tabela da modelagem não pode apagar a tabela do banco, só do desenho; tabela que existe no banco e não está na modelagem fica "num cantinho"; e o que o gestor reorganizar (posições, grupos) tem de se manter: a organização vale mais que o banco.

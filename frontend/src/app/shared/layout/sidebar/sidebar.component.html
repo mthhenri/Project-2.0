@@ -6,47 +6,27 @@
     }
   </a>
 
-  <nav class="sidebar__nav flex flex-col gap-1 flex-1 px-2 py-2" aria-label="Navegação principal">
-    @for (item of itensNavegacao(); track item.rotaLink) {
-      @if (item.desabilitado) {
-        <span
-          class="sidebar__item sidebar__item--desabilitado flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap"
-          role="link"
-          aria-disabled="true"
-          [attr.aria-label]="item.label + ' (substituída pelo chat enquanto a IA está no ar)'"
-          [pTooltip]="recolhida() ? item.label + ': substituída pelo chat' : ''"
-          tooltipPosition="right"
-        >
-          <i [class]="item.icone"></i>
-          @if (!recolhida()) {
-            <span class="sidebar__rotulo sidebar__rotulo--com-nota">
-              {{ item.label }}
-              <small class="sidebar__nota">Substituída pelo chat</small>
-            </span>
-          }
-        </span>
-      } @else {
-        <a
-          [routerLink]="item.rotaLink"
-          routerLinkActive="sidebar__item--ativo"
-          class="sidebar__item flex items-center gap-3 px-3 py-2 rounded-lg text-color hover:bg-emphasis transition-colors text-sm font-medium whitespace-nowrap"
-          [attr.aria-label]="item.label"
-          [pTooltip]="item.semIa ? item.label + ': a IA está desativada' : recolhida() ? item.label : ''"
-          tooltipPosition="right"
-        >
-          @if (item.semIa) {
-            <span class="sidebar__icone-composto">
-              <i [class]="item.icone"></i>
-              <i class="pi pi-ban sidebar__icone-selo" aria-hidden="true"></i>
-            </span>
-          } @else {
-            <i [class]="item.icone"></i>
-          }
-          @if (!recolhida()) {
-            <span class="sidebar__rotulo">{{ item.label }}</span>
-          }
-        </a>
-      }
+  <nav class="sidebar__nav flex flex-col gap-1 flex-1 px-2 pb-2" aria-label="Navegação principal">
+    <!-- Grupos de itens parecidos (task 223): só um título e uma linha separam, sem moldura; recolhida, fica só a linha. -->
+    @for (grupo of navegacaoAgrupada().grupos; track grupo.grupo) {
+      <div class="sidebar__grupo flex flex-col gap-1" role="group" [attr.aria-labelledby]="'sidebar-grupo-' + grupo.grupo">
+        <div class="sidebar__grupo-cabecalho">
+          <span class="sidebar__grupo-titulo" [class.sr-only]="recolhida()" [id]="'sidebar-grupo-' + grupo.grupo">{{ grupo.titulo }}</span>
+          <span class="sidebar__grupo-linha" aria-hidden="true"></span>
+        </div>
+        @for (item of grupo.itens; track item.rotaLink) {
+          <ng-container [ngTemplateOutlet]="itemNavegacao" [ngTemplateOutletContext]="{ $implicit: item }" />
+        }
+      </div>
+    }
+
+    <!-- Sem grupo, no fundo e afastada do resto (a Modelagem): não é tela do dia a dia e não deve ser clicada sem querer. -->
+    @if (navegacaoAgrupada().fundo.length > 0) {
+      <div class="sidebar__fundo flex flex-col gap-1">
+        @for (item of navegacaoAgrupada().fundo; track item.rotaLink) {
+          <ng-container [ngTemplateOutlet]="itemNavegacao" [ngTemplateOutletContext]="{ $implicit: item }" />
+        }
+      </div>
     }
   </nav>
 
@@ -67,3 +47,45 @@
     </button>
   </div>
 </aside>
+
+<ng-template #itemNavegacao let-item>
+  @if (item.desabilitado) {
+    <span
+      class="sidebar__item sidebar__item--desabilitado flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap"
+      role="link"
+      aria-disabled="true"
+      [attr.aria-label]="item.label + ' (substituída pelo chat enquanto a IA está no ar)'"
+      [pTooltip]="recolhida() ? item.label + ': substituída pelo chat' : ''"
+      tooltipPosition="right"
+    >
+      <i [class]="item.icone"></i>
+      @if (!recolhida()) {
+        <span class="sidebar__rotulo sidebar__rotulo--com-nota">
+          {{ item.label }}
+          <small class="sidebar__nota">Substituída pelo chat</small>
+        </span>
+      }
+    </span>
+  } @else {
+    <a
+      [routerLink]="item.rotaLink"
+      routerLinkActive="sidebar__item--ativo"
+      class="sidebar__item flex items-center gap-3 px-3 py-2 rounded-lg text-color hover:bg-emphasis transition-colors text-sm font-medium whitespace-nowrap"
+      [attr.aria-label]="item.label"
+      [pTooltip]="item.semIa ? item.label + ': a IA está desativada' : recolhida() ? item.label : ''"
+      tooltipPosition="right"
+    >
+      @if (item.semIa) {
+        <span class="sidebar__icone-composto">
+          <i [class]="item.icone"></i>
+          <i class="pi pi-ban sidebar__icone-selo" aria-hidden="true"></i>
+        </span>
+      } @else {
+        <i [class]="item.icone"></i>
+      }
+      @if (!recolhida()) {
+        <span class="sidebar__rotulo">{{ item.label }}</span>
+      }
+    </a>
+  }
+</ng-template>

@@ -160,7 +160,7 @@
 
 ### I-027 — Barra lateral em grupos · frontend/navegação
 
-- **Promovida em 2026-10-25** para a task [`223-barra-lateral-em-grupos`](../specs/backlog/223-barra-lateral-em-grupos.spec.md) (no backlog). Os grupos acabaram iguais para todos os perfis.
+- **Promovida em 2026-10-25** para a task [`223-barra-lateral-em-grupos`](../specs/done/223-barra-lateral-em-grupos.spec.md) (implementada em 2026-10-25). Os grupos acabaram iguais para todos os perfis.
 
 ### I-004 — Chat IA como tira-dúvidas de programação, com bloco de código copiável · chat IA/frontend
 

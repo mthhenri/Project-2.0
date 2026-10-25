@@ -102,6 +102,14 @@
 - **Correção:** o `app-markdown-editor` passar a sincronizar o valor por `aoAplicar` (depois de cada transação, criado na task 218 e usado pelo chat) ou ler `obterMarkdown()` na hora de confirmar. Confirmar o sintoma antes (teste de componente digitando e confirmando em seguida).
 - **Desde:** 2026-10-23 (achado na task 218).
 
+### P-034 — Testes de componente do editor e do chat entre colaboradores estouram o tempo na suíte inteira · `ABERTO` · frontend/testes
+
+- **Sintoma:** em `npm run test --workspace=frontend`, 6 testes falham levando de 6 a 12 s cada (`markdown-editor`, `mensagem-direta-compositor`, `-conversa`, `-editor-mensagem`, `-popup` e `chat-popup`); rodados sozinhos (`ng test --include` nesses arquivos), os 173 testes passam.
+- **Causa:** não investigada; a suspeita é o limite de tempo padrão do Vitest com o editor Milkdown montado sob a carga da suíte inteira.
+- **Contorno:** rodar esses arquivos à parte para confirmar que passam.
+- **Correção:** medir o tempo desses testes na suíte inteira e decidir entre limite de tempo maior para eles e montagem mais leve do editor.
+- **Desde:** 2026-10-25 (visto no fecho da task 223, que não toca esses componentes).
+
 ### P-001 — Projeto sem lint · `CONTORNADO` · repositório
 
 - **Sintoma:** não há ESLint nem Prettier em nenhum workspace; o gate de qualidade do `CLAUDE.md` pede lint e hoje a lacuna é só declarada no fecho de cada task.
