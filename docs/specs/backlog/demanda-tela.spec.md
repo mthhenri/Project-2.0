@@ -63,8 +63,10 @@ horas e a mesma pasta escolhida.
 
 - **Nomes:** a visão Lista passa a se chamar **Árvore**. `?modo=planejamento` e o último modo guardado como `planejamento` continuam
   aceitos e abrem o Controle de horas (links antigos não quebram).
-- **Cor da planejada:** o **ciano** de `COR_NO_BORDA` em todas as telas (é o que o grafo, a toolbar e a legenda já usam); o azul do canvas
-  na lista e nos filtros é só do rascunho. O status vira um componente só, usado na Árvore, no Controle de horas, no grafo e nos filtros.
+- **Cor da planejada (autor, 2026-10-25):** **uma cor só em todas as telas**, numa constante única que a Árvore, o Controle de horas,
+  o grafo e os filtros leem. Hoje há duas (ciano no grafo, na toolbar e na legenda; o `info` do status chip na lista); a task da fase 1
+  escolhe a que fica mais bonita na tela e aplica nas outras. O status vira um componente só, usado na Árvore, no Controle de horas, no
+  grafo e nos filtros.
 - **"Sem pasta":** primeira entrada da coluna de pastas, com as demandas sem pai que não são de estrutura.
 - **Pasta escolhida** é uma só para as três visões e fica na URL (`?pasta=`), como o projeto e o modo.
 - **Demanda aberta** troca o `demanda-detalhe-dialog` na Árvore; o diálogo continua onde é aberto de fora (chat, atividade).

@@ -142,13 +142,6 @@
 - **Por quê:** um print explica um erro ou uma tela muito mais rápido que um texto.
 - **Custo aparente:** armazenamento de arquivo (hoje as mensagens são só texto), envio da imagem ao provedor de IA (custo e consentimento), exibição no popup e no Project Desktop.
 
-### I-025 — O desenvolvedor executa demandas; a IA cuida de atividades e execuções · chat IA/demanda
-
-- **Ideia:** o desenvolvedor diz que vai trabalhar numa demanda e o que precisa fazer; a IA quebra isso em atividades, troca a atividade ativa conforme ele avisa o que terminou e descreve as execuções sozinha. Atividade e execução passam a ser trabalho da IA, não do desenvolvedor. Os prompts de nome de atividade, nome de demanda e descrição seguem configuráveis.
-- **Origem:** conversa de 2026-10-25 com o autor; vai ser conversada junto com a I-026 e com a tela de demandas.
-- **Por quê:** atividade e execução são formalidade; o que o desenvolvedor faz de verdade é executar a demanda.
-- **Custo aparente:** mais autonomia para a IA (criar e trocar atividade sem confirmação a cada passo), revisão do fluxo do chat e da tela de demandas; esbarra na regra "a IA sempre pede confirmação".
-
 ### I-028 — Cada usuário escolhe a autonomia da IA para si · chat IA/preferências
 
 - **Ideia:** dentro do teto que o administrador define na IA Config., cada usuário decide nas próprias preferências quais propostas a IA pode fazer sem perguntar (por exemplo, "mexer no meu pad: nem pergunta").
@@ -157,6 +150,10 @@
 - **Custo aparente:** não existe preferência de usuário para a IA hoje; dá para seguir o modelo das preferências do chat entre colaboradores (`MensagemDiretaPreferencia*`).
 
 ## Promovidas
+
+### I-025 — O desenvolvedor executa demandas; a IA cuida de atividades e execuções · chat IA/demanda
+
+- **Promovida em 2026-10-25** para a guarda-chuva [`chat-execucao-por-demanda.spec.md`](../specs/backlog/chat-execucao-por-demanda.spec.md) (só a spec, no backlog): atividades como checklist, bom dia com "continuar ou coisa nova", check-in que troca sozinho e "Minhas demandas" no chat.
 
 ### I-029 — Tela de demandas em três colunas, com as descrições em primeiro plano · demanda/frontend
 

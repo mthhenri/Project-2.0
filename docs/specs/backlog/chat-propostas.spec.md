@@ -73,10 +73,12 @@ administrador.
 | Anotar no pad, seção Pessoal | todos, só com pedido explícito | Sempre pergunta |
 | Colocar e tirar tags | todos, no que é deles | Faz e avisa |
 | Descrever execução, continuando na mesma atividade | todos, a própria | Faz e avisa |
-| Descrever execução e trocar de atividade | todos, a própria | Pergunta |
+| Descrever execução e trocar de atividade | todos, a própria | Faz e avisa (`chat-execucao-por-demanda.spec.md`) |
 | Conectar e desconectar demandas | só gestor | Faz e avisa |
-| Criar e alterar atividade, criar e alterar demanda, concluir demanda, mover e excluir atividade | conforme a regra de hoje | Pergunta |
-| Iniciar e pausar a própria execução, suspender e retomar o check-in, entrar numa demanda | todos, os próprios | Pergunta |
+| Criar atividade e marcar desenvolvida, no próprio trabalho | todos, os próprios | Faz e avisa (`chat-execucao-por-demanda.spec.md`) |
+| Alterar atividade, criar e alterar demanda, concluir demanda, mover e excluir atividade | conforme a regra de hoje | Pergunta |
+| Iniciar e pausar a própria execução | todos, a própria | Faz e avisa (`chat-execucao-por-demanda.spec.md`) |
+| Suspender e retomar o check-in, entrar numa demanda | todos, os próprios | Pergunta |
 | Descrever demanda | só gestor | Pergunta |
 | Registrar e corrigir execução, criar projeto, justificar o ponto | conforme a regra de hoje | Sempre pergunta |
 | Qualquer ação em nome de outra pessoa (iniciar, pausar, criar atividade ou pôr membro para outro) | gestor | Sempre pergunta |
