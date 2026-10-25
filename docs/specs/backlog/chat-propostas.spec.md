@@ -64,6 +64,9 @@ sumir e voltar, e a rolagem acompanha o cartão.
 
 ## Nível por tipo (sugestão do agente aprovada como ponto de partida; o administrador muda o que não é fixo)
 
+"Gestor" nesta spec é a permissão de gestor (gestor e administrador, `temPermissaoDeGestor`); o que é de administrador é só do
+administrador.
+
 | Tipo | Quem pode | Nível inicial |
 |---|---|---|
 | Anotar no pad (fora da seção Pessoal) | todos, no próprio pad | Faz e avisa |

@@ -51,7 +51,7 @@ e reescreve trechos a pedido; no fim, a pessoa **publica** os textos na demanda.
     lacuna, suposição, peso demais, contradição, dependência, risco, fora do escopo, decisão registrada são exemplos, não uma lista
     fechada). Responder no chat fecha o ponto e o texto entra no documento; dispensar pode registrar o motivo.
 15. **Material de fora:** colar o texto do e-mail do cliente ou anexar um arquivo de texto. Não há leitura de caixa de e-mail.
-16. **Prompts configuráveis** nas Configurações da IA do gestor: um para a conversa do planejamento e um por tipo de texto (técnico,
+16. **Prompts configuráveis** nas Configurações da IA (exclusivas do administrador, como hoje): um para a conversa do planejamento e um por tipo de texto (técnico,
     cliente, documentação), porque são formas de escrever diferentes.
 
 ## Decisões do agente (padrão proposto; o autor confirma na spec de cada task)

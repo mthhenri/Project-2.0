@@ -17,7 +17,7 @@ horas e a mesma pasta escolhida.
 - `demanda-projeto.page` com três modos: **Lista** (`demanda-arvore-painel` + `demanda-arvore-item`: árvore inteira, linha com nome,
   barra e horas, status em texto, três ícones de descrição, `+` de sub-demanda nas estruturais e `⋮`), **Grafo** (`demanda-grafo`, d3 com
   força: círculo com a borda na cor do status, estrutural tracejada, hierarquia azul, conexão cinza tracejada, cartão ao passar o mouse,
-  legenda que filtra) e **Planejamento** (`demanda-planejamento-painel`, só gestor: tabela plana com caminho, status, estimado ×
+  legenda que filtra) e **Planejamento** (`demanda-planejamento-painel`, só gestor e administrador: tabela plana com caminho, status, estimado ×
   executado com a cor por percentual, estouro e quem executa agora).
 - O detalhe abre no `demanda-detalhe-dialog` (abas Sub-demandas, Atividades, Conexões); cada descrição abre num diálogo próprio.
 - Cores dos ícones de descrição: `--app-icone-tecnica`, `--app-icone-cliente`, `--app-icone-doc` (brilho quando preenchida, cinza apagado
@@ -68,11 +68,11 @@ horas e a mesma pasta escolhida.
 - **"Sem pasta":** primeira entrada da coluna de pastas, com as demandas sem pai que não são de estrutura.
 - **Pasta escolhida** é uma só para as três visões e fica na URL (`?pasta=`), como o projeto e o modo.
 - **Demanda aberta** troca o `demanda-detalhe-dialog` na Árvore; o diálogo continua onde é aberto de fora (chat, atividade).
-- **Quem vê o quê não muda:** Controle de horas segue só do gestor (`GET /demanda/planejamento` é `@GestorOnly`); a visibilidade e a edição
+- **Quem vê o quê não muda:** Controle de horas segue só do gestor e do administrador (`GET /demanda/planejamento` é `@GestorOnly`, que é `temPermissaoDeGestor`); a visibilidade e a edição
   das descrições seguem as regras de hoje (`SYSTEM.SPEC.md` §14).
 - **Paradas:** demanda com estimativa, não concluída nem cancelada, sem execução há mais de 7 dias (ou sem nenhuma, criada há mais de 7).
   Pede dado novo no `DemandaPlanejamentoDto` (última execução) e sai do backend; o prazo é constante no `shared`.
-- **Estimar pelo cartão** usa a alteração de demanda de hoje (só o gestor altera horas).
+- **Estimar pelo cartão** usa a alteração de demanda de hoje (só gestor e administrador alteram horas).
 - **Busca** procura em todas as pastas e abre a pasta do resultado; os filtros de status e tags valem dentro da pasta escolhida.
 
 ## Fora de Escopo
