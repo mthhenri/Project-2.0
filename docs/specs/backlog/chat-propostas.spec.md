@@ -95,9 +95,13 @@ sumir e voltar, e a rolagem acompanha o cartão.
   atômica e com o seu próprio desfazer. "Desfazer todas" desfaz na ordem inversa e para na primeira que recusar.
 - **Conexões:** antes de conectar e desconectar virarem "faz e avisa", a regra "só gestor" desce para `criarConexao`/`excluirConexao`
   (recebendo o usuário), além do `@GestorOnly`.
-- **Exclusões:** o registro de ferramentas hoje recusa nomes com excluir, remover, apagar e parecidos (`SYSTEM.SPEC.md`, `ferramenta-ia`,
-  "Sem exclusão"). Excluir atividade sem execução e desconectar demandas pedem abrir exceção nomeada só para esses dois casos, com o
-  `SYSTEM.SPEC.md` atualizado na mesma task. Exclusão continua soft delete.
+- **Exclusões (exceção aprovada pelo autor em 2026-10-25):** o registro de ferramentas hoje recusa nomes com excluir, remover, apagar e
+  parecidos (`SYSTEM.SPEC.md`, `ferramenta-ia`, "Sem exclusão"). Abre-se exceção nomeada **só** para dois casos: excluir atividade **sem
+  nenhuma execução** e desconectar duas demandas. Qualquer outra exclusão continua proibida à IA. O `SYSTEM.SPEC.md` é atualizado na
+  mesma task, e exclusão continua soft delete.
+- **Renomear:** já existe hoje, pelos campos `nome` de `ALTERAR_ATIVIDADE` e de `ALTERAR_DEMANDA`; a ferramenta de atividade já cita
+  "renomeia a Z". O cartão de hoje mostra só "Novo nome"; com o diff, o nome atual (`atividadeNome`/`demandaNome`, gravados na proposta)
+  contra o novo aparece por palavra. Renomear segue no nível de Alterar atividade e Alterar demanda (Pergunta).
 - **Justificar o ponto** usa a regra e a service da tela de justificativas (só gestor), sem regra nova.
 
 ## Fora de Escopo
