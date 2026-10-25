@@ -2,8 +2,8 @@
 
 > Guarda-chuva da **reorganização da tela de demandas**: a visão Lista vira três colunas (pastas, demandas da pasta e a demanda aberta
 > com as descrições em primeiro plano), a aba Planejamento vira **Controle de horas** e o grafo ganha os mesmos sinais. Origem: conversa
-> com o autor em 2026-10-25 (`IDEAS.md` I-029). **Não é uma task implementável**: registra as decisões; cada task ganha a sua spec (o
-> número é decidido na hora) antes de ser implementada. O visual está no canvas do autor (link em
+> com o autor em 2026-10-25 (`IDEAS.md` I-029). **Não é uma task implementável**: registra as decisões; cada task ganha a sua spec (tasks
+> **238–241**, tabela em "Tasks") antes de ser implementada. O visual está no canvas do autor (link em
 > [`demanda-tela/referencias.md`](demanda-tela/referencias.md)); o canvas ilustra, a spec decide.
 
 ## Objetivo
@@ -95,12 +95,16 @@ horas e a mesma pasta escolhida.
 - **Perder o que o diálogo de detalhe faz** (sub-demandas, atividades, conexões, editar título, histórico de navegação). Mitigação: listar as
   funções do `demanda-detalhe-dialog` e conferir cada uma na demanda aberta.
 
-## Fases sugeridas (numeração decidida na hora)
+## Tasks (238–241)
 
-1. **Status em bolinha e ícones das descrições:** componente de status único, ícones novos com as cores de hoje, aplicados na tela atual
-   (lista, grafo, planejamento, filtros). Pequena e independente.
-2. **Árvore em três colunas:** pastas, lista da pasta, demanda aberta com as abas, "Demanda aqui", pasta na URL.
-3. **Controle de horas:** renomear, árvore com totais, barra até 150%, executando agora, resumo, cartões de sem estimativa e paradas.
-4. **Grafo:** marca do status, cartão com a barra nova, clique para a Árvore, foco na pasta.
+| # | Task | Escopo | Depende de |
+|---|---|---|---|
+| 238 | [Status em bolinha e ícones das descrições](238-demanda-status-em-bolinha.spec.md) | componente de status único, ícones novos com as cores de hoje, cor única da planejada, aplicados na tela atual (lista, grafo, planejamento, filtros); gerenciamento de impacto | — |
+| 239 | [Árvore em três colunas](239-demanda-arvore-em-tres-colunas.spec.md) | pastas, lista da pasta, demanda aberta com as abas, "Demanda aqui", "Sem pasta", `?pasta=`; demanda aberta no lugar do diálogo, com as funções do diálogo listadas | 238 |
+| 240 | [Controle de horas](240-demanda-controle-de-horas.spec.md) | renomear, árvore com totais, barra até 150%, executando agora, resumo com bolinhas, cartões de sem estimativa e paradas (dado novo no `DemandaPlanejamentoDto`, prazo de 7 dias no `shared`) | 238, 239 |
+| 241 | [Grafo](241-demanda-grafo-integrado.spec.md) | marca do status, cartão com a barra nova, clique abre na Árvore, foco na pasta | 238, 239, 240 |
+
+**Ordem:** 238 → 239 → 240 → 241. A 238 é pequena e independente; a 239 deixa um encaminhamento provisório do clique do grafo e do
+Controle de horas até a 240 e a 241.
 
 Para UI, o análogo aprovado é a tela atual de demandas (`modules/demanda/pages/demanda-projeto`) e a barra lateral da task 223.

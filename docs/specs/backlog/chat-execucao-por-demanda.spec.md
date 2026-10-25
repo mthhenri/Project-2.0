@@ -2,7 +2,7 @@
 
 > Guarda-chuva do **desenvolvedor que executa demandas**: ele fala de demandas, e a IA cuida das atividades e das execuções. Origem:
 > conversa com o autor em 2026-10-25 (`IDEAS.md` I-025). **Não é uma task implementável**: registra as decisões, e cada task ganha a sua
-> spec (o número é decidido na hora) antes de ser implementada. O canvas está em
+> spec (as tasks **242 a 245**, na tabela do fim) antes de ser implementada. O canvas está em
 > [`chat-execucao-por-demanda/referencias.md`](chat-execucao-por-demanda/referencias.md). Ele ilustra o fluxo; **o visual segue a tela
 > atual do chat** e a spec decide.
 
@@ -107,12 +107,14 @@ desenvolvedor conta o que vai fazer e o que fez, e a IA cria, troca, inicia, pau
 - **Lugar errado para a coisa nova** (demanda ou projeto errado). Mitigação: criar demanda sempre pergunta; a linha de aviso mostra o
   caminho completo da demanda onde a atividade foi criada.
 
-## Fases sugeridas (numeração decidida na hora)
+## Tasks
 
-1. **Prompts e ferramentas do checklist:** a IA lê o checklist da demanda, marca `DESENVOLVIDA` e cria bloco só quando falta.
-2. **Bom dia com continuar ou coisa nova:** retomar a última atividade e encaixar a coisa nova (demanda existente, atividade, iniciar).
-3. **Check-in que troca sozinho** e o aviso de tempo demais no mesmo bloco.
-4. **Minhas demandas no chat:** a lista à direita, a demanda aberta com as abas e a abertura automática da que está rodando.
+| # | Task | Escopo | Depende de |
+|---|---|---|---|
+| 242 | [Checklist da demanda](242-chat-checklist-da-demanda.spec.md) | Prompts e ferramentas: a IA lê o checklist, marca `DESENVOLVIDA` e cria bloco só quando falta | — |
+| 243 | [Bom dia: continuar ou coisa nova](243-chat-bom-dia-continuar-ou-coisa-nova.spec.md) | Retomar a última atividade; encaixar a coisa nova (demanda, atividade, pausar e iniciar) | 228, 242 |
+| 244 | [Check-in que troca sozinho](244-chat-checkin-troca-sozinho.spec.md) | Troca de atividade pelo relato e aviso de tempo demais no mesmo bloco | 228, 242 |
+| 245 | [Minhas demandas no chat](245-chat-minhas-demandas.spec.md) | Lista à direita, demanda aberta com abas, abertura automática; endpoint próprio | 233; 239 (padrão a confirmar) |
 
 Para UI, o análogo aprovado é a tela atual do chat (`modules/chat/pages/chat`), e a demanda aberta segue a da guarda-chuva
 `demanda-tela.spec.md`.

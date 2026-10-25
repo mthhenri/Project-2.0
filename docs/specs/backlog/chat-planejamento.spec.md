@@ -1,8 +1,7 @@
 # chat-planejamento.spec.md
 
 > Guarda-chuva do **modo planejamento** do chat com a IA. Origem: conversa com o autor em 2026-10-24 e 2026-10-25. **Não é uma task
-> implementável**: registra as decisões e os pontos em aberto; cada task ganha a sua spec (a partir da **224**, o número é decidido na
-> hora) antes de ser implementada. Estende o chat da guarda-chuva `done/rework-chat-ia.spec.md` (tasks 135–141) e a entrevista de
+> implementável**: registra as decisões e os pontos em aberto; cada task ganha a sua spec (tasks **224** e **232 a 237**, tabela em "Tasks") antes de ser implementada. Estende o chat da guarda-chuva `done/rework-chat-ia.spec.md` (tasks 135–141) e a entrevista de
 > demanda da task 155. A modelagem está em [`chat-planejamento/modelagem.md`](chat-planejamento/modelagem.md). O mockup clicável e a
 > visão geral para o gestor do autor estão no canvas privado do autor (link em `chat-planejamento/referencias.md`); o canvas ilustra, a
 > spec decide.
@@ -90,15 +89,19 @@ Ficam para projetos próprios, com conversa própria antes da spec:
 - **Imagens e prints** no chat da IA e no chat entre colaboradores.
 - Coedição ao vivo do documento; notificação de mudança no plano; leitura direta da caixa de e-mail.
 
-## Fases sugeridas (numeração decidida na hora, a partir da 224)
+## Tasks
 
-1. **Diff sobreposto por palavra:** regra pura no `shared` (com teste), componente de exibição, troca no pad e nas propostas que alteram
-   texto. Independente das demais; aplicar a skill `gerenciamento-de-impacto`. É a mesma task da fase 2 de `chat-propostas.spec.md`.
-2. **Modelo do plano:** migrations, repositories, service, API e regras de acesso (projeto, demanda, solo, pessoal).
-3. **Tela:** seletor no topo no lugar do histórico (nos dois modos), chave de modo, divisor arrastável, documento com abas e edição à mão.
-4. **IA no plano:** prompts novos, conversa do plano no armazenamento, escrita direta no rascunho e edição de trecho com aceitar/rejeitar.
-5. **Pontos em aberto** e decisões registradas.
-6. **Material de fora** (texto colado e arquivo de texto).
-7. **Publicar na demanda**, plano vivo e "nasceu do plano" no detalhe da demanda.
+A 224 (diff por palavra) é escrita na guarda-chuva [`chat-propostas.spec.md`](chat-propostas.spec.md) e serve às duas. As demais são
+numeradas de 232 a 237.
+
+| # | Task | Escopo | Depende de |
+|---|---|---|---|
+| 224 | [Diff por palavra](224-diff-sobreposto-por-palavra.spec.md) | regra pura no `shared` (com teste), componente de exibição, troca no pad e nas propostas que alteram texto; aplicar `gerenciamento-de-impacto` | — |
+| 232 | [Modelo do plano](232-plano-modelo-e-api.spec.md) | migrations, repositories (com teste de integração), service, API, regras de acesso (projeto, demanda, solo, pessoal), arquivar e excluir, ligar demanda | — |
+| 233 | [Tela](233-plano-tela.spec.md) | seletor no topo no lugar do histórico (nos dois modos), chave de modo, divisor arrastável, documento com abas e edição à mão; deixa a lateral livre para a 245 | 232 |
+| 234 | [IA no plano](234-plano-ia.spec.md) | prompts novos (só o administrador edita), conversa do plano no armazenamento do chat, escrita direta no rascunho, edição de trecho com aceitar/rejeitar | 232, 233 (224 desejável) |
+| 235 | [Pontos em aberto](235-plano-pontos-em-aberto.spec.md) | painel de pontos em aberto e decisões registradas | 232, 233, 234 |
+| 236 | [Material de fora](236-plano-material-de-fora.spec.md) | texto colado e arquivo de texto como fonte | 232, 233, 234 |
+| 237 | [Publicar e plano vivo](237-plano-publicar-e-plano-vivo.spec.md) | publicar na demanda com diff, plano vivo, "nasceu do plano" no detalhe da demanda | 232, 233, 234 (224, 235 desejáveis) |
 
 Para UI, o análogo aprovado é a tela atual do chat (`modules/chat/pages/chat`) e o cartão de proposta (`proposta-cartao`).

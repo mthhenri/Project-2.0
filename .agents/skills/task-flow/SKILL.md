@@ -79,7 +79,7 @@ nomear um contrato/DTO, use a skill `project20-dto-conventions`.
    reorganizar a seção existente.
 4. `PROBLEMS.md`: remover da lista de Ativos todo item que a task corrigiu (o relato da correção
    vai para `HISTORY.md`, não fica repetido aqui).
-5. `IDEAS.md`: mover de "Abertas" para "Promovidas" a ideia que virou spec nesta task.
+5. `IDEAS.md`: tirar do arquivo a ideia que virou spec nesta task (a spec cita o número de origem).
 6. `MEMORY.md`: só se algo descoberto sobreviver à tarefa (onde uma regra/código/doc passou a
    viver) — é ponteiro, nunca cópia de conteúdo.
 

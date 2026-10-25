@@ -1,8 +1,7 @@
 # chat-grupos.spec.md
 
 > Guarda-chuva dos **grupos** no chat entre colaboradores. Origem: conversa com o autor em 2026-10-23. **Não é uma task
-> implementável**: registra as decisões e os pontos em aberto; cada task ganha a sua spec (a partir da **219**, o número é decidido na
-> hora) antes de ser implementada. Estende a guarda-chuva `chat-colaboradores.spec.md` (conversa um a um, tasks 205–218), que
+> implementável**: registra as decisões e os pontos em aberto; cada task ganha a sua spec (tasks **246–250**, tabela abaixo) antes de ser implementada. Estende a guarda-chuva `chat-colaboradores.spec.md` (conversa um a um, tasks 205–218), que
 > tratava grupos como fora de escopo. A modelagem está em [`chat-grupos/modelagem.md`](chat-grupos/modelagem.md).
 
 ## Objetivo
@@ -66,12 +65,17 @@ propor gravar o resumo na documentação da demanda.
 - Resumo automático ao concluir a demanda; remover membro de grupo; anexos e imagens; chamadas.
 - Canal que inclua as sub-demandas.
 
-## Fases sugeridas (numeração decidida na hora, a partir da 219)
+## Tasks (**246–250**)
 
-1. **Grupo livre:** modelo, membros, nome e foto, sair, supervisão, popup, avisos e seletor do Desktop.
-2. **Canais** de projeto e demanda.
-3. **Resumo com a IA** (`/resumir`, etapas, código, proposta e custos).
-4. **Fixar mensagem** e **busca** no grupo.
+| # | Task | Escopo | Depende de |
+|---|---|---|---|
+| 246 | [Grupo livre, backend](246-grupo-livre-backend.spec.md) | modelo e migration, armazenamento, service e API, membros (adicionar, sair, readicionar, fim do grupo), nome e foto, mensagens do sistema, supervisão de grupo | 214 |
+| 247 | [Grupo livre, frontend e Desktop](247-grupo-livre-frontend-e-desktop.spec.md) | popup (lista e conversa de grupo, criar, renomear, sair), avisos, `@todos`, seletor do Project Desktop com pessoas e grupos | 246 |
+| 248 | [Canais de projeto e de demanda](248-canais-de-projeto-e-de-demanda.spec.md) | fase 2: canal sob demanda, membros por `demanda_usuario`, supervisão | 246, 247 |
+| 249 | [Resumo com a IA](249-resumo-do-grupo-com-ia.spec.md) | fase 3: `/resumir`, blocos, estimativa, código omitido, proposta de gravar na documentação, custos | 248 |
+| 250 | [Fixar mensagem e busca no grupo](250-fixar-mensagem-e-busca-no-grupo.spec.md) | fase 4 | 246, 247 (248 para os canais) |
+
+**Ordem:** 214 → 246 → 247 → 248 → 249 e 250 (independentes entre si).
 
 Antes de alterar o `shared` e o executor de demanda, aplicar a skill `gerenciamento-de-impacto` (`npm run impacto`). A task **214**
 (supervisão) deve já aceitar N participantes na regra de elegibilidade, para evitar retrabalho.

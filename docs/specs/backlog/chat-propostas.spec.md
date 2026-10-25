@@ -2,8 +2,8 @@
 
 > Guarda-chuva das **propostas da IA** no chat: cartões mais simples, várias propostas juntas, diff por palavra, autonomia por tipo e
 > propostas novas, mais a correção do sumiço da mensagem e do scroll. Origem: conversa com o autor em 2026-10-25 (`IDEAS.md` I-026).
-> **Não é uma task implementável**: registra as decisões; cada task ganha a sua spec (o número é decidido na hora) antes de ser
-> implementada. Estende o mecanismo de propostas da task 136 (`done/rework-chat-ia.spec.md`) e o desfazer com prazo da task 194. O
+> **Não é uma task implementável**: registra as decisões; cada task tem a sua spec (tasks **224–231**, na tabela de tasks no fim) e é
+> implementada a partir dela. Estende o mecanismo de propostas da task 136 (`done/rework-chat-ia.spec.md`) e o desfazer com prazo da task 194. O
 > antes e depois de cada cartão está no canvas privado do autor (link em [`chat-propostas/referencias.md`](chat-propostas/referencias.md));
 > o canvas ilustra, a spec decide.
 
@@ -130,18 +130,20 @@ administrador.
 - **A correção do sumiço mexe no fluxo de streaming do chat**, que é sensível (bom dia, retomada, check-in usam o mesmo caminho).
   Mitigação: teste de componente cobrindo resposta com e sem proposta, com duas propostas e com falha no meio, e verificação ao vivo.
 
-## Fases sugeridas (numeração decidida na hora)
+## Tasks (224–231)
 
-1. **Sumiço, scroll e várias propostas por mensagem:** um item só para resposta em andamento e gravada, cartão sem recriar, rolagem até o
-   cartão carregar, lista de propostas nos três armazenamentos e separador entre as voltas. Independente das demais; vem primeiro.
-2. **Diff por palavra** (a fase 1 do planejamento): regra pura no `shared`, componente de exibição e troca nos cartões listados na decisão 3
-   e no pad. Aplicar a skill `gerenciamento-de-impacto`.
-3. **Cartão compacto** e a linha de "feito" depois de confirmar.
-4. **Grupo com Confirmar todas**, Recusar todas e Desfazer todas.
-5. **Autonomia:** campo na `configuracao_ia`, regra dos fixos no `shared`, painel na IA Config., "faz e avisa" nas ferramentas, linha azul
-   no chat, regra de gestor descendo para as conexões e `SYSTEM.SPEC.md` atualizado.
-6. **Propostas novas:** concluir demanda e mover atividade; desconectar e excluir atividade sem execução (com a exceção do "sem
-   exclusão"); justificar o ponto. Podem ser tasks separadas.
+| # | Task | Escopo | Depende de |
+|---|---|---|---|
+| 224 | [Diff sobreposto por palavra](224-diff-sobreposto-por-palavra.spec.md) | regra pura no `shared`, componente de exibição, troca nos cartões da decisão 3 e no pad; **é também a fase 1 de `chat-planejamento.spec.md`** (uma task só para as duas guarda-chuvas) | — |
+| 225 | [Sumiço, scroll e várias propostas](225-chat-sumico-scroll-e-varias-propostas.spec.md) | item único para resposta em andamento e gravada, cartão sem recriar, rolagem, lista de propostas nos três armazenamentos, separador entre voltas | — |
+| 226 | [Cartão compacto](226-proposta-cartao-compacto.spec.md) | cartão de uma linha para mudança pequena e a linha de "feito" com Desfazer | 224, 225 |
+| 227 | [Propostas em grupo](227-propostas-em-grupo.spec.md) | grupo no fim da resposta, Confirmar todas, Recusar todas e Desfazer todas, dependência entre linhas | 225, 226 |
+| 228 | [Autonomia por tipo](228-propostas-autonomia-por-tipo.spec.md) | regra de níveis no `shared`, campo na `configuracao_ia`, painel na IA Config., "faz e avisa", linha azul, gestor nas conexões | 226, 227 |
+| 229 | [Concluir demanda e mover atividade](229-proposta-concluir-demanda-e-mover-atividade.spec.md) | duas propostas novas (nível Pergunta) | 228 (nível); 224, 226 (cartão) |
+| 230 | [Desconectar demandas e excluir atividade](230-proposta-desconectar-demandas-e-excluir-atividade.spec.md) | duas propostas novas e a exceção nomeada ao "sem exclusão" | 228 (nível) |
+| 231 | [Justificar o ponto](231-proposta-justificar-ponto.spec.md) | proposta nova, só gestor, sempre pergunta | 228 (nível) |
+
+A 224 e a 225 não dependem de nada e podem ser feitas em qualquer ordem; a 229 a 231 podem ser feitas em qualquer ordem entre si.
 
 Para UI, o análogo aprovado é a tela atual do chat (`modules/chat/pages/chat`) e o `proposta-cartao`; o painel de autonomia segue a tela
 de Configurações da IA (task 204).

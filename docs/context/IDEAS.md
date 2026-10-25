@@ -5,7 +5,8 @@
 > vale considerar um dia. Nada aqui é compromisso.
 >
 > **A porta de saída importa mais que a entrada.** Quando uma ideia amadurece, ela vira uma spec em
-> `docs/specs/backlog/` e **sai da lista de abertas**, indo para "Promovidas" com o link da spec.
+> `docs/specs/backlog/` e **sai deste arquivo**: a spec cita a origem (`IDEAS.md I-0NN`) e o número nunca é
+> reaproveitado.
 > Sem isso, este arquivo vira um segundo backlog concorrente e o `docs/specs/backlog/` deixa de ser
 > a fila real.
 >
@@ -155,75 +156,3 @@
 - **Origem:** conversas de 2026-10-25 com o autor; o check-in manual e o checklist de `chat-execucao-por-demanda.spec.md` ficam até esta integração existir.
 - **Por quê:** tira do desenvolvedor o último relato manual e dá à IA a fonte mais fiel do trabalho.
 - **Custo aparente:** alto e de futuro distante: acesso ao Gitea por projeto, ligar commit a demanda e atividade, segurança das credenciais e mudança no fluxo do check-in.
-
-## Promovidas
-
-### I-025 — O desenvolvedor executa demandas; a IA cuida de atividades e execuções · chat IA/demanda
-
-- **Promovida em 2026-10-25** para a guarda-chuva [`chat-execucao-por-demanda.spec.md`](../specs/backlog/chat-execucao-por-demanda.spec.md) (só a spec, no backlog): atividades como checklist, bom dia com "continuar ou coisa nova", check-in que troca sozinho e "Minhas demandas" no chat.
-
-### I-029 — Tela de demandas em três colunas, com as descrições em primeiro plano · demanda/frontend
-
-- **Promovida em 2026-10-25** para a guarda-chuva [`demanda-tela.spec.md`](../specs/backlog/demanda-tela.spec.md) (só a spec, no backlog): Árvore em três colunas, Controle de horas no lugar da aba Planejamento e os ajustes do grafo.
-
-### I-026 — Propostas mais simples e mais autonomia para a IA · chat IA
-
-- **Promovida em 2026-10-25** para a guarda-chuva [`chat-propostas.spec.md`](../specs/backlog/chat-propostas.spec.md) (só a spec, no backlog): régua de autonomia configurada pelo administrador, cartões compactos, Confirmar todas, diff por palavra, cinco propostas novas e a correção do sumiço e do scroll. A escolha por usuário ficou na I-028.
-
-### I-027 — Barra lateral em grupos · frontend/navegação
-
-- **Promovida em 2026-10-25** para a task [`223-barra-lateral-em-grupos`](../specs/done/223-barra-lateral-em-grupos.spec.md) (implementada em 2026-10-25). Os grupos acabaram iguais para todos os perfis.
-
-### I-004 — Chat IA como tira-dúvidas de programação, com bloco de código copiável · chat IA/frontend
-
-- **Promovida em 2026-10-19** para a guarda-chuva [`chat-duvidas-de-codigo.spec.md`](../specs/done/chat-duvidas-de-codigo.spec.md)
-  (tasks 188–191). As decisões da conversa com o autor estão na seção "Decisões" da guarda-chuva.
-
-### I-008 — Chip de nível (rápido / padrão / analítico) abaixo, ao lado do horário · chat IA/frontend
-
-- **Promovida em 2026-10-19** para a task [`193-chat-chip-de-nivel-ao-lado-do-horario`](../specs/done/193-chat-chip-de-nivel-ao-lado-do-horario.spec.md) (implementada).
-
-### I-009 — Desfazer das propostas no lado oposto e com prazo · chat IA/frontend
-
-- **Promovida em 2026-10-19** para a task [`194-chat-desfazer-proposta-com-prazo`](../specs/done/194-chat-desfazer-proposta-com-prazo.spec.md) (implementada).
-
-### I-011 — Gestor/admin lê e edita o pad dos desenvolvedores · anotações/permissão
-
-- **Promovida em 2026-10-19** para a task [`195-gestor-le-e-edita-pad-dos-desenvolvedores`](../specs/done/195-gestor-le-e-edita-pad-dos-desenvolvedores.spec.md) (implementada).
-
-### I-012 — Loading das propostas mais discreto · chat IA/frontend
-
-- **Promovida em 2026-10-19** para a task [`196-chat-loading-da-proposta-discreto`](../specs/done/196-chat-loading-da-proposta-discreto.spec.md) (implementada).
-
-### I-013 — Volume de trabalho por projeto · projeto/relatório
-
-- **Promovida em 2026-10-19** para a task [`197-projeto-volume-de-trabalho`](../specs/done/197-projeto-volume-de-trabalho.spec.md) (implementada em 2026-10-19).
-
-### I-014 — Botão "Baixar Project Desktop" e conferir a atualização do app · desktop/frontend
-
-- **Promovida em 2026-10-19** para a task [`198-desktop-baixar-e-atualizar`](../specs/done/198-desktop-baixar-e-atualizar.spec.md) (implementada).
-
-### I-015 — Project Desktop mostra e avisa que atualizou · desktop
-
-- **Promovida em 2026-10-20** para a task [`200-desktop-aviso-de-que-atualizou`](../specs/backlog/200-desktop-aviso-de-que-atualizou.spec.md) (só a spec, no backlog; a implementação fica para depois).
-
-### I-016 — Custo da IA por usuário e por origem, com histórico de preço · ia-custo
-
-- **Ideia:** além do custo por modelo e por dia, mostrar quanto cada pessoa e cada origem (chat, check-in, assistente de descrição, relatório, nomeação) gastou; e guardar o preço vigente de cada época, para trocar um preço não recalcular o passado.
-- **Origem:** task 201 (aba Custos); ficou fora do escopo de propósito.
-- **Por quê:** hoje trocar o preço de um modelo muda o custo de tudo o que já foi registrado, e não dá para saber quem ou o que mais gasta.
-- **Custo aparente:** o corte por pessoa já existe nas mensagens (`usuario_id`) e é um filtro a mais em `somarTokens`; a origem exige gravar a origem na mensagem; o preço com vigência vira um histórico dentro de `configuracao_ia.precos_modelo` (hoje o preço é único e retroativo, task 202).
-
-### I-017 — Avisar o desenvolvedor quando o gestor consulta a conversa dele pela IA · chat IA/gestor
-
-- **Ideia:** registrar e mostrar ao desenvolvedor que o gestor leu (ou buscou em) suas conversas com a IA.
-- **Origem:** task 201; a decisão de não avisar foi minha e está marcada a confirmar.
-- **Por quê:** transparência sobre um acesso sensível a conversas pessoais de trabalho.
-- **Custo aparente:** uma tabela de acessos, a escrita nas três ferramentas e um ponto de exibição para o desenvolvedor (por exemplo, no histórico do chat).
-
-### I-018 — Custo exato por modelo e custo do que fica fora do chat · ia-custo
-
-- **Ideia:** (a) gravar na mensagem os tokens **por modelo** do turno, em vez de um só `modelo` com a soma de tudo; (b) medir também o que não é mensagem do chat (relatório, assistente de descrição, nomeação, sugestões de conexões e lugar, propostas de descrição, teste de prompts).
-- **Origem:** task 202 (aba Custos pelas mensagens); o autor pediu para deixar anotado.
-- **Por quê:** (a) o turno soma as chamadas das ferramentas (task 188), que podem rodar num nível mais barato, mas todos os tokens são precificados pelo modelo da mensagem (o do nível mais alto): o custo sai aproximado, para mais. (b) a aba só enxerga o chat: o que o Console da Anthropic mostra a mais é isso, mais o uso da mesma chave fora da aplicação.
-- **Custo aparente:** (a) campo novo no documento da mensagem e no mapeamento dos três armazenamentos, mudança no `TurnoIa` e em `somarTokens`; só vale para mensagem nova. (b) exige um lugar para gravar chamadas que não têm mensagem (uma tabela de uso, que é o que a task 202 tirou) ou um conceito de "mensagem de sistema" por origem.
