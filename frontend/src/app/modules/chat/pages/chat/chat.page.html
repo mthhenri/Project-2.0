@@ -90,8 +90,13 @@
                             <span class="chat__ferramenta" role="status" aria-label="A IA está pensando"><span class="chat__pontos" aria-hidden="true"><i></i><i></i><i></i></span></span>
                           }
                         }
-                        @for (propostaId of mensagem.propostaIds; track propostaId) {
-                          <app-chat-proposta-cartao [propostaId]="propostaId" (resolvida)="aoResolverProposta($event)" />
+                        @if (mensagem.propostaIds.length > 1) {
+                          <!-- Duas ou mais propostas na mesma resposta: um grupo só, com Confirmar todas (task 227). Uma só continua sendo o cartão. -->
+                          <app-chat-proposta-grupo [propostaIds]="mensagem.propostaIds" (resolvida)="aoResolverProposta($event)" />
+                        } @else {
+                          @for (propostaId of mensagem.propostaIds; track propostaId) {
+                            <app-chat-proposta-cartao [propostaId]="propostaId" (resolvida)="aoResolverProposta($event)" />
+                          }
                         }
                         @if (!mensagem.aoVivo) {
                           <div class="chat__rodape-mensagem">

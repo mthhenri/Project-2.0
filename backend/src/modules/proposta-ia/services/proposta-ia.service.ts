@@ -1,10 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable, Logger } from '@nestjs/common';
 import {
   PropostaIaAjustadaDto,
   PropostaIaAjustarDto,
   PropostaIaConfirmadaDto,
   PropostaIaCriarDto,
   PropostaIaDesfeitaDto,
+  PropostaIaGrupoConfirmadoDto,
+  PropostaIaGrupoConfirmarDto,
+  PropostaIaGrupoDesfazerDto,
+  PropostaIaGrupoDesfeitoDto,
+  PropostaIaGrupoItemDto,
+  PropostaIaGrupoRecusadoDto,
+  PropostaIaGrupoRecusarDto,
+  PropostaIaGrupoSituacaoEnum,
+  idsDasPropostasDeQueDepende,
   PropostaIaRecuperadaDto,
   PropostaIaRecusadaDto,
   podeDesfazerProposta,
@@ -30,6 +39,8 @@ import { PropostaIaRepository } from '../repositories/proposta-ia.repository';
  */
 @Injectable()
 export class PropostaIaService {
+  private readonly logger = new Logger(PropostaIaService.name);
+
   constructor(
     private readonly propostaIaRepositorio: PropostaIaRepository,
     private readonly executores: ExecutorPropostaIaRegistro,
@@ -120,6 +131,96 @@ export class PropostaIaService {
       throw erro;
     }
     return { sucesso: true, dados: reivindicada, mensagem: 'Proposta desfeita com sucesso' };
+  }
+
+  /**
+   * Confirma as propostas de um grupo numa chamada só (task 227), na ordem em que nasceram: quem referencia outra sempre vem depois dela. Cada
+   * uma segue a confirmação de sempre (atômica, com o próprio desfazer). Uma que falha fica como estava e **as que dependem dela** (regra de
+   * `idsDasPropostasDeQueDepende`) ficam pendentes com o motivo; as independentes seguem. Proposta que não é do usuário recusa o grupo todo
+   * antes de executar qualquer uma.
+   */
+  async confirmarGrupo(dto: PropostaIaGrupoConfirmarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<PropostaIaGrupoConfirmadoDto>> {
+    const propostas = await this.recuperarDoGrupo(dto.propostaIds, usuarioAtivo);
+    const itens: PropostaIaGrupoItemDto[] = [];
+    for (const proposta of propostas) {
+      const impeditiva = idsDasPropostasDeQueDepende(proposta.tipo, proposta.dados)
+        .map((id) => itens.find((item) => item.propostaId === id))
+        .find((item) => item !== undefined && item.situacao !== PropostaIaGrupoSituacaoEnum.RESOLVIDA);
+      if (impeditiva) {
+        itens.push(await this.itemDoGrupo(proposta.id, PropostaIaGrupoSituacaoEnum.BLOQUEADA, 'Depende de uma proposta do grupo que não foi confirmada'));
+        continue;
+      }
+      itens.push(await this.tentarNoGrupo(proposta.id, () => this.confirmar(proposta.id, usuarioAtivo)));
+    }
+    return { sucesso: true, dados: { itens }, mensagem: 'Propostas do grupo tratadas' };
+  }
+
+  /** Recusa as propostas do grupo (task 227); as que já não estavam pendentes ficam como estavam, com o motivo. Uma não impede as outras. */
+  async recusarGrupo(dto: PropostaIaGrupoRecusarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<PropostaIaGrupoRecusadoDto>> {
+    const propostas = await this.recuperarDoGrupo(dto.propostaIds, usuarioAtivo);
+    const itens: PropostaIaGrupoItemDto[] = [];
+    for (const proposta of propostas) {
+      itens.push(await this.tentarNoGrupo(proposta.id, () => this.recusar(proposta.id, usuarioAtivo)));
+    }
+    return { sucesso: true, dados: { itens }, mensagem: 'Propostas do grupo tratadas' };
+  }
+
+  /**
+   * Desfaz as propostas do grupo na **ordem inversa** (task 227): quem veio por último sai primeiro, para nunca desfazer uma de que outra
+   * ainda depende. Para na primeira que recusar o desfazer (prazo, ou o estado mudou); as que sobram ficam como estavam, bloqueadas.
+   */
+  async desfazerGrupo(dto: PropostaIaGrupoDesfazerDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<PropostaIaGrupoDesfeitoDto>> {
+    const propostas = (await this.recuperarDoGrupo(dto.propostaIds, usuarioAtivo)).reverse();
+    const itens: PropostaIaGrupoItemDto[] = [];
+    let motivoDaParada: string | null = null;
+    for (const proposta of propostas) {
+      if (motivoDaParada !== null) {
+        itens.push(await this.itemDoGrupo(proposta.id, PropostaIaGrupoSituacaoEnum.BLOQUEADA, `Não foi desfeita: ${motivoDaParada}`));
+        continue;
+      }
+      const item = await this.tentarNoGrupo(proposta.id, () => this.desfazer(proposta.id, usuarioAtivo));
+      if (item.situacao === PropostaIaGrupoSituacaoEnum.FALHOU) motivoDaParada = item.motivo ?? 'a anterior não pôde ser desfeita';
+      itens.push(item);
+    }
+    return { sucesso: true, dados: { itens }, mensagem: 'Propostas do grupo tratadas' };
+  }
+
+  /** As propostas do grupo em ordem crescente de id, todas do usuário (a primeira que não existir ou for de outro recusa o grupo). */
+  private async recuperarDoGrupo(propostaIds: number[], usuarioAtivo: JwtPayload): Promise<PropostaIaResumoDto[]> {
+    const propostas: PropostaIaResumoDto[] = [];
+    for (const id of [...new Set(propostaIds)].sort((primeiro, segundo) => primeiro - segundo)) {
+      propostas.push(await this.obterDoUsuario(id, usuarioAtivo));
+    }
+    return propostas;
+  }
+
+  /** Roda a ação de uma proposta do grupo; falha vira `FALHOU` com o motivo em vez de derrubar o grupo. */
+  private async tentarNoGrupo(propostaId: number, acao: () => Promise<StandardResponse<PropostaIaResumoDto>>): Promise<PropostaIaGrupoItemDto> {
+    try {
+      const resposta = await acao();
+      return { propostaId, situacao: PropostaIaGrupoSituacaoEnum.RESOLVIDA, motivo: null, proposta: resposta.dados ?? null };
+    } catch (erro) {
+      return this.itemDoGrupo(propostaId, PropostaIaGrupoSituacaoEnum.FALHOU, this.motivoDoErro(erro, propostaId));
+    }
+  }
+
+  /** O item sem sucesso, com a proposta como ficou (a tela atualiza a linha). */
+  private async itemDoGrupo(propostaId: number, situacao: PropostaIaGrupoSituacaoEnum, motivo: string): Promise<PropostaIaGrupoItemDto> {
+    const proposta = (await this.propostaIaRepositorio.recuperarPorId(propostaId)) ?? null;
+    return { propostaId, situacao, motivo, proposta };
+  }
+
+  /** O texto que a exceção mostra ao usuário (`mensagem` da resposta HTTP); erro de programação vira um aviso genérico e vai para o log. */
+  private motivoDoErro(erro: unknown, propostaId: number): string {
+    if (erro instanceof HttpException) {
+      const resposta = erro.getResponse();
+      if (typeof resposta === 'object' && resposta !== null && typeof (resposta as { mensagem?: unknown }).mensagem === 'string') {
+        return (resposta as { mensagem: string }).mensagem;
+      }
+      return erro.message;
+    }
+    this.logger.error(`Falha inesperada na proposta ${propostaId} do grupo`, erro instanceof Error ? erro.stack : String(erro));
+    return 'Não foi possível concluir esta proposta';
   }
 
   /** Valida, reivindica a proposta (só um chamador passa), executa e guarda o resultado; falha do executor devolve a `PENDENTE`. */

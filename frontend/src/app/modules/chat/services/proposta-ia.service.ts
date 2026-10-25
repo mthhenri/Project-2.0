@@ -6,6 +6,12 @@ import {
   PropostaIaAjustarDto,
   PropostaIaConfirmadaDto,
   PropostaIaDesfeitaDto,
+  PropostaIaGrupoConfirmadoDto,
+  PropostaIaGrupoConfirmarDto,
+  PropostaIaGrupoDesfazerDto,
+  PropostaIaGrupoDesfeitoDto,
+  PropostaIaGrupoRecusadoDto,
+  PropostaIaGrupoRecusarDto,
   PropostaIaRecuperadaDto,
   PropostaIaRecusadaDto,
   StandardResponse,
@@ -41,5 +47,18 @@ export class PropostaIaService {
 
   desfazer(id: number): Observable<StandardResponse<PropostaIaDesfeitaDto>> {
     return this.httpClient.post<StandardResponse<PropostaIaDesfeitaDto>>(`${this.urlBase}/${id}/desfazer`, {}, comFeedbackProprioEErroTratado());
+  }
+
+  /** As três ações do grupo (task 227): uma chamada só, e o resultado diz o que aconteceu com cada proposta. */
+  confirmarGrupo(dto: PropostaIaGrupoConfirmarDto): Observable<StandardResponse<PropostaIaGrupoConfirmadoDto>> {
+    return this.httpClient.post<StandardResponse<PropostaIaGrupoConfirmadoDto>>(`${this.urlBase}/grupo/confirmar`, dto, comFeedbackProprioEErroTratado());
+  }
+
+  recusarGrupo(dto: PropostaIaGrupoRecusarDto): Observable<StandardResponse<PropostaIaGrupoRecusadoDto>> {
+    return this.httpClient.post<StandardResponse<PropostaIaGrupoRecusadoDto>>(`${this.urlBase}/grupo/recusar`, dto, comFeedbackProprioEErroTratado());
+  }
+
+  desfazerGrupo(dto: PropostaIaGrupoDesfazerDto): Observable<StandardResponse<PropostaIaGrupoDesfeitoDto>> {
+    return this.httpClient.post<StandardResponse<PropostaIaGrupoDesfeitoDto>>(`${this.urlBase}/grupo/desfazer`, dto, comFeedbackProprioEErroTratado());
   }
 }

@@ -1,0 +1,73 @@
+<section class="proposta-grupo" [class.proposta-grupo--operando]="operando()" [attr.aria-label]="'Grupo de ' + propostaIds().length + ' propostas'">
+  <header class="proposta-grupo__cabecalho">
+    <div class="proposta-grupo__titulo">
+      <strong>{{ propostaIds().length }} propostas</strong>
+      @if (resumo().carregando) {
+        <span class="proposta-grupo__resumo" role="status">Carregando…</span>
+      } @else if (resumo().texto) {
+        <span class="proposta-grupo__resumo">{{ resumo().texto }}</span>
+      }
+    </div>
+
+    <div class="proposta-grupo__acoes">
+      @if (resumo().pendentes.length > 0 && !resumo().carregando) {
+        <p-button [label]="rotuloRecusar()" severity="secondary" size="small" [text]="true" [disabled]="operando()" (onClick)="recusarTodas()" />
+        <p-button [label]="rotuloConfirmar()" icon="pi pi-check" size="small" [disabled]="operando()" (onClick)="confirmarTodas()" />
+      } @else if (resumo().feitas.length > 0) {
+        <p-button
+          [label]="listaAberta() ? 'Ocultar' : 'Ver'"
+          [icon]="listaAberta() ? 'pi pi-angle-up' : 'pi pi-angle-down'"
+          severity="secondary"
+          size="small"
+          [text]="true"
+          [attr.aria-expanded]="listaAberta()"
+          (onClick)="alternarLista()"
+        />
+        @if (resumo().desfaziveis.length > 0) {
+          <p-button label="Desfazer todas" icon="pi pi-undo" severity="secondary" size="small" [outlined]="true" [disabled]="operando()" (onClick)="desfazerTodas()" />
+        }
+      }
+    </div>
+  </header>
+
+  @if (listaAberta()) {
+    <ol class="proposta-grupo__lista">
+      @for (id of propostaIds(); track id; let posicao = $index) {
+        <li class="proposta-grupo__item" [class.proposta-grupo__item--fora]="foraDoGrupo().has(id)">
+          <span class="proposta-grupo__numero" aria-hidden="true">{{ posicao + 1 }}</span>
+
+          <div class="proposta-grupo__corpo">
+            @if (dependencias()[id]; as dependencia) {
+              <span class="proposta-grupo__depende">{{ dependencia }}</span>
+            }
+            @if (propostas()[id]; as proposta) {
+              <app-chat-proposta-cartao [propostaId]="id" [propostaCarregada]="proposta" (resolvida)="aoResolverUma($event)" />
+            } @else if (falhasDeLeitura().has(id)) {
+              <app-chat-proposta-cartao [propostaId]="id" (resolvida)="aoResolverUma($event)" />
+            } @else {
+              <p class="proposta-grupo__carregando" role="status">Carregando proposta…</p>
+            }
+            @if (motivos()[id]; as motivo) {
+              <p class="proposta-grupo__motivo" role="alert"><i class="pi pi-exclamation-triangle" aria-hidden="true"></i>{{ motivo }}</p>
+            }
+          </div>
+
+          @if (ehPendente(id)) {
+            <p-button
+              [icon]="foraDoGrupo().has(id) ? 'pi pi-plus-circle' : 'pi pi-minus-circle'"
+              severity="secondary"
+              size="small"
+              [rounded]="true"
+              [text]="true"
+              [ariaLabel]="foraDoGrupo().has(id) ? 'Voltar para o grupo' : 'Tirar do grupo'"
+              [pTooltip]="foraDoGrupo().has(id) ? 'Voltar para o grupo' : 'Tirar do grupo'"
+              tooltipPosition="left"
+              [disabled]="operando()"
+              (onClick)="tirarDoGrupo(id)"
+            />
+          }
+        </li>
+      }
+    </ol>
+  }
+</section>

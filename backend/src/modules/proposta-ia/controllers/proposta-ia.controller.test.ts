@@ -10,7 +10,7 @@ import { PropostaIaController } from './proposta-ia.controller';
 test('só rotas de leitura e resolução; nenhuma cria proposta', () => {
   assert.deepEqual(
     Object.values(rotasPorNome(PropostaIaController)).map((rota) => `${rota.verbo} ${rota.caminho}`).sort(),
-    ['GET :id', 'POST :id/ajustar', 'POST :id/confirmar', 'POST :id/desfazer', 'POST :id/recusar'].sort(),
+    ['GET :id', 'POST :id/ajustar', 'POST :id/confirmar', 'POST :id/desfazer', 'POST :id/recusar', 'POST grupo/confirmar', 'POST grupo/desfazer', 'POST grupo/recusar'].sort(),
   );
 });
 
@@ -28,6 +28,7 @@ test('repassa o id, o DTO e o usuário ativo (o dono é decidido pelo token, nun
   const controller = new PropostaIaController({
     recuperarPorId: registrar('recuperarPorId'), confirmar: registrar('confirmar'), ajustar: registrar('ajustar'),
     recusar: registrar('recusar'), desfazer: registrar('desfazer'),
+    confirmarGrupo: registrar('confirmarGrupo'), recusarGrupo: registrar('recusarGrupo'), desfazerGrupo: registrar('desfazerGrupo'),
   } as never);
   const usuario = { sub: 4, login: 'dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
 
@@ -36,8 +37,19 @@ test('repassa o id, o DTO e o usuário ativo (o dono é decidido pelo token, nun
   await controller.ajustar(8, { dados: { a: 1 } }, usuario);
   await controller.recusar(8, usuario);
   await controller.desfazer(8, usuario);
+  await controller.confirmarGrupo({ propostaIds: [1, 2] }, usuario);
+  await controller.recusarGrupo({ propostaIds: [3] }, usuario);
+  await controller.desfazerGrupo({ propostaIds: [4, 5] }, usuario);
 
   assert.deepEqual(chamadas, [
     ['recuperarPorId', 8, usuario], ['confirmar', 8, usuario], ['ajustar', 8, { dados: { a: 1 } }, usuario], ['recusar', 8, usuario], ['desfazer', 8, usuario],
+    ['confirmarGrupo', { propostaIds: [1, 2] }, usuario], ['recusarGrupo', { propostaIds: [3] }, usuario], ['desfazerGrupo', { propostaIds: [4, 5] }, usuario],
   ]);
+});
+
+test('as rotas do grupo vêm antes das de :id, senão "grupo" seria lido como o id', () => {
+  const caminhos = Object.values(rotasPorNome(PropostaIaController)).map((rota) => rota.caminho);
+  const primeiraComId = caminhos.findIndex((caminho) => caminho.startsWith(':id'));
+  const ultimaDoGrupo = caminhos.map((caminho) => caminho.startsWith('grupo/')).lastIndexOf(true);
+  assert.ok(ultimaDoGrupo >= 0 && ultimaDoGrupo < primeiraComId, caminhos.join(' | '));
 });

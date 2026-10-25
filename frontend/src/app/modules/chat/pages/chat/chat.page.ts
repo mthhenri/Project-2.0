@@ -14,6 +14,7 @@ import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.s
 import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
 import { HistoricoComponent, MensagemDoHistorico } from '../../components/historico/historico.component';
 import { PropostaCartaoComponent } from '../../components/proposta-cartao/proposta-cartao.component';
+import { PropostaGrupoComponent } from '../../components/proposta-grupo/proposta-grupo.component';
 import { ChatService, ErroDoChat } from '../../services/chat.service';
 import { dataDaConversa, ROTULO_NIVEL, sugestoesAposProposta, sugestoesIniciais } from '../../utils/chat.util';
 
@@ -68,6 +69,7 @@ const JANELA_DA_INTERACAO_MS = 400;
     TooltipModule,
     MarkdownVisualizadorComponent,
     PropostaCartaoComponent,
+    PropostaGrupoComponent,
     HistoricoComponent,
   ],
   templateUrl: './chat.page.html',

@@ -1,9 +1,10 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { PropostaIaCriarDto, PropostaIaResumoDto, StatusPropostaIaEnum, TipoPropostaIaEnum, TipoUsuarioEnum } from '@project20/shared';
+import { PropostaIaCriarDto, PropostaIaGrupoSituacaoEnum, PropostaIaResumoDto, StatusPropostaIaEnum, TipoPropostaIaEnum, TipoUsuarioEnum } from '@project20/shared';
 import { ConfigService } from '../../../config/config.service';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { ConflictException } from '../../../core/exceptions/conflict.exception';
+import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
 import { UnauthorizedAccessException } from '../../../core/exceptions/unauthorized-access.exception';
 import { ExecutorPropostaIa, ExecutorPropostaIaRegistro } from '../domain/executor-proposta-ia';
 import { PropostaIaRepository, PropostaIaTransicao } from '../repositories/proposta-ia.repository';
@@ -252,4 +253,172 @@ test('expirar obsoletas: proposta que ainda vale fica pendente e uma que não d�
   await falhando.servico.criar({ usuarioId: 1, tipo: TIPO, dados: DADOS });
   assert.equal(await falhando.servico.expirarObsoletas(DONO), 0);
   assert.equal(falhando.propostas[0].status, StatusPropostaIaEnum.PENDENTE);
+});
+
+// Grupo de propostas (task 227): confirmar, recusar e desfazer várias de uma vez, cada uma com a regra de sempre.
+function criarServicoDeGrupo() {
+  const { repositorio, propostas } = criarRepositorio();
+  const registro = new ExecutorPropostaIaRegistro();
+  const ordem: string[] = [];
+  const atividade: ExecutorPropostaIa = {
+    tipo: TipoPropostaIaEnum.CRIAR_ATIVIDADE,
+    validar() {},
+    async executar(dados) {
+      ordem.push(`executar:${String(dados['nome'])}`);
+      if (dados['falhar']) throw new BusinessException(String(dados['falhar']));
+      if (dados['explodir']) throw new Error('bug interno');
+      return { nome: dados['nome'], naoDesfaz: dados['naoDesfaz'] ?? false };
+    },
+    async desfazer(resultado) {
+      ordem.push(`desfazer:${String(resultado['nome'])}`);
+      if (resultado['naoDesfaz']) throw new BusinessException('A atividade já foi alterada');
+    },
+  };
+  const demanda: ExecutorPropostaIa = {
+    tipo: TipoPropostaIaEnum.CRIAR_DEMANDA,
+    validar() {},
+    async executar(dados) {
+      ordem.push(`executar:${String(dados['nome'])}`);
+      if (dados['falhar']) throw new BusinessException(String(dados['falhar']));
+      return { demandaId: 5, nome: dados['nome'] };
+    },
+    async desfazer(resultado) {
+      ordem.push(`desfazer:${String(resultado['nome'])}`);
+    },
+  };
+  registro.registrar(atividade);
+  registro.registrar(demanda);
+  const configService = { obter: () => ({ aplicacao: { fusoHorario: 'America/Sao_Paulo' } }) } as unknown as ConfigService;
+  const servico = new PropostaIaService(repositorio as unknown as PropostaIaRepository, registro, configService);
+  const criarAtividade = (nome: string, extras: Record<string, unknown> = {}, usuarioId = 1) =>
+    servico.criar({ usuarioId, tipo: TipoPropostaIaEnum.CRIAR_ATIVIDADE, dados: { nome, ...extras } });
+  const criarDemanda = (nome: string, extras: Record<string, unknown> = {}) =>
+    servico.criar({ usuarioId: 1, tipo: TipoPropostaIaEnum.CRIAR_DEMANDA, dados: { nome, ...extras } });
+  return { servico, propostas, ordem, criarAtividade, criarDemanda };
+}
+
+const situacoesDe = (itens: { propostaId: number; situacao: PropostaIaGrupoSituacaoEnum }[]) => itens.map((item) => `${item.propostaId}:${item.situacao}`);
+
+test('confirmar o grupo executa na ordem em que as propostas nasceram, mesmo com os ids fora de ordem', async () => {
+  const { servico, ordem, criarAtividade, criarDemanda } = criarServicoDeGrupo();
+  const demanda = await criarDemanda('Demanda');
+  const primeira = await criarAtividade('A1');
+  const segunda = await criarAtividade('A2');
+  const resposta = await servico.confirmarGrupo({ propostaIds: [segunda.id, demanda.id, primeira.id] }, DONO);
+  assert.deepEqual(ordem, ['executar:Demanda', 'executar:A1', 'executar:A2']);
+  assert.deepEqual(situacoesDe(resposta.dados.itens), [`${demanda.id}:RESOLVIDA`, `${primeira.id}:RESOLVIDA`, `${segunda.id}:RESOLVIDA`]);
+  assert.ok(resposta.dados.itens.every((item) => item.proposta?.status === StatusPropostaIaEnum.CONFIRMADA && item.motivo === null));
+});
+
+test('quando uma falha, as que dependem dela ficam pendentes com o motivo e as independentes seguem', async () => {
+  const { servico, ordem, propostas, criarAtividade, criarDemanda } = criarServicoDeGrupo();
+  const estrutura = await criarDemanda('Estrutura', { falhar: 'O projeto não aceita' });
+  const filha = await criarDemanda('Filha', { demandaPaiPropostaId: estrutura.id });
+  const neta = await criarDemanda('Neta', { demandaPaiPropostaId: filha.id });
+  const independente = await criarAtividade('Independente');
+  const resposta = await servico.confirmarGrupo({ propostaIds: [estrutura.id, filha.id, neta.id, independente.id] }, DONO);
+
+  assert.deepEqual(situacoesDe(resposta.dados.itens), [`${estrutura.id}:FALHOU`, `${filha.id}:BLOQUEADA`, `${neta.id}:BLOQUEADA`, `${independente.id}:RESOLVIDA`]);
+  assert.equal(resposta.dados.itens[0].motivo, 'O projeto não aceita');
+  assert.equal(resposta.dados.itens[1].motivo, 'Depende de uma proposta do grupo que não foi confirmada');
+  assert.equal(resposta.dados.itens[2].motivo, 'Depende de uma proposta do grupo que não foi confirmada');
+  assert.deepEqual(ordem, ['executar:Estrutura', 'executar:Independente'], 'a dependente nem chegou a executar');
+  // A que falhou volta a pendente, as bloqueadas nunca saíram dela, e o item traz a proposta como ficou.
+  assert.deepEqual(
+    propostas.map((proposta) => proposta.status),
+    [StatusPropostaIaEnum.PENDENTE, StatusPropostaIaEnum.PENDENTE, StatusPropostaIaEnum.PENDENTE, StatusPropostaIaEnum.CONFIRMADA],
+  );
+  assert.equal(resposta.dados.itens[1].proposta?.status, StatusPropostaIaEnum.PENDENTE);
+});
+
+test('a falha de uma proposta independente não impede as outras', async () => {
+  const { servico, criarAtividade } = criarServicoDeGrupo();
+  const boa = await criarAtividade('Boa');
+  const ruim = await criarAtividade('Ruim', { falhar: 'Já existe uma execução ativa' });
+  const outra = await criarAtividade('Outra');
+  const resposta = await servico.confirmarGrupo({ propostaIds: [boa.id, ruim.id, outra.id] }, DONO);
+  assert.deepEqual(situacoesDe(resposta.dados.itens), [`${boa.id}:RESOLVIDA`, `${ruim.id}:FALHOU`, `${outra.id}:RESOLVIDA`]);
+  assert.equal(resposta.dados.itens[1].motivo, 'Já existe uma execução ativa');
+});
+
+test('erro inesperado numa proposta vira um motivo genérico, sem vazar a mensagem, e o grupo segue', async () => {
+  const { servico, criarAtividade } = criarServicoDeGrupo();
+  const quebrada = await criarAtividade('Quebrada', { explodir: true });
+  const normal = await criarAtividade('Normal');
+  const resposta = await servico.confirmarGrupo({ propostaIds: [quebrada.id, normal.id] }, DONO);
+  assert.equal(resposta.dados.itens[0].situacao, PropostaIaGrupoSituacaoEnum.FALHOU);
+  assert.equal(resposta.dados.itens[0].motivo, 'Não foi possível concluir esta proposta');
+  assert.equal(resposta.dados.itens[1].situacao, PropostaIaGrupoSituacaoEnum.RESOLVIDA);
+});
+
+test('proposta já resolvida no grupo falha com o motivo e não repete a ação', async () => {
+  const { servico, ordem, criarAtividade } = criarServicoDeGrupo();
+  const feita = await criarAtividade('Feita');
+  const nova = await criarAtividade('Nova');
+  await servico.confirmar(feita.id, DONO);
+  const resposta = await servico.confirmarGrupo({ propostaIds: [feita.id, nova.id] }, DONO);
+  assert.deepEqual(situacoesDe(resposta.dados.itens), [`${feita.id}:FALHOU`, `${nova.id}:RESOLVIDA`]);
+  assert.equal(resposta.dados.itens[0].motivo, 'A proposta já foi resolvida');
+  assert.deepEqual(ordem, ['executar:Feita', 'executar:Nova']);
+});
+
+test('proposta de outro usuário no grupo recusa tudo antes de executar qualquer uma', async () => {
+  const { servico, ordem, propostas, criarAtividade } = criarServicoDeGrupo();
+  const minha = await criarAtividade('Minha');
+  const alheia = await criarAtividade('Alheia', {}, 2);
+  await assert.rejects(servico.confirmarGrupo({ propostaIds: [minha.id, alheia.id] }, DONO), UnauthorizedAccessException);
+  await assert.rejects(servico.recusarGrupo({ propostaIds: [minha.id, alheia.id] }, DONO), UnauthorizedAccessException);
+  assert.deepEqual(ordem, []);
+  assert.ok(propostas.every((proposta) => proposta.status === StatusPropostaIaEnum.PENDENTE));
+  await assert.rejects(servico.confirmarGrupo({ propostaIds: [minha.id, 9999] }, DONO), ResourceNotFoundException);
+});
+
+test('recusar o grupo recusa todas sem executar nada; a que já foi resolvida falha sem impedir as outras', async () => {
+  const { servico, ordem, propostas, criarAtividade } = criarServicoDeGrupo();
+  const primeira = await criarAtividade('A1');
+  const segunda = await criarAtividade('A2');
+  const terceira = await criarAtividade('A3');
+  await servico.confirmar(segunda.id, DONO);
+  ordem.length = 0;
+  const resposta = await servico.recusarGrupo({ propostaIds: [primeira.id, segunda.id, terceira.id] }, DONO);
+  assert.deepEqual(situacoesDe(resposta.dados.itens), [`${primeira.id}:RESOLVIDA`, `${segunda.id}:FALHOU`, `${terceira.id}:RESOLVIDA`]);
+  assert.equal(resposta.dados.itens[1].motivo, 'A proposta já foi resolvida');
+  assert.deepEqual(ordem, []);
+  assert.deepEqual(propostas.map((proposta) => proposta.status), [StatusPropostaIaEnum.EXPIRADA, StatusPropostaIaEnum.CONFIRMADA, StatusPropostaIaEnum.EXPIRADA]);
+});
+
+test('desfazer o grupo desfaz na ordem inversa', async () => {
+  const { servico, ordem, criarAtividade, criarDemanda } = criarServicoDeGrupo();
+  const demanda = await criarDemanda('Demanda');
+  const primeira = await criarAtividade('A1');
+  const segunda = await criarAtividade('A2');
+  await servico.confirmarGrupo({ propostaIds: [demanda.id, primeira.id, segunda.id] }, DONO);
+  ordem.length = 0;
+  const resposta = await servico.desfazerGrupo({ propostaIds: [demanda.id, primeira.id, segunda.id] }, DONO);
+  assert.deepEqual(ordem, ['desfazer:A2', 'desfazer:A1', 'desfazer:Demanda']);
+  assert.deepEqual(situacoesDe(resposta.dados.itens), [`${segunda.id}:RESOLVIDA`, `${primeira.id}:RESOLVIDA`, `${demanda.id}:RESOLVIDA`]);
+  assert.ok(resposta.dados.itens.every((item) => item.proposta?.status === StatusPropostaIaEnum.DESFEITA));
+});
+
+test('desfazer o grupo para na primeira que recusa e deixa as outras como estavam, bloqueadas', async () => {
+  const { servico, ordem, propostas, criarAtividade, criarDemanda } = criarServicoDeGrupo();
+  const demanda = await criarDemanda('Demanda');
+  const primeira = await criarAtividade('A1', { naoDesfaz: true });
+  const segunda = await criarAtividade('A2');
+  await servico.confirmarGrupo({ propostaIds: [demanda.id, primeira.id, segunda.id] }, DONO);
+  ordem.length = 0;
+  const resposta = await servico.desfazerGrupo({ propostaIds: [demanda.id, primeira.id, segunda.id] }, DONO);
+  assert.deepEqual(situacoesDe(resposta.dados.itens), [`${segunda.id}:RESOLVIDA`, `${primeira.id}:FALHOU`, `${demanda.id}:BLOQUEADA`]);
+  assert.equal(resposta.dados.itens[1].motivo, 'A atividade já foi alterada');
+  assert.equal(resposta.dados.itens[2].motivo, 'Não foi desfeita: A atividade já foi alterada');
+  assert.deepEqual(ordem, ['desfazer:A2', 'desfazer:A1'], 'a demanda nem foi tentada');
+  assert.deepEqual(propostas.map((proposta) => proposta.status), [StatusPropostaIaEnum.CONFIRMADA, StatusPropostaIaEnum.CONFIRMADA, StatusPropostaIaEnum.DESFEITA]);
+});
+
+test('o grupo com o mesmo id repetido não executa duas vezes', async () => {
+  const { servico, ordem, criarAtividade } = criarServicoDeGrupo();
+  const unica = await criarAtividade('Única');
+  const resposta = await servico.confirmarGrupo({ propostaIds: [unica.id, unica.id] }, DONO);
+  assert.equal(resposta.dados.itens.length, 1);
+  assert.deepEqual(ordem, ['executar:Única']);
 });

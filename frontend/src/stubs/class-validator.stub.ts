@@ -2,6 +2,8 @@
 const d = (..._args: any[]) => (_target: any, _key?: any): void => {};
 
 export const ArrayMaxSize = d;
+export const ArrayMinSize = d;
+export const ArrayUnique  = d;
 export const IsArray      = d;
 export const IsBoolean    = d;
 export const IsDate       = d;

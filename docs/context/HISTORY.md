@@ -12,6 +12,41 @@
 
 ---
 
+## 2026-10-25 — Task 227: propostas em grupo (Confirmar todas, Recusar todas e Desfazer todas)
+
+Quarta task das propostas da IA (`chat-propostas.spec.md`). Quando a IA propõe várias coisas numa resposta, o usuário vê **um grupo** e resolve tudo de uma vez ou linha por linha.
+
+- **Ponto em aberto da spec (como o grupo sabe que a N depende da M):** levantado no código, só existe um critério: `CRIAR_DEMANDA` com `projetoPropostaId` (proposta de projeto) ou
+  `demandaPaiPropostaId` (proposta de demanda de estrutura); os executores exigem a referenciada confirmada (`idCriadoPelaProposta`). Virou a regra pura
+  `idsDasPropostasDeQueDepende` no `shared` (a atividade ainda não referencia proposta; quando referenciar, é só acrescentar o tipo à regra). Quem referencia sempre nasce depois da
+  referenciada, então a ordem crescente de id já é a ordem certa.
+- **Backend:** `POST /proposta-ia/grupo/confirmar`, `/grupo/recusar` e `/grupo/desfazer` (controller fino; as rotas do grupo vêm **antes** das de `:id`, senão `grupo` seria lido
+  como id). DTOs `PropostaIaGrupo{Confirmar,Recusar,Desfazer}Dto` (1 a 20 ids, sem repetir) e `PropostaIaGrupo{Confirmado,Recusado,Desfeito}Dto` com `PropostaIaGrupoItemDto`
+  (`RESOLVIDA`, `FALHOU` ou `BLOQUEADA`, o motivo e a proposta como ficou). `PropostaIaService`: confirmar na ordem crescente, **cada uma pela confirmação atômica de sempre**; a que falha e
+  as que dependem dela ficam pendentes (a dependente com "Depende de uma proposta do grupo que não foi confirmada") e as independentes seguem; proposta que não existe ou é de outro
+  usuário recusa o grupo todo **antes** de executar qualquer uma; erro de programação vira o aviso genérico e vai para o log; desfazer na ordem inversa e para na primeira que recusa.
+  Sem consulta nova no repository (nenhum teste de integração novo).
+- **Frontend:** `app-chat-proposta-grupo` (cabeçalho com "N propostas", o resumo e as ações; lista numerada; "depende da N"; Tirar do grupo / Voltar para o grupo; motivo na linha), a
+  entrada `[propostaCarregada]` do cartão (o grupo lê cada proposta uma vez e passa ao cartão, que não lê de novo) e a `chat.page` que usa o grupo a partir de 2 propostas (o grupo
+  também não é recriado no fim da resposta, task 225). Depois de tudo feito a lista fecha e o cabeçalho mostra "N feitas · Ver · Desfazer todas"; o "Desfazer" do toast desfaz o
+  grupo que acabou de ser confirmado. O ponto de encaixe da mistura de níveis (linha azul) fica para a 228: o resumo já separa feitas, pendentes, recusadas e desfeitas.
+- **Achados na própria task:** (1) o teste de "Desfazer todas que para no meio" mostrou que a lista fechava e **escondia os motivos**: ela agora nunca fecha com motivo a mostrar; (2) o motivo
+  da dependente dizia "proposta 9422" (id do banco) enquanto a tela numera as linhas: a mensagem ficou sem o id e o "depende da N" da linha diz de qual se trata; (3) as linhas sem o botão
+  de tirar do grupo ficavam mais largas que as pendentes: a coluna do botão ficou fixa; (4) o stub do `class-validator` do frontend não tinha `ArrayMinSize` nem `ArrayUnique`.
+- **Impacto** (`npm run impacto`): o cartão ganhou um consumidor (o grupo) além de `chat.page` e `checkin.page`; a entrada nova é opcional, então o check-in não muda.
+- **Testes:** `shared` 230 (5 da dependência); `backend` 1347 (10 do serviço do grupo: ordem, falha com dependentes, independentes seguem, erro inesperado, já resolvida, dono, recusar, desfazer em
+  ordem inversa, parada e id repetido; 3 de validação da entrada; rotas do controller e a ordem delas); `frontend` 160 arquivos e 1927 testes (8 da regra do grupo, 15 do componente, 3 novos
+  da `chat.page`); `desktop` 33; `repo:test` 13 (1 ignorado, preexistente). Builds de `backend` e `frontend` ok. Sem lint (`PROBLEMS.md` P-001).
+- **Ao vivo** (1920×1080, 1366×768 e 1080×1920, tema claro e escuro): cinco respostas no chat real (2 propostas, 5 com dependências, 5 em que uma falha, um grupo já feito e um parcial):
+  5 grupos e 14 linhas em todos os cenários, "depende da 1", "depende da 1 e 2" e "depende da 2", nenhum erro de console e nenhuma rolagem horizontal; Confirmar todas, Ver, Desfazer
+  todas, falha com motivo, Tirar do grupo (a chamada saiu sem o id tirado) e Confirmar 4 funcionaram. No backend de verdade (sem criar nada): id inexistente nas três rotas dá 404, lista
+  vazia, repetida ou sem lista dá 400 com a mensagem de validação e sem token dá 401.
+- **Limites:** as respostas das ações em grupo foram simuladas no navegador (o backend em execução não executou propostas de verdade: a execução em grupo está provada por teste unitário
+  com executores em memória); o estado "expirado" do grupo (proposta de dia anterior) e o de erro de leitura de uma proposta só têm teste de componente; a atividade proposta ainda não
+  referencia proposta, então "depende da N" só aparece hoje entre demandas e projetos.
+
+---
+
 ## 2026-10-25 — Task 226: cartão compacto das propostas da IA
 
 Terceira task das propostas da IA (`chat-propostas.spec.md`). Mudança pequena ocupa uma linha no chat e o que foi confirmado vira uma linha verde com Desfazer.

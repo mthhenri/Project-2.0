@@ -57,6 +57,11 @@ export class PropostaCartaoComponent {
   private readonly zona = inject(NgZone);
 
   readonly propostaId = input.required<number>();
+  /**
+   * A proposta já lida por quem hospeda o cartão (o grupo, task 227): o cartão a usa em vez de ler de novo e acompanha as mudanças que o
+   * grupo faz nela (confirmar todas, recusar todas, desfazer todas). Sem ela, o cartão lê a proposta sozinho.
+   */
+  readonly propostaCarregada = input<PropostaIaResumoDto | null>(null);
 
   readonly proposta = signal<PropostaIaResumoDto | null>(null);
   readonly erro = signal(false);
@@ -170,7 +175,15 @@ export class PropostaCartaoComponent {
     this.prioridadeService.carregar();
     effect(() => {
       const id = this.propostaId();
-      untracked(() => this.carregar(id));
+      const carregada = this.propostaCarregada();
+      untracked(() => {
+        if (carregada && carregada.id === id) {
+          this.erro.set(false);
+          this.proposta.set(carregada);
+        } else {
+          this.carregar(id);
+        }
+      });
     });
     effect((aoLimpar) => {
       const limite = limiteParaDesfazerProposta(this.proposta()?.resolucaoData);

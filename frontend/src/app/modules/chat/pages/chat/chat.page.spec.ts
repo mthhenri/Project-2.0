@@ -352,11 +352,16 @@ describe('ChatPage — enviar e receber a resposta', () => {
       montado.fixture.detectChanges();
       const aoVivo = cartoes(montado);
       expect(aoVivo).toHaveLength(2);
+      // Duas propostas na mesma resposta são um grupo só (task 227), e o grupo também não é recriado no fim.
+      const grupoAoVivo = montado.elemento.querySelector('app-chat-proposta-grupo');
+      expect(grupoAoVivo).not.toBeNull();
+      expect(montado.elemento.querySelectorAll('app-chat-proposta-grupo')).toHaveLength(1);
 
       fluxo.emitir({ tipo: 'fim', mensagem: DA_IA('Duas propostas.', { id: 'm-duas', propostaIds: [31, 32] }) as never });
       fluxo.terminar();
       montado.fixture.detectChanges();
 
+      expect(montado.elemento.querySelector('app-chat-proposta-grupo')).toBe(grupoAoVivo);
       const depois = cartoes(montado);
       expect(depois).toHaveLength(2);
       expect(depois[0]).toBe(aoVivo[0]);
@@ -365,11 +370,22 @@ describe('ChatPage — enviar e receber a resposta', () => {
       await montado.atualizar();
     });
 
-    it('ao reabrir a conversa, a mensagem com duas propostas mostra as duas', async () => {
+    it('ao reabrir a conversa, a mensagem com duas propostas mostra as duas, num grupo', async () => {
       const montado = await montarChat({ mensagens: [DA_IA('Duas propostas.', { id: 'm-duas', propostaIds: [31, 32] })] });
       carregarCartoes(montado, [31, 32]);
       await montado.atualizar();
+      expect(montado.elemento.querySelectorAll('[data-mensagem-id="m-duas"] app-chat-proposta-grupo')).toHaveLength(1);
       expect(montado.elemento.querySelectorAll('[data-mensagem-id="m-duas"] app-chat-proposta-cartao')).toHaveLength(2);
+      expect(botao(montado, 'Confirmar todas')).toBeDefined();
+    });
+
+    it('uma proposta só continua sendo o cartão, sem grupo', async () => {
+      const montado = await montarChat({ mensagens: [DA_IA('Uma proposta.', { id: 'm-uma', propostaIds: [31] })] });
+      carregarCartoes(montado, [31]);
+      await montado.atualizar();
+      expect(montado.elemento.querySelector('app-chat-proposta-grupo')).toBeNull();
+      expect(montado.elemento.querySelectorAll('[data-mensagem-id="m-uma"] app-chat-proposta-cartao')).toHaveLength(1);
+      expect(botao(montado, 'Confirmar todas')).toBeUndefined();
     });
 
     it('sem proposta: a resposta em andamento vira a mensagem gravada no mesmo elemento, com rodapé só depois do fim', async () => {
