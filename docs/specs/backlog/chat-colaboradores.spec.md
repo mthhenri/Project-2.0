@@ -22,7 +22,8 @@ administrador leem as conversas dos desenvolvedores numa área separada, com avi
    navegador fica só o popup interno.
 4. **Avisos:** notificação de mensagem nova (no Project e no Desktop) que o usuário pode **desativar**, e silêncio temporário (ex.:
    1 hora, para reunião). Contador de não lidas e silenciar por conversa.
-5. **Supervisão:** gestor e administrador leem as conversas **entre desenvolvedores**, numa **área separada**, somente leitura e com
+5. **Supervisão:** gestor e administrador leem as conversas **entre desenvolvedores**, numa **área separada** (item **Supervisão do
+   chat** na barra lateral, no grupo **IA**, conforme a task 223; o mockup de 2026-10-21 a punha num grupo "Gestão"), somente leitura e com
    **aviso aos envolvidos** (mensagem do sistema na própria conversa, no máximo uma por leitor e dia, mais um registro de auditoria).
    Conversa que envolve gestor ou administrador, **inclusive com um desenvolvedor**, é **privada** entre as duas pessoas (a mesma
    regra das ferramentas do chat da IA, task 201). A elegibilidade é decidida na hora da leitura, pelo tipo atual dos usuários.
@@ -76,7 +77,7 @@ Resumo (detalhes, DDL, campos, API e fluxos em [`chat-colaboradores/modelagem.md
 | 211 | [Composer](../done/211-mensagem-direta-compositor.spec.md) | Markdown, bloco de código, menção e referência a demanda | 210 |
 | 212 | [Avisos no Project](../done/212-mensagem-direta-avisos-no-project.spec.md) | notificação, contador, silêncio e desligar | 210 |
 | 213 | [Project Desktop](../done/213-mensagem-direta-project-desktop.spec.md) | janela de chat, atalho global, área de transferência, aviso com o app oculto; versão nova do executável | 209, 210 |
-| 214 | Supervisão | rotas, auditoria, aviso aos envolvidos e a tela do gestor | 208, 210 |
+| 214 | Supervisão | rotas, auditoria, aviso aos envolvidos e a tela do gestor (item "Supervisão do chat" no grupo IA da barra lateral) | 208, 210, 223 |
 | 215 | Verificação de ponta a ponta | duas instâncias da API, queda e volta do stream, deploy simulado, Elasticsearch e PostgreSQL provisório | 209–214 |
 
 **Ordem:** 205 → 206 (e 207 em paralelo à 208) → 208 → 209 → 210 → 211, 212, 213 e 214 (independentes entre si). A 215 fecha a guarda-chuva.

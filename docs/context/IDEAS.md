@@ -156,14 +156,11 @@
 - **Por quê:** confirmar tudo cansa; quanto mais fácil de desfazer, menos confirmação a ação precisa.
 - **Custo aparente:** decidir por tipo de proposta o que vira automático, como avisar e como desfazer; mexe no `proposta-cartao` e nos executores.
 
-### I-027 — Barra lateral em grupos por perfil · frontend/navegação
-
-- **Ideia:** organizar os itens da barra lateral em grupos, com agrupamento próprio para desenvolvedor, gestor e administrador.
-- **Origem:** conversa de 2026-10-25 com o autor.
-- **Por quê:** já são onze itens numa lista só, e cada perfil usa o sistema de um jeito.
-- **Custo aparente:** só UI (`shared/layout/navegacao.ts` e `sidebar`), com cuidado com a barra recolhida e os atalhos de teclado.
-
 ## Promovidas
+
+### I-027 — Barra lateral em grupos · frontend/navegação
+
+- **Promovida em 2026-10-25** para a task [`223-barra-lateral-em-grupos`](../specs/backlog/223-barra-lateral-em-grupos.spec.md) (no backlog). Os grupos acabaram iguais para todos os perfis.
 
 ### I-004 — Chat IA como tira-dúvidas de programação, com bloco de código copiável · chat IA/frontend
 

@@ -1,7 +1,7 @@
 # chat-planejamento.spec.md
 
 > Guarda-chuva do **modo planejamento** do chat com a IA. Origem: conversa com o autor em 2026-10-24 e 2026-10-25. **Não é uma task
-> implementável**: registra as decisões e os pontos em aberto; cada task ganha a sua spec (a partir da **223**, o número é decidido na
+> implementável**: registra as decisões e os pontos em aberto; cada task ganha a sua spec (a partir da **224**, o número é decidido na
 > hora) antes de ser implementada. Estende o chat da guarda-chuva `done/rework-chat-ia.spec.md` (tasks 135–141) e a entrevista de
 > demanda da task 155. A modelagem está em [`chat-planejamento/modelagem.md`](chat-planejamento/modelagem.md). O mockup clicável e a
 > visão geral para o gestor do autor estão no canvas privado do autor (link em `chat-planejamento/referencias.md`); o canvas ilustra, a
@@ -90,7 +90,7 @@ Ficam para projetos próprios, com conversa própria antes da spec:
 - **Imagens e prints** no chat da IA e no chat entre colaboradores.
 - Coedição ao vivo do documento; notificação de mudança no plano; leitura direta da caixa de e-mail.
 
-## Fases sugeridas (numeração decidida na hora, a partir da 223)
+## Fases sugeridas (numeração decidida na hora, a partir da 224)
 
 1. **Diff sobreposto por palavra:** regra pura no `shared` (com teste), componente de exibição, troca no pad e nas propostas que alteram
    texto. Independente das demais; aplicar a skill `gerenciamento-de-impacto`.
