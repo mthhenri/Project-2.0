@@ -12,6 +12,26 @@
 
 ---
 
+## 2026-10-25 — Task 229: propostas de concluir demanda e mover atividade
+
+Sexta task das propostas da IA (`chat-propostas.spec.md`). A IA passa a propor **concluir uma demanda** e **mover uma atividade para outra demanda**, sempre com confirmação (nível Pergunta, regra da 228) e Desfazer por 30 minutos.
+
+- **Pontos em aberto da spec, decididos pelo agente** (o autor ainda não confirmou): (1) **Concluir demanda só avisa** das atividades abertas: elas não mudam, o cartão grande diz quantas são e que só a demanda é concluída (não há escolha a
+  fazer, então não há controle "Só a demanda"); quem quiser encerrá-las pede cada uma por Alterar atividade. (2) **Mover atividade** valida, na `AtividadeService`: só o **dono** da atividade e o gestor (o membro da demanda, que pode alterar outros
+  campos, **não** move); destino existente e **nem concluído nem cancelado**; desenvolvedor com acesso ao destino (como ao criar atividade lá). Não se confere o acesso do dono quando é o gestor quem move (como no criar, que também não confere).
+- **Shared:** `TipoPropostaIaEnum.CONCLUIR_DEMANDA`/`MOVER_ATIVIDADE`, DTOs `ProporConcluirDemandaDto`/`PropostaConcluirDemandaDadosDto` e `ProporMoverAtividadeDto`/`PropostaMoverAtividadeDadosDto`, `AtividadeInternoAlterarDto.demandaId`; o nível padrão dos dois é Pergunta
+  (o compilador cobrou, como previsto na 228). **Banco:** migration `0056` (só as linhas de `tipo_proposta_ia`; aplicada e usada).
+- **Backend:** `AtividadeRepository.alterar` ganhou `demanda_id` (as execuções ficam ligadas à atividade, então vão junto, provado em teste de integração); `AtividadeService.alterar` valida a mudança de demanda; executores e ferramentas novos, registrados nos módulos de demanda e de atividade.
+  Desfazer só vale se a demanda ainda está concluída / a atividade ainda está no destino; as duas ficam obsoletas se alguém fez à mão.
+- **Frontend:** rótulos, próximos passos, resumo de uma linha (concluir sem atividades abertas e mover cabem numa linha; mover mostra "origem → destino" e "Execuções vão junto"), cartão grande dos dois tipos e as duas regras no painel de autonomia.
+- **Testes:** `shared` 245; `backend` 1385 unitários (19 novos: 6 do `alterar` com `demandaId`, 7 de mover, 6 de concluir) e 322 de integração (1 novo: a atividade muda de demanda e a execução vai junto); `frontend` 161 arquivos e 1956 testes (resumo, cartões, painel); `desktop` 33; `repo:test` 13 (1 ignorado, preexistente). Builds de `backend` e `frontend` ok. Sem lint (`PROBLEMS.md` P-001).
+- **Ao vivo** (administrador, IA de verdade, backend e frontend reais, numa atividade temporária): "Conclui a demanda Ajustes gerais" gerou o cartão grande com "Ainda há 2 atividades em aberto… Só a demanda será concluída", a confirmação mudou a demanda para `CONCLUIDA` e o Desfazer a devolveu a `PENDENTE`;
+  "Move a atividade Teste 229 mover para a demanda Exportação em PDF" gerou o cartão compacto, a confirmação mudou a atividade para a demanda 5 e o Desfazer a devolveu à 7; os dois juntos viraram um grupo com "Recusar todas". Três tamanhos e dois temas, sem erro de console nem rolagem horizontal.
+  A atividade temporária foi excluída (soft delete) e as propostas, recusadas ou desfeitas.
+- **Limites:** só o administrador foi exercitado ao vivo (desenvolvedor dono, não dono e sem acesso ao destino só em teste de serviço); "concluir" por desenvolvedor membro só em teste (a regra é da `DemandaService`, que não mudou).
+
+---
+
 ## 2026-10-25 — Task 228: autonomia da IA por tipo de proposta (Faz e avisa, Pergunta, Sempre pergunta)
 
 Quinta task das propostas da IA (`chat-propostas.spec.md`). A IA passa a **executar sozinha** o que é fácil de desfazer, deixando uma linha azul na conversa com Desfazer por 30 minutos; pergunta

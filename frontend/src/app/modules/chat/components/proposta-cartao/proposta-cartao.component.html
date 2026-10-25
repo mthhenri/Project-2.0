@@ -125,6 +125,30 @@
           }
         </div>
       }
+      @case (Tipo.CONCLUIR_DEMANDA) {
+        <div class="proposta-cartao__resumo">
+          <strong class="proposta-cartao__destaque">{{ texto('demandaNome') || 'Demanda ' + propostaAtual.dados['demandaId'] }}</strong>
+          @if (texto('projetoNome')) {
+            <span class="proposta-cartao__linha">Projeto: {{ texto('projetoNome') }}</span>
+          }
+          @if (texto('statusAnterior')) {
+            <span class="proposta-cartao__linha">Status: {{ rotuloDoStatusDaDemanda('statusAnterior') }} → Concluída</span>
+          }
+          @if (numero('atividadesEmAberto') > 0) {
+            <span class="proposta-cartao__aviso">
+              <i class="pi pi-exclamation-triangle"></i>Ainda há {{ numero('atividadesEmAberto') }} {{ numero('atividadesEmAberto') === 1 ? 'atividade' : 'atividades' }} em aberto nesta demanda. Só a demanda será concluída: as atividades continuam como estão.
+            </span>
+          }
+        </div>
+      }
+      @case (Tipo.MOVER_ATIVIDADE) {
+        <div class="proposta-cartao__resumo">
+          <strong class="proposta-cartao__destaque">{{ texto('atividadeNome') || 'Atividade ' + propostaAtual.dados['atividadeId'] }}</strong>
+          <span class="proposta-cartao__linha">De: {{ texto('demandaOrigemNome') || 'Demanda ' + propostaAtual.dados['demandaOrigemId'] }}</span>
+          <span class="proposta-cartao__linha">Para: {{ texto('demandaDestinoNome') || 'Demanda ' + propostaAtual.dados['demandaDestinoId'] }}</span>
+          <span class="proposta-cartao__linha">As execuções da atividade vão junto.</span>
+        </div>
+      }
       @case (Tipo.ATRIBUIR_MEMBRO) {
         <div class="proposta-cartao__resumo">
           <strong class="proposta-cartao__destaque">{{ texto('usuarioNome') || 'Usuário ' + propostaAtual.dados['usuarioId'] }}</strong>

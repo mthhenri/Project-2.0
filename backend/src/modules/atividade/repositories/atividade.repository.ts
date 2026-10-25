@@ -312,6 +312,10 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
       );
       parametros.status = dto.status;
     }
+    if (dto.demandaId !== undefined) {
+      setClauses.push('demanda_id = :demandaId');
+      parametros.demandaId = dto.demandaId;
+    }
     if (dto.prioridade !== undefined) {
       setClauses.push(
         'tipo_atividade_prioridade_id = (SELECT tipo_atividade_prioridade.id FROM tipo_atividade_prioridade WHERE tipo_atividade_prioridade.codigo = :prioridade AND tipo_atividade_prioridade.is_deleted = false)',

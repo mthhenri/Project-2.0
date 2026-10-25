@@ -14,6 +14,7 @@ import {
   AtividadeTagsAtribuirDto,
   AtividadeTagsAtribuidasDto,
   TagResumoDto,
+  TipoDemandaStatusEnum,
   TipoUsuarioEnum,
   temPermissaoDeGestor,
 } from '@project20/shared';
@@ -211,6 +212,10 @@ export class AtividadeService {
       }
     }
 
+    if (dto.demandaId !== undefined && dto.demandaId !== atividadeEncontrada.demandaId) {
+      await this.validarMudancaDeDemanda(dto.demandaId, atividadeEncontrada.usuarioId, usuarioAtivo);
+    }
+
     if (dto.status !== undefined && dto.status !== atividadeEncontrada.status) {
       const possuiExecucaoAtiva = await this.atividadeRepositorio.possuiExecucaoAtiva({ id: dto.id });
       if (possuiExecucaoAtiva) {
@@ -225,6 +230,7 @@ export class AtividadeService {
       nome:          dto.nome,
       status:        dto.status,
       prioridade:    dto.prioridade,
+      demandaId:     dto.demandaId,
     });
 
     return {
@@ -232,6 +238,30 @@ export class AtividadeService {
       dados:    atividadeAlterada,
       mensagem: 'Atividade alterada com sucesso',
     };
+  }
+
+  /**
+   * Mudar a atividade de demanda (task 229): só o dono da atividade e o gestor; a demanda de destino precisa existir e estar em aberto
+   * (nem concluída nem cancelada), e o desenvolvedor precisa ter acesso a ela, como ao criar uma atividade lá. As execuções pertencem à
+   * atividade e vão junto.
+   */
+  private async validarMudancaDeDemanda(demandaDestinoId: number, donoId: number, usuarioAtivo: JwtPayload): Promise<void> {
+    if (!temPermissaoDeGestor(usuarioAtivo.tipo) && donoId !== usuarioAtivo.sub) {
+      throw new UnauthorizedAccessException('Só o dono da atividade ou o gestor muda a atividade de demanda');
+    }
+    const demandaDestino = await this.demandaRepositorio.recuperar({ id: demandaDestinoId });
+    if (!demandaDestino) {
+      throw new ResourceNotFoundException('Demanda de destino');
+    }
+    if (demandaDestino.status === TipoDemandaStatusEnum.CONCLUIDA || demandaDestino.status === TipoDemandaStatusEnum.CANCELADA) {
+      throw new BusinessException(`A demanda de destino está ${demandaDestino.status === TipoDemandaStatusEnum.CONCLUIDA ? 'concluída' : 'cancelada'}: escolha uma demanda em aberto`);
+    }
+    if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
+      const temAcesso = await this.atividadeRepositorio.validarAcessoDemanda({ demandaId: demandaDestinoId, usuarioId: usuarioAtivo.sub });
+      if (!temAcesso) {
+        throw new UnauthorizedAccessException('Usuário não tem acesso à demanda de destino');
+      }
+    }
   }
 
   /** Realiza soft delete da atividade. Restrito a gestores. */

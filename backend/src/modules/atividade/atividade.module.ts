@@ -12,6 +12,8 @@ import { PropostaIaModule } from '../proposta-ia/proposta-ia.module';
 import { CriarAtividadeExecutor } from './executores/criar-atividade.executor';
 import { AlterarAtividadeExecutor } from './executores/alterar-atividade.executor';
 import { AtribuirTagExecutor } from './executores/atribuir-tag.executor';
+import { MoverAtividadeExecutor } from './executores/mover-atividade.executor';
+import { ProporMoverAtividadeFerramenta } from './ferramentas/propor-mover-atividade.ferramenta';
 import { ProporAtribuirTagFerramenta } from './ferramentas/propor-atribuir-tag.ferramenta';
 import { ProporCriarAtividadeFerramenta } from './ferramentas/propor-criar-atividade.ferramenta';
 import { ProporAlterarAtividadeFerramenta } from './ferramentas/propor-alterar-atividade.ferramenta';
@@ -21,7 +23,7 @@ import { ListarMinhasAtividadesFerramenta } from './ferramentas/listar-minhas-at
 @Module({
   imports:     [DemandaModule, TagModule, UsuarioModule, FerramentaIaModule, PropostaIaModule],
   controllers: [AtividadeController],
-  providers:   [AtividadeService, AtividadeRepository, ListarMinhasAtividadesFerramenta, ConsultarDemandaFerramenta, ProporCriarAtividadeFerramenta, CriarAtividadeExecutor, ProporAlterarAtividadeFerramenta, AlterarAtividadeExecutor, ProporAtribuirTagFerramenta, AtribuirTagExecutor],
+  providers:   [AtividadeService, AtividadeRepository, ListarMinhasAtividadesFerramenta, ConsultarDemandaFerramenta, ProporCriarAtividadeFerramenta, CriarAtividadeExecutor, ProporAlterarAtividadeFerramenta, AlterarAtividadeExecutor, ProporAtribuirTagFerramenta, AtribuirTagExecutor, ProporMoverAtividadeFerramenta, MoverAtividadeExecutor],
   exports:     [AtividadeService, AtividadeRepository],
 })
 export class AtividadeModule implements OnModuleInit {
@@ -36,6 +38,8 @@ export class AtividadeModule implements OnModuleInit {
     private readonly alterarAtividadeExecutor: AlterarAtividadeExecutor,
     private readonly proporAtribuirTag: ProporAtribuirTagFerramenta,
     private readonly atribuirTagExecutor: AtribuirTagExecutor,
+    private readonly proporMoverAtividade: ProporMoverAtividadeFerramenta,
+    private readonly moverAtividadeExecutor: MoverAtividadeExecutor,
   ) {}
 
   /** As ferramentas de IA do domínio de atividade se registram aqui (a IA só lê o que a service entrega ao usuário). */
@@ -48,5 +52,7 @@ export class AtividadeModule implements OnModuleInit {
     this.registroDeExecutores.registrar(this.alterarAtividadeExecutor);
     this.registroDeFerramentas.registrar(this.proporAtribuirTag);
     this.registroDeExecutores.registrar(this.atribuirTagExecutor);
+    this.registroDeFerramentas.registrar(this.proporMoverAtividade);
+    this.registroDeExecutores.registrar(this.moverAtividadeExecutor);
   }
 }

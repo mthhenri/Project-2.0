@@ -52,6 +52,8 @@ const PROXIMOS_PASSOS_DA_PROPOSTA: Partial<Record<TipoPropostaIaEnum, { todos?: 
   [TipoPropostaIaEnum.DESCREVER_DEMANDA]: { todos: ['Criar atividades nessa demanda', 'Colocar alguém nessa demanda'] },
   [TipoPropostaIaEnum.ALTERAR_DEMANDA]: { todos: ['Criar uma atividade nessa demanda', 'Alterar outra demanda'], gestor: ['Marcar tags nessa demanda'] },
   [TipoPropostaIaEnum.CONECTAR_DEMANDA]: { todos: ['Conectar outra demanda', 'Mostrar como as demandas se conectam'] },
+  [TipoPropostaIaEnum.CONCLUIR_DEMANDA]: { todos: ['O que eu tenho pra fazer hoje?', 'Concluir outra demanda'] },
+  [TipoPropostaIaEnum.MOVER_ATIVIDADE]: { todos: ['Começar essa atividade', 'Mover outra atividade'] },
   [TipoPropostaIaEnum.ATRIBUIR_MEMBRO]: { todos: ['O que eu tenho pra fazer hoje?'], gestor: ['Criar uma atividade para ele', 'Marcar tags nessa demanda'] },
   [TipoPropostaIaEnum.ATRIBUIR_TAG]: { todos: ['Marcar outra atividade'], gestor: ['Marcar outra demanda', 'Quanto tempo o projeto consumiu este mês?'] },
   [TipoPropostaIaEnum.ANOTAR_PAD]: { todos: ['Mostrar meu pad', 'O que eu tenho pra fazer hoje?'] },
@@ -86,6 +88,8 @@ export const ROTULO_TIPO_PROPOSTA: Record<TipoPropostaIaEnum, string> = {
   [TipoPropostaIaEnum.CRIAR_DEMANDA]: 'Criar demanda',
   [TipoPropostaIaEnum.DESCREVER_DEMANDA]: 'Descrever demanda',
   [TipoPropostaIaEnum.CONECTAR_DEMANDA]: 'Conectar demanda',
+  [TipoPropostaIaEnum.CONCLUIR_DEMANDA]: 'Concluir demanda',
+  [TipoPropostaIaEnum.MOVER_ATIVIDADE]: 'Mover atividade',
 };
 
 export const ROTULO_STATUS_PROPOSTA: Record<StatusPropostaIaEnum, string> = {

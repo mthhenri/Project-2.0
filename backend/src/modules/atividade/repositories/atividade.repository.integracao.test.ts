@@ -416,3 +416,22 @@ testarComBanco('buscarPorNome: com usuarioId só entram atividades de demandas e
   const todas = (await repositorio.buscarPorNome({ texto: 'zj', usuarioId: null, limite: 8 })).map((atividade) => atividade.id);
   assert.deepEqual(todas.sort(), [dela.id, alheia.id].sort());
 });
+
+testarComBanco('alterar demandaId: muda a atividade de demanda e as execuções vão junto (task 229)', async (conexao) => {
+  const { projeto, demanda, usuario } = await cenario(conexao);
+  const destino = await criarDemanda(conexao, { projetoId: projeto.id, nome: 'Demanda Destino' });
+  const atividade = await criarAtividade(conexao, { demandaId: demanda.id, usuarioId: usuario.id, nome: 'Mudar de lugar' });
+  await criarExecucao(conexao, { atividadeId: atividade.id, inicioData: '2026-01-15T09:00:00-03:00', fimData: '2026-01-15T10:00:00-03:00' });
+  const repositorio = repositorioDe(conexao);
+
+  const alterada = await repositorio.alterar({ id: atividade.id, demandaId: destino.id });
+  assert.equal(alterada.demandaId, destino.id);
+  assert.equal((await repositorio.recuperar({ id: atividade.id }))?.demandaId, destino.id);
+  assert.equal(await repositorio.possuiExecucao({ id: atividade.id }), true, 'a execução continua ligada à atividade, agora na nova demanda');
+  assert.deepEqual(ids((await repositorio.listar({ demandaId: destino.id, allRows: true } as never)).itens), [atividade.id]);
+  assert.deepEqual(ids((await repositorio.listar({ demandaId: demanda.id, allRows: true } as never)).itens), []);
+
+  const devolvida = await repositorio.alterar({ id: atividade.id, demandaId: demanda.id });
+  assert.equal(devolvida.demandaId, demanda.id);
+});
+

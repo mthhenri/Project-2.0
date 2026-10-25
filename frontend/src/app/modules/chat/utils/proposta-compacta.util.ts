@@ -234,6 +234,24 @@ const RESUMIDORES: Record<TipoPropostaIaEnum, (dados: Dados) => ResumoBruto> = {
     campos: [],
     exigeCartaoGrande: true,
   }),
+  [TipoPropostaIaEnum.CONCLUIR_DEMANDA]: (dados) => ({
+    acao: 'Concluir demanda',
+    nome: nomeOu(dados, 'demandaNome', 'Demanda', 'demandaId'),
+    contexto: texto(dados, 'projetoNome'),
+    campos: texto(dados, 'statusAnterior')
+      ? [{ tipo: 'mudanca', antes: rotuloStatusDaDemanda(texto(dados, 'statusAnterior')), depois: rotuloStatusDaDemanda('CONCLUIDA'), diff: false }]
+      : [],
+    // O aviso das atividades que continuam abertas precisa ser lido antes de confirmar.
+    exigeCartaoGrande: numero(dados, 'atividadesEmAberto') > 0,
+  }),
+  [TipoPropostaIaEnum.MOVER_ATIVIDADE]: (dados) => ({
+    acao: 'Mover atividade',
+    nome: nomeOu(dados, 'atividadeNome', 'Atividade', 'atividadeId'),
+    campos: [
+      { tipo: 'mudanca', antes: nomeOu(dados, 'demandaOrigemNome', 'Demanda', 'demandaOrigemId'), depois: nomeOu(dados, 'demandaDestinoNome', 'Demanda', 'demandaDestinoId'), diff: false },
+      { tipo: 'chip', texto: 'Execuções vão junto' },
+    ],
+  }),
   [TipoPropostaIaEnum.CONECTAR_DEMANDA]: (dados) => ({
     acao: 'Conectar',
     nome: `${nomeOu(dados, 'demandaOrigemNome', 'Demanda', 'demandaOrigemId')} ${dados['ehBidirecional'] === true ? '↔' : '→'} ${nomeOu(dados, 'demandaDestinoNome', 'Demanda', 'demandaDestinoId')}`,

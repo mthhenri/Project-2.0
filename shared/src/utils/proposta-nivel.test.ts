@@ -52,6 +52,8 @@ test('o padrão segue a tabela de níveis da guarda-chuva', () => {
     TipoPropostaIaEnum.DESCREVER_DEMANDA,
     TipoPropostaIaEnum.SUSPENDER_CHECKIN,
     TipoPropostaIaEnum.ATRIBUIR_MEMBRO,
+    TipoPropostaIaEnum.CONCLUIR_DEMANDA,
+    TipoPropostaIaEnum.MOVER_ATIVIDADE,
   ];
   for (const chave of fazEAvisa) assert.equal(nivelPadraoDaChave(chave), PropostaIaNivelEnum.FAZ_E_AVISA, chave);
   for (const chave of pergunta) assert.equal(nivelPadraoDaChave(chave), PropostaIaNivelEnum.PERGUNTA, chave);

@@ -252,7 +252,7 @@ test('alterar: sem execução em andamento aceita qualquer troca de status', asy
 test('alterar: a prioridade é repassada ao repository, inclusive sem mexer nos outros campos', async () => {
   const repo = repositorio();
   await criarServico(repo).alterar({ id: 10, prioridade: TipoAtividadePrioridadeEnum.URGENTE }, GESTOR);
-  assert.deepEqual(repo.gravacoes[0].argumento, { id: 10, nome: undefined, status: undefined, prioridade: TipoAtividadePrioridadeEnum.URGENTE });
+  assert.deepEqual(repo.gravacoes[0].argumento, { id: 10, nome: undefined, status: undefined, prioridade: TipoAtividadePrioridadeEnum.URGENTE, demandaId: undefined });
 });
 
 // ---------------------------------------------------------------------------
@@ -310,4 +310,52 @@ test('alterarTags: lista vazia remove todas as tags', async () => {
   const repo = repositorio();
   await criarServico(repo, tagExistente).alterarTags({ id: 10, tagIds: [] }, GESTOR);
   assert.deepEqual(repo.gravacoes, [{ metodo: 'alterarTags', argumento: { atividadeId: 10, tagIds: [] } }]);
+});
+
+// ---------------------------------------------------------------------------
+// Mudar a atividade de demanda (task 229)
+// ---------------------------------------------------------------------------
+
+const DEMANDA_DESTINO = { id: 20, status: 'PENDENTE' };
+const demandaDeDestino = (status = 'PENDENTE') => ({ recuperar: async () => ({ ...DEMANDA_DESTINO, status }) });
+
+test('alterar demanda: o dono (desenvolvedor com acesso ao destino) muda a atividade e o repository recebe o destino', async () => {
+  const repo = repositorio();
+  await criarServico(repo, {}, demandaDeDestino()).alterar({ id: 10, demandaId: 20 }, DESENVOLVEDOR);
+  assert.deepEqual(repo.gravacoes, [{ metodo: 'alterar', argumento: { id: 10, nome: undefined, status: undefined, prioridade: undefined, demandaId: 20 } }]);
+});
+
+test('alterar demanda: o gestor muda a atividade de outra pessoa, sem precisar de vínculo com o destino', async () => {
+  for (const gestor of [GESTOR, ADMINISTRADOR]) {
+    const repo = repositorio({ validarAcessoDemanda: async () => false });
+    await criarServico(repo, {}, demandaDeDestino()).alterar({ id: 10, demandaId: 20 }, gestor);
+    assert.equal(repo.gravacoes.length, 1);
+  }
+});
+
+test('alterar demanda: desenvolvedor que não é o dono é recusado, mesmo sendo membro da demanda, e nada é gravado', async () => {
+  const repo = repositorio();
+  await assert.rejects(() => criarServico(repo, {}, demandaDeDestino()).alterar({ id: 10, demandaId: 20 }, OUTRO_DESENVOLVEDOR), UnauthorizedAccessException);
+  assert.equal(gravou(repo), false);
+});
+
+test('alterar demanda: o dono sem acesso à demanda de destino é recusado', async () => {
+  const repo = repositorio({ validarAcessoDemanda: async ({ demandaId }: { demandaId: number }) => demandaId !== 20 });
+  await assert.rejects(() => criarServico(repo, {}, demandaDeDestino()).alterar({ id: 10, demandaId: 20 }, DESENVOLVEDOR), UnauthorizedAccessException);
+  assert.equal(gravou(repo), false);
+});
+
+test('alterar demanda: destino inexistente é 404; concluído ou cancelado é recusado; nada é gravado', async () => {
+  const repo = repositorio();
+  await assert.rejects(() => criarServico(repo, {}, { recuperar: async () => null }).alterar({ id: 10, demandaId: 20 }, GESTOR), ResourceNotFoundException);
+  for (const status of ['CONCLUIDA', 'CANCELADA']) {
+    await assert.rejects(() => criarServico(repo, {}, demandaDeDestino(status)).alterar({ id: 10, demandaId: 20 }, GESTOR), BusinessException);
+  }
+  assert.equal(gravou(repo), false);
+});
+
+test('alterar demanda: o destino igual à demanda de hoje não confere nada e só passa o resto', async () => {
+  const repo = repositorio();
+  await criarServico(repo, {}, { recuperar: async () => { throw new Error('não deveria consultar'); } }).alterar({ id: 10, demandaId: 9, nome: 'X' }, DESENVOLVEDOR);
+  assert.equal(repo.gravacoes.length, 1);
 });

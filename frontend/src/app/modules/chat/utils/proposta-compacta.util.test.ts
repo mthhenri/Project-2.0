@@ -23,6 +23,8 @@ const TIPICAS: [TipoPropostaIaEnum, Record<string, unknown>, boolean][] = [
   [Tipo.CRIAR_DEMANDA, { nome: 'Exportar relatório em PDF', projetoNome: 'Portal', demandaPaiNome: 'Relatórios' }, true],
   [Tipo.DESCREVER_DEMANDA, { demandaNome: 'Exportar PDF', descricaoTecnica: 'Curto.' }, false],
   [Tipo.CONECTAR_DEMANDA, { demandaOrigemNome: 'API de relatórios', demandaDestinoNome: 'Exportar PDF', motivo: 'o PDF usa os dados da API' }, true],
+  [Tipo.CONCLUIR_DEMANDA, { demandaNome: 'Tela de login', projetoNome: 'Portal', statusAnterior: 'PLANEJADA', atividadesEmAberto: 0 }, true],
+  [Tipo.MOVER_ATIVIDADE, { atividadeNome: 'Montar o formulário', demandaOrigemNome: 'Login', demandaDestinoNome: 'Relatórios' }, true],
 ];
 
 test('todos os tipos de proposta têm resumo e a regra decide cada um', () => {
@@ -126,4 +128,18 @@ test('corrigir execução: horário e duração de antes e depois, com a duraç�
 test('tipo desconhecido não quebra: vira cartão grande', () => {
   const resumo = resumirProposta('NOVO_TIPO' as TipoPropostaIaEnum, {});
   assert.equal(resumo.compacto, false);
+});
+
+test('concluir demanda com atividades abertas vai para o cartão grande, onde o aviso aparece (task 229)', () => {
+  const resumo = resumirProposta(Tipo.CONCLUIR_DEMANDA, { demandaNome: 'Tela de login', statusAnterior: 'PLANEJADA', atividadesEmAberto: 2 });
+  assert.equal(resumo.compacto, false);
+  assert.equal(resumo.acao, 'Concluir demanda');
+});
+
+test('mover atividade mostra de onde para onde e que as execuções vão junto (task 229)', () => {
+  const resumo = resumirProposta(Tipo.MOVER_ATIVIDADE, { atividadeNome: 'Montar o formulário', demandaOrigemNome: 'Login', demandaDestinoNome: 'Relatórios' });
+  assert.deepEqual(resumo.campos, [
+    { tipo: 'mudanca', antes: 'Login', depois: 'Relatórios', diff: false },
+    { tipo: 'chip', texto: 'Execuções vão junto' },
+  ]);
 });

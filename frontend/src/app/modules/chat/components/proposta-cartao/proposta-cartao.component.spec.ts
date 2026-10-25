@@ -279,6 +279,41 @@ describe('PropostaCartaoComponent — feita pela IA (task 228)', () => {
   });
 });
 
+describe('PropostaCartaoComponent — concluir demanda e mover atividade (task 229)', () => {
+  it('Concluir demanda com atividades abertas mostra o cartão grande com o aviso e que só a demanda é concluída', async () => {
+    const montado = await montarCartao(proposta(TipoPropostaIaEnum.CONCLUIR_DEMANDA, StatusPropostaIaEnum.PENDENTE, {
+      demandaId: 3, demandaNome: 'Relatórios', projetoNome: 'Portal', statusAnterior: 'PLANEJADA', atividadesEmAberto: 2,
+    }));
+    expect(montado.elemento.querySelector('.proposta-cartao')).not.toBeNull();
+    expect(texto(montado)).toContain('Relatórios');
+    expect(texto(montado)).toContain('Planejada → Concluída');
+    expect(montado.elemento.querySelector('.proposta-cartao__aviso')?.textContent).toContain('Ainda há 2 atividades em aberto');
+    expect(montado.elemento.querySelector('.proposta-cartao__aviso')?.textContent).toContain('Só a demanda será concluída');
+  });
+
+  it('Concluir demanda sem atividades abertas cabe numa linha', async () => {
+    const montado = await montarCartao(proposta(TipoPropostaIaEnum.CONCLUIR_DEMANDA, StatusPropostaIaEnum.PENDENTE, {
+      demandaId: 3, demandaNome: 'Relatórios', projetoNome: 'Portal', statusAnterior: 'PLANEJADA', atividadesEmAberto: 0,
+    }));
+    expect(montado.elemento.querySelector('.proposta-cartao')).toBeNull();
+    expect(texto(montado)).toContain('Concluir demanda');
+    expect(botao(montado, 'Confirmar')).toBeDefined();
+  });
+
+  it('Mover atividade mostra de onde para onde e que as execuções vão junto, também nos detalhes', async () => {
+    const montado = await montarCartao(proposta(TipoPropostaIaEnum.MOVER_ATIVIDADE, StatusPropostaIaEnum.PENDENTE, {
+      atividadeId: 5, atividadeNome: 'Montar o formulário', demandaOrigemId: 3, demandaOrigemNome: 'Login', demandaDestinoId: 4, demandaDestinoNome: 'Relatórios',
+    }));
+    expect(texto(montado)).toContain('Mover atividade');
+    expect(texto(montado)).toContain('Execuções vão junto');
+    botao(montado, 'Ver detalhes')!.click();
+    detectar(montado);
+    expect(texto(montado)).toContain('De: Login');
+    expect(texto(montado)).toContain('Para: Relatórios');
+    expect(texto(montado)).toContain('As execuções da atividade vão junto');
+  });
+});
+
 describe('PropostaCartaoComponent — Recusar e Desfazer', () => {
   it('Recusar faz POST em /recusar e o cartão fica sem botões, sem oferecer desfazer no toast', async () => {
     const montado = await montarCartao();

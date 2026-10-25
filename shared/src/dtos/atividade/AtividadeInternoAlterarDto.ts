@@ -12,4 +12,6 @@ export class AtividadeInternoAlterarDto {
   nome?: string;
   status?: TipoAtividadeStatusEnum;
   prioridade?: TipoAtividadePrioridadeEnum;
+  /** Muda a atividade de demanda (task 229); as execuções vão junto, pois pertencem à atividade. */
+  demandaId?: number;
 }

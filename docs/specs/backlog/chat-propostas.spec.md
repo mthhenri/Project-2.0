@@ -139,7 +139,7 @@ administrador.
 | 226 | [Cartão compacto](../done/226-proposta-cartao-compacto.spec.md) | cartão de uma linha para mudança pequena e a linha de "feito" com Desfazer | 224, 225 |
 | 227 | [Propostas em grupo](../done/227-propostas-em-grupo.spec.md) | grupo no fim da resposta, Confirmar todas, Recusar todas e Desfazer todas, dependência entre linhas | 225, 226 |
 | 228 | [Autonomia por tipo](../done/228-propostas-autonomia-por-tipo.spec.md) | regra de níveis no `shared`, campo na `configuracao_ia`, painel na IA Config., "faz e avisa", linha azul, gestor nas conexões | 226, 227 |
-| 229 | [Concluir demanda e mover atividade](229-proposta-concluir-demanda-e-mover-atividade.spec.md) | duas propostas novas (nível Pergunta) | 228 (nível); 224, 226 (cartão) |
+| 229 | [Concluir demanda e mover atividade](../done/229-proposta-concluir-demanda-e-mover-atividade.spec.md) | duas propostas novas (nível Pergunta) | 228 (nível); 224, 226 (cartão) |
 | 230 | [Desconectar demandas e excluir atividade](230-proposta-desconectar-demandas-e-excluir-atividade.spec.md) | duas propostas novas e a exceção nomeada ao "sem exclusão" | 228 (nível) |
 | 231 | [Justificar o ponto](231-proposta-justificar-ponto.spec.md) | proposta nova, só gestor, sempre pergunta | 228 (nível) |
 

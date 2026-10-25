@@ -25,6 +25,8 @@ const NIVEL_PADRAO_POR_TIPO: Readonly<Record<TipoPropostaIaEnum, PropostaIaNivel
   [TipoPropostaIaEnum.ALTERAR_ATIVIDADE]:  PropostaIaNivelEnum.PERGUNTA,
   [TipoPropostaIaEnum.CRIAR_DEMANDA]:      PropostaIaNivelEnum.PERGUNTA,
   [TipoPropostaIaEnum.ALTERAR_DEMANDA]:    PropostaIaNivelEnum.PERGUNTA,
+  [TipoPropostaIaEnum.CONCLUIR_DEMANDA]:   PropostaIaNivelEnum.PERGUNTA,
+  [TipoPropostaIaEnum.MOVER_ATIVIDADE]:    PropostaIaNivelEnum.PERGUNTA,
   [TipoPropostaIaEnum.DESCREVER_DEMANDA]:  PropostaIaNivelEnum.PERGUNTA,
   [TipoPropostaIaEnum.SUSPENDER_CHECKIN]:  PropostaIaNivelEnum.PERGUNTA,
   [TipoPropostaIaEnum.ATRIBUIR_MEMBRO]:    PropostaIaNivelEnum.PERGUNTA,
