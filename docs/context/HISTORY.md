@@ -12,6 +12,22 @@
 
 ---
 
+## 2026-10-25 — Task 230: propostas de desconectar demandas e excluir atividade sem execução
+
+Sétima task das propostas da IA (`chat-propostas.spec.md`). A IA passa a propor **desconectar duas demandas** (conexão do grafo, só gestor, nível Faz e avisa) e **excluir uma atividade que nunca teve execução** (dono e gestor, nível Pergunta). São as **duas únicas exclusões** que a IA pode propor; qualquer outra continua proibida.
+
+- **Exceção nomeada ao "sem exclusão":** `sem-exclusao.ts` ganhou `EXCECOES_DE_EXCLUSAO_DA_IA` (lista fixa: as ferramentas `propor_desconectar_demanda` e `propor_excluir_atividade` e os tipos `DESCONECTAR_DEMANDA` e `EXCLUIR_ATIVIDADE`) e `exclusaoNaoPermitida`, que o registro de ferramentas passou a usar no lugar de `sugereExclusao`. O teste do registro prova que as duas passam e que uma terceira com "excluir" no nome é recusada, e outro teste quebra se a lista crescer. Exclusão continua soft delete.
+- **Pontos em aberto, decididos pelo agente** (o autor ainda não confirmou): (1) a ferramenta de desconectar recebe o **par origem → destino** no sentido em que o grafo mostra a conexão (não o id da conexão, que o modelo não tem); o executor reencontra a conexão pelo par na hora de confirmar. (2) Sem campo "motivo" nas duas (diferente de conectar): o cartão mostra só o que muda. (3) `AtividadeService.excluir` e `restaurar` **passaram a receber o usuário** e exigir gestor ou o dono da atividade (a rota segue `@GestorOnly`, então a tela não mudou); o desfazer do dono desenvolvedor precisa disso. (4) Recusa por execução dos dois lados: a ferramenta (com o texto que o modelo repassa) e o executor (se a atividade ganhou execução entre a proposta e o clique); o desfazer também recusa se há execução nova.
+- **Shared:** `TipoPropostaIaEnum.DESCONECTAR_DEMANDA`/`EXCLUIR_ATIVIDADE` (comentário do enum atualizado), DTOs `ProporDesconectarDemandaDto`/`PropostaDesconectarDemandaDadosDto` e `ProporExcluirAtividadeDto`/`PropostaExcluirAtividadeDadosDto`; níveis padrão Faz e avisa e Pergunta. **Banco:** migration `0057` (só as linhas de `tipo_proposta_ia`; aplica, reverte e reaplica).
+- **Backend:** `DemandaRepository.recuperarConexaoPorPar` (consulta nova com teste de integração); `AtividadeRepository.recuperarExcluida` devolve o dono; executores e ferramentas novos registrados nos módulos de demanda e de atividade; `CriarAtividadeExecutor` passa o usuário ao `excluir`.
+- **Frontend:** rótulos, próximos passos, resumo de uma linha (desconectar mostra "origem → destino" ou "↔" e "As demandas ficam onde estão"; excluir mostra a demanda e "Sem execuções"), cartão grande dos dois e as duas regras no painel de autonomia.
+- **Testes:** `shared` 245; `backend` 1403 unitários (18 novos: 6 de desconectar, 7 de excluir, 2 de `AtividadeService.excluir`/`restaurar` por dono e gestor, 2 do registro e 1 de `sem-exclusao`); integração 323 (1 novo, mais o `recuperarExcluida` atualizado); `frontend` 1960 (4 novos). Sem lint (`PROBLEMS.md` P-001).
+- **Ao vivo** (administrador, IA de verdade, backend reiniciado com o código novo, numa atividade e numa conexão temporárias): "Desconecta a demanda Exportação em PDF de Ajustes gerais" **foi feito na hora** (linha azul "Feito pela IA", conexão removida) e o Desfazer a recriou; "Exclui a atividade Teste 230 sem execucao" gerou o cartão compacto, a confirmação excluiu e o Desfazer restaurou (conferido no banco); "Exclui a atividade Teste 230 com execucao" não gerou proposta e a IA explicou que a exclusão é pela tela de Atividades. Três tamanhos e dois temas, sem erro de console nem rolagem horizontal. O cenário temporário foi limpo (atividades 19 e 20, execução 17, conexão 5).
+- **Achado só na verificação:** o cartão grande de Excluir dizia "Você pode desfazer por 30 minutos" mesmo depois de Desfeita; a frase saiu (o botão Desfazer já diz isso).
+- **Limites:** só o administrador foi exercitado ao vivo; o desenvolvedor dono e o não dono estão só em teste de serviço, executor e ferramenta. "Desfazer" do dono desenvolvedor depende da regra nova do `restaurar`, também só em teste.
+
+---
+
 ## 2026-10-25 — Task 229: propostas de concluir demanda e mover atividade
 
 Sexta task das propostas da IA (`chat-propostas.spec.md`). A IA passa a propor **concluir uma demanda** e **mover uma atividade para outra demanda**, sempre com confirmação (nível Pergunta, regra da 228) e Desfazer por 30 minutos.

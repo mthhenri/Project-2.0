@@ -252,6 +252,17 @@ const RESUMIDORES: Record<TipoPropostaIaEnum, (dados: Dados) => ResumoBruto> = {
       { tipo: 'chip', texto: 'Execuções vão junto' },
     ],
   }),
+  [TipoPropostaIaEnum.DESCONECTAR_DEMANDA]: (dados) => ({
+    acao: 'Desconectar',
+    nome: `${nomeOu(dados, 'demandaOrigemNome', 'Demanda', 'demandaOrigemId')} ${dados['ehBidirecional'] === true ? '↔' : '→'} ${nomeOu(dados, 'demandaDestinoNome', 'Demanda', 'demandaDestinoId')}`,
+    campos: [{ tipo: 'chip', texto: 'As demandas ficam onde estão' }],
+  }),
+  [TipoPropostaIaEnum.EXCLUIR_ATIVIDADE]: (dados) => ({
+    acao: 'Excluir atividade',
+    nome: nomeOu(dados, 'atividadeNome', 'Atividade', 'atividadeId'),
+    contexto: texto(dados, 'demandaNome'),
+    campos: [{ tipo: 'chip', texto: 'Sem execuções' }],
+  }),
   [TipoPropostaIaEnum.CONECTAR_DEMANDA]: (dados) => ({
     acao: 'Conectar',
     nome: `${nomeOu(dados, 'demandaOrigemNome', 'Demanda', 'demandaOrigemId')} ${dados['ehBidirecional'] === true ? '↔' : '→'} ${nomeOu(dados, 'demandaDestinoNome', 'Demanda', 'demandaDestinoId')}`,

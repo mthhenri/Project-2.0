@@ -1,4 +1,7 @@
-/** Ações que a IA pode propor ao usuário (tabela `tipo_proposta_ia`). Nenhuma exclui dados. */
+/**
+ * Ações que a IA pode propor ao usuário (tabela `tipo_proposta_ia`). Só duas tiram algo do ar, por exceção nomeada (task 230, ver `sem-exclusao.ts`):
+ * `DESCONECTAR_DEMANDA` e `EXCLUIR_ATIVIDADE` (sem execução), ambas por soft delete e desfazíveis. Nenhuma outra exclui dados.
+ */
 export enum TipoPropostaIaEnum {
   INICIAR_EXECUCAO   = 'INICIAR_EXECUCAO',
   PAUSAR_EXECUCAO    = 'PAUSAR_EXECUCAO',
@@ -18,4 +21,6 @@ export enum TipoPropostaIaEnum {
   CONECTAR_DEMANDA   = 'CONECTAR_DEMANDA',
   CONCLUIR_DEMANDA   = 'CONCLUIR_DEMANDA',
   MOVER_ATIVIDADE    = 'MOVER_ATIVIDADE',
+  DESCONECTAR_DEMANDA = 'DESCONECTAR_DEMANDA',
+  EXCLUIR_ATIVIDADE  = 'EXCLUIR_ATIVIDADE',
 }

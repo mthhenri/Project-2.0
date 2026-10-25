@@ -264,11 +264,17 @@ export class AtividadeService {
     }
   }
 
-  /** Realiza soft delete da atividade. Restrito a gestores. */
-  async excluir(dto: AtividadeRecuperarDto): Promise<StandardResponse<void>> {
+  /**
+   * Realiza soft delete da atividade. A rota é só do gestor (`@GestorOnly`); a regra também mora aqui porque a IA exclui pelo executor (task 230):
+   * gestor, ou o dono da atividade.
+   */
+  async excluir(dto: AtividadeRecuperarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<void>> {
     const atividadeEncontrada = await this.atividadeRepositorio.recuperar({ id: dto.id });
     if (!atividadeEncontrada) {
       throw new ResourceNotFoundException('Atividade');
+    }
+    if (!temPermissaoDeGestor(usuarioAtivo.tipo) && atividadeEncontrada.usuarioId !== usuarioAtivo.sub) {
+      throw new UnauthorizedAccessException('Só o dono da atividade ou o gestor exclui a atividade');
     }
 
     await this.atividadeRepositorio.excluir({ id: dto.id });
@@ -280,11 +286,14 @@ export class AtividadeService {
     };
   }
 
-  /** Restaura a atividade excluída (soft delete revertido, sem cascata). Restrito a gestores. */
-  async restaurar(dto: AtividadeRestaurarDto): Promise<StandardResponse<AtividadeRestauradaDto>> {
+  /** Restaura a atividade excluída (soft delete revertido, sem cascata). A rota é do gestor; pela IA, também o dono da atividade (task 230). */
+  async restaurar(dto: AtividadeRestaurarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<AtividadeRestauradaDto>> {
     const atividadeExcluida = await this.atividadeRepositorio.recuperarExcluida({ id: dto.id });
     if (!atividadeExcluida) {
       throw new ResourceNotFoundException('Atividade');
+    }
+    if (!temPermissaoDeGestor(usuarioAtivo.tipo) && atividadeExcluida.usuarioId !== usuarioAtivo.sub) {
+      throw new UnauthorizedAccessException('Só o dono da atividade ou o gestor restaura a atividade');
     }
 
     if (!atividadeExcluida.demandaAtiva) {

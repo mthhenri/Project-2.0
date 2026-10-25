@@ -6,7 +6,7 @@ import { StatusPropostaIaEnum, TipoPropostaIaEnum, TipoUsuarioEnum } from '@proj
 import { PropostaIaService } from '../../proposta-ia/services/proposta-ia.service';
 import { DescricaoCampoIa } from '../domain/esquema-da-classe';
 import { ClasseDeEntrada, FerramentaIa, PermissaoFerramentaIa } from '../domain/ferramenta-ia';
-import { sugereExclusao } from '../domain/sem-exclusao';
+import { EXCECOES_DE_EXCLUSAO_DA_IA, exclusaoNaoPermitida, sugereExclusao } from '../domain/sem-exclusao';
 import { FerramentaPropostaIa } from '../ferramentas/ferramenta-proposta-ia';
 import { FerramentaIaRegistro, LIMITE_RESULTADO_CARACTERES, NOTA_DO_RESULTADO_DA_PROPOSTA } from './ferramenta-ia.registro';
 
@@ -139,7 +139,23 @@ test('sem exclusão: o registro recusa ferramenta com nome de exclusão e nenhum
     assert.throws(() => registro.registrar(ferramentaDeLeitura('QUALQUER', nome).ferramenta), /não exclui nada/, nome);
   }
   assert.equal(sugereExclusao('consultar_data_e_hora'), false);
-  assert.deepEqual(Object.values(TipoPropostaIaEnum).filter(sugereExclusao), []);
+  assert.deepEqual(Object.values(TipoPropostaIaEnum).filter(exclusaoNaoPermitida), []);
+});
+
+test('sem exclusão: a exceção nomeada (task 230) vale só para as duas ferramentas da lista fechada; uma terceira com "excluir" no nome é recusada', () => {
+  const registro = new FerramentaIaRegistro();
+  for (const nome of ['propor_excluir_atividade', 'propor_desconectar_demanda']) {
+    assert.doesNotThrow(() => registro.registrar(ferramentaDeLeitura('QUALQUER', nome).ferramenta), nome);
+  }
+  for (const nome of ['propor_excluir_demanda', 'propor_excluir_execucao', 'excluir_atividade', 'propor_apagar_atividade', 'propor_remover_tag']) {
+    assert.throws(() => registro.registrar(ferramentaDeLeitura('QUALQUER', nome).ferramenta), /não exclui nada/, nome);
+  }
+});
+
+test('sem exclusão: a lista de exceções é fechada, e os tipos de proposta que sugerem exclusão são só os da lista', () => {
+  // Se a lista crescer, este teste quebra: o nome novo precisa de uma spec que o aprove.
+  assert.deepEqual([...EXCECOES_DE_EXCLUSAO_DA_IA].sort(), ['DESCONECTAR_DEMANDA', 'EXCLUIR_ATIVIDADE', 'propor_desconectar_demanda', 'propor_excluir_atividade']);
+  assert.deepEqual(Object.values(TipoPropostaIaEnum).filter(sugereExclusao), [TipoPropostaIaEnum.EXCLUIR_ATIVIDADE]);
 });
 
 /** Ferramenta de proposta de teste: a única coisa que ela enxerga é a service de proposta. */

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { sugereExclusao } from './sem-exclusao';
+import { exclusaoNaoPermitida, sugereExclusao } from './sem-exclusao';
 
 // "A IA não exclui dados": nenhuma ferramenta nem tipo de proposta pode ter nome que sugira exclusão.
 
@@ -14,4 +14,12 @@ test('nomes de ferramentas legítimas passam', () => {
   for (const nome of ['consultar_data_e_hora', 'listar_minhas_atividades', 'propor_criar_atividade', 'propor_iniciar_execucao', 'propor_atribuir_tag', 'consultar_pad']) {
     assert.equal(sugereExclusao(nome), false, nome);
   }
+});
+
+test('a exceção nomeada libera só os nomes da lista fechada', () => {
+  assert.equal(sugereExclusao('propor_excluir_atividade'), true);
+  assert.equal(exclusaoNaoPermitida('propor_excluir_atividade'), false);
+  assert.equal(exclusaoNaoPermitida('EXCLUIR_ATIVIDADE'), false);
+  assert.equal(exclusaoNaoPermitida('propor_excluir_demanda'), true);
+  assert.equal(exclusaoNaoPermitida('propor_atribuir_tag'), false);
 });

@@ -366,12 +366,13 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
    * Recupera a atividade **excluída**. É a única leitura que filtra `is_deleted = true`: a restauração
    * precisa do registro apagado para validar unicidade e dependências antes de reativá-lo.
    */
-  async recuperarExcluida(dto: AtividadeRestaurarDto): Promise<(AtividadeRestauradaDto & { demandaAtiva: boolean }) | null> {
-    const resultado = await this.executarConsulta<AtividadeRestauradaDto & { demandaAtiva: boolean }>(
+  async recuperarExcluida(dto: AtividadeRestaurarDto): Promise<(AtividadeRestauradaDto & { demandaAtiva: boolean; usuarioId: number }) | null> {
+    const resultado = await this.executarConsulta<AtividadeRestauradaDto & { demandaAtiva: boolean; usuarioId: number }>(
       `SELECT
          atividade.id,
          atividade.demanda_id AS "demandaId",
          atividade.nome,
+         atividade.usuario_id AS "usuarioId",
          EXISTS(
            SELECT 1 FROM demanda
            WHERE demanda.id = atividade.demanda_id

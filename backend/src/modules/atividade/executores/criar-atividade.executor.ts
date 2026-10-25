@@ -51,6 +51,6 @@ export class CriarAtividadeExecutor implements ExecutorPropostaIa {
     if (await this.atividadeRepositorio.possuiExecucao({ id: atividadeId })) {
       throw new BusinessException('A atividade já tem execuções: não dá para desfazer a criação');
     }
-    await this.atividadeService.excluir({ id: atividadeId });
+    await this.atividadeService.excluir({ id: atividadeId }, usuarioAtivo);
   }
 }

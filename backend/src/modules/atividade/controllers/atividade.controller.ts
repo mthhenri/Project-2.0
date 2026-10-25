@@ -91,8 +91,11 @@ export class AtividadeController {
   @ApiResponse({ status: 404, description: 'Atividade não encontrada', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
   @GestorOnly()
   @Delete(':id')
-  excluir(@Param('id', ParseIntPipe) id: number) {
-    return this.atividadeService.excluir({ id });
+  excluir(
+    @Param('id', ParseIntPipe) id: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ) {
+    return this.atividadeService.excluir({ id }, usuarioAtivo);
   }
 
   @ApiOperation({ summary: 'Restaurar atividade excluída desfazendo o soft delete (somente gestor)' })
@@ -103,8 +106,11 @@ export class AtividadeController {
   @ApiResponse({ status: 404, description: 'Atividade não encontrada entre as excluídas', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
   @GestorOnly()
   @Patch(':id/restaurar')
-  restaurar(@Param('id', ParseIntPipe) id: number) {
-    return this.atividadeService.restaurar({ id });
+  restaurar(
+    @Param('id', ParseIntPipe) id: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ) {
+    return this.atividadeService.restaurar({ id }, usuarioAtivo);
   }
 
   @ApiOperation({ summary: 'Sincronizar tags da atividade (gestor ou desenvolvedor dono da atividade)' })

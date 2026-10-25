@@ -855,6 +855,25 @@ export class DemandaRepository extends BaseRepository<Demanda> {
     return resultado[0].existe;
   }
 
+  /** A conexão ativa de origem → destino, com o sentido (a IA desconecta pelo par de demandas). */
+  async recuperarConexaoPorPar(dto: DemandaValidarConexaoDto): Promise<DemandaConexaoCriadaDto | null> {
+    const resultado = await this.executarConsulta<DemandaConexaoCriadaDto>(
+      `SELECT
+         demanda_conexao.id,
+         demanda_conexao.demanda_origem_id  AS "demandaOrigemId",
+         demanda_conexao.demanda_destino_id AS "demandaDestinoId",
+         demanda_conexao.eh_bidirecional    AS "ehBidirecional",
+         demanda_conexao.created_date       AS "createdDate"
+       FROM demanda_conexao
+       WHERE demanda_conexao.demanda_origem_id = :demandaOrigemId
+         AND demanda_conexao.demanda_destino_id = :demandaDestinoId
+         AND demanda_conexao.is_deleted = false
+       LIMIT 1`,
+      { demandaOrigemId: dto.demandaOrigemId, demandaDestinoId: dto.demandaDestinoId },
+    );
+    return resultado[0] ?? null;
+  }
+
   /**
    * Insere nova conexão entre demandas.
    */

@@ -261,12 +261,22 @@ test('alterar: a prioridade é repassada ao repository, inclusive sem mexer nos 
 
 test('excluir: atividade inexistente é 404; existente faz o soft delete', async () => {
   const inexistente = repositorio({ recuperar: async () => null });
-  await assert.rejects(() => criarServico(inexistente).excluir({ id: 10 }), ResourceNotFoundException);
+  await assert.rejects(() => criarServico(inexistente).excluir({ id: 10 }, GESTOR), ResourceNotFoundException);
   assert.equal(gravou(inexistente), false);
 
   const repo = repositorio();
-  await criarServico(repo).excluir({ id: 10 });
+  await criarServico(repo).excluir({ id: 10 }, GESTOR);
   assert.deepEqual(repo.gravacoes, [{ metodo: 'excluir', argumento: { id: 10 } }]);
+});
+
+test('excluir: o dono (desenvolvedor) exclui a própria atividade; quem não é o dono nem gestor é recusado e nada é gravado (task 230)', async () => {
+  const donoExclui = repositorio();
+  await criarServico(donoExclui).excluir({ id: 10 }, DESENVOLVEDOR);
+  assert.equal(donoExclui.gravacoes.length, 1);
+
+  const outroExclui = repositorio();
+  await assert.rejects(() => criarServico(outroExclui).excluir({ id: 10 }, OUTRO_DESENVOLVEDOR), UnauthorizedAccessException);
+  assert.equal(gravou(outroExclui), false);
 });
 
 // ---------------------------------------------------------------------------

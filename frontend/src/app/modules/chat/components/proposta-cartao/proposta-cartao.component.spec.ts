@@ -314,6 +314,32 @@ describe('PropostaCartaoComponent — concluir demanda e mover atividade (task 2
   });
 });
 
+describe('PropostaCartaoComponent — desconectar demandas e excluir atividade (task 230)', () => {
+  it('Desconectar mostra as duas demandas e que só a conexão sai, nos detalhes', async () => {
+    const montado = await montarCartao(proposta(TipoPropostaIaEnum.DESCONECTAR_DEMANDA, StatusPropostaIaEnum.PENDENTE, {
+      demandaOrigemId: 3, demandaOrigemNome: 'API', demandaDestinoId: 4, demandaDestinoNome: 'Tela', ehBidirecional: false,
+    }));
+    expect(texto(montado)).toContain('Desconectar');
+    expect(texto(montado)).toContain('API → Tela');
+    botao(montado, 'Ver detalhes')!.click();
+    detectar(montado);
+    expect(texto(montado)).toContain('Conectada a: Tela');
+    expect(texto(montado)).toContain('as demandas ficam onde estão');
+  });
+
+  it('Excluir atividade mostra o nome, a demanda e que ela não tem execuções, nos detalhes', async () => {
+    const montado = await montarCartao(proposta(TipoPropostaIaEnum.EXCLUIR_ATIVIDADE, StatusPropostaIaEnum.PENDENTE, {
+      atividadeId: 5, atividadeNome: 'Montar o formulário', demandaNome: 'Login',
+    }));
+    expect(texto(montado)).toContain('Excluir atividade');
+    expect(texto(montado)).toContain('Sem execuções');
+    botao(montado, 'Ver detalhes')!.click();
+    detectar(montado);
+    expect(texto(montado)).toContain('Demanda: Login');
+    expect(texto(montado)).toContain('Esta atividade não tem execuções');
+  });
+});
+
 describe('PropostaCartaoComponent — Recusar e Desfazer', () => {
   it('Recusar faz POST em /recusar e o cartão fica sem botões, sem oferecer desfazer no toast', async () => {
     const montado = await montarCartao();

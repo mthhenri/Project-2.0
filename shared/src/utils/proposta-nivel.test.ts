@@ -40,6 +40,7 @@ test('o padrão segue a tabela de níveis da guarda-chuva', () => {
     TipoPropostaIaEnum.ATRIBUIR_TAG,
     TipoPropostaIaEnum.DESCREVER_EXECUCAO,
     TipoPropostaIaEnum.CONECTAR_DEMANDA,
+    TipoPropostaIaEnum.DESCONECTAR_DEMANDA,
     TipoPropostaIaEnum.CRIAR_ATIVIDADE,
     TipoPropostaIaEnum.INICIAR_EXECUCAO,
     TipoPropostaIaEnum.PAUSAR_EXECUCAO,
@@ -54,6 +55,7 @@ test('o padrão segue a tabela de níveis da guarda-chuva', () => {
     TipoPropostaIaEnum.ATRIBUIR_MEMBRO,
     TipoPropostaIaEnum.CONCLUIR_DEMANDA,
     TipoPropostaIaEnum.MOVER_ATIVIDADE,
+    TipoPropostaIaEnum.EXCLUIR_ATIVIDADE,
   ];
   for (const chave of fazEAvisa) assert.equal(nivelPadraoDaChave(chave), PropostaIaNivelEnum.FAZ_E_AVISA, chave);
   for (const chave of pergunta) assert.equal(nivelPadraoDaChave(chave), PropostaIaNivelEnum.PERGUNTA, chave);

@@ -483,3 +483,18 @@ testarComBanco('buscarPorNome: com usuarioId só entram demandas de projetos em 
   assert.equal(todas.some((demanda) => demanda.id === alheia.id), true);
   assert.equal((await repositorio.buscarPorNome({ texto: 'zq', usuarioId: null, limite: 1 })).length, 1);
 });
+
+testarComBanco('recuperarConexaoPorPar: acha a conexão ativa só no sentido origem → destino, com o sentido; a excluída não conta', async (conexao) => {
+  const repositorio = criarRepositorio(DemandaRepository, conexao);
+  const [a, b] = await tresDemandas(conexao, 2);
+  assert.equal(await repositorio.recuperarConexaoPorPar({ demandaOrigemId: a.id, demandaDestinoId: b.id }), null);
+
+  const criada = await criarDemandaConexao(conexao, { demandaOrigemId: a.id, demandaDestinoId: b.id });
+  const achada = await repositorio.recuperarConexaoPorPar({ demandaOrigemId: a.id, demandaDestinoId: b.id });
+  assert.equal(achada?.id, criada.id);
+  assert.equal(achada?.ehBidirecional, false);
+  assert.equal(await repositorio.recuperarConexaoPorPar({ demandaOrigemId: b.id, demandaDestinoId: a.id }), null, 'o sentido inverso não é a mesma conexão');
+
+  await repositorio.excluirConexao({ demandaId: a.id, conexaoId: criada.id });
+  assert.equal(await repositorio.recuperarConexaoPorPar({ demandaOrigemId: a.id, demandaDestinoId: b.id }), null);
+});

@@ -25,6 +25,8 @@ const TIPICAS: [TipoPropostaIaEnum, Record<string, unknown>, boolean][] = [
   [Tipo.CONECTAR_DEMANDA, { demandaOrigemNome: 'API de relatórios', demandaDestinoNome: 'Exportar PDF', motivo: 'o PDF usa os dados da API' }, true],
   [Tipo.CONCLUIR_DEMANDA, { demandaNome: 'Tela de login', projetoNome: 'Portal', statusAnterior: 'PLANEJADA', atividadesEmAberto: 0 }, true],
   [Tipo.MOVER_ATIVIDADE, { atividadeNome: 'Montar o formulário', demandaOrigemNome: 'Login', demandaDestinoNome: 'Relatórios' }, true],
+  [Tipo.DESCONECTAR_DEMANDA, { demandaOrigemNome: 'API de relatórios', demandaDestinoNome: 'Exportar PDF', ehBidirecional: false }, true],
+  [Tipo.EXCLUIR_ATIVIDADE, { atividadeNome: 'Montar o formulário', demandaNome: 'Login' }, true],
 ];
 
 test('todos os tipos de proposta têm resumo e a regra decide cada um', () => {
@@ -142,4 +144,18 @@ test('mover atividade mostra de onde para onde e que as execuções vão junto (
     { tipo: 'mudanca', antes: 'Login', depois: 'Relatórios', diff: false },
     { tipo: 'chip', texto: 'Execuções vão junto' },
   ]);
+});
+
+test('desconectar mostra as duas demandas com a seta do sentido e que elas ficam onde estão (task 230)', () => {
+  const unica = resumirProposta(Tipo.DESCONECTAR_DEMANDA, { demandaOrigemNome: 'API', demandaDestinoNome: 'Tela', ehBidirecional: false });
+  assert.equal(unica.nome, 'API → Tela');
+  assert.deepEqual(unica.campos, [{ tipo: 'chip', texto: 'As demandas ficam onde estão' }]);
+  assert.equal(resumirProposta(Tipo.DESCONECTAR_DEMANDA, { demandaOrigemNome: 'API', demandaDestinoNome: 'Tela', ehBidirecional: true }).nome, 'API ↔ Tela');
+});
+
+test('excluir atividade mostra o nome, a demanda e que ela não tem execuções (task 230)', () => {
+  const resumo = resumirProposta(Tipo.EXCLUIR_ATIVIDADE, { atividadeNome: 'Montar o formulário', demandaNome: 'Login' });
+  assert.equal(resumo.acao, 'Excluir atividade');
+  assert.equal(resumo.contexto, 'Login');
+  assert.deepEqual(resumo.campos, [{ tipo: 'chip', texto: 'Sem execuções' }]);
 });

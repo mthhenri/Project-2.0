@@ -140,7 +140,7 @@ administrador.
 | 227 | [Propostas em grupo](../done/227-propostas-em-grupo.spec.md) | grupo no fim da resposta, Confirmar todas, Recusar todas e Desfazer todas, dependência entre linhas | 225, 226 |
 | 228 | [Autonomia por tipo](../done/228-propostas-autonomia-por-tipo.spec.md) | regra de níveis no `shared`, campo na `configuracao_ia`, painel na IA Config., "faz e avisa", linha azul, gestor nas conexões | 226, 227 |
 | 229 | [Concluir demanda e mover atividade](../done/229-proposta-concluir-demanda-e-mover-atividade.spec.md) | duas propostas novas (nível Pergunta) | 228 (nível); 224, 226 (cartão) |
-| 230 | [Desconectar demandas e excluir atividade](230-proposta-desconectar-demandas-e-excluir-atividade.spec.md) | duas propostas novas e a exceção nomeada ao "sem exclusão" | 228 (nível) |
+| 230 | [Desconectar demandas e excluir atividade](../done/230-proposta-desconectar-demandas-e-excluir-atividade.spec.md) | duas propostas novas e a exceção nomeada ao "sem exclusão" | 228 (nível) |
 | 231 | [Justificar o ponto](231-proposta-justificar-ponto.spec.md) | proposta nova, só gestor, sempre pergunta | 228 (nível) |
 
 A 224 e a 225 não dependem de nada e podem ser feitas em qualquer ordem; a 229 a 231 podem ser feitas em qualquer ordem entre si.

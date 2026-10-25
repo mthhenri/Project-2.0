@@ -653,7 +653,7 @@ CREATE UNIQUE INDEX uix_prompt_tipo_versao ON prompt(tipo_prompt_id, versao) WHE
 
 Uma linha por proposta. A IA só **propõe**; a ação roda quando o usuário confirma (uma vez), pela service do domínio. A troca de situação é um `UPDATE` condicional
 (só `PENDENTE` passa), o que impede duas confirmações simultâneas de executar duas vezes. `resultado` guarda o que a ação criou ou alterou (base do "desfazer").
-Não existe tipo de exclusão: a IA não exclui dados. A exceção à "confirmação do usuário" é a autonomia da IA (task 228): no nível "Faz e avisa" a própria IA confirma a proposta na hora e ela fica marcada em `aplicada_pela_ia`.
+Só dois tipos tiram algo do ar, por exceção nomeada (task 230): `DESCONECTAR_DEMANDA` e `EXCLUIR_ATIVIDADE` (sem execução), ambos por soft delete e desfazíveis; a IA não exclui mais nada. A exceção à "confirmação do usuário" é a autonomia da IA (task 228): no nível "Faz e avisa" a própria IA confirma a proposta na hora e ela fica marcada em `aplicada_pela_ia`.
 
 ```sql
 CREATE TABLE proposta_ia (
@@ -763,7 +763,7 @@ Seeds (`codigo` → `descricao`):
 | `tipo_dia_nao_util` | FERIADO→"Feriado", RECESSO→"Recesso", PONTO_FACULTATIVO→"Ponto facultativo" |
 | `tipo_dia_nao_util_duracao` | INTEGRAL→"Integral", MEIO_PERIODO→"Meio período" |
 | `tipo_atividade_prioridade` | URGENTE (1, `#dc2626`), ALTA (2, `#f97316`), MEDIA (3, `#eab308`), BAIXA (4, `#0ea5e9`), INDEFINIDA (5, `#94a3b8`), com `ordem` INTEGER (única entre as ativas) e `cor` VARCHAR(7) além do molde; só a `cor` é editável, só pelo administrador (migration `0036`) |
-| `tipo_proposta_ia` | INICIAR_EXECUCAO, PAUSAR_EXECUCAO, CRIAR_ATIVIDADE, DESCREVER_EXECUCAO, SUSPENDER_CHECKIN, ANOTAR_PAD, CRIAR_DEMANDA, DESCREVER_DEMANDA, CONECTAR_DEMANDA (migration `0035`; `CRIAR_PROJETO` na `0037`; `ALTERAR_ATIVIDADE` na `0039`; `REGISTRAR_EXECUCAO` e `CORRIGIR_EXECUCAO` na `0040`; `ALTERAR_DEMANDA` na `0041`; `ATRIBUIR_MEMBRO` e `ATRIBUIR_TAG` na `0042`; `CONCLUIR_DEMANDA` e `MOVER_ATIVIDADE` na `0056`; sem tipo de exclusão) |
+| `tipo_proposta_ia` | INICIAR_EXECUCAO, PAUSAR_EXECUCAO, CRIAR_ATIVIDADE, DESCREVER_EXECUCAO, SUSPENDER_CHECKIN, ANOTAR_PAD, CRIAR_DEMANDA, DESCREVER_DEMANDA, CONECTAR_DEMANDA (migration `0035`; `CRIAR_PROJETO` na `0037`; `ALTERAR_ATIVIDADE` na `0039`; `REGISTRAR_EXECUCAO` e `CORRIGIR_EXECUCAO` na `0040`; `ALTERAR_DEMANDA` na `0041`; `ATRIBUIR_MEMBRO` e `ATRIBUIR_TAG` na `0042`; `CONCLUIR_DEMANDA` e `MOVER_ATIVIDADE` na `0056`; `DESCONECTAR_DEMANDA` e `EXCLUIR_ATIVIDADE` na `0057`, as duas únicas exclusões da IA, por exceção nomeada) |
 | `tipo_proposta_ia_status` | PENDENTE, CONFIRMADA, AJUSTADA, EXPIRADA (também a recusada), DESFEITA (migration `0035`) |
 | `tipo_prompt` | CONVERSA, CHECKIN, DESCRICAO_EXECUCAO, PAD, PRIORIDADE, ENTREVISTA_DEMANDA, CONEXAO_DEMANDA (migration `0034`), DUVIDA_CODIGO (migration `0044`, com a versão 1 semeada; a lista cresce por migration) |
 | `tipo_provedor_ia` | ANTHROPIC→"Anthropic", GOOGLE→"Google", OPENAI→"OpenAI" (migration `0033`; os três têm implementação desde a task 203) |

@@ -149,6 +149,22 @@
           <span class="proposta-cartao__linha">As execuções da atividade vão junto.</span>
         </div>
       }
+      @case (Tipo.DESCONECTAR_DEMANDA) {
+        <div class="proposta-cartao__resumo">
+          <strong class="proposta-cartao__destaque">{{ texto('demandaOrigemNome') || 'Demanda ' + propostaAtual.dados['demandaOrigemId'] }}</strong>
+          <span class="proposta-cartao__linha">{{ propostaAtual.dados['ehBidirecional'] === true ? 'Conectada nos dois sentidos a' : 'Conectada a' }}: {{ texto('demandaDestinoNome') || 'Demanda ' + propostaAtual.dados['demandaDestinoId'] }}</span>
+          <span class="proposta-cartao__linha">Só a conexão sai do grafo; as demandas ficam onde estão.</span>
+        </div>
+      }
+      @case (Tipo.EXCLUIR_ATIVIDADE) {
+        <div class="proposta-cartao__resumo">
+          <strong class="proposta-cartao__destaque">{{ texto('atividadeNome') || 'Atividade ' + propostaAtual.dados['atividadeId'] }}</strong>
+          @if (texto('demandaNome')) {
+            <span class="proposta-cartao__linha">Demanda: {{ texto('demandaNome') }}</span>
+          }
+          <span class="proposta-cartao__linha">Esta atividade não tem execuções.</span>
+        </div>
+      }
       @case (Tipo.ATRIBUIR_MEMBRO) {
         <div class="proposta-cartao__resumo">
           <strong class="proposta-cartao__destaque">{{ texto('usuarioNome') || 'Usuário ' + propostaAtual.dados['usuarioId'] }}</strong>

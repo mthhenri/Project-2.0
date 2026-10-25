@@ -24,6 +24,8 @@ import { ProporCriarDemandaFerramenta } from './ferramentas/propor-criar-demanda
 import { AlterarDemandaExecutor } from './executores/alterar-demanda.executor';
 import { ConcluirDemandaExecutor } from './executores/concluir-demanda.executor';
 import { ProporConcluirDemandaFerramenta } from './ferramentas/propor-concluir-demanda.ferramenta';
+import { DesconectarDemandaExecutor } from './executores/desconectar-demanda.executor';
+import { ProporDesconectarDemandaFerramenta } from './ferramentas/propor-desconectar-demanda.ferramenta';
 import { AtribuirMembroExecutor } from './executores/atribuir-membro.executor';
 import { ProporAtribuirMembroFerramenta } from './ferramentas/propor-atribuir-membro.ferramenta';
 import { ProporAlterarDemandaFerramenta } from './ferramentas/propor-alterar-demanda.ferramenta';
@@ -31,7 +33,7 @@ import { ProporAlterarDemandaFerramenta } from './ferramentas/propor-alterar-dem
 @Module({
   imports:     [TagModule, UsuarioModule, FerramentaIaModule, PropostaIaModule, ProjetoModule, IaModule, PromptModule],
   controllers: [DemandaController],
-  providers:   [DemandaService, DemandaRepository, ListarMinhasDemandasFerramenta, ListarDemandasDoProjetoFerramenta, ConsultarGrafoDoProjetoFerramenta, ProporCriarDemandaFerramenta, CriarDemandaExecutor, ProporDescreverDemandaFerramenta, DescreverDemandaExecutor, SugerirConexoesELugarFerramenta, ProporConectarDemandaFerramenta, ConectarDemandaExecutor, ProporAlterarDemandaFerramenta, AlterarDemandaExecutor, ProporAtribuirMembroFerramenta, AtribuirMembroExecutor, ProporConcluirDemandaFerramenta, ConcluirDemandaExecutor],
+  providers:   [DemandaService, DemandaRepository, ListarMinhasDemandasFerramenta, ListarDemandasDoProjetoFerramenta, ConsultarGrafoDoProjetoFerramenta, ProporCriarDemandaFerramenta, CriarDemandaExecutor, ProporDescreverDemandaFerramenta, DescreverDemandaExecutor, SugerirConexoesELugarFerramenta, ProporConectarDemandaFerramenta, ConectarDemandaExecutor, ProporAlterarDemandaFerramenta, AlterarDemandaExecutor, ProporAtribuirMembroFerramenta, AtribuirMembroExecutor, ProporConcluirDemandaFerramenta, ConcluirDemandaExecutor, ProporDesconectarDemandaFerramenta, DesconectarDemandaExecutor],
   exports:     [DemandaService, DemandaRepository],
 })
 export class DemandaModule implements OnModuleInit {
@@ -54,6 +56,8 @@ export class DemandaModule implements OnModuleInit {
     private readonly atribuirMembroExecutor: AtribuirMembroExecutor,
     private readonly proporConcluirDemanda: ProporConcluirDemandaFerramenta,
     private readonly concluirDemandaExecutor: ConcluirDemandaExecutor,
+    private readonly proporDesconectarDemanda: ProporDesconectarDemandaFerramenta,
+    private readonly desconectarDemandaExecutor: DesconectarDemandaExecutor,
   ) {}
 
   /** As ferramentas de IA do domínio de demanda se registram aqui. */
@@ -74,5 +78,7 @@ export class DemandaModule implements OnModuleInit {
     this.registroDeExecutores.registrar(this.atribuirMembroExecutor);
     this.registroDeFerramentas.registrar(this.proporConcluirDemanda);
     this.registroDeExecutores.registrar(this.concluirDemandaExecutor);
+    this.registroDeFerramentas.registrar(this.proporDesconectarDemanda);
+    this.registroDeExecutores.registrar(this.desconectarDemandaExecutor);
   }
 }

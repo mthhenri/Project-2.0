@@ -194,7 +194,7 @@ testarComBanco('restaurar: recuperarExcluida só vê a excluída e informa se a 
   assert.equal(await repositorio.recuperarExcluida({ id: atividade.id }), null, 'ativa não é "excluída"');
 
   await excluirLinha(conexao, 'atividade', atividade.id);
-  assert.deepEqual(await repositorio.recuperarExcluida({ id: atividade.id }), { id: atividade.id, demandaId: demanda.id, nome: 'Voltar', demandaAtiva: true });
+  assert.deepEqual(await repositorio.recuperarExcluida({ id: atividade.id }), { id: atividade.id, demandaId: demanda.id, nome: 'Voltar', usuarioId: usuario.id, demandaAtiva: true });
 
   await excluirLinha(conexao, 'demanda', demanda.id);
   assert.equal((await repositorio.recuperarExcluida({ id: atividade.id }))?.demandaAtiva, false);

@@ -6,7 +6,7 @@ import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.int
 import { IaFerramenta } from '../../ia/domain/ia.tipos';
 import { gerarEsquemaDeClasse } from '../domain/esquema-da-classe';
 import { FerramentaIa, ResultadoFerramentaIa, usuarioPodeUsar } from '../domain/ferramenta-ia';
-import { sugereExclusao } from '../domain/sem-exclusao';
+import { exclusaoNaoPermitida } from '../domain/sem-exclusao';
 
 /**
  * Acrescentada à descrição de toda ferramenta de proposta: o nível de autonomia (task 228) é decidido pelo sistema, não pelo modelo, e muda com a
@@ -29,8 +29,8 @@ export class FerramentaIaRegistro {
   private readonly ferramentas = new Map<string, FerramentaIa>();
 
   registrar(ferramenta: FerramentaIa): void {
-    if (sugereExclusao(ferramenta.nome)) {
-      throw new Error(`A ferramenta ${ferramenta.nome} sugere exclusão de dados, e a IA não exclui nada`);
+    if (exclusaoNaoPermitida(ferramenta.nome)) {
+      throw new Error(`A ferramenta ${ferramenta.nome} sugere exclusão de dados, e a IA não exclui nada (a exceção é só a lista fechada de sem-exclusao.ts)`);
     }
     if (this.ferramentas.has(ferramenta.nome)) {
       throw new Error(`Já existe uma ferramenta de IA registrada com o nome ${ferramenta.nome}`);
