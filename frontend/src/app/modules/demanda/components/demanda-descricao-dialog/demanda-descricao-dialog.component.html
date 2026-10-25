@@ -1,0 +1,45 @@
+<p-dialog
+  [header]="titulo()"
+  [visible]="visivel()"
+  (visibleChange)="tentarFechar.emit($event)"
+  [modal]="true"
+  [style]="{ width: '95vw', height: '95vh' }"
+  [contentStyle]="{ display: 'flex', flexDirection: 'column' }"
+  [draggable]="false"
+  [resizable]="false"
+  appendTo="body"
+>
+  @if (podeEditar()) {
+    <form [formGroup]="formulario()" class="demanda-descricao-dialog__form">
+      <app-markdown-editor
+        formControlName="valor"
+        [alturaMinima]="0"
+        [rotulo]="titulo()"
+        class="demanda-descricao-dialog__editor"
+      />
+      <app-assistente-descricao
+        [textoAtual]="texto"
+        tipoEntidade="demanda"
+        [contextoEntidade]="nomeDemanda()"
+        (textoAuxiliadoAceito)="textoAssistenteAceito.emit($event)"
+      />
+    </form>
+  } @else {
+    @if (texto) {
+      <div class="demanda-descricao-dialog__leitura">
+        <app-markdown-visualizador [texto]="texto" />
+      </div>
+    } @else {
+      <div class="demanda-descricao-dialog__vazia">Sem conteúdo</div>
+    }
+  }
+
+  <ng-template pTemplate="footer">
+    @if (podeEditar()) {
+      <p-button label="Cancelar" severity="secondary" [outlined]="true" (onClick)="tentarFechar.emit(false)" />
+      <p-button label="Salvar" icon="pi pi-check" [loading]="carregandoSalvar()" (onClick)="salvar.emit()" />
+    } @else {
+      <p-button label="Fechar" severity="secondary" [outlined]="true" (onClick)="tentarFechar.emit(false)" />
+    }
+  </ng-template>
+</p-dialog>

@@ -1,0 +1,45 @@
+.demanda-barra-horas {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+
+  &__barra {
+    width: 3.5rem;
+    height: 0.3rem;
+    border-radius: 0.2rem;
+    background-color: var(--app-surface-200);
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  &__preenchimento {
+    display: block;
+    height: 100%;
+    background-color: var(--app-realce-primario);
+  }
+
+  &__texto {
+    font-size: 0.75rem;
+    color: var(--p-text-muted-color);
+    white-space: nowrap;
+  }
+
+  &--larga &__barra {
+    width: 8rem;
+    height: 0.4rem;
+  }
+
+  &--larga &__texto {
+    font-size: 0.8rem;
+  }
+
+  &--estouro &__preenchimento {
+    background-color: var(--p-red-400);
+  }
+
+  &--estouro &__texto {
+    color: var(--p-red-500);
+    font-weight: 600;
+  }
+}

@@ -10,4 +10,5 @@ export interface DemandaVisualizacao {
   projetoId: number;
 }
 
-export type ModoVisualizacao = 'grafo' | 'lista' | 'planejamento';
+/** As três visões da tela. `lista` era o nome da Árvore (task 239): o valor antigo ainda é aceito na URL e no que foi lembrado. */
+export type ModoVisualizacao = 'grafo' | 'arvore' | 'planejamento';

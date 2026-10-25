@@ -1,8 +1,11 @@
-<div class="demanda-membros-cabecalho">
+<div class="demanda-membros-cabecalho" [class.demanda-membros-cabecalho--com-nome]="comNome()">
   <div class="demanda-membros-cabecalho__pilha">
     @for (membro of membros(); track membro.usuarioId) {
       <span class="demanda-membros-cabecalho__membro" [pTooltip]="membro.nomeCompleto + ' · ' + membro.cargoTitulo" tooltipPosition="bottom">
         <span class="demanda-membros-cabecalho__avatar">{{ iniciais(membro.nomeCompleto) }}</span>
+        @if (comNome()) {
+          <span class="demanda-membros-cabecalho__nome">{{ membro.nomeCompleto }}</span>
+        }
         @if (sessao.eGestor()) {
           <button
             type="button"

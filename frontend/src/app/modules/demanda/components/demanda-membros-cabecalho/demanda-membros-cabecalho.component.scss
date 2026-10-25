@@ -17,6 +17,24 @@
     }
   }
 
+  // Com o nome ao lado, os membros deixam de se sobrepor.
+  &--com-nome &__pilha {
+    flex-wrap: wrap;
+    gap: 0.25rem 0.75rem;
+  }
+
+  &--com-nome &__membro {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-left: 0;
+  }
+
+  &__nome {
+    font-size: 0.85rem;
+    color: var(--p-text-color);
+  }
+
   &__avatar {
     display: inline-flex;
     align-items: center;

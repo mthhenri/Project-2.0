@@ -47,6 +47,11 @@ async function carregarProjetos(montado: Montado, projetos = PROJETOS): Promise<
 
 const texto = (montado: Montado) => montado.elemento.textContent ?? '';
 
+/** A Árvore abre a primeira demanda da pasta e busca o detalhe dela: os testes que não olham isso descartam essas chamadas. */
+function descartarDetalhe(montado: Montado): void {
+  montado.http.match((r) => /\/demanda\/\d+(\/|$)/.test(r.url) || r.url.includes('/atividade') || r.url.includes('/tag') || r.url.includes('/usuario'));
+}
+
 describe('DemandaProjetoPage', () => {
   it('pede os projetos ao abrir; com mais de um e sem contexto lembrado, espera a escolha (nada de grafo)', async () => {
     const { montado } = await montarPagina();
@@ -66,7 +71,7 @@ describe('DemandaProjetoPage', () => {
     expect(montado.componente.projetoId()).toBe(5);
     expect(esperarRequisicao(montado.http, 'GET', '/demanda/grafo').request.params.get('projetoId')).toBe('5');
     expect(localStorage.getItem('demanda.ultimoProjetoId')).toBe('5');
-    expect(irPara).toHaveBeenCalledWith([], { queryParams: { modo: 'lista', projetoId: 5 }, replaceUrl: true });
+    expect(irPara).toHaveBeenCalledWith([], { queryParams: { modo: 'arvore', projetoId: 5 }, replaceUrl: true });
   });
 
   it('com vários projetos e nenhum lembrado, não escolhe nenhum; o projeto lembrado só vale se ainda existir', async () => {
@@ -102,7 +107,7 @@ describe('DemandaProjetoPage', () => {
     responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/grafo'), GRAFO);
     await montado.atualizar();
     expect(montado.componente.projetoTemDemandas()).toBe(true);
-    expect(montado.componente.arvoreRaizes().map((raiz) => raiz.id)).toEqual([1]);
+    expect(montado.componente.pastaId()).toBeNull();
   });
 
   it('falha ao carregar projetos ou grafo avisa o usuário', async () => {
@@ -121,25 +126,28 @@ describe('DemandaProjetoPage', () => {
   });
 
   describe('modos', () => {
-    it('padrão é a lista; o gestor tem Lista, Grafo e Planejamento; o desenvolvedor só Lista e Grafo', async () => {
+    it('padrão é a Árvore; o gestor tem Árvore, Grafo e Planejamento; o desenvolvedor só Árvore e Grafo', async () => {
       const gestor = await montarPagina();
-      expect(gestor.montado.componente.modoVisualizacao()).toBe('lista');
-      expect(gestor.montado.componente.opcoesModo().map((opcao) => opcao.valor)).toEqual(['lista', 'grafo', 'planejamento']);
+      expect(gestor.montado.componente.modoVisualizacao()).toBe('arvore');
+      expect(gestor.montado.componente.opcoesModo().map((opcao) => opcao.valor)).toEqual(['arvore', 'grafo', 'planejamento']);
+      expect(gestor.montado.componente.opcoesModo()[0].rotulo).toBe('Árvore');
       const dev = await montarPagina({ usuario: TipoUsuarioEnum.DESENVOLVEDOR });
-      expect(dev.montado.componente.opcoesModo().map((opcao) => opcao.valor)).toEqual(['lista', 'grafo']);
+      expect(dev.montado.componente.opcoesModo().map((opcao) => opcao.valor)).toEqual(['arvore', 'grafo']);
     });
 
-    it('?modo= vence o último modo lembrado; valor inválido volta para a lista', async () => {
+    it('?modo= vence o último modo lembrado; valor inválido volta para a Árvore; o nome antigo (lista) abre a Árvore', async () => {
       expect((await montarPagina({ consulta: { modo: 'grafo' }, armazenamento: { 'demanda.ultimoModo': 'lista' } })).montado.componente.modoVisualizacao()).toBe('grafo');
+      expect((await montarPagina({ consulta: { modo: 'lista' } })).montado.componente.modoVisualizacao()).toBe('arvore');
+      expect((await montarPagina({ armazenamento: { 'demanda.ultimoModo': 'lista' } })).montado.componente.modoVisualizacao()).toBe('arvore');
       expect((await montarPagina({ armazenamento: { 'demanda.ultimoModo': 'grafo' } })).montado.componente.modoVisualizacao()).toBe('grafo');
-      expect((await montarPagina({ consulta: { modo: 'qualquer' } })).montado.componente.modoVisualizacao()).toBe('lista');
+      expect((await montarPagina({ consulta: { modo: 'qualquer' } })).montado.componente.modoVisualizacao()).toBe('arvore');
     });
 
     it('o desenvolvedor nunca cai no planejamento, nem por URL nem por armazenamento', async () => {
       const porUrl = await montarPagina({ usuario: TipoUsuarioEnum.DESENVOLVEDOR, consulta: { modo: 'planejamento' } });
-      expect(porUrl.montado.componente.modoVisualizacao()).toBe('lista');
+      expect(porUrl.montado.componente.modoVisualizacao()).toBe('arvore');
       const porArmazenamento = await montarPagina({ usuario: TipoUsuarioEnum.DESENVOLVEDOR, armazenamento: { 'demanda.ultimoModo': 'planejamento' } });
-      expect(porArmazenamento.montado.componente.modoVisualizacao()).toBe('lista');
+      expect(porArmazenamento.montado.componente.modoVisualizacao()).toBe('arvore');
     });
 
     it('o desenvolvedor que força o modo planejamento não dispara a consulta', async () => {
@@ -154,12 +162,12 @@ describe('DemandaProjetoPage', () => {
       const { montado, irPara } = await montarPagina({ consulta: { projetoId: '5' } });
       await carregarProjetos(montado);
       responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/grafo'), GRAFO);
-      montado.componente.alternarModo('lista');
+      montado.componente.alternarModo('arvore');
       montado.http.expectNone((r) => r.url.endsWith('/demanda/planejamento'));
 
       montado.componente.alternarModo('planejamento');
       expect(localStorage.getItem('demanda.ultimoModo')).toBe('planejamento');
-      expect(irPara).toHaveBeenLastCalledWith([], { queryParams: { modo: 'planejamento', projetoId: 5 }, replaceUrl: true });
+      expect(irPara).toHaveBeenLastCalledWith([], { queryParams: { modo: 'planejamento', projetoId: 5, pasta: 'sem-pasta' }, replaceUrl: true });
       const requisicao = esperarRequisicao(montado.http, 'GET', '/demanda/planejamento');
       expect(requisicao.request.params.get('projetoId')).toBe('5');
       responderSucesso(requisicao, [{ demandaId: 1, caminho: 'Demanda 1', executoresAtivos: [{ usuarioId: 3, nomeCompleto: 'Ana' }] }]);
@@ -184,6 +192,7 @@ describe('DemandaProjetoPage', () => {
       await carregarProjetos(contexto.montado);
       responderSucesso(esperarRequisicao(contexto.montado.http, 'GET', '/demanda/grafo'), { nos: [], arestas: [] });
       await contexto.montado.atualizar();
+      descartarDetalhe(contexto.montado);
       return contexto.montado;
     }
 
@@ -220,6 +229,7 @@ describe('DemandaProjetoPage', () => {
       await carregarProjetos(montado);
       responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/grafo'), grafo);
       await montado.atualizar();
+      descartarDetalhe(montado);
       return { montado, irPara };
     }
 
@@ -231,7 +241,6 @@ describe('DemandaProjetoPage', () => {
       });
       expect(montado.componente.tagsDoProjeto().map((tag) => tag.nome)).toEqual(['Alfa', 'Beta']);
       expect(montado.componente.contagemPorStatus()).toMatchObject({ PENDENTE: 1, CONCLUIDA: 1 });
-      expect(montado.componente.arvoreRaizes()[0].filhos.map((filho) => filho.id)).toEqual([2]);
     });
 
     it('o filtro de status recorta a árvore e o grafo exibido (este com atraso de 200 ms)', async () => {
@@ -271,10 +280,48 @@ describe('DemandaProjetoPage', () => {
 
       montado.componente.aoAlteradoPlanejamento();
       responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/grafo'), GRAFO);
+      descartarDetalhe(montado);
       montado.http.expectNone((r) => r.url.endsWith('/demanda/planejamento'));
     });
 
-    it('navegar para o projeto leva ao detalhe; sem projeto leva à lista', async () => {
+    it('a pasta de partida: a da URL se existe; senão Sem pasta; cai na primeira pasta quando não há demandas soltas', async () => {
+      const pastas = { nos: [criarNo(1, { isEstrutural: true }), criarNo(2, { demandaPaiId: 1 }), criarNo(3)], arestas: [] };
+      const daUrl = await montarPagina({ consulta: { projetoId: '5', pasta: '1' } });
+      await carregarProjetos(daUrl.montado);
+      responderSucesso(esperarRequisicao(daUrl.montado.http, 'GET', '/demanda/grafo'), pastas);
+      await daUrl.montado.atualizar();
+      expect(daUrl.montado.componente.pastaId()).toBe(1);
+      expect(daUrl.irPara).toHaveBeenLastCalledWith([], { queryParams: { modo: 'arvore', projetoId: 5, pasta: '1' }, replaceUrl: true });
+
+      const semPasta = await montarPagina({ consulta: { projetoId: '5', pasta: 'sem-pasta' } });
+      await carregarProjetos(semPasta.montado);
+      responderSucesso(esperarRequisicao(semPasta.montado.http, 'GET', '/demanda/grafo'), pastas);
+      await semPasta.montado.atualizar();
+      expect(semPasta.montado.componente.pastaId()).toBeNull();
+      expect(semPasta.irPara).toHaveBeenLastCalledWith([], { queryParams: { modo: 'arvore', projetoId: 5, pasta: 'sem-pasta' }, replaceUrl: true });
+
+      const inexistente = await montarPagina({ consulta: { projetoId: '5', pasta: '99' } });
+      await carregarProjetos(inexistente.montado);
+      responderSucesso(esperarRequisicao(inexistente.montado.http, 'GET', '/demanda/grafo'), pastas);
+      await inexistente.montado.atualizar();
+      expect(inexistente.montado.componente.pastaId()).toBeNull();
+    });
+
+    it('escolher a pasta vai para a URL; abrir uma demanda do Grafo ou do Controle de horas troca para a Árvore com o pedido', async () => {
+      const { montado, irPara } = await comGrafo({ nos: [criarNo(1, { isEstrutural: true }), criarNo(2, { demandaPaiId: 1 })], arestas: [] });
+      montado.componente.aoEscolherPasta(1);
+      expect(montado.componente.pastaId()).toBe(1);
+      expect(irPara).toHaveBeenLastCalledWith([], { queryParams: { modo: 'arvore', projetoId: 5, pasta: '1' }, replaceUrl: true });
+
+      montado.componente.alternarModo('grafo');
+      montado.componente.abrirNaArvore(2);
+      expect(montado.componente.modoVisualizacao()).toBe('arvore');
+      expect(montado.componente.pedidoAbrirDemanda()).toEqual({ id: 2, versao: 1 });
+      montado.componente.abrirNaArvore(2);
+      expect(montado.componente.pedidoAbrirDemanda()).toEqual({ id: 2, versao: 2 });
+    });
+
+    it('navegar para o projeto leva ao detalhe; sem projeto leva à lista de projetos', async () => {
       const { montado, irPara } = await comGrafo();
       montado.componente.navegarParaProjeto();
       expect(irPara).toHaveBeenLastCalledWith(['/projeto', 5]);

@@ -1,0 +1,60 @@
+<div class="demanda-arvore-tela">
+  <app-demanda-pastas
+    class="demanda-arvore-tela__pastas"
+    [pastas]="pastas()"
+    [semPastaQuantidade]="semPastaQuantidade()"
+    [pastaId]="emBusca() ? undefined : pastaId()"
+    [expandidas]="expandidas()"
+    (pastaEscolhida)="escolherPasta($event)"
+    (expansaoAlternada)="alternarExpansao($event)"
+  />
+
+  <app-demanda-pasta-lista
+    class="demanda-arvore-tela__lista"
+    [titulo]="tituloDaLista()"
+    [caminho]="caminhoDaLista()"
+    [itens]="itens()"
+    [selecionadaId]="demandaAbertaId()"
+    [termo]="filtro().termo"
+    [nomesDasPastas]="nomesDasPastas()"
+    [filtroAtivo]="filtroEstaAtivo()"
+    [acoes]="acoesMenu"
+    [pastaDemandaId]="pastaDemandaId()"
+    [permitirDemandaAqui]="!emBusca()"
+    (demandaEscolhida)="escolherDemanda($event)"
+    (descricaoSolicitada)="abrirDescricao($event)"
+    (statusEscolhido)="aoStatusEscolhido($event)"
+    (demandaAquiSolicitada)="mostrarDemandaAqui.set(true)"
+    (abrirPastaSolicitada)="escolherDemanda($event)"
+    (filtrosLimpos)="filtrosLimpos.emit()"
+  />
+
+  <div class="demanda-arvore-tela__aberta">
+    @if (demandaAbertaId(); as idAberto) {
+      <app-demanda-aberta
+        [demandaId]="idAberto"
+        [minutosExecutados]="noAberto()?.minutosExecutados ?? 0"
+        [(aba)]="aba"
+        (navegou)="aoNavegar($event)"
+        (demandaAlterada)="alterado.emit()"
+        (demandaExcluida)="aoExcluida()"
+        (statusAlterado)="statusAlterado.emit($event)"
+        (tagsAlteradas)="tagsAlteradas.emit($event)"
+      />
+    } @else {
+      <div class="demanda-arvore-tela__vazio">
+        <i class="pi pi-arrow-left"></i>
+        <p>Escolha uma demanda para ver as descrições, as atividades e as conexões.</p>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- "Demanda aqui": cria já dentro da pasta escolhida (sem pasta, na raiz do projeto) -->
+<app-demanda-formulario-dialog
+  [projetoId]="projetoId()"
+  [demandaPaiIdInicial]="pastaId()"
+  [visivel]="mostrarDemandaAqui()"
+  (visivelChange)="mostrarDemandaAqui.set($event)"
+  (demandaCriada)="aoDemandaAquiCriada()"
+/>

@@ -1,0 +1,63 @@
+<section class="demanda-pasta-lista" aria-label="Demandas da pasta">
+  <header class="demanda-pasta-lista__topo">
+    <div class="demanda-pasta-lista__titulos">
+      @if (caminho()) {
+        <span class="demanda-pasta-lista__caminho">{{ caminho() }}</span>
+      }
+      <strong class="demanda-pasta-lista__titulo">{{ titulo() }}</strong>
+    </div>
+    @if (pastaDemandaId() !== null) {
+      <p-button
+        icon="pi pi-external-link"
+        severity="secondary"
+        [text]="true"
+        size="small"
+        ariaLabel="Abrir a pasta"
+        pTooltip="Abrir a própria pasta (descrições, atividades e conexões dela)"
+        tooltipPosition="bottom"
+        (onClick)="abrirPastaSolicitada.emit(pastaDemandaId()!)"
+      />
+    }
+    @if (sessao.eGestor() && permitirDemandaAqui()) {
+      <p-button
+        label="Demanda aqui"
+        icon="pi pi-plus"
+        severity="secondary"
+        [outlined]="true"
+        size="small"
+        pTooltip="Cria uma demanda dentro desta pasta"
+        tooltipPosition="bottom"
+        (onClick)="demandaAquiSolicitada.emit()"
+      />
+    }
+  </header>
+
+  <div class="demanda-pasta-lista__itens" role="listbox" aria-label="Demandas">
+    @for (no of itens(); track no.id) {
+      <app-demanda-pasta-linha
+        [no]="no"
+        [selecionada]="selecionadaId() === no.id"
+        [termo]="termo()"
+        [nomeDaPasta]="nomeDaPastaDe(no)"
+        [acoes]="acoes()"
+        (escolhida)="demandaEscolhida.emit(no.id)"
+        (statusEscolhido)="statusEscolhido.emit($event)"
+        (descricaoSolicitada)="descricaoSolicitada.emit({ id: no.id, campo: $event })"
+      />
+    } @empty {
+      <div class="demanda-pasta-lista__vazio">
+        @if (filtroAtivo()) {
+          <i class="pi pi-search"></i>
+          <p>Nenhuma demanda corresponde aos filtros.</p>
+          <p-button label="Limpar filtros" icon="pi pi-filter-slash" severity="secondary" [outlined]="true" size="small" (onClick)="filtrosLimpos.emit()" />
+        } @else {
+          <i class="pi pi-inbox"></i>
+          <p>Nenhuma demanda aqui ainda.</p>
+          @if (sessao.eGestor() && permitirDemandaAqui()) {
+            <p-button label="Demanda aqui" icon="pi pi-plus" severity="secondary" [outlined]="true" size="small" (onClick)="demandaAquiSolicitada.emit()" />
+          }
+        }
+      </div>
+    }
+  </div>
+</section>

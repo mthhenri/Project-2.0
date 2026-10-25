@@ -1,0 +1,56 @@
+<div class="demanda-atividades">
+  <div class="demanda-atividades__header">
+    @if (atividades().length > 0) {
+      <span class="demanda-atividades__contador">{{ atividades().length }} atividade(s)</span>
+    }
+    <p-button label="Nova Atividade" icon="pi pi-plus" size="small" (onClick)="nova.emit()" />
+    <p-button
+      label="Ver todas"
+      icon="pi pi-external-link"
+      iconPos="right"
+      severity="secondary"
+      [outlined]="true"
+      size="small"
+      pTooltip="Abre a lista de atividades em outra aba"
+      tooltipPosition="top"
+      (onClick)="verTodas.emit()"
+    />
+  </div>
+
+  @if (carregando()) {
+    <div class="demanda-atividades__carregando">
+      <i class="pi pi-spin pi-spinner"></i>
+    </div>
+  } @else if (atividades().length === 0) {
+    <div class="demanda-atividades__vazio">
+      <i class="pi pi-check-square"></i>
+      <p>Nenhuma atividade nesta demanda</p>
+      <p-button label="Criar a primeira atividade" icon="pi pi-plus" severity="secondary" [outlined]="true" size="small" (onClick)="nova.emit()" />
+    </div>
+  } @else {
+    <div class="demanda-atividades__lista">
+      @for (atividade of atividades(); track atividade.id) {
+        <div class="demanda-atividades__item">
+          <div class="demanda-atividades__principal">
+            <span class="demanda-atividades__nome">{{ atividade.nome }}</span>
+            <p-tag [value]="rotuloStatusAtividade(atividade.status)" [severity]="severidadeStatusAtividade(atividade.status)" />
+            <app-prioridade-selo [prioridade]="atividade.prioridade" />
+          </div>
+          <div class="demanda-atividades__meta">
+            <span class="demanda-atividades__executor">
+              <span class="demanda-atividades__avatar">{{ iniciaisUsuario(atividade.nomeUsuario) }}</span>
+              {{ atividade.nomeUsuario }}
+            </span>
+            <span
+              class="demanda-atividades__tempo"
+              [pTooltip]="unidadeTempo.emDias() ? (atividade.totalMinutosExecutados | tempoExibicao: false : 'minutos') : ''"
+            >
+              <i class="pi pi-clock"></i>
+              {{ atividade.totalMinutosExecutados | tempoExibicao: unidadeTempo.emDias() : 'minutos' }}
+            </span>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

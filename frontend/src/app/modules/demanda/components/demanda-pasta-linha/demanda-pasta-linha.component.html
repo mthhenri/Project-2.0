@@ -1,0 +1,47 @@
+<p-contextmenu #menu [model]="itensMenu" appendTo="body" (onHide)="aoFecharMenu(menu)" />
+
+<div
+  class="demanda-pasta-linha"
+  [class.demanda-pasta-linha--selecionada]="selecionada()"
+  role="option"
+  tabindex="0"
+  [attr.aria-selected]="selecionada()"
+  [attr.id]="'demanda-linha-' + no().id"
+  (click)="escolhida.emit()"
+  (keydown.enter)="escolhida.emit()"
+  (contextmenu)="abrirMenu($event, menu)"
+>
+  <app-demanda-status [status]="no().status" [editavel]="sessao.eGestor()" (statusEscolhido)="aoEscolherStatus($event)" />
+
+  <span class="demanda-pasta-linha__corpo">
+    <span class="demanda-pasta-linha__nome">
+      @if (no().isEstrutural) {
+        <i class="pi pi-folder demanda-pasta-linha__icone-pasta"></i>
+      }@for (parte of nomeEmPartes; track $index) {@if (parte.destaque) {<mark class="demanda-pasta-linha__destaque">{{ parte.texto }}</mark>} @else {{{ parte.texto }}}}
+    </span>
+    <span class="demanda-pasta-linha__detalhe">
+      <app-demanda-barra-horas [minutosExecutados]="no().minutosExecutados" [horasEstimadas]="no().horasEstimadas" />
+      @for (tag of no().tags; track tag.id) {
+        <span class="demanda-pasta-linha__tag" [style.background-color]="tag.cor + '22'" [style.border-color]="tag.cor + '55'" [style.color]="tag.cor">{{ tag.nome }}</span>
+      }
+      @if (nomeDaPasta()) {
+        <span class="demanda-pasta-linha__pasta"><i class="pi pi-folder"></i>{{ nomeDaPasta() }}</span>
+      }
+    </span>
+  </span>
+
+  <span class="demanda-pasta-linha__descricoes" role="group" aria-label="Descrições da demanda">
+    @for (descricao of descricoes; track descricao.campo) {
+      <button
+        type="button"
+        class="demanda-pasta-linha__descricao"
+        [class.demanda-pasta-linha__descricao--preenchida]="preenchida(descricao.campo)"
+        [class]="'demanda-pasta-linha__descricao--' + descricao.tipo"
+        [attr.aria-label]="descricao.rotulo + (preenchida(descricao.campo) ? ' (preenchida)' : ' (vazia)')"
+        [pTooltip]="descricao.rotulo + (preenchida(descricao.campo) ? ' — preenchida' : ' — vazia')"
+        tooltipPosition="top"
+        (click)="abrirDescricao($event, descricao.campo)"
+      ><i [class]="descricao.icone"></i></button>
+    }
+  </span>
+</div>

@@ -1,0 +1,206 @@
+@if (carregando()) {
+  <div class="demanda-aberta__carregando"><i class="pi pi-spin pi-spinner"></i></div>
+} @else if (demanda(); as dadosDemanda) {
+  <header class="demanda-aberta__topo">
+    <div class="demanda-aberta__linha-topo">
+      @if (historico().length > 0) {
+        <p-button
+          icon="pi pi-arrow-left"
+          severity="secondary"
+          [text]="true"
+          size="small"
+          ariaLabel="Voltar"
+          [pTooltip]="'Voltar para ' + nomeAnterior()"
+          tooltipPosition="bottom"
+          (onClick)="voltar()"
+        />
+      }
+      <nav class="demanda-aberta__caminho" aria-label="Caminho da demanda">
+        @for (ancestral of ancestrais(); track ancestral.id) {
+          <button type="button" class="demanda-aberta__caminho-item" (click)="navegarParaAncestral(ancestral)">{{ ancestral.nome }}</button>
+          <i class="pi pi-chevron-right demanda-aberta__caminho-sep"></i>
+        } @empty {
+          <span class="demanda-aberta__caminho-raiz">Raiz do projeto</span>
+        }
+      </nav>
+      @if (sessao.eGestor()) {
+        <p-button
+          label="Editar"
+          icon="pi pi-pencil"
+          severity="secondary"
+          [outlined]="true"
+          size="small"
+          pTooltip="Abre o formulário completo"
+          tooltipPosition="bottom"
+          (onClick)="mostrarDialogEditar.set(true)"
+        />
+        <p-button
+          icon="pi pi-trash"
+          severity="danger"
+          [text]="true"
+          size="small"
+          ariaLabel="Excluir demanda"
+          pTooltip="Excluir demanda"
+          tooltipPosition="bottom"
+          (onClick)="confirmarExclusao()"
+        />
+      }
+    </div>
+
+    <div class="demanda-aberta__titulo-area">
+      @if (dadosDemanda.isEstrutural) {
+        <i class="pi pi-folder demanda-aberta__icone-pasta" pTooltip="Demanda de estrutura" tooltipPosition="bottom"></i>
+      }
+      @if (editandoTitulo()) {
+        <input
+          #campoTitulo
+          class="demanda-aberta__titulo-campo"
+          [value]="tituloEdicao()"
+          maxlength="255"
+          aria-label="Título da demanda"
+          (input)="tituloEdicao.set(campoTitulo.value)"
+          (keydown.enter)="salvarTitulo()"
+          (keydown.escape)="cancelarTitulo($event)"
+          (blur)="salvarTitulo()"
+        />
+        @if (erroTitulo()) {
+          <span class="demanda-aberta__titulo-erro">{{ erroTitulo() }}</span>
+        }
+      } @else {
+        <h2 class="demanda-aberta__titulo">{{ dadosDemanda.nome }}</h2>
+        @if (sessao.eGestor()) {
+          <button type="button" class="demanda-aberta__lapis" aria-label="Editar título" pTooltip="Editar título" tooltipPosition="bottom" (click)="iniciarEdicaoTitulo()">
+            <i class="pi pi-pencil"></i>
+          </button>
+        }
+      }
+    </div>
+
+    <div class="demanda-aberta__meta">
+      <span class="demanda-aberta__status">
+        <app-demanda-status [status]="dadosDemanda.status" [editavel]="sessao.eGestor()" (statusEscolhido)="aoStatusEscolhido($event)" />
+        {{ rotuloStatus[dadosDemanda.status] }}
+      </span>
+      <app-demanda-barra-horas [minutosExecutados]="minutosExecutados()" [horasEstimadas]="dadosDemanda.horasEstimadas" [larga]="true" />
+      <app-demanda-metricas
+        class="demanda-aberta__metricas"
+        [demandaId]="dadosDemanda.id"
+        [horasEstimadas]="dadosDemanda.horasEstimadas"
+        [previsaoFimData]="dadosDemanda.previsaoFimData"
+        [editavel]="sessao.eGestor()"
+        (alterada)="aoMetricaAlterada($event)"
+      />
+    </div>
+
+    <div class="demanda-aberta__pessoas">
+      <app-demanda-membros-cabecalho
+        [demandaId]="dadosDemanda.id"
+        [usuariosDisponiveis]="todosUsuarios()"
+        [comNome]="true"
+        [(membros)]="membros"
+        (membrosAlterados)="demandaAlterada.emit()"
+      />
+      <app-demanda-tags-cabecalho
+        [demandaId]="dadosDemanda.id"
+        [tagsDisponiveis]="tagsDisponiveis()"
+        [editavel]="sessao.eGestor()"
+        [(tags)]="tagsDaDemanda"
+        (tagsAlteradas)="aoTagsAlteradas($event)"
+      />
+    </div>
+
+    <p-tabs [value]="abaAtiva()" (valueChange)="aba.set($any($event))" class="demanda-aberta__abas">
+      <p-tablist>
+        <p-tab value="tecnica">
+          <i class="icone-descricao icone-descricao--tecnica demanda-aberta__aba-icone demanda-aberta__aba-icone--tecnica" [class.demanda-aberta__aba-icone--preenchida]="descricaoPreenchida('descricaoTecnica')"></i>Técnica
+        </p-tab>
+        <p-tab value="cliente">
+          <i class="pi pi-user demanda-aberta__aba-icone demanda-aberta__aba-icone--cliente" [class.demanda-aberta__aba-icone--preenchida]="descricaoPreenchida('descricaoCliente')"></i>Cliente
+        </p-tab>
+        <p-tab value="doc">
+          <i class="icone-descricao icone-descricao--doc demanda-aberta__aba-icone demanda-aberta__aba-icone--doc" [class.demanda-aberta__aba-icone--preenchida]="descricaoPreenchida('documentacao')"></i>Documentação
+        </p-tab>
+        @if (eMembro()) {
+          <p-tab value="atividades"><i class="pi pi-check-square demanda-aberta__aba-icone"></i>Atividades</p-tab>
+        }
+        <p-tab value="conexoes"><i class="pi pi-share-alt demanda-aberta__aba-icone"></i>Conexões</p-tab>
+      </p-tablist>
+    </p-tabs>
+  </header>
+
+  <div class="demanda-aberta__corpo">
+    @switch (abaAtiva()) {
+      @case ('tecnica') {
+        <ng-container *ngTemplateOutlet="descricaoTemplate; context: { campo: 'descricaoTecnica', rotulo: 'a descrição técnica' }" />
+      }
+      @case ('cliente') {
+        <ng-container *ngTemplateOutlet="descricaoTemplate; context: { campo: 'descricaoCliente', rotulo: 'a descrição para o cliente' }" />
+      }
+      @case ('doc') {
+        <ng-container *ngTemplateOutlet="descricaoTemplate; context: { campo: 'documentacao', rotulo: 'a documentação' }" />
+      }
+      @case ('atividades') {
+        <app-demanda-atividades-painel
+          [atividades]="atividades()"
+          [carregando]="carregandoAtividades()"
+          (nova)="criarAtividade()"
+          (verTodas)="verTodasAtividades()"
+        />
+      }
+      @case ('conexoes') {
+        <app-demanda-conexao-lista
+          [demandaId]="dadosDemanda.id"
+          [todasDemandas]="destinosConexao()"
+          [(conexoes)]="conexoes"
+          (demandaAbrir)="navegarParaSubDemanda($event)"
+        />
+      }
+    }
+  </div>
+
+  <!-- O texto de uma descrição, para leitura, com Editar (e "Planejar com a IA" quando o modo planejamento do chat existir) -->
+  <ng-template #descricaoTemplate let-campo="campo" let-rotulo="rotulo">
+    @if (textoDaDescricao(campo)) {
+      @if (podeEditarDescricao(campo)) {
+        <div class="demanda-aberta__acoes-texto">
+          <p-button label="Editar" icon="pi pi-pencil" severity="secondary" [outlined]="true" size="small" (onClick)="abrirDialogDescricao(campo)" />
+        </div>
+      }
+      <app-markdown-visualizador [texto]="textoDaDescricao(campo)" />
+    } @else {
+      <div class="demanda-aberta__vazio">
+        <strong>Sem {{ rotulo }} ainda</strong>
+        @if (podeEditarDescricao(campo)) {
+          <p-button label="Escrever" icon="pi pi-pencil" severity="secondary" [outlined]="true" size="small" (onClick)="abrirDialogDescricao(campo)" />
+        } @else {
+          <span>Só quem é da demanda escreve aqui.</span>
+        }
+      </div>
+    }
+  </ng-template>
+
+  @if (campoDescricaoEditando()) {
+    <app-demanda-descricao-dialog
+      [visivel]="mostrarDialogDescricao()"
+      [titulo]="tituloDialogDescricao()"
+      [nomeDemanda]="nomeDemandaDescricaoEditando()"
+      [podeEditar]="podeEditarDescricaoAtual()"
+      [carregandoSalvar]="carregandoSalvarDescricao()"
+      [formulario]="formularioDescricao"
+      (tentarFechar)="aoTentarFecharDescricao($event)"
+      (salvar)="salvarDescricao()"
+      (textoAssistenteAceito)="aceitarDescricaoAssistente($event)"
+    />
+  }
+
+  <app-demanda-formulario-dialog
+    [demandaId]="dadosDemanda.id"
+    [visivel]="mostrarDialogEditar()"
+    (visivelChange)="mostrarDialogEditar.set($event)"
+    (demandaAlterada)="aoDemandaAlterada()"
+  />
+}
+
+<p-confirmDialog />
+<p-confirmDialog key="descricao-fechar" />
+<app-atividade-nova-dialog (aoCriar)="aoAtividadeCriada()" />

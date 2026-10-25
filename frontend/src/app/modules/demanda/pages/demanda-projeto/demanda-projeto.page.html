@@ -65,7 +65,7 @@
       [filtro]="filtro()"
       [contagem]="contagemPorStatus()"
       [tagsDisponiveis]="tagsDoProjeto()"
-      [mostrarExpansao]="modoVisualizacao() === 'lista'"
+      [mostrarExpansao]="modoVisualizacao() === 'arvore'"
       [todosExpandidos]="todosExpandidos"
       (filtroAlterado)="aoAlterarFiltro($event)"
       (limpar)="limparFiltros()"
@@ -103,8 +103,6 @@
                 <p-button label="Nova Demanda" icon="pi pi-plus" (onClick)="mostrarDialogNovaDemanda.set(true)" />
               }
             </div>
-          } @else if (filtroEstaAtivo() && modoVisualizacao() === 'lista' && arvoreRaizes().length === 0) {
-            <ng-container *ngTemplateOutlet="semResultado" />
           } @else if (filtroEstaAtivo() && modoVisualizacao() === 'grafo' && grafoExibido()!.nos.length === 0 && filtroGrafo() === filtro()) {
             <ng-container *ngTemplateOutlet="semResultado" />
           } @else if (modoVisualizacao() === 'grafo' && grafoExibido()) {
@@ -112,20 +110,38 @@
               [grafo]="grafoExibido()!"
               [statusVisiveis]="statusDoFiltro()"
               (statusAlternado)="alternarStatusVisivel($event)"
-              (demandaSelecionada)="painel.abrirDetalhe($event)"
+              (demandaSelecionada)="abrirNaArvore($event)"
             />
           }
 
-          <!-- O painel é renderizado sempre (hospeda os diálogos e expõe abrirDetalhe
-               para o grafo); o container da lista fica oculto fora do modo lista. -->
-          <div class="demanda-projeto__lista" [hidden]="modoVisualizacao() !== 'lista' || !arvoreRaizes().length">
+          @if (modoVisualizacao() === 'arvore' && projetoTemDemandas()) {
+            <app-demanda-arvore-tela
+              #arvoreTela
+              [nos]="grafo()!.nos"
+              [filtro]="filtro()"
+              [projetoId]="projetoId()"
+              [pastaId]="pastaId()"
+              [abrirDemanda]="pedidoAbrirDemanda()"
+              (pastaChange)="aoEscolherPasta($event)"
+              (alterado)="aoAlteradoPlanejamento()"
+              (statusAlterado)="aoStatusAlterado($event)"
+              (tagsAlteradas)="aoTagsAlteradas($event)"
+              (filtrosLimpos)="limparFiltros()"
+              (demandaEditarSolicitada)="painel.abrirEdicao($event)"
+              (demandaNovaFilhaSolicitada)="painel.abrirNovaFilha($event)"
+              (demandaTagsSolicitadas)="painel.abrirDialogTagsPorId($event)"
+              (demandaMembrosSolicitados)="painel.abrirDialogMembros($event)"
+              (demandaDescricaoSolicitada)="painel.abrirDialogDescricaoPorId($event.id, $event.campo)"
+            />
+          }
+
+          <!-- O painel da árvore antiga fica escondido: hospeda só os diálogos de editar, nova filha, tags, membros e descrição que o menu de
+               contexto e o Controle de horas abrem (a Árvore nova e o Controle de horas os herdam até a task 240). -->
+          <div class="demanda-projeto__dialogos" hidden>
             <app-demanda-arvore-painel
               #painel
-              [raizes]="arvoreRaizes()"
+              [raizes]="[]"
               [projetoId]="projetoId()"
-              [termoBusca]="filtro().termo"
-              [expandirIds]="expandirPorFiltro()"
-              [executoresPorDemanda]="executoresPorDemanda()"
               (alterado)="aoAlteradoPlanejamento()"
               (tagsAlteradas)="aoTagsAlteradas($event)"
               (statusAlterado)="aoStatusAlterado($event)"
@@ -136,7 +152,7 @@
             <app-demanda-planejamento-painel
               [itens]="planejamento()"
               [carregando]="carregandoPlanejamento()"
-              (demandaVisualizarSolicitada)="painel.abrirDetalhe($event)"
+              (demandaVisualizarSolicitada)="abrirNaArvore($event)"
               (demandaEditarSolicitada)="painel.abrirEdicao($event)"
               (demandaNovaFilhaSolicitada)="painel.abrirNovaFilha($event)"
               (demandaTagsSolicitadas)="painel.abrirDialogTagsPorId($event)"

@@ -11,7 +11,6 @@ import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
 import {
   DemandaGrafoDto,
-  DemandaArvoreItemDto,
   DemandaPlanejamentoDto,
   TipoDemandaStatusEnum,
   ProjetoResumoDto,
@@ -24,9 +23,10 @@ import { DemandaToolbarComponent } from '../../components/demanda-toolbar/demand
 import { DemandaGrafoComponent } from '../../components/demanda-grafo/demanda-grafo.component';
 import { DemandaFormularioDialogComponent } from '../../components/demanda-formulario-dialog/demanda-formulario-dialog.component';
 import { DemandaArvorePainelComponent } from '../../components/demanda-arvore-painel/demanda-arvore-painel.component';
+import { DemandaArvoreTelaComponent } from '../../components/demanda-arvore-tela/demanda-arvore-tela.component';
 import { DemandaPlanejamentoPainelComponent } from '../../components/demanda-planejamento-painel/demanda-planejamento-painel.component';
 import { ModoVisualizacao } from '../../models/demanda.model';
-import { construirArvoreDemandas } from '../../utils/demanda-arvore.util';
+import { PastaId, lerPastaDaUrl, pastaInicial, pastaParaUrl } from '../../utils/demanda-pasta.util';
 import { focoEmCampo, haSobreposicaoAberta } from '../../../../core/utils/atalhos';
 import {
   DemandaFiltro,
@@ -35,7 +35,6 @@ import {
   contarPorStatus,
   filtroAtivo,
   nosCorrespondentes,
-  recortarArvore,
   statusVisiveis,
 } from '../../utils/demanda-filtro.util';
 import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
@@ -43,7 +42,13 @@ import { SkeletonListaComponent } from '../../../../shared/components/skeleton-l
 /** Último projeto e modo usados, lembrados entre visitas (task 106). */
 const CHAVE_ULTIMO_PROJETO = 'demanda.ultimoProjetoId';
 const CHAVE_ULTIMO_MODO = 'demanda.ultimoModo';
-const MODOS_VALIDOS: ModoVisualizacao[] = ['grafo', 'lista', 'planejamento'];
+const MODOS_VALIDOS: ModoVisualizacao[] = ['grafo', 'arvore', 'planejamento'];
+
+/** `lista` foi o nome da Árvore até a task 239: links e preferências antigos continuam abrindo a Árvore. */
+function normalizarModo(valor: string | null): ModoVisualizacao | null {
+  const modo = valor === 'lista' ? 'arvore' : valor;
+  return modo && (MODOS_VALIDOS as string[]).includes(modo) ? (modo as ModoVisualizacao) : null;
+}
 
 function lerArmazenado(chave: string): string | null {
   try {
@@ -77,6 +82,7 @@ function gravarArmazenado(chave: string, valor: string): void {
     DemandaGrafoComponent,
     DemandaFormularioDialogComponent,
     DemandaArvorePainelComponent,
+    DemandaArvoreTelaComponent,
     DemandaPlanejamentoPainelComponent,
   ],
   templateUrl: './demanda-projeto.page.html',
@@ -103,16 +109,25 @@ export class DemandaProjetoPage implements OnInit, OnDestroy {
 
   private readonly seletorProjeto = viewChild<Select>('seletorProjeto');
   private readonly toolbar = viewChild<DemandaToolbarComponent>('toolbar');
+  /** Hospeda os diálogos que o Controle de horas e o menu de contexto abrem (editar, nova filha, tags, membros e descrição). */
   private readonly painel = viewChild<DemandaArvorePainelComponent>('painel');
+  private readonly arvoreTela = viewChild<DemandaArvoreTelaComponent>('arvoreTela');
 
-  /** Critérios da toolbar (busca, status, tags): valem para a Lista e para o Grafo. */
+  /** A pasta escolhida da Árvore: uma só para as três visões, e fica na URL (`?pasta=`). `null` é "Sem pasta". */
+  readonly pastaId = signal<PastaId>(null);
+  private pastaDaUrl: PastaId | undefined = lerPastaDaUrl(this.route.snapshot.queryParamMap.get('pasta'));
+  /** Pedido para abrir uma demanda na Árvore, vindo do Grafo e do Controle de horas; `versao` faz o mesmo clique valer de novo. */
+  readonly pedidoAbrirDemanda = signal<{ id: number; versao: number } | null>(null);
+  private versaoDoPedido = 0;
+
+  /** Critérios da toolbar (busca, status, tags): valem para a Árvore e para o Grafo. */
   readonly filtro = signal<DemandaFiltro>(FILTRO_VAZIO);
   /** Cópia com atraso do filtro: o Grafo refaz o layout a cada mudança, então não acompanha cada tecla. */
   readonly filtroGrafo = signal<DemandaFiltro>(FILTRO_VAZIO);
   private temporizadorFiltroGrafo?: ReturnType<typeof setTimeout>;
 
   readonly opcoesModo = computed(() => [
-    { rotulo: 'Lista', valor: 'lista' as ModoVisualizacao, icone: 'pi pi-list' },
+    { rotulo: 'Árvore', valor: 'arvore' as ModoVisualizacao, icone: 'pi pi-sitemap' },
     { rotulo: 'Grafo', valor: 'grafo' as ModoVisualizacao, icone: 'pi pi-share-alt' },
     ...(this.sessao.eGestor() ? [{ rotulo: 'Planejamento', valor: 'planejamento' as ModoVisualizacao, icone: 'pi pi-chart-bar' }] : []),
   ]);
@@ -120,15 +135,6 @@ export class DemandaProjetoPage implements OnInit, OnDestroy {
   private readonly nosDoProjeto = computed(() => this.grafo()?.nos ?? []);
   readonly projetoTemDemandas = computed(() => this.nosDoProjeto().length > 0);
   readonly filtroEstaAtivo = computed(() => filtroAtivo(this.filtro()));
-
-  /** Árvore já filtrada: nós que correspondem + ancestrais; `expandirPorFiltro` abre os ramos com resultado. */
-  private readonly recorteDaArvore = computed(() => recortarArvore(this.nosDoProjeto(), this.filtro()));
-  readonly expandirPorFiltro = computed(() => this.recorteDaArvore().expandir);
-
-  readonly arvoreRaizes = computed<DemandaArvoreItemDto[]>(() => {
-    const nosVisiveis = this.recorteDaArvore().nos;
-    return nosVisiveis.length ? construirArvoreDemandas(nosVisiveis) : [];
-  });
 
   readonly contagemPorStatus = computed(() => contarPorStatus(this.nosDoProjeto(), this.filtro()));
 
@@ -158,11 +164,11 @@ export class DemandaProjetoPage implements OnInit, OnDestroy {
     clearTimeout(this.temporizadorFiltroGrafo);
   }
 
-  /** `?modo=` vence o último modo usado, que vence o padrão (Lista). Planejamento é só do gestor. */
+  /** `?modo=` vence o último modo usado, que vence o padrão (Árvore). Planejamento é só do gestor. */
   private modoInicial(): ModoVisualizacao {
-    const candidato = (this.route.snapshot.queryParamMap.get('modo') ?? lerArmazenado(CHAVE_ULTIMO_MODO)) as ModoVisualizacao | null;
-    if (!candidato || !MODOS_VALIDOS.includes(candidato)) return 'lista';
-    return candidato === 'planejamento' && !this.sessao.eGestor() ? 'lista' : candidato;
+    const candidato = normalizarModo(this.route.snapshot.queryParamMap.get('modo') ?? lerArmazenado(CHAVE_ULTIMO_MODO));
+    if (!candidato) return 'arvore';
+    return candidato === 'planejamento' && !this.sessao.eGestor() ? 'arvore' : candidato;
   }
 
   ngOnInit(): void {
@@ -177,6 +183,8 @@ export class DemandaProjetoPage implements OnInit, OnDestroy {
     gravarArmazenado(CHAVE_ULTIMO_PROJETO, String(projetoId));
     this.limparFiltros();
     this.planejamento.set([]);
+    this.pastaDaUrl = undefined;
+    this.pastaId.set(null);
     this.atualizarUrl();
     this.carregarGrafo();
     if (this.modoVisualizacao() === 'planejamento' && this.sessao.eGestor()) {
@@ -194,10 +202,11 @@ export class DemandaProjetoPage implements OnInit, OnDestroy {
     }
   }
 
-  /** Projeto e modo na URL: o link compartilhado/recarregado volta ao mesmo contexto. */
+  /** Projeto, modo e pasta na URL: o link compartilhado/recarregado volta ao mesmo contexto. */
   private atualizarUrl(): void {
     const queryParams: Record<string, string | number> = { modo: this.modoVisualizacao() };
     if (this.projetoId()) queryParams['projetoId'] = this.projetoId();
+    if (this.projetoId() && this.grafo()) queryParams['pasta'] = pastaParaUrl(this.pastaId());
     this.router.navigate([], { queryParams, replaceUrl: true });
   }
 
@@ -228,15 +237,30 @@ export class DemandaProjetoPage implements OnInit, OnDestroy {
   }
 
   alternarExpansaoGeral(): void {
-    this.painel()?.alternarExpansaoGeral();
+    this.arvoreTela()?.alternarExpansaoGeral();
   }
 
   get todosExpandidos(): boolean {
-    return this.painel()?.todosExpandidos() ?? false;
+    return this.arvoreTela()?.todosExpandidos() ?? false;
+  }
+
+  /** A pasta mudou (clique na coluna, resultado da busca, demanda aberta de dentro): vale para as três visões e vai para a URL. */
+  aoEscolherPasta(pasta: PastaId): void {
+    if (pasta === this.pastaId()) return;
+    this.pastaId.set(pasta);
+    this.atualizarUrl();
   }
 
   /**
-   * Atalhos da página (task 106): `/` busca, `C` nova demanda (gestor; o `N` global já abre as Anotações, task 96) e ↑/↓ levam o foco à árvore da Lista.
+   * Abre uma demanda na Árvore, na pasta dela: o clique no nó do Grafo e o "Ver" do Controle de horas (a Árvore é onde a demanda se lê e edita).
+   */
+  abrirNaArvore(demandaId: number): void {
+    this.alternarModo('arvore');
+    this.pedidoAbrirDemanda.set({ id: demandaId, versao: ++this.versaoDoPedido });
+  }
+
+  /**
+   * Atalhos da página (task 106): `/` busca, `C` nova demanda (gestor; o `N` global já abre as Anotações, task 96) e ↑/↓ levam o foco às pastas da Árvore.
    * Ficam quietos com campo em foco, dialog/overlay aberto ou modificador pressionado.
    */
   @HostListener('document:keydown', ['$event'])
@@ -252,9 +276,9 @@ export class DemandaProjetoPage implements OnInit, OnDestroy {
     } else if (evento.key.toLowerCase() === 'c' && this.sessao.eGestor()) {
       evento.preventDefault();
       this.mostrarDialogNovaDemanda.set(true);
-    } else if ((evento.key === 'ArrowDown' || evento.key === 'ArrowUp') && modo === 'lista' && !(evento.target as HTMLElement)?.closest?.('[role="tree"]')) {
+    } else if ((evento.key === 'ArrowDown' || evento.key === 'ArrowUp') && modo === 'arvore' && !(evento.target as HTMLElement)?.closest?.('[role="tree"]')) {
       evento.preventDefault();
-      this.painel()?.focar();
+      this.arvoreTela()?.focar();
     }
   }
 
@@ -280,6 +304,7 @@ export class DemandaProjetoPage implements OnInit, OnDestroy {
    */
   aoAlteradoPlanejamento(): void {
     this.recarregarGrafo();
+    this.arvoreTela()?.recarregar();
     if (this.modoVisualizacao() === 'planejamento' && this.sessao.eGestor()) {
       this.carregarPlanejamento();
     }
@@ -315,7 +340,12 @@ export class DemandaProjetoPage implements OnInit, OnDestroy {
   recarregarGrafo(): void {
     this.demandaService.recuperarGrafo(this.projetoId()).subscribe({
       next: (resposta) => {
-        if (resposta.sucesso && resposta.dados) this.grafo.set(resposta.dados);
+        if (resposta.sucesso && resposta.dados) {
+          this.grafo.set(resposta.dados);
+          // A pasta escolhida pode ter sido excluída: nesse caso cai na pasta de partida.
+          const atual = this.pastaId();
+          if (atual !== null && !resposta.dados.nos.some((no) => no.id === atual && no.isEstrutural)) this.aoEscolherPasta(pastaInicial(resposta.dados.nos, undefined));
+        }
       },
       error: () => {
         this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Não foi possível atualizar o grafo' });
@@ -379,7 +409,12 @@ export class DemandaProjetoPage implements OnInit, OnDestroy {
       .pipe(finalize(() => this.carregando.set(false)))
       .subscribe({
         next: (resposta) => {
-          if (resposta.sucesso && resposta.dados) this.grafo.set(resposta.dados);
+          if (resposta.sucesso && resposta.dados) {
+            this.grafo.set(resposta.dados);
+            this.pastaId.set(pastaInicial(resposta.dados.nos, this.pastaDaUrl));
+            this.pastaDaUrl = undefined;
+            this.atualizarUrl();
+          }
         },
         error: () => {
           this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Não foi possível carregar as demandas' });

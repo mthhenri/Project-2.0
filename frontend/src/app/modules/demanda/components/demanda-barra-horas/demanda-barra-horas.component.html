@@ -1,0 +1,16 @@
+@if (temEstimativa()) {
+  <span class="demanda-barra-horas" [class.demanda-barra-horas--larga]="larga()" [class.demanda-barra-horas--estouro]="estourou()">
+    <span class="demanda-barra-horas__barra" aria-hidden="true">
+      <span class="demanda-barra-horas__preenchimento" [style.width.%]="percentual()"></span>
+    </span>
+    <span
+      class="demanda-barra-horas__texto"
+      [pTooltip]="unidadeTempo.emDias() ? (minutosExecutados() | tempoExibicao: false : 'minutos') + ' de ' + (horasEstimadas() | tempoExibicao: false : 'horas') : 'Executado de estimado'"
+      tooltipPosition="top"
+    >{{ minutosExecutados() | tempoExibicao: unidadeTempo.emDias() : 'minutos' }} de {{ horasEstimadas() | tempoExibicao: unidadeTempo.emDias() : 'horas' }}</span>
+  </span>
+} @else if (minutosExecutados() > 0) {
+  <span class="demanda-barra-horas demanda-barra-horas--sem-estimativa">
+    <span class="demanda-barra-horas__texto">{{ minutosExecutados() | tempoExibicao: unidadeTempo.emDias() : 'minutos' }} exec.</span>
+  </span>
+}

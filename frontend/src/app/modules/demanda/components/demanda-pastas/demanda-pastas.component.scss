@@ -1,0 +1,103 @@
+:host {
+  display: block;
+  min-height: 0;
+  height: 100%;
+}
+
+.demanda-pastas {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  height: 100%;
+  overflow-y: auto;
+  padding: 0.75rem 0.5rem;
+  background: var(--app-surface-0);
+  border-right: 1px solid var(--app-surface-200);
+
+  &:focus-visible {
+    outline: 2px solid var(--p-primary-color);
+    outline-offset: -2px;
+  }
+
+  &__titulo {
+    padding: 0.25rem 0.5rem 0.5rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--p-text-muted-color);
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.4rem 0.5rem;
+    border: none;
+    border-radius: 0.5rem;
+    background: transparent;
+    color: var(--p-text-color);
+    font-size: 0.875rem;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--app-surface-100);
+    }
+
+    &--ativa {
+      background: var(--app-realce-sutil);
+      color: var(--p-primary-color);
+      font-weight: 600;
+    }
+  }
+
+  &__chevron,
+  &__chevron-vazio {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1rem;
+    flex-shrink: 0;
+    font-size: 0.65rem;
+
+    .pi {
+      transition: transform 0.15s ease;
+    }
+  }
+
+  &__chevron--aberto {
+    transform: rotate(90deg);
+  }
+
+  &__icone {
+    flex-shrink: 0;
+    font-size: 0.95rem;
+    color: var(--p-text-muted-color);
+  }
+
+  &__item--ativa &__icone {
+    color: inherit;
+  }
+
+  &__nome {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__conta {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--p-text-muted-color);
+  }
+
+  &__vazio {
+    padding: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--p-text-muted-color);
+  }
+}

@@ -1,0 +1,55 @@
+<nav
+  #arvore
+  class="demanda-pastas"
+  role="tree"
+  tabindex="0"
+  aria-label="Pastas"
+  (keydown)="aoTeclar($event)"
+>
+  <span class="demanda-pastas__titulo">Pastas</span>
+
+  <button
+    type="button"
+    class="demanda-pastas__item"
+    [class.demanda-pastas__item--ativa]="pastaId() === null"
+    role="treeitem"
+    [attr.aria-selected]="pastaId() === null"
+    (click)="pastaEscolhida.emit(null)"
+  >
+    <i class="pi pi-list demanda-pastas__icone"></i>
+    <span class="demanda-pastas__nome">Sem pasta</span>
+    <span class="demanda-pastas__conta">{{ semPastaQuantidade() }}</span>
+  </button>
+
+  @for (linha of linhas(); track linha.pasta.id) {
+    <button
+      type="button"
+      class="demanda-pastas__item"
+      [class.demanda-pastas__item--ativa]="pastaId() === linha.pasta.id"
+      [style.padding-left.rem]="0.5 + linha.pasta.nivel * 1.1"
+      role="treeitem"
+      [attr.aria-selected]="pastaId() === linha.pasta.id"
+      [attr.aria-expanded]="linha.pasta.filhas.length ? linha.aberta : null"
+      [pTooltip]="linha.pasta.nome"
+      tooltipPosition="right"
+      [showDelay]="600"
+      (click)="pastaEscolhida.emit(linha.pasta.id)"
+    >
+      @if (linha.pasta.filhas.length) {
+        <span
+          class="demanda-pastas__chevron"
+          role="button"
+          [attr.aria-label]="linha.aberta ? 'Recolher ' + linha.pasta.nome : 'Expandir ' + linha.pasta.nome"
+          (click)="alternar($event, linha.pasta.id)"
+        ><i class="pi pi-chevron-right" [class.demanda-pastas__chevron--aberto]="linha.aberta"></i></span>
+      } @else {
+        <span class="demanda-pastas__chevron-vazio"></span>
+      }
+      <i class="pi pi-folder demanda-pastas__icone"></i>
+      <span class="demanda-pastas__nome">{{ linha.pasta.nome }}</span>
+      <span class="demanda-pastas__conta">{{ linha.pasta.quantidade }}</span>
+    </button>
+  } @empty {
+    <span class="demanda-pastas__vazio">Este projeto não tem pastas.</span>
+  }
+</nav>

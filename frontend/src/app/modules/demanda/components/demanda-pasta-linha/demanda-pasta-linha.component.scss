@@ -1,0 +1,119 @@
+:host {
+  display: block;
+}
+
+.demanda-pasta-linha {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.12s ease;
+
+  &:hover {
+    background: var(--app-surface-100);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--p-primary-color);
+    outline-offset: -2px;
+  }
+
+  &--selecionada,
+  &--selecionada:hover {
+    background: var(--app-realce-sutil);
+  }
+
+  &__corpo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__nome {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--p-text-color);
+  }
+
+  &__icone-pasta {
+    margin-right: 0.35rem;
+    font-size: 0.8rem;
+    color: var(--p-text-muted-color);
+  }
+
+  &__destaque {
+    background: var(--app-destaque-busca, color-mix(in srgb, var(--p-yellow-400) 45%, transparent));
+    color: inherit;
+    border-radius: 0.15rem;
+  }
+
+  &__detalhe {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.5rem;
+    min-width: 0;
+  }
+
+  &__tag {
+    padding: 0 0.4rem;
+    border: 1px solid;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 500;
+    line-height: 1.5;
+  }
+
+  &__pasta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.72rem;
+    color: var(--p-text-muted-color);
+
+    .pi {
+      font-size: 0.65rem;
+    }
+  }
+
+  &__descricoes {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.1rem;
+    flex-shrink: 0;
+  }
+
+  &__descricao {
+    width: 1.5rem;
+    height: 1.5rem;
+    padding: 0;
+    border: 0;
+    border-radius: 0.3rem;
+    background: transparent;
+    color: var(--app-surface-400);
+    font-size: 0.85rem;
+    cursor: pointer;
+    opacity: 0.55;
+
+    &:hover {
+      opacity: 1;
+      background: var(--app-surface-200);
+    }
+
+    &--preenchida {
+      opacity: 1;
+      filter: drop-shadow(0 0 3px color-mix(in srgb, currentColor 45%, transparent));
+    }
+
+    &--tecnica.demanda-pasta-linha__descricao--preenchida { color: var(--app-icone-tecnica); }
+    &--cliente.demanda-pasta-linha__descricao--preenchida { color: var(--app-icone-cliente); }
+    &--doc.demanda-pasta-linha__descricao--preenchida { color: var(--app-icone-doc); }
+  }
+}

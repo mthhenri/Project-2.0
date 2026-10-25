@@ -215,72 +215,12 @@
         <!-- Atividades (apenas membros da demanda) -->
         @if (eMembro()) {
         <p-tabpanel value="1">
-          <div class="demanda-detalhe-dialog__atividades">
-            <div class="demanda-detalhe-dialog__atividades-header">
-              @if (atividades().length > 0) {
-                <span class="demanda-detalhe-dialog__atividades-contador">
-                  {{ atividades().length }} atividade(s)
-                </span>
-              }
-              <p-button
-                label="Nova Atividade"
-                icon="pi pi-plus"
-                size="small"
-                (onClick)="criarAtividade()"
-              />
-              <p-button
-                label="Ver todas"
-                icon="pi pi-external-link"
-                iconPos="right"
-                severity="secondary"
-                [outlined]="true"
-                size="small"
-                pTooltip="Abre a lista de atividades em outra aba"
-                tooltipPosition="top"
-                (onClick)="verTodasAtividades()"
-              />
-            </div>
-
-            @if (carregandoAtividades()) {
-              <div class="demanda-detalhe-dialog__atividades-carregando">
-                <i class="pi pi-spin pi-spinner"></i>
-              </div>
-            } @else if (atividades().length === 0) {
-              <div class="demanda-detalhe-dialog__atividades-vazio">
-                <i class="pi pi-check-square"></i>
-                <p>Nenhuma atividade nesta demanda</p>
-                <p-button label="Criar a primeira atividade" icon="pi pi-plus" severity="secondary" [outlined]="true" size="small" (onClick)="criarAtividade()" />
-              </div>
-            } @else {
-              <div class="demanda-detalhe-dialog__atividades-lista">
-                @for (atividade of atividades(); track atividade.id) {
-                  <div class="demanda-detalhe-dialog__atividade-item">
-                    <div class="demanda-detalhe-dialog__atividade-principal">
-                      <span class="demanda-detalhe-dialog__atividade-nome">{{ atividade.nome }}</span>
-                      <p-tag
-                        [value]="rotuloStatusAtividade(atividade.status)"
-                        [severity]="severidadeStatusAtividade(atividade.status)"
-                      />
-                      <app-prioridade-selo [prioridade]="atividade.prioridade" />
-                    </div>
-                    <div class="demanda-detalhe-dialog__atividade-meta">
-                      <span class="demanda-detalhe-dialog__atividade-executor">
-                        <span class="demanda-detalhe-dialog__atividade-avatar">{{ iniciaisUsuario(atividade.nomeUsuario) }}</span>
-                        {{ atividade.nomeUsuario }}
-                      </span>
-                      <span
-                        class="demanda-detalhe-dialog__atividade-tempo"
-                        [pTooltip]="unidadeTempo.emDias() ? (atividade.totalMinutosExecutados | tempoExibicao: false : 'minutos') : ''"
-                      >
-                        <i class="pi pi-clock"></i>
-                        {{ atividade.totalMinutosExecutados | tempoExibicao: unidadeTempo.emDias() : 'minutos' }}
-                      </span>
-                    </div>
-                  </div>
-                }
-              </div>
-            }
-          </div>
+          <app-demanda-atividades-painel
+            [atividades]="atividades()"
+            [carregando]="carregandoAtividades()"
+            (nova)="criarAtividade()"
+            (verTodas)="verTodasAtividades()"
+          />
         </p-tabpanel>
         }
 
@@ -312,66 +252,17 @@
 
 <!-- Dialog de edição de descrição -->
 @if (demanda() && campoDescricaoEditando()) {
-  <p-dialog
-    [header]="tituloDialogDescricao()"
-    [visible]="mostrarDialogDescricao()"
-    (visibleChange)="aoTentarFecharDescricao($event)"
-    [modal]="true"
-    [style]="{ width: '95vw', height: '95vh' }"
-    [contentStyle]="{ display: 'flex', flexDirection: 'column' }"
-    [draggable]="false"
-    [resizable]="false"
-    appendTo="body"
-  >
-    @if (podeEditarDescricaoAtual()) {
-      <form [formGroup]="formularioDescricao" class="demanda-detalhe-dialog__descricao-dialog-form">
-        <app-markdown-editor
-          formControlName="valor"
-          [alturaMinima]="0"
-          [rotulo]="tituloDialogDescricao()"
-          class="demanda-detalhe-dialog__editor"
-        />
-        <app-assistente-descricao
-          [textoAtual]="formularioDescricao.value.valor || ''"
-          tipoEntidade="demanda"
-          [contextoEntidade]="nomeDemandaDescricaoEditando()"
-          (textoAuxiliadoAceito)="aceitarDescricaoAssistente($event)"
-        />
-      </form>
-    } @else {
-      @if (formularioDescricao.value.valor) {
-        <div class="demanda-detalhe-dialog__descricao-leitura">
-          <app-markdown-visualizador [texto]="formularioDescricao.value.valor" />
-        </div>
-      } @else {
-        <div class="demanda-detalhe-dialog__descricao-vazia">Sem conteúdo</div>
-      }
-    }
-
-    <ng-template pTemplate="footer">
-      @if (podeEditarDescricaoAtual()) {
-        <p-button
-          label="Cancelar"
-          severity="secondary"
-          [outlined]="true"
-          (onClick)="aoTentarFecharDescricao(false)"
-        />
-        <p-button
-          label="Salvar"
-          icon="pi pi-check"
-          [loading]="carregandoSalvarDescricao()"
-          (onClick)="salvarDescricao()"
-        />
-      } @else {
-        <p-button
-          label="Fechar"
-          severity="secondary"
-          [outlined]="true"
-          (onClick)="mostrarDialogDescricao.set(false)"
-        />
-      }
-    </ng-template>
-  </p-dialog>
+  <app-demanda-descricao-dialog
+    [visivel]="mostrarDialogDescricao()"
+    [titulo]="tituloDialogDescricao()"
+    [nomeDemanda]="nomeDemandaDescricaoEditando()"
+    [podeEditar]="podeEditarDescricaoAtual()"
+    [carregandoSalvar]="carregandoSalvarDescricao()"
+    [formulario]="formularioDescricao"
+    (tentarFechar)="aoTentarFecharDescricao($event)"
+    (salvar)="salvarDescricao()"
+    (textoAssistenteAceito)="aceitarDescricaoAssistente($event)"
+  />
 }
 
 <!-- Dialog de edição -->

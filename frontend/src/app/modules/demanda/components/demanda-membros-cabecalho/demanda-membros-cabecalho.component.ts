@@ -29,6 +29,8 @@ export class DemandaMembrosCabecalhoComponent {
   /** Usuários que o gestor pode adicionar (sem gestores); vazio para o desenvolvedor. */
   readonly usuariosDisponiveis = input<UsuarioResumoDto[]>([]);
   readonly membros = model<DemandaMembroDto[]>([]);
+  /** Mostra o nome ao lado do avatar (a demanda aberta da Árvore); sem isso, só a pilha de avatares. */
+  readonly comNome = input<boolean>(false);
   readonly membrosAlterados = output<void>();
 
   readonly adicionando = signal<boolean>(false);

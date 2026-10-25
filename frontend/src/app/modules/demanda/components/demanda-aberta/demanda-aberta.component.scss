@@ -1,0 +1,188 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+}
+
+:host ::ng-deep .demanda-aberta__abas .p-tab {
+  padding: 0.6rem 0.8rem;
+  font-size: 0.875rem;
+}
+
+.demanda-aberta {
+  &__carregando {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    font-size: 1.5rem;
+    color: var(--p-text-muted-color);
+  }
+
+  &__topo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+    padding: 1rem 1.25rem 0;
+    border-bottom: 1px solid var(--app-surface-200);
+  }
+
+  &__linha-topo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+
+  &__caminho {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+    gap: 0.25rem;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  &__caminho-item {
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--p-primary-color);
+    font-size: 0.8rem;
+    cursor: pointer;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__caminho-sep {
+    font-size: 0.6rem;
+    color: var(--p-text-muted-color);
+  }
+
+  &__caminho-raiz {
+    font-size: 0.8rem;
+    color: var(--p-text-muted-color);
+  }
+
+  &__titulo-area {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+
+  &__icone-pasta {
+    color: var(--p-text-muted-color);
+  }
+
+  &__titulo {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+
+  &__lapis {
+    display: inline-flex;
+    padding: 0.25rem;
+    border: none;
+    border-radius: 0.375rem;
+    background: none;
+    color: var(--p-text-muted-color);
+    cursor: pointer;
+    opacity: 0.6;
+
+    &:hover {
+      opacity: 1;
+      background: var(--app-surface-100);
+    }
+  }
+
+  &__titulo-campo {
+    flex: 1;
+    min-width: 0;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid var(--p-primary-color);
+    border-radius: 0.375rem;
+    background: var(--app-surface-0);
+    color: var(--p-text-color);
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+
+  &__titulo-erro {
+    color: var(--p-red-500);
+    font-size: 0.8rem;
+  }
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1.25rem;
+  }
+
+  &__status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  &__pessoas {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1.25rem;
+  }
+
+  // As abas moram no topo fixo; o conteúdo rola embaixo.
+  &__abas {
+    margin-top: 0.25rem;
+  }
+
+  &__aba-icone {
+    margin-right: 0.4rem;
+    font-size: 0.9rem;
+    color: var(--app-surface-400);
+
+    &--preenchida.demanda-aberta__aba-icone--tecnica { color: var(--app-icone-tecnica); }
+    &--preenchida.demanda-aberta__aba-icone--cliente { color: var(--app-icone-cliente); }
+    &--preenchida.demanda-aberta__aba-icone--doc { color: var(--app-icone-doc); }
+  }
+
+  &__corpo {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 1rem 1.25rem 1.5rem;
+  }
+
+  &__acoes-texto {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 0.5rem;
+  }
+
+  &__vazio {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 1.5rem 0;
+    color: var(--p-text-muted-color);
+
+    strong {
+      color: var(--p-text-color);
+    }
+  }
+}
