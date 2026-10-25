@@ -149,6 +149,13 @@
 - **Por quê:** cada pessoa tem uma tolerância diferente a confirmar.
 - **Custo aparente:** não existe preferência de usuário para a IA hoje; dá para seguir o modelo das preferências do chat entre colaboradores (`MensagemDiretaPreferencia*`).
 
+### I-030 — Integração com o Git (Gitea) · projeto todo
+
+- **Ideia:** ligar o Project ao repositório Git do projeto (a empresa do autor está saindo do Tortoise para o Gitea, não GitHub). Com os commits, o check-in passa a ser automático (a IA lê o que foi feito em vez de perguntar) e a documentação da demanda pode sair do que realmente mudou no código (I-023 cita os commits como o passo seguinte às execuções).
+- **Origem:** conversas de 2026-10-25 com o autor; o check-in manual e o checklist de `chat-execucao-por-demanda.spec.md` ficam até esta integração existir.
+- **Por quê:** tira do desenvolvedor o último relato manual e dá à IA a fonte mais fiel do trabalho.
+- **Custo aparente:** alto e de futuro distante: acesso ao Gitea por projeto, ligar commit a demanda e atividade, segurança das credenciais e mudança no fluxo do check-in.
+
 ## Promovidas
 
 ### I-025 — O desenvolvedor executa demandas; a IA cuida de atividades e execuções · chat IA/demanda
