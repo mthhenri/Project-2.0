@@ -22,3 +22,4 @@ export * from './tipo-proposta-ia.enum';
 export * from './status-proposta-ia.enum';
 export * from './autor-mensagem-direta.enum';
 export * from './referencia-mensagem-direta.enum';
+export * from './trecho-diff-tipo.enum';

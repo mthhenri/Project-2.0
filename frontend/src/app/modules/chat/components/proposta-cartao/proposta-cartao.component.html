@@ -38,7 +38,8 @@
             </span>
           }
           @if (texto('nome')) {
-            <span class="proposta-cartao__linha">Novo nome: {{ texto('nome') }}</span>
+            <span class="proposta-cartao__linha">Nome</span>
+            <div class="proposta-cartao__trecho"><app-diff-por-palavra [antes]="texto('atividadeNome')" [depois]="texto('nome')" /></div>
           }
         </div>
       }
@@ -61,10 +62,11 @@
           @if (texto('demandaNome')) {
             <span class="proposta-cartao__linha">Demanda: {{ texto('demandaNome') }}</span>
           }
-          <span class="proposta-cartao__linha">Antes: {{ texto('periodoAnteriorTexto') }}</span>
-          <span class="proposta-cartao__linha">Depois: {{ texto('periodoNovoTexto') }}@if (numero('duracaoNovaMinutos')) { ({{ formatarDuracao(numero('duracaoNovaMinutos')) }}) }</span>
+          <span class="proposta-cartao__linha">Horário e duração</span>
+          <div class="proposta-cartao__trecho"><app-diff-por-palavra [antes]="periodoAnteriorDaExecucao()" [depois]="periodoNovoDaExecucao()" /></div>
           @if (texto('descricao')) {
-            <span class="proposta-cartao__linha">Nova descrição: {{ texto('descricao') }}</span>
+            <span class="proposta-cartao__linha">Descrição</span>
+            <div class="proposta-cartao__trecho"><app-diff-por-palavra [antes]="texto('descricaoAnterior')" [depois]="texto('descricao')" /></div>
           }
         </div>
       }
@@ -75,7 +77,8 @@
             <span class="proposta-cartao__linha">Projeto: {{ texto('projetoNome') }}</span>
           }
           @if (texto('nome')) {
-            <span class="proposta-cartao__linha">Novo nome: {{ texto('nome') }}</span>
+            <span class="proposta-cartao__linha">Nome</span>
+            <div class="proposta-cartao__trecho"><app-diff-por-palavra [antes]="texto('demandaNome')" [depois]="texto('nome')" /></div>
           }
           @if (texto('statusAnterior')) {
             <span class="proposta-cartao__linha">Status: {{ rotuloDoStatusDaDemanda('statusAnterior') }} → {{ rotuloDoStatusDaDemanda('status') }}</span>
@@ -91,7 +94,11 @@
           }
           @if (texto('acrescentarDocumentacao')) {
             <span class="proposta-cartao__linha">Acrescenta à documentação</span>
-            <div class="proposta-cartao__trecho proposta-cartao__trecho--depois"><app-markdown-visualizador [texto]="texto('acrescentarDocumentacao')" /></div>
+            @if (documentacaoAcrescentada(); as documentacao) {
+              <div class="proposta-cartao__trecho"><app-diff-por-palavra [antes]="documentacao.antes" [depois]="documentacao.depois" /></div>
+            } @else {
+              <div class="proposta-cartao__trecho proposta-cartao__trecho--depois"><app-markdown-visualizador [texto]="texto('acrescentarDocumentacao')" /></div>
+            }
           }
           @if (numero('atividadesEmAberto') > 0) {
             <span class="proposta-cartao__aviso"><i class="pi pi-exclamation-triangle"></i>Ainda há {{ numero('atividadesEmAberto') }} {{ numero('atividadesEmAberto') === 1 ? 'atividade' : 'atividades' }} em aberto nesta demanda.</span>
@@ -166,13 +173,36 @@
           @if (texto('projetoNome')) {
             <span class="proposta-cartao__linha">Projeto: {{ texto('projetoNome') }}</span>
           }
+          @if (temAnteriorDaDescricao()) {
+            <div class="proposta-cartao__visoes" role="group" aria-label="O que mostrar">
+              @for (visao of visoesDosTextos; track visao.codigo) {
+                <button type="button" class="proposta-cartao__visao" [class.proposta-cartao__visao--ativa]="visaoDosTextos() === visao.codigo" [attr.aria-pressed]="visaoDosTextos() === visao.codigo" (click)="visaoDosTextos.set(visao.codigo)">{{ visao.rotulo }}</button>
+              }
+            </div>
+          }
           @if (texto('descricaoCliente')) {
             <span class="proposta-cartao__linha">Descrição do cliente</span>
-            <div class="proposta-cartao__trecho proposta-cartao__trecho--depois"><app-markdown-visualizador [texto]="texto('descricaoCliente')" /></div>
+            @if (temAnteriorDaDescricao() && visaoDosTextos() === 'MUDANCAS') {
+              <div class="proposta-cartao__trecho"><app-diff-por-palavra [antes]="texto('descricaoClienteAnterior')" [depois]="texto('descricaoCliente')" /></div>
+            } @else if (temAnteriorDaDescricao() && visaoDosTextos() === 'ANTES') {
+              <div class="proposta-cartao__trecho proposta-cartao__trecho--antes">
+                @if (texto('descricaoClienteAnterior')) { <app-markdown-visualizador [texto]="texto('descricaoClienteAnterior')" /> } @else { <em>Sem descrição até agora</em> }
+              </div>
+            } @else {
+              <div class="proposta-cartao__trecho proposta-cartao__trecho--depois"><app-markdown-visualizador [texto]="texto('descricaoCliente')" /></div>
+            }
           }
           @if (texto('descricaoTecnica')) {
             <span class="proposta-cartao__linha">Descrição técnica</span>
-            <div class="proposta-cartao__trecho proposta-cartao__trecho--depois"><app-markdown-visualizador [texto]="texto('descricaoTecnica')" /></div>
+            @if (temAnteriorDaDescricao() && visaoDosTextos() === 'MUDANCAS') {
+              <div class="proposta-cartao__trecho"><app-diff-por-palavra [antes]="texto('descricaoTecnicaAnterior')" [depois]="texto('descricaoTecnica')" /></div>
+            } @else if (temAnteriorDaDescricao() && visaoDosTextos() === 'ANTES') {
+              <div class="proposta-cartao__trecho proposta-cartao__trecho--antes">
+                @if (texto('descricaoTecnicaAnterior')) { <app-markdown-visualizador [texto]="texto('descricaoTecnicaAnterior')" /> } @else { <em>Sem descrição até agora</em> }
+              </div>
+            } @else {
+              <div class="proposta-cartao__trecho proposta-cartao__trecho--depois"><app-markdown-visualizador [texto]="texto('descricaoTecnica')" /></div>
+            }
           }
         </div>
       }
@@ -251,10 +281,8 @@
         <div class="proposta-cartao__resumo">
           <strong class="proposta-cartao__destaque">Pad · {{ rotuloSecao(texto('secao')) }}</strong>
           @if (texto('operacao') === 'TROCAR') {
-            <span class="proposta-cartao__linha">Antes</span>
-            <div class="proposta-cartao__trecho proposta-cartao__trecho--antes"><app-markdown-visualizador [texto]="texto('trechoAntigo')" /></div>
-            <span class="proposta-cartao__linha">Depois</span>
-            <div class="proposta-cartao__trecho proposta-cartao__trecho--depois"><app-markdown-visualizador [texto]="texto('trechoNovo')" /></div>
+            <span class="proposta-cartao__linha">Trecho trocado</span>
+            <div class="proposta-cartao__trecho"><app-diff-por-palavra [antes]="texto('trechoAntigo')" [depois]="texto('trechoNovo')" /></div>
           } @else {
             <span class="proposta-cartao__linha">{{ texto('secao') === 'FEITO' ? 'Acrescentar debaixo do título de hoje:' : 'Acrescentar ao fim:' }}</span>
             <div class="proposta-cartao__trecho proposta-cartao__trecho--depois"><app-markdown-visualizador [texto]="texto('texto')" /></div>

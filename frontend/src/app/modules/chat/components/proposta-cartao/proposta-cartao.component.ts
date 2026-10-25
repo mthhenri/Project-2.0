@@ -15,6 +15,7 @@ import { ATIVIDADE_STATUS_OPCOES } from '../../../atividade/models/atividade.mod
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { AtividadePrioridadeService } from '../../../../core/services/atividade-prioridade.service';
 import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
+import { DiffPorPalavraComponent } from '../../../../shared/components/diff-por-palavra/diff-por-palavra.component';
 import { PrioridadeSeloComponent } from '../../../../shared/components/prioridade-selo/prioridade-selo.component';
 import { ROTULO_SECAO_ANOTACAO } from '../../../usuario/utils/anotacoes.util';
 import { DesfazerService } from '../../../../core/services/desfazer.service';
@@ -41,10 +42,15 @@ const ROTULO_STATUS_DA_DEMANDA: Record<string, string> = {
   CANCELADA: 'Cancelada',
 };
 
+type VisaoDosTextos = 'MUDANCAS' | 'ANTES' | 'DEPOIS';
+
+/** Quanto do fim da documentação de antes o cartão mostra como contexto do que será acrescentado. */
+const CONTEXTO_DA_DOCUMENTACAO = 240;
+
 @Component({
   selector: 'app-chat-proposta-cartao',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, TooltipModule, TagModule, TextareaModule, PrioridadeSeloComponent, MarkdownVisualizadorComponent],
+  imports: [ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, TooltipModule, TagModule, TextareaModule, PrioridadeSeloComponent, MarkdownVisualizadorComponent, DiffPorPalavraComponent],
   templateUrl: './proposta-cartao.component.html',
   styleUrl: './proposta-cartao.component.scss',
 })
@@ -108,6 +114,49 @@ export class PropostaCartaoComponent {
   /** O relógio do cartão: só avança quando o prazo de desfazer vence, para o botão desativar com o cartão aberto. */
   private readonly agora = signal(Date.now());
   readonly desfazerDisponivel = computed(() => podeDesfazerProposta(this.proposta()?.resolucaoData, new Date(this.agora())));
+
+  /** Como o cartão de Descrever demanda mostra os textos: o que muda (diff por palavra), o de antes ou o de depois. */
+  readonly visaoDosTextos = signal<VisaoDosTextos>('MUDANCAS');
+  readonly visoesDosTextos: { codigo: VisaoDosTextos; rotulo: string }[] = [
+    { codigo: 'MUDANCAS', rotulo: 'Mudanças' },
+    { codigo: 'ANTES', rotulo: 'Antes' },
+    { codigo: 'DEPOIS', rotulo: 'Depois' },
+  ];
+  /** A proposta traz o texto de antes (as de antes da task 224 não trazem: seguem mostrando só o texto novo). */
+  readonly temAnteriorDaDescricao = computed(() => {
+    const dados = this.proposta()?.dados;
+    return !!dados && (dados['descricaoClienteAnterior'] !== undefined || dados['descricaoTecnicaAnterior'] !== undefined);
+  });
+
+  /** Período e duração da execução corrigida, antes e depois, em texto, para o diff por palavra da correção. */
+  readonly periodoAnteriorDaExecucao = computed(() => {
+    const dados = this.proposta()?.dados;
+    if (!dados) return '';
+    const inicio = typeof dados['inicioAnteriorData'] === 'string' ? Date.parse(dados['inicioAnteriorData']) : NaN;
+    const fim = typeof dados['fimAnteriorData'] === 'string' ? Date.parse(dados['fimAnteriorData']) : NaN;
+    const duracao = Number.isNaN(inicio) || Number.isNaN(fim) ? 0 : Math.round((fim - inicio) / 60000);
+    return duracao > 0 ? `${this.texto('periodoAnteriorTexto')} (${formatarDuracao(duracao)})` : this.texto('periodoAnteriorTexto');
+  });
+  readonly periodoNovoDaExecucao = computed(() => {
+    const duracao = this.numero('duracaoNovaMinutos');
+    return duracao > 0 ? `${this.texto('periodoNovoTexto')} (${formatarDuracao(duracao)})` : this.texto('periodoNovoTexto');
+  });
+
+  /**
+   * A documentação que o cartão de Alterar demanda acrescenta, como antes e depois: o fim da documentação de antes (o suficiente para
+   * situar o trecho) e o mesmo fim com o acréscimo, como o executor grava. Nulo nas propostas sem a documentação de antes.
+   */
+  readonly documentacaoAcrescentada = computed(() => {
+    const dados = this.proposta()?.dados;
+    if (!dados || dados['documentacaoAnterior'] === undefined) return null;
+    const anterior = (typeof dados['documentacaoAnterior'] === 'string' ? dados['documentacaoAnterior'] : '').trimEnd();
+    const acrescimo = this.texto('acrescentarDocumentacao');
+    if (!anterior.trim()) return { antes: '', depois: acrescimo };
+    const cortou = anterior.length > CONTEXTO_DA_DOCUMENTACAO;
+    // Corta no começo de uma palavra, para o contexto não abrir no meio dela.
+    const contexto = cortou ? `… ${anterior.slice(-CONTEXTO_DA_DOCUMENTACAO).replace(/^\S*\s+/, '')}` : anterior;
+    return { antes: contexto, depois: `${contexto}\n\n${acrescimo}` };
+  });
 
   /** A proposta mudou de situação por uma ação do usuário (confirmar, ajustar, recusar, desfazer): a tela atualiza os botões de sugestão. */
   readonly resolvida = output<PropostaIaResumoDto>();

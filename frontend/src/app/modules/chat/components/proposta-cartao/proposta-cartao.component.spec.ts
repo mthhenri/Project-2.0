@@ -377,3 +377,105 @@ describe('PropostaCartaoComponent — Ajustar', () => {
     detectar(montado);
   });
 });
+
+// Diff por palavra nos cartões (task 224): um caso por tipo que passou a mostrar o que muda; as propostas de antes dessa task, que não
+// trazem o texto de antes, seguem mostrando o texto novo como sempre.
+describe('PropostaCartaoComponent — diff por palavra', () => {
+  const pendente = (tipo: TipoPropostaIaEnum, dados: Record<string, unknown>) => proposta(tipo, StatusPropostaIaEnum.PENDENTE, dados);
+  const removidos = (montado: Montado) => Array.from(montado.elemento.querySelectorAll('del')).map((item) => item.textContent);
+  const adicionados = (montado: Montado) => Array.from(montado.elemento.querySelectorAll('ins')).map((item) => item.textContent);
+
+  it('Alterar atividade: o nome atual contra o novo, por palavra', async () => {
+    const montado = await montarCartao(pendente(TipoPropostaIaEnum.ALTERAR_ATIVIDADE, { atividadeId: 3, atividadeNome: 'Montar o formulário de login', nome: 'Montar o formulário de acesso' }));
+    expect(removidos(montado)).toEqual(['login']);
+    expect(adicionados(montado)).toEqual(['acesso']);
+    expect(texto(montado)).not.toContain('Novo nome');
+  });
+
+  it('Alterar demanda: o nome contra o novo e a documentação acrescentada em verde depois do fim da que existe', async () => {
+    const montado = await montarCartao(pendente(TipoPropostaIaEnum.ALTERAR_DEMANDA, {
+      demandaId: 4, demandaNome: 'Tela de login', nome: 'Tela de acesso', acrescentarDocumentacao: 'Bloqueia após 5 tentativas.', documentacaoAnterior: 'Login por e-mail e senha.',
+    }));
+    expect(removidos(montado)).toEqual(['login']);
+    expect(adicionados(montado)).toEqual(['acesso', '\n\nBloqueia após 5 tentativas.']);
+    expect(texto(montado)).toContain('Login por e-mail e senha.');
+  });
+
+  it('Alterar demanda: só o fim de uma documentação longa serve de contexto, aberto numa palavra inteira', async () => {
+    const longa = Array.from({ length: 120 }, (_, indice) => `palavra${indice}`).join(' ');
+    const montado = await montarCartao(pendente(TipoPropostaIaEnum.ALTERAR_DEMANDA, { demandaId: 4, acrescentarDocumentacao: 'Novo parágrafo.', documentacaoAnterior: longa }));
+    const contexto = montado.componente.documentacaoAcrescentada();
+    expect(contexto?.antes.startsWith('… palavra')).toBe(true);
+    expect(contexto?.antes.endsWith('palavra119')).toBe(true);
+    expect(contexto?.antes.length).toBeLessThan(300);
+    expect(contexto?.depois).toBe(`${contexto?.antes}\n\nNovo parágrafo.`);
+  });
+
+  it('Alterar demanda de antes da task (sem a documentação de antes) mostra só o acréscimo, como sempre', async () => {
+    const montado = await montarCartao(pendente(TipoPropostaIaEnum.ALTERAR_DEMANDA, { demandaId: 4, demandaNome: 'Tela de login', acrescentarDocumentacao: 'Bloqueia após 5 tentativas.' }));
+    expect(montado.componente.documentacaoAcrescentada()).toBeNull();
+    expect(texto(montado)).toContain('Bloqueia após 5 tentativas.');
+    expect(montado.elemento.querySelector('ins')).toBeNull();
+  });
+
+  it('Corrigir execução: horário e duração, e a descrição, contra os de antes', async () => {
+    const montado = await montarCartao(pendente(TipoPropostaIaEnum.CORRIGIR_EXECUCAO, {
+      execucaoId: 9, atividadeNome: 'Revisar contrato', demandaNome: 'Jurídico',
+      inicioAnteriorData: '2026-10-24T12:00:00.000Z', fimAnteriorData: '2026-10-24T14:00:00.000Z',
+      periodoAnteriorTexto: '24/10 09:00–11:00', periodoNovoTexto: '24/10 09:00–18:00', duracaoNovaMinutos: 540,
+      descricaoAnterior: 'Revisão inicial', descricao: 'Revisão completa',
+    }));
+    expect(montado.componente.periodoAnteriorDaExecucao()).toBe('24/10 09:00–11:00 (2h00)');
+    expect(montado.componente.periodoNovoDaExecucao()).toBe('24/10 09:00–18:00 (9h00)');
+    expect(removidos(montado)).toContain('09:00–11:00');
+    expect(adicionados(montado)).toContain('09:00–18:00');
+    expect(removidos(montado)).toContain('inicial');
+    expect(adicionados(montado)).toContain('completa');
+  });
+
+  it('Trocar trecho do pad: o trecho antigo contra o novo, em um texto só', async () => {
+    const montado = await montarCartao(pendente(TipoPropostaIaEnum.ANOTAR_PAD, { secao: 'FEITO', operacao: 'TROCAR', trechoAntigo: 'revisar o contrato', trechoNovo: 'revisar o aditivo' }));
+    expect(removidos(montado)).toEqual(['contrato']);
+    expect(adicionados(montado)).toEqual(['aditivo']);
+    expect(texto(montado)).toContain('Trecho trocado');
+  });
+
+  it('Anotar no pad acrescentando não ganha diff: continua mostrando o texto a acrescentar', async () => {
+    const montado = await montarCartao(pendente(TipoPropostaIaEnum.ANOTAR_PAD, { secao: 'FEITO', operacao: 'ANEXAR', texto: 'Revisei o contrato.' }));
+    expect(montado.elemento.querySelector('app-diff-por-palavra')).toBeNull();
+    expect(texto(montado)).toContain('Revisei o contrato.');
+  });
+
+  it('Descrever demanda: mostra as mudanças por padrão e alterna para o antes e o depois', async () => {
+    const montado = await montarCartao(pendente(TipoPropostaIaEnum.DESCREVER_DEMANDA, {
+      demandaId: 3, demandaNome: 'Cadastro', descricaoCliente: 'O cliente quer um cadastro simples.', descricaoClienteAnterior: 'O cliente quer um cadastro.',
+      descricaoTecnica: 'Criar a tela', descricaoTecnicaAnterior: null,
+    }));
+    expect(adicionados(montado)).toEqual(['cadastro simples.', 'Criar a tela']);
+    expect(removidos(montado)).toEqual(['cadastro.']);
+
+    botao(montado, 'Antes')!.click();
+    detectar(montado);
+    expect(montado.elemento.querySelector('app-diff-por-palavra')).toBeNull();
+    expect(texto(montado)).toContain('O cliente quer um cadastro.');
+    expect(texto(montado)).toContain('Sem descrição até agora');
+
+    botao(montado, 'Depois')!.click();
+    detectar(montado);
+    expect(montado.elemento.querySelector('app-diff-por-palavra')).toBeNull();
+    expect(texto(montado)).toContain('O cliente quer um cadastro simples.');
+    expect(texto(montado)).toContain('Criar a tela');
+  });
+
+  it('Descrever demanda de antes da task (sem o texto de antes) mostra só o texto novo, sem as opções', async () => {
+    const montado = await montarCartao(pendente(TipoPropostaIaEnum.DESCREVER_DEMANDA, { demandaId: 3, descricaoCliente: 'O cliente quer um cadastro simples.' }));
+    expect(botao(montado, 'Mudanças')).toBeUndefined();
+    expect(montado.elemento.querySelector('app-diff-por-palavra')).toBeNull();
+    expect(texto(montado)).toContain('O cliente quer um cadastro simples.');
+  });
+
+  it('os tipos que não mudaram seguem sem diff (regressão)', async () => {
+    const montado = await montarCartao();
+    expect(montado.elemento.querySelector('app-diff-por-palavra')).toBeNull();
+  });
+});

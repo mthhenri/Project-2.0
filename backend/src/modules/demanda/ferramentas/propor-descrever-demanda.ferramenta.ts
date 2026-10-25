@@ -69,7 +69,14 @@ export class ProporDescreverDemandaFerramenta extends FerramentaPropostaIa<Propo
     const descricoes = interpretarRedacaoDaDemanda(redigida.texto, { cliente: relatoDoCliente !== undefined, tecnica: relatoTecnico !== undefined });
     if (!descricoes) throw new BusinessException('Não foi possível redigir as descrições a partir do relato; peça mais detalhe ao gestor.');
 
-    const dados: PropostaDescreverDemandaDadosDto = { demandaId: entrada.demandaId, ...descricoes, demandaNome: demanda.nome, projetoNome: projeto?.nome };
+    const dados: PropostaDescreverDemandaDadosDto = {
+      demandaId: entrada.demandaId,
+      ...descricoes,
+      demandaNome: demanda.nome,
+      projetoNome: projeto?.nome,
+      ...(descricoes.descricaoCliente ? { descricaoClienteAnterior: demanda.descricaoCliente ?? null } : {}),
+      ...(descricoes.descricaoTecnica ? { descricaoTecnicaAnterior: demanda.descricaoTecnica ?? null } : {}),
+    };
     return { ...dados };
   }
 }

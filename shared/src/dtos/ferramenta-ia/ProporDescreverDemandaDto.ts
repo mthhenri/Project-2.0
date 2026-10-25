@@ -51,4 +51,13 @@ export class PropostaDescreverDemandaDadosDto {
   @IsOptional()
   @IsString()
   projetoNome?: string;
+
+  /** As descrições de antes (só dos campos que a proposta traz; nulo se a demanda não tinha), para o cartão mostrar o diff por palavra. */
+  @IsOptional()
+  @IsString()
+  descricaoClienteAnterior?: string | null;
+
+  @IsOptional()
+  @IsString()
+  descricaoTecnicaAnterior?: string | null;
 }

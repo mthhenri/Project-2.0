@@ -12,6 +12,37 @@
 
 ---
 
+## 2026-10-25 — Task 224: diff sobreposto por palavra nos cartões de proposta
+
+Primeira task das propostas da IA (`chat-propostas.spec.md`) e fase 1 do modo planejamento: toda mudança de texto mostrada no cartão passa a ser um
+diff sobreposto por palavra (o que sai riscado em vermelho, o que entra em verde).
+
+- **`shared`:** `compararPorPalavra` e `diffTemMudanca` (`utils/diff-por-palavra.ts`) e `TrechoDiffTipoEnum`. Aparam o começo e o fim iguais e alinham o
+  miolo por maior subsequência comum de palavras; passando de 4 milhões de células (palavras antes × depois) o miolo vira "tudo removido, tudo
+  adicionado", para texto grande nunca travar. Espaços e quebras de linha são preservados (juntar os trechos devolve o antes e o depois exatos).
+- **Componente** `app-diff-por-palavra` (`shared/components/diff-por-palavra/`): `<del>` e `<ins>`, cores por `color-mix` sobre os aliases `--app-surface-*`,
+  rolagem interna (`--diff-por-palavra-altura-maxima`, 16rem) e a variante `codigo` (monoespaçada). Nenhum cartão usa `codigo` hoje.
+- **Cartão:** Alterar atividade e Alterar demanda mostram o nome atual contra o novo (`atividadeNome`/`demandaNome`); Alterar demanda mostra o fim da
+  documentação (240 caracteres, aberto numa palavra inteira) com o acréscimo em verde; Corrigir execução, o horário com a duração e a descrição;
+  Descrever demanda ganhou a alternância Mudanças, Antes e Depois; Trocar trecho do pad virou um texto só. Os demais tipos não mudaram.
+- **Dados gravados na proposta (sem migration):** `descricaoClienteAnterior` e `descricaoTecnicaAnterior` (Descrever demanda) e `documentacaoAnterior`
+  (Alterar demanda ao acrescentar documentação). Proposta criada antes da task não os tem e continua mostrando só o texto novo (teste cobre). O pad fora
+  do chat não tem tela de diff (a busca por `trechoNovo` só acha o cartão e o editor Markdown, sem relação): só os cartões entraram.
+- **Impacto** (`npm run impacto`): o cartão tem 4 consumidores, `chat.page` e `checkin.page` (importação e seletor). O check-in só hospeda cartões de
+  Descrever execução, que não mudou.
+- **Testes:** `shared` 224 (9 novos do diff), `backend` 1324 (1 novo e 1 ajustado: os dados da proposta ganharam os campos de antes), `frontend` 157
+  arquivos e 1868 testes (6 do componente e 10 novos do cartão, 32 no spec do cartão), `desktop` 33, `repo:test` 13 (1 ignorado, preexistente).
+  Builds de `backend` e `frontend` ok (aviso do módulo `extend` não ESM, preexistente). Sem lint (`PROBLEMS.md` P-001).
+- **Ao vivo** (Playwright contra o front e o backend de desenvolvimento, gestor inicial): chat em 1920×1080, 1366×768 e 1080×1920, tema claro e
+  escuro, com 7 propostas simuladas (uma por tipo da lista, uma antiga sem o antes e uma sem mudança): 7 cartões por cenário, nenhum erro de console e
+  nenhuma rolagem horizontal. As respostas de `/chat/hoje` e de `/proposta-ia/:id` foram interceptadas no navegador, então o banco não foi alterado.
+  **Achado só na verificação:** no tema escuro o vermelho riscado ficava apagado; a cor passou a ser misturada com a cor do texto do tema.
+- **Limites:** as propostas foram simuladas, não nasceram das ferramentas rodando no backend em execução (que não foi reiniciado): a gravação do antes só
+  está provada por teste unitário. A alternância Mudanças/Antes/Depois foi provada por teste de componente e a vista "Mudanças" ao vivo; as vistas
+  Antes e Depois não foram capturadas. A palavra é o bloco sem espaço: `09:00–11:00` e `cadastro.` são trocados inteiros, não por parte.
+
+---
+
 ## 2026-10-25 — Execuções: edição inline, exclusão na tela e coluna de atividade única
 
 Pedido do autor, sem spec: otimizar o espaço da tela de Execuções (gestor) e achar por que o gestor não via "excluir execução".

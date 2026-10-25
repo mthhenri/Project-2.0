@@ -5,3 +5,4 @@ export * from './prazo-para-desfazer-proposta';
 export * from './versao';
 export * from './provedor-ia';
 export * from './mensagem-direta';
+export * from './diff-por-palavra';

@@ -115,7 +115,11 @@ test('a ferramenta é do gestor, redige no nível analítico com o prompt da ent
   assert.match(geradas[0].instrucoes, /Nunca invente/);
   assert.match(String(geradas[0].mensagens[0].conteudo), /Quer cadastrar parceiros/);
   assert.equal(propostas[0].tipo, TipoPropostaIaEnum.DESCREVER_DEMANDA);
-  assert.deepEqual(propostas[0].dados, { demandaId: 3, descricaoCliente: 'O cliente pediu um cadastro.', descricaoTecnica: '- Criar a tela', demandaNome: 'Novo cadastro', projetoNome: 'GR' });
+  assert.deepEqual(propostas[0].dados, {
+    demandaId: 3, descricaoCliente: 'O cliente pediu um cadastro.', descricaoTecnica: '- Criar a tela', demandaNome: 'Novo cadastro', projetoNome: 'GR',
+    // O texto de antes de cada descrição proposta, para o cartão mostrar o diff por palavra (a técnica não existia: nulo).
+    descricaoClienteAnterior: 'Já existente', descricaoTecnicaAnterior: null,
+  });
 });
 
 test('sem entrevista (nenhum relato) não redige nem cria proposta', async () => {

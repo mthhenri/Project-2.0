@@ -83,6 +83,34 @@
     }
   }
 
+  // Escolha entre o que muda, o de antes e o de depois (Descrever demanda, task 224).
+  &__visoes {
+    display: inline-flex;
+    align-self: flex-start;
+    gap: 2px;
+    padding: 2px;
+    border-radius: 8px;
+    border: 1px solid var(--app-surface-200);
+    background: var(--app-surface-50);
+  }
+
+  &__visao {
+    padding: 0.125rem 0.625rem;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--p-text-muted-color);
+    font-size: 0.75rem;
+    cursor: pointer;
+
+    &--ativa {
+      background: var(--app-surface-0);
+      color: var(--p-text-color);
+      font-weight: 600;
+      box-shadow: 0 1px 2px color-mix(in srgb, var(--p-text-color) 15%, transparent);
+    }
+  }
+
   &__ajuste {
     display: flex;
     flex-direction: column;

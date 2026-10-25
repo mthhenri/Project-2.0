@@ -51,6 +51,7 @@ Estas são as fontes da verdade. Em conflito entre código e documento, **o docu
 | Datas no fuso do sistema (`APP_TIMEZONE`): hoje, dia, hora, relógio local do datepicker | `shared/src/utils/fuso-horario.ts` + `ambiente.fusoHorario` (`frontend/src/environments/`) |
 | Execuções: contexto, linha ativa, URL e teclado (110) e relatório com auto-preview/IA (111) | `modules/execucao/pages/execucao-historico/`, `modules/execucao/utils/execucao.util.ts`, `modules/relatorio/components/relatorio-execucao-dialog/`, `modules/relatorio/utils/relatorio.util.ts` |
 | Provedores de IA, fallback entre eles e regra "o modelo é do provedor" (task 203) | `backend/src/modules/ia/` (`provedores/`, `services/ia.service.ts`), `shared/src/utils/provedor-ia.ts`, `configuracao_ia.modelos_provedor`/`fallbacks` |
+| Diff por palavra (task 224) | `shared/src/utils/diff-por-palavra.ts`, `shared/components/diff-por-palavra/`; usado em `modules/chat/components/proposta-cartao` |
 | Chat com a IA: conversa do dia, streaming SSE e cartões de proposta (task 139) | `modules/chat/` (`pages/chat`, `components/proposta-cartao`, `services/chat.service.ts` com o `fetch` do fluxo, `utils/chat.util.ts`) |
 | Tags: quick-add, popover de paleta, seleção em lote (task 116) | `modules/tag/` (`pages/tag-listagem`, `components/tag-edicao-dialog`, `utils/tag.util.ts`), `shared/components/seletor-cor/` |
 | Calendário: clique no dia, popover, navegação e legenda (task 115) | `modules/calendario/pages/calendario-listagem/`, `modules/calendario/models/dia-nao-util.model.ts` |

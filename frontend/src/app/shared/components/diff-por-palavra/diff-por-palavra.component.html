@@ -1,0 +1,15 @@
+<div class="diff-por-palavra" [class.diff-por-palavra--codigo]="codigo()" role="group" aria-label="Diferença entre o texto atual e o proposto">
+  @for (trecho of trechos(); track $index) {
+    @switch (trecho.tipo) {
+      @case (Tipo.REMOVIDO) {
+        <del class="diff-por-palavra__removido">{{ trecho.texto }}</del>
+      }
+      @case (Tipo.ADICIONADO) {
+        <ins class="diff-por-palavra__adicionado">{{ trecho.texto }}</ins>
+      }
+      @default {
+        <span>{{ trecho.texto }}</span>
+      }
+    }
+  }
+</div>

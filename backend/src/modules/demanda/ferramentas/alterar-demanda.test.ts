@@ -74,6 +74,16 @@ test('propor alterar guarda só o que muda, com os valores de antes e os nomes p
   });
 });
 
+test('propor acrescentar documentação guarda a documentação de antes para o cartão mostrar o diff', async () => {
+  const comDocumentacao = criarFerramenta(0, { ...INICIAL, documentacao: 'Login por e-mail e senha.' });
+  await comDocumentacao.ferramenta.executar({ demandaId: 4, acrescentarDocumentacao: 'Bloqueia após 5 tentativas.' }, GESTOR);
+  assert.equal(comDocumentacao.propostas[0].dados['documentacaoAnterior'], 'Login por e-mail e senha.');
+  assert.equal(comDocumentacao.propostas[0].dados['acrescentarDocumentacao'], 'Bloqueia após 5 tentativas.');
+  const semDocumentacao = criarFerramenta();
+  await semDocumentacao.ferramenta.executar({ demandaId: 4, acrescentarDocumentacao: 'Primeira anotação.' }, GESTOR);
+  assert.equal(semDocumentacao.propostas[0].dados['documentacaoAnterior'], null);
+});
+
 test('propor alterar sem nada que mude a demanda, ou com nome vazio, não cria proposta', async () => {
   const { ferramenta, propostas } = criarFerramenta();
   await assert.rejects(ferramenta.executar({ demandaId: 4 }, GESTOR), BusinessException);

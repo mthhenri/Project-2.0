@@ -75,6 +75,11 @@ export class PropostaAlterarDemandaDadosDto extends ProporAlterarDemandaDto {
   @IsString()
   previsaoAnteriorData?: string | null;
 
+  /** Só ao acrescentar documentação: a documentação de antes (nulo se não havia), para o cartão mostrar o diff por palavra. */
+  @IsOptional()
+  @IsString()
+  documentacaoAnterior?: string | null;
+
   /** Só ao mover: o nome do pai de antes (`null` se estava no topo) e do novo. */
   @IsOptional()
   @IsString()

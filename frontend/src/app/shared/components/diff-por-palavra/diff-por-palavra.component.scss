@@ -1,0 +1,29 @@
+.diff-por-palavra {
+  max-height: var(--diff-por-palavra-altura-maxima, 16rem);
+  overflow-y: auto;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+
+  &--codigo {
+    font-family: var(--font-mono, monospace);
+    tab-size: 2;
+  }
+
+  &__removido {
+    padding: 0 0.125rem;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--p-red-500) 16%, var(--app-surface-0));
+    color: color-mix(in srgb, var(--p-red-600) 60%, var(--p-text-color));
+    text-decoration: line-through;
+  }
+
+  &__adicionado {
+    padding: 0 0.125rem;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--p-green-500) 16%, var(--app-surface-0));
+    color: color-mix(in srgb, var(--p-green-700) 60%, var(--p-text-color));
+    text-decoration: none;
+  }
+}

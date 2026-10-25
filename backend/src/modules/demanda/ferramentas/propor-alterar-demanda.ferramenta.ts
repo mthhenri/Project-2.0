@@ -79,7 +79,7 @@ export class ProporAlterarDemandaFerramenta extends FerramentaPropostaIa<ProporA
       ...(muda.status ? { status: entrada.status, statusAnterior: demanda.status } : {}),
       ...(muda.horas ? { horasEstimadas: entrada.horasEstimadas, horasAnteriores: demanda.horasEstimadas } : {}),
       ...(muda.previsao ? { previsaoFimData: entrada.previsaoFimData, previsaoAnteriorData: previsaoAtual } : {}),
-      ...(documentacaoAcrescentada ? { acrescentarDocumentacao: documentacaoAcrescentada } : {}),
+      ...(documentacaoAcrescentada ? { acrescentarDocumentacao: documentacaoAcrescentada, documentacaoAnterior: demanda.documentacao ?? null } : {}),
       ...(mudaPai ? { demandaPaiId: entrada.demandaPaiId, paiAnteriorNome, paiNovoNome } : {}),
       ...(atividadesEmAberto > 0 ? { atividadesEmAberto } : {}),
     };
