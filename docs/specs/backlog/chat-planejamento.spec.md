@@ -93,7 +93,7 @@ Ficam para projetos próprios, com conversa própria antes da spec:
 ## Fases sugeridas (numeração decidida na hora, a partir da 224)
 
 1. **Diff sobreposto por palavra:** regra pura no `shared` (com teste), componente de exibição, troca no pad e nas propostas que alteram
-   texto. Independente das demais; aplicar a skill `gerenciamento-de-impacto`.
+   texto. Independente das demais; aplicar a skill `gerenciamento-de-impacto`. É a mesma task da fase 2 de `chat-propostas.spec.md`.
 2. **Modelo do plano:** migrations, repositories, service, API e regras de acesso (projeto, demanda, solo, pessoal).
 3. **Tela:** seletor no topo no lugar do histórico (nos dois modos), chave de modo, divisor arrastável, documento com abas e edição à mão.
 4. **IA no plano:** prompts novos, conversa do plano no armazenamento, escrita direta no rascunho e edição de trecho com aceitar/rejeitar.

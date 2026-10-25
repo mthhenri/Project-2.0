@@ -149,14 +149,18 @@
 - **Por quê:** atividade e execução são formalidade; o que o desenvolvedor faz de verdade é executar a demanda.
 - **Custo aparente:** mais autonomia para a IA (criar e trocar atividade sem confirmação a cada passo), revisão do fluxo do chat e da tela de demandas; esbarra na regra "a IA sempre pede confirmação".
 
-### I-026 — Propostas mais simples e mais autonomia para a IA · chat IA
+### I-028 — Cada usuário escolhe a autonomia da IA para si · chat IA/preferências
 
-- **Ideia:** repensar os cartões de proposta para ficarem mais fáceis de usar e deixar a IA agir sozinha onde a ação é fácil de desfazer, inclusive criar conexões entre demandas.
-- **Origem:** conversa de 2026-10-25 com o autor.
-- **Por quê:** confirmar tudo cansa; quanto mais fácil de desfazer, menos confirmação a ação precisa.
-- **Custo aparente:** decidir por tipo de proposta o que vira automático, como avisar e como desfazer; mexe no `proposta-cartao` e nos executores.
+- **Ideia:** dentro do teto que o administrador define na IA Config., cada usuário decide nas próprias preferências quais propostas a IA pode fazer sem perguntar (por exemplo, "mexer no meu pad: nem pergunta").
+- **Origem:** conversa de 2026-10-25 com o autor, ao discutir a I-026; ele preferiu deixar só o administrador por enquanto e ver a complexidade depois.
+- **Por quê:** cada pessoa tem uma tolerância diferente a confirmar.
+- **Custo aparente:** não existe preferência de usuário para a IA hoje; dá para seguir o modelo das preferências do chat entre colaboradores (`MensagemDiretaPreferencia*`).
 
 ## Promovidas
+
+### I-026 — Propostas mais simples e mais autonomia para a IA · chat IA
+
+- **Promovida em 2026-10-25** para a guarda-chuva [`chat-propostas.spec.md`](../specs/backlog/chat-propostas.spec.md) (só a spec, no backlog): régua de autonomia configurada pelo administrador, cartões compactos, Confirmar todas, diff por palavra, cinco propostas novas e a correção do sumiço e do scroll. A escolha por usuário ficou na I-028.
 
 ### I-027 — Barra lateral em grupos · frontend/navegação
 
