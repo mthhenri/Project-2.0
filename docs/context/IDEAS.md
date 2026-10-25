@@ -149,13 +149,6 @@
 - **Por quê:** atividade e execução são formalidade; o que o desenvolvedor faz de verdade é executar a demanda.
 - **Custo aparente:** mais autonomia para a IA (criar e trocar atividade sem confirmação a cada passo), revisão do fluxo do chat e da tela de demandas; esbarra na regra "a IA sempre pede confirmação".
 
-### I-029 — Tela de demandas em três colunas, com as descrições em primeiro plano · demanda/frontend
-
-- **Ideia:** coluna de **pastas** (só demandas de estrutura, em árvore, mais "Sem pasta" para as demandas sem pai); ao clicar numa pasta, a lista mostra **só as demandas que estão direto nela** (as de uma sub-pasta aparecem ao clicar na sub-pasta); à direita, a demanda aberta com as abas Técnica, Cliente e Documentação em leitura, mais Atividades e Conexões. Na linha: status em ícone, sempre uma bolinha (pendente vazia, planejada com ponto no meio = "está no jogo", concluída cheia com ✓, cancelada cortada), nome, barrinha com horas, tags e os ícones das três descrições com as cores de hoje (`--app-icone-*`, brilho quando preenchida, cinza apagado quando vazia; ícones escolhidos: técnica terminal, cliente pessoa, documentação folha com texto). As abas da demanda aberta também têm ícones. Precisa caber com a barra lateral aberta e fechada. A visão "Lista" vira **Árvore** (nome em aberto) e a aba "Planejamento" vira **Controle de horas** (o nome "planejamento" fica para o modo do chat): resumo do projeto (estimado, executado, estouro, quem executa agora), árvore de pastas e demandas com status em bolinha, barra que vai até 150% com o risco nos 100% e a cor de hoje (azul até 75%, amarelo, laranja, vermelho, vermelho escuro acima de 100%), quanto passou ou quanto resta, e quem executa agora com nome e há quanto tempo; embaixo, cartões das demandas **sem estimativa** (com campo para estimar) e das **paradas** (sugestão do agente). **Grafo** mexe pouco: status em bolinha nos nós e no cartão do nó, a mesma barra do Controle de horas no cartão, clique no nó abre a demanda na Árvore e o grafo começa focado na pasta escolhida (as outras apagadas, com chips para trocar o foco). Membros saem da linha e aparecem com nome no painel; sub-demanda vira "Demanda aqui" no topo da pasta e mais ações vão para o painel.
-- **Origem:** conversa de 2026-10-25 com o autor; visual em https://claude.ai/artifact/NbttspKKQszuroEYbVu9DQ. Em aberto: não ficar pesado demais, e a tela de Planejamento (conversa própria, depois).
-- **Por quê:** dar foco às descrições e separar a navegação pela estrutura da lista de trabalho.
-- **Custo aparente:** só frontend em boa parte (a árvore já vem com `isEstrutural`); substitui `demanda-arvore-painel`/`demanda-arvore-item` e parte do `demanda-detalhe-dialog`.
-
 ### I-028 — Cada usuário escolhe a autonomia da IA para si · chat IA/preferências
 
 - **Ideia:** dentro do teto que o administrador define na IA Config., cada usuário decide nas próprias preferências quais propostas a IA pode fazer sem perguntar (por exemplo, "mexer no meu pad: nem pergunta").
@@ -164,6 +157,10 @@
 - **Custo aparente:** não existe preferência de usuário para a IA hoje; dá para seguir o modelo das preferências do chat entre colaboradores (`MensagemDiretaPreferencia*`).
 
 ## Promovidas
+
+### I-029 — Tela de demandas em três colunas, com as descrições em primeiro plano · demanda/frontend
+
+- **Promovida em 2026-10-25** para a guarda-chuva [`demanda-tela.spec.md`](../specs/backlog/demanda-tela.spec.md) (só a spec, no backlog): Árvore em três colunas, Controle de horas no lugar da aba Planejamento e os ajustes do grafo.
 
 ### I-026 — Propostas mais simples e mais autonomia para a IA · chat IA
 
