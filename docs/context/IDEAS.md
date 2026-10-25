@@ -121,6 +121,48 @@
 - **Por quê:** documentação com autoria ("Ana decidiu usar a fila") tem mais valor de consulta.
 - **Custo aparente:** só prompt e uma opção na confirmação do resumo; os nomes passariam a ir ao provedor de IA, o que pede aviso de consentimento.
 
+### I-022 — Plano que vira várias demandas · chat IA/planejamento
+
+- **Ideia:** no modo planejamento, a IA propõe quebrar o plano numa árvore de demandas, e publicar cria todas de uma vez, cada uma com o seu pedaço do texto.
+- **Origem:** conversa de 2026-10-25 sobre o modo planejamento (`backlog/chat-planejamento.spec.md`, Fora de Escopo).
+- **Por quê:** um plano grande costuma ser a criação de várias demandas, e criar uma a uma joga fora o que o plano já organizou.
+- **Custo aparente:** a modelagem do plano já admite várias demandas (`plano_demanda`); falta a parte do documento com a árvore e a publicação em lote (as propostas de criar demanda já dependem umas das outras).
+
+### I-023 — Documentação a partir do que foi feito · chat IA/planejamento
+
+- **Ideia:** depois da entrega, a IA escreve a documentação da demanda a partir do que realmente foi feito: primeiro pelas descrições das execuções; mais para frente, pelos commits do repositório Git (a empresa do autor está indo para o Gitea).
+- **Origem:** conversa de 2026-10-25 sobre o modo planejamento.
+- **Por quê:** a documentação fica fiel ao entregue, e não ao planejado, sem ninguém precisar escrever do zero.
+- **Custo aparente:** só leitura de execuções no primeiro passo; o passo do Git depende da I-005 (vincular projeto a repositório, credencial, permissão), que é futuro distante e vale para o projeto inteiro.
+
+### I-024 — Imagens e prints no chat da IA e no chat entre colaboradores · chat
+
+- **Ideia:** enviar imagens e prints nas conversas, tanto com a IA quanto entre colaboradores.
+- **Origem:** conversa de 2026-10-25 com o autor.
+- **Por quê:** um print explica um erro ou uma tela muito mais rápido que um texto.
+- **Custo aparente:** armazenamento de arquivo (hoje as mensagens são só texto), envio da imagem ao provedor de IA (custo e consentimento), exibição no popup e no Project Desktop.
+
+### I-025 — O desenvolvedor executa demandas; a IA cuida de atividades e execuções · chat IA/demanda
+
+- **Ideia:** o desenvolvedor diz que vai trabalhar numa demanda e o que precisa fazer; a IA quebra isso em atividades, troca a atividade ativa conforme ele avisa o que terminou e descreve as execuções sozinha. Atividade e execução passam a ser trabalho da IA, não do desenvolvedor. Os prompts de nome de atividade, nome de demanda e descrição seguem configuráveis.
+- **Origem:** conversa de 2026-10-25 com o autor; vai ser conversada junto com a I-026 e com a tela de demandas.
+- **Por quê:** atividade e execução são formalidade; o que o desenvolvedor faz de verdade é executar a demanda.
+- **Custo aparente:** mais autonomia para a IA (criar e trocar atividade sem confirmação a cada passo), revisão do fluxo do chat e da tela de demandas; esbarra na regra "a IA sempre pede confirmação".
+
+### I-026 — Propostas mais simples e mais autonomia para a IA · chat IA
+
+- **Ideia:** repensar os cartões de proposta para ficarem mais fáceis de usar e deixar a IA agir sozinha onde a ação é fácil de desfazer, inclusive criar conexões entre demandas.
+- **Origem:** conversa de 2026-10-25 com o autor.
+- **Por quê:** confirmar tudo cansa; quanto mais fácil de desfazer, menos confirmação a ação precisa.
+- **Custo aparente:** decidir por tipo de proposta o que vira automático, como avisar e como desfazer; mexe no `proposta-cartao` e nos executores.
+
+### I-027 — Barra lateral em grupos por perfil · frontend/navegação
+
+- **Ideia:** organizar os itens da barra lateral em grupos, com agrupamento próprio para desenvolvedor, gestor e administrador.
+- **Origem:** conversa de 2026-10-25 com o autor.
+- **Por quê:** já são onze itens numa lista só, e cada perfil usa o sistema de um jeito.
+- **Custo aparente:** só UI (`shared/layout/navegacao.ts` e `sidebar`), com cuidado com a barra recolhida e os atalhos de teclado.
+
 ## Promovidas
 
 ### I-004 — Chat IA como tira-dúvidas de programação, com bloco de código copiável · chat IA/frontend
