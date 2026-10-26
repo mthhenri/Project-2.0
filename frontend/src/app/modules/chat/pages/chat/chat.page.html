@@ -170,7 +170,6 @@
 
       @if (modo() === Modo.PLANEJAMENTO) {
         <div class="chat__rodape">
-          <ng-container [ngTemplateOutlet]="chaveDeModo" />
           <form class="chat__entrada" (submit)="$event.preventDefault(); enviar()">
             <textarea
               #campoTexto
@@ -188,11 +187,13 @@
               <i class="pi" [class.pi-arrow-right]="!enviando()" [class.pi-spin]="enviando()" [class.pi-spinner]="enviando()"></i>
             </button>
           </form>
-          <span class="chat__legenda">Quem tem acesso ao plano vê esta conversa. A IA pergunta antes de escrever no documento. Enter envia, Shift+Enter quebra a linha.</span>
+          <div class="chat__base">
+            <ng-container [ngTemplateOutlet]="chaveDeModo" />
+            <span class="chat__legenda">Quem tem acesso ao plano vê esta conversa. A IA pergunta antes de escrever no documento. Enter envia, Shift+Enter quebra a linha.</span>
+          </div>
         </div>
       } @else if (!somenteLeitura()) {
         <div class="chat__rodape">
-          <ng-container [ngTemplateOutlet]="chaveDeModo" />
           @if (podeSugerir() && mensagens().length > 0) {
             <div class="chat__sugestoes" role="group" aria-label="Sugestões de mensagem">
               @for (sugestao of sugestoes(); track sugestao) {
@@ -218,15 +219,20 @@
               <i class="pi" [class.pi-arrow-right]="!enviando()" [class.pi-spin]="enviando()" [class.pi-spinner]="enviando()"></i>
             </button>
           </form>
-          <span class="chat__legenda">A IA pergunta antes do que é difícil de desfazer e avisa o que faz sozinha. Enter envia, Shift+Enter quebra a linha.</span>
+          <div class="chat__base">
+            <ng-container [ngTemplateOutlet]="chaveDeModo" />
+            <span class="chat__legenda">A IA pergunta antes do que é difícil de desfazer e avisa o que faz sozinha. Enter envia, Shift+Enter quebra a linha.</span>
+          </div>
         </div>
       } @else {
         <div class="chat__rodape">
-          <ng-container [ngTemplateOutlet]="chaveDeModo" />
           <p class="chat__aviso chat__aviso--neutro chat__aviso--leitura" role="status">
             <span class="chat__aviso-texto"><i class="pi pi-calendar"></i>Conversa de {{ diaFormatado() }}, só para leitura.</span>
             <p-button class="chat__aviso-acao" label="Voltar para hoje" icon="pi pi-arrow-right" size="small" [text]="true" (onClick)="voltarParaHoje()" />
           </p>
+          <div class="chat__base">
+            <ng-container [ngTemplateOutlet]="chaveDeModo" />
+          </div>
         </div>
       }
     }

@@ -7,8 +7,11 @@
     aria-label="Abrir conversas e planos"
     (click)="popover.toggle($event)"
   >
-    <i class="pi" [class.pi-comments]="modo() === Modo.PERGUNTAS" [class.pi-file-edit]="modo() === Modo.PLANEJAMENTO" aria-hidden="true"></i>
+    <i class="pi pi-list chat-seletor__gatilho-icone" aria-hidden="true"></i>
     <span class="chat-seletor__gatilho-texto">{{ rotuloDoBotao() }}</span>
+    @if (modo() === Modo.PERGUNTAS && diaAtual() === hoje()) {
+      <span class="chat-seletor__gatilho-etiqueta">conversa do dia</span>
+    }
     <i class="pi pi-chevron-down chat-seletor__gatilho-seta" aria-hidden="true"></i>
   </button>
   <p-button label="Novo plano" icon="pi pi-plus" size="small" [outlined]="true" (onClick)="criarPlano()" />

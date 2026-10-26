@@ -13,6 +13,9 @@ import { PlanoService } from '../../services/plano.service';
 import { dataDaConversa, rotuloDoDia } from '../../utils/chat.util';
 import { ModoDoChatEnum } from '../../utils/plano.util';
 
+/** O começo do nome que o servidor dá à conversa sem nome próprio ("Chat do dia 26 de outubro de 2026"); no botão ela aparece como o dia. */
+const PREFIXO_TITULO_PADRAO = 'Chat do dia';
+
 /** Uma mensagem achada na busca, com o dia a que pertence (para abrir a conversa certa). */
 export interface MensagemDoSeletor {
   data: string;
@@ -65,11 +68,14 @@ export class SeletorComponent {
   readonly salvandoNome = signal(false);
   readonly controleNome = new FormControl<string>('', { nonNullable: true });
 
-  /** O que o botão mostra: o plano aberto (modo Planejamento) ou o dia da conversa. */
+  /** O que o botão mostra: o plano aberto (modo Planejamento), o nome da conversa (dado ou gerado) ou, sem ele, o dia ("Hoje, 26/10"). */
   readonly rotuloDoBotao = computed(() => {
     if (this.modo() === ModoDoChatEnum.PLANEJAMENTO) return this.planoAbertoTitulo() ?? 'Escolher um plano';
     const doDia = this.conversas().find((conversa) => conversa.data === this.diaAtual());
-    return doDia?.titulo ?? (this.diaAtual() === this.hoje() ? 'Conversa de hoje' : rotuloDoDia(this.diaAtual(), this.hoje()));
+    if (doDia && !doDia.titulo.startsWith(PREFIXO_TITULO_PADRAO)) return doDia.titulo;
+    const rotulo = rotuloDoDia(this.diaAtual(), this.hoje());
+    const [, mes, dia] = this.diaAtual().split('-');
+    return rotulo.includes('/') ? rotulo : `${rotulo}, ${dia}/${mes}`;
   });
 
   private readonly campoNome = viewChild<ElementRef<HTMLInputElement>>('campoNome');

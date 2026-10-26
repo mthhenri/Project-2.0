@@ -66,6 +66,17 @@ describe('SeletorComponent — botão', () => {
     expect(montado.elemento.querySelector('.chat-seletor__gatilho-texto')?.textContent).toBe('Planejando a semana');
   });
 
+  it('sem nome próprio mostra o dia no lugar do nome padrão', async () => {
+    const montado = await montar({}, [conversa(HOJE)]);
+    expect(montado.elemento.querySelector('.chat-seletor__gatilho-texto')?.textContent).toBe('Hoje, 19/10');
+    expect(montado.elemento.querySelector('.chat-seletor__gatilho-etiqueta')?.textContent).toBe('conversa do dia');
+  });
+
+  it('a etiqueta "conversa do dia" some ao abrir um dia antigo', async () => {
+    const montado = await montar({ diaAtual: '2026-10-18' });
+    expect(montado.elemento.querySelector('.chat-seletor__gatilho-etiqueta')).toBeNull();
+  });
+
   it('no modo Planejamento mostra o plano aberto', async () => {
     const montado = await montar({ modo: ModoDoChatEnum.PLANEJAMENTO, planoAbertoId: 1, planoAbertoTitulo: 'Relatório mensal' });
     expect(montado.elemento.querySelector('.chat-seletor__gatilho-texto')?.textContent).toBe('Relatório mensal');
