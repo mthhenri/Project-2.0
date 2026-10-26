@@ -12,6 +12,20 @@
 
 ---
 
+## 2026-10-26 — Task 232: o plano como entidade (migration 0059, DTOs, regra de acesso e API)
+
+Segunda das tasks da guarda-chuva `chat-planejamento.spec.md` (a 224 já estava feita). Só modelo e API: sem tela e sem IA.
+
+- **Banco:** migration `0059` com `plano` (`titulo`, `projeto_id` anulável, `usuario_id`, `is_solo`, `is_arquivado`, três textos anuláveis e `versao`) e `plano_demanda` (único parcial em `plano_id` + `demanda_id`). Aplica, reverte e reaplica no banco de desenvolvimento (lote 19). `docs/SCHEMA.md` ganhou a seção.
+- **`shared`:** DTOs em `dtos/plano` (21 arquivos: criar, listar, resumo, recuperar, alterar com `versao`, solo, arquivo, ligar demanda e atribuir projeto, cada um com o par `Interno` quando a controller injeta o id), `PlanoAbaEnum` e `utils/plano.ts` com a regra pura (`podeVerAbaDoPlano`, `podeAcessarPlano`, `podeArquivarOuExcluirPlano`, `textoInicialDaAba`, `TITULO_PADRAO_DO_PLANO`).
+- **Backend:** módulo `plano` (controller fino em `/api/v1/plano`, service, repository). Acesso: amplo e solo só do criador (nem gestor nem administrador entram); de projeto, gestor/administrador por tipo e desenvolvedor por `demanda_usuario`. O que a pessoa não vê é "não encontrado". A descrição do cliente nem vem na resposta do desenvolvedor, e ele não a grava. **Versão:** o `UPDATE` compara `versao` e grava na mesma instrução (duas pessoas gravando juntas não se sobrescrevem); versão antiga vira `BusinessException`. Ligar demanda exige poder editá-la (gestor/administrador ou membro) e que seja do projeto do plano; as abas vazias começam com o texto da demanda, gravado com a versão lida **antes** da ligação. Plano amplo ganha projeto só pelo criador, com `confirmado: true`.
+- **Decisão de projeto (ponto em aberto da spec):** a exclusão de projeto **não cascateia** hoje em nenhuma tabela (é um soft delete só dele). Em vez de escrever em `plano` a partir do `ProjetoService`/`DemandaService` (o que criaria dependência circular entre módulos), a leitura do plano junta `projeto` e `demanda` ativos: projeto excluído esconde os planos dele, demanda excluída deixa o plano sem demanda, e restaurar traz tudo de volta. O título padrão sem título é "Plano sem título" (a IA sugere um depois, na 234).
+- **Testes:** `shared` 257 (6 novos da regra pura); `backend` unitários 1435 (25 novos da service: matriz de acesso para desenvolvedor com e sem acesso, gestor, administrador e criador em plano de projeto, solo e amplo; aba do cliente; versão; ligar demanda; arquivar e excluir); integração 8 novos do repository contra o PostgreSQL de teste (acesso por perfil, versão, busca e arquivados com curinga do `LIKE` literal, troca de ligação, demanda e projeto excluídos, soft delete). `npm run build --workspace=backend` aprovado.
+- **Ao vivo** (API em `localhost:3000`, desenvolvedor `dev.teste`): criar plano ligado à demanda 2 (versão foi a 2, aba técnica copiada); gravar com a versão lida (3); gravar com a versão antiga recusado com a mensagem de recarregar; gravar a descrição do cliente como desenvolvedor, 403; descrição do cliente escrita no banco **não** aparece na resposta do desenvolvedor; plano amplo não liga demanda; arquivar tira da lista e a busca ainda o acha; excluir. Planos de teste excluídos.
+- **Limites:** a visão do gestor e do administrador só foi exercida nos testes unitários (a senha do administrador do banco de desenvolvimento não é conhecida da sessão). Sem lint no projeto (`PROBLEMS.md` P-001).
+
+---
+
 ## 2026-10-25 — Task 241: o Grafo integrado (marca do status, barra nova, clique na Árvore e foco na pasta)
 
 Quarta e última das tasks da reorganização da tela de demandas (`demanda-tela.spec.md`; 238–241, **guarda-chuva concluída**). O grafo continua o de hoje (força, círculos, cores, linhas, zoom e legenda), com os mesmos sinais da Árvore e do Controle de horas.

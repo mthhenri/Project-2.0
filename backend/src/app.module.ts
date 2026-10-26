@@ -15,6 +15,7 @@ import { ExecucaoModule } from './modules/execucao/execucao.module';
 import { CalendarioModule } from './modules/calendario/calendario.module';
 import { PontoModule } from './modules/ponto/ponto.module';
 import { PontoJustificativaModule } from './modules/ponto-justificativa/ponto-justificativa.module';
+import { PlanoModule } from './modules/plano/plano.module';
 import { AnotacaoModule } from './modules/anotacao/anotacao.module';
 import { ConfiguracaoIaModule } from './modules/configuracao-ia/configuracao-ia.module';
 import { PromptModule } from './modules/prompt/prompt.module';
@@ -29,6 +30,6 @@ import { RelatorioModule } from './modules/relatorio/relatorio.module';
 import { DesktopModule } from './modules/desktop/desktop.module';
 
 @Module({
-  imports: [ScheduleModule.forRoot(), ConfigModule, DatabaseModule, CoreModule, AutenticacaoModule, UsuarioModule, TagModule, ProjetoModule, DemandaModule, AtividadeModule, AtividadePrioridadeModule, CheckinModule, ExecucaoModule, CalendarioModule, PontoModule, PontoJustificativaModule, AnotacaoModule, ConfiguracaoIaModule, PromptModule, ChatModule, MensagemDiretaModule, PropostaIaModule, FerramentaIaModule, AssistenteModule, RelatorioModule, DesktopModule, IaCustoModule, ModelagemModule],
+  imports: [ScheduleModule.forRoot(), ConfigModule, DatabaseModule, CoreModule, AutenticacaoModule, UsuarioModule, TagModule, ProjetoModule, DemandaModule, AtividadeModule, AtividadePrioridadeModule, CheckinModule, ExecucaoModule, CalendarioModule, PontoModule, PontoJustificativaModule, AnotacaoModule, ConfiguracaoIaModule, PromptModule, ChatModule, MensagemDiretaModule, PropostaIaModule, FerramentaIaModule, AssistenteModule, RelatorioModule, DesktopModule, IaCustoModule, ModelagemModule, PlanoModule],
 })
 export class AppModule {}

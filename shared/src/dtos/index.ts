@@ -22,3 +22,4 @@ export * from './desktop/index';
 export * from './ia-custo/index';
 export * from './modelagem/index';
 export * from './mensagem-direta/index';
+export * from './plano/index';

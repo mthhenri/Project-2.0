@@ -1,7 +1,7 @@
 # 232-plano-modelo-e-api.spec.md
 
-> Task 2/7 da guarda-chuva [`chat-planejamento.spec.md`](chat-planejamento.spec.md) (a 224 é a 1/7): o modelo do plano, do banco à API.
-> Sem tela e sem IA. Modelagem de partida em [`chat-planejamento/modelagem.md`](chat-planejamento/modelagem.md) (tabelas `plano` e
+> Task 2/7 da guarda-chuva [`chat-planejamento.spec.md`](../backlog/chat-planejamento.spec.md) (a 224 é a 1/7): o modelo do plano, do banco à API.
+> Sem tela e sem IA. Modelagem de partida em [`chat-planejamento/modelagem.md`](../backlog/chat-planejamento/modelagem.md) (tabelas `plano` e
 > `plano_demanda`; as demais ficam para as tasks 235 e 236).
 
 ## Objetivo

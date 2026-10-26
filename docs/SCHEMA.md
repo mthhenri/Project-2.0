@@ -718,6 +718,17 @@ CREATE INDEX ix_modelagem_tabela_modelagem_grupo ON modelagem_tabela (modelagem_
 
 A `0052` semeia os 6 grupos (Domínio, Usuários e ponto, Calendário, IA, Chat, Modelagem) e as 37 posições que a tela tinha; a `0053` tira da modelagem (soft delete) as linhas sem grupo e passa a coluna a `NOT NULL`. Tabela sem linha ativa não herda grupo de ninguém (nem a `tipo_*`) e não tem posição guardada. Excluir um grupo só é permitido vazio (a service confere pelo diagrama resolvido).
 
+### Plano do chat com a IA — migration `0059` (task 232)
+
+> O **plano** é o documento do modo planejamento: três textos Markdown (rascunho das descrições técnica e do cliente e da documentação de uma demanda) que vive vários dias e só grava na demanda ao publicar (task 237). Guarda-chuva `chat-planejamento.spec.md`; modelagem em `chat-planejamento/modelagem.md`. As tabelas de pontos em aberto e de fontes (`plano_ponto`, `plano_fonte`) entram nas tasks 235 e 236. Colunas de `BaseEntity`, nenhum `DEFAULT`, trigger `trg_*_updated_date`.
+
+#### `plano`
+`titulo` (`VARCHAR(255)`), `projeto_id` (FK, **anulável**: plano amplo, pessoal do criador), `usuario_id` (FK: quem criou), `is_solo`, `is_arquivado`, `descricao_tecnica`, `descricao_cliente` e `documentacao` (`TEXT`, anuláveis: o rascunho) e `versao` (`INTEGER`, a partir de 1; sobe a cada gravação do documento e é a base da recusa de gravação sobre versão mais nova: o `UPDATE` compara e grava na mesma instrução). Índices parciais em `projeto_id` e `usuario_id`.
+Quem vê: plano amplo e plano solo, só o criador; plano de projeto, quem tem acesso ao projeto (regra pura `podeAcessarPlano`, no `shared`). A leitura esconde o plano de projeto excluído; restaurar o projeto o traz de volta.
+
+#### `plano_demanda`
+Ligação do plano com a demanda para a qual ele publica: `plano_id` e `demanda_id` (FKs) e `publicacao_data` (`TIMESTAMPTZ`, anulável: ligado e ainda não publicado). Índice único parcial em (`plano_id`, `demanda_id`) com `is_deleted = false`. A service admite **uma** linha ativa por plano (a tabela já admite várias, para o projeto futuro "plano que vira várias demandas"). Demanda excluída deixa o plano sem demanda (a leitura só junta demanda ativa).
+
 ### Tabelas de referência (enums) — migration `20240025`
 
 Todo enum de domínio fechado é uma **tabela de referência** `tipo_<tabela>_<complemento?>`
@@ -847,6 +858,9 @@ dia_nao_util  [standalone, consultado pelo módulo ponto]
 
 usuario ─── mensagem_direta_leitura, mensagem_direta_preferencia, mensagem_direta_supervisao
             [chat entre colaboradores; as mensagens ficam no índice, não no PostgreSQL]
+
+projeto ─── plano ─── plano_demanda ─── demanda
+usuario ─── plano (criador)   [plano amplo: projeto_id nulo, pessoal do criador]
 ```
 
 ---

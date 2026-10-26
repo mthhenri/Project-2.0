@@ -9,3 +9,4 @@ export * from './diff-por-palavra';
 export * from './proposta-dependencia';
 export * from './proposta-nivel';
 export * from './demanda-parada';
+export * from './plano';

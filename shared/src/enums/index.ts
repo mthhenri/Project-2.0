@@ -25,3 +25,4 @@ export * from './referencia-mensagem-direta.enum';
 export * from './trecho-diff-tipo.enum';
 export * from './proposta-ia-grupo-situacao.enum';
 export * from './proposta-ia-nivel.enum';
+export * from './plano-aba.enum';
