@@ -22,6 +22,6 @@ export function montarAberturaDoDia(dados: DadosDaAberturaDoDia): string {
     'listar_minhas_atividades e consultar_execucao_ativa.',
     'Depois apresente, de forma breve, o plano do dia: as atividades em aberto em ordem de prioridade (com a demanda) e, se o pad disser, onde o usuário parou ("ontem você parou em…"), ',
     'os lembretes do dia e se há execução em andamento. Não invente nada: se não houver atividades nem anotações, diga que o dia está livre.',
-    'Não proponha nenhuma ação agora; termine perguntando por onde ele quer começar.',
+    'Não proponha nenhuma ação agora; termine perguntando, do seu jeito e em uma frase, se ele quer continuar de onde paramos (diga onde foi, se souber) ou se tem coisa nova.',
   ].join(' ');
 }

@@ -47,6 +47,7 @@ test('devolve ao modelo o id, a situação pendente e o aviso de que nada foi fe
   const resultado = (await new FerramentaFicticia(criarServicoDeProposta().servico).executar({ atividadeId: 3 }, USUARIO)) as Record<string, unknown>;
   assert.equal(resultado.propostaId, 55);
   assert.equal(resultado.situacao, StatusPropostaIaEnum.PENDENTE);
+  assert.equal('resultado' in resultado, false, 'proposta pendente não tem o que devolver');
   assert.match(String(resultado.mensagem), /Nada foi feito ainda/);
 });
 
@@ -64,10 +65,11 @@ test('se a criação da proposta falha, a falha sobe (o registro a devolve ao mo
 
 test('proposta que o serviço já confirmou (nível "Faz e avisa") volta ao modelo como feita, sem pedir confirmação (task 228)', async () => {
   const ferramenta = new FerramentaFicticia({
-    criarComAutonomia: async () => ({ id: 56, status: StatusPropostaIaEnum.CONFIRMADA }),
+    criarComAutonomia: async () => ({ id: 56, status: StatusPropostaIaEnum.CONFIRMADA, resultado: { atividadeId: 81 } }),
   } as unknown as PropostaIaService);
   const resultado = (await ferramenta.executar({ atividadeId: 3 }, USUARIO)) as Record<string, unknown>;
   assert.equal(resultado.propostaId, 56);
+  assert.deepEqual(resultado.resultado, { atividadeId: 81 }, 'os ids do que foi feito voltam ao modelo para encadear o próximo passo');
   assert.equal(resultado.situacao, StatusPropostaIaEnum.CONFIRMADA);
   assert.match(String(resultado.mensagem), /^Feito/);
   assert.doesNotMatch(String(resultado.mensagem), /Nada foi feito ainda/);

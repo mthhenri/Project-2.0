@@ -45,7 +45,7 @@ const USUARIOS: Record<number, { nomeCompleto: string; status: TipoUsuarioStatus
 function criarFerramentaDeCriar() {
   const propostas: { tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }[] = [];
   const propostaIaService = { criarComAutonomia: async (dto: { tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }) => { propostas.push(dto); return { id: 77, status: 'PENDENTE' }; } };
-  const demandaRepositorio = { recuperar: async ({ id }: { id: number }) => ({ id, nome: 'Tela de login' }) };
+  const demandaRepositorio = { recuperar: async ({ id }: { id: number }) => ({ id, nome: 'Tela de login' }), listarAncestral: async () => [] };
   const usuarioService = { recuperar: async ({ id }: { id: number }) => ({ dados: { id, ...USUARIOS[id] } }) };
   const ferramenta = new ProporCriarAtividadeFerramenta(
     propostaIaService as unknown as PropostaIaService, demandaRepositorio as unknown as DemandaRepository, usuarioService as unknown as UsuarioService,

@@ -12,6 +12,17 @@
 
 ---
 
+## 2026-10-26 — Task 243: bom dia "continuar ou coisa nova" (código pronto; teste de prompt e verificação ao vivo pendentes)
+
+Segunda task da guarda-chuva `chat-execucao-por-demanda.spec.md`. O autor aceitou os padrões propostos para os dois pontos em aberto: ao iniciar atividade PENDENTE ou PLANEJADA a IA passa `novoStatus = DESENVOLVENDO` sem perguntar (aviso diz a mudança; o desfazer já devolve o `statusAnterior`), e se a última atividade já está DESENVOLVIDA a IA segue para a próxima do checklist e avisa.
+
+- **Bom dia:** `montarAberturaDoDia` termina perguntando se o usuário continua de onde pararam ou tem coisa nova (continua sendo instrução do sistema, não gravada). O fluxo (continuar, coisa nova, nome da atividade com identificador do caso, criar demanda sempre pergunta) mora no texto-padrão do prompt `CONVERSA`, migration `0066` (UP e DOWN conferidos no banco de teste).
+- **Ferramentas:** `propor_iniciar_execucao` deixou de mandar perguntar o status; `propor_criar_atividade` mostra no cartão e no aviso o **caminho completo** da demanda (`listarAncestral`, raiz › … › demanda) e orienta o nome da coisa nova; a base `FerramentaPropostaIa` passou a devolver ao modelo o `resultado` da proposta feita (ex.: `atividadeId`), o que permite criar e iniciar em sequência. Os níveis de autonomia já eram "Faz e avisa" para criar atividade, iniciar e pausar (task 228): nada mudou na régua.
+- **Testes:** abertura do dia, caminho da demanda, `resultado` devolvido; mocks de três arquivos de teste ganharam `listarAncestral`.
+- **Não verificado (task segue aberta em `active/`):** teste de prompt (continuar; coisa nova com demanda existente; sem a demanda, a IA pergunta antes de criar; com execução rodando) e verificação ao vivo nos três tamanhos; exigem provedor de IA, ausente no ambiente da sessão. Sem lint (P-001).
+
+---
+
 ## 2026-10-26 — Task 242: a IA trata as atividades como o checklist da demanda (código pronto; teste de prompt e verificação ao vivo pendentes)
 
 Primeira task da guarda-chuva `chat-execucao-por-demanda.spec.md`. O autor confirmou os dois pontos em aberto: ferramenta de leitura **nova** e texto nos prompts `CONVERSA` e `CHECKIN`, sem tipo novo.

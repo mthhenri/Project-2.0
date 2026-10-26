@@ -21,6 +21,8 @@ export class ProporCriarAtividadeFerramenta extends FerramentaPropostaIa<ProporC
     'O demandaId vem das atividades já listadas; se o usuário citar uma demanda que você não conhece, pergunte qual é antes de propor. ' +
     'Atividade é um BLOCO do trabalho (a tela, o repositório, os testes), com várias execuções: nunca crie uma atividade por execução nem para uma continuação. ' +
     'ANTES de propor, olhe o checklist da demanda (consultar_checklist_da_demanda) e, se um bloco já serve, use-o; crie só quando falta o bloco, com um nome que descreve a parte do trabalho. ' +
+    'Para uma coisa nova (um bug, um chamado), o nome descreve o trabalho e leva o identificador do caso quando houver ("investigar CPF válido recusado, caso 4821"). ' +
+    'Quando o resultado vier como feito, ele traz o `atividadeId` da atividade criada: use-o para iniciar a execução (propor_iniciar_execucao). ' +
     'Só o gestor pode criar a atividade PARA OUTRA PESSOA: nesse caso passe `usuarioId` (de listar_usuarios; nome ambíguo, pergunte); sem ele, a atividade é de quem conversa com você.';
   readonly permissao = 'QUALQUER' as const;
   readonly classeDeEntrada = ProporCriarAtividadeDto;
@@ -48,9 +50,11 @@ export class ProporCriarAtividadeFerramenta extends FerramentaPropostaIa<ProporC
       if (dono.status !== TipoUsuarioStatusEnum.ATIVO) throw new BusinessException(`${dono.nomeCompleto} está inativo e não recebe atividades.`);
       usuarioNome = dono.nomeCompleto;
     }
+    // O aviso e o cartão mostram o caminho completo da demanda (raiz › … › demanda), para o desenvolvedor ver se o lugar está certo.
+    const ancestrais = await this.demandaRepositorio.listarAncestral({ demandaId: demanda.id });
     const dados: PropostaCriarAtividadeDadosDto = {
       ...semUsuario,
-      demandaNome: demanda.nome,
+      demandaNome: [...ancestrais.map((ancestral) => ancestral.nome), demanda.nome].join(' › '),
       ...(usuarioNome ? { usuarioId, usuarioNome } : {}),
     };
     return { ...dados };

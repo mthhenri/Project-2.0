@@ -261,7 +261,7 @@ CHECK (status IN (...))                              -- gera demanda_status_chec
 
 Arquivo `.sql` puro em `backend/src/database/migrations/`, nome `NNNN - Nome descritivo.sql`
 (4 dígitos + `" - "` + frase em português). Duas seções por marcador sozinho na linha: `-- UP`
-(obrigatória) e `-- DOWN` (obrigatória, salvo justificativa no arquivo). Próxima migration: `0066`.
+(obrigatória) e `-- DOWN` (obrigatória, salvo justificativa no arquivo). Próxima migration: `0067`.
 Detalhes completos no `SYSTEM.SPEC.md` §9.5.
 
 ```sql
