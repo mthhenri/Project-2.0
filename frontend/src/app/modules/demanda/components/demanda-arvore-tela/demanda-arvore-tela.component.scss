@@ -5,10 +5,10 @@
   container-type: inline-size;
 }
 
-// Três colunas lado a lado, cada uma com a rolagem própria. Em largura curta (monitor vertical, barra lateral aberta) a demanda aberta desce.
+// Três colunas lado a lado (pastas 20%, lista 28% e demanda aberta 52%), cada uma com a rolagem própria. Em largura curta (monitor vertical, barra lateral aberta) a demanda aberta desce.
 .demanda-arvore-tela {
   display: grid;
-  grid-template-columns: 13rem minmax(16rem, 22rem) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 20fr) minmax(0, 28fr) minmax(0, 52fr);
   height: 100%;
   min-height: 0;
   background: var(--app-surface-0);
@@ -47,6 +47,13 @@
       margin: 0;
       max-width: 22rem;
     }
+  }
+}
+
+// Em largura média (notebook com a barra lateral aberta) as pastas encolhem para a demanda aberta não perder as abas.
+@container (max-width: 1250px) {
+  .demanda-arvore-tela {
+    grid-template-columns: minmax(0, 20fr) minmax(0, 25fr) minmax(0, 55fr);
   }
 }
 

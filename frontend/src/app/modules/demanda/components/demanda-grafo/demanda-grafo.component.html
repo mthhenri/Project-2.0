@@ -59,7 +59,10 @@
 @if (cartao(); as c) {
   <div class="demanda-grafo__cartao" [style.left.px]="c.esquerda" [style.top.px]="c.topo">
     <div class="demanda-grafo__cartao-nome">{{ c.no.nome }}</div>
-    <app-demanda-status [status]="c.no.status" />
+    <span class="demanda-grafo__cartao-status">
+      <app-demanda-status [status]="c.no.status" />
+      <span class="demanda-grafo__cartao-status-nome">{{ rotuloStatus[c.no.status] }}</span>
+    </span>
     @if (c.no.horasEstimadas > 0 || c.no.minutosExecutados > 0) {
       <app-demanda-barra-controle-horas [minutosExecutados]="c.no.minutosExecutados" [horasEstimadas]="c.no.horasEstimadas" />
     }

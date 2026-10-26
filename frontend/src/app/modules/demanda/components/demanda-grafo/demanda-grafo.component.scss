@@ -132,6 +132,17 @@
     overflow-wrap: anywhere;
   }
 
+  &__cartao-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__cartao-status-nome {
+    font-size: 0.85rem;
+    color: var(--p-text-color);
+  }
+
   &__cartao-tags {
     display: flex;
     flex-wrap: wrap;

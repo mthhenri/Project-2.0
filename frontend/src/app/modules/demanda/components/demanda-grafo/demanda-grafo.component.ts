@@ -22,7 +22,7 @@ import {
   DemandaGrafoArestaDto,
   TipoDemandaStatusEnum,
 } from '@project20/shared';
-import { COR_NO_BORDA, OPCOES_STATUS_DEMANDA, corPreenchimentoNo } from '../../constants/demanda-cores.constants';
+import { COR_NO_BORDA, OPCOES_STATUS_DEMANDA, ROTULO_STATUS_DEMANDA, corPreenchimentoNo } from '../../constants/demanda-cores.constants';
 import { PastaId } from '../../utils/demanda-pasta.util';
 import { idsDoFoco, pastaAcimaDoFoco, subpastasDoFoco } from '../../utils/demanda-foco-grafo.util';
 import { DemandaBarraControleHorasComponent } from '../demanda-barra-controle-horas/demanda-barra-controle-horas.component';
@@ -78,6 +78,7 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
   readonly cartao = signal<CartaoNo | null>(null);
 
   readonly itensLegenda = OPCOES_STATUS_DEMANDA;
+  readonly rotuloStatus = ROTULO_STATUS_DEMANDA;
 
   /** "Projeto inteiro": desliga o foco só aqui, sem mexer na pasta das outras visões. */
   readonly projetoInteiro = signal(false);

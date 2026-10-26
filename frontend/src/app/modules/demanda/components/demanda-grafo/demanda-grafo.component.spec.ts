@@ -130,6 +130,13 @@ describe('DemandaGrafoComponent', () => {
     expect(svg(montado.elemento).querySelectorAll('circle.demanda-grafo__marca')).toHaveLength(1);
   });
 
+  it('o cartão do nó mostra o nome do status ao lado da bolinha, mesmo sem horas', async () => {
+    const { montado } = await montar({ nos: [criarNo(1, { status: TipoDemandaStatusEnum.PLANEJADA, horasEstimadas: 0, minutosExecutados: 0 })], arestas: [] });
+    svg(montado.elemento).querySelector('g > g > g')!.dispatchEvent(new MouseEvent('mouseover', { clientX: 10, clientY: 10 }));
+    await montado.atualizar();
+    expect(montado.elemento.querySelector('.demanda-grafo__cartao-status-nome')?.textContent?.trim()).toBe('Planejada');
+  });
+
   it('o cartão do nó usa a barra do Controle de horas e some sem horas nem execução', async () => {
     const { montado } = await montar({ nos: [criarNo(1, { horasEstimadas: 2, minutosExecutados: 60 }), criarNo(2, { horasEstimadas: 0, minutosExecutados: 0 })], arestas: [] });
     const grupos = svg(montado.elemento).querySelectorAll('g > g > g');
