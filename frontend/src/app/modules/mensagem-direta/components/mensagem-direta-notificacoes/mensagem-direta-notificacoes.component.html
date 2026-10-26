@@ -71,7 +71,7 @@
       <hr class="menu-notificacoes__divisor" />
       <p class="menu-notificacoes__secao">Posição do chat</p>
       @for (item of posicoes; track item.valor) {
-        <button type="button" class="menu-notificacoes__opcao menu-notificacoes__opcao--posicao" role="menuitemradio" [attr.aria-checked]="posicaoPreferida() === item.valor" (click)="escolherPosicao(item.valor); menu.hide()">
+        <button type="button" class="menu-notificacoes__opcao menu-notificacoes__opcao--posicao" role="menuitemradio" [attr.aria-checked]="posicaoPreferida() === item.valor" (click)="escolherPosicao(item.valor)">
           <span>{{ item.rotulo }}</span>
           @if (posicaoPreferida() === item.valor) {
             <i class="pi pi-check menu-notificacoes__marca" aria-hidden="true"></i>
