@@ -15,6 +15,8 @@ import { MarkdownVisualizadorComponent } from '../../../../shared/components/mar
 import { PedidoDeAlteracaoDoTrecho, PlanoDocumentoComponent } from '../../components/plano-documento/plano-documento.component';
 import { PropostaCartaoComponent } from '../../components/proposta-cartao/proposta-cartao.component';
 import { PropostaGrupoComponent } from '../../components/proposta-grupo/proposta-grupo.component';
+import { DemandaLeituraComponent } from '../../components/demanda-leitura/demanda-leitura.component';
+import { MinhasDemandasComponent } from '../../components/minhas-demandas/minhas-demandas.component';
 import { MensagemDoSeletor, SeletorComponent } from '../../components/seletor/seletor.component';
 import { ChatService, ErroDoChat } from '../../services/chat.service';
 import { PlanoService } from '../../services/plano.service';
@@ -78,6 +80,8 @@ const JANELA_DA_INTERACAO_MS = 400;
     PropostaGrupoComponent,
     SeletorComponent,
     PlanoDocumentoComponent,
+    MinhasDemandasComponent,
+    DemandaLeituraComponent,
     NgTemplateOutlet,
   ],
   templateUrl: './chat.page.html',
@@ -107,6 +111,16 @@ export class ChatPage implements OnInit {
   readonly modo = signal<ModoDoChatEnum>(ModoDoChatEnum.PERGUNTAS);
   readonly planoAbertoId = signal<number | null>(null);
   readonly planoAbertoTitulo = signal<string | null>(null);
+  /** A demanda aberta ao lado da conversa em Perguntas (task 245); sem ela, a lateral é a lista "Minhas demandas". */
+  readonly demandaAbertaId = signal<number | null>(null);
+  /** A demanda só abre sozinha uma vez por visita ao chat: voltar à lista não a reabre. */
+  private abriuDemandaEmExecucao = false;
+  /** A demanda está aberta ao lado da conversa (só em Perguntas). */
+  readonly demandaVisivel = computed(() => this.modo() === ModoDoChatEnum.PERGUNTAS && this.demandaAbertaId() !== null);
+  /** A lateral é a lista de demandas (Perguntas, nenhuma demanda aberta). */
+  readonly listaVisivel = computed(() => this.modo() === ModoDoChatEnum.PERGUNTAS && this.demandaAbertaId() === null);
+  /** A tela está dividida com o divisor arrastável: o documento do plano ou a demanda aberta. */
+  readonly dividida = computed(() => this.modo() === ModoDoChatEnum.PLANEJAMENTO || this.demandaVisivel());
   /** Parte do espaço (%) que o documento ocupa; a pessoa a escolhe arrastando o divisor e o valor fica lembrado. */
   readonly larguraDocumento = signal(this.lerLarguraDoDocumento());
   readonly arrastandoDivisor = signal(false);
@@ -444,6 +458,27 @@ export class ChatPage implements OnInit {
     if (this.modo() === modo) return;
     this.modo.set(modo);
     if (modo === ModoDoChatEnum.PLANEJAMENTO && this.planoAbertoId() === null) this.abrirUltimoPlano();
+  }
+
+  abrirDemanda(id: number): void {
+    this.demandaAbertaId.set(id);
+  }
+
+  /** Volta para a lista "Minhas demandas" (a demanda aberta fecha). */
+  voltarParaALista(): void {
+    this.demandaAbertaId.set(null);
+  }
+
+  /** A lista achou uma execução rodando: a demanda dela abre por padrão, uma vez, se a pessoa ainda não abriu outra. */
+  abrirDemandaEmExecucao(id: number): void {
+    if (this.abriuDemandaEmExecucao) return;
+    this.abriuDemandaEmExecucao = true;
+    if (this.modo() === ModoDoChatEnum.PERGUNTAS && this.demandaAbertaId() === null) this.demandaAbertaId.set(id);
+  }
+
+  /** "Planejar com a IA", na demanda aberta: só leva ao modo planejamento. */
+  planejarComAIa(): void {
+    this.trocarModo(ModoDoChatEnum.PLANEJAMENTO);
   }
 
   abrirPlano(id: number): void {

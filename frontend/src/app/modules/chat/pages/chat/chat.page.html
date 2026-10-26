@@ -12,7 +12,7 @@
     (novoPlano)="criarPlano()"
   />
 
-  <div #area class="chat__area" [class.chat__area--planejamento]="modo() === Modo.PLANEJAMENTO" [style.--largura-documento]="larguraDocumento() + '%'">
+  <div #area class="chat__area" [class.chat__area--planejamento]="dividida()" [class.chat__area--lista]="listaVisivel()" [style.--largura-documento]="larguraDocumento() + '%'">
   <div class="chat__principal">
     @if (erro()) {
       <div class="chat__erro" role="alert">
@@ -238,7 +238,13 @@
     }
   </div>
 
-  @if (modo() === Modo.PLANEJAMENTO) {
+  @if (listaVisivel()) {
+    <aside class="chat__lateral" aria-label="Minhas demandas">
+      <app-chat-minhas-demandas (escolhida)="abrirDemanda($event)" (emExecucaoEncontrada)="abrirDemandaEmExecucao($event)" />
+    </aside>
+  }
+
+  @if (dividida()) {
     <div
       class="chat__divisor"
       [class.chat__divisor--arrastando]="arrastandoDivisor()"
@@ -256,7 +262,11 @@
       (keydown)="aoTeclarNoDivisor($event)"
     ></div>
     <div class="chat__documento">
-      @if (planoAbertoId(); as idDoPlano) {
+      @if (modo() === Modo.PERGUNTAS) {
+        @if (demandaAbertaId(); as idDaDemanda) {
+          <app-chat-demanda-leitura [demandaId]="idDaDemanda" (voltar)="voltarParaALista()" (planejar)="planejarComAIa()" />
+        }
+      } @else if (planoAbertoId(); as idDoPlano) {
         <app-plano-documento
           [planoId]="idDoPlano"
           [podePedirIa]="!iaDesligada()"

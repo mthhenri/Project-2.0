@@ -1,0 +1,60 @@
+<section class="minhas-demandas" aria-label="Minhas demandas">
+  <header class="minhas-demandas__topo">
+    <h2 class="minhas-demandas__titulo">Minhas demandas</h2>
+    <p-button
+      icon="pi pi-refresh"
+      severity="secondary"
+      [text]="true"
+      size="small"
+      ariaLabel="Atualizar a lista"
+      pTooltip="Atualizar"
+      tooltipPosition="left"
+      [disabled]="carregando()"
+      (onClick)="carregar()"
+    />
+  </header>
+
+  @if (carregando() && itens().length === 0) {
+    <div class="minhas-demandas__esqueleto" aria-busy="true">
+      <p-skeleton height="4.5rem" />
+      <p-skeleton height="4.5rem" />
+      <p-skeleton height="4.5rem" />
+    </div>
+  } @else if (erro()) {
+    <div class="minhas-demandas__estado" role="alert">
+      <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+      <span>Não foi possível carregar as demandas.</span>
+      <p-button label="Tentar de novo" icon="pi pi-refresh" size="small" [outlined]="true" (onClick)="carregar()" />
+    </div>
+  } @else if (itens().length === 0) {
+    <div class="minhas-demandas__estado">
+      <i class="pi pi-inbox" aria-hidden="true"></i>
+      <strong>Nenhuma demanda ainda</strong>
+      <span>As demandas em que você executar atividades aparecem aqui.</span>
+    </div>
+  } @else {
+    <ul class="minhas-demandas__lista">
+      @for (demanda of itens(); track demanda.demandaId) {
+        <li>
+          <button type="button" class="minhas-demandas__item" [class.minhas-demandas__item--rodando]="demanda.executando" (click)="escolhida.emit(demanda.demandaId)">
+            <span class="minhas-demandas__linha">
+              <app-demanda-status-marca [status]="demanda.status" [tamanho]="16" />
+              <span class="minhas-demandas__nome">{{ demanda.nome }}</span>
+              @if (demanda.executando) {
+                <span class="minhas-demandas__rodando" pTooltip="Você está executando nesta demanda" tooltipPosition="left"><i class="pi pi-play-circle" aria-hidden="true"></i>Rodando</span>
+              }
+            </span>
+            <span class="minhas-demandas__caminho">{{ demanda.nomeProjeto }} › {{ demanda.caminho }}</span>
+            <app-demanda-barra-horas [minutosExecutados]="demanda.minutosExecutados" [horasEstimadas]="demanda.horasEstimadas" />
+            <span class="minhas-demandas__atividades">
+              <span class="minhas-demandas__progresso" aria-hidden="true">
+                <span class="minhas-demandas__progresso-preenchimento" [style.width.%]="percentualDesenvolvidas(demanda.atividadesDesenvolvidas, demanda.totalAtividades)"></span>
+              </span>
+              {{ rotuloDesenvolvidas(demanda.atividadesDesenvolvidas, demanda.totalAtividades) }}
+            </span>
+          </button>
+        </li>
+      }
+    </ul>
+  }
+</section>

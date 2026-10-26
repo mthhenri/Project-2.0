@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
+import { LIMITE_PADRAO_DEMANDAS_EXECUTADAS, TipoUsuarioEnum } from '@project20/shared';
 import { DemandaService } from './demanda.service';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
@@ -41,4 +42,19 @@ test('restaurar: com projeto e pai ativos reativa somente a demanda', async () =
   });
   assert.equal((await servico.restaurar({ id: 1 })).dados?.id, 1);
   assert.equal(chamadas, 1);
+});
+
+test('listarExecutadas: sempre as do token; o desenvolvedor só as de que é membro, o gestor sem esse filtro; limite padrão quando o pedido não diz', async () => {
+  const chamadas: unknown[] = [];
+  const servico = criarServico({ listarExecutadas: async (dto: unknown) => { chamadas.push(dto); return []; } });
+
+  await servico.listarExecutadas({}, { sub: 7, login: 'dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never);
+  await servico.listarExecutadas({ limite: 5 }, { sub: 1, login: 'g', tipo: TipoUsuarioEnum.GESTOR } as never);
+  await servico.listarExecutadas({}, { sub: 2, login: 'a', tipo: TipoUsuarioEnum.ADMINISTRADOR } as never);
+
+  assert.deepEqual(chamadas, [
+    { usuarioId: 7, apenasMembro: true, limite: LIMITE_PADRAO_DEMANDAS_EXECUTADAS },
+    { usuarioId: 1, apenasMembro: false, limite: 5 },
+    { usuarioId: 2, apenasMembro: false, limite: LIMITE_PADRAO_DEMANDAS_EXECUTADAS },
+  ]);
 });

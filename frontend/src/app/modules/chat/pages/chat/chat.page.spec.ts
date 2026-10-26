@@ -7,6 +7,7 @@ import { esperarRequisicao, responderSucesso } from '../../../../../testes/http-
 import { DesfazerService } from '../../../../core/services/desfazer.service';
 import { IaDisponibilidadeService } from '../../../../core/services/ia-disponibilidade.service';
 import { ChatService, ErroDoChat } from '../../services/chat.service';
+import { ModoDoChatEnum } from '../../utils/plano.util';
 import { ChatPage } from './chat.page';
 
 // Chat do dia (SYSTEM.SPEC.md §12 "chat" e "ia"): a mensagem é enviada por stream (ChatService.enviarMensagem, que usa fetch e já tem
@@ -36,6 +37,8 @@ interface OpcoesMontagem {
   estado?: EstadoIaEnum;
   mensagens?: ReturnType<typeof mensagem>[];
   conversas?: Record<string, unknown>[];
+  /** O que a lateral "Minhas demandas" recebe (padrão: nenhuma). */
+  demandas?: Record<string, unknown>[];
 }
 
 /** Monta a página e responde o que ela pede ao abrir: estado da IA, conversa de hoje e lista do histórico. */
@@ -44,6 +47,7 @@ async function montarChat(opcoes: OpcoesMontagem = {}): Promise<Montado> {
   responderSucesso(esperarRequisicao(montado.http, 'GET', '/chat/hoje'), { conversaId: CONVERSA_DE_HOJE, mensagens: opcoes.mensagens ?? [] });
   responderSucesso(esperarRequisicao(montado.http, 'GET', '/chat/conversas'), { conversas: opcoes.conversas ?? [] });
   responderSucesso(esperarRequisicao(montado.http, 'GET', '/plano'), []);
+  responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/executadas'), opcoes.demandas ?? []);
   responderSucesso(esperarRequisicao(montado.http, 'GET', '/ia/disponibilidade'), { estado: opcoes.estado ?? EstadoIaEnum.NO_AR });
   await montado.atualizar();
   return montado;
@@ -1108,5 +1112,83 @@ describe('ChatPage — modo Planejamento (task 233)', () => {
     fluxo.terminar();
     await montado.atualizar();
     responderPendentes(montado);
+  });
+});
+
+// "Minhas demandas" (task 245): a lateral à direita lista as demandas executadas; abrir uma divide a tela, só para leitura.
+describe('ChatPage: minhas demandas', () => {
+  const RESUMO_DA_DEMANDA = {
+    demandaId: 9, nome: 'Cadastro de usuário', caminho: 'Segurança › Cadastro de usuário', projetoId: 3, nomeProjeto: 'Portal', status: 'PENDENTE',
+    horasEstimadas: 8, minutosExecutados: 120, totalAtividades: 4, atividadesDesenvolvidas: 1, executando: false, ultimaExecucaoData: '2026-10-25T12:00:00.000Z',
+  };
+  const DEMANDA_ABERTA = {
+    id: 9, nome: 'Cadastro de usuário', projetoId: 3, status: 'PENDENTE', horasEstimadas: 8, descricaoTecnica: 'Técnica', descricaoCliente: null, documentacao: null, podeEditar: true,
+  };
+
+  async function abrirDemandaNaLateral(montado: Montado): Promise<void> {
+    montado.elemento.querySelector<HTMLButtonElement>('.minhas-demandas__item')!.click();
+    await montado.atualizar();
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/9'), DEMANDA_ABERTA);
+    await montado.atualizar();
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/atividade'), { itens: [], totalItens: 0, paginaAtual: 1, itensPorPagina: 100, totalPaginas: 1 });
+    await montado.atualizar();
+  }
+
+  it('em Perguntas a lateral é a lista "Minhas demandas" (o histórico mora no seletor do topo)', async () => {
+    const montado = await montarChat({ demandas: [RESUMO_DA_DEMANDA] });
+
+    expect(montado.elemento.querySelector('app-chat-minhas-demandas')).not.toBeNull();
+    expect(montado.elemento.querySelector('app-chat-demanda-leitura')).toBeNull();
+    expect(montado.elemento.querySelector('.chat__divisor')).toBeNull();
+    expect(montado.elemento.textContent).toContain('Cadastro de usuário');
+  });
+
+  it('clicar numa demanda fecha a lista e divide a tela com a demanda; Demandas volta à lista', async () => {
+    const montado = await montarChat({ demandas: [RESUMO_DA_DEMANDA] });
+    await abrirDemandaNaLateral(montado);
+
+    expect(montado.elemento.querySelector('app-chat-minhas-demandas')).toBeNull();
+    expect(montado.elemento.querySelector('app-chat-demanda-leitura')).not.toBeNull();
+    expect(montado.elemento.querySelector('.chat__divisor')).not.toBeNull();
+
+    Array.from(montado.elemento.querySelectorAll<HTMLButtonElement>('app-chat-demanda-leitura button')).find((botao) => botao.textContent?.includes('Demandas'))!.click();
+    await montado.atualizar();
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/executadas'), [RESUMO_DA_DEMANDA]);
+    await montado.atualizar();
+
+    expect(montado.elemento.querySelector('app-chat-demanda-leitura')).toBeNull();
+    expect(montado.elemento.querySelector('app-chat-minhas-demandas')).not.toBeNull();
+  });
+
+  it('com execução rodando a demanda dela abre sozinha, e voltar à lista não a reabre', async () => {
+    const montado = await montarChat({ demandas: [{ ...RESUMO_DA_DEMANDA, executando: true }] });
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/9'), DEMANDA_ABERTA);
+    await montado.atualizar();
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/atividade'), { itens: [], totalItens: 0, paginaAtual: 1, itensPorPagina: 100, totalPaginas: 1 });
+    await montado.atualizar();
+    expect(montado.elemento.querySelector('app-chat-demanda-leitura')).not.toBeNull();
+
+    montado.componente.voltarParaALista();
+    await montado.atualizar();
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/executadas'), [{ ...RESUMO_DA_DEMANDA, executando: true }]);
+    await montado.atualizar();
+
+    expect(montado.elemento.querySelector('app-chat-minhas-demandas')).not.toBeNull();
+    expect(montado.elemento.querySelector('app-chat-demanda-leitura')).toBeNull();
+  });
+
+  it('Planejar com a IA leva ao modo planejamento e a lista de demandas some', async () => {
+    const montado = await montarChat({ demandas: [RESUMO_DA_DEMANDA] });
+    await abrirDemandaNaLateral(montado);
+
+    montado.componente.planejarComAIa();
+    await montado.atualizar();
+    for (const pedido of montado.http.match((requisicao) => requisicao.method === 'GET' && requisicao.url.endsWith('/plano'))) responderSucesso(pedido, []);
+    for (const pedido of montado.http.match((requisicao) => requisicao.url.endsWith('/chat/conversas'))) responderSucesso(pedido, { conversas: [] });
+    await montado.atualizar();
+
+    expect(montado.componente.modo()).toBe(ModoDoChatEnum.PLANEJAMENTO);
+    expect(montado.elemento.querySelector('app-chat-demanda-leitura')).toBeNull();
+    expect(montado.elemento.querySelector('app-chat-minhas-demandas')).toBeNull();
   });
 });

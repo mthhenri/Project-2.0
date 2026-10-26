@@ -15,6 +15,7 @@ import { DemandaService } from '../services/demanda.service';
 import {
   DemandaCriarDto,
   DemandaListarDto,
+  DemandaExecutadaListarDto,
   DemandaAlterarDto,
   DemandaConexaoCriarDto,
   DemandaTagsAtribuirDto,
@@ -99,6 +100,14 @@ export class DemandaController {
   @Get('atribuidas')
   listarAtribuidas(@ActiveUser() usuarioAtivo: JwtPayload) {
     return this.demandaService.listarAtribuidas(usuarioAtivo);
+  }
+
+  @ApiOperation({ summary: 'Listar as últimas demandas que o próprio usuário executou, da execução mais recente para a mais antiga' })
+  @ApiResponse({ status: 200, description: 'Demandas executadas listadas com sucesso' })
+  @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+  @Get('executadas')
+  listarExecutadas(@Query() filtros: DemandaExecutadaListarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
+    return this.demandaService.listarExecutadas(filtros, usuarioAtivo);
   }
 
   @ApiOperation({ summary: 'Listar demandas não-concluídas do projeto com horas executadas e execuções ativas (somente gestor)' })

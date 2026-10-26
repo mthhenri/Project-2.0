@@ -12,6 +12,18 @@
 
 ---
 
+## 2026-10-26 — Task 245: "Minhas demandas" no chat (lista, demanda aberta em leitura e abertura automática)
+
+Quarta e última task da guarda-chuva `chat-execucao-por-demanda.spec.md` (a UI; as 242 a 244 estão com o código pronto e as verificações com IA pendentes). O autor mandou seguir sem decidir o ponto "reaproveitar a demanda aberta da 239": a demanda aberta é um componente novo do chat, e o motivo está em `done/245-.../verificacao.md`.
+
+- **Backend/`shared`:** `GET /demanda/executadas` (rota fixa antes de `:id`), `DemandaService.listarExecutadas` (o do token; desenvolvedor só as de que é membro) e `DemandaRepository.listarExecutadas` (CTE recursiva do caminho só dos projetos envolvidos, horas com a execução aberta até agora, total e desenvolvidas, `BOOL_OR` para "rodando"); DTOs `DemandaExecutadaListarDto`, `DemandaExecutadaInternoListarDto` e `DemandaExecutadaResumoDto`.
+- **Front:** `app-chat-minhas-demandas` (lista com vazio, carregando, erro) e `app-chat-demanda-leitura` (abas Checklist, Técnica, Cliente só gestor e administrador, Documentação; Editar e Planejar com a IA); a página do chat reaproveita o contêiner, o divisor e a largura do planejamento, e em janela estreita a lista vai para baixo da conversa. Com execução rodando a demanda abre sozinha uma vez por visita.
+- **Testes:** `shared` 275; backend unitários com a service e as rotas; integração 350 (3 novos de `listarExecutadas`: ordem e sem repetição, caminho e desenvolvidas, acesso do desenvolvedor e do gestor); frontend 2180 aprovados e 3 falhas **fora do escopo** (`demanda-grafo`: tempo esgotado só na suíte inteira, passa isolado; `mensagem-direta-notificacoes`: 2 falhas preexistentes, **P-036**). Build do frontend aprovado; o `chat.page.scss` ficou no limite do orçamento (8,00 kB).
+- **Ao vivo:** ver `done/245-.../verificacao.md` (desenvolvedor e gestor, três tamanhos, claro e escuro, vazio, erro, execução rodando, voltar à lista). **Achado:** a barra de horas da demanda aberta soma só execuções encerradas e a da lista conta a rodando; diferem pelo tempo da aberta.
+- **Não há lint** no projeto (P-001).
+
+---
+
 ## 2026-10-26 — Task 244: check-in que troca sozinho e avisa do tempo (código pronto; teste de prompt e verificação ao vivo pendentes)
 
 Terceira task da guarda-chuva `chat-execucao-por-demanda.spec.md`. Ponto em aberto: frequência do aviso de tempo, no padrão proposto (todo check-in acima da duração recomendada, uma vez por check-in, sem prazo novo).
