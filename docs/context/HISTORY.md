@@ -12,6 +12,12 @@
 
 ---
 
+## 2026-10-26 — CI do PR 17: teste de tela pesada estourava os 5 s com a suíte inteira em paralelo
+
+O check "Organização e build" do PR falhou em `modelagem.page.spec` ("escolher uma relação no painel passa para a outra tabela", `Test timed out in 5000ms`), a mesma falha por tempo que apareceu localmente a cada rodada completa depois da task 253 (ora na Modelagem, ora no grafo de Demandas); o resto da suíte passou (2212 de 2213) e o job de integração e o build do frontend estavam verdes. Sozinho, o spec da Modelagem termina em ~3 s. Causa provável: com a 253, cada um dos 72 testes da `chat.page` passou a carregar o editor Milkdown (antes era um `textarea`), o que pesa na CPU dos workers e faz o spec de tela pesada passar dos 5 s sem estar travado. Correção: `testTimeout: 15_000` em `frontend/vitest.config.ts` (nenhum teste foi pulado ou desligado). Suíte inteira depois: 179 arquivos, 2213 testes aprovados. Se a falha por tempo voltar com 15 s, a saída é fazer a `chat.page.spec` simular o editor nos testes que não escrevem no campo.
+
+---
+
 ## 2026-10-26 — Task 253: campo do chat com a IA escreve formatado (editor compartilhado)
 
 Pedido do autor: o campo do chat com a IA deve ter o mesmo Markdown "tímido" do chat entre colaboradores (formata ao digitar, barra só sobre a seleção). Spec 253, criada junto da 252 e executada em seguida.
