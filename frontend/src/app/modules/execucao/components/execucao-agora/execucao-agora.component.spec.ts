@@ -1,13 +1,16 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { Popover } from 'primeng/popover';
 import { ExecucaoItemDto, TipoUsuarioEnum } from '@project20/shared';
 import { montarComponente } from '../../../../../testes/montar-componente';
 import { ExecucaoAgoraComponent, ExecucaoPausaPedida } from './execucao-agora.component';
 
-// O cronômetro usa setInterval, que deixaria a zona instável: só os intervalos são falsos.
-vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
-afterEach(() => vi.clearAllMocks());
+// O cronômetro usa setInterval, que deixaria a zona instável: só os intervalos são falsos (e voltam ao real ao fim de cada teste).
+beforeEach(() => vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] }));
+afterEach(() => {
+  vi.useRealTimers();
+  vi.clearAllMocks();
+});
 
 function criarAtiva(id: number, sobrescritas: Partial<ExecucaoItemDto> = {}): ExecucaoItemDto {
   return {
