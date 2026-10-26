@@ -1,0 +1,159 @@
+.execucao-agora {
+  margin-bottom: 1.25rem;
+
+  &__titulo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--p-text-muted-color);
+  }
+
+  &__ponto {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--p-primary-color);
+    animation: execucao-agora-pulso 1.6s infinite;
+  }
+
+  &__lista {
+    display: grid;
+    gap: 0.625rem;
+
+    &--grade {
+      grid-template-columns: repeat(auto-fill, minmax(26rem, 1fr));
+    }
+  }
+
+  &__cartao {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    background: var(--p-content-background);
+    border: 1px solid color-mix(in srgb, var(--p-primary-color) 35%, var(--p-content-border-color));
+    border-left: 4px solid var(--p-primary-color);
+    border-radius: 0.5rem;
+
+    &--compacto {
+      padding: 0.5625rem 0.875rem;
+    }
+  }
+
+  &__avatar {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 2.125rem;
+    height: 2.125rem;
+    border-radius: 50%;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--p-primary-600);
+    background: var(--p-primary-50);
+  }
+
+  &__corpo {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 0.125rem;
+    min-width: 0;
+  }
+
+  &__atividade {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-weight: 500;
+    color: var(--p-primary-600);
+    text-align: left;
+    cursor: pointer;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__caminho,
+  &__descricao {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__caminho {
+    font-size: 0.75rem;
+    color: var(--p-text-muted-color);
+  }
+
+  &__descricao {
+    font-size: 0.8125rem;
+  }
+
+  &__tempo {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.25rem;
+  }
+
+  &__inicio {
+    font-size: 0.6875rem;
+    color: var(--p-text-muted-color);
+  }
+
+  &__vazio {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    color: var(--p-text-muted-color);
+    background: var(--p-content-background);
+    border: 1px dashed var(--p-content-border-color);
+    border-radius: 0.5rem;
+  }
+
+  &__popover {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 20rem;
+  }
+
+  &__rotulo {
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  &__erro {
+    color: var(--p-red-500);
+  }
+
+  &__acoes {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+}
+
+@keyframes execucao-agora-pulso {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--p-primary-color) 50%, transparent);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 0.4375rem transparent;
+  }
+}

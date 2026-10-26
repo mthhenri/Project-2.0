@@ -24,6 +24,9 @@ export class MarkdownVisualizadorComponent {
   /** Menções (`@Nome`) e referências (`#Nome`) conhecidas, que ganham um destaque no texto. Vazio, nada muda. */
   readonly destaques = input<readonly string[]>([]);
 
+  /** O texto está sobre um fundo colorido (o balão da própria mensagem): herda cor e tamanho do entorno em vez de usar os do tema. */
+  readonly herdaCor = input(false);
+
   readonly blocos = computed(() => interpretarMarkdown(this.texto() ?? ''));
 
   protected partir(valor: string) {

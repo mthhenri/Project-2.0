@@ -1,0 +1,71 @@
+<section class="execucao-agora" aria-label="Execuções em andamento">
+  <h2 class="execucao-agora__titulo"><span class="execucao-agora__ponto" aria-hidden="true"></span>{{ titulo() }}</h2>
+
+  @if (ativas().length > 0) {
+    <div class="execucao-agora__lista" [class.execucao-agora__lista--grade]="mostrarUsuario()">
+      @for (execucao of ativas(); track execucao.id) {
+        <article class="execucao-agora__cartao" [class.execucao-agora__cartao--compacto]="mostrarUsuario()">
+          @if (mostrarUsuario()) {
+            <span class="execucao-agora__avatar" aria-hidden="true">{{ iniciais(execucao.nomeUsuario) }}</span>
+          }
+          <div class="execucao-agora__corpo">
+            <button type="button" class="execucao-agora__atividade" (click)="abrirAtividade.emit(execucao.atividadeId)">
+              {{ execucao.nomeAtividade }}
+            </button>
+            <span class="execucao-agora__caminho">
+              @if (mostrarUsuario()) { {{ execucao.nomeUsuario }} · }{{ execucao.nomeProjeto }} › {{ execucao.nomeDemanda }}
+            </span>
+            <span class="execucao-agora__descricao">{{ execucao.descricao }}</span>
+          </div>
+          <div class="execucao-agora__tempo">
+            <app-execucao-timer [inicioData]="execucao.inicioData" tamanho="medio" />
+            <span class="execucao-agora__inicio">desde {{ horaDeInicio(execucao) }}</span>
+          </div>
+          <p-button
+            icon="pi pi-pause"
+            severity="secondary"
+            [outlined]="true"
+            [loading]="pausando() && execucaoEmPausa()?.id === execucao.id"
+            ariaLabel="Pausar execução"
+            pTooltip="Pausar execução"
+            tooltipPosition="top"
+            (onClick)="abrirPausa($event, execucao, pausaPopover)"
+          />
+        </article>
+      }
+    </div>
+  } @else {
+    <div class="execucao-agora__vazio">
+      <span>{{ textoVazio() }}</span>
+      @if (podeIniciar()) {
+        <p-button label="Iniciar atividade" icon="pi pi-play" size="small" (onClick)="iniciar.emit()" />
+      }
+    </div>
+  }
+</section>
+
+<p-popover #pausaPopover (onShow)="focarDescricao()">
+  <div class="execucao-agora__popover">
+    <label class="execucao-agora__rotulo" for="execucao-agora-descricao">
+      Descrição da execução @if (descricaoObrigatoria()) { <span>*</span> }
+    </label>
+    <textarea
+      id="execucao-agora-descricao"
+      pTextarea
+      appBloquearCaracteresProibidos
+      spellcheck="true"
+      rows="3"
+      class="execucao-agora__descricao-campo w-full"
+      [formControl]="descricao"
+      (keydown.enter)="aoTeclar($event, pausaPopover)"
+      (keydown.escape)="pausaPopover.hide()"
+    ></textarea>
+    @if (descricao.touched && descricao.invalid) {
+      <small class="execucao-agora__erro">Informe a descrição para pausar.</small>
+    }
+    <div class="execucao-agora__acoes">
+      <p-button label="Cancelar" severity="secondary" [outlined]="true" size="small" (onClick)="pausaPopover.hide()" />
+      <p-button label="Pausar" icon="pi pi-pause" size="small" (onClick)="confirmarPausa(pausaPopover)" />
+    </div>
+  </div>
+</p-popover>

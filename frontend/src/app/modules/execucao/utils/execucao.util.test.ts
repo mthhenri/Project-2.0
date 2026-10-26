@@ -1,6 +1,6 @@
 import { test } from 'vitest';
 import * as assert from 'node:assert/strict';
-import { dataParaIso, isoParaData, mesmoDia, rotuloDoDia, horasCompactas, resumoDoDia } from './execucao.util';
+import { dataParaIso, isoParaData, mesmoDia, rotuloDoDia, horasCompactas, resumoDoDia, separarExecucoes, mensagemInicialDoChat, iniciaisDoNome } from './execucao.util';
 
 const hoje = new Date(2026, 6, 10);
 
@@ -63,4 +63,34 @@ test('resumoDoDia usa o singular para uma execução', () => {
 
 test('resumoDoDia usa o plural e o total compacto para várias execuções', () => {
   assert.equal(resumoDoDia(new Date(2026, 6, 9), 5, 744, hoje), 'Quinta-feira, 9 de julho · 5 execuções · 12h24');
+});
+
+test('resumoDoDia acrescenta as execuções em andamento só quando há', () => {
+  assert.equal(resumoDoDia(hoje, 5, 744, hoje, 1), 'Sexta-feira, 10 de julho · 5 execuções · 12h24 · 1 em andamento');
+  assert.equal(resumoDoDia(hoje, 5, 744, hoje, 0), 'Sexta-feira, 10 de julho · 5 execuções · 12h24');
+});
+
+test('separarExecucoes tira a ativa da lista das encerradas e preserva a ordem', () => {
+  const lista = [
+    { id: 1, fimData: new Date(2026, 6, 10, 10) },
+    { id: 2, fimData: null },
+    { id: 3, fimData: '2026-07-10T12:00:00Z' },
+    { id: 4, fimData: null },
+  ];
+  const { ativas, encerradas } = separarExecucoes(lista);
+  assert.deepEqual(ativas.map((item) => item.id), [2, 4]);
+  assert.deepEqual(encerradas.map((item) => item.id), [1, 3]);
+  assert.deepEqual(separarExecucoes([]), { ativas: [], encerradas: [] });
+});
+
+test('mensagemInicialDoChat retoma de onde parou só quando já houve execução no dia', () => {
+  assert.equal(mensagemInicialDoChat(true), 'De onde paramos?');
+  assert.equal(mensagemInicialDoChat(false), 'O que temos pra fazer?');
+});
+
+test('iniciaisDoNome pega as duas primeiras iniciais e tolera espaços e nome vazio', () => {
+  assert.equal(iniciaisDoNome('Matheus Henrique'), 'MH');
+  assert.equal(iniciaisDoNome('  ana   souza lima '), 'AS');
+  assert.equal(iniciaisDoNome('Carlos'), 'C');
+  assert.equal(iniciaisDoNome(''), '');
 });

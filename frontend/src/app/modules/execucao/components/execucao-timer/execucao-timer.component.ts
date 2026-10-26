@@ -10,7 +10,7 @@ import { segundosDecorridos, formatarRelogio } from '../../models/execucao.model
 })
 export class ExecucaoTimerComponent implements OnInit, OnDestroy {
   @Input({ required: true }) inicioData!: Date;
-  @Input() tamanho: 'grande' | 'compacto' = 'grande';
+  @Input() tamanho: 'grande' | 'medio' | 'compacto' = 'grande';
 
   readonly tempoDecorrido = signal<string>('00:00:00');
   private intervalo?: ReturnType<typeof setInterval>;

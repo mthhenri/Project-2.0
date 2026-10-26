@@ -540,6 +540,14 @@ export class EditorFormatado {
     this.editor.action(replaceAll(''));
   }
 
+  /** Põe o cursor no fim do documento (depois de trocar o conteúdo inteiro, o campo volta a ser escrito dali). */
+  cursorNoFim(): void {
+    this.editor.action((contexto) => {
+      const view = contexto.get(editorViewCtx);
+      view.dispatch(view.state.tr.setSelection(TextSelection.atEnd(view.state.doc)));
+    });
+  }
+
   temFoco(): boolean {
     return this.editor.action((contexto) => contexto.get(editorViewCtx).hasFocus());
   }

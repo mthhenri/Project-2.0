@@ -3,7 +3,8 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
 import { ConfirmationService } from 'primeng/api';
-import { ExecucaoItemDto, TipoUsuarioEnum } from '@project20/shared';
+import { EstadoIaEnum, ExecucaoItemDto, TipoUsuarioEnum } from '@project20/shared';
+import { IaDisponibilidadeService } from '../../../../core/services/ia-disponibilidade.service';
 import { montarComponente, ComponenteMontado } from '../../../../../testes/montar-componente';
 import { esperarRequisicao, responderErro, responderSucesso } from '../../../../../testes/http-teste';
 import { ExecucaoHistoricoPage } from './execucao-historico.page';
@@ -113,15 +114,101 @@ describe('ExecucaoHistoricoPage: carregamento e estados', () => {
     expect(texto(montado)).toContain('Nenhuma execução em');
   });
 
-  it('a execução em andamento vai para o topo, com "Em andamento" e cronômetro no lugar da duração', async () => {
+  it('a execução em andamento sai da tabela e vai para o bloco "Em andamento agora", com cronômetro', async () => {
     const { montado } = await montarPagina();
     await carregar(montado, [criarExecucao(1), criarExecucao(2, { fimData: null, duracaoMinutos: null })], 90);
     const linhas = Array.from(montado.elemento.querySelectorAll('tr.execucao-historico__linha'));
-    expect(linhas[0].classList).toContain('execucao-historico__linha--ativa');
-    expect(linhas[0].textContent).toContain('Em andamento');
-    expect(linhas[0].querySelector('app-execucao-timer')).not.toBeNull();
-    expect(linhas[1].querySelector('app-execucao-timer')).toBeNull();
-    expect(linhas[1].textContent).toContain('1h 30min');
+    expect(linhas.length).toBe(1);
+    expect(linhas[0].textContent).toContain('1h 30min');
+    expect(linhas[0].querySelector('app-execucao-timer')).toBeNull();
+    const bloco = montado.elemento.querySelector('app-execucao-agora')!;
+    expect(bloco.textContent).toContain('Em andamento agora');
+    expect(bloco.textContent).toContain('Atividade 2');
+    expect(bloco.querySelector('app-execucao-timer')).not.toBeNull();
+    expect(texto(montado)).toContain('2 execuções · 1h30 · 1 em andamento');
+    expect(montado.elemento.querySelector('.execucao-historico__rodape')?.textContent).toContain('Total do dia');
+  });
+
+  it('só com execução ativa a tabela não diz que o dia está vazio', async () => {
+    const { montado } = await montarPagina();
+    await carregar(montado, [criarExecucao(2, { fimData: null, duracaoMinutos: null })], 10);
+    expect(texto(montado)).toContain('Nenhuma execução encerrada em');
+    expect(texto(montado)).not.toContain('Ver dia anterior');
+    expect(montado.componente.totalEncerradas()).toBe(0);
+  });
+
+  it('gestor sem filtro vê um cartão por usuário em andamento, com o nome', async () => {
+    const { montado } = await montarPagina();
+    await carregar(
+      montado,
+      [
+        criarExecucao(1, { fimData: null, duracaoMinutos: null, nomeUsuario: 'Maria Souza' }),
+        criarExecucao(2, { fimData: null, duracaoMinutos: null, nomeUsuario: 'João Lima' }),
+      ],
+      0,
+    );
+    const bloco = montado.elemento.querySelector('app-execucao-agora')!;
+    expect(bloco.querySelectorAll('article').length).toBe(2);
+    expect(bloco.textContent).toContain('Em andamento agora · 2');
+    expect(bloco.textContent).toContain('João Lima');
+    expect(bloco.querySelector('.execucao-agora__avatar')?.textContent?.trim()).toBe('MS');
+  });
+
+  it('gestor filtrado em um usuário vê o cartão sem avatar', async () => {
+    const { montado } = await montarPagina({ consulta: { usuario: '1' } });
+    await carregar(montado, [criarExecucao(1, { fimData: null, duracaoMinutos: null })]);
+    expect(montado.elemento.querySelector('.execucao-agora__avatar')).toBeNull();
+  });
+
+  it('sem execução ativa o gestor vê o estado vazio e nenhum botão de iniciar', async () => {
+    const { montado } = await montarPagina();
+    await carregar(montado, [criarExecucao(1)], 90);
+    expect(montado.elemento.querySelector('app-execucao-agora')?.textContent).toContain('Ninguém está executando agora.');
+    expect(botaoPorTexto(montado, 'Iniciar atividade')).toBeUndefined();
+  });
+
+  it('num dia passado sem execução ativa o bloco "agora" não aparece', async () => {
+    const { montado } = await montarPagina({ consulta: { data: '2026-01-05' } });
+    await carregar(montado, [criarExecucao(1)], 90);
+    expect(montado.elemento.querySelector('app-execucao-agora')).toBeNull();
+  });
+
+  it('o desenvolvedor sem execução ativa leva "O que temos pra fazer?" ao chat com a IA no ar', async () => {
+    const { montado, irPara } = await montarPagina({ usuario: TipoUsuarioEnum.DESENVOLVEDOR });
+    montado.fixture.debugElement.injector.get(IaDisponibilidadeService).estadoReal.set(EstadoIaEnum.NO_AR);
+    await carregar(montado, []);
+    botaoPorTexto(montado, 'Iniciar atividade')!.click();
+    expect(irPara).toHaveBeenCalledWith(['/chat'], { queryParams: { mensagem: 'O que temos pra fazer?' } });
+  });
+
+  it('com execução já feita no dia a mensagem do chat é "De onde paramos?"', async () => {
+    const { montado, irPara } = await montarPagina({ usuario: TipoUsuarioEnum.DESENVOLVEDOR });
+    montado.fixture.debugElement.injector.get(IaDisponibilidadeService).estadoReal.set(EstadoIaEnum.NO_AR);
+    await carregar(montado, [criarExecucao(1)], 90);
+    botaoPorTexto(montado, 'Iniciar atividade')!.click();
+    expect(irPara).toHaveBeenCalledWith(['/chat'], { queryParams: { mensagem: 'De onde paramos?' } });
+  });
+
+  it('com a IA fora do ar, "Iniciar atividade" leva às Atividades', async () => {
+    const { montado, irPara } = await montarPagina({ usuario: TipoUsuarioEnum.DESENVOLVEDOR });
+    montado.fixture.debugElement.injector.get(IaDisponibilidadeService).estadoReal.set(EstadoIaEnum.DESLIGADA);
+    await carregar(montado, []);
+    botaoPorTexto(montado, 'Iniciar atividade')!.click();
+    expect(irPara).toHaveBeenCalledWith(['/atividade']);
+  });
+
+  it('pausar encerra a execução com a descrição e recarrega a lista', async () => {
+    const { montado } = await montarPagina();
+    const ativa = criarExecucao(2, { fimData: null, duracaoMinutos: null });
+    await carregar(montado, [ativa]);
+    montado.componente.pausarExecucao({ execucao: ativa, descricao: 'Feito o ajuste' });
+    const encerrar = esperarRequisicao(montado.http, 'PATCH', '/execucao/2/encerrar');
+    expect(encerrar.request.body).toEqual({ descricao: 'Feito o ajuste' });
+    responderSucesso(encerrar, { id: 2, duracaoMinutos: 30 });
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/execucao'), pagina([{ ...ativa, fimData: new Date(), duracaoMinutos: 30 }], 30));
+    await montado.atualizar();
+    expect(montado.componente.ativas()).toEqual([]);
+    expect(montado.componente.linhas().length).toBe(1);
   });
 });
 
