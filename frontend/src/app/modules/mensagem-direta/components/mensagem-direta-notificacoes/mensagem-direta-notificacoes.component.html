@@ -67,6 +67,20 @@
       <button type="button" class="menu-notificacoes__opcao" (click)="silenciar(item.opcao)">{{ item.rotulo }}</button>
     }
 
+    @if (comPosicao) {
+      <hr class="menu-notificacoes__divisor" />
+      <p class="menu-notificacoes__secao">Posição do chat</p>
+      @for (item of posicoes; track item.valor) {
+        <button type="button" class="menu-notificacoes__opcao menu-notificacoes__opcao--posicao" role="menuitemradio" [attr.aria-checked]="posicaoPreferida() === item.valor" (click)="escolherPosicao(item.valor); menu.hide()">
+          <span>{{ item.rotulo }}</span>
+          @if (posicaoPreferida() === item.valor) {
+            <i class="pi pi-check menu-notificacoes__marca" aria-hidden="true"></i>
+          }
+        </button>
+      }
+      <button type="button" class="menu-notificacoes__reativar menu-notificacoes__restaurar" (click)="restaurarPosicao(); menu.hide()">Restaurar posição e tamanho</button>
+    }
+
     @if (erro()) {
       <p class="menu-notificacoes__erro" role="alert"><i class="pi pi-exclamation-triangle" aria-hidden="true"></i> Não foi possível salvar. Tente de novo.</p>
     }

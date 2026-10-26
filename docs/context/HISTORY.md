@@ -12,6 +12,18 @@
 
 ---
 
+## 2026-10-26 — Task 221: posição, arrasto e tamanho do popup do chat
+
+Pedido do autor em 2026-10-23, especificada e implementada em 2026-10-26 com os padrões propostos no rascunho (arranjo no navegador, preferência só no menu do chat). O popup deixa de ser 392×640 fixo no canto inferior direito.
+
+- **`shared`/backend:** `PosicaoPopupChatEnum` e `posicaoPopup` nos DTOs de preferência (obrigatório no pedido, que troca o conjunto inteiro); migration `0064` com `posicao_popup VARCHAR(30)` anulável (sem tabela de referência: não filtra); a service completa a linha antiga sem valor com o padrão do `shared`.
+- **Front:** `utils/posicao-popup.util.ts` (âncoras, limite pela janela, arrasto, alça por canto, registro tolerante), `MensagemDiretaPosicaoService` (`linkedSignal` do arranjo por usuário, `localStorage` em `try/catch`), arrasto por *pointer events* nos três cabeçalhos (`data-popup-arrasto`, fora de botões e campos), alça no canto oposto à âncora com setas, relimite no `resize`, e a seção "Posição do chat" no menu do sino (que fecha ao escolher).
+- **Testes:** `shared` 275, `backend` 1502, integração 347, `frontend` 2159 (175 arquivos; 14 de lógica pura, 11 do popup, 4 do menu); builds passam. Uma rodada completa do front teve 6 falhas em testes que carregam o Milkdown e todas passaram isoladas e numa segunda rodada (oscilação sob carga).
+- **Ao vivo:** ver `done/221-...` (arrastar, redimensionar, recarregar, restaurar, `resize`, claro e escuro). **Achados:** o menu (popover do PrimeNG) não acompanha o sino quando o popup muda de lugar, então passou a fechar ao escolher; um `effect` de raiz não lia o arranjo guardado a tempo, e o `linkedSignal` resolveu; `montarComponente` limpa o `localStorage`, então o registro de teste vai pela opção `armazenamento`.
+- **Não verificado:** o Project Desktop; 1080×1920 sem captura (só a posição); o emulador do painel não dispara `resize` (provado com o evento à mão).
+
+---
+
 ## 2026-10-26 — Task 220: responder mensagem no chat entre colaboradores (e o compositor numa barra só)
 
 Pedido do autor em 2026-10-23, especificada e implementada no mesmo dia depois de ele aprovar o desenho e um mockup. A resposta cita a mensagem original (autor e trecho) no balão e, ao clicar, leva até ela. Na aprovação o autor pediu também que o botão de enviar e o de código ficassem **dentro** da barra do campo.

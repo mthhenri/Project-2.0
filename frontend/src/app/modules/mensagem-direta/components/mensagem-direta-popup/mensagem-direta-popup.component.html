@@ -1,5 +1,20 @@
 @if (estado.aberto()) {
-  <section class="popup-direto" [class.popup-direto--janela]="emJanela()" role="dialog" aria-label="Chat com colegas" (keydown.escape)="estado.fechar()">
+  <section
+    class="popup-direto"
+    [class.popup-direto--janela]="emJanela()"
+    [class.popup-direto--em-gesto]="gestoEmCurso()"
+    [style.left.px]="emJanela() ? null : retangulo().esquerda"
+    [style.top.px]="emJanela() ? null : retangulo().topo"
+    [style.width.px]="emJanela() ? null : retangulo().largura"
+    [style.height.px]="emJanela() ? null : retangulo().altura"
+    role="dialog"
+    aria-label="Chat com colegas"
+    (keydown.escape)="estado.fechar()"
+    (pointerdown)="aoApertar($event)"
+    (pointermove)="aoMoverOPonteiro($event)"
+    (pointerup)="aoSoltar($event)"
+    (pointercancel)="aoSoltar($event)"
+  >
     @if (emJanela()) {
       <!-- A janela do Desktop não tem moldura: esta faixa é por onde se arrasta. -->
       <div class="popup-direto__arrasto" aria-hidden="true"><span class="popup-direto__alca"></span></div>
@@ -17,6 +32,18 @@
           <app-mensagem-direta-lista />
         }
       }
+    }
+    @if (!emJanela()) {
+      <button
+        type="button"
+        class="popup-direto__redimensionar"
+        data-popup-alca
+        [attr.data-canto]="cantoDaAlca()"
+        aria-label="Redimensionar o chat (arraste, ou use as setas)"
+        pTooltip="Redimensionar"
+        tooltipPosition="top"
+        (keydown)="aoTeclarNaAlca($event)"
+      ></button>
     }
     <!-- Na conversa o aviso vira o ícone do cabeçalho (task 217): o rodapé ficaria com a altura que a lista de mensagens precisa. -->
     @if (estado.visao() !== 'CONVERSA') {

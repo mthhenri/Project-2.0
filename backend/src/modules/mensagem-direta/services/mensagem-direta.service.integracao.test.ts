@@ -1,6 +1,6 @@
 import * as assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
-import { ReferenciaMensagemDiretaEnum, TipoUsuarioEnum } from '@project20/shared';
+import { PosicaoPopupChatEnum, ReferenciaMensagemDiretaEnum, TipoUsuarioEnum } from '@project20/shared';
 import { testarComBanco, ConexaoTeste } from '../../../testes/banco-teste';
 import { criarRepositorio } from '../../../testes/criar-repositorio';
 import { criarAtividade, criarDemanda, criarDemandaUsuario, criarDesenvolvedor, criarGestor, criarUsuario } from '../../../testes/fabricas';
@@ -178,11 +178,15 @@ testarComBanco('preferências: o padrão do shared até a primeira alteração, 
   assert.equal(padrao.silenciadoAteDate, null);
 
   await service.alterarPreferencia(
-    { avisosAtivos: false, avisoDesktopAtivo: false, somAtivo: true, silenciadoAteDate: '2026-10-21T16:00:00.000Z', atalhoGlobal: 'Alt+F1' },
+    { avisosAtivos: false, avisoDesktopAtivo: false, somAtivo: true, silenciadoAteDate: '2026-10-21T16:00:00.000Z', atalhoGlobal: 'Alt+F1', posicaoPopup: PosicaoPopupChatEnum.CANTO_SUPERIOR_DIREITO },
     como(ana),
   );
   const gravada = (await service.recuperarPreferencia(como(ana))).dados!;
-  assert.deepEqual([gravada.avisosAtivos, gravada.somAtivo, gravada.atalhoGlobal], [false, true, 'Alt+F1']);
+  assert.deepEqual([gravada.avisosAtivos, gravada.somAtivo, gravada.atalhoGlobal, gravada.posicaoPopup], [false, true, 'Alt+F1', PosicaoPopupChatEnum.CANTO_SUPERIOR_DIREITO]);
+
+  // Linha anterior à task 221: a coluna da posição é nula e vale o padrão do shared.
+  await conexao.raw('UPDATE mensagem_direta_preferencia SET posicao_popup = NULL WHERE usuario_id = ?', [ana.id]);
+  assert.equal((await service.recuperarPreferencia(como(ana))).dados!.posicaoPopup, PosicaoPopupChatEnum.CANTO_INFERIOR_DIREITO);
   assert.equal(gravada.silenciadoAteDate?.toISOString(), '2026-10-21T16:00:00.000Z');
   assert.deepEqual((await service.recuperarPreferencia(como(bruno))).dados, padrao);
 });

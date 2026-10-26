@@ -82,6 +82,17 @@
     color: var(--p-text-color);
   }
 
+  &__opcao--posicao {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__marca {
+    font-size: 0.75rem;
+    color: var(--p-primary-color);
+  }
+
   &__reativar {
     margin-left: auto;
     padding: 0;
@@ -92,6 +103,14 @@
     text-decoration: underline;
     color: var(--p-primary-color);
     cursor: pointer;
+  }
+
+  // Depois do `&__reativar` (que alinha à direita): o link da posição fica à esquerda, sob as opções.
+  &__restaurar {
+    align-self: flex-start;
+    margin: 0.25rem 0 0.125rem 0.5rem;
+    font-size: 0.75rem;
+    text-align: left;
   }
 
   &__linha--atalho {

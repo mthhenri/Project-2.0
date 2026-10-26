@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { PosicaoPopupChatEnum } from '@project20/shared';
 import {
   atalhoDoTeclado,
   AvisoNaTela,
@@ -18,7 +19,7 @@ const AGORA = new Date('2026-10-21T18:00:00.000Z'); // 15:00 em São Paulo (UTC-
 
 function entrada(parcial: Partial<EntradaDaDecisaoDeAviso> = {}, preferencia: Partial<EntradaDaDecisaoDeAviso['preferencia']> = {}): EntradaDaDecisaoDeAviso {
   return {
-    preferencia: { avisosAtivos: true, avisoDesktopAtivo: true, somAtivo: false, silenciadoAteDate: null, atalhoGlobal: 'Ctrl+Shift+Space', ...preferencia },
+    preferencia: { avisosAtivos: true, avisoDesktopAtivo: true, somAtivo: false, silenciadoAteDate: null, atalhoGlobal: 'Ctrl+Shift+Space', posicaoPopup: PosicaoPopupChatEnum.CANTO_INFERIOR_DIREITO, ...preferencia },
     mensagemMinha: false,
     mencionaVoce: false,
     conversaSilenciada: false,
@@ -97,7 +98,7 @@ describe('rotuloDoSilencio', () => {
 
 describe('normalizarPreferencia', () => {
   it('converte a data do silêncio em Date e mantém o nulo', () => {
-    const base = { avisosAtivos: true, avisoDesktopAtivo: true, somAtivo: false, atalhoGlobal: 'Alt+F1' };
+    const base = { avisosAtivos: true, avisoDesktopAtivo: true, somAtivo: false, atalhoGlobal: 'Alt+F1', posicaoPopup: PosicaoPopupChatEnum.CANTO_INFERIOR_DIREITO };
     expect(normalizarPreferencia({ ...base, silenciadoAteDate: '2026-10-21T19:00:00.000Z' as never }).silenciadoAteDate).toEqual(new Date('2026-10-21T19:00:00.000Z'));
     expect(normalizarPreferencia({ ...base, silenciadoAteDate: null }).silenciadoAteDate).toBeNull();
   });

@@ -131,6 +131,7 @@ test('a preferência padrão é válida e não silencia ninguém', () => {
   assert.equal(PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA.somAtivo, false);
   assert.equal(PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA.silenciadoAteDate, null);
   assert.match(PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA.atalhoGlobal, REGEX_ATALHO_GLOBAL);
+  assert.equal(PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA.posicaoPopup, 'CANTO_INFERIOR_DIREITO', 'o padrão é o canto de hoje');
 });
 
 // --- texto simples e trecho da resposta (task 220) --------------------------

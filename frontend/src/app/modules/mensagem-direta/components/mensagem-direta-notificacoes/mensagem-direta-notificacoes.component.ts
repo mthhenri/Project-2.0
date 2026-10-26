@@ -7,8 +7,11 @@ import { TooltipModule } from 'primeng/tooltip';
 import { estaSilenciado } from '@project20/shared';
 import { ambiente } from '../../../../../environments/environment';
 import { ProjectDesktopService } from '../../../../core/services/project-desktop.service';
+import { PosicaoPopupChatEnum } from '@project20/shared';
 import { MensagemDiretaAvisosService } from '../../services/mensagem-direta-avisos.service';
+import { MensagemDiretaPosicaoService } from '../../services/mensagem-direta-posicao.service';
 import { OpcaoDeSilencio, atalhoDoTeclado, rotuloDoSilencio } from '../../utils/avisos.util';
+import { POSICOES_DO_POPUP } from '../../utils/posicao-popup.util';
 
 interface OpcaoDoMenu {
   opcao: OpcaoDeSilencio;
@@ -35,6 +38,7 @@ export class MensagemDiretaNotificacoesComponent {
   private readonly servico = inject(MensagemDiretaAvisosService);
   private readonly zona = inject(NgZone);
   private readonly desktop = inject(ProjectDesktopService);
+  private readonly posicao = inject(MensagemDiretaPosicaoService);
 
   /** Dentro do Project Desktop o menu também mostra e grava o atalho global do chat (task 213). */
   /** O atalho se muda no Project; a janela de chat do Desktop não tem esta seção (apertar teclas ali dispararia o atalho e fecharia a janela). */
@@ -45,6 +49,10 @@ export class MensagemDiretaNotificacoesComponent {
   protected readonly estadoDoAtalho = signal<'ok' | 'indisponivel' | 'pendente'>('ok');
   private readonly campoDoAtalho = viewChild<ElementRef<HTMLInputElement>>('campoDoAtalho');
 
+  /** A posição do popup (task 221) não vale na janela de chat do Desktop, que é a própria janela: a seção some dali. */
+  protected readonly comPosicao = !this.desktop.naJanelaDeChat;
+  protected readonly posicoes = POSICOES_DO_POPUP;
+  protected readonly posicaoPreferida = computed(() => this.servico.preferencia().posicaoPopup);
   protected readonly preferencia = this.servico.preferencia;
   protected readonly erro = this.servico.erroNaPreferencia;
 
@@ -116,6 +124,17 @@ export class MensagemDiretaNotificacoesComponent {
     this.gravandoAtalho.set(false);
     this.estadoDoAtalho.set(atalho === this.atalho() ? this.estadoDoAtalho() : 'pendente');
     void this.servico.alterarPreferencia({ atalhoGlobal: atalho });
+  }
+
+  /** Escolher um canto leva o popup para lá: o que foi arrastado ou redimensionado é descartado. */
+  protected escolherPosicao(posicao: PosicaoPopupChatEnum): void {
+    this.posicao.restaurar();
+    void this.servico.alterarPreferencia({ posicaoPopup: posicao });
+  }
+
+  /** Volta à posição preferida da conta, com o tamanho padrão. */
+  protected restaurarPosicao(): void {
+    this.posicao.restaurar();
   }
 
   protected async silenciar(opcao: OpcaoDeSilencio): Promise<void> {

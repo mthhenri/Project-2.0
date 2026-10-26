@@ -5,11 +5,12 @@ import { montarComponente, ComponenteMontado } from '../../../../../testes/monta
 import { esperarRequisicao, responderErro, responderSucesso } from '../../../../../testes/http-teste';
 import { ProjectDesktopService } from '../../../../core/services/project-desktop.service';
 import { MensagemDiretaAvisosService } from '../../services/mensagem-direta-avisos.service';
+import { MensagemDiretaPosicaoService } from '../../services/mensagem-direta-posicao.service';
 import { MensagemDiretaNotificacoesComponent } from './mensagem-direta-notificacoes.component';
 
 // O menu "Notificações" (task 212): interruptores gravados na hora (o conjunto inteiro), silêncio geral e volta ao valor anterior quando a gravação falha.
 
-const PREFERENCIA = { avisosAtivos: true, avisoDesktopAtivo: true, somAtivo: false, silenciadoAteDate: null, atalhoGlobal: 'Ctrl+Shift+Space' };
+const PREFERENCIA = { avisosAtivos: true, avisoDesktopAtivo: true, somAtivo: false, silenciadoAteDate: null, atalhoGlobal: 'Ctrl+Shift+Space', posicaoPopup: 'CANTO_INFERIOR_DIREITO' as const };
 
 describe('MensagemDiretaNotificacoesComponent', () => {
   let tela: ComponenteMontado<MensagemDiretaNotificacoesComponent>;
@@ -57,11 +58,60 @@ describe('MensagemDiretaNotificacoesComponent', () => {
     await tela.atualizar();
 
     const requisicao = esperarRequisicao(tela.http, 'PUT', '/mensagem-direta/preferencia');
-    expect(requisicao.request.body).toEqual({ avisosAtivos: true, avisoDesktopAtivo: true, somAtivo: true, silenciadoAteDate: null, atalhoGlobal: 'Ctrl+Shift+Space' });
+    expect(requisicao.request.body).toEqual({ avisosAtivos: true, avisoDesktopAtivo: true, somAtivo: true, silenciadoAteDate: null, atalhoGlobal: 'Ctrl+Shift+Space', posicaoPopup: 'CANTO_INFERIOR_DIREITO' });
     responderSucesso(requisicao, { ...PREFERENCIA, somAtivo: true });
     await tela.atualizar();
     expect(avisos.preferencia().somAtivo).toBe(true);
     expect(interruptor('Som').checked).toBe(true);
+  });
+
+  it('lista as cinco posições do chat, com a preferida marcada', async () => {
+    await montar();
+    await abrirMenu();
+    const itens = Array.from(menu()!.querySelectorAll<HTMLButtonElement>('[role="menuitemradio"]'));
+    expect(itens.map((item) => item.textContent?.trim())).toEqual([
+      'Canto inferior direito', 'Canto inferior esquerdo', 'Canto superior direito', 'Canto superior esquerdo', 'Centro',
+    ]);
+    expect(itens.map((item) => item.getAttribute('aria-checked'))).toEqual(['true', 'false', 'false', 'false', 'false']);
+  });
+
+  it('escolher uma posição grava o conjunto com ela e descarta o arranjo arrastado', async () => {
+    await montar();
+    const posicao = TestBed.inject(MensagemDiretaPosicaoService);
+    posicao.definir({ esquerda: 100, topo: 100, largura: 400, altura: 500 });
+    await abrirMenu();
+
+    botao('Centro').click();
+    await tela.atualizar();
+    const requisicao = esperarRequisicao(tela.http, 'PUT', '/mensagem-direta/preferencia');
+    expect(requisicao.request.body).toMatchObject({ posicaoPopup: 'CENTRO', avisosAtivos: true, atalhoGlobal: 'Ctrl+Shift+Space' });
+    expect(posicao.arranjo()).toBeNull();
+    responderSucesso(requisicao, { ...PREFERENCIA, posicaoPopup: 'CENTRO' });
+    await tela.atualizar();
+    expect(avisos.preferencia().posicaoPopup).toBe('CENTRO');
+    expect(menu()!.querySelector('[role="menuitemradio"][aria-checked="true"]')?.textContent).toContain('Centro');
+  });
+
+  it('se o servidor recusa a posição, a tela volta à anterior e o menu avisa', async () => {
+    await montar();
+    await abrirMenu();
+    botao('Canto superior direito').click();
+    await tela.atualizar();
+    responderErro(esperarRequisicao(tela.http, 'PUT', '/mensagem-direta/preferencia'), 500, 'caiu');
+    await tela.atualizar();
+    expect(avisos.preferencia().posicaoPopup).toBe('CANTO_INFERIOR_DIREITO');
+    expect(menu()!.textContent).toContain('Não foi possível salvar');
+  });
+
+  it('Restaurar posição e tamanho descarta o arranjo e não mexe na preferência', async () => {
+    await montar();
+    const posicao = TestBed.inject(MensagemDiretaPosicaoService);
+    posicao.definir({ esquerda: 100, topo: 100, largura: 400, altura: 500 });
+    await abrirMenu();
+    botao('Restaurar posição e tamanho').click();
+    await tela.atualizar();
+    expect(posicao.arranjo()).toBeNull();
+    tela.http.expectNone((requisicao) => requisicao.method === 'PUT');
   });
 
   it('desligar os avisos e o aviso do Desktop grava cada um', async () => {

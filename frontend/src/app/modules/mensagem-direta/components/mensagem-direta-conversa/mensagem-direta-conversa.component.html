@@ -1,6 +1,6 @@
 @if (aberta(); as conversa) {
   <div class="conversa-direta">
-    <div class="conversa-direta__cabecalho">
+    <div class="conversa-direta__cabecalho" data-popup-arrasto>
       <p-button icon="pi pi-angle-left" severity="secondary" [text]="true" [rounded]="true" size="small" ariaLabel="Voltar para as conversas" pTooltip="Voltar" tooltipPosition="bottom" (onClick)="voltar()" />
       <app-mensagem-direta-avatar [nome]="conversa.usuarioNome" [online]="estaOnline()" [pequeno]="true" />
       <div class="conversa-direta__identidade">

@@ -1,5 +1,5 @@
 import * as assert from 'node:assert/strict';
-import { ATALHO_GLOBAL_PADRAO } from '@project20/shared';
+import { ATALHO_GLOBAL_PADRAO, PosicaoPopupChatEnum } from '@project20/shared';
 import { testarComBanco, ConexaoTeste } from '../../../testes/banco-teste';
 import { criarRepositorio } from '../../../testes/criar-repositorio';
 import { criarDesenvolvedor } from '../../../testes/fabricas';
@@ -109,13 +109,13 @@ testarComBanco('alterar: cria a linha do usuário e a segunda chamada troca o co
   const outra = await criarDesenvolvedor(conexao);
   const primeira = {
     usuarioId: ana.id, avisosAtivos: true, avisoDesktopAtivo: false, somAtivo: true,
-    silenciadoAteDate: new Date('2026-10-21T16:00:00.000Z'), atalhoGlobal: 'Alt+F1',
+    silenciadoAteDate: new Date('2026-10-21T16:00:00.000Z'), atalhoGlobal: 'Alt+F1', posicaoPopup: PosicaoPopupChatEnum.CENTRO,
   };
   const { usuarioId: _usuarioId, ...esperada } = primeira;
   assert.deepEqual(await preferencia(conexao).alterar(primeira), esperada);
   assert.deepEqual(await preferencia(conexao).recuperar({ usuarioId: ana.id }), esperada);
 
-  const segunda = { ...primeira, avisosAtivos: false, somAtivo: false, silenciadoAteDate: null, atalhoGlobal: ATALHO_GLOBAL_PADRAO };
+  const segunda = { ...primeira, avisosAtivos: false, somAtivo: false, silenciadoAteDate: null, atalhoGlobal: ATALHO_GLOBAL_PADRAO, posicaoPopup: PosicaoPopupChatEnum.CANTO_SUPERIOR_ESQUERDO };
   const { usuarioId: _outroUsuarioId, ...esperadaSegunda } = segunda;
   assert.deepEqual(await preferencia(conexao).alterar(segunda), esperadaSegunda);
   assert.deepEqual(await preferencia(conexao).recuperar({ usuarioId: ana.id }), esperadaSegunda);

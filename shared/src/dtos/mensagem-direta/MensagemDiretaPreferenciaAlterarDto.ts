@@ -1,4 +1,5 @@
-import { IsBoolean, IsDateString, IsString, Matches, MaxLength, ValidateIf } from 'class-validator';
+import { IsBoolean, IsDateString, IsEnum, IsString, Matches, MaxLength, ValidateIf } from 'class-validator';
+import { PosicaoPopupChatEnum } from '../../enums/posicao-popup-chat.enum';
 import { LIMITE_ATALHO_GLOBAL, REGEX_ATALHO_GLOBAL } from '../../utils/mensagem-direta';
 
 /** As preferências do chat do próprio usuário. O pedido troca todas de uma vez: o cliente envia o conjunto inteiro. */
@@ -23,4 +24,8 @@ export class MensagemDiretaPreferenciaAlterarDto {
   @MaxLength(LIMITE_ATALHO_GLOBAL)
   @Matches(REGEX_ATALHO_GLOBAL, { message: 'atalhoGlobal deve ter ao menos um modificador e uma tecla, como Ctrl+Shift+Space' })
   atalhoGlobal: string;
+
+  /** Onde o popup do chat abre na tela (task 221). */
+  @IsEnum(PosicaoPopupChatEnum)
+  posicaoPopup: PosicaoPopupChatEnum;
 }

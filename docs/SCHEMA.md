@@ -804,7 +804,8 @@ igual à data dela. Índice único parcial em (`conversa_id`, `usuario_id`) e í
 
 #### `mensagem_direta_preferencia`
 As preferências do chat, uma linha por usuário, criada na primeira alteração: `usuario_id` (FK, único entre as linhas ativas), `avisos_ativos`, `aviso_desktop_ativo`, `som_ativo`,
-`silenciado_ate_date` (anulável) e `atalho_global` (`VARCHAR(40)`, formato do Electron). Sem linha, a service devolve `PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA`, do `shared`
+`silenciado_ate_date` (anulável), `atalho_global` (`VARCHAR(40)`, formato do Electron) e, desde a task 221 (migration `0064`), `posicao_popup` (`VARCHAR(30)` anulável: o código de `PosicaoPopupChatEnum`, sem tabela de referência porque não
+entra em `WHERE`/`JOIN`/FK; sem valor vale `CANTO_INFERIOR_DIREITO`, o padrão do `shared`). Sem linha, a service devolve `PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA`, do `shared`
 (nunca um `DEFAULT`). "Silenciar por 1 hora" grava o instante final em `silenciado_ate_date`; quem decide se um aviso aparece é a service, comparando com a hora atual, então não
 há tarefa agendada para reativar.
 

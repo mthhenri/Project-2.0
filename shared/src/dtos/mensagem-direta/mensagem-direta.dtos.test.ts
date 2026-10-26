@@ -13,6 +13,7 @@ import { MensagemDiretaBuscarDto } from './MensagemDiretaBuscarDto';
 import { MensagemDiretaEnviarDto } from './MensagemDiretaEnviarDto';
 import { MensagemDiretaLeituraAlterarDto } from './MensagemDiretaLeituraAlterarDto';
 import { MensagemDiretaListarDto } from './MensagemDiretaListarDto';
+import { PosicaoPopupChatEnum } from '../../enums/posicao-popup-chat.enum';
 import { MensagemDiretaPreferenciaAlterarDto } from './MensagemDiretaPreferenciaAlterarDto';
 import { MensagemDiretaSilencioAlterarDto } from './MensagemDiretaSilencioAlterarDto';
 
@@ -153,7 +154,17 @@ const PREFERENCIA_VALIDA = {
   somAtivo: false,
   silenciadoAteDate: null,
   atalhoGlobal: 'Ctrl+Shift+Space',
+  posicaoPopup: 'CANTO_INFERIOR_DIREITO',
 };
+
+test('preferência: aceita cada posição do popup e recusa valor fora do enum', async () => {
+  for (const posicaoPopup of Object.values(PosicaoPopupChatEnum)) {
+    assert.deepEqual(await erros(MensagemDiretaPreferenciaAlterarDto, { ...PREFERENCIA_VALIDA, posicaoPopup }), [], posicaoPopup);
+  }
+  for (const posicaoPopup of ['', 'ESQUERDA', 'centro', 1, null]) {
+    assert.deepEqual(await erros(MensagemDiretaPreferenciaAlterarDto, { ...PREFERENCIA_VALIDA, posicaoPopup }), ['posicaoPopup'], String(posicaoPopup));
+  }
+});
 
 test('preferência: o conjunto inteiro é válido, com ou sem silêncio', async () => {
   assert.deepEqual(await erros(MensagemDiretaPreferenciaAlterarDto, PREFERENCIA_VALIDA), []);
