@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, input, model, signal, untracked } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MessageService } from 'primeng/api';
@@ -6,6 +6,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TextareaModule } from 'primeng/textarea';
+import { TooltipModule } from 'primeng/tooltip';
 import { PlanoPontoResumoDto, TipoPlanoPontoSituacaoEnum } from '@project20/shared';
 import { PlanoService } from '../../services/plano.service';
 
@@ -36,7 +37,8 @@ export const ROTULO_DA_SITUACAO_DO_PONTO: Record<TipoPlanoPontoSituacaoEnum, str
 @Component({
   selector: 'app-plano-pontos',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonModule, InputTextModule, SkeletonModule, TextareaModule],
+  imports: [ReactiveFormsModule, ButtonModule, InputTextModule, SkeletonModule, TextareaModule, TooltipModule],
+  host: { '[class.plano-pontos-recolhido]': '!aberto()' },
   templateUrl: './plano-pontos.component.html',
   styleUrl: './plano-pontos.component.scss',
 })
@@ -53,8 +55,8 @@ export class PlanoPontosComponent {
   readonly carregando = signal(true);
   readonly erro = signal(false);
   readonly ocupado = signal(false);
-  /** O painel inteiro aberto ou recolhido (aberto por padrão). */
-  readonly aberto = signal(true);
+  /** O painel aberto ou recolhido num trilho lateral (aberto por padrão); o documento lê para dar o espaço ao texto. */
+  readonly aberto = model(true);
   readonly fechadosVisiveis = signal(false);
   readonly anotando = signal(false);
   readonly tratando = signal<Tratamento | null>(null);

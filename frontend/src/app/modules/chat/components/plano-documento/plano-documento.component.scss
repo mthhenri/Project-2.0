@@ -67,6 +67,10 @@
 
   &__lateral {
     --pontos-altura-maxima: 12rem;
+    --fontes-altura-maxima: 12rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
     flex-shrink: 0;
   }
 
@@ -75,6 +79,7 @@
 
     // As três abas cabem lado a lado mesmo na coluna estreita, sem a seta de rolagem.
     ::ng-deep .p-tab {
+      gap: 0.4375rem;
       padding: 0.625rem 0.875rem;
       font-size: 0.875rem;
       white-space: nowrap;
@@ -144,8 +149,13 @@
 
   .plano-documento__lateral {
     --pontos-altura-maxima: 100%;
+    --fontes-altura-maxima: 50vh;
     order: 2;
-    width: 17rem;
+    width: 19rem;
     min-height: 0;
+
+    &--recolhida {
+      width: 3rem;
+    }
   }
 }

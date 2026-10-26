@@ -33,8 +33,9 @@
     }
 
     <div class="plano-documento__miolo">
-    <aside class="plano-documento__lateral" aria-label="Pontos em aberto">
-      <app-plano-pontos [planoId]="atual.id" />
+    <aside class="plano-documento__lateral" [class.plano-documento__lateral--recolhida]="!pontosAbertos() && !fontesAbertas()" aria-label="Pontos em aberto e fontes">
+      <app-plano-pontos [planoId]="atual.id" [(aberto)]="pontosAbertos" />
+      <app-plano-fontes [planoId]="atual.id" [(aberto)]="fontesAbertas" />
     </aside>
 
     <div class="plano-documento__texto">
@@ -42,6 +43,7 @@
       <p-tablist>
         @for (opcao of abasVisiveis(); track opcao) {
           <p-tab [value]="opcao">
+            <i class="pi" [class]="iconeAba[opcao]" aria-hidden="true"></i>
             {{ rotuloAba[opcao] }}
             @if ((opcao === Aba.DESCRICAO_TECNICA && alterados().tecnica) || (opcao === Aba.DESCRICAO_CLIENTE && alterados().cliente) || (opcao === Aba.DOCUMENTACAO && alterados().documentacao)) {
               <span class="plano-documento__ponto" aria-label="Alterações sem gravar"></span>

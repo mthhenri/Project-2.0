@@ -15,6 +15,7 @@ import { MarkdownEditorComponent, MenuContextoEditorEvento } from '../../../../s
 import { PlanoService } from '../../services/plano.service';
 import { ROTULO_ABA_DO_PLANO } from '../../utils/plano.util';
 import { PlanoCabecalhoComponent } from '../plano-cabecalho/plano-cabecalho.component';
+import { PlanoFontesComponent } from '../plano-fontes/plano-fontes.component';
 import { PlanoPontosComponent } from '../plano-pontos/plano-pontos.component';
 
 /** O que mudou no plano e o seletor precisa saber (título, projeto, demanda, solo, arquivo); `excluido` tira o plano da tela. */
@@ -38,7 +39,7 @@ const AVISO_DE_ALTERACAO_DA_IA = 'A IA alterou o documento. O que você escreveu
 @Component({
   selector: 'app-plano-documento',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonModule, PopoverModule, SkeletonModule, TabsModule, TextareaModule, MarkdownEditorComponent, PlanoCabecalhoComponent, PlanoPontosComponent],
+  imports: [ReactiveFormsModule, ButtonModule, PopoverModule, SkeletonModule, TabsModule, TextareaModule, MarkdownEditorComponent, PlanoCabecalhoComponent, PlanoPontosComponent, PlanoFontesComponent],
   templateUrl: './plano-documento.component.html',
   styleUrl: './plano-documento.component.scss',
 })
@@ -59,6 +60,15 @@ export class PlanoDocumentoComponent {
 
   readonly Aba = PlanoAbaEnum;
   readonly rotuloAba = ROTULO_ABA_DO_PLANO;
+  readonly iconeAba: Record<PlanoAbaEnum, string> = {
+    [PlanoAbaEnum.DESCRICAO_TECNICA]: 'pi-code',
+    [PlanoAbaEnum.DESCRICAO_CLIENTE]: 'pi-user',
+    [PlanoAbaEnum.DOCUMENTACAO]: 'pi-book',
+  };
+  /** O painel dos pontos em aberto está aberto (`false`: recolhido num trilho, e o texto ganha a largura). */
+  readonly pontosAbertos = signal(true);
+  /** O painel das fontes (task 236): recolhido de saída, porque é consulta e não trabalho de todo dia; abre ao colar ou anexar. */
+  readonly fontesAbertas = signal(false);
 
   readonly plano = signal<PlanoRecuperadoDto | null>(null);
   readonly carregando = signal(true);

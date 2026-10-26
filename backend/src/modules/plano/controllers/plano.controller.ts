@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Put, Q
 import { JwtAuthGuard } from '../../autenticacao/guards/jwt-auth.guard';
 import { ActiveUser } from '../../autenticacao/decorators/active-user.decorator';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
+import { PlanoFonteService } from '../services/plano-fonte.service';
 import { PlanoPontoService } from '../services/plano-ponto.service';
 import { PlanoService } from '../services/plano.service';
 import {
@@ -9,6 +10,7 @@ import {
   PlanoArquivarDto,
   PlanoCriarDto,
   PlanoDemandaLigarDto,
+  PlanoFonteCriarDto,
   PlanoListarDto,
   PlanoPontoCriarDto,
   PlanoPontoSituacaoAlterarDto,
@@ -22,6 +24,7 @@ export class PlanoController {
   constructor(
     private readonly planoService: PlanoService,
     private readonly planoPontoService: PlanoPontoService,
+    private readonly planoFonteService: PlanoFonteService,
   ) {}
 
   @Post()
@@ -83,6 +86,27 @@ export class PlanoController {
     @ActiveUser() usuarioAtivo: JwtPayload,
   ) {
     return this.planoPontoService.alterarSituacao({ ...dto, planoId: id, id: pontoId }, usuarioAtivo);
+  }
+
+  /** Fontes (material de fora) do plano (task 236): o mesmo acesso do plano. */
+  @Get(':id/fonte')
+  listarFontes(@Param('id', ParseIntPipe) id: number, @ActiveUser() usuarioAtivo: JwtPayload) {
+    return this.planoFonteService.listar({ planoId: id }, usuarioAtivo);
+  }
+
+  @Post(':id/fonte')
+  criarFonte(@Param('id', ParseIntPipe) id: number, @Body() dto: PlanoFonteCriarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
+    return this.planoFonteService.criar({ ...dto, planoId: id, usuarioId: usuarioAtivo.sub }, usuarioAtivo);
+  }
+
+  @Get(':id/fonte/:fonteId')
+  recuperarFonte(@Param('id', ParseIntPipe) id: number, @Param('fonteId', ParseIntPipe) fonteId: number, @ActiveUser() usuarioAtivo: JwtPayload) {
+    return this.planoFonteService.recuperar({ planoId: id, id: fonteId }, usuarioAtivo);
+  }
+
+  @Delete(':id/fonte/:fonteId')
+  excluirFonte(@Param('id', ParseIntPipe) id: number, @Param('fonteId', ParseIntPipe) fonteId: number, @ActiveUser() usuarioAtivo: JwtPayload) {
+    return this.planoFonteService.excluir({ planoId: id, id: fonteId }, usuarioAtivo);
   }
 
   @Delete(':id')

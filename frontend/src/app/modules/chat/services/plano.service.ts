@@ -8,6 +8,10 @@ import {
   PlanoCriadoDto,
   PlanoCriarDto,
   PlanoDemandaLigadaDto,
+  PlanoFonteCriadoDto,
+  PlanoFonteExcluidaDto,
+  PlanoFonteRecuperadaDto,
+  PlanoFonteResumoDto,
   PlanoListarDto,
   PlanoPontoCriadoDto,
   PlanoPontoResumoDto,
@@ -17,6 +21,7 @@ import {
   PlanoResumoDto,
   PlanoSoloMarcadoDto,
   StandardResponse,
+  TipoPlanoFonteOrigemEnum,
   TipoPlanoPontoSituacaoEnum,
 } from '@project20/shared';
 import { ambiente } from '../../../../environments/environment';
@@ -88,6 +93,23 @@ export class PlanoService {
       { situacao, ...(resolucaoTexto ? { resolucaoTexto } : {}) },
       comFeedbackProprioEErroTratado(),
     );
+  }
+
+  /** As fontes (material de fora) do plano (task 236), sem o conteúdo. */
+  listarFontes(planoId: number): Observable<StandardResponse<PlanoFonteResumoDto[]>> {
+    return this.httpClient.get<StandardResponse<PlanoFonteResumoDto[]>>(`${this.urlBase}/${planoId}/fonte`, comFeedbackProprio());
+  }
+
+  recuperarFonte(planoId: number, fonteId: number): Observable<StandardResponse<PlanoFonteRecuperadaDto>> {
+    return this.httpClient.get<StandardResponse<PlanoFonteRecuperadaDto>>(`${this.urlBase}/${planoId}/fonte/${fonteId}`, comFeedbackProprioEErroTratado());
+  }
+
+  criarFonte(planoId: number, titulo: string, conteudo: string, origem: TipoPlanoFonteOrigemEnum): Observable<StandardResponse<PlanoFonteCriadoDto>> {
+    return this.httpClient.post<StandardResponse<PlanoFonteCriadoDto>>(`${this.urlBase}/${planoId}/fonte`, { titulo, conteudo, origem }, comFeedbackProprioEErroTratado());
+  }
+
+  excluirFonte(planoId: number, fonteId: number): Observable<StandardResponse<PlanoFonteExcluidaDto>> {
+    return this.httpClient.delete<StandardResponse<PlanoFonteExcluidaDto>>(`${this.urlBase}/${planoId}/fonte/${fonteId}`, comFeedbackProprioEErroTratado());
   }
 
   excluir(id: number): Observable<StandardResponse<void>> {

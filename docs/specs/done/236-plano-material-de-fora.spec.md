@@ -1,6 +1,6 @@
 # 236-plano-material-de-fora.spec.md
 
-> Task 6/7 da guarda-chuva [`chat-planejamento.spec.md`](chat-planejamento.spec.md): texto colado e arquivo de texto como fonte do plano.
+> Task 6/7 da guarda-chuva [`chat-planejamento.spec.md`](../backlog/chat-planejamento.spec.md): texto colado e arquivo de texto como fonte do plano.
 
 ## Objetivo
 
@@ -33,7 +33,13 @@ Leitura direta de caixa de e-mail; imagens, prints, PDF e documentos de escritó
 
 232, 233, 234.
 
-## Pontos em aberto (o autor confirma ao abrir a task)
+## Pontos em aberto (confirmados ao abrir a task: valeram os padrões propostos)
 
 - Extensões aceitas e tamanho máximo (padrão proposto: `.txt` e `.md`, até o limite de mensagem do chat).
 - Remover uma fonte: padrão proposto, soft delete (some do contexto da IA).
+
+## Resultado
+
+- Extensões `.txt` e `.md`, até 4000 caracteres (o limite da mensagem do chat) e **10 fontes por plano** (acréscimo desta task, para limitar o contexto da IA). Remover é soft delete.
+- A regra do conteúdo (`validarFonteDoPlano`, em `shared/src/utils/plano-fonte.ts`) vale na tela e na service. O arquivo é lido na tela e só o texto vai à API (`POST /plano/:id/fonte`, `origem` `ARQUIVO` e o nome do arquivo como título).
+- O texto das fontes entra inteiro nas instruções da IA, marcado como dado e não como instrução.

@@ -4,6 +4,8 @@ import { PlanoService } from './services/plano.service';
 import { PlanoRepository } from './repositories/plano.repository';
 import { PlanoPontoRepository } from './repositories/plano-ponto.repository';
 import { PlanoPontoService } from './services/plano-ponto.service';
+import { PlanoFonteRepository } from './repositories/plano-fonte.repository';
+import { PlanoFonteService } from './services/plano-fonte.service';
 import { AnotarPontoEmAbertoFerramenta, ListarPontosDoPlanoFerramenta, ResolverPontoDoPlanoFerramenta } from './ferramentas/pontos-do-plano.ferramentas';
 import { DemandaModule } from '../demanda/demanda.module';
 import { ProjetoModule } from '../projeto/projeto.module';
@@ -24,6 +26,8 @@ import { AlterarTrechoDoPlanoExecutor } from './executores/alterar-trecho-do-pla
     PlanoRepository,
     PlanoPontoRepository,
     PlanoPontoService,
+    PlanoFonteRepository,
+    PlanoFonteService,
     AnotarPontoEmAbertoFerramenta,
     ResolverPontoDoPlanoFerramenta,
     ListarPontosDoPlanoFerramenta,
@@ -32,7 +36,7 @@ import { AlterarTrechoDoPlanoExecutor } from './executores/alterar-trecho-do-pla
     ProporAlterarTrechoDoPlanoFerramenta,
     AlterarTrechoDoPlanoExecutor,
   ],
-  exports:     [PlanoService, PlanoRepository, PlanoPontoService],
+  exports:     [PlanoService, PlanoRepository, PlanoPontoService, PlanoFonteService],
 })
 export class PlanoModule implements OnModuleInit {
   constructor(

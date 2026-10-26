@@ -12,6 +12,21 @@
 
 ---
 
+## 2026-10-26 — Task 236: o material de fora do plano (texto colado e arquivo de texto como fonte)
+
+Sexta das tasks da guarda-chuva `chat-planejamento.spec.md`. A pessoa cola o e-mail do cliente ou anexa um `.txt`/`.md`, e a IA usa como base do plano e cita pelo título. Sem leitura de caixa de e-mail, sem binário.
+
+- **Banco (migration `0062`):** `tipo_plano_fonte_origem` (`COLADO`, `ARQUIVO`; `TipoPlanoFonteOrigemEnum`) e `plano_fonte` (`titulo`, `conteudo`, origem, `usuario_id`). Só texto. O teste de enums e tabelas ganhou a entrada; `docs/SCHEMA.md` atualizado.
+- **`shared`:** DTOs de fonte e `utils/plano-fonte.ts`: limites (4000 caracteres, título de 120, 10 fontes por plano), `temExtensaoAceitaDeFonte`, `pareceConteudoBinario` e `validarFonteDoPlano`, a regra única da tela e da service.
+- **Backend (módulo `plano`):** `PlanoFonteRepository`, `PlanoFonteService` (acesso = o do plano; recusa em branco, grande demais, arquivo que não é `.txt`/`.md`, conteúdo binário e o 11º item; quem trouxe é o usuário ativo, nunca o do corpo) e as rotas `GET/POST /plano/:id/fonte`, `GET/DELETE /plano/:id/fonte/:fonteId` (soft delete). O `ChatPlanoService` põe as fontes inteiras nas instruções, marcadas como dado e não como instrução.
+- **Frontend:** `app-plano-fontes` na coluna lateral do documento, abaixo dos pontos (colar, anexar, ver, remover com confirmação; recolhido de saída).
+- **Ajuste pedido pelo autor na verificação:** o painel dos pontos em aberto passou a recolher **pela lateral** (botão de seta na ponta, trilho estreito com ícone `pi-question-circle` e a contagem, e o texto ganha a largura); o título ganhou o ícone e as ações viraram botões só de ícone com tooltip; as três abas do documento ganharam ícones (`pi-code`, `pi-user`, `pi-book`). A coluna foi de 17rem para 19rem para o título não cortar. Os dois painéis (pontos e fontes) dividem a coluna e ela só vira trilho com os dois recolhidos.
+- **Testes:** `shared` 4 novos (regra da fonte); backend unitário 1486 e integração 342 (repository 4, com soft delete e plano alheio); frontend 2113 (painel de fontes 10, pontos com o trilho). Builds do backend e do frontend aprovados.
+- **Ao vivo** (gestor, app real): 1920×1080 e 1366×768 (claro) e 1080×1920: colar o e-mail, ver o conteúdo, recolher e expandir os painéis pelo trilho. **Não verificado ao vivo:** anexar `.txt`/`.md` e recusar binário/arquivo grande (só teste de componente e de regra), a IA citar a fonte numa resposta (só o teste das instruções), o tema escuro (o botão do topo não alternou na sessão) e o remover pela tela (o clique de confirmação falhou na automação). A fonte de teste "E-mail do cliente" ficou no plano 8 do banco de desenvolvimento.
+- **Limites:** 4000 caracteres é pouco para um e-mail longo; o teto está em `LIMITE_CONTEUDO_DA_FONTE_DO_PLANO` (`shared`). Não há lint (P-001).
+
+---
+
 ## 2026-10-26 — Task 235: os pontos em aberto do plano (painel, API e ferramentas da IA)
 
 Quinta das tasks da guarda-chuva `chat-planejamento.spec.md`. A IA anota o que fica em aberto no plano, a resposta no chat fecha o ponto e o texto entra no documento, e a pessoa também cria, resolve, dispensa, registra decisão e reabre à mão.

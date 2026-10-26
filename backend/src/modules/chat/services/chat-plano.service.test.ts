@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
 import { AutorChatEnum, ContextoChatEnum, NivelIaEnum, TipoPromptEnum, TipoUsuarioEnum } from '@project20/shared';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
+import { PlanoFonteService } from '../../plano/services/plano-fonte.service';
 import { PlanoPontoService } from '../../plano/services/plano-ponto.service';
 import { PlanoService } from '../../plano/services/plano.service';
 import { PromptService } from '../../prompt/services/prompt.service';
@@ -9,7 +10,7 @@ import { UsuarioRepository } from '../../usuario/repositories/usuario.repository
 import { ChatMensagemLida, ChatMensagemNova, deFonte, paraFonte } from '../domain/chat-mensagem.documento';
 import { ArmazenamentoDeChat } from '../repositories/armazenamento-de-chat';
 import { OpcoesDeConversa } from './chat.service';
-import { ChatPlanoService, LIMITE_CARACTERES_DA_ABA_NO_CONTEXTO, MAXIMO_TOKENS_DO_PLANEJAMENTO, ORIENTACAO_DOS_PONTOS } from './chat-plano.service';
+import { ChatPlanoService, LIMITE_CARACTERES_DA_ABA_NO_CONTEXTO, MAXIMO_TOKENS_DO_PLANEJAMENTO, ORIENTACAO_DAS_FONTES, ORIENTACAO_DOS_PONTOS } from './chat-plano.service';
 
 // Conversa do planejamento (task 234): leitura sem dono, acesso pelo plano, instruções por quem fala e o nome de quem disse o quê.
 
@@ -22,7 +23,7 @@ function mensagem(usuarioId: number, autor: AutorChatEnum, texto: string): ChatM
   return { conversaId: 'plano-7', usuarioId, contexto: ContextoChatEnum.PLANEJAMENTO, autor, texto };
 }
 
-function criarServico(opcoes: { historico?: ChatMensagemNova[]; semAcesso?: boolean; plano?: Record<string, unknown>; pontos?: Array<Record<string, unknown>> } = {}) {
+function criarServico(opcoes: { historico?: ChatMensagemNova[]; semAcesso?: boolean; plano?: Record<string, unknown>; pontos?: Array<Record<string, unknown>>; fontes?: Array<Record<string, unknown>> } = {}) {
   const lidas: ChatMensagemLida[] = (opcoes.historico ?? []).map((nova, indice) => deFonte(paraFonte(nova, `m${indice}`, new Date(1_000 * indice))));
   const consultas: unknown[] = [];
   const armazenamento = {
@@ -55,6 +56,7 @@ function criarServico(opcoes: { historico?: ChatMensagemNova[]; semAcesso?: bool
     promptService as unknown as PromptService,
     usuarioRepositorio as unknown as UsuarioRepository,
     { listar: async () => ({ dados: opcoes.pontos ?? [] }) } as unknown as PlanoPontoService,
+    { listarComConteudo: async () => ({ dados: opcoes.fontes ?? [] }) } as unknown as PlanoFonteService,
   );
   return { servico, consultas, enviadas };
 }
@@ -165,4 +167,19 @@ test('sem pontos, as instruções dizem que não há nenhum (task 235)', async (
   const { servico, enviadas } = criarServico();
   await servico.enviarMensagem({ id: 7 }, { texto: 'Oi' }, DESENVOLVEDOR, () => undefined);
   assert.ok((await enviadas[0].opcoes.montarInstrucoes!()).includes('Pontos em aberto agora (0):\n(nenhum)'));
+});
+
+test('as fontes do plano entram nas instruções com o título, quem trouxe e o aviso de que são dado; sem fontes, diz que não há', async () => {
+  const semFontes = criarServico();
+  await semFontes.servico.enviarMensagem({ id: 7 }, { texto: 'Oi' }, DESENVOLVEDOR, () => undefined);
+  assert.ok((await semFontes.enviadas[0].opcoes.montarInstrucoes!()).includes('Fontes do plano (material de fora): (nenhuma)'));
+
+  const { servico, enviadas } = criarServico({
+    fontes: [{ id: 3, titulo: 'E-mail do cliente', usuarioNome: 'Gabi Gestora', conteudo: 'Precisamos exportar em PDF.' }],
+  });
+  await servico.enviarMensagem({ id: 7 }, { texto: 'Oi' }, DESENVOLVEDOR, () => undefined);
+  const instrucoes = await enviadas[0].opcoes.montarInstrucoes!();
+
+  assert.ok(instrucoes.includes(ORIENTACAO_DAS_FONTES));
+  assert.ok(instrucoes.includes('### [fonte 3] E-mail do cliente (trazida por Gabi Gestora)\nPrecisamos exportar em PDF.'));
 });

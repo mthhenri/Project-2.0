@@ -1,19 +1,19 @@
-<section class="plano-pontos" aria-label="Pontos em aberto do plano">
-  <header class="plano-pontos__cabecalho">
-    <button
-      type="button"
-      class="plano-pontos__titulo"
-      [attr.aria-expanded]="aberto()"
-      (click)="aberto.set(!aberto())"
-    >
-      <i class="pi" [class.pi-chevron-down]="aberto()" [class.pi-chevron-right]="!aberto()" aria-hidden="true"></i>
-      <strong>Pontos em aberto</strong>
+<section class="plano-pontos" [class.plano-pontos--recolhido]="!aberto()" aria-label="Pontos em aberto do plano">
+  @if (aberto()) {
+    <header class="plano-pontos__cabecalho">
+      <i class="pi pi-question-circle plano-pontos__icone" aria-hidden="true"></i>
+      <strong class="plano-pontos__titulo">Pontos em aberto</strong>
+      <span class="plano-pontos__contagem" [class.plano-pontos__contagem--zero]="abertos().length === 0">{{ abertos().length }}</span>
+      <p-button icon="pi pi-plus" size="small" [text]="true" pTooltip="Anotar ponto" tooltipPosition="bottom" ariaLabel="Anotar ponto" (onClick)="alternarAnotacao()" />
+      <p-button icon="pi pi-angle-double-right" size="small" [text]="true" severity="secondary" pTooltip="Recolher painel" tooltipPosition="bottom" ariaLabel="Recolher painel" (onClick)="aberto.set(false)" />
+    </header>
+  } @else {
+    <button type="button" class="plano-pontos__trilho" aria-label="Expandir pontos em aberto" aria-expanded="false" pTooltip="Pontos em aberto" tooltipPosition="left" (click)="aberto.set(true)">
+      <i class="pi pi-angle-double-left" aria-hidden="true"></i>
+      <i class="pi pi-question-circle plano-pontos__icone" aria-hidden="true"></i>
       <span class="plano-pontos__contagem" [class.plano-pontos__contagem--zero]="abertos().length === 0">{{ abertos().length }}</span>
     </button>
-    @if (aberto()) {
-      <p-button label="Anotar" icon="pi pi-plus" size="small" [text]="true" (onClick)="alternarAnotacao()" />
-    }
-  </header>
+  }
 
   @if (aberto()) {
     @if (anotando()) {

@@ -730,7 +730,10 @@ Quem vê: plano amplo e plano solo, só o criador; plano de projeto, quem tem ac
 Ligação do plano com a demanda para a qual ele publica: `plano_id` e `demanda_id` (FKs) e `publicacao_data` (`TIMESTAMPTZ`, anulável: ligado e ainda não publicado). Índice único parcial em (`plano_id`, `demanda_id`) com `is_deleted = false`. A service admite **uma** linha ativa por plano (a tabela já admite várias, para o projeto futuro "plano que vira várias demandas"). Demanda excluída deixa o plano sem demanda (a leitura só junta demanda ativa).
 
 #### `plano_ponto` — pontos em aberto do plano (migration `0061`, task 235)
-`plano_id` (FK), `rotulo` (`VARCHAR(60)`, **texto livre** escolhido pela IA ou pela pessoa: nada valida contra lista), `texto`, `tipo_plano_ponto_situacao_id` (FK para a tabela de referência `tipo_plano_ponto_situacao`: `ABERTO`, `RESOLVIDO`, `DISPENSADO`, `DECISAO`) e `resolucao_texto` (anulável: a resposta, o motivo de dispensar ou a decisão). Índice parcial em `plano_id`. Reabrir volta a `ABERTO` e apaga a resolução. `plano_fonte` entra na task 236.
+`plano_id` (FK), `rotulo` (`VARCHAR(60)`, **texto livre** escolhido pela IA ou pela pessoa: nada valida contra lista), `texto`, `tipo_plano_ponto_situacao_id` (FK para a tabela de referência `tipo_plano_ponto_situacao`: `ABERTO`, `RESOLVIDO`, `DISPENSADO`, `DECISAO`) e `resolucao_texto` (anulável: a resposta, o motivo de dispensar ou a decisão). Índice parcial em `plano_id`. Reabrir volta a `ABERTO` e apaga a resolução.
+
+#### `plano_fonte` — material de fora do plano (migration `0062`, task 236)
+`plano_id` (FK), `titulo` (`VARCHAR(120)`: dado pela pessoa ou o nome do arquivo), `conteudo` (`TEXT`: **só o texto**; o arquivo `.txt`/`.md` é lido na tela e não é guardado como binário), `tipo_plano_fonte_origem_id` (FK para a tabela de referência `tipo_plano_fonte_origem`: `COLADO`, `ARQUIVO`) e `usuario_id` (FK: quem trouxe). Índice parcial em `plano_id`. Excluir é soft delete e a fonte some do contexto da IA. Limites (`shared`): 4000 caracteres no conteúdo, 120 no título, 10 fontes por plano.
 
 ### Tabelas de referência (enums) — migration `20240025`
 

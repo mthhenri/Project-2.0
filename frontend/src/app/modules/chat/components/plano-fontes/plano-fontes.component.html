@@ -1,0 +1,75 @@
+<section class="plano-fontes" [class.plano-fontes--recolhido]="!aberto()" aria-label="Fontes do plano">
+  @if (aberto()) {
+    <header class="plano-fontes__cabecalho">
+      <i class="pi pi-paperclip plano-fontes__icone" aria-hidden="true"></i>
+      <strong class="plano-fontes__titulo">Fontes</strong>
+      <span class="plano-fontes__contagem" [class.plano-fontes__contagem--zero]="fontes().length === 0">{{ fontes().length }}</span>
+      <p-button icon="pi pi-clipboard" size="small" [text]="true" pTooltip="Colar texto" tooltipPosition="bottom" ariaLabel="Colar texto" [disabled]="noLimite()" (onClick)="alternarColagem()" />
+      <p-button icon="pi pi-upload" size="small" [text]="true" pTooltip="Anexar arquivo de texto" tooltipPosition="bottom" ariaLabel="Anexar arquivo de texto" [disabled]="noLimite() || ocupado()" (onClick)="seletorDeArquivo.click()" />
+      <p-button icon="pi pi-angle-double-right" size="small" [text]="true" severity="secondary" pTooltip="Recolher painel" tooltipPosition="bottom" ariaLabel="Recolher painel de fontes" (onClick)="aberto.set(false)" />
+    </header>
+    <input #seletorDeArquivo type="file" class="plano-fontes__arquivo" [accept]="extensoesAceitas" aria-label="Arquivo de texto da fonte" (change)="anexarArquivo($event)" />
+  } @else {
+    <button type="button" class="plano-fontes__trilho" aria-label="Expandir fontes do plano" aria-expanded="false" pTooltip="Fontes" tooltipPosition="left" (click)="aberto.set(true)">
+      <i class="pi pi-angle-double-left" aria-hidden="true"></i>
+      <i class="pi pi-paperclip plano-fontes__icone" aria-hidden="true"></i>
+      <span class="plano-fontes__contagem" [class.plano-fontes__contagem--zero]="fontes().length === 0">{{ fontes().length }}</span>
+    </button>
+  }
+
+  @if (aberto()) {
+    @if (colando()) {
+      <form class="plano-fontes__colagem" (submit)="$event.preventDefault(); adicionarColado()">
+        <input pInputText type="text" [maxLength]="limiteTitulo" aria-label="Título da fonte" placeholder="Título (ex.: E-mail do cliente)" [formControl]="controleTitulo" />
+        <textarea pTextarea rows="5" [maxLength]="limiteConteudo" aria-label="Texto da fonte" placeholder="Cole o texto aqui" [formControl]="controleConteudo"></textarea>
+        <small class="plano-fontes__contador">{{ controleConteudo.value.length }} / {{ limiteConteudo }}</small>
+        <div class="plano-fontes__acoes">
+          <p-button label="Cancelar" size="small" [text]="true" severity="secondary" (onClick)="alternarColagem()" />
+          <p-button type="submit" label="Adicionar" size="small" [disabled]="controleConteudo.value.trim() === '' || ocupado()" />
+        </div>
+      </form>
+    }
+
+    @if (carregando()) {
+      <div class="plano-fontes__esqueleto" aria-busy="true"><p-skeleton height="2.25rem" /><p-skeleton height="2.25rem" /></div>
+    } @else if (erro()) {
+      <p class="plano-fontes__vazio" role="alert">
+        Não foi possível carregar as fontes.
+        <p-button label="Tentar de novo" size="small" [text]="true" (onClick)="recarregar()" />
+      </p>
+    } @else {
+      @if (fontes().length === 0) {
+        <p class="plano-fontes__vazio">Nenhuma fonte. Cole o e-mail do cliente ou anexe um .txt ou .md, e a IA usa como base do plano.</p>
+      }
+      @if (noLimite()) {
+        <p class="plano-fontes__vazio">O plano chegou a {{ limiteDeFontes }} fontes: remova uma para trazer outra.</p>
+      }
+      <ul class="plano-fontes__lista">
+        @for (fonte of fontes(); track fonte.id) {
+          <li class="plano-fontes__fonte">
+            <div class="plano-fontes__linha">
+              <i class="pi" [class.pi-clipboard]="fonte.origem === Origem.COLADO" [class.pi-file]="fonte.origem === Origem.ARQUIVO" aria-hidden="true"></i>
+              <span class="plano-fontes__nome">{{ fonte.titulo }}</span>
+            </div>
+            <small class="plano-fontes__meta">{{ fonte.usuarioNome }} · {{ fonte.tamanho }} caracteres</small>
+            @if (vendo(); as aberta) {
+              @if (aberta.id === fonte.id) {
+                <pre class="plano-fontes__conteudo">{{ aberta.conteudo }}</pre>
+              }
+            }
+            <div class="plano-fontes__acoes">
+              @if (removendo() === fonte.id) {
+                <small>Remover esta fonte?</small>
+                <p-button label="Não" size="small" [text]="true" severity="secondary" (onClick)="cancelarRemocao()" />
+                <p-button label="Remover" size="small" [text]="true" severity="danger" [disabled]="ocupado()" (onClick)="remover(fonte)" />
+              } @else {
+                <p-button [label]="vendo()?.id === fonte.id ? 'Ocultar' : 'Ver'" size="small" [text]="true" (onClick)="ver(fonte)" />
+                <p-button label="Remover" size="small" [text]="true" severity="secondary" [disabled]="ocupado()" (onClick)="pedirRemocao(fonte)" />
+              }
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  }
+</section>

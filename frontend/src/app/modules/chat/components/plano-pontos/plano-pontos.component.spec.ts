@@ -22,6 +22,7 @@ async function montar(pontos: unknown[] = []): Promise<Montado> {
 
 const texto = (montado: Montado) => montado.elemento.textContent ?? '';
 const botao = (montado: Montado, rotulo: string) => Array.from(montado.elemento.querySelectorAll<HTMLButtonElement>('button')).find((item) => item.textContent?.trim() === rotulo);
+const porRotuloDeAcessibilidade = (montado: Montado, rotulo: string) => montado.elemento.querySelector<HTMLButtonElement>(`button[aria-label="${rotulo}"]`);
 const campo = (montado: Montado, rotulo: string) => montado.elemento.querySelector<HTMLInputElement | HTMLTextAreaElement>(`[aria-label="${rotulo}"]`)!;
 function escrever(alvo: HTMLInputElement | HTMLTextAreaElement, valor: string) {
   alvo.value = valor;
@@ -64,18 +65,23 @@ describe('PlanoPontosComponent — listar', () => {
     expect(texto(montado)).toContain('Texto do ponto 1');
   });
 
-  it('recolher o painel esconde a lista', async () => {
+  it('recolher o painel esconde a lista e deixa só o trilho com a contagem; o trilho reabre', async () => {
     const montado = await montar([ponto(1, Situacao.ABERTO)]);
-    montado.elemento.querySelector<HTMLButtonElement>('.plano-pontos__titulo')!.click();
+    porRotuloDeAcessibilidade(montado, 'Recolher painel')!.click();
     await montado.atualizar();
     expect(texto(montado)).not.toContain('Texto do ponto 1');
+    expect(montado.elemento.querySelector('.plano-pontos--recolhido .plano-pontos__contagem')?.textContent?.trim()).toBe('1');
+
+    porRotuloDeAcessibilidade(montado, 'Expandir pontos em aberto')!.click();
+    await montado.atualizar();
+    expect(texto(montado)).toContain('Texto do ponto 1');
   });
 });
 
 describe('PlanoPontosComponent — anotar à mão', () => {
   it('anota com o rótulo e o texto e relê a lista', async () => {
     const montado = await montar([]);
-    botao(montado, 'Anotar')!.click();
+    porRotuloDeAcessibilidade(montado, 'Anotar ponto')!.click();
     await montado.atualizar();
 
     escrever(campo(montado, 'Rótulo do ponto'), 'Risco');

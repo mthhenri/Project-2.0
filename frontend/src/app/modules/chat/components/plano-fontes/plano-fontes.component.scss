@@ -1,0 +1,165 @@
+:host {
+  display: block;
+  flex-shrink: 0;
+}
+
+.plano-fontes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: var(--fontes-altura-maxima, 16rem);
+  padding: 0.5rem 0.75rem;
+  overflow-y: auto;
+  border: 1px solid var(--app-surface-200);
+  border-radius: 8px;
+  background: var(--app-surface-50);
+
+  &__cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+  }
+
+  &__icone {
+    color: var(--app-realce-primario);
+    font-size: 1rem;
+  }
+
+  &__titulo {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.875rem;
+  }
+
+  &__arquivo {
+    display: none;
+  }
+
+  // Recolhido: uma faixa com a seta, o ícone e a contagem; ao lado do texto ela vira um trilho estreito e o texto ganha o espaço.
+  &__trilho {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.125rem 0;
+    border: 0;
+    background: transparent;
+    color: var(--p-text-muted-color);
+    font: inherit;
+    cursor: pointer;
+
+    i:first-child {
+      font-size: 0.75rem;
+    }
+  }
+
+  &__contagem {
+    min-width: 1.25rem;
+    padding: 0 0.375rem;
+    border-radius: 999px;
+    background: var(--app-realce-primario);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-align: center;
+
+    &--zero {
+      background: var(--app-surface-300);
+      color: var(--p-text-muted-color);
+    }
+  }
+
+  &__vazio {
+    margin: 0;
+    color: var(--p-text-muted-color);
+    font-size: 0.8125rem;
+  }
+
+  &__esqueleto,
+  &__colagem {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__contador {
+    align-self: flex-end;
+    color: var(--p-text-muted-color);
+  }
+
+  &__lista {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__fonte {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.5rem 0.625rem;
+    border: 1px solid var(--app-surface-200);
+    border-radius: 6px;
+    background: var(--app-surface-0);
+  }
+
+  &__linha {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+
+    i {
+      color: var(--p-text-muted-color);
+      font-size: 0.8125rem;
+    }
+  }
+
+  &__nome {
+    min-width: 0;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  &__meta {
+    color: var(--p-text-muted-color);
+  }
+
+  &__conteudo {
+    max-height: 12rem;
+    margin: 0;
+    padding: 0.5rem 0.75rem;
+    overflow: auto;
+    border-left: 3px solid var(--p-primary-400);
+    border-radius: 4px;
+    background: var(--app-surface-100);
+    font: inherit;
+    font-size: 0.8125rem;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  &__acoes {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.25rem;
+  }
+}
+
+// Só a coluna totalmente recolhida vira trilho vertical (a classe vem do documento).
+:host-context(.plano-documento__lateral--recolhida) {
+  .plano-fontes--recolhido {
+    align-items: center;
+    padding: 0.5rem 0.25rem;
+  }
+
+  .plano-fontes__trilho {
+    flex-direction: column;
+    padding: 0.25rem 0;
+  }
+}
