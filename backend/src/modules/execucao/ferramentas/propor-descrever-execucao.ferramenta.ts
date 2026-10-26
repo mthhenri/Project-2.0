@@ -28,7 +28,7 @@ export class ProporDescreverExecucaoFerramenta extends FerramentaPropostaIa<Prop
     'Propõe a descrição formal da execução em andamento a partir do relato do desenvolvedor no check-in, e o que fazer depois: CONTINUAR na mesma atividade ' +
     '(padrão) ou TROCAR para outra (informe atividadeSeguinteId, de listar_minhas_atividades). Passe em relato o que ele contou, fiel, com as palavras dele e sem ' +
     'inventar nada; o sistema redige a descrição formal. Só chame quando já tiver o essencial do que foi feito (e, se a execução passou da duração recomendada, depois ' +
-    'de pedir mais detalhe). Almoço e pausa pessoal não são trabalho: não proponha descrição para eles. Nada é gravado até o usuário confirmar.';
+    'de pedir mais detalhe). Perceba a troca pelo relato, sem perguntar: se ele já está em outra parte, use TROCAR com a atividade do checklist que serve (ou a que você acabou de criar). Almoço e pausa pessoal não são trabalho: não proponha descrição para eles. Nada é gravado até o usuário confirmar.';
   readonly permissao = 'QUALQUER' as const;
   readonly classeDeEntrada = ProporDescreverExecucaoDto;
   readonly tipoProposta = TipoPropostaIaEnum.DESCREVER_EXECUCAO;

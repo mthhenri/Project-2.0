@@ -41,6 +41,38 @@ test('com o rigor desligado, não há instrução de rigor em nenhum dos casos',
   }
 });
 
+test('não pergunta se vai trocar: percebe pelo relato, troca com TROCAR e cria o bloco só quando falta', () => {
+  const texto = montarContextoDoCheckin(BASE);
+  assert.doesNotMatch(texto, /Pergunte também se ele continua/);
+  assert.match(texto, /Não pergunte se ele vai trocar de atividade: perceba pelo relato/);
+  assert.match(texto, /propor_descrever_execucao e escolha TROCAR/);
+  assert.match(texto, /consultar_checklist_da_demanda/);
+  assert.match(texto, /nunca uma atividade por execução/);
+  assert.match(texto, /Em dúvida real, continue na mesma/);
+});
+
+test('bloco acabado: marca DESENVOLVIDA na ordem que a regra de status permite', () => {
+  const texto = montarContextoDoCheckin(BASE);
+  assert.match(texto, /DESENVOLVIDA \(propor_alterar_atividade\)/);
+  assert.match(texto, /não muda de status: descreva trocando para a próxima atividade/);
+  assert.match(texto, /propor_pausar_execucao e marque/);
+});
+
+test('acima do recomendado avisa do tempo, com o rigor ligado ou não, e nunca como trava', () => {
+  for (const rigorProporcional of [true, false]) {
+    const texto = montarContextoDoCheckin({ ...BASE, rigorProporcional });
+    assert.match(texto, /está nisso há bastante tempo/);
+    assert.match(texto, /quebrar o bloco em atividades menores/);
+    assert.match(texto, /nunca é trava/);
+  }
+});
+
+test('dentro do recomendado não há aviso de tempo', () => {
+  for (const rigorProporcional of [true, false]) {
+    assert.doesNotMatch(montarContextoDoCheckin({ ...BASE, minutos: 40, rigorProporcional }), /há bastante tempo/);
+  }
+});
+
 test('leva a execução, a descrição provisória e a regra da narrativa crua', () => {
   const texto = montarContextoDoCheckin(BASE);
   assert.match(texto, /"Ajustar login" \(demanda "Autenticação", projeto "Loja"\), iniciada às 09:10, há 2h40/);

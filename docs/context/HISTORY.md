@@ -12,6 +12,20 @@
 
 ---
 
+## 2026-10-26 — Task 244: check-in que troca sozinho e avisa do tempo (código pronto; teste de prompt e verificação ao vivo pendentes)
+
+Terceira task da guarda-chuva `chat-execucao-por-demanda.spec.md`. Ponto em aberto: frequência do aviso de tempo, no padrão proposto (todo check-in acima da duração recomendada, uma vez por check-in, sem prazo novo).
+
+- **Contexto do check-in:** `montarContextoDoCheckin` trocou "pergunte se continua ou troca" por perceber a troca pelo relato (`propor_descrever_execucao` com `TROCAR`, próxima atividade do checklist ou bloco criado só se falta, em dúvida continua), pelo bloco acabado (`DESENVOLVIDA`) e, **acima da duração recomendada, com o rigor ligado ou não**, pelo aviso de tempo sem trava. O aviso é independente do rigor proporcional, que continua só mudando o que se pergunta antes da descrição.
+- **Ordem do bloco acabado (desvio da redação da spec, mesmo resultado):** a spec dizia pausar, marcar e iniciar a próxima. Como `TROCAR` já encerra a execução do bloco acabado e abre a próxima na mesma confirmação (e mantém a descrição formal), o texto manda descrever trocando e depois marcar `DESENVOLVIDA`; só sem próxima atividade a ordem é pausar e marcar.
+- **Autonomia:** `DESCREVER_EXECUCAO`, `CRIAR_ATIVIDADE` e a marcação da própria atividade como desenvolvida já eram "Faz e avisa" (task 228); o desfazer da troca é o do executor existente. Nenhuma mudança neles.
+- **Limite conhecido:** trocar para uma atividade `PENDENTE` falha no executor (a atividade não é executável) e o executor reabre a execução anterior; o executor da descrição não tem `novoStatus` do trecho seguinte. Fora do escopo desta task; fica como possível ajuste.
+- **Prompt:** migration `0067` acrescenta o texto à versão 1 do `CHECKIN`. A descrição de `propor_descrever_execucao` orienta a perceber a troca sem perguntar.
+- **Testes:** 4 novos em `contexto-do-checkin.test.ts` (troca sem pergunta, bloco acabado, aviso de tempo com e sem rigor, sem aviso dentro do recomendado).
+- **Não verificado (task segue aberta em `active/`):** teste de prompt (troca, continuação, bloco acabado, tempo acima do recomendado) e verificação ao vivo do check-in nos três tamanhos; exigem provedor de IA. Sem lint (P-001).
+
+---
+
 ## 2026-10-26 — Task 243: bom dia "continuar ou coisa nova" (código pronto; teste de prompt e verificação ao vivo pendentes)
 
 Segunda task da guarda-chuva `chat-execucao-por-demanda.spec.md`. O autor aceitou os padrões propostos para os dois pontos em aberto: ao iniciar atividade PENDENTE ou PLANEJADA a IA passa `novoStatus = DESENVOLVENDO` sem perguntar (aviso diz a mudança; o desfazer já devolve o `statusAnterior`), e se a última atividade já está DESENVOLVIDA a IA segue para a próxima do checklist e avisa.
