@@ -32,11 +32,13 @@ export function registrarContratoDeArmazenamentoDeMensagemDireta(
     const bruno = base + 1;
     const carla = base + 2;
     const gestor = base + 3;
+    const davi = base + 4;
     const marca = `zq${base}`;
     const conversaAnaBruno = `${ana}-${bruno}`;
     const conversaAnaCarla = `${ana}-${carla}`;
     const conversaAnaGestor = `${ana}-${gestor}`;
     const conversaBrunoCarla = `${bruno}-${carla}`;
+    const conversaAnaDavi = `${ana}-${davi}`;
     let armazenamento: ArmazenamentoDeMensagemDireta;
 
     const mensagem = (conversaId: string, autorUsuarioId: number | null, texto: string, extras: Partial<MensagemDiretaNova> = {}): MensagemDiretaNova => ({
@@ -59,7 +61,7 @@ export function registrarContratoDeArmazenamentoDeMensagemDireta(
     const daAnaECarla: MensagemDiretaResumoDto[] = []; // da mais antiga para a mais nova
 
     after(async () => {
-      await limpar([ana, bruno, carla, gestor]);
+      await limpar([ana, bruno, carla, gestor, davi]);
     });
 
     it('grava e lê a conversa da mais nova para a mais antiga, com todos os campos', async () => {
@@ -251,6 +253,39 @@ export function registrarContratoDeArmazenamentoDeMensagemDireta(
 
       await assert.rejects(armazenamento.listarTodasConversas({ usuarioIdsExcluidos: [], pagina: 0, porPagina: 10 }), (erro) => erro instanceof BusinessException);
       await assert.rejects(armazenamento.listarTodasConversas({ usuarioIdsExcluidos: [], pagina: 1, porPagina: 101 }), (erro) => erro instanceof BusinessException);
+    });
+
+    it('grava a resposta com a citação, devolve-a na leitura e no reenvio, e deixa a mensagem comum sem citação', async () => {
+      const original = (await armazenamento.gravar(mensagem(conversaAnaDavi, ana, 'Pode revisar o cadastro?'))).mensagem;
+      await espera(15);
+      const citacao = { mensagemId: original.mensagemId, autorUsuarioId: ana, trecho: 'Pode revisar o cadastro?' };
+      const resposta = await armazenamento.gravar(mensagem(conversaAnaDavi, davi, 'Respondendo a você', { respondeA: citacao }));
+      assert.equal(resposta.jaExistia, false);
+      assert.deepEqual(resposta.mensagem.respondeA, citacao);
+
+      const pagina = await armazenamento.listarConversa({ conversaId: conversaAnaDavi, limite: 10 });
+      const lida = pagina.mensagens.find((item) => item.mensagemId === resposta.mensagem.mensagemId)!;
+      assert.deepEqual(lida.respondeA, citacao, 'a citação sobrevive à leitura');
+      assert.equal(pagina.mensagens.find((item) => item.mensagemId === original.mensagemId)!.respondeA, null, 'a mensagem comum não tem citação');
+
+      const repetida = await armazenamento.gravar({ ...mensagem(conversaAnaDavi, davi, 'texto no reenvio'), mensagemId: resposta.mensagem.mensagemId });
+      assert.equal(repetida.jaExistia, true);
+      assert.deepEqual(repetida.mensagem.respondeA, citacao, 'o reenvio devolve a citação já gravada');
+
+      const total = await armazenamento.listarConversasDoUsuario({ usuarioId: davi });
+      const daConversa = total.find((conversa) => conversa.conversaId === conversaAnaDavi)!;
+      assert.deepEqual(daConversa.ultimaMensagem.respondeA, citacao, 'a última mensagem da lista traz a citação');
+    });
+
+    it('recuperarMensagem devolve a mensagem só se for da conversa pedida', async () => {
+      const achada = await armazenamento.recuperarMensagem({ conversaId: conversaAnaBruno, mensagemId: primeira.mensagemId });
+      assert.equal(achada?.mensagemId, primeira.mensagemId);
+      assert.equal(achada?.texto, primeira.texto);
+      assert.equal((await armazenamento.recuperarMensagem({ conversaId: conversaAnaBruno, mensagemId: primeira.mensagemId.toUpperCase() }))?.mensagemId, primeira.mensagemId);
+      assert.equal(await armazenamento.recuperarMensagem({ conversaId: conversaAnaCarla, mensagemId: primeira.mensagemId }), null, 'de outra conversa');
+      assert.equal(await armazenamento.recuperarMensagem({ conversaId: conversaAnaBruno, mensagemId: randomUUID() }), null, 'inexistente');
+      assert.equal(await armazenamento.recuperarMensagem({ conversaId: conversaAnaBruno, mensagemId: 'nao-e-uuid' }), null);
+      await assert.rejects(armazenamento.recuperarMensagem({ conversaId: 'nao-e-conversa', mensagemId: primeira.mensagemId }), (erro) => erro instanceof BusinessException);
     });
   });
 }

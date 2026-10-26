@@ -830,7 +830,8 @@ Uma linha por mensagem do chat, gravada uma vez e nunca reescrita (sem exclusão
 Uma linha por mensagem entre colaboradores, com os mesmos campos e nomes do documento do índice `mensagem-direta`; gravada uma vez e nunca reescrita. Colunas de `BaseEntity` mais:
 `mensagem_id` (UUID, único, vem do cliente e dá idempotência ao reenvio), `conversa_id` (`VARCHAR(21)`, `<menorId>-<maiorId>`), `usuario_menor_id` e `usuario_maior_id` (os dois
 participantes, **sem FK** para `usuario`, como `chat_mensagem`; `CHECK` de menor < maior e de que `conversa_id` bate com os dois), `autor_usuario_id` (anulável: mensagem do sistema),
-`autor` (`USUARIO`/`SISTEMA`), `texto` (Markdown), `contem_codigo`, `mencoes` (`INTEGER[]`) e `referencias` (`TEXT[]`, `DEMANDA:212`). `created_date` é a data da mensagem, definida pela
+`autor` (`USUARIO`/`SISTEMA`), `texto` (Markdown), `contem_codigo`, `mencoes` (`INTEGER[]`) e `referencias` (`TEXT[]`, `DEMANDA:212`) e, desde a task 220 (migration `0063`), `responde_a_mensagem_id` (`UUID`), `responde_a_autor_usuario_id` (`INTEGER`) e `responde_a_trecho` (`TEXT`): a mensagem
+que esta responde, anuláveis e **sempre os três juntos ou nenhum** (`CHECK`), sem FK; o trecho é uma cópia do começo do texto original, gravada no envio. `created_date` é a data da mensagem, definida pela
 aplicação em milissegundos (é o que o cursor de paginação compara). Índices: (`conversa_id`, `created_date`, `mensagem_id`), um por participante e GIN em `fn_chat_texto_busca(texto)`.
 
 #### `chat_conversa`

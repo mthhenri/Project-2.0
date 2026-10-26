@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import {
   AutorMensagemDiretaEnum,
+  CitacaoMensagemDto,
   ConversaDiretaListadasDto,
   ConversaDiretaResumoDto,
   LIMITE_PADRAO_DA_CONVERSA_DIRETA,
@@ -33,6 +34,7 @@ import {
   contemBlocoDeCodigo,
   montarConversaDiretaId,
   outroParticipanteDaConversaDireta,
+  trechoDaMensagemDireta,
 } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
@@ -89,6 +91,7 @@ export class MensagemDiretaService {
     for (const referencia of referencias) {
       await this.validarReferencia(referencia, usuarioAtivo);
     }
+    const respondeA = await this.montarCitacao(dto.respondeAMensagemId, conversaId);
 
     const enviada = await this.armazenamento.gravar({
       mensagemId: dto.mensagemId.toLowerCase(),
@@ -99,6 +102,7 @@ export class MensagemDiretaService {
       contemCodigo: contemBlocoDeCodigo(dto.texto),
       mencoes,
       referencias,
+      respondeA,
     });
 
     // O reenvio de uma mensagem que já estava gravada não avisa de novo. As duas pontas recebem (a do remetente cobre as outras abas dele).
@@ -324,6 +328,19 @@ export class MensagemDiretaService {
   }
 
   /** Para enviar o destinatário precisa, além disso, existir sem exclusão e estar **ativo**. */
+  /**
+   * A citação da resposta (task 220): autor e trecho saem da mensagem original, lida **nesta conversa**; o cliente só diz qual é. A mensagem do sistema
+   * (aviso da supervisão, por exemplo) não é respondida.
+   */
+  private async montarCitacao(respondeAMensagemId: string | undefined, conversaId: string): Promise<CitacaoMensagemDto | null> {
+    if (!respondeAMensagemId) return null;
+    const original = await this.armazenamento.recuperarMensagem({ conversaId, mensagemId: respondeAMensagemId });
+    if (!original || original.autor !== AutorMensagemDiretaEnum.USUARIO || original.autorUsuarioId === null) {
+      throw new BusinessException('A mensagem respondida não existe nesta conversa');
+    }
+    return { mensagemId: original.mensagemId, autorUsuarioId: original.autorUsuarioId, trecho: trechoDaMensagemDireta(original.texto) };
+  }
+
   private async validarDestinatarioAtivo(destinatarioId: number, usuarioAtivo: JwtPayload): Promise<void> {
     if (destinatarioId === usuarioAtivo.sub) throw new BusinessException('A conversa precisa ser com outra pessoa');
     const encontrado = await this.usuarioRepositorio.recuperar({ id: destinatarioId });

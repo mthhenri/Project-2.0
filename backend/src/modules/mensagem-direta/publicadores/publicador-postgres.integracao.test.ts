@@ -45,7 +45,7 @@ function entrega(texto: string): MensagemDoBarramento {
       tipo: 'MENSAGEM',
       mensagem: {
         mensagemId: '7f0c2b9e-4c1a-4e6a-9d55-2f6c0d1b8a10', conversaId: '4-9', autor: AutorMensagemDiretaEnum.USUARIO, autorUsuarioId: 4,
-        texto, contemCodigo: false, mencoes: [], referencias: [], createdDate: new Date('2026-10-21T14:05:11.482Z'),
+        texto, contemCodigo: false, mencoes: [], referencias: [], respondeA: null, createdDate: new Date('2026-10-21T14:05:11.482Z'),
       },
     },
   };

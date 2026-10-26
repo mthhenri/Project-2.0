@@ -12,6 +12,8 @@ import type { MarkdownBlocoNo } from '../markdown/markdown.tipos';
 export const LIMITE_TEXTO_MENSAGEM_DIRETA = 10_000;
 export const LIMITE_MENCOES_MENSAGEM_DIRETA = 20;
 export const LIMITE_REFERENCIAS_MENSAGEM_DIRETA = 20;
+/** Caracteres do trecho que a resposta cita da mensagem original (task 220). */
+export const LIMITE_TRECHO_MENSAGEM_DIRETA = 200;
 /** Mensagens por página quando o cliente não pede um limite, e o máximo que ele pode pedir. */
 export const LIMITE_PADRAO_DA_CONVERSA_DIRETA = 50;
 export const LIMITE_MAXIMO_DA_CONVERSA_DIRETA = 100;
@@ -146,4 +148,30 @@ function algumBlocoDeCodigo(blocos: MarkdownBlocoNo[]): boolean {
 export function contemBlocoDeCodigo(texto: string): boolean {
   if (!texto) return false;
   return algumBlocoDeCodigo(interpretarMarkdown(texto));
+}
+
+// ---------------------------------------------------------------------------
+// Texto simples e trecho da resposta (task 220)
+// ---------------------------------------------------------------------------
+
+/**
+ * O Markdown numa linha só, sem marcação (`*`, `#`, crases, citação, marcador de lista) e com cada bloco de código cercado trocado por
+ * `[código]`. Uma mensagem que só tem código (ou cujo texto some sem a marcação) e `contemCodigo` verdadeiro vira `[código]`. É o que a prévia
+ * da lista e o trecho da resposta mostram.
+ */
+export function textoSimplesDaMensagemDireta(texto: string, contemCodigo = false): string {
+  const semBlocos = (texto ?? '').replace(/```[\s\S]*?(?:```|$)/g, ' [código] ');
+  const linha = semBlocos
+    .replace(/^\s*(?:[-*+]|\d+\.)\s+/gm, '')
+    .replace(/[*_`#>]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return linha || (contemCodigo ? '[código]' : '');
+}
+
+/** O começo da mensagem que a resposta cita: texto simples, cortado em `LIMITE_TRECHO_MENSAGEM_DIRETA` caracteres com `…` quando passa. */
+export function trechoDaMensagemDireta(texto: string): string {
+  const simples = textoSimplesDaMensagemDireta(texto, contemBlocoDeCodigo(texto));
+  if (simples.length <= LIMITE_TRECHO_MENSAGEM_DIRETA) return simples;
+  return `${simples.slice(0, LIMITE_TRECHO_MENSAGEM_DIRETA - 1).trimEnd()}…`;
 }

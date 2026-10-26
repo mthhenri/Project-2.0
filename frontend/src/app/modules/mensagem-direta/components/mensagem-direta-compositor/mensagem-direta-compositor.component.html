@@ -51,9 +51,20 @@
     />
   }
 
+  @if (resposta(); as alvo) {
+    <div class="compositor-direto__resposta" role="group" aria-label="Resposta em preparo">
+      <span class="compositor-direto__resposta-texto">
+        <span class="compositor-direto__resposta-nome">Respondendo a {{ alvo.nome }}</span>
+        <span class="compositor-direto__resposta-trecho">{{ alvo.trecho }}</span>
+      </span>
+      <p-button icon="pi pi-times" severity="secondary" [text]="true" [rounded]="true" size="small" ariaLabel="Cancelar a resposta" pTooltip="Cancelar a resposta (Esc)" tooltipPosition="top" (onClick)="cancelarResposta.emit()" />
+    </div>
+  }
+
   <div class="compositor-direto__caixa" [attr.inert]="painelDeCodigo() ? '' : null">
     <app-mensagem-direta-editor-mensagem
       class="compositor-direto__campo"
+      [embutido]="true"
       placeholder="Mensagem — @ pessoa, # demanda"
       rotulo="Mensagem"
       [listaControlada]="listaAberta() ? 'sugestoes-do-compositor' : null"
@@ -64,7 +75,7 @@
       (colou)="aoColar($event)"
       (perdeuFoco)="aoPerderOFoco()"
     />
-    <p-button icon="pi pi-code" severity="secondary" [text]="true" [rounded]="true" size="small" ariaLabel="Inserir bloco de código" pTooltip="Bloco de código" tooltipPosition="top" (onClick)="inserirCodigo()" />
+    <p-button class="compositor-direto__codigo" icon="pi pi-code" severity="secondary" [text]="true" [rounded]="true" size="small" ariaLabel="Inserir bloco de código" pTooltip="Bloco de código" tooltipPosition="top" (onClick)="inserirCodigo()" />
     <button type="submit" class="compositor-direto__enviar" aria-label="Enviar mensagem" pTooltip="Enviar (Enter) · Shift+Enter nova linha · Ctrl+Enter envia em lista e código" tooltipPosition="top" [disabled]="!podeEnviar()"><i class="pi pi-send" aria-hidden="true"></i></button>
   </div>
   @if (mostrarContador()) {

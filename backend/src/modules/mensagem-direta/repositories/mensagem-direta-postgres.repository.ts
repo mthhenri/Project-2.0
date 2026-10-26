@@ -7,6 +7,7 @@ import {
   ConsultaBuscaDireta,
   ConsultaConversaDireta,
   ConsultaConversasDoUsuario,
+  ConsultaMensagemDireta,
   ConsultaNaoLidas,
   ConsultaSupervisao,
   LIMITE_BUSCA_DIRETA,
@@ -19,6 +20,7 @@ import {
   montarPaginaDeMensagens,
   validarConsultaBuscaDireta,
   validarConsultaConversaDireta,
+  validarConsultaMensagemDireta,
   validarConsultaNaoLidas,
   validarPaginaDaSupervisao,
 } from '../domain/mensagem-direta-consultas';
@@ -45,6 +47,9 @@ interface LinhaDeMensagemDireta {
   contem_codigo: boolean;
   mencoes: number[];
   referencias: string[];
+  responde_a_mensagem_id: string | null;
+  responde_a_autor_usuario_id: number | null;
+  responde_a_trecho: string | null;
   created_date: Date;
 }
 
@@ -58,7 +63,7 @@ interface LinhaDeNaoLidas {
 }
 
 const COLUNAS_DA_MENSAGEM = `mensagem_id, conversa_id, usuario_menor_id, usuario_maior_id, autor_usuario_id, autor, texto, contem_codigo, mencoes,
-  referencias, created_date`;
+  referencias, responde_a_mensagem_id, responde_a_autor_usuario_id, responde_a_trecho, created_date`;
 
 /** A pessoa é um dos dois participantes da conversa. */
 const PARTICIPA_DA_CONVERSA = '(usuario_menor_id = :usuarioId OR usuario_maior_id = :usuarioId)';
@@ -98,6 +103,13 @@ function deLinha(linha: LinhaDeMensagemDireta): MensagemDiretaFonte {
     contem_codigo: linha.contem_codigo,
     mencoes: linha.mencoes,
     referencias: linha.referencias,
+    ...(linha.responde_a_mensagem_id
+      ? {
+          responde_a_mensagem_id: linha.responde_a_mensagem_id,
+          responde_a_autor_usuario_id: linha.responde_a_autor_usuario_id,
+          responde_a_trecho: linha.responde_a_trecho,
+        }
+      : {}),
     created_date: linha.created_date.toISOString(),
   };
 }
@@ -130,9 +142,11 @@ export class MensagemDiretaPostgresRepository extends BaseRepository<MensagemDir
       const fonte = paraFonteDireta(mensagem, new Date());
       const inseridas = await this.executarConsulta<{ id: number }>(
         `INSERT INTO mensagem_direta (created_date, updated_date, is_deleted, mensagem_id, conversa_id, usuario_menor_id, usuario_maior_id,
-                                      autor_usuario_id, autor, texto, contem_codigo, mencoes, referencias)
+                                      autor_usuario_id, autor, texto, contem_codigo, mencoes, referencias,
+                                      responde_a_mensagem_id, responde_a_autor_usuario_id, responde_a_trecho)
          SELECT :criadaEm, :criadaEm, false, CAST(:mensagemId AS uuid), :conversaId, :usuarioMenorId, :usuarioMaiorId,
-                :autorUsuarioId, :autor, :texto, :contemCodigo, CAST(:mencoes AS integer[]), CAST(:referencias AS text[])
+                :autorUsuarioId, :autor, :texto, :contemCodigo, CAST(:mencoes AS integer[]), CAST(:referencias AS text[]),
+                CAST(:respostaMensagemId AS uuid), CAST(:respostaAutorUsuarioId AS integer), CAST(:respostaTrecho AS text)
          ON CONFLICT (mensagem_id) DO NOTHING
          RETURNING id`,
         {
@@ -147,6 +161,9 @@ export class MensagemDiretaPostgresRepository extends BaseRepository<MensagemDir
           contemCodigo: fonte.contem_codigo,
           mencoes: fonte.mencoes,
           referencias: fonte.referencias,
+          respostaMensagemId: fonte.responde_a_mensagem_id ?? null,
+          respostaAutorUsuarioId: fonte.responde_a_autor_usuario_id ?? null,
+          respostaTrecho: fonte.responde_a_trecho ?? null,
         },
       );
       if (inseridas.length > 0) return { mensagem: deFonteDireta(fonte), jaExistia: false };
@@ -160,6 +177,20 @@ export class MensagemDiretaPostgresRepository extends BaseRepository<MensagemDir
       const existente = deLinha(existentes[0]);
       if (!mesmaOrigemDaMensagem(existente, mensagem)) throw new BusinessException('Esse identificador de mensagem já foi usado');
       return { mensagem: deFonteDireta(existente), jaExistia: true };
+    });
+  }
+
+  async recuperarMensagem(consulta: ConsultaMensagemDireta): Promise<MensagemDiretaResumoDto | null> {
+    validarConsultaMensagemDireta(consulta);
+    if (!REGEX_UUID.test(consulta.mensagemId)) return null;
+    return this.proteger(async () => {
+      const linhas = await this.executarConsulta<LinhaDeMensagemDireta>(
+        `SELECT ${COLUNAS_DA_MENSAGEM}
+         FROM mensagem_direta
+         WHERE mensagem_id = CAST(:mensagemId AS uuid) AND conversa_id = :conversaId AND is_deleted = false`,
+        { mensagemId: consulta.mensagemId.toLowerCase(), conversaId: consulta.conversaId },
+      );
+      return linhas.length > 0 ? deFonteDireta(deLinha(linhas[0])) : null;
     });
   }
 

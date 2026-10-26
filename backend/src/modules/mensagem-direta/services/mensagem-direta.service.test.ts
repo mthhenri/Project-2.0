@@ -32,6 +32,7 @@ function mensagem(parcial: Partial<MensagemDiretaResumoDto> = {}): MensagemDiret
     contemCodigo: false,
     mencoes: [],
     referencias: [],
+    respondeA: null,
     createdDate: new Date('2026-10-21T14:00:00.000Z'),
     ...parcial,
   };
@@ -45,6 +46,8 @@ interface Cenario {
   atividadeDemandaId?: number | null;
   atividadeComAcesso?: boolean;
   jaExistia?: boolean;
+  /** As mensagens que `recuperarMensagem` encontra, por id (cada uma já com a conversa dela). */
+  originais?: MensagemDiretaResumoDto[];
   marcadores?: MarcadorDeLeituraRegistrado[];
   marcadorDoOutro?: MarcadorDeLeituraRegistrado | null;
   conversas?: { conversaId: string; participantes: number[]; totalMensagens: number; ultimaMensagem: MensagemDiretaResumoDto }[];
@@ -63,6 +66,10 @@ function montar(cenario: Cenario = {}) {
 
   const armazenamento = {
     gravar: async (nova: { mensagemId: string }) => { registrar('gravar', nova); return { mensagem: mensagem({ mensagemId: nova.mensagemId }), jaExistia: cenario.jaExistia ?? false }; },
+    recuperarMensagem: async (consulta: { conversaId: string; mensagemId: string }) => {
+      registrar('recuperarMensagem', consulta);
+      return (cenario.originais ?? []).find((original) => original.mensagemId === consulta.mensagemId && original.conversaId === consulta.conversaId) ?? null;
+    },
     listarConversa: async (consulta: unknown) => { registrar('listarConversa', consulta); return { mensagens: [mensagem()], proximoCursor: 'abc' }; },
     listarConversasDoUsuario: async (consulta: unknown) => { registrar('listarConversasDoUsuario', consulta); return cenario.conversas ?? []; },
     contarNaoLidas: async (consulta: unknown) => { registrar('contarNaoLidas', consulta); return cenario.naoLidas ?? {}; },
@@ -138,6 +145,7 @@ test('enviarMensagem: o remetente e a conversa vêm do token e do par; o mensage
     contemCodigo: false,
     mencoes: [],
     referencias: [],
+    respondeA: null,
   });
 });
 
@@ -147,6 +155,49 @@ test('enviarMensagem: contemCodigo vem do Markdown, nunca do cliente', async () 
   await service.enviarMensagem(envio({ texto: 'só `inline` aqui', contemCodigo: true }), ANA);
   assert.equal((chamadas.gravar[0] as { contemCodigo: boolean }).contemCodigo, true);
   assert.equal((chamadas.gravar[1] as { contemCodigo: boolean }).contemCodigo, false);
+});
+
+const ORIGINAL_ID = '11111111-2222-4333-8444-555555555555';
+const doBruno = (parcial: Partial<MensagemDiretaResumoDto> = {}) =>
+  mensagem({ mensagemId: ORIGINAL_ID, autorUsuarioId: BRUNO_ID, texto: 'Subi o **ajuste** do cadastro', ...parcial });
+
+test('enviarMensagem: a resposta monta a citação no servidor, com o autor e o trecho da original', async () => {
+  const { service, chamadas } = montar({ originais: [doBruno()] });
+  await service.enviarMensagem(envio({ respondeAMensagemId: ORIGINAL_ID.toUpperCase() }), ANA);
+  assert.deepEqual(chamadas.recuperarMensagem[0], { conversaId: '4-9', mensagemId: ORIGINAL_ID.toUpperCase() });
+  assert.deepEqual((chamadas.gravar[0] as { respondeA: unknown }).respondeA, {
+    mensagemId: ORIGINAL_ID,
+    autorUsuarioId: BRUNO_ID,
+    trecho: 'Subi o ajuste do cadastro',
+  });
+});
+
+test('enviarMensagem: o cliente não consegue impor autor nem trecho da citação', async () => {
+  const { service, chamadas } = montar({ originais: [doBruno()] });
+  await service.enviarMensagem(envio({ respondeAMensagemId: ORIGINAL_ID, respondeA: { mensagemId: ORIGINAL_ID, autorUsuarioId: 1, trecho: 'inventado' } }), ANA);
+  const gravada = chamadas.gravar[0] as { respondeA: { autorUsuarioId: number; trecho: string } };
+  assert.equal(gravada.respondeA.autorUsuarioId, BRUNO_ID);
+  assert.notEqual(gravada.respondeA.trecho, 'inventado');
+});
+
+test('enviarMensagem: recusa responder a mensagem inexistente, de outra conversa ou do sistema — e não grava', async () => {
+  const inexistente = montar();
+  await recusaComMensagem(inexistente.service.enviarMensagem(envio({ respondeAMensagemId: ORIGINAL_ID }), ANA), /não existe nesta conversa/);
+  assert.equal(inexistente.chamadas.gravar, undefined);
+
+  const deOutraConversa = montar({ originais: [doBruno({ conversaId: '4-12' })] });
+  await recusaComMensagem(deOutraConversa.service.enviarMensagem(envio({ respondeAMensagemId: ORIGINAL_ID }), ANA), /não existe nesta conversa/);
+  assert.equal(deOutraConversa.chamadas.gravar, undefined);
+
+  const doSistema = montar({ originais: [doBruno({ autor: AutorMensagemDiretaEnum.SISTEMA, autorUsuarioId: null })] });
+  await recusaComMensagem(doSistema.service.enviarMensagem(envio({ respondeAMensagemId: ORIGINAL_ID }), ANA), /não existe nesta conversa/);
+  assert.equal(doSistema.chamadas.gravar, undefined);
+});
+
+test('enviarMensagem: sem respondeAMensagemId não consulta a original', async () => {
+  const { service, chamadas } = montar();
+  await service.enviarMensagem(envio(), ANA);
+  assert.equal(chamadas.recuperarMensagem, undefined);
 });
 
 test('enviarMensagem: reenviar devolve jaExistia com a mensagem já gravada', async () => {

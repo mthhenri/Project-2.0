@@ -92,7 +92,7 @@ describe('MensagemDiretaConversaComponent — digitando…', () => {
       tipo: 'MENSAGEM',
       mensagem: {
         mensagemId: 'm-1', conversaId: '1-9', autor: AutorMensagemDiretaEnum.USUARIO, autorUsuarioId: 9, texto: 'oi',
-        contemCodigo: false, mencoes: [], referencias: [], createdDate: new Date().toISOString() as never,
+        contemCodigo: false, mencoes: [], referencias: [], respondeA: null, createdDate: new Date().toISOString() as never,
       },
     });
     await redesenhar();
@@ -127,7 +127,7 @@ describe('MensagemDiretaConversaComponent — digitando…', () => {
       mensagens: [
         {
           mensagemId: 'm-2', conversaId: '1-9', autor: AutorMensagemDiretaEnum.USUARIO, autorUsuarioId: 9, texto: '**oi**\n\n```ts\nconst a = 1;\n```',
-          contemCodigo: true, mencoes: [], referencias: [], createdDate: new Date(), situacao: 'ENVIADA',
+          contemCodigo: true, mencoes: [], referencias: [], respondeA: null, createdDate: new Date(), situacao: 'ENVIADA',
         },
       ],
     }));

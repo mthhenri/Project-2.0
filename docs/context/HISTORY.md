@@ -12,6 +12,20 @@
 
 ---
 
+## 2026-10-26 — Task 220: responder mensagem no chat entre colaboradores (e o compositor numa barra só)
+
+Pedido do autor em 2026-10-23, especificada e implementada no mesmo dia depois de ele aprovar o desenho e um mockup. A resposta cita a mensagem original (autor e trecho) no balão e, ao clicar, leva até ela. Na aprovação o autor pediu também que o botão de enviar e o de código ficassem **dentro** da barra do campo.
+
+- **Contrato (`shared`):** `CitacaoMensagemDto`, `MensagemDiretaResumoDto.respondeA` (obrigatório, `null` sem resposta), `MensagemDiretaEnviarDto.respondeAMensagemId`, `LIMITE_TRECHO_MENSAGEM_DIRETA` (200), `textoSimplesDaMensagemDireta` e `trechoDaMensagemDireta`. A limpeza da prévia da lista subiu do front para o `shared` (uma cópia só).
+- **Backend:** o cliente só diz o id; a service lê a original com `armazenamento.recuperarMensagem` (método novo do contrato, nos três armazenamentos, devolve só se for da mesma conversa), recusa inexistente, de outra conversa e do sistema, e monta autor e trecho. Documento imutável com `responde_a_*` (OpenSearch/Elasticsearch: campos novos, sem reindexar, pois o mapeamento dinâmico cobre o índice já existente; Postgres provisório: migration `0063` com `CHECK` dos três juntos).
+- **Front:** `respondendoA` no estado, ação Responder no balão, barra "Respondendo a…" (Esc cancela só a resposta), citação clicável que rola, realça e carrega até 5 páginas antigas, reenvio que preserva a citação. Compositor: campo + `</>` + enviar numa barra com aparência de campo (`embutido` no editor).
+- **Testes:** `shared` 273, `backend` 1502, integração 347, suíte de contrato também no OpenSearch real (22/22), `frontend` 2130 (173 arquivos, 8 novos). Builds do backend e do front passam.
+- **Ao vivo:** API real e navegador, `gestor.inicial` e `dev.teste`, três tamanhos no escuro e um no claro; detalhes e limites na spec (`done/220-...`).
+- **Achados na execução:** o rascunho citava a migration `0052`, já ocupada (usada a `0063`); a primeira versão da migration usou `resposta_a_*` contra `responde_a_*` do documento e já havia sido aplicada ao banco de teste, então as colunas dele foram renomeadas por SQL (a migration nunca foi commitada com o nome antigo); o `backend:dev` do ambiente rodava sem watch e foi reiniciado para a verificação.
+- **Não verificado:** Elasticsearch real (sem serviço no ambiente); reenvio com a rede derrubada e citação de página antiga só em teste de componente. Sem lint (P-001).
+
+---
+
 ## 2026-10-26 — Task 237: publicar o plano na demanda, plano vivo e "nasceu do plano" (fecha a guarda-chuva `chat-planejamento.spec.md`)
 
 Sétima e última task da guarda-chuva. A pessoa publica os textos escolhidos do plano na demanda ligada vendo o diff por palavra contra o texto atual dela; o plano segue editável e a demanda mostra de que plano nasceu.

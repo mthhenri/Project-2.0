@@ -6,6 +6,7 @@ import {
   MensagemDiretaPessoaResumoDto,
   ReferenciaMensagemDto,
   montarConversaDiretaId,
+  trechoDaMensagemDireta,
 } from '@project20/shared';
 import { ProjectDesktopService } from '../../../core/services/project-desktop.service';
 import { UsuarioSessaoService } from '../../../core/services/usuario-sessao.service';
@@ -89,6 +90,8 @@ export class MensagemDiretaEstadoService {
   readonly digitando = signal<ReadonlySet<number>>(new Set());
 
   readonly conversaAberta = signal<ConversaAberta | null>(null);
+  /** A mensagem a que o próximo envio responde (task 220): vale para a conversa aberta, sai ao enviar, cancelar ou abrir outra conversa. */
+  readonly respondendoA = signal<MensagemNaConversa | null>(null);
   /** O código que o usuário copiou antes de apertar o atalho do Desktop (task 213): vira bloco no campo da próxima conversa aberta e some. */
   readonly rascunhoDoDesktop = signal<string | null>(null);
 
@@ -225,6 +228,7 @@ export class MensagemDiretaEstadoService {
 
   voltarParaALista(): void {
     this.rascunhoDoDesktop.set(null);
+    this.respondendoA.set(null);
     this.conversaAberta.set(null);
     this.resultadoDaBusca.set(null);
     this.visao.set('LISTA');
@@ -262,6 +266,7 @@ export class MensagemDiretaEstadoService {
     if (meuId === undefined || meuId === usuarioId) return;
     // O código copiado só vai à conversa escolhida na tela de nova conversa; qualquer outro caminho até uma conversa o descarta.
     if (this.visao() !== 'NOVA') this.rascunhoDoDesktop.set(null);
+    if (this.conversaAberta()?.usuarioId !== usuarioId) this.respondendoA.set(null);
     this.aberto.set(true);
     this.visao.set('CONVERSA');
     this.conversaAberta.set({
@@ -354,6 +359,17 @@ export class MensagemDiretaEstadoService {
   // Envio
   // ---------------------------------------------------------------------------
 
+  /** Passa a responder a uma mensagem já enviada da conversa aberta (a de uma pessoa, não a do sistema nem a que ainda não chegou). */
+  responder(mensagem: MensagemNaConversa): void {
+    if (mensagem.situacao !== 'ENVIADA' || mensagem.autor !== AutorMensagemDiretaEnum.USUARIO || mensagem.autorUsuarioId === null) return;
+    if (mensagem.conversaId !== this.conversaAberta()?.conversaId) return;
+    this.respondendoA.set(mensagem);
+  }
+
+  cancelarResposta(): void {
+    this.respondendoA.set(null);
+  }
+
   /**
    * Envia o texto (com as menções e referências que ainda valem nele) na conversa aberta: a mensagem aparece na hora (`ENVIANDO`) e vira `ENVIADA`
    * ou `FALHOU`. O reenvio leva os mesmos `mencoes` e `referencias`, porque eles ficam guardados na mensagem local.
@@ -366,6 +382,14 @@ export class MensagemDiretaEstadoService {
     // Enviou: a próxima digitação avisa de novo na hora, sem esperar o intervalo.
     this.ultimoAvisoDeDigitacao.delete(aberta.usuarioId);
 
+    // A citação local é o que o servidor vai montar (o mesmo trecho), para o balão já nascer com ela; o servidor devolve a definitiva.
+    const respondida = this.respondendoA();
+    const respondeA =
+      respondida && respondida.conversaId === aberta.conversaId && respondida.autorUsuarioId !== null
+        ? { mensagemId: respondida.mensagemId, autorUsuarioId: respondida.autorUsuarioId, trecho: trechoDaMensagemDireta(respondida.texto) }
+        : null;
+    this.respondendoA.set(null);
+
     const local: MensagemNaConversa = {
       mensagemId: gerarMensagemId(),
       conversaId: aberta.conversaId,
@@ -375,6 +399,7 @@ export class MensagemDiretaEstadoService {
       contemCodigo: false,
       mencoes: envio.mencoes,
       referencias: envio.referencias,
+      respondeA,
       createdDate: new Date(),
       situacao: 'ENVIANDO',
     };
@@ -421,7 +446,7 @@ export class MensagemDiretaEstadoService {
   private async transmitir(usuarioId: number, local: MensagemNaConversa): Promise<void> {
     const sessao = this.geracaoDaSessao;
     try {
-      const resposta = await firstValueFrom(this.api.enviarMensagem({ destinatarioId: usuarioId, mensagemId: local.mensagemId, texto: local.texto, mencoes: local.mencoes, referencias: local.referencias }));
+      const resposta = await firstValueFrom(this.api.enviarMensagem({ destinatarioId: usuarioId, mensagemId: local.mensagemId, texto: local.texto, mencoes: local.mencoes, referencias: local.referencias, respondeAMensagemId: local.respondeA?.mensagemId }));
       if (sessao !== this.geracaoDaSessao) return;
       this.receberMensagem(normalizarMensagem(resposta.dados!.mensagem), false);
     } catch {

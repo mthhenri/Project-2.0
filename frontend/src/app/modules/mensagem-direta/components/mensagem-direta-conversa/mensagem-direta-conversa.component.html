@@ -59,10 +59,18 @@
             <div class="conversa-direta__linha" [class.conversa-direta__linha--minha]="minha">
               <div
                 class="conversa-direta__balao"
+                [attr.data-mensagem-id]="mensagem.mensagemId"
+                [class.conversa-direta__balao--destacado]="destacadaId() === mensagem.mensagemId"
                 [class.conversa-direta__balao--minha]="minha"
                 [class.conversa-direta__balao--enviando]="mensagem.situacao === 'ENVIANDO'"
                 [class.conversa-direta__balao--falhou]="mensagem.situacao === 'FALHOU'"
               >
+                @if (mensagem.respondeA; as citacao) {
+                  <button type="button" class="conversa-direta__citacao" [attr.aria-label]="'Ir para a mensagem de ' + nomeDaCitacao(citacao)" (click)="irParaOriginal(citacao.mensagemId)">
+                    <span class="conversa-direta__citacao-nome">{{ nomeDaCitacao(citacao) }}</span>
+                    <span class="conversa-direta__citacao-trecho">{{ citacao.trecho }}</span>
+                  </button>
+                }
                 <app-markdown-visualizador [texto]="mensagem.texto" [destaques]="destaquesDe(mensagem)" />
                 @for (referencia of mensagem.referencias; track referencia.tipo + referencia.id) {
                   <app-mensagem-direta-referencia-cartao [tipo]="referencia.tipo" [id]="referencia.id" />
@@ -87,6 +95,18 @@
                     } @else if (minha && mensagem.mensagemId === ultimaMinhaId()) {
                       <span>· Enviada</span>
                     }
+                    @if (mensagem.autor === 'USUARIO') {
+                      <button
+                        type="button"
+                        class="conversa-direta__responder"
+                        aria-label="Responder a esta mensagem"
+                        pTooltip="Responder"
+                        tooltipPosition="top"
+                        (click)="estado.responder(mensagem)"
+                      >
+                        <i class="pi pi-reply" aria-hidden="true"></i>
+                      </button>
+                    }
                     <button
                       type="button"
                       class="conversa-direta__copiar"
@@ -107,6 +127,10 @@
       }
     </div>
 
-    <app-mensagem-direta-compositor [pessoas]="pessoasMencionaveis()" [chave]="pessoaAberta()" [codigoInicial]="estado.rascunhoDoDesktop()" (textoAplicado)="estado.rascunhoDoDesktop.set(null)" (enviar)="aoEnviar($event)" (digitando)="aoDigitar()" />
+    @if (avisoDaOriginal()) {
+      <p class="conversa-direta__faixa" role="status"><i class="pi pi-info-circle" aria-hidden="true"></i><span>{{ avisoDaOriginal() }}</span></p>
+    }
+
+    <app-mensagem-direta-compositor [pessoas]="pessoasMencionaveis()" [resposta]="respostaEmPreparo()" (cancelarResposta)="estado.cancelarResposta()" [chave]="pessoaAberta()" [codigoInicial]="estado.rascunhoDoDesktop()" (textoAplicado)="estado.rascunhoDoDesktop.set(null)" (enviar)="aoEnviar($event)" (digitando)="aoDigitar()" />
   </div>
 }

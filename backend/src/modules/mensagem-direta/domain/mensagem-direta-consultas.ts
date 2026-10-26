@@ -35,6 +35,9 @@ export const MAPEAMENTO_MENSAGEM_DIRETA = {
       contem_codigo: { type: 'boolean' },
       mencoes: { type: 'integer' },
       referencias: { type: 'keyword' },
+      responde_a_mensagem_id: { type: 'keyword' },
+      responde_a_autor_usuario_id: { type: 'integer' },
+      responde_a_trecho: { type: 'text', index: false },
       created_date: { type: 'date' },
     },
   },
@@ -49,6 +52,12 @@ export interface ConsultaConversaDireta {
   /** O `proximoCursor` da página anterior; sem ele vem a página mais nova. */
   cursor?: string;
   limite: number;
+}
+
+/** Uma mensagem pelo id, dentro de uma conversa (task 220): a service a usa para validar a mensagem respondida. */
+export interface ConsultaMensagemDireta {
+  conversaId: string;
+  mensagemId: string;
 }
 
 export interface PaginaDeMensagensDiretas {
@@ -141,6 +150,10 @@ export function validarConsultaConversaDireta(consulta: ConsultaConversaDireta):
   if (!Number.isInteger(consulta.limite) || consulta.limite < 1 || consulta.limite > LIMITE_MAXIMO_DA_CONVERSA_DIRETA) {
     throw new BusinessException(`O limite da conversa deve ficar entre 1 e ${LIMITE_MAXIMO_DA_CONVERSA_DIRETA}`);
   }
+}
+
+export function validarConsultaMensagemDireta(consulta: ConsultaMensagemDireta): void {
+  if (!lerConversaDiretaId(consulta.conversaId)) throw new BusinessException('Conversa direta inválida');
 }
 
 export function validarConsultaNaoLidas(consulta: ConsultaNaoLidas): void {

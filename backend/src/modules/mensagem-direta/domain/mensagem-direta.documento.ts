@@ -1,5 +1,7 @@
 import {
   AutorMensagemDiretaEnum,
+  CitacaoMensagemDto,
+  LIMITE_TRECHO_MENSAGEM_DIRETA,
   MensagemDiretaResumoDto,
   ReferenciaMensagemDto,
   formatarReferenciaDireta,
@@ -22,6 +24,8 @@ export interface MensagemDiretaNova {
   contemCodigo: boolean;
   mencoes: number[];
   referencias: ReferenciaMensagemDto[];
+  /** A mensagem respondida (task 220), já montada pela service a partir da original; `null` ou ausente quando não é resposta. */
+  respondeA?: CitacaoMensagemDto | null;
 }
 
 /** Forma do documento no índice `mensagem-direta` (nomes da modelagem). */
@@ -37,6 +41,10 @@ export interface MensagemDiretaFonte {
   mencoes: number[];
   /** `DEMANDA:212`, `ATIVIDADE:57`. */
   referencias: string[];
+  /** Os três campos da resposta (task 220) vêm juntos ou não vêm; documento anterior à task não os tem. */
+  responde_a_mensagem_id?: string | null;
+  responde_a_autor_usuario_id?: number | null;
+  responde_a_trecho?: string | null;
   created_date: string;
 }
 
@@ -58,6 +66,16 @@ export function validarMensagemDiretaNova(mensagem: MensagemDiretaNova): void {
   } else if (mensagem.autorUsuarioId !== null) {
     throw new BusinessException('A mensagem do sistema não tem autor');
   }
+
+  const respondeA = mensagem.respondeA;
+  if (respondeA) {
+    if (!REGEX_UUID.test(respondeA.mensagemId)) throw new BusinessException('O identificador da mensagem respondida deve ser um UUID');
+    if (respondeA.mensagemId.toLowerCase() === mensagem.mensagemId.toLowerCase()) throw new BusinessException('A mensagem não pode responder a ela mesma');
+    if (!Number.isInteger(respondeA.autorUsuarioId) || respondeA.autorUsuarioId < 1) throw new BusinessException('A mensagem respondida precisa de um autor');
+    if (!respondeA.trecho || !respondeA.trecho.trim() || respondeA.trecho.length > LIMITE_TRECHO_MENSAGEM_DIRETA) {
+      throw new BusinessException(`O trecho da resposta deve ter de 1 a ${LIMITE_TRECHO_MENSAGEM_DIRETA} caracteres`);
+    }
+  }
 }
 
 /** O reenvio de um `mensagemId` só devolve o que já estava gravado se for o mesmo autor, na mesma conversa; senão vazaria a mensagem de outra pessoa. */
@@ -78,6 +96,13 @@ export function paraFonteDireta(mensagem: MensagemDiretaNova, criadaEm: Date): M
     contem_codigo: mensagem.contemCodigo,
     mencoes: mensagem.mencoes,
     referencias: mensagem.referencias.map(formatarReferenciaDireta),
+    ...(mensagem.respondeA
+      ? {
+          responde_a_mensagem_id: mensagem.respondeA.mensagemId.toLowerCase(),
+          responde_a_autor_usuario_id: mensagem.respondeA.autorUsuarioId,
+          responde_a_trecho: mensagem.respondeA.trecho,
+        }
+      : {}),
     created_date: criadaEm.toISOString(),
   };
 }
@@ -95,6 +120,10 @@ export function deFonteDireta(fonte: MensagemDiretaFonte): MensagemDiretaResumoD
       const referencia = lerReferenciaDireta(texto);
       return referencia ? [referencia] : [];
     }),
+    respondeA:
+      fonte.responde_a_mensagem_id && fonte.responde_a_autor_usuario_id && fonte.responde_a_trecho
+        ? { mensagemId: fonte.responde_a_mensagem_id, autorUsuarioId: fonte.responde_a_autor_usuario_id, trecho: fonte.responde_a_trecho }
+        : null,
     createdDate: new Date(fonte.created_date),
   };
 }

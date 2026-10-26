@@ -6,6 +6,7 @@ import {
   ConsultaBuscaDireta,
   ConsultaConversaDireta,
   ConsultaConversasDoUsuario,
+  ConsultaMensagemDireta,
   ConsultaNaoLidas,
   ConsultaSupervisao,
   PaginaDeConversasSupervisionadas,
@@ -30,6 +31,8 @@ export interface ArmazenamentoDeMensagemDireta {
    * estava gravada (`jaExistia`); um `mensagemId` já usado por outro autor ou em outra conversa é recusado.
    */
   gravar(mensagem: MensagemDiretaNova): Promise<MensagemDiretaEnviadaDto>;
+  /** A mensagem com esse id **se for desta conversa**; de outra conversa, apagada ou inexistente, `null`. */
+  recuperarMensagem(consulta: ConsultaMensagemDireta): Promise<MensagemDiretaResumoDto | null>;
   /** Uma página da conversa, da mais nova para a mais antiga. */
   listarConversa(consulta: ConsultaConversaDireta): Promise<PaginaDeMensagensDiretas>;
   /** As conversas em que a pessoa participa, da que teve mensagem mais recente. */

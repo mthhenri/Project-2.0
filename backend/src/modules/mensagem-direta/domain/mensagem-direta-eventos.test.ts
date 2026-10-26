@@ -21,6 +21,7 @@ function mensagem(texto = 'oi'): MensagemDiretaResumoDto {
     contemCodigo: false,
     mencoes: [9],
     referencias: [],
+    respondeA: null,
     createdDate: new Date('2026-10-21T14:05:11.482Z'),
   };
 }

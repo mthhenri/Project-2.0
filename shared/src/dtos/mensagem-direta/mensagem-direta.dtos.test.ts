@@ -44,6 +44,13 @@ test('enviar: aceita código colado, com os caracteres que o validador de nomes 
   assert.deepEqual(await erros(MensagemDiretaEnviarDto, { ...ENVIO_VALIDO, texto: codigo }), []);
 });
 
+test('enviar: a mensagem respondida é opcional e precisa ser UUID v4', async () => {
+  assert.deepEqual(await erros(MensagemDiretaEnviarDto, { ...ENVIO_VALIDO, respondeAMensagemId: '7f0c2b9e-4c1a-4e6a-9d55-2f6c0d1b8a10' }), []);
+  for (const respondeAMensagemId of ['', 'abc', 123, '7f0c2b9e-4c1a-1e6a-9d55-2f6c0d1b8a10']) {
+    assert.deepEqual(await erros(MensagemDiretaEnviarDto, { ...ENVIO_VALIDO, respondeAMensagemId }), ['respondeAMensagemId'], String(respondeAMensagemId));
+  }
+});
+
 test('enviar: recusa destinatário inválido e id de cliente que não é UUID v4', async () => {
   for (const destinatarioId of [0, -1, 1.5, '9', null]) {
     assert.deepEqual(await erros(MensagemDiretaEnviarDto, { ...ENVIO_VALIDO, destinatarioId }), ['destinatarioId'], String(destinatarioId));

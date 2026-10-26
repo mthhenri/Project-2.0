@@ -6,6 +6,7 @@ import {
   ConsultaBuscaDireta,
   ConsultaConversaDireta,
   ConsultaConversasDoUsuario,
+  ConsultaMensagemDireta,
   ConsultaNaoLidas,
   ConsultaSupervisao,
   INDICE_MENSAGEM_DIRETA,
@@ -23,11 +24,13 @@ import {
   montarPaginaDeMensagens,
   validarConsultaBuscaDireta,
   validarConsultaConversaDireta,
+  validarConsultaMensagemDireta,
   validarConsultaNaoLidas,
 } from '../domain/mensagem-direta-consultas';
 import {
   MensagemDiretaFonte,
   MensagemDiretaNova,
+  REGEX_UUID,
   deFonteDireta,
   mesmaOrigemDaMensagem,
   paraFonteDireta,
@@ -89,6 +92,16 @@ export abstract class MensagemDiretaIndiceRepository implements ArmazenamentoDeM
       if (!existente) throw new Error('O documento existia na gravação e não foi encontrado na leitura');
       if (!mesmaOrigemDaMensagem(existente, mensagem)) throw new BusinessException('Esse identificador de mensagem já foi usado');
       return { mensagem: deFonteDireta(existente), jaExistia: true };
+    });
+  }
+
+  async recuperarMensagem(consulta: ConsultaMensagemDireta): Promise<MensagemDiretaResumoDto | null> {
+    validarConsultaMensagemDireta(consulta);
+    if (!REGEX_UUID.test(consulta.mensagemId)) return null;
+    return this.proteger(async () => {
+      await this.garantirIndice();
+      const fonte = await this.lerDocumento(INDICE_MENSAGEM_DIRETA, consulta.mensagemId.toLowerCase());
+      return fonte && fonte.conversa_id === consulta.conversaId ? deFonteDireta(fonte) : null;
     });
   }
 

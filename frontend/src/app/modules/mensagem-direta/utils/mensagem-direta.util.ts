@@ -2,8 +2,8 @@ import {
   ConversaDiretaResumoDto,
   MensagemDiretaResumoDto,
   outroParticipanteDaConversaDireta,
+  textoSimplesDaMensagemDireta,
 } from '@project20/shared';
-import { semMarcacaoMarkdown } from '../../chat/utils/chat.util';
 
 // Lógica pura do chat entre colaboradores (task 210): nada aqui conhece Angular nem a rede, para testar sem montar componente.
 
@@ -198,9 +198,7 @@ export function iniciais(nome: string): string {
 
 /** A prévia da última mensagem na lista: sem marcação, o bloco de código vira `[código]` e a minha começa com `Você:`. */
 export function previaDaMensagem(texto: string, contemCodigo: boolean, souEuQuemEscreveu: boolean): string {
-  const semBlocos = texto.replace(/```[\s\S]*?(?:```|$)/g, ' [código] ');
-  const linha = semMarcacaoMarkdown(semBlocos);
-  const corpo = linha || (contemCodigo ? '[código]' : '');
+  const corpo = textoSimplesDaMensagemDireta(texto, contemCodigo);
   return souEuQuemEscreveu ? `Você: ${corpo}` : corpo;
 }
 

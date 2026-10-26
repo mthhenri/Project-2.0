@@ -40,4 +40,9 @@ export class MensagemDiretaEnviarDto {
   @ValidateNested({ each: true })
   @Type(() => ReferenciaMensagemDto)
   referencias?: ReferenciaMensagemDto[];
+
+  /** A mensagem desta conversa a que esta responde (task 220). Só o id vai: autor e trecho da citação o servidor lê da original. */
+  @IsOptional()
+  @IsUUID('4')
+  respondeAMensagemId?: string;
 }

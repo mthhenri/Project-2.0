@@ -1,4 +1,5 @@
 import { AutorMensagemDiretaEnum } from '../../enums/autor-mensagem-direta.enum';
+import { CitacaoMensagemDto } from './CitacaoMensagemDto';
 import { ReferenciaMensagemDto } from './ReferenciaMensagemDto';
 
 /** Uma mensagem de uma conversa entre duas pessoas. Gravada uma vez e nunca reescrita. */
@@ -16,5 +17,7 @@ export interface MensagemDiretaResumoDto {
   contemCodigo: boolean;
   mencoes: number[];
   referencias: ReferenciaMensagemDto[];
+  /** A mensagem a que esta responde; `null` quando não é resposta. */
+  respondeA: CitacaoMensagemDto | null;
   createdDate: Date;
 }

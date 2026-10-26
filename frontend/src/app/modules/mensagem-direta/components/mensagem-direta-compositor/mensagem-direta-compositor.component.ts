@@ -79,6 +79,9 @@ export class MensagemDiretaCompositorComponent {
   /** Muda ao abrir outra conversa: o campo recebe o foco (depois disso o foco é de quem usa a página, o popup não é modal). */
   readonly chave = input<number | null>(null);
   readonly enviar = output<EnvioDoCompositor>();
+  /** A mensagem a que o envio responde (task 220): a barra "Respondendo a…" acima do campo. `null` = mensagem comum. */
+  readonly resposta = input<{ nome: string; trecho: string } | null>(null);
+  readonly cancelarResposta = output<void>();
   /** O usuário está escrevendo (tecla que insere ou apaga texto, ou colagem): só ação dele, nunca o texto posto por programa (código do Desktop, limpar após enviar). Quem usa o compositor decide quando avisar a outra pessoa. */
   readonly digitando = output<void>();
   /** Código a pôr no campo como bloco (o que o usuário copiou antes do atalho do Desktop, task 213); `textoAplicado` avisa que já foi usado. */
@@ -179,6 +182,13 @@ export class MensagemDiretaCompositorComponent {
       const editor = this.campo().editor();
       if (this.temporizadorDoFoco) clearTimeout(this.temporizadorDoFoco);
       this.temporizadorDoFoco = this.chave() !== null && editor ? setTimeout(() => editor.focar(), 0) : null;
+    });
+
+    // Ao começar a responder, o foco volta ao campo para já escrever a resposta.
+    effect(() => {
+      const respondendo = this.resposta();
+      const editor = this.campo().editor();
+      if (respondendo && editor) untracked(() => editor.focar());
     });
 
     // O código do Desktop entra uma vez como bloco, no cursor; o usuário confere e envia (nada é enviado sozinho).
@@ -300,6 +310,12 @@ export class MensagemDiretaCompositorComponent {
       // Fecha só a lista visível: o Esc do popup (que o oculta) não deve disparar junto. Sem lista, o Esc segue para o popup.
       consumir(evento);
       this.dispensadoEm.set(this.gatilho()!.inicioNoDocumento);
+      return;
+    }
+    if (evento.key === 'Escape' && this.resposta()) {
+      // Cancela só a resposta (o texto fica) e não deixa o Esc ocultar o popup.
+      consumir(evento);
+      this.cancelarResposta.emit();
       return;
     }
     if (evento.key === 'Enter') {

@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
-import { ReferenciaMensagemDiretaEnum } from '@project20/shared';
+import { CitacaoMensagemDto, ReferenciaMensagemDiretaEnum, trechoDaMensagemDireta } from '@project20/shared';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -16,6 +16,13 @@ import { MensagemDiretaReferenciaCartaoComponent } from '../mensagem-direta-refe
 
 /** Distância do fim (px) até a qual a conversa continua acompanhando as mensagens que chegam. */
 const MARGEM_DO_FIM_PX = 80;
+/** Quantas páginas mais antigas a citação carrega, no máximo, ao procurar a mensagem original (task 220). */
+const PAGINAS_PARA_ACHAR_A_ORIGINAL = 5;
+/** Quanto tempo a mensagem original fica realçada depois de a citação levar até ela. */
+const TEMPO_DO_REALCE_MS = 1_500;
+const TEMPO_DO_AVISO_MS = 4_000;
+const AVISO_ORIGINAL_NAO_ACHADA = 'Mensagem antiga demais para localizar.';
+const NOME_DE_USUARIO_REMOVIDO = 'Usuário removido';
 /** Distância do topo (px) a partir da qual se pede a página mais antiga. */
 const MARGEM_DO_TOPO_PX = 40;
 
@@ -72,6 +79,18 @@ export class MensagemDiretaConversaComponent {
   /** Nome de cada demanda/atividade citada (`TIPO:id`), conforme chega do servidor; só as acessíveis têm nome. */
   private readonly nomesDasReferencias = signal<ReadonlyMap<string, string>>(new Map());
 
+  /** A mensagem a que o compositor está respondendo, no formato da barra "Respondendo a…". */
+  protected readonly respostaEmPreparo = computed(() => {
+    const respondida = this.estado.respondendoA();
+    if (!respondida || respondida.autorUsuarioId === null) return null;
+    return { nome: this.nomeDoAutor(respondida.autorUsuarioId), trecho: trechoDaMensagemDireta(respondida.texto) };
+  });
+  /** A mensagem realçada depois de a citação levar até ela, e o aviso quando ela não foi achada. */
+  protected readonly destacadaId = signal<string | null>(null);
+  protected readonly avisoDaOriginal = signal<string | null>(null);
+  private temporizadorDoRealce: ReturnType<typeof setTimeout> | null = null;
+  private temporizadorDoAviso: ReturnType<typeof setTimeout> | null = null;
+
   /** A mensagem cujo texto acabou de ser copiado (o botão mostra "Copiado" por um instante). */
   protected readonly copiadaId = signal<string | null>(null);
   private temporizadorDoCopiado: ReturnType<typeof setTimeout> | null = null;
@@ -91,6 +110,8 @@ export class MensagemDiretaConversaComponent {
 
     inject(DestroyRef).onDestroy(() => {
       if (this.temporizadorDoCopiado) clearTimeout(this.temporizadorDoCopiado);
+      if (this.temporizadorDoRealce) clearTimeout(this.temporizadorDoRealce);
+      if (this.temporizadorDoAviso) clearTimeout(this.temporizadorDoAviso);
     });
 
     // Os nomes das referências vêm da consulta dos cartões (guardada por sessão, então não repete a chamada).
@@ -141,6 +162,54 @@ export class MensagemDiretaConversaComponent {
     this.copiadaId.set(mensagemId);
     if (this.temporizadorDoCopiado) clearTimeout(this.temporizadorDoCopiado);
     this.temporizadorDoCopiado = setTimeout(() => this.copiadaId.set(null), TEMPO_DO_COPIADO_MS);
+  }
+
+  /** Quem escreveu: "Você", a outra pessoa da conversa ou, se nenhuma das duas, uma pessoa removida. */
+  private nomeDoAutor(autorUsuarioId: number): string {
+    if (autorUsuarioId === this.meuId()) return 'Você';
+    const aberta = this.aberta();
+    return aberta && autorUsuarioId === aberta.usuarioId ? aberta.usuarioNome : NOME_DE_USUARIO_REMOVIDO;
+  }
+
+  protected nomeDaCitacao(citacao: CitacaoMensagemDto): string {
+    return this.nomeDoAutor(citacao.autorUsuarioId);
+  }
+
+  /**
+   * Rola até a mensagem original de uma citação e a realça. Se ela ainda não está carregada, traz páginas mais antigas até achá-la (no máximo
+   * `PAGINAS_PARA_ACHAR_A_ORIGINAL`); se não achar, avisa na própria conversa.
+   */
+  protected async irParaOriginal(mensagemId: string): Promise<void> {
+    this.avisoDaOriginal.set(null);
+    for (let paginas = 0; ; paginas++) {
+      const aberta = this.aberta();
+      if (!aberta) return;
+      if (aberta.mensagens.some((mensagem) => mensagem.mensagemId === mensagemId)) {
+        await this.esperarARenderizacao();
+        const alvo = this.rolagem()?.nativeElement.querySelector<HTMLElement>(`[data-mensagem-id="${mensagemId}"]`);
+        if (!alvo) break;
+        this.colarNoFim = false;
+        alvo.scrollIntoView?.({ block: 'center', behavior: 'smooth' });
+        this.realcar(mensagemId);
+        return;
+      }
+      if (!aberta.proximoCursor || paginas >= PAGINAS_PARA_ACHAR_A_ORIGINAL) break;
+      this.colarNoFim = false;
+      await this.estado.carregarMais();
+    }
+    this.avisoDaOriginal.set(AVISO_ORIGINAL_NAO_ACHADA);
+    if (this.temporizadorDoAviso) clearTimeout(this.temporizadorDoAviso);
+    this.temporizadorDoAviso = setTimeout(() => this.avisoDaOriginal.set(null), TEMPO_DO_AVISO_MS);
+  }
+
+  private esperarARenderizacao(): Promise<void> {
+    return new Promise((resolver) => setTimeout(resolver, 50));
+  }
+
+  private realcar(mensagemId: string): void {
+    this.destacadaId.set(mensagemId);
+    if (this.temporizadorDoRealce) clearTimeout(this.temporizadorDoRealce);
+    this.temporizadorDoRealce = setTimeout(() => this.destacadaId.set(null), TEMPO_DO_REALCE_MS);
   }
 
   protected voltar(): void {

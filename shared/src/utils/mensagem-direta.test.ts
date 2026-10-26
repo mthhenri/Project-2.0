@@ -13,7 +13,10 @@ import {
   lerReferenciaDireta,
   montarConversaDiretaId,
   outroParticipanteDaConversaDireta,
+  LIMITE_TRECHO_MENSAGEM_DIRETA,
   silenciarAteDeReuniao,
+  textoSimplesDaMensagemDireta,
+  trechoDaMensagemDireta,
 } from './mensagem-direta';
 
 // --- conversa -------------------------------------------------------------
@@ -128,4 +131,25 @@ test('a preferência padrão é válida e não silencia ninguém', () => {
   assert.equal(PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA.somAtivo, false);
   assert.equal(PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA.silenciadoAteDate, null);
   assert.match(PREFERENCIA_PADRAO_DA_MENSAGEM_DIRETA.atalhoGlobal, REGEX_ATALHO_GLOBAL);
+});
+
+// --- texto simples e trecho da resposta (task 220) --------------------------
+
+test('o texto simples tira a marcação, junta as linhas e troca o bloco de código por [código]', () => {
+  assert.equal(textoSimplesDaMensagemDireta('**Bom dia**\n' + '\n- um item\n- outro'), 'Bom dia um item outro');
+  assert.equal(textoSimplesDaMensagemDireta('veja\n\n```ts\nconst a = 1;\n```\nfim'), 'veja [código] fim');
+  assert.equal(textoSimplesDaMensagemDireta('```ts\nbloco sem fechar'), '[código]');
+  assert.equal(textoSimplesDaMensagemDireta('`x`', true), 'x');
+  assert.equal(textoSimplesDaMensagemDireta('***', true), '[código]');
+  assert.equal(textoSimplesDaMensagemDireta('', false), '');
+});
+
+test('o trecho da resposta é o texto simples, cortado com reticências acima do limite', () => {
+  assert.equal(trechoDaMensagemDireta('Subi o **ajuste** do cadastro'), 'Subi o ajuste do cadastro');
+  assert.equal(trechoDaMensagemDireta('```js\nrun()\n```'), '[código]');
+  const exato = 'a'.repeat(LIMITE_TRECHO_MENSAGEM_DIRETA);
+  assert.equal(trechoDaMensagemDireta(exato), exato, 'no limite não corta');
+  const longo = trechoDaMensagemDireta('b'.repeat(LIMITE_TRECHO_MENSAGEM_DIRETA + 50));
+  assert.equal(longo.length, LIMITE_TRECHO_MENSAGEM_DIRETA);
+  assert.ok(longo.endsWith('…'));
 });

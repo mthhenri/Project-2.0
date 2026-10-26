@@ -11,10 +11,55 @@
   border-top: 1px solid var(--app-surface-200);
   background: var(--app-surface-0);
 
+  // A barra do compositor (task 220): o campo, o botão de código e o de enviar vivem dentro de uma caixa só, com a aparência de campo de texto.
   &__caixa {
     display: flex;
     align-items: flex-end;
-    gap: 0.25rem;
+    gap: 0.125rem;
+    padding: 0.1875rem;
+    border: 1px solid var(--p-inputtext-border-color, var(--app-surface-300));
+    border-radius: 12px;
+    background: var(--p-inputtext-background, var(--app-surface-0));
+    transition: border-color 0.15s;
+
+    &:focus-within {
+      border-color: var(--p-inputtext-focus-border-color, var(--p-primary-color));
+    }
+  }
+
+  &__codigo {
+    flex-shrink: 0;
+  }
+
+  // A citação da mensagem respondida, logo acima da barra.
+  &__resposta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.25rem 0.25rem 0.5rem;
+    border-left: 3px solid var(--p-primary-color);
+    background: var(--app-surface-100);
+  }
+
+  &__resposta-texto {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__resposta-nome {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--p-primary-color);
+  }
+
+  &__resposta-trecho {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.75rem;
+    color: var(--p-text-muted-color);
   }
 
   // O campo é o editor formatado (task 218): ocupa o que sobra da linha e encolhe até 0, então os botões de código e de enviar nunca saem dela.
@@ -39,8 +84,8 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 2.25rem;
-    height: 2.25rem;
+    width: 2rem;
+    height: 2rem;
     border: 0;
     border-radius: 9px;
     background: var(--p-primary-color);

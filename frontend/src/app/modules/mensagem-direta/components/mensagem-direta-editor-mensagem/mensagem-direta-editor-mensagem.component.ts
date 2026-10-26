@@ -34,6 +34,8 @@ export class MensagemDiretaEditorMensagemComponent {
   readonly placeholder = input('');
   /** O nome que leitores de tela dão ao campo. */
   readonly rotulo = input('Mensagem');
+  /** Sem borda, fundo nem raio próprios: o campo vive dentro da barra do compositor, que tem a aparência de campo de texto (task 220). */
+  readonly embutido = input(false);
   /** O `id` da lista de sugestões aberta e a opção destacada nela (ARIA do campo de escrita com sugestões). */
   readonly listaControlada = input<string | null>(null);
   readonly opcaoAtiva = input<string | null>(null);

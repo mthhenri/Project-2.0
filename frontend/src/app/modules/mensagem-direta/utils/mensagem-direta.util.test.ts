@@ -40,6 +40,7 @@ function mensagem(id: string, minutos: number, autor = OUTRO, parcial: Partial<M
     contemCodigo: false,
     mencoes: [],
     referencias: [],
+    respondeA: null,
     createdDate: new Date(2026, 9, 21, 14, minutos),
     situacao: 'ENVIADA',
     ...parcial,
