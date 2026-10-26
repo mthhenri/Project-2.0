@@ -6,6 +6,7 @@ import { PlanoPontoRepository } from './repositories/plano-ponto.repository';
 import { PlanoPontoService } from './services/plano-ponto.service';
 import { PlanoFonteRepository } from './repositories/plano-fonte.repository';
 import { PlanoFonteService } from './services/plano-fonte.service';
+import { PlanoPublicacaoService } from './services/plano-publicacao.service';
 import { AnotarPontoEmAbertoFerramenta, ListarPontosDoPlanoFerramenta, ResolverPontoDoPlanoFerramenta } from './ferramentas/pontos-do-plano.ferramentas';
 import { DemandaModule } from '../demanda/demanda.module';
 import { ProjetoModule } from '../projeto/projeto.module';
@@ -28,6 +29,7 @@ import { AlterarTrechoDoPlanoExecutor } from './executores/alterar-trecho-do-pla
     PlanoPontoService,
     PlanoFonteRepository,
     PlanoFonteService,
+    PlanoPublicacaoService,
     AnotarPontoEmAbertoFerramenta,
     ResolverPontoDoPlanoFerramenta,
     ListarPontosDoPlanoFerramenta,

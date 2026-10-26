@@ -1,0 +1,84 @@
+.plano-publicar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+
+  &__destino,
+  &__lembrete,
+  &__erro-publicacao {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    font-size: 0.875rem;
+  }
+
+  &__lembrete {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid color-mix(in srgb, var(--p-orange-500) 45%, var(--app-surface-200));
+    border-radius: 8px;
+  }
+
+  &__erro,
+  &__erro-publicacao {
+    flex-wrap: wrap;
+    color: var(--p-red-500);
+  }
+
+  &__erro {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  &__esqueleto {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__vazio {
+    margin: 0;
+    color: var(--p-text-muted-color);
+  }
+
+  &__aba {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    border: 1px solid var(--app-surface-200);
+    border-radius: 10px;
+    background: var(--app-surface-0);
+
+    &--igual {
+      opacity: 0.65;
+    }
+  }
+
+  &__aba-cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__aba-rotulo {
+    font-weight: 600;
+  }
+
+  &__marca {
+    margin-left: auto;
+    padding: 0.125rem 0.5rem;
+    border-radius: 999px;
+    background: var(--app-surface-100);
+    font-size: 0.75rem;
+
+    &--muda {
+      background: color-mix(in srgb, var(--p-green-500) 18%, var(--app-surface-0));
+    }
+
+    &--perigo {
+      background: color-mix(in srgb, var(--p-red-500) 18%, var(--app-surface-0));
+    }
+  }
+}

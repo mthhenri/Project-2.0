@@ -8,6 +8,7 @@ import {
   PlanoCriadoDto,
   PlanoCriarDto,
   PlanoDemandaLigadaDto,
+  PlanoDemandaOrigemRecuperadoDto,
   PlanoFonteCriadoDto,
   PlanoFonteExcluidaDto,
   PlanoFonteRecuperadaDto,
@@ -17,6 +18,8 @@ import {
   PlanoPontoResumoDto,
   PlanoPontoSituacaoAlteradaDto,
   PlanoProjetoAtribuidoDto,
+  PlanoPublicadoDto,
+  PlanoPublicarDto,
   PlanoRecuperadoDto,
   PlanoResumoDto,
   PlanoSoloMarcadoDto,
@@ -67,6 +70,16 @@ export class PlanoService {
 
   ligarDemanda(id: number, demandaId: number): Observable<StandardResponse<PlanoDemandaLigadaDto>> {
     return this.httpClient.put<StandardResponse<PlanoDemandaLigadaDto>>(`${this.urlBase}/${id}/demanda`, { demandaId }, comFeedbackProprioEErroTratado());
+  }
+
+  /** Grava na demanda ligada os textos escolhidos (task 237); 409 quando o plano mudou depois do diff que a pessoa viu. */
+  publicar(id: number, dto: PlanoPublicarDto): Observable<StandardResponse<PlanoPublicadoDto>> {
+    return this.httpClient.post<StandardResponse<PlanoPublicadoDto>>(`${this.urlBase}/${id}/publicacao`, dto, comFeedbackProprioEErroTratado());
+  }
+
+  /** De que plano a demanda nasceu, entre os que a pessoa vê; `dados` nulo quando não há. Falha silenciosa: é um complemento do detalhe. */
+  recuperarOrigemDaDemanda(demandaId: number): Observable<StandardResponse<PlanoDemandaOrigemRecuperadoDto | null>> {
+    return this.httpClient.get<StandardResponse<PlanoDemandaOrigemRecuperadoDto | null>>(`${this.urlBase}/demanda/${demandaId}`, comFeedbackProprio());
   }
 
   atribuirProjeto(id: number, projetoId: number): Observable<StandardResponse<PlanoProjetoAtribuidoDto>> {

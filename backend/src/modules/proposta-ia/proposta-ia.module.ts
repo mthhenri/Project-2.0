@@ -9,6 +9,6 @@ import { ExecutorPropostaIaRegistro } from './domain/executor-proposta-ia';
   imports:     [ConfiguracaoIaModule],
   controllers: [PropostaIaController],
   providers:   [PropostaIaService, PropostaIaRepository, ExecutorPropostaIaRegistro],
-  exports:     [PropostaIaService, ExecutorPropostaIaRegistro],
+  exports:     [PropostaIaService, PropostaIaRepository, ExecutorPropostaIaRegistro],
 })
 export class PropostaIaModule {}

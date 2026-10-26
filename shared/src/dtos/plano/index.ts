@@ -37,3 +37,8 @@ export * from './PlanoFonteExcluirDto';
 export * from './PlanoFonteExcluidaDto';
 export * from './PlanoFonteResumoDto';
 export * from './PlanoFonteRecuperadaDto';
+export * from './PlanoPublicarDto';
+export * from './PlanoInternoPublicarDto';
+export * from './PlanoPublicadoDto';
+export * from './PlanoDemandaOrigemRecuperarDto';
+export * from './PlanoDemandaOrigemRecuperadoDto';

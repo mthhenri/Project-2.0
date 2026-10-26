@@ -9,14 +9,16 @@ import { Popover, PopoverModule } from 'primeng/popover';
 import { TextareaModule } from 'primeng/textarea';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TabsModule } from 'primeng/tabs';
-import { PlanoAbaEnum, PlanoAlterarDto, PlanoRecuperadoDto, podeVerAbaDoPlano } from '@project20/shared';
+import { DemandaCriadaDto, PlanoAbaEnum, PlanoAlterarDto, PlanoRecuperadoDto, podeVerAbaDoPlano } from '@project20/shared';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { MarkdownEditorComponent, MenuContextoEditorEvento } from '../../../../shared/components/markdown-editor/markdown-editor.component';
+import { DemandaFormularioDialogComponent } from '../../../demanda/components/demanda-formulario-dialog/demanda-formulario-dialog.component';
 import { PlanoService } from '../../services/plano.service';
 import { ROTULO_ABA_DO_PLANO } from '../../utils/plano.util';
 import { PlanoCabecalhoComponent } from '../plano-cabecalho/plano-cabecalho.component';
 import { PlanoFontesComponent } from '../plano-fontes/plano-fontes.component';
 import { PlanoPontosComponent } from '../plano-pontos/plano-pontos.component';
+import { PlanoPublicarDialogComponent } from '../plano-publicar-dialog/plano-publicar-dialog.component';
 
 /** O que mudou no plano e o seletor precisa saber (título, projeto, demanda, solo, arquivo); `excluido` tira o plano da tela. */
 export type MudancaDoPlano = 'titulo' | 'projeto' | 'demanda' | 'solo' | 'arquivo' | 'texto';
@@ -39,7 +41,7 @@ const AVISO_DE_ALTERACAO_DA_IA = 'A IA alterou o documento. O que você escreveu
 @Component({
   selector: 'app-plano-documento',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonModule, PopoverModule, SkeletonModule, TabsModule, TextareaModule, MarkdownEditorComponent, PlanoCabecalhoComponent, PlanoPontosComponent, PlanoFontesComponent],
+  imports: [ReactiveFormsModule, ButtonModule, PopoverModule, SkeletonModule, TabsModule, TextareaModule, MarkdownEditorComponent, PlanoCabecalhoComponent, PlanoPontosComponent, PlanoFontesComponent, PlanoPublicarDialogComponent, DemandaFormularioDialogComponent],
   templateUrl: './plano-documento.component.html',
   styleUrl: './plano-documento.component.scss',
 })
@@ -65,6 +67,9 @@ export class PlanoDocumentoComponent {
     [PlanoAbaEnum.DESCRICAO_CLIENTE]: 'pi-user',
     [PlanoAbaEnum.DOCUMENTACAO]: 'pi-book',
   };
+  /** O diálogo de publicação na demanda (task 237) e o formulário de uma demanda nova a partir do plano. */
+  readonly mostrarPublicacao = signal(false);
+  readonly mostrarDemandaNova = signal(false);
   /** O painel dos pontos em aberto está aberto (`false`: recolhido num trilho, e o texto ganha a largura). */
   readonly pontosAbertos = signal(true);
   /** O painel das fontes (task 236): recolhido de saída, porque é consulta e não trabalho de todo dia; abre ao colar ou anexar. */
@@ -264,6 +269,28 @@ export class PlanoDocumentoComponent {
     const plano = this.plano();
     if (!plano || this.recusarComAlteracoesSemGravar('ligar a demanda')) return;
     this.executar(this.planoService.ligarDemanda(plano.id, demandaId), () => this.carregar(plano.id), 'demanda', 'Não foi possível ligar a demanda');
+  }
+
+  /** O diff da publicação é do texto gravado, então o documento precisa estar gravado. */
+  abrirPublicacao(): void {
+    if (this.recusarComAlteracoesSemGravar('publicar')) return;
+    this.mostrarPublicacao.set(true);
+  }
+
+  /** Depois de publicar, o plano relê a data da publicação; o diff seguinte compara de novo com o texto atual da demanda. */
+  aoPublicar(): void {
+    this.carregar(this.planoId());
+  }
+
+  abrirDemandaNova(): void {
+    if (this.recusarComAlteracoesSemGravar('criar a demanda')) return;
+    this.mostrarDemandaNova.set(true);
+  }
+
+  /** A demanda nasceu pelo fluxo de criação de sempre; o plano a liga (as abas vazias começam com o texto dela, que ainda não tem). */
+  aoDemandaCriada(demanda: DemandaCriadaDto): void {
+    this.mostrarDemandaNova.set(false);
+    this.ligarDemanda(demanda.id);
   }
 
   excluir(): void {

@@ -4,6 +4,7 @@ import { ActiveUser } from '../../autenticacao/decorators/active-user.decorator'
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { PlanoFonteService } from '../services/plano-fonte.service';
 import { PlanoPontoService } from '../services/plano-ponto.service';
+import { PlanoPublicacaoService } from '../services/plano-publicacao.service';
 import { PlanoService } from '../services/plano.service';
 import {
   PlanoAlterarDto,
@@ -15,6 +16,7 @@ import {
   PlanoPontoCriarDto,
   PlanoPontoSituacaoAlterarDto,
   PlanoProjetoAtribuirDto,
+  PlanoPublicarDto,
   PlanoSoloMarcarDto,
 } from '@project20/shared';
 
@@ -25,6 +27,7 @@ export class PlanoController {
     private readonly planoService: PlanoService,
     private readonly planoPontoService: PlanoPontoService,
     private readonly planoFonteService: PlanoFonteService,
+    private readonly planoPublicacaoService: PlanoPublicacaoService,
   ) {}
 
   @Post()
@@ -35,6 +38,12 @@ export class PlanoController {
   @Get()
   listar(@Query() dto: PlanoListarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
     return this.planoService.listar(dto, usuarioAtivo);
+  }
+
+  /** De que plano a demanda nasceu (task 237): só o que a pessoa pode ver. Antes de `:id`, para "demanda" não ser lido como id. */
+  @Get('demanda/:demandaId')
+  recuperarOrigemDaDemanda(@Param('demandaId', ParseIntPipe) demandaId: number, @ActiveUser() usuarioAtivo: JwtPayload) {
+    return this.planoPublicacaoService.recuperarOrigem({ demandaId }, usuarioAtivo);
   }
 
   @Get(':id')
@@ -65,6 +74,12 @@ export class PlanoController {
   @Patch(':id/projeto')
   atribuirProjeto(@Param('id', ParseIntPipe) id: number, @Body() dto: PlanoProjetoAtribuirDto, @ActiveUser() usuarioAtivo: JwtPayload) {
     return this.planoService.atribuirProjeto({ ...dto, id }, usuarioAtivo);
+  }
+
+  /** Grava na demanda ligada os textos escolhidos do plano (task 237). */
+  @Post(':id/publicacao')
+  publicar(@Param('id', ParseIntPipe) id: number, @Body() dto: PlanoPublicarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
+    return this.planoPublicacaoService.publicar({ ...dto, id }, usuarioAtivo);
   }
 
   /** Pontos em aberto do plano (task 235): o mesmo acesso do plano. */

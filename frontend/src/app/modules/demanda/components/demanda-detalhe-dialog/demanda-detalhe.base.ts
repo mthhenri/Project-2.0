@@ -19,8 +19,10 @@ import {
   TipoDemandaStatusEnum,
   AtividadeResumoDto,
   AtividadeListarDto,
+  PlanoDemandaOrigemRecuperadoDto,
 } from '@project20/shared';
 import { DemandaService } from '../../services/demanda.service';
+import { PlanoService } from '../../../chat/services/plano.service';
 import { TagService } from '../../../tag/services/tag.service';
 import { UsuarioService } from '../../../usuario/services/usuario.service';
 import { AtividadeNovaDialogComponent } from '../../../atividade/components/atividade-nova-dialog/atividade-nova-dialog.component';
@@ -62,6 +64,7 @@ export abstract class DemandaDetalheBase {
 
   private readonly demandaService = inject(DemandaService);
   readonly unidadeTempo = inject(VisualizacaoTempoService);
+  private readonly planoService = inject(PlanoService);
   private readonly tagService = inject(TagService);
   private readonly usuarioService = inject(UsuarioService);
   private readonly atividadeService = inject(AtividadeService);
@@ -81,6 +84,8 @@ export abstract class DemandaDetalheBase {
   readonly todosUsuarios = signal<UsuarioResumoDto[]>([]);
   readonly todasDemandas = signal<Array<{ demandaConectadaId: number; nomeDemandaConectada: string }>>([]);
   readonly membros = signal<DemandaMembroDto[]>([]);
+  /** O plano de que a demanda nasceu, só se a pessoa pode vê-lo (task 237). */
+  readonly planoDeOrigem = signal<PlanoDemandaOrigemRecuperadoDto | null>(null);
   readonly conexoes = signal<DemandaConexaoResumoDto[]>([]);
   /** Demandas visitadas antes da atual (pilha): "← Voltar" restaura a última sem refazer as chamadas. */
   readonly historico = signal<EstadoDetalhe[]>([]);
@@ -495,9 +500,31 @@ export abstract class DemandaDetalheBase {
     });
   }
 
+  /** Abre o plano de origem no chat, em Planejamento. */
+  abrirPlanoDeOrigem(): void {
+    const origem = this.planoDeOrigem();
+    if (!origem) return;
+    void this.router.navigate(['/chat'], { queryParams: { plano: origem.id } });
+    this.aoAbrirPlanoDeOrigem();
+  }
+
+  /** Gancho: a pessoa saiu para o plano (o diálogo se fecha). */
+  protected aoAbrirPlanoDeOrigem(): void {}
+
+  private carregarPlanoDeOrigem(demandaId: number): void {
+    this.planoDeOrigem.set(null);
+    this.planoService.recuperarOrigemDaDemanda(demandaId).subscribe({
+      next: (resposta) => {
+        if (demandaId === this.demandaIdAtual()) this.planoDeOrigem.set(resposta.dados ?? null);
+      },
+      error: () => {},
+    });
+  }
+
   protected carregarTudo(identificador: number): void {
     this.carregando.set(true);
     this.demanda.set(null);
+    this.carregarPlanoDeOrigem(identificador);
     this.editandoTitulo.set(false);
     this.mostrarDialogEditar.set(false);
     this.aoRecarregar();

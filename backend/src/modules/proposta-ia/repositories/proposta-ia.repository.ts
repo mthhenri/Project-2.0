@@ -3,7 +3,7 @@ import { Knex } from 'knex';
 import { BaseRepository } from '../../../core/base/base.repository';
 import { DATABASE_CONNECTION } from '../../../core/database/database.provider';
 import { PropostaIa } from '../domain/models/proposta-ia.model';
-import { PropostaIaCriarDto, PropostaIaResumoDto, StatusPropostaIaEnum } from '@project20/shared';
+import { PropostaIaCriarDto, PropostaIaResumoDto, StatusPropostaIaEnum, TipoPropostaIaEnum } from '@project20/shared';
 
 const COLUNAS_RESUMO = `
          proposta_ia.id,
@@ -78,6 +78,20 @@ export class PropostaIaRepository extends BaseRepository<PropostaIa> {
        ORDER BY proposta_ia.id`,
       { usuarioId, pendente: StatusPropostaIaEnum.PENDENTE },
     );
+  }
+
+  /** Quantas propostas pendentes (de qualquer pessoa) de um tipo trazem aquele plano em `dados`. */
+  async contarPendentesDoPlano(dados: { planoId: number; tipo: TipoPropostaIaEnum }): Promise<number> {
+    const contagem = await this.executarConsulta<{ total: string }>(
+      `SELECT COUNT(*) AS total
+       ${JUNCOES_RESUMO}
+       WHERE tipo_proposta_ia.codigo = :tipo
+         AND tipo_proposta_ia_status.codigo = :pendente
+         AND proposta_ia.dados ->> 'planoId' = :planoId
+         AND proposta_ia.is_deleted = false`,
+      { tipo: dados.tipo, pendente: StatusPropostaIaEnum.PENDENTE, planoId: String(dados.planoId) },
+    );
+    return Number(contagem[0].total);
   }
 
   /**

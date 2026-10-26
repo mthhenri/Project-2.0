@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { Component, ElementRef, computed, inject, input, output, signal, viewChild } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ConfirmationService } from 'primeng/api';
@@ -20,7 +21,7 @@ import { ProjetoService } from '../../../projeto/services/projeto.service';
 @Component({
   selector: 'app-plano-cabecalho',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonModule, ConfirmPopupModule, InputTextModule, PopoverModule, SelectModule, TooltipModule],
+  imports: [DatePipe, ReactiveFormsModule, ButtonModule, ConfirmPopupModule, InputTextModule, PopoverModule, SelectModule, TooltipModule],
   providers: [ConfirmationService],
   templateUrl: './plano-cabecalho.component.html',
   styleUrl: './plano-cabecalho.component.scss',
@@ -34,6 +35,10 @@ export class PlanoCabecalhoComponent {
   readonly soloAlterado = output<boolean>();
   readonly projetoAtribuido = output<number>();
   readonly demandaLigada = output<number>();
+  /** Publicar os textos na demanda ligada (task 237). */
+  readonly publicarSolicitado = output<void>();
+  /** Criar uma demanda nova a partir do plano e ligá-la a ele (task 237). */
+  readonly demandaNovaSolicitada = output<void>();
   readonly arquivadoAlterado = output<boolean>();
   readonly excluido = output<void>();
 

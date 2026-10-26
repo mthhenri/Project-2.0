@@ -23,6 +23,17 @@
     }
 
     <div class="plano-cabecalho__acoes">
+      @if (plano().demandaId !== null) {
+        <p-button
+          label="Publicar"
+          icon="pi pi-upload"
+          size="small"
+          [disabled]="ocupado()"
+          pTooltip="Grava os textos do plano na demanda, mostrando antes o que muda"
+          tooltipPosition="bottom"
+          (onClick)="publicarSolicitado.emit()"
+        />
+      }
       <p-button
         [icon]="plano().isArquivado ? 'pi pi-inbox' : 'pi pi-box'"
         [text]="true"
@@ -62,6 +73,12 @@
         <i class="pi pi-link" aria-hidden="true"></i>
         {{ plano().demandaNome ? plano().demandaNome : 'Ligar a uma demanda' }}
       </button>
+      @if (plano().demandaId === null) {
+        <p-button label="Criar demanda" icon="pi pi-plus" size="small" [text]="true" [disabled]="ocupado()" pTooltip="Cria uma demanda nova e a liga a este plano" tooltipPosition="bottom" (onClick)="demandaNovaSolicitada.emit()" />
+      }
+      @if (plano().publicacaoData) {
+        <span class="plano-cabecalho__chip" pTooltip="Última publicação na demanda" tooltipPosition="bottom"><i class="pi pi-check-circle" aria-hidden="true"></i>Publicado {{ plano().publicacaoData | date: 'dd/MM HH:mm' }}</span>
+      }
       @if (eCriador()) {
         <label class="plano-cabecalho__solo">
           <input

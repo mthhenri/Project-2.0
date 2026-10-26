@@ -162,3 +162,40 @@ testarComBanco('excluir faz soft delete do plano e da ligação com a demanda', 
   assert.equal(ligacao.rows.length, 1);
   assert.equal(ligacao.rows[0].is_deleted, true);
 });
+
+testarComBanco('marcarPublicacao grava o instante na ligação ativa; sem ligação devolve null; ligar de novo zera a data', async (conexao) => {
+  const repositorio = criarRepositorio(PlanoRepository, conexao);
+  const criador = await criarGestor(conexao);
+  const projeto = await criarProjeto(conexao);
+  const demanda = await criarDemanda(conexao, { projetoId: projeto.id });
+  const { id } = await repositorio.inserir({ titulo: 'Publicado', projetoId: projeto.id, usuarioId: criador.id });
+
+  assert.equal(await repositorio.marcarPublicacao({ planoId: id }), null, 'sem demanda ligada não há o que marcar');
+
+  await repositorio.ligarDemanda({ planoId: id, demandaId: demanda.id });
+  assert.equal((await repositorio.recuperar({ id }))?.publicacaoData, null);
+
+  const instante = await repositorio.marcarPublicacao({ planoId: id });
+  assert.ok(instante);
+  assert.ok((await repositorio.recuperar({ id }))?.publicacaoData, 'o plano passa a mostrar a data da publicação');
+});
+
+testarComBanco('listarPorDemanda: os planos ativos ligados à demanda, o mexido por último primeiro; exclui plano excluído e ligação desfeita', async (conexao) => {
+  const repositorio = criarRepositorio(PlanoRepository, conexao);
+  const criador = await criarGestor(conexao);
+  const projeto = await criarProjeto(conexao);
+  const demanda = await criarDemanda(conexao, { projetoId: projeto.id });
+  const outraDemanda = await criarDemanda(conexao, { projetoId: projeto.id });
+  const { id: antigo } = await repositorio.inserir({ titulo: 'Antigo', projetoId: projeto.id, usuarioId: criador.id });
+  const { id: recente } = await repositorio.inserir({ titulo: 'Recente', projetoId: projeto.id, usuarioId: criador.id });
+  const { id: excluido } = await repositorio.inserir({ titulo: 'Excluído', projetoId: projeto.id, usuarioId: criador.id });
+  const { id: religado } = await repositorio.inserir({ titulo: 'Religado', projetoId: projeto.id, usuarioId: criador.id });
+  for (const planoId of [antigo, recente, excluido, religado]) await repositorio.ligarDemanda({ planoId, demandaId: demanda.id });
+  await repositorio.ligarDemanda({ planoId: religado, demandaId: outraDemanda.id });
+  await repositorio.excluir({ id: excluido });
+  await repositorio.alterar({ id: recente, versao: 1, titulo: 'Recente' });
+
+  const planos = await repositorio.listarPorDemanda({ demandaId: demanda.id });
+  assert.deepEqual(planos.map((plano) => plano.titulo), ['Recente', 'Antigo']);
+  assert.equal(planos[0].demandaId, demanda.id);
+});

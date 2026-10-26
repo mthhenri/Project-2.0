@@ -232,14 +232,18 @@ export class PlanoService {
   /** O plano que a pessoa pode acessar; o que ela não vê (inclusive plano solo ou amplo de outra pessoa) é "não encontrado". */
   private async recuperarPlanoAcessivel(id: number, usuarioAtivo: JwtPayload): Promise<PlanoCompletoDto> {
     const plano = await this.planoRepositorio.recuperar({ id });
-    if (!plano) throw new ResourceNotFoundException('Plano');
+    if (!plano || !(await this.podeAcessar(plano, usuarioAtivo))) throw new ResourceNotFoundException('Plano');
+    return plano;
+  }
 
+  /** A pessoa vê e edita o plano? (`podeAcessarPlano`, do `shared`, com o acesso ao projeto que só o banco sabe.) */
+  async podeAcessar(plano: PlanoCompletoDto, usuarioAtivo: JwtPayload): Promise<boolean> {
     const temAcessoAoProjeto =
       plano.projetoId !== null &&
       usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR &&
       (await this.demandaRepositorio.validarAcessoProjeto({ projetoId: plano.projetoId, usuarioId: usuarioAtivo.sub }));
 
-    const podeAcessar = podeAcessarPlano({
+    return podeAcessarPlano({
       tipoUsuario: usuarioAtivo.tipo,
       usuarioId:   usuarioAtivo.sub,
       criadorId:   plano.criadorId,
@@ -247,9 +251,6 @@ export class PlanoService {
       isSolo:      plano.isSolo,
       temAcessoAoProjeto,
     });
-    if (!podeAcessar) throw new ResourceNotFoundException('Plano');
-
-    return plano;
   }
 
   /** A demanda existe e a pessoa pode editá-la: gestor e administrador sempre, desenvolvedor só como membro. */

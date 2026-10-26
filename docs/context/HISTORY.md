@@ -12,6 +12,20 @@
 
 ---
 
+## 2026-10-26 — Task 237: publicar o plano na demanda, plano vivo e "nasceu do plano" (fecha a guarda-chuva `chat-planejamento.spec.md`)
+
+Sétima e última task da guarda-chuva. A pessoa publica os textos escolhidos do plano na demanda ligada vendo o diff por palavra contra o texto atual dela; o plano segue editável e a demanda mostra de que plano nasceu.
+
+- **`shared`:** `PlanoPublicarDto`, `PlanoInternoPublicarDto`, `PlanoPublicadoDto`, `PlanoDemandaOrigemRecuperarDto` e `PlanoDemandaOrigemRecuperadoDto`; `situacaoDaAbaNaPublicacao` (`IGUAL`, `APAGARIA`, `PUBLICARIA`; `SituacaoDaAbaNaPublicacaoEnum`), a regra única da service e do diálogo.
+- **Backend (módulo `plano`):** `PlanoPublicacaoService` (arquivo novo, para não engordar a `PlanoService`) com `publicar` e `recuperarOrigem`; `POST /plano/:id/publicacao` e `GET /plano/demanda/:demandaId` (declarada antes de `:id`). A gravação passa **sempre** pela `DemandaService.alterar`. `PlanoService.podeAcessar` virou público (a origem filtra os planos que a pessoa vê). `PlanoRepository.marcarPublicacao` e `listarPorDemanda`; `PropostaIaRepository.contarPendentesDoPlano` (exportado pelo módulo) conta as alterações de trecho pendentes, que ficam de fora e voltam num aviso.
+- **Frontend:** `app-plano-publicar-dialog` (abas com checkbox, diff por palavra, lembrete de pontos em aberto, erro de 409 que pede recarregar), botões Publicar e Criar demanda no cabeçalho do plano, chip "Publicado dd/MM", `DemandaFormularioDialog` com `nomeInicial` (a demanda nasce com o título do plano, pelo fluxo de criação de hoje, e o plano a liga), chip "Nasceu do plano" no detalhe da demanda (`DemandaDetalheBase`, logo no diálogo e na demanda aberta da Árvore) e `/chat?plano=<id>` abrindo o plano em Planejamento. O stub de `class-validator` do front ganhou `ArrayNotEmpty`.
+- **Impacto (`gerenciamento-de-impacto`):** a base do detalhe é compartilhada pelo diálogo e pela demanda aberta, então o chip aparece nos dois; o formulário ganhou só uma entrada opcional (padrão igual ao de antes). Os specs do detalhe e da demanda aberta precisaram responder a nova chamada (e um `endsWith('/demanda/12')` passou a casar também `/plano/demanda/12`).
+- **Testes:** `shared` +1; backend unitário +8 (publicação) e integração 345 (+3: `marcarPublicacao`, `listarPorDemanda`, `contarPendentesDoPlano`); frontend 172 arquivos verdes (+7 do diálogo e +2 do detalhe). Builds do backend e do frontend aprovados. Sem lint (P-001).
+- **Ao vivo** (gestor no navegador e desenvolvedor por API): ver `docs/specs/done/237-plano-publicar-e-plano-vivo/verificacao.md`. **Não verificado ao vivo:** 1920×1080, 1366×768, 1080×1920 e tema claro (o painel do navegador tem ~500 px), e o desenvolvedor sem a aba do cliente (só teste).
+- **Decisão:** a alteração de trecho pendente não entra na publicação (o texto dela ainda não está no plano); a resposta devolve a contagem e a tela avisa.
+
+---
+
 ## 2026-10-26 — Task 236: o material de fora do plano (texto colado e arquivo de texto como fonte)
 
 Sexta das tasks da guarda-chuva `chat-planejamento.spec.md`. A pessoa cola o e-mail do cliente ou anexa um `.txt`/`.md`, e a IA usa como base do plano e cita pelo título. Sem leitura de caixa de e-mail, sem binário.

@@ -1,6 +1,6 @@
 import { Component, ElementRef, OnInit, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { DatePipe, NgTemplateOutlet } from '@angular/common';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MessageService } from 'primeng/api';
@@ -88,6 +88,7 @@ export class ChatPage implements OnInit {
   private readonly messageService = inject(MessageService);
   private readonly iaDisponibilidade = inject(IaDisponibilidadeService);
   private readonly roteador = inject(Router);
+  private readonly rotaAtiva = inject(ActivatedRoute);
   private readonly areaDeRolagem = viewChild<ElementRef<HTMLElement>>('rolagem');
   private readonly fluxo = viewChild<ElementRef<HTMLElement>>('fluxo');
   private readonly campoDeTexto = viewChild<ElementRef<HTMLTextAreaElement>>('campoTexto');
@@ -240,6 +241,9 @@ export class ChatPage implements OnInit {
   ngOnInit(): void {
     // Quem abre o chat à mão depois do "Agora não" está voltando para a IA.
     if (this.iaDisponibilidade.modoConvencional()) this.iaDisponibilidade.voltarParaAIa();
+    // `/chat?plano=<id>` (o "nasceu do plano" da demanda) abre o plano direto em Planejamento.
+    const planoDoLink = Number(this.rotaAtiva.snapshot.queryParamMap.get('plano'));
+    if (Number.isInteger(planoDoLink) && planoDoLink > 0) this.abrirPlano(planoDoLink);
     this.carregar();
   }
 

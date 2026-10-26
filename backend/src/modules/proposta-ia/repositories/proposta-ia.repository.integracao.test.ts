@@ -191,3 +191,20 @@ testarComBanco('criar: por padrão a proposta não é da IA; com aplicadaPelaIa 
   assert.equal(confirmada?.aplicadaPelaIa, true, 'a marca acompanha a proposta depois de confirmada');
   assert.equal((await repositorioDe(conexao).recuperarPorId(daIa.id))?.aplicadaPelaIa, true);
 });
+
+testarComBanco('contarPendentesDoPlano: só as pendentes do tipo e do plano, de qualquer pessoa', async (conexao) => {
+  const dono = await criarDesenvolvedor(conexao);
+  const colega = await criarDesenvolvedor(conexao);
+  const tipo = TipoPropostaIaEnum.ALTERAR_TRECHO_PLANO;
+  await proporPara(conexao, dono.id, { planoId: 7 }, tipo);
+  await proporPara(conexao, colega.id, { planoId: 7 }, tipo);
+  await proporPara(conexao, dono.id, { planoId: 8 }, tipo);
+  await proporPara(conexao, dono.id, { planoId: 7 }, TipoPropostaIaEnum.CRIAR_ATIVIDADE);
+  const resolvida = await proporPara(conexao, dono.id, { planoId: 7 }, tipo);
+  await repositorioDe(conexao).transitar({ id: resolvida.id, usuarioId: dono.id, de: [PENDENTE], para: CONFIRMADA });
+  const excluida = await proporPara(conexao, dono.id, { planoId: 7 }, tipo);
+  await excluirProposta(conexao, excluida.id);
+
+  assert.equal(await repositorioDe(conexao).contarPendentesDoPlano({ planoId: 7, tipo }), 2);
+  assert.equal(await repositorioDe(conexao).contarPendentesDoPlano({ planoId: 9, tipo }), 0);
+});

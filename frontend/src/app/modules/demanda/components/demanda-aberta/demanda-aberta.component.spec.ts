@@ -24,6 +24,7 @@ function responderPendentes(montado: Montado, podeEditar: boolean): string[] {
     let dados: unknown = [];
     if (caminho === '/demanda/10') dados = { ...DEMANDA, podeEditar };
     else if (caminho === '/demanda/10/arvore') dados = { id: 10, nome: 'Demanda de teste', filhos: [] };
+    else if (caminho === '/plano/demanda/10') dados = null;
     else if (['/usuario', '/demanda', '/atividade'].includes(caminho)) dados = PAGINA([]);
     responderSucesso(requisicao, dados);
   }
@@ -131,7 +132,7 @@ describe('DemandaAbertaComponent — navegação e título', () => {
     montado.http.expectNone(() => true);
     montado.fixture.componentRef.setInput('demandaId', 12);
     montado.componente.ngOnChanges({ demandaId: { currentValue: 12, previousValue: 10, firstChange: false, isFirstChange: () => false } });
-    expect(montado.http.match((r) => r.url.endsWith('/demanda/12')).length).toBe(1);
+    expect(montado.http.match((r) => r.url.endsWith('/demanda/12') && !r.url.includes('/plano/')).length).toBe(1);
   });
 
   it('gestor edita o título pelo lápis: Enter salva (PUT), vazio é recusado', async () => {

@@ -74,6 +74,8 @@ export class DemandaFormularioDialogComponent implements OnChanges {
   @Input() projetoId = 0;
   @Input() visivel = false;
   @Input() demandaPaiIdInicial: number | null = null;
+  /** Nome já preenchido na criação (a demanda que nasce de um plano começa com o título dele). */
+  @Input() nomeInicial: string | null = null;
   /** Presente = modo edição. */
   @Input() demandaId: number | null = null;
   @Output() visivelChange = new EventEmitter<boolean>();
@@ -129,7 +131,7 @@ export class DemandaFormularioDialogComponent implements OnChanges {
 
     this.maisOpcoesAbertas.set(false);
     this.formulario.reset({
-      nome:           '',
+      nome:           this.nomeInicial ?? '',
       demandaPaiId:   this.demandaPaiIdInicial ?? null,
       status:         TipoDemandaStatusEnum.PLANEJADA,
       isEstrutural:   false,

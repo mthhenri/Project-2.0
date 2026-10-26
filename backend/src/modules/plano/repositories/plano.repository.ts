@@ -261,6 +261,30 @@ export class PlanoRepository extends BaseRepository<Plano> {
     });
   }
 
+  /** Marca que o plano foi publicado agora na demanda ligada. Devolve o instante, ou `null` se o plano não tem ligação ativa. */
+  async marcarPublicacao(dados: { planoId: number }): Promise<string | null> {
+    const resultado = await this.executarConsulta<{ publicacaoData: string }>(
+      `UPDATE plano_demanda
+       SET publicacao_data = NOW(), updated_date = NOW()
+       WHERE plano_id = :planoId AND is_deleted = false
+       RETURNING publicacao_data AS "publicacaoData"`,
+      { planoId: dados.planoId },
+    );
+    return resultado[0]?.publicacaoData ?? null;
+  }
+
+  /** Os planos ativos ligados à demanda (do mais recente ao mais antigo); quem os pode ver é a service. */
+  async listarPorDemanda(dados: { demandaId: number }): Promise<PlanoCompletoDto[]> {
+    return this.executarConsulta<PlanoCompletoDto>(
+      `${SELECT_PLANO}
+       WHERE plano_demanda.demanda_id = :demandaId
+         AND plano.is_deleted = false
+         AND ${PLANO_DE_PROJETO_ATIVO}
+       ORDER BY plano.updated_date DESC, plano.id DESC`,
+      { demandaId: dados.demandaId },
+    );
+  }
+
   /** Soft delete do plano e da ligação dele com a demanda, numa transação. */
   async excluir(dto: PlanoRecuperarDto): Promise<void> {
     await this.conexaoBancoDados.transaction(async (transacao) => {

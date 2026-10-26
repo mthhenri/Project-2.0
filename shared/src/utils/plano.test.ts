@@ -1,9 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { PlanoAbaEnum } from '../enums/plano-aba.enum';
+import { SituacaoDaAbaNaPublicacaoEnum } from '../enums/situacao-da-aba-na-publicacao.enum';
 import { TipoUsuarioEnum } from '../enums/tipo-usuario.enum';
 import {
   campoDaAbaDoPlano,
+  situacaoDaAbaNaPublicacao,
   contarOcorrenciasDoTrecho,
   montarConversaIdDoPlano,
   podeAcessarPlano,
@@ -92,4 +94,14 @@ test('campoDaAbaDoPlano mapeia cada aba para o campo que guarda o texto', () => 
   assert.equal(campoDaAbaDoPlano(PlanoAbaEnum.DESCRICAO_TECNICA), 'descricaoTecnica');
   assert.equal(campoDaAbaDoPlano(PlanoAbaEnum.DESCRICAO_CLIENTE), 'descricaoCliente');
   assert.equal(campoDaAbaDoPlano(PlanoAbaEnum.DOCUMENTACAO), 'documentacao');
+});
+
+test('situacaoDaAbaNaPublicacao: igual, apagaria e publicaria', () => {
+  assert.equal(situacaoDaAbaNaPublicacao(null, null), SituacaoDaAbaNaPublicacaoEnum.IGUAL);
+  assert.equal(situacaoDaAbaNaPublicacao('  ', ''), SituacaoDaAbaNaPublicacaoEnum.IGUAL);
+  assert.equal(situacaoDaAbaNaPublicacao('Texto', 'Texto'), SituacaoDaAbaNaPublicacaoEnum.IGUAL);
+  assert.equal(situacaoDaAbaNaPublicacao('', 'Texto da demanda'), SituacaoDaAbaNaPublicacaoEnum.APAGARIA);
+  assert.equal(situacaoDaAbaNaPublicacao(null, 'Texto da demanda'), SituacaoDaAbaNaPublicacaoEnum.APAGARIA);
+  assert.equal(situacaoDaAbaNaPublicacao('Novo', 'Velho'), SituacaoDaAbaNaPublicacaoEnum.PUBLICARIA);
+  assert.equal(situacaoDaAbaNaPublicacao('Novo', null), SituacaoDaAbaNaPublicacaoEnum.PUBLICARIA);
 });

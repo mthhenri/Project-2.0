@@ -138,6 +138,24 @@
     font-weight: 500;
   }
 
+  // "Nasceu do plano" (task 237): chip discreto que abre o plano no chat.
+  &__origem-plano {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.625rem;
+    border: 1px solid var(--app-surface-200);
+    border-radius: 999px;
+    background: var(--app-surface-0);
+    color: inherit;
+    font-size: 0.8125rem;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--app-surface-100);
+    }
+  }
+
   &__pessoas {
     display: flex;
     flex-wrap: wrap;

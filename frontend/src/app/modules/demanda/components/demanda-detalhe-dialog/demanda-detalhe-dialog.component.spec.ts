@@ -22,7 +22,7 @@ const PAGINA = (itens: unknown[]) => ({ itens, totalItens: itens.length, paginaA
  * Responde a tudo o que está pendente com o valor padrão da rota. O detalhe e os diálogos filhos (nova atividade, formulário) pedem catálogos
  * por conta própria, então a resposta é por URL em vez de por ordem. Devolve quantas chamadas respondeu.
  */
-function responderPendentes(montado: Montado, podeEditar: boolean): string[] {
+function responderPendentes(montado: Montado, podeEditar: boolean, origemDoPlano: unknown = null): string[] {
   const respondidas: string[] = [];
   for (const requisicao of montado.http.match(() => true)) {
     const caminho = requisicao.request.url.replace(/^.*\/api\/v1/, '');
@@ -30,6 +30,7 @@ function responderPendentes(montado: Montado, podeEditar: boolean): string[] {
     let dados: unknown = [];
     if (caminho === '/demanda/10') dados = { ...DEMANDA, podeEditar };
     else if (caminho === '/demanda/10/arvore') dados = { id: 10, nome: 'Demanda de teste', filhos: [] };
+    else if (caminho === '/plano/demanda/10') dados = origemDoPlano;
     else if (['/usuario', '/demanda', '/atividade'].includes(caminho)) dados = PAGINA([]);
     responderSucesso(requisicao, dados);
   }
@@ -37,8 +38,8 @@ function responderPendentes(montado: Montado, podeEditar: boolean): string[] {
 }
 
 /** Abre o detalhe e responde a todas as leituras iniciais; `podeEditar` simula a participação do desenvolvedor. */
-async function abrir(tipo: TipoUsuarioEnum, podeEditar = true): Promise<{ montado: Montado; alteradas: number[]; excluidas: number[]; fechamentos: boolean[]; carga: string[] }> {
-  const montado = await montarComponente(DemandaDetalheDialogComponent, { usuario: tipo, entradas: { demandaId: 10, visivel: true } });
+async function abrir(tipo: TipoUsuarioEnum, podeEditar = true, origemDoPlano: unknown = null): Promise<{ montado: Montado; alteradas: number[]; excluidas: number[]; fechamentos: boolean[]; carga: string[] }> {
+  const montado = await montarComponente(DemandaDetalheDialogComponent, { usuario: tipo, entradas: { demandaId: 10, visivel: true }, rotas: [{ path: 'chat', children: [] }] });
   const alteradas: number[] = [];
   const excluidas: number[] = [];
   const fechamentos: boolean[] = [];
@@ -46,9 +47,9 @@ async function abrir(tipo: TipoUsuarioEnum, podeEditar = true): Promise<{ montad
   montado.componente.demandaExcluida.subscribe(() => excluidas.push(1));
   montado.componente.visivelChange.subscribe((valor) => fechamentos.push(valor));
 
-  const carga = responderPendentes(montado, podeEditar);
+  const carga = responderPendentes(montado, podeEditar, origemDoPlano);
   await montado.atualizar();
-  carga.push(...responderPendentes(montado, podeEditar));
+  carga.push(...responderPendentes(montado, podeEditar, origemDoPlano));
   await montado.atualizar();
   return { montado, alteradas, excluidas, fechamentos, carga };
 }
@@ -260,5 +261,25 @@ describe('DemandaDetalheDialogComponent — navegação e exclusão', () => {
     const { montado } = await abrir(TipoUsuarioEnum.GESTOR);
     expect(montado.componente.iniciaisUsuario('maria clara souza')).toBe('MC');
     expect(montado.componente.iniciaisUsuario(undefined as never)).toBe('');
+  });
+});
+
+describe('DemandaDetalheDialogComponent — nasceu do plano (task 237)', () => {
+  const ORIGEM = { id: 7, titulo: 'Plano da exportação', projetoNome: 'Projeto', publicacaoData: '2026-10-25T10:00:00.000Z' };
+
+  it('mostra de que plano a demanda nasceu e abre o plano no chat, fechando o diálogo', async () => {
+    const { montado, fechamentos } = await abrir(TipoUsuarioEnum.DESENVOLVEDOR, true, ORIGEM);
+    const chip = montado.elemento.ownerDocument.querySelector<HTMLButtonElement>('.demanda-detalhe-dialog__origem-plano');
+    expect(chip?.textContent).toContain('Plano da exportação');
+
+    chip!.click();
+    await montado.atualizar();
+    expect(fechamentos).toContain(false);
+  });
+
+  it('sem plano que a pessoa possa ver (a API devolve nulo), não mostra nada', async () => {
+    const { montado } = await abrir(TipoUsuarioEnum.DESENVOLVEDOR, true, null);
+    expect(montado.elemento.ownerDocument.querySelector('.demanda-detalhe-dialog__origem-plano')).toBeNull();
+    expect(montado.componente.planoDeOrigem()).toBeNull();
   });
 });

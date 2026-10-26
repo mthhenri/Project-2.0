@@ -1,4 +1,5 @@
 import { PlanoAbaEnum } from '../enums/plano-aba.enum';
+import { SituacaoDaAbaNaPublicacaoEnum } from '../enums/situacao-da-aba-na-publicacao.enum';
 import { TipoUsuarioEnum } from '../enums/tipo-usuario.enum';
 import { temPermissaoDeGestor } from './permissao-usuario';
 
@@ -92,4 +93,13 @@ export function campoDaAbaDoPlano(aba: PlanoAbaEnum): 'descricaoTecnica' | 'desc
     default:
       return 'documentacao';
   }
+}
+
+/** O que publicar a aba faria, comparando o texto do plano com o atual da demanda. Fonte de verdade da regra, usada pela service e pela tela. */
+export function situacaoDaAbaNaPublicacao(textoDoPlano: string | null, textoDaDemanda: string | null): SituacaoDaAbaNaPublicacaoEnum {
+  const planoVazio = textoDoPlano === null || textoDoPlano.trim() === '';
+  const demandaVazia = textoDaDemanda === null || textoDaDemanda.trim() === '';
+  if (planoVazio && demandaVazia) return SituacaoDaAbaNaPublicacaoEnum.IGUAL;
+  if (planoVazio) return SituacaoDaAbaNaPublicacaoEnum.APAGARIA;
+  return textoDoPlano === textoDaDemanda ? SituacaoDaAbaNaPublicacaoEnum.IGUAL : SituacaoDaAbaNaPublicacaoEnum.PUBLICARIA;
 }

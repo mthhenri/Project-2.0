@@ -93,6 +93,12 @@
     </div>
 
     <div class="demanda-aberta__pessoas">
+      @if (planoDeOrigem(); as origem) {
+        <button type="button" class="demanda-aberta__origem-plano" [pTooltip]="'Abrir o plano no chat' + (origem.publicacaoData ? '' : ' (ainda não publicado)')" tooltipPosition="bottom" (click)="abrirPlanoDeOrigem()">
+          <i class="pi pi-compass" aria-hidden="true"></i>
+          <span>Nasceu do plano <strong>{{ origem.titulo }}</strong></span>
+        </button>
+      }
       <app-demanda-membros-cabecalho
         [demandaId]="dadosDemanda.id"
         [usuariosDisponiveis]="todosUsuarios()"

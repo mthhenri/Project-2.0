@@ -1,0 +1,82 @@
+<p-dialog
+  [visible]="visivel()"
+  (visibleChange)="visivel.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: 'min(96vw, 860px)' }"
+  [contentStyle]="{ 'max-height': '70vh' }"
+  header="Publicar na demanda"
+  appendTo="body"
+>
+  <div class="plano-publicar">
+    <p class="plano-publicar__destino">
+      <i class="pi pi-link" aria-hidden="true"></i>
+      <span>Os textos marcados vão para <strong>{{ plano().demandaNome }}</strong>. Veja o que muda antes de gravar.</span>
+    </p>
+
+    @if (carregando()) {
+      <div class="plano-publicar__esqueleto" aria-busy="true">
+        <p-skeleton height="1.5rem" width="40%" />
+        <p-skeleton height="6rem" />
+      </div>
+    } @else if (erroAoCarregar()) {
+      <div class="plano-publicar__erro" role="alert">
+        <i class="pi pi-exclamation-triangle"></i>
+        <span>Não foi possível ler a demanda.</span>
+        <p-button label="Tentar de novo" icon="pi pi-refresh" size="small" [outlined]="true" (onClick)="carregar()" />
+      </div>
+    } @else {
+      @if (pontosAbertos() > 0) {
+        <p class="plano-publicar__lembrete" role="status">
+          <i class="pi pi-flag" aria-hidden="true"></i>
+          <span>
+            {{ pontosAbertos() === 1 ? 'Ainda há 1 ponto em aberto' : 'Ainda há ' + pontosAbertos() + ' pontos em aberto' }} neste plano. Você pode publicar mesmo assim.
+          </span>
+        </p>
+      }
+
+      @if (nenhumaMudanca()) {
+        <p class="plano-publicar__vazio">Os textos do plano já são iguais aos da demanda. Não há nada para publicar.</p>
+      }
+
+      @for (linha of linhas(); track linha.aba) {
+        <section class="plano-publicar__aba" [class.plano-publicar__aba--igual]="linha.situacao === Situacao.IGUAL">
+          <header class="plano-publicar__aba-cabecalho">
+            <p-checkbox
+              [inputId]="'publicar-' + linha.aba"
+              [binary]="true"
+              [ngModel]="marcadas().has(linha.aba)"
+              [disabled]="linha.situacao === Situacao.IGUAL"
+              (onChange)="alternar(linha.aba, $event.checked)"
+            />
+            <label class="plano-publicar__aba-rotulo" [for]="'publicar-' + linha.aba">{{ linha.rotulo }}</label>
+            @switch (linha.situacao) {
+              @case (Situacao.IGUAL) {
+                <span class="plano-publicar__marca">Sem mudança</span>
+              }
+              @case (Situacao.APAGARIA) {
+                <span class="plano-publicar__marca plano-publicar__marca--perigo">Apaga o texto da demanda</span>
+              }
+              @default {
+                <span class="plano-publicar__marca plano-publicar__marca--muda">{{ linha.antes === '' ? 'Texto novo' : 'Muda' }}</span>
+              }
+            }
+          </header>
+          @if (linha.situacao !== Situacao.IGUAL) {
+            <app-diff-por-palavra [antes]="linha.antes" [depois]="linha.depois" />
+          }
+        </section>
+      }
+    }
+
+    @if (erro(); as textoDoErro) {
+      <p class="plano-publicar__erro-publicacao" role="alert"><i class="pi pi-exclamation-triangle"></i><span>{{ textoDoErro }}</span></p>
+    }
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="fechar()" />
+    <p-button label="Publicar" icon="pi pi-upload" [disabled]="!podePublicar() || publicando()" [loading]="publicando()" (onClick)="publicar()" />
+  </ng-template>
+</p-dialog>

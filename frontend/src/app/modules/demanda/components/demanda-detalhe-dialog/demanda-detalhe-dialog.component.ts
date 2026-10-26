@@ -87,6 +87,10 @@ export class DemandaDetalheDialogComponent extends DemandaDetalheBase implements
     this.mostrarDialogNovaFilha.set(true);
   }
 
+  protected override aoAbrirPlanoDeOrigem(): void {
+    this.visivelChange.emit(false);
+  }
+
   protected override aoExcluida(): void {
     this.visivelChange.emit(false);
   }

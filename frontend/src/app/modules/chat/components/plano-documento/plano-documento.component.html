@@ -21,6 +21,8 @@
       (arquivadoAlterado)="alterarArquivo($event)"
       (projetoAtribuido)="atribuirProjeto($event)"
       (demandaLigada)="ligarDemanda($event)"
+      (publicarSolicitado)="abrirPublicacao()"
+      (demandaNovaSolicitada)="abrirDemandaNova()"
       (excluido)="excluir()"
     />
 
@@ -82,6 +84,16 @@
       </span>
       <p-button label="Gravar" icon="pi pi-save" size="small" [disabled]="!sujo() || salvando()" [loading]="salvando()" (onClick)="salvar()" />
     </footer>
+
+    <app-plano-publicar-dialog [plano]="atual" [(visivel)]="mostrarPublicacao" (publicado)="aoPublicar()" (desatualizado)="carregar()" />
+    @if (atual.projetoId !== null) {
+      <app-demanda-formulario-dialog
+        [projetoId]="atual.projetoId"
+        [nomeInicial]="atual.titulo"
+        [(visivel)]="mostrarDemandaNova"
+        (demandaCriada)="aoDemandaCriada($event)"
+      />
+    }
   }
 </section>
 
