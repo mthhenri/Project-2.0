@@ -1,21 +1,33 @@
-import { Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, input, output, signal, untracked, viewChild } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
+import { Popover, PopoverModule } from 'primeng/popover';
+import { TextareaModule } from 'primeng/textarea';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TabsModule } from 'primeng/tabs';
 import { PlanoAbaEnum, PlanoAlterarDto, PlanoRecuperadoDto, podeVerAbaDoPlano } from '@project20/shared';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
-import { MarkdownEditorComponent } from '../../../../shared/components/markdown-editor/markdown-editor.component';
+import { MarkdownEditorComponent, MenuContextoEditorEvento } from '../../../../shared/components/markdown-editor/markdown-editor.component';
 import { PlanoService } from '../../services/plano.service';
 import { ROTULO_ABA_DO_PLANO } from '../../utils/plano.util';
 import { PlanoCabecalhoComponent } from '../plano-cabecalho/plano-cabecalho.component';
 
 /** O que mudou no plano e o seletor precisa saber (título, projeto, demanda, solo, arquivo); `excluido` tira o plano da tela. */
 export type MudancaDoPlano = 'titulo' | 'projeto' | 'demanda' | 'solo' | 'arquivo' | 'texto';
+
+/** O pedido para a IA alterar só o trecho que a pessoa selecionou numa aba (task 234). */
+export interface PedidoDeAlteracaoDoTrecho {
+  aba: PlanoAbaEnum;
+  trecho: string;
+  pedido: string;
+}
+
+const AVISO_DE_VERSAO_MAIS_NOVA = 'Outra pessoa gravou uma versão mais nova deste plano. O que você escreveu continua na tela, mas não foi gravado.';
+const AVISO_DE_ALTERACAO_DA_IA = 'A IA alterou o documento. O que você escreveu continua na tela, mas não foi gravado: recarregue para ver a mudança dela (o que não foi gravado se perde).';
 
 /**
  * O documento do plano (task 233): cabeçalho, as abas dos textos e o editor de Markdown, editados à mão e gravados com a `versao` lida.
@@ -25,17 +37,20 @@ export type MudancaDoPlano = 'titulo' | 'projeto' | 'demanda' | 'solo' | 'arquiv
 @Component({
   selector: 'app-plano-documento',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonModule, SkeletonModule, TabsModule, MarkdownEditorComponent, PlanoCabecalhoComponent],
+  imports: [ReactiveFormsModule, ButtonModule, PopoverModule, SkeletonModule, TabsModule, TextareaModule, MarkdownEditorComponent, PlanoCabecalhoComponent],
   templateUrl: './plano-documento.component.html',
   styleUrl: './plano-documento.component.scss',
 })
 export class PlanoDocumentoComponent {
   readonly planoId = input.required<number>();
+  /** A conversa com a IA está disponível: a seleção de um trecho com o botão direito abre o pedido de alteração (task 234). */
+  readonly podePedirIa = input(false);
 
   /** O plano foi lido ou renomeado: quem o abriu mostra o título dele. */
   readonly identificado = output<{ id: number; titulo: string }>();
   readonly mudou = output<MudancaDoPlano>();
   readonly excluido = output<void>();
+  readonly pedirAlteracao = output<PedidoDeAlteracaoDoTrecho>();
 
   private readonly planoService = inject(PlanoService);
   private readonly messageService = inject(MessageService);
@@ -50,8 +65,12 @@ export class PlanoDocumentoComponent {
   readonly salvando = signal(false);
   /** Uma ação do cabeçalho (solo, arquivo, projeto, demanda, título) está em andamento. */
   readonly ocupado = signal(false);
-  /** Outra pessoa gravou antes: a gravação foi recusada e o que foi escrito continua nos campos. */
-  readonly conflito = signal(false);
+  /** Aviso com "Recarregar": outra pessoa gravou antes (a gravação foi recusada) ou a IA alterou o documento; o que foi escrito continua nos campos. */
+  readonly aviso = signal<string | null>(null);
+  /** O trecho selecionado e o pedido que a pessoa está escrevendo à IA (task 234). */
+  readonly trechoSelecionado = signal<{ aba: PlanoAbaEnum; texto: string } | null>(null);
+  readonly controlePedido = new FormControl<string>('', { nonNullable: true });
+  private readonly popoverDoPedido = viewChild<Popover>('popoverPedido');
   readonly aba = signal<PlanoAbaEnum>(PlanoAbaEnum.DESCRICAO_TECNICA);
 
   readonly controleTecnica = new FormControl<string>('', { nonNullable: true });
@@ -103,7 +122,7 @@ export class PlanoDocumentoComponent {
   carregar(id: number = this.planoId()): void {
     this.carregando.set(true);
     this.erro.set(false);
-    this.conflito.set(false);
+    this.aviso.set(null);
     this.planoService.recuperar(id).subscribe({
       next: (resposta) => {
         if (!resposta.dados) {
@@ -121,6 +140,33 @@ export class PlanoDocumentoComponent {
         this.carregando.set(false);
       },
     });
+  }
+
+  /**
+   * A IA escreveu no plano (ou a pessoa aceitou uma alteração de trecho): relê o documento. Com texto da pessoa ainda sem gravar, não o sobrescreve:
+   * avisa e deixa ela escolher recarregar.
+   */
+  recarregarDepoisDaIa(): void {
+    if (this.sujo()) this.aviso.set(AVISO_DE_ALTERACAO_DA_IA);
+    else this.carregar();
+  }
+
+  /** Botão direito sobre um trecho selecionado: abre o pedido de alteração à IA (task 234). */
+  abrirPedidoDeAlteracao(evento: MenuContextoEditorEvento): void {
+    const texto = evento.texto.trim();
+    if (texto === '') return;
+    this.trechoSelecionado.set({ aba: this.aba(), texto });
+    this.controlePedido.setValue('');
+    this.popoverDoPedido()?.show(evento.evento, evento.evento.target as HTMLElement);
+  }
+
+  enviarPedidoDeAlteracao(): void {
+    const trecho = this.trechoSelecionado();
+    const pedido = this.controlePedido.value.trim();
+    if (!trecho || pedido === '') return;
+    this.popoverDoPedido()?.hide();
+    this.pedirAlteracao.emit({ aba: trecho.aba, trecho: trecho.texto, pedido });
+    this.trechoSelecionado.set(null);
   }
 
   escolherAba(aba: PlanoAbaEnum): void {
@@ -143,7 +189,7 @@ export class PlanoDocumentoComponent {
     this.planoService.alterar(plano.id, dto).subscribe({
       next: (resposta) => {
         this.salvando.set(false);
-        this.conflito.set(false);
+        this.aviso.set(null);
         this.plano.update((atual) => atual && { ...atual, versao: resposta.dados?.versao ?? atual.versao });
         this.textosGravados.update((atual) => ({
           tecnica: mudou.tecnica ? editados.tecnica : atual.tecnica,
@@ -239,7 +285,7 @@ export class PlanoDocumentoComponent {
   /** 409 = outra pessoa gravou antes (mostra o aviso com "Recarregar"); os demais erros viram um aviso com a mensagem da API. */
   private tratarFalha(falha: HttpErrorResponse, mensagemPadrao: string): void {
     if (falha.status === 409) {
-      this.conflito.set(true);
+      this.aviso.set(AVISO_DE_VERSAO_MAIS_NOVA);
       return;
     }
     this.messageService.add({ severity: 'warn', summary: 'Plano', detail: falha.error?.mensagem ?? mensagemPadrao });

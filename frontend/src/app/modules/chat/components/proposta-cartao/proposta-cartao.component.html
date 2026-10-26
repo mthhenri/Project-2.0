@@ -348,6 +348,13 @@
           </span>
         </div>
       }
+      @case (Tipo.ALTERAR_TRECHO_PLANO) {
+        <div class="proposta-cartao__resumo">
+          <strong class="proposta-cartao__destaque">{{ texto('planoTitulo') || 'Plano ' + propostaAtual.dados['planoId'] }} · {{ rotuloAbaDoPlano(texto('aba')) }}</strong>
+          <span class="proposta-cartao__linha">Trecho alterado</span>
+          <div class="proposta-cartao__trecho"><app-diff-por-palavra [antes]="texto('trechoAntigo')" [depois]="texto('trechoNovo')" /></div>
+        </div>
+      }
       @case (Tipo.ANOTAR_PAD) {
         <div class="proposta-cartao__resumo">
           <strong class="proposta-cartao__destaque">Pad · {{ rotuloSecao(texto('secao')) }}</strong>

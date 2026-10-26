@@ -85,4 +85,29 @@
     color: var(--p-text-muted-color);
     font-size: 0.8125rem;
   }
+
+  &__pedido {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+    width: 22rem;
+
+    small {
+      color: var(--p-text-muted-color);
+      line-height: 1.35;
+    }
+  }
+
+  &__trecho {
+    max-height: 7rem;
+    margin: 0;
+    padding: 0.5rem 0.75rem;
+    overflow: auto;
+    border-left: 3px solid var(--p-primary-400);
+    border-radius: 4px;
+    background: var(--app-surface-100);
+    font-size: 0.8125rem;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
 }

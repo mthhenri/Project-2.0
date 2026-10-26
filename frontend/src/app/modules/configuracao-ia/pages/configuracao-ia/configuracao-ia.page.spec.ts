@@ -607,7 +607,7 @@ describe('ConfiguracaoIaPage — aba Autonomia (task 228)', () => {
     expect(linhaDa('Alterar atividade').querySelector('.p-togglebutton-checked')?.textContent?.trim()).toBe('Pergunta');
     const fixas = Array.from(painel().querySelectorAll('.autonomia-aba__regra--fixa'));
     expect(fixas.map((linha) => linha.querySelector('strong')?.textContent?.trim())).toEqual([
-      'Registrar execução', 'Corrigir execução', 'Criar projeto', 'Justificar ponto', 'Qualquer ação em nome de outra pessoa', 'Anotar na seção Pessoal do pad',
+      'Registrar execução', 'Corrigir execução', 'Criar projeto', 'Justificar ponto', 'Alterar trecho do plano', 'Qualquer ação em nome de outra pessoa', 'Anotar na seção Pessoal do pad',
     ]);
     for (const fixa of fixas) {
       expect(fixa.querySelector('.pi-shield'), 'escudo, não cadeado').not.toBeNull();

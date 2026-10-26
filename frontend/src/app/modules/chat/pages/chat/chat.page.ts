@@ -8,17 +8,18 @@ import { ButtonModule } from 'primeng/button';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TextareaModule } from 'primeng/textarea';
 import { TooltipModule } from 'primeng/tooltip';
-import { AutorChatEnum, ChatEventoDto, ChatMensagemResumoDto, EstadoIaEnum, NivelIaEnum, PropostaIaResumoDto } from '@project20/shared';
+import { AutorChatEnum, ChatEventoDto, ChatMensagemResumoDto, EstadoIaEnum, NivelIaEnum, PropostaIaResumoDto, StatusPropostaIaEnum, TipoPropostaIaEnum } from '@project20/shared';
 import { IaDisponibilidadeService } from '../../../../core/services/ia-disponibilidade.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
-import { PlanoDocumentoComponent } from '../../components/plano-documento/plano-documento.component';
+import { PedidoDeAlteracaoDoTrecho, PlanoDocumentoComponent } from '../../components/plano-documento/plano-documento.component';
 import { PropostaCartaoComponent } from '../../components/proposta-cartao/proposta-cartao.component';
 import { PropostaGrupoComponent } from '../../components/proposta-grupo/proposta-grupo.component';
 import { MensagemDoSeletor, SeletorComponent } from '../../components/seletor/seletor.component';
 import { ChatService, ErroDoChat } from '../../services/chat.service';
 import { PlanoService } from '../../services/plano.service';
 import { dataDaConversa, ROTULO_NIVEL, sugestoesAposProposta, sugestoesIniciais } from '../../utils/chat.util';
+import { montarPedidoDeAlteracaoDoTrecho } from '../../utils/plano.util';
 import { LARGURA_DO_DOCUMENTO, larguraDoDocumentoPeloPonteiro, limitarLarguraDoDocumento, ModoDoChatEnum } from '../../utils/plano.util';
 
 /** Uma mensagem como a tela a mostra: as da conversa do dia mais as locais (otimistas), com os cartões de proposta ligados a ela. */
@@ -38,6 +39,8 @@ interface MensagemNaTela {
   aoVivo?: boolean;
   /** Só na resposta em andamento: a ferramenta que a IA está usando agora. */
   ferramenta?: string | null;
+  /** Só na conversa de um plano: o nome de quem escreveu, quando não foi a própria pessoa (ela vê a conversa dos outros também). */
+  autorNome?: string;
 }
 
 /** A resposta que está chegando: cresce a cada `trecho` e vira uma mensagem da conversa no `fim`. */
@@ -89,6 +92,7 @@ export class ChatPage implements OnInit {
   private readonly fluxo = viewChild<ElementRef<HTMLElement>>('fluxo');
   private readonly campoDeTexto = viewChild<ElementRef<HTMLTextAreaElement>>('campoTexto');
   private readonly seletor = viewChild(SeletorComponent);
+  private readonly documento = viewChild(PlanoDocumentoComponent);
   private readonly areaDoChat = viewChild<ElementRef<HTMLElement>>('area');
   private readonly planoService = inject(PlanoService);
 
@@ -110,11 +114,15 @@ export class ChatPage implements OnInit {
   readonly erro = signal(false);
   readonly enviando = signal(false);
   readonly mensagens = signal<MensagemNaTela[]>([]);
+  /** As mensagens da conversa do plano aberto (task 234): de todos que têm acesso a ele. */
+  readonly mensagensDoPlano = signal<MensagemNaTela[]>([]);
+  /** A conversa que a tela mostra: a do plano em Planejamento, a do dia em Perguntas. */
+  readonly mensagensVisiveis = computed(() => (this.modo() === ModoDoChatEnum.PLANEJAMENTO ? this.mensagensDoPlano() : this.mensagens()));
   readonly aoVivo = signal<RespostaAoVivo | null>(null);
   /** O que a conversa mostra: as mensagens e, no fim, a resposta em andamento como mais um item (que vira a mensagem gravada sem sumir). */
   readonly itens = computed<MensagemNaTela[]>(() => {
     const resposta = this.aoVivo();
-    if (!resposta) return this.mensagens();
+    if (!resposta) return this.mensagensVisiveis();
     const emAndamento: MensagemNaTela = {
       id: resposta.chave,
       chave: resposta.chave,
@@ -126,7 +134,7 @@ export class ChatPage implements OnInit {
       aoVivo: true,
       ferramenta: resposta.ferramenta,
     };
-    return [...this.mensagens(), emAndamento];
+    return [...this.mensagensVisiveis(), emAndamento];
   });
   readonly conversaId = signal<string>('');
   /** O dia de hoje no servidor (`yyyy-mm-dd`, do id da conversa de hoje); vazio até a primeira carga. */
@@ -146,7 +154,9 @@ export class ChatPage implements OnInit {
 
   readonly iaDesligada = computed(() => this.disponibilidade() === EstadoIaEnum.DESLIGADA);
   readonly iaForaDoAr = computed(() => this.disponibilidade() === EstadoIaEnum.FORA_DO_AR);
-  readonly podeEnviar = computed(() => !this.enviando() && !this.somenteLeitura() && !this.iaDesligada() && this.textoDigitado().trim() !== '');
+  /** Em Planejamento só se conversa com um plano aberto; em Perguntas, só na conversa de hoje. */
+  readonly podeConversar = computed(() => (this.modo() === ModoDoChatEnum.PLANEJAMENTO ? this.planoAbertoId() !== null : !this.somenteLeitura()));
+  readonly podeEnviar = computed(() => !this.enviando() && this.podeConversar() && !this.iaDesligada() && this.textoDigitado().trim() !== '');
   /** Atalhos acima do campo: só com o campo vazio e a IA livre para receber. */
   private readonly sessao = inject(UsuarioSessaoService);
   /** As sugestões de quando a conversa ainda não tem nenhuma da IA: o que mais se faz por aqui (o gestor também cria demandas e projetos). */
@@ -154,16 +164,21 @@ export class ChatPage implements OnInit {
   /** As sugestões que a IA trouxe junto da última resposta; somem quando o usuário manda outra mensagem. */
   readonly sugestoesDaIa = signal<string[]>([]);
   readonly sugestoes = computed(() => (this.sugestoesDaIa().length > 0 ? this.sugestoesDaIa() : this.sugestoesIniciais()));
-  readonly podeSugerir = computed(() => !this.enviando() && !this.iaDesligada() && !this.somenteLeitura() && this.textoDigitado().trim() === '');
+  readonly podeSugerir = computed(() => this.modo() === ModoDoChatEnum.PERGUNTAS && !this.enviando() && !this.iaDesligada() && !this.somenteLeitura() && this.textoDigitado().trim() === '');
   /** O usuário resolveu um cartão (confirmou, ajustou, recusou ou desfez): a IA não responde a esse clique, então os botões seguem o que acabou de acontecer. */
   aoResolverProposta(proposta: PropostaIaResumoDto): void {
     const proximos = sugestoesAposProposta(proposta.tipo, proposta.status, this.sessao.eGestor());
     // Recusar, desfazer ou expirar não abrem um próximo passo: ficam os botões que já estavam.
     if (proximos.length > 0) this.sugestoesDaIa.set(proximos);
+    // Aceitar ou desfazer uma alteração de trecho muda o documento: ele se relê.
+    const mudouODocumento = proposta.status === StatusPropostaIaEnum.CONFIRMADA || proposta.status === StatusPropostaIaEnum.DESFEITA;
+    if (proposta.tipo === TipoPropostaIaEnum.ALTERAR_TRECHO_PLANO && mudouODocumento) this.documento()?.recarregarDepoisDaIa();
   }
 
   /** A última mensagem é a do sistema (falha): oferece "Tentar de novo". */
-  readonly ultimaFoiFalha = computed(() => this.mensagens().at(-1)?.autor === AutorChatEnum.SISTEMA && !this.enviando());
+  readonly ultimaFoiFalha = computed(() => this.mensagensVisiveis().at(-1)?.autor === AutorChatEnum.SISTEMA && !this.enviando());
+  /** Em que lista a resposta que está chegando vai parar: a do momento em que a mensagem saiu (trocar de modo no meio não a desvia). */
+  private destinoDaResposta: 'DIA' | 'PLANO' = 'DIA';
   private contadorLocal = 0;
   /** O bom dia é tentado uma vez por abertura da tela (o servidor garante uma vez por dia). */
   private bomDiaTentado = false;
@@ -175,6 +190,7 @@ export class ChatPage implements OnInit {
     effect(() => {
       // Acompanha a resposta que chega e as mensagens novas, a menos que o usuário tenha subido para ler.
       this.mensagens();
+      this.mensagensDoPlano();
       this.aoVivo();
       untracked(() => {
         if (!this.longeDoFim()) this.rolarParaOFim();
@@ -208,7 +224,16 @@ export class ChatPage implements OnInit {
       aoLimpar(() => observador.disconnect());
     });
     effect(() => {
-      this.controleTexto[this.iaDesligada() || this.enviando() ? 'disable' : 'enable']({ emitEvent: false });
+      this.controleTexto[this.iaDesligada() || this.enviando() || !this.podeConversar() ? 'disable' : 'enable']({ emitEvent: false });
+    });
+    // Abriu um plano em Planejamento: lê a conversa dele (a de todos que têm acesso).
+    effect(() => {
+      const planoId = this.planoAbertoId();
+      const emPlanejamento = this.modo() === ModoDoChatEnum.PLANEJAMENTO;
+      untracked(() => {
+        if (emPlanejamento && planoId !== null) this.carregarConversaDoPlano(planoId);
+        else this.mensagensDoPlano.set([]);
+      });
     });
   }
 
@@ -248,11 +273,14 @@ export class ChatPage implements OnInit {
     const texto = (textoReenvio ?? this.controleTexto.value).trim();
     if (!texto || this.enviando() || this.iaDesligada()) return;
 
+    const planoId = this.modo() === ModoDoChatEnum.PLANEJAMENTO ? this.planoAbertoId() : null;
+    if (this.modo() === ModoDoChatEnum.PLANEJAMENTO && planoId === null) return;
+    this.destinoDaResposta = planoId === null ? 'DIA' : 'PLANO';
     this.enviando.set(true);
     this.longeDoFim.set(false);
     this.sugestoesDaIa.set([]);
     const idLocal = `local-${++this.contadorLocal}`;
-    this.mensagens.update((lista) => [
+    this.atualizarMensagensDoDestino((lista) => [
       ...lista,
       { id: idLocal, chave: idLocal, autor: AutorChatEnum.USUARIO, texto, nivel: null, propostaIds: [], criadaEm: new Date() },
     ]);
@@ -261,15 +289,20 @@ export class ChatPage implements OnInit {
 
     let terminou = false;
     try {
-      await this.chatService.enviarMensagem(texto, (evento) => {
-        if (evento.tipo === 'fim' || evento.tipo === 'erro') terminou = true;
-        this.tratarEvento(evento);
-      });
+      await this.chatService.enviarMensagem(
+        texto,
+        (evento) => {
+          if (evento.tipo === 'fim' || evento.tipo === 'erro') terminou = true;
+          this.tratarEvento(evento);
+        },
+        undefined,
+        planoId === null ? undefined : `/chat/plano/${planoId}/mensagem`,
+      );
       if (!terminou) this.mostrarFalhaLocal('A conexão foi interrompida antes do fim da resposta.');
     } catch (erro) {
       const falha = erro as ErroDoChat;
       // Recusada antes de começar (IA desligada, mensagem em andamento): nada foi gravado, o texto volta ao campo.
-      this.mensagens.update((lista) => lista.filter((mensagem) => mensagem.id !== idLocal));
+      this.atualizarMensagensDoDestino((lista) => lista.filter((mensagem) => mensagem.id !== idLocal));
       if (textoReenvio === undefined) this.controleTexto.setValue(texto);
       if (falha.status === 409) this.atualizarDisponibilidade();
       this.messageService.add({ severity: falha.status === 409 ? 'info' : 'warn', summary: 'Chat', detail: falha.mensagem ?? 'Não foi possível enviar a mensagem' });
@@ -284,7 +317,7 @@ export class ChatPage implements OnInit {
   }
 
   tentarDeNovo(): void {
-    const ultimaDoUsuario = [...this.mensagens()].reverse().find((mensagem) => mensagem.autor === AutorChatEnum.USUARIO);
+    const ultimaDoUsuario = [...this.mensagensVisiveis()].reverse().find((mensagem) => mensagem.autor === AutorChatEnum.USUARIO);
     if (ultimaDoUsuario) {
       void this.enviar(ultimaDoUsuario.texto);
       return;
@@ -419,6 +452,28 @@ export class ChatPage implements OnInit {
     if (plano.id === this.planoAbertoId()) this.planoAbertoTitulo.set(plano.titulo);
   }
 
+  /** Lê a conversa do plano aberto (a de todos que têm acesso a ele). Erro: a lista fica vazia e a pessoa pode tentar trocar de plano. */
+  private carregarConversaDoPlano(planoId: number): void {
+    this.chatService.recuperarConversaDoPlano(planoId).subscribe({
+      next: (resposta) => {
+        if (planoId !== this.planoAbertoId() || !resposta.dados) return;
+        const { mensagens, autores } = resposta.dados;
+        this.mensagensDoPlano.set(mensagens.map((mensagem) => this.paraTela(mensagem, autores)));
+        this.irParaMensagemOuFim();
+      },
+      error: () => this.mensagensDoPlano.set([]),
+    });
+  }
+
+  /** O documento pediu para a IA alterar só o trecho selecionado: vira uma mensagem na conversa do plano. */
+  pedirAlteracaoDoTrecho(pedido: PedidoDeAlteracaoDoTrecho): void {
+    void this.enviar(montarPedidoDeAlteracaoDoTrecho(pedido));
+  }
+
+  private atualizarMensagensDoDestino(atualizar: (lista: MensagemNaTela[]) => MensagemNaTela[]): void {
+    (this.destinoDaResposta === 'PLANO' ? this.mensagensDoPlano : this.mensagens).update(atualizar);
+  }
+
   /** Qualquer mudança no plano (título, projeto, demanda, solo, arquivo) muda a linha dele na lista. */
   aoMudarPlano(): void {
     this.seletor()?.recarregar();
@@ -535,6 +590,8 @@ export class ChatPage implements OnInit {
         break;
       case 'ferramenta':
         this.aoVivo.update((atual) => atual && { ...atual, ferramenta: evento.situacao === 'EXECUTANDO' ? evento.nome : null });
+        // A IA escreveu no rascunho: o documento se relê (sem pisar no que a pessoa ainda não gravou).
+        if (this.destinoDaResposta === 'PLANO' && evento.nome === 'escrever_no_plano' && evento.situacao === 'CONCLUIDA') this.documento()?.recarregarDepoisDaIa();
         break;
       case 'proposta':
         this.aoVivo.update((atual) => atual && { ...atual, propostaIds: [...atual.propostaIds, evento.propostaId] });
@@ -545,7 +602,7 @@ export class ChatPage implements OnInit {
         mensagem.propostaIds = [...new Set([...(resposta?.propostaIds ?? []), ...mensagem.propostaIds])];
         // A mesma chave faz a lista trocar a resposta em andamento pela gravada sem recriar o elemento nem os cartões.
         if (resposta) mensagem.chave = resposta.chave;
-        this.mensagens.update((lista) => [...lista, mensagem]);
+        this.atualizarMensagensDoDestino((lista) => [...lista, mensagem]);
         this.aoVivo.set(null);
         this.atualizarDisponibilidade();
         break;
@@ -563,7 +620,7 @@ export class ChatPage implements OnInit {
 
   private mostrarFalhaLocal(texto: string): void {
     const idLocal = `local-${++this.contadorLocal}`;
-    this.mensagens.update((lista) => [
+    this.atualizarMensagensDoDestino((lista) => [
       ...lista,
       { id: idLocal, chave: idLocal, autor: AutorChatEnum.SISTEMA, texto, nivel: null, propostaIds: [], criadaEm: new Date() },
     ]);
@@ -577,8 +634,10 @@ export class ChatPage implements OnInit {
     this.iaDisponibilidade.carregar();
   }
 
-  private paraTela(mensagem: ChatMensagemResumoDto): MensagemNaTela {
+  private paraTela(mensagem: ChatMensagemResumoDto, autores?: Record<number, string>): MensagemNaTela {
+    const deOutraPessoa = autores !== undefined && mensagem.autor === AutorChatEnum.USUARIO && mensagem.usuarioId !== this.sessao.id();
     return {
+      ...(deOutraPessoa && autores[mensagem.usuarioId] ? { autorNome: autores[mensagem.usuarioId] } : {}),
       id: mensagem.id,
       chave: mensagem.id,
       autor: mensagem.autor,

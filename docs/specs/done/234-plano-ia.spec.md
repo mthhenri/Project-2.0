@@ -1,6 +1,6 @@
 # 234-plano-ia.spec.md
 
-> Task 4/7 da guarda-chuva [`chat-planejamento.spec.md`](chat-planejamento.spec.md): a IA passa a conversar no plano, escrever no
+> Task 4/7 da guarda-chuva [`chat-planejamento.spec.md`](../backlog/chat-planejamento.spec.md): a IA passa a conversar no plano, escrever no
 > rascunho e editar trechos com aceitar ou rejeitar.
 
 ## Objetivo
@@ -58,3 +58,8 @@ Prompt novo precisa de revisão do autor (a qualidade da escrita depende dele). 
 ## Pontos em aberto (o autor confirma ao abrir a task)
 
 - Nível analítico de cada um dos quatro prompts; formato da chave de conversa do plano.
+
+## Resultado (fechamento, 2026-10-26)
+
+Conversa do plano `plano-<id>` (formato da chave), prompts `PLANEJAMENTO` e por aba no nível analítico (migration `0060`), escrita direta e alteração de trecho com cartão. O diff da 224 (por palavra) foi usado.
+**Desvio a decidir pelo autor:** o diff do trecho aparece no cartão da conversa, e não sobreposto ao texto do documento. Relato completo, testes e limites em `docs/context/HISTORY.md` (bloco de 2026-10-26, task 234).

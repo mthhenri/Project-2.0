@@ -36,9 +36,11 @@ const NIVEL_PADRAO_POR_TIPO: Readonly<Record<TipoPropostaIaEnum, PropostaIaNivel
   [TipoPropostaIaEnum.CORRIGIR_EXECUCAO]:  PropostaIaNivelEnum.SEMPRE_PERGUNTA,
   [TipoPropostaIaEnum.JUSTIFICAR_PONTO]:   PropostaIaNivelEnum.SEMPRE_PERGUNTA,
   [TipoPropostaIaEnum.CRIAR_PROJETO]:      PropostaIaNivelEnum.SEMPRE_PERGUNTA,
+  // Altera o texto do plano (task 234): quem aceita ou rejeita é sempre a pessoa, nunca a IA sozinha.
+  [TipoPropostaIaEnum.ALTERAR_TRECHO_PLANO]: PropostaIaNivelEnum.SEMPRE_PERGUNTA,
 };
 
-/** Os tipos que mexem em horas, em ponto ou em projeto: sempre perguntam, não aparecem na configuração. */
+/** Os tipos que mexem em horas, em ponto, em projeto ou no texto do plano: sempre perguntam, não aparecem na configuração. */
 export const TIPOS_COM_NIVEL_FIXO: readonly TipoPropostaIaEnum[] = (Object.values(TipoPropostaIaEnum) as TipoPropostaIaEnum[]).filter(
   (tipo) => NIVEL_PADRAO_POR_TIPO[tipo] === PropostaIaNivelEnum.SEMPRE_PERGUNTA,
 );

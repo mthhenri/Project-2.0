@@ -3,6 +3,7 @@ import { ConfiguracaoIaModule } from '../configuracao-ia/configuracao-ia.module'
 import { FerramentaIaModule } from '../ferramenta-ia/ferramenta-ia.module';
 import { FerramentaIaRegistro } from '../ferramenta-ia/services/ferramenta-ia.registro';
 import { IaModule } from '../ia/ia.module';
+import { PlanoModule } from '../plano/plano.module';
 import { PromptModule } from '../prompt/prompt.module';
 import { PropostaIaModule } from '../proposta-ia/proposta-ia.module';
 import { UsuarioModule } from '../usuario/usuario.module';
@@ -12,15 +13,17 @@ import { ConsultarConversaDoDesenvolvedorFerramenta } from './ferramentas/consul
 import { ListarConversasDoDesenvolvedorFerramenta } from './ferramentas/listar-conversas-do-desenvolvedor.ferramenta';
 import { ARMAZENAMENTO_DE_CHAT, armazenamentoDeChatProvider } from './repositories/armazenamento-de-chat';
 import { ChatDesenvolvedorService } from './services/chat-desenvolvedor.service';
+import { ChatPlanoService } from './services/chat-plano.service';
 import { ChatService } from './services/chat.service';
 
 @Module({
-  imports:     [ConfiguracaoIaModule, IaModule, PromptModule, FerramentaIaModule, PropostaIaModule, UsuarioModule],
+  imports:     [ConfiguracaoIaModule, IaModule, PromptModule, FerramentaIaModule, PropostaIaModule, UsuarioModule, PlanoModule],
   controllers: [ChatController],
   providers:   [
     armazenamentoDeChatProvider,
     ChatService,
     ChatDesenvolvedorService,
+    ChatPlanoService,
     ListarConversasDoDesenvolvedorFerramenta,
     ConsultarConversaDoDesenvolvedorFerramenta,
     BuscarNasConversasDoDesenvolvedorFerramenta,

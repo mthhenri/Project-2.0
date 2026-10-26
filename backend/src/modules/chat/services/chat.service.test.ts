@@ -70,6 +70,8 @@ function montar(cenario: Cenario) {
     Object.entries(cenario.titulosIniciais ?? {}).map(([conversaId, valor]) => [conversaId, typeof valor === 'string' ? { titulo: valor, editado: false } : valor]),
   );
   const gravacoesDeTitulo: TituloParaGravar[] = [];
+  const consultasDeConversa: unknown[] = [];
+  const escoposDeFerramentas: unknown[] = [];
   const geradas: IaSolicitacao[] = [];
   const ordem: string[] = [];
   const repositorio = {
@@ -79,7 +81,8 @@ function montar(cenario: Cenario) {
       gravadas.push(lida);
       return lida;
     },
-    async listarConversa() {
+    async listarConversa(consulta: unknown) {
+      consultasDeConversa.push(consulta);
       return [...gravadas];
     },
     async listarTitulos() {
@@ -140,7 +143,10 @@ function montar(cenario: Cenario) {
       },
     } as unknown as PromptService,
     {
-      listarParaUsuario: () => [{ nome: 'consultar_data_e_hora', descricao: 'd', esquemaEntrada: {} }],
+      listarParaUsuario: (_usuario: unknown, escopo?: unknown) => {
+        escoposDeFerramentas.push(escopo);
+        return [{ nome: 'consultar_data_e_hora', descricao: 'd', esquemaEntrada: {} }];
+      },
       executar: async (nome: string) => {
         for (const chamadaDaFerramenta of cenario.iaDaFerramenta?.(nome) ?? []) turnoAtual()?.registrar(chamadaDaFerramenta);
         return cenario.ferramenta ? cenario.ferramenta(nome) : { conteudo: '{"data":"2026-10-17"}', erro: false };
@@ -163,7 +169,7 @@ function montar(cenario: Cenario) {
       obterAtiva: async () => ({ duvidasCodigo: false, modoContextoChat: ModoContextoChatEnum.MISTURADO, ...cenario.configuracao }),
     } as unknown as ConfiguracaoIaService,
   );
-  return { servico, gravadas, ordem, solicitacoes, recusadas, titulos, gravacoesDeTitulo, geradas, tiposDePrompt };
+  return { servico, gravadas, ordem, solicitacoes, recusadas, titulos, gravacoesDeTitulo, geradas, tiposDePrompt, consultasDeConversa, escoposDeFerramentas };
 }
 
 async function enviar(servico: ChatService, texto = 'Oi') {
@@ -958,4 +964,48 @@ test('a retomada segue o modo de contexto e o assunto da última mensagem marcad
   const textos = solicitacoes[0].mensagens.map((mensagem) => (typeof mensagem.conteudo === 'string' ? mensagem.conteudo : ''));
   assert.deepEqual(textos.slice(0, 2), ['como faço um loop em PHP?', 'use foreach']);
   assert.equal(textos.some((texto) => texto.includes('quais minhas atividades?')), false);
+});
+
+test('a conversa de um plano grava no id do plano, lê sem filtro de dono e usa instruções, nível, teto e ferramentas próprios (task 234)', async () => {
+  const { servico, gravadas, solicitacoes, consultasDeConversa, escoposDeFerramentas, geradas, tiposDePrompt } = montar({
+    chamadas: [async (_solicitacao, aoTrecho) => { aoTrecho('Certo'); return resposta({ texto: 'Certo' }); }],
+  });
+  const eventos: ChatEventoDto[] = [];
+
+  await servico.enviarMensagem(USUARIO, { texto: 'Descreva o cadastro' }, (evento) => eventos.push(evento), {
+    contexto: ContextoChatEnum.PLANEJAMENTO,
+    conversaId: 'plano-7',
+    montarInstrucoes: async () => 'INSTRUCOES DO PLANO',
+    nivel: NivelIaEnum.ANALITICO,
+    maximoTokens: 8192,
+    escopoDeFerramentas: 'PLANEJAMENTO',
+    rotularMensagemDoUsuario: (mensagem) => `[Ana] ${mensagem.texto}`,
+  });
+
+  assert.deepEqual(gravadas.map((mensagem) => [mensagem.conversaId, mensagem.contexto, mensagem.autor]), [
+    ['plano-7', ContextoChatEnum.PLANEJAMENTO, AutorChatEnum.USUARIO],
+    ['plano-7', ContextoChatEnum.PLANEJAMENTO, AutorChatEnum.IA],
+  ]);
+  assert.equal(gravadas[1].usuarioId, 7, 'o custo da resposta é de quem enviou a mensagem');
+  assert.equal(solicitacoes[0].instrucoes, 'INSTRUCOES DO PLANO');
+  assert.equal(solicitacoes[0].nivel, NivelIaEnum.ANALITICO);
+  assert.equal(solicitacoes[0].maximoTokens, 8192);
+  assert.equal(solicitacoes[0].mensagens[0].conteudo, '[Ana] Descreva o cadastro', 'o modelo lê quem disse o quê');
+  assert.deepEqual(consultasDeConversa, [{ conversaId: 'plano-7', usuarioId: undefined }], 'a conversa do plano é lida sem dono');
+  assert.deepEqual(escoposDeFerramentas, ['PLANEJAMENTO']);
+  assert.deepEqual(tiposDePrompt, [], 'o prompt da conversa do dia não é pedido');
+  assert.deepEqual(geradas, [], 'sem assunto, nome de conversa nem sugestões');
+  assert.equal(eventos.at(-1)?.tipo, 'fim');
+});
+
+test('duas pessoas no mesmo plano: um segundo envio na mesma conversa recebe 409 enquanto a IA responde (task 234)', async () => {
+  let liberar: () => void = () => undefined;
+  const { servico } = montar({ chamadas: [() => new Promise<IaResposta>((resolver) => { liberar = () => resolver(resposta({ texto: 'Ok' })); })] });
+  const opcoes = { contexto: ContextoChatEnum.PLANEJAMENTO, conversaId: 'plano-7', montarInstrucoes: async () => 'x' };
+
+  const primeira = servico.enviarMensagem(USUARIO, { texto: 'a' }, () => undefined, opcoes);
+  await new Promise((resolver) => setTimeout(resolver, 10));
+  await assert.rejects(() => servico.enviarMensagem(USUARIO, { texto: 'b' }, () => undefined, opcoes), ConflictException);
+  liberar();
+  await primeira;
 });

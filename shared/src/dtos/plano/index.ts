@@ -19,3 +19,4 @@ export * from './PlanoDemandaLigadaDto';
 export * from './PlanoProjetoAtribuirDto';
 export * from './PlanoProjetoInternoAtribuirDto';
 export * from './PlanoProjetoAtribuidoDto';
+export * from './PlanoConversaRecuperadaDto';

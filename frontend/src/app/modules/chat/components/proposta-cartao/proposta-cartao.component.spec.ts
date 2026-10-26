@@ -714,3 +714,27 @@ describe('PropostaCartaoComponent — linha compacta', () => {
     montado.http.expectOne((requisicao) => requisicao.url.endsWith('/confirmar'));
   });
 });
+
+describe('PropostaCartaoComponent — alterar trecho do plano (task 234)', () => {
+  const DADOS = { planoId: 7, planoTitulo: 'Relatório mensal', aba: 'DESCRICAO_TECNICA', trechoAntigo: 'Gera o relatório todo dia.', trechoNovo: 'Gera o relatório todo dia útil.', versao: 3 };
+
+  it('mostra o plano, a aba e a diferença do trecho, e Confirmar chama a API; não há Ajustar', async () => {
+    const montado = await montarCartao(proposta(TipoPropostaIaEnum.ALTERAR_TRECHO_PLANO, StatusPropostaIaEnum.PENDENTE, DADOS));
+
+    expect(texto(montado)).toContain('Relatório mensal');
+    expect(texto(montado)).toContain('Descrição técnica');
+    expect(texto(montado)).toContain('Trecho alterado');
+    expect(montado.elemento.querySelector('.proposta-cartao__trecho app-diff-por-palavra')).not.toBeNull();
+    expect(texto(montado)).toContain('útil');
+    expect(botao(montado, 'Ajustar')).toBeUndefined();
+
+    botao(montado, 'Confirmar')!.click();
+    responderSucesso(esperarRequisicao(montado.http, 'POST', `/proposta-ia/${ID}/confirmar`), proposta(TipoPropostaIaEnum.ALTERAR_TRECHO_PLANO, StatusPropostaIaEnum.CONFIRMADA, DADOS));
+    detectar(montado);
+  });
+
+  it('uma alteração que expirou (o texto mudou) aparece como expirada, sem botões de confirmar', async () => {
+    const montado = await montarCartao(proposta(TipoPropostaIaEnum.ALTERAR_TRECHO_PLANO, StatusPropostaIaEnum.EXPIRADA, DADOS));
+    expect(botao(montado, 'Confirmar')).toBeUndefined();
+  });
+});

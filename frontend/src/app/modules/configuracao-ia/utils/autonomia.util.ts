@@ -52,6 +52,7 @@ const DESCRICAO_DA_REGRA: Record<ChaveDeNivelDaProposta, Pick<RegraDeAutonomia, 
   [TipoPropostaIaEnum.CORRIGIR_EXECUCAO]: { rotulo: 'Corrigir execução', descricao: '' },
   [TipoPropostaIaEnum.CRIAR_PROJETO]: { rotulo: 'Criar projeto', descricao: '' },
   [TipoPropostaIaEnum.JUSTIFICAR_PONTO]: { rotulo: 'Justificar ponto', descricao: '' },
+  [TipoPropostaIaEnum.ALTERAR_TRECHO_PLANO]: { rotulo: 'Alterar trecho do plano', descricao: '' },
 };
 
 /** As regras configuráveis, na ordem do `shared`. */
@@ -64,6 +65,7 @@ const REGRAS_FIXAS_POR_TIPO: Partial<Record<TipoPropostaIaEnum, Pick<RegraFixaDe
   [TipoPropostaIaEnum.CORRIGIR_EXECUCAO]: { descricao: 'Mudar horário e duração de uma execução já registrada.', motivo: MOTIVO_HORAS },
   [TipoPropostaIaEnum.JUSTIFICAR_PONTO]: { descricao: 'Justificar o ponto de outra pessoa num dia. Só gestor.', motivo: 'Mexe em ponto: a IA sempre pergunta.' },
   [TipoPropostaIaEnum.CRIAR_PROJETO]: { descricao: 'Um projeto novo, com código próprio. Só gestor.', motivo: 'Cria um projeto: a IA sempre pergunta.' },
+  [TipoPropostaIaEnum.ALTERAR_TRECHO_PLANO]: { descricao: 'Trocar um trecho do texto de um plano, no planejamento.', motivo: 'Altera o texto do plano: quem aceita ou rejeita é sempre a pessoa.' },
 };
 
 /**

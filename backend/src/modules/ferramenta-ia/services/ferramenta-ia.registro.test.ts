@@ -247,3 +247,31 @@ test('a descrição de toda ferramenta de proposta ganha a nota de que o sistema
   assert.doesNotMatch(descricoes['leitura'], /Feito/);
   assert.equal(proposta.descricao, 'Propõe algo', 'a descrição da própria ferramenta não muda: a nota entra só na lista enviada ao modelo');
 });
+
+test('o chat não lista as ferramentas do plano; o planejamento lista as de leitura e as do plano, nenhuma proposta do dia a dia (task 234)', () => {
+  const registro = new FerramentaIaRegistro();
+  const leitura = ferramentaDeLeitura('QUALQUER', 'consultar_algo').ferramenta;
+  registro.registrar(leitura);
+  const doPlano = new (class extends FerramentaIa<EntradaSomaDto> {
+    readonly nome = 'escrever_no_plano';
+    readonly descricao = 'Escreve no plano';
+    readonly tipo = 'RASCUNHO' as const;
+    readonly permissao = 'QUALQUER' as const;
+    readonly somentePlanejamento = true;
+    readonly classeDeEntrada: ClasseDeEntrada<EntradaSomaDto> = EntradaSomaDto;
+    async executar() { return {}; }
+  })();
+  registro.registrar(doPlano);
+  const proposta = new (class extends FerramentaPropostaIa<EntradaSomaDto> {
+    readonly nome = 'propor_algo_do_dia_a_dia';
+    readonly descricao = 'Propõe algo';
+    readonly permissao = 'QUALQUER' as const;
+    readonly classeDeEntrada: ClasseDeEntrada<EntradaSomaDto> = EntradaSomaDto;
+    readonly tipoProposta = TipoPropostaIaEnum.CRIAR_ATIVIDADE;
+  })({} as PropostaIaService);
+  registro.registrar(proposta);
+
+  assert.deepEqual(registro.listarParaUsuario(DESENVOLVEDOR).map((ferramenta) => ferramenta.nome), ['consultar_algo', 'propor_algo_do_dia_a_dia']);
+  assert.deepEqual(registro.listarParaUsuario(DESENVOLVEDOR, 'CHAT').map((ferramenta) => ferramenta.nome), ['consultar_algo', 'propor_algo_do_dia_a_dia']);
+  assert.deepEqual(registro.listarParaUsuario(DESENVOLVEDOR, 'PLANEJAMENTO').map((ferramenta) => ferramenta.nome), ['consultar_algo', 'escrever_no_plano']);
+});

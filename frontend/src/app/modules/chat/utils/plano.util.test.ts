@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { LARGURA_DO_DOCUMENTO, larguraDoDocumentoPeloPonteiro, limitarLarguraDoDocumento } from './plano.util';
+import { PlanoAbaEnum } from '@project20/shared';
+import { LARGURA_DO_DOCUMENTO, larguraDoDocumentoPeloPonteiro, limitarLarguraDoDocumento, montarPedidoDeAlteracaoDoTrecho } from './plano.util';
 
 describe('largura do documento do plano', () => {
   it('mantém o valor entre o mínimo e o máximo', () => {
@@ -21,5 +22,15 @@ describe('largura do documento do plano', () => {
 
   it('área sem largura devolve o padrão', () => {
     expect(larguraDoDocumentoPeloPonteiro(100, 0, 0)).toBe(LARGURA_DO_DOCUMENTO.padrao);
+  });
+});
+
+describe('pedido de alteração de um trecho', () => {
+  it('cita o trecho linha a linha e diz a aba e o que mudar', () => {
+    const mensagem = montarPedidoDeAlteracaoDoTrecho({ aba: PlanoAbaEnum.DOCUMENTACAO, trecho: 'Linha 1\nLinha 2', pedido: 'explicar o porquê' });
+    expect(mensagem).toContain('"Documentação"');
+    expect(mensagem).toContain('(aba DOCUMENTACAO)');
+    expect(mensagem).toContain('> Linha 1\n> Linha 2');
+    expect(mensagem.endsWith('O que mudar: explicar o porquê')).toBe(true);
   });
 });

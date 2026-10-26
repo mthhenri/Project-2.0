@@ -24,6 +24,7 @@ import { ConflictException } from '../../../core/exceptions/conflict.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { ConfiguracaoIaService } from '../../configuracao-ia/services/configuracao-ia.service';
+import { EscopoDaFerramentaIa } from '../../ferramenta-ia/domain/ferramenta-ia';
 import { FerramentaIaRegistro } from '../../ferramenta-ia/services/ferramenta-ia.registro';
 import { IaException } from '../../ia/domain/ia.exception';
 import { IaBloco, IaMensagem } from '../../ia/domain/ia.tipos';
@@ -80,6 +81,17 @@ export interface OpcoesDeConversa {
   /** A instrução de retomada depois de uma queda da IA (task 158): vai ao modelo como a última mensagem do usuário, sem ser gravada. */
   retomada?: string;
   instrucoesExtras?: string;
+  /**
+   * A conversa de um plano (task 234): o id próprio (`plano-<id>`), lida sem filtro de dono (é de todos que têm acesso ao plano; quem autoriza é
+   * quem chama), com instruções montadas a cada turno (o documento muda), nível, teto de tokens e conjunto de ferramentas próprios.
+   */
+  conversaId?: string;
+  montarInstrucoes?: () => Promise<string>;
+  nivel?: NivelIaEnum;
+  maximoTokens?: number;
+  escopoDeFerramentas?: EscopoDaFerramentaIa;
+  /** O texto de uma mensagem do usuário como o modelo a lê (na conversa do plano, com o nome de quem falou). */
+  rotularMensagemDoUsuario?: (mensagem: ChatMensagemLida) => string;
 }
 
 /** O que fica guardado em `conteudo_bruto` da mensagem da IA: as trocas do turno, para remontar a conversa depois. */
@@ -185,7 +197,7 @@ export class ChatService {
   ): Promise<void> {
     if ((await this.iaService.obterEstado()) === EstadoIaEnum.DESLIGADA) throw new ConflictException('A IA está desligada');
 
-    const conversaId = this.conversaDeHoje(usuarioAtivo);
+    const conversaId = opcoes.conversaId ?? this.conversaDeHoje(usuarioAtivo);
     if (this.emAndamento.has(conversaId)) throw new ConflictException('A IA ainda está respondendo à mensagem anterior');
     this.emAndamento.add(conversaId);
 
@@ -314,16 +326,29 @@ export class ChatService {
   ): Promise<void> {
     const { abertura, retomada, contexto } = opcoes;
     const doChat = contexto === ContextoChatEnum.CHAT;
+    const doPlano = contexto === ContextoChatEnum.PLANEJAMENTO;
     const configuracao = await this.configuracaoIaService.obterAtiva();
-    const historicoDoContexto = await this.listarDoContexto(conversaId, usuarioAtivo.sub, contexto);
+    // A conversa de um plano é de todos que a escreveram: sem filtro de dono (quem chama já checou o acesso ao plano).
+    const historicoLido = await this.listarDoContexto(conversaId, doPlano ? undefined : usuarioAtivo.sub, contexto);
+    const historicoDoContexto = opcoes.rotularMensagemDoUsuario
+      ? historicoLido.map((mensagem) => (mensagem.autor === AutorChatEnum.USUARIO ? { ...mensagem, texto: opcoes.rotularMensagemDoUsuario!(mensagem) } : mensagem))
+      : historicoLido;
     // Só o chat tem assunto (o check-in tem o próprio prompt e não é marcado). A retomada continua no assunto da última mensagem marcada.
     const assunto: AssuntoChatEnum | null = !doChat ? null : assuntoInformado ?? assuntoDaUltimaMarcada(historicoDoContexto);
     const historico = assunto ? filtrarHistoricoPorModo(historicoDoContexto, configuracao.modoContextoChat, assunto) : historicoDoContexto;
-    const prompt = await this.promptService.obterAtivo(contexto === ContextoChatEnum.CHECKIN ? TipoPromptEnum.CHECKIN : TipoPromptEnum.CONVERSA);
-    const promptDuvidaCodigo = doChat && configuracao.duvidasCodigo ? (await this.promptService.obterAtivo(TipoPromptEnum.DUVIDA_CODIGO)).conteudo : null;
-    const base = doChat ? montarInstrucoesDaConversa(prompt.conteudo, configuracao.duvidasCodigo, promptDuvidaCodigo) : prompt.conteudo;
+    let base: string;
+    if (opcoes.montarInstrucoes) {
+      // A conversa de um plano monta as próprias instruções a cada resposta (o documento muda entre uma e outra).
+      base = await opcoes.montarInstrucoes();
+    } else {
+      const prompt = await this.promptService.obterAtivo(contexto === ContextoChatEnum.CHECKIN ? TipoPromptEnum.CHECKIN : TipoPromptEnum.CONVERSA);
+      const promptDuvidaCodigo = doChat && configuracao.duvidasCodigo ? (await this.promptService.obterAtivo(TipoPromptEnum.DUVIDA_CODIGO)).conteudo : null;
+      base = doChat ? montarInstrucoesDaConversa(prompt.conteudo, configuracao.duvidasCodigo, promptDuvidaCodigo) : prompt.conteudo;
+    }
     const instrucoes = opcoes.instrucoesExtras ? `${base}\n\n${opcoes.instrucoesExtras}` : base;
-    const ferramentas = this.ferramentaIaRegistro.listarParaUsuario(usuarioAtivo);
+    const ferramentas = opcoes.escopoDeFerramentas
+      ? this.ferramentaIaRegistro.listarParaUsuario(usuarioAtivo, opcoes.escopoDeFerramentas)
+      : this.ferramentaIaRegistro.listarParaUsuario(usuarioAtivo);
 
     // Na abertura do dia não há mensagem do usuário: a instrução entra como a primeira mensagem e fica no conteúdo bruto da resposta.
     const mensagemDeAbertura: IaMensagem | null = abertura ? { papel: 'usuario', conteudo: abertura } : null;
@@ -339,7 +364,7 @@ export class ChatService {
       const separador = separadorEntreVoltas(texto);
       let separadorEmitido = separador === '';
       const resposta = await this.iaService.transmitir(
-        { nivel: NivelIaEnum.RAPIDO, instrucoes, mensagens, ferramentas, maximoTokens: MAXIMO_TOKENS_DO_CHAT },
+        { nivel: opcoes.nivel ?? NivelIaEnum.RAPIDO, instrucoes, mensagens, ferramentas, maximoTokens: opcoes.maximoTokens ?? MAXIMO_TOKENS_DO_CHAT },
         (trecho) => {
           if (trecho === '') return;
           if (!separadorEmitido) {
@@ -576,7 +601,7 @@ export class ChatService {
   }
 
   /** As mensagens da conversa do dia que são de um contexto (o chat e o check-in não se leem). */
-  private async listarDoContexto(conversaId: string, usuarioId: number, contexto: ContextoChatEnum): Promise<ChatMensagemLida[]> {
+  private async listarDoContexto(conversaId: string, usuarioId: number | undefined, contexto: ContextoChatEnum): Promise<ChatMensagemLida[]> {
     const todas = await this.chatMensagemRepositorio.listarConversa({ conversaId, usuarioId });
     return todas.filter((mensagem) => mensagem.contexto === contexto);
   }

@@ -218,3 +218,25 @@ testarComBanco('somarTokens: soma por dia e por modelo só as mensagens com mode
   const porMes = (await repositorio.somarTokens({ dataInicio: '2031-01-01', dataFim: '2031-12-31', porMes: true, fusoHorario: 'America/Sao_Paulo' })).filter((item) => item.modelo === 'modelo-soma-a');
   assert.deepEqual(porMes.map((item) => [item.periodo, item.tokensEntrada]).sort(), [['2031-03', 157], ['2031-04', 999]]);
 });
+
+testarComBanco('a conversa de um plano é lida sem filtro de dono, com as mensagens de todos, e fica fora das conversas do dia e da busca (task 234)', async (conexao) => {
+  const { dono, outro, mensagem } = await cenario(conexao);
+  const repositorio = repositorioDe(conexao);
+  const conversaDoPlano = `plano-${dono.id}`;
+  const doPlano = (texto: string, extras: Partial<ChatMensagemNova> = {}) => mensagem(texto, { conversaId: conversaDoPlano, contexto: ContextoChatEnum.PLANEJAMENTO, ...extras });
+  await repositorio.gravar(doPlano('Pergunta de planejamentoxyz do dono'));
+  await espera(15);
+  await repositorio.gravar(doPlano('Resposta do colega sobre planejamentoxyz', { usuarioId: outro.id }));
+  await espera(15);
+  await repositorio.gravar(doPlano('Resposta da IA', { autor: AutorChatEnum.IA }));
+  await repositorio.gravar(mensagem('Mensagem comum planejamentoxyz'));
+
+  const lida = await repositorio.listarConversa({ conversaId: conversaDoPlano });
+  assert.deepEqual(lida.map((item) => item.usuarioId), [dono.id, outro.id, dono.id]);
+
+  const conversasDoDia = await repositorio.listarConversas({ usuarioId: dono.id });
+  assert.equal(conversasDoDia.some((balde) => balde.key === conversaDoPlano), false);
+
+  const achadas = await repositorio.buscar({ usuarioId: dono.id, texto: 'planejamentoxyz' });
+  assert.deepEqual(achadas.map((item) => item.texto), ['Mensagem comum planejamentoxyz'], 'só a mensagem do chat comum');
+});

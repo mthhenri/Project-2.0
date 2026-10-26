@@ -1,8 +1,14 @@
 import { temPermissaoDeAdministrador, temPermissaoDeGestor, TipoUsuarioEnum } from '@project20/shared';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 
-/** Uma ferramenta de leitura devolve dados; uma de proposta só cria uma proposta (nunca executa a ação). */
-export type TipoFerramentaIa = 'LEITURA' | 'PROPOSTA';
+/**
+ * Uma ferramenta de leitura devolve dados; uma de proposta só cria uma proposta (nunca executa a ação); uma de rascunho (task 234) grava só no
+ * rascunho do plano, que nunca é dado do sistema: a demanda só muda quando a pessoa publica.
+ */
+export type TipoFerramentaIa = 'LEITURA' | 'PROPOSTA' | 'RASCUNHO';
+
+/** Onde a IA conversa: o chat de perguntas (e o check-in) ou a conversa de um plano. Cada um enxerga o seu conjunto de ferramentas. */
+export type EscopoDaFerramentaIa = 'CHAT' | 'PLANEJAMENTO';
 
 /** Quem pode usar a ferramenta (as mesmas regras de tipo de usuário do resto do sistema). */
 export type PermissaoFerramentaIa = 'QUALQUER' | 'GESTOR' | 'ADMINISTRADOR';
@@ -28,6 +34,8 @@ export abstract class FerramentaIa<TEntrada extends object = object> {
   abstract readonly tipo: TipoFerramentaIa;
   abstract readonly permissao: PermissaoFerramentaIa;
   abstract readonly classeDeEntrada: ClasseDeEntrada<TEntrada>;
+  /** Ferramenta do plano: só a conversa do planejamento a vê (o chat de perguntas nunca a lista). */
+  readonly somentePlanejamento?: boolean;
 
   /**
    * Ferramenta que depende de uma configuração (flag da IA): quando devolve `false` ela some da lista do modelo e, se for chamada

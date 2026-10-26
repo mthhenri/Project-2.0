@@ -63,7 +63,8 @@ export const MAPEAMENTO_CHAT_MENSAGEM = {
 
 export interface ConsultaConversa {
   conversaId: string;
-  usuarioId: number;
+  /** O dono da conversa. Só a conversa de um plano (task 234) vai sem ele: é de todos que têm acesso ao plano, e quem autoriza é a service. */
+  usuarioId?: number;
 }
 
 export interface ConsultaBusca {
@@ -73,16 +74,18 @@ export interface ConsultaBusca {
   fim?: Date;
 }
 
-/** A conversa do dia, em ordem. O filtro por dono vem junto: um usuário nunca lê a conversa de outro. */
+/** A conversa, em ordem. Com `usuarioId` o filtro por dono vem junto (um usuário nunca lê a conversa do dia de outro); sem ele, é a de um plano. */
 export function montarConsultaConversa(consulta: ConsultaConversa) {
+  const filtros: unknown[] = [{ term: { conversa_id: consulta.conversaId } }];
+  if (consulta.usuarioId !== undefined) filtros.push({ term: { usuario_id: consulta.usuarioId } });
   return {
     size: LIMITE_CONVERSA,
-    query: { bool: { filter: [{ term: { conversa_id: consulta.conversaId } }, { term: { usuario_id: consulta.usuarioId } }] } },
+    query: { bool: { filter: filtros } },
     sort: [{ created_date: 'asc' }],
   };
 }
 
-/** Busca textual nas mensagens do próprio usuário, mais relevantes primeiro, com filtro opcional de período. */
+/** Busca textual nas mensagens do próprio usuário, mais relevantes primeiro, com filtro opcional de período. A conversa de um plano não entra (task 234). */
 export function montarConsultaBusca(consulta: ConsultaBusca) {
   const filtros: unknown[] = [{ term: { usuario_id: consulta.usuarioId } }];
   if (consulta.inicio || consulta.fim) {
@@ -97,7 +100,13 @@ export function montarConsultaBusca(consulta: ConsultaBusca) {
   }
   return {
     size: LIMITE_BUSCA,
-    query: { bool: { filter: filtros, must: [{ match: { texto: { query: consulta.texto, operator: 'and' } } }] } },
+    query: {
+      bool: {
+        filter: filtros,
+        must: [{ match: { texto: { query: consulta.texto, operator: 'and' } } }],
+        must_not: [{ term: { contexto: 'PLANEJAMENTO' } }],
+      },
+    },
     sort: [{ _score: 'desc' }, { created_date: 'desc' }],
   };
 }

@@ -43,3 +43,53 @@ export function textoInicialDaAba(textoDoPlano: string | null, textoDaDemanda: s
   const demandaTemTexto = textoDaDemanda !== null && textoDaDemanda.trim() !== '';
   return planoVazio && demandaTemTexto ? textoDaDemanda : null;
 }
+
+/** A conversa de um plano: `plano-<id>`. Não casa com `<usuarioId>-<yyyy-mm-dd>`, então nunca aparece nas conversas do dia. */
+export function montarConversaIdDoPlano(planoId: number): string {
+  return `plano-${planoId}`;
+}
+
+/** O texto da aba no plano (ou `null` quando está vazia). */
+export function textoDaAbaDoPlano(
+  plano: { descricaoTecnica: string | null; descricaoCliente?: string | null; documentacao: string | null },
+  aba: PlanoAbaEnum,
+): string | null {
+  switch (aba) {
+    case PlanoAbaEnum.DESCRICAO_TECNICA:
+      return plano.descricaoTecnica;
+    case PlanoAbaEnum.DESCRICAO_CLIENTE:
+      return plano.descricaoCliente ?? null;
+    default:
+      return plano.documentacao;
+  }
+}
+
+/** Quantas vezes o trecho aparece, igual e sem sobreposição, no texto. Trecho vazio nunca conta. */
+export function contarOcorrenciasDoTrecho(texto: string, trecho: string): number {
+  if (trecho === '') return 0;
+  let total = 0;
+  for (let posicao = texto.indexOf(trecho); posicao !== -1; posicao = texto.indexOf(trecho, posicao + trecho.length)) total += 1;
+  return total;
+}
+
+/**
+ * Troca o trecho pelo novo **só quando ele aparece exatamente uma vez** (a alteração de trecho do plano mexe num lugar só do documento); com zero
+ * ocorrências (o texto mudou) ou com mais de uma (não dá para saber qual), devolve `null`.
+ */
+export function substituirTrechoUnico(texto: string, trechoAntigo: string, trechoNovo: string): string | null {
+  if (contarOcorrenciasDoTrecho(texto, trechoAntigo) !== 1) return null;
+  const inicio = texto.indexOf(trechoAntigo);
+  return texto.slice(0, inicio) + trechoNovo + texto.slice(inicio + trechoAntigo.length);
+}
+
+/** O campo do plano (e da demanda) que guarda o texto de cada aba. */
+export function campoDaAbaDoPlano(aba: PlanoAbaEnum): 'descricaoTecnica' | 'descricaoCliente' | 'documentacao' {
+  switch (aba) {
+    case PlanoAbaEnum.DESCRICAO_TECNICA:
+      return 'descricaoTecnica';
+    case PlanoAbaEnum.DESCRICAO_CLIENTE:
+      return 'descricaoCliente';
+    default:
+      return 'documentacao';
+  }
+}

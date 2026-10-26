@@ -73,7 +73,6 @@
     }
   }
 
-  &__planejamento,
   &__sem-plano {
     display: flex;
     flex: 1;
@@ -99,6 +98,15 @@
     height: 100%;
     border: 1px dashed var(--app-surface-300);
     border-radius: 12px;
+  }
+
+  // O nome de quem escreveu na conversa do plano, quando não é a própria pessoa.
+  &__autor {
+    align-self: flex-end;
+    margin-bottom: 0.125rem;
+    color: var(--p-text-muted-color);
+    font-size: 0.75rem;
+    font-weight: 600;
   }
 
   // A chave de modo no campo de mensagem: duas opções lado a lado, a ativa em destaque.

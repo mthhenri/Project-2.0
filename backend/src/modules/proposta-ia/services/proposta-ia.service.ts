@@ -33,6 +33,7 @@ import { dataNoFuso } from '../../chat/domain/chat-conversa';
 import { ConfiguracaoIaService } from '../../configuracao-ia/services/configuracao-ia.service';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { ExecutorPropostaIaRegistro } from '../domain/executor-proposta-ia';
+import { PropostaObsoletaException } from '../domain/proposta-obsoleta.exception';
 import { PropostaIaRepository } from '../repositories/proposta-ia.repository';
 
 /**
@@ -128,10 +129,10 @@ export class PropostaIaService {
 
   /** Recusar não executa nada: a proposta vira `EXPIRADA`. */
   async recusar(id: number, usuarioAtivo: JwtPayload): Promise<StandardResponse<PropostaIaRecusadaDto>> {
-    await this.obterDoUsuario(id, usuarioAtivo);
+    const proposta = await this.obterDoUsuario(id, usuarioAtivo);
     const recusada = await this.propostaIaRepositorio.transitar({
       id,
-      usuarioId: usuarioAtivo.sub,
+      usuarioId: proposta.usuarioId,
       de: [StatusPropostaIaEnum.PENDENTE],
       para: StatusPropostaIaEnum.EXPIRADA,
     });
@@ -154,7 +155,7 @@ export class PropostaIaService {
     const executor = this.executores.obter(proposta.tipo);
     const reivindicada = await this.propostaIaRepositorio.transitar({
       id,
-      usuarioId: usuarioAtivo.sub,
+      usuarioId: proposta.usuarioId,
       de: [situacaoAtual],
       para: StatusPropostaIaEnum.DESFEITA,
     });
@@ -163,7 +164,7 @@ export class PropostaIaService {
     try {
       await executor.desfazer(proposta.resultado, usuarioAtivo);
     } catch (erro) {
-      await this.propostaIaRepositorio.transitar({ id, usuarioId: usuarioAtivo.sub, de: [StatusPropostaIaEnum.DESFEITA], para: situacaoAtual });
+      await this.propostaIaRepositorio.transitar({ id, usuarioId: proposta.usuarioId, de: [StatusPropostaIaEnum.DESFEITA], para: situacaoAtual });
       throw erro;
     }
     return { sucesso: true, dados: reivindicada, mensagem: 'Proposta desfeita com sucesso' };
@@ -259,7 +260,7 @@ export class PropostaIaService {
     return 'Não foi possível concluir esta proposta';
   }
 
-  /** Valida, reivindica a proposta (só um chamador passa), executa e guarda o resultado; falha do executor devolve a `PENDENTE`. */
+  /** Valida, reivindica a proposta (só um chamador passa), executa e guarda o resultado; falha do executor devolve a `PENDENTE` (ou a `EXPIRADA`, se obsoleta). */
   private async resolver(
     proposta: PropostaIaResumoDto,
     dados: Record<string, unknown>,
@@ -271,7 +272,7 @@ export class PropostaIaService {
 
     const reivindicada = await this.propostaIaRepositorio.transitar({
       id: proposta.id,
-      usuarioId: usuarioAtivo.sub,
+      usuarioId: proposta.usuarioId,
       de: [StatusPropostaIaEnum.PENDENTE],
       para: destino,
       dados: destino === StatusPropostaIaEnum.AJUSTADA ? dados : undefined,
@@ -284,9 +285,10 @@ export class PropostaIaService {
     } catch (erro) {
       await this.propostaIaRepositorio.transitar({
         id: proposta.id,
-        usuarioId: usuarioAtivo.sub,
+        usuarioId: proposta.usuarioId,
         de: [destino],
-        para: StatusPropostaIaEnum.PENDENTE,
+        // Proposta obsoleta (o estado em que se baseava mudou) expira: confirmar de novo nunca vai servir. Qualquer outra falha volta a pendente.
+        para: erro instanceof PropostaObsoletaException ? StatusPropostaIaEnum.EXPIRADA : StatusPropostaIaEnum.PENDENTE,
       });
       throw erro;
     }
@@ -296,18 +298,30 @@ export class PropostaIaService {
   private async obterDoUsuario(id: number, usuarioAtivo: JwtPayload): Promise<PropostaIaResumoDto> {
     const proposta = await this.propostaIaRepositorio.recuperarPorId(id);
     if (!proposta) throw new ResourceNotFoundException('Proposta');
-    if (proposta.usuarioId !== usuarioAtivo.sub) throw new UnauthorizedAccessException('Esta proposta é de outro usuário');
+    if (proposta.usuarioId !== usuarioAtivo.sub && !(await this.outraPessoaPodeResolver(proposta, usuarioAtivo))) {
+      throw new UnauthorizedAccessException('Esta proposta é de outro usuário');
+    }
 
     if (proposta.status === StatusPropostaIaEnum.PENDENTE && this.ehDeDiaAnterior(proposta.createdDate)) {
       const expirada = await this.propostaIaRepositorio.transitar({
         id,
-        usuarioId: usuarioAtivo.sub,
+        usuarioId: proposta.usuarioId,
         de: [StatusPropostaIaEnum.PENDENTE],
         para: StatusPropostaIaEnum.EXPIRADA,
       });
       return expirada ?? ((await this.propostaIaRepositorio.recuperarPorId(id)) as PropostaIaResumoDto);
     }
     return proposta;
+  }
+
+  /** O executor do tipo deixa outra pessoa resolver a proposta (a alteração de trecho do plano é de quem edita o plano)? */
+  private async outraPessoaPodeResolver(proposta: PropostaIaResumoDto, usuarioAtivo: JwtPayload): Promise<boolean> {
+    try {
+      const executor = this.executores.obter(proposta.tipo);
+      return (await executor.podeResolver?.(proposta.dados, usuarioAtivo)) ?? false;
+    } catch {
+      return false;
+    }
   }
 
   private ehDeDiaAnterior(criadaEm: Date): boolean {

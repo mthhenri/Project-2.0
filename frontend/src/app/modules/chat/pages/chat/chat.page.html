@@ -37,7 +37,6 @@
         </p>
       }
 
-      @if (modo() === Modo.PERGUNTAS) {
       <div class="chat__conversa">
         <div
           #rolagem
@@ -58,11 +57,18 @@
                 <p-skeleton height="5rem" width="75%" />
                 <p-skeleton height="3rem" width="40%" />
               </div>
-            } @else if (mensagens().length === 0 && !aoVivo()) {
+            } @else if (mensagensVisiveis().length === 0 && !aoVivo()) {
               <div class="chat__vazio">
                 <span class="chat__avatar chat__avatar--grande" aria-hidden="true">IA</span>
-                <p>Nenhuma mensagem {{ somenteLeitura() ? 'neste dia' : 'hoje ainda' }}.</p>
-                @if (!somenteLeitura()) {
+                @if (modo() === Modo.PLANEJAMENTO) {
+                  <p>{{ planoAbertoId() === null ? 'Abra ou crie um plano para conversar.' : 'Nenhuma mensagem neste plano ainda.' }}</p>
+                  @if (planoAbertoId() !== null) {
+                    <small>Conte o que a demanda precisa e a IA pergunta o que falta antes de escrever no documento ao lado. Quem tem acesso ao plano vê esta conversa.</small>
+                  }
+                } @else {
+                  <p>Nenhuma mensagem {{ somenteLeitura() ? 'neste dia' : 'hoje ainda' }}.</p>
+                }
+                @if (modo() === Modo.PERGUNTAS && !somenteLeitura()) {
                   <small>Conte o que vai fazer ou pergunte o que precisar; a IA pergunta antes do que é difícil de desfazer e avisa o que faz sozinha.</small>
                   @if (podeSugerir()) {
                     <div class="chat__sugestoes chat__sugestoes--centro" role="group" aria-label="Sugestões de mensagem">
@@ -79,6 +85,9 @@
                   @case (Autor.USUARIO) {
                     <div class="chat__linha chat__linha--usuario" [attr.data-mensagem-id]="mensagem.id">
                       <div class="chat__coluna-usuario">
+                        @if (mensagem.autorNome) {
+                          <span class="chat__autor">{{ mensagem.autorNome }}</span>
+                        }
                         <div class="chat__balao">{{ mensagem.texto }}</div>
                         <div class="chat__rodape-mensagem">
                           @if (mensagem.criadaEm) {
@@ -158,21 +167,28 @@
           />
         }
       </div>
-      } @else {
-        <div class="chat__planejamento" role="status">
-          <i class="pi pi-file-edit" aria-hidden="true"></i>
-          <strong>Modo planejamento</strong>
-          <p>O documento fica ao lado e, por enquanto, é escrito à mão. A IA entra na conversa do plano em breve.</p>
-        </div>
-      }
 
       @if (modo() === Modo.PLANEJAMENTO) {
         <div class="chat__rodape">
           <ng-container [ngTemplateOutlet]="chaveDeModo" />
-          <form class="chat__entrada" (submit)="$event.preventDefault()">
-            <textarea pTextarea class="chat__campo" rows="2" disabled placeholder="A conversa do plano chega em breve" aria-label="Mensagem para a IA"></textarea>
-            <button type="submit" class="chat__enviar" aria-label="Enviar" disabled><i class="pi pi-arrow-right"></i></button>
+          <form class="chat__entrada" (submit)="$event.preventDefault(); enviar()">
+            <textarea
+              #campoTexto
+              pTextarea
+              class="chat__campo"
+              rows="2"
+              [autoResize]="true"
+              [formControl]="controleTexto"
+              [placeholder]="iaDesligada() ? 'A IA está desligada' : planoAbertoId() === null ? 'Abra um plano para conversar' : 'Converse sobre o plano: o que a demanda precisa, o que falta, o que escrever…'"
+              aria-label="Mensagem para a IA"
+              maxlength="4000"
+              (keydown)="aoTeclar($event)"
+            ></textarea>
+            <button type="submit" class="chat__enviar" aria-label="Enviar" [disabled]="!podeEnviar()">
+              <i class="pi" [class.pi-arrow-right]="!enviando()" [class.pi-spin]="enviando()" [class.pi-spinner]="enviando()"></i>
+            </button>
           </form>
+          <span class="chat__legenda">Quem tem acesso ao plano vê esta conversa. A IA pergunta antes de escrever no documento. Enter envia, Shift+Enter quebra a linha.</span>
         </div>
       } @else if (!somenteLeitura()) {
         <div class="chat__rodape">
@@ -237,6 +253,8 @@
       @if (planoAbertoId(); as idDoPlano) {
         <app-plano-documento
           [planoId]="idDoPlano"
+          [podePedirIa]="!iaDesligada()"
+          (pedirAlteracao)="pedirAlteracaoDoTrecho($event)"
           (identificado)="aoIdentificarPlano($event)"
           (mudou)="aoMudarPlano()"
           (excluido)="aoExcluirPlano()"

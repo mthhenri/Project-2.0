@@ -96,6 +96,7 @@ export const ROTULO_TIPO_PROPOSTA: Record<TipoPropostaIaEnum, string> = {
   [TipoPropostaIaEnum.DESCONECTAR_DEMANDA]: 'Desconectar demandas',
   [TipoPropostaIaEnum.EXCLUIR_ATIVIDADE]: 'Excluir atividade',
   [TipoPropostaIaEnum.JUSTIFICAR_PONTO]: 'Justificar ponto',
+  [TipoPropostaIaEnum.ALTERAR_TRECHO_PLANO]: 'Alterar trecho do plano',
 };
 
 export const ROTULO_STATUS_PROPOSTA: Record<StatusPropostaIaEnum, string> = {

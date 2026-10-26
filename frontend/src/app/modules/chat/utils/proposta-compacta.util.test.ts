@@ -27,6 +27,7 @@ const TIPICAS: [TipoPropostaIaEnum, Record<string, unknown>, boolean][] = [
   [Tipo.MOVER_ATIVIDADE, { atividadeNome: 'Montar o formulário', demandaOrigemNome: 'Login', demandaDestinoNome: 'Relatórios' }, true],
   [Tipo.DESCONECTAR_DEMANDA, { demandaOrigemNome: 'API de relatórios', demandaDestinoNome: 'Exportar PDF', ehBidirecional: false }, true],
   [Tipo.EXCLUIR_ATIVIDADE, { atividadeNome: 'Montar o formulário', demandaNome: 'Login' }, true],
+  [Tipo.ALTERAR_TRECHO_PLANO, { planoId: 7, planoTitulo: 'Relatório mensal', aba: 'DESCRICAO_TECNICA', trechoAntigo: 'Texto velho.', trechoNovo: 'Texto novo.', versao: 3 }, false],
   [Tipo.JUSTIFICAR_PONTO, { usuarioNome: 'Ana', diaData: '2026-10-20', nome: 'Consulta médica', descricao: 'Combinado com o gestor', horasCobertas: 4 }, true],
 ];
 

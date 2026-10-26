@@ -9,7 +9,7 @@ import { SelectModule } from 'primeng/select';
 import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
 import { TextareaModule } from 'primeng/textarea';
-import { limiteParaDesfazerProposta, podeDesfazerProposta, PRAZO_PARA_DESFAZER_PROPOSTA_MINUTOS, PropostaIaResumoDto, StandardResponse, StatusPropostaIaEnum, TipoAtividadePrioridadeEnum, TipoAtividadeStatusEnum, TipoPropostaIaEnum } from '@project20/shared';
+import { limiteParaDesfazerProposta, PlanoAbaEnum, podeDesfazerProposta, PRAZO_PARA_DESFAZER_PROPOSTA_MINUTOS, PropostaIaResumoDto, StandardResponse, StatusPropostaIaEnum, TipoAtividadePrioridadeEnum, TipoAtividadeStatusEnum, TipoPropostaIaEnum } from '@project20/shared';
 import { AtividadeService } from '../../../atividade/services/atividade.service';
 import { ATIVIDADE_STATUS_OPCOES } from '../../../atividade/models/atividade.model';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
@@ -21,6 +21,7 @@ import { PrioridadeSeloComponent } from '../../../../shared/components/prioridad
 import { ROTULO_SECAO_ANOTACAO } from '../../../usuario/utils/anotacoes.util';
 import { DesfazerService } from '../../../../core/services/desfazer.service';
 import { PropostaIaService } from '../../services/proposta-ia.service';
+import { ROTULO_ABA_DO_PLANO } from '../../utils/plano.util';
 import {
   ROTULO_STATUS_PROPOSTA,
   ROTULO_TIPO_PROPOSTA,
@@ -92,6 +93,10 @@ export class PropostaCartaoComponent {
   /** As atividades do usuário em que dá para começar uma execução (a escolha "Trocar para…" do check-in). */
   readonly atividadesParaTroca = signal<{ id: number; rotulo: string }[]>([]);
   readonly formatarDuracao = formatarDuracao;
+  /** O nome da aba do plano como ela aparece no documento. */
+  rotuloAbaDoPlano(aba: string): string {
+    return ROTULO_ABA_DO_PLANO[aba as PlanoAbaEnum] ?? aba;
+  }
 
   private static readonly TIPOS_AJUSTAVEIS: TipoPropostaIaEnum[] = [
     TipoPropostaIaEnum.CRIAR_ATIVIDADE,

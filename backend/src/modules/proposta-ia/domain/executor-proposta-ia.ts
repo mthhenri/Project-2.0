@@ -20,6 +20,11 @@ export interface ExecutorPropostaIa {
    * volta de uma queda, as pendentes obsoletas expiram em vez de aparecer como se ainda valessem.
    */
   estaObsoleta?(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<boolean>;
+  /**
+   * Opcional: além de quem a criou, esta pessoa também pode ver, confirmar, recusar e desfazer a proposta? É o caso da alteração de trecho do plano
+   * (task 234): quem pode editar o plano a resolve, mesmo que a IA a tenha criado a pedido de outra pessoa. Sem este método, só o dono resolve.
+   */
+  podeResolver?(dados: Record<string, unknown>, usuarioAtivo: JwtPayload): Promise<boolean>;
 }
 
 /** Os executores por tipo. Cada executor se registra na subida do módulo dele. */

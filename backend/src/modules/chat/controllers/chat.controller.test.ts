@@ -10,10 +10,10 @@ import { ChatController } from './chat.controller';
 
 const USUARIO = { sub: 7, login: 'dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
 
-test('verbos e caminhos das oito rotas do chat', () => {
+test('verbos e caminhos das dez rotas do chat', () => {
   assert.deepEqual(
     Object.values(rotasPorNome(ChatController)).map((rota) => `${rota.verbo} ${rota.caminho}`).sort(),
-    ['GET busca', 'GET conversa/:data', 'GET conversas', 'GET hoje', 'POST bom-dia', 'POST mensagem', 'POST retomada', 'PUT conversa/:data/titulo'].sort(),
+    ['GET busca', 'GET conversa/:data', 'GET conversas', 'GET hoje', 'GET plano/:planoId', 'POST bom-dia', 'POST mensagem', 'POST plano/:planoId/mensagem', 'POST retomada', 'PUT conversa/:data/titulo'].sort(),
   );
 });
 
@@ -31,7 +31,7 @@ test('as rotas de leitura repassam o DTO e o usuário do token (nunca um id vind
   const controller = new ChatController({
     recuperarHoje: registrar('recuperarHoje'), listarConversas: registrar('listarConversas'),
     recuperarConversa: registrar('recuperarConversa'), buscar: registrar('buscar'),
-  } as never);
+  } as never, {} as never);
 
   await controller.recuperarHoje(USUARIO);
   await controller.listarConversas(USUARIO);
@@ -45,14 +45,14 @@ test('as rotas de leitura repassam o DTO e o usuário do token (nunca um id vind
 
 test('renomear a conversa junta o dia da rota ao corpo e usa o usuário do token (nunca um id da requisição)', async () => {
   const chamadas: unknown[][] = [];
-  const controller = new ChatController({ alterarTituloConversa: async (...argumentos: unknown[]) => { chamadas.push(argumentos); return null; } } as never);
+  const controller = new ChatController({ alterarTituloConversa: async (...argumentos: unknown[]) => { chamadas.push(argumentos); return null; } } as never, {} as never);
   await controller.alterarTituloConversa({ data: '2026-10-16' }, { titulo: 'Meu nome' }, USUARIO);
   assert.deepEqual(chamadas, [[{ titulo: 'Meu nome', data: '2026-10-16' }, USUARIO]]);
 });
 
 test('o dia da rota vence um "data" que venha no corpo', async () => {
   const chamadas: unknown[][] = [];
-  const controller = new ChatController({ alterarTituloConversa: async (...argumentos: unknown[]) => { chamadas.push(argumentos); return null; } } as never);
+  const controller = new ChatController({ alterarTituloConversa: async (...argumentos: unknown[]) => { chamadas.push(argumentos); return null; } } as never, {} as never);
   await controller.alterarTituloConversa({ data: '2026-10-16' }, { titulo: 'x', data: '1999-01-01' } as never, USUARIO);
   assert.equal((chamadas[0][0] as { data: string }).data, '2026-10-16');
 });
@@ -91,7 +91,7 @@ for (const rota of ROTAS_DE_ENVIO) {
       },
     };
     const { resposta, registro } = criarResposta();
-    await rota.chamar(new ChatController(servico as never), resposta as never);
+    await rota.chamar(new ChatController(servico as never, {} as never), resposta as never);
 
     assert.deepEqual(eventosEscritos(registro.escritas), [
       { tipo: 'trecho', texto: 'Olá' }, { tipo: 'proposta', propostaId: 4 }, { tipo: 'sugestoes', itens: ['Sim', 'Não'] },
@@ -107,7 +107,7 @@ for (const rota of ROTAS_DE_ENVIO) {
     const servico = { [rota.metodo]: async () => { throw conflito; } };
     const { resposta, registro } = criarResposta();
 
-    await assert.rejects(() => rota.chamar(new ChatController(servico as never), resposta as never), conflito);
+    await assert.rejects(() => rota.chamar(new ChatController(servico as never, {} as never), resposta as never), conflito);
     assert.deepEqual(registro.status, []);
     assert.deepEqual(registro.escritas, []);
     assert.equal(registro.terminou, 0);
@@ -121,14 +121,14 @@ for (const rota of ROTAS_DE_ENVIO) {
       },
     };
     const { resposta, registro } = criarResposta();
-    await assert.rejects(() => rota.chamar(new ChatController(servico as never), resposta as never), /estourou/);
+    await assert.rejects(() => rota.chamar(new ChatController(servico as never, {} as never), resposta as never), /estourou/);
     assert.equal(registro.terminou, 1);
   });
 }
 
 test('mensagem: o texto do DTO e o usuário do token chegam à service', async () => {
   const recebidos: unknown[][] = [];
-  const controller = new ChatController({ enviarMensagem: async (...argumentos: unknown[]) => { recebidos.push(argumentos.slice(0, 2)); } } as never);
+  const controller = new ChatController({ enviarMensagem: async (...argumentos: unknown[]) => { recebidos.push(argumentos.slice(0, 2)); } } as never, {} as never);
   await controller.enviarMensagem({ texto: 'Preciso de ajuda' }, USUARIO, criarResposta().resposta as never);
   assert.deepEqual(recebidos, [[USUARIO, { texto: 'Preciso de ajuda' }]]);
 });
@@ -142,7 +142,23 @@ test('cliente que fecha a conexão no meio: a service continua gerando e o contr
   };
   const { resposta, registro } = criarResposta();
   resposta.destroyed = true;
-  await new ChatController(servico as never).enviarMensagem({ texto: 'Oi' }, USUARIO, resposta as never);
+  await new ChatController(servico as never, {} as never).enviarMensagem({ texto: 'Oi' }, USUARIO, resposta as never);
   assert.equal(eventosGerados, 3);
   assert.deepEqual(registro.escritas, []);
+});
+
+test('a conversa do plano usa o id da rota e o usuário do token (nunca um id do corpo)', async () => {
+  const chamadas: unknown[][] = [];
+  const controller = new ChatController({} as never, { recuperarConversa: async (...argumentos: unknown[]) => { chamadas.push(['conversa', ...argumentos]); return null; } } as never);
+  await controller.recuperarConversaDoPlano(12, USUARIO);
+  assert.deepEqual(chamadas, [['conversa', { id: 12 }, USUARIO]]);
+});
+
+test('a mensagem no plano repassa o id da rota, o corpo e o usuário do token', async () => {
+  const recebidos: unknown[][] = [];
+  const { resposta, registro } = criarResposta();
+  const planoService = { enviarMensagem: async (...argumentos: unknown[]) => { recebidos.push(argumentos.slice(0, 3)); } };
+  await new ChatController({} as never, planoService as never).enviarMensagemNoPlano(12, { texto: 'Oi' }, USUARIO, resposta as never);
+  assert.deepEqual(recebidos, [[{ id: 12 }, { texto: 'Oi' }, USUARIO]]);
+  assert.deepEqual(registro.escritas, [], 'sem evento da service, nada é escrito no fluxo');
 });

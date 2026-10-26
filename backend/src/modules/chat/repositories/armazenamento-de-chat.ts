@@ -24,7 +24,7 @@ import { ChatMensagemPostgresRepository } from './chat-mensagem-postgres.reposit
  */
 export interface ArmazenamentoDeChat {
   gravar(mensagem: ChatMensagemNova): Promise<ChatMensagemLida>;
-  /** A conversa do dia, em ordem crescente de data, só do dono. */
+  /** A conversa, em ordem crescente de data: a do dia só do dono (`usuarioId`); a de um plano (task 234) sem `usuarioId`, de todos que a escreveram. */
   listarConversa(consulta: ConsultaConversa): Promise<ChatMensagemLida[]>;
   /** As conversas do usuário (uma por dia, contexto CHAT), da mais recente à mais antiga, sem as mensagens. */
   listarConversas(consulta: ConsultaConversas): Promise<BaldeConversa[]>;
@@ -32,7 +32,7 @@ export interface ArmazenamentoDeChat {
   gravarTitulo(titulo: TituloParaGravar): Promise<void>;
   /** Os nomes das conversas pedidas do usuário, por `conversaId`; quem não tem registro não aparece (o nome vazio também vale o padrão). */
   listarTitulos(consulta: ConsultaTitulos): Promise<Record<string, TituloDaConversa>>;
-  /** Busca textual (sem acento, todas as palavras) nas mensagens do próprio usuário, mais relevantes primeiro. */
+  /** Busca textual (sem acento, todas as palavras) nas mensagens do próprio usuário, mais relevantes primeiro; a conversa de um plano não entra. */
   buscar(consulta: ConsultaBusca): Promise<ChatMensagemLida[]>;
   /** Os tokens gravados nas mensagens (de qualquer usuário), somados por dia ou mês e por modelo: a base da aba "Custos" (task 202). */
   somarTokens(consulta: ConsultaTokens): Promise<TokensSomados[]>;

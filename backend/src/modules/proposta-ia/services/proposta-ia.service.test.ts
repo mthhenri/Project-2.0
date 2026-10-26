@@ -8,6 +8,7 @@ import { ConflictException } from '../../../core/exceptions/conflict.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
 import { UnauthorizedAccessException } from '../../../core/exceptions/unauthorized-access.exception';
 import { ExecutorPropostaIa, ExecutorPropostaIaRegistro } from '../domain/executor-proposta-ia';
+import { PropostaObsoletaException } from '../domain/proposta-obsoleta.exception';
 import { PropostaIaRepository, PropostaIaTransicao } from '../repositories/proposta-ia.repository';
 import { PropostaIaService } from './proposta-ia.service';
 
@@ -62,7 +63,7 @@ function criarRepositorio() {
   return { repositorio, propostas };
 }
 
-function criarExecutor(opcoes: { falharAoExecutar?: boolean; falharAoDesfazer?: boolean; atraso?: boolean; obsoleta?: boolean | 'falha' } = {}) {
+function criarExecutor(opcoes: { falharAoExecutar?: boolean | 'obsoleta'; falharAoDesfazer?: boolean; atraso?: boolean; obsoleta?: boolean | 'falha'; podeResolver?: boolean } = {}) {
   const chamadas = { executar: [] as Record<string, unknown>[], desfazer: 0 };
   const executor: ExecutorPropostaIa = {
     tipo: TIPO,
@@ -72,6 +73,7 @@ function criarExecutor(opcoes: { falharAoExecutar?: boolean; falharAoDesfazer?: 
     async executar(dados) {
       chamadas.executar.push(dados);
       if (opcoes.atraso) await new Promise((resolver) => setTimeout(resolver, 20));
+      if (opcoes.falharAoExecutar === 'obsoleta') throw new PropostaObsoletaException('O trecho mudou');
       if (opcoes.falharAoExecutar) throw new BusinessException('Já existe uma execução ativa');
       return { atividadeId: 99 };
     },
@@ -83,6 +85,7 @@ function criarExecutor(opcoes: { falharAoExecutar?: boolean; falharAoDesfazer?: 
       chamadas.desfazer++;
       if (opcoes.falharAoDesfazer) throw new BusinessException('A atividade já foi alterada');
     },
+    ...(opcoes.podeResolver !== undefined ? { podeResolver: async () => opcoes.podeResolver as boolean } : {}),
   };
   return { executor, chamadas };
 }
@@ -500,4 +503,44 @@ test('autonomia: desfazer recusado porque o estado mudou depois deixa a proposta
   await assert.rejects(() => servico.desfazer(proposta.id, DONO), BusinessException);
   assert.equal(propostas[0].status, StatusPropostaIaEnum.CONFIRMADA);
   assert.equal(propostas[0].aplicadaPelaIa, true);
+});
+
+test('proposta obsoleta (o estado em que se baseava mudou) expira em vez de voltar a pendente (task 234)', async () => {
+  const { servico, propostas } = criarServico({ falharAoExecutar: 'obsoleta' });
+  const criada = await servico.criar({ usuarioId: 1, tipo: TIPO, dados: DADOS });
+  await assert.rejects(() => servico.confirmar(criada.id, DONO), PropostaObsoletaException);
+  assert.equal(propostas[0].status, StatusPropostaIaEnum.EXPIRADA);
+});
+
+test('outra falha do executor continua voltando a proposta a pendente (task 234)', async () => {
+  const { servico, propostas } = criarServico({ falharAoExecutar: true });
+  const criada = await servico.criar({ usuarioId: 1, tipo: TIPO, dados: DADOS });
+  await assert.rejects(() => servico.confirmar(criada.id, DONO), BusinessException);
+  assert.equal(propostas[0].status, StatusPropostaIaEnum.PENDENTE);
+});
+
+test('quando o executor deixa, outra pessoa também lê, confirma, recusa e desfaz a proposta; o dono segue sendo o da proposta (task 234)', async () => {
+  const { servico, propostas, chamadas } = criarServico({ podeResolver: true });
+  const criada = await servico.criar({ usuarioId: 1, tipo: TIPO, dados: DADOS });
+  assert.equal((await servico.recuperarPorId(criada.id, OUTRO)).dados.id, criada.id);
+  const confirmada = await servico.confirmar(criada.id, OUTRO);
+  assert.equal(confirmada.dados.status, StatusPropostaIaEnum.CONFIRMADA);
+  assert.equal(propostas[0].usuarioId, 1, 'continua sendo de quem a IA atendeu');
+  assert.equal(chamadas.executar.length, 1);
+  await servico.desfazer(criada.id, OUTRO);
+  assert.equal(chamadas.desfazer, 1);
+
+  const segunda = await servico.criar({ usuarioId: 1, tipo: TIPO, dados: DADOS });
+  await servico.recusar(segunda.id, OUTRO);
+  assert.equal(propostas[1].status, StatusPropostaIaEnum.EXPIRADA);
+});
+
+test('sem o `podeResolver` do executor (ou com ele recusando), a proposta de outra pessoa segue vedada (task 234)', async () => {
+  const sem = criarServico();
+  const criadaSem = await sem.servico.criar({ usuarioId: 1, tipo: TIPO, dados: DADOS });
+  await assert.rejects(() => sem.servico.confirmar(criadaSem.id, OUTRO), UnauthorizedAccessException);
+
+  const recusando = criarServico({ podeResolver: false });
+  const criadaRecusando = await recusando.servico.criar({ usuarioId: 1, tipo: TIPO, dados: DADOS });
+  await assert.rejects(() => recusando.servico.recuperarPorId(criadaRecusando.id, OUTRO), UnauthorizedAccessException);
 });

@@ -48,3 +48,7 @@ export * from './RelatorioDeExecucoesConsultarDto';
 export * from './ConversasDoDesenvolvedorListarDto';
 export * from './ConversaDoDesenvolvedorConsultarDto';
 export * from './ConversasDoDesenvolvedorBuscarDto';
+export * from './PlanoConsultarDto';
+export * from './PlanoEscreverDto';
+export * from './ProporAlterarTrechoPlanoDto';
+export * from './PropostaAlterarTrechoPlanoDadosDto';

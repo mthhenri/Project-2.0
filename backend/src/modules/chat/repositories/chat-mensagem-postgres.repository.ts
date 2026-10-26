@@ -99,10 +99,11 @@ export class ChatMensagemPostgresRepository extends BaseRepository<ChatMensagemF
       const linhas = await this.executarConsulta<LinhaDeMensagem>(
         `SELECT ${COLUNAS_DA_MENSAGEM}
          FROM chat_mensagem
-         WHERE conversa_id = :conversaId AND usuario_id = :usuarioId AND is_deleted = false
+         WHERE conversa_id = :conversaId AND is_deleted = false
+           AND (CAST(:usuarioId AS integer) IS NULL OR usuario_id = CAST(:usuarioId AS integer))
          ORDER BY created_date ASC, id ASC
          LIMIT :limite`,
-        { conversaId: consulta.conversaId, usuarioId: consulta.usuarioId, limite: LIMITE_CONVERSA },
+        { conversaId: consulta.conversaId, usuarioId: consulta.usuarioId ?? null, limite: LIMITE_CONVERSA },
       );
       return linhas.map(deLinha);
     });
@@ -164,7 +165,7 @@ export class ChatMensagemPostgresRepository extends BaseRepository<ChatMensagemF
       const linhas = await this.executarConsulta<LinhaDeMensagem>(
         `SELECT ${COLUNAS_DA_MENSAGEM}
          FROM chat_mensagem
-         WHERE usuario_id = :usuarioId AND is_deleted = false
+         WHERE usuario_id = :usuarioId AND is_deleted = false AND contexto <> 'PLANEJAMENTO'
            AND fn_chat_texto_busca(texto) @@ fn_chat_texto_consulta(:texto)
            AND (CAST(:inicio AS timestamptz) IS NULL OR created_date >= CAST(:inicio AS timestamptz))
            AND (CAST(:fim AS timestamptz) IS NULL OR created_date <= CAST(:fim AS timestamptz))

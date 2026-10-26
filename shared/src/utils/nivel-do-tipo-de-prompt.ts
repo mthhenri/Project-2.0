@@ -11,6 +11,11 @@ export const NIVEL_DO_TIPO_DE_PROMPT: Record<TipoPromptEnum, NivelIaEnum> = {
   [TipoPromptEnum.ENTREVISTA_DEMANDA]: NivelIaEnum.ANALITICO,
   [TipoPromptEnum.CONEXAO_DEMANDA]: NivelIaEnum.ANALITICO,
   [TipoPromptEnum.DUVIDA_CODIGO]: NivelIaEnum.RAPIDO,
+  // Planejamento (task 234): escrever e analisar um documento pede o nível analítico, nos quatro tipos.
+  [TipoPromptEnum.PLANEJAMENTO]: NivelIaEnum.ANALITICO,
+  [TipoPromptEnum.PLANO_DESCRICAO_TECNICA]: NivelIaEnum.ANALITICO,
+  [TipoPromptEnum.PLANO_DESCRICAO_CLIENTE]: NivelIaEnum.ANALITICO,
+  [TipoPromptEnum.PLANO_DOCUMENTACAO]: NivelIaEnum.ANALITICO,
 };
 
 /** Quantas narrativas um teste de prompt aceita (cada uma custa duas chamadas à IA). */

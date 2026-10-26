@@ -26,3 +26,8 @@ export function larguraDoDocumentoPeloPonteiro(ponteiroX: number, areaEsquerda: 
   if (areaLargura <= 0) return LARGURA_DO_DOCUMENTO.padrao;
   return limitarLarguraDoDocumento(((areaEsquerda + areaLargura - ponteiroX) / areaLargura) * 100);
 }
+
+/** A mensagem que o pedido de alteração de um trecho vira na conversa do plano (a IA copia o trecho exato e usa a ferramenta de alterar trecho). */
+export function montarPedidoDeAlteracaoDoTrecho(pedido: { aba: PlanoAbaEnum; trecho: string; pedido: string }): string {
+  return `Altere só este trecho da aba "${ROTULO_ABA_DO_PLANO[pedido.aba]}" do plano (aba ${pedido.aba}):\n\n> ${pedido.trecho.replace(/\n/g, '\n> ')}\n\nO que mudar: ${pedido.pedido}`;
+}

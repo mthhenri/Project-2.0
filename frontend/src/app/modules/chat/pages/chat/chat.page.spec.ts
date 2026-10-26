@@ -881,11 +881,17 @@ describe('ChatPage — modo Planejamento (task 233)', () => {
     Array.from(montado.elemento.querySelectorAll<HTMLButtonElement>('.chat__modo-opcao')).find((item) => item.textContent?.includes(rotulo))!;
   const divisor = (montado: Montado) => montado.elemento.querySelector<HTMLElement>('[role="separator"]');
 
-  /** Troca para Planejamento e responde o que a troca pede (a lista de planos e o plano mais recente). */
-  async function entrarEmPlanejamento(montado: Montado): Promise<void> {
+  /** O plano em si (`/plano/<id>`), sem confundir com a conversa dele (`/chat/plano/<id>`). */
+  const pedidoDoPlano = (montado: Montado, id: number) =>
+    montado.http.expectOne((requisicao) => requisicao.method === 'GET' && requisicao.url.endsWith(`/plano/${id}`) && !requisicao.url.includes('/chat/'));
+  const pedidoDaConversa = (montado: Montado, id: number) => esperarRequisicao(montado.http, 'GET', `/chat/plano/${id}`);
+
+  /** Troca para Planejamento e responde o que a troca pede (a lista de planos, o plano mais recente e a conversa dele). */
+  async function entrarEmPlanejamento(montado: Montado, mensagensDoPlano: unknown[] = [], autores: Record<number, string> = {}): Promise<void> {
     chave(montado, 'Planejamento').click();
     await responderListas(montado, [RESUMO]);
-    responderSucesso(esperarRequisicao(montado.http, 'GET', '/plano/7'), PLANO);
+    responderSucesso(pedidoDoPlano(montado, 7), PLANO);
+    responderSucesso(pedidoDaConversa(montado, 7), { conversaId: 'plano-7', planoId: 7, mensagens: mensagensDoPlano, autores });
     await montado.atualizar();
   }
 
@@ -912,17 +918,19 @@ describe('ChatPage — modo Planejamento (task 233)', () => {
 
     expect(montado.elemento.querySelector('app-plano-documento')).not.toBeNull();
     expect(divisor(montado)).not.toBeNull();
-    expect(texto(montado)).toContain('Modo planejamento');
+    expect(texto(montado)).toContain('Nenhuma mensagem neste plano ainda.');
     expect(montado.elemento.querySelector('.chat-seletor__gatilho-texto')?.textContent).toBe('Plano da semana');
   });
 
-  it('em Planejamento a conversa do dia não aparece e o campo de mensagem fica desabilitado', async () => {
+  it('em Planejamento a conversa do dia sai e entra a do plano, com o campo de mensagem habilitado', async () => {
     const montado = await montarChat({ mensagens: [DELA('Oi de hoje'), DA_IA('Olá de hoje!')] });
 
-    await entrarEmPlanejamento(montado);
+    await entrarEmPlanejamento(montado, [DELA('Vamos planejar o relatório', { conversaId: 'plano-7' }), DA_IA('Qual é o objetivo?', { conversaId: 'plano-7' })]);
 
-    expect(montado.elemento.querySelector('[role="log"]')).toBeNull();
-    expect(montado.elemento.querySelector<HTMLTextAreaElement>('textarea')!.disabled).toBe(true);
+    expect(conversaDa(montado)).toContain('Vamos planejar o relatório');
+    expect(conversaDa(montado)).toContain('Qual é o objetivo?');
+    expect(conversaDa(montado)).not.toContain('Olá de hoje!');
+    expect(campo(montado)!.disabled).toBe(false);
   });
 
   it('sem nenhum plano, Planejamento mostra "Nenhum plano aberto" e Novo plano cria um plano pessoal e o abre', async () => {
@@ -937,7 +945,8 @@ describe('ChatPage — modo Planejamento (task 233)', () => {
     expect(criacao.request.body).toEqual({});
     responderSucesso(criacao, { id: 8, titulo: 'Plano sem título', projetoId: null, demandaId: null, isSolo: false, versao: 1 });
     await montado.atualizar();
-    responderSucesso(esperarRequisicao(montado.http, 'GET', '/plano/8'), { ...PLANO, id: 8, titulo: 'Plano sem título', projetoId: null, projetoNome: null });
+    responderSucesso(pedidoDoPlano(montado, 8), { ...PLANO, id: 8, titulo: 'Plano sem título', projetoId: null, projetoNome: null });
+    responderSucesso(pedidoDaConversa(montado, 8), { conversaId: 'plano-8', planoId: 8, mensagens: [], autores: {} });
     await responderListas(montado, []);
 
     expect(texto(montado)).toContain('Pessoal');
@@ -990,5 +999,95 @@ describe('ChatPage — modo Planejamento (task 233)', () => {
 
     expect(texto(montado)).toContain('A IA está desligada');
     expect(montado.elemento.querySelector('app-plano-documento')).not.toBeNull();
+  });
+
+  it('na conversa do plano as mensagens de outra pessoa trazem o nome dela; as da própria pessoa, não (task 234)', async () => {
+    const montado = await montarChat();
+
+    await entrarEmPlanejamento(
+      montado,
+      [DELA('Eu comecei', { conversaId: 'plano-7', id: 'm-minha' }), DELA('Eu completo', { conversaId: 'plano-7', id: 'm-dela', usuarioId: 2 }), DA_IA('Ok', { conversaId: 'plano-7' })],
+      { 1: 'Eu mesmo', 2: 'Gabi Gestora' },
+    );
+
+    const nomes = Array.from(montado.elemento.querySelectorAll('.chat__autor')).map((nome) => nome.textContent?.trim());
+    expect(nomes).toEqual(['Gabi Gestora']);
+  });
+
+  it('enviar em Planejamento usa a rota do plano, mostra a resposta na conversa do plano e deixa a conversa do dia como estava (task 234)', async () => {
+    const montado = await montarChat({ mensagens: [DELA('Oi de hoje'), DA_IA('Olá de hoje!')] });
+    await entrarEmPlanejamento(montado);
+    const fluxo = controlarFluxo(enviarMensagemEspiao, 1);
+
+    await enviarPeloTeclado(montado, 'Descreva o relatório');
+    expect(enviarMensagemEspiao.mock.calls[0][0]).toBe('Descreva o relatório');
+    expect(enviarMensagemEspiao.mock.calls[0][3]).toBe('/chat/plano/7/mensagem');
+    expect(conversaDa(montado)).toContain('Descreva o relatório');
+
+    fluxo.emitir({ tipo: 'trecho', texto: 'Qual é o objetivo?' });
+    fluxo.emitir({ tipo: 'fim', mensagem: DA_IA('Qual é o objetivo?', { conversaId: 'plano-7', id: 'm-resposta' }) } as never);
+    fluxo.terminar();
+    await montado.atualizar();
+
+    expect(conversaDa(montado)).toContain('Qual é o objetivo?');
+    expect(montado.componente.mensagensDoPlano().map((mensagem) => mensagem.texto)).toEqual(['Descreva o relatório', 'Qual é o objetivo?']);
+    expect(montado.componente.mensagens().map((mensagem) => mensagem.texto)).toEqual(['Oi de hoje', 'Olá de hoje!']);
+    responderPendentes(montado);
+  });
+
+  it('a IA escrever no plano relê o documento (a ferramenta escrever_no_plano concluída)', async () => {
+    const montado = await montarChat();
+    await entrarEmPlanejamento(montado);
+    const fluxo = controlarFluxo(enviarMensagemEspiao, 1);
+    await enviarPeloTeclado(montado, 'Escreva a descrição técnica');
+
+    fluxo.emitir({ tipo: 'ferramenta', nome: 'escrever_no_plano', situacao: 'EXECUTANDO' });
+    fluxo.emitir({ tipo: 'ferramenta', nome: 'escrever_no_plano', situacao: 'CONCLUIDA' });
+
+    responderSucesso(pedidoDoPlano(montado, 7), { ...PLANO, versao: 4, descricaoTecnica: 'Texto novo da IA' });
+    await montado.atualizar();
+    expect(montado.elemento.querySelector('app-plano-documento')).not.toBeNull();
+    fluxo.terminar();
+    await montado.atualizar();
+    responderPendentes(montado);
+  });
+
+  it('aceitar uma alteração de trecho relê o documento; recusar não (task 234)', async () => {
+    const montado = await montarChat();
+    await entrarEmPlanejamento(montado);
+    const proposta = (status: StatusPropostaIaEnum) => ({ id: 3, usuarioId: 1, tipo: TipoPropostaIaEnum.ALTERAR_TRECHO_PLANO, status, dados: {}, resultado: null, resolucaoData: null, createdDate: '2026-10-19T12:00:00.000Z' });
+
+    montado.componente.aoResolverProposta(proposta(StatusPropostaIaEnum.EXPIRADA) as never);
+    montado.http.expectNone((requisicao) => requisicao.method === 'GET' && requisicao.url.endsWith('/plano/7') && !requisicao.url.includes('/chat/'));
+
+    montado.componente.aoResolverProposta(proposta(StatusPropostaIaEnum.CONFIRMADA) as never);
+    responderSucesso(pedidoDoPlano(montado, 7), { ...PLANO, versao: 4 });
+    await montado.atualizar();
+  });
+
+  it('o pedido de alteração de um trecho vira uma mensagem na conversa do plano, com o trecho e o que mudar', async () => {
+    const montado = await montarChat();
+    await entrarEmPlanejamento(montado);
+    controlarFluxo(enviarMensagemEspiao, 1);
+
+    montado.componente.pedirAlteracaoDoTrecho({ aba: 'DESCRICAO_TECNICA' as never, trecho: 'Primeira linha\nSegunda linha', pedido: 'deixar mais direto' });
+    await montado.atualizar();
+
+    const enviada = enviarMensagemEspiao.mock.calls[0][0] as string;
+    expect(enviada).toContain('DESCRICAO_TECNICA');
+    expect(enviada).toContain('> Primeira linha\n> Segunda linha');
+    expect(enviada).toContain('O que mudar: deixar mais direto');
+    expect(enviarMensagemEspiao.mock.calls[0][3]).toBe('/chat/plano/7/mensagem');
+  });
+
+  it('sem plano aberto não há conversa: o campo fica desabilitado e nada é enviado', async () => {
+    const montado = await montarChat();
+    chave(montado, 'Planejamento').click();
+    await responderListas(montado, []);
+
+    expect(texto(montado)).toContain('Abra ou crie um plano para conversar.');
+    expect(campo(montado).disabled).toBe(true);
+    await montado.componente.enviar('Oi');
+    expect(enviarMensagemEspiao).not.toHaveBeenCalled();
   });
 });

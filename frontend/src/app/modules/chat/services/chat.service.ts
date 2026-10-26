@@ -7,6 +7,7 @@ import {
   ChatConversaTituloAlteradoDto,
   ChatEventoDto,
   ChatHojeRecuperadoDto,
+  PlanoConversaRecuperadaDto,
   StandardResponse,
 } from '@project20/shared';
 import { ambiente } from '../../../../environments/environment';
@@ -45,6 +46,11 @@ export class ChatService {
   /** Renomeia a conversa de um dia (`yyyy-mm-dd`); em branco volta ao nome padrão. Quem chama dá o aviso de erro (sem overlay global). */
   alterarTituloConversa(data: string, titulo: string): Observable<StandardResponse<ChatConversaTituloAlteradoDto>> {
     return this.httpClient.put<StandardResponse<ChatConversaTituloAlteradoDto>>(`${this.urlBase}/conversa/${data}/titulo`, { titulo }, comFeedbackProprio());
+  }
+
+  /** A conversa de um plano (task 234): as mensagens de todos que têm acesso a ele, com o nome de cada autor. */
+  recuperarConversaDoPlano(planoId: number): Observable<StandardResponse<PlanoConversaRecuperadaDto>> {
+    return this.httpClient.get<StandardResponse<PlanoConversaRecuperadaDto>>(`${this.urlBase}/plano/${planoId}`, comFeedbackProprio());
   }
 
   buscar(texto: string): Observable<StandardResponse<ChatBuscadoDto>> {

@@ -5,7 +5,7 @@ import { TipoUsuarioEnum } from '@project20/shared';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { IaFerramenta } from '../../ia/domain/ia.tipos';
 import { gerarEsquemaDeClasse } from '../domain/esquema-da-classe';
-import { FerramentaIa, ResultadoFerramentaIa, usuarioPodeUsar } from '../domain/ferramenta-ia';
+import { EscopoDaFerramentaIa, FerramentaIa, ResultadoFerramentaIa, usuarioPodeUsar } from '../domain/ferramenta-ia';
 import { exclusaoNaoPermitida } from '../domain/sem-exclusao';
 
 /**
@@ -43,10 +43,16 @@ export class FerramentaIaRegistro {
     return [...this.ferramentas.values()];
   }
 
-  /** As ferramentas que o usuário pode usar, no formato do contrato do provedor (task 130). */
-  listarParaUsuario(usuarioAtivo: JwtPayload): IaFerramenta[] {
+  /**
+   * As ferramentas que o usuário pode usar, no formato do contrato do provedor (task 130). No chat (o padrão) entram todas menos as do plano; na
+   * conversa do planejamento (task 234) entram as de **leitura** do sistema e as do plano, e nenhuma proposta de ação do dia a dia (iniciar,
+   * pausar ou registrar execução, criar atividade...).
+   */
+  listarParaUsuario(usuarioAtivo: JwtPayload, escopo: EscopoDaFerramentaIa = 'CHAT'): IaFerramenta[] {
+    const doEscopo = (ferramenta: FerramentaIa) =>
+      escopo === 'PLANEJAMENTO' ? ferramenta.somentePlanejamento === true || ferramenta.tipo === 'LEITURA' : ferramenta.somentePlanejamento !== true;
     return this.listarTodas()
-      .filter((ferramenta) => usuarioPodeUsar(ferramenta.permissao, usuarioAtivo.tipo) && (ferramenta.habilitada?.() ?? true))
+      .filter((ferramenta) => doEscopo(ferramenta) && usuarioPodeUsar(ferramenta.permissao, usuarioAtivo.tipo) && (ferramenta.habilitada?.() ?? true))
       .map((ferramenta) => ({
         nome: ferramenta.nome,
         descricao: ferramenta.tipo === 'PROPOSTA' ? ferramenta.descricao + NOTA_DO_RESULTADO_DA_PROPOSTA : ferramenta.descricao,

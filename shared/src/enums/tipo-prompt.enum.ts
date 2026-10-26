@@ -8,4 +8,9 @@ export enum TipoPromptEnum {
   ENTREVISTA_DEMANDA = 'ENTREVISTA_DEMANDA',
   CONEXAO_DEMANDA    = 'CONEXAO_DEMANDA',
   DUVIDA_CODIGO      = 'DUVIDA_CODIGO',
+  // Modo planejamento (task 234): a conversa do plano e, por tipo de texto, como escrever cada aba.
+  PLANEJAMENTO            = 'PLANEJAMENTO',
+  PLANO_DESCRICAO_TECNICA = 'PLANO_DESCRICAO_TECNICA',
+  PLANO_DESCRICAO_CLIENTE = 'PLANO_DESCRICAO_CLIENTE',
+  PLANO_DOCUMENTACAO      = 'PLANO_DOCUMENTACAO',
 }

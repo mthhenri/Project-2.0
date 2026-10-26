@@ -118,6 +118,22 @@ export function registrarContratoDeArmazenamento(
       assert.equal(foraDoRecorte.filter((linha) => linha.modelo === modelo).length, 0);
     });
 
+    it('a conversa de um plano é lida sem filtro de dono, com as mensagens de quem escreveu, e não aparece nas conversas do dia nem na busca (task 234)', async () => {
+      const conversaDoPlano = `plano-${base}`;
+      await armazenamento.gravar(mensagem('Pergunta de planejamentoxyz do dono', { conversaId: conversaDoPlano, contexto: ContextoChatEnum.PLANEJAMENTO }));
+      await espera(15);
+      await armazenamento.gravar(mensagem('Resposta do colega sobre planejamentoxyz', { conversaId: conversaDoPlano, contexto: ContextoChatEnum.PLANEJAMENTO, usuarioId: outro }));
+      await espera(15);
+      await armazenamento.gravar(mensagem('Resposta da IA', { conversaId: conversaDoPlano, contexto: ContextoChatEnum.PLANEJAMENTO, autor: AutorChatEnum.IA }));
+
+      const lida = await armazenamento.listarConversa({ conversaId: conversaDoPlano });
+      assert.deepEqual(lida.map((item) => item.usuarioId), [dono, outro, dono], 'todas as mensagens, de todos, em ordem');
+      assert.equal(lida.every((item) => item.contexto === ContextoChatEnum.PLANEJAMENTO), true);
+
+      assert.equal((await armazenamento.listarConversas({ usuarioId: dono })).some((balde) => balde.key === conversaDoPlano), false, 'não é conversa do dia');
+      assert.equal((await armazenamento.buscar({ usuarioId: dono, texto: 'planejamentoxyz' })).length, 0, 'a busca não a acha');
+    });
+
     it('guarda e troca o título da conversa, só para o dono, e quem não tem título não aparece', async () => {
       assert.deepEqual(await armazenamento.listarTitulos({ usuarioId: dono, conversaIds: [] }), {});
       await armazenamento.gravarTitulo({ conversaId, usuarioId: dono, titulo: 'Descrição do cadastro', editado: false });

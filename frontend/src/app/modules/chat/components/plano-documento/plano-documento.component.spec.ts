@@ -221,3 +221,55 @@ describe('PlanoDocumentoComponent — cabeçalho', () => {
     expect(montado.componente.controleDocumentacao.value).toBe('Da demanda');
   });
 });
+
+describe('PlanoDocumentoComponent — a IA no plano (task 234)', () => {
+  it('a IA escreveu: com tudo gravado o documento se relê e mostra o texto novo', async () => {
+    const montado = await montarDocumento(TipoUsuarioEnum.DESENVOLVEDOR);
+
+    montado.componente.recarregarDepoisDaIa();
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/plano/7'), plano({ versao: 4, descricaoTecnica: 'Texto novo da IA' }));
+    await montado.atualizar();
+
+    expect(montado.componente.controleTecnica.value).toBe('Texto novo da IA');
+    expect(montado.componente.plano()?.versao).toBe(4);
+  });
+
+  it('a IA escreveu com texto da pessoa ainda sem gravar: não pisa nele, avisa e Recarregar descarta', async () => {
+    const montado = await montarDocumento(TipoUsuarioEnum.DESENVOLVEDOR);
+    montado.componente.controleDocumentacao.setValue('Meu rascunho');
+    await montado.atualizar();
+
+    montado.componente.recarregarDepoisDaIa();
+    montado.http.expectNone((requisicao) => requisicao.method === 'GET' && requisicao.url.endsWith('/plano/7'));
+    await montado.atualizar();
+    expect(texto(montado)).toContain('A IA alterou o documento');
+    expect(montado.componente.controleDocumentacao.value).toBe('Meu rascunho');
+
+    botao(montado, 'Recarregar')!.click();
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/plano/7'), plano({ versao: 4, documentacao: 'Da IA' }));
+    await montado.atualizar();
+    expect(montado.componente.controleDocumentacao.value).toBe('Da IA');
+    expect(texto(montado)).not.toContain('A IA alterou o documento');
+  });
+
+  it('o pedido de alteração do trecho selecionado sai com a aba, o trecho e o que mudar, e só com o pedido escrito', async () => {
+    const montado = await montarDocumento(TipoUsuarioEnum.DESENVOLVEDOR);
+    const pedidos: Array<{ aba: string; trecho: string; pedido: string }> = [];
+    montado.componente.pedirAlteracao.subscribe((pedido) => pedidos.push(pedido));
+
+    montado.componente.trechoSelecionado.set({ aba: montado.componente.aba(), texto: 'Texto técnico' });
+    montado.componente.enviarPedidoDeAlteracao();
+    expect(pedidos).toEqual([]);
+
+    montado.componente.controlePedido.setValue('  deixar mais curto  ');
+    montado.componente.enviarPedidoDeAlteracao();
+    expect(pedidos).toEqual([{ aba: 'DESCRICAO_TECNICA', trecho: 'Texto técnico', pedido: 'deixar mais curto' }]);
+    expect(montado.componente.trechoSelecionado()).toBeNull();
+  });
+
+  it('a seleção em branco não abre pedido', async () => {
+    const montado = await montarDocumento(TipoUsuarioEnum.DESENVOLVEDOR);
+    montado.componente.abrirPedidoDeAlteracao({ inicio: 0, fim: 2, texto: '   ', evento: new MouseEvent('contextmenu') });
+    expect(montado.componente.trechoSelecionado()).toBeNull();
+  });
+});

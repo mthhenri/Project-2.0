@@ -1,7 +1,8 @@
-import { TipoPropostaIaEnum } from '@project20/shared';
+import { PlanoAbaEnum, TipoPropostaIaEnum } from '@project20/shared';
 import { ATIVIDADE_STATUS_OPCOES } from '../../atividade/models/atividade.model';
 import { ROTULO_SECAO_ANOTACAO } from '../../usuario/utils/anotacoes.util';
 import { formatarDuracao } from './chat.util';
+import { ROTULO_ABA_DO_PLANO } from './plano.util';
 
 /** Mais que isto num texto do cartão e ele deixa de caber numa linha: vai para o cartão grande (decisão do autor, task 226). */
 export const LIMITE_DE_TEXTO_COMPACTO = 80;
@@ -262,6 +263,14 @@ const RESUMIDORES: Record<TipoPropostaIaEnum, (dados: Dados) => ResumoBruto> = {
     nome: nomeOu(dados, 'atividadeNome', 'Atividade', 'atividadeId'),
     contexto: texto(dados, 'demandaNome'),
     campos: [{ tipo: 'chip', texto: 'Sem execuções' }],
+  }),
+  // A diferença do trecho é o que a pessoa vai conferir antes de aceitar: sempre cartão grande.
+  [TipoPropostaIaEnum.ALTERAR_TRECHO_PLANO]: (dados) => ({
+    acao: 'Alterar trecho do plano',
+    nome: texto(dados, 'planoTitulo') || `Plano ${String(dados['planoId'] ?? '')}`.trim(),
+    contexto: ROTULO_ABA_DO_PLANO[texto(dados, 'aba') as PlanoAbaEnum] ?? texto(dados, 'aba'),
+    campos: [],
+    exigeCartaoGrande: true,
   }),
   [TipoPropostaIaEnum.JUSTIFICAR_PONTO]: (dados) => ({
     acao: comPessoa('Justificar ponto', dados),
