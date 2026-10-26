@@ -12,6 +12,18 @@
 
 ---
 
+## 2026-10-26 — Task 253: campo do chat com a IA escreve formatado (editor compartilhado)
+
+Pedido do autor: o campo do chat com a IA deve ter o mesmo Markdown "tímido" do chat entre colaboradores (formata ao digitar, barra só sobre a seleção). Spec 253, criada junto da 252 e executada em seguida.
+
+- **O que mudou:** o editor da task 218 saiu de `mensagem-direta` para `shared/components/editor-mensagem/` (`app-editor-mensagem`, com `git mv`; o compositor só trocou seletor e import) e ganhou `desabilitado` e `definirTexto`; o `EditorFormatado` ganhou `cursorNoFim`. A `chat.page` trocou os dois `textarea` (Perguntas e Planejamento) pelo componente: `Enter` envia, `Shift+Enter` abre parágrafo/item, `Ctrl+Enter` envia sempre, em lista e código o `Enter` continua o bloco; limite de 4000 do Markdown com contador a partir de 3200; `?mensagem=` (252) entra pelo `definirTexto` com foco. A mensagem do usuário passou a ser renderizada como Markdown no histórico (balão azul): o `app-markdown-visualizador` ganhou o input aditivo `herdaCor` (o estilo mora nele porque o `chat.page.scss` estourou o orçamento de 8 kB do build ao receber os overrides).
+- **Impacto:** `npm run impacto` mostrou dois consumidores (o compositor e o ajudante de teste `testes/campo-mensagem.ts`), ambos ajustados; o comportamento do chat entre colaboradores não mudou.
+- **Testes:** suíte inteira do frontend 2211 aprovados e **1 falha por tempo** (5 s) a cada rodada, em arquivos diferentes e sem relação com a task (`modelagem.page.spec` e `demanda-grafo.component.spec`, sob carga com o navegador do teste aberto); os dois passam sozinhos (modelagem 22 de 22, duas vezes). Os testes do chat, de Execuções, do visualizador e do editor compartilhado passam. Novos: 8 casos na `chat.page` (formatado, `Shift+Enter`, lista e `Ctrl+Enter`, só espaços, limite e contador, Planejamento, histórico formatado), `cursorNoFim` no `markdown-formatado.test.ts`, `mensagemInicialDoLink`. Build do frontend verde.
+- **Ao vivo:** ver `done/253-chat-ia-campo-formatado/verificacao.md`. **Achado:** o `Enter` ignorava o limite de 4000 (só o botão estava bloqueado); `enviar()` passou a checar.
+- **Não há lint** no projeto (P-001).
+
+---
+
 ## 2026-10-26 — Task 252: execuções em andamento fora da tabela, com "Iniciar atividade" que leva ao chat
 
 Pedido do autor sobre a tela Execuções: a linha "Em andamento" dentro da tabela confundia, o natural é a tabela ser só histórico fechado. Antes de implementar, um POC visual (`.artifacts/poc-execucao-ativa/`) foi aprovado com o bloco **acima** da tabela; as specs 252 e 253 nasceram juntas (a 253, campo formatado no chat da IA, segue no backlog).

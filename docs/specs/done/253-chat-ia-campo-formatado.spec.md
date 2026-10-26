@@ -19,7 +19,7 @@ enviado continua sendo Markdown puro; servidor, `shared` e renderizador não mud
 
 - `chat.page.html` tem dois `<textarea pTextarea [formControl]="controleTexto">` (planejamento e perguntas) e `aoTeclar` trata o Enter; o campo é
   habilitado/desabilitado por `controleTexto.enable/disable` e as sugestões e o `queryParam` de mensagem inicial (task 252) escrevem nele.
-- O editor da 218 vive em `mensagem-direta` (`app-mensagem-direta-editor-mensagem`) sobre `EditorFormatado` (`shared/components/markdown-editor/markdown-formatado.ts`).
+- O editor da 218 vivia em `mensagem-direta` (`app-mensagem-direta-editor-mensagem`, hoje `app-editor-mensagem`) sobre `EditorFormatado` (`shared/components/markdown-editor/markdown-formatado.ts`).
   Esse componente não deve ser importado do módulo `mensagem-direta` pelo `chat`: extrair a parte genérica (editor, barra flutuante, estilos) para `shared/components`
   e fazer os dois consumidores a usarem, **sem mudar o comportamento do chat entre colaboradores**.
 
@@ -47,3 +47,12 @@ enviado continua sendo Markdown puro; servidor, `shared` e renderizador não mud
 ## Dependências
 
 - Tasks 134 e 218 em `done/`. Combina com a 252 (mensagem inicial pré-digitada).
+
+## Resultado (2026-10-26)
+
+- Extração feita com `git mv` para `shared/components/editor-mensagem/` (`app-editor-mensagem`); o compositor do chat entre colaboradores só trocou o seletor e o
+  import, com os specs da 218 verdes. O componente ganhou `desabilitado` e `definirTexto`; o `EditorFormatado` ganhou `cursorNoFim`.
+- Decisão tomada na implementação: a mensagem **do usuário** passou a ser renderizada como Markdown no histórico (entregável 4), com o visualizador herdando a
+  cor do balão azul (input `herdaCor` do `app-markdown-visualizador`, aditivo). Mensagens antigas, em texto puro, passam pelo mesmo renderizador.
+- A legenda do rodapé não mudou ("Enter envia, Shift+Enter quebra a linha" continua certa). O contador aparece a partir de 3.200 caracteres.
+- Verificação ao vivo e limites: `done/253-chat-ia-campo-formatado/verificacao.md`.

@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, effect, inject, input, output, signal, untracked, viewChild } from '@angular/core';
 import { TooltipModule } from 'primeng/tooltip';
-import type { AcaoFormatada, EditorFormatado } from '../../../../shared/components/markdown-editor/markdown-formatado';
+import type { AcaoFormatada, EditorFormatado } from '../markdown-editor/markdown-formatado';
 
 interface BotaoDaBarra {
   acao: AcaoFormatada;
@@ -23,14 +23,14 @@ const FOLGA_ACIMA_DA_SELECAO_PX = 6;
  * usa, que recebe `teclou` e `colou` ainda na **fase de captura** (antes do editor) e pode cancelar o evento. O editor carrega sob demanda.
  */
 @Component({
-  selector: 'app-mensagem-direta-editor-mensagem',
+  selector: 'app-editor-mensagem',
   standalone: true,
   imports: [TooltipModule],
-  templateUrl: './mensagem-direta-editor-mensagem.component.html',
-  styleUrl: './mensagem-direta-editor-mensagem.component.scss',
+  templateUrl: './editor-mensagem.component.html',
+  styleUrl: './editor-mensagem.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MensagemDiretaEditorMensagemComponent {
+export class EditorMensagemComponent {
   readonly placeholder = input('');
   /** O nome que leitores de tela dão ao campo. */
   readonly rotulo = input('Mensagem');
@@ -39,6 +39,8 @@ export class MensagemDiretaEditorMensagemComponent {
   /** O `id` da lista de sugestões aberta e a opção destacada nela (ARIA do campo de escrita com sugestões). */
   readonly listaControlada = input<string | null>(null);
   readonly opcaoAtiva = input<string | null>(null);
+  /** O campo não aceita escrita (a IA está desligada, uma resposta está a caminho): fica apagado e sem barra de formatação. */
+  readonly desabilitado = input(false);
 
   /** O Markdown depois de cada mudança do texto. */
   readonly mudou = output<string>();
@@ -71,11 +73,24 @@ export class MensagemDiretaEditorMensagemComponent {
   private readonly raiz = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly hospede = viewChild<ElementRef<HTMLElement>>('hospede');
   private geracaoMontagem = 0;
+  /** Texto pedido antes de o editor terminar de carregar: entra assim que ele montar. */
+  private textoPendente: string | null = null;
 
   constructor() {
     effect(() => {
       const hospede = this.hospede();
       if (hospede) untracked(() => void this.montar(hospede.nativeElement));
+    });
+
+    // Desabilitado: o texto continua à vista, mas não se escreve nele (e a barra de formatação some).
+    effect(() => {
+      const editor = this.editor();
+      const desabilitado = this.desabilitado();
+      if (!editor) return;
+      untracked(() => {
+        editor.definirEditavel(!desabilitado);
+        if (desabilitado) this.barra.set(null);
+      });
     });
 
     // O ARIA do campo de escrita (o elemento editável é criado pela biblioteca, então os atributos vão nele depois de montado).
@@ -110,6 +125,7 @@ export class MensagemDiretaEditorMensagemComponent {
 
   /** Esvazia o campo (o que o usuário vê e o Markdown). */
   limpar(): void {
+    this.textoPendente = null;
     this.editor()?.limpar();
     this.texto.set('');
     this.barra.set(null);
@@ -117,11 +133,26 @@ export class MensagemDiretaEditorMensagemComponent {
     this.atualizou.emit();
   }
 
+  /**
+   * Troca o texto do campo (Markdown, interpretado: `**oi**` aparece em negrito) e leva o cursor ao fim. Pedido antes de o editor carregar, espera
+   * por ele. Quem usa o campo é avisado por `mudou`, como em qualquer mudança do texto.
+   */
+  definirTexto(markdown: string): void {
+    const editor = this.editor();
+    if (!editor) {
+      this.textoPendente = markdown;
+      return;
+    }
+    editor.definirMarkdown(markdown);
+    editor.cursorNoFim();
+    this.sincronizar();
+  }
+
   // --- Montagem --------------------------------------------------------------------------------
 
   private async montar(hospede: HTMLElement): Promise<void> {
     const geracao = ++this.geracaoMontagem;
-    const modulo = await import('../../../../shared/components/markdown-editor/markdown-formatado');
+    const modulo = await import('../markdown-editor/markdown-formatado');
     if (geracao !== this.geracaoMontagem || !hospede.isConnected) return;
     // Os ouvintes `aoMudar` (200 ms de atraso) e `aoAtualizar` (estado antigo) do Milkdown não servem a um campo em que o Enter envia na hora: o
     // texto e o cursor são lidos a cada transação, em `aoAplicar`, já com o estado novo.
@@ -142,6 +173,11 @@ export class MensagemDiretaEditorMensagemComponent {
     hospede.addEventListener('keydown', (evento) => this.teclou.emit(evento), true);
     hospede.addEventListener('paste', (evento) => this.colou.emit(evento), true);
     this.editor.set(editor);
+    if (this.textoPendente !== null) {
+      const pendente = this.textoPendente;
+      this.textoPendente = null;
+      this.definirTexto(pendente);
+    }
   }
 
   // --- Barra flutuante -------------------------------------------------------------------------

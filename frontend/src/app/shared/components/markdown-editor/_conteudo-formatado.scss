@@ -1,5 +1,5 @@
 // O conteúdo que o Milkdown monta (parágrafos, listas, citação, código...), em um lugar só: o editor de Markdown (`app-markdown-editor`) e o
-// campo de mensagem do chat (`app-mensagem-direta-editor-mensagem`, task 218) mostram o texto formatado do mesmo jeito. O conteúdo é criado pela
+// campo de mensagem do chat (`app-editor-mensagem`, task 218) mostram o texto formatado do mesmo jeito. O conteúdo é criado pela
 // biblioteca fora do Angular, daí o ::ng-deep.
 @mixin conteudo-formatado {
   ::ng-deep .ProseMirror {

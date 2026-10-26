@@ -375,7 +375,6 @@
     background: var(--p-primary-600);
     color: var(--p-primary-contrast-color);
     line-height: 1.45;
-    white-space: pre-wrap;
     overflow-wrap: anywhere;
   }
 
@@ -493,13 +492,7 @@
   // O campo se funde à moldura arredondada do formulário.
   &__campo {
     flex: 1;
-    max-height: 10rem;
-    resize: none;
-    padding: 0.25rem 0;
-    border: none;
-    background: transparent;
-    box-shadow: none;
-    outline: none;
+    min-width: 0;
   }
 
   &__enviar {

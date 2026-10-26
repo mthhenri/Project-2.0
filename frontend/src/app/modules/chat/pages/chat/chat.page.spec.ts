@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import { AutorChatEnum, ChatEventoDto, ContextoChatEnum, EstadoIaEnum, NivelIaEnum, StatusPropostaIaEnum, TipoPropostaIaEnum, TipoUsuarioEnum } from '@project20/shared';
 import { montarComponente, ComponenteMontado } from '../../../../../testes/montar-componente';
+import { campoDeMensagem, digitarNaMensagem, esperarCampoDeMensagem, teclarNaMensagem, textoDaMensagem } from '../../../../../testes/campo-mensagem';
 import { esperarRequisicao, responderSucesso } from '../../../../../testes/http-teste';
 import { DesfazerService } from '../../../../core/services/desfazer.service';
 import { IaDisponibilidadeService } from '../../../../core/services/ia-disponibilidade.service';
@@ -93,7 +94,11 @@ function controlarFluxo(espiao: ReturnType<typeof vi.spyOn>, indiceDoCallback: n
 
 const conversaDa = (montado: Montado) => montado.elemento.querySelector('[aria-label="Conversa"]')!.textContent ?? '';
 const texto = (montado: Montado) => montado.elemento.textContent ?? '';
-const campo = (montado: Montado) => montado.elemento.querySelector<HTMLTextAreaElement>('[aria-label="Mensagem para a IA"]')!;
+/** O campo de mensagem (o editor formatado); o que está escrito nele e se aceita escrita saem dos ajudantes abaixo. */
+const campo = (montado: Montado) => montado.elemento.querySelector<HTMLElement>('app-editor-mensagem');
+const textoDoCampo = (montado: Montado) => textoDaMensagem(montado.fixture);
+const campoDesabilitado = (montado: Montado) => campo(montado)?.querySelector('.editor-mensagem--desabilitado') != null;
+const placeholderDoCampo = (montado: Montado) => campo(montado)?.querySelector('.editor-mensagem')?.getAttribute('data-placeholder');
 const botaoEnviar = (montado: Montado) => montado.elemento.querySelector<HTMLButtonElement>('[aria-label="Enviar"]')!;
 /** O botão pelo texto ou pelo rótulo de acessibilidade (os ícones da linha compacta da proposta). */
 const botao = (montado: Montado, rotulo: string) =>
@@ -107,8 +112,8 @@ const avisosDe = (montado: Montado) => {
 };
 
 async function digitar(montado: Montado, conteudo: string) {
-  campo(montado).value = conteudo;
-  campo(montado).dispatchEvent(new Event('input'));
+  await esperarCampoDeMensagem(montado.fixture, montado.atualizar);
+  digitarNaMensagem(montado.fixture, conteudo);
   await montado.atualizar();
 }
 
@@ -116,7 +121,7 @@ async function enviarPeloTeclado(montado: Montado, conteudo: string) {
   await digitar(montado, conteudo);
   expect(botaoEnviar(montado).disabled).toBe(false);
   // Pelo Enter (o clique no botão tem o próprio teste).
-  campo(montado).dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', cancelable: true }));
+  teclarNaMensagem(montado.fixture, 'Enter');
   await montado.atualizar();
 }
 
@@ -205,7 +210,7 @@ describe('ChatPage — enviar e receber a resposta', () => {
 
     expect(enviarMensagemEspiao).toHaveBeenCalledTimes(1);
     expect(enviarMensagemEspiao.mock.calls[0][0]).toBe('Vou começar o login');
-    expect(campo(montado).value).toBe('');
+    expect(textoDoCampo(montado)).toBe('');
   });
 
 
@@ -221,7 +226,7 @@ describe('ChatPage — enviar e receber a resposta', () => {
     expect(enviarMensagemEspiao).toHaveBeenCalledTimes(1);
     expect(enviarMensagemEspiao.mock.calls[0][0]).toBe('Vou começar o login');
     expect(conversaDa(montado)).toContain('Vou começar o login');
-    expect(campo(montado).value).toBe('');
+    expect(textoDoCampo(montado)).toBe('');
   });
 
   it('Enter envia; Shift+Enter não envia (quebra a linha)', async () => {
@@ -229,11 +234,11 @@ describe('ChatPage — enviar e receber a resposta', () => {
     controlarFluxo(enviarMensagemEspiao, 1);
     await digitar(montado, 'oi');
 
-    campo(montado).dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', shiftKey: true, cancelable: true }));
+    teclarNaMensagem(montado.fixture, 'Enter', { shiftKey: true });
     await montado.atualizar();
     expect(enviarMensagemEspiao).not.toHaveBeenCalled();
 
-    campo(montado).dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', cancelable: true }));
+    teclarNaMensagem(montado.fixture, 'Enter');
     await montado.atualizar();
     expect(enviarMensagemEspiao).toHaveBeenCalledTimes(1);
   });
@@ -245,7 +250,7 @@ describe('ChatPage — enviar e receber a resposta', () => {
     await enviarPeloTeclado(montado, 'Como está meu dia?');
     expect(montado.elemento.querySelector('[aria-label="A IA está pensando"]')).not.toBeNull();
     expect(botaoEnviar(montado).disabled).toBe(true);
-    expect(campo(montado).disabled).toBe(true);
+    expect(campoDesabilitado(montado)).toBe(true);
 
     fluxo.emitir({ tipo: 'trecho', texto: 'Você tem ' });
     montado.fixture.detectChanges();
@@ -262,7 +267,7 @@ describe('ChatPage — enviar e receber a resposta', () => {
 
     expect(montado.elemento.querySelector('[aria-busy="true"].chat__ia-conteudo')).toBeNull();
     expect(montado.elemento.querySelectorAll('[data-mensagem-id="m-final"]')).toHaveLength(1);
-    expect(campo(montado).disabled).toBe(false);
+    expect(campoDesabilitado(montado)).toBe(false);
     // O fim relê o estado da IA e a lista do histórico (a conversa pode ter ganhado nome).
     expect(montado.http.match((requisicao) => requisicao.url.endsWith('/ia/disponibilidade'))).toHaveLength(1);
     expect(montado.http.match((requisicao) => requisicao.url.endsWith('/chat/conversas'))).toHaveLength(1);
@@ -543,7 +548,7 @@ describe('ChatPage — enviar e receber a resposta', () => {
     expect(enviarMensagemEspiao).toHaveBeenCalledTimes(2);
     expect(enviarMensagemEspiao.mock.calls[1][0]).toBe('Cria a atividade');
     // O reenvio não limpa nem copia o que estava no campo.
-    expect(campo(montado).value).toBe('');
+    expect(textoDoCampo(montado)).toBe('');
     segundoFluxo.terminar();
     await montado.atualizar();
   });
@@ -571,7 +576,7 @@ describe('ChatPage — enviar e receber a resposta', () => {
     await montado.atualizar();
 
     expect(conversaDa(montado)).not.toContain('Pergunta importante');
-    expect(campo(montado).value).toBe('Pergunta importante');
+    expect(textoDoCampo(montado)).toBe('Pergunta importante');
     expect(avisos).toEqual([expect.objectContaining({ severity: 'info', detail: 'A IA está desligada.' })]);
     expect(montado.http.match((requisicao) => requisicao.url.endsWith('/ia/disponibilidade'))).toHaveLength(1);
   });
@@ -586,7 +591,7 @@ describe('ChatPage — enviar e receber a resposta', () => {
     await montado.atualizar();
 
     expect(avisos).toEqual([expect.objectContaining({ severity: 'warn', detail: 'Sem conexão com o servidor. Tente de novo.' })]);
-    expect(campo(montado).value).toBe('Oi de novo');
+    expect(textoDoCampo(montado)).toBe('Oi de novo');
   });
 });
 
@@ -642,8 +647,8 @@ describe('ChatPage — IA desligada e fora do ar', () => {
     const navegar = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
 
     expect(texto(montado)).toContain('A IA está desligada.');
-    expect(campo(montado).disabled).toBe(true);
-    expect(campo(montado).placeholder).toBe('A IA está desligada');
+    expect(campoDesabilitado(montado)).toBe(true);
+    expect(placeholderDoCampo(montado)).toBe('A IA está desligada');
     expect(botaoEnviar(montado).disabled).toBe(true);
     expect(sugestoesVisiveis(montado)).toEqual([]);
     // A conversa continua legível.
@@ -658,7 +663,7 @@ describe('ChatPage — IA desligada e fora do ar', () => {
     const montado = await montarChat({ estado: EstadoIaEnum.FORA_DO_AR, mensagens: [DA_IA('Olá!')] });
 
     expect(texto(montado)).toContain('A IA está fora do ar no momento.');
-    expect(campo(montado).disabled).toBe(false);
+    expect(campoDesabilitado(montado)).toBe(false);
     await digitar(montado, 'Tem alguém aí?');
     expect(botaoEnviar(montado).disabled).toBe(false);
     expect(iniciarBomDiaEspiao).not.toHaveBeenCalled();
@@ -937,7 +942,7 @@ describe('ChatPage — modo Planejamento (task 233)', () => {
     expect(conversaDa(montado)).toContain('Vamos planejar o relatório');
     expect(conversaDa(montado)).toContain('Qual é o objetivo?');
     expect(conversaDa(montado)).not.toContain('Olá de hoje!');
-    expect(campo(montado)!.disabled).toBe(false);
+    expect(campoDesabilitado(montado)).toBe(false);
   });
 
   it('sem nenhum plano, Planejamento mostra "Nenhum plano aberto" e Novo plano cria um plano pessoal e o abre', async () => {
@@ -1093,7 +1098,7 @@ describe('ChatPage — modo Planejamento (task 233)', () => {
     await responderListas(montado, []);
 
     expect(texto(montado)).toContain('Abra ou crie um plano para conversar.');
-    expect(campo(montado).disabled).toBe(true);
+    expect(campoDesabilitado(montado)).toBe(true);
     await montado.componente.enviar('Oi');
     expect(enviarMensagemEspiao).not.toHaveBeenCalled();
   });
@@ -1198,22 +1203,109 @@ describe('ChatPage: minhas demandas', () => {
 
 describe('ChatPage — mensagem inicial pelo link', () => {
   it('`?mensagem=` deixa o texto digitado no campo, sem enviar e com o foco', async () => {
-    vi.useFakeTimers({ toFake: ['setTimeout', 'setInterval', 'clearInterval', 'clearTimeout'] });
-    TestBed.resetTestingModule();
     const montado = await montarChat({ consulta: { mensagem: 'De onde paramos?' } });
-    await montado.atualizar();
-    await vi.advanceTimersByTimeAsync(100);
-    const campo = montado.elemento.querySelector<HTMLTextAreaElement>('textarea[aria-label="Mensagem para a IA"]')!;
-    expect(campo.value).toBe('De onde paramos?');
-    expect(montado.componente.controleTexto.value).toBe('De onde paramos?');
-    expect(document.activeElement).toBe(campo);
+    await esperarCampoDeMensagem(montado.fixture, montado.atualizar);
+    await vi.waitFor(async () => {
+      await montado.atualizar();
+      expect(textoDoCampo(montado)).toBe('De onde paramos?');
+      expect(document.activeElement).toBe(montado.elemento.querySelector('.ProseMirror'));
+    });
     expect(montado.http.match((r) => r.method === 'POST')).toEqual([]);
-    vi.useRealTimers();
+    expect(enviarMensagemEspiao).not.toHaveBeenCalled();
   });
 
   it('sem `?mensagem=` o campo começa vazio', async () => {
-    TestBed.resetTestingModule();
     const montado = await montarChat();
-    expect(montado.componente.controleTexto.value).toBe('');
+    await esperarCampoDeMensagem(montado.fixture, montado.atualizar);
+    expect(textoDoCampo(montado)).toBe('');
+  });
+});
+
+describe('ChatPage — campo que escreve formatado (task 253)', () => {
+  const campoDoEditor = (montado: Montado) => campoDeMensagem(montado.fixture);
+
+  it('o campo é o editor formatado e a mensagem sai em Markdown', async () => {
+    const montado = await montarChat({ mensagens: [DA_IA('Olá!')] });
+    controlarFluxo(enviarMensagemEspiao, 1);
+    await esperarCampoDeMensagem(montado.fixture, montado.atualizar);
+    expect(montado.elemento.querySelector('textarea')).toBeNull();
+
+    campoDoEditor(montado).definirTexto('Isso é **importante** e `simples`');
+    await montado.atualizar();
+    teclarNaMensagem(montado.fixture, 'Enter');
+    await montado.atualizar();
+
+    expect(enviarMensagemEspiao.mock.calls[0][0]).toBe('Isso é **importante** e `simples`');
+    expect(textoDoCampo(montado)).toBe('');
+  });
+
+  it('Shift+Enter abre um novo parágrafo em vez de enviar', async () => {
+    const montado = await montarChat({ mensagens: [DA_IA('Olá!')] });
+    await digitar(montado, 'primeira');
+    const evento = teclarNaMensagem(montado.fixture, 'Enter', { shiftKey: true });
+    expect(evento.defaultPrevented).toBe(true);
+    campoDoEditor(montado).editor()!.inserirTexto('segunda');
+    await montado.atualizar();
+
+    expect(enviarMensagemEspiao).not.toHaveBeenCalled();
+    expect(textoDoCampo(montado)).toBe('primeira\n\nsegunda');
+  });
+
+  it('em lista o Enter continua a lista e só o Ctrl+Enter envia', async () => {
+    const montado = await montarChat({ mensagens: [DA_IA('Olá!')] });
+    controlarFluxo(enviarMensagemEspiao, 1);
+    await esperarCampoDeMensagem(montado.fixture, montado.atualizar);
+    campoDoEditor(montado).definirTexto('- um\n- dois');
+    await montado.atualizar();
+
+    teclarNaMensagem(montado.fixture, 'Enter');
+    await montado.atualizar();
+    expect(enviarMensagemEspiao).not.toHaveBeenCalled();
+
+    teclarNaMensagem(montado.fixture, 'Enter', { ctrlKey: true });
+    await montado.atualizar();
+    expect(enviarMensagemEspiao).toHaveBeenCalledTimes(1);
+    // O Enter abriu um terceiro item (vazio), que o Ctrl+Enter leva junto: é o mesmo comportamento do campo do chat entre colaboradores.
+    expect(enviarMensagemEspiao.mock.calls[0][0]).toMatch(/^- um\n- dois/);
+  });
+
+  it('Enter com texto só de espaços não envia', async () => {
+    const montado = await montarChat({ mensagens: [DA_IA('Olá!')] });
+    await digitar(montado, '   ');
+    teclarNaMensagem(montado.fixture, 'Enter');
+    await montado.atualizar();
+    expect(enviarMensagemEspiao).not.toHaveBeenCalled();
+  });
+
+  it('perto do limite aparece o contador e acima dele o envio fica bloqueado', async () => {
+    const montado = await montarChat({ mensagens: [DA_IA('Olá!')] });
+    await digitar(montado, 'a'.repeat(3300));
+    expect(texto(montado)).toContain('3.300 / 4.000');
+    expect(botaoEnviar(montado).disabled).toBe(false);
+
+    await digitar(montado, 'a'.repeat(4001));
+    expect(texto(montado)).toContain('Passou do limite da mensagem');
+    expect(botaoEnviar(montado).disabled).toBe(true);
+    teclarNaMensagem(montado.fixture, 'Enter');
+    await montado.atualizar();
+    expect(enviarMensagemEspiao).not.toHaveBeenCalled();
+  });
+
+  it('a mensagem do usuário aparece formatada no histórico (o que foi escrito em negrito aparece em negrito)', async () => {
+    const montado = await montarChat({ mensagens: [DELA('Terminei a **análise** e fiz:\n\n- revisão\n- testes'), DA_IA('Ótimo!')] });
+    const balao = montado.elemento.querySelector('.chat__balao')!;
+    expect(balao.querySelector('strong')?.textContent).toBe('análise');
+    expect(balao.querySelectorAll('li').length).toBe(2);
+    expect(balao.textContent).not.toContain('**');
+  });
+
+  it('no modo Planejamento o campo também é o editor formatado', async () => {
+    const montado = await montarChat({ mensagens: [DA_IA('Olá!')] });
+    montado.componente.modo.set(ModoDoChatEnum.PLANEJAMENTO);
+    await montado.atualizar();
+    await esperarCampoDeMensagem(montado.fixture, montado.atualizar);
+    expect(montado.elemento.querySelector('textarea')).toBeNull();
+    expect(placeholderDoCampo(montado)).toBe('Abra um plano para conversar');
+    expect(campoDesabilitado(montado)).toBe(true);
   });
 });

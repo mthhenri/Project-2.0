@@ -1,4 +1,4 @@
-@use '../../../../shared/components/markdown-editor/conteudo-formatado' as conteudo;
+@use '../markdown-editor/conteudo-formatado' as conteudo;
 
 // A raiz é a referência de posição da barra flutuante, que fica FORA da caixa com rolagem (senão a caixa a cortaria).
 :host {
@@ -43,6 +43,15 @@
       top: 0.3125rem;
       left: 0.5rem;
       max-width: calc(100% - 1rem);
+    }
+  }
+
+  &--desabilitado {
+    opacity: 0.6;
+    cursor: not-allowed;
+
+    ::ng-deep .ProseMirror {
+      cursor: not-allowed;
     }
   }
 

@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { TestBed } from '@angular/core/testing';
 import { montarComponente } from '../../../../testes/montar-componente';
 import { MarkdownVisualizadorComponent } from './markdown-visualizador.component';
 
@@ -13,6 +14,14 @@ describe('MarkdownVisualizadorComponent', () => {
   it.each([['vazio', ''], ['nulo', null], ['indefinido', undefined]])('texto %s não renderiza nada', async (_descricao, vazio) => {
     const montado = await renderizar(vazio);
     expect(montado.elemento.querySelector('.markdown')).toBeNull();
+  });
+
+  it('herdaCor liga o modificador que deixa o texto herdar a cor do entorno (só quando pedido)', async () => {
+    const padrao = await renderizar('texto');
+    expect(padrao.elemento.querySelector('.markdown--herda-cor')).toBeNull();
+    TestBed.resetTestingModule();
+    const herdando = await montarComponente(MarkdownVisualizadorComponent, { entradas: { texto: 'texto', herdaCor: true } });
+    expect(herdando.elemento.querySelector('.markdown--herda-cor')).not.toBeNull();
   });
 
   it('títulos viram h1 a h4 e níveis acima de 4 caem no h4', async () => {

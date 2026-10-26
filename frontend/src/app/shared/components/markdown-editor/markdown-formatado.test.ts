@@ -326,3 +326,12 @@ test('textoSelecionado devolve o texto sem formatação; o retângulo da seleç�
     assert.equal(editor.obterMarkdown(), '');
   });
 });
+
+test('cursorNoFim leva o cursor ao fim do documento: o que se escreve depois entra no final', async () => {
+  await comEditor('primeiro\n\nsegundo', (editor) => {
+    editor.definirMarkdown('**um** dois');
+    editor.cursorNoFim();
+    editor.inserirTexto(' três');
+    assert.equal(editor.obterMarkdown(), '**um** dois três');
+  });
+});

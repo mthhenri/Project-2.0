@@ -1,12 +1,9 @@
 import { Component, ElementRef, OnInit, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { DatePipe, NgTemplateOutlet } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { SkeletonModule } from 'primeng/skeleton';
-import { TextareaModule } from 'primeng/textarea';
 import { TooltipModule } from 'primeng/tooltip';
 import { AutorChatEnum, ChatEventoDto, ChatMensagemResumoDto, EstadoIaEnum, NivelIaEnum, PropostaIaResumoDto, StatusPropostaIaEnum, TipoPropostaIaEnum } from '@project20/shared';
 import { IaDisponibilidadeService } from '../../../../core/services/ia-disponibilidade.service';
@@ -20,7 +17,8 @@ import { MinhasDemandasComponent } from '../../components/minhas-demandas/minhas
 import { MensagemDoSeletor, SeletorComponent } from '../../components/seletor/seletor.component';
 import { ChatService, ErroDoChat } from '../../services/chat.service';
 import { PlanoService } from '../../services/plano.service';
-import { dataDaConversa, mensagemInicialDoLink, ROTULO_NIVEL, sugestoesAposProposta, sugestoesIniciais } from '../../utils/chat.util';
+import { EditorMensagemComponent } from '../../../../shared/components/editor-mensagem/editor-mensagem.component';
+import { COMECO_DO_AVISO_DE_LIMITE, dataDaConversa, LIMITE_MENSAGEM_CHAT, mensagemInicialDoLink, ROTULO_NIVEL, sugestoesAposProposta, sugestoesIniciais } from '../../utils/chat.util';
 import { montarPedidoDeAlteracaoDoTrecho } from '../../utils/plano.util';
 import { LARGURA_DO_DOCUMENTO, larguraDoDocumentoPeloPonteiro, limitarLarguraDoDocumento, ModoDoChatEnum } from '../../utils/plano.util';
 
@@ -55,6 +53,12 @@ interface RespostaAoVivo {
 }
 
 /** Distância do fim (px) até a qual a conversa continua acompanhando a resposta que chega. */
+/** Tecla do campo tratada pela página: o editor não a vê. */
+function consumir(evento: Event): void {
+  evento.preventDefault();
+  evento.stopPropagation();
+}
+
 const MARGEM_DO_FIM_PX = 80;
 /** Quanto tempo (ms) depois de uma roda, toque, tecla ou clique na barra um evento de rolagem ainda conta como do usuário. */
 const JANELA_DA_INTERACAO_MS = 400;
@@ -70,10 +74,9 @@ const JANELA_DA_INTERACAO_MS = 400;
   standalone: true,
   imports: [
     DatePipe,
-    ReactiveFormsModule,
     ButtonModule,
     SkeletonModule,
-    TextareaModule,
+    EditorMensagemComponent,
     TooltipModule,
     MarkdownVisualizadorComponent,
     PropostaCartaoComponent,
@@ -95,7 +98,7 @@ export class ChatPage implements OnInit {
   private readonly rotaAtiva = inject(ActivatedRoute);
   private readonly areaDeRolagem = viewChild<ElementRef<HTMLElement>>('rolagem');
   private readonly fluxo = viewChild<ElementRef<HTMLElement>>('fluxo');
-  private readonly campoDeTexto = viewChild<ElementRef<HTMLTextAreaElement>>('campoTexto');
+  private readonly campoDeTexto = viewChild(EditorMensagemComponent);
   private readonly seletor = viewChild(SeletorComponent);
   private readonly documento = viewChild(PlanoDocumentoComponent);
   private readonly areaDoChat = viewChild<ElementRef<HTMLElement>>('area');
@@ -164,14 +167,23 @@ export class ChatPage implements OnInit {
   /** Há texto abaixo da área visível (o usuário subiu para ler): mostra "ir para o fim". */
   readonly longeDoFim = signal(false);
 
-  readonly controleTexto = new FormControl<string>('', { nonNullable: true });
+  /** O Markdown que está no campo (o editor formatado avisa a cada mudança). */
   private readonly textoDigitado = signal('');
+  /** Texto que veio pelo link (`?mensagem=`) e ainda espera o campo existir. */
+  private readonly textoDoLinkPendente = signal<string | null>(null);
+  readonly limiteDaMensagem = LIMITE_MENSAGEM_CHAT;
+  readonly excedeuOLimite = computed(() => this.textoDigitado().length > LIMITE_MENSAGEM_CHAT);
+  /** O contador só aparece perto do limite. */
+  readonly mostrarContador = computed(() => this.textoDigitado().length >= COMECO_DO_AVISO_DE_LIMITE);
+  readonly contador = computed(() => `${this.textoDigitado().length.toLocaleString('pt-BR')} / ${LIMITE_MENSAGEM_CHAT.toLocaleString('pt-BR')}`);
 
   readonly iaDesligada = computed(() => this.disponibilidade() === EstadoIaEnum.DESLIGADA);
   readonly iaForaDoAr = computed(() => this.disponibilidade() === EstadoIaEnum.FORA_DO_AR);
   /** Em Planejamento só se conversa com um plano aberto; em Perguntas, só na conversa de hoje. */
   readonly podeConversar = computed(() => (this.modo() === ModoDoChatEnum.PLANEJAMENTO ? this.planoAbertoId() !== null : !this.somenteLeitura()));
-  readonly podeEnviar = computed(() => !this.enviando() && this.podeConversar() && !this.iaDesligada() && this.textoDigitado().trim() !== '');
+  /** O campo não aceita escrita: IA desligada, resposta a caminho ou nada aberto para conversar. */
+  readonly campoBloqueado = computed(() => this.iaDesligada() || this.enviando() || !this.podeConversar());
+  readonly podeEnviar = computed(() => !this.enviando() && this.podeConversar() && !this.iaDesligada() && this.textoDigitado().trim() !== '' && !this.excedeuOLimite());
   /** Atalhos acima do campo: só com o campo vazio e a IA livre para receber. */
   private readonly sessao = inject(UsuarioSessaoService);
   /** As sugestões de quando a conversa ainda não tem nenhuma da IA: o que mais se faz por aqui (o gestor também cria demandas e projetos). */
@@ -203,7 +215,6 @@ export class ChatPage implements OnInit {
   private ultimaInteracaoDoUsuario = 0;
 
   constructor() {
-    this.controleTexto.valueChanges.pipe(takeUntilDestroyed()).subscribe((valor) => this.textoDigitado.set(valor));
     effect(() => {
       // Acompanha a resposta que chega e as mensagens novas, a menos que o usuário tenha subido para ler.
       this.mensagens();
@@ -240,12 +251,16 @@ export class ChatPage implements OnInit {
       observador.observe(alvo);
       aoLimpar(() => observador.disconnect());
     });
+    // O texto do link entra no campo (e o foco vai para ele) assim que o editor termina de carregar.
     effect(() => {
-      const bloqueado = this.iaDesligada() || this.enviando() || !this.podeConversar();
       const campo = this.campoDeTexto();
-      this.controleTexto[bloqueado ? 'disable' : 'enable']({ emitEvent: false });
-      if (bloqueado || !campo || !this.focoNoCampoPendente) return;
-      this.focarCampoQuandoHabilitado();
+      const pendente = this.textoDoLinkPendente();
+      if (!campo || pendente === null || !campo.editor()) return;
+      untracked(() => {
+        this.textoDoLinkPendente.set(null);
+        campo.definirTexto(pendente);
+        campo.focar();
+      });
     });
     // Abriu um plano em Planejamento: lê a conversa dele (a de todos que têm acesso).
     effect(() => {
@@ -270,22 +285,8 @@ export class ChatPage implements OnInit {
     this.carregar();
   }
 
-  /** O campo só aceita foco depois de habilitado no DOM (o que acontece na detecção de mudanças seguinte): tenta até conseguir. */
-  private focarCampoQuandoHabilitado(tentativasRestantes = 20): void {
-    setTimeout(() => {
-      const campo = this.campoDeTexto()?.nativeElement;
-      if (campo && !campo.disabled) {
-        campo.focus();
-        this.focoNoCampoPendente = false;
-      } else if (tentativasRestantes > 0 && this.focoNoCampoPendente) {
-        this.focarCampoQuandoHabilitado(tentativasRestantes - 1);
-      }
-    }, 50);
-  }
-
   private prepararMensagemDoLink(texto: string): void {
-    this.controleTexto.setValue(texto);
-    this.focoNoCampoPendente = true;
+    this.textoDoLinkPendente.set(texto);
     // O texto não volta ao recarregar a página.
     void this.roteador.navigate([], { queryParams: { mensagem: null }, queryParamsHandling: 'merge', replaceUrl: true });
   }
@@ -317,8 +318,10 @@ export class ChatPage implements OnInit {
 
   /** Envia o texto do campo (ou o que for passado, no "Tentar de novo"). */
   async enviar(textoReenvio?: string): Promise<void> {
-    const texto = (textoReenvio ?? this.controleTexto.value).trim();
+    const texto = (textoReenvio ?? this.textoDigitado()).trim();
     if (!texto || this.enviando() || this.iaDesligada()) return;
+    // O Enter e o Ctrl+Enter também passam por aqui: o limite vale para o que foi digitado, não para o "Tentar de novo".
+    if (textoReenvio === undefined && this.excedeuOLimite()) return;
 
     const planoId = this.modo() === ModoDoChatEnum.PLANEJAMENTO ? this.planoAbertoId() : null;
     if (this.modo() === ModoDoChatEnum.PLANEJAMENTO && planoId === null) return;
@@ -331,7 +334,7 @@ export class ChatPage implements OnInit {
       ...lista,
       { id: idLocal, chave: idLocal, autor: AutorChatEnum.USUARIO, texto, nivel: null, propostaIds: [], criadaEm: new Date() },
     ]);
-    if (textoReenvio === undefined) this.controleTexto.setValue('', { emitEvent: true });
+    if (textoReenvio === undefined) this.campoDeTexto()?.limpar();
     this.aoVivo.set(this.novaRespostaAoVivo());
 
     let terminou = false;
@@ -350,7 +353,7 @@ export class ChatPage implements OnInit {
       const falha = erro as ErroDoChat;
       // Recusada antes de começar (IA desligada, mensagem em andamento): nada foi gravado, o texto volta ao campo.
       this.atualizarMensagensDoDestino((lista) => lista.filter((mensagem) => mensagem.id !== idLocal));
-      if (textoReenvio === undefined) this.controleTexto.setValue(texto);
+      if (textoReenvio === undefined) this.campoDeTexto()?.definirTexto(texto);
       if (falha.status === 409) this.atualizarDisponibilidade();
       this.messageService.add({ severity: falha.status === 409 ? 'info' : 'warn', summary: 'Chat', detail: falha.mensagem ?? 'Não foi possível enviar a mensagem' });
     } finally {
@@ -359,7 +362,7 @@ export class ChatPage implements OnInit {
       // A conversa pode ter ganhado nome (dado pela IA ao fim da primeira resposta do dia) e ela entra na lista se era a primeira.
       this.seletor()?.recarregar();
       // O campo volta a ser habilitado na próxima detecção de mudanças; só então recebe o foco.
-      setTimeout(() => this.campoDeTexto()?.nativeElement.focus(), 50);
+      setTimeout(() => this.campoDeTexto()?.focar(), 50);
     }
   }
 
@@ -416,10 +419,36 @@ export class ChatPage implements OnInit {
     }
   }
 
-  aoTeclar(evento: KeyboardEvent): void {
-    if (evento.key !== 'Enter' || evento.shiftKey || evento.isComposing) return;
-    evento.preventDefault();
-    void this.enviar();
+  aoMudarTexto(markdown: string): void {
+    this.textoDigitado.set(markdown);
+  }
+
+  /**
+   * `Enter` envia; `Shift+Enter` abre um novo parágrafo (ou item); `Ctrl+Enter` envia sempre. Dentro de lista e de bloco de código o `Enter`
+   * não envia: continua o bloco, como no campo do chat entre colaboradores (o `Ctrl+Enter` e o botão enviam).
+   */
+  aoTeclarNoCampo(evento: KeyboardEvent): void {
+    if (evento.key !== 'Enter' || evento.isComposing) return;
+    const editor = this.campoDeTexto()?.editor();
+    if (!editor) return;
+    if (evento.ctrlKey || evento.metaKey) {
+      consumir(evento);
+      void this.enviar();
+      return;
+    }
+    const contexto = editor.contextoDoCursor();
+    if (evento.shiftKey) {
+      // Em bloco de código a quebra de linha é a do próprio editor.
+      if (!contexto.emCodigo) {
+        consumir(evento);
+        editor.dividirBloco();
+      }
+      return;
+    }
+    if (!contexto.emLista && !contexto.emCodigo) {
+      consumir(evento);
+      void this.enviar();
+    }
   }
 
   /** O usuário mexeu na área de rolagem (roda, toque, tecla ou clique na barra): o próximo evento de rolagem é dele. */

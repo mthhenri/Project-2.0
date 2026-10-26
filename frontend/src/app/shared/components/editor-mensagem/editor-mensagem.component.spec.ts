@@ -1,14 +1,14 @@
 import { describe, it, expect, vi } from 'vitest';
 import { editorViewCtx } from '@milkdown/kit/core';
 import { TextSelection } from '@milkdown/kit/prose/state';
-import { montarComponente } from '../../../../../testes/montar-componente';
-import { MensagemDiretaEditorMensagemComponent } from './mensagem-direta-editor-mensagem.component';
+import { montarComponente } from '../../../../testes/montar-componente';
+import { EditorMensagemComponent } from './editor-mensagem.component';
 
 // O campo de escrever a mensagem do chat (task 218): o editor formatado dentro de uma caixa, com a barra flutuante da seleção. O jsdom não mede texto, então a
 // posição da seleção e o foco são dublês (o posicionamento real é conferido ao vivo).
 
 async function montar() {
-  const montado = await montarComponente(MensagemDiretaEditorMensagemComponent, { entradas: { placeholder: 'Escreva aqui', rotulo: 'Mensagem' } });
+  const montado = await montarComponente(EditorMensagemComponent, { entradas: { placeholder: 'Escreva aqui', rotulo: 'Mensagem' } });
   await vi.waitFor(async () => {
     await montado.atualizar();
     expect(montado.componente.editor()).not.toBeNull();
@@ -41,7 +41,7 @@ async function montar() {
   return { ...montado, editor, editavel, markdowns, selecionar, comFocoEMedida, barra, botao };
 }
 
-describe('MensagemDiretaEditorMensagemComponent', () => {
+describe('EditorMensagemComponent', () => {
   it('monta o editor com a dica do campo, e o campo vazio mostra o placeholder', async () => {
     const campo = await montar();
     const caixa = campo.elemento.querySelector('.editor-mensagem')!;
