@@ -24,7 +24,7 @@ import { DemandaGrafoComponent } from '../../components/demanda-grafo/demanda-gr
 import { DemandaFormularioDialogComponent } from '../../components/demanda-formulario-dialog/demanda-formulario-dialog.component';
 import { DemandaArvorePainelComponent } from '../../components/demanda-arvore-painel/demanda-arvore-painel.component';
 import { DemandaArvoreTelaComponent } from '../../components/demanda-arvore-tela/demanda-arvore-tela.component';
-import { DemandaPlanejamentoPainelComponent } from '../../components/demanda-planejamento-painel/demanda-planejamento-painel.component';
+import { DemandaControleHorasPainelComponent } from '../../components/demanda-controle-horas-painel/demanda-controle-horas-painel.component';
 import { ModoVisualizacao } from '../../models/demanda.model';
 import { PastaId, lerPastaDaUrl, pastaInicial, pastaParaUrl } from '../../utils/demanda-pasta.util';
 import { focoEmCampo, haSobreposicaoAberta } from '../../../../core/utils/atalhos';
@@ -42,11 +42,14 @@ import { SkeletonListaComponent } from '../../../../shared/components/skeleton-l
 /** Último projeto e modo usados, lembrados entre visitas (task 106). */
 const CHAVE_ULTIMO_PROJETO = 'demanda.ultimoProjetoId';
 const CHAVE_ULTIMO_MODO = 'demanda.ultimoModo';
-const MODOS_VALIDOS: ModoVisualizacao[] = ['grafo', 'arvore', 'planejamento'];
+const MODOS_VALIDOS: ModoVisualizacao[] = ['grafo', 'arvore', 'controle-de-horas'];
 
-/** `lista` foi o nome da Árvore até a task 239: links e preferências antigos continuam abrindo a Árvore. */
+/**
+ * `lista` foi o nome da Árvore até a task 239 e `planejamento` o do Controle de horas até a 240: links e preferências antigos continuam
+ * abrindo as mesmas telas.
+ */
 function normalizarModo(valor: string | null): ModoVisualizacao | null {
-  const modo = valor === 'lista' ? 'arvore' : valor;
+  const modo = valor === 'lista' ? 'arvore' : valor === 'planejamento' ? 'controle-de-horas' : valor;
   return modo && (MODOS_VALIDOS as string[]).includes(modo) ? (modo as ModoVisualizacao) : null;
 }
 
@@ -83,7 +86,7 @@ function gravarArmazenado(chave: string, valor: string): void {
     DemandaFormularioDialogComponent,
     DemandaArvorePainelComponent,
     DemandaArvoreTelaComponent,
-    DemandaPlanejamentoPainelComponent,
+    DemandaControleHorasPainelComponent,
   ],
   templateUrl: './demanda-projeto.page.html',
   styleUrl: './demanda-projeto.page.scss',
@@ -129,7 +132,7 @@ export class DemandaProjetoPage implements OnInit, OnDestroy {
   readonly opcoesModo = computed(() => [
     { rotulo: 'Árvore', valor: 'arvore' as ModoVisualizacao, icone: 'pi pi-sitemap' },
     { rotulo: 'Grafo', valor: 'grafo' as ModoVisualizacao, icone: 'pi pi-share-alt' },
-    ...(this.sessao.eGestor() ? [{ rotulo: 'Planejamento', valor: 'planejamento' as ModoVisualizacao, icone: 'pi pi-chart-bar' }] : []),
+    ...(this.sessao.eGestor() ? [{ rotulo: 'Controle de horas', valor: 'controle-de-horas' as ModoVisualizacao, icone: 'pi pi-chart-bar' }] : []),
   ]);
 
   private readonly nosDoProjeto = computed(() => this.grafo()?.nos ?? []);
@@ -164,11 +167,11 @@ export class DemandaProjetoPage implements OnInit, OnDestroy {
     clearTimeout(this.temporizadorFiltroGrafo);
   }
 
-  /** `?modo=` vence o último modo usado, que vence o padrão (Árvore). Planejamento é só do gestor. */
+  /** `?modo=` vence o último modo usado, que vence o padrão (Árvore). O Controle de horas é só do gestor. */
   private modoInicial(): ModoVisualizacao {
     const candidato = normalizarModo(this.route.snapshot.queryParamMap.get('modo') ?? lerArmazenado(CHAVE_ULTIMO_MODO));
     if (!candidato) return 'arvore';
-    return candidato === 'planejamento' && !this.sessao.eGestor() ? 'arvore' : candidato;
+    return candidato === 'controle-de-horas' && !this.sessao.eGestor() ? 'arvore' : candidato;
   }
 
   ngOnInit(): void {
@@ -187,7 +190,7 @@ export class DemandaProjetoPage implements OnInit, OnDestroy {
     this.pastaId.set(null);
     this.atualizarUrl();
     this.carregarGrafo();
-    if (this.modoVisualizacao() === 'planejamento' && this.sessao.eGestor()) {
+    if (this.modoVisualizacao() === 'controle-de-horas' && this.sessao.eGestor()) {
       this.carregarPlanejamento();
     }
   }
@@ -197,7 +200,7 @@ export class DemandaProjetoPage implements OnInit, OnDestroy {
     this.modoVisualizacao.set(modo);
     gravarArmazenado(CHAVE_ULTIMO_MODO, modo);
     this.atualizarUrl();
-    if (modo === 'planejamento' && this.sessao.eGestor() && this.projetoId()) {
+    if (modo === 'controle-de-horas' && this.sessao.eGestor() && this.projetoId()) {
       this.carregarPlanejamento();
     }
   }
@@ -270,7 +273,7 @@ export class DemandaProjetoPage implements OnInit, OnDestroy {
     if (focoEmCampo(evento.target) || haSobreposicaoAberta()) return;
 
     const modo = this.modoVisualizacao();
-    if (evento.key === '/' && modo !== 'planejamento') {
+    if (evento.key === '/' && modo !== 'controle-de-horas') {
       evento.preventDefault();
       this.toolbar()?.focarBusca();
     } else if (evento.key.toLowerCase() === 'c' && this.sessao.eGestor()) {
@@ -293,25 +296,25 @@ export class DemandaProjetoPage implements OnInit, OnDestroy {
           if (resposta.sucesso && resposta.dados) this.planejamento.set(resposta.dados);
         },
         error: () => {
-          this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Não foi possível carregar o planejamento' });
+          this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Não foi possível carregar o controle de horas' });
         },
       });
   }
 
   /**
-   * Alteração vinda do painel de Planejamento ou de um diálogo por ele acionado
+   * Alteração vinda do Controle de horas ou de um diálogo por ele acionado
    * (status, edição, tags, etc.): atualiza o grafo e, se estiver no modo, o planejamento.
    */
   aoAlteradoPlanejamento(): void {
     this.recarregarGrafo();
     this.arvoreTela()?.recarregar();
-    if (this.modoVisualizacao() === 'planejamento' && this.sessao.eGestor()) {
+    if (this.modoVisualizacao() === 'controle-de-horas' && this.sessao.eGestor()) {
       this.carregarPlanejamento();
     }
   }
 
   /**
-   * Status trocado no painel de Planejamento (otimista, com rollback): aplica no nó do grafo e na linha do
+   * Status trocado no Controle de horas (otimista, com rollback): aplica no nó do grafo e na linha do
    * planejamento sem refazer nenhuma consulta. Concluída sai do planejamento (ele só lista não-concluídas).
    */
   aoStatusAlterado(alteracao: { demandaId: number; status: TipoDemandaStatusEnum }): void {
@@ -324,6 +327,18 @@ export class DemandaProjetoPage implements OnInit, OnDestroy {
       alteracao.status === TipoDemandaStatusEnum.CONCLUIDA
         ? linhas.filter((linha) => linha.demandaId !== alteracao.demandaId)
         : linhas.map((linha) => (linha.demandaId === alteracao.demandaId ? { ...linha, status: alteracao.status } : linha)),
+    );
+  }
+
+  /** Estimativa gravada pelo cartão "Sem estimativa": aplica no nó do grafo e na linha do planejamento, sem recarregar. */
+  aoHorasEstimadasAlteradas(alteracao: { demandaId: number; horasEstimadas: number }): void {
+    this.grafo.update((grafoAtual) =>
+      grafoAtual
+        ? { ...grafoAtual, nos: grafoAtual.nos.map((no) => (no.id === alteracao.demandaId ? { ...no, horasEstimadas: alteracao.horasEstimadas } : no)) }
+        : grafoAtual,
+    );
+    this.planejamento.update((linhas) =>
+      linhas.map((linha) => (linha.demandaId === alteracao.demandaId ? { ...linha, horasEstimadas: alteracao.horasEstimadas } : linha)),
     );
   }
 
@@ -381,7 +396,7 @@ export class DemandaProjetoPage implements OnInit, OnDestroy {
               gravarArmazenado(CHAVE_ULTIMO_PROJETO, String(projetoInicial));
               this.atualizarUrl();
               this.carregarGrafo();
-              if (this.modoVisualizacao() === 'planejamento' && this.sessao.eGestor()) this.carregarPlanejamento();
+              if (this.modoVisualizacao() === 'controle-de-horas' && this.sessao.eGestor()) this.carregarPlanejamento();
             }
           }
         },

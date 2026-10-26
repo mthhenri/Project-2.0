@@ -38,6 +38,12 @@ export class DemandaPlanejamentoDto {
   @ApiProperty({ example: false, description: 'Documentação preenchida — realça o ícone no menu de contexto' })
   temDocumentacao: boolean;
 
+  @ApiProperty({ example: '2026-10-20T18:00:00.000Z', nullable: true, description: 'Última execução das atividades diretas (fim_data, ou inicio_data se aberta); null se nunca executou' })
+  ultimaExecucaoData: Date | null;
+
+  @ApiProperty({ example: '2026-10-01T12:00:00.000Z', description: 'Quando a demanda foi criada (created_date)' })
+  criadaData: Date;
+
   @ApiProperty({ type: [ExecutorAtivoDto] })
   executoresAtivos: ExecutorAtivoDto[];
 }

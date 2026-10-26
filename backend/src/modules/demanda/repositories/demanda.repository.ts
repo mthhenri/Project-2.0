@@ -415,7 +415,8 @@ export class DemandaRepository extends BaseRepository<Demanda> {
          COALESCE((
            SELECT JSON_AGG(JSON_BUILD_OBJECT(
              'usuarioId', usuario.id,
-             'nomeCompleto', usuario.nome_completo
+             'nomeCompleto', usuario.nome_completo,
+             'inicioData', execucao.inicio_data
            ))
            FROM atividade
            INNER JOIN execucao
@@ -427,7 +428,17 @@ export class DemandaRepository extends BaseRepository<Demanda> {
              AND usuario.is_deleted = false
            WHERE atividade.demanda_id = caminho_demanda.id
              AND atividade.is_deleted = false
-         ), '[]'::json) AS "executoresAtivos"
+         ), '[]'::json) AS "executoresAtivos",
+         (
+           SELECT MAX(COALESCE(execucao.fim_data, execucao.inicio_data))
+           FROM atividade
+           INNER JOIN execucao
+             ON execucao.atividade_id = atividade.id
+             AND execucao.is_deleted = false
+           WHERE atividade.demanda_id = caminho_demanda.id
+             AND atividade.is_deleted = false
+         ) AS "ultimaExecucaoData",
+         demanda.created_date AS "criadaData"
        FROM caminho_demanda
        INNER JOIN tipo_demanda_status
          ON tipo_demanda_status.id = caminho_demanda.tipo_demanda_status_id

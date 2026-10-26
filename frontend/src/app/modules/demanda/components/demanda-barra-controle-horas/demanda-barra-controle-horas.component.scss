@@ -1,0 +1,62 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.barra-controle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+
+  &__trilho {
+    position: relative;
+    width: 6rem;
+    height: 0.4rem;
+    border-radius: 0.2rem;
+    background-color: var(--app-surface-200);
+    flex-shrink: 0;
+  }
+
+  &__preenchimento {
+    display: block;
+    height: 100%;
+    border-radius: 0.2rem;
+    transition: width 0.3s ease, background-color 0.3s ease;
+  }
+
+  // O risco dos 100%: passa um pouco da altura da barra para se ler mesmo coberto pelo preenchimento.
+  &__risco {
+    position: absolute;
+    top: -0.15rem;
+    bottom: -0.15rem;
+    width: 2px;
+    margin-left: -1px;
+    border-radius: 1px;
+    background-color: var(--p-text-color);
+    opacity: 0.55;
+  }
+
+  &__texto {
+    font-size: 0.78rem;
+    color: var(--p-text-muted-color);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__saldo {
+    font-size: 0.78rem;
+    color: var(--p-text-muted-color);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+
+    &--acima {
+      color: var(--p-red-500);
+      font-weight: 600;
+    }
+  }
+
+  &--estourou &__texto {
+    color: var(--p-text-color);
+  }
+}

@@ -126,10 +126,10 @@ describe('DemandaProjetoPage', () => {
   });
 
   describe('modos', () => {
-    it('padrão é a Árvore; o gestor tem Árvore, Grafo e Planejamento; o desenvolvedor só Árvore e Grafo', async () => {
+    it('padrão é a Árvore; o gestor tem Árvore, Grafo e Controle de horas; o desenvolvedor só Árvore e Grafo', async () => {
       const gestor = await montarPagina();
       expect(gestor.montado.componente.modoVisualizacao()).toBe('arvore');
-      expect(gestor.montado.componente.opcoesModo().map((opcao) => opcao.valor)).toEqual(['arvore', 'grafo', 'planejamento']);
+      expect(gestor.montado.componente.opcoesModo().map((opcao) => opcao.valor)).toEqual(['arvore', 'grafo', 'controle-de-horas']);
       expect(gestor.montado.componente.opcoesModo()[0].rotulo).toBe('Árvore');
       const dev = await montarPagina({ usuario: TipoUsuarioEnum.DESENVOLVEDOR });
       expect(dev.montado.componente.opcoesModo().map((opcao) => opcao.valor)).toEqual(['arvore', 'grafo']);
@@ -143,31 +143,47 @@ describe('DemandaProjetoPage', () => {
       expect((await montarPagina({ consulta: { modo: 'qualquer' } })).montado.componente.modoVisualizacao()).toBe('arvore');
     });
 
-    it('o desenvolvedor nunca cai no planejamento, nem por URL nem por armazenamento', async () => {
-      const porUrl = await montarPagina({ usuario: TipoUsuarioEnum.DESENVOLVEDOR, consulta: { modo: 'planejamento' } });
+    it('o desenvolvedor nunca cai no Controle de horas, nem por URL nem por armazenamento', async () => {
+      const porUrl = await montarPagina({ usuario: TipoUsuarioEnum.DESENVOLVEDOR, consulta: { modo: 'controle-de-horas' } });
       expect(porUrl.montado.componente.modoVisualizacao()).toBe('arvore');
-      const porArmazenamento = await montarPagina({ usuario: TipoUsuarioEnum.DESENVOLVEDOR, armazenamento: { 'demanda.ultimoModo': 'planejamento' } });
+      const porArmazenamento = await montarPagina({ usuario: TipoUsuarioEnum.DESENVOLVEDOR, armazenamento: { 'demanda.ultimoModo': 'controle-de-horas' } });
       expect(porArmazenamento.montado.componente.modoVisualizacao()).toBe('arvore');
     });
 
-    it('o desenvolvedor que força o modo planejamento não dispara a consulta', async () => {
+    it('?modo=planejamento e o modo lembrado como planejamento (nome antigo) abrem o Controle de horas do gestor', async () => {
+      const porUrl = await montarPagina({ consulta: { modo: 'planejamento' } });
+      expect(porUrl.montado.componente.modoVisualizacao()).toBe('controle-de-horas');
+      const porArmazenamento = await montarPagina({ armazenamento: { 'demanda.ultimoModo': 'planejamento' } });
+      expect(porArmazenamento.montado.componente.modoVisualizacao()).toBe('controle-de-horas');
+    });
+
+    it('aoHorasEstimadasAlteradas aplica a estimativa no nó do grafo e na linha do planejamento, sem consulta', async () => {
+      const { montado } = await montarPagina({ consulta: { projetoId: '5' } });
+      montado.componente.grafo.set({ nos: [criarNo(1, { horasEstimadas: 0 })], arestas: [] } as never);
+      montado.componente.planejamento.set([{ demandaId: 1, horasEstimadas: 0 }] as never);
+      montado.componente.aoHorasEstimadasAlteradas({ demandaId: 1, horasEstimadas: 6 });
+      expect(montado.componente.grafo()!.nos[0].horasEstimadas).toBe(6);
+      expect(montado.componente.planejamento()[0].horasEstimadas).toBe(6);
+    });
+
+    it('o desenvolvedor que força o Controle de horas não dispara a consulta', async () => {
       const { montado } = await montarPagina({ usuario: TipoUsuarioEnum.DESENVOLVEDOR, consulta: { projetoId: '5' } });
       await carregarProjetos(montado);
       responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/grafo'), GRAFO);
-      montado.componente.alternarModo('planejamento');
+      montado.componente.alternarModo('controle-de-horas');
       montado.http.expectNone((r) => r.url.endsWith('/demanda/planejamento'));
     });
 
-    it('o gestor, ao trocar para planejamento, carrega as linhas; o mesmo modo é ignorado; o modo vai para URL e armazenamento', async () => {
+    it('o gestor, ao trocar para o Controle de horas, carrega as linhas; o mesmo modo é ignorado; o modo vai para URL e armazenamento', async () => {
       const { montado, irPara } = await montarPagina({ consulta: { projetoId: '5' } });
       await carregarProjetos(montado);
       responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/grafo'), GRAFO);
       montado.componente.alternarModo('arvore');
       montado.http.expectNone((r) => r.url.endsWith('/demanda/planejamento'));
 
-      montado.componente.alternarModo('planejamento');
-      expect(localStorage.getItem('demanda.ultimoModo')).toBe('planejamento');
-      expect(irPara).toHaveBeenLastCalledWith([], { queryParams: { modo: 'planejamento', projetoId: 5, pasta: 'sem-pasta' }, replaceUrl: true });
+      montado.componente.alternarModo('controle-de-horas');
+      expect(localStorage.getItem('demanda.ultimoModo')).toBe('controle-de-horas');
+      expect(irPara).toHaveBeenLastCalledWith([], { queryParams: { modo: 'controle-de-horas', projetoId: 5, pasta: 'sem-pasta' }, replaceUrl: true });
       const requisicao = esperarRequisicao(montado.http, 'GET', '/demanda/planejamento');
       expect(requisicao.request.params.get('projetoId')).toBe('5');
       responderSucesso(requisicao, [{ demandaId: 1, caminho: 'Demanda 1', executoresAtivos: [{ usuarioId: 3, nomeCompleto: 'Ana' }] }]);
@@ -176,13 +192,13 @@ describe('DemandaProjetoPage', () => {
     });
 
     it('falha ao carregar o planejamento avisa o usuário', async () => {
-      const { montado } = await montarPagina({ consulta: { projetoId: '5', modo: 'planejamento' } });
+      const { montado } = await montarPagina({ consulta: { projetoId: '5', modo: 'controle-de-horas' } });
       const avisos: string[] = [];
       montado.mensagens.add = ((mensagem: { detail: string }) => avisos.push(mensagem.detail)) as never;
       await carregarProjetos(montado);
       responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/grafo'), GRAFO);
       responderErro(esperarRequisicao(montado.http, 'GET', '/demanda/planejamento'), 500, 'falhou');
-      expect(avisos).toContain('Não foi possível carregar o planejamento');
+      expect(avisos).toContain('Não foi possível carregar o controle de horas');
     });
   });
 

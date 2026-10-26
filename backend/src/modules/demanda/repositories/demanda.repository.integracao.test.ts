@@ -420,6 +420,11 @@ testarComBanco('listarPlanejamento: só PENDENTE e PLANEJADA, com caminho, minut
   assert.match(dela.caminho, /Pai.+Filha$/);
   assert.ok(dela.minutosExecutados >= 60, 'a execução aberta conta até agora');
   assert.deepEqual(dela.executoresAtivos.map((pessoa) => pessoa.nomeCompleto), ['Executora']);
+  assert.equal(new Date(dela.executoresAtivos[0].inicioData).toISOString(), '2026-01-15T14:00:00.000Z', 'o início da execução aberta');
+  assert.equal(new Date(dela.ultimaExecucaoData!).toISOString(), '2026-01-15T14:00:00.000Z', 'a aberta conta pelo início');
+  assert.ok(!Number.isNaN(new Date(dela.criadaData).getTime()), 'traz a data de criação');
+  const dopai = linhas.find((linha) => linha.demandaId === pai.id)!;
+  assert.equal(dopai.ultimaExecucaoData, null, 'nunca executada');
 });
 
 testarComBanco('possuiFilhasOuAtividades só conta filha e atividade não excluídas', async (conexao) => {

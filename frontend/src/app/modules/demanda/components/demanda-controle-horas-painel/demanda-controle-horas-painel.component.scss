@@ -1,0 +1,337 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.controle-horas {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  height: 100%;
+  overflow: auto;
+  padding: 1rem;
+  background-color: var(--app-surface-50);
+
+  &__resumo {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  &__numero {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--app-surface-200);
+    border-radius: 0.5rem;
+    background: var(--app-surface-0);
+
+    &--alerta .controle-horas__numero-valor {
+      color: var(--p-red-500);
+    }
+  }
+
+  &__numero-rotulo {
+    font-size: 0.75rem;
+    color: var(--p-text-muted-color);
+  }
+
+  &__numero-valor {
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    min-height: 1.75rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--p-text-color);
+    font-variant-numeric: tabular-nums;
+
+    small {
+      font-size: 0.75rem;
+      font-weight: 400;
+      color: var(--p-text-muted-color);
+    }
+  }
+
+  // Quem executa agora: bolinhas sobrepostas, na cor do tema.
+  &__pilha {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  &__avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    margin-left: -0.4rem;
+    border: 2px solid var(--app-surface-0);
+    border-radius: 50%;
+    background: var(--app-realce-primario);
+    color: var(--p-primary-contrast-color);
+    font-size: 0.65rem;
+    font-weight: 600;
+    cursor: default;
+
+    &:first-child {
+      margin-left: 0;
+    }
+
+    &--resto {
+      background: var(--app-surface-300);
+      color: var(--p-text-color);
+    }
+  }
+
+  &__arvore {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--app-surface-200);
+    border-radius: 0.5rem;
+    background: var(--app-surface-0);
+    transition: opacity 0.15s ease;
+
+    &--recarregando {
+      opacity: 0.6;
+    }
+  }
+
+  &__cabecalho,
+  &__linha {
+    display: grid;
+    grid-template-columns: minmax(14rem, 1fr) minmax(19rem, 24rem) minmax(11rem, 15rem);
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  &__cabecalho {
+    border-bottom: 1px solid var(--app-surface-200);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--p-text-muted-color);
+  }
+
+  &__linha {
+    min-height: 2.5rem;
+    cursor: pointer;
+    transition: background-color 0.12s ease;
+
+    &:hover {
+      background: var(--app-surface-100);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--p-primary-color);
+      outline-offset: -2px;
+    }
+
+    &--pasta {
+      background: var(--app-surface-50);
+      font-weight: 600;
+    }
+
+    &--escolhida,
+    &--escolhida:hover {
+      background: var(--app-realce-sutil);
+    }
+  }
+
+  &__demanda {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+    padding-left: calc(var(--nivel, 0) * 1.25rem);
+  }
+
+  &__chevron {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 1.25rem;
+    height: 1.25rem;
+    padding: 0;
+    border: 0;
+    border-radius: 0.25rem;
+    background: transparent;
+    color: var(--p-text-muted-color);
+    font-size: 0.7rem;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--app-surface-200);
+    }
+
+    &--vazio {
+      cursor: default;
+      pointer-events: none;
+    }
+  }
+
+  &__icone-pasta {
+    flex-shrink: 0;
+    font-size: 0.8rem;
+    color: var(--p-text-muted-color);
+  }
+
+  &__nome {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.9rem;
+    color: var(--p-text-color);
+  }
+
+  &__executando {
+    min-width: 0;
+  }
+
+  &__executor {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-width: 0;
+    font-size: 0.82rem;
+    color: var(--p-text-color);
+  }
+
+  &__executor-nome {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__executor-tempo {
+    flex-shrink: 0;
+    font-size: 0.72rem;
+    color: var(--p-text-muted-color);
+    white-space: nowrap;
+  }
+
+  &__pulso {
+    flex-shrink: 0;
+    font-size: 0.5rem;
+    color: var(--app-realce-primario);
+    animation: controle-horas-pulso 1.4s ease-in-out infinite;
+  }
+
+  &__sem-dado {
+    color: var(--p-text-muted-color);
+  }
+
+  &__cartoes {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  &__cartao {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+    padding: 0.75rem;
+    border: 1px solid var(--app-surface-200);
+    border-radius: 0.5rem;
+    background: var(--app-surface-0);
+  }
+
+  &__cartao-titulo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 0.25rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--p-text-color);
+  }
+
+  &__cartao-contagem {
+    padding: 0 0.5rem;
+    border-radius: 999px;
+    background: var(--app-surface-200);
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--p-text-muted-color);
+  }
+
+  &__cartao-linha {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.25rem;
+    border: 0;
+    border-radius: 0.375rem;
+    background: transparent;
+    text-align: left;
+
+    &--botao {
+      width: 100%;
+      cursor: pointer;
+
+      &:hover {
+        background: var(--app-surface-100);
+      }
+    }
+  }
+
+  &__cartao-nome {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    text-align: left;
+    font-size: 0.88rem;
+    color: var(--p-text-color);
+    cursor: pointer;
+
+    > span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    small {
+      font-size: 0.72rem;
+      color: var(--p-text-muted-color);
+    }
+  }
+
+  &__cartao-vazio {
+    margin: 0;
+    padding: 0.5rem 0.25rem;
+    font-size: 0.85rem;
+    color: var(--p-text-muted-color);
+  }
+
+  ::ng-deep .controle-horas__campo-horas {
+    width: 5.5rem;
+  }
+
+  &__vazio {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 2rem 1rem;
+    color: var(--p-text-muted-color);
+  }
+
+  &__vazio-icone {
+    font-size: 1.75rem;
+    opacity: 0.6;
+  }
+}
+
+@keyframes controle-horas-pulso {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}

@@ -155,8 +155,8 @@ export class ProjetoDetalhePage implements OnInit {
     });
   }
 
-  /** Abre a visão escolhida (Lista, Grafo ou Planejamento) já com o projeto selecionado. */
-  abrirVisao(modo: 'lista' | 'grafo' | 'planejamento'): void {
+  /** Abre a visão escolhida (Árvore, Grafo ou Controle de horas) já com o projeto selecionado. */
+  abrirVisao(modo: 'lista' | 'grafo' | 'controle-de-horas'): void {
     const projetoDados = this.projeto();
     if (projetoDados) this.router.navigate(['/demanda'], { queryParams: { projetoId: projetoDados.id, modo } });
   }

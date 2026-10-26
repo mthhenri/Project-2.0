@@ -47,10 +47,10 @@ describe('ProjetoDetalhePage', () => {
     expect(montado.componente.resumo()).toMatchObject({ total: 0, percentual: 0, estourou: false });
   });
 
-  it('gestor vê Nova Demanda, Relatório, Editar, Planejamento e "Definir datas"', async () => {
+  it('gestor vê Nova Demanda, Relatório, Editar, Controle de horas e "Definir datas"', async () => {
     const { montado } = await montarDetalhe(TipoUsuarioEnum.GESTOR);
     await carregar(montado);
-    for (const esperado of ['Nova Demanda', 'Relatório', 'Editar', 'Planejamento', 'Definir datas', 'Criar primeira demanda']) {
+    for (const esperado of ['Nova Demanda', 'Relatório', 'Editar', 'Controle de horas', 'Definir datas', 'Criar primeira demanda']) {
       expect(texto(montado), esperado).toContain(esperado);
     }
     expect(montado.elemento.querySelector('[aria-label="Trocar status do projeto"]')).not.toBeNull();
@@ -60,7 +60,7 @@ describe('ProjetoDetalhePage', () => {
     const { montado } = await montarDetalhe(TipoUsuarioEnum.DESENVOLVEDOR);
     await carregar(montado);
     expect(texto(montado)).toContain('Portal do Cliente');
-    for (const proibido of ['Nova Demanda', 'Relatório', 'Planejamento', 'Definir datas', 'Criar primeira demanda']) {
+    for (const proibido of ['Nova Demanda', 'Relatório', 'Controle de horas', 'Definir datas', 'Criar primeira demanda']) {
       expect(texto(montado), proibido).not.toContain(proibido);
     }
     expect(montado.elemento.querySelector('[aria-label="Trocar status do projeto"]')).toBeNull();

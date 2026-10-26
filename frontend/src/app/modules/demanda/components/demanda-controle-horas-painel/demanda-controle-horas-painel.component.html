@@ -1,0 +1,176 @@
+<div class="controle-horas">
+  <p-contextmenu #menuContexto [model]="itensMenu" appendTo="body" />
+
+  @if (carregando() && projetoVazio()) {
+    <app-skeleton-lista variante="linhas" [quantidade]="8" />
+  } @else if (projetoVazio()) {
+    <div class="controle-horas__vazio">
+      <i class="pi pi-inbox controle-horas__vazio-icone"></i>
+      <span>Este projeto ainda não tem demandas para controlar.</span>
+    </div>
+  } @else {
+    <!-- Resumo do topo -->
+    <section class="controle-horas__resumo" aria-label="Resumo das horas do projeto">
+      <div class="controle-horas__numero">
+        <span class="controle-horas__numero-rotulo">Estimado</span>
+        <span class="controle-horas__numero-valor">{{ resumo().horasEstimadas | tempoExibicao: unidadeTempo.emDias() : 'horas' }}</span>
+      </div>
+      <div class="controle-horas__numero">
+        <span class="controle-horas__numero-rotulo">Executado</span>
+        <span class="controle-horas__numero-valor">{{ resumo().minutosExecutados | tempoExibicao: unidadeTempo.emDias() : 'minutos' }}</span>
+      </div>
+      <div class="controle-horas__numero" [class.controle-horas__numero--alerta]="resumo().demandasEstouradas > 0">
+        <span class="controle-horas__numero-rotulo">Estouro</span>
+        <span class="controle-horas__numero-valor">
+          @if (resumo().demandasEstouradas > 0) {
+            +{{ resumo().minutosAcima | tempoExibicao: unidadeTempo.emDias() : 'minutos' }}
+            <small>em {{ resumo().demandasEstouradas }} {{ resumo().demandasEstouradas === 1 ? 'demanda' : 'demandas' }}</small>
+          } @else {
+            —
+          }
+        </span>
+      </div>
+      <div class="controle-horas__numero">
+        <span class="controle-horas__numero-rotulo">Executando agora</span>
+        <span class="controle-horas__numero-valor">
+          @if (executoresDoProjeto().length) {
+            <span class="controle-horas__pilha">
+              @for (executor of executoresNoResumo(); track executor.usuarioId) {
+                <span class="controle-horas__avatar" [pTooltip]="dicaDoExecutor(executor)" tooltipPosition="top">{{ iniciais(executor.nomeCompleto) }}</span>
+              }
+              @if (executoresExcedentes().length) {
+                <span class="controle-horas__avatar controle-horas__avatar--resto" [pTooltip]="dicaDosExecutores(executoresExcedentes())" tooltipPosition="top">+{{ executoresExcedentes().length }}</span>
+              }
+            </span>
+          } @else {
+            —
+          }
+        </span>
+      </div>
+    </section>
+
+    <!-- Árvore de horas -->
+    <section class="controle-horas__arvore" [class.controle-horas__arvore--recarregando]="carregando()" aria-label="Horas por demanda">
+      <div class="controle-horas__cabecalho" aria-hidden="true">
+        <span>Demanda</span>
+        <span>Estimado × executado</span>
+        <span>Executando agora</span>
+      </div>
+
+      @for (linha of linhas(); track linha.noHoras.no.id) {
+        @let no = linha.noHoras.no;
+        <div
+          class="controle-horas__linha"
+          [class.controle-horas__linha--pasta]="no.isEstrutural"
+          [class.controle-horas__linha--escolhida]="no.id === pastaId()"
+          [attr.id]="'horas-linha-' + no.id"
+          [style.--nivel]="linha.noHoras.nivel"
+          role="button"
+          tabindex="0"
+          [attr.aria-expanded]="no.isEstrutural && linha.noHoras.filhos.length ? !linha.recolhida : null"
+          (click)="aoClicarLinha(linha)"
+          (keydown.enter)="aoClicarLinha(linha)"
+          (contextmenu)="abrirMenu($event, no, menuContexto)"
+        >
+          <span class="controle-horas__demanda">
+            @if (no.isEstrutural && linha.noHoras.filhos.length) {
+              <button
+                type="button"
+                class="controle-horas__chevron"
+                [attr.aria-label]="linha.recolhida ? 'Abrir pasta' : 'Fechar pasta'"
+                (click)="alternarPasta(linha.noHoras, $event)"
+              ><i class="pi" [class.pi-chevron-right]="linha.recolhida" [class.pi-chevron-down]="!linha.recolhida"></i></button>
+            } @else {
+              <span class="controle-horas__chevron controle-horas__chevron--vazio"></span>
+            }
+            <app-demanda-status [status]="no.status" [editavel]="sessao.eGestor()" (statusEscolhido)="alterarStatus(no, $event)" />
+            @if (no.isEstrutural) {
+              <i class="pi pi-folder controle-horas__icone-pasta"></i>
+            }
+            <span class="controle-horas__nome">{{ no.nome }}</span>
+          </span>
+
+          <app-demanda-barra-controle-horas
+            class="controle-horas__barra"
+            [minutosExecutados]="linha.noHoras.minutosTotais"
+            [horasEstimadas]="linha.noHoras.horasTotais"
+          />
+
+          <span class="controle-horas__executando">
+            @if (linha.executores.length) {
+              <span class="controle-horas__executor" [pTooltip]="linha.executores.length > 1 ? dicaDosExecutores(linha.executores) : ''">
+                <i class="pi pi-circle-fill controle-horas__pulso"></i>
+                <span class="controle-horas__executor-nome">{{ linha.executores[0].nomeCompleto }}</span>
+                <span class="controle-horas__executor-tempo">{{ haQuantoTempo(linha.executores[0].inicioData) }}</span>
+                @if (linha.executores.length > 1) {
+                  <span class="controle-horas__executor-tempo">+{{ linha.executores.length - 1 }}</span>
+                }
+              </span>
+            } @else {
+              <span class="controle-horas__sem-dado">—</span>
+            }
+          </span>
+        </div>
+      }
+    </section>
+
+    <!-- Cartões do que pede atenção -->
+    <div class="controle-horas__cartoes">
+      <section class="controle-horas__cartao" aria-labelledby="titulo-sem-estimativa">
+        <h3 id="titulo-sem-estimativa" class="controle-horas__cartao-titulo">
+          <i class="pi pi-question-circle"></i> Sem estimativa
+          <span class="controle-horas__cartao-contagem">{{ semEstimativa().length }}</span>
+        </h3>
+        @for (cartao of semEstimativa(); track cartao.no.id) {
+          <div class="controle-horas__cartao-linha">
+            <button type="button" class="controle-horas__cartao-nome" (click)="demandaVisualizarSolicitada.emit(cartao.no.id)">
+              <span>{{ cartao.no.nome }}</span>
+              @if (cartao.pasta) {
+                <small><i class="pi pi-folder"></i> {{ cartao.pasta }}</small>
+              }
+            </button>
+            @if (sessao.eGestor()) {
+              <p-inputnumber
+                [formControl]="cartao.controle"
+                [min]="0"
+                [maxFractionDigits]="2"
+                suffix=" h"
+                placeholder="Horas"
+                inputStyleClass="controle-horas__campo-horas"
+                (keydown.enter)="estimar(cartao)"
+              />
+              <p-button
+                icon="pi pi-check"
+                size="small"
+                ariaLabel="Salvar estimativa"
+                pTooltip="Salvar estimativa"
+                [disabled]="!cartao.controle.value || cartao.controle.value <= 0"
+                [loading]="salvandoEstimativa().has(cartao.no.id)"
+                (onClick)="estimar(cartao)"
+              />
+            }
+          </div>
+        } @empty {
+          <p class="controle-horas__cartao-vazio">Todas as demandas em andamento têm estimativa.</p>
+        }
+      </section>
+
+      <section class="controle-horas__cartao" aria-labelledby="titulo-paradas">
+        <h3 id="titulo-paradas" class="controle-horas__cartao-titulo">
+          <i class="pi pi-pause-circle"></i> Paradas
+          <span class="controle-horas__cartao-contagem">{{ paradas().length }}</span>
+        </h3>
+        @for (parada of paradas(); track parada.linha.demandaId) {
+          <button type="button" class="controle-horas__cartao-linha controle-horas__cartao-linha--botao" (click)="demandaVisualizarSolicitada.emit(parada.linha.demandaId)">
+            <span class="controle-horas__cartao-nome">
+              <span>{{ parada.linha.caminho }}</span>
+              <small>{{ parada.situacao }}</small>
+            </span>
+          </button>
+        } @empty {
+          <p class="controle-horas__cartao-vazio">Nenhuma demanda parada há mais de 7 dias.</p>
+        }
+      </section>
+    </div>
+  }
+</div>

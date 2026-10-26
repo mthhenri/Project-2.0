@@ -12,6 +12,20 @@
 
 ---
 
+## 2026-10-25 — Task 240: o Controle de horas (a aba Planejamento virou uma árvore de horas)
+
+Terceira das quatro tasks da reorganização da tela de demandas (`demanda-tela.spec.md`; 238–241). A aba **Planejamento** virou o **Controle de horas**: árvore de pastas e demandas com o total de cada pasta, barra nova, quem executa agora e dois cartões do que pede atenção.
+
+- **Decisões do autor ao abrir a task:** (1) as **concluídas entram** na árvore e as horas já gastas contam no total da pasta; as canceladas nunca; (2) a tela mostra o **projeto inteiro**, com a pasta escolhida realçada e a tela rolando até ela (`?pasta=`); (3) o modo se chama `controle-de-horas` (`?modo=planejamento` e o modo lembrado como `planejamento` continuam abrindo a mesma tela); (4) o total da pasta **inclui as horas próprias da estrutural** mais as dos descendentes.
+- **Hierarquia e totais saem do grafo** (`nos` já carregado pela página: `demandaPaiId`, status, horas); o endpoint `GET /demanda/planejamento` ficou enxuto e **continua só com pendentes e planejadas** (quem executa, última execução, criação), o que dispensou `demandaPaiId` nele e mudar o filtro. `DemandaPlanejamentoDto` ganhou `ultimaExecucaoData` e `criadaData`; `ExecutorAtivoDto` ganhou `inicioData` (só os dois DTOs e o repository o consomem: `npm run impacto` antes). Sem migration.
+- **Regras puras:** `demandaEstaParada` e `PRAZO_DEMANDA_PARADA_DIAS = 7` no `shared` (mais de 7 dias sem execução, ou nunca executada e criada há mais de 7; com estimativa, nem concluída nem cancelada); no front `utils/demanda-horas.util.ts` (cor da barra, barra até 150% com risco nos 100%, árvore com totais, resumo, "há quanto tempo", iniciais, executores únicos). A barra nova é `app-demanda-barra-controle-horas`, **outra** da `app-demanda-barra-horas` da Árvore (que trava em 100%): mexer na da 239 mudaria a lista inteira; a 241 reaproveita a nova no grafo.
+- **Tela:** `demanda-planejamento-painel` virou `demanda-controle-horas-painel`. Resumo do topo (estimado, executado, estouro, executando agora em bolinhas sobrepostas com tooltip e "+N"), árvore com pastas que abrem e fecham, executor na linha com bolinha pulsando, nome e há quanto tempo; cartões "Sem estimativa" (campo para estimar ali, pela alteração de demanda, sem recarregar) e "Paradas". Clique na demanda abre na Árvore, na pasta dela; menu de contexto e troca otimista de status mantidos. O botão do detalhe do projeto também virou "Controle de horas".
+- **Testes:** shared 250 (5 novos de `demandaEstaParada`); backend 1410 e integração 323 (o `listarPlanejamento` ganhou asserções dos campos novos); frontend 2044, com 24 novos (`demanda-horas.util.test.ts`, `demanda-controle-horas-painel.component.spec.ts` com 15 e dois na página). Builds de backend e frontend passam. Na suíte completa do front 6 testes de chat/markdown estouraram o tempo sob carga e passam isolados (instabilidade preexistente, não desta task). Lint: não existe (P-001).
+- **Ao vivo** (gestor, banco de dev, Projeto Demo): `?modo=planejamento` abre o Controle de horas; totais das pastas, barras com o risco, os dois cartões e o clique abrindo a demanda na Árvore com a pasta; a API devolve os campos novos.
+- **Limites (tarefa fica com isso aberto):** o painel do navegador do app tem 800×450, então **não foram capturados** 1920×1080, 1366×768 e 1080×1920 (só a largura foi simulada com zoom e a altura ficou cortada), nem tema escuro, administrador/desenvolvedor, estouro acima de 150%, mais de um executor, projeto vazio e o fluxo de estimar ao vivo; esses estados estão só nos testes de componente. Os avisos de orçamento de SCSS do build incluem o do painel novo (5,45 kB contra 4).
+
+---
+
 ## 2026-10-25 — Task 239: a Árvore de demandas em três colunas
 
 Segunda das quatro tasks da reorganização da tela de demandas (`demanda-tela.spec.md`; 238–241). A visão Lista virou a **Árvore**: pastas, demandas da pasta e a demanda aberta, que tomou o lugar do diálogo de detalhe dentro da tela.

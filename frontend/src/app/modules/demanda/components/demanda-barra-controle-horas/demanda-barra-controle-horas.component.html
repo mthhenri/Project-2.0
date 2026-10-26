@@ -1,0 +1,21 @@
+<span class="barra-controle" [class.barra-controle--estourou]="barra().estourou">
+  @if (temEstimativa()) {
+    <span class="barra-controle__trilho" aria-hidden="true">
+      <span class="barra-controle__preenchimento" [style.width.%]="barra().larguraPreenchimento" [style.background-color]="barra().cor"></span>
+      <span class="barra-controle__risco" [style.left.%]="barra().posicaoDoRisco"></span>
+    </span>
+    <span
+      class="barra-controle__texto"
+      [pTooltip]="unidadeTempo.emDias() ? (minutosExecutados() | tempoExibicao: false : 'minutos') + ' de ' + (horasEstimadas() | tempoExibicao: false : 'horas') : ''"
+      tooltipPosition="top"
+    >{{ minutosExecutados() | tempoExibicao: unidadeTempo.emDias() : 'minutos' }} de {{ horasEstimadas() | tempoExibicao: unidadeTempo.emDias() : 'horas' }}</span>
+    @if (barra().estourou) {
+      <span class="barra-controle__saldo barra-controle__saldo--acima">+{{ barra().minutosAcima | tempoExibicao: unidadeTempo.emDias() : 'minutos' }} ({{ barra().percentual }}%)</span>
+    } @else {
+      <span class="barra-controle__saldo">faltam {{ barra().minutosRestantes! | tempoExibicao: unidadeTempo.emDias() : 'minutos' }}</span>
+    }
+  } @else {
+    <span class="barra-controle__texto">{{ minutosExecutados() | tempoExibicao: unidadeTempo.emDias() : 'minutos' }} exec.</span>
+    <span class="barra-controle__saldo">sem estimativa</span>
+  }
+</span>

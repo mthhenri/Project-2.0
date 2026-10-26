@@ -59,7 +59,7 @@
     </div>
   </div>
 
-  @if (projetoId() && !carregando() && projetoTemDemandas() && modoVisualizacao() !== 'planejamento') {
+  @if (projetoId() && !carregando() && projetoTemDemandas() && modoVisualizacao() !== 'controle-de-horas') {
     <app-demanda-toolbar
       #toolbar
       [filtro]="filtro()"
@@ -95,7 +95,7 @@
             <app-skeleton-lista variante="linhas" [quantidade]="8" />
           </div>
         } @else {
-          @if (!projetoTemDemandas() && modoVisualizacao() !== 'planejamento') {
+          @if (!projetoTemDemandas() && modoVisualizacao() !== 'controle-de-horas') {
             <div class="demanda-projeto__vazio demanda-projeto__vazio--lista">
               <i class="pi pi-inbox demanda-projeto__vazio-icone"></i>
               <p class="demanda-projeto__vazio-texto">Este projeto ainda não tem demandas.</p>
@@ -136,7 +136,7 @@
           }
 
           <!-- O painel da árvore antiga fica escondido: hospeda só os diálogos de editar, nova filha, tags, membros e descrição que o menu de
-               contexto e o Controle de horas abrem (a Árvore nova e o Controle de horas os herdam até a task 240). -->
+               contexto e o Controle de horas abrem (a Árvore e o Controle de horas os herdam do painel antigo). -->
           <div class="demanda-projeto__dialogos" hidden>
             <app-demanda-arvore-painel
               #painel
@@ -148,10 +148,12 @@
             />
           </div>
 
-          @if (modoVisualizacao() === 'planejamento') {
-            <app-demanda-planejamento-painel
+          @if (modoVisualizacao() === 'controle-de-horas') {
+            <app-demanda-controle-horas-painel
+              [nos]="grafo()?.nos ?? []"
               [itens]="planejamento()"
               [carregando]="carregandoPlanejamento()"
+              [pastaId]="pastaId()"
               (demandaVisualizarSolicitada)="abrirNaArvore($event)"
               (demandaEditarSolicitada)="painel.abrirEdicao($event)"
               (demandaNovaFilhaSolicitada)="painel.abrirNovaFilha($event)"
@@ -159,6 +161,7 @@
               (demandaMembrosSolicitados)="painel.abrirDialogMembros($event)"
               (demandaDescricaoSolicitada)="painel.abrirDialogDescricaoPorId($event.id, $event.campo)"
               (statusAlterado)="aoStatusAlterado($event)"
+              (horasEstimadasAlteradas)="aoHorasEstimadasAlteradas($event)"
             />
           }
         }

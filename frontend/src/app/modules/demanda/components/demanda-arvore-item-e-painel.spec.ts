@@ -1,11 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { DemandaArvoreItemDto, DemandaPlanejamentoDto, TipoDemandaStatusEnum, TipoUsuarioEnum } from '@project20/shared';
+import { DemandaArvoreItemDto, TipoDemandaStatusEnum, TipoUsuarioEnum } from '@project20/shared';
 import { montarComponente } from '../../../../testes/montar-componente';
 import { esperarRequisicao, responderErro, responderSucesso } from '../../../../testes/http-teste';
 import { DemandaArvoreItemComponent } from './demanda-arvore-item/demanda-arvore-item.component';
 import { DemandaArvorePainelComponent } from './demanda-arvore-painel/demanda-arvore-painel.component';
-import { DemandaPlanejamentoPainelComponent } from './demanda-planejamento-painel/demanda-planejamento-painel.component';
 
 function criarItem(id: number, sobrescritas: Partial<DemandaArvoreItemDto> = {}): DemandaArvoreItemDto {
   return {
@@ -337,84 +336,5 @@ describe('DemandaArvorePainelComponent', () => {
       semPermissao.montado.componente.aoTentarFecharDescricao(false);
       expect(outras).toHaveLength(0);
     });
-  });
-});
-
-// ---------------------------------------------------------------------------
-// demanda-planejamento-painel
-// ---------------------------------------------------------------------------
-
-describe('DemandaPlanejamentoPainelComponent', () => {
-  function criarLinha(demandaId: number, sobrescritas: Partial<DemandaPlanejamentoDto> = {}): DemandaPlanejamentoDto {
-    return {
-      demandaId, caminho: `Raiz › Demanda ${demandaId}`, isEstrutural: false, status: TipoDemandaStatusEnum.PLANEJADA, horasEstimadas: 10,
-      minutosExecutados: 0, temDescricaoTecnica: false, temDescricaoCliente: false, temDocumentacao: false, executoresAtivos: [], ...sobrescritas,
-    };
-  }
-
-  async function montar(itens: DemandaPlanejamentoDto[], usuario = TipoUsuarioEnum.GESTOR) {
-    const montado = await montarComponente(DemandaPlanejamentoPainelComponent, { usuario, entradas: { itens } });
-    const status: unknown[] = [];
-    const visualizar: number[] = [];
-    montado.componente.statusAlterado.subscribe((valor) => status.push(valor));
-    montado.componente.demandaVisualizarSolicitada.subscribe((id) => visualizar.push(id));
-    return { montado, status, visualizar };
-  }
-
-  it('calcula percentual, estouro e minutos restantes; sem estimativa não há percentual', async () => {
-    const { montado } = await montar([
-      criarLinha(1, { horasEstimadas: 2, minutosExecutados: 30 }),
-      criarLinha(2, { horasEstimadas: 1, minutosExecutados: 90 }),
-      criarLinha(3, { horasEstimadas: 0, minutosExecutados: 15 }),
-    ]);
-    const [parcial, estourada, semEstimativa] = montado.componente.linhas();
-    expect([parcial.percentualBarra, parcial.percentualRotulo, parcial.estourou, parcial.minutosRestantes]).toEqual([25, 25, false, 90]);
-    expect([estourada.percentualBarra, estourada.percentualRotulo, estourada.estourou, estourada.minutosRestantes]).toEqual([100, 150, true, null]);
-    expect([semEstimativa.percentual, semEstimativa.percentualBarra, semEstimativa.estourou, semEstimativa.minutosRestantes]).toEqual([null, 0, false, null]);
-  });
-
-  it('a cor da barra vai de azul até 75% a vermelho no limite e escurece acima de 100%', async () => {
-    const { montado } = await montar([
-      criarLinha(1, { horasEstimadas: 100, minutosExecutados: 0 }),
-      criarLinha(2, { horasEstimadas: 100, minutosExecutados: 6000 }),
-      criarLinha(3, { horasEstimadas: 100, minutosExecutados: 9000 }),
-      criarLinha(4, { horasEstimadas: 0, minutosExecutados: 0 }),
-    ]);
-    const cores = montado.componente.linhas().map((linha) => linha.corBarra);
-    expect(cores[0]).toBe('rgb(59, 130, 246)');
-    expect(cores[1]).toBe('rgb(239, 68, 68)');
-    expect(cores[2]).toBe('rgb(185, 28, 28)');
-    expect(cores[3]).toBe('rgb(59, 130, 246)');
-  });
-
-  it('o menu de contexto do desenvolvedor não tem Editar/Membros; as ações emitem o id da linha', async () => {
-    const { montado, visualizar } = await montar([criarLinha(8)], TipoUsuarioEnum.DESENVOLVEDOR);
-    const menu = { show: () => undefined } as never;
-    montado.componente.abrirMenu({} as MouseEvent, montado.componente.linhas()[0], menu);
-    const rotulos = montado.componente.itensMenu.map((opcao) => opcao.label);
-    for (const proibido of ['Editar', 'Membros']) expect(rotulos).not.toContain(proibido);
-    montado.componente.itensMenu.find((opcao) => opcao.label === 'Visualizar')?.command?.({} as never);
-    expect(visualizar).toEqual([8]);
-  });
-
-  it('escolher outro status emite na hora e confirma; recusa emite o status anterior; o mesmo status não faz nada', async () => {
-    const { montado, status } = await montar([criarLinha(8)]);
-    const linha = montado.componente.linhas()[0];
-
-    montado.componente.alterarStatus(linha, TipoDemandaStatusEnum.PLANEJADA);
-    montado.http.expectNone(() => true);
-
-    montado.componente.alterarStatus(linha, TipoDemandaStatusEnum.CONCLUIDA);
-    expect(status).toEqual([{ demandaId: 8, status: TipoDemandaStatusEnum.CONCLUIDA }]);
-    const requisicao = esperarRequisicao(montado.http, 'PUT', '/demanda/8');
-    expect(requisicao.request.body).toEqual({ status: TipoDemandaStatusEnum.CONCLUIDA });
-    responderErro(requisicao, 400, 'recusado');
-    await montado.atualizar();
-    expect(status[1]).toEqual({ demandaId: 8, status: TipoDemandaStatusEnum.PLANEJADA });
-  });
-
-  it('nomes dos executores', async () => {
-    const { montado } = await montar([criarLinha(1, { executoresAtivos: [{ usuarioId: 1, nomeCompleto: 'Ana' }, { usuarioId: 2, nomeCompleto: 'Bia' }] as never })]);
-    expect(montado.componente.nomesExecutores(montado.componente.linhas()[0])).toBe('Ana, Bia');
   });
 });

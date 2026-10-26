@@ -101,7 +101,7 @@ horas e a mesma pasta escolhida.
 |---|---|---|---|
 | 238 | [Status em bolinha e ícones das descrições](../done/238-demanda-status-em-bolinha.spec.md) | componente de status único, ícones novos com as cores de hoje, cor única da planejada, aplicados na tela atual (lista, grafo, planejamento, filtros); gerenciamento de impacto | — |
 | 239 | [Árvore em três colunas](../done/239-demanda-arvore-em-tres-colunas.spec.md) | pastas, lista da pasta, demanda aberta com as abas, "Demanda aqui", "Sem pasta", `?pasta=`; demanda aberta no lugar do diálogo, com as funções do diálogo listadas | 238 |
-| 240 | [Controle de horas](240-demanda-controle-de-horas.spec.md) | renomear, árvore com totais, barra até 150%, executando agora, resumo com bolinhas, cartões de sem estimativa e paradas (dado novo no `DemandaPlanejamentoDto`, prazo de 7 dias no `shared`) | 238, 239 |
+| 240 | [Controle de horas](../done/240-demanda-controle-de-horas.spec.md) | renomear, árvore com totais, barra até 150%, executando agora, resumo com bolinhas, cartões de sem estimativa e paradas (dado novo no `DemandaPlanejamentoDto`, prazo de 7 dias no `shared`) | 238, 239 |
 | 241 | [Grafo](241-demanda-grafo-integrado.spec.md) | marca do status, cartão com a barra nova, clique abre na Árvore, foco na pasta | 238, 239, 240 |
 
 **Ordem:** 238 → 239 → 240 → 241. A 238 é pequena e independente; a 239 deixa um encaminhamento provisório do clique do grafo e do
