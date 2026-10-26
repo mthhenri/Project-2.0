@@ -24,7 +24,7 @@ function resumo(sobrescrita: Partial<AtividadeResumoDto> = {}): AtividadeResumoD
   return {
     id: 5, nome: 'Corrigir bug', status: TipoAtividadeStatusEnum.DESENVOLVENDO, prioridade: PRIORIDADE, usuarioId: 1, nomeUsuario: 'Ana Souza',
     usuarioTipo: TipoUsuarioEnum.DESENVOLVEDOR, demandaId: 10, nomeDemanda: 'Login', demandaTemDescricaoCliente: false, demandaTemDescricaoTecnica: false,
-    demandaTemDocumentacao: false, projetoId: 3, nomeProjeto: 'Portal', totalMinutosExecutados: 90, execucaoAtivaId: null, execucaoAtivaDescricao: null, tags: [],
+    demandaTemDocumentacao: false, projetoId: 3, nomeProjeto: 'Portal', totalMinutosExecutados: 90, totalExecucoes: 2, execucaoAtivaId: null, execucaoAtivaDescricao: null, tags: [],
     createdDate: new Date('2026-01-01T00:00:00Z'), ...sobrescrita,
   };
 }

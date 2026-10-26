@@ -20,6 +20,8 @@ export class AtividadeResumoDto {
   projetoId: number;
   nomeProjeto: string;
   totalMinutosExecutados: number;
+  /** Quantas execuções a atividade já teve (as em andamento incluídas). */
+  totalExecucoes: number;
   /** Execução em andamento nesta atividade (de qualquer usuário), ou null. */
   execucaoAtivaId: number | null;
   /** Descrição da execução em andamento, para revisão ao encerrar. */

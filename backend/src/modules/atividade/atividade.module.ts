@@ -19,13 +19,14 @@ import { ProporExcluirAtividadeFerramenta } from './ferramentas/propor-excluir-a
 import { ProporAtribuirTagFerramenta } from './ferramentas/propor-atribuir-tag.ferramenta';
 import { ProporCriarAtividadeFerramenta } from './ferramentas/propor-criar-atividade.ferramenta';
 import { ProporAlterarAtividadeFerramenta } from './ferramentas/propor-alterar-atividade.ferramenta';
+import { ConsultarChecklistDaDemandaFerramenta } from './ferramentas/consultar-checklist-da-demanda.ferramenta';
 import { ConsultarDemandaFerramenta } from './ferramentas/consultar-demanda.ferramenta';
 import { ListarMinhasAtividadesFerramenta } from './ferramentas/listar-minhas-atividades.ferramenta';
 
 @Module({
   imports:     [DemandaModule, TagModule, UsuarioModule, FerramentaIaModule, PropostaIaModule],
   controllers: [AtividadeController],
-  providers:   [AtividadeService, AtividadeRepository, ListarMinhasAtividadesFerramenta, ConsultarDemandaFerramenta, ProporCriarAtividadeFerramenta, CriarAtividadeExecutor, ProporAlterarAtividadeFerramenta, AlterarAtividadeExecutor, ProporAtribuirTagFerramenta, AtribuirTagExecutor, ProporMoverAtividadeFerramenta, MoverAtividadeExecutor, ProporExcluirAtividadeFerramenta, ExcluirAtividadeExecutor],
+  providers:   [AtividadeService, AtividadeRepository, ListarMinhasAtividadesFerramenta, ConsultarDemandaFerramenta, ConsultarChecklistDaDemandaFerramenta, ProporCriarAtividadeFerramenta, CriarAtividadeExecutor, ProporAlterarAtividadeFerramenta, AlterarAtividadeExecutor, ProporAtribuirTagFerramenta, AtribuirTagExecutor, ProporMoverAtividadeFerramenta, MoverAtividadeExecutor, ProporExcluirAtividadeFerramenta, ExcluirAtividadeExecutor],
   exports:     [AtividadeService, AtividadeRepository],
 })
 export class AtividadeModule implements OnModuleInit {
@@ -33,6 +34,7 @@ export class AtividadeModule implements OnModuleInit {
     private readonly registroDeFerramentas: FerramentaIaRegistro,
     private readonly listarMinhasAtividades: ListarMinhasAtividadesFerramenta,
     private readonly consultarDemanda: ConsultarDemandaFerramenta,
+    private readonly consultarChecklistDaDemanda: ConsultarChecklistDaDemandaFerramenta,
     private readonly proporCriarAtividade: ProporCriarAtividadeFerramenta,
     private readonly registroDeExecutores: ExecutorPropostaIaRegistro,
     private readonly criarAtividadeExecutor: CriarAtividadeExecutor,
@@ -50,6 +52,7 @@ export class AtividadeModule implements OnModuleInit {
   onModuleInit(): void {
     this.registroDeFerramentas.registrar(this.listarMinhasAtividades);
     this.registroDeFerramentas.registrar(this.consultarDemanda);
+    this.registroDeFerramentas.registrar(this.consultarChecklistDaDemanda);
     this.registroDeFerramentas.registrar(this.proporCriarAtividade);
     this.registroDeExecutores.registrar(this.criarAtividadeExecutor);
     this.registroDeFerramentas.registrar(this.proporAlterarAtividade);

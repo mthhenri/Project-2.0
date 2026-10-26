@@ -22,7 +22,7 @@ function criarAtividade(id: number, sobrescritas: Partial<AtividadeResumoDto> = 
     id, nome: `Atividade ${id}`, status: TipoAtividadeStatusEnum.PLANEJADA, prioridade: PRIORIDADE,
     usuarioId: 1, nomeUsuario: 'Maria Souza', usuarioTipo: TipoUsuarioEnum.DESENVOLVEDOR,
     demandaId: 10, nomeDemanda: 'Demanda dez', demandaTemDescricaoCliente: false, demandaTemDescricaoTecnica: false, demandaTemDocumentacao: false,
-    projetoId: 5, nomeProjeto: 'Portal', totalMinutosExecutados: 90, execucaoAtivaId: null, execucaoAtivaDescricao: null,
+    projetoId: 5, nomeProjeto: 'Portal', totalMinutosExecutados: 90, totalExecucoes: 2, execucaoAtivaId: null, execucaoAtivaDescricao: null,
     tags: [], createdDate: new Date('2026-02-01T12:00:00.000Z'), ...sobrescritas,
   };
 }

@@ -19,6 +19,8 @@ export class ProporCriarAtividadeFerramenta extends FerramentaPropostaIa<ProporC
     'Propõe criar UMA atividade do usuário numa demanda, com nome e prioridade (URGENTE, ALTA, MEDIA, BAIXA ou INDEFINIDA; defina conforme o que o usuário disse). ' +
     'Nada é criado até o usuário confirmar no cartão. Se o usuário citar várias atividades, chame a ferramenta uma vez para cada. ' +
     'O demandaId vem das atividades já listadas; se o usuário citar uma demanda que você não conhece, pergunte qual é antes de propor. ' +
+    'Atividade é um BLOCO do trabalho (a tela, o repositório, os testes), com várias execuções: nunca crie uma atividade por execução nem para uma continuação. ' +
+    'ANTES de propor, olhe o checklist da demanda (consultar_checklist_da_demanda) e, se um bloco já serve, use-o; crie só quando falta o bloco, com um nome que descreve a parte do trabalho. ' +
     'Só o gestor pode criar a atividade PARA OUTRA PESSOA: nesse caso passe `usuarioId` (de listar_usuarios; nome ambíguo, pergunte); sem ele, a atividade é de quem conversa com você.';
   readonly permissao = 'QUALQUER' as const;
   readonly classeDeEntrada = ProporCriarAtividadeDto;

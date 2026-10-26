@@ -261,6 +261,10 @@ export class AtividadeRepository extends BaseRepository<Atividade> {
            WHERE execucao.atividade_id = atividade.id
              AND execucao.is_deleted = false
              AND execucao.fim_data IS NOT NULL) AS "totalMinutosExecutados",
+         (SELECT COUNT(*)::int
+            FROM execucao
+           WHERE execucao.atividade_id = atividade.id
+             AND execucao.is_deleted = false) AS "totalExecucoes",
          execucao_ativa.id         AS "execucaoAtivaId",
          execucao_ativa.descricao  AS "execucaoAtivaDescricao",
          (SELECT COALESCE(

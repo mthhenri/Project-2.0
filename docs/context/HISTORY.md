@@ -12,6 +12,17 @@
 
 ---
 
+## 2026-10-26 — Task 242: a IA trata as atividades como o checklist da demanda (código pronto; teste de prompt e verificação ao vivo pendentes)
+
+Primeira task da guarda-chuva `chat-execucao-por-demanda.spec.md`. O autor confirmou os dois pontos em aberto: ferramenta de leitura **nova** e texto nos prompts `CONVERSA` e `CHECKIN`, sem tipo novo.
+
+- **`shared`:** `DemandaChecklistConsultarDto` e `DemandaChecklistConsultadoDto`; `AtividadeResumoDto` ganhou `totalExecucoes` (aditivo; `AtividadeRepository.listar` conta as execuções não excluídas, ativa incluída).
+- **Backend:** `consultar_checklist_da_demanda` (leitura, `QUALQUER`, módulo de atividade): gestor lê qualquer demanda, desenvolvedor só a atribuída (usa `podeEditar` de `DemandaService.recuperar`; de fora é recusado e nada é listado); não devolve as descrições da demanda. Descrições de `propor_criar_atividade`, `listar_minhas_atividades` e `propor_alterar_atividade` orientam bloco, checklist antes de criar e `DESENVOLVIDA`. Migration `0065` acrescenta o parágrafo à versão 1 de CONVERSA e CHECKIN (UP e DOWN conferidos no banco de teste); versões já editadas pelo administrador não mudam.
+- **Testes:** `shared` 275; `backend` unitários com 5 testes novos da ferramenta; integração estendida (`totalExecucoes`), 346 aprovados e 1 falha em `vigia` (eventos do chat, tempo esgotado), fora do alcance desta task.
+- **Não verificado (task segue aberta em `active/`):** teste de prompt na aba Prompts (continuação, bloco acabado, bloco novo) e verificação ao vivo no chat; ambos exigem provedor de IA configurado, que o ambiente desta sessão não tem. Sem lint no projeto (P-001).
+
+---
+
 ## 2026-10-26 — Task 221: posição, arrasto e tamanho do popup do chat
 
 Pedido do autor em 2026-10-23, especificada e implementada em 2026-10-26 com os padrões propostos no rascunho (arranjo no navegador, preferência só no menu do chat). O popup deixa de ser 392×640 fixo no canto inferior direito.
