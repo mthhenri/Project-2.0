@@ -18,9 +18,15 @@ publicados, limpos; a data de publicação do plano 8 ficou).
 - **Criar demanda a partir do plano:** o botão abre o formulário de criação de sempre com o título do plano em "Nome"; ao criar, o plano
   ficou ligado à demanda nova.
 
+## Segunda rodada (Playwright, gestor/administrador, app real)
+
+Plano ligado a "Recuperação de senha" com três textos diferentes dos da demanda e um ponto em aberto; capturas em `.artifacts/237/` (local).
+**1920×1080, 1366×768 e 1080×1920, nos temas escuro e claro**: a tela do plano e o diálogo de publicação (lembrete do ponto em aberto, as
+três abas com diff por palavra, "Muda" e "Texto novo") sem rolagem horizontal e sem sobreposição; no 1080×1920 o diálogo cabe inteiro. O
+chip "Nasceu do plano" foi visto no detalhe da demanda aberta em 1366×768, claro e escuro. Plano e textos de teste desfeitos ao fim.
+
 ## Limites
 
-- O painel do navegador do Claude tem ~500 px de largura: **1920×1080, 1366×768 e 1080×1920 não foram verificados ao vivo**, nem o tema
-  claro (só o escuro). A emulação de viewport deste painel reduziu a página a um tamanho ilegível.
 - Desenvolvedor sem a aba do cliente: coberto por teste de componente e de service, não ao vivo.
-- Os "�" dos textos de teste vêm do payload de `curl` no Windows, não do app.
+- Anexar/estados de erro do diálogo (409, falha ao ler a demanda): só por teste de componente.
+- Os "�" dos textos da primeira rodada vêm do payload de `curl` no Windows, não do app.
