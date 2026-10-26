@@ -50,7 +50,7 @@ const svg = (elemento: HTMLElement) => elemento.querySelector('svg') as SVGSVGEl
 describe('DemandaGrafoComponent', () => {
   it('desenha um círculo e um rótulo por nó; estrutural é tracejado e menor que o raio folha invertido', async () => {
     const { montado } = await montar();
-    const circulos = Array.from(svg(montado.elemento).querySelectorAll('circle'));
+    const circulos = Array.from(svg(montado.elemento).querySelectorAll('circle.demanda-grafo__no'));
     expect(circulos).toHaveLength(3);
     const [estrutural, folha] = circulos;
     expect(estrutural.getAttribute('stroke-dasharray')).toBe('6,3');
@@ -98,7 +98,7 @@ describe('DemandaGrafoComponent', () => {
 
   it('sem nós não desenha nada; trocar o grafo redesenha do zero', async () => {
     const vazio = await montar({ nos: [], arestas: [] });
-    expect(svg(vazio.montado.elemento).querySelectorAll('circle')).toHaveLength(0);
+    expect(svg(vazio.montado.elemento).querySelectorAll('circle.demanda-grafo__no')).toHaveLength(0);
 
     const { montado } = await montar();
     montado.fixture.componentRef.setInput('grafo', { nos: [criarNo(7)], arestas: [] });
@@ -106,15 +106,130 @@ describe('DemandaGrafoComponent', () => {
     expect(Array.from(svg(montado.elemento).querySelectorAll('text')).map((texto) => texto.textContent)).toEqual(['Demanda 7']);
   });
 
-  it('a legenda mostra os status visíveis e emite o status clicado; percentual trava na conta (horas × 60)', async () => {
+  it('a legenda mostra os status visíveis e emite o status clicado', async () => {
     const { montado, alternados } = await montar(GRAFO, { statusVisiveis: [TipoDemandaStatusEnum.PENDENTE] });
     expect(montado.componente.statusEstaVisivel(TipoDemandaStatusEnum.PENDENTE)).toBe(true);
     expect(montado.componente.statusEstaVisivel(TipoDemandaStatusEnum.CONCLUIDA)).toBe(false);
     expect(montado.componente.itensLegenda.map((item) => item.rotulo)).toEqual(['Pendente', 'Planejada', 'Concluída', 'Cancelada']);
     montado.componente.statusAlternado.emit(TipoDemandaStatusEnum.CONCLUIDA);
     expect(alternados).toEqual([TipoDemandaStatusEnum.CONCLUIDA]);
-    expect(montado.componente.percentual(criarNo(1, { horasEstimadas: 2, minutosExecutados: 60 }))).toBe(50);
-    expect(montado.componente.percentual(criarNo(1, { horasEstimadas: 0, minutosExecutados: 60 }))).toBe(0);
+  });
+
+  it('o nó leva a marca do status: ponto na planejada, ✓ na concluída, risco na cancelada e nada na pendente', async () => {
+    const { montado } = await montar({
+      nos: [
+        criarNo(1, { status: TipoDemandaStatusEnum.PENDENTE }),
+        criarNo(2, { status: TipoDemandaStatusEnum.PLANEJADA }),
+        criarNo(3, { status: TipoDemandaStatusEnum.CONCLUIDA }),
+        criarNo(4, { status: TipoDemandaStatusEnum.CANCELADA }),
+      ],
+      arestas: [],
+    });
+    const marcasPorNo = Array.from(svg(montado.elemento).querySelectorAll('g > g > g')).map((grupo) => grupo.querySelectorAll('.demanda-grafo__marca').length);
+    expect(marcasPorNo).toEqual([0, 1, 1, 1]);
+    expect(svg(montado.elemento).querySelectorAll('circle.demanda-grafo__marca')).toHaveLength(1);
+  });
+
+  it('o cartão do nó usa a barra do Controle de horas e some sem horas nem execução', async () => {
+    const { montado } = await montar({ nos: [criarNo(1, { horasEstimadas: 2, minutosExecutados: 60 }), criarNo(2, { horasEstimadas: 0, minutosExecutados: 0 })], arestas: [] });
+    const grupos = svg(montado.elemento).querySelectorAll('g > g > g');
+    grupos[0].dispatchEvent(new MouseEvent('mouseover', { clientX: 10, clientY: 10 }));
+    await montado.atualizar();
+    expect(montado.elemento.querySelector('.demanda-grafo__cartao app-demanda-barra-controle-horas')).not.toBeNull();
+    grupos[1].dispatchEvent(new MouseEvent('mouseover', { clientX: 10, clientY: 10 }));
+    await montado.atualizar();
+    expect(montado.elemento.querySelector('.demanda-grafo__cartao app-demanda-barra-controle-horas')).toBeNull();
+  });
+
+  describe('foco na pasta (task 241)', () => {
+    const NOS_FOCO = [
+      criarNo(1, { isEstrutural: true }),
+      criarNo(2, { demandaPaiId: 1 }),
+      criarNo(3, { isEstrutural: true, demandaPaiId: 1 }),
+      criarNo(4, { demandaPaiId: 3 }),
+      criarNo(5, { isEstrutural: true }),
+      criarNo(6),
+    ];
+    const GRAFO_FOCO: DemandaGrafoDto = { nos: NOS_FOCO, arestas: [{ id: 1, origemId: 1, destinoId: 2, tipo: 'hierarquia', ehBidirecional: false }, { id: 2, origemId: 2, destinoId: 6, tipo: 'conexao', ehBidirecional: false }] };
+
+    const opacidades = (elemento: HTMLElement) =>
+      Array.from(svg(elemento).querySelectorAll('g > g > g')).map((grupo) => (grupo as SVGGElement).style.opacity);
+
+    it('apaga o que está fora da pasta e das demandas dentro dela, em qualquer nível; as arestas que saem também', async () => {
+      const { montado } = await montar(GRAFO_FOCO, { todosOsNos: NOS_FOCO, pastaId: 1 });
+      expect(opacidades(montado.elemento)).toEqual(['1', '1', '1', '1', '0.1', '0.1']);
+      const grupos = Array.from(svg(montado.elemento).querySelectorAll('g > g > g')) as SVGGElement[];
+      expect(grupos[5].style.pointerEvents).toBe('none');
+      expect(grupos[1].style.pointerEvents).toBe('');
+      const linhas = Array.from(svg(montado.elemento).querySelectorAll('line')) as SVGLineElement[];
+      expect(linhas.map((linha) => linha.style.opacity)).toEqual(['1', '0.06']);
+    });
+
+    it('sem pasta de foco o grafo mostra tudo; "Sem pasta" foca só as demandas soltas', async () => {
+      const semFoco = await montar(GRAFO_FOCO, { todosOsNos: NOS_FOCO });
+      expect(new Set(opacidades(semFoco.montado.elemento))).toEqual(new Set(['1']));
+      const soltas = await montar(GRAFO_FOCO, { todosOsNos: NOS_FOCO, pastaId: null });
+      expect(opacidades(soltas.montado.elemento)).toEqual(['0.1', '0.1', '0.1', '0.1', '0.1', '1']);
+    });
+
+    it('trocar a pasta apaga de novo sem redesenhar o grafo', async () => {
+      const { montado } = await montar(GRAFO_FOCO, { todosOsNos: NOS_FOCO, pastaId: 1 });
+      const antes = svg(montado.elemento).querySelectorAll('g > g > g')[0];
+      montado.fixture.componentRef.setInput('pastaId', 5);
+      await montado.atualizar();
+      expect(opacidades(montado.elemento)).toEqual(['0.1', '0.1', '0.1', '0.1', '1', '0.1']);
+      expect(svg(montado.elemento).querySelectorAll('g > g > g')[0]).toBe(antes);
+    });
+
+    it('clicar numa pasta troca o foco em vez de abrir a demanda; clicar numa demanda abre', async () => {
+      const { montado, selecionadas } = await montar(GRAFO_FOCO, { todosOsNos: NOS_FOCO, pastaId: 1 });
+      const trocadas: unknown[] = [];
+      montado.componente.pastaChange.subscribe((pasta) => trocadas.push(pasta));
+      const grupos = svg(montado.elemento).querySelectorAll('g > g > g');
+      grupos[2].dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      expect(trocadas).toEqual([3]);
+      expect(selecionadas).toEqual([]);
+      grupos[1].dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      expect(selecionadas).toEqual([2]);
+    });
+
+    it('os botões: projeto inteiro tira o foco só aqui; pasta acima e subpastas trocam a pasta', async () => {
+      const { montado } = await montar(GRAFO_FOCO, { todosOsNos: NOS_FOCO, pastaId: 3 });
+      const trocadas: unknown[] = [];
+      montado.componente.pastaChange.subscribe((pasta) => trocadas.push(pasta));
+      expect(montado.componente.pastaAcima()).toBe(1);
+      expect(montado.componente.subpastas()).toHaveLength(0);
+
+      montado.componente.subirPasta();
+      expect(trocadas).toEqual([1]);
+
+      montado.componente.verProjetoInteiro();
+      expect(montado.componente.projetoInteiro()).toBe(true);
+      expect(new Set(opacidades(montado.elemento))).toEqual(new Set(['1']));
+      expect(trocadas).toEqual([1]);
+
+      montado.componente.escolherPasta(5);
+      expect(montado.componente.projetoInteiro()).toBe(false);
+      expect(trocadas).toEqual([1, 5]);
+    });
+
+    it('os botões de foco só aparecem quando o grafo recebe a pasta', async () => {
+      const comPasta = await montar(GRAFO_FOCO, { todosOsNos: NOS_FOCO, pastaId: 1 });
+      expect(comPasta.montado.elemento.querySelector('.demanda-grafo__foco')).not.toBeNull();
+      const semPasta = await montar(GRAFO_FOCO);
+      expect(semPasta.montado.elemento.querySelector('.demanda-grafo__foco')).toBeNull();
+    });
+
+    it('o filtro recorta depois do foco: nada do foco na tela mostra o aviso com atalho para o projeto inteiro', async () => {
+      const filtrado: DemandaGrafoDto = { nos: [NOS_FOCO[5]], arestas: [] };
+      const { montado } = await montar(filtrado, { todosOsNos: NOS_FOCO, pastaId: 1 });
+      expect(montado.componente.nadaNoFoco()).toBe(true);
+      expect(montado.elemento.textContent).toContain('Nada neste foco');
+      montado.componente.verProjetoInteiro();
+      await montado.atualizar();
+      expect(montado.componente.nadaNoFoco()).toBe(false);
+      expect(montado.elemento.textContent).not.toContain('Nada neste foco');
+    });
   });
 
   it('destruir o componente para a simulação (sem timers soltos)', async () => {

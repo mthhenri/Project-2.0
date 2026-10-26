@@ -9,6 +9,7 @@ import {
   ElementRef,
   inject,
   signal,
+  computed,
   SimpleChanges,
 } from '@angular/core';
 import * as d3 from 'd3';
@@ -22,8 +23,9 @@ import {
   TipoDemandaStatusEnum,
 } from '@project20/shared';
 import { COR_NO_BORDA, OPCOES_STATUS_DEMANDA, corPreenchimentoNo } from '../../constants/demanda-cores.constants';
-import { VisualizacaoTempoService } from '../../../../core/services/visualizacao-tempo.service';
-import { TempoExibicaoPipe } from '../../../../shared/pipes/tempo-exibicao.pipe';
+import { PastaId } from '../../utils/demanda-pasta.util';
+import { idsDoFoco, pastaAcimaDoFoco, subpastasDoFoco } from '../../utils/demanda-foco-grafo.util';
+import { DemandaBarraControleHorasComponent } from '../demanda-barra-controle-horas/demanda-barra-controle-horas.component';
 import { DemandaStatusComponent } from '../demanda-status/demanda-status.component';
 import { DemandaStatusMarcaComponent } from '../demanda-status-marca/demanda-status-marca.component';
 
@@ -39,11 +41,14 @@ const TODOS_OS_STATUS = Object.values(TipoDemandaStatusEnum);
 /**
  * Grafo de demandas (d3) integrado ao tema (task 107): cores por tokens, cartão no hover, legenda em popover
  * cujos status filtram o grafo e controles de zoom. Os filtros da toolbar chegam já aplicados em `grafo`.
+ *
+ * Task 241: o nó leva a marca do status, o cartão usa a barra do Controle de horas, o clique abre a demanda na Árvore e o clique numa pasta troca
+ * o **foco**. O foco é a pasta escolhida (a mesma das outras visões) com tudo que está dentro; o resto fica apagado, sem clique, e o layout não muda.
  */
 @Component({
   selector: 'app-demanda-grafo',
   standalone: true,
-  imports: [ButtonModule, PopoverModule, TooltipModule, TempoExibicaoPipe, DemandaStatusComponent, DemandaStatusMarcaComponent],
+  imports: [ButtonModule, PopoverModule, TooltipModule, DemandaStatusComponent, DemandaStatusMarcaComponent, DemandaBarraControleHorasComponent],
   templateUrl: './demanda-grafo.component.html',
   styleUrls: ['./demanda-grafo.component.scss'],
 })
@@ -51,28 +56,58 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
   @Input({ required: true }) grafo!: DemandaGrafoDto;
   /** Status exibidos (a legenda mostra os demais como desligados). */
   @Input() statusVisiveis: TipoDemandaStatusEnum[] = TODOS_OS_STATUS;
+  /** Todas as demandas do projeto, sem o filtro da toolbar: o foco parte delas (o filtro recorta depois). Vazio: vale `grafo.nos`. */
+  @Input() todosOsNos: DemandaGrafoNoDto[] = [];
+  /** A pasta em foco (`null` é "Sem pasta"); sem ela o grafo mostra o projeto inteiro. */
+  @Input() pastaId: PastaId | undefined = undefined;
   @Output() demandaSelecionada = new EventEmitter<number>();
+  /** Clicou numa pasta, ou escolheu uma nos botões de foco: quem hospeda troca a pasta das três visões. */
+  @Output() pastaChange = new EventEmitter<PastaId>();
   /** Um status da legenda foi clicado (liga/desliga): quem hospeda aplica no filtro da toolbar. */
   @Output() statusAlternado = new EventEmitter<TipoDemandaStatusEnum>();
 
   private readonly elementRef = inject(ElementRef);
-  readonly unidadeTempo = inject(VisualizacaoTempoService);
   private simulacao?: d3.Simulation<DemandaGrafoNoDto & d3.SimulationNodeDatum, undefined>;
   private svgSelecao?: d3.Selection<SVGSVGElement, unknown, HTMLElement, any>;
   private comportamentoZoom?: d3.ZoomBehavior<SVGSVGElement, unknown>;
+  private gruposNo?: d3.Selection<SVGGElement, DemandaGrafoNoDto & d3.SimulationNodeDatum, SVGGElement, unknown>;
+  private linhasAresta?: d3.Selection<SVGLineElement, any, SVGGElement, unknown>;
+  private nosSimulados: Array<DemandaGrafoNoDto & d3.SimulationNodeDatum> = [];
+  private ajusteInicialFeito = false;
 
   readonly cartao = signal<CartaoNo | null>(null);
 
   readonly itensLegenda = OPCOES_STATUS_DEMANDA;
 
+  /** "Projeto inteiro": desliga o foco só aqui, sem mexer na pasta das outras visões. */
+  readonly projetoInteiro = signal(false);
+  /** Os ids dentro do foco; `null` sem foco. */
+  readonly focoIds = signal<Set<number> | null>(null);
+  readonly subpastas = signal<DemandaGrafoNoDto[]>([]);
+  readonly pastaAcima = signal<number | undefined>(undefined);
+  readonly nomeDoFoco = signal<string>('');
+  private readonly focoVazioNaTela = signal(false);
+  /** Há foco e nenhuma demanda dele passa nos filtros da toolbar. */
+  readonly nadaNoFoco = computed(() => this.focoIds() !== null && this.focoVazioNaTela());
+
   statusEstaVisivel(status: TipoDemandaStatusEnum): boolean {
     return this.statusVisiveis.includes(status);
   }
 
-  /** Fração 0..100 do executado sobre o estimado; a barra do cartão trava em 100. */
-  percentual(no: DemandaGrafoNoDto): number {
-    const minutosEstimados = no.horasEstimadas * 60;
-    return minutosEstimados > 0 ? Math.round((no.minutosExecutados / minutosEstimados) * 100) : 0;
+  /** Os botões do foco: volta ao projeto inteiro, sobe uma pasta ou desce para uma subpasta. */
+  verProjetoInteiro(): void {
+    this.projetoInteiro.set(true);
+    this.atualizarFoco();
+  }
+
+  subirPasta(): void {
+    const acima = this.pastaAcima();
+    if (acima !== undefined) this.escolherPasta(acima);
+  }
+
+  escolherPasta(pastaId: PastaId): void {
+    this.projetoInteiro.set(false);
+    this.pastaChange.emit(pastaId);
   }
 
   alternarLegenda(evento: Event, popover: Popover): void {
@@ -99,7 +134,88 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
     if (!mudancas['grafo']?.firstChange && mudancas['grafo']?.currentValue) {
       this.destruirGrafo();
       this.inicializarGrafo();
+    } else if (!mudancas['pastaId']?.firstChange && (mudancas['pastaId'] || mudancas['todosOsNos'])) {
+      if (mudancas['pastaId']) this.projetoInteiro.set(false);
+      this.atualizarFoco(Boolean(mudancas['pastaId']));
     }
+  }
+
+  /** Recalcula o foco e apaga o que ficou de fora, sem refazer o layout; `ajustar` leva a visão até as demandas do foco. */
+  private atualizarFoco(ajustar = true): void {
+    const todos = this.todosOsNos.length ? this.todosOsNos : (this.grafo?.nos ?? []);
+    const comFoco = this.pastaId !== undefined && !this.projetoInteiro();
+    this.focoIds.set(comFoco ? idsDoFoco(todos, this.pastaId as PastaId) : null);
+    this.subpastas.set(this.pastaId === undefined ? [] : subpastasDoFoco(todos, this.pastaId));
+    this.pastaAcima.set(this.pastaId === undefined ? undefined : pastaAcimaDoFoco(todos, this.pastaId));
+    this.nomeDoFoco.set(this.pastaId === undefined ? '' : this.pastaId === null ? 'Sem pasta' : (todos.find((no) => no.id === this.pastaId)?.nome ?? ''));
+    this.aplicarFoco();
+    if (ajustar) this.ajustarAoFoco();
+  }
+
+  private estaNoFoco(no: DemandaGrafoNoDto): boolean {
+    const foco = this.focoIds();
+    return foco === null || foco.has(no.id);
+  }
+
+  private aplicarFoco(): void {
+    this.gruposNo
+      ?.style('opacity', (no) => (this.estaNoFoco(no) ? (no.status === TipoDemandaStatusEnum.CANCELADA ? 0.4 : 1) : 0.1))
+      .style('pointer-events', (no) => (this.estaNoFoco(no) ? null : 'none'));
+    this.linhasAresta?.style('opacity', (aresta: any) => (this.estaNoFoco(aresta.source) && this.estaNoFoco(aresta.target) ? 1 : 0.06));
+    this.focoVazioNaTela.set(this.focoIds() !== null && this.nosSimulados.length > 0 && !this.nosSimulados.some((no) => this.estaNoFoco(no)));
+  }
+
+  /** Enquadra as demandas do foco (ou o projeto inteiro) na tela, sem aproximar além do tamanho normal. */
+  private ajustarAoFoco(): void {
+    const foco = this.focoIds();
+    if (!this.svgSelecao || !this.comportamentoZoom || (foco === null && this.pastaId === undefined)) return;
+    // Sem foco (o "Projeto inteiro" dos botões) enquadra o projeto todo.
+    const dentro = this.nosSimulados.filter((no) => (foco === null || foco.has(no.id)) && no.x !== undefined && no.y !== undefined);
+    if (!dentro.length) return;
+    const largura = this.elementRef.nativeElement.clientWidth;
+    const altura = this.elementRef.nativeElement.clientHeight;
+    if (!largura || !altura) return; // oculto ou sem layout: não há o que enquadrar
+    const margem = 90;
+    const minX = Math.min(...dentro.map((no) => no.x!)) - margem;
+    const maxX = Math.max(...dentro.map((no) => no.x!)) + margem;
+    const minY = Math.min(...dentro.map((no) => no.y!)) - margem;
+    const maxY = Math.max(...dentro.map((no) => no.y!)) + margem;
+    const escala = Math.min(1.2, Math.max(0.1, Math.min(largura / (maxX - minX), altura / (maxY - minY))));
+    const transformacao = d3.zoomIdentity
+      .translate(largura / 2, altura / 2)
+      .scale(escala)
+      .translate(-(minX + maxX) / 2, -(minY + maxY) / 2);
+    this.svgSelecao.transition().duration(350).call(this.comportamentoZoom.transform, transformacao);
+  }
+
+  /** A marca do status dentro do nó: ponto (planejada), ✓ (concluída) e risco (cancelada); a pendente fica vazia. */
+  private desenharMarca(grupo: d3.Selection<SVGGElement, DemandaGrafoNoDto & d3.SimulationNodeDatum, SVGGElement, unknown>): void {
+    const escala = (no: DemandaGrafoNoDto) => this.calcularRaioNo(no) / 10;
+
+    grupo.filter((no) => no.status === TipoDemandaStatusEnum.PLANEJADA).append('circle')
+      .attr('class', 'demanda-grafo__marca')
+      .attr('r', (no) => 3.6 * escala(no))
+      .style('fill', (no) => COR_NO_BORDA[no.status])
+      .style('pointer-events', 'none');
+
+    grupo.filter((no) => no.status === TipoDemandaStatusEnum.CONCLUIDA).append('path')
+      .attr('class', 'demanda-grafo__marca')
+      .attr('d', (no) => { const k = escala(no); return `M${-4.5 * k},${0.5 * k}l${3 * k},${3 * k}l${6 * k},${-6.5 * k}`; })
+      .style('fill', 'none')
+      .style('stroke', (no) => COR_NO_BORDA[no.status])
+      .attr('stroke-width', 2.4)
+      .attr('stroke-linecap', 'round')
+      .attr('stroke-linejoin', 'round')
+      .style('pointer-events', 'none');
+
+    grupo.filter((no) => no.status === TipoDemandaStatusEnum.CANCELADA).append('path')
+      .attr('class', 'demanda-grafo__marca')
+      .attr('d', (no) => { const k = escala(no); return `M${-6 * k},${6 * k}L${6 * k},${-6 * k}`; })
+      .style('fill', 'none')
+      .style('stroke', (no) => COR_NO_BORDA[no.status])
+      .attr('stroke-width', 2.4)
+      .attr('stroke-linecap', 'round')
+      .style('pointer-events', 'none');
   }
 
   ngOnDestroy(): void {
@@ -108,6 +224,10 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
 
   private destruirGrafo(): void {
     this.cartao.set(null);
+    this.gruposNo = undefined;
+    this.linhasAresta = undefined;
+    this.nosSimulados = [];
+    this.ajusteInicialFeito = false;
     if (this.simulacao) {
       this.simulacao.stop();
       this.simulacao = undefined;
@@ -157,6 +277,7 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
     );
 
     const nos = nosFiltrados.map((no) => ({ ...no } as DemandaGrafoNoDto & d3.SimulationNodeDatum));
+    this.nosSimulados = nos;
     const arestas = arestasFiltraras.map((aresta) => ({
       ...aresta,
       source: aresta.origemId as any,
@@ -174,7 +295,7 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
       .force('centro', d3.forceCenter(largura / 2, altura / 2))
       .force('colisao', d3.forceCollide(60));
 
-    const linhasAresta = grupoZoom.append('g')
+    const linhasAresta = this.linhasAresta = grupoZoom.append('g')
       .selectAll('line')
       .data(arestas)
       .enter()
@@ -188,7 +309,7 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
         aresta.tipo === 'hierarquia' ? 'url(#seta-hierarquia)' : null,
       );
 
-    const gruposNo = grupoZoom.append('g')
+    const gruposNo = this.gruposNo = grupoZoom.append('g')
       .selectAll('g')
       .data(nos)
       .enter()
@@ -211,17 +332,20 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
             no.fy = null;
           }),
       )
-      .on('click', (_evento: any, no: DemandaGrafoNoDto) => this.demandaSelecionada.emit(no.id))
+      .on('click', (_evento: any, no: DemandaGrafoNoDto) => (no.isEstrutural ? this.escolherPasta(no.id) : this.demandaSelecionada.emit(no.id)))
       .on('mouseover', (evento: MouseEvent, no: DemandaGrafoNoDto) => this.mostrarCartao(evento, no))
       .on('mousemove', (evento: MouseEvent, no: DemandaGrafoNoDto) => this.mostrarCartao(evento, no))
       .on('mouseout', () => this.cartao.set(null));
 
     gruposNo.append('circle')
+      .attr('class', 'demanda-grafo__no')
       .attr('r', (no: DemandaGrafoNoDto) => this.calcularRaioNo(no))
       .style('fill', (no: DemandaGrafoNoDto) => corPreenchimentoNo(no.status))
       .style('stroke', (no: DemandaGrafoNoDto) => COR_NO_BORDA[no.status])
       .attr('stroke-width', 3)
       .attr('stroke-dasharray', (no: DemandaGrafoNoDto) => no.isEstrutural ? '6,3' : null);
+
+    this.desenharMarca(gruposNo);
 
     gruposNo.append('text')
       .attr('dy', (no: DemandaGrafoNoDto) => this.calcularRaioNo(no) + 15)
@@ -258,7 +382,14 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
         });
 
       gruposNo.attr('transform', (no: any) => `translate(${no.x},${no.y})`);
+      // Com o layout já quase assentado, enquadra o foco uma vez; depois a pessoa mexe no zoom à vontade.
+      if (!this.ajusteInicialFeito && (this.simulacao?.alpha() ?? 1) < 0.35) {
+        this.ajusteInicialFeito = true;
+        this.ajustarAoFoco();
+      }
     });
+
+    this.atualizarFoco(false);
   }
 
   /** Posiciona o cartão ao lado do cursor, virando para o outro lado perto das bordas do canvas. */

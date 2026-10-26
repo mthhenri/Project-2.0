@@ -12,6 +12,21 @@
 
 ---
 
+## 2026-10-25 — Task 241: o Grafo integrado (marca do status, barra nova, clique na Árvore e foco na pasta)
+
+Quarta e última das tasks da reorganização da tela de demandas (`demanda-tela.spec.md`; 238–241, **guarda-chuva concluída**). O grafo continua o de hoje (força, círculos, cores, linhas, zoom e legenda), com os mesmos sinais da Árvore e do Controle de horas.
+
+- **Decisões do autor ao abrir a task:** o foco recorta a pasta escolhida por **todos os descendentes**; os botões de troca de foco ficam **ao lado do zoom**, no canto do grafo.
+- **Marca no nó:** ponto (planejada), ✓ (concluída), risco (cancelada) e nada na pendente, desenhados em SVG pelo d3 dentro do círculo, na cor do status (`COR_NO_BORDA`). A legenda já usava a bolinha desde a 238.
+- **Cartão do mouse:** a barra própria do grafo saiu (e o `percentual()`); entra `app-demanda-barra-controle-horas` (a da 240; a spec dizia `app-demanda-barra-horas`, que é a curta da Árvore). Sem horas nem execução o cartão não mostra barra.
+- **Clique:** na demanda abre a Árvore, na pasta dela (`abrirNaArvore`, que a 239/240 já ligavam); em **pasta** troca o foco (`pastaChange`, a pasta das três visões e a URL). Não sobrou o encaminhamento provisório da 239.
+- **Foco:** regra pura em `utils/demanda-foco-grafo.util.ts` (`idsDoFoco`, `subpastasDoFoco`, `pastaAcimaDoFoco`; "Sem pasta" = demandas soltas na raiz com o que está sob elas). Parte de **todas** as demandas (`todosOsNos`), então a busca não esconde o pai de quem está na pasta: o foco recorta primeiro e o filtro da toolbar depois. O que fica fora é apagado (opacidade 0,1, sem clique, arestas 0,06) **sem refazer o layout** e a visão se enquadra nas demandas do foco (zoom máximo 1,2). Botões "Projeto inteiro" (tira o foco só no grafo e enquadra tudo), "Pasta acima" e "Subpastas (N)"; só aparecem quando a página passa a pasta. Foco que o filtro esvazia mostra "Nada neste foco com esses filtros" com atalho para o projeto inteiro.
+- **Testes:** frontend 2060 (16 novos: 9 do foco puro e 9 do grafo — marca, cartão, apagar, "Sem pasta", troca sem redesenhar, cliques, botões, aviso; os testes antigos do grafo trocaram o seletor do círculo). Build do frontend passa; sem lint (P-001). Backend e shared não mudaram.
+- **Ao vivo** (gestor, Projeto Demo, iframe em tamanho real dentro do painel de 800×450): focos "Sem pasta" e Autenticação (apagados, enquadrados, controles dentro do grafo em 1920×1080, 1366×768 e 1080×1920), clique numa pasta trocando o foco e a URL (`pasta=1`), "Projeto inteiro" enquadrando tudo, cartão com a barra nova e clique na demanda abrindo a Árvore na pasta dela, tema escuro.
+- **Limites:** o tema claro, a barra lateral recolhida e o administrador/desenvolvedor não foram exercitados no grafo; o projeto de teste tem 7 demandas, então **o peso do d3 com a marca em projeto grande não foi medido** (a spec previa desenhar a marca só acima de um zoom mínimo se pesasse; não pesou nos testes, mas não houve projeto grande). A posição dos botões de foco fica para o autor conferir.
+
+---
+
 ## 2026-10-25 — Task 240: o Controle de horas (a aba Planejamento virou uma árvore de horas)
 
 Terceira das quatro tasks da reorganização da tela de demandas (`demanda-tela.spec.md`; 238–241). A aba **Planejamento** virou o **Controle de horas**: árvore de pastas e demandas com o total de cada pasta, barra nova, quem executa agora e dois cartões do que pede atenção.

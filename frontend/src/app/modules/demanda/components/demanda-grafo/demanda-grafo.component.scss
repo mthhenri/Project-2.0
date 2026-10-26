@@ -27,6 +27,83 @@
     gap: 0.5rem;
   }
 
+  &__foco {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.25rem;
+    padding: 0.5rem;
+    border: 1px solid var(--app-surface-200);
+    border-radius: 0.625rem;
+    background: color-mix(in srgb, var(--app-surface-0) 92%, transparent);
+  }
+
+  &__foco-nome {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    max-width: 13rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--p-text-color);
+  }
+
+  &__sem-foco {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    pointer-events: none;
+
+    ::ng-deep .p-button {
+      pointer-events: auto;
+    }
+  }
+
+  &__sem-foco-icone {
+    font-size: 1.75rem;
+    color: var(--p-text-muted-color);
+    opacity: 0.6;
+  }
+
+  &__sem-foco-texto {
+    margin: 0;
+    color: var(--p-text-muted-color);
+  }
+
+  &__subpastas {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    min-width: 12rem;
+    max-height: 18rem;
+    overflow-y: auto;
+  }
+
+  &__subpasta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.5rem;
+    border: 0;
+    border-radius: 0.375rem;
+    background: transparent;
+    color: var(--p-text-color);
+    font-size: 0.85rem;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--app-surface-100);
+    }
+  }
+
   &__zoom {
     display: flex;
     flex-direction: column;
@@ -53,37 +130,6 @@
     font-weight: 600;
     color: var(--p-text-color);
     overflow-wrap: anywhere;
-  }
-
-  &__cartao-progresso {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    width: 100%;
-  }
-
-  &__cartao-barra {
-    flex: 1;
-    height: 0.35rem;
-    border-radius: 0.2rem;
-    background: var(--app-surface-200);
-    overflow: hidden;
-  }
-
-  &__cartao-barra-preenchimento {
-    display: block;
-    height: 100%;
-    background: var(--app-realce-primario);
-  }
-
-  &__cartao-barra--estouro &__cartao-barra-preenchimento {
-    background: var(--p-red-400);
-  }
-
-  &__cartao-horas {
-    font-size: 0.8rem;
-    color: var(--p-text-muted-color);
-    white-space: nowrap;
   }
 
   &__cartao-tags {
