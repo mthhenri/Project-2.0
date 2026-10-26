@@ -17,11 +17,11 @@ export class ProporIniciarExecucaoFerramenta extends FerramentaPropostaIa<Propor
   readonly nome = 'propor_iniciar_execucao';
   readonly descricao =
     'Propõe iniciar uma execução numa atividade do usuário, com uma descrição provisória curta do que ele vai fazer. Se já houver uma execução em andamento, ' +
-    'ela é pausada antes (o cartão avisa). Nada começa até o usuário confirmar. Use o atividadeId de listar_minhas_atividades; ' +
-    'se o usuário não deixar claro qual atividade, pergunte antes de propor. Só atividades PLANEJADA ou DESENVOLVENDO podem ser iniciadas. ' +
-    'Antes de propor, confira o status em listar_minhas_atividades e PERGUNTE ao usuário: se a atividade estiver PENDENTE, se ele quer deixá-la PLANEJADA ou em DESENVOLVENDO; ' +
-    'se estiver PLANEJADA, se quer passá-la para DESENVOLVENDO ou iniciar como planejada mesmo. Depois da resposta, proponha com novoStatus (omita para manter o status). ' +
-    'Numa DESENVOLVIDA, pergunte o que ele quer fazer. Sem novoStatus, PENDENTE e DESENVOLVIDA são recusadas. ' +
+    'ela é pausada antes (o cartão ou o aviso diz qual). Use o atividadeId de listar_minhas_atividades ou o `atividadeId` devolvido ao criar a atividade; ' +
+    'se o usuário não deixar claro qual atividade, e não for um "continuar de onde parei", pergunte antes de propor. ' +
+    'Não pergunte o status: ao iniciar uma atividade PENDENTE ou PLANEJADA, passe novoStatus DESENVOLVENDO (o aviso mostra a mudança e o desfazer devolve o status de antes); ' +
+    'se já estiver DESENVOLVENDO, omita novoStatus. Uma DESENVOLVIDA não se inicia: no "continuar", siga para a próxima atividade em aberto do checklist e avise; ' +
+    'se não houver outra, pergunte o que ele quer fazer. Sem novoStatus, PENDENTE e DESENVOLVIDA são recusadas. ' +
     'O gestor pode iniciar a execução de uma atividade de OUTRA pessoa (passe o atividadeId dela; use listar_minhas_atividades com usuarioId): a execução é do dono da atividade e é a execução em andamento DELE que será pausada.';
   readonly permissao = 'QUALQUER' as const;
   readonly classeDeEntrada = ProporIniciarExecucaoDto;

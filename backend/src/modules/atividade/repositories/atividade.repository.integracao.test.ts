@@ -222,6 +222,7 @@ testarComBanco('listar: soma só os minutos das execuções encerradas e traz a 
 
   const [item] = (await repositorioDe(conexao).listar({ demandaId: demanda.id })).itens;
   assert.equal(item.totalMinutosExecutados, 105);
+  assert.equal(item.totalExecucoes, 3, 'conta as encerradas e a ativa, não a excluída');
   assert.equal(item.execucaoAtivaId, ativa.id);
   assert.equal(item.execucaoAtivaDescricao, 'Em andamento');
 });
@@ -230,7 +231,7 @@ testarComBanco('listar: sem execuções os minutos são 0 e não há execução 
   const { demanda, usuario } = await cenario(conexao);
   await criarAtividade(conexao, { demandaId: demanda.id, usuarioId: usuario.id });
   const [item] = (await repositorioDe(conexao).listar({ demandaId: demanda.id })).itens;
-  assert.deepEqual([item.totalMinutosExecutados, item.execucaoAtivaId], [0, null]);
+  assert.deepEqual([item.totalMinutosExecutados, item.totalExecucoes, item.execucaoAtivaId], [0, 0, null]);
 });
 
 testarComBanco('possuiExecucaoAtiva e possuiExecucao distinguem execução em andamento de execução qualquer', async (conexao) => {

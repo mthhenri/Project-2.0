@@ -39,6 +39,8 @@ import {
   DemandaGrafoRecuperarDto,
   DemandaConexaoListarDto,
   DemandaAtribuidaDto,
+  DemandaExecutadaInternoListarDto,
+  DemandaExecutadaResumoDto,
   DemandaAtribuidasListarDto,
   DemandaInternoAlterarDto,
   DemandaPlanejamentoDto,
@@ -357,6 +359,97 @@ export class DemandaRepository extends BaseRepository<Demanda> {
          AND tipo_demanda_status.codigo IN ('PLANEJADA', 'PENDENTE')
        ORDER BY projeto.nome ASC, demanda.nome ASC`,
       { usuarioId: dto.usuarioId },
+    );
+  }
+
+  /**
+   * As demandas das atividades do usuário em que há execução (a execução não tem coluna de usuário: o dono é o da atividade), da execução
+   * mais recente para a mais antiga e sem repetir demanda. Traz o caminho (CTE recursiva dos projetos envolvidos), as horas estimadas e executadas
+   * (a execução aberta conta até agora), quantas atividades a demanda tem e quantas estão DESENVOLVIDA, e se o usuário está executando nela agora.
+   * Com `apenasMembro` (desenvolvedor) só entram as demandas em que ele tem linha em `demanda_usuario`.
+   */
+  async listarExecutadas(dto: DemandaExecutadaInternoListarDto): Promise<DemandaExecutadaResumoDto[]> {
+    const juncaoMembro = dto.apenasMembro
+      ? `INNER JOIN demanda_usuario
+           ON demanda_usuario.demanda_id = demanda_executada.demanda_id
+           AND demanda_usuario.usuario_id = :usuarioId
+           AND demanda_usuario.is_deleted = false`
+      : '';
+    return this.executarConsulta<DemandaExecutadaResumoDto>(
+      `WITH RECURSIVE demanda_executada AS (
+         SELECT atividade.demanda_id,
+                MAX(execucao.inicio_data)       AS ultima_execucao_data,
+                BOOL_OR(execucao.fim_data IS NULL) AS executando
+         FROM execucao
+         INNER JOIN atividade
+           ON atividade.id = execucao.atividade_id
+           AND atividade.usuario_id = :usuarioId
+           AND atividade.is_deleted = false
+         WHERE execucao.is_deleted = false
+         GROUP BY atividade.demanda_id
+       ),
+       caminho_demanda AS (
+         SELECT demanda_raiz.id, demanda_raiz.nome::text AS caminho
+         FROM demanda AS demanda_raiz
+         WHERE demanda_raiz.demanda_pai_id IS NULL
+           AND demanda_raiz.is_deleted = false
+           AND demanda_raiz.projeto_id IN (
+             SELECT demanda_do_projeto.projeto_id
+             FROM demanda AS demanda_do_projeto
+             INNER JOIN demanda_executada ON demanda_executada.demanda_id = demanda_do_projeto.id
+           )
+         UNION ALL
+         SELECT demanda_filho.id, (caminho_demanda.caminho || :separadorCaminho || demanda_filho.nome)::text
+         FROM demanda AS demanda_filho
+         INNER JOIN caminho_demanda ON demanda_filho.demanda_pai_id = caminho_demanda.id
+         WHERE demanda_filho.is_deleted = false
+       )
+       SELECT
+         demanda.id                         AS "demandaId",
+         demanda.nome,
+         COALESCE(caminho_demanda.caminho, demanda.nome) AS caminho,
+         projeto.id                         AS "projetoId",
+         projeto.nome                       AS "nomeProjeto",
+         tipo_demanda_status.codigo         AS status,
+         demanda.horas_estimadas            AS "horasEstimadas",
+         COALESCE((
+           SELECT SUM(EXTRACT(EPOCH FROM (COALESCE(execucao.fim_data, NOW()) - execucao.inicio_data)) / 60)
+           FROM atividade
+           INNER JOIN execucao
+             ON execucao.atividade_id = atividade.id
+             AND execucao.is_deleted = false
+           WHERE atividade.demanda_id = demanda.id
+             AND atividade.is_deleted = false
+         ), 0)::int                         AS "minutosExecutados",
+         (SELECT COUNT(*)::int
+            FROM atividade
+           WHERE atividade.demanda_id = demanda.id
+             AND atividade.is_deleted = false) AS "totalAtividades",
+         (SELECT COUNT(*)::int
+            FROM atividade
+            INNER JOIN tipo_atividade_status
+              ON tipo_atividade_status.id = atividade.tipo_atividade_status_id
+              AND tipo_atividade_status.is_deleted = false
+           WHERE atividade.demanda_id = demanda.id
+             AND atividade.is_deleted = false
+             AND tipo_atividade_status.codigo = 'DESENVOLVIDA') AS "atividadesDesenvolvidas",
+         demanda_executada.executando,
+         demanda_executada.ultima_execucao_data AS "ultimaExecucaoData"
+       FROM demanda_executada
+       ${juncaoMembro}
+       INNER JOIN demanda
+         ON demanda.id = demanda_executada.demanda_id
+         AND demanda.is_deleted = false
+       INNER JOIN projeto
+         ON projeto.id = demanda.projeto_id
+         AND projeto.is_deleted = false
+       INNER JOIN tipo_demanda_status
+         ON tipo_demanda_status.id = demanda.tipo_demanda_status_id
+         AND tipo_demanda_status.is_deleted = false
+       LEFT JOIN caminho_demanda ON caminho_demanda.id = demanda.id
+       ORDER BY demanda_executada.ultima_execucao_data DESC, demanda.id DESC
+       LIMIT :limite`,
+      { usuarioId: dto.usuarioId, limite: dto.limite, separadorCaminho: SEPARADOR_CAMINHO },
     );
   }
 

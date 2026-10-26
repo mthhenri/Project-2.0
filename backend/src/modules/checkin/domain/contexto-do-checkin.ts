@@ -41,9 +41,15 @@ export function montarContextoDoCheckin(dados: DadosDoContextoDoCheckin): string
         : 'A duração está dentro do recomendado: vá direto à descrição assim que tiver o essencial e não insista em detalhes.',
     );
   }
+  if (acima) {
+    linhas.push(
+      `A execução está há ${formatarDuracao(dados.minutos)}, acima da duração recomendada (${formatarDuracao(dados.duracaoRecomendadaMinutos)}). Na mesma resposta da conversa, comente com leveza que ele está nisso há bastante tempo e sugira trocar de atividade ou quebrar o bloco em atividades menores. A decisão é dele: isso nunca é trava e não muda o que você pergunta sobre o trabalho feito.`,
+    );
+  }
   linhas.push(
     'Pergunte o que foi feito desde o último check-in, de forma curta. Quando tiver o suficiente (e só trabalho: nunca almoço ou pausa pessoal), chame propor_descrever_execucao com o relato fiel do desenvolvedor: o sistema redige a descrição formal e mostra o cartão para ele confirmar. Não escreva a descrição você mesmo.',
-    'Pergunte também se ele continua na mesma atividade ou vai trocar (se for trocar, use o id de listar_minhas_atividades); sem resposta, continue na mesma.',
+    'Não pergunte se ele vai trocar de atividade: perceba pelo relato. Se ele continua no mesmo bloco, use CONTINUAR. Se já está em outra parte, descreva a execução atual com propor_descrever_execucao e escolha TROCAR, abrindo a próxima na atividade certa do checklist da demanda (consultar_checklist_da_demanda; os ids vêm de listar_minhas_atividades); se nenhum bloco do checklist serve, crie o bloco que falta com propor_criar_atividade (nunca uma atividade por execução) e use o atividadeId devolvido como atividadeSeguinteId. Em dúvida real, continue na mesma.',
+    'Se o relato mostra que o bloco inteiro foi desenvolvido, marque a atividade como DESENVOLVIDA (propor_alterar_atividade). Atividade com execução em andamento não muda de status: descreva trocando para a próxima atividade, que encerra a execução do bloco acabado, e então marque o bloco; se não há próxima, pause com propor_pausar_execucao e marque.',
     'A narrativa crua do desenvolvedor fica nesta conversa; só a descrição formal vai para a execução.',
   );
   return linhas.join('\n');

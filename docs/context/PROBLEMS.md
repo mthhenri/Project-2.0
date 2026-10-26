@@ -110,6 +110,14 @@
 - **Correção:** medir o tempo desses testes na suíte inteira e decidir entre limite de tempo maior para eles e montagem mais leve do editor.
 - **Desde:** 2026-10-25 (visto no fecho da task 223, que não toca esses componentes).
 
+### P-036 — Dois testes de `mensagem-direta-notificacoes` falham, inclusive sozinhos · `ABERTO` · frontend/mensagem-direta
+
+- **Sintoma:** `escolher uma posição grava o conjunto com ela e descarta o arranjo arrastado` e `se o servidor recusa a posição, a tela volta à anterior e o menu avisa` falham (`querySelector`/`textContent` de `null`) em `mensagem-direta-notificacoes.component.spec.ts`, rodando só esse arquivo.
+- **Causa:** não investigada; falham também sem as mudanças da task 245 (conferido com `git stash`). Suspeita: o menu de posição do popup (task 221, popover do PrimeNG) não abre no teste.
+- **Contorno:** nenhum; a tela funciona (verificada ao vivo na 221).
+- **Correção:** reproduzir o teste, ver se o popover abre e ajustar o teste ou o componente.
+- **Desde:** 2026-10-26 (visto no fecho da task 245).
+
 ### P-035 — Check-in: a resposta da IA com proposta some e volta no fim do fluxo · `ABERTO` · frontend/checkin
 
 - **Sintoma:** igual ao que a task 225 corrigiu no chat: no evento `fim` a bolha da resposta é apagada e a mensagem gravada entra no lugar, então os cartões de proposta são destruídos e recriados (piscam em "Carregando proposta…") e a rolagem pode parar antes do cartão terminar de crescer.

@@ -20,7 +20,7 @@ export class ListarMinhasAtividadesFerramenta extends FerramentaIa<MinhasAtivida
   readonly descricao =
     'Lista as atividades do usuário, da mais para a menos prioritária, com a demanda, o projeto, a prioridade e se há execução em andamento. ' +
     'Por padrão só as em aberto; use incluirDesenvolvidas para ver também as já desenvolvidas. Use para responder "o que eu tenho pra fazer?" ' +
-    'e para achar a atividade certa antes de propor iniciar uma execução. O gestor pode informar `usuarioId` (de listar_usuarios) para ver as atividades de OUTRA pessoa.';
+    'e para achar a atividade certa antes de propor iniciar uma execução. Atividade é um bloco do trabalho com várias execuções: se uma delas serve ao relato, reaproveite-a em vez de criar outra. O gestor pode informar `usuarioId` (de listar_usuarios) para ver as atividades de OUTRA pessoa.';
   readonly tipo = 'LEITURA' as const;
   readonly permissao = 'QUALQUER' as const;
   readonly classeDeEntrada = MinhasAtividadesListarDto;

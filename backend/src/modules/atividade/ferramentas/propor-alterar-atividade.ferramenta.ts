@@ -18,7 +18,7 @@ export class ProporAlterarAtividadeFerramenta extends FerramentaPropostaIa<Propo
   readonly nome = 'propor_alterar_atividade';
   readonly descricao =
     'Propõe alterar UMA atividade existente: `status` (PLANEJADA, PENDENTE, DESENVOLVENDO ou DESENVOLVIDA), `prioridade` (URGENTE, ALTA, MEDIA, BAIXA ou INDEFINIDA) e/ou `nome`. ' +
-    'Informe só o que muda. Use para "terminei a X" (DESENVOLVIDA), "sobe a prioridade da Y" ou "renomeia a Z". Nada muda até o usuário confirmar no cartão. ' +
+    'Informe só o que muda. Use para "terminei a X" (DESENVOLVIDA) e sempre que o relato mostrar que o bloco inteiro foi desenvolvido (a atividade não é "concluída": é DESENVOLVIDA), "sobe a prioridade da Y" ou "renomeia a Z". Nada muda até o usuário confirmar no cartão. ' +
     'O atividadeId vem de listar_minhas_atividades. Se a atividade tem execução em andamento, a mudança de status é recusada: proponha pausar a execução (propor_pausar_execucao) e só depois o status.';
   readonly permissao = 'QUALQUER' as const;
   readonly classeDeEntrada = ProporAlterarAtividadeDto;

@@ -20,6 +20,8 @@ export * from './SugerirConexoesELugarDto';
 export * from './ProjetosListarDto';
 export * from './MudancasDaQuedaConsultarDto';
 export * from './DemandaConsultarDto';
+export * from './DemandaChecklistConsultarDto';
+export * from './DemandaChecklistConsultadoDto';
 export * from './GrafoDoProjetoConsultarDto';
 export * from './ExecucoesDaEquipeListarDto';
 export * from './AtividadesParadasListarDto';

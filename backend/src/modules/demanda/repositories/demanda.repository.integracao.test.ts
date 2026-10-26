@@ -283,6 +283,73 @@ testarComBanco('listarAtribuidas: só PENDENTE e PLANEJADA; o desenvolvedor só 
   assert.deepEqual(await repositorio.listarAtribuidas({ usuarioId: desenvolvedor.id, apenasAtribuidas: true }), []);
 });
 
+testarComBanco('listarExecutadas: só as demandas das atividades do usuário, da execução mais recente para a mais antiga, sem repetir', async (conexao) => {
+  const repositorio = criarRepositorio(DemandaRepository, conexao);
+  const desenvolvedor = await criarDesenvolvedor(conexao);
+  const colega = await criarDesenvolvedor(conexao);
+  const projeto = await criarProjeto(conexao);
+  const antiga = await criarDemanda(conexao, { projetoId: projeto.id, nome: 'Antiga' });
+  const recente = await criarDemanda(conexao, { projetoId: projeto.id, nome: 'Recente' });
+  const doColega = await criarDemanda(conexao, { projetoId: projeto.id, nome: 'Do colega' });
+  const semExecucao = await criarDemanda(conexao, { projetoId: projeto.id, nome: 'Sem execução' });
+  for (const demanda of [antiga, recente, doColega, semExecucao]) await criarDemandaUsuario(conexao, { demandaId: demanda.id, usuarioId: desenvolvedor.id });
+  const atividadeAntiga = await criarAtividade(conexao, { demandaId: antiga.id, usuarioId: desenvolvedor.id });
+  const outraAtividadeAntiga = await criarAtividade(conexao, { demandaId: antiga.id, usuarioId: desenvolvedor.id });
+  const atividadeRecente = await criarAtividade(conexao, { demandaId: recente.id, usuarioId: desenvolvedor.id });
+  const atividadeDoColega = await criarAtividade(conexao, { demandaId: doColega.id, usuarioId: colega.id });
+  await criarAtividade(conexao, { demandaId: semExecucao.id, usuarioId: desenvolvedor.id });
+  await criarExecucao(conexao, { atividadeId: atividadeAntiga.id, inicioData: '2026-01-10T09:00:00-03:00', fimData: '2026-01-10T10:00:00-03:00' });
+  await criarExecucao(conexao, { atividadeId: outraAtividadeAntiga.id, inicioData: '2026-01-11T09:00:00-03:00', fimData: '2026-01-11T09:30:00-03:00' });
+  await criarExecucao(conexao, { atividadeId: atividadeRecente.id, inicioData: '2026-01-12T09:00:00-03:00', fimData: '2026-01-12T11:00:00-03:00' });
+  await criarExecucao(conexao, { atividadeId: atividadeDoColega.id, inicioData: '2026-01-13T09:00:00-03:00', fimData: '2026-01-13T10:00:00-03:00' });
+
+  const executadas = await repositorio.listarExecutadas({ usuarioId: desenvolvedor.id, apenasMembro: true, limite: 20 });
+  assert.deepEqual(executadas.map((item) => item.demandaId), [recente.id, antiga.id]);
+  assert.equal(executadas[1].minutosExecutados, 90, 'soma as execuções das duas atividades');
+  assert.equal(executadas[1].totalAtividades, 2);
+  assert.equal(executadas[1].atividadesDesenvolvidas, 0);
+  assert.equal(executadas[1].executando, false);
+  assert.equal(executadas[0].nomeProjeto, projeto.nome);
+
+  assert.deepEqual((await repositorio.listarExecutadas({ usuarioId: desenvolvedor.id, apenasMembro: true, limite: 1 })).map((item) => item.demandaId), [recente.id]);
+});
+
+testarComBanco('listarExecutadas: caminho da árvore, atividades desenvolvidas, execução rodando e demanda/atividade excluídas fora', async (conexao) => {
+  const repositorio = criarRepositorio(DemandaRepository, conexao);
+  const desenvolvedor = await criarDesenvolvedor(conexao);
+  const { a1, projeto } = await montarArvore(conexao);
+  await criarDemandaUsuario(conexao, { demandaId: a1.id, usuarioId: desenvolvedor.id });
+  const desenvolvida = await criarAtividade(conexao, { demandaId: a1.id, usuarioId: desenvolvedor.id, statusCodigo: 'DESENVOLVIDA' });
+  const rodando = await criarAtividade(conexao, { demandaId: a1.id, usuarioId: desenvolvedor.id, statusCodigo: 'DESENVOLVENDO' });
+  await criarExecucao(conexao, { atividadeId: desenvolvida.id, inicioData: '2026-01-10T09:00:00-03:00', fimData: '2026-01-10T10:00:00-03:00' });
+  await criarExecucao(conexao, { atividadeId: rodando.id, inicioData: '2026-01-11T09:00:00-03:00', fimData: null });
+
+  const [item] = await repositorio.listarExecutadas({ usuarioId: desenvolvedor.id, apenasMembro: true, limite: 20 });
+  assert.equal(item.caminho, 'Raiz › A › A1');
+  assert.equal(item.projetoId, projeto.id);
+  assert.deepEqual([item.totalAtividades, item.atividadesDesenvolvidas, item.executando], [2, 1, true]);
+
+  await excluirLinha(conexao, 'atividade', rodando.id);
+  assert.equal((await repositorio.listarExecutadas({ usuarioId: desenvolvedor.id, apenasMembro: true, limite: 20 }))[0].executando, false, 'atividade excluída não conta');
+  await excluirLinha(conexao, 'demanda', a1.id);
+  assert.deepEqual(await repositorio.listarExecutadas({ usuarioId: desenvolvedor.id, apenasMembro: true, limite: 20 }), []);
+});
+
+testarComBanco('listarExecutadas: o desenvolvedor sem linha em demanda_usuario não vê a demanda; o gestor vê o que ele mesmo executou', async (conexao) => {
+  const repositorio = criarRepositorio(DemandaRepository, conexao);
+  const desenvolvedor = await criarDesenvolvedor(conexao);
+  const gestor = await criarGestor(conexao);
+  const projeto = await criarProjeto(conexao);
+  const demanda = await criarDemanda(conexao, { projetoId: projeto.id });
+  const atividadeDoDesenvolvedor = await criarAtividade(conexao, { demandaId: demanda.id, usuarioId: desenvolvedor.id });
+  const atividadeDoGestor = await criarAtividade(conexao, { demandaId: demanda.id, usuarioId: gestor.id });
+  await criarExecucao(conexao, { atividadeId: atividadeDoDesenvolvedor.id, inicioData: '2026-01-10T09:00:00-03:00', fimData: '2026-01-10T10:00:00-03:00' });
+  await criarExecucao(conexao, { atividadeId: atividadeDoGestor.id, inicioData: '2026-01-11T09:00:00-03:00', fimData: '2026-01-11T10:00:00-03:00' });
+
+  assert.deepEqual(await repositorio.listarExecutadas({ usuarioId: desenvolvedor.id, apenasMembro: true, limite: 20 }), []);
+  assert.deepEqual((await repositorio.listarExecutadas({ usuarioId: gestor.id, apenasMembro: false, limite: 20 })).map((item) => item.demandaId), [demanda.id]);
+});
+
 // ---------------------------------------------------------------------------
 // Criação, atribuição transacional, membros e tags
 // ---------------------------------------------------------------------------

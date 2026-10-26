@@ -1,0 +1,88 @@
+<section class="demanda-leitura" aria-label="Demanda aberta">
+  @if (carregando()) {
+    <div class="demanda-leitura__esqueleto" aria-busy="true">
+      <p-skeleton height="1.25rem" width="60%" />
+      <p-skeleton height="2rem" width="80%" />
+      <p-skeleton height="1rem" width="40%" />
+      <p-skeleton height="8rem" />
+    </div>
+  } @else if (erro() || !demanda()) {
+    <div class="demanda-leitura__estado" role="alert">
+      <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+      <span>Não foi possível abrir a demanda.</span>
+      <div class="demanda-leitura__estado-acoes">
+        <p-button label="Tentar de novo" icon="pi pi-refresh" size="small" [outlined]="true" (onClick)="carregar()" />
+        <p-button label="Voltar à lista" icon="pi pi-arrow-left" size="small" [text]="true" (onClick)="voltar.emit()" />
+      </div>
+    </div>
+  } @else if (demanda(); as dadosDemanda) {
+    <header class="demanda-leitura__topo">
+      <div class="demanda-leitura__linha-topo">
+        <p-button label="Demandas" icon="pi pi-arrow-left" severity="secondary" [text]="true" size="small" (onClick)="voltar.emit()" />
+        <span class="demanda-leitura__espaco"></span>
+        <p-button label="Editar" icon="pi pi-pencil" severity="secondary" [outlined]="true" size="small" pTooltip="Abre a tela de Demandas do projeto" tooltipPosition="bottom" (onClick)="editar()" />
+        <p-button label="Planejar com a IA" icon="pi pi-file-edit" size="small" pTooltip="Abre o modo planejamento do chat" tooltipPosition="bottom" (onClick)="planejar.emit()" />
+      </div>
+
+      <div class="demanda-leitura__titulo-area">
+        <app-demanda-status-marca [status]="dadosDemanda.status" [tamanho]="20" />
+        <h2 class="demanda-leitura__titulo">{{ dadosDemanda.nome }}</h2>
+      </div>
+
+      <div class="demanda-leitura__meta">
+        <span class="demanda-leitura__status">{{ rotuloStatus[dadosDemanda.status] }}</span>
+        <app-demanda-barra-horas [minutosExecutados]="minutosExecutados()" [horasEstimadas]="dadosDemanda.horasEstimadas" [larga]="true" />
+        <span class="demanda-leitura__contagem">{{ desenvolvidas() }} de {{ atividades().length }} desenvolvidas</span>
+      </div>
+
+      <p-tabs [value]="abaAtiva()" (valueChange)="aba.set($any($event))" class="demanda-leitura__abas">
+        <p-tablist>
+          <p-tab value="checklist"><i class="pi pi-check-square demanda-leitura__aba-icone"></i>Checklist</p-tab>
+          <p-tab value="tecnica"><i class="pi pi-code demanda-leitura__aba-icone"></i>Técnica</p-tab>
+          @if (sessao.eGestor()) {
+            <p-tab value="cliente"><i class="pi pi-user demanda-leitura__aba-icone"></i>Cliente</p-tab>
+          }
+          <p-tab value="documentacao"><i class="pi pi-book demanda-leitura__aba-icone"></i>Documentação</p-tab>
+        </p-tablist>
+      </p-tabs>
+    </header>
+
+    <div class="demanda-leitura__corpo">
+      @if (abaAtiva() === 'checklist') {
+        @if (checklist().length === 0) {
+          <p class="demanda-leitura__vazio">Esta demanda ainda não tem atividades.</p>
+        } @else {
+          <ul class="demanda-leitura__checklist">
+            @for (atividade of checklist(); track atividade.id) {
+              <li
+                class="demanda-leitura__atividade"
+                [class.demanda-leitura__atividade--desenvolvida]="atividade.status === TipoStatus.DESENVOLVIDA"
+                [class.demanda-leitura__atividade--rodando]="atividade.emExecucao"
+              >
+                <i
+                  class="pi demanda-leitura__atividade-icone"
+                  [class.pi-check-circle]="atividade.status === TipoStatus.DESENVOLVIDA"
+                  [class.pi-play-circle]="atividade.emExecucao && atividade.status !== TipoStatus.DESENVOLVIDA"
+                  [class.pi-circle]="atividade.status !== TipoStatus.DESENVOLVIDA && !atividade.emExecucao"
+                  aria-hidden="true"
+                ></i>
+                <span class="demanda-leitura__atividade-nome">{{ atividade.nome }}</span>
+                @if (atividade.emExecucao) {
+                  <span class="demanda-leitura__atividade-marca">Rodando</span>
+                }
+                <span class="demanda-leitura__atividade-tempo">
+                  {{ atividade.minutosExecutados | tempoExibicao: false : 'minutos' }}
+                  · {{ atividade.totalExecucoes }} {{ atividade.totalExecucoes === 1 ? 'execução' : 'execuções' }}
+                </span>
+              </li>
+            }
+          </ul>
+        }
+      } @else if (textoDaAba()) {
+        <app-markdown-visualizador [texto]="textoDaAba()" />
+      } @else {
+        <p class="demanda-leitura__vazio">Nada escrito nesta aba ainda.</p>
+      }
+    </div>
+  }
+</section>

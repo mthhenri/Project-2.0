@@ -24,6 +24,7 @@ import {
   StandardResponse,
   PaginatedResult,
   DemandaRestauradaDto,
+  DemandaExecutadaResumoDto,
 } from '@project20/shared';
 import { ambiente } from '../../../../environments/environment';
 import { comFeedbackProprio } from '../../../core/interceptors/loading.interceptor';
@@ -46,6 +47,13 @@ export class DemandaService {
 
   listarAtribuidas(): Observable<StandardResponse<DemandaAtribuidaDto[]>> {
     return this.httpClient.get<StandardResponse<DemandaAtribuidaDto[]>>(`${this.urlBase}/atribuidas`);
+  }
+
+  /** As últimas demandas que o próprio usuário executou, da execução mais recente para a mais antiga (a lateral "Minhas demandas" do chat). */
+  listarExecutadas(limite?: number): Observable<StandardResponse<DemandaExecutadaResumoDto[]>> {
+    let params = new HttpParams();
+    if (limite) params = params.set('limite', String(limite));
+    return this.httpClient.get<StandardResponse<DemandaExecutadaResumoDto[]>>(`${this.urlBase}/executadas`, { params, ...comFeedbackProprio() });
   }
 
   recuperarGrafo(projetoId: number): Observable<StandardResponse<DemandaGrafoDto>> {

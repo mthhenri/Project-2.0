@@ -49,3 +49,6 @@ export * from './DemandaRestaurarDto';
 export * from './DemandaRestauradaDto';
 export * from './DemandaNomeBuscarDto';
 export * from './DemandaNomeResumoDto';
+export * from './DemandaExecutadaListarDto';
+export * from './DemandaExecutadaInternoListarDto';
+export * from './DemandaExecutadaResumoDto';

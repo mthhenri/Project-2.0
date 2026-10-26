@@ -29,6 +29,7 @@ function montar(opcoes: { ativa?: { id: number; atividadeId: number; descricao: 
   const atividadeService = { recuperar: async ({ id }: { id: number }) => ({ dados: { id, ...nomesDasAtividades[id] } }) };
   const demandaRepositorio = {
     recuperar: async ({ id }: { id: number }) => (opcoes.demandaExiste === false ? null : { id, nome: id === 3 ? 'Autenticação' : 'Carrinho' }),
+    listarAncestral: async () => [],
   };
   const execucaoService = { recuperarAtiva: async () => ({ dados: opcoes.ativa ?? null }), recuperarAtivaDoUsuario: async () => ({ dados: opcoes.ativa ?? null }) };
   const proposta = propostaIaService as unknown as PropostaIaService;

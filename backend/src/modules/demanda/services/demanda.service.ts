@@ -7,6 +7,9 @@ import {
   DemandaCriadaDto,
   DemandaListarDto,
   DemandaAtribuidaDto,
+  DemandaExecutadaListarDto,
+  DemandaExecutadaResumoDto,
+  LIMITE_PADRAO_DEMANDAS_EXECUTADAS,
   DemandaResumoDto,
   DemandaRecuperadaDto,
   DemandaRecuperarDto,
@@ -225,6 +228,27 @@ export class DemandaService {
       sucesso: true,
       dados: demandas,
       mensagem: 'Demandas atribuídas listadas com sucesso',
+    };
+  }
+
+  /**
+   * As últimas demandas que o próprio usuário executou (a lateral "Minhas demandas" do chat, task 245), da execução mais recente para a mais
+   * antiga. Sempre as do token: o desenvolvedor só vê as de que é membro, o gestor e o administrador veem as que executaram, sem esse filtro.
+   */
+  async listarExecutadas(
+    filtros: DemandaExecutadaListarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<StandardResponse<DemandaExecutadaResumoDto[]>> {
+    const demandas = await this.demandaRepositorio.listarExecutadas({
+      usuarioId: usuarioAtivo.sub,
+      apenasMembro: usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR,
+      limite: filtros.limite ?? LIMITE_PADRAO_DEMANDAS_EXECUTADAS,
+    });
+
+    return {
+      sucesso: true,
+      dados: demandas,
+      mensagem: 'Demandas executadas listadas com sucesso',
     };
   }
 

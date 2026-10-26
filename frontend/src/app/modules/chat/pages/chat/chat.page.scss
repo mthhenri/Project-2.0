@@ -34,6 +34,13 @@
     padding: 0 1rem 0 1.5rem;
   }
 
+  // "Minhas demandas": coluna estreita à direita.
+  &__lateral {
+    flex: 0 0 22rem;
+    min-width: 0;
+    min-height: 0;
+  }
+
   &__documento {
     flex: 0 0 var(--largura-documento);
     min-width: 0;
@@ -549,9 +556,10 @@
   }
 }
 
-// Sem largura para os dois lado a lado (janela estreita ou monitor na vertical), o documento fica abaixo da conversa e o divisor some.
+// Sem largura para os dois lado a lado, o documento, a demanda ou a lista vão abaixo da conversa.
 @container (max-width: 64rem) {
-  .chat__area--planejamento {
+  .chat__area--planejamento,
+  .chat__area--lista {
     flex-direction: column;
     gap: 0.75rem;
   }
@@ -560,9 +568,14 @@
     flex: 1 1 45%;
   }
 
-  .chat__area--planejamento .chat__documento {
+  .chat__area--planejamento .chat__documento,
+  .chat__lateral {
     flex: 1 1 55%;
     padding: 0 0.5rem 0 1.5rem;
+  }
+
+  .chat__area--lista .chat__lateral {
+    flex: 0 0 40%;
   }
 
   .chat__divisor {

@@ -13,10 +13,13 @@ import { ProporCriarAtividadeFerramenta } from './propor-criar-atividade.ferrame
 const DESENVOLVEDOR = { sub: 7, login: 'dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
 const GESTOR = { sub: 1, login: 'gestor', tipo: TipoUsuarioEnum.GESTOR } as never;
 
-function montar(opcoes: { demanda?: unknown; dono?: Record<string, unknown> | null } = {}) {
+function montar(opcoes: { demanda?: unknown; dono?: Record<string, unknown> | null; ancestrais?: { id: number; nome: string; nivel: number }[] } = {}) {
   const propostas: { usuarioId: number; tipo: TipoPropostaIaEnum; dados: Record<string, unknown> }[] = [];
   const propostaIaService = { criarComAutonomia: async (dto: (typeof propostas)[number]) => { propostas.push(dto); return { id: 55, status: 'PENDENTE' }; } };
-  const demandaRepositorio = { recuperar: async () => (opcoes.demanda === undefined ? { id: 9, nome: 'Autenticação' } : opcoes.demanda) };
+  const demandaRepositorio = {
+    recuperar: async () => (opcoes.demanda === undefined ? { id: 9, nome: 'Autenticação' } : opcoes.demanda),
+    listarAncestral: async () => opcoes.ancestrais ?? [],
+  };
   const usuarioService = {
     recuperar: async () => ({ dados: opcoes.dono === undefined ? { id: 12, nomeCompleto: 'Bia', status: TipoUsuarioStatusEnum.ATIVO } : opcoes.dono }),
   };
@@ -34,6 +37,12 @@ test('propõe a atividade do próprio usuário com o nome da demanda para o cart
     usuarioId: 7, tipo: TipoPropostaIaEnum.CRIAR_ATIVIDADE,
     dados: { demandaId: 9, nome: 'Ajustar login', prioridade: 'ALTA', demandaNome: 'Autenticação' },
   }]);
+});
+
+test('o nome da demanda no cartão e no aviso é o caminho completo, da raiz à demanda', async () => {
+  const { ferramenta, propostas } = montar({ ancestrais: [{ id: 1, nome: 'Pesquisas', nivel: 2 }, { id: 4, nome: 'Integração', nivel: 1 }] });
+  await ferramenta.executar({ demandaId: 9, nome: 'Investigar CPF válido recusado, caso 4821' }, DESENVOLVEDOR);
+  assert.equal(propostas[0].dados.demandaNome, 'Pesquisas › Integração › Autenticação');
 });
 
 test('demanda inexistente é recusada e nenhuma proposta é criada', async () => {
