@@ -1,6 +1,6 @@
 # 233-plano-tela.spec.md
 
-> Task 3/7 da guarda-chuva [`chat-planejamento.spec.md`](chat-planejamento.spec.md): a tela do modo planejamento e o novo seletor no
+> Task 3/7 da guarda-chuva [`chat-planejamento.spec.md`](../backlog/chat-planejamento.spec.md): a tela do modo planejamento e o novo seletor no
 > topo do chat. Ainda sem IA: o plano é lido e editado à mão.
 
 ## Objetivo
@@ -54,3 +54,8 @@ de orquestrar modo e plano aberto. Aplicar `gerenciamento-de-impacto` ao retirar
 
 - Largura inicial e mínima do documento; o divisor em 1080×1920 (padrão proposto: documento abaixo do chat quando a largura não
   comportar os dois).
+
+## Resultado (fechamento, 2026-10-26)
+
+Largura inicial do documento 50%, de 30% a 70%, lembrada em `localStorage`; abaixo de 64rem de largura do chat o documento vai para baixo da conversa e o divisor some.
+Relato completo e achados da verificação ao vivo em `docs/context/HISTORY.md` (bloco de 2026-10-26, task 233).

@@ -1,0 +1,155 @@
+<div class="chat-seletor">
+  <button
+    #gatilho
+    type="button"
+    class="chat-seletor__gatilho"
+    aria-haspopup="dialog"
+    aria-label="Abrir conversas e planos"
+    (click)="popover.toggle($event)"
+  >
+    <i class="pi" [class.pi-comments]="modo() === Modo.PERGUNTAS" [class.pi-file-edit]="modo() === Modo.PLANEJAMENTO" aria-hidden="true"></i>
+    <span class="chat-seletor__gatilho-texto">{{ rotuloDoBotao() }}</span>
+    <i class="pi pi-chevron-down chat-seletor__gatilho-seta" aria-hidden="true"></i>
+  </button>
+  <p-button label="Novo plano" icon="pi pi-plus" size="small" [outlined]="true" (onClick)="criarPlano()" />
+</div>
+
+<p-popover #popover (onShow)="aoAbrir()">
+  <div class="chat-seletor__painel" role="dialog" aria-label="Conversas e planos">
+    <span class="chat-seletor__busca">
+      <i class="pi pi-search chat-seletor__busca-icone"></i>
+      <input
+        #campoBusca
+        pInputText
+        type="text"
+        class="chat-seletor__busca-campo"
+        placeholder="Buscar em conversas e planos…"
+        aria-label="Buscar em conversas e planos"
+        [formControl]="controleBusca"
+        (keydown.enter)="buscar()"
+        (keydown.escape)="limparBusca()"
+      />
+    </span>
+
+    <div class="chat-seletor__corpo">
+      @if (carregando() && conversas().length === 0 && planos().length === 0) {
+        <div class="chat-seletor__esqueleto" aria-busy="true">
+          <p-skeleton height="2.5rem" />
+          <p-skeleton height="2.5rem" />
+          <p-skeleton height="2.5rem" />
+        </div>
+      } @else if (erro() && conversas().length === 0 && planos().length === 0) {
+        <div class="chat-seletor__vazio" role="alert">
+          <span>Não foi possível carregar as conversas e os planos.</span>
+          <p-button label="Tentar de novo" size="small" [text]="true" (onClick)="recarregar()" />
+        </div>
+      } @else {
+        <section class="chat-seletor__secao" aria-label="Planos">
+          <header class="chat-seletor__secao-cabecalho">
+            <strong>Planos</strong>
+            @if (buscaFeita()) {
+              <p-button label="Limpar busca" size="small" [text]="true" (onClick)="limparBusca()" />
+            }
+          </header>
+          @if (planos().length === 0) {
+            <p class="chat-seletor__vazio">
+              {{ buscaFeita() ? 'Nenhum plano encontrado.' : 'Nenhum plano ainda. Use "Novo plano" para começar.' }}
+            </p>
+          } @else {
+            <ul class="chat-seletor__lista">
+              @for (plano of planos(); track plano.id) {
+                <li>
+                  <button
+                    type="button"
+                    class="chat-seletor__item"
+                    [class.chat-seletor__item--atual]="modo() === Modo.PLANEJAMENTO && plano.id === planoAbertoId()"
+                    [attr.aria-current]="modo() === Modo.PLANEJAMENTO && plano.id === planoAbertoId() ? 'true' : null"
+                    (click)="escolherPlano(plano)"
+                  >
+                    <span class="chat-seletor__item-titulo">{{ plano.titulo }}</span>
+                    <span class="chat-seletor__item-meta">
+                      {{ plano.projetoNome ?? 'Pessoal' }}{{ plano.demandaNome ? ' › ' + plano.demandaNome : '' }}
+                      @if (plano.isSolo) { · solo }
+                      @if (plano.isArquivado) { · arquivado }
+                    </span>
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+        </section>
+
+        @if (resultados(); as encontrados) {
+          <section class="chat-seletor__secao" aria-label="Mensagens encontradas">
+            <header class="chat-seletor__secao-cabecalho">
+              <strong>Mensagens</strong>
+              <span>{{ encontrados.length }} {{ encontrados.length === 1 ? 'resultado' : 'resultados' }}</span>
+            </header>
+            @if (encontrados.length === 0) {
+              <p class="chat-seletor__vazio">Nenhuma mensagem encontrada.</p>
+            } @else {
+              <ul class="chat-seletor__lista">
+                @for (resultado of encontrados; track resultado.id) {
+                  <li>
+                    <button type="button" class="chat-seletor__item" (click)="escolherResultado(resultado)">
+                      <span class="chat-seletor__item-meta">
+                        {{ resultado.autor === Autor.USUARIO ? 'Você' : 'IA' }} · {{ resultado.createdDate | date: 'dd/MM/yyyy HH:mm' }}
+                      </span>
+                      <span class="chat-seletor__item-texto">{{ resultado.texto }}</span>
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+          </section>
+        } @else {
+          <section class="chat-seletor__secao" aria-label="Conversas do dia">
+            <header class="chat-seletor__secao-cabecalho"><strong>Conversas do dia</strong></header>
+            @if (conversas().length === 0) {
+              <p class="chat-seletor__vazio">Nenhuma conversa ainda.</p>
+            } @else {
+              <ul class="chat-seletor__lista">
+                @for (conversa of conversas(); track conversa.conversaId) {
+                  <li class="chat-seletor__linha">
+                    @if (editandoId() === conversa.conversaId) {
+                      <div class="chat-seletor__edicao">
+                        <input
+                          #campoNome
+                          pInputText
+                          type="text"
+                          class="chat-seletor__edicao-campo"
+                          aria-label="Nome da conversa"
+                          placeholder="Chat do dia…"
+                          [maxlength]="limiteNome"
+                          [formControl]="controleNome"
+                          (keydown.enter)="salvarNome(conversa)"
+                          (keydown.escape)="cancelarEdicao()"
+                          (blur)="salvarNome(conversa)"
+                        />
+                        <span class="chat-seletor__edicao-dica">Enter salva · Esc cancela · em branco volta ao padrão</span>
+                      </div>
+                    } @else {
+                      <button
+                        type="button"
+                        class="chat-seletor__item"
+                        [class.chat-seletor__item--atual]="modo() === Modo.PERGUNTAS && conversa.data === diaAtual()"
+                        [attr.aria-current]="modo() === Modo.PERGUNTAS && conversa.data === diaAtual() ? 'true' : null"
+                        (click)="escolherDia(conversa.data)"
+                      >
+                        <span class="chat-seletor__item-titulo">{{ conversa.titulo }}</span>
+                        <span class="chat-seletor__item-meta">{{ rotuloDoDia(conversa.data, hoje()) }} · {{ conversa.quantidadeDeMensagens }} msg</span>
+                      </button>
+                      <button type="button" class="chat-seletor__renomear" aria-label="Renomear conversa" pTooltip="Renomear" tooltipPosition="left" (click)="iniciarEdicao(conversa)">
+                        <i class="pi pi-pencil"></i>
+                      </button>
+                    }
+                  </li>
+                }
+              </ul>
+            }
+          </section>
+        }
+      }
+    </div>
+  </div>
+</p-popover>

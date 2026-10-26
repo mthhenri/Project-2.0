@@ -1,0 +1,150 @@
+:host {
+  display: block;
+}
+
+.plano-cabecalho {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  &__linha {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  &__titulo {
+    flex: 1;
+    margin: 0;
+    min-width: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+  }
+
+  &__titulo-botao {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    max-width: 100%;
+    padding: 0.125rem 0.375rem;
+    margin-left: -0.375rem;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+
+    span {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    i {
+      flex-shrink: 0;
+      color: var(--p-text-muted-color);
+      font-size: 0.75rem;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+    }
+
+    &:hover,
+    &:focus-visible {
+      background: var(--app-surface-100);
+
+      i {
+        opacity: 1;
+      }
+    }
+  }
+
+  &__campo-titulo {
+    flex: 1;
+    min-width: 0;
+    font-size: 1.0625rem;
+    font-weight: 600;
+  }
+
+  &__acoes {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+  }
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    max-width: 100%;
+    padding: 0.1875rem 0.625rem;
+    border: 1px solid var(--app-surface-200);
+    border-radius: 999px;
+    background: var(--app-surface-50);
+    color: var(--p-text-color);
+    font: inherit;
+    font-size: 0.8125rem;
+
+    i {
+      color: var(--p-text-muted-color);
+      font-size: 0.75rem;
+    }
+
+    &--acao {
+      cursor: pointer;
+
+      &:hover:not(:disabled),
+      &:focus-visible {
+        border-color: var(--p-primary-400);
+        background: var(--app-realce-sutil);
+      }
+
+      &:disabled {
+        cursor: default;
+        opacity: 0.6;
+      }
+    }
+
+    &--pessoal i {
+      color: var(--app-realce-primario);
+    }
+
+    &--aviso {
+      border-color: color-mix(in srgb, var(--p-orange-500) 45%, var(--app-surface-200));
+    }
+  }
+
+  &__solo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.8125rem;
+    cursor: pointer;
+
+    i {
+      color: var(--p-text-muted-color);
+      font-size: 0.75rem;
+    }
+  }
+
+  &__popover {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+    width: 19rem;
+
+    small {
+      color: var(--p-text-muted-color);
+      line-height: 1.35;
+    }
+  }
+}

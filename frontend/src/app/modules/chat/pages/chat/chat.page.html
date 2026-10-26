@@ -1,4 +1,18 @@
 <div class="chat">
+  <app-chat-seletor
+    class="chat__topo"
+    [diaAtual]="diaExibido()"
+    [hoje]="hoje()"
+    [modo]="modo()"
+    [planoAbertoId]="planoAbertoId()"
+    [planoAbertoTitulo]="planoAbertoTitulo()"
+    (diaEscolhido)="abrirDia($event)"
+    (mensagemEscolhida)="abrirMensagem($event)"
+    (planoEscolhido)="abrirPlano($event)"
+    (novoPlano)="criarPlano()"
+  />
+
+  <div #area class="chat__area" [class.chat__area--planejamento]="modo() === Modo.PLANEJAMENTO" [style.--largura-documento]="larguraDocumento() + '%'">
   <div class="chat__principal">
     @if (erro()) {
       <div class="chat__erro" role="alert">
@@ -23,6 +37,7 @@
         </p>
       }
 
+      @if (modo() === Modo.PERGUNTAS) {
       <div class="chat__conversa">
         <div
           #rolagem
@@ -143,9 +158,25 @@
           />
         }
       </div>
+      } @else {
+        <div class="chat__planejamento" role="status">
+          <i class="pi pi-file-edit" aria-hidden="true"></i>
+          <strong>Modo planejamento</strong>
+          <p>O documento fica ao lado e, por enquanto, é escrito à mão. A IA entra na conversa do plano em breve.</p>
+        </div>
+      }
 
-      @if (!somenteLeitura()) {
+      @if (modo() === Modo.PLANEJAMENTO) {
         <div class="chat__rodape">
+          <ng-container [ngTemplateOutlet]="chaveDeModo" />
+          <form class="chat__entrada" (submit)="$event.preventDefault()">
+            <textarea pTextarea class="chat__campo" rows="2" disabled placeholder="A conversa do plano chega em breve" aria-label="Mensagem para a IA"></textarea>
+            <button type="submit" class="chat__enviar" aria-label="Enviar" disabled><i class="pi pi-arrow-right"></i></button>
+          </form>
+        </div>
+      } @else if (!somenteLeitura()) {
+        <div class="chat__rodape">
+          <ng-container [ngTemplateOutlet]="chaveDeModo" />
           @if (podeSugerir() && mensagens().length > 0) {
             <div class="chat__sugestoes" role="group" aria-label="Sugestões de mensagem">
               @for (sugestao of sugestoes(); track sugestao) {
@@ -175,6 +206,7 @@
         </div>
       } @else {
         <div class="chat__rodape">
+          <ng-container [ngTemplateOutlet]="chaveDeModo" />
           <p class="chat__aviso chat__aviso--neutro chat__aviso--leitura" role="status">
             <span class="chat__aviso-texto"><i class="pi pi-calendar"></i>Conversa de {{ diaFormatado() }}, só para leitura.</span>
             <p-button class="chat__aviso-acao" label="Voltar para hoje" icon="pi pi-arrow-right" size="small" [text]="true" (onClick)="voltarParaHoje()" />
@@ -184,10 +216,51 @@
     }
   </div>
 
-  <app-chat-historico
-    [diaAtual]="diaExibido()"
-    [hoje]="hoje()"
-    (diaEscolhido)="abrirDia($event)"
-    (mensagemEscolhida)="abrirMensagem($event)"
-  />
+  @if (modo() === Modo.PLANEJAMENTO) {
+    <div
+      class="chat__divisor"
+      [class.chat__divisor--arrastando]="arrastandoDivisor()"
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="Largura do documento"
+      tabindex="0"
+      [attr.aria-valuenow]="larguraDocumento()"
+      [attr.aria-valuemin]="larguraDoDocumento.minima"
+      [attr.aria-valuemax]="larguraDoDocumento.maxima"
+      (pointerdown)="iniciarArrasto($event)"
+      (pointermove)="aoArrastar($event)"
+      (pointerup)="finalizarArrasto()"
+      (pointercancel)="finalizarArrasto()"
+      (keydown)="aoTeclarNoDivisor($event)"
+    ></div>
+    <div class="chat__documento">
+      @if (planoAbertoId(); as idDoPlano) {
+        <app-plano-documento
+          [planoId]="idDoPlano"
+          (identificado)="aoIdentificarPlano($event)"
+          (mudou)="aoMudarPlano()"
+          (excluido)="aoExcluirPlano()"
+        />
+      } @else {
+        <div class="chat__sem-plano">
+          <i class="pi pi-file-edit" aria-hidden="true"></i>
+          <strong>Nenhum plano aberto</strong>
+          <p>Escolha um plano no seletor do topo ou comece um novo.</p>
+          <p-button label="Novo plano" icon="pi pi-plus" size="small" (onClick)="criarPlano()" />
+        </div>
+      }
+    </div>
+  }
+  </div>
 </div>
+
+<ng-template #chaveDeModo>
+  <div class="chat__modo" role="group" aria-label="Modo do chat">
+    <button type="button" class="chat__modo-opcao" [class.chat__modo-opcao--ativo]="modo() === Modo.PERGUNTAS" [attr.aria-pressed]="modo() === Modo.PERGUNTAS" (click)="trocarModo(Modo.PERGUNTAS)">
+      <i class="pi pi-comments" aria-hidden="true"></i>Perguntas
+    </button>
+    <button type="button" class="chat__modo-opcao" [class.chat__modo-opcao--ativo]="modo() === Modo.PLANEJAMENTO" [attr.aria-pressed]="modo() === Modo.PLANEJAMENTO" (click)="trocarModo(Modo.PLANEJAMENTO)">
+      <i class="pi pi-file-edit" aria-hidden="true"></i>Planejamento
+    </button>
+  </div>
+</ng-template>

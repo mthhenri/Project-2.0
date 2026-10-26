@@ -98,7 +98,7 @@ numeradas de 232 a 237.
 |---|---|---|---|
 | 224 | [Diff por palavra](../done/224-diff-sobreposto-por-palavra.spec.md) | regra pura no `shared` (com teste), componente de exibição, troca no pad e nas propostas que alteram texto; aplicar `gerenciamento-de-impacto` | — |
 | 232 | [Modelo do plano](../done/232-plano-modelo-e-api.spec.md) | migrations, repositories (com teste de integração), service, API, regras de acesso (projeto, demanda, solo, pessoal), arquivar e excluir, ligar demanda | — |
-| 233 | [Tela](233-plano-tela.spec.md) | seletor no topo no lugar do histórico (nos dois modos), chave de modo, divisor arrastável, documento com abas e edição à mão; deixa a lateral livre para a 245 | 232 |
+| 233 | [Tela](../done/233-plano-tela.spec.md) | seletor no topo no lugar do histórico (nos dois modos), chave de modo, divisor arrastável, documento com abas e edição à mão; deixa a lateral livre para a 245 | 232 |
 | 234 | [IA no plano](234-plano-ia.spec.md) | prompts novos (só o administrador edita), conversa do plano no armazenamento do chat, escrita direta no rascunho, edição de trecho com aceitar/rejeitar | 232, 233 (224 desejável) |
 | 235 | [Pontos em aberto](235-plano-pontos-em-aberto.spec.md) | painel de pontos em aberto e decisões registradas | 232, 233, 234 |
 | 236 | [Material de fora](236-plano-material-de-fora.spec.md) | texto colado e arquivo de texto como fonte | 232, 233, 234 |

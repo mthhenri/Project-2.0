@@ -12,6 +12,21 @@
 
 ---
 
+## 2026-10-26 — Task 233: a tela do modo planejamento (seletor no topo, chave de modo, documento ao lado)
+
+Terceira das tasks da guarda-chuva `chat-planejamento.spec.md`. Ainda sem IA: o plano é lido e escrito à mão, sobre a API da 232.
+
+- **Seletor no topo** (`components/seletor`, `app-chat-seletor`) no lugar do histórico lateral (`components/historico` saiu inteiro: componente, estilo e spec; nenhuma referência ficou). Um botão mostra o que está aberto (a conversa do dia ou o plano) e abre um painel com a busca e as listas **Planos** e **Conversas do dia**; **Novo plano** fica sempre ao lado do botão. Tudo o que o histórico fazia migrou: abrir dia anterior (só leitura), busca nas mensagens, renomear a conversa. A busca (Enter) também filtra os planos por título e traz os arquivados. A lateral direita ficou livre para a 245.
+- **Chave de modo** (Perguntas / Planejamento) acima do campo de mensagem, trocável no meio da conversa. Planejamento sem plano aberto abre o mais recente da pessoa ou, sem nenhum, abre a lista com "Novo plano". Em Planejamento a conversa do dia sai e o campo fica desabilitado ("A conversa do plano chega em breve"; a IA no plano é a 234). O aviso de IA desligada continua na coluna da conversa e o documento segue legível e editável.
+- **Documento** (`app-plano-documento` + `app-plano-cabecalho`): cabeçalho com título editável, projeto (ou "Pessoal" + "Atribuir a um projeto"), demanda (ligar e trocar), Solo (só o criador), arquivar e excluir com confirmação; abas descrição técnica, descrição do cliente (só gestor e administrador, pela regra do `shared`) e documentação, no editor de Markdown formatado do sistema. Grava só o que mudou, com a `versao` lida; o 409 mantém o texto na tela e oferece "Recarregar". Ligar demanda e atribuir projeto exigem o documento gravado (relêem o plano). "Novo plano" cria um plano pessoal sem projeto.
+- **Divisor** arrastável (ponteiro) e por teclado (←/→), largura em `localStorage` (`chat.documento.largura`), padrão 50%, de 30% a 70%. Abaixo de 64rem de largura do chat o documento vai para baixo da conversa e o divisor some (container query no `.chat`).
+- **Backend (ajuste na 232):** a gravação sobre versão mais nova passou de `BusinessException` (400) para `ConflictException` (409), que é o que a tela distingue; o teste da service foi atualizado.
+- **Testes:** frontend 2075 (169 arquivos; novos: documento 16, seletor 12, modo Planejamento na página 8, regra do divisor 4; os 5 testes do histórico na página foram reescritos para o painel do seletor). Backend 1435 e `build` do frontend aprovados.
+- **Ao vivo** (administrador, backend e frontend do desenvolvimento): sem plano o seletor abre sozinho; criar plano; escrever e gravar (PUT 200); conflito de versão provocado por fora (aviso e Recarregar); atribuir projeto; ligar demanda (texto já escrito não foi sobrescrito); excluir com confirmação; 1366×768, 1920×1080 e 1080×1920 (empilhado), tema escuro e claro. **Achados só ao vivo:** o título do cabeçalho truncava cedo (o `h2` encolhia), o chip focado ficava com fundo claro e texto invisível no tema escuro (`--p-primary-50`; trocado por `--app-realce-sutil`) e a container query não valia porque o container era o próprio elemento estilizado (agora é o `.chat`).
+- **Limites:** só a visão do administrador foi exercida ao vivo (a do gestor e a do desenvolvedor, só nos testes de componente e na API da 232); o seletor com planos na lista foi visto só nos testes; a "Descrição do cliente" não foi escrita ao vivo. Ao abrir o chat ao vivo a IA deu o bom dia, como sempre faz. Sem lint no projeto (P-001).
+
+---
+
 ## 2026-10-26 — Task 232: o plano como entidade (migration 0059, DTOs, regra de acesso e API)
 
 Segunda das tasks da guarda-chuva `chat-planejamento.spec.md` (a 224 já estava feita). Só modelo e API: sem tela e sem IA.

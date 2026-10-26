@@ -1,0 +1,75 @@
+<section class="plano-documento" aria-label="Documento do plano">
+  @if (carregando() && !plano()) {
+    <div class="plano-documento__esqueleto" aria-busy="true">
+      <p-skeleton height="1.75rem" width="55%" />
+      <p-skeleton height="1.25rem" width="35%" />
+      <p-skeleton height="12rem" />
+    </div>
+  } @else if (erro() || !plano()) {
+    <div class="plano-documento__erro" role="alert">
+      <i class="pi pi-exclamation-triangle"></i>
+      <span>Não foi possível abrir o plano.</span>
+      <p-button label="Tentar de novo" icon="pi pi-refresh" size="small" [outlined]="true" (onClick)="carregar()" />
+    </div>
+  } @else {
+    @let atual = plano()!;
+    <app-plano-cabecalho
+      [plano]="atual"
+      [ocupado]="ocupado()"
+      (tituloAlterado)="alterarTitulo($event)"
+      (soloAlterado)="alterarSolo($event)"
+      (arquivadoAlterado)="alterarArquivo($event)"
+      (projetoAtribuido)="atribuirProjeto($event)"
+      (demandaLigada)="ligarDemanda($event)"
+      (excluido)="excluir()"
+    />
+
+    @if (conflito()) {
+      <p class="plano-documento__aviso" role="alert">
+        <i class="pi pi-exclamation-triangle"></i>
+        <span>Outra pessoa gravou uma versão mais nova deste plano. O que você escreveu continua na tela, mas não foi gravado.</span>
+        <p-button label="Recarregar" icon="pi pi-refresh" size="small" [text]="true" (onClick)="carregar()" />
+      </p>
+    }
+
+    <p-tabs class="plano-documento__abas" [value]="aba()" (valueChange)="escolherAba($any($event))" [scrollable]="false">
+      <p-tablist>
+        @for (opcao of abasVisiveis(); track opcao) {
+          <p-tab [value]="opcao">
+            {{ rotuloAba[opcao] }}
+            @if ((opcao === Aba.DESCRICAO_TECNICA && alterados().tecnica) || (opcao === Aba.DESCRICAO_CLIENTE && alterados().cliente) || (opcao === Aba.DOCUMENTACAO && alterados().documentacao)) {
+              <span class="plano-documento__ponto" aria-label="Alterações sem gravar"></span>
+            }
+          </p-tab>
+        }
+      </p-tablist>
+    </p-tabs>
+
+    <div class="plano-documento__editor">
+      @switch (aba()) {
+        @case (Aba.DESCRICAO_CLIENTE) {
+          <app-markdown-editor [formControl]="controleCliente" [alturaMinima]="16" rotulo="Descrição do cliente" placeholder="Escreva a descrição do cliente…" />
+        }
+        @case (Aba.DOCUMENTACAO) {
+          <app-markdown-editor [formControl]="controleDocumentacao" [alturaMinima]="16" rotulo="Documentação" placeholder="Escreva a documentação…" />
+        }
+        @default {
+          <app-markdown-editor [formControl]="controleTecnica" [alturaMinima]="16" rotulo="Descrição técnica" placeholder="Escreva a descrição técnica…" />
+        }
+      }
+    </div>
+
+    <footer class="plano-documento__rodape">
+      <span class="plano-documento__estado" role="status">
+        @if (salvando()) {
+          Gravando…
+        } @else if (sujo()) {
+          Alterações sem gravar
+        } @else {
+          Tudo gravado
+        }
+      </span>
+      <p-button label="Gravar" icon="pi pi-save" size="small" [disabled]="!sujo() || salvando()" [loading]="salvando()" (onClick)="salvar()" />
+    </footer>
+  }
+</section>

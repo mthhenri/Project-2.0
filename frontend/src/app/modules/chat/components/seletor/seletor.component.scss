@@ -1,68 +1,51 @@
 :host {
   display: block;
   flex-shrink: 0;
-  width: 20rem;
-  min-height: 0;
-  // Abrir e fechar animam a largura, como a barra lateral; o conteúdo mantém a largura aberta e só some por baixo (sem reflow).
-  transition: width 0.15s ease;
 }
 
-:host(.chat-historico--recolhido) {
-  width: 3.75rem;
-}
-
-.chat-historico {
+.chat-seletor {
   display: flex;
-  flex-direction: column;
-  position: relative;
-  gap: 0.75rem;
-  height: 100%;
-  min-height: 0;
-  padding: 0.75rem;
-  border: 1px solid var(--app-surface-200);
-  border-radius: 12px;
-  background: var(--app-surface-0);
-  overflow: hidden;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
 
-  &__cabecalho {
-    display: flex;
+  &__gatilho {
+    display: inline-flex;
     align-items: center;
-    justify-content: space-between;
     gap: 0.5rem;
-  }
-
-  // Recolhido: o nome na vertical, para a faixa dizer o que é sem precisar abrir.
-  &__rotulo-vertical {
-    position: absolute;
-    top: 4rem;
-    left: 50%;
-    transform: translateX(-50%);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.15s ease;
-    color: var(--p-text-muted-color);
-    font-size: 0.8125rem;
+    min-width: 0;
+    max-width: min(28rem, 100%);
+    padding: 0.4375rem 0.75rem;
+    border: 1px solid var(--app-surface-200);
+    border-radius: 8px;
+    background: var(--app-surface-0);
+    color: var(--p-text-color);
+    font: inherit;
     font-weight: 600;
-    letter-spacing: 0.04em;
-    writing-mode: vertical-rl;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--p-primary-400);
+    }
   }
 
-  &__titulo {
-    max-width: 10rem;
+  &__gatilho-texto {
     overflow: hidden;
-    font-size: 0.9375rem;
+    text-overflow: ellipsis;
     white-space: nowrap;
-    transition: max-width 0.15s ease, margin-right 0.15s ease, opacity 0.15s ease;
   }
 
-  &__conteudo {
+  &__gatilho-seta {
+    color: var(--p-text-muted-color);
+    font-size: 0.75rem;
+  }
+
+  &__painel {
     display: flex;
-    flex: 1;
     flex-direction: column;
     gap: 0.75rem;
-    min-height: 0;
-    min-width: 18.25rem;
-    transition: opacity 0.15s ease, visibility 0.15s;
+    width: min(26rem, 80vw);
   }
 
   &__busca {
@@ -84,9 +67,17 @@
   }
 
   &__corpo {
-    flex: 1;
-    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-height: min(26rem, 60vh);
     overflow-y: auto;
+  }
+
+  &__secao {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
   }
 
   &__secao-cabecalho {
@@ -212,32 +203,5 @@
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow-wrap: anywhere;
-  }
-}
-
-:host(.chat-historico--recolhido) .chat-historico {
-  &__conteudo {
-    opacity: 0;
-    visibility: hidden;
-  }
-
-  // Recolhido o título cede o lugar ao botão, que é o que sobra visível na faixa.
-  &__titulo {
-    max-width: 0;
-    margin-right: -0.5rem;
-    opacity: 0;
-  }
-
-  &__rotulo-vertical {
-    opacity: 1;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  :host,
-  .chat-historico__titulo,
-  .chat-historico__conteudo,
-  .chat-historico__rotulo-vertical {
-    transition: none;
   }
 }

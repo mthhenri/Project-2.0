@@ -43,9 +43,17 @@ async function montarChat(opcoes: OpcoesMontagem = {}): Promise<Montado> {
   const montado = await montarComponente(ChatPage, { usuario: opcoes.usuario ?? TipoUsuarioEnum.DESENVOLVEDOR });
   responderSucesso(esperarRequisicao(montado.http, 'GET', '/chat/hoje'), { conversaId: CONVERSA_DE_HOJE, mensagens: opcoes.mensagens ?? [] });
   responderSucesso(esperarRequisicao(montado.http, 'GET', '/chat/conversas'), { conversas: opcoes.conversas ?? [] });
+  responderSucesso(esperarRequisicao(montado.http, 'GET', '/plano'), []);
   responderSucesso(esperarRequisicao(montado.http, 'GET', '/ia/disponibilidade'), { estado: opcoes.estado ?? EstadoIaEnum.NO_AR });
   await montado.atualizar();
   return montado;
+}
+
+/** O seletor do topo abre num painel (overlay no `body`): clica no botão e devolve o painel. */
+async function abrirSeletor(montado: Montado): Promise<HTMLElement> {
+  montado.elemento.querySelector<HTMLButtonElement>('[aria-label="Abrir conversas e planos"]')!.click();
+  await montado.atualizar();
+  return document.body.querySelector<HTMLElement>('.chat-seletor__painel')!;
 }
 
 /** Responde o que o envio e o fim deixam pendente (estado da IA e lista do histórico, relidos a cada resposta). */
@@ -732,6 +740,7 @@ describe('ChatPage — retomada após queda da IA', () => {
     const montado = await montarComponente(ChatPage, { usuario: TipoUsuarioEnum.DESENVOLVEDOR });
     responderSucesso(esperarRequisicao(montado.http, 'GET', '/chat/hoje'), { conversaId: CONVERSA_DE_HOJE, mensagens: [DELA('Oi'), DA_IA('Olá!')] });
     responderSucesso(esperarRequisicao(montado.http, 'GET', '/chat/conversas'), { conversas: [] });
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/plano'), []);
     responderSucesso(esperarRequisicao(montado.http, 'GET', '/ia/disponibilidade'), { estado: EstadoIaEnum.NO_AR });
     await montado.atualizar();
 
@@ -760,7 +769,8 @@ describe('ChatPage — histórico: abrir um dia anterior', () => {
 
   async function abrirOntem(): Promise<Montado> {
     const montado = await montarChat({ mensagens: [DELA('Oi de hoje'), DA_IA('Olá de hoje!')], conversas: CONVERSAS });
-    Array.from(montado.elemento.querySelectorAll<HTMLButtonElement>('aside button')).find((item) => item.textContent?.includes('Conversa de ontem'))!.click();
+    const painel = await abrirSeletor(montado);
+    Array.from(painel.querySelectorAll<HTMLButtonElement>('button')).find((item) => item.textContent?.includes('Conversa de ontem'))!.click();
     responderSucesso(esperarRequisicao(montado.http, 'GET', `/chat/conversa/${ONTEM}`), {
       conversaId: `1-${ONTEM}`,
       mensagens: [DELA('Falei ontem', { conversaId: `1-${ONTEM}` }), DA_IA('Respondi ontem', { conversaId: `1-${ONTEM}` })],
@@ -796,7 +806,8 @@ describe('ChatPage — histórico: abrir um dia anterior', () => {
   it('escolher o dia de hoje na lista volta à conversa viva (sem abrir "dia anterior")', async () => {
     const montado = await montarChat({ mensagens: [DELA('Oi de hoje'), DA_IA('Olá de hoje!')], conversas: CONVERSAS });
 
-    Array.from(montado.elemento.querySelectorAll<HTMLButtonElement>('aside button')).find((item) => item.textContent?.includes('Conversa de hoje'))!.click();
+    const painel = await abrirSeletor(montado);
+    Array.from(painel.querySelectorAll<HTMLButtonElement>('button')).find((item) => item.textContent?.includes('Conversa de hoje'))!.click();
     await montado.atualizar();
 
     montado.http.expectNone((requisicao) => requisicao.url.includes('/chat/conversa/'));
@@ -807,7 +818,8 @@ describe('ChatPage — histórico: abrir um dia anterior', () => {
     const montado = await montarChat({ mensagens: [DELA('Oi de hoje'), DA_IA('Olá de hoje!')], conversas: CONVERSAS });
     const avisos = avisosDe(montado);
 
-    Array.from(montado.elemento.querySelectorAll<HTMLButtonElement>('aside button')).find((item) => item.textContent?.includes('Conversa de ontem'))!.click();
+    const painel = await abrirSeletor(montado);
+    Array.from(painel.querySelectorAll<HTMLButtonElement>('button')).find((item) => item.textContent?.includes('Conversa de ontem'))!.click();
     esperarRequisicao(montado.http, 'GET', `/chat/conversa/${ONTEM}`).flush({ mensagem: 'falhou' }, { status: 500, statusText: 'Erro' });
     await montado.atualizar();
 
@@ -817,16 +829,18 @@ describe('ChatPage — histórico: abrir um dia anterior', () => {
 
   it('um resultado da busca abre o dia da mensagem e rola até ela', async () => {
     const montado = await montarChat({ mensagens: [DELA('Oi de hoje'), DA_IA('Olá de hoje!')], conversas: CONVERSAS });
-    const campoBusca = montado.elemento.querySelector<HTMLInputElement>('[aria-label="Buscar nas minhas conversas"]')!;
+    const painel = await abrirSeletor(montado);
+    const campoBusca = painel.querySelector<HTMLInputElement>('[aria-label="Buscar em conversas e planos"]')!;
     campoBusca.value = 'ontem';
     campoBusca.dispatchEvent(new Event('input'));
     campoBusca.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
     await montado.atualizar();
     const achada = DELA('Falei ontem', { id: 'm-achada', conversaId: `1-${ONTEM}` });
     responderSucesso(esperarRequisicao(montado.http, 'GET', '/chat/busca'), { mensagens: [achada] });
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/plano'), []);
     await montado.atualizar();
 
-    Array.from(montado.elemento.querySelectorAll<HTMLButtonElement>('aside li button'))[0].click();
+    Array.from(painel.querySelectorAll<HTMLButtonElement>('section[aria-label="Mensagens encontradas"] li button'))[0].click();
     responderSucesso(esperarRequisicao(montado.http, 'GET', `/chat/conversa/${ONTEM}`), { conversaId: `1-${ONTEM}`, mensagens: [achada] });
     await montado.atualizar();
     await new Promise((resolver) => setTimeout(resolver, 80));
@@ -852,5 +866,129 @@ describe('ChatPage — copiar', () => {
     montado.elemento.querySelector<HTMLButtonElement>('[aria-label="Copiar a mensagem"]')!.click();
     await montado.atualizar();
     expect(avisos.at(-1)).toMatchObject({ severity: 'warn', detail: 'Não foi possível copiar' });
+  });
+});
+
+describe('ChatPage — modo Planejamento (task 233)', () => {
+  const PLANO = {
+    id: 7, titulo: 'Plano da semana', projetoId: 10, projetoNome: 'Projeto Demo', demandaId: null, demandaNome: null, publicacaoData: null,
+    criadorId: 1, criadorNome: 'Eu', isSolo: false, isArquivado: false, descricaoTecnica: 'Texto técnico', documentacao: null,
+    versao: 3, createdDate: '2026-10-20T12:00:00.000Z', updatedDate: '2026-10-21T12:00:00.000Z',
+  };
+  const RESUMO = { id: 7, titulo: 'Plano da semana', projetoId: 10, projetoNome: 'Projeto Demo', demandaId: null, demandaNome: null, criadorId: 1, criadorNome: 'Eu', isSolo: false, isArquivado: false, updatedDate: '2026-10-21T12:00:00.000Z' };
+
+  const chave = (montado: Montado, rotulo: string) =>
+    Array.from(montado.elemento.querySelectorAll<HTMLButtonElement>('.chat__modo-opcao')).find((item) => item.textContent?.includes(rotulo))!;
+  const divisor = (montado: Montado) => montado.elemento.querySelector<HTMLElement>('[role="separator"]');
+
+  /** Troca para Planejamento e responde o que a troca pede (a lista de planos e o plano mais recente). */
+  async function entrarEmPlanejamento(montado: Montado): Promise<void> {
+    chave(montado, 'Planejamento').click();
+    await responderListas(montado, [RESUMO]);
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/plano/7'), PLANO);
+    await montado.atualizar();
+  }
+
+  /** Responde as leituras da lista de planos que estiverem pendentes (a da troca de modo e a do seletor, relido ao fim do bom dia). */
+  async function responderListas(montado: Montado, planos: unknown[]): Promise<void> {
+    for (const pedido of montado.http.match((requisicao) => requisicao.method === 'GET' && requisicao.url.endsWith('/plano'))) responderSucesso(pedido, planos);
+    for (const pedido of montado.http.match((requisicao) => requisicao.url.endsWith('/chat/conversas'))) responderSucesso(pedido, { conversas: [] });
+    await montado.atualizar();
+  }
+
+  it('abre em Perguntas: sem documento nem divisor, e a chave de modo está no campo de mensagem', async () => {
+    const montado = await montarChat();
+
+    expect(chave(montado, 'Perguntas').getAttribute('aria-pressed')).toBe('true');
+    expect(chave(montado, 'Planejamento').getAttribute('aria-pressed')).toBe('false');
+    expect(divisor(montado)).toBeNull();
+    expect(montado.elemento.querySelector('app-plano-documento')).toBeNull();
+  });
+
+  it('Planejamento abre o último plano da pessoa, com o documento e o divisor ao lado', async () => {
+    const montado = await montarChat();
+
+    await entrarEmPlanejamento(montado);
+
+    expect(montado.elemento.querySelector('app-plano-documento')).not.toBeNull();
+    expect(divisor(montado)).not.toBeNull();
+    expect(texto(montado)).toContain('Modo planejamento');
+    expect(montado.elemento.querySelector('.chat-seletor__gatilho-texto')?.textContent).toBe('Plano da semana');
+  });
+
+  it('em Planejamento a conversa do dia não aparece e o campo de mensagem fica desabilitado', async () => {
+    const montado = await montarChat({ mensagens: [DELA('Oi de hoje'), DA_IA('Olá de hoje!')] });
+
+    await entrarEmPlanejamento(montado);
+
+    expect(montado.elemento.querySelector('[role="log"]')).toBeNull();
+    expect(montado.elemento.querySelector<HTMLTextAreaElement>('textarea')!.disabled).toBe(true);
+  });
+
+  it('sem nenhum plano, Planejamento mostra "Nenhum plano aberto" e Novo plano cria um plano pessoal e o abre', async () => {
+    const montado = await montarChat();
+
+    chave(montado, 'Planejamento').click();
+    await responderListas(montado, []);
+    expect(texto(montado)).toContain('Nenhum plano aberto');
+
+    Array.from(montado.elemento.querySelectorAll<HTMLButtonElement>('.chat__sem-plano button')).find((item) => item.textContent?.includes('Novo plano'))!.click();
+    const criacao = esperarRequisicao(montado.http, 'POST', '/plano');
+    expect(criacao.request.body).toEqual({});
+    responderSucesso(criacao, { id: 8, titulo: 'Plano sem título', projetoId: null, demandaId: null, isSolo: false, versao: 1 });
+    await montado.atualizar();
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/plano/8'), { ...PLANO, id: 8, titulo: 'Plano sem título', projetoId: null, projetoNome: null });
+    await responderListas(montado, []);
+
+    expect(texto(montado)).toContain('Pessoal');
+    expect(montado.elemento.querySelector('.chat-seletor__gatilho-texto')?.textContent).toBe('Plano sem título');
+  });
+
+  it('voltar para Perguntas devolve a conversa do dia e tira o documento', async () => {
+    const montado = await montarChat({ mensagens: [DELA('Oi de hoje'), DA_IA('Olá de hoje!')] });
+    await entrarEmPlanejamento(montado);
+
+    chave(montado, 'Perguntas').click();
+    await montado.atualizar();
+
+    expect(conversaDa(montado)).toContain('Olá de hoje!');
+    expect(montado.elemento.querySelector('app-plano-documento')).toBeNull();
+    expect(campo(montado)).not.toBeNull();
+  });
+
+  it('o divisor muda a largura do documento pelo teclado, respeita os limites e a lembra', async () => {
+    const montado = await montarChat();
+    await entrarEmPlanejamento(montado);
+
+    expect(divisor(montado)!.getAttribute('aria-valuenow')).toBe('50');
+    divisor(montado)!.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft' }));
+    divisor(montado)!.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft' }));
+    await montado.atualizar();
+
+    expect(divisor(montado)!.getAttribute('aria-valuenow')).toBe('54');
+    expect(localStorage.getItem('chat.documento.largura')).toBe('54');
+    for (let vezes = 0; vezes < 20; vezes++) divisor(montado)!.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft' }));
+    await montado.atualizar();
+    expect(divisor(montado)!.getAttribute('aria-valuenow')).toBe('70');
+  });
+
+  it('a largura guardada é a de partida', async () => {
+    const montado = await montarComponente(ChatPage, { usuario: TipoUsuarioEnum.DESENVOLVEDOR, armazenamento: { 'chat.documento.largura': '40' } });
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/chat/hoje'), { conversaId: CONVERSA_DE_HOJE, mensagens: [] });
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/chat/conversas'), { conversas: [] });
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/plano'), []);
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/ia/disponibilidade'), { estado: EstadoIaEnum.NO_AR });
+    await montado.atualizar();
+
+    expect(montado.componente.larguraDocumento()).toBe(40);
+  });
+
+  it('a IA desligada não impede abrir e ler o plano: o aviso fica na conversa e o documento aparece', async () => {
+    const montado = await montarChat({ estado: EstadoIaEnum.DESLIGADA });
+
+    await entrarEmPlanejamento(montado);
+
+    expect(texto(montado)).toContain('A IA está desligada');
+    expect(montado.elemento.querySelector('app-plano-documento')).not.toBeNull();
   });
 });

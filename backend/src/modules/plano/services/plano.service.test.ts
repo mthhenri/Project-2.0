@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
 import { PlanoService } from './plano.service';
+import { ConflictException } from '../../../core/exceptions/conflict.exception';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
 import { UnauthorizedAccessException } from '../../../core/exceptions/unauthorized-access.exception';
@@ -133,9 +134,9 @@ test('alterar: grava com a versão lida e devolve a versão nova', async () => {
   assert.deepEqual(chamadas.find((chamada) => chamada.metodo === 'alterar')?.argumento, { id: 7, versao: 3, documentacao: 'Novo' });
 });
 
-test('alterar: gravação sobre versão mais nova é recusada com BusinessException', async () => {
+test('alterar: gravação sobre versão mais nova é recusada com ConflictException (409)', async () => {
   const { servico } = criarServico({ comAcessoAoProjeto: [2], alterarDevolve: null });
-  await assert.rejects(() => servico.alterar({ id: 7, versao: 2, documentacao: 'Velho' }, COLEGA_DEV), BusinessException);
+  await assert.rejects(() => servico.alterar({ id: 7, versao: 2, documentacao: 'Velho' }, COLEGA_DEV), ConflictException);
 });
 
 test('alterar: desenvolvedor não grava a descrição do cliente; gestor grava', async () => {
@@ -255,7 +256,7 @@ test('ligarDemanda: versão do plano mudou no meio do caminho — recusa e não 
     demanda: demandaBase({ descricaoTecnica: 'Texto' }),
     alterarDevolve: null,
   });
-  await assert.rejects(() => servico.ligarDemanda({ id: 7, demandaId: 20 }, GESTOR), BusinessException);
+  await assert.rejects(() => servico.ligarDemanda({ id: 7, demandaId: 20 }, GESTOR), ConflictException);
   assert.deepEqual(metodos(chamadas), ['alterar']);
 });
 

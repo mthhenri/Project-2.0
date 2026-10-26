@@ -4,6 +4,7 @@ import { DemandaRepository } from '../../demanda/repositories/demanda.repository
 import { ProjetoRepository } from '../../projeto/repositories/projeto.repository';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { BusinessException } from '../../../core/exceptions/business.exception';
+import { ConflictException } from '../../../core/exceptions/conflict.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
 import { UnauthorizedAccessException } from '../../../core/exceptions/unauthorized-access.exception';
 import {
@@ -121,7 +122,7 @@ export class PlanoService {
     }
 
     const planoAlterado = await this.planoRepositorio.alterar(dto);
-    if (!planoAlterado) throw new BusinessException(MENSAGEM_VERSAO_MAIS_NOVA);
+    if (!planoAlterado) throw new ConflictException(MENSAGEM_VERSAO_MAIS_NOVA);
 
     return { sucesso: true, dados: planoAlterado, mensagem: 'Plano alterado com sucesso' };
   }
@@ -220,7 +221,7 @@ export class PlanoService {
         ...(textos.descricaoCliente !== null && { descricaoCliente: textos.descricaoCliente }),
         ...(textos.documentacao !== null && { documentacao: textos.documentacao }),
       });
-      if (!planoPreenchido) throw new BusinessException(MENSAGEM_VERSAO_MAIS_NOVA);
+      if (!planoPreenchido) throw new ConflictException(MENSAGEM_VERSAO_MAIS_NOVA);
       versao = planoPreenchido.versao;
     }
 

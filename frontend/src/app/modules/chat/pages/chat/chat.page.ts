@@ -1,5 +1,5 @@
 import { Component, ElementRef, OnInit, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { DatePipe, NgTemplateOutlet } from '@angular/common';
 import { Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -12,11 +12,14 @@ import { AutorChatEnum, ChatEventoDto, ChatMensagemResumoDto, EstadoIaEnum, Nive
 import { IaDisponibilidadeService } from '../../../../core/services/ia-disponibilidade.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
-import { HistoricoComponent, MensagemDoHistorico } from '../../components/historico/historico.component';
+import { PlanoDocumentoComponent } from '../../components/plano-documento/plano-documento.component';
 import { PropostaCartaoComponent } from '../../components/proposta-cartao/proposta-cartao.component';
 import { PropostaGrupoComponent } from '../../components/proposta-grupo/proposta-grupo.component';
+import { MensagemDoSeletor, SeletorComponent } from '../../components/seletor/seletor.component';
 import { ChatService, ErroDoChat } from '../../services/chat.service';
+import { PlanoService } from '../../services/plano.service';
 import { dataDaConversa, ROTULO_NIVEL, sugestoesAposProposta, sugestoesIniciais } from '../../utils/chat.util';
+import { LARGURA_DO_DOCUMENTO, larguraDoDocumentoPeloPonteiro, limitarLarguraDoDocumento, ModoDoChatEnum } from '../../utils/plano.util';
 
 /** Uma mensagem como a tela a mostra: as da conversa do dia mais as locais (otimistas), com os cartões de proposta ligados a ela. */
 interface MensagemNaTela {
@@ -70,7 +73,9 @@ const JANELA_DA_INTERACAO_MS = 400;
     MarkdownVisualizadorComponent,
     PropostaCartaoComponent,
     PropostaGrupoComponent,
-    HistoricoComponent,
+    SeletorComponent,
+    PlanoDocumentoComponent,
+    NgTemplateOutlet,
   ],
   templateUrl: './chat.page.html',
   styleUrl: './chat.page.scss',
@@ -83,12 +88,23 @@ export class ChatPage implements OnInit {
   private readonly areaDeRolagem = viewChild<ElementRef<HTMLElement>>('rolagem');
   private readonly fluxo = viewChild<ElementRef<HTMLElement>>('fluxo');
   private readonly campoDeTexto = viewChild<ElementRef<HTMLTextAreaElement>>('campoTexto');
-  private readonly historico = viewChild(HistoricoComponent);
+  private readonly seletor = viewChild(SeletorComponent);
+  private readonly areaDoChat = viewChild<ElementRef<HTMLElement>>('area');
+  private readonly planoService = inject(PlanoService);
 
   readonly Autor = AutorChatEnum;
   readonly Estado = EstadoIaEnum;
+  readonly Modo = ModoDoChatEnum;
+  readonly larguraDoDocumento = LARGURA_DO_DOCUMENTO;
   readonly rotuloNivel = ROTULO_NIVEL;
 
+  /** Perguntas é o chat de hoje; Planejamento abre o documento do plano ao lado (task 233). */
+  readonly modo = signal<ModoDoChatEnum>(ModoDoChatEnum.PERGUNTAS);
+  readonly planoAbertoId = signal<number | null>(null);
+  readonly planoAbertoTitulo = signal<string | null>(null);
+  /** Parte do espaço (%) que o documento ocupa; a pessoa a escolhe arrastando o divisor e o valor fica lembrado. */
+  readonly larguraDocumento = signal(this.lerLarguraDoDocumento());
+  readonly arrastandoDivisor = signal(false);
   readonly carregando = signal(true);
   readonly jaCarregou = signal(false);
   readonly erro = signal(false);
@@ -261,7 +277,7 @@ export class ChatPage implements OnInit {
       this.aoVivo.set(null);
       this.enviando.set(false);
       // A conversa pode ter ganhado nome (dado pela IA ao fim da primeira resposta do dia) e ela entra na lista se era a primeira.
-      this.historico()?.recarregar();
+      this.seletor()?.recarregar();
       // O campo volta a ser habilitado na próxima detecção de mudanças; só então recebe o foco.
       setTimeout(() => this.campoDeTexto()?.nativeElement.focus(), 50);
     }
@@ -316,7 +332,7 @@ export class ChatPage implements OnInit {
     } finally {
       this.aoVivo.set(null);
       this.enviando.set(false);
-      this.historico()?.recarregar();
+      this.seletor()?.recarregar();
     }
   }
 
@@ -355,6 +371,7 @@ export class ChatPage implements OnInit {
 
   /** Abre um dia da lista do histórico: hoje volta à conversa viva; os outros abrem só para leitura. */
   abrirDia(data: string, mensagemId?: string): void {
+    this.modo.set(ModoDoChatEnum.PERGUNTAS);
     if (data === this.hoje()) {
       this.voltarParaHoje(mensagemId);
       return;
@@ -381,8 +398,111 @@ export class ChatPage implements OnInit {
     this.carregar(mensagemId);
   }
 
-  abrirMensagem(escolhida: MensagemDoHistorico): void {
+  abrirMensagem(escolhida: MensagemDoSeletor): void {
     this.abrirDia(escolhida.data, escolhida.mensagemId);
+  }
+
+  /** Troca de modo no meio da conversa. Sem plano aberto, Planejamento abre o último em andamento ou, sem nenhum, a lista com "Novo plano". */
+  trocarModo(modo: ModoDoChatEnum): void {
+    if (this.modo() === modo) return;
+    this.modo.set(modo);
+    if (modo === ModoDoChatEnum.PLANEJAMENTO && this.planoAbertoId() === null) this.abrirUltimoPlano();
+  }
+
+  abrirPlano(id: number): void {
+    this.modo.set(ModoDoChatEnum.PLANEJAMENTO);
+    this.planoAbertoId.set(id);
+  }
+
+  /** O plano aberto foi lido ou renomeado: o botão do seletor mostra o título dele. */
+  aoIdentificarPlano(plano: { id: number; titulo: string }): void {
+    if (plano.id === this.planoAbertoId()) this.planoAbertoTitulo.set(plano.titulo);
+  }
+
+  /** Qualquer mudança no plano (título, projeto, demanda, solo, arquivo) muda a linha dele na lista. */
+  aoMudarPlano(): void {
+    this.seletor()?.recarregar();
+  }
+
+  aoExcluirPlano(): void {
+    this.planoAbertoId.set(null);
+    this.planoAbertoTitulo.set(null);
+    this.seletor()?.recarregar();
+  }
+
+  /** "Novo plano" cria um plano pessoal (sem projeto); o projeto e a demanda vêm depois, no cabeçalho do plano. */
+  criarPlano(): void {
+    this.planoService.criar({}).subscribe({
+      next: (resposta) => {
+        if (!resposta.dados) return;
+        this.planoAbertoTitulo.set(resposta.dados.titulo);
+        this.abrirPlano(resposta.dados.id);
+        this.seletor()?.recarregar();
+      },
+      error: (falha) =>
+        this.messageService.add({ severity: 'warn', summary: 'Plano', detail: falha?.error?.mensagem ?? 'Não foi possível criar o plano' }),
+    });
+  }
+
+  /** Começa a arrastar o divisor entre a conversa e o documento. */
+  iniciarArrasto(evento: PointerEvent): void {
+    evento.preventDefault();
+    (evento.currentTarget as HTMLElement).setPointerCapture?.(evento.pointerId);
+    this.arrastandoDivisor.set(true);
+  }
+
+  aoArrastar(evento: PointerEvent): void {
+    if (!this.arrastandoDivisor()) return;
+    const area = this.areaDoChat()?.nativeElement.getBoundingClientRect();
+    if (!area) return;
+    this.larguraDocumento.set(larguraDoDocumentoPeloPonteiro(evento.clientX, area.left, area.width));
+  }
+
+  finalizarArrasto(): void {
+    if (!this.arrastandoDivisor()) return;
+    this.arrastandoDivisor.set(false);
+    this.guardarLarguraDoDocumento();
+  }
+
+  /** Setas ajustam o divisor pelo teclado: ← aumenta o documento, → diminui. */
+  aoTeclarNoDivisor(evento: KeyboardEvent): void {
+    const passo = evento.key === 'ArrowLeft' ? LARGURA_DO_DOCUMENTO.passoDoTeclado : evento.key === 'ArrowRight' ? -LARGURA_DO_DOCUMENTO.passoDoTeclado : 0;
+    if (passo === 0) return;
+    evento.preventDefault();
+    this.larguraDocumento.update((atual) => limitarLarguraDoDocumento(atual + passo));
+    this.guardarLarguraDoDocumento();
+  }
+
+  private abrirUltimoPlano(): void {
+    this.planoService.listar().subscribe({
+      next: (resposta) => {
+        const ultimo = resposta.dados?.[0];
+        if (ultimo) {
+          this.planoAbertoTitulo.set(ultimo.titulo);
+          this.planoAbertoId.set(ultimo.id);
+        } else {
+          setTimeout(() => this.seletor()?.abrir());
+        }
+      },
+      error: () => setTimeout(() => this.seletor()?.abrir()),
+    });
+  }
+
+  private lerLarguraDoDocumento(): number {
+    try {
+      const guardada = localStorage.getItem('chat.documento.largura');
+      return guardada === null ? LARGURA_DO_DOCUMENTO.padrao : limitarLarguraDoDocumento(Number(guardada));
+    } catch {
+      return LARGURA_DO_DOCUMENTO.padrao;
+    }
+  }
+
+  private guardarLarguraDoDocumento(): void {
+    try {
+      localStorage.setItem('chat.documento.largura', String(this.larguraDocumento()));
+    } catch {
+      // Sem armazenamento (janela privada, dados bloqueados): o divisor funciona, só não lembra.
+    }
   }
 
   async copiar(texto: string): Promise<void> {

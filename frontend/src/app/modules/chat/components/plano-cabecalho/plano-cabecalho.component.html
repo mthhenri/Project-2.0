@@ -1,0 +1,124 @@
+<header class="plano-cabecalho">
+  <div class="plano-cabecalho__linha">
+    @if (editandoTitulo()) {
+      <input
+        #campoTitulo
+        pInputText
+        type="text"
+        class="plano-cabecalho__campo-titulo"
+        aria-label="Título do plano"
+        maxlength="255"
+        [formControl]="controleTitulo"
+        (keydown.enter)="confirmarTitulo()"
+        (keydown.escape)="cancelarEdicaoDoTitulo()"
+        (blur)="confirmarTitulo()"
+      />
+    } @else {
+      <h2 class="plano-cabecalho__titulo">
+        <button type="button" class="plano-cabecalho__titulo-botao" pTooltip="Renomear o plano" tooltipPosition="bottom" (click)="iniciarEdicaoDoTitulo()">
+          <span>{{ plano().titulo }}</span>
+          <i class="pi pi-pencil" aria-hidden="true"></i>
+        </button>
+      </h2>
+    }
+
+    <div class="plano-cabecalho__acoes">
+      <p-button
+        [icon]="plano().isArquivado ? 'pi pi-inbox' : 'pi pi-box'"
+        [text]="true"
+        severity="secondary"
+        size="small"
+        [disabled]="ocupado()"
+        [ariaLabel]="plano().isArquivado ? 'Desarquivar o plano' : 'Arquivar o plano'"
+        [pTooltip]="plano().isArquivado ? 'Desarquivar' : 'Arquivar'"
+        tooltipPosition="bottom"
+        (onClick)="arquivadoAlterado.emit(!plano().isArquivado)"
+      />
+      <p-button
+        icon="pi pi-trash"
+        [text]="true"
+        severity="danger"
+        size="small"
+        [disabled]="ocupado()"
+        ariaLabel="Excluir o plano"
+        pTooltip="Excluir"
+        tooltipPosition="bottom"
+        (onClick)="confirmarExclusao($event)"
+      />
+    </div>
+  </div>
+
+  <div class="plano-cabecalho__chips">
+    @if (ePessoal()) {
+      <span class="plano-cabecalho__chip plano-cabecalho__chip--pessoal" pTooltip="Só você vê este plano até atribuí-lo a um projeto" tooltipPosition="bottom">
+        <i class="pi pi-user" aria-hidden="true"></i>Pessoal
+      </span>
+      @if (eCriador()) {
+        <p-button label="Atribuir a um projeto" icon="pi pi-folder" size="small" [text]="true" [disabled]="ocupado()" (onClick)="abrirProjetos($event)" />
+      }
+    } @else {
+      <span class="plano-cabecalho__chip"><i class="pi pi-folder" aria-hidden="true"></i>{{ plano().projetoNome }}</span>
+      <button type="button" class="plano-cabecalho__chip plano-cabecalho__chip--acao" [disabled]="ocupado()" (click)="abrirDemandas($event)">
+        <i class="pi pi-link" aria-hidden="true"></i>
+        {{ plano().demandaNome ? plano().demandaNome : 'Ligar a uma demanda' }}
+      </button>
+      @if (eCriador()) {
+        <label class="plano-cabecalho__solo">
+          <input
+            type="checkbox"
+            [checked]="plano().isSolo"
+            [disabled]="ocupado()"
+            (change)="soloAlterado.emit(!plano().isSolo)"
+          />
+          <span>Solo</span>
+          <i class="pi pi-info-circle" aria-hidden="true" pTooltip="Só você vê e edita este plano; os outros do projeto não o veem." tooltipPosition="bottom"></i>
+        </label>
+      } @else if (plano().isSolo) {
+        <span class="plano-cabecalho__chip"><i class="pi pi-lock" aria-hidden="true"></i>Solo</span>
+      }
+    }
+    @if (plano().isArquivado) {
+      <span class="plano-cabecalho__chip plano-cabecalho__chip--aviso"><i class="pi pi-box" aria-hidden="true"></i>Arquivado</span>
+    }
+  </div>
+</header>
+
+<p-popover #popoverProjeto>
+  <div class="plano-cabecalho__popover">
+    <strong>Atribuir a um projeto</strong>
+    <p-select
+      [options]="projetos()"
+      optionLabel="nome"
+      optionValue="id"
+      placeholder="Escolha o projeto"
+      ariaLabel="Projeto do plano"
+      [loading]="carregandoOpcoes()"
+      [formControl]="controleProjeto"
+      appendTo="body"
+    />
+    <small>O rascunho, a conversa e as fontes passam a ser vistos por quem tem acesso ao projeto, e o plano não volta a ser pessoal.</small>
+    <p-button label="Atribuir" size="small" [disabled]="controleProjeto.value === null" (onClick)="atribuirProjeto()" />
+  </div>
+</p-popover>
+
+<p-popover #popoverDemanda>
+  <div class="plano-cabecalho__popover">
+    <strong>Demanda do plano</strong>
+    <p-select
+      [options]="demandas()"
+      optionLabel="caminho"
+      optionValue="id"
+      placeholder="Escolha a demanda"
+      ariaLabel="Demanda do plano"
+      [filter]="true"
+      filterBy="caminho"
+      [loading]="carregandoOpcoes()"
+      [formControl]="controleDemanda"
+      appendTo="body"
+    />
+    <small>As abas vazias do plano começam com o texto atual da demanda; as já escritas não são sobrescritas.</small>
+    <p-button label="Ligar" size="small" [disabled]="controleDemanda.value === null || controleDemanda.value === plano().demandaId" (onClick)="ligarDemanda()" />
+  </div>
+</p-popover>
+
+<p-confirmpopup />
