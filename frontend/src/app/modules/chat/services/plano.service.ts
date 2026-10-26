@@ -9,11 +9,15 @@ import {
   PlanoCriarDto,
   PlanoDemandaLigadaDto,
   PlanoListarDto,
+  PlanoPontoCriadoDto,
+  PlanoPontoResumoDto,
+  PlanoPontoSituacaoAlteradaDto,
   PlanoProjetoAtribuidoDto,
   PlanoRecuperadoDto,
   PlanoResumoDto,
   PlanoSoloMarcadoDto,
   StandardResponse,
+  TipoPlanoPontoSituacaoEnum,
 } from '@project20/shared';
 import { ambiente } from '../../../../environments/environment';
 import { comFeedbackProprio, comFeedbackProprioEErroTratado } from '../../../core/interceptors/loading.interceptor';
@@ -64,6 +68,24 @@ export class PlanoService {
     return this.httpClient.patch<StandardResponse<PlanoProjetoAtribuidoDto>>(
       `${this.urlBase}/${id}/projeto`,
       { projetoId, confirmado: true },
+      comFeedbackProprioEErroTratado(),
+    );
+  }
+
+  /** Os pontos em aberto do plano (task 235): abertos primeiro. */
+  listarPontos(planoId: number): Observable<StandardResponse<PlanoPontoResumoDto[]>> {
+    return this.httpClient.get<StandardResponse<PlanoPontoResumoDto[]>>(`${this.urlBase}/${planoId}/ponto`, comFeedbackProprio());
+  }
+
+  criarPonto(planoId: number, rotulo: string, texto: string): Observable<StandardResponse<PlanoPontoCriadoDto>> {
+    return this.httpClient.post<StandardResponse<PlanoPontoCriadoDto>>(`${this.urlBase}/${planoId}/ponto`, { rotulo, texto }, comFeedbackProprioEErroTratado());
+  }
+
+  /** Resolve, dispensa, registra a decisão ou reabre; `resolucaoTexto` é a resposta, o motivo ou a decisão. */
+  alterarSituacaoDoPonto(planoId: number, pontoId: number, situacao: TipoPlanoPontoSituacaoEnum, resolucaoTexto?: string): Observable<StandardResponse<PlanoPontoSituacaoAlteradaDto>> {
+    return this.httpClient.patch<StandardResponse<PlanoPontoSituacaoAlteradaDto>>(
+      `${this.urlBase}/${planoId}/ponto/${pontoId}/situacao`,
+      { situacao, ...(resolucaoTexto ? { resolucaoTexto } : {}) },
       comFeedbackProprioEErroTratado(),
     );
   }

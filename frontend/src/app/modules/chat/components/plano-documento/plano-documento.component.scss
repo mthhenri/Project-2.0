@@ -15,6 +15,8 @@
   border: 1px solid var(--app-surface-200);
   border-radius: 12px;
   background: var(--app-surface-0);
+  // A largura do cartão decide se os pontos ficam numa coluna ao lado ou acima do texto.
+  container-type: inline-size;
 
   &__esqueleto {
     display: flex;
@@ -43,6 +45,29 @@
     span {
       flex: 1;
     }
+  }
+
+  // O texto (abas e editor) e, ao lado dele, a coluna dos pontos em aberto; em cartão estreito os pontos vão para cima do texto.
+  &__miolo {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 0.75rem;
+    min-height: 0;
+  }
+
+  &__texto {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 0.75rem;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  &__lateral {
+    --pontos-altura-maxima: 12rem;
+    flex-shrink: 0;
   }
 
   &__abas {
@@ -109,5 +134,18 @@
     font-size: 0.8125rem;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
+  }
+}
+
+@container (min-width: 44rem) {
+  .plano-documento__miolo {
+    flex-direction: row;
+  }
+
+  .plano-documento__lateral {
+    --pontos-altura-maxima: 100%;
+    order: 2;
+    width: 17rem;
+    min-height: 0;
   }
 }

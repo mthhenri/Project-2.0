@@ -32,6 +32,12 @@
       </p>
     }
 
+    <div class="plano-documento__miolo">
+    <aside class="plano-documento__lateral" aria-label="Pontos em aberto">
+      <app-plano-pontos [planoId]="atual.id" />
+    </aside>
+
+    <div class="plano-documento__texto">
     <p-tabs class="plano-documento__abas" [value]="aba()" (valueChange)="escolherAba($any($event))" [scrollable]="false">
       <p-tablist>
         @for (opcao of abasVisiveis(); track opcao) {
@@ -57,6 +63,9 @@
           <app-markdown-editor [formControl]="controleTecnica" [alturaMinima]="16" rotulo="Descrição técnica" placeholder="Escreva a descrição técnica…" [emitirMenuContexto]="podePedirIa()" (aoMenuContexto)="abrirPedidoDeAlteracao($event)" />
         }
       }
+    </div>
+
+    </div>
     </div>
 
     <footer class="plano-documento__rodape">

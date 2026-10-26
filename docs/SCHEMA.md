@@ -729,6 +729,9 @@ Quem vê: plano amplo e plano solo, só o criador; plano de projeto, quem tem ac
 #### `plano_demanda`
 Ligação do plano com a demanda para a qual ele publica: `plano_id` e `demanda_id` (FKs) e `publicacao_data` (`TIMESTAMPTZ`, anulável: ligado e ainda não publicado). Índice único parcial em (`plano_id`, `demanda_id`) com `is_deleted = false`. A service admite **uma** linha ativa por plano (a tabela já admite várias, para o projeto futuro "plano que vira várias demandas"). Demanda excluída deixa o plano sem demanda (a leitura só junta demanda ativa).
 
+#### `plano_ponto` — pontos em aberto do plano (migration `0061`, task 235)
+`plano_id` (FK), `rotulo` (`VARCHAR(60)`, **texto livre** escolhido pela IA ou pela pessoa: nada valida contra lista), `texto`, `tipo_plano_ponto_situacao_id` (FK para a tabela de referência `tipo_plano_ponto_situacao`: `ABERTO`, `RESOLVIDO`, `DISPENSADO`, `DECISAO`) e `resolucao_texto` (anulável: a resposta, o motivo de dispensar ou a decisão). Índice parcial em `plano_id`. Reabrir volta a `ABERTO` e apaga a resolução. `plano_fonte` entra na task 236.
+
 ### Tabelas de referência (enums) — migration `20240025`
 
 Todo enum de domínio fechado é uma **tabela de referência** `tipo_<tabela>_<complemento?>`

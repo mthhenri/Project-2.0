@@ -1,0 +1,97 @@
+<section class="plano-pontos" aria-label="Pontos em aberto do plano">
+  <header class="plano-pontos__cabecalho">
+    <button
+      type="button"
+      class="plano-pontos__titulo"
+      [attr.aria-expanded]="aberto()"
+      (click)="aberto.set(!aberto())"
+    >
+      <i class="pi" [class.pi-chevron-down]="aberto()" [class.pi-chevron-right]="!aberto()" aria-hidden="true"></i>
+      <strong>Pontos em aberto</strong>
+      <span class="plano-pontos__contagem" [class.plano-pontos__contagem--zero]="abertos().length === 0">{{ abertos().length }}</span>
+    </button>
+    @if (aberto()) {
+      <p-button label="Anotar" icon="pi pi-plus" size="small" [text]="true" (onClick)="alternarAnotacao()" />
+    }
+  </header>
+
+  @if (aberto()) {
+    @if (anotando()) {
+      <form class="plano-pontos__anotacao" (submit)="$event.preventDefault(); anotar()">
+        <input pInputText type="text" maxlength="60" aria-label="Rótulo do ponto" placeholder="Rótulo (ex.: Pergunta, Risco)" [formControl]="controleRotulo" />
+        <textarea pTextarea rows="2" maxlength="4000" aria-label="Texto do ponto" placeholder="O que ficou em aberto?" [formControl]="controleTexto"></textarea>
+        <div class="plano-pontos__acoes">
+          <p-button label="Cancelar" size="small" [text]="true" severity="secondary" (onClick)="alternarAnotacao()" />
+          <p-button type="submit" label="Anotar" size="small" [disabled]="controleTexto.value.trim() === '' || ocupado()" />
+        </div>
+      </form>
+    }
+
+    @if (carregando()) {
+      <div class="plano-pontos__esqueleto" aria-busy="true"><p-skeleton height="2.25rem" /><p-skeleton height="2.25rem" /></div>
+    } @else if (erro()) {
+      <p class="plano-pontos__vazio" role="alert">
+        Não foi possível carregar os pontos.
+        <p-button label="Tentar de novo" size="small" [text]="true" (onClick)="recarregar()" />
+      </p>
+    } @else {
+      @if (abertos().length === 0) {
+        <p class="plano-pontos__vazio">Nenhum ponto em aberto. A IA anota aqui o que identificar e você também pode anotar.</p>
+      }
+      <ul class="plano-pontos__lista">
+        @for (ponto of abertos(); track ponto.id) {
+          <li class="plano-pontos__ponto">
+            <div class="plano-pontos__linha">
+              <span class="plano-pontos__rotulo">{{ ponto.rotulo }}</span>
+              <span class="plano-pontos__texto">{{ ponto.texto }}</span>
+            </div>
+            @if (tratando(); as atual) {
+              @if (atual.pontoId === ponto.id) {
+                <form class="plano-pontos__tratamento" (submit)="$event.preventDefault(); confirmarTratamento()">
+                  <textarea pTextarea rows="2" maxlength="4000" [attr.aria-label]="rotuloDoCampoTratado()" [placeholder]="rotuloDoCampoTratado()" [formControl]="controleResolucao"></textarea>
+                  <div class="plano-pontos__acoes">
+                    <p-button label="Cancelar" size="small" [text]="true" severity="secondary" (onClick)="cancelarTratamento()" />
+                    <p-button type="submit" label="Confirmar" size="small" [disabled]="ocupado() || (precisaDeTexto() && controleResolucao.value.trim() === '')" />
+                  </div>
+                </form>
+              }
+            }
+            @if (tratando()?.pontoId !== ponto.id) {
+              <div class="plano-pontos__acoes">
+                <p-button label="Resolver" size="small" [text]="true" [disabled]="ocupado()" (onClick)="tratar(ponto, Situacao.RESOLVIDO)" />
+                <p-button label="Decisão" size="small" [text]="true" [disabled]="ocupado()" (onClick)="tratar(ponto, Situacao.DECISAO)" />
+                <p-button label="Dispensar" size="small" [text]="true" severity="secondary" [disabled]="ocupado()" (onClick)="tratar(ponto, Situacao.DISPENSADO)" />
+              </div>
+            }
+          </li>
+        }
+      </ul>
+
+      @if (fechados().length > 0) {
+        <button type="button" class="plano-pontos__alternar" [attr.aria-expanded]="fechadosVisiveis()" (click)="fechadosVisiveis.set(!fechadosVisiveis())">
+          <i class="pi" [class.pi-chevron-down]="fechadosVisiveis()" [class.pi-chevron-right]="!fechadosVisiveis()" aria-hidden="true"></i>
+          Resolvidos, dispensados e decisões ({{ fechados().length }})
+        </button>
+        @if (fechadosVisiveis()) {
+          <ul class="plano-pontos__lista plano-pontos__lista--fechados">
+            @for (ponto of fechados(); track ponto.id) {
+              <li class="plano-pontos__ponto plano-pontos__ponto--fechado">
+                <div class="plano-pontos__linha">
+                  <span class="plano-pontos__situacao" [class.plano-pontos__situacao--decisao]="ponto.situacao === Situacao.DECISAO">{{ rotuloDaSituacao[ponto.situacao] }}</span>
+                  <span class="plano-pontos__rotulo">{{ ponto.rotulo }}</span>
+                  <span class="plano-pontos__texto">{{ ponto.texto }}</span>
+                </div>
+                @if (ponto.resolucaoTexto) {
+                  <p class="plano-pontos__resolucao">{{ ponto.resolucaoTexto }}</p>
+                }
+                <div class="plano-pontos__acoes">
+                  <p-button label="Reabrir" size="small" [text]="true" severity="secondary" [disabled]="ocupado()" (onClick)="reabrir(ponto)" />
+                </div>
+              </li>
+            }
+          </ul>
+        }
+      }
+    }
+  }
+</section>

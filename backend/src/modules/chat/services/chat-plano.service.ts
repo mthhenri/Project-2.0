@@ -9,13 +9,16 @@ import {
   PlanoAbaEnum,
   PlanoConversaRecuperadaDto,
   PlanoRecuperadoDto,
+  PlanoPontoResumoDto,
   PlanoRecuperarDto,
   podeVerAbaDoPlano,
   StandardResponse,
+  TipoPlanoPontoSituacaoEnum,
   TipoPromptEnum,
   TipoUsuarioEnum,
 } from '@project20/shared';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
+import { PlanoPontoService } from '../../plano/services/plano-ponto.service';
 import { PlanoService } from '../../plano/services/plano.service';
 import { PromptService } from '../../prompt/services/prompt.service';
 import { UsuarioRepository } from '../../usuario/repositories/usuario.repository';
@@ -27,6 +30,14 @@ import { ChatService } from './chat.service';
 export const MAXIMO_TOKENS_DO_PLANEJAMENTO = 8192;
 /** O quanto de cada aba entra nas instruções; o resto a IA lê com `consultar_plano`. */
 export const LIMITE_CARACTERES_DA_ABA_NO_CONTEXTO = 20_000;
+
+/**
+ * Como a IA usa os pontos em aberto do plano (task 235). Fica no código, não no prompt editável, porque depende das ferramentas: o administrador
+ * muda o estilo da conversa sem desligar o painel.
+ */
+export const ORIENTACAO_DOS_PONTOS =
+  'Pontos em aberto: anote no painel do plano, com anotar_ponto_em_aberto, o que identificar e não estiver resolvido (pergunta sem resposta, lacuna, suposição, peso demais, contradição, dependência, risco, fora do escopo), com um rótulo livre e curto. ' +
+  'Não repita um ponto que já está aberto. Quando a pessoa responder a um ponto, feche-o com resolver_ponto_do_plano (RESOLVIDO, com a resposta) e escreva essa resposta no documento com escrever_no_plano. Se ela disser que não importa, use DISPENSADO (com o motivo, se ela deu) e, se ficou decidido algo que vale registrar, DECISAO.';
 
 const PROMPT_DA_ABA: Record<PlanoAbaEnum, TipoPromptEnum> = {
   [PlanoAbaEnum.DESCRICAO_TECNICA]: TipoPromptEnum.PLANO_DESCRICAO_TECNICA,
@@ -54,6 +65,7 @@ export class ChatPlanoService {
     private readonly planoService: PlanoService,
     private readonly promptService: PromptService,
     private readonly usuarioRepositorio: UsuarioRepository,
+    private readonly planoPontoService: PlanoPontoService,
   ) {}
 
   /** As mensagens do plano, de todos, em ordem, com o nome de quem escreveu. */
@@ -100,10 +112,13 @@ export class ChatPlanoService {
     const comoEscrever: string[] = [];
     for (const aba of abas) comoEscrever.push(`${ROTULO_DA_ABA[aba]}:\n${(await this.promptService.obterAtivo(PROMPT_DA_ABA[aba])).conteudo}`);
 
+    const pontos = (await this.planoPontoService.listar({ planoId: plano.id }, usuarioAtivo)).dados ?? [];
     return [
       prompt.conteudo,
       `Como escrever cada texto:\n\n${comoEscrever.join('\n\n')}`,
+      ORIENTACAO_DOS_PONTOS,
       this.descreverPlano(plano, abas, usuarioAtivo, autores),
+      this.descreverPontos(pontos),
     ].join('\n\n');
   }
 
@@ -124,6 +139,15 @@ export class ChatPlanoService {
       return `### ${ROTULO_DA_ABA[aba]}\n${corpo}`;
     });
     return `${cabecalho.join('\n')}\n\n${textos.join('\n\n')}`;
+  }
+
+  /** Os pontos abertos (com o id, para a IA fechá-los) e quantos já foram fechados. */
+  private descreverPontos(pontos: PlanoPontoResumoDto[]): string {
+    const abertos = pontos.filter((ponto) => ponto.situacao === TipoPlanoPontoSituacaoEnum.ABERTO);
+    const fechados = pontos.length - abertos.length;
+    const linhas = abertos.map((ponto) => `- [id ${ponto.id}] ${ponto.rotulo}: ${ponto.texto}`);
+    const resumo = `${abertos.length}${fechados > 0 ? `; ${fechados} já fechados` : ''}`;
+    return `Pontos em aberto agora (${resumo}):\n${linhas.length > 0 ? linhas.join('\n') : '(nenhum)'}`;
   }
 
   private textoDaAba(plano: PlanoRecuperadoDto, aba: PlanoAbaEnum): string {

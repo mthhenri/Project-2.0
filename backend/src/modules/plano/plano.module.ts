@@ -2,6 +2,9 @@ import { Module, OnModuleInit } from '@nestjs/common';
 import { PlanoController } from './controllers/plano.controller';
 import { PlanoService } from './services/plano.service';
 import { PlanoRepository } from './repositories/plano.repository';
+import { PlanoPontoRepository } from './repositories/plano-ponto.repository';
+import { PlanoPontoService } from './services/plano-ponto.service';
+import { AnotarPontoEmAbertoFerramenta, ListarPontosDoPlanoFerramenta, ResolverPontoDoPlanoFerramenta } from './ferramentas/pontos-do-plano.ferramentas';
 import { DemandaModule } from '../demanda/demanda.module';
 import { ProjetoModule } from '../projeto/projeto.module';
 import { FerramentaIaModule } from '../ferramenta-ia/ferramenta-ia.module';
@@ -19,12 +22,17 @@ import { AlterarTrechoDoPlanoExecutor } from './executores/alterar-trecho-do-pla
   providers:   [
     PlanoService,
     PlanoRepository,
+    PlanoPontoRepository,
+    PlanoPontoService,
+    AnotarPontoEmAbertoFerramenta,
+    ResolverPontoDoPlanoFerramenta,
+    ListarPontosDoPlanoFerramenta,
     ConsultarPlanoFerramenta,
     EscreverNoPlanoFerramenta,
     ProporAlterarTrechoDoPlanoFerramenta,
     AlterarTrechoDoPlanoExecutor,
   ],
-  exports:     [PlanoService, PlanoRepository],
+  exports:     [PlanoService, PlanoRepository, PlanoPontoService],
 })
 export class PlanoModule implements OnModuleInit {
   constructor(
@@ -34,6 +42,9 @@ export class PlanoModule implements OnModuleInit {
     private readonly escreverNoPlano: EscreverNoPlanoFerramenta,
     private readonly proporAlterarTrecho: ProporAlterarTrechoDoPlanoFerramenta,
     private readonly alterarTrechoExecutor: AlterarTrechoDoPlanoExecutor,
+    private readonly anotarPonto: AnotarPontoEmAbertoFerramenta,
+    private readonly resolverPonto: ResolverPontoDoPlanoFerramenta,
+    private readonly listarPontos: ListarPontosDoPlanoFerramenta,
   ) {}
 
   /** As ferramentas do planejamento (só a conversa do plano as vê) e o executor da alteração de trecho se registram aqui. */
@@ -42,5 +53,8 @@ export class PlanoModule implements OnModuleInit {
     this.registroDeFerramentas.registrar(this.escreverNoPlano);
     this.registroDeFerramentas.registrar(this.proporAlterarTrecho);
     this.registroDeExecutores.registrar(this.alterarTrechoExecutor);
+    this.registroDeFerramentas.registrar(this.anotarPonto);
+    this.registroDeFerramentas.registrar(this.resolverPonto);
+    this.registroDeFerramentas.registrar(this.listarPontos);
   }
 }

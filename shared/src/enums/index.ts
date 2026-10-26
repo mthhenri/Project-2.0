@@ -26,3 +26,4 @@ export * from './trecho-diff-tipo.enum';
 export * from './proposta-ia-grupo-situacao.enum';
 export * from './proposta-ia-nivel.enum';
 export * from './plano-aba.enum';
+export * from './tipo-plano-ponto-situacao.enum';

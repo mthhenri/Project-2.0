@@ -2,13 +2,14 @@ import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
 import { AutorChatEnum, ContextoChatEnum, NivelIaEnum, TipoPromptEnum, TipoUsuarioEnum } from '@project20/shared';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
+import { PlanoPontoService } from '../../plano/services/plano-ponto.service';
 import { PlanoService } from '../../plano/services/plano.service';
 import { PromptService } from '../../prompt/services/prompt.service';
 import { UsuarioRepository } from '../../usuario/repositories/usuario.repository';
 import { ChatMensagemLida, ChatMensagemNova, deFonte, paraFonte } from '../domain/chat-mensagem.documento';
 import { ArmazenamentoDeChat } from '../repositories/armazenamento-de-chat';
 import { OpcoesDeConversa } from './chat.service';
-import { ChatPlanoService, LIMITE_CARACTERES_DA_ABA_NO_CONTEXTO, MAXIMO_TOKENS_DO_PLANEJAMENTO } from './chat-plano.service';
+import { ChatPlanoService, LIMITE_CARACTERES_DA_ABA_NO_CONTEXTO, MAXIMO_TOKENS_DO_PLANEJAMENTO, ORIENTACAO_DOS_PONTOS } from './chat-plano.service';
 
 // Conversa do planejamento (task 234): leitura sem dono, acesso pelo plano, instruções por quem fala e o nome de quem disse o quê.
 
@@ -21,7 +22,7 @@ function mensagem(usuarioId: number, autor: AutorChatEnum, texto: string): ChatM
   return { conversaId: 'plano-7', usuarioId, contexto: ContextoChatEnum.PLANEJAMENTO, autor, texto };
 }
 
-function criarServico(opcoes: { historico?: ChatMensagemNova[]; semAcesso?: boolean; plano?: Record<string, unknown> } = {}) {
+function criarServico(opcoes: { historico?: ChatMensagemNova[]; semAcesso?: boolean; plano?: Record<string, unknown>; pontos?: Array<Record<string, unknown>> } = {}) {
   const lidas: ChatMensagemLida[] = (opcoes.historico ?? []).map((nova, indice) => deFonte(paraFonte(nova, `m${indice}`, new Date(1_000 * indice))));
   const consultas: unknown[] = [];
   const armazenamento = {
@@ -53,6 +54,7 @@ function criarServico(opcoes: { historico?: ChatMensagemNova[]; semAcesso?: bool
     planoService as unknown as PlanoService,
     promptService as unknown as PromptService,
     usuarioRepositorio as unknown as UsuarioRepository,
+    { listar: async () => ({ dados: opcoes.pontos ?? [] }) } as unknown as PlanoPontoService,
   );
   return { servico, consultas, enviadas };
 }
@@ -144,4 +146,23 @@ test('com duas pessoas na conversa o modelo lê o nome de quem falou; com uma s�
   const uma = criarServico({ historico: [mensagem(1, AutorChatEnum.USUARIO, 'Oi')] });
   await uma.servico.enviarMensagem({ id: 7 }, { texto: 'x' }, DESENVOLVEDOR, () => undefined);
   assert.equal(uma.enviadas[0].opcoes.rotularMensagemDoUsuario!(lida(1, 'Oi')), 'Oi');
+});
+
+test('as instruções trazem a orientação dos pontos e os pontos abertos com o id, contando os já fechados (task 235)', async () => {
+  const ponto = (id: number, situacao: string, rotulo = 'Lacuna', texto = 'Falta definir quem exporta') => ({ id, situacao, rotulo, texto });
+  const { servico, enviadas } = criarServico({ pontos: [ponto(4, 'ABERTO'), ponto(5, 'RESOLVIDO', 'Pergunta', 'Qual o formato?'), ponto(6, 'DECISAO', 'Decisão', 'PDF')] });
+  await servico.enviarMensagem({ id: 7 }, { texto: 'Oi' }, DESENVOLVEDOR, () => undefined);
+
+  const instrucoes = await enviadas[0].opcoes.montarInstrucoes!();
+
+  assert.ok(instrucoes.includes(ORIENTACAO_DOS_PONTOS));
+  assert.ok(instrucoes.includes('Pontos em aberto agora (1; 2 já fechados):'));
+  assert.ok(instrucoes.includes('- [id 4] Lacuna: Falta definir quem exporta'));
+  assert.equal(instrucoes.includes('Qual o formato?'), false, 'os fechados não entram na lista');
+});
+
+test('sem pontos, as instruções dizem que não há nenhum (task 235)', async () => {
+  const { servico, enviadas } = criarServico();
+  await servico.enviarMensagem({ id: 7 }, { texto: 'Oi' }, DESENVOLVEDOR, () => undefined);
+  assert.ok((await enviadas[0].opcoes.montarInstrucoes!()).includes('Pontos em aberto agora (0):\n(nenhum)'));
 });

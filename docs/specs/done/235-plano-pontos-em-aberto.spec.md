@@ -1,6 +1,6 @@
 # 235-plano-pontos-em-aberto.spec.md
 
-> Task 5/7 da guarda-chuva [`chat-planejamento.spec.md`](chat-planejamento.spec.md): painel de pontos em aberto e decisões registradas
+> Task 5/7 da guarda-chuva [`chat-planejamento.spec.md`](../backlog/chat-planejamento.spec.md): painel de pontos em aberto e decisões registradas
 > ao lado do documento.
 
 ## Objetivo
@@ -41,3 +41,8 @@ Estrutura rígida de tipos de ponto; notificação de ponto novo; pontos fora do
 ## Pontos em aberto (o autor confirma ao abrir a task)
 
 - Se pontos abertos aparecem no aviso de publicar (237). Padrão proposto: sim, como lembrete, sem bloquear.
+
+## Resultado (fechamento, 2026-10-26)
+
+O painel ficou numa **coluna ao lado** do documento (acima das abas só em cartão estreito, menos de 44rem). A orientação das ferramentas ficou no código, não no prompt versionado. "Pontos abertos no aviso de publicar" segue para a 237.
+Relato, testes e limites em `docs/context/HISTORY.md` (bloco de 2026-10-26, task 235).

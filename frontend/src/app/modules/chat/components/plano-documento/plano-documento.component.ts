@@ -15,6 +15,7 @@ import { MarkdownEditorComponent, MenuContextoEditorEvento } from '../../../../s
 import { PlanoService } from '../../services/plano.service';
 import { ROTULO_ABA_DO_PLANO } from '../../utils/plano.util';
 import { PlanoCabecalhoComponent } from '../plano-cabecalho/plano-cabecalho.component';
+import { PlanoPontosComponent } from '../plano-pontos/plano-pontos.component';
 
 /** O que mudou no plano e o seletor precisa saber (título, projeto, demanda, solo, arquivo); `excluido` tira o plano da tela. */
 export type MudancaDoPlano = 'titulo' | 'projeto' | 'demanda' | 'solo' | 'arquivo' | 'texto';
@@ -37,7 +38,7 @@ const AVISO_DE_ALTERACAO_DA_IA = 'A IA alterou o documento. O que você escreveu
 @Component({
   selector: 'app-plano-documento',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonModule, PopoverModule, SkeletonModule, TabsModule, TextareaModule, MarkdownEditorComponent, PlanoCabecalhoComponent],
+  imports: [ReactiveFormsModule, ButtonModule, PopoverModule, SkeletonModule, TabsModule, TextareaModule, MarkdownEditorComponent, PlanoCabecalhoComponent, PlanoPontosComponent],
   templateUrl: './plano-documento.component.html',
   styleUrl: './plano-documento.component.scss',
 })
@@ -71,6 +72,7 @@ export class PlanoDocumentoComponent {
   readonly trechoSelecionado = signal<{ aba: PlanoAbaEnum; texto: string } | null>(null);
   readonly controlePedido = new FormControl<string>('', { nonNullable: true });
   private readonly popoverDoPedido = viewChild<Popover>('popoverPedido');
+  private readonly painelDePontos = viewChild(PlanoPontosComponent);
   readonly aba = signal<PlanoAbaEnum>(PlanoAbaEnum.DESCRICAO_TECNICA);
 
   readonly controleTecnica = new FormControl<string>('', { nonNullable: true });
@@ -149,6 +151,11 @@ export class PlanoDocumentoComponent {
   recarregarDepoisDaIa(): void {
     if (this.sujo()) this.aviso.set(AVISO_DE_ALTERACAO_DA_IA);
     else this.carregar();
+  }
+
+  /** A IA anotou ou fechou um ponto (task 235): o painel se relê. */
+  recarregarPontos(): void {
+    this.painelDePontos()?.recarregar();
   }
 
   /** Botão direito sobre um trecho selecionado: abre o pedido de alteração à IA (task 234). */

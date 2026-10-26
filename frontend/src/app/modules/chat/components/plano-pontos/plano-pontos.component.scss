@@ -1,0 +1,162 @@
+:host {
+  display: block;
+  flex-shrink: 0;
+  height: 100%;
+}
+
+.plano-pontos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: var(--pontos-altura-maxima, 16rem);
+  height: 100%;
+  padding: 0.5rem 0.75rem;
+  overflow-y: auto;
+  border: 1px solid var(--app-surface-200);
+  border-radius: 8px;
+  background: var(--app-surface-50);
+
+  &__cabecalho {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  &__titulo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--p-text-color);
+    font: inherit;
+    cursor: pointer;
+
+    i {
+      color: var(--p-text-muted-color);
+      font-size: 0.75rem;
+    }
+  }
+
+  &__contagem {
+    min-width: 1.25rem;
+    padding: 0 0.375rem;
+    border-radius: 999px;
+    background: var(--p-orange-500);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-align: center;
+
+    &--zero {
+      background: var(--app-surface-300);
+      color: var(--p-text-muted-color);
+    }
+  }
+
+  &__vazio {
+    margin: 0;
+    color: var(--p-text-muted-color);
+    font-size: 0.8125rem;
+  }
+
+  &__esqueleto,
+  &__anotacao,
+  &__tratamento {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__lista {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__ponto {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.5rem 0.625rem;
+    border: 1px solid var(--app-surface-200);
+    border-radius: 6px;
+    background: var(--app-surface-0);
+
+    &--fechado {
+      opacity: 0.85;
+    }
+  }
+
+  &__linha {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.375rem 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  &__rotulo {
+    padding: 0.0625rem 0.5rem;
+    border-radius: 999px;
+    background: var(--app-realce-sutil);
+    color: var(--app-realce-primario);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  &__situacao {
+    color: var(--p-text-muted-color);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+
+    &--decisao {
+      color: var(--p-green-500);
+    }
+  }
+
+  &__texto {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  &__resolucao {
+    margin: 0;
+    padding-left: 0.625rem;
+    border-left: 2px solid var(--app-surface-300);
+    color: var(--p-text-muted-color);
+    font-size: 0.8125rem;
+    overflow-wrap: anywhere;
+  }
+
+  &__acoes {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.25rem;
+  }
+
+  &__alternar {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--p-text-muted-color);
+    font: inherit;
+    font-size: 0.8125rem;
+    cursor: pointer;
+
+    i {
+      font-size: 0.6875rem;
+    }
+  }
+}

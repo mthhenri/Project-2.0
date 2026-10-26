@@ -1090,4 +1090,23 @@ describe('ChatPage — modo Planejamento (task 233)', () => {
     await montado.componente.enviar('Oi');
     expect(enviarMensagemEspiao).not.toHaveBeenCalled();
   });
+
+  it('a IA anotar ou fechar um ponto relê o painel de pontos, sem reler o documento (task 235)', async () => {
+    const montado = await montarChat();
+    await entrarEmPlanejamento(montado);
+    const fluxo = controlarFluxo(enviarMensagemEspiao, 1);
+    await enviarPeloTeclado(montado, 'O que ficou em aberto?');
+    const pedidosDePontos = () => montado.http.match((requisicao) => requisicao.method === 'GET' && requisicao.url.endsWith('/plano/7/ponto'));
+    pedidosDePontos();
+
+    fluxo.emitir({ tipo: 'ferramenta', nome: 'anotar_ponto_em_aberto', situacao: 'CONCLUIDA' });
+    fluxo.emitir({ tipo: 'ferramenta', nome: 'resolver_ponto_do_plano', situacao: 'EXECUTANDO' });
+
+    expect(pedidosDePontos()).toHaveLength(1);
+    montado.http.expectNone((requisicao) => requisicao.method === 'GET' && requisicao.url.endsWith('/plano/7') && !requisicao.url.includes('/chat/'));
+    expect(montado.elemento.querySelector('app-plano-pontos')).not.toBeNull();
+    fluxo.terminar();
+    await montado.atualizar();
+    responderPendentes(montado);
+  });
 });

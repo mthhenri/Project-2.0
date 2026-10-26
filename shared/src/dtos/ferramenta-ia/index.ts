@@ -52,3 +52,5 @@ export * from './PlanoConsultarDto';
 export * from './PlanoEscreverDto';
 export * from './ProporAlterarTrechoPlanoDto';
 export * from './PropostaAlterarTrechoPlanoDadosDto';
+export * from './PlanoPontoAnotarDto';
+export * from './PlanoPontoResolverDto';

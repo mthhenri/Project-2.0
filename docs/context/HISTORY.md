@@ -12,6 +12,19 @@
 
 ---
 
+## 2026-10-26 — Task 235: os pontos em aberto do plano (painel, API e ferramentas da IA)
+
+Quinta das tasks da guarda-chuva `chat-planejamento.spec.md`. A IA anota o que fica em aberto no plano, a resposta no chat fecha o ponto e o texto entra no documento, e a pessoa também cria, resolve, dispensa, registra decisão e reabre à mão.
+
+- **Banco (migration `0061`):** `tipo_plano_ponto_situacao` (`ABERTO`, `RESOLVIDO`, `DISPENSADO`, `DECISAO`; `TipoPlanoPontoSituacaoEnum`) e `plano_ponto` (`rotulo` de texto **livre**, `texto`, `resolucao_texto`). O teste que confere "toda tabela `tipo_*` tem enum" ganhou a entrada. `docs/SCHEMA.md` atualizado.
+- **Backend (módulo `plano`):** `PlanoPontoRepository`, `PlanoPontoService` (acesso = o do plano, solo e amplo valem; `RESOLVIDO` e `DECISAO` exigem o texto; reabrir apaga a resolução; ponto de outro plano é 404) e as rotas `GET/POST /plano/:id/ponto` e `PATCH /plano/:id/ponto/:pontoId/situacao`. Ferramentas só do planejamento: `anotar_ponto_em_aberto`, `resolver_ponto_do_plano` (não reabre) e `listar_pontos_do_plano`. **A orientação de uso fica no código** (`ORIENTACAO_DOS_PONTOS` em `ChatPlanoService`), não no prompt `PLANEJAMENTO`: o prompt é versionado e editável, e a 234 já o semeou; assim o administrador muda o estilo sem desligar o painel. Os pontos abertos, com o id, entram nas instruções de cada resposta.
+- **Frontend:** `app-plano-pontos`, coluna **ao lado do documento** (17rem; em cartão com menos de 44rem de largura, como em 1366×768, vira uma faixa recolhível acima das abas; abertos primeiro, resolvidos, dispensados e decisões numa seção recolhível, anotar, resolver, decisão, dispensar com motivo opcional, reabrir; estados de esqueleto, vazio e erro). A IA anotar ou fechar um ponto (evento da ferramenta) relê o painel sem reler o documento.
+- **Testes:** `shared` 263; backend unitário 1480 (service 5, ferramentas 4, instruções 2, mais os da 234) e integração 337 com o contrato ligado (4 do repository); frontend 2101 (painel 12, página 1). Builds aprovados.
+- **Ao vivo** (IA real, administrador no navegador, 1366×768, escuro): a IA anotou três pontos ("Pergunta") sem escrever nas abas; ao responder um no chat, ela o fechou como `RESOLVIDO` com a resposta e escreveu quem pode cancelar na descrição técnica; dispensei outro pela tela com motivo, e a seção dos fechados mostrou a resolução e o Reabrir.
+- **Decisões e limites:** (1) o painel fica numa coluna ao lado do documento, como a spec diz; só em cartão estreito (container query de 44rem) ele sobe para cima das abas, para não estreitar o editor. (2) A decisão manual e o Reabrir pela tela foram cobertos por teste de componente, não ao vivo. (3) A coluna foi vista ao vivo em 1920×1080 (tema claro) e a faixa empilhada medida em 1366×768; 1080×1920 não foi refeito. (4) "Pontos abertos no aviso de publicar" (ponto da spec) fica para a 237. (5) Sem lint no projeto (P-001).
+
+---
+
 ## 2026-10-26 — Task 234: a IA no plano (conversa do plano, escrita no rascunho e alteração de trecho)
 
 Quarta das tasks da guarda-chuva `chat-planejamento.spec.md`. A conversa do planejamento deixa de ser um aviso: a IA pergunta antes de escrever, escreve direto no rascunho e altera só o trecho que a pessoa seleciona, com cartão de aceitar ou rejeitar.

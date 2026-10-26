@@ -592,6 +592,8 @@ export class ChatPage implements OnInit {
         this.aoVivo.update((atual) => atual && { ...atual, ferramenta: evento.situacao === 'EXECUTANDO' ? evento.nome : null });
         // A IA escreveu no rascunho: o documento se relê (sem pisar no que a pessoa ainda não gravou).
         if (this.destinoDaResposta === 'PLANO' && evento.nome === 'escrever_no_plano' && evento.situacao === 'CONCLUIDA') this.documento()?.recarregarDepoisDaIa();
+        // A IA anotou ou fechou um ponto em aberto: o painel se relê.
+        if (this.destinoDaResposta === 'PLANO' && (evento.nome === 'anotar_ponto_em_aberto' || evento.nome === 'resolver_ponto_do_plano') && evento.situacao === 'CONCLUIDA') this.documento()?.recarregarPontos();
         break;
       case 'proposta':
         this.aoVivo.update((atual) => atual && { ...atual, propostaIds: [...atual.propostaIds, evento.propostaId] });
