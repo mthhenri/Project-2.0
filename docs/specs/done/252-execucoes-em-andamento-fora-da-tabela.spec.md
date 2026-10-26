@@ -21,7 +21,8 @@ ao chat com uma mensagem pronta.
 - **Cartão da execução ativa:** atividade (link), caminho `Projeto › Demanda`, descrição, cronômetro grande, "desde HH:MM" e botões Pausar e
   Encerrar (no lugar da lixeira da tabela). Com mais de um usuário (gestor sem filtro), o bloco é uma **grade de cartões compactos** com avatar e
   nome, e o título conta os ativos ("Em andamento agora · N de M usuários").
-- **Total do dia** continua somando a execução ativa, com a nota "(inclui execução em andamento)"; o subtítulo da página ganha "· N em andamento".
+- **Total do dia** continua somando a execução ativa; o subtítulo da página ganha "· N em andamento" (a nota "inclui execução em andamento" no rodapé da
+  tabela foi descartada na verificação: alargava a tabela e fazia a coluna Duração quebrar em 1080×1920).
 - **Estado vazio** mantém o bloco (a altura da tela não pula quando alguém inicia ou encerra).
 - Tabela: sem a linha "Em andamento"; a coluna Fim nunca fica vazia.
 
@@ -40,12 +41,14 @@ ao chat com uma mensagem pronta.
   desligada), gestor sem filtro com vários ativos, gestor filtrado, gestor sem ninguém; iniciar, pausar e encerrar atualizam bloco, tabela e total.
   Comparar com o POC e com a tela atual (análogo aprovado).
 
-## Pontos a confirmar na implementação
+## Pontos em aberto, resolvidos na implementação (2026-10-26; o autor mandou executar)
 
-- **Execução ativa de outro dia:** o bloco "agora" deve aparecer **qualquer que seja a data filtrada** (é estado atual); o total do dia só soma a ativa se
-  ela pertence ao dia filtrado. Proposta, a confirmar com o autor.
-- **Qual mensagem padrão** em cada caso (a regra "já houve execução hoje" acima é proposta minha).
-- Atualização do cronômetro entre telas (o `execucao-timer` já resolve? conferir antes de duplicar).
+- **Execução ativa de outro dia:** o bloco mostra o que a listagem do dia traz. Num dia passado **sem** execução ativa ele não aparece (o estado vazio é do
+  "agora"); a API não devolve a ativa de outro dia e não se criou chamada extra.
+- **Mensagem padrão:** "De onde paramos?" quando já há execução encerrada no dia listado, senão "O que temos pra fazer?" (`mensagemInicialDoChat`).
+- **Pausar** é encerrar com a descrição (a mesma rota `PATCH /execucao/:id/encerrar` do chip da barra superior): o cartão abre um popover com a descrição,
+  obrigatória para desenvolvedor e opcional para o gestor, que pausa a execução de qualquer um.
+- **Cronômetro:** reaproveita o `app-execucao-timer` (ganhou o tamanho `medio`); ele já corre sozinho por `setInterval`.
 
 ## Fora de Escopo
 

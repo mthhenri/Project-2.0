@@ -20,7 +20,7 @@ import { MinhasDemandasComponent } from '../../components/minhas-demandas/minhas
 import { MensagemDoSeletor, SeletorComponent } from '../../components/seletor/seletor.component';
 import { ChatService, ErroDoChat } from '../../services/chat.service';
 import { PlanoService } from '../../services/plano.service';
-import { dataDaConversa, ROTULO_NIVEL, sugestoesAposProposta, sugestoesIniciais } from '../../utils/chat.util';
+import { dataDaConversa, mensagemInicialDoLink, ROTULO_NIVEL, sugestoesAposProposta, sugestoesIniciais } from '../../utils/chat.util';
 import { montarPedidoDeAlteracaoDoTrecho } from '../../utils/plano.util';
 import { LARGURA_DO_DOCUMENTO, larguraDoDocumentoPeloPonteiro, limitarLarguraDoDocumento, ModoDoChatEnum } from '../../utils/plano.util';
 
@@ -195,6 +195,8 @@ export class ChatPage implements OnInit {
   /** Em que lista a resposta que está chegando vai parar: a do momento em que a mensagem saiu (trocar de modo no meio não a desvia). */
   private destinoDaResposta: 'DIA' | 'PLANO' = 'DIA';
   private contadorLocal = 0;
+  /** Mensagem que veio pelo link: o campo recebe o foco assim que existir (a tela carrega antes de mostrá-lo). */
+  private focoNoCampoPendente = false;
   /** O bom dia é tentado uma vez por abertura da tela (o servidor garante uma vez por dia). */
   private bomDiaTentado = false;
   /** O instante da última roda, toque, tecla ou clique na área de rolagem: é o que distingue "o usuário subiu" de "a conversa cresceu". */
@@ -239,7 +241,11 @@ export class ChatPage implements OnInit {
       aoLimpar(() => observador.disconnect());
     });
     effect(() => {
-      this.controleTexto[this.iaDesligada() || this.enviando() || !this.podeConversar() ? 'disable' : 'enable']({ emitEvent: false });
+      const bloqueado = this.iaDesligada() || this.enviando() || !this.podeConversar();
+      const campo = this.campoDeTexto();
+      this.controleTexto[bloqueado ? 'disable' : 'enable']({ emitEvent: false });
+      if (bloqueado || !campo || !this.focoNoCampoPendente) return;
+      this.focarCampoQuandoHabilitado();
     });
     // Abriu um plano em Planejamento: lê a conversa dele (a de todos que têm acesso).
     effect(() => {
@@ -258,7 +264,30 @@ export class ChatPage implements OnInit {
     // `/chat?plano=<id>` (o "nasceu do plano" da demanda) abre o plano direto em Planejamento.
     const planoDoLink = Number(this.rotaAtiva.snapshot.queryParamMap.get('plano'));
     if (Number.isInteger(planoDoLink) && planoDoLink > 0) this.abrirPlano(planoDoLink);
+    // `/chat?mensagem=<texto>` (o "Iniciar atividade" da tela Execuções) deixa o texto digitado, sem enviar.
+    const mensagemDoLink = mensagemInicialDoLink(this.rotaAtiva.snapshot.queryParamMap.get('mensagem'));
+    if (mensagemDoLink) this.prepararMensagemDoLink(mensagemDoLink);
     this.carregar();
+  }
+
+  /** O campo só aceita foco depois de habilitado no DOM (o que acontece na detecção de mudanças seguinte): tenta até conseguir. */
+  private focarCampoQuandoHabilitado(tentativasRestantes = 20): void {
+    setTimeout(() => {
+      const campo = this.campoDeTexto()?.nativeElement;
+      if (campo && !campo.disabled) {
+        campo.focus();
+        this.focoNoCampoPendente = false;
+      } else if (tentativasRestantes > 0 && this.focoNoCampoPendente) {
+        this.focarCampoQuandoHabilitado(tentativasRestantes - 1);
+      }
+    }, 50);
+  }
+
+  private prepararMensagemDoLink(texto: string): void {
+    this.controleTexto.setValue(texto);
+    this.focoNoCampoPendente = true;
+    // O texto não volta ao recarregar a página.
+    void this.roteador.navigate([], { queryParams: { mensagem: null }, queryParamsHandling: 'merge', replaceUrl: true });
   }
 
   carregar(mensagemId?: string): void {

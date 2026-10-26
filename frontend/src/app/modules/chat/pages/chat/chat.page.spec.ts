@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import { AutorChatEnum, ChatEventoDto, ContextoChatEnum, EstadoIaEnum, NivelIaEnum, StatusPropostaIaEnum, TipoPropostaIaEnum, TipoUsuarioEnum } from '@project20/shared';
 import { montarComponente, ComponenteMontado } from '../../../../../testes/montar-componente';
 import { esperarRequisicao, responderSucesso } from '../../../../../testes/http-teste';
@@ -39,11 +39,14 @@ interface OpcoesMontagem {
   conversas?: Record<string, unknown>[];
   /** O que a lateral "Minhas demandas" recebe (padrão: nenhuma). */
   demandas?: Record<string, unknown>[];
+  /** Parâmetros da URL (ex.: `mensagem` do "Iniciar atividade" da tela Execuções). */
+  consulta?: Record<string, string>;
 }
 
 /** Monta a página e responde o que ela pede ao abrir: estado da IA, conversa de hoje e lista do histórico. */
 async function montarChat(opcoes: OpcoesMontagem = {}): Promise<Montado> {
-  const montado = await montarComponente(ChatPage, { usuario: opcoes.usuario ?? TipoUsuarioEnum.DESENVOLVEDOR });
+  const provedores = opcoes.consulta ? [{ provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(opcoes.consulta) } } }] : [];
+  const montado = await montarComponente(ChatPage, { usuario: opcoes.usuario ?? TipoUsuarioEnum.DESENVOLVEDOR, provedores });
   responderSucesso(esperarRequisicao(montado.http, 'GET', '/chat/hoje'), { conversaId: CONVERSA_DE_HOJE, mensagens: opcoes.mensagens ?? [] });
   responderSucesso(esperarRequisicao(montado.http, 'GET', '/chat/conversas'), { conversas: opcoes.conversas ?? [] });
   responderSucesso(esperarRequisicao(montado.http, 'GET', '/plano'), []);
@@ -1190,5 +1193,27 @@ describe('ChatPage: minhas demandas', () => {
     expect(montado.componente.modo()).toBe(ModoDoChatEnum.PLANEJAMENTO);
     expect(montado.elemento.querySelector('app-chat-demanda-leitura')).toBeNull();
     expect(montado.elemento.querySelector('app-chat-minhas-demandas')).toBeNull();
+  });
+});
+
+describe('ChatPage — mensagem inicial pelo link', () => {
+  it('`?mensagem=` deixa o texto digitado no campo, sem enviar e com o foco', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'setInterval', 'clearInterval', 'clearTimeout'] });
+    TestBed.resetTestingModule();
+    const montado = await montarChat({ consulta: { mensagem: 'De onde paramos?' } });
+    await montado.atualizar();
+    await vi.advanceTimersByTimeAsync(100);
+    const campo = montado.elemento.querySelector<HTMLTextAreaElement>('textarea[aria-label="Mensagem para a IA"]')!;
+    expect(campo.value).toBe('De onde paramos?');
+    expect(montado.componente.controleTexto.value).toBe('De onde paramos?');
+    expect(document.activeElement).toBe(campo);
+    expect(montado.http.match((r) => r.method === 'POST')).toEqual([]);
+    vi.useRealTimers();
+  });
+
+  it('sem `?mensagem=` o campo começa vazio', async () => {
+    TestBed.resetTestingModule();
+    const montado = await montarChat();
+    expect(montado.componente.controleTexto.value).toBe('');
   });
 });

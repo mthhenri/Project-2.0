@@ -160,3 +160,11 @@ export function semMarcacaoMarkdown(texto: string): string {
     .replace(/\s+/g, ' ')
     .trim();
 }
+
+/** O limite de caracteres de uma mensagem para a IA (o `maxlength` do campo do chat). */
+export const LIMITE_MENSAGEM_CHAT = 4000;
+
+/** Texto que chega pelo link (`/chat?mensagem=`) para ficar digitado no campo, sem enviar; vazio quando não há o que mostrar. */
+export function mensagemInicialDoLink(valor: string | null | undefined, limite: number = LIMITE_MENSAGEM_CHAT): string {
+  return (valor ?? '').trim().slice(0, limite);
+}

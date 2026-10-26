@@ -12,6 +12,18 @@
 
 ---
 
+## 2026-10-26 — Task 252: execuções em andamento fora da tabela, com "Iniciar atividade" que leva ao chat
+
+Pedido do autor sobre a tela Execuções: a linha "Em andamento" dentro da tabela confundia, o natural é a tabela ser só histórico fechado. Antes de implementar, um POC visual (`.artifacts/poc-execucao-ativa/`) foi aprovado com o bloco **acima** da tabela; as specs 252 e 253 nasceram juntas (a 253, campo formatado no chat da IA, segue no backlog).
+
+- **O que mudou:** novo `app-execucao-agora` (`modules/execucao/components/execucao-agora/`): cartão da execução ativa (atividade, caminho, descrição, cronômetro, "desde HH:MM", Pausar) ou grade de cartões compactos com avatar para o gestor sem filtro; estado vazio com "Iniciar atividade" só para o desenvolvedor. A página separa ativas e encerradas (`separarExecucoes`), a tabela fica só com as encerradas, o paginador conta só elas e o subtítulo ganha "· N em andamento". Pausar é encerrar com a descrição (mesma rota do chip da barra superior): popover com a descrição, obrigatória para desenvolvedor; o gestor pausa a de qualquer um. O `app-execucao-timer` ganhou o tamanho `medio` (aditivo). "Iniciar atividade" leva a `/chat?mensagem=` (ou a `/atividade` com a IA fora do ar): "De onde paramos?" se já houve execução no dia, senão "O que temos pra fazer?"; o chat deixa o texto no campo, sem enviar, com foco, e tira o parâmetro da URL.
+- **Decisões do autor:** bloco acima; botão de iniciar para o dev (chat com mensagem pronta, ou Atividades com a IA desligada); gestor pausa qualquer execução e não vê o botão. Resolvido por mim e registrado na spec: num dia passado sem ativa o bloco "agora" não aparece; a nota "inclui execução em andamento" do rodapé foi descartada (alargava a tabela).
+- **Testes:** frontend 179 arquivos aprovados (suíte inteira), build do frontend verde; novos: `execucao.util.test.ts` (separar, mensagem inicial, iniciais, resumo), spec do `app-execucao-agora`, 10 casos novos na página de Execuções e 3 no chat (`mensagemInicialDoLink`, campo preenchido com foco, campo vazio sem o parâmetro). Backend e `shared` não mudaram.
+- **Ao vivo:** ver `done/252-execucoes-em-andamento-fora-da-tabela/verificacao.md`. **Achado:** o foco do campo do chat falhava porque o `textarea` existe desabilitado enquanto a conversa carrega; passou a tentar até habilitar. Em 1080×1920 a tabela do gestor já cortava Descrição e Ações antes desta task.
+- **Não há lint** no projeto (P-001).
+
+---
+
 ## 2026-10-26 — Task 245: "Minhas demandas" no chat (lista, demanda aberta em leitura e abertura automática)
 
 Quarta e última task da guarda-chuva `chat-execucao-por-demanda.spec.md` (a UI; as 242 a 244 estão com o código pronto e as verificações com IA pendentes). O autor mandou seguir sem decidir o ponto "reaproveitar a demanda aberta da 239": a demanda aberta é um componente novo do chat, e o motivo está em `done/245-.../verificacao.md`.
