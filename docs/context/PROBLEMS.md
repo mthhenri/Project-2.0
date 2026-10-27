@@ -126,6 +126,14 @@
 - **Correção:** aplicar à `checkin.page` o mesmo item único (`itens` com `track` por `chave`) e a mesma regra de rolagem por interação do usuário, com teste de componente.
 - **Desde:** achado na task 225 (2026-10-25); não reproduzido ao vivo, só visto no código.
 
+### P-037 — "Alterar trecho com IA" manda o bloco inteiro, e não a seleção · `ABERTO` · frontend/markdown/plano
+
+- **Sintoma:** no documento do plano, com o editor no modo formatado (o padrão), selecionar parte de um parágrafo e pedir à IA pelo botão direito faz a IA receber e reescrever o parágrafo (ou o item de lista) inteiro. No modo Markdown cru vai só a seleção.
+- **Causa:** `aoAbrirMenuContextoFormatado` (`markdown-editor.component.ts`) entrega `blocoSelecionadoEmMarkdown()` (`markdown-formatado.ts`), que sobe da seleção até o bloco. É assim porque a troca no backend (`substituirTrechoUnico`, `alterar-trecho-do-plano.executor.ts`) procura o Markdown exato do trecho antigo, e o texto renderizado não bate com o Markdown.
+- **Contorno:** passar o editor para o modo Markdown cru antes de selecionar, ou dizer no pedido qual parte do bloco deve mudar.
+- **Correção:** task 255 (`docs/specs/backlog/255-alterar-trecho-so-a-selecao.spec.md`): o editor entrega o bloco como contexto e a seleção como único alvo.
+- **Desde:** task 234 (2026-10-25); achado na conversa com o autor em 2026-10-26.
+
 ### P-001 — Projeto sem lint · `CONTORNADO` · repositório
 
 - **Sintoma:** não há ESLint nem Prettier em nenhum workspace; o gate de qualidade do `CLAUDE.md` pede lint e hoje a lacuna é só declarada no fecho de cada task.
