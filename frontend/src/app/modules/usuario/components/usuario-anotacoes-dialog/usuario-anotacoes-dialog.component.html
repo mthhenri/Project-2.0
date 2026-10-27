@@ -6,26 +6,48 @@
   [dismissible]="true"
   [closeOnEscape]="true"
   [showCloseIcon]="false"
-  styleClass="anotacoes-drawer"
+  [styleClass]="cheio() ? 'anotacoes-drawer anotacoes-drawer--cheio' : 'anotacoes-drawer'"
+  [style]="{ width: cheio() ? '100vw' : larguraEfetiva() + 'px' }"
 >
   <ng-template #headless>
-    <div
-      class="anotacoes-drawer__conteudo"
-      (keydown.control.s)="$event.preventDefault(); salvar()"
-      (keydown.meta.s)="$event.preventDefault(); salvar()"
-    >
-      <header class="anotacoes-drawer__cabecalho">
-        <div class="anotacoes-drawer__titulos">
-          <h2 class="anotacoes-drawer__titulo">{{ titulo() }}</h2>
-          <span
-            class="anotacoes-drawer__editado"
-            [pTooltip]="alteracaoData() ? (alteracaoData() | date: 'dd/MM/yyyy HH:mm:ss') ?? '' : ''"
-            tooltipPosition="bottom"
-          >
-            <i class="pi pi-history"></i>{{ editadoHa() }}
-          </span>
+    <div class="anotacoes-drawer__conteudo">
+      @if (!cheio()) {
+        <div
+          class="anotacoes-drawer__alca"
+          [class.anotacoes-drawer__alca--arrastando]="arrastando()"
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Largura do pad"
+          tabindex="0"
+          [attr.aria-valuenow]="larguraEfetiva()"
+          [attr.aria-valuemin]="largura.minima"
+          [attr.aria-valuemax]="larguraMaxima()"
+          (pointerdown)="iniciarArrasto($event)"
+          (pointermove)="aoArrastar($event)"
+          (pointerup)="finalizarArrasto()"
+          (pointercancel)="finalizarArrasto()"
+          (dblclick)="restaurarLargura()"
+          (keydown)="aoTeclarNaAlca($event)"
+        >
+          @if (arrastando()) {
+            <span class="anotacoes-drawer__etiqueta" role="status">{{ larguraEfetiva() }} px</span>
+          }
         </div>
+      }
+
+      <app-pad-painel [editavel]="editavel()" [colunaCentral]="cheio()">
         <p-button
+          padAcoes
+          [icon]="cheio() ? 'pi pi-window-minimize' : 'pi pi-window-maximize'"
+          [text]="true"
+          severity="secondary"
+          [ariaLabel]="cheio() ? 'Sair da tela cheia' : 'Tela cheia'"
+          [pTooltip]="cheio() ? 'Sair da tela cheia' : 'Tela cheia'"
+          tooltipPosition="bottom"
+          (onClick)="alternarTelaCheia()"
+        />
+        <p-button
+          padAcoes
           icon="pi pi-times"
           [text]="true"
           severity="secondary"
@@ -34,95 +56,7 @@
           tooltipPosition="left"
           (onClick)="aoMudarVisibilidade(false)"
         />
-      </header>
-
-      <p-contextmenu #menuContexto [model]="itensMenu" appendTo="body" />
-
-      @if (carregando()) {
-        <div class="anotacoes-drawer__esqueleto" aria-busy="true">
-          <p-skeleton height="2rem" />
-          <p-skeleton height="1rem" width="90%" />
-          <p-skeleton height="1rem" width="75%" />
-          <p-skeleton height="1rem" width="85%" />
-          <p-skeleton height="1rem" width="60%" />
-        </div>
-      } @else {
-        <div class="anotacoes-drawer__secoes">
-          <p-accordion [multiple]="true" [value]="secoesAbertas()" (valueChange)="aoMudarSecoesAbertas($event)">
-            @for (secao of secoes(); track secao.tipo) {
-              <p-accordion-panel [value]="secao.tipo">
-                <p-accordion-header>
-                  <span class="anotacoes-secao__titulo">
-                    <i
-                      [class]="iconeSecao[secao.tipo]"
-                      class="anotacoes-secao__icone"
-                      [class.anotacoes-secao__icone--com-texto]="secao.temTexto()"
-                    ></i>
-                    {{ rotuloSecao[secao.tipo] }}
-                  </span>
-                  <span class="anotacoes-secao__estado" [attr.data-estado]="secao.estado()">
-                    @switch (secao.estado()) {
-                      @case ('editando') { <i class="pi pi-pencil"></i>Editando… }
-                      @case ('salvando') { <i class="pi pi-spin pi-spinner"></i>Salvando… }
-                      @case ('salvo') { <i class="pi pi-check"></i>Salvo }
-                      @case ('erro') { <i class="pi pi-exclamation-triangle"></i>Não salvou }
-                    }
-                  </span>
-                </p-accordion-header>
-                <p-accordion-content>
-                  @if (editavel()) {
-                    <app-markdown-editor
-                      [formControl]="secao.controle"
-                      [alturaMinima]="9"
-                      [rotulo]="rotuloSecao[secao.tipo]"
-                      placeholder="Escreva aqui — salva sozinho enquanto você digita."
-                      [emitirMenuContexto]="true"
-                      (aoMenuContexto)="abrirMenuDoTrecho(secao, $event)"
-                    />
-                    <div class="anotacoes-secao__acoes">
-                      <p-button
-                        label="Limpar"
-                        icon="pi pi-trash"
-                        severity="danger"
-                        [text]="true"
-                        size="small"
-                        [disabled]="!secao.temTexto()"
-                        (onClick)="limpar(secao)"
-                      />
-                    </div>
-                  } @else if (secao.temTexto()) {
-                    <app-markdown-visualizador [texto]="secao.textoAtual" />
-                  } @else {
-                    <p class="anotacoes-secao__vazia">Nada nesta seção.</p>
-                  }
-                </p-accordion-content>
-              </p-accordion-panel>
-            }
-          </p-accordion>
-        </div>
-      }
-
-      @if (editavel()) {
-        <footer class="anotacoes-drawer__rodape">
-          <span class="anotacoes-drawer__estado" role="status" aria-live="polite" [attr.data-estado]="estadoGeral()">
-            @switch (estadoGeral()) {
-              @case ('editando') { <i class="pi pi-pencil"></i>Editando… }
-              @case ('salvando') { <i class="pi pi-spin pi-spinner"></i>Salvando… }
-              @case ('salvo') { <i class="pi pi-check"></i>Salvo às {{ salvoEmGeral() | date: 'HH:mm' }} }
-              @case ('erro') { <i class="pi pi-exclamation-triangle"></i>Não salvou — tente de novo }
-            }
-          </span>
-          <p-button
-            label="Salvar"
-            icon="pi pi-save"
-            size="small"
-            pTooltip="Ctrl+S"
-            tooltipPosition="top"
-            [disabled]="carregando() || (estadoGeral() !== 'editando' && estadoGeral() !== 'erro')"
-            (onClick)="salvar()"
-          />
-        </footer>
-      }
+      </app-pad-painel>
     </div>
   </ng-template>
 </p-drawer>

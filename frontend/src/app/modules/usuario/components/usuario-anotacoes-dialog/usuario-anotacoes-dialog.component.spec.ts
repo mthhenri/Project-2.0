@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { TipoAnotacaoEnum, TipoUsuarioEnum, EstadoIaEnum, TIPOS_ANOTACAO_ORDENADOS } from '@project20/shared';
 import { montarComponente, ComponenteMontado } from '../../../../../testes/montar-componente';
 import { esperarRequisicao, responderErro, responderSucesso } from '../../../../../testes/http-teste';
@@ -7,6 +8,8 @@ import { criarUsuarioTeste } from '../../../../../testes/usuarios-teste';
 import { DesfazerService } from '../../../../core/services/desfazer.service';
 import { IaDisponibilidadeService } from '../../../../core/services/ia-disponibilidade.service';
 import { SecaoAnotacao } from './secao-anotacao';
+import { PadService } from '../../services/pad.service';
+import { PadPainelComponent } from '../pad-painel/pad-painel.component';
 import { UsuarioAnotacoesDialogComponent } from './usuario-anotacoes-dialog.component';
 
 // Pad em cinco seções (SYSTEM.SPEC.md §12 "anotacao"; tasks 114, 126 e 127): salvar com a versão lida, 409 recarrega,
@@ -39,8 +42,11 @@ async function abrirPad(
   return montado;
 }
 
+/** O estado do pad é o do `PadService` (um só para todo lugar que o mostra) e o painel é o que o drawer renderiza (task 256). */
+const pad = () => TestBed.inject(PadService);
+const painel = (montado: Montado) => montado.fixture.debugElement.query(By.directive(PadPainelComponent)).componentInstance as PadPainelComponent;
 const secao = (montado: Montado, tipo: TipoAnotacaoEnum): SecaoAnotacao =>
-  montado.componente.secoes().find((candidata) => candidata.tipo === tipo)!;
+  pad().secoes().find((candidata) => candidata.tipo === tipo)!;
 const avisosDe = (montado: Montado) => {
   const avisos: { severity?: string; summary?: string; detail?: string }[] = [];
   montado.mensagens.messageObserver.subscribe((mensagem) => avisos.push(...[mensagem].flat()));
@@ -55,25 +61,25 @@ describe('UsuarioAnotacoesDialogComponent — abrir', () => {
     const montado = await montarComponente(UsuarioAnotacoesDialogComponent, { usuario: TipoUsuarioEnum.GESTOR });
     montado.componente.abrir(ID_DE_OUTRA_PESSOA, 'Fulano de Tal');
     await montado.atualizar();
-    expect(montado.componente.carregando()).toBe(true);
+    expect(pad().carregando()).toBe(true);
     expect(document.body.querySelector('[aria-busy="true"]')).not.toBeNull();
 
     responderSucesso(esperarRequisicao(montado.http, 'GET', '/anotacao'), secoesDe(ID_DE_OUTRA_PESSOA));
     await montado.atualizar();
 
-    expect(montado.componente.carregando()).toBe(false);
-    expect(montado.componente.secoes().map((candidata) => candidata.tipo)).toEqual(TIPOS_ANOTACAO_ORDENADOS);
+    expect(pad().carregando()).toBe(false);
+    expect(pad().secoes().map((candidata) => candidata.tipo)).toEqual(TIPOS_ANOTACAO_ORDENADOS);
     for (const rotulo of ['Em andamento', 'Feito', 'Pendências', 'Lembretes', 'Pessoal']) expect(textoDaTela()).toContain(rotulo);
   });
 
   it('o próprio pad se chama "Minhas anotações"', async () => {
     const proprio = await abrirPad(TipoUsuarioEnum.DESENVOLVEDOR, ID_LOGADO);
-    expect(proprio.componente.titulo()).toBe('Minhas anotações');
+    expect(pad().titulo()).toBe('Minhas anotações');
   });
 
   it('o pad de outra pessoa se chama "Anotações de <nome>"', async () => {
     const alheio = await abrirPad(TipoUsuarioEnum.GESTOR, ID_DE_OUTRA_PESSOA);
-    expect(alheio.componente.titulo()).toBe('Anotações de Fulano de Tal');
+    expect(pad().titulo()).toBe('Anotações de Fulano de Tal');
   });
 
   it('gestor abre o pad de outro: o pedido vai com o id dele e as seções gravam no dono certo', async () => {
@@ -102,7 +108,7 @@ describe('UsuarioAnotacoesDialogComponent — abrir', () => {
     responderSucesso(esperarRequisicao(montado.http, 'GET', '/anotacao'), secoesDe(ID_DE_OUTRA_PESSOA));
     responderSucesso(esperarRequisicao(montado.http, 'GET', `/usuario/${ID_DE_OUTRA_PESSOA}`), { id: ID_DE_OUTRA_PESSOA, nomeCompleto: 'Beltrana' });
     await montado.atualizar();
-    expect(montado.componente.titulo()).toBe('Anotações de Beltrana');
+    expect(pad().titulo()).toBe('Anotações de Beltrana');
   });
 });
 
@@ -115,7 +121,7 @@ describe('UsuarioAnotacoesDialogComponent — salvar', () => {
 
     lembretes.controle.setValue('Reunião às 10h.');
     expect(lembretes.estado()).toBe('editando');
-    montado.componente.salvar();
+    pad().salvar();
 
     const requisicao = esperarRequisicao(montado.http, 'PUT', `/anotacao/${ID_DE_OUTRA_PESSOA}/LEMBRETE`);
     expect(requisicao.request.body).toEqual({ texto: 'Reunião às 10h.', updatedDateLido: VERSAO });
@@ -130,7 +136,7 @@ describe('UsuarioAnotacoesDialogComponent — salvar', () => {
   it('sem mudança real nenhuma requisição sai (salvar e fechar)', async () => {
     const montado = await abrirPad(TipoUsuarioEnum.GESTOR, ID_DE_OUTRA_PESSOA, { PESSOAL: 'igual' });
     secao(montado, TipoAnotacaoEnum.PESSOAL).controle.setValue('igual');
-    montado.componente.salvar();
+    pad().salvar();
     montado.componente.aoMudarVisibilidade(false);
     montado.http.expectNone((requisicao) => requisicao.method === 'PUT');
   });
@@ -159,7 +165,7 @@ describe('UsuarioAnotacoesDialogComponent — salvar', () => {
     const avisos = avisosDe(montado);
     const lembretes = secao(montado, TipoAnotacaoEnum.LEMBRETE);
     lembretes.controle.setValue('minha edição');
-    montado.componente.salvar();
+    pad().salvar();
     responderErro(esperarRequisicao(montado.http, 'PUT', `/anotacao/${ID_DE_OUTRA_PESSOA}/LEMBRETE`), 409, 'A seção foi alterada em outro lugar');
     await montado.atualizar();
 
@@ -178,28 +184,28 @@ describe('UsuarioAnotacoesDialogComponent — salvar', () => {
     const montado = await abrirPad(TipoUsuarioEnum.GESTOR, ID_DE_OUTRA_PESSOA);
     const pessoal = secao(montado, TipoAnotacaoEnum.PESSOAL);
     pessoal.controle.setValue('rascunho');
-    montado.componente.salvar();
+    pad().salvar();
     responderErro(esperarRequisicao(montado.http, 'PUT', `/anotacao/${ID_DE_OUTRA_PESSOA}/PESSOAL`), 500, 'falhou');
     await montado.atualizar();
 
     expect(pessoal.estado()).toBe('erro');
     expect(pessoal.textoAtual).toBe('rascunho');
-    expect(montado.componente.estadoGeral()).toBe('erro');
+    expect(pad().estadoGeral()).toBe('erro');
   });
 });
 
 describe('UsuarioAnotacoesDialogComponent — "Enviar para" outra seção', () => {
   async function enviar(montado: Montado, trecho: string, destino: TipoAnotacaoEnum) {
-    montado.componente.abrirMenuDoTrecho(secao(montado, TipoAnotacaoEnum.EM_ANDAMENTO), { inicio: 0, fim: trecho.length, texto: trecho, selecao: trecho, evento: new MouseEvent('contextmenu') });
-    const itens = montado.componente.itensMenu[0].items!;
+    painel(montado).abrirMenuDoTrecho(secao(montado, TipoAnotacaoEnum.EM_ANDAMENTO), { inicio: 0, fim: trecho.length, texto: trecho, selecao: trecho, evento: new MouseEvent('contextmenu') });
+    const itens = painel(montado).itensMenu[0].items!;
     itens.find((item) => item.id === destino)!.command!({});
     await montado.atualizar();
   }
 
   it('o menu esconde a própria seção e lista as outras quatro', async () => {
     const montado = await abrirPad(TipoUsuarioEnum.GESTOR, ID_DE_OUTRA_PESSOA, { EM_ANDAMENTO: 'x' });
-    montado.componente.abrirMenuDoTrecho(secao(montado, TipoAnotacaoEnum.EM_ANDAMENTO), { inicio: 0, fim: 1, texto: 'x', selecao: 'x', evento: new MouseEvent('contextmenu') });
-    const visiveis = montado.componente.itensMenu[0].items!.filter((item) => item.visible !== false).map((item) => item.id);
+    painel(montado).abrirMenuDoTrecho(secao(montado, TipoAnotacaoEnum.EM_ANDAMENTO), { inicio: 0, fim: 1, texto: 'x', selecao: 'x', evento: new MouseEvent('contextmenu') });
+    const visiveis = painel(montado).itensMenu[0].items!.filter((item) => item.visible !== false).map((item) => item.id);
     expect(visiveis).toEqual(['FEITO', 'PENDENCIA', 'LEMBRETE', 'PESSOAL']);
   });
 
@@ -228,7 +234,7 @@ describe('UsuarioAnotacoesDialogComponent — "Enviar para" outra seção', () =
     expect(secao(montado, TipoAnotacaoEnum.EM_ANDAMENTO).textoAtual).toBe('A');
     expect(secao(montado, TipoAnotacaoEnum.PENDENCIA).textoAtual).toBe('P\nB');
     expect(secao(montado, TipoAnotacaoEnum.PENDENCIA).versaoLida).toBe(VERSAO_NOVA);
-    expect(montado.componente.secoesAbertas()).toContain(TipoAnotacaoEnum.PENDENCIA);
+    expect(pad().secoesAbertas()).toContain(TipoAnotacaoEnum.PENDENCIA);
     expect(desfazer.oferta()?.mensagem).toBe('Enviado para Pendências');
     expect(desfazer.oferta()?.duracaoMs).toBe(7000);
   });
@@ -311,7 +317,7 @@ describe('UsuarioAnotacoesDialogComponent — "Enviar para" outra seção', () =
 
   it('seção vazia não tem o que limpar', async () => {
     const montado = await abrirPad(TipoUsuarioEnum.GESTOR, ID_DE_OUTRA_PESSOA);
-    montado.componente.limpar(secao(montado, TipoAnotacaoEnum.PESSOAL));
+    painel(montado).limpar(secao(montado, TipoAnotacaoEnum.PESSOAL));
     expect(TestBed.inject(DesfazerService).oferta()).toBeNull();
   });
 });
@@ -340,3 +346,82 @@ describe('UsuarioAnotacoesDialogComponent — quem pode editar', () => {
   });
 });
 
+
+describe('UsuarioAnotacoesDialogComponent — largura e tela cheia (task 256)', () => {
+  const alca = () => document.body.querySelector<HTMLElement>('[aria-label="Largura do pad"]');
+  const painelDoDrawer = () => document.body.querySelector<HTMLElement>('.anotacoes-drawer');
+  const teclar = (tecla: string) => alca()!.dispatchEvent(new KeyboardEvent('keydown', { key: tecla, bubbles: true, cancelable: true }));
+  const botaoPorRotulo = (rotulo: string) => document.body.querySelector<HTMLElement>(`[aria-label="${rotulo}"]`);
+
+  afterEach(() => localStorage.clear());
+
+  it('abre com 520 px; as setas mudam 16 px, respeitam o mínimo de 380 px e guardam a largura por usuário', async () => {
+    const montado = await abrirPad(TipoUsuarioEnum.DESENVOLVEDOR, ID_LOGADO);
+    expect(alca()!.getAttribute('aria-valuenow')).toBe('520');
+    expect(painelDoDrawer()!.style.width).toBe('520px');
+
+    teclar('ArrowLeft');
+    await montado.atualizar();
+    expect(alca()!.getAttribute('aria-valuenow')).toBe('536');
+    expect(localStorage.getItem(`pad.largura.${ID_LOGADO}`)).toBe('536');
+
+    for (let vez = 0; vez < 30; vez++) teclar('ArrowRight');
+    await montado.atualizar();
+    expect(alca()!.getAttribute('aria-valuenow')).toBe('380');
+  });
+
+  it('duplo clique na alça volta aos 520 px', async () => {
+    const montado = await abrirPad(TipoUsuarioEnum.DESENVOLVEDOR, ID_LOGADO);
+    teclar('ArrowLeft');
+    teclar('ArrowLeft');
+    await montado.atualizar();
+    expect(alca()!.getAttribute('aria-valuenow')).toBe('552');
+
+    alca()!.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+    await montado.atualizar();
+    expect(alca()!.getAttribute('aria-valuenow')).toBe('520');
+  });
+
+  it('a largura guardada é a de quem abre: o drawer abre com ela', async () => {
+    const montado = await montarComponente(UsuarioAnotacoesDialogComponent, { usuario: TipoUsuarioEnum.DESENVOLVEDOR });
+    localStorage.setItem(`pad.largura.${ID_LOGADO}`, '640');
+    montado.componente.abrir(ID_LOGADO, 'Fulano de Tal');
+    await montado.atualizar();
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/anotacao'), secoesDe(ID_LOGADO));
+    await montado.atualizar();
+    expect(alca()!.getAttribute('aria-valuenow')).toBe('640');
+    expect(montado.componente.larguraEfetiva()).toBe(640);
+  });
+
+  it('tela cheia cobre a janela e esconde a alça; sair volta à largura de antes; reabrir não lembra a tela cheia', async () => {
+    const montado = await abrirPad(TipoUsuarioEnum.DESENVOLVEDOR, ID_LOGADO);
+    teclar('ArrowLeft');
+    await montado.atualizar();
+
+    botaoPorRotulo('Tela cheia')!.click();
+    await montado.atualizar();
+    expect(painelDoDrawer()!.style.width).toBe('100vw');
+    expect(alca()).toBeNull();
+    expect(botaoPorRotulo('Sair da tela cheia')).not.toBeNull();
+
+    botaoPorRotulo('Sair da tela cheia')!.click();
+    await montado.atualizar();
+    expect(painelDoDrawer()!.style.width).toBe('536px');
+
+    botaoPorRotulo('Tela cheia')!.click();
+    await montado.atualizar();
+    montado.componente.aoMudarVisibilidade(false);
+    montado.componente.abrir(ID_LOGADO, 'Fulano de Tal');
+    await montado.atualizar();
+    expect(montado.componente.cheio()).toBe(false);
+  });
+
+  it('fechar pelo X salva sozinho e esconde o drawer, em tela cheia também', async () => {
+    const montado = await abrirPad(TipoUsuarioEnum.DESENVOLVEDOR, ID_LOGADO);
+    botaoPorRotulo('Tela cheia')!.click();
+    await montado.atualizar();
+    botaoPorRotulo('Fechar anotações')!.click();
+    await montado.atualizar();
+    expect(montado.componente.visivel()).toBe(false);
+  });
+});

@@ -1,6 +1,6 @@
 # 256-pad-ajustavel-e-tela-cheia.spec.md
 
-> Task 3/7 da guarda-chuva [`documentacoes-e-pad.spec.md`](documentacoes-e-pad.spec.md) (decisão 7): o pad vira **um componente
+> Task 3/7 da guarda-chuva [`documentacoes-e-pad.spec.md`](../../backlog/documentacoes-e-pad.spec.md) (decisão 7): o pad vira **um componente
 > reaproveitável**, e o painel lateral ganha **largura ajustável** e **tela cheia**.
 
 ## Objetivo
