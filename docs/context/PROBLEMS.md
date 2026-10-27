@@ -142,6 +142,30 @@
 - **Correção:** a decidir pelo autor: fazer o visualizador (`markdown-visualizador`) renderizar tabela GFM só na leitura (sem criá-la no editor), ou orientar o prompt da IA a não usar tabela.
 - **Desde:** 2026-10-27 (apontado pelo autor, com captura de uma resposta com três opções de sincronização).
 
+### P-040 — Check-in da IA: execução ativa na topbar não recarrega, barra de mensagem e fechamento automático · `ABERTO` · frontend/checkin/chat IA
+
+- **Sintoma:** no check-in da IA (e em outros fluxos que mudam a execução), a execução ativa mostrada na topbar não recarrega sozinha; a barra de mensagem precisa de ajuste; e o check-in vem "fechando sozinho", por causa do auto-confirmar da IA na descrição da execução.
+- **Causa:** não investigada (o fechamento parece vir da confirmação automática da proposta de descrição da execução).
+- **Contorno:** recarregar a tela à mão para ver a execução ativa atualizada.
+- **Correção:** a decidir: recarregar a execução ativa da topbar ao fim das ações da IA/check-in e nos demais fluxos que a alteram; ajustar a barra de mensagem; impedir que o auto-confirmar da descrição da execução encerre o check-in.
+- **Desde:** 2026-10-27 (apontado pelo autor).
+
+### P-041 — Chat: as anotações não recarregam quando a IA mexe nelas · `ABERTO` · frontend/chat IA/pad
+
+- **Sintoma:** na visão de chat, quando a IA altera as anotações (pad), a tela não recarrega e continua mostrando o conteúdo antigo.
+- **Causa:** não investigada.
+- **Contorno:** recarregar a tela ou reabrir o pad.
+- **Correção:** recarregar as anotações depois de a IA aplicar a alteração (cuidando do risco do P-024, sobrescrever o que o usuário digita).
+- **Desde:** 2026-10-27 (apontado pelo autor).
+
+### P-042 — Ícones das descrições fora de padrão; o da descrição técnica está no lugar errado em algumas telas · `ABERTO` · frontend/descrição
+
+- **Sintoma:** os ícones das descrições (a do cliente, a técnica etc.) não seguem um padrão entre as telas, e o da descrição técnica aparece no lugar errado em algumas.
+- **Causa:** não investigada; provavelmente cada tela posiciona o ícone por conta própria.
+- **Contorno:** nenhum.
+- **Correção:** padronizar ícone e posição das descrições (antes, `gerenciamento-de-impacto` para listar as telas que os usam).
+- **Desde:** 2026-10-27 (apontado pelo autor).
+
 ### P-001 — Projeto sem lint · `CONTORNADO` · repositório
 
 - **Sintoma:** não há ESLint nem Prettier em nenhum workspace; o gate de qualidade do `CLAUDE.md` pede lint e hoje a lacuna é só declarada no fecho de cada task.
