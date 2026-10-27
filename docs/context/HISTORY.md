@@ -12,6 +12,18 @@
 
 ---
 
+## 2026-10-27 — Guarda-chuva `documentacoes-e-pad.spec.md`: tela de Documentações, pad ajustável e no chat, Cliente legível (tasks 252–258, só as specs)
+
+Conversa com o autor em 2026-10-26 e 2026-10-27, com protótipo clicável num canvas (`backlog/documentacoes-e-pad/referencias.md`). Nenhum código mudou.
+
+- **Pedido:** uma tela no Dia a dia para escrever os textos da demanda e as próprias anotações ao mesmo tempo. A primeira versão do protótipo tinha a árvore de demandas fixa ao lado; o autor pediu que a árvore só abra num seletor e suma ao escolher, que a demanda escolhida fique guardada, e a demanda à esquerda com o pad à direita. Pediu também o pad lateral com largura ajustável e tela cheia, e o pad no chat. Para o chat, a primeira proposta (pad embaixo da demanda aberta) foi trocada, a pedido dele, por uma **aba Anotações** entre Checklist e Técnica, aberta por padrão.
+- **Descrição do cliente:** o autor decidiu que todos leem e só gestor e administrador alteram, em todo lugar. A edição já era bloqueada no backend (`DemandaService`, publicação do plano); o que estava errado era a leitura, escondida do desenvolvedor no chat (`demanda-leitura`, task 245) e no plano (`podeVerAbaDoPlano`). Isso revê a decisão 15 de `chat-execucao-por-demanda.spec.md` (aba Cliente só do gestor), que não foi reescrita.
+- **Defeito achado:** o "alterar trecho com IA" do plano manda o bloco inteiro no modo formatado do editor, e não a seleção; registrado como `PROBLEMS.md` P-037, com a correção na task 253.
+- **Decisões do agente**, a confirmar nas specs: seletor na própria tela (não na barra global), demanda em execução já escolhida na primeira visita, larguras e escolha guardadas no navegador, um componente de pad só, trava de versão da demanda numa coluna `versao` (o `updated_date` perde os microssegundos no navegador).
+- **Tasks:** 252 (Cliente legível), 253 (trecho só a seleção), 254 (pad reaproveitável, ajustável e em tela cheia), 255 (aba Anotações no chat), 256 (versão dos textos da demanda, migration), 257 (tela de Documentações), 258 (alterar trecho com IA em Documentações). Maior número em uso: 258.
+
+---
+
 ## 2026-10-26 — Task 245: "Minhas demandas" no chat (lista, demanda aberta em leitura e abertura automática)
 
 Quarta e última task da guarda-chuva `chat-execucao-por-demanda.spec.md` (a UI; as 242 a 244 estão com o código pronto e as verificações com IA pendentes). O autor mandou seguir sem decidir o ponto "reaproveitar a demanda aberta da 239": a demanda aberta é um componente novo do chat, e o motivo está em `done/245-.../verificacao.md`.
