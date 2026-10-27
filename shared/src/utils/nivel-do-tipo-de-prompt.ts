@@ -11,11 +11,12 @@ export const NIVEL_DO_TIPO_DE_PROMPT: Record<TipoPromptEnum, NivelIaEnum> = {
   [TipoPromptEnum.ENTREVISTA_DEMANDA]: NivelIaEnum.ANALITICO,
   [TipoPromptEnum.CONEXAO_DEMANDA]: NivelIaEnum.ANALITICO,
   [TipoPromptEnum.DUVIDA_CODIGO]: NivelIaEnum.RAPIDO,
-  // Planejamento (task 234): escrever e analisar um documento pede o nível analítico, nos quatro tipos.
-  [TipoPromptEnum.PLANEJAMENTO]: NivelIaEnum.ANALITICO,
-  [TipoPromptEnum.PLANO_DESCRICAO_TECNICA]: NivelIaEnum.ANALITICO,
-  [TipoPromptEnum.PLANO_DESCRICAO_CLIENTE]: NivelIaEnum.ANALITICO,
-  [TipoPromptEnum.PLANO_DOCUMENTACAO]: NivelIaEnum.ANALITICO,
+  // Planejamento (task 234): a conversa roda no nível padrão (era o analítico, caro demais; decisão do autor de 2026-10-27) e escala para o analítico
+  // pela ferramenta `aprofundar_analise_do_plano` só quando o trabalho pede. Os três prompts por aba entram nessa mesma conversa.
+  [TipoPromptEnum.PLANEJAMENTO]: NivelIaEnum.PADRAO,
+  [TipoPromptEnum.PLANO_DESCRICAO_TECNICA]: NivelIaEnum.PADRAO,
+  [TipoPromptEnum.PLANO_DESCRICAO_CLIENTE]: NivelIaEnum.PADRAO,
+  [TipoPromptEnum.PLANO_DOCUMENTACAO]: NivelIaEnum.PADRAO,
   // Alterar trecho (task 260): feature de uso frequente, então o nível padrão (era o analítico, caro demais); a regra de encaixe recusa a resposta que mexe fora da seleção.
   [TipoPromptEnum.ALTERAR_TRECHO]: NivelIaEnum.PADRAO,
 };

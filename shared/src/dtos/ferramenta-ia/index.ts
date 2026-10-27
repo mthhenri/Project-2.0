@@ -56,3 +56,4 @@ export * from './ProporAlterarTrechoPlanoDto';
 export * from './PropostaAlterarTrechoPlanoDadosDto';
 export * from './PlanoPontoAnotarDto';
 export * from './PlanoPontoResolverDto';
+export * from './PlanoAnaliseAprofundarDto';

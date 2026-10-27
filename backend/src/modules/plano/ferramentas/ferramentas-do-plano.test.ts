@@ -1,11 +1,12 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { PlanoAbaEnum, StatusPropostaIaEnum, TipoPropostaIaEnum, TipoUsuarioEnum } from '@project20/shared';
+import { NivelIaEnum, PlanoAbaEnum, StatusPropostaIaEnum, TipoPropostaIaEnum, TipoUsuarioEnum } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { ConflictException } from '../../../core/exceptions/conflict.exception';
 import { UnauthorizedAccessException } from '../../../core/exceptions/unauthorized-access.exception';
 import { PropostaIaService } from '../../proposta-ia/services/proposta-ia.service';
 import { PlanoService } from '../services/plano.service';
+import { AprofundarAnaliseDoPlanoFerramenta } from './aprofundar-analise-do-plano.ferramenta';
 import { ConsultarPlanoFerramenta } from './consultar-plano.ferramenta';
 import { EscreverNoPlanoFerramenta } from './escrever-no-plano.ferramenta';
 import { ProporAlterarTrechoDoPlanoFerramenta } from './propor-alterar-trecho-do-plano.ferramenta';
@@ -132,4 +133,29 @@ test('propor_alterar_trecho_do_plano não cria proposta com o trecho ausente, re
   const vedada = criarProposta();
   await assert.rejects(() => vedada.ferramenta.executar({ ...entrada, aba: PlanoAbaEnum.DESCRICAO_CLIENTE, trechoAntigo: 'Cliente.' }, DESENVOLVEDOR), UnauthorizedAccessException);
   for (const cenario of [ausente, repetido, igual, vedada]) assert.deepEqual(cenario.criadas, []);
+});
+
+// aprofundar_analise_do_plano (escalada do planejamento para o modelo mais forte): chamada à parte no nível analítico, sem escrever nada.
+test('aprofundar_analise_do_plano chama a IA no nível analítico com o documento e o pedido e devolve só o texto; nada é gravado', async () => {
+  const { servico, gravacoes } = criarPlanoService({ tecnica: 'Texto técnico do plano.', cliente: 'Pedido do cliente.' });
+  const chamadas: Record<string, unknown>[] = [];
+  const ia = { gerar: async (pedido: Record<string, unknown>) => { chamadas.push(pedido); return { texto: '  1. Falta definir quem exporta.  ' }; } };
+  const ferramenta = new AprofundarAnaliseDoPlanoFerramenta(servico, ia as never);
+
+  assert.equal(ferramenta.somentePlanejamento, true);
+  assert.equal(ferramenta.tipo, 'LEITURA');
+  const resultado = (await ferramenta.executar({ planoId: 7, pedido: 'ache as lacunas' }, GESTOR)) as Record<string, unknown>;
+
+  assert.deepEqual(resultado, { planoId: 7, analise: '1. Falta definir quem exporta.' });
+  assert.equal(chamadas[0].nivel, NivelIaEnum.ANALITICO);
+  const mensagem = (chamadas[0].mensagens as { conteudo: string }[])[0].conteudo;
+  assert.ok(mensagem.includes('Texto técnico do plano.') && mensagem.includes('Pedido do cliente.') && mensagem.includes('ache as lacunas'));
+  assert.equal(gravacoes.length, 0);
+});
+
+test('aprofundar_analise_do_plano: IA fora do ar vira a mensagem de falha da IA, sem escrever nada', async () => {
+  const { servico, gravacoes } = criarPlanoService();
+  const ia = { gerar: async () => { throw new Error('provedor caiu'); } };
+  await assert.rejects(() => new AprofundarAnaliseDoPlanoFerramenta(servico, ia as never).executar({ planoId: 7, pedido: 'x' }, GESTOR));
+  assert.equal(gravacoes.length, 0);
 });

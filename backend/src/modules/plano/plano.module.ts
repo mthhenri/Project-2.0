@@ -10,17 +10,19 @@ import { PlanoPublicacaoService } from './services/plano-publicacao.service';
 import { AnotarPontoEmAbertoFerramenta, ListarPontosDoPlanoFerramenta, ResolverPontoDoPlanoFerramenta } from './ferramentas/pontos-do-plano.ferramentas';
 import { DemandaModule } from '../demanda/demanda.module';
 import { ProjetoModule } from '../projeto/projeto.module';
+import { IaModule } from '../ia/ia.module';
 import { FerramentaIaModule } from '../ferramenta-ia/ferramenta-ia.module';
 import { FerramentaIaRegistro } from '../ferramenta-ia/services/ferramenta-ia.registro';
 import { PropostaIaModule } from '../proposta-ia/proposta-ia.module';
 import { ExecutorPropostaIaRegistro } from '../proposta-ia/domain/executor-proposta-ia';
+import { AprofundarAnaliseDoPlanoFerramenta } from './ferramentas/aprofundar-analise-do-plano.ferramenta';
 import { ConsultarPlanoFerramenta } from './ferramentas/consultar-plano.ferramenta';
 import { EscreverNoPlanoFerramenta } from './ferramentas/escrever-no-plano.ferramenta';
 import { ProporAlterarTrechoDoPlanoFerramenta } from './ferramentas/propor-alterar-trecho-do-plano.ferramenta';
 import { AlterarTrechoDoPlanoExecutor } from './executores/alterar-trecho-do-plano.executor';
 
 @Module({
-  imports:     [DemandaModule, ProjetoModule, FerramentaIaModule, PropostaIaModule],
+  imports:     [DemandaModule, ProjetoModule, FerramentaIaModule, PropostaIaModule, IaModule],
   controllers: [PlanoController],
   providers:   [
     PlanoService,
@@ -34,6 +36,7 @@ import { AlterarTrechoDoPlanoExecutor } from './executores/alterar-trecho-do-pla
     ResolverPontoDoPlanoFerramenta,
     ListarPontosDoPlanoFerramenta,
     ConsultarPlanoFerramenta,
+    AprofundarAnaliseDoPlanoFerramenta,
     EscreverNoPlanoFerramenta,
     ProporAlterarTrechoDoPlanoFerramenta,
     AlterarTrechoDoPlanoExecutor,
@@ -45,6 +48,7 @@ export class PlanoModule implements OnModuleInit {
     private readonly registroDeFerramentas: FerramentaIaRegistro,
     private readonly registroDeExecutores: ExecutorPropostaIaRegistro,
     private readonly consultarPlano: ConsultarPlanoFerramenta,
+    private readonly aprofundarAnalise: AprofundarAnaliseDoPlanoFerramenta,
     private readonly escreverNoPlano: EscreverNoPlanoFerramenta,
     private readonly proporAlterarTrecho: ProporAlterarTrechoDoPlanoFerramenta,
     private readonly alterarTrechoExecutor: AlterarTrechoDoPlanoExecutor,
@@ -56,6 +60,7 @@ export class PlanoModule implements OnModuleInit {
   /** As ferramentas do planejamento (só a conversa do plano as vê) e o executor da alteração de trecho se registram aqui. */
   onModuleInit(): void {
     this.registroDeFerramentas.registrar(this.consultarPlano);
+    this.registroDeFerramentas.registrar(this.aprofundarAnalise);
     this.registroDeFerramentas.registrar(this.escreverNoPlano);
     this.registroDeFerramentas.registrar(this.proporAlterarTrecho);
     this.registroDeExecutores.registrar(this.alterarTrechoExecutor);

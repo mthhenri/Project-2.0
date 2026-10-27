@@ -81,7 +81,7 @@ test('quem não vê o plano não lê nem escreve na conversa dele (404, nada é 
   assert.deepEqual(enviadas, []);
 });
 
-test('o envio usa o contexto, a conversa, o nível analítico, o teto e o escopo de ferramentas do planejamento', async () => {
+test('o envio usa o contexto, a conversa, o nível padrão, o teto e o escopo de ferramentas do planejamento', async () => {
   const { servico, enviadas } = criarServico();
   await servico.enviarMensagem({ id: 7 }, { texto: 'Escreva a descrição' }, DESENVOLVEDOR, () => undefined);
 
@@ -90,7 +90,7 @@ test('o envio usa o contexto, a conversa, o nível analítico, o teto e o escopo
   assert.deepEqual(dto, { texto: 'Escreva a descrição' });
   assert.equal(opcoes.contexto, ContextoChatEnum.PLANEJAMENTO);
   assert.equal(opcoes.conversaId, 'plano-7');
-  assert.equal(opcoes.nivel, NivelIaEnum.ANALITICO);
+  assert.equal(opcoes.nivel, NivelIaEnum.PADRAO);
   assert.equal(opcoes.maximoTokens, MAXIMO_TOKENS_DO_PLANEJAMENTO);
   assert.equal(opcoes.escopoDeFerramentas, 'PLANEJAMENTO');
 });
