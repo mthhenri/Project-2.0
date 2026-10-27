@@ -1,7 +1,7 @@
 import { test } from 'vitest';
 import * as assert from 'node:assert/strict';
 import { TIPOS_ANOTACAO_ORDENADOS } from '@project20/shared';
-import { anotacaoTemTexto, ICONE_SECAO_ANOTACAO, ROTULO_SECAO_ANOTACAO, tempoDecorrido } from './anotacoes.util';
+import { anotacaoTemTexto, contarItensEmAberto, ICONE_SECAO_ANOTACAO, ROTULO_SECAO_ANOTACAO, tempoDecorrido } from './anotacoes.util';
 
 test('anotacaoTemTexto: só espaços, quebras de linha, vazio e nulos não contam', () => {
   assert.equal(anotacaoTemTexto('lembrar'), true);
@@ -33,4 +33,11 @@ test('tempoDecorrido: data no futuro vira "agora há pouco" e string ISO é acei
 test('rótulos e ícones cobrem as cinco seções, na ordem de exibição', () => {
   assert.deepEqual(TIPOS_ANOTACAO_ORDENADOS.map((tipo) => ROTULO_SECAO_ANOTACAO[tipo]), ['Em andamento', 'Feito', 'Pendências', 'Lembretes', 'Pessoal']);
   for (const tipo of TIPOS_ANOTACAO_ORDENADOS) assert.ok(ICONE_SECAO_ANOTACAO[tipo].startsWith('pi pi-'), tipo);
+});
+
+test('contarItensEmAberto: só tarefas não marcadas contam, em qualquer marcador de lista', () => {
+  assert.equal(contarItensEmAberto(''), 0);
+  assert.equal(contarItensEmAberto(null), 0);
+  assert.equal(contarItensEmAberto('- [ ] um\n- [x] dois\n* [ ] três\n1. [ ] quatro\n  - [ ] cinco'), 4);
+  assert.equal(contarItensEmAberto('- item comum\ntexto [ ] solto\n- [X] feito'), 0);
 });

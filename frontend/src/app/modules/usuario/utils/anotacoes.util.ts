@@ -34,3 +34,8 @@ export const ROTULO_SECAO_ANOTACAO: Record<TipoAnotacaoEnum, string> = {
   [TipoAnotacaoEnum.LEMBRETE]: 'Lembretes',
   [TipoAnotacaoEnum.PESSOAL]: 'Pessoal',
 };
+
+/** Quantos itens de tarefa em aberto (`- [ ]`) o texto tem: é o número que a aba Anotações do chat mostra para as Pendências (task 257). */
+export function contarItensEmAberto(texto: string | null | undefined): number {
+  return (texto ?? '').split(/\r?\n/).filter((linha) => /^\s*(?:[-*+]|\d+[.)])\s+\[ \](?:\s|$)/.test(linha)).length;
+}

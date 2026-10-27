@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
+import { Component, DestroyRef, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -9,6 +9,8 @@ import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.s
 import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
 import { TempoExibicaoPipe } from '../../../../shared/pipes/tempo-exibicao.pipe';
 import { AtividadeService } from '../../../atividade/services/atividade.service';
+import { PadPainelComponent } from '../../../usuario/components/pad-painel/pad-painel.component';
+import { PadService } from '../../../usuario/services/pad.service';
 import { ROTULO_STATUS_DEMANDA } from '../../../demanda/constants/demanda-cores.constants';
 import { DemandaBarraHorasComponent } from '../../../demanda/components/demanda-barra-horas/demanda-barra-horas.component';
 import { DemandaStatusMarcaComponent } from '../../../demanda/components/demanda-status-marca/demanda-status-marca.component';
@@ -17,7 +19,7 @@ import { ItemDoChecklist, ordenarChecklist } from '../../utils/minhas-demandas.u
 import { AvisoPedidoDoClienteComponent } from '../aviso-pedido-do-cliente/aviso-pedido-do-cliente.component';
 
 /** As abas da demanda aberta no chat; a Cliente aparece para todos (o desenvolvedor só lê, com aviso). */
-export type AbaDemandaLeitura = 'checklist' | 'tecnica' | 'cliente' | 'documentacao';
+export type AbaDemandaLeitura = 'checklist' | 'anotacoes' | 'tecnica' | 'cliente' | 'documentacao';
 
 /** Até quantas atividades o checklist pede à API. */
 const LIMITE_DE_ATIVIDADES = 100;
@@ -40,6 +42,7 @@ const LIMITE_DE_ATIVIDADES = 100;
     TooltipModule,
     MarkdownVisualizadorComponent,
     AvisoPedidoDoClienteComponent,
+    PadPainelComponent,
     TempoExibicaoPipe,
     DemandaBarraHorasComponent,
     DemandaStatusMarcaComponent,
@@ -51,7 +54,10 @@ export class DemandaLeituraComponent {
   private readonly demandaService = inject(DemandaService);
   private readonly atividadeService = inject(AtividadeService);
   private readonly roteador = inject(Router);
+  private readonly pad = inject(PadService);
   readonly sessao = inject(UsuarioSessaoService);
+  /** Itens de tarefa em aberto nas Pendências, o número ao lado do nome da aba Anotações. */
+  readonly pendencias = this.pad.pendenciasEmAberto;
 
   readonly demandaId = input.required<number>();
   /** Voltar para a lista de demandas. */
@@ -66,7 +72,8 @@ export class DemandaLeituraComponent {
   readonly atividades = signal<AtividadeResumoDto[]>([]);
   readonly carregando = signal(true);
   readonly erro = signal(false);
-  readonly aba = signal<AbaDemandaLeitura>('checklist');
+  /** A demanda abre nas Anotações (o pad, decisão do autor de 2026-10-27); o Checklist é a aba ao lado. */
+  readonly aba = signal<AbaDemandaLeitura>('anotacoes');
 
   /** O checklist na ordem de leitura (desenvolvidas, a que roda, as em aberto). */
   readonly checklist = computed<ItemDoChecklist[]>(() =>
@@ -92,12 +99,18 @@ export class DemandaLeituraComponent {
       const id = this.demandaId();
       untracked(() => this.carregar(id));
     });
+    // O pad é o da própria pessoa e o estado é o mesmo do drawer da barra superior; ao sair, o que foi digitado é gravado.
+    effect(() => {
+      const usuarioId = this.sessao.id();
+      if (usuarioId) untracked(() => this.pad.garantirCarregado(usuarioId, this.sessao.nomeCompleto() ?? ''));
+    });
+    inject(DestroyRef).onDestroy(() => this.pad.salvar());
   }
 
   carregar(id: number = this.demandaId()): void {
     this.carregando.set(true);
     this.erro.set(false);
-    this.aba.set('checklist');
+    this.aba.set('anotacoes');
     this.demanda.set(null);
     this.atividades.set([]);
     this.demandaService.recuperar(id).subscribe({

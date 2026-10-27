@@ -38,6 +38,12 @@
       <p-tabs [value]="abaAtiva()" (valueChange)="aba.set($any($event))" class="demanda-leitura__abas">
         <p-tablist>
           <p-tab value="checklist"><i class="pi pi-check-square demanda-leitura__aba-icone"></i>Checklist</p-tab>
+          <p-tab value="anotacoes">
+            <i class="pi pi-bookmark demanda-leitura__aba-icone"></i>Anotações
+            @if (pendencias() > 0) {
+              <span class="demanda-leitura__aba-contador" aria-label="{{ pendencias() }} pendências em aberto">{{ pendencias() }}</span>
+            }
+          </p-tab>
           <p-tab value="tecnica"><i class="pi pi-code demanda-leitura__aba-icone"></i>Técnica</p-tab>
           <p-tab value="cliente">
             <i class="pi demanda-leitura__aba-icone" [class.pi-user]="sessao.eGestor()" [class.pi-lock]="!sessao.eGestor()"></i>Cliente
@@ -47,8 +53,10 @@
       </p-tabs>
     </header>
 
-    <div class="demanda-leitura__corpo">
-      @if (abaAtiva() === 'checklist') {
+    <div class="demanda-leitura__corpo" [class.demanda-leitura__corpo--pad]="abaAtiva() === 'anotacoes'">
+      @if (abaAtiva() === 'anotacoes') {
+        <app-pad-painel [comTitulo]="false" />
+      } @else if (abaAtiva() === 'checklist') {
         @if (checklist().length === 0) {
           <p class="demanda-leitura__vazio">Esta demanda ainda não tem atividades.</p>
         } @else {

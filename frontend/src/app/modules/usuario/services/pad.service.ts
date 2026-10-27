@@ -7,7 +7,7 @@ import { AnotacaoResumoDto, AnotacaoTrechoMovidoDto, TipoAnotacaoEnum } from '@p
 import { DesfazerService } from '../../../core/services/desfazer.service';
 import { UsuarioSessaoService } from '../../../core/services/usuario-sessao.service';
 import { EstadoSalvamento, SecaoAnotacao } from '../components/usuario-anotacoes-dialog/secao-anotacao';
-import { anotacaoTemTexto, ROTULO_SECAO_ANOTACAO, tempoDecorrido } from '../utils/anotacoes.util';
+import { anotacaoTemTexto, contarItensEmAberto, ROTULO_SECAO_ANOTACAO, tempoDecorrido } from '../utils/anotacoes.util';
 import { AnotacaoService } from './anotacao.service';
 import { UsuarioService } from './usuario.service';
 
@@ -43,6 +43,8 @@ export class PadService implements OnDestroy {
   readonly secoes = signal<SecaoAnotacao[]>([]);
   readonly secoesAbertas = signal<TipoAnotacaoEnum[]>(SECOES_ABERTAS_PADRAO);
   readonly alteracaoData = signal<Date | string | null>(null);
+  /** Itens de tarefa em aberto nas Pendências (o número da aba Anotações do chat); acompanha o que está digitado. */
+  readonly pendenciasEmAberto = signal(0);
   private readonly agora = signal(new Date());
   private readonly usuarioId = signal(0);
   private readonly nomeCompleto = signal('');
@@ -70,8 +72,13 @@ export class PadService implements OnDestroy {
     return datas.length ? new Date(Math.max(...datas.map((data) => data.getTime()))) : null;
   });
 
+  /** O app (ou o teste) acabou: só desarma os temporizadores. Gravar o que sobrou é de quem mostra o pad, enquanto o injetor ainda vive. */
   ngOnDestroy(): void {
-    this.encerrar();
+    this.pararRelogio();
+    this.secoes().forEach((secao) => {
+      secao.cancelarAgendamento();
+      secao.encerrar();
+    });
   }
 
   /** Quem quer saber quando um salvamento muda se o pad tem texto (a listagem atualiza o ícone). Devolve o cancelamento. */
@@ -88,8 +95,24 @@ export class PadService implements OnDestroy {
     this.secoesAbertasAoAbrir = opcoes.secoesAbertas ?? SECOES_ABERTAS_PADRAO;
     this.reabrir = opcoes.aoReabrir ?? null;
     this.aoFalharAoCarregar = opcoes.aoFalhar ?? null;
-    this.carregar(usuarioId);
+    // O mesmo pad já na tela com texto ainda sem gravar (o drawer abriu sobre a aba do chat): reler do servidor perderia o que foi digitado.
+    if (!this.temMudancaSemGravar(usuarioId)) this.carregar(usuarioId);
     this.iniciarRelogio();
+  }
+
+  /**
+   * Garante o pad da pessoa carregado para quem o mostra de forma permanente (a aba Anotações do chat, task 257): carrega na primeira vez e, nas
+   * seguintes, só se for outra pessoa. O estado é o mesmo do drawer, então o que foi editado num lugar já está no outro.
+   */
+  garantirCarregado(usuarioId: number, nomeCompleto: string): void {
+    if (this.usuarioId() === usuarioId && (this.secoes().length > 0 || this.carregando())) return;
+    this.usuarioId.set(usuarioId);
+    this.nomeCompleto.set(nomeCompleto);
+    this.carregar(usuarioId);
+  }
+
+  private temMudancaSemGravar(usuarioId: number): boolean {
+    return this.usuarioId() === usuarioId && this.secoes().some((secao) => secao.textoAtual !== secao.conteudoSalvo || secao.salvandoRequisicao);
   }
 
   /** O pad saiu de cena (fechar, Esc ou clique fora): salva sem confirmação. */
@@ -125,6 +148,7 @@ export class PadService implements OnDestroy {
     secao.conteudoAntesDeLimpar = anterior;
     secao.controle.setValue('', { emitEvent: false });
     secao.temTexto.set(false);
+    this.recalcularPendencias();
     secao.estado.set('editando');
 
     this.desfazerService.oferecer({
@@ -241,6 +265,7 @@ export class PadService implements OnDestroy {
       this.desfazerService.dispensarSemEncerrar();
     }
     secao.temTexto.set(anotacaoTemTexto(conteudo));
+    this.recalcularPendencias();
     secao.cancelarAgendamento();
     if (conteudo === secao.conteudoSalvo) {
       secao.estado.set(secao.salvoEm() ? 'salvo' : 'ocioso');
@@ -366,9 +391,15 @@ export class PadService implements OnDestroy {
     });
   }
 
+  private recalcularPendencias(): void {
+    const pendencias = this.secoes().find((secao) => secao.tipo === TipoAnotacaoEnum.PENDENCIA);
+    this.pendenciasEmAberto.set(pendencias ? contarItensEmAberto(pendencias.textoAtual) : 0);
+  }
+
   /** Avisa quem observa se o pad inteiro tem ou não texto (conforme o que está salvo). */
   private avisarAlteracao(usuarioId: number): void {
     if (this.usuarioId() !== usuarioId) return;
+    this.recalcularPendencias();
     const temAnotacoes = this.secoes().some((secao) => anotacaoTemTexto(secao.conteudoSalvo));
     this.ouvintes.forEach((ouvinte) => ouvinte({ usuarioId, temAnotacoes }));
   }
@@ -395,6 +426,7 @@ export class PadService implements OnDestroy {
           });
           this.secoes.set(novas);
           this.secoesAbertas.set(this.secoesAbertasAoAbrir);
+          this.recalcularPendencias();
           const comTexto = novas.filter((secao) => anotacaoTemTexto(secao.conteudoSalvo)).map((secao) => secao.versaoLida);
           this.alteracaoData.set(comTexto.length ? comTexto.reduce((a, b) => (new Date(a) > new Date(b) ? a : b)) : null);
         },
