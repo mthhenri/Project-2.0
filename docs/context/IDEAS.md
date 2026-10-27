@@ -178,3 +178,10 @@
 - **Origem:** pedido do autor em 2026-10-27, só anotado; o alcance (quais propostas, se o cartão some ou fica enxuto) não foi definido.
 - **Por quê:** o autor vê a mudança no contexto do texto em que ela cai, em vez de lê-la fora do lugar, no chat.
 - **Custo aparente:** médio, só frontend: hoje o diff por palavra (task 224) é desenhado no cartão do chat; teria de ser levado ao visualizador/editor do documento. Rodar `gerenciamento-de-impacto` no componente do diff antes de mexer.
+
+### I-034 — Vários provedores de IA ao mesmo tempo, um por nível · configuração da IA
+
+- **Ideia:** usar provedores diferentes ao mesmo tempo, um por nível: por exemplo Anthropic no rápido, Gemini no padrão e OpenAI no analítico.
+- **Origem:** pedido do autor em 2026-10-27, só anotado.
+- **Por quê:** escolher o provedor melhor ou mais barato para cada nível, em vez de um provedor para tudo.
+- **Custo aparente:** a conferir antes de especificar: como a task 203 (provedores e fallback) e a configuração ativa tratam o provedor hoje (um só por vez, ou por nível), o preço por provedor nos custos e a ligação com I-031 (escolher o nível de cada tipo de prompt pelo sistema).
