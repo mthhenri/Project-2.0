@@ -126,6 +126,14 @@
 - **Correção:** aplicar à `checkin.page` o mesmo item único (`itens` com `track` por `chave`) e a mesma regra de rolagem por interação do usuário, com teste de componente.
 - **Desde:** achado na task 225 (2026-10-25); não reproduzido ao vivo, só visto no código.
 
+### P-038 — A tela de detalhe do projeto ainda usa a visão antiga de demandas · `ABERTO` · frontend/projeto
+
+- **Sintoma:** o detalhe do projeto (`projeto-detalhe`) ainda desenha as demandas à moda antiga (toolbar própria e botões de visão "Lista", "Grafo" e "Controle de horas"), sem a Árvore em três colunas nem o "Projeto inteiro" da tela de Demandas.
+- **Causa:** as tasks 238–241 reorganizaram só a tela de Demandas; o detalhe do projeto não foi revisto.
+- **Contorno:** usar a tela de Demandas, que já tem a Árvore nova.
+- **Correção:** a decidir pelo autor (ajuste adiado): alinhar o detalhe do projeto à Árvore nova ou reaproveitar os componentes dela.
+- **Desde:** 2026-10-27 (apontado pelo autor).
+
 ### P-001 — Projeto sem lint · `CONTORNADO` · repositório
 
 - **Sintoma:** não há ESLint nem Prettier em nenhum workspace; o gate de qualidade do `CLAUDE.md` pede lint e hoje a lacuna é só declarada no fecho de cada task.

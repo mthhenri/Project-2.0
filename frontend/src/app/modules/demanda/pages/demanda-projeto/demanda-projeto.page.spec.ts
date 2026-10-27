@@ -135,11 +135,11 @@ describe('DemandaProjetoPage', () => {
       expect(dev.montado.componente.opcoesModo().map((opcao) => opcao.valor)).toEqual(['arvore', 'grafo']);
     });
 
-    it('?modo= vence o último modo lembrado; valor inválido volta para a Árvore; o nome antigo (lista) abre a Árvore', async () => {
+    it('?modo= vale; sem ele a tela abre na Árvore mesmo com modo guardado de antes; valor inválido e o nome antigo (lista) abrem a Árvore', async () => {
       expect((await montarPagina({ consulta: { modo: 'grafo' }, armazenamento: { 'demanda.ultimoModo': 'lista' } })).montado.componente.modoVisualizacao()).toBe('grafo');
       expect((await montarPagina({ consulta: { modo: 'lista' } })).montado.componente.modoVisualizacao()).toBe('arvore');
       expect((await montarPagina({ armazenamento: { 'demanda.ultimoModo': 'lista' } })).montado.componente.modoVisualizacao()).toBe('arvore');
-      expect((await montarPagina({ armazenamento: { 'demanda.ultimoModo': 'grafo' } })).montado.componente.modoVisualizacao()).toBe('grafo');
+      expect((await montarPagina({ armazenamento: { 'demanda.ultimoModo': 'grafo' } })).montado.componente.modoVisualizacao()).toBe('arvore');
       expect((await montarPagina({ consulta: { modo: 'qualquer' } })).montado.componente.modoVisualizacao()).toBe('arvore');
     });
 
@@ -150,11 +150,11 @@ describe('DemandaProjetoPage', () => {
       expect(porArmazenamento.montado.componente.modoVisualizacao()).toBe('arvore');
     });
 
-    it('?modo=planejamento e o modo lembrado como planejamento (nome antigo) abrem o Controle de horas do gestor', async () => {
+    it('?modo=planejamento (nome antigo) abre o Controle de horas do gestor; modo guardado não vale', async () => {
       const porUrl = await montarPagina({ consulta: { modo: 'planejamento' } });
       expect(porUrl.montado.componente.modoVisualizacao()).toBe('controle-de-horas');
       const porArmazenamento = await montarPagina({ armazenamento: { 'demanda.ultimoModo': 'planejamento' } });
-      expect(porArmazenamento.montado.componente.modoVisualizacao()).toBe('controle-de-horas');
+      expect(porArmazenamento.montado.componente.modoVisualizacao()).toBe('arvore');
     });
 
     it('aoHorasEstimadasAlteradas aplica a estimativa no nó do grafo e na linha do planejamento, sem consulta', async () => {
@@ -174,7 +174,7 @@ describe('DemandaProjetoPage', () => {
       montado.http.expectNone((r) => r.url.endsWith('/demanda/planejamento'));
     });
 
-    it('o gestor, ao trocar para o Controle de horas, carrega as linhas; o mesmo modo é ignorado; o modo vai para URL e armazenamento', async () => {
+    it('o gestor, ao trocar para o Controle de horas, carrega as linhas; o mesmo modo é ignorado; o modo vai para a URL, sem ser guardado', async () => {
       const { montado, irPara } = await montarPagina({ consulta: { projetoId: '5' } });
       await carregarProjetos(montado);
       responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/grafo'), GRAFO);
@@ -182,7 +182,7 @@ describe('DemandaProjetoPage', () => {
       montado.http.expectNone((r) => r.url.endsWith('/demanda/planejamento'));
 
       montado.componente.alternarModo('controle-de-horas');
-      expect(localStorage.getItem('demanda.ultimoModo')).toBe('controle-de-horas');
+      expect(localStorage.getItem('demanda.ultimoModo')).toBeNull();
       expect(irPara).toHaveBeenLastCalledWith([], { queryParams: { modo: 'controle-de-horas', projetoId: 5, pasta: 'sem-pasta' }, replaceUrl: true });
       const requisicao = esperarRequisicao(montado.http, 'GET', '/demanda/planejamento');
       expect(requisicao.request.params.get('projetoId')).toBe('5');

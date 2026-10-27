@@ -32,7 +32,7 @@ describe('MinhasDemandasComponent', () => {
     const montado = await montar();
     responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/executadas'), []);
     await montado.atualizar();
-    expect(montado.elemento.textContent).toContain('Nenhuma demanda ainda');
+    expect(montado.elemento.textContent).toContain('Nenhuma demanda em aberto');
   });
 
   it('cheio: cada demanda mostra o projeto e o caminho, a barra de horas e quantas atividades estão desenvolvidas', async () => {
@@ -91,5 +91,57 @@ describe('MinhasDemandasComponent', () => {
     responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/executadas'), [demanda(1)]);
     await montado.atualizar();
     expect(emExecucao).not.toHaveBeenCalled();
+  });
+  describe('botão direito', () => {
+    const opcoes = (montado: { componente: MinhasDemandasComponent }) => montado.componente.itensMenu();
+
+    it('desenvolvedor: menu com Alterar status e Sair da demanda; o status atual vem desabilitado', async () => {
+      const montado = await montar();
+      responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/executadas'), [demanda(1)]);
+      await montado.atualizar();
+      montado.elemento.querySelector('li')!.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }));
+      const itens = opcoes(montado);
+      expect(itens.map((item) => item.label).filter(Boolean)).toEqual(['Alterar status', 'Sair da demanda']);
+      expect(itens[0].items!.filter((item) => item.disabled).map((item) => item.label)).toEqual(['Pendente']);
+    });
+
+    it('trocar para Concluída tira a demanda da lista; para Planejada só muda o status', async () => {
+      const montado = await montar();
+      responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/executadas'), [demanda(1), demanda(2)]);
+      await montado.atualizar();
+      montado.componente.alterarStatus(montado.componente.itens()[0], TipoDemandaStatusEnum.PLANEJADA);
+      responderSucesso(esperarRequisicao(montado.http, 'PUT', '/demanda/1'), {});
+      expect(montado.componente.itens()[0].status).toBe(TipoDemandaStatusEnum.PLANEJADA);
+      montado.componente.alterarStatus(montado.componente.itens()[1], TipoDemandaStatusEnum.CONCLUIDA);
+      responderSucesso(esperarRequisicao(montado.http, 'PUT', '/demanda/2'), {});
+      expect(montado.componente.itens().map((item) => item.demandaId)).toEqual([1]);
+    });
+
+    it('status recusado pela API volta a lista como estava', async () => {
+      const montado = await montar();
+      responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/executadas'), [demanda(1)]);
+      await montado.atualizar();
+      montado.componente.alterarStatus(montado.componente.itens()[0], TipoDemandaStatusEnum.CANCELADA);
+      expect(montado.componente.itens()).toHaveLength(0);
+      responderErro(esperarRequisicao(montado.http, 'PUT', '/demanda/1'), 403, 'Negado');
+      expect(montado.componente.itens()).toHaveLength(1);
+    });
+
+    it('Sair da demanda remove o próprio usuário e tira a demanda da lista', async () => {
+      const montado = await montar();
+      responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/executadas'), [demanda(1)]);
+      await montado.atualizar();
+      montado.componente.sair(montado.componente.itens()[0]);
+      expect(montado.componente.itens()).toHaveLength(0);
+      responderSucesso(montado.http.expectOne((requisicao) => requisicao.method === 'DELETE' && requisicao.url.includes('/demanda/1/membro/')), null);
+    });
+
+    it('gestor não tem Sair da demanda (não é membro)', async () => {
+      const montado = await montarComponente(MinhasDemandasComponent, { usuario: TipoUsuarioEnum.GESTOR });
+      responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/executadas'), [demanda(1)]);
+      await montado.atualizar();
+      montado.elemento.querySelector('li')!.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }));
+      expect(opcoes(montado).map((item) => item.label).filter(Boolean)).toEqual(['Alterar status']);
+    });
   });
 });

@@ -314,6 +314,23 @@ testarComBanco('listarExecutadas: só as demandas das atividades do usuário, da
   assert.deepEqual((await repositorio.listarExecutadas({ usuarioId: desenvolvedor.id, apenasMembro: true, limite: 1 })).map((item) => item.demandaId), [recente.id]);
 });
 
+testarComBanco('listarExecutadas: demandas CONCLUIDA e CANCELADA não entram', async (conexao) => {
+  const repositorio = criarRepositorio(DemandaRepository, conexao);
+  const desenvolvedor = await criarDesenvolvedor(conexao);
+  const projeto = await criarProjeto(conexao);
+  const emAberto = await criarDemanda(conexao, { projetoId: projeto.id, statusCodigo: 'PLANEJADA' });
+  const concluida = await criarDemanda(conexao, { projetoId: projeto.id, statusCodigo: 'CONCLUIDA' });
+  const cancelada = await criarDemanda(conexao, { projetoId: projeto.id, statusCodigo: 'CANCELADA' });
+  for (const demanda of [emAberto, concluida, cancelada]) {
+    await criarDemandaUsuario(conexao, { demandaId: demanda.id, usuarioId: desenvolvedor.id });
+    const atividade = await criarAtividade(conexao, { demandaId: demanda.id, usuarioId: desenvolvedor.id });
+    await criarExecucao(conexao, { atividadeId: atividade.id, inicioData: '2026-01-10T09:00:00-03:00', fimData: '2026-01-10T10:00:00-03:00' });
+  }
+
+  const executadas = await repositorio.listarExecutadas({ usuarioId: desenvolvedor.id, apenasMembro: true, limite: 20 });
+  assert.deepEqual(executadas.map((item) => item.demandaId), [emAberto.id]);
+});
+
 testarComBanco('listarExecutadas: caminho da árvore, atividades desenvolvidas, execução rodando e demanda/atividade excluídas fora', async (conexao) => {
   const repositorio = criarRepositorio(DemandaRepository, conexao);
   const desenvolvedor = await criarDesenvolvedor(conexao);

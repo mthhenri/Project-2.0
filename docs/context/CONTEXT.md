@@ -282,8 +282,8 @@ project-2.0/
   de status são tokens (`constants/demanda-cores.constants.ts`); o grafo não tem mais painel lateral.
 - **[task 106]** Em Demandas, a toolbar filtra no cliente (busca sem acento, status, tags) e o filtro vale para
   Lista e Grafo (o grafo recebe só os nós que atendem; a Lista mantém os ancestrais e abre os ramos). O clique
-  na linha abre o Detalhe e só o chevron expande; o status troca pelo chip (otimista, gestor). Projeto e modo
-  ficam em `localStorage` (`demanda.ultimoProjetoId`/`demanda.ultimoModo`) e na URL. `C` cria demanda: o `N`
+  na linha abre o Detalhe e só o chevron expande; o status troca pelo chip (otimista, gestor). O projeto
+  fica em `localStorage` (`demanda.ultimoProjetoId`) e o modo na URL (`?modo=`); a aba **não** é lembrada: a tela sempre abre na Árvore. `C` cria demanda: o `N`
   global é das Anotações (task 96).
 - **[tasks 100–101]** No Ponto, o cabeçalho é estável (controles do mês só desabilitam na visão equipe), o
   gestor justifica direto da linha do dia (déficit sugere as horas, limitadas à jornada), o desenvolvedor

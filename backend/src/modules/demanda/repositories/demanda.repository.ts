@@ -369,7 +369,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
 
   /**
    * As demandas das atividades do usuário em que há execução (a execução não tem coluna de usuário: o dono é o da atividade), da execução
-   * mais recente para a mais antiga e sem repetir demanda. Traz o caminho (CTE recursiva dos projetos envolvidos), as horas estimadas e executadas
+   * mais recente para a mais antiga e sem repetir demanda; as CONCLUIDA e CANCELADA não entram. Traz o caminho (CTE recursiva dos projetos envolvidos), as horas estimadas e executadas
    * (a execução aberta conta até agora), quantas atividades a demanda tem e quantas estão DESENVOLVIDA, e se o usuário está executando nela agora.
    * Com `apenasMembro` (desenvolvedor) só entram as demandas em que ele tem linha em `demanda_usuario`.
    */
@@ -452,6 +452,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
          ON tipo_demanda_status.id = demanda.tipo_demanda_status_id
          AND tipo_demanda_status.is_deleted = false
        LEFT JOIN caminho_demanda ON caminho_demanda.id = demanda.id
+       WHERE tipo_demanda_status.codigo NOT IN ('CONCLUIDA', 'CANCELADA')
        ORDER BY demanda_executada.ultima_execucao_data DESC, demanda.id DESC
        LIMIT :limite`,
       { usuarioId: dto.usuarioId, limite: dto.limite, separadorCaminho: SEPARADOR_CAMINHO },
