@@ -182,6 +182,14 @@
 - **Correção:** voltar a re-listar com o filtro atual depois de alterar o status.
 - **Desde:** 2026-10-27 (apontado pelo autor; funcionava antes).
 
+### P-045 — Tela de Execuções não recalcula ao mudar a data de uma execução · `ABERTO` · execucao/frontend
+
+- **Sintoma:** na tela de Execuções, ao alterar a data de uma execução, os valores que dependem dela (totais, durações) não são recalculados.
+- **Causa:** não investigada; o relato não diz se é regressão nem se ao recarregar a tela os valores aparecem certos.
+- **Contorno:** recarregar a tela (a confirmar).
+- **Correção:** recalcular (ou recarregar a lista) depois de salvar a nova data.
+- **Desde:** 2026-10-27 (apontado pelo autor).
+
 ### P-001 — Projeto sem lint · `CONTORNADO` · repositório
 
 - **Sintoma:** não há ESLint nem Prettier em nenhum workspace; o gate de qualidade do `CLAUDE.md` pede lint e hoje a lacuna é só declarada no fecho de cada task.
