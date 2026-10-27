@@ -27,7 +27,19 @@ export function larguraDoDocumentoPeloPonteiro(ponteiroX: number, areaEsquerda: 
   return limitarLarguraDoDocumento(((areaEsquerda + areaLargura - ponteiroX) / areaLargura) * 100);
 }
 
-/** A mensagem que o pedido de alteração de um trecho vira na conversa do plano (a IA copia o trecho exato e usa a ferramenta de alterar trecho). */
-export function montarPedidoDeAlteracaoDoTrecho(pedido: { aba: PlanoAbaEnum; trecho: string; pedido: string }): string {
-  return `Altere só este trecho da aba "${ROTULO_ABA_DO_PLANO[pedido.aba]}" do plano (aba ${pedido.aba}):\n\n> ${pedido.trecho.replace(/\n/g, '\n> ')}\n\nO que mudar: ${pedido.pedido}`;
+/**
+ * A mensagem que o pedido de alteração de um trecho vira na conversa do plano. `trecho` é o **bloco** em Markdown exato (a ferramenta de alterar
+ * trecho o procura no texto) e `selecao` é o único alvo da mudança: o bloco vai como contexto e volta igual, mudando só a seleção. Sem `selecao`
+ * (ou igual ao bloco, como no Markdown cru) o trecho inteiro é o alvo.
+ */
+export function montarPedidoDeAlteracaoDoTrecho(pedido: { aba: PlanoAbaEnum; trecho: string; selecao?: string; pedido: string }): string {
+  const citar = (texto: string) => `> ${texto.replace(/\n/g, '\n> ')}`;
+  const aba = `da aba "${ROTULO_ABA_DO_PLANO[pedido.aba]}" do plano (aba ${pedido.aba})`;
+  if (!pedido.selecao || pedido.selecao === pedido.trecho) {
+    return `Altere só este trecho ${aba}:\n\n${citar(pedido.trecho)}\n\nO que mudar: ${pedido.pedido}`;
+  }
+  return (
+    `Altere só a seleção abaixo, ${aba}. Ela está dentro do bloco que vai logo depois como contexto: use o bloco inteiro como trecho antigo e devolva-o igual, ` +
+    `mudando apenas a seleção.\n\nSeleção (o único alvo da mudança):\n\n${citar(pedido.selecao)}\n\nBloco (contexto, não muda fora da seleção):\n\n${citar(pedido.trecho)}\n\nO que mudar: ${pedido.pedido}`
+  );
 }

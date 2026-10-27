@@ -33,8 +33,13 @@ interface BotaoDaBarra {
 export interface MenuContextoEditorEvento {
   inicio: number;
   fim: number;
-  /** Trecho selecionado, exatamente como está no campo. */
+  /**
+   * O **bloco** da seleção em Markdown exato (é o que a troca no texto procura). No modo formatado é o parágrafo, título ou item inteiro que a
+   * seleção toca; no Markdown cru é o próprio trecho selecionado.
+   */
   texto: string;
+  /** O que a pessoa selecionou, como aparece. No Markdown cru é igual a `texto`. */
+  selecao: string;
   evento: MouseEvent;
 }
 
@@ -183,7 +188,7 @@ export class MarkdownEditorComponent implements ControlValueAccessor {
     const texto = this.textoSelecionado();
     if (texto.trim() === '') return;
     evento.preventDefault();
-    this.aoMenuContexto.emit({ ...this.selecao(), texto, evento });
+    this.aoMenuContexto.emit({ ...this.selecao(), texto, selecao: texto, evento });
   }
 
   /** Alterna entre a edição formatada e o Markdown cru. */
@@ -201,14 +206,15 @@ export class MarkdownEditorComponent implements ControlValueAccessor {
     }
   }
 
-  /** Menu de contexto do editor formatado: entrega o **Markdown do bloco** da seleção (para o "Enviar para"). */
+  /** Menu de contexto do editor formatado: entrega o **Markdown do bloco** da seleção (o "Enviar para" e o contexto do pedido à IA) e a seleção em si. */
   aoAbrirMenuContextoFormatado(evento: MouseEvent): void {
     const editor = this.editorFormatado;
     if (!editor || !this.emitirMenuContexto() || this.desabilitado() || !editor.temSelecao()) return;
     const texto = editor.blocoSelecionadoEmMarkdown();
     if (texto.trim() === '') return;
     evento.preventDefault();
-    this.aoMenuContexto.emit({ inicio: 0, fim: texto.length, texto, evento });
+    const selecao = editor.textoSelecionado();
+    this.aoMenuContexto.emit({ inicio: 0, fim: texto.length, texto, selecao: selecao.trim() === '' ? texto : selecao, evento });
   }
 
   /** Clique na caixa de uma tarefa marca ou desmarca. */

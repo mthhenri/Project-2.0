@@ -99,6 +99,29 @@ test('"Enviar para" leva o bloco inteiro da seleção, em Markdown', async () =>
   await editor.destruir();
 });
 
+test('a seleção sai como aparece e o bloco continua o Markdown exato (task 255)', async () => {
+  const raiz = document.createElement('div');
+  document.body.appendChild(raiz);
+  const editor = await EditorFormatado.criar(raiz, 'um **parágrafo** formatado\n\n- item um\n- item dois\n\n## Título', SEM_OUVINTES);
+
+  selecionar(editor, 'parágrafo');
+  assert.equal(editor.textoSelecionado(), 'parágrafo');
+  assert.equal(editor.blocoSelecionadoEmMarkdown(), 'um **parágrafo** formatado');
+
+  selecionar(editor, 'item dois');
+  assert.equal(editor.textoSelecionado(), 'item dois');
+  assert.equal(editor.blocoSelecionadoEmMarkdown(), '- item dois');
+
+  // Seleção que atravessa dois blocos: o texto leva os dois, em linhas separadas; os blocos vão como contexto.
+  editor.acao((contexto) => {
+    const view = contexto.get(editorViewCtx);
+    view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, 4, 30)));
+  });
+  assert.ok(editor.textoSelecionado().includes('\n'), JSON.stringify(editor.textoSelecionado()));
+  assert.ok(editor.blocoSelecionadoEmMarkdown().startsWith('um **parágrafo** formatado'));
+  await editor.destruir();
+});
+
 test('parágrafo vazio no editor não vira <br /> no Markdown', async () => {
   const raiz = document.createElement('div');
   document.body.appendChild(raiz);
@@ -120,6 +143,7 @@ test('sem seleção não há bloco para enviar', async () => {
   const editor = await EditorFormatado.criar(raiz, 'texto', SEM_OUVINTES);
   assert.equal(editor.temSelecao(), false);
   assert.equal(editor.blocoSelecionadoEmMarkdown(), '');
+  assert.equal(editor.textoSelecionado(), '');
   await editor.destruir();
 });
 

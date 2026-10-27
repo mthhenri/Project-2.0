@@ -110,7 +110,10 @@
   <form class="plano-documento__pedido" (submit)="$event.preventDefault(); enviarPedidoDeAlteracao()">
     <strong>Pedir à IA para alterar este trecho</strong>
     @if (trechoSelecionado(); as selecionado) {
-      <blockquote class="plano-documento__trecho">{{ selecionado.texto }}</blockquote>
+      <blockquote class="plano-documento__trecho">{{ selecionado.selecao }}</blockquote>
+      @if (selecionado.selecao !== selecionado.bloco) {
+        <small>Só o trecho marcado é alterado. O parágrafo vai junto como contexto e não muda.</small>
+      }
     }
     <textarea
       pTextarea
@@ -120,7 +123,7 @@
       [formControl]="controlePedido"
       (keydown.control.enter)="enviarPedidoDeAlteracao()"
     ></textarea>
-    <small>A IA devolve só esse trecho; você vê a diferença na conversa e aceita ou rejeita.</small>
+    <small>Você vê a diferença na conversa e aceita ou rejeita.</small>
     <p-button type="submit" label="Pedir à IA" icon="pi pi-sparkles" size="small" [disabled]="controlePedido.value.trim() === ''" />
   </form>
 </p-popover>

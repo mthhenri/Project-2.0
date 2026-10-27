@@ -279,24 +279,34 @@ describe('PlanoDocumentoComponent — a IA no plano (task 234)', () => {
     expect(texto(montado)).not.toContain('A IA alterou o documento');
   });
 
-  it('o pedido de alteração do trecho selecionado sai com a aba, o trecho e o que mudar, e só com o pedido escrito', async () => {
+  it('o pedido de alteração do trecho selecionado sai com a aba, o bloco, a seleção e o que mudar, e só com o pedido escrito', async () => {
     const montado = await montarDocumento(TipoUsuarioEnum.DESENVOLVEDOR);
-    const pedidos: Array<{ aba: string; trecho: string; pedido: string }> = [];
+    const pedidos: Array<{ aba: string; trecho: string; selecao: string; pedido: string }> = [];
     montado.componente.pedirAlteracao.subscribe((pedido) => pedidos.push(pedido));
 
-    montado.componente.trechoSelecionado.set({ aba: montado.componente.aba(), texto: 'Texto técnico' });
+    montado.componente.trechoSelecionado.set({ aba: montado.componente.aba(), bloco: 'Texto **técnico**', selecao: 'técnico' });
     montado.componente.enviarPedidoDeAlteracao();
     expect(pedidos).toEqual([]);
 
     montado.componente.controlePedido.setValue('  deixar mais curto  ');
     montado.componente.enviarPedidoDeAlteracao();
-    expect(pedidos).toEqual([{ aba: 'DESCRICAO_TECNICA', trecho: 'Texto técnico', pedido: 'deixar mais curto' }]);
+    expect(pedidos).toEqual([{ aba: 'DESCRICAO_TECNICA', trecho: 'Texto **técnico**', selecao: 'técnico', pedido: 'deixar mais curto' }]);
     expect(montado.componente.trechoSelecionado()).toBeNull();
+  });
+
+  it('o pedido mostra só a seleção, com o aviso de que o bloco é contexto; bloco igual à seleção não traz o aviso', async () => {
+    const montado = await montarDocumento(TipoUsuarioEnum.DESENVOLVEDOR);
+    montado.componente.abrirPedidoDeAlteracao({ inicio: 0, fim: 9, texto: 'Texto **técnico**', selecao: 'técnico', evento: new MouseEvent('contextmenu') });
+    await montado.atualizar();
+    expect(montado.componente.trechoSelecionado()).toEqual({ aba: 'DESCRICAO_TECNICA', bloco: 'Texto **técnico**', selecao: 'técnico' });
+
+    montado.componente.abrirPedidoDeAlteracao({ inicio: 0, fim: 2, texto: 'Texto', selecao: 'Texto', evento: new MouseEvent('contextmenu') });
+    expect(montado.componente.trechoSelecionado()).toEqual({ aba: 'DESCRICAO_TECNICA', bloco: 'Texto', selecao: 'Texto' });
   });
 
   it('a seleção em branco não abre pedido', async () => {
     const montado = await montarDocumento(TipoUsuarioEnum.DESENVOLVEDOR);
-    montado.componente.abrirPedidoDeAlteracao({ inicio: 0, fim: 2, texto: '   ', evento: new MouseEvent('contextmenu') });
+    montado.componente.abrirPedidoDeAlteracao({ inicio: 0, fim: 2, texto: '   ', selecao: '   ', evento: new MouseEvent('contextmenu') });
     expect(montado.componente.trechoSelecionado()).toBeNull();
   });
 });

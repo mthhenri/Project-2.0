@@ -245,7 +245,7 @@ describe('MarkdownEditorComponent — barra de botões (modo Markdown)', () => {
 });
 
 describe('MarkdownEditorComponent — menu de contexto', () => {
-  it('com trecho selecionado o botão direito vira o evento aoMenuContexto com o trecho e a posição', async () => {
+  it('com trecho selecionado o botão direito vira o evento aoMenuContexto com o trecho (bloco e seleção iguais no Markdown cru) e a posição', async () => {
     const montado = await montarEmTexto('um dois três');
     posicionar(campo(montado), 'um dois três', 3, 7);
     campo(montado).dispatchEvent(new Event('select'));
@@ -255,7 +255,7 @@ describe('MarkdownEditorComponent — menu de contexto', () => {
 
     expect(evento.defaultPrevented).toBe(true);
     expect(montado.componente.menus).toHaveLength(1);
-    expect(montado.componente.menus[0]).toMatchObject({ inicio: 3, fim: 7, texto: 'dois' });
+    expect(montado.componente.menus[0]).toMatchObject({ inicio: 3, fim: 7, texto: 'dois', selecao: 'dois' });
   });
 
   it('sem seleção o menu do navegador segue valendo e nada é emitido', async () => {

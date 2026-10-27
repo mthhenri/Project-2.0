@@ -1,6 +1,6 @@
 # 255-alterar-trecho-so-a-selecao.spec.md
 
-> Task 2/7 da guarda-chuva [`documentacoes-e-pad.spec.md`](documentacoes-e-pad.spec.md) (decisão 9): o "alterar trecho com IA" manda à
+> Task 2/7 da guarda-chuva [`documentacoes-e-pad.spec.md`](../../backlog/documentacoes-e-pad.spec.md) (decisão 9): o "alterar trecho com IA" manda à
 > IA **só o texto selecionado** para mudar. Corrige `PROBLEMS.md` P-037.
 
 ## Objetivo

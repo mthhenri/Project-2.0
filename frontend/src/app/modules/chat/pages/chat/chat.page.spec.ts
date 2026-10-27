@@ -1082,7 +1082,7 @@ describe('ChatPage — modo Planejamento (task 233)', () => {
     await entrarEmPlanejamento(montado);
     controlarFluxo(enviarMensagemEspiao, 1);
 
-    montado.componente.pedirAlteracaoDoTrecho({ aba: 'DESCRICAO_TECNICA' as never, trecho: 'Primeira linha\nSegunda linha', pedido: 'deixar mais direto' });
+    montado.componente.pedirAlteracaoDoTrecho({ aba: 'DESCRICAO_TECNICA' as never, trecho: 'Primeira linha\nSegunda linha', selecao: 'Primeira linha\nSegunda linha', pedido: 'deixar mais direto' });
     await montado.atualizar();
 
     const enviada = enviarMensagemEspiao.mock.calls[0][0] as string;

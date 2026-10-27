@@ -190,7 +190,7 @@ describe('UsuarioAnotacoesDialogComponent — salvar', () => {
 
 describe('UsuarioAnotacoesDialogComponent — "Enviar para" outra seção', () => {
   async function enviar(montado: Montado, trecho: string, destino: TipoAnotacaoEnum) {
-    montado.componente.abrirMenuDoTrecho(secao(montado, TipoAnotacaoEnum.EM_ANDAMENTO), { inicio: 0, fim: trecho.length, texto: trecho, evento: new MouseEvent('contextmenu') });
+    montado.componente.abrirMenuDoTrecho(secao(montado, TipoAnotacaoEnum.EM_ANDAMENTO), { inicio: 0, fim: trecho.length, texto: trecho, selecao: trecho, evento: new MouseEvent('contextmenu') });
     const itens = montado.componente.itensMenu[0].items!;
     itens.find((item) => item.id === destino)!.command!({});
     await montado.atualizar();
@@ -198,7 +198,7 @@ describe('UsuarioAnotacoesDialogComponent — "Enviar para" outra seção', () =
 
   it('o menu esconde a própria seção e lista as outras quatro', async () => {
     const montado = await abrirPad(TipoUsuarioEnum.GESTOR, ID_DE_OUTRA_PESSOA, { EM_ANDAMENTO: 'x' });
-    montado.componente.abrirMenuDoTrecho(secao(montado, TipoAnotacaoEnum.EM_ANDAMENTO), { inicio: 0, fim: 1, texto: 'x', evento: new MouseEvent('contextmenu') });
+    montado.componente.abrirMenuDoTrecho(secao(montado, TipoAnotacaoEnum.EM_ANDAMENTO), { inicio: 0, fim: 1, texto: 'x', selecao: 'x', evento: new MouseEvent('contextmenu') });
     const visiveis = montado.componente.itensMenu[0].items!.filter((item) => item.visible !== false).map((item) => item.id);
     expect(visiveis).toEqual(['FEITO', 'PENDENCIA', 'LEMBRETE', 'PESSOAL']);
   });

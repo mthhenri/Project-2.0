@@ -526,7 +526,7 @@ export class EditorFormatado {
     });
   }
 
-  /** O texto (sem formatação) do trecho selecionado. */
+  /** O texto (sem formatação) do trecho selecionado, como aparece; blocos diferentes ficam em linhas separadas. */
   textoSelecionado(): string {
     return this.editor.action((contexto) => {
       const { state } = contexto.get(editorViewCtx);

@@ -24,7 +24,9 @@ export class ProporAlterarTrechoDoPlanoFerramenta extends FerramentaPropostaIa<P
   readonly nome = 'propor_alterar_trecho_do_plano';
   readonly descricao =
     'Propõe trocar só um trecho do texto de uma aba do plano (a pessoa selecionou o trecho e pediu a mudança). Informe a aba, o trecho antigo copiado EXATAMENTE do texto da aba (use consultar_plano se precisar; ele tem de aparecer uma vez só: ' +
-    'se se repetir, inclua palavras ao redor para ficar único) e o trecho novo, que o substitui. Altere somente o trecho pedido: não reescreva o resto da aba. A pessoa vê a diferença no cartão e aceita ou rejeita; nada é gravado antes.';
+    'se se repetir, inclua palavras ao redor para ficar único) e o trecho novo, que o substitui. Altere somente o trecho pedido: não reescreva o resto da aba. ' +
+    'Quando a pessoa marcou uma seleção dentro de um bloco (parágrafo, item de lista, título), envie o bloco inteiro, em Markdown exato, como trecho antigo e o mesmo bloco com SÓ a seleção alterada como trecho novo: ' +
+    'o que está fora da seleção volta idêntico, caractere por caractere, inclusive a marcação (negrito, links, listas). A pessoa vê a diferença no cartão e aceita ou rejeita; nada é gravado antes.';
   readonly permissao = 'QUALQUER' as const;
   readonly somentePlanejamento = true;
   readonly classeDeEntrada = ProporAlterarTrechoPlanoDto;

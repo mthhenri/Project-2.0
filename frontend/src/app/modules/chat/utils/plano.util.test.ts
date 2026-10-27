@@ -33,4 +33,18 @@ describe('pedido de alteração de um trecho', () => {
     expect(mensagem).toContain('> Linha 1\n> Linha 2');
     expect(mensagem.endsWith('O que mudar: explicar o porquê')).toBe(true);
   });
+
+  it('com seleção dentro do bloco, a seleção é o único alvo e o bloco vai como contexto', () => {
+    const mensagem = montarPedidoDeAlteracaoDoTrecho({ aba: PlanoAbaEnum.DESCRICAO_TECNICA, trecho: 'um **parágrafo** formatado', selecao: 'parágrafo', pedido: 'trocar por "texto"' });
+    expect(mensagem).toContain('Seleção (o único alvo da mudança):\n\n> parágrafo');
+    expect(mensagem).toContain('Bloco (contexto, não muda fora da seleção):\n\n> um **parágrafo** formatado');
+    expect(mensagem).toContain('devolva-o igual');
+    expect(mensagem.endsWith('O que mudar: trocar por "texto"')).toBe(true);
+  });
+
+  it('seleção igual ao bloco (Markdown cru) usa a mensagem do trecho único', () => {
+    const mensagem = montarPedidoDeAlteracaoDoTrecho({ aba: PlanoAbaEnum.DOCUMENTACAO, trecho: 'Linha', selecao: 'Linha', pedido: 'x' });
+    expect(mensagem).not.toContain('Seleção (o único alvo');
+    expect(mensagem).toContain('> Linha');
+  });
 });

@@ -25,10 +25,13 @@ import { PlanoPublicarDialogComponent } from '../plano-publicar-dialog/plano-pub
 /** O que mudou no plano e o seletor precisa saber (título, projeto, demanda, solo, arquivo); `excluido` tira o plano da tela. */
 export type MudancaDoPlano = 'titulo' | 'projeto' | 'demanda' | 'solo' | 'arquivo' | 'texto';
 
-/** O pedido para a IA alterar só o trecho que a pessoa selecionou numa aba (task 234). */
+/** O pedido para a IA alterar só o que a pessoa selecionou numa aba (tasks 234 e 255): o bloco vai como contexto, a seleção é o único alvo. */
 export interface PedidoDeAlteracaoDoTrecho {
   aba: PlanoAbaEnum;
+  /** O bloco da seleção em Markdown exato. */
   trecho: string;
+  /** O que foi selecionado; igual ao bloco no Markdown cru. */
+  selecao: string;
   pedido: string;
 }
 
@@ -85,8 +88,8 @@ export class PlanoDocumentoComponent {
   readonly ocupado = signal(false);
   /** Aviso com "Recarregar": outra pessoa gravou antes (a gravação foi recusada) ou a IA alterou o documento; o que foi escrito continua nos campos. */
   readonly aviso = signal<string | null>(null);
-  /** O trecho selecionado e o pedido que a pessoa está escrevendo à IA (task 234). */
-  readonly trechoSelecionado = signal<{ aba: PlanoAbaEnum; texto: string } | null>(null);
+  /** O bloco e a seleção, e o pedido que a pessoa está escrevendo à IA (tasks 234 e 255). */
+  readonly trechoSelecionado = signal<{ aba: PlanoAbaEnum; bloco: string; selecao: string } | null>(null);
   readonly controlePedido = new FormControl<string>('', { nonNullable: true });
   private readonly popoverDoPedido = viewChild<Popover>('popoverPedido');
   private readonly painelDePontos = viewChild(PlanoPontosComponent);
@@ -182,9 +185,9 @@ export class PlanoDocumentoComponent {
 
   /** Botão direito sobre um trecho selecionado: abre o pedido de alteração à IA (task 234). */
   abrirPedidoDeAlteracao(evento: MenuContextoEditorEvento): void {
-    const texto = evento.texto.trim();
-    if (texto === '') return;
-    this.trechoSelecionado.set({ aba: this.aba(), texto });
+    const bloco = evento.texto.trim();
+    if (bloco === '') return;
+    this.trechoSelecionado.set({ aba: this.aba(), bloco, selecao: evento.selecao.trim() || bloco });
     this.controlePedido.setValue('');
     this.popoverDoPedido()?.show(evento.evento, evento.evento.target as HTMLElement);
   }
@@ -194,7 +197,7 @@ export class PlanoDocumentoComponent {
     const pedido = this.controlePedido.value.trim();
     if (!trecho || pedido === '') return;
     this.popoverDoPedido()?.hide();
-    this.pedirAlteracao.emit({ aba: trecho.aba, trecho: trecho.texto, pedido });
+    this.pedirAlteracao.emit({ aba: trecho.aba, trecho: trecho.bloco, selecao: trecho.selecao, pedido });
     this.trechoSelecionado.set(null);
   }
 
