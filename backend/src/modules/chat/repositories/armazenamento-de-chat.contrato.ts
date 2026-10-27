@@ -134,6 +134,17 @@ export function registrarContratoDeArmazenamento(
       assert.equal((await armazenamento.buscar({ usuarioId: dono, texto: 'planejamentoxyz' })).length, 0, 'a busca não a acha');
     });
 
+    it('o uso da IA fora da conversa soma tokens na conta de custos, mas não é conversa do dia nem aparece na busca (task 260)', async () => {
+      const modeloDoUso = `modelo-uso-${base}`;
+      await armazenamento.gravar(mensagem('Alterar trecho usoxyz', {
+        conversaId: `uso-ia-${dono}`, contexto: ContextoChatEnum.USO_DE_IA, autor: AutorChatEnum.IA, modelo: modeloDoUso, tokensEntrada: 70, tokensSaida: 9, tokensCache: 3,
+      }));
+      const somados = (await armazenamento.somarTokens({ dataInicio: '2000-01-01', dataFim: '2100-12-31', porMes: false, fusoHorario: 'UTC' })).filter((linha) => linha.modelo === modeloDoUso);
+      assert.deepEqual(somados.map((linha) => [linha.mensagens, linha.tokensEntrada, linha.tokensSaida, linha.tokensCache]), [[1, 70, 9, 3]]);
+      assert.equal((await armazenamento.listarConversas({ usuarioId: dono })).some((balde) => balde.key === `uso-ia-${dono}`), false, 'não é conversa do dia');
+      assert.equal((await armazenamento.buscar({ usuarioId: dono, texto: 'usoxyz' })).length, 0, 'a busca não a acha');
+    });
+
     it('guarda e troca o título da conversa, só para o dono, e quem não tem título não aparece', async () => {
       assert.deepEqual(await armazenamento.listarTitulos({ usuarioId: dono, conversaIds: [] }), {});
       await armazenamento.gravarTitulo({ conversaId, usuarioId: dono, titulo: 'Descrição do cadastro', editado: false });

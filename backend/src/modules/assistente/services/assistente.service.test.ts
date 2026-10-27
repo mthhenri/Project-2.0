@@ -17,7 +17,7 @@ function criar(resposta: string | Error = 'Texto refinado') {
       return { texto: resposta };
     },
   };
-  return { servico: new AssistenteService(iaService as never, {} as never, {} as never), chamadas };
+  return { servico: new AssistenteService(iaService as never, {} as never, {} as never, {} as never), chamadas };
 }
 
 const promptDe = (chamada: Record<string, unknown>) => (chamada.mensagens as { papel: string; conteudo: string }[])[0].conteudo;
@@ -78,7 +78,7 @@ function criarParaTrecho(resposta: string | Error, opcoes: { negarEdicao?: boole
     gerar: async (pedido: Record<string, unknown>) => {
       chamadas.push(pedido);
       if (resposta instanceof Error) throw resposta;
-      return { texto: resposta };
+      return { texto: resposta, modelo: 'modelo-teste', tokens: { entrada: 100, saida: 20, cache: 5 } };
     },
   };
   const demandaService = {
@@ -89,7 +89,9 @@ function criarParaTrecho(resposta: string | Error, opcoes: { negarEdicao?: boole
     },
   };
   const promptService = { obterAtivo: async (tipo: TipoPromptEnum) => ({ conteudo: `PROMPT ${tipo}` }) };
-  return { servico: new AssistenteService(iaService as never, demandaService as never, promptService as never), chamadas, verificacoes };
+  const usos: Record<string, unknown>[] = [];
+  const iaUsoService = { registrar: async (uso: Record<string, unknown>) => { usos.push(uso); } };
+  return { servico: new AssistenteService(iaService as never, demandaService as never, promptService as never, iaUsoService as never), chamadas, verificacoes, usos };
 }
 
 test('alterarTrecho: devolve o bloco com só a seleção alterada, no nível analítico, com os dois prompts e o pedido', async () => {
@@ -130,4 +132,26 @@ test('alterarTrecho: resposta que muda além da seleção ou não muda nada vira
 test('alterarTrecho: IA fora do ar vira a mensagem de falha da IA', async () => {
   const { servico } = criarParaTrecho(new IaException('FORA_DO_AR' as never, 'sem chave'));
   await assert.rejects(() => servico.alterarTrecho(PEDIDO, GESTOR));
+});
+
+test('alterarTrecho: a chamada entra na conta de custos com o modelo e os tokens, também quando a resposta não encaixa', async () => {
+  const sucesso = criarParaTrecho('O sistema deve **gerar o relatório** em PDF.');
+  await sucesso.servico.alterarTrecho(PEDIDO, GESTOR);
+  assert.deepEqual(sucesso.usos, [{
+    usuarioId: 1, descricao: 'Alterar trecho (Documentações)', nivel: NivelIaEnum.ANALITICO, modelo: 'modelo-teste',
+    tokensEntrada: 100, tokensSaida: 20, tokensCache: 5, demandaId: 5,
+  }]);
+
+  const naoEncaixa = criarParaTrecho('O sistema precisa **gerar o relatório** em PDF.');
+  await assert.rejects(() => naoEncaixa.servico.alterarTrecho(PEDIDO, GESTOR), BusinessException);
+  assert.equal(naoEncaixa.usos.length, 1, 'os tokens foram gastos mesmo sem proposta');
+});
+
+test('alterarTrecho: sem permissão ou com a IA fora do ar nada é registrado (nada foi gasto)', async () => {
+  const semPermissao = criarParaTrecho('x', { negarEdicao: true });
+  await assert.rejects(() => semPermissao.servico.alterarTrecho(PEDIDO, DEV));
+  assert.equal(semPermissao.usos.length, 0);
+  const iaFora = criarParaTrecho(new IaException('FORA_DO_AR' as never, 'sem chave'));
+  await assert.rejects(() => iaFora.servico.alterarTrecho(PEDIDO, GESTOR));
+  assert.equal(iaFora.usos.length, 0);
 });

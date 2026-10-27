@@ -13,6 +13,7 @@ import { NivelIaEnum } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { DemandaService } from '../../demanda/services/demanda.service';
+import { IaUsoService } from '../../ia-custo/services/ia-uso.service';
 import { PromptService } from '../../prompt/services/prompt.service';
 import { traduzirFalhaDeIa } from '../../ia/domain/ia.exception';
 import { IaService } from '../../ia/services/ia.service';
@@ -39,6 +40,7 @@ export class AssistenteService {
     private readonly iaService: IaService,
     private readonly demandaService: DemandaService,
     private readonly promptService: PromptService,
+    private readonly iaUsoService: IaUsoService,
   ) {}
 
   /**
@@ -106,6 +108,8 @@ Refine, clarifique e complemente esse texto mantendo a voz e intenção original
     ].join('\n');
 
     let blocoNovo: string;
+    let modelo: string;
+    let tokens: { entrada: number; saida: number; cache: number };
     try {
       const resposta = await this.iaService.gerar({
         nivel: NIVEL_DO_TIPO_DE_PROMPT[TipoPromptEnum.ALTERAR_TRECHO],
@@ -114,9 +118,23 @@ Refine, clarifique e complemente esse texto mantendo a voz e intenção original
         maximoTokens: MAXIMO_TOKENS_DO_TRECHO,
       });
       blocoNovo = resposta.texto.trim();
+      modelo = resposta.modelo;
+      tokens = resposta.tokens;
     } catch (erro) {
       throw traduzirFalhaDeIa(erro);
     }
+
+    // A IA respondeu e gastou tokens, encaixe ou não: a chamada entra na conta da aba Custos (task 260).
+    await this.iaUsoService.registrar({
+      usuarioId:     usuarioAtivo.sub,
+      descricao:     'Alterar trecho (Documentações)',
+      nivel:         NIVEL_DO_TIPO_DE_PROMPT[TipoPromptEnum.ALTERAR_TRECHO],
+      modelo,
+      tokensEntrada: tokens.entrada,
+      tokensSaida:   tokens.saida,
+      tokensCache:   tokens.cache,
+      demandaId:     dto.demandaId,
+    });
 
     const encaixe = conferirEncaixeDoTrecho(dto.bloco, dto.selecao, blocoNovo);
     if (encaixe.encaixa === false) throw new BusinessException(encaixe.motivo === 'IGUAL' ? MENSAGEM_SEM_MUDANCA : MENSAGEM_NAO_ENCAIXA);

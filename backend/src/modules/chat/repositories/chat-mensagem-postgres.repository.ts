@@ -165,7 +165,7 @@ export class ChatMensagemPostgresRepository extends BaseRepository<ChatMensagemF
       const linhas = await this.executarConsulta<LinhaDeMensagem>(
         `SELECT ${COLUNAS_DA_MENSAGEM}
          FROM chat_mensagem
-         WHERE usuario_id = :usuarioId AND is_deleted = false AND contexto <> 'PLANEJAMENTO'
+         WHERE usuario_id = :usuarioId AND is_deleted = false AND contexto NOT IN ('PLANEJAMENTO', 'USO_DE_IA')
            AND fn_chat_texto_busca(texto) @@ fn_chat_texto_consulta(:texto)
            AND (CAST(:inicio AS timestamptz) IS NULL OR created_date >= CAST(:inicio AS timestamptz))
            AND (CAST(:fim AS timestamptz) IS NULL OR created_date <= CAST(:fim AS timestamptz))

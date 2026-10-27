@@ -104,7 +104,7 @@ export function montarConsultaBusca(consulta: ConsultaBusca) {
       bool: {
         filter: filtros,
         must: [{ match: { texto: { query: consulta.texto, operator: 'and' } } }],
-        must_not: [{ term: { contexto: 'PLANEJAMENTO' } }],
+        must_not: [{ terms: { contexto: ['PLANEJAMENTO', 'USO_DE_IA'] } }],
       },
     },
     sort: [{ _score: 'desc' }, { created_date: 'desc' }],
