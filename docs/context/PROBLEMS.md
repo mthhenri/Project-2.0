@@ -166,6 +166,14 @@
 - **Correção:** padronizar ícone e posição das descrições (antes, `gerenciamento-de-impacto` para listar as telas que os usam).
 - **Desde:** 2026-10-27 (apontado pelo autor).
 
+### P-043 — Chat IA: pergunta sem resposta (falha ou timeout) mas com custo registrado · `ABERTO` · chat IA/backend
+
+- **Sintoma:** o autor fez uma pergunta no chat da IA e não veio nenhuma resposta, mas o gasto da chamada apareceu nos custos. Há falhas na resposta da IA e timeouts.
+- **Causa:** não investigada (a hipótese a verificar é a chamada gastar tokens e a resposta se perder, por timeout ou erro no streaming, sem chegar ao chat).
+- **Contorno:** repetir a pergunta (e arcar com o custo de novo).
+- **Correção:** a investigar: achar onde a resposta se perde (timeout do provedor, do streaming ou do front), avisar o usuário quando falhar em vez de silêncio, e decidir como contabilizar o custo de uma chamada que não entregou resposta.
+- **Desde:** 2026-10-27 (apontado pelo autor; pergunta e conversa não anexadas).
+
 ### P-001 — Projeto sem lint · `CONTORNADO` · repositório
 
 - **Sintoma:** não há ESLint nem Prettier em nenhum workspace; o gate de qualidade do `CLAUDE.md` pede lint e hoje a lacuna é só declarada no fecho de cada task.
