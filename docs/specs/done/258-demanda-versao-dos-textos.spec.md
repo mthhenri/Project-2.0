@@ -1,6 +1,6 @@
 # 258-demanda-versao-dos-textos.spec.md
 
-> Task 5/7 da guarda-chuva [`documentacoes-e-pad.spec.md`](documentacoes-e-pad.spec.md) (decisão 5): os textos da demanda ganham
+> Task 5/7 da guarda-chuva [`documentacoes-e-pad.spec.md`](../../backlog/documentacoes-e-pad.spec.md) (decisão 5): os textos da demanda ganham
 > **trava de versão**, como o plano, para a tela de Documentações não sobrescrever quem gravou antes.
 
 ## Objetivo

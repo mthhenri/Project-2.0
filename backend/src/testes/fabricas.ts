@@ -106,10 +106,10 @@ export async function criarDemanda(
   };
   return inserirLinha<DemandaFabricada>(conexao,
     `INSERT INTO demanda (projeto_id, demanda_pai_id, nome, descricao_tecnica, descricao_cliente, documentacao,
-       horas_estimadas, tipo_demanda_status_id, is_estrutural, previsao_fim_data, created_date, updated_date, is_deleted)
+       horas_estimadas, tipo_demanda_status_id, is_estrutural, previsao_fim_data, versao, created_date, updated_date, is_deleted)
      SELECT :projetoId, :demandaPaiId, :nome, :descricaoTecnica, :descricaoCliente, :documentacao, :horasEstimadas,
        (SELECT tipo_demanda_status.id FROM tipo_demanda_status WHERE tipo_demanda_status.codigo = :statusCodigo),
-       :isEstrutural, :previsaoFimData, :dataBase::timestamptz, :dataBase::timestamptz, false
+       :isEstrutural, :previsaoFimData, 1, :dataBase::timestamptz, :dataBase::timestamptz, false
      RETURNING id, projeto_id AS "projetoId", demanda_pai_id AS "demandaPaiId"`, dados);
 }
 

@@ -52,3 +52,6 @@ export * from './DemandaNomeResumoDto';
 export * from './DemandaExecutadaListarDto';
 export * from './DemandaExecutadaInternoListarDto';
 export * from './DemandaExecutadaResumoDto';
+export * from './DemandaTextosAlterarDto';
+export * from './DemandaTextosInternoAlterarDto';
+export * from './DemandaTextosAlteradosDto';

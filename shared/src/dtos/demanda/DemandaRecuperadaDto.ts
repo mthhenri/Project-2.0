@@ -23,6 +23,9 @@ export class DemandaRecuperadaDto {
   @ApiPropertyOptional({ example: '# Documentação\n\nDescrição detalhada...' })
   documentacao: string | null;
 
+  @ApiProperty({ example: 1, description: 'Versão dos três textos: sobe a cada gravação que muda um deles (task 258).' })
+  versao: number;
+
   @ApiProperty({ example: 8 })
   horasEstimadas: number;
 

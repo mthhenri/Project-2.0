@@ -570,3 +570,43 @@ testarComBanco('recuperarConexaoPorPar: acha a conexão ativa só no sentido ori
   await repositorio.excluirConexao({ demandaId: a.id, conexaoId: criada.id });
   assert.equal(await repositorio.recuperarConexaoPorPar({ demandaOrigemId: a.id, demandaDestinoId: b.id }), null);
 });
+
+// ---------------------------------------------------------------------------
+// Versão dos textos (task 258)
+// ---------------------------------------------------------------------------
+
+testarComBanco('versão: a demanda nasce na versão 1 e gravar um texto soma 1; gravar outro campo não mexe nela', async (conexao) => {
+  const repositorio = criarRepositorio(DemandaRepository, conexao);
+  const projeto = await criarProjeto(conexao);
+  const demanda = await criarDemanda(conexao, { projetoId: projeto.id });
+  assert.equal((await repositorio.recuperar({ id: demanda.id }))?.versao, 1);
+
+  const comTexto = await repositorio.alterar({ id: demanda.id, descricaoTecnica: 'Texto novo' });
+  assert.equal(comTexto.versao, 2);
+  const semTexto = await repositorio.alterar({ id: demanda.id, nome: 'Outro nome' });
+  assert.equal(semTexto.versao, 2);
+});
+
+testarComBanco('versão: inserir grava a versão 1', async (conexao) => {
+  const repositorio = criarRepositorio(DemandaRepository, conexao);
+  const projeto = await criarProjeto(conexao);
+  const criada = await repositorio.inserir({ projetoId: projeto.id, nome: 'Nova', horasEstimadas: 1, status: TipoDemandaStatusEnum.PENDENTE, isEstrutural: false } as never);
+  assert.equal((await repositorio.recuperar({ id: criada.id }))?.versao, 1);
+});
+
+testarComBanco('alterarTextos: com a versão lida grava, devolve os textos e a versão nova; com versão velha não muda nada e devolve null', async (conexao) => {
+  const repositorio = criarRepositorio(DemandaRepository, conexao);
+  const projeto = await criarProjeto(conexao);
+  const demanda = await criarDemanda(conexao, { projetoId: projeto.id, descricaoTecnica: 'Antes' });
+
+  const gravado = await repositorio.alterarTextos({ id: demanda.id, documentacao: 'Doc', versao: 1 });
+  assert.equal(gravado?.versao, 2);
+  assert.equal(gravado?.documentacao, 'Doc');
+  assert.equal(gravado?.descricaoTecnica, 'Antes');
+
+  const recusado = await repositorio.alterarTextos({ id: demanda.id, documentacao: 'Velho', versao: 1 });
+  assert.equal(recusado, null);
+  const atual = await repositorio.recuperar({ id: demanda.id });
+  assert.equal(atual?.documentacao, 'Doc');
+  assert.equal(atual?.versao, 2);
+});

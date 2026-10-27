@@ -14,6 +14,8 @@ import {
   DemandaRecuperadaDto,
   DemandaRecuperarDto,
   DemandaInternoAlterarDto,
+  DemandaTextosAlteradosDto,
+  DemandaTextosInternoAlterarDto,
   DemandaGrafoDto,
   DemandaGrafoRecuperarDto,
   DemandaArvoreItemDto,
@@ -38,9 +40,12 @@ import { StandardResponse } from '@project20/shared';
 import { PaginatedResult } from '@project20/shared';
 import { DemandaRestaurarDto, DemandaRestauradaDto } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
+import { ConflictException } from '../../../core/exceptions/conflict.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
 import { UnauthorizedAccessException } from '../../../core/exceptions/unauthorized-access.exception';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
+
+const MENSAGEM_VERSAO_DOS_TEXTOS_MAIS_NOVA = 'Alguém gravou uma versão mais nova dos textos desta demanda. Recarregue para ver a versão mais nova antes de gravar.';
 
 @Injectable()
 export class DemandaService {
@@ -312,38 +317,7 @@ export class DemandaService {
     dto: DemandaInternoAlterarDto,
     usuarioAtivo: JwtPayload,
   ): Promise<StandardResponse<DemandaRecuperadaDto>> {
-    const usuarioId =
-      usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
-
-    const demandaEncontrada = await this.demandaRepositorio.recuperar(
-      { id: dto.id },
-      usuarioId !== undefined ? { usuarioId } : undefined,
-    );
-
-    if (!demandaEncontrada) {
-      throw new ResourceNotFoundException('Demanda');
-    }
-
-    if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
-      const eMembro = await this.demandaRepositorio.validarMembro({
-        demandaId: dto.id,
-        usuarioId: usuarioAtivo.sub,
-      });
-      if (!eMembro) {
-        throw new UnauthorizedAccessException(
-          'Você só pode editar demandas das quais é membro',
-        );
-      }
-    }
-
-    if (
-      usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR &&
-      dto.descricaoCliente !== undefined
-    ) {
-      throw new UnauthorizedAccessException(
-        'Apenas gestores podem alterar a descrição do cliente',
-      );
-    }
+    const demandaEncontrada = await this.recuperarDemandaParaEditar(dto.id, dto.descricaoCliente !== undefined, usuarioAtivo);
 
     if (dto.demandaPaiId !== undefined) {
       const demandaPaiEncontrada = await this.demandaRepositorio.recuperar(
@@ -388,6 +362,71 @@ export class DemandaService {
       dados:    demandaAlterada,
       mensagem: 'Demanda alterada com sucesso',
     };
+  }
+
+  /**
+   * Grava os textos da demanda com a versão que a pessoa leu (task 258, tela de Documentações): versão mais nova no banco recusa a gravação (409).
+   * Permissões de §14: desenvolvedor só se for membro e nunca a descrição do cliente.
+   */
+  async alterarTextos(
+    dto: DemandaTextosInternoAlterarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<StandardResponse<DemandaTextosAlteradosDto>> {
+    await this.recuperarDemandaParaEditar(dto.id, dto.descricaoCliente !== undefined, usuarioAtivo);
+
+    if (dto.descricaoTecnica === undefined && dto.descricaoCliente === undefined && dto.documentacao === undefined) {
+      throw new BusinessException('Informe ao menos um texto para alterar');
+    }
+
+    const textosAlterados = await this.demandaRepositorio.alterarTextos(dto);
+    if (!textosAlterados) throw new ConflictException(MENSAGEM_VERSAO_DOS_TEXTOS_MAIS_NOVA);
+
+    return { sucesso: true, dados: textosAlterados, mensagem: 'Textos da demanda alterados com sucesso' };
+  }
+
+  /**
+   * A demanda a editar, depois das regras de §14: desenvolvedor só edita demanda de que é membro e nunca a descrição do cliente. Usada por `alterar` e
+   * `alterarTextos`.
+   */
+  private async recuperarDemandaParaEditar(
+    demandaId: number,
+    alteraDescricaoCliente: boolean,
+    usuarioAtivo: JwtPayload,
+  ): Promise<DemandaRecuperadaDto> {
+    const usuarioId =
+      usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR ? usuarioAtivo.sub : undefined;
+
+    const demandaEncontrada = await this.demandaRepositorio.recuperar(
+      { id: demandaId },
+      usuarioId !== undefined ? { usuarioId } : undefined,
+    );
+
+    if (!demandaEncontrada) {
+      throw new ResourceNotFoundException('Demanda');
+    }
+
+    if (usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR) {
+      const eMembro = await this.demandaRepositorio.validarMembro({
+        demandaId: demandaId,
+        usuarioId: usuarioAtivo.sub,
+      });
+      if (!eMembro) {
+        throw new UnauthorizedAccessException(
+          'Você só pode editar demandas das quais é membro',
+        );
+      }
+    }
+
+    if (
+      usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR &&
+      alteraDescricaoCliente
+    ) {
+      throw new UnauthorizedAccessException(
+        'Apenas gestores podem alterar a descrição do cliente',
+      );
+    }
+
+    return demandaEncontrada;
   }
 
   /**

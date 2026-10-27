@@ -97,10 +97,10 @@ async function inserirDemanda(
   const resultado = await transacao.raw(
     `INSERT INTO demanda (
        created_date, updated_date, is_deleted, projeto_id, demanda_pai_id, nome, descricao_tecnica,
-       horas_estimadas, tipo_demanda_status_id, is_estrutural
+       horas_estimadas, tipo_demanda_status_id, is_estrutural, versao
      )
      SELECT NOW(), NOW(), false, :projetoId, :demandaPaiId, :nome, :descricaoTecnica,
-            :horasEstimadas, tipo_demanda_status.id, :estrutural
+            :horasEstimadas, tipo_demanda_status.id, :estrutural, 1
      FROM tipo_demanda_status
      WHERE tipo_demanda_status.codigo = :status AND tipo_demanda_status.is_deleted = false
      RETURNING id`,

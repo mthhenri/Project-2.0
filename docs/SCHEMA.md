@@ -265,6 +265,11 @@ via `demanda_pai_id`). Demandas também se conectam em grafo via `demanda_conexa
 Ao criar uma demanda, o sistema auto-atribui o criador e todos os gestores ativos
 via `demanda_usuario`.
 
+`versao` (migration `0070`, task 258) é a trava de versão dos textos, como `plano.versao`: nasce em 1 e todo
+`UPDATE` que muda `descricao_tecnica`, `descricao_cliente` ou `documentacao` soma 1 na mesma instrução. A gravação
+com versão (`PATCH /demanda/:id/textos`) só vale se a versão do banco ainda for a lida; as demais telas gravam sem
+recusar, só sobem o número.
+
 ```sql
 CREATE TABLE demanda (
   id            SERIAL    PRIMARY KEY,
@@ -283,7 +288,9 @@ CREATE TABLE demanda (
   tipo_demanda_status_id INTEGER NOT NULL
                       CONSTRAINT fk_demanda_tipo_demanda_status REFERENCES tipo_demanda_status(id),
   is_estrutural     BOOLEAN      NOT NULL,
-  previsao_fim_data DATE
+  previsao_fim_data DATE,
+  versao            INTEGER      NOT NULL,  -- sobe a cada gravação que muda um dos três textos (task 258)
+  CONSTRAINT chk_demanda_versao_positiva CHECK (versao >= 1)
 );
 
 CREATE INDEX ix_demanda_projeto

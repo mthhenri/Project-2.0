@@ -1309,6 +1309,7 @@ Regras que exigem consulta ao banco ou lógica de domínio:
 | `tipo_demanda_status_id` | INTEGER FK | → `tipo_demanda_status` (PENDENTE, PLANEJADA, CONCLUIDA, CANCELADA) |
 | `is_estrutural` | BOOLEAN | demanda-container que agrupa sub-demandas |
 | `previsao_fim_data` | DATE \| NULL | |
+| `versao` | INTEGER | trava de versão dos três textos: nasce em 1 e sobe a cada gravação que muda um deles; `PATCH /demanda/:id/textos` só grava com a versão lida (task 258) |
 
 ### DemandaUsuario
 

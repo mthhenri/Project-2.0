@@ -17,6 +17,7 @@ import {
   DemandaListarDto,
   DemandaExecutadaListarDto,
   DemandaAlterarDto,
+  DemandaTextosAlterarDto,
   DemandaConexaoCriarDto,
   DemandaTagsAtribuirDto,
   DemandaUsuarioAtribuirDto,
@@ -148,6 +149,21 @@ export class DemandaController {
     @ActiveUser() usuarioAtivo: JwtPayload,
   ) {
     return this.demandaService.alterar({ ...dto, id }, usuarioAtivo);
+  }
+
+  @ApiOperation({ summary: 'Alterar os três textos da demanda com a versão lida (desenvolvedor só se for membro e nunca a descrição do cliente)' })
+  @ApiResponse({ status: 200, description: 'Textos alterados com sucesso' })
+  @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+  @ApiResponse({ status: 403, description: 'Sem permissão para editar', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+  @ApiResponse({ status: 404, description: 'Demanda não encontrada', schema: { example: NAO_ENCONTRADO_EXEMPLO } })
+  @ApiResponse({ status: 409, description: 'Alguém gravou uma versão mais nova dos textos' })
+  @Patch(':id/textos')
+  alterarTextos(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: DemandaTextosAlterarDto,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ) {
+    return this.demandaService.alterarTextos({ ...dto, id }, usuarioAtivo);
   }
 
   @ApiOperation({ summary: 'Excluir demanda via soft delete (somente gestor)' })

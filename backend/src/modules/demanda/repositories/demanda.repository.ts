@@ -43,6 +43,8 @@ import {
   DemandaExecutadaResumoDto,
   DemandaAtribuidasListarDto,
   DemandaInternoAlterarDto,
+  DemandaTextosAlteradosDto,
+  DemandaTextosInternoAlterarDto,
   DemandaPlanejamentoDto,
   DemandaPlanejamentoListarDto,
 } from '@project20/shared';
@@ -71,7 +73,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
       `INSERT INTO demanda (
          projeto_id, demanda_pai_id, nome, descricao_tecnica, descricao_cliente,
          documentacao, horas_estimadas, tipo_demanda_status_id, is_estrutural,
-         previsao_fim_data, created_date, updated_date, is_deleted
+         previsao_fim_data, versao, created_date, updated_date, is_deleted
        )
        SELECT
          :projetoId, :demandaPaiId, :nome, :descricaoTecnica, :descricaoCliente,
@@ -79,7 +81,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
          (SELECT tipo_demanda_status.id FROM tipo_demanda_status
             WHERE tipo_demanda_status.codigo = :status AND tipo_demanda_status.is_deleted = false),
          :isEstrutural,
-         :previsaoFimData, NOW(), NOW(), false
+         :previsaoFimData, 1, NOW(), NOW(), false
        RETURNING
          id,
          projeto_id         AS "projetoId",
@@ -216,6 +218,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
          demanda.descricao_tecnica  AS "descricaoTecnica",
          demanda.descricao_cliente  AS "descricaoCliente",
          demanda.documentacao,
+         demanda.versao,
          demanda.horas_estimadas    AS "horasEstimadas",
          tipo_demanda_status.codigo AS status,
          demanda.is_estrutural      AS "isEstrutural",
@@ -591,6 +594,11 @@ export class DemandaRepository extends BaseRepository<Demanda> {
       parametros.previsaoFimData = dto.previsaoFimData;
     }
 
+    // Qualquer gravação que muda um dos três textos soma 1 na mesma instrução (task 258).
+    if (dto.descricaoTecnica !== undefined || dto.descricaoCliente !== undefined || dto.documentacao !== undefined) {
+      setClauses.push('versao = demanda.versao + 1');
+    }
+
     const resultado = await this.executarConsulta<DemandaRecuperadaDto>(
       `UPDATE demanda
        SET ${setClauses.join(', ')}
@@ -604,6 +612,7 @@ export class DemandaRepository extends BaseRepository<Demanda> {
          descricao_tecnica  AS "descricaoTecnica",
          descricao_cliente  AS "descricaoCliente",
          documentacao,
+         versao,
          horas_estimadas    AS "horasEstimadas",
          (SELECT tipo_demanda_status.codigo FROM tipo_demanda_status
             WHERE tipo_demanda_status.id = demanda.tipo_demanda_status_id) AS status,
@@ -790,6 +799,43 @@ export class DemandaRepository extends BaseRepository<Demanda> {
          AND demanda.is_deleted = true
        LIMIT 1`,
       { id: dto.id },
+    );
+    return resultado[0] ?? null;
+  }
+
+  /**
+   * Grava os textos informados **se a versão ainda for a lida** e soma 1 na mesma instrução (task 258). Devolve `null` quando a versão no banco já é
+   * outra (ou a demanda não existe): nada foi alterado e quem chamou recusa a gravação.
+   */
+  async alterarTextos(dto: DemandaTextosInternoAlterarDto): Promise<DemandaTextosAlteradosDto | null> {
+    const parametros: Record<string, unknown> = { id: dto.id, versao: dto.versao };
+    const setClauses: string[] = ['versao = demanda.versao + 1'];
+    if (dto.descricaoTecnica !== undefined) {
+      setClauses.push('descricao_tecnica = :descricaoTecnica');
+      parametros.descricaoTecnica = dto.descricaoTecnica;
+    }
+    if (dto.descricaoCliente !== undefined) {
+      setClauses.push('descricao_cliente = :descricaoCliente');
+      parametros.descricaoCliente = dto.descricaoCliente;
+    }
+    if (dto.documentacao !== undefined) {
+      setClauses.push('documentacao = :documentacao');
+      parametros.documentacao = dto.documentacao;
+    }
+
+    const resultado = await this.executarConsulta<DemandaTextosAlteradosDto>(
+      `UPDATE demanda
+       SET ${setClauses.join(', ')}
+       WHERE demanda.id = :id
+         AND demanda.is_deleted = false
+         AND demanda.versao = :versao
+       RETURNING
+         id,
+         descricao_tecnica AS "descricaoTecnica",
+         descricao_cliente AS "descricaoCliente",
+         documentacao,
+         versao`,
+      parametros,
     );
     return resultado[0] ?? null;
   }
