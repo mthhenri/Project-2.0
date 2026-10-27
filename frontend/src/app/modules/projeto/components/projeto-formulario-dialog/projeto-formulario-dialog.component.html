@@ -84,26 +84,6 @@
             <small class="projeto-formulario-dialog__erro">Status é obrigatório</small>
           }
         </div>
-
-        <div class="projeto-formulario-dialog__campo">
-          <label for="volumeEsperadoHorasMes" class="projeto-formulario-dialog__label">
-            Volume esperado <span class="projeto-formulario-dialog__periodo-dica">(opcional)</span>
-          </label>
-          <p-inputnumber
-            inputId="volumeEsperadoHorasMes"
-            formControlName="volumeEsperadoHorasMes"
-            [min]="0"
-            [max]="limiteVolumeEsperado"
-            [useGrouping]="false"
-            [maxFractionDigits]="0"
-            suffix=" h por mês"
-            placeholder="Sem volume definido"
-            locale="pt-BR"
-            class="w-full"
-            [inputStyle]="{ width: '100%' }"
-          />
-          <small class="projeto-formulario-dialog__dica">Compara com as horas gastas no mês em "Volume do mês"</small>
-        </div>
       </div>
 
       <div class="projeto-formulario-dialog__campo">
@@ -159,7 +139,17 @@
         </div>
       </div>
     }
-
+    @if (projetoIdEdicao(); as projetoId) {
+      @if (mostrarDialog()) {
+        <app-projeto-volume-vigencias [projetoId]="projetoId" />
+      }
+    } @else {
+      <div class="projeto-formulario-dialog__campo">
+        <label for="volumeInicialHoras" class="projeto-formulario-dialog__label">Volume esperado inicial (opcional)</label>
+        <p-inputnumber inputId="volumeInicialHoras" formControlName="volumeInicialHoras" [min]="0" [max]="limiteVolumeEsperado" [useGrouping]="false" [maxFractionDigits]="0" suffix=" h por mês" placeholder="Sem volume definido" locale="pt-BR" />
+        <small class="projeto-formulario-dialog__dica">Vale a partir do mês de início do projeto; sem data de início, do mês atual.</small>
+      </div>
+    }
   </form>
 
   <ng-template pTemplate="footer">

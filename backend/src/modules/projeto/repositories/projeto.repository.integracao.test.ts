@@ -3,6 +3,7 @@ import { TipoProjetoStatusEnum, TipoUsuarioEnum } from '@project20/shared';
 import { testarComBanco } from '../../../testes/banco-teste';
 import { criarRepositorio } from '../../../testes/criar-repositorio';
 import { criarAtividade, criarDemanda, criarDemandaUsuario, criarDesenvolvedor, criarExecucao, criarGestor, criarProjeto, excluirLinha } from '../../../testes/fabricas';
+import { ProjetoVolumeVigenciaRepository } from './projeto-volume-vigencia.repository';
 import { ProjetoRepository } from './projeto.repository';
 import { ProjetoService } from '../services/projeto.service';
 
@@ -142,36 +143,13 @@ testarComBanco('inserir e alterar gravam status por código e devolvem datas com
   assert.deepEqual([alterado.nome, alterado.codigo, alterado.status, alterado.previsaoFimData], ['Renomeado', 'NOVO1', TipoProjetoStatusEnum.PAUSADO, '2026-12-31']);
 });
 
-testarComBanco('volume esperado: inserir grava, alterar muda e null limpa; recuperar devolve', async (conexao) => {
-  const repositorio = criarRepositorio(ProjetoRepository, conexao);
-  const criado = await repositorio.inserir({
-    nome: 'Com volume', codigo: 'VOL1', cor: '#123456', status: TipoProjetoStatusEnum.ATIVO, inicioData: null, previsaoFimData: null, volumeEsperadoHorasMes: 40,
-  } as never);
-  assert.equal(criado.volumeEsperadoHorasMes, 40);
-  assert.equal((await repositorio.recuperar({ id: criado.id }))?.volumeEsperadoHorasMes, 40);
-
-  assert.equal((await repositorio.alterar({ id: criado.id, volumeEsperadoHorasMes: 80 })).volumeEsperadoHorasMes, 80);
-  assert.equal((await repositorio.alterar({ id: criado.id, nome: 'Outro nome' })).volumeEsperadoHorasMes, 80);
-  assert.equal((await repositorio.alterar({ id: criado.id, volumeEsperadoHorasMes: null })).volumeEsperadoHorasMes, null);
-
-  const semVolume = await repositorio.inserir({
-    nome: 'Sem volume', codigo: 'VOL2', cor: '#123456', status: TipoProjetoStatusEnum.ATIVO, inicioData: null, previsaoFimData: null,
-  } as never);
-  assert.equal(semVolume.volumeEsperadoHorasMes, null);
-});
-
-testarComBanco('a coluna recusa volume esperado negativo', async (conexao) => {
-  const projeto = await criarProjeto(conexao);
-  await assert.rejects(() => conexao.raw('UPDATE projeto SET volume_esperado_horas_mes = -1 WHERE projeto.id = :id', { id: projeto.id }), /chk_projeto_volume_esperado_horas_mes/);
-});
-
 testarComBanco('listarVolume soma só as execuções encerradas do mês, nas atividades e demandas ativas, e devolve 0 sem execução', async (conexao) => {
   const repositorio = criarRepositorio(ProjetoRepository, conexao);
   const desenvolvedor = await criarDesenvolvedor(conexao);
   const projetoA = await criarProjeto(conexao);
   const projetoB = await criarProjeto(conexao);
   const projetoVazio = await criarProjeto(conexao);
-  await conexao.raw('UPDATE projeto SET volume_esperado_horas_mes = 40 WHERE projeto.id = :id', { id: projetoA.id });
+  await criarRepositorio(ProjetoVolumeVigenciaRepository, conexao).inserir({ projetoId: projetoA.id, vigenciaInicioData: '2026-01-01', volumeEsperadoHoras: 40 });
 
   const demandaA = await criarDemanda(conexao, { projetoId: projetoA.id });
   const demandaB = await criarDemanda(conexao, { projetoId: projetoB.id });
@@ -206,7 +184,7 @@ testarComBanco('listarVolumePorMes devolve 12 linhas por projeto, com os minutos
   const projeto = await criarProjeto(conexao);
   const demanda = await criarDemanda(conexao, { projetoId: projeto.id });
   const atividade = await criarAtividade(conexao, { demandaId: demanda.id, usuarioId: desenvolvedor.id });
-  await conexao.raw('UPDATE projeto SET volume_esperado_horas_mes = 40 WHERE projeto.id = :id', { id: projeto.id });
+  await criarRepositorio(ProjetoVolumeVigenciaRepository, conexao).inserir({ projetoId: projeto.id, vigenciaInicioData: '2026-01-01', volumeEsperadoHoras: 40 });
 
   // 31/10 22:00 -03:00 já é 01/11 em UTC: conta em outubro (fuso do sistema). Em andamento e excluída ficam fora; 2025 fica fora do ano.
   await criarExecucao(conexao, { atividadeId: atividade.id, inicioData: '2026-10-31T22:00:00-03:00', fimData: '2026-10-31T23:00:00-03:00' });

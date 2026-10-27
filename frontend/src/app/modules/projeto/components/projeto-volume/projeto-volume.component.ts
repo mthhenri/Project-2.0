@@ -10,7 +10,6 @@ import { TooltipModule } from 'primeng/tooltip';
 import { ProjetoVolumeAnualResumoDto, ProjetoVolumeResumoDto, hojeNoFuso } from '@project20/shared';
 import { ambiente } from '../../../../../environments/environment';
 import { VisualizacaoTempoService } from '../../../../core/services/visualizacao-tempo.service';
-import { formatarTempoExibicao } from '../../../../core/models/visualizacao-tempo.model';
 import { GraficoBarrasComponent } from '../../../../shared/components/grafico-barras/grafico-barras.component';
 import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
 import { BarraRecargaComponent } from '../../../../shared/components/barra-recarga/barra-recarga.component';
@@ -63,7 +62,7 @@ export class ProjetoVolumeComponent implements OnInit {
     this.itensAnuais().map((item) => ({
       item,
       categorias: montarCategoriasAnuais(item, this.unidadeTempo.emDias()),
-      rotuloEsperado: item.volumeEsperadoHorasMes === null ? 'sem volume definido' : `${formatarTempoExibicao(item.volumeEsperadoHorasMes, this.unidadeTempo.emDias(), 'horas')} por mês`,
+      rotuloEsperado: item.volumeEsperadoHorasPorMes.every(valor => valor === null) ? 'sem volume definido' : 'Esperado de cada mês (tracejado)',
     })),
   );
 

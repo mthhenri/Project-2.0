@@ -17,6 +17,6 @@ export class ProjetoVolumeResumoDto {
   @ApiProperty({ example: 720, description: 'Minutos das execuções encerradas do mês' })
   minutosGastos: number;
 
-  @ApiProperty({ example: 40, nullable: true, description: 'Horas esperadas por mês; nulo = não definido' })
+  @ApiProperty({ example: 40, nullable: true, description: 'Horas esperadas vigentes no mês consultado; null = sem volume' })
   volumeEsperadoHorasMes: number | null;
 }

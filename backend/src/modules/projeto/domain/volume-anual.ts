@@ -19,12 +19,13 @@ export function agruparVolumePorProjeto(linhas: readonly ProjetoVolumeMesDto[]):
         nome: linha.nome,
         codigo: linha.codigo,
         cor: linha.cor,
-        volumeEsperadoHorasMes: linha.volumeEsperadoHorasMes,
+        volumeEsperadoHorasPorMes: new Array<number | null>(12).fill(null),
         minutosGastosPorMes: new Array<number>(12).fill(0),
       };
       porProjeto.set(linha.projetoId, projeto);
     }
     projeto.minutosGastosPorMes[linha.mes - 1] = linha.minutosGastos;
+    projeto.volumeEsperadoHorasPorMes[linha.mes - 1] = linha.volumeEsperadoHorasMes;
   }
   return [...porProjeto.values()];
 }

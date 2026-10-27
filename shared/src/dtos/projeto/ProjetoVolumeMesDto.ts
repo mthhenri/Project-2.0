@@ -4,6 +4,7 @@ export class ProjetoVolumeMesDto {
   nome: string;
   codigo: string;
   cor: string;
+  /** Valor vigente neste mês, resolvido antes do agrupamento anual. */
   volumeEsperadoHorasMes: number | null;
   /** 1 a 12 */
   mes: number;

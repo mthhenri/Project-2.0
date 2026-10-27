@@ -38,6 +38,7 @@ Estas são as fontes da verdade. Em conflito entre código e documento, **o docu
 | Base comum, exceções, filtros, interceptors | `backend/src/core/` |
 | Configuração (`ConfigService`) | `backend/src/config/` |
 | Conexão Knex, migrations `.sql` numeradas e corte de legado | `backend/src/database/` (`migrations/`, `sql-migration-source.ts`) |
+| Volume de projeto por vigência (251) | `backend/src/modules/projeto/{services,repositories}/projeto-volume-vigencia.*`, `domain/volume-vigencia.ts`, migration `0068`; `frontend/src/app/modules/projeto/components/projeto-volume-vigencias/`; verificação junto da spec 251 |
 | Telas e serviços HTTP do frontend | `frontend/src/app/modules/<modulo>/` |
 | Project Desktop (Electron): janela, bandeja, travas e funções puras (task 152); aviso de versão nova (task 198) | `desktop/src/` (`main.ts`, `politica-da-janela.ts`, `politica-da-versao.ts`, `config.ts`); README em `desktop/README.md` |
 | Download do Project Desktop (versão publicada, arquivo, botão da topbar) (task 198) | `backend/src/modules/desktop/` (`DESKTOP_PASTA_EXECUTAVEIS`), `frontend/src/app/core/services/desktop-download.service.ts`, `shared/src/utils/versao.ts` |

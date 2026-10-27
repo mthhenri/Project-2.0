@@ -21,6 +21,8 @@ export interface GraficoBarrasCategoria {
   /** Rótulo completo, usado no tooltip quando o do eixo é cortado. */
   descricao?: string;
   barras: GraficoBarrasBarra[];
+  /** Referência desta categoria; ausente interrompe a linha em degraus. */
+  referencia?: { valor: number; descricao: string };
 }
 
 interface BarraDesenhada extends GraficoBarrasBarra {
@@ -94,7 +96,8 @@ export class GraficoBarrasComponent {
       ? this.categorias().map((categoria) => somar(categoria.barras.map((barra) => barra.valor)))
       : this.categorias().flatMap((categoria) => categoria.barras.map((barra) => barra.valor));
     const maiorValor = max(valores) ?? 0;
-    const teto = Math.max(maiorValor, this.linhaReferencia() ?? 0, 1);
+    const maiorReferencia = max(this.categorias().map(categoria => categoria.referencia?.valor ?? 0)) ?? 0;
+    const teto = Math.max(maiorValor, maiorReferencia, this.linhaReferencia() ?? 0, 1);
     return scaleLinear().domain([0, teto]).nice().range([this.altura() - MARGEM.inferior, MARGEM.superior]);
   });
 
@@ -150,6 +153,24 @@ export class GraficoBarrasComponent {
           };
         }),
       };
+    });
+  });
+
+  /** Um segmento por mês com conector na fronteira; um mês sem referência quebra o caminho. */
+  readonly referenciasDesenhadas = computed(() => {
+    const desenhadas = this.categoriasDesenhadas();
+    const categorias = this.categorias();
+    return categorias.flatMap((categoria, indice) => {
+      if (!categoria.referencia) return [];
+      const atual = desenhadas[indice];
+      const anterior = desenhadas[indice - 1];
+      const seguinte = desenhadas[indice + 1];
+      const inicio = anterior ? (anterior.centroX + atual.centroX) / 2 : this.margem.esquerda;
+      const fim = seguinte ? (atual.centroX + seguinte.centroX) / 2 : this.largura() - this.margem.direita;
+      const altura = this.escalaY()(categoria.referencia.valor);
+      const alturaAnterior = categorias[indice - 1]?.referencia;
+      const conector = alturaAnterior ? `M ${inicio} ${this.escalaY()(alturaAnterior.valor)} V ${altura} ` : '';
+      return [{ caminho: `${conector}M ${inicio} ${altura} H ${fim}`, descricao: categoria.referencia.descricao }];
     });
   });
 

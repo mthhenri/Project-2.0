@@ -116,12 +116,10 @@
                     <span class="projeto-volume__codigo">{{ projeto.item.codigo }}</span>
                     <a class="projeto-volume__nome" [routerLink]="['/projeto', projeto.item.projetoId]">{{ projeto.item.nome }}</a>
                   </div>
-                  <span class="projeto-volume__esperado" [class.projeto-volume__esperado--vazio]="projeto.item.volumeEsperadoHorasMes === null">{{ projeto.rotuloEsperado }}</span>
+                  <span class="projeto-volume__esperado">{{ projeto.rotuloEsperado }}</span>
                 </header>
                 <app-grafico-barras
                   [categorias]="projeto.categorias"
-                  [linhaReferencia]="projeto.item.volumeEsperadoHorasMes"
-                  rotuloLinhaReferencia="esperado por mês"
                   [altura]="220"
                   unidadeDoEixo=" h"
                   [descricaoGeral]="'Horas gastas por mês em ' + projeto.item.nome"

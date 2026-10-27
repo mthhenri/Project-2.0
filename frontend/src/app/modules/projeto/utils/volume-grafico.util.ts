@@ -42,12 +42,14 @@ export function montarCategoriasMensais(itens: readonly ProjetoVolumeResumoDto[]
 
 /** Visão anual de um projeto: doze categorias (os meses), uma barra de horas gastas cada, vermelha no mês acima do esperado. */
 export function montarCategoriasAnuais(item: ProjetoVolumeAnualResumoDto, emDias: boolean): GraficoBarrasCategoria[] {
-  const minutosEsperados = item.volumeEsperadoHorasMes === null ? null : item.volumeEsperadoHorasMes * 60;
   return item.minutosGastosPorMes.map((minutos, indice) => {
+    const esperado = item.volumeEsperadoHorasPorMes[indice] ?? null;
+    const minutosEsperados = esperado === null ? null : esperado * 60;
     const estourou = minutosEsperados !== null && minutos > minutosEsperados;
     const gasto = formatarTempoExibicao(minutos, emDias, 'minutos');
     return {
       rotulo: MESES_ABREVIADOS[indice],
+      referencia: esperado === null ? undefined : { valor: esperado, descricao: `${MESES_ABREVIADOS[indice]}: ${formatarTempoExibicao(esperado, emDias, 'horas')} esperadas` },
       barras: [{
         valor: minutosParaHoras(minutos),
         cor: estourou ? COR_VOLUME_ESTOURO : item.cor,

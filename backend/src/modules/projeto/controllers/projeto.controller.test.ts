@@ -8,7 +8,7 @@ import { ProjetoController } from './projeto.controller';
 
 test('criar, alterar, excluir, restaurar e o volume do mês do projeto são @GestorOnly', () => {
   const rotas = rotasPorNome(ProjetoController);
-  for (const nome of ['criar', 'alterar', 'excluir', 'restaurar', 'listarVolume', 'listarVolumeAnual']) {
+  for (const nome of ['criar', 'alterar', 'excluir', 'restaurar', 'listarVolume', 'listarVolumeAnual', 'listarVigencias', 'criarVigencia', 'excluirVigencia']) {
     assert.equal(rotas[nome].gestorOnly, true, `${nome} deveria ser @GestorOnly`);
   }
 });
@@ -31,6 +31,6 @@ test('nenhuma rota de projeto é pública nem exclusiva de administrador', () =>
 test('verbos e caminhos das rotas', () => {
   assert.deepEqual(
     Object.values(rotasPorNome(ProjetoController)).map((rota) => `${rota.verbo} ${rota.caminho}`).sort(),
-    ['DELETE :id', 'GET /', 'GET :id', 'GET volume', 'GET volume/anual', 'PATCH :id/restaurar', 'POST /', 'PUT :id'].sort(),
+    ['DELETE :id', 'GET /', 'GET :id', 'GET volume', 'GET volume/anual', 'PATCH :id/restaurar', 'POST /', 'PUT :id', 'GET :id/volume-vigencia', 'POST :id/volume-vigencia', 'DELETE :id/volume-vigencia/:vigenciaId'].sort(),
   );
 });

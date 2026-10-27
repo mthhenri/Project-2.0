@@ -48,11 +48,11 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
   /** Insere novo projeto e retorna os dados do projeto criado. */
   async inserir(dados: ProjetoCriarDados): Promise<ProjetoCriadoDto> {
     const resultado = await this.executarConsulta<ProjetoCriadoDto>(
-      `INSERT INTO projeto (nome, codigo, cor, tipo_projeto_status_id, inicio_data, previsao_fim_data, volume_esperado_horas_mes, created_date, updated_date, is_deleted)
+      `INSERT INTO projeto (nome, codigo, cor, tipo_projeto_status_id, inicio_data, previsao_fim_data, created_date, updated_date, is_deleted)
        SELECT :nome, :codigo, :cor,
          (SELECT tipo_projeto_status.id FROM tipo_projeto_status
             WHERE tipo_projeto_status.codigo = :status AND tipo_projeto_status.is_deleted = false),
-         :inicioData, :previsaoFimData, :volumeEsperadoHorasMes, NOW(), NOW(), false
+         :inicioData, :previsaoFimData, NOW(), NOW(), false
        RETURNING
          id,
          nome,
@@ -62,7 +62,6 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
             WHERE tipo_projeto_status.id = projeto.tipo_projeto_status_id) AS status,
          inicio_data::text       AS "inicioData",
          previsao_fim_data::text AS "previsaoFimData",
-         volume_esperado_horas_mes AS "volumeEsperadoHorasMes",
          created_date            AS "createdDate"`,
       {
         nome:            dados.nome,
@@ -71,7 +70,6 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
         status:          dados.status,
         inicioData:      dados.inicioData ?? null,
         previsaoFimData: dados.previsaoFimData ?? null,
-        volumeEsperadoHorasMes: dados.volumeEsperadoHorasMes ?? null,
       },
     );
     return resultado[0];
@@ -88,7 +86,6 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
          tipo_projeto_status.codigo      AS status,
          projeto.inicio_data::text       AS "inicioData",
          projeto.previsao_fim_data::text AS "previsaoFimData",
-         projeto.volume_esperado_horas_mes AS "volumeEsperadoHorasMes",
          projeto.created_date            AS "createdDate"
        FROM projeto
        INNER JOIN tipo_projeto_status
@@ -162,8 +159,16 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
          projeto.codigo,
          projeto.cor,
          COALESCE(execucao_do_mes.minutos_gastos, 0) AS "minutosGastos",
-         projeto.volume_esperado_horas_mes           AS "volumeEsperadoHorasMes"
+         volume_vigente.volume_esperado_horas        AS "volumeEsperadoHorasMes"
        FROM projeto
+       LEFT JOIN LATERAL (
+         SELECT projeto_volume_vigencia.volume_esperado_horas
+         FROM projeto_volume_vigencia
+         WHERE projeto_volume_vigencia.projeto_id = projeto.id
+           AND projeto_volume_vigencia.is_deleted = false
+           AND projeto_volume_vigencia.vigencia_inicio_data <= :dataInicio::date
+         ORDER BY projeto_volume_vigencia.vigencia_inicio_data DESC LIMIT 1
+       ) AS volume_vigente ON true
        LEFT JOIN (
          SELECT
            demanda.projeto_id AS projeto_id,
@@ -198,11 +203,19 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
          projeto.nome,
          projeto.codigo,
          projeto.cor,
-         projeto.volume_esperado_horas_mes           AS "volumeEsperadoHorasMes",
+         volume_vigente.volume_esperado_horas        AS "volumeEsperadoHorasMes",
          mes_do_ano.mes                              AS "mes",
          COALESCE(execucao_do_mes.minutos_gastos, 0) AS "minutosGastos"
        FROM projeto
        CROSS JOIN generate_series(1, 12) AS mes_do_ano(mes)
+       LEFT JOIN LATERAL (
+         SELECT projeto_volume_vigencia.volume_esperado_horas
+         FROM projeto_volume_vigencia
+         WHERE projeto_volume_vigencia.projeto_id = projeto.id
+           AND projeto_volume_vigencia.is_deleted = false
+           AND projeto_volume_vigencia.vigencia_inicio_data <= make_date(EXTRACT(YEAR FROM :dataInicio::date)::int, mes_do_ano.mes, 1)
+         ORDER BY projeto_volume_vigencia.vigencia_inicio_data DESC LIMIT 1
+       ) AS volume_vigente ON true
        LEFT JOIN (
          SELECT
            demanda.projeto_id AS projeto_id,
@@ -346,10 +359,6 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
       setClauses.push('previsao_fim_data = :previsaoFimData');
       parametros.previsaoFimData = dto.previsaoFimData;
     }
-    if (dto.volumeEsperadoHorasMes !== undefined) {
-      setClauses.push('volume_esperado_horas_mes = :volumeEsperadoHorasMes');
-      parametros.volumeEsperadoHorasMes = dto.volumeEsperadoHorasMes;
-    }
 
     const resultado = await this.executarConsulta<ProjetoAlteradoDto>(
       `UPDATE projeto
@@ -365,7 +374,6 @@ export class ProjetoRepository extends BaseRepository<Projeto> {
             WHERE tipo_projeto_status.id = projeto.tipo_projeto_status_id) AS status,
          inicio_data::text       AS "inicioData",
          previsao_fim_data::text AS "previsaoFimData",
-         volume_esperado_horas_mes AS "volumeEsperadoHorasMes",
          created_date            AS "createdDate"`,
       parametros,
     );

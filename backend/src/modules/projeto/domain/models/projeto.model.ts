@@ -8,5 +8,4 @@ export class Projeto extends BaseEntity {
   status: TipoProjetoStatusEnum;
   inicioData: string | null;
   previsaoFimData: string | null;
-  volumeEsperadoHorasMes: number | null;
 }

@@ -16,6 +16,10 @@ import {
   ProjetoVolumeResumoDto,
   ProjetoVolumeAnualListarDto,
   ProjetoVolumeAnualResumoDto,
+  ProjetoVolumeVigenciaCriarDto,
+  ProjetoVolumeVigenciaResumoDto,
+  ProjetoVolumeVigenciaListarDto,
+  ProjetoVolumeVigenciaExcluirDto,
 } from '@project20/shared';
 import { ambiente } from '../../../../environments/environment';
 import { comFeedbackProprio } from '../../../core/interceptors/loading.interceptor';
@@ -24,6 +28,21 @@ import { comFeedbackProprio } from '../../../core/interceptors/loading.intercept
 export class ProjetoService {
   private readonly httpClient = inject(HttpClient);
   private readonly urlBase = `${ambiente.apiUrl}/projeto`;
+
+  /** Lista as mudanças de volume do projeto. */
+  listarVigencias(dto: ProjetoVolumeVigenciaListarDto): Observable<StandardResponse<ProjetoVolumeVigenciaResumoDto[]>> {
+    return this.httpClient.get<StandardResponse<ProjetoVolumeVigenciaResumoDto[]>>(`${this.urlBase}/${dto.projetoId}/volume-vigencia`, comFeedbackProprio());
+  }
+
+  /** Registra ou substitui o valor a partir de um mês. */
+  criarVigencia(dto: ProjetoVolumeVigenciaCriarDto): Observable<StandardResponse<ProjetoVolumeVigenciaResumoDto>> {
+    return this.httpClient.post<StandardResponse<ProjetoVolumeVigenciaResumoDto>>(`${this.urlBase}/${dto.projetoId}/volume-vigencia`, dto, comFeedbackProprio());
+  }
+
+  /** Exclui uma mudança de volume. */
+  excluirVigencia(dto: ProjetoVolumeVigenciaExcluirDto): Observable<StandardResponse<void>> {
+    return this.httpClient.delete<StandardResponse<void>>(`${this.urlBase}/${dto.projetoId}/volume-vigencia/${dto.vigenciaId}`, comFeedbackProprio());
+  }
 
   listar(filtros: ProjetoListarDto): Observable<StandardResponse<PaginatedResult<ProjetoResumoDto>>> {
     let params = new HttpParams();

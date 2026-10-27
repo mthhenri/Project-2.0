@@ -16,6 +16,8 @@ import { ProjetoCriarDto, ProjetoListarDto, ProjetoAlterarDto, ProjetoVolumeList
 import { GestorOnly } from '../../autenticacao/decorators/gestor-only.decorator';
 import { ActiveUser } from '../../autenticacao/decorators/active-user.decorator';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
+import { ProjetoVolumeVigenciaCriarDto } from '@project20/shared';
+import { ProjetoVolumeVigenciaService } from '../services/projeto-volume-vigencia.service';
 
 const PROJETO_EXEMPLO = {
   id: 1,
@@ -36,7 +38,7 @@ const NAO_ENCONTRADO_EXEMPLO = { sucesso: false, dados: null, mensagem: 'Projeto
 @ApiBearerAuth()
 @Controller('projeto')
 export class ProjetoController {
-  constructor(private readonly projetoService: ProjetoService) {}
+  constructor(private readonly projetoService: ProjetoService, private readonly volumeVigenciaService: ProjetoVolumeVigenciaService) {}
 
   @ApiOperation({ summary: 'Criar novo projeto (somente gestor)' })
   @ApiResponse({ status: 201, description: 'Projeto criado com sucesso', schema: { example: { sucesso: true, dados: PROJETO_EXEMPLO, mensagem: 'Projeto criado com sucesso' } } })
@@ -79,6 +81,24 @@ export class ProjetoController {
   @Get('volume/anual')
   listarVolumeAnual(@Query() filtros: ProjetoVolumeAnualListarDto) {
     return this.projetoService.listarVolumeAnual(filtros);
+  }
+
+  @GestorOnly()
+  @Get(':id/volume-vigencia')
+  listarVigencias(@Param('id', ParseIntPipe) id: number) {
+    return this.volumeVigenciaService.listar({ projetoId: id });
+  }
+
+  @GestorOnly()
+  @Post(':id/volume-vigencia')
+  criarVigencia(@Param('id', ParseIntPipe) id: number, @Body() dto: ProjetoVolumeVigenciaCriarDto) {
+    return this.volumeVigenciaService.criar({ ...dto, projetoId: id });
+  }
+
+  @GestorOnly()
+  @Delete(':id/volume-vigencia/:vigenciaId')
+  excluirVigencia(@Param('id', ParseIntPipe) id: number, @Param('vigenciaId', ParseIntPipe) vigenciaId: number) {
+    return this.volumeVigenciaService.excluir({ projetoId: id, vigenciaId });
   }
 
   @ApiOperation({ summary: 'Recuperar projeto por ID' })

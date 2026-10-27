@@ -13,7 +13,7 @@ function item(projetoId: number, minutosGastos: number, volumeEsperadoHorasMes: 
 }
 
 function itemAnual(projetoId: number, minutosGastosPorMes: number[], volumeEsperadoHorasMes: number | null) {
-  return { projetoId, nome: `Projeto ${projetoId}`, codigo: `P${projetoId}`, cor: '#336699', volumeEsperadoHorasMes, minutosGastosPorMes };
+  return { projetoId, nome: `Projeto ${projetoId}`, codigo: `P${projetoId}`, cor: '#336699', volumeEsperadoHorasPorMes: new Array(12).fill(volumeEsperadoHorasMes), minutosGastosPorMes };
 }
 
 const ANO_SEM_EXECUCAO = new Array<number>(12).fill(0);
@@ -172,9 +172,9 @@ describe('ProjetoVolumeComponent — anual', () => {
     const montado = await montar();
     await carregarMensal(montado, []);
     await irParaAnual(montado, [itemAnual(1, ANO_SEM_EXECUCAO, 40), itemAnual(2, ANO_SEM_EXECUCAO, null)]);
-    expect(montado.elemento.querySelectorAll('.grafico-barras__referencia')).toHaveLength(1);
+    expect(montado.elemento.querySelectorAll('.grafico-barras__referencia')).toHaveLength(12);
     expect(texto(montado)).toContain('sem volume definido');
-    expect(texto(montado)).toContain('40h por mês');
+    expect(texto(montado)).toContain('Esperado de cada mês');
   });
 
   it('o mês acima do esperado fica vermelho e os outros não', async () => {

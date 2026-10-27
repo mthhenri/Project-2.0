@@ -7,7 +7,15 @@ const mensal = (minutosGastos: number, volumeEsperadoHorasMes: number | null, pr
   ({ projetoId, nome: `Projeto ${projetoId}`, codigo: `P${projetoId}`, cor: '#336699', minutosGastos, volumeEsperadoHorasMes });
 
 const anual = (minutosGastosPorMes: number[], volumeEsperadoHorasMes: number | null): ProjetoVolumeAnualResumoDto =>
-  ({ projetoId: 1, nome: 'Projeto 1', codigo: 'P1', cor: '#336699', volumeEsperadoHorasMes, minutosGastosPorMes });
+  ({ projetoId: 1, nome: 'Projeto 1', codigo: 'P1', cor: '#336699', volumeEsperadoHorasPorMes: new Array(12).fill(volumeEsperadoHorasMes), minutosGastosPorMes });
+
+test('anual: corte de abril não muda estouro de março; zero e sem volume são diferentes', () => {
+  const item = anual(new Array(12).fill(150 * 60), 160);
+  item.volumeEsperadoHorasPorMes = [null, 160, 160, 120, 0, null, 200, 200, 200, 200, 200, 200];
+  const categorias = montarCategoriasAnuais(item, false);
+  assert.deepEqual(categorias.slice(0, 6).map(categoria => !!categoria.barras[0].destaque), [false, false, false, true, true, false]);
+  assert.deepEqual(categorias.slice(0, 6).map(categoria => categoria.referencia?.valor ?? null), [null, 160, 160, 120, 0, null]);
+});
 
 test('mensal: duas barras por projeto (gastas na cor do projeto e esperadas em cinza), valores em horas', () => {
   const [categoria] = montarCategoriasMensais([mensal(918, 40)], false);

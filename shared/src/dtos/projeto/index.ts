@@ -19,3 +19,7 @@ export * from './ProjetoVolumeResumoDto';
 export * from './ProjetoVolumeAnualListarDto';
 export * from './ProjetoVolumeAnualResumoDto';
 export * from './ProjetoVolumeMesDto';
+export * from './ProjetoVolumeVigenciaCriarDto';
+export * from './ProjetoVolumeVigenciaResumoDto';
+export * from './ProjetoVolumeVigenciaListarDto';
+export * from './ProjetoVolumeVigenciaExcluirDto';

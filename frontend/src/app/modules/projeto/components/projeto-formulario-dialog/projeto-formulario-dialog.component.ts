@@ -1,7 +1,11 @@
 import { Component, computed, inject, signal, output, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
-import { finalize } from 'rxjs/operators';
+import { finalize, switchMap, map, catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
+import { ProjetoVolumeVigenciasComponent } from '../projeto-volume-vigencias/projeto-volume-vigencias.component';
+import { hojeNoFuso } from '@project20/shared';
+import { ambiente } from '../../../../../environments/environment';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
@@ -31,7 +35,7 @@ import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog
 @Component({
   selector: 'app-projeto-formulario-dialog',
   standalone: true,
-  imports: [DialogFormularioDirective, DialogDicaAtalhosComponent, ReactiveFormsModule, ButtonModule, InputTextModule, InputNumberModule, Select, SeletorCorComponent, DatePickerModule, DialogModule, BloquearCaracteresProibidosDirective, TooltipModule],
+  imports: [ProjetoVolumeVigenciasComponent, DialogFormularioDirective, DialogDicaAtalhosComponent, ReactiveFormsModule, ButtonModule, InputTextModule, InputNumberModule, Select, SeletorCorComponent, DatePickerModule, DialogModule, BloquearCaracteresProibidosDirective, TooltipModule],
   templateUrl: './projeto-formulario-dialog.component.html',
   styleUrl: './projeto-formulario-dialog.component.scss',
 })
@@ -48,6 +52,7 @@ export class ProjetoFormularioDialogComponent {
 
   /** Id do projeto em edição; `null` = criação. */
   readonly projetoIdEdicao = signal<number | null>(null);
+  private readonly projetoCriadoPendente = signal<number | null>(null);
   readonly eEdicao = computed(() => this.projetoIdEdicao() !== null);
   /** "Período (opcional)": recolhido na criação; aberto na edição quando já há datas (ou se pediram o foco nelas). */
   readonly periodoAberto = signal<boolean>(false);
@@ -62,7 +67,7 @@ export class ProjetoFormularioDialogComponent {
       status:          [TipoProjetoStatusEnum.ATIVO as TipoProjetoStatusEnum, [Validators.required]],
       inicioData:      [null as Date | null],
       previsaoFimData: [null as Date | null],
-      volumeEsperadoHorasMes: [null as number | null, [Validators.min(0), Validators.max(LIMITE_VOLUME_ESPERADO_HORAS_MES)]],
+      volumeInicialHoras: [null as number | null, [Validators.min(0), Validators.max(LIMITE_VOLUME_ESPERADO_HORAS_MES)]],
     },
     { validators: this.validarPrevisaoFim },
   );
@@ -110,6 +115,7 @@ export class ProjetoFormularioDialogComponent {
 
   /** Abre o dialog de criação com o formulário limpo. */
   abrir(): void {
+    this.projetoCriadoPendente.set(null);
     this.projetoIdEdicao.set(null);
     this.focarDatas.set(false);
     this.periodoAberto.set(false);
@@ -124,6 +130,7 @@ export class ProjetoFormularioDialogComponent {
    * (só o resumo) busca o projeto para trazer as datas. `focarDatas` leva o foco ao início do período.
    */
   abrirEdicao(projeto: { id: number } & Partial<ProjetoRecuperadoDto>, opcoes: { focarDatas?: boolean } = {}): void {
+    this.projetoCriadoPendente.set(null);
     this.projetoIdEdicao.set(projeto.id);
     this.focarDatas.set(!!opcoes.focarDatas);
     this.formulario.controls.codigo.disable({ emitEvent: false });
@@ -153,7 +160,7 @@ export class ProjetoFormularioDialogComponent {
       status:          projeto.status,
       inicioData:      projeto.inicioData ? lerDataIso(projeto.inicioData) : null,
       previsaoFimData: projeto.previsaoFimData ? lerDataIso(projeto.previsaoFimData) : null,
-      volumeEsperadoHorasMes: projeto.volumeEsperadoHorasMes ?? null,
+      volumeInicialHoras: null,
     });
     this.periodoAberto.set(!!(projeto.inicioData || projeto.previsaoFimData) || this.focarDatas());
     if (this.focarDatas()) setTimeout(() => document.getElementById('inicioData')?.focus(), 100);
@@ -185,14 +192,30 @@ export class ProjetoFormularioDialogComponent {
       status: valor.status!,
       inicioData:      valor.inicioData ? formatarDataIso(valor.inicioData) : undefined,
       previsaoFimData: valor.previsaoFimData ? formatarDataIso(valor.previsaoFimData) : undefined,
-      volumeEsperadoHorasMes: valor.volumeEsperadoHorasMes ?? undefined,
     };
 
     this.projetoService
       .criar(dto)
-      .pipe(finalize(() => this.carregando.set(false)))
+      .pipe(switchMap(resposta => {
+        if (!resposta.dados || valor.volumeInicialHoras === null || valor.volumeInicialHoras === undefined) return of(resposta);
+        const projeto = resposta.dados;
+        return this.projetoService.criarVigencia({
+          projetoId: projeto.id,
+          vigenciaInicioData: formatarDataIso(valor.inicioData ?? hojeNoFuso(ambiente.fusoHorario)),
+          volumeEsperadoHoras: valor.volumeInicialHoras,
+        }).pipe(map(() => resposta), catchError(() => {
+          // O projeto já existe: a nova tentativa usa a edição, sem criar um segundo cadastro.
+          this.projetoIdEdicao.set(projeto.id);
+          this.projetoCriadoPendente.set(projeto.id);
+          this.preencher(projeto);
+          this.formulario.controls.codigo.disable({ emitEvent: false });
+          this.messageService.add({ severity: 'warn', summary: 'Volume pendente', detail: 'Projeto criado. Registre o volume inicial no bloco Volume esperado.' });
+          return of(null);
+        }));
+      }), finalize(() => this.carregando.set(false)))
       .subscribe({
         next: (resposta) => {
+          if (!resposta) return;
           this.messageService.add({
             severity: 'success',
             summary: 'Sucesso',
@@ -216,8 +239,6 @@ export class ProjetoFormularioDialogComponent {
       status:          valor.status ?? undefined,
       inicioData:      valor.inicioData ? formatarDataIso(valor.inicioData) : undefined,
       previsaoFimData: valor.previsaoFimData ? formatarDataIso(valor.previsaoFimData) : undefined,
-      // Campo vazio manda null: limpa o volume (as datas não têm esse caminho).
-      volumeEsperadoHorasMes: valor.volumeEsperadoHorasMes ?? null,
     };
 
     this.projetoService
@@ -227,7 +248,10 @@ export class ProjetoFormularioDialogComponent {
         next: (resposta) => {
           this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Projeto alterado com sucesso' });
           this.mostrarDialog.set(false);
-          if (resposta.dados) this.aoAlterar.emit(resposta.dados);
+          if (this.projetoCriadoPendente() === identificador) {
+            this.projetoCriadoPendente.set(null);
+            this.aoCriar.emit(identificador);
+          } else if (resposta.dados) this.aoAlterar.emit(resposta.dados);
         },
       });
   }

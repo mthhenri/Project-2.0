@@ -9,11 +9,13 @@ import { PropostaIaModule } from '../proposta-ia/proposta-ia.module';
 import { CriarProjetoExecutor } from './executores/criar-projeto.executor';
 import { ListarProjetosFerramenta } from './ferramentas/listar-projetos.ferramenta';
 import { ProporCriarProjetoFerramenta } from './ferramentas/propor-criar-projeto.ferramenta';
+import { ProjetoVolumeVigenciaService } from './services/projeto-volume-vigencia.service';
+import { ProjetoVolumeVigenciaRepository } from './repositories/projeto-volume-vigencia.repository';
 
 @Module({
   imports:     [FerramentaIaModule, PropostaIaModule],
   controllers: [ProjetoController],
-  providers:   [ProjetoService, ProjetoRepository, ListarProjetosFerramenta, ProporCriarProjetoFerramenta, CriarProjetoExecutor],
+  providers:   [ProjetoService, ProjetoRepository, ProjetoVolumeVigenciaService, ProjetoVolumeVigenciaRepository, ListarProjetosFerramenta, ProporCriarProjetoFerramenta, CriarProjetoExecutor],
   exports:     [ProjetoService, ProjetoRepository],
 })
 export class ProjetoModule implements OnModuleInit {

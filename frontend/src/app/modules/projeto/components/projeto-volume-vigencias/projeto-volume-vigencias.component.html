@@ -1,0 +1,35 @@
+<section class="volume-vigencias" aria-label="Volume esperado">
+  <div><strong>Volume esperado</strong><p class="volume-vigencias__dica">Vigente hoje: {{ formatarVolume(vigente()) }}</p></div>
+  @if (carregando()) {
+    <p role="status" class="volume-vigencias__dica">Carregando vigências…</p>
+  } @else {
+    @if (vigencias().length === 0 && !erro()) { <p class="volume-vigencias__dica">Nenhuma vigência registrada.</p> }
+    <ul class="volume-vigencias__lista">
+      @for (vigencia of vigencias(); track vigencia.id) {
+        <li class="volume-vigencias__linha">
+          <span>A partir de {{ formatarMes(vigencia.vigenciaInicioData) }} — {{ formatarVolume(vigencia.volumeEsperadoHoras) }}</span>
+          <p-button icon="pi pi-trash" severity="secondary" [text]="true" [disabled]="salvando()" [ariaLabel]="'Excluir vigência de ' + formatarMes(vigencia.vigenciaInicioData)" (onClick)="excluir(vigencia)" />
+        </li>
+      }
+    </ul>
+  }
+  @if (erro()) {
+    <p role="alert" class="volume-vigencias__erro">{{ erro() }}</p>
+    <p-button label="Recarregar vigências" severity="secondary" [text]="true" [disabled]="salvando() || carregando()" (onClick)="carregar()" />
+  }
+  <div [formGroup]="formulario" class="volume-vigencias__campos">
+    <label>Alterar a partir de
+      <p-datepicker formControlName="mes" view="month" dateFormat="mm/yy" [showIcon]="true" appendTo="body" ariaLabel="Mês de início da vigência" />
+    </label>
+    <label>Volume
+      <p-select formControlName="semVolume" [options]="opcoes" optionLabel="rotulo" optionValue="valor" appendTo="body" ariaLabel="Definição do volume" />
+    </label>
+    @if (!formulario.controls.semVolume.value) {
+      <label>Horas por mês
+        <p-inputnumber formControlName="horas" [min]="0" [max]="limite" [useGrouping]="false" [maxFractionDigits]="0" suffix=" h" ariaLabel="Horas por mês" />
+      </label>
+    }
+  </div>
+  <p-button label="Salvar volume" icon="pi pi-check" size="small" [loading]="salvando()" [disabled]="carregando() || !!erro().includes('carregar')" (onClick)="salvar()" />
+  <small class="volume-vigencias__dica">Salvo ao clicar em Salvar volume. Mesmo mês substitui o valor anterior. Excluir faz valer a vigência anterior.</small>
+</section>

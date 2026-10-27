@@ -7,5 +7,4 @@ export class ProjetoInternoAlterarDto {
   status?: TipoProjetoStatusEnum;
   inicioData?: string | null;
   previsaoFimData?: string | null;
-  volumeEsperadoHorasMes?: number | null;
 }

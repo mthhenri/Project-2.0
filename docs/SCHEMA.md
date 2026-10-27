@@ -189,10 +189,7 @@ CREATE TABLE projeto (
   tipo_projeto_status_id INTEGER NOT NULL
                       CONSTRAINT fk_projeto_tipo_projeto_status REFERENCES tipo_projeto_status(id),
   inicio_data       DATE,
-  previsao_fim_data DATE,
-  volume_esperado_horas_mes INTEGER
-                      CONSTRAINT chk_projeto_volume_esperado_horas_mes
-                      CHECK (volume_esperado_horas_mes IS NULL OR volume_esperado_horas_mes >= 0)
+  previsao_fim_data DATE
 );
 
 CREATE UNIQUE INDEX uix_projeto_codigo_ativo
@@ -205,6 +202,31 @@ CREATE INDEX ix_projeto_tipo_projeto_status_id
 
 CREATE TRIGGER trg_projeto_updated_date
   BEFORE UPDATE ON projeto
+  FOR EACH ROW EXECUTE FUNCTION fn_set_updated_date();
+```
+
+---
+
+### projeto_volume_vigencia
+
+Volume esperado do projeto por mês de início (task 251, migration 0068). Uma linha ativa por projeto e mês; vale até a próxima vigência. Null suspende a definição, zero é um valor definido. A coluna antiga de projeto foi migrada e removida. Sem início informado, a migração usa o mês de criação; projetos excluídos também preservam o valor para restauração.
+
+```sql
+CREATE TABLE projeto_volume_vigencia (
+  id SERIAL CONSTRAINT pk_projeto_volume_vigencia PRIMARY KEY,
+  created_date TIMESTAMPTZ NOT NULL,
+  updated_date TIMESTAMPTZ NOT NULL,
+  is_deleted BOOLEAN NOT NULL,
+  deleted_date TIMESTAMPTZ,
+  projeto_id INTEGER NOT NULL CONSTRAINT fk_projeto_volume_vigencia_projeto REFERENCES projeto(id),
+  vigencia_inicio_data DATE NOT NULL,
+  volume_esperado_horas INTEGER,
+  CONSTRAINT chk_projeto_volume_vigencia_volume CHECK (volume_esperado_horas >= 0),
+  CONSTRAINT chk_projeto_volume_vigencia_inicio CHECK (EXTRACT(DAY FROM vigencia_inicio_data) = 1)
+);
+CREATE UNIQUE INDEX uix_projeto_volume_vigencia_mes_ativo
+  ON projeto_volume_vigencia (projeto_id, vigencia_inicio_data) WHERE is_deleted = false;
+CREATE TRIGGER trg_projeto_volume_vigencia_updated_date BEFORE UPDATE ON projeto_volume_vigencia
   FOR EACH ROW EXECUTE FUNCTION fn_set_updated_date();
 ```
 

@@ -24,6 +24,9 @@
       </g>
     }
 
+    @for (referencia of referenciasDesenhadas(); track $index) {
+      <path class="grafico-barras__referencia" fill="none" [attr.d]="referencia.caminho" [attr.aria-label]="referencia.descricao" />
+    }
     @if (linhaDeReferenciaY() !== null) {
       <line class="grafico-barras__referencia" [attr.x1]="margem.esquerda" [attr.x2]="largura() - margem.direita" [attr.y1]="linhaDeReferenciaY()" [attr.y2]="linhaDeReferenciaY()" />
       @if (rotuloLinhaReferencia()) {

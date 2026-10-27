@@ -3,6 +3,8 @@ import { TipoProjetoStatusEnum, TipoUsuarioEnum } from '@project20/shared';
 import { montarComponente } from '../../../../../testes/montar-componente';
 import { esperarRequisicao, responderErro, responderSucesso } from '../../../../../testes/http-teste';
 import { ProjetoFormularioDialogComponent } from './projeto-formulario-dialog.component';
+import { By } from '@angular/platform-browser';
+import { ProjetoVolumeVigenciasComponent } from '../projeto-volume-vigencias/projeto-volume-vigencias.component';
 
 async function montar() {
   const montado = await montarComponente(ProjetoFormularioDialogComponent, { usuario: TipoUsuarioEnum.GESTOR });
@@ -91,26 +93,36 @@ describe('ProjetoFormularioDialogComponent — criar', () => {
     expect(criados).toEqual([33]);
   });
 
-  it('o volume esperado é opcional: informado vai no corpo; vazio não vai; negativo invalida', async () => {
-    const { montado } = await montar();
+  it('criar com volume registra a primeira vigência no mês do início', async () => {
+    const { montado, criados } = await montar();
     montado.componente.abrir();
-    montado.componente.formulario.patchValue({ nome: 'Projeto Novo', codigo: 'NOVO-1', volumeEsperadoHorasMes: 40 });
+    montado.componente.formulario.patchValue({ nome: 'Novo', codigo: 'NOVO', inicioData: new Date(2026, 3, 17), volumeInicialHoras: 160 });
     montado.componente.salvar();
-    await montado.atualizar();
     const requisicao = esperarRequisicao(montado.http, 'POST', '/projeto');
-    expect(requisicao.request.body).toMatchObject({ volumeEsperadoHorasMes: 40 });
-    responderSucesso(requisicao, { id: 34, nome: 'Projeto Novo', codigo: 'NOVO-1' }, 201);
+    expect(requisicao.request.body.volumeInicialHoras).toBeUndefined();
+    responderSucesso(requisicao, { ...PROJETO_COMPLETO, id: 34 });
+    const vigencia = esperarRequisicao(montado.http, 'POST', '/projeto/34/volume-vigencia');
+    expect(vigencia.request.body).toEqual({ projetoId: 34, vigenciaInicioData: '2026-04-17', volumeEsperadoHoras: 160 });
+    responderSucesso(vigencia, { id: 1 });
     await montado.atualizar();
+    expect(criados).toEqual([34]);
+    expect(montado.componente.mostrarDialog()).toBe(false);
+  });
 
+  it('falha no volume inicial mantém o projeto em edição sem duplicar a criação', async () => {
+    const { montado, criados } = await montar();
     montado.componente.abrir();
-    montado.componente.formulario.patchValue({ nome: 'Outro', codigo: 'OUTRO' });
+    montado.componente.formulario.patchValue({ nome: 'Novo', codigo: 'NOVO', volumeInicialHoras: 0 });
     montado.componente.salvar();
-    await montado.atualizar();
-    expect((esperarRequisicao(montado.http, 'POST', '/projeto').request.body as { volumeEsperadoHorasMes?: number }).volumeEsperadoHorasMes).toBeUndefined();
-
-    montado.componente.abrir();
-    montado.componente.formulario.patchValue({ nome: 'Negativo', codigo: 'NEG', volumeEsperadoHorasMes: -1 });
-    expect(montado.componente.formulario.controls.volumeEsperadoHorasMes.invalid).toBe(true);
+    responderSucesso(esperarRequisicao(montado.http, 'POST', '/projeto'), PROJETO_COMPLETO);
+    responderErro(esperarRequisicao(montado.http, 'POST', '/projeto/12/volume-vigencia'), 500, 'Falha de teste');
+    await carregarVigencias(montado);
+    expect(montado.componente.projetoIdEdicao()).toBe(12);
+    expect(montado.componente.mostrarDialog()).toBe(true);
+    expect(criados).toEqual([]);
+    montado.componente.salvar();
+    responderSucesso(esperarRequisicao(montado.http, 'PUT', '/projeto/12'), PROJETO_COMPLETO);
+    expect(criados).toEqual([12]);
   });
 
   it('erro de código duplicado: o dialog continua aberto, nada é emitido e o botão volta a ficar livre', async () => {
@@ -127,9 +139,33 @@ describe('ProjetoFormularioDialogComponent — criar', () => {
 });
 
 describe('ProjetoFormularioDialogComponent — editar', () => {
+  it('reabrir o mesmo projeto carrega novamente as vigências', async () => {
+    const { montado } = await montar();
+    montado.componente.abrirEdicao(PROJETO_COMPLETO as never);
+    await carregarVigencias(montado);
+    montado.componente.mostrarDialog.set(false);
+    await montado.atualizar();
+    montado.componente.abrirEdicao(PROJETO_COMPLETO as never);
+    await montado.atualizar();
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/projeto/12/volume-vigencia'), []);
+  });
+  it('Enter nas horas salva a vigência e mantém aberto o cadastro', async () => {
+    const { montado } = await montar();
+    montado.componente.abrirEdicao({ ...PROJETO_COMPLETO, createdDate: new Date(PROJETO_COMPLETO.createdDate) });
+    await carregarVigencias(montado);
+    const bloco = montado.fixture.debugElement.query(By.directive(ProjetoVolumeVigenciasComponent)).componentInstance as ProjetoVolumeVigenciasComponent;
+    bloco.formulario.patchValue({ horas: 120 });
+    await montado.atualizar();
+    const campo = document.body.querySelector('app-projeto-volume-vigencias input[role="spinbutton"]')!;
+    campo.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+    responderSucesso(esperarRequisicao(montado.http, 'POST', '/projeto/12/volume-vigencia'), { id: 1, projetoId: 12, vigenciaInicioData: '2026-10-01', volumeEsperadoHoras: 120 });
+    montado.http.expectNone(requisicao => requisicao.method === 'PUT');
+    expect(montado.componente.mostrarDialog()).toBe(true);
+  });
   it('com o projeto completo preenche direto, sem GET, trava o código e abre o período quando há datas', async () => {
     const { montado } = await montar();
     montado.componente.abrirEdicao(PROJETO_COMPLETO as never);
+    await carregarVigencias(montado);
     await montado.atualizar();
     montado.http.expectNone(() => true);
     expect(montado.componente.eEdicao()).toBe(true);
@@ -141,26 +177,17 @@ describe('ProjetoFormularioDialogComponent — editar', () => {
   it('com só o resumo (listagem) busca o projeto para trazer as datas', async () => {
     const { montado } = await montar();
     montado.componente.abrirEdicao({ id: 12 });
+    await carregarVigencias(montado);
     responderSucesso(esperarRequisicao(montado.http, 'GET', '/projeto/12'), PROJETO_COMPLETO);
     await montado.atualizar();
     expect(montado.componente.formulario.controls.nome.value).toBe('Projeto Antigo');
     expect(montado.componente.carregandoDados()).toBe(false);
   });
 
-  it('o volume esperado do projeto aparece na edição; esvaziar o campo manda null (limpa o volume)', async () => {
-    const { montado } = await montar();
-    montado.componente.abrirEdicao({ ...PROJETO_COMPLETO, volumeEsperadoHorasMes: 40 } as never);
-    expect(montado.componente.formulario.controls.volumeEsperadoHorasMes.value).toBe(40);
-
-    montado.componente.formulario.patchValue({ volumeEsperadoHorasMes: null });
-    montado.componente.salvar();
-    const requisicao = esperarRequisicao(montado.http, 'PUT', '/projeto/12');
-    expect(requisicao.request.body).toMatchObject({ volumeEsperadoHorasMes: null });
-  });
-
   it('salvar envia PUT sem o código e emite o projeto alterado', async () => {
     const { montado, alterados } = await montar();
     montado.componente.abrirEdicao(PROJETO_COMPLETO as never);
+    await carregarVigencias(montado);
     montado.componente.formulario.patchValue({ nome: 'Renomeado', status: TipoProjetoStatusEnum.CONCLUIDO });
     montado.componente.salvar();
     const requisicao = esperarRequisicao(montado.http, 'PUT', '/projeto/12');
@@ -172,3 +199,9 @@ describe('ProjetoFormularioDialogComponent — editar', () => {
     expect(montado.componente.mostrarDialog()).toBe(false);
   });
 });
+
+async function carregarVigencias(montado: Awaited<ReturnType<typeof montar>>['montado']) {
+  await montado.atualizar();
+  for (const requisicao of montado.http.match(requisicao => requisicao.method === 'GET' && requisicao.url.endsWith('/volume-vigencia'))) responderSucesso(requisicao, []);
+  await montado.atualizar();
+}

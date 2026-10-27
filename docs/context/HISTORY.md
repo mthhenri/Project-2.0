@@ -12,6 +12,18 @@
 
 ---
 
+## 2026-10-26 — Task 251: volume esperado do projeto por vigência
+
+O volume deixou de ser uma coluna fixa do cadastro: a migration `0068` copia o legado para `projeto_volume_vigencia` e remove a coluna antiga. Cada mudança vale do mês informado em diante; a service normaliza o dia, distingue zero de sem volume e substitui o mesmo mês por soft delete, numa transação serializada pelo projeto. Sem início informado, a cópia do legado usa o mês de criação. O rollback recompõe o valor mais recente.
+
+As visões mensal e anual resolvem o esperado de cada mês; a anual tem doze valores e referência em degraus, com interrupções onde não há volume. O diálogo de Projeto ganhou um bloco próprio para listar, registrar e excluir vigências. O volume inicial é registrado pela API específica depois do cadastro; falhar mantém o projeto em edição e a recuperação não o duplica. O gráfico compartilhado conserva o comportamento de Custos. Análogos e mapa de impacto registrados no plano.
+
+Verificação: shared **276/276**, backend **1.516/1.516**, frontend final **2.219/2.219** (180 arquivos), integração **350/350**, mais **3/3** no recorte final de vigências/migration, incluindo aplicar → reverter → aplicar em transação descartável. Builds backend/frontend aprovados, assim como `git diff --check` e `repo:verificar`. Permanecem os avisos de orçamento/CommonJS do build e a ausência de lint (P-001); as falhas conhecidas P-034/P-036 não ocorreram nesta rodada.
+
+Ao vivo: corte 160→120 e aumento 80→200 com 150 horas em março/abril, mensal/anual, vazio/carregando/preenchido/erro do formulário nos três viewports; zero, null, substituição, exclusão e recuperação de erro. Dois POST simultâneos deixaram uma só vigência ativa; desenvolvedor recebeu 403 em GET/POST/DELETE. A revisão independente (GPT-6 Astra) achou o Enter que fechava o cadastro sem salvar volume e a notificação de criação ausente na recuperação parcial; ambos tiveram teste vermelho → verde. A verificação ao vivo revelou ainda que reabrir o mesmo projeto mantinha uma lista antiga: corrigido e testado. Projetos sintéticos excluídos logicamente e proxies temporários encerrados; os servidores preexistentes foram preservados.
+
+Spec e anexos em [`251-projeto-volume-esperado-por-vigencia`](../specs/done/251-projeto-volume-esperado-por-vigencia.spec.md); [relatório completo](../specs/done/251-projeto-volume-esperado-por-vigencia/verificacao.md). Capturas/logs locais em `.artifacts/251-projeto-volume-esperado-por-vigencia/`, fora do Git. Próxima migration: `0069`; próximo número de spec segue `261`.
+
 ## 2026-10-27 — Guarda-chuva `documentacoes-e-pad.spec.md`: tela de Documentações, pad ajustável e no chat, Cliente legível (tasks 254–260, só as specs)
 
 Conversa com o autor em 2026-10-26 e 2026-10-27, com protótipo clicável num canvas (`backlog/documentacoes-e-pad/referencias.md`). Nenhum código mudou.

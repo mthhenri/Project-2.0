@@ -48,7 +48,6 @@ export class ProjetoService {
       status:          dto.status,
       inicioData:      dto.inicioData      ?? null,
       previsaoFimData: dto.previsaoFimData ?? null,
-      volumeEsperadoHorasMes: dto.volumeEsperadoHorasMes ?? null,
     });
 
     return {
@@ -176,7 +175,6 @@ export class ProjetoService {
       status:          dto.status,
       inicioData:      dto.inicioData,
       previsaoFimData: dto.previsaoFimData,
-      volumeEsperadoHorasMes: dto.volumeEsperadoHorasMes,
     });
 
     return {
