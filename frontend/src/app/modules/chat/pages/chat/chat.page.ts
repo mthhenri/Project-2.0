@@ -118,6 +118,8 @@ export class ChatPage implements OnInit {
   readonly demandaAbertaId = signal<number | null>(null);
   /** A demanda só abre sozinha uma vez por visita ao chat: voltar à lista não a reabre. */
   private abriuDemandaEmExecucao = false;
+  /** A demanda em que a pessoa está executando agora: ao abri-la, a lateral começa no Checklist. */
+  readonly demandaEmExecucaoId = signal<number | null>(null);
   /** A demanda está aberta ao lado da conversa (só em Perguntas). */
   readonly demandaVisivel = computed(() => this.modo() === ModoDoChatEnum.PERGUNTAS && this.demandaAbertaId() !== null);
   /** A lateral é a lista de demandas (Perguntas, nenhuma demanda aberta). */
@@ -529,6 +531,7 @@ export class ChatPage implements OnInit {
 
   /** A lista achou uma execução rodando: a demanda dela abre por padrão, uma vez, se a pessoa ainda não abriu outra. */
   abrirDemandaEmExecucao(id: number): void {
+    this.demandaEmExecucaoId.set(id);
     if (this.abriuDemandaEmExecucao) return;
     this.abriuDemandaEmExecucao = true;
     if (this.modo() === ModoDoChatEnum.PERGUNTAS && this.demandaAbertaId() === null) this.demandaAbertaId.set(id);

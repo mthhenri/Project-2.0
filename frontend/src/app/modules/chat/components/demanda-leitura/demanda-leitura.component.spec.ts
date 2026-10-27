@@ -25,8 +25,8 @@ function secoesDoPad(textos: Partial<Record<TipoAnotacaoEnum, string>> = {}) {
   }));
 }
 
-async function montar(usuario: TipoUsuarioEnum, atividades: unknown[] = [], textosDoPad: Partial<Record<TipoAnotacaoEnum, string>> = {}) {
-  const montado = await montarComponente(DemandaLeituraComponent, { usuario, entradas: { demandaId: 9 } });
+async function montar(usuario: TipoUsuarioEnum, atividades: unknown[] = [], textosDoPad: Partial<Record<TipoAnotacaoEnum, string>> = {}, abaInicial?: 'checklist') {
+  const montado = await montarComponente(DemandaLeituraComponent, { usuario, entradas: abaInicial ? { demandaId: 9, abaInicial } : { demandaId: 9 } });
   // O pad da própria pessoa carrega junto com a demanda; a requisição pendente seguraria o `whenStable`.
   responderSucesso(esperarRequisicao(montado.http, 'GET', '/anotacao'), secoesDoPad(textosDoPad));
   responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/9'), DEMANDA);
@@ -53,6 +53,16 @@ describe('DemandaLeituraComponent', () => {
     expect(montado.elemento.querySelectorAll('.demanda-leitura__atividade--desenvolvida').length).toBe(1);
     expect(montado.elemento.querySelectorAll('.demanda-leitura__atividade--rodando').length).toBe(1);
     expect(montado.elemento.textContent).toContain('1 de 3 desenvolvidas');
+  });
+
+  it('na demanda em que a pessoa executa, abre direto no Checklist', async () => {
+    const montado = await montar(TipoUsuarioEnum.DESENVOLVEDOR, [atividade(2, TipoAtividadeStatusEnum.DESENVOLVENDO, { execucaoAtivaId: 80 })], {}, 'checklist');
+    expect(montado.componente.abaAtiva()).toBe('checklist');
+  });
+
+  it('nas demais demandas, abre nas Anotações', async () => {
+    const montado = await montar(TipoUsuarioEnum.DESENVOLVEDOR);
+    expect(montado.componente.abaAtiva()).toBe('anotacoes');
   });
 
   it('sem atividades, diz que o checklist está vazio', async () => {

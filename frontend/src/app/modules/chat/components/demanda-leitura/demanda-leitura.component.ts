@@ -74,6 +74,8 @@ export class DemandaLeituraComponent {
   readonly erro = signal(false);
   /** A demanda abre nas Anotações (o pad, decisão do autor de 2026-10-27); o Checklist é a aba ao lado. */
   readonly aba = signal<AbaDemandaLeitura>('anotacoes');
+  /** A aba em que a demanda abre: a página pede o Checklist quando é a demanda em que a pessoa está executando. */
+  readonly abaInicial = input<AbaDemandaLeitura>('anotacoes');
 
   /** O checklist na ordem de leitura (desenvolvidas, a que roda, as em aberto). */
   readonly checklist = computed<ItemDoChecklist[]>(() =>
@@ -110,7 +112,7 @@ export class DemandaLeituraComponent {
   carregar(id: number = this.demandaId()): void {
     this.carregando.set(true);
     this.erro.set(false);
-    this.aba.set('anotacoes');
+    this.aba.set(this.abaInicial());
     this.demanda.set(null);
     this.atividades.set([]);
     this.demandaService.recuperar(id).subscribe({
