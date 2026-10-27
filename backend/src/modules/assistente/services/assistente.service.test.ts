@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { NivelIaEnum } from '@project20/shared';
+import { NivelIaEnum, PlanoAbaEnum, TipoPromptEnum, TipoUsuarioEnum } from '@project20/shared';
+import { UnauthorizedAccessException } from '../../../core/exceptions/unauthorized-access.exception';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { IaException } from '../../ia/domain/ia.exception';
 import { AssistenteService } from './assistente.service';
@@ -16,7 +17,7 @@ function criar(resposta: string | Error = 'Texto refinado') {
       return { texto: resposta };
     },
   };
-  return { servico: new AssistenteService(iaService as never), chamadas };
+  return { servico: new AssistenteService(iaService as never, {} as never, {} as never), chamadas };
 }
 
 const promptDe = (chamada: Record<string, unknown>) => (chamada.mensagens as { papel: string; conteudo: string }[])[0].conteudo;
@@ -62,4 +63,71 @@ test('erro desconhecido vira a mensagem genérica de indisponibilidade', async (
     () => servico.auxiliarDescricao({ textoOriginal: 'x', tipoEntidade: 'demanda', contextoEntidade: 'Y' }),
     (erro: unknown) => erro instanceof BusinessException && mensagemDe(erro) === 'Serviço de IA temporariamente indisponível',
   );
+});
+
+// alterarTrecho() (task 260): só a seleção muda, a IA recebe os dois prompts, a permissão é a da aba e nada é gravado.
+const BLOCO = 'O sistema deve **exportar o relatório** em PDF.';
+const PEDIDO = { demandaId: 5, aba: PlanoAbaEnum.DESCRICAO_TECNICA, bloco: BLOCO, selecao: 'exportar', pedido: 'trocar por gerar' };
+const GESTOR = { sub: 1, login: 'g', tipo: TipoUsuarioEnum.GESTOR } as never;
+const DEV = { sub: 7, login: 'd', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
+
+function criarParaTrecho(resposta: string | Error, opcoes: { negarEdicao?: boolean } = {}) {
+  const chamadas: Record<string, unknown>[] = [];
+  const verificacoes: unknown[][] = [];
+  const iaService = {
+    gerar: async (pedido: Record<string, unknown>) => {
+      chamadas.push(pedido);
+      if (resposta instanceof Error) throw resposta;
+      return { texto: resposta };
+    },
+  };
+  const demandaService = {
+    recuperarDemandaParaEditar: async (...argumentos: unknown[]) => {
+      verificacoes.push(argumentos);
+      if (opcoes.negarEdicao) throw new UnauthorizedAccessException('Você só pode editar demandas das quais é membro');
+      return { id: 5 };
+    },
+  };
+  const promptService = { obterAtivo: async (tipo: TipoPromptEnum) => ({ conteudo: `PROMPT ${tipo}` }) };
+  return { servico: new AssistenteService(iaService as never, demandaService as never, promptService as never), chamadas, verificacoes };
+}
+
+test('alterarTrecho: devolve o bloco com só a seleção alterada, no nível analítico, com os dois prompts e o pedido', async () => {
+  const { servico, chamadas, verificacoes } = criarParaTrecho('O sistema deve **gerar o relatório** em PDF.');
+  const resposta = await servico.alterarTrecho(PEDIDO, GESTOR);
+
+  assert.equal(resposta.dados?.bloco, BLOCO);
+  assert.equal(resposta.dados?.blocoNovo, 'O sistema deve **gerar o relatório** em PDF.');
+  assert.equal(chamadas[0].nivel, NivelIaEnum.ANALITICO);
+  const instrucoes = chamadas[0].instrucoes as string;
+  assert.ok(instrucoes.includes(`PROMPT ${TipoPromptEnum.ALTERAR_TRECHO}`));
+  assert.ok(instrucoes.includes(`PROMPT ${TipoPromptEnum.PLANO_DESCRICAO_TECNICA}`));
+  const mensagem = (chamadas[0].mensagens as { conteudo: string }[])[0].conteudo;
+  assert.ok(mensagem.includes(BLOCO) && mensagem.includes('exportar') && mensagem.includes('trocar por gerar'));
+  assert.deepEqual(verificacoes[0], [5, false, GESTOR]);
+});
+
+test('alterarTrecho: o prompt de como escrever é o da aba pedida, e a aba do cliente pede a regra de quem altera o cliente', async () => {
+  const { servico, chamadas, verificacoes } = criarParaTrecho('O sistema deve **gerar o relatório** em PDF.');
+  await servico.alterarTrecho({ ...PEDIDO, aba: PlanoAbaEnum.DESCRICAO_CLIENTE }, GESTOR);
+  assert.ok((chamadas[0].instrucoes as string).includes(`PROMPT ${TipoPromptEnum.PLANO_DESCRICAO_CLIENTE}`));
+  assert.deepEqual(verificacoes[0], [5, true, GESTOR]);
+});
+
+test('alterarTrecho: sem permissão na aba ou na demanda, recusa antes de chamar a IA', async () => {
+  const { servico, chamadas } = criarParaTrecho('x', { negarEdicao: true });
+  await assert.rejects(() => servico.alterarTrecho(PEDIDO, DEV), UnauthorizedAccessException);
+  assert.equal(chamadas.length, 0);
+});
+
+test('alterarTrecho: resposta que muda além da seleção ou não muda nada vira erro, em vez de proposta', async () => {
+  const alemDaSelecao = criarParaTrecho('O sistema precisa **gerar o relatório** em PDF.');
+  await assert.rejects(() => alemDaSelecao.servico.alterarTrecho(PEDIDO, GESTOR), BusinessException);
+  const igual = criarParaTrecho(BLOCO);
+  await assert.rejects(() => igual.servico.alterarTrecho(PEDIDO, GESTOR), (erro: unknown) => mensagemDe(erro).includes('não mudou nada'));
+});
+
+test('alterarTrecho: IA fora do ar vira a mensagem de falha da IA', async () => {
+  const { servico } = criarParaTrecho(new IaException('FORA_DO_AR' as never, 'sem chave'));
+  await assert.rejects(() => servico.alterarTrecho(PEDIDO, GESTOR));
 });

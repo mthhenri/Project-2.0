@@ -16,6 +16,8 @@ export const NIVEL_DO_TIPO_DE_PROMPT: Record<TipoPromptEnum, NivelIaEnum> = {
   [TipoPromptEnum.PLANO_DESCRICAO_TECNICA]: NivelIaEnum.ANALITICO,
   [TipoPromptEnum.PLANO_DESCRICAO_CLIENTE]: NivelIaEnum.ANALITICO,
   [TipoPromptEnum.PLANO_DOCUMENTACAO]: NivelIaEnum.ANALITICO,
+  // Alterar trecho (task 260): mexer numa palavra sem estragar o resto do bloco pede o nível analítico.
+  [TipoPromptEnum.ALTERAR_TRECHO]: NivelIaEnum.ANALITICO,
 };
 
 /** Quantas narrativas um teste de prompt aceita (cada uma custa duas chamadas à IA). */

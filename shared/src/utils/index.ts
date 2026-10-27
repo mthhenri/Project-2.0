@@ -11,3 +11,4 @@ export * from './proposta-nivel';
 export * from './demanda-parada';
 export * from './plano';
 export * from './plano-fonte';
+export * from './alterar-trecho';

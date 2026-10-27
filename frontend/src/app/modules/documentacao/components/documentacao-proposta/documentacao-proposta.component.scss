@@ -1,0 +1,50 @@
+.documentacao-proposta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  margin-top: 0.75rem;
+  padding: 0.75rem 0.875rem;
+  border: 1px solid color-mix(in srgb, var(--p-primary-500) 40%, var(--app-surface-200));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--p-primary-500) 5%, var(--app-surface-0));
+
+  &__cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+
+    i {
+      color: var(--p-primary-500);
+    }
+  }
+
+  &__nota {
+    color: var(--p-text-muted-color);
+    font-size: 0.75rem;
+  }
+
+  &__estado {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    color: var(--p-text-muted-color);
+    font-size: 0.875rem;
+
+    &--erro {
+      color: var(--p-red-500);
+    }
+
+    &--aviso {
+      color: var(--p-orange-600);
+    }
+  }
+
+  &__acoes {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}

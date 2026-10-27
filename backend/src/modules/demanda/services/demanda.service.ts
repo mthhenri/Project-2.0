@@ -401,7 +401,7 @@ export class DemandaService {
    * A demanda a editar, depois das regras de §14: desenvolvedor só edita demanda de que é membro e nunca a descrição do cliente. Usada por `alterar` e
    * `alterarTextos`.
    */
-  private async recuperarDemandaParaEditar(
+  async recuperarDemandaParaEditar(
     demandaId: number,
     alteraDescricaoCliente: boolean,
     usuarioAtivo: JwtPayload,

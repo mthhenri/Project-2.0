@@ -13,4 +13,6 @@ export enum TipoPromptEnum {
   PLANO_DESCRICAO_TECNICA = 'PLANO_DESCRICAO_TECNICA',
   PLANO_DESCRICAO_CLIENTE = 'PLANO_DESCRICAO_CLIENTE',
   PLANO_DOCUMENTACAO      = 'PLANO_DOCUMENTACAO',
+  // Tela de Documentações (task 260): alterar só a seleção de um texto da demanda, sem conversa.
+  ALTERAR_TRECHO          = 'ALTERAR_TRECHO',
 }

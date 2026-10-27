@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { PlanoAbaEnum, TipoDemandaStatusEnum, TipoUsuarioEnum } from '@project20/shared';
+import { TestBed } from '@angular/core/testing';
+import { EstadoIaEnum, PlanoAbaEnum, TipoDemandaStatusEnum, TipoUsuarioEnum } from '@project20/shared';
+import { IaDisponibilidadeService } from '../../../../core/services/ia-disponibilidade.service';
 import { esperarRequisicao, responderErro, responderSucesso } from '../../../../../testes/http-teste';
 import { montarComponente, ComponenteMontado } from '../../../../../testes/montar-componente';
 import { DocumentacaoDemandaComponent } from './documentacao-demanda.component';
@@ -126,5 +128,124 @@ describe('DocumentacaoDemandaComponent', () => {
     await montado.atualizar();
     expect(montado.elemento.querySelector('[role="alert"]')?.textContent).toContain('Não foi possível abrir a demanda');
     expect(botao(montado, 'Tentar de novo')).toBeDefined();
+  });
+});
+
+describe('DocumentacaoDemandaComponent — alterar trecho com IA (task 260)', () => {
+  const evento = (texto: string, selecao: string) => ({ inicio: 0, fim: texto.length, texto, selecao, evento: new MouseEvent('contextmenu') });
+
+  async function montarComIa(usuario: TipoUsuarioEnum = TipoUsuarioEnum.GESTOR, dados: Record<string, unknown> = demanda(), estado = EstadoIaEnum.NO_AR) {
+    const montado = await montarComponente(DocumentacaoDemandaComponent, { usuario, entradas: { demandaId: 9 } });
+    TestBed.inject(IaDisponibilidadeService).estadoReal.set(estado);
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/9'), dados);
+    await montado.atualizar();
+    return montado;
+  }
+
+  async function pedir(montado: Montado, texto = 'Texto técnico', selecao = 'técnico') {
+    montado.componente.abrirPedido(evento(texto, selecao));
+    montado.componente.controlePedido.setValue('  trocar por claro  ');
+    montado.componente.enviarPedido();
+    await montado.atualizar();
+  }
+
+  it('só aparece com a IA no ar e na aba em que a pessoa escreve', async () => {
+    const noAr = await montarComIa();
+    expect(noAr.componente.podePedirIa()).toBe(true);
+    TestBed.inject(IaDisponibilidadeService).estadoReal.set(EstadoIaEnum.FORA_DO_AR);
+    expect(noAr.componente.podePedirIa()).toBe(false);
+    TestBed.inject(IaDisponibilidadeService).estadoReal.set(EstadoIaEnum.DESLIGADA);
+    expect(noAr.componente.podePedirIa()).toBe(false);
+  });
+
+  it('o desenvolvedor não pede alteração na aba do cliente, que é leitura para ele', async () => {
+    const montado = await montarComIa(TipoUsuarioEnum.DESENVOLVEDOR);
+    expect(montado.componente.podePedirIa()).toBe(true);
+    montado.componente.escolherAba(PlanoAbaEnum.DESCRICAO_CLIENTE);
+    expect(montado.componente.podePedirIa()).toBe(false);
+  });
+
+  it('pedir manda o bloco, a seleção, o pedido e a aba, e mostra a proposta com o diff; nada é gravado', async () => {
+    const montado = await montarComIa(TipoUsuarioEnum.GESTOR, demanda({ descricaoTecnica: 'Texto **técnico**' }));
+    await pedir(montado, 'Texto **técnico**', 'técnico');
+
+    const requisicao = esperarRequisicao(montado.http, 'POST', '/assistente/alterar-trecho');
+    expect(requisicao.request.body).toEqual({ demandaId: 9, aba: 'DESCRICAO_TECNICA', bloco: 'Texto **técnico**', selecao: 'técnico', pedido: 'trocar por claro' });
+    expect(montado.elemento.querySelector('app-documentacao-proposta')).not.toBeNull();
+    expect(montado.elemento.textContent).toContain('A IA está alterando o trecho');
+
+    responderSucesso(requisicao, { bloco: 'Texto **técnico**', blocoNovo: 'Texto **claro**' });
+    await montado.atualizar();
+    expect(montado.componente.propostaDaAba()?.estado).toBe('PRONTA');
+    expect(montado.elemento.querySelector('ins')?.textContent).toContain('claro');
+    expect(montado.http.match(() => true)).toHaveLength(0);
+  });
+
+  it('aceitar troca o bloco no editor e deixa a aba como "Alterações sem gravar", sem gravar', async () => {
+    const montado = await montarComIa(TipoUsuarioEnum.GESTOR, demanda({ descricaoTecnica: 'Primeiro. Texto técnico. Último.' }));
+    await pedir(montado, 'Texto técnico.', 'técnico');
+    responderSucesso(esperarRequisicao(montado.http, 'POST', '/assistente/alterar-trecho'), { bloco: 'Texto técnico.', blocoNovo: 'Texto claro.' });
+    await montado.atualizar();
+
+    montado.componente.aceitarProposta();
+    await montado.atualizar();
+    expect(montado.componente.controleTecnica.value).toBe('Primeiro. Texto claro. Último.');
+    expect(montado.componente.sujo()).toBe(true);
+    expect(montado.componente.propostaDaAba()).toBeNull();
+    expect(montado.elemento.textContent).toContain('Alterações sem gravar');
+    expect(montado.http.match(() => true)).toHaveLength(0);
+  });
+
+  it('descartar fecha o cartão sem mexer no texto', async () => {
+    const montado = await montarComIa();
+    await pedir(montado);
+    responderSucesso(esperarRequisicao(montado.http, 'POST', '/assistente/alterar-trecho'), { bloco: 'Texto técnico', blocoNovo: 'Texto claro' });
+    await montado.atualizar();
+    montado.componente.descartarProposta();
+    await montado.atualizar();
+    expect(montado.elemento.querySelector('app-documentacao-proposta')).toBeNull();
+    expect(montado.componente.controleTecnica.value).toBe('Texto técnico');
+    expect(montado.componente.sujo()).toBe(false);
+  });
+
+  it('se o texto mudou depois do pedido e o bloco não está mais lá, a proposta expira e aceitar não faz nada', async () => {
+    const montado = await montarComIa();
+    await pedir(montado);
+    responderSucesso(esperarRequisicao(montado.http, 'POST', '/assistente/alterar-trecho'), { bloco: 'Texto técnico', blocoNovo: 'Texto claro' });
+    await montado.atualizar();
+
+    montado.componente.controleTecnica.setValue('Outro texto qualquer');
+    await montado.atualizar();
+    expect(montado.componente.propostaDaAba()?.estado).toBe('EXPIRADA');
+    montado.componente.aceitarProposta();
+    expect(montado.componente.controleTecnica.value).toBe('Outro texto qualquer');
+  });
+
+  it('erro da IA mostra a mensagem e "Tentar de novo" repete o mesmo pedido', async () => {
+    const montado = await montarComIa();
+    await pedir(montado);
+    responderErro(esperarRequisicao(montado.http, 'POST', '/assistente/alterar-trecho'), 400, 'A IA devolveu um texto que muda além da seleção. Peça de novo.');
+    await montado.atualizar();
+    expect(montado.componente.propostaDaAba()?.estado).toBe('ERRO');
+    expect(montado.elemento.textContent).toContain('muda além da seleção');
+
+    montado.componente.repetirPedido();
+    await montado.atualizar();
+    const repetida = esperarRequisicao(montado.http, 'POST', '/assistente/alterar-trecho');
+    expect(repetida.request.body).toMatchObject({ bloco: 'Texto técnico', selecao: 'técnico', pedido: 'trocar por claro' });
+    responderSucesso(repetida, { bloco: 'Texto técnico', blocoNovo: 'Texto claro' });
+    await montado.atualizar();
+    expect(montado.componente.propostaDaAba()?.estado).toBe('PRONTA');
+  });
+
+  it('a proposta fica na aba em que foi pedida', async () => {
+    const montado = await montarComIa();
+    await pedir(montado);
+    responderSucesso(esperarRequisicao(montado.http, 'POST', '/assistente/alterar-trecho'), { bloco: 'Texto técnico', blocoNovo: 'Texto claro' });
+    await montado.atualizar();
+    montado.componente.escolherAba(PlanoAbaEnum.DOCUMENTACAO);
+    expect(montado.componente.propostaDaAba()).toBeNull();
+    montado.componente.escolherAba(PlanoAbaEnum.DESCRICAO_TECNICA);
+    expect(montado.componente.propostaDaAba()?.estado).toBe('PRONTA');
   });
 });

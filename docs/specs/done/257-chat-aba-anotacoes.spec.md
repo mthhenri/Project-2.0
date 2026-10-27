@@ -1,6 +1,6 @@
 # 257-chat-aba-anotacoes.spec.md
 
-> Task 4/7 da guarda-chuva [`documentacoes-e-pad.spec.md`](../../backlog/documentacoes-e-pad.spec.md) (decisão 8): no chat, o pad vira a aba
+> Task 4/7 da guarda-chuva [`documentacoes-e-pad.spec.md`](documentacoes-e-pad.spec.md) (decisão 8): no chat, o pad vira a aba
 > **Anotações** da demanda aberta.
 
 ## Objetivo

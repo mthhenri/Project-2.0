@@ -113,6 +113,27 @@
     font-size: 0.875rem;
   }
 
+  &__pedido {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: min(88vw, 24rem);
+
+    small {
+      color: var(--p-text-muted-color);
+    }
+  }
+
+  &__trecho {
+    margin: 0;
+    padding: 0.375rem 0.625rem;
+    border-left: 3px solid var(--p-primary-400);
+    background: var(--app-surface-50);
+    font-size: 0.8125rem;
+    max-height: 7rem;
+    overflow: auto;
+  }
+
   &__rodape {
     display: flex;
     align-items: center;

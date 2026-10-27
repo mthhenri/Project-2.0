@@ -1,0 +1,43 @@
+<section class="documentacao-proposta" [attr.data-estado]="estado()" aria-label="Proposta da IA">
+  <header class="documentacao-proposta__cabecalho">
+    <i class="pi pi-sparkles" aria-hidden="true"></i>
+    <strong>Proposta da IA</strong>
+    <span class="documentacao-proposta__nota">só o trecho marcado</span>
+  </header>
+
+  @switch (estado()) {
+    @case ('PEDINDO') {
+      <p class="documentacao-proposta__estado" role="status" aria-busy="true">
+        <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+        <span>A IA está alterando o trecho…</span>
+      </p>
+    }
+    @case ('ERRO') {
+      <p class="documentacao-proposta__estado documentacao-proposta__estado--erro" role="alert">
+        <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+        <span>{{ mensagemDeErro() || 'Não foi possível alterar o trecho.' }}</span>
+      </p>
+      <footer class="documentacao-proposta__acoes">
+        <p-button label="Tentar de novo" icon="pi pi-refresh" size="small" (onClick)="tentarDeNovo.emit()" />
+        <p-button label="Descartar" size="small" severity="secondary" [text]="true" (onClick)="descartar.emit()" />
+      </footer>
+    }
+    @case ('EXPIRADA') {
+      <p class="documentacao-proposta__estado documentacao-proposta__estado--aviso" role="alert">
+        <i class="pi pi-clock" aria-hidden="true"></i>
+        <span>O texto mudou depois do pedido e o trecho não está mais lá: esta proposta expirou. Peça de novo sobre o texto de agora.</span>
+      </p>
+      <footer class="documentacao-proposta__acoes">
+        <p-button label="Descartar" size="small" severity="secondary" [text]="true" (onClick)="descartar.emit()" />
+      </footer>
+    }
+    @default {
+      <app-diff-por-palavra [antes]="bloco()" [depois]="blocoNovo()" />
+      <footer class="documentacao-proposta__acoes">
+        <p-button label="Aceitar" icon="pi pi-check" size="small" (onClick)="aceitar.emit()" />
+        <p-button label="Descartar" size="small" severity="secondary" [text]="true" (onClick)="descartar.emit()" />
+        <p-button label="Pedir de novo" icon="pi pi-refresh" size="small" severity="secondary" [text]="true" (onClick)="pedirDeNovo.emit()" />
+      </footer>
+    }
+  }
+</section>

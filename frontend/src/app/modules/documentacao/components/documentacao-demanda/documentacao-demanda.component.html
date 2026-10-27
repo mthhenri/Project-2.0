@@ -58,7 +58,21 @@
           [alturaMinima]="16"
           [rotulo]="rotuloDaAba[aba()]"
           [placeholder]="'Escreva ' + rotuloDaAba[aba()].toLowerCase() + '…'"
+          [emitirMenuContexto]="podePedirIa()"
+          (aoMenuContexto)="abrirPedido($event)"
         />
+        @if (propostaDaAba(); as proposta) {
+          <app-documentacao-proposta
+            [estado]="proposta.estado"
+            [bloco]="proposta.bloco"
+            [blocoNovo]="proposta.blocoNovo ?? ''"
+            [mensagemDeErro]="proposta.erro"
+            (aceitar)="aceitarProposta()"
+            (descartar)="descartarProposta()"
+            (pedirDeNovo)="repetirPedido()"
+            (tentarDeNovo)="repetirPedido()"
+          />
+        }
       } @else {
         @if (aba() === Aba.DESCRICAO_CLIENTE && podeEditar()) {
           <app-aviso-pedido-do-cliente />
@@ -90,3 +104,25 @@
     }
   }
 </section>
+
+<p-popover #popoverPedido>
+  <form class="documentacao-demanda__pedido" (submit)="$event.preventDefault(); enviarPedido()">
+    <strong>Alterar trecho com IA</strong>
+    @if (trechoSelecionado(); as selecionado) {
+      <blockquote class="documentacao-demanda__trecho">{{ selecionado.selecao }}</blockquote>
+      @if (selecionado.selecao !== selecionado.bloco) {
+        <small>Só o trecho marcado é alterado. O parágrafo vai junto como contexto e não muda.</small>
+      }
+    }
+    <textarea
+      pTextarea
+      rows="3"
+      aria-label="O que mudar no trecho"
+      placeholder="O que mudar? Ex.: deixar mais direto, corrigir a regra, explicar o porquê…"
+      [formControl]="controlePedido"
+      (keydown.control.enter)="enviarPedido()"
+    ></textarea>
+    <small>A IA devolve a proposta aqui embaixo; você aceita ou descarta, e nada é gravado antes de Gravar.</small>
+    <p-button type="submit" label="Pedir à IA" icon="pi pi-sparkles" size="small" [disabled]="controlePedido.value.trim() === ''" />
+  </form>
+</p-popover>
