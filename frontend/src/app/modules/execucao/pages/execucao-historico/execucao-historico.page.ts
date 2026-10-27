@@ -27,6 +27,8 @@ import {
   ExecucaoListarDto,
   ExecucaoItemDto,
   ExecucaoAlterarDto,
+  ExecucaoEncerrarDto,
+  EstadoIaEnum,
   UsuarioResumoDto,
   TipoUsuarioStatusEnum,
   REGEX_SEM_CARACTERES_PROIBIDOS,
@@ -44,6 +46,7 @@ import { ambiente } from '../../../../../environments/environment';
 import { ExecucaoService } from '../../services/execucao.service';
 import { UsuarioService } from '../../../usuario/services/usuario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
+import { IaDisponibilidadeService } from '../../../../core/services/ia-disponibilidade.service';
 import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-horas.pipe';
 import { BloquearCaracteresProibidosDirective } from '../../../../shared/directives/bloquear-caracteres-proibidos.directive';
 import { AtividadeVisualizarDialogComponent } from '../../../atividade/components/atividade-visualizar-dialog/atividade-visualizar-dialog.component';
@@ -51,8 +54,9 @@ import { SkeletonListaComponent } from '../../../../shared/components/skeleton-l
 import { BarraRecargaComponent } from '../../../../shared/components/barra-recarga/barra-recarga.component';
 import { focoEmCampo, haSobreposicaoAberta } from '../../../../core/utils/atalhos';
 import { RelatorioExecucaoDialogComponent } from '../../../relatorio/components/relatorio-execucao-dialog/relatorio-execucao-dialog.component';
-import { ExecucaoTimerComponent } from '../../components/execucao-timer/execucao-timer.component';
-import { dataParaIso, isoParaData, mesmoDia, resumoDoDia } from '../../utils/execucao.util';
+import { ExecucaoAgoraComponent, ExecucaoPausaPedida } from '../../components/execucao-agora/execucao-agora.component';
+import { dataParaIso, isoParaData, mensagemInicialDoChat, mesmoDia, resumoDoDia, separarExecucoes } from '../../utils/execucao.util';
+
 
 type CampoEdicao = 'descricao' | 'inicio' | 'fim';
 
@@ -75,7 +79,7 @@ type CampoEdicao = 'descricao' | 'inicio' | 'fim';
     AtividadeVisualizarDialogComponent,
     BloquearCaracteresProibidosDirective,
     RelatorioExecucaoDialogComponent,
-    ExecucaoTimerComponent,
+    ExecucaoAgoraComponent,
   ],
   templateUrl: './execucao-historico.page.html',
   styleUrl: './execucao-historico.page.scss',
@@ -90,6 +94,7 @@ export class ExecucaoHistoricoPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly iaDisponibilidade = inject(IaDisponibilidadeService);
   readonly sessao = inject(UsuarioSessaoService);
   /** Os rótulos e as larguras da tabela real (Usuário e Ações só para o gestor), para o esqueleto não parecer outra tela. */
   readonly esqueleto = computed(() =>
@@ -132,15 +137,22 @@ export class ExecucaoHistoricoPage implements OnInit {
 
   /** "Quinta-feira, 10 de julho · 5 execuções · 12h24" — contexto do que está na tela. */
   readonly resumo = computed(() =>
-    resumoDoDia(isoParaData(this.dataSelecionada()) ?? this.hoje, this.totalRegistros(), this.totalMinutosDia(), this.hoje),
+    resumoDoDia(isoParaData(this.dataSelecionada()) ?? this.hoje, this.totalRegistros(), this.totalMinutosDia(), this.hoje, this.ativas().length),
   );
   readonly rotuloDiaVazio = computed(() => (isoParaData(this.dataSelecionada()) ?? this.hoje).toLocaleDateString('pt-BR'));
 
-  /** A execução em andamento fica fixada no topo da página corrente. */
-  readonly linhas = computed(() => {
-    const lista = this.execucoes();
-    return [...lista.filter((item) => !item.fimData), ...lista.filter((item) => !!item.fimData)];
-  });
+  /** A execução em andamento sai da tabela e vai para o bloco "Em andamento agora" (task 252); a tabela é só o que já fechou. */
+  private readonly separadas = computed(() => separarExecucoes(this.execucoes()));
+  readonly ativas = computed(() => this.separadas().ativas);
+  readonly linhas = computed(() => this.separadas().encerradas);
+  /** O total da API conta a ativa; o paginador da tabela, não. */
+  readonly totalEncerradas = computed(() => Math.max(0, this.totalRegistros() - this.ativas().length));
+  /** O bloco é do "agora": num dia passado sem execução ativa ele não aparece. */
+  readonly mostrarAgora = computed(() => this.ativas().length > 0 || this.visualizandoHoje());
+  /** Gestor sem filtro de usuário vê vários donos: o cartão mostra de quem é. */
+  readonly agoraDeVarios = computed(() => this.sessao.eGestor() && !this.usuarioFiltradoId());
+  readonly podeIniciar = computed(() => !this.sessao.eGestor());
+  readonly pausando = signal<boolean>(false);
 
   // --- Edição inline (gestor): descrição, início e fim direto na célula ---
   readonly edicao = signal<{ execucaoId: number; campo: CampoEdicao } | null>(null);
@@ -176,6 +188,31 @@ export class ExecucaoHistoricoPage implements OnInit {
       this.paginaAtual.set(1);
       this.buscarExecucoes();
     });
+  }
+
+  /** Pausar é encerrar com a descrição (a mesma rota do chip da barra superior); o gestor pausa a de qualquer um. */
+  pausarExecucao(pedido: ExecucaoPausaPedida): void {
+    const dto: ExecucaoEncerrarDto = { descricao: pedido.descricao || undefined };
+    this.pausando.set(true);
+    this.execucaoService
+      .encerrar(pedido.execucao.id, dto)
+      .pipe(finalize(() => this.pausando.set(false)))
+      .subscribe({
+        next: () => {
+          this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Execução pausada com sucesso' });
+          this.buscarExecucoes();
+        },
+      });
+  }
+
+  /** Sem nada em andamento, o desenvolvedor volta ao chat com a mensagem pronta (ou às Atividades, com a IA fora do ar). */
+  iniciarAtividade(): void {
+    if (this.iaDisponibilidade.estado() !== EstadoIaEnum.NO_AR) {
+      this.router.navigate(['/atividade']);
+      return;
+    }
+    const houveExecucaoNoDia = this.linhas().length > 0;
+    this.router.navigate(['/chat'], { queryParams: { mensagem: mensagemInicialDoChat(houveExecucaoNoDia) } });
   }
 
   /** Esc sai da edição inline. ←/→ trocam o dia, Home volta a hoje, quietos em campo de texto e com dialog/popover aberto. */

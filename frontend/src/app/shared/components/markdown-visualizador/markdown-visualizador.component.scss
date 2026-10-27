@@ -20,6 +20,26 @@
     margin-bottom: 0;
   }
 
+  // Sobre o balão colorido da própria mensagem (task 253): tudo herda a cor do entorno.
+  &--herda-cor {
+    color: inherit;
+    font-size: inherit;
+    line-height: inherit;
+
+    .markdown__link,
+    .markdown__citacao {
+      color: inherit;
+    }
+
+    .markdown__citacao {
+      border-left-color: currentcolor;
+    }
+
+    .markdown__codigo {
+      background: color-mix(in srgb, var(--p-primary-contrast-color) 20%, transparent);
+    }
+  }
+
   &__titulo {
     margin: 1em 0 0.4em;
     font-weight: 600;

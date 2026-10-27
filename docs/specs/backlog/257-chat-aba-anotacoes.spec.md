@@ -1,4 +1,4 @@
-# 255-chat-aba-anotacoes.spec.md
+# 257-chat-aba-anotacoes.spec.md
 
 > Task 4/7 da guarda-chuva [`documentacoes-e-pad.spec.md`](documentacoes-e-pad.spec.md) (decisão 8): no chat, o pad vira a aba
 > **Anotações** da demanda aberta.
@@ -12,10 +12,10 @@ demanda à direita. Com o pad numa aba ali, ele anota sem abrir o painel lateral
 
 1. **Aba Anotações** entre Checklist e Técnica: **Checklist · Anotações · Técnica · Cliente · Documentação**. Ícone do pad e, ao lado
    do nome, a quantidade de itens em aberto em Pendências (sem número quando zero).
-2. **Conteúdo da aba:** o componente do pad da task 254, sem o cabeçalho próprio (o nome já está na aba), com edição, gravação e
+2. **Conteúdo da aba:** o componente do pad da task 256, sem o cabeçalho próprio (o nome já está na aba), com edição, gravação e
    "Enviar para" como no drawer. Ocupa a altura toda da área da demanda, com rolagem interna.
 3. **Aba aberta por padrão:** ao abrir uma demanda no chat, a aba **Anotações** vem selecionada (decisão do autor de 2026-10-27).
-4. **Mesmo estado do pad:** editar na aba e abrir o drawer pela barra superior mostra o mesmo texto (o estado único da task 254).
+4. **Mesmo estado do pad:** editar na aba e abrir o drawer pela barra superior mostra o mesmo texto (o estado único da task 256).
 
 ## Critérios de Aceite
 
@@ -27,8 +27,8 @@ demanda à direita. Com o pad numa aba ali, ele anota sem abrir o painel lateral
 
 ## Fora de Escopo
 
-- O pad na tela de Documentações (task 257); a aba Cliente legível (task 252).
+- O pad na tela de Documentações (task 259); a aba Cliente legível (task 254).
 
 ## Dependências
 
-- Tasks 252 (a aba Cliente já aparece para o desenvolvedor) e 254 (componente e estado do pad).
+- Tasks 254 (a aba Cliente já aparece para o desenvolvedor) e 256 (componente e estado do pad).

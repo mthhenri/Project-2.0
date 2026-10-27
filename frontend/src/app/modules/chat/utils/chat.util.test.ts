@@ -1,7 +1,7 @@
 import { test } from 'vitest';
 import * as assert from 'node:assert/strict';
 import { StatusPropostaIaEnum, TipoPropostaIaEnum } from '@project20/shared';
-import { dataDaConversa, extrairEventos, formatarDuracao, paresDosDados, rotuloDoDia, semMarcacaoMarkdown, sugestoesAposProposta, sugestoesIniciais } from './chat.util';
+import { dataDaConversa, extrairEventos, formatarDuracao, LIMITE_MENSAGEM_CHAT, mensagemInicialDoLink, paresDosDados, rotuloDoDia, semMarcacaoMarkdown, sugestoesAposProposta, sugestoesIniciais } from './chat.util';
 
 test('lê vários eventos de uma vez', () => {
   const texto = 'data: {"tipo":"trecho","texto":"Bom "}\n\ndata: {"tipo":"trecho","texto":"dia"}\n\n';
@@ -101,4 +101,12 @@ test('recusar, desfazer ou expirar não abrem próximo passo, e há no máximo q
   for (const tipo of Object.values(TipoPropostaIaEnum)) {
     assert.ok(sugestoesAposProposta(tipo, StatusPropostaIaEnum.CONFIRMADA, true).length <= 4);
   }
+});
+
+test('mensagemInicialDoLink apara o texto, tolera ausência e respeita o limite do campo', () => {
+  assert.equal(mensagemInicialDoLink('  De onde paramos?  '), 'De onde paramos?');
+  assert.equal(mensagemInicialDoLink(null), '');
+  assert.equal(mensagemInicialDoLink(undefined), '');
+  assert.equal(mensagemInicialDoLink('   '), '');
+  assert.equal(mensagemInicialDoLink('a'.repeat(LIMITE_MENSAGEM_CHAT + 10)).length, LIMITE_MENSAGEM_CHAT);
 });

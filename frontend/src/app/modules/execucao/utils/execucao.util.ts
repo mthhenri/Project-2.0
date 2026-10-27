@@ -40,12 +40,42 @@ export function horasCompactas(totalMinutos: number): string {
   return `${horas}h${String(minutos).padStart(2, '0')}`;
 }
 
-/** "Quinta-feira, 10 de julho · 5 execuções · 12h24". */
-export function resumoDoDia(data: Date, totalExecucoes: number, totalMinutos: number, hoje: Date = new Date()): string {
+/** "Quinta-feira, 10 de julho · 5 execuções · 12h24" (e "· 2 em andamento" quando há execução ativa no dia). */
+export function resumoDoDia(
+  data: Date,
+  totalExecucoes: number,
+  totalMinutos: number,
+  hoje: Date = new Date(),
+  emAndamento = 0,
+): string {
   const partes = [rotuloDoDia(data, hoje)];
   partes.push(
     totalExecucoes === 0 ? 'Nenhuma execução' : `${totalExecucoes} ${totalExecucoes === 1 ? 'execução' : 'execuções'}`,
   );
   if (totalExecucoes > 0) partes.push(horasCompactas(totalMinutos));
+  if (emAndamento > 0) partes.push(`${emAndamento} em andamento`);
   return partes.join(' · ');
+}
+
+/** Separa as execuções ativas (sem fim) das encerradas, mantendo a ordem de cada grupo: a ativa não entra na tabela. */
+export function separarExecucoes<T extends { fimData: Date | string | null }>(lista: T[]): { ativas: T[]; encerradas: T[] } {
+  return {
+    ativas: lista.filter((item) => !item.fimData),
+    encerradas: lista.filter((item) => !!item.fimData),
+  };
+}
+
+/** Texto que o "Iniciar atividade" deixa digitado no chat: retoma de onde parou quando já houve execução no dia. */
+export function mensagemInicialDoChat(houveExecucaoNoDia: boolean): string {
+  return houveExecucaoNoDia ? 'De onde paramos?' : 'O que temos pra fazer?';
+}
+
+/** "Matheus Henrique" → "MH" (as duas primeiras iniciais), para o avatar do cartão. */
+export function iniciaisDoNome(nomeCompleto: string): string {
+  return nomeCompleto
+    .split(/\s+/)
+    .filter((parte) => parte.length > 0)
+    .slice(0, 2)
+    .map((parte) => parte[0].toUpperCase())
+    .join('');
 }

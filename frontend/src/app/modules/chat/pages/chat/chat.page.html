@@ -88,7 +88,7 @@
                         @if (mensagem.autorNome) {
                           <span class="chat__autor">{{ mensagem.autorNome }}</span>
                         }
-                        <div class="chat__balao">{{ mensagem.texto }}</div>
+                        <div class="chat__balao"><app-markdown-visualizador [texto]="mensagem.texto" [herdaCor]="true" /></div>
                         <div class="chat__rodape-mensagem">
                           @if (mensagem.criadaEm) {
                             <span class="chat__hora">{{ mensagem.criadaEm | date: 'dd/MM/yyyy HH:mm' }}</span>
@@ -171,18 +171,15 @@
       @if (modo() === Modo.PLANEJAMENTO) {
         <div class="chat__rodape">
           <form class="chat__entrada" (submit)="$event.preventDefault(); enviar()">
-            <textarea
-              #campoTexto
-              pTextarea
+            <app-editor-mensagem
               class="chat__campo"
-              rows="2"
-              [autoResize]="true"
-              [formControl]="controleTexto"
+              [embutido]="true"
+              rotulo="Mensagem para a IA"
               [placeholder]="iaDesligada() ? 'A IA está desligada' : planoAbertoId() === null ? 'Abra um plano para conversar' : 'Converse sobre o plano: o que a demanda precisa, o que falta, o que escrever…'"
-              aria-label="Mensagem para a IA"
-              maxlength="4000"
-              (keydown)="aoTeclar($event)"
-            ></textarea>
+              [desabilitado]="campoBloqueado()"
+              (mudou)="aoMudarTexto($event)"
+              (teclou)="aoTeclarNoCampo($event)"
+            />
             <button type="submit" class="chat__enviar" aria-label="Enviar" [disabled]="!podeEnviar()">
               <i class="pi" [class.pi-arrow-right]="!enviando()" [class.pi-spin]="enviando()" [class.pi-spinner]="enviando()"></i>
             </button>
@@ -190,6 +187,11 @@
           <div class="chat__base">
             <ng-container [ngTemplateOutlet]="chaveDeModo" />
             <span class="chat__legenda">Quem tem acesso ao plano vê esta conversa. A IA pergunta antes de escrever no documento. Enter envia, Shift+Enter quebra a linha.</span>
+            @if (mostrarContador()) {
+              <span class="text-xs" [class.text-surface-500]="!excedeuOLimite()" [class.text-red-500]="excedeuOLimite()" [attr.role]="excedeuOLimite() ? 'alert' : null">
+                @if (excedeuOLimite()) { Passou do limite da mensagem: } {{ contador() }}
+              </span>
+            }
           </div>
         </div>
       } @else if (!somenteLeitura()) {
@@ -203,18 +205,15 @@
           }
 
           <form class="chat__entrada" (submit)="$event.preventDefault(); enviar()">
-            <textarea
-              #campoTexto
-              pTextarea
+            <app-editor-mensagem
               class="chat__campo"
-              rows="2"
-              [autoResize]="true"
-              [formControl]="controleTexto"
+              [embutido]="true"
+              rotulo="Mensagem para a IA"
               [placeholder]="iaDesligada() ? 'A IA está desligada' : 'Fale com a IA: o que vai fazer, o que fez, o que recebeu…'"
-              aria-label="Mensagem para a IA"
-              maxlength="4000"
-              (keydown)="aoTeclar($event)"
-            ></textarea>
+              [desabilitado]="campoBloqueado()"
+              (mudou)="aoMudarTexto($event)"
+              (teclou)="aoTeclarNoCampo($event)"
+            />
             <button type="submit" class="chat__enviar" aria-label="Enviar" [disabled]="!podeEnviar()">
               <i class="pi" [class.pi-arrow-right]="!enviando()" [class.pi-spin]="enviando()" [class.pi-spinner]="enviando()"></i>
             </button>
@@ -222,6 +221,11 @@
           <div class="chat__base">
             <ng-container [ngTemplateOutlet]="chaveDeModo" />
             <span class="chat__legenda">A IA pergunta antes do que é difícil de desfazer e avisa o que faz sozinha. Enter envia, Shift+Enter quebra a linha.</span>
+            @if (mostrarContador()) {
+              <span class="text-xs" [class.text-surface-500]="!excedeuOLimite()" [class.text-red-500]="excedeuOLimite()" [attr.role]="excedeuOLimite() ? 'alert' : null">
+                @if (excedeuOLimite()) { Passou do limite da mensagem: } {{ contador() }}
+              </span>
+            }
           </div>
         </div>
       } @else {

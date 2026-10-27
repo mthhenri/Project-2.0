@@ -12,15 +12,51 @@
 
 ---
 
-## 2026-10-27 — Guarda-chuva `documentacoes-e-pad.spec.md`: tela de Documentações, pad ajustável e no chat, Cliente legível (tasks 252–258, só as specs)
+## 2026-10-27 — Guarda-chuva `documentacoes-e-pad.spec.md`: tela de Documentações, pad ajustável e no chat, Cliente legível (tasks 254–260, só as specs)
 
 Conversa com o autor em 2026-10-26 e 2026-10-27, com protótipo clicável num canvas (`backlog/documentacoes-e-pad/referencias.md`). Nenhum código mudou.
 
 - **Pedido:** uma tela no Dia a dia para escrever os textos da demanda e as próprias anotações ao mesmo tempo. A primeira versão do protótipo tinha a árvore de demandas fixa ao lado; o autor pediu que a árvore só abra num seletor e suma ao escolher, que a demanda escolhida fique guardada, e a demanda à esquerda com o pad à direita. Pediu também o pad lateral com largura ajustável e tela cheia, e o pad no chat. Para o chat, a primeira proposta (pad embaixo da demanda aberta) foi trocada, a pedido dele, por uma **aba Anotações** entre Checklist e Técnica, aberta por padrão.
 - **Descrição do cliente:** o autor decidiu que todos leem e só gestor e administrador alteram, em todo lugar. A edição já era bloqueada no backend (`DemandaService`, publicação do plano); o que estava errado era a leitura, escondida do desenvolvedor no chat (`demanda-leitura`, task 245) e no plano (`podeVerAbaDoPlano`). Isso revê a decisão 15 de `chat-execucao-por-demanda.spec.md` (aba Cliente só do gestor), que não foi reescrita.
-- **Defeito achado:** o "alterar trecho com IA" do plano manda o bloco inteiro no modo formatado do editor, e não a seleção; registrado como `PROBLEMS.md` P-037, com a correção na task 253.
+- **Defeito achado:** o "alterar trecho com IA" do plano manda o bloco inteiro no modo formatado do editor, e não a seleção; registrado como `PROBLEMS.md` P-037, com a correção na task 255.
 - **Decisões do agente**, a confirmar nas specs: seletor na própria tela (não na barra global), demanda em execução já escolhida na primeira visita, larguras e escolha guardadas no navegador, um componente de pad só, trava de versão da demanda numa coluna `versao` (o `updated_date` perde os microssegundos no navegador).
-- **Tasks:** 252 (Cliente legível), 253 (trecho só a seleção), 254 (pad reaproveitável, ajustável e em tela cheia), 255 (aba Anotações no chat), 256 (versão dos textos da demanda, migration), 257 (tela de Documentações), 258 (alterar trecho com IA em Documentações). Maior número em uso: 258.
+- **Tasks:** 254 (Cliente legível), 255 (trecho só a seleção), 256 (pad reaproveitável, ajustável e em tela cheia), 257 (aba Anotações no chat), 258 (versão dos textos da demanda, migration), 259 (tela de Documentações), 260 (alterar trecho com IA em Documentações). Maior número em uso: 260 (os números 252 e 253 foram ocupados na `master` por outras tasks enquanto estas specs estavam abertas; as daqui foram renumeradas de 252–258 para 254–260).
+
+---
+
+## 2026-10-26 — Correção do bloco anterior: o teste da Modelagem que reprova o CI não é da carga nem do PR 17
+
+O `testTimeout` de 15 s (commit "Frontend: testTimeout...") **não resolveu**: o CI reprovou de novo no mesmo teste (`modelagem.page.spec`, "escolher uma relação no painel passa para a outra tabela"), agora com `Test timed out in 15000ms`, então não era lentidão. Ele **já reprovava na base**: o CI do commit só de documentação da spec 251 (branch `claude/amazing-feynman-v1c27s`) falhou nele (5 s). Reproduzido localmente com a suíte inteira em 2 núcleos (`taskset -c 0,1 npx ng test --watch=false`); o arquivo sozinho passa, mesmo com um núcleo e carga extra (22 de 22). Causa conhecida: o builder `@angular/build:unit-test` roda com **`isolate: false`** (`runners/vitest/plugins.js`), então estado global vaza entre os arquivos de spec do mesmo worker; algum spec anterior deixa o ambiente num estado em que a transição do d3 (250 ms, disparada ao escolher a relação) nunca termina. O diagnóstico no início do teste mostrou timers reais (`vi.isFakeTimers()` falso, `setInterval` nativo), então o vazamento não é de relógio falso; o spec culpado não foi isolado. O `testTimeout` foi revertido (não mascara um travamento). Corrigido de verdade nesta rodada só o que era meu: o spec do `app-execucao-agora` ligava o relógio falso no topo do arquivo e nunca o restaurava; agora liga em `beforeEach` e restaura em `afterEach`. Pendência aberta: achar o spec que vaza estado (bisseção da suíte em 2 núcleos) ou rodar o frontend com isolamento (`isolate: true` em `vitest.config.ts`, a conferir contra o custo de tempo).
+
+---
+
+## 2026-10-26 — CI do PR 17: teste de tela pesada estourava os 5 s com a suíte inteira em paralelo
+
+O check "Organização e build" do PR falhou em `modelagem.page.spec` ("escolher uma relação no painel passa para a outra tabela", `Test timed out in 5000ms`), a mesma falha por tempo que apareceu localmente a cada rodada completa depois da task 253 (ora na Modelagem, ora no grafo de Demandas); o resto da suíte passou (2212 de 2213) e o job de integração e o build do frontend estavam verdes. Sozinho, o spec da Modelagem termina em ~3 s. Causa provável: com a 253, cada um dos 72 testes da `chat.page` passou a carregar o editor Milkdown (antes era um `textarea`), o que pesa na CPU dos workers e faz o spec de tela pesada passar dos 5 s sem estar travado. Correção: `testTimeout: 15_000` em `frontend/vitest.config.ts` (nenhum teste foi pulado ou desligado). Suíte inteira depois: 179 arquivos, 2213 testes aprovados. Se a falha por tempo voltar com 15 s, a saída é fazer a `chat.page.spec` simular o editor nos testes que não escrevem no campo.
+
+---
+
+## 2026-10-26 — Task 253: campo do chat com a IA escreve formatado (editor compartilhado)
+
+Pedido do autor: o campo do chat com a IA deve ter o mesmo Markdown "tímido" do chat entre colaboradores (formata ao digitar, barra só sobre a seleção). Spec 253, criada junto da 252 e executada em seguida.
+
+- **O que mudou:** o editor da task 218 saiu de `mensagem-direta` para `shared/components/editor-mensagem/` (`app-editor-mensagem`, com `git mv`; o compositor só trocou seletor e import) e ganhou `desabilitado` e `definirTexto`; o `EditorFormatado` ganhou `cursorNoFim`. A `chat.page` trocou os dois `textarea` (Perguntas e Planejamento) pelo componente: `Enter` envia, `Shift+Enter` abre parágrafo/item, `Ctrl+Enter` envia sempre, em lista e código o `Enter` continua o bloco; limite de 4000 do Markdown com contador a partir de 3200; `?mensagem=` (252) entra pelo `definirTexto` com foco. A mensagem do usuário passou a ser renderizada como Markdown no histórico (balão azul): o `app-markdown-visualizador` ganhou o input aditivo `herdaCor` (o estilo mora nele porque o `chat.page.scss` estourou o orçamento de 8 kB do build ao receber os overrides).
+- **Impacto:** `npm run impacto` mostrou dois consumidores (o compositor e o ajudante de teste `testes/campo-mensagem.ts`), ambos ajustados; o comportamento do chat entre colaboradores não mudou.
+- **Testes:** suíte inteira do frontend 2211 aprovados e **1 falha por tempo** (5 s) a cada rodada, em arquivos diferentes e sem relação com a task (`modelagem.page.spec` e `demanda-grafo.component.spec`, sob carga com o navegador do teste aberto); os dois passam sozinhos (modelagem 22 de 22, duas vezes). Os testes do chat, de Execuções, do visualizador e do editor compartilhado passam. Novos: 8 casos na `chat.page` (formatado, `Shift+Enter`, lista e `Ctrl+Enter`, só espaços, limite e contador, Planejamento, histórico formatado), `cursorNoFim` no `markdown-formatado.test.ts`, `mensagemInicialDoLink`. Build do frontend verde.
+- **Ao vivo:** ver `done/253-chat-ia-campo-formatado/verificacao.md`. **Achado:** o `Enter` ignorava o limite de 4000 (só o botão estava bloqueado); `enviar()` passou a checar.
+- **Não há lint** no projeto (P-001).
+
+---
+
+## 2026-10-26 — Task 252: execuções em andamento fora da tabela, com "Iniciar atividade" que leva ao chat
+
+Pedido do autor sobre a tela Execuções: a linha "Em andamento" dentro da tabela confundia, o natural é a tabela ser só histórico fechado. Antes de implementar, um POC visual (`.artifacts/poc-execucao-ativa/`) foi aprovado com o bloco **acima** da tabela; as specs 252 e 253 nasceram juntas (a 253, campo formatado no chat da IA, segue no backlog).
+
+- **O que mudou:** novo `app-execucao-agora` (`modules/execucao/components/execucao-agora/`): cartão da execução ativa (atividade, caminho, descrição, cronômetro, "desde HH:MM", Pausar) ou grade de cartões compactos com avatar para o gestor sem filtro; estado vazio com "Iniciar atividade" só para o desenvolvedor. A página separa ativas e encerradas (`separarExecucoes`), a tabela fica só com as encerradas, o paginador conta só elas e o subtítulo ganha "· N em andamento". Pausar é encerrar com a descrição (mesma rota do chip da barra superior): popover com a descrição, obrigatória para desenvolvedor; o gestor pausa a de qualquer um. O `app-execucao-timer` ganhou o tamanho `medio` (aditivo). "Iniciar atividade" leva a `/chat?mensagem=` (ou a `/atividade` com a IA fora do ar): "De onde paramos?" se já houve execução no dia, senão "O que temos pra fazer?"; o chat deixa o texto no campo, sem enviar, com foco, e tira o parâmetro da URL.
+- **Decisões do autor:** bloco acima; botão de iniciar para o dev (chat com mensagem pronta, ou Atividades com a IA desligada); gestor pausa qualquer execução e não vê o botão. Resolvido por mim e registrado na spec: num dia passado sem ativa o bloco "agora" não aparece; a nota "inclui execução em andamento" do rodapé foi descartada (alargava a tabela).
+- **Testes:** frontend 179 arquivos aprovados (suíte inteira), build do frontend verde; novos: `execucao.util.test.ts` (separar, mensagem inicial, iniciais, resumo), spec do `app-execucao-agora`, 10 casos novos na página de Execuções e 3 no chat (`mensagemInicialDoLink`, campo preenchido com foco, campo vazio sem o parâmetro). Backend e `shared` não mudaram.
+- **Ao vivo:** ver `done/252-execucoes-em-andamento-fora-da-tabela/verificacao.md`. **Achado:** o foco do campo do chat falhava porque o `textarea` existe desabilitado enquanto a conversa carrega; passou a tentar até habilitar. Em 1080×1920 a tabela do gestor já cortava Descrição e Ações antes desta task.
+- **Não há lint** no projeto (P-001).
 
 ---
 

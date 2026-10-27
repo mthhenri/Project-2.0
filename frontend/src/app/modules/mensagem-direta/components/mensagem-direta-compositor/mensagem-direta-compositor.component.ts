@@ -21,7 +21,7 @@ import { filtrarPessoasPorNome } from '../../utils/mensagem-direta.util';
 import type { BlocoAtual } from '../../../../shared/components/markdown-editor/markdown-formatado';
 import { MensagemDiretaAvatarComponent } from '../mensagem-direta-avatar/mensagem-direta-avatar.component';
 import { CodigoEscolhido, MensagemDiretaCodigoPainelComponent } from '../mensagem-direta-codigo-painel/mensagem-direta-codigo-painel.component';
-import { MensagemDiretaEditorMensagemComponent } from '../mensagem-direta-editor-mensagem/mensagem-direta-editor-mensagem.component';
+import { EditorMensagemComponent } from '../../../../shared/components/editor-mensagem/editor-mensagem.component';
 
 const ATRASO_DA_BUSCA_MS = 250;
 const MINIMO_DE_LETRAS_DA_REFERENCIA = 2;
@@ -64,7 +64,7 @@ function consumir(evento: Event): void {
 @Component({
   selector: 'app-mensagem-direta-compositor',
   standalone: true,
-  imports: [ButtonModule, TooltipModule, MensagemDiretaAvatarComponent, MensagemDiretaCodigoPainelComponent, MensagemDiretaEditorMensagemComponent],
+  imports: [ButtonModule, TooltipModule, MensagemDiretaAvatarComponent, MensagemDiretaCodigoPainelComponent, EditorMensagemComponent],
   templateUrl: './mensagem-direta-compositor.component.html',
   styleUrl: './mensagem-direta-compositor.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -72,7 +72,7 @@ function consumir(evento: Event): void {
 export class MensagemDiretaCompositorComponent {
   private readonly api = inject(MensagemDiretaService);
   private readonly detectorDeMudancas = inject(ChangeDetectorRef);
-  private readonly campo = viewChild.required(MensagemDiretaEditorMensagemComponent);
+  private readonly campo = viewChild.required(EditorMensagemComponent);
 
   /** Quem pode ser mencionado: só os participantes da conversa (a regra do servidor). */
   readonly pessoas = input.required<PessoaEscolhida[]>();

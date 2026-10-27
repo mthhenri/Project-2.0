@@ -1,4 +1,4 @@
-# 257-tela-documentacoes.spec.md
+# 259-tela-documentacoes.spec.md
 
 > Task 6/7 da guarda-chuva [`documentacoes-e-pad.spec.md`](documentacoes-e-pad.spec.md) (decisões 2 a 5): a tela **Documentações** no
 > grupo Dia a dia, com a demanda em que estou trabalhando à esquerda e o pad à direita.
@@ -24,11 +24,11 @@ também é o caminho de escrita quando a IA está fora do ar.
    sem execução, a área da demanda mostra "Em que demanda você está trabalhando?" com o botão "Escolher demanda", e o pad continua ao
    lado. Demanda guardada que deixou de existir ou de ser acessível volta a esse estado.
 5. **Demanda à esquerda:** título, status, "Abrir em Demandas" e as abas **Técnica · Cliente · Documentação** com o editor de Markdown,
-   Gravar e Descartar, no padrão do documento do plano. Grava pelo endpoint de textos da task 256; versão mais nova mostra o aviso do
+   Gravar e Descartar, no padrão do documento do plano. Grava pelo endpoint de textos da task 258; versão mais nova mostra o aviso do
    plano ("Outra pessoa gravou este texto depois que você abriu…", com Recarregar), sem perder o texto digitado. Permissões de §14:
    desenvolvedor de fora da demanda vê as três abas em leitura; a Cliente é sempre leitura para o desenvolvedor (cadeado e aviso, task
-   252). Trocar de demanda com alteração sem gravar pede confirmação.
-6. **Pad à direita:** o componente da task 254, com botão de recolher (a demanda ocupa a largura toda; "Mostrar o pad" traz de volta).
+   254). Trocar de demanda com alteração sem gravar pede confirmação.
+6. **Pad à direita:** o componente da task 256, com botão de recolher (a demanda ocupa a largura toda; "Mostrar o pad" traz de volta).
    **Divisor arrastável** entre os dois, entre 34% e 72% da largura, duplo clique volta ao padrão (56%), teclado com setas; a divisão e o
    pad recolhido ficam guardados no navegador.
 7. **Estados:** carregando (esqueleto), erro com "Tentar de novo", sem demanda escolhida, busca sem resultado (com "Limpar busca") e
@@ -46,12 +46,12 @@ também é o caminho de escrita quando a IA está fora do ar.
 
 ## Fora de Escopo
 
-- "Alterar trecho com IA" nesta tela (task 258).
+- "Alterar trecho com IA" nesta tela (task 260).
 - Criar, mover ou excluir demanda por aqui; mudar status ou horas.
 
 ## Dependências
 
-- Tasks 252 (Cliente legível), 254 (componente do pad) e 256 (versão e endpoint de textos).
+- Tasks 254 (Cliente legível), 256 (componente do pad) e 258 (versão e endpoint de textos).
 
 ## Pontos em aberto (o autor confirma ao abrir a task)
 

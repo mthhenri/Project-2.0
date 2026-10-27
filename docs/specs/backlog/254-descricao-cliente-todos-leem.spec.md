@@ -1,4 +1,4 @@
-# 252-descricao-cliente-todos-leem.spec.md
+# 254-descricao-cliente-todos-leem.spec.md
 
 > Task 1/7 da guarda-chuva [`documentacoes-e-pad.spec.md`](documentacoes-e-pad.spec.md) (decisão 1): a descrição do cliente passa a ser
 > **lida por todos** em todo lugar; alterar continua só do gestor e do administrador.
@@ -39,7 +39,7 @@ O desenvolvedor precisa ler o pedido do cliente para trabalhar na demanda. A reg
 ## Fora de Escopo
 
 - Mudar quem altera a descrição do cliente.
-- Abas Anotações (task 255) e tela de Documentações (task 257).
+- Abas Anotações (task 257) e tela de Documentações (task 259).
 
 ## Dependências
 

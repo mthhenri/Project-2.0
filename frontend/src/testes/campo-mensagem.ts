@@ -1,17 +1,17 @@
 import { ComponentFixture } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { expect, vi } from 'vitest';
-import { MensagemDiretaEditorMensagemComponent } from '../app/modules/mensagem-direta/components/mensagem-direta-editor-mensagem/mensagem-direta-editor-mensagem.component';
+import { EditorMensagemComponent } from '../app/shared/components/editor-mensagem/editor-mensagem.component';
 
 // Ajudantes dos testes que escrevem no campo de mensagem do chat entre colaboradores (task 218). O campo é o editor formatado (Milkdown), carregado
 // sob demanda: antes de usá-lo o teste espera ele montar, e escreve pela API dele (o jsdom não digita de verdade). O elemento editável é o `.ProseMirror`.
 
 /** O componente do campo de mensagem que está na tela, ou `null`. */
-export function campoDeMensagemOuNulo(fixture: ComponentFixture<unknown>): MensagemDiretaEditorMensagemComponent | null {
-  return (fixture.debugElement.query(By.directive(MensagemDiretaEditorMensagemComponent))?.componentInstance as MensagemDiretaEditorMensagemComponent | undefined) ?? null;
+export function campoDeMensagemOuNulo(fixture: ComponentFixture<unknown>): EditorMensagemComponent | null {
+  return (fixture.debugElement.query(By.directive(EditorMensagemComponent))?.componentInstance as EditorMensagemComponent | undefined) ?? null;
 }
 
-export function campoDeMensagem(fixture: ComponentFixture<unknown>): MensagemDiretaEditorMensagemComponent {
+export function campoDeMensagem(fixture: ComponentFixture<unknown>): EditorMensagemComponent {
   const campo = campoDeMensagemOuNulo(fixture);
   if (!campo) throw new Error('O campo de mensagem não está na tela');
   return campo;

@@ -1,5 +1,5 @@
 @if (blocos().length > 0) {
-  <div class="markdown">
+  <div class="markdown" [class.markdown--herda-cor]="herdaCor()">
     <ng-container *ngTemplateOutlet="modeloBlocos; context: { $implicit: blocos() }" />
   </div>
 }

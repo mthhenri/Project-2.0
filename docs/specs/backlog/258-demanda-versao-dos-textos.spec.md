@@ -1,11 +1,11 @@
-# 256-demanda-versao-dos-textos.spec.md
+# 258-demanda-versao-dos-textos.spec.md
 
 > Task 5/7 da guarda-chuva [`documentacoes-e-pad.spec.md`](documentacoes-e-pad.spec.md) (decisão 5): os textos da demanda ganham
 > **trava de versão**, como o plano, para a tela de Documentações não sobrescrever quem gravou antes.
 
 ## Objetivo
 
-A tela de Documentações (task 257) é um editor de escrita longa dos três textos da demanda. Enquanto alguém escreve, outra pessoa pode
+A tela de Documentações (task 259) é um editor de escrita longa dos três textos da demanda. Enquanto alguém escreve, outra pessoa pode
 gravar o mesmo texto pela tela de Demandas, pela publicação do plano ou por uma proposta da IA. O plano já resolve isso com
 `plano.versao`; a demanda não tem coluna equivalente.
 
@@ -20,7 +20,7 @@ gravar o mesmo texto pela tela de Demandas, pela publicação do plano ou por um
    `descricaoCliente?`, `documentacao?`, `versao`) e saída `DemandaTextosAlteradosDto` (os três textos e a versão nova). O `UPDATE`
    compara a versão e grava na mesma instrução; versão diferente é recusada com o mesmo erro e mensagem do plano ("alguém gravou uma
    versão mais nova"). Permissões de §14 sem mudança: desenvolvedor só se for membro e nunca a descrição do cliente.
-4. **Leitura com versão:** o DTO que a tela de Documentações lê da demanda (`DemandaRecuperadaDto` ou o de leitura que a 257 usar) passa
+4. **Leitura com versão:** o DTO que a tela de Documentações lê da demanda (`DemandaRecuperadaDto` ou o de leitura que a 259 usar) passa
    a trazer `versao`.
 5. **Documentação:** `SYSTEM.SPEC.md` (entidade demanda) e `docs/SCHEMA.md`.
 
@@ -33,7 +33,7 @@ gravar o mesmo texto pela tela de Demandas, pela publicação do plano ou por um
 
 ## Fora de Escopo
 
-- A tela de Documentações (task 257). As outras telas continuam gravando como hoje, sem recusar por versão; elas só sobem a versão.
+- A tela de Documentações (task 259). As outras telas continuam gravando como hoje, sem recusar por versão; elas só sobem a versão.
 - Histórico de versões.
 
 ## Dependências

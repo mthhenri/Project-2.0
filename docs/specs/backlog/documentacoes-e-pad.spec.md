@@ -3,7 +3,7 @@
 > Guarda-chuva da **tela de Documentações** e do **pad junto do trabalho**: ver o texto da demanda e as próprias anotações ao mesmo
 > tempo, o pad com largura ajustável e em tela cheia, o pad como aba da demanda no chat, a descrição do cliente legível por todos e o
 > "alterar trecho com IA" mandando só o que foi selecionado. Origem: conversa com o autor em 2026-10-26 e 2026-10-27. **Não é uma task
-> implementável**: registra as decisões, e cada task tem a sua spec (as tasks **252 a 258**, na tabela do fim). O protótipo está em
+> implementável**: registra as decisões, e cada task tem a sua spec (as tasks **254 a 260**, na tabela do fim). O protótipo está em
 > [`documentacoes-e-pad/referencias.md`](documentacoes-e-pad/referencias.md); ele ilustra, e a spec decide.
 
 ## Objetivo
@@ -91,9 +91,9 @@ demanda está em outra tela. A guarda-chuva junta os dois e corrige o que atrapa
 ## Riscos e Mitigação
 
 - **Duas pessoas gravando o mesmo texto da demanda** (Documentações, tela de Demandas, publicação do plano, executores da IA).
-  Mitigação: todo caminho que grava os textos sobe a `versao`, e só a tela de Documentações recusa por versão (task 256).
+  Mitigação: todo caminho que grava os textos sobe a `versao`, e só a tela de Documentações recusa por versão (task 258).
 - **Pad editado em dois lugares ao mesmo tempo** (o drawer aberto sobre Documentações). Mitigação: um só estado do pad no frontend,
-  compartilhado pelo componente (task 254).
+  compartilhado pelo componente (task 256).
 - **Proposta de trecho que não encaixa mais** porque o texto mudou depois do pedido. Mitigação: a troca continua exigindo o bloco exato,
   e expira como hoje.
 
@@ -101,13 +101,13 @@ demanda está em outra tela. A guarda-chuva junta os dois e corrige o que atrapa
 
 | # | Task | Escopo | Depende de |
 |---|---|---|---|
-| 252 | [Descrição do cliente: todos leem](252-descricao-cliente-todos-leem.spec.md) | Aba Cliente legível para o desenvolvedor no chat e no plano; edição continua só do gestor | — |
-| 253 | [Alterar trecho com IA: só a seleção](253-alterar-trecho-so-a-selecao.spec.md) | Editor entrega a seleção e o bloco; o pedido à IA muda só a seleção | — |
-| 254 | [Pad reaproveitável, ajustável e em tela cheia](254-pad-ajustavel-e-tela-cheia.spec.md) | Componente de pad único; drawer com largura pela borda e tela cheia | — |
-| 255 | [Anotações como aba da demanda no chat](255-chat-aba-anotacoes.spec.md) | Aba Anotações entre Checklist e Técnica, aberta por padrão | 252, 254 |
-| 256 | [Trava de versão nos textos da demanda](256-demanda-versao-dos-textos.spec.md) | Coluna `versao`, endpoint de textos com recusa por versão | — |
-| 257 | [Tela de Documentações](257-tela-documentacoes.spec.md) | Rota, seletor em árvore, demanda à esquerda e pad à direita, divisor | 252, 254, 256 |
-| 258 | [Alterar trecho com IA em Documentações](258-documentacoes-alterar-trecho-com-ia.spec.md) | Pedido direto à IA, proposta com diff no texto, aceitar sem gravar | 253, 257 |
+| 254 | [Descrição do cliente: todos leem](254-descricao-cliente-todos-leem.spec.md) | Aba Cliente legível para o desenvolvedor no chat e no plano; edição continua só do gestor | — |
+| 255 | [Alterar trecho com IA: só a seleção](255-alterar-trecho-so-a-selecao.spec.md) | Editor entrega a seleção e o bloco; o pedido à IA muda só a seleção | — |
+| 256 | [Pad reaproveitável, ajustável e em tela cheia](256-pad-ajustavel-e-tela-cheia.spec.md) | Componente de pad único; drawer com largura pela borda e tela cheia | — |
+| 257 | [Anotações como aba da demanda no chat](257-chat-aba-anotacoes.spec.md) | Aba Anotações entre Checklist e Técnica, aberta por padrão | 254, 256 |
+| 258 | [Trava de versão nos textos da demanda](258-demanda-versao-dos-textos.spec.md) | Coluna `versao`, endpoint de textos com recusa por versão | — |
+| 259 | [Tela de Documentações](259-tela-documentacoes.spec.md) | Rota, seletor em árvore, demanda à esquerda e pad à direita, divisor | 254, 256, 258 |
+| 260 | [Alterar trecho com IA em Documentações](260-documentacoes-alterar-trecho-com-ia.spec.md) | Pedido direto à IA, proposta com diff no texto, aceitar sem gravar | 255, 259 |
 
 Para UI, os análogos aprovados são o documento do plano (`modules/chat/components/plano-documento/`) para a edição, o seletor do chat
 (`modules/chat/components/seletor/`) para o seletor de demanda e o pad atual para o painel de anotações.

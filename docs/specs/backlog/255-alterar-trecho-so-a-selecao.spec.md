@@ -1,4 +1,4 @@
-# 253-alterar-trecho-so-a-selecao.spec.md
+# 255-alterar-trecho-so-a-selecao.spec.md
 
 > Task 2/7 da guarda-chuva [`documentacoes-e-pad.spec.md`](documentacoes-e-pad.spec.md) (decisão 9): o "alterar trecho com IA" manda à
 > IA **só o texto selecionado** para mudar. Corrige `PROBLEMS.md` P-037.
@@ -32,7 +32,7 @@ com o Markdown (`**negrito**`, listas, links).
 - Teste do editor (componente): seleção de parte de um parágrafo com negrito entrega o bloco em Markdown e a seleção em texto; no modo
   cru, os dois iguais. Teste de `montarPedidoDeAlteracaoDoTrecho` com bloco e seleção.
 - Teste de prompt (aba Prompts das Configurações da IA): três pedidos (palavra no meio do parágrafo, item de lista, trecho com negrito);
-  a proposta só muda a seleção e encaixa (não expira). Relatos em `.artifacts/253-alterar-trecho-so-a-selecao/`, com modelo e data.
+  a proposta só muda a seleção e encaixa (não expira). Relatos em `.artifacts/255-alterar-trecho-so-a-selecao/`, com modelo e data.
 - `npm run test` e `npm run build` de `shared`, `backend` e `frontend` aprovados.
 - Verificação ao vivo no plano (skill `verify`), em 1920×1080, 1366×768 e 1080×1920: selecionar, pedir, ver o diff só na seleção,
   aceitar e desfazer.
@@ -40,7 +40,7 @@ com o Markdown (`**negrito**`, listas, links).
 
 ## Fora de Escopo
 
-- O "alterar trecho" na tela de Documentações (task 258).
+- O "alterar trecho" na tela de Documentações (task 260).
 - Mudar o "Enviar para" do pad.
 
 ## Dependências

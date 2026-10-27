@@ -1,4 +1,4 @@
-# 254-pad-ajustavel-e-tela-cheia.spec.md
+# 256-pad-ajustavel-e-tela-cheia.spec.md
 
 > Task 3/7 da guarda-chuva [`documentacoes-e-pad.spec.md`](documentacoes-e-pad.spec.md) (decisão 7): o pad vira **um componente
 > reaproveitável**, e o painel lateral ganha **largura ajustável** e **tela cheia**.
@@ -6,7 +6,7 @@
 ## Objetivo
 
 O pad hoje é um `p-drawer` de 520 px fixos (`modules/usuario/components/usuario-anotacoes-dialog/`). O autor quer alargar o painel
-arrastando a borda e, quando precisar, ocupar a tela toda. As tasks 255 e 257 mostram o mesmo pad em outros lugares, então o conteúdo do
+arrastando a borda e, quando precisar, ocupar a tela toda. As tasks 257 e 259 mostram o mesmo pad em outros lugares, então o conteúdo do
 pad sai do drawer para um componente próprio.
 
 ## Entregáveis
@@ -37,7 +37,7 @@ pad sai do drawer para um componente próprio.
 ## Fora de Escopo
 
 - Mudar o backend do pad, as seções ou o "Enviar para".
-- O pad em Documentações (task 257) e no chat (task 255).
+- O pad em Documentações (task 259) e no chat (task 257).
 
 ## Dependências
 

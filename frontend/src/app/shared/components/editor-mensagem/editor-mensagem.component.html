@@ -1,4 +1,4 @@
-<div #hospede class="editor-mensagem" [class.editor-mensagem--embutido]="embutido()" [class.editor-mensagem--vazio]="texto() === ''" [attr.data-placeholder]="placeholder()"></div>
+<div #hospede class="editor-mensagem" [class.editor-mensagem--embutido]="embutido()" [class.editor-mensagem--vazio]="texto() === ''" [class.editor-mensagem--desabilitado]="desabilitado()" [attr.data-placeholder]="placeholder()"></div>
 
 @if (barra(); as posicao) {
   <div class="editor-mensagem__barra" role="toolbar" aria-label="Formatação do texto selecionado" [style.left.px]="posicao.esquerda" [style.top.px]="posicao.topo">
