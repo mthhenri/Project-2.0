@@ -164,3 +164,10 @@
 - **Por quê:** o custo da IA passa a ser ajustável sem mexer em código, tipo a tipo.
 - **Custo aparente:** médio: guardar o nível por tipo (na versão do prompt ou na configuração ativa, por migration), a service ler dele no lugar da constante (chat, planejamento, assistente e teste de prompt) e um seletor por tipo na aba Prompts.
 
+
+### I-032 — Fundo da mensagem do chat da IA em um tom mais apagado (cinza) · chat IA/frontend
+
+- **Ideia:** trocar a cor de fundo da mensagem do chat da IA por uma cor mais "morta", tipo um cinza. Conferir se a mudança vale também para o chat entre colaboradores (provavelmente sim, se o fundo vier do mesmo estilo/token compartilhado).
+- **Origem:** pedido do autor em 2026-10-27, só anotado, sem decisão de tom nem de escopo.
+- **Por quê:** a cor atual da mensagem chama mais atenção do que o conteúdo.
+- **Custo aparente:** só UI (estilo/token de cor); antes de mexer, rodar a skill `gerenciamento-de-impacto` para ver quais telas consomem o mesmo estilo e confirmar com o autor o que mudar além do chat da IA.
