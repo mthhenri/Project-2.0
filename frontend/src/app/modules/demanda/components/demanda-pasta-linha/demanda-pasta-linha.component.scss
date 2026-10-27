@@ -54,6 +54,14 @@
     border-radius: 0.15rem;
   }
 
+  &__caminho {
+    overflow: hidden;
+    font-size: 0.7rem;
+    color: var(--p-text-muted-color);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   &__detalhe {
     display: flex;
     flex-wrap: wrap;

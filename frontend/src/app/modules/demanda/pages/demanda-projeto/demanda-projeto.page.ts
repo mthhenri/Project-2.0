@@ -39,9 +39,8 @@ import {
 } from '../../utils/demanda-filtro.util';
 import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
 
-/** Último projeto e modo usados, lembrados entre visitas (task 106). */
+/** Último projeto usado, lembrado entre visitas (task 106). O modo (aba) não é lembrado: a tela sempre abre na Árvore. */
 const CHAVE_ULTIMO_PROJETO = 'demanda.ultimoProjetoId';
-const CHAVE_ULTIMO_MODO = 'demanda.ultimoModo';
 const MODOS_VALIDOS: ModoVisualizacao[] = ['grafo', 'arvore', 'controle-de-horas'];
 
 /**
@@ -167,9 +166,9 @@ export class DemandaProjetoPage implements OnInit, OnDestroy {
     clearTimeout(this.temporizadorFiltroGrafo);
   }
 
-  /** `?modo=` vence o último modo usado, que vence o padrão (Árvore). O Controle de horas é só do gestor. */
+  /** `?modo=` vence o padrão (Árvore); nada é lembrado entre visitas. O Controle de horas é só do gestor. */
   private modoInicial(): ModoVisualizacao {
-    const candidato = normalizarModo(this.route.snapshot.queryParamMap.get('modo') ?? lerArmazenado(CHAVE_ULTIMO_MODO));
+    const candidato = normalizarModo(this.route.snapshot.queryParamMap.get('modo'));
     if (!candidato) return 'arvore';
     return candidato === 'controle-de-horas' && !this.sessao.eGestor() ? 'arvore' : candidato;
   }
@@ -198,7 +197,6 @@ export class DemandaProjetoPage implements OnInit, OnDestroy {
   alternarModo(modo: ModoVisualizacao): void {
     if (!modo || modo === this.modoVisualizacao()) return;
     this.modoVisualizacao.set(modo);
-    gravarArmazenado(CHAVE_ULTIMO_MODO, modo);
     this.atualizarUrl();
     if (modo === 'controle-de-horas' && this.sessao.eGestor() && this.projetoId()) {
       this.carregarPlanejamento();

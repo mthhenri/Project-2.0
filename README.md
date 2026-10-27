@@ -1,8 +1,17 @@
 # Project 2.0
 
-Sistema de controle de ponto e gestão de projetos para times de desenvolvimento.
-Permite o registro de execuções com controle de tempo, gestão hierárquica de projetos
-e demandas, e visualização de conexões entre demandas em grafo interativo.
+Plataforma interna para gestão de times de desenvolvimento, com controle de acesso por papel
+(administrador, gestor e desenvolvedor).
+
+- **Projetos, demandas e atividades:** hierarquia de demandas com grafo interativo de conexões,
+  documentação em Markdown, tags, volume de trabalho esperado × gasto e planejamento de demandas.
+- **Execuções e ponto:** registro de execuções com controle de tempo, ponto diário com meta,
+  justificativas, calendário de dias não úteis e relatórios.
+- **Chat com IA:** assistente (Claude, com fallback para Gemini e OpenAI) que responde dúvidas,
+  planeja demandas, propõe alterações com diff para aprovação e faz check-in durante a execução.
+- **Chat entre colaboradores:** mensagens diretas com tempo real, menções, referências a
+  demandas/atividades e blocos de código.
+- **Project Desktop:** app Electron com janela própria, bandeja, atalho global e janelinha de check-in.
 
 ---
 
@@ -17,7 +26,10 @@ e demandas, e visualização de conexões entre demandas em grafo interativo.
 | Pacote Compartilhado | npm workspaces (`@project20/shared`) |
 | Estilos | SCSS + Tailwind CSS + BEM |
 | Visualização | D3.js (force simulation) |
-| IA | Anthropic Claude (auxílio de descrições) |
+| IA | Anthropic Claude, com fallback para Google Gemini e OpenAI |
+| Armazenamento do chat | OpenSearch (dev), PostgreSQL (provisório) ou Elasticsearch (produção) |
+| Desktop | Electron (`desktop/`) |
+| Testes | Node test runner (shared, backend, desktop) e Vitest (frontend) |
 | Containers | Docker + Docker Compose |
 
 ---
@@ -91,6 +103,10 @@ O backend sobe em `http://localhost:3000` e o frontend em `http://localhost:4200
 |---|---|
 | `npm run db:up` | Sobe o PostgreSQL via Docker Compose |
 | `npm run db:down` | Para o PostgreSQL |
+| `npm run dev` | Inicia backend e frontend juntos |
+| `npm test` | Testes do shared, do backend e dos scripts de repositório |
+| `npm run test:integracao` | Testes dos repositories contra o PostgreSQL de teste (precisa do banco no ar) |
+| `npm run repo:verificar` | Confere a organização de specs/artefatos e os espelhos `AGENTS.md`/`CLAUDE.md` e `.claude/.agents` |
 | `npm run backend:dev` | Inicia o backend em modo watch |
 | `npm run frontend:dev` | Inicia o frontend com proxy para o backend |
 | `npm run start --workspace=desktop` | Abre o Project Desktop (Electron) apontando para o front |
@@ -126,11 +142,13 @@ project-2.0/
   backend/          ← API NestJS
   frontend/         ← Aplicação Angular 21
   desktop/          ← Project Desktop (Electron): janela própria para o front
+  scripts/          ← repo:verificar, impacto e hook de agente
   shared/           ← DTOs, Enums e Interfaces compartilhados
   docs/
     SYSTEM.SPEC.md  ← Constituição do projeto (leia antes de qualquer coisa)
     CONVENTIONS.md  ← Referência rápida de convenções de código
     SCHEMA.md       ← Schema SQL completo do banco de dados
+    DEPLOY.md       ← Publicação e operação
     context/        ← CONTEXT (estado atual), HISTORY, PROBLEMS, MEMORY e IDEAS
     specs/
       backlog/      ← Tasks a implementar
@@ -142,11 +160,12 @@ project-2.0/
 
 ## Arquitetura
 
-O projeto é um monorepo com quatro pacotes independentes conectados via npm workspaces:
+O projeto é um monorepo com quatro workspaces conectados via npm workspaces:
 
 - **`shared/`** — pacote `@project20/shared` com DTOs, enums e interfaces. Importado pelo backend e pelo frontend, garantindo consistência de tipos entre as duas camadas sem duplicação.
 - **`backend/`** — API REST em NestJS seguindo DDD simplificado: controller (burra) → service (inteligência de negócio) → repository (SQL bruto via Knex). Sem ORM.
 - **`frontend/`** — SPA Angular 21 com standalone components, Signals para estado e PrimeNG para UI.
+- **`desktop/`** — Project Desktop (Electron): abre o front numa janela própria, com bandeja, atalho global do chat e janelinha de check-in. Veja `desktop/README.md`.
 
 ---
 

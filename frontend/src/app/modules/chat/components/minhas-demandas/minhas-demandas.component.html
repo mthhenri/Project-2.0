@@ -1,4 +1,6 @@
 <section class="minhas-demandas" aria-label="Minhas demandas">
+  <p-contextmenu #menu [model]="itensMenu()" appendTo="body" />
+
   <header class="minhas-demandas__topo">
     <h2 class="minhas-demandas__titulo">Minhas demandas</h2>
     <p-button
@@ -29,13 +31,13 @@
   } @else if (itens().length === 0) {
     <div class="minhas-demandas__estado">
       <i class="pi pi-inbox" aria-hidden="true"></i>
-      <strong>Nenhuma demanda ainda</strong>
-      <span>As demandas em que você executar atividades aparecem aqui.</span>
+      <strong>Nenhuma demanda em aberto</strong>
+      <span>As demandas em que você executar atividades aparecem aqui, até serem concluídas ou canceladas.</span>
     </div>
   } @else {
     <ul class="minhas-demandas__lista">
       @for (demanda of itens(); track demanda.demandaId) {
-        <li>
+        <li (contextmenu)="abrirMenu($event, menu, demanda)">
           <button type="button" class="minhas-demandas__item" [class.minhas-demandas__item--rodando]="demanda.executando" (click)="escolhida.emit(demanda.demandaId)">
             <span class="minhas-demandas__linha">
               <app-demanda-status-marca [status]="demanda.status" [tamanho]="16" />

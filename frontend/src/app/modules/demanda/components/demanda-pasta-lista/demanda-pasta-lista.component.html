@@ -39,6 +39,7 @@
         [selecionada]="selecionadaId() === no.id"
         [termo]="termo()"
         [nomeDaPasta]="nomeDaPastaDe(no)"
+        [caminho]="caminhoDe(no)"
         [acoes]="acoes()"
         (escolhida)="demandaEscolhida.emit(no.id)"
         (statusEscolhido)="statusEscolhido.emit($event)"

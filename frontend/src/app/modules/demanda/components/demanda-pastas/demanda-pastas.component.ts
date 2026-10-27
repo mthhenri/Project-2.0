@@ -7,9 +7,11 @@ interface LinhaDePasta {
   aberta: boolean;
 }
 
+const PROJETO_INTEIRO = 'projeto-inteiro';
+
 /**
- * A coluna das pastas da Árvore (task 239): só as demandas de estrutura, em árvore, com "Sem pasta" no topo e a contagem das demandas diretas de
- * cada uma. Clicar escolhe a pasta. Teclado: ↑↓ percorrem e escolhem, → abre, ← fecha ou sobe.
+ * A coluna das pastas da Árvore (task 239): só as demandas de estrutura, em árvore, com "Projeto inteiro" e "Sem pasta" no topo e a contagem das
+ * demandas diretas de cada uma. Clicar escolhe a pasta; clicar de novo na já escolhida passa para "Projeto inteiro". Teclado: ↑↓ percorrem e escolhem, → abre, ← fecha ou sobe.
  */
 @Component({
   selector: 'app-demanda-pastas',
@@ -24,8 +26,13 @@ export class DemandaPastasComponent {
   /** A pasta escolhida; `undefined` quando nenhuma vale (a lista mostra resultados da busca). */
   readonly pastaId = input<PastaId | undefined>(null);
   readonly expandidas = input<ReadonlySet<number>>(new Set());
+  /** "Projeto inteiro" está escolhido: nenhuma pasta fica marcada. */
+  readonly projetoInteiro = input<boolean>(false);
+  /** Quantas demandas há no projeto inteiro. */
+  readonly totalQuantidade = input<number>(0);
 
   readonly pastaEscolhida = output<PastaId>();
+  readonly projetoInteiroEscolhido = output<void>();
   readonly expansaoAlternada = output<number>();
 
   private readonly arvore = viewChild<ElementRef<HTMLElement>>('arvore');
@@ -49,6 +56,12 @@ export class DemandaPastasComponent {
     this.arvore()?.nativeElement.focus();
   }
 
+  /** Clique numa pasta: se ela já é a escolhida, o filtro passa para "Projeto inteiro". */
+  aoClicar(id: PastaId): void {
+    if (!this.projetoInteiro() && this.pastaId() === id) this.projetoInteiroEscolhido.emit();
+    else this.pastaEscolhida.emit(id);
+  }
+
   alternar(evento: Event, id: number): void {
     evento.stopPropagation();
     this.expansaoAlternada.emit(id);
@@ -56,17 +69,18 @@ export class DemandaPastasComponent {
 
   aoTeclar(evento: KeyboardEvent): void {
     if (evento.ctrlKey || evento.metaKey || evento.altKey || evento.shiftKey) return;
-    // "Sem pasta" é a primeira linha (índice 0), seguida das pastas visíveis.
-    const ids: PastaId[] = [null, ...this.linhas().map((linha) => linha.pasta.id)];
-    const indice = Math.max(0, ids.indexOf(this.pastaId() ?? null));
-    const atual = this.linhas().find((linha) => linha.pasta.id === this.pastaId());
+    // "Projeto inteiro" é a primeira linha (índice 0), depois "Sem pasta" e as pastas visíveis.
+    const ids: (PastaId | typeof PROJETO_INTEIRO)[] = [PROJETO_INTEIRO, null, ...this.linhas().map((linha) => linha.pasta.id)];
+    const indice = this.projetoInteiro() ? 0 : Math.max(1, ids.indexOf(this.pastaId() ?? null));
+    const atual = this.projetoInteiro() ? undefined : this.linhas().find((linha) => linha.pasta.id === this.pastaId());
+    const escolher = (id: PastaId | typeof PROJETO_INTEIRO) => (id === PROJETO_INTEIRO ? this.projetoInteiroEscolhido.emit() : this.pastaEscolhida.emit(id));
 
     switch (evento.key) {
       case 'ArrowDown':
-        this.pastaEscolhida.emit(ids[Math.min(indice + 1, ids.length - 1)]);
+        escolher(ids[Math.min(indice + 1, ids.length - 1)]);
         break;
       case 'ArrowUp':
-        this.pastaEscolhida.emit(ids[Math.max(indice - 1, 0)]);
+        escolher(ids[Math.max(indice - 1, 0)]);
         break;
       case 'ArrowRight':
         if (!atual || !atual.pasta.filhas.length) return;

@@ -108,12 +108,9 @@
           } @else if (modoVisualizacao() === 'grafo' && grafoExibido()) {
             <app-demanda-grafo
               [grafo]="grafoExibido()!"
-              [todosOsNos]="grafo()!.nos"
-              [pastaId]="pastaId()"
               [statusVisiveis]="statusDoFiltro()"
               (statusAlternado)="alternarStatusVisivel($event)"
               (demandaSelecionada)="abrirNaArvore($event)"
-              (pastaChange)="aoEscolherPasta($event)"
             />
           }
 

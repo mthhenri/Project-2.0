@@ -14,6 +14,9 @@
   <app-demanda-status [status]="no().status" [editavel]="sessao.eGestor()" (statusEscolhido)="aoEscolherStatus($event)" />
 
   <span class="demanda-pasta-linha__corpo">
+    @if (caminho()) {
+      <span class="demanda-pasta-linha__caminho">{{ caminho() }}</span>
+    }
     <span class="demanda-pasta-linha__nome">
       @if (no().isEstrutural) {
         <i class="pi pi-folder demanda-pasta-linha__icone-pasta"></i>

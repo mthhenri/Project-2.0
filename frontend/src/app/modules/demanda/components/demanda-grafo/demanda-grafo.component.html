@@ -2,42 +2,6 @@
 
 <!-- Controles flutuantes: legenda (ⓘ) e zoom -->
 <div class="demanda-grafo__controles">
-  @if (pastaId !== undefined) {
-    <!-- O foco: a pasta escolhida e tudo dentro dela; o resto fica apagado -->
-    <div class="demanda-grafo__foco" role="group" aria-label="Foco do grafo">
-      <span class="demanda-grafo__foco-nome" [pTooltip]="projetoInteiro() ? 'Mostrando o projeto inteiro' : 'Foco: ' + nomeDoFoco()" tooltipPosition="left">
-        <i class="pi" [class.pi-folder]="!projetoInteiro()" [class.pi-sitemap]="projetoInteiro()"></i>
-        {{ projetoInteiro() ? 'Projeto inteiro' : nomeDoFoco() }}
-      </span>
-      <p-button
-        label="Projeto inteiro"
-        icon="pi pi-sitemap"
-        severity="secondary"
-        [outlined]="true"
-        size="small"
-        [disabled]="projetoInteiro()"
-        (onClick)="verProjetoInteiro()"
-      />
-      <p-button
-        label="Pasta acima"
-        icon="pi pi-arrow-up"
-        severity="secondary"
-        [outlined]="true"
-        size="small"
-        [disabled]="pastaAcima() === undefined"
-        (onClick)="subirPasta()"
-      />
-      <p-button
-        [label]="'Subpastas (' + subpastas().length + ')'"
-        icon="pi pi-folder-open"
-        severity="secondary"
-        [outlined]="true"
-        size="small"
-        [disabled]="subpastas().length === 0"
-        (onClick)="subpastasPopover.toggle($event)"
-      />
-    </div>
-  }
   <p-button
     icon="pi pi-info-circle"
     severity="secondary"
@@ -75,27 +39,6 @@
     }
   </div>
 }
-
-<!-- Os filtros da toolbar deixaram o foco sem nenhuma demanda -->
-@if (nadaNoFoco()) {
-  <div class="demanda-grafo__sem-foco">
-    <i class="pi pi-search demanda-grafo__sem-foco-icone"></i>
-    <p class="demanda-grafo__sem-foco-texto">Nada neste foco com esses filtros.</p>
-    <p-button label="Ver o projeto inteiro" icon="pi pi-sitemap" severity="secondary" [outlined]="true" size="small" (onClick)="verProjetoInteiro()" />
-  </div>
-}
-
-<!-- Subpastas do foco: escolher uma troca a pasta nas três visões -->
-<p-popover #subpastasPopover>
-  <div class="demanda-grafo__subpastas">
-    @for (pasta of subpastas(); track pasta.id) {
-      <button type="button" class="demanda-grafo__subpasta" (click)="escolherPasta(pasta.id); subpastasPopover.hide()">
-        <i class="pi pi-folder"></i>
-        <span>{{ pasta.nome }}</span>
-      </button>
-    }
-  </div>
-</p-popover>
 
 <!-- Legenda: os status são o filtro (ligar/desligar) -->
 <p-popover #legenda>
