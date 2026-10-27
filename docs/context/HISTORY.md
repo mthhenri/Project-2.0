@@ -62,7 +62,7 @@ Pedido do autor sobre a tela Execuções: a linha "Em andamento" dentro da tabel
 
 ## 2026-10-26 — Task 245: "Minhas demandas" no chat (lista, demanda aberta em leitura e abertura automática)
 
-Quarta e última task da guarda-chuva `chat-execucao-por-demanda.spec.md` (a UI; as 242 a 244 estão com o código pronto e as verificações com IA pendentes). O autor mandou seguir sem decidir o ponto "reaproveitar a demanda aberta da 239": a demanda aberta é um componente novo do chat, e o motivo está em `done/245-.../verificacao.md`.
+Quarta e última task da guarda-chuva `chat-execucao-por-demanda.spec.md` (a UI; as 242 a 244 já têm teste de prompt e verificação ao vivo, em `done/`). O autor mandou seguir sem decidir o ponto "reaproveitar a demanda aberta da 239": a demanda aberta é um componente novo do chat, e o motivo está em `done/245-.../verificacao.md`.
 
 - **Backend/`shared`:** `GET /demanda/executadas` (rota fixa antes de `:id`), `DemandaService.listarExecutadas` (o do token; desenvolvedor só as de que é membro) e `DemandaRepository.listarExecutadas` (CTE recursiva do caminho só dos projetos envolvidos, horas com a execução aberta até agora, total e desenvolvidas, `BOOL_OR` para "rodando"); DTOs `DemandaExecutadaListarDto`, `DemandaExecutadaInternoListarDto` e `DemandaExecutadaResumoDto`.
 - **Front:** `app-chat-minhas-demandas` (lista com vazio, carregando, erro) e `app-chat-demanda-leitura` (abas Checklist, Técnica, Cliente só gestor e administrador, Documentação; Editar e Planejar com a IA); a página do chat reaproveita o contêiner, o divisor e a largura do planejamento, e em janela estreita a lista vai para baixo da conversa. Com execução rodando a demanda abre sozinha uma vez por visita.
@@ -72,7 +72,7 @@ Quarta e última task da guarda-chuva `chat-execucao-por-demanda.spec.md` (a UI;
 
 ---
 
-## 2026-10-26 — Task 244: check-in que troca sozinho e avisa do tempo (código pronto; teste de prompt e verificação ao vivo pendentes)
+## 2026-10-26 — Task 244: check-in que troca sozinho e avisa do tempo
 
 Terceira task da guarda-chuva `chat-execucao-por-demanda.spec.md`. Ponto em aberto: frequência do aviso de tempo, no padrão proposto (todo check-in acima da duração recomendada, uma vez por check-in, sem prazo novo).
 
@@ -82,29 +82,29 @@ Terceira task da guarda-chuva `chat-execucao-por-demanda.spec.md`. Ponto em aber
 - **Limite conhecido:** trocar para uma atividade `PENDENTE` falha no executor (a atividade não é executável) e o executor reabre a execução anterior; o executor da descrição não tem `novoStatus` do trecho seguinte. Fora do escopo desta task; fica como possível ajuste.
 - **Prompt:** migration `0067` acrescenta o texto à versão 1 do `CHECKIN`. A descrição de `propor_descrever_execucao` orienta a perceber a troca sem perguntar.
 - **Testes:** 4 novos em `contexto-do-checkin.test.ts` (troca sem pergunta, bloco acabado, aviso de tempo com e sem rigor, sem aviso dentro do recomendado).
-- **Não verificado (task segue aberta em `active/`):** teste de prompt (troca, continuação, bloco acabado, tempo acima do recomendado) e verificação ao vivo do check-in nos três tamanhos; exigem provedor de IA. Sem lint (P-001).
+- **Verificação (2026-10-26):** teste de prompt e verificação ao vivo feitos com IA real; ver `done/244-chat-checkin-troca-sozinho/verificacao.md` (achados nos limites). Sem lint (P-001).
 
 ---
 
-## 2026-10-26 — Task 243: bom dia "continuar ou coisa nova" (código pronto; teste de prompt e verificação ao vivo pendentes)
+## 2026-10-26 — Task 243: bom dia "continuar ou coisa nova"
 
 Segunda task da guarda-chuva `chat-execucao-por-demanda.spec.md`. O autor aceitou os padrões propostos para os dois pontos em aberto: ao iniciar atividade PENDENTE ou PLANEJADA a IA passa `novoStatus = DESENVOLVENDO` sem perguntar (aviso diz a mudança; o desfazer já devolve o `statusAnterior`), e se a última atividade já está DESENVOLVIDA a IA segue para a próxima do checklist e avisa.
 
 - **Bom dia:** `montarAberturaDoDia` termina perguntando se o usuário continua de onde pararam ou tem coisa nova (continua sendo instrução do sistema, não gravada). O fluxo (continuar, coisa nova, nome da atividade com identificador do caso, criar demanda sempre pergunta) mora no texto-padrão do prompt `CONVERSA`, migration `0066` (UP e DOWN conferidos no banco de teste).
 - **Ferramentas:** `propor_iniciar_execucao` deixou de mandar perguntar o status; `propor_criar_atividade` mostra no cartão e no aviso o **caminho completo** da demanda (`listarAncestral`, raiz › … › demanda) e orienta o nome da coisa nova; a base `FerramentaPropostaIa` passou a devolver ao modelo o `resultado` da proposta feita (ex.: `atividadeId`), o que permite criar e iniciar em sequência. Os níveis de autonomia já eram "Faz e avisa" para criar atividade, iniciar e pausar (task 228): nada mudou na régua.
 - **Testes:** abertura do dia, caminho da demanda, `resultado` devolvido; mocks de três arquivos de teste ganharam `listarAncestral`.
-- **Não verificado (task segue aberta em `active/`):** teste de prompt (continuar; coisa nova com demanda existente; sem a demanda, a IA pergunta antes de criar; com execução rodando) e verificação ao vivo nos três tamanhos; exigem provedor de IA, ausente no ambiente da sessão. Sem lint (P-001).
+- **Verificação (2026-10-26):** teste de prompt e verificação ao vivo feitos com IA real; ver `done/243-chat-bom-dia-continuar-ou-coisa-nova/verificacao.md` (achados nos limites). Sem lint (P-001).
 
 ---
 
-## 2026-10-26 — Task 242: a IA trata as atividades como o checklist da demanda (código pronto; teste de prompt e verificação ao vivo pendentes)
+## 2026-10-26 — Task 242: a IA trata as atividades como o checklist da demanda
 
 Primeira task da guarda-chuva `chat-execucao-por-demanda.spec.md`. O autor confirmou os dois pontos em aberto: ferramenta de leitura **nova** e texto nos prompts `CONVERSA` e `CHECKIN`, sem tipo novo.
 
 - **`shared`:** `DemandaChecklistConsultarDto` e `DemandaChecklistConsultadoDto`; `AtividadeResumoDto` ganhou `totalExecucoes` (aditivo; `AtividadeRepository.listar` conta as execuções não excluídas, ativa incluída).
 - **Backend:** `consultar_checklist_da_demanda` (leitura, `QUALQUER`, módulo de atividade): gestor lê qualquer demanda, desenvolvedor só a atribuída (usa `podeEditar` de `DemandaService.recuperar`; de fora é recusado e nada é listado); não devolve as descrições da demanda. Descrições de `propor_criar_atividade`, `listar_minhas_atividades` e `propor_alterar_atividade` orientam bloco, checklist antes de criar e `DESENVOLVIDA`. Migration `0065` acrescenta o parágrafo à versão 1 de CONVERSA e CHECKIN (UP e DOWN conferidos no banco de teste); versões já editadas pelo administrador não mudam.
 - **Testes:** `shared` 275; `backend` unitários com 5 testes novos da ferramenta; integração estendida (`totalExecucoes`), 346 aprovados e 1 falha em `vigia` (eventos do chat, tempo esgotado), fora do alcance desta task.
-- **Não verificado (task segue aberta em `active/`):** teste de prompt na aba Prompts (continuação, bloco acabado, bloco novo) e verificação ao vivo no chat; ambos exigem provedor de IA configurado, que o ambiente desta sessão não tem. Sem lint no projeto (P-001).
+- **Verificação (2026-10-26):** teste de prompt e verificação ao vivo feitos com IA real; ver `done/242-chat-checklist-da-demanda/verificacao.md` (achados nos limites). Sem lint (P-001).
 
 ---
 
