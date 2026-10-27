@@ -181,7 +181,7 @@
               (teclou)="aoTeclarNoCampo($event)"
             />
             <button type="submit" class="chat__enviar" aria-label="Enviar" [disabled]="!podeEnviar()">
-              <i class="pi" [class.pi-arrow-right]="!enviando()" [class.pi-spin]="enviando()" [class.pi-spinner]="enviando()"></i>
+              <i class="pi" [class.pi-send]="!enviando()" [class.pi-spin]="enviando()" [class.pi-spinner]="enviando()"></i>
             </button>
           </form>
           <div class="chat__base">
@@ -215,12 +215,12 @@
               (teclou)="aoTeclarNoCampo($event)"
             />
             <button type="submit" class="chat__enviar" aria-label="Enviar" [disabled]="!podeEnviar()">
-              <i class="pi" [class.pi-arrow-right]="!enviando()" [class.pi-spin]="enviando()" [class.pi-spinner]="enviando()"></i>
+              <i class="pi" [class.pi-send]="!enviando()" [class.pi-spin]="enviando()" [class.pi-spinner]="enviando()"></i>
             </button>
           </form>
           <div class="chat__base">
             <ng-container [ngTemplateOutlet]="chaveDeModo" />
-            <span class="chat__legenda" title="A IA pergunta antes do que é difícil de desfazer e avisa o que faz sozinha. Enter envia, Shift+Enter quebra a linha.">A IA pergunta antes do que é difícil de desfazer e avisa o que faz sozinha. Enter envia, Shift+Enter quebra a linha.</span>
+            <span class="chat__legenda">A IA pode cometer erros. Enter envia, Shift+Enter quebra a linha.</span>
             @if (mostrarContador()) {
               <span class="text-xs" [class.text-surface-500]="!excedeuOLimite()" [class.text-red-500]="excedeuOLimite()" [attr.role]="excedeuOLimite() ? 'alert' : null">
                 @if (excedeuOLimite()) { Passou do limite da mensagem: } {{ contador() }}
