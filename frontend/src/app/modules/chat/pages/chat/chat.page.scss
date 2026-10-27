@@ -151,10 +151,9 @@
     }
   }
 
-  // A linha sob o campo: a chave de modo à esquerda e a legenda à direita.
+  // A linha sob o campo: a chave de modo num canto e a legenda no outro, sempre na mesma linha.
   &__base {
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     gap: 0.5rem 1rem;
@@ -478,10 +477,10 @@
   &__entrada {
     display: flex;
     align-items: flex-end;
-    gap: 0.625rem;
-    padding: 0.625rem 0.625rem 0.625rem 1rem;
+    gap: 0.5rem;
+    padding: 0.3125rem 0.3125rem 0.3125rem 0.75rem;
     border: 1px solid var(--app-surface-300);
-    border-radius: 14px;
+    border-radius: 12px;
     background: var(--app-surface-0);
 
     &:focus-within {
@@ -500,10 +499,10 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 2.75rem;
-    height: 2.75rem;
+    width: 2rem;
+    height: 2rem;
     border: none;
-    border-radius: 10px;
+    border-radius: 9px;
     background: var(--p-primary-600);
     color: var(--p-primary-contrast-color);
     cursor: pointer;
@@ -519,6 +518,11 @@
   }
 
   &__legenda {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     color: var(--p-text-muted-color);
     font-size: 0.75rem;
     text-align: right;
