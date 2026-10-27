@@ -156,3 +156,11 @@
 - **Origem:** conversas de 2026-10-25 com o autor; o check-in manual e o checklist de `chat-execucao-por-demanda.spec.md` ficam até esta integração existir.
 - **Por quê:** tira do desenvolvedor o último relato manual e dá à IA a fonte mais fiel do trabalho.
 - **Custo aparente:** alto e de futuro distante: acesso ao Gitea por projeto, ligar commit a demanda e atividade, segurança das credenciais e mudança no fluxo do check-in.
+
+### I-031 — Escolher pelo sistema o nível de IA de cada tipo de prompt · configuração da IA
+
+- **Ideia:** hoje o nível (rápido, padrão, analítico) de cada tipo de prompt é a constante `NIVEL_DO_TIPO_DE_PROMPT` no código. O administrador poderia escolher o nível de cada tipo na tela de Configurações da IA (por exemplo, tirar o planejamento do analítico, ou subir o alterar trecho).
+- **Origem:** pergunta do autor em 2026-10-27, ao baixar o "alterar trecho com IA" do analítico para o padrão por custo.
+- **Por quê:** o custo da IA passa a ser ajustável sem mexer em código, tipo a tipo.
+- **Custo aparente:** médio: guardar o nível por tipo (na versão do prompt ou na configuração ativa, por migration), a service ler dele no lugar da constante (chat, planejamento, assistente e teste de prompt) e um seletor por tipo na aba Prompts.
+

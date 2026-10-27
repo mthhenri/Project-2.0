@@ -94,13 +94,13 @@ function criarParaTrecho(resposta: string | Error, opcoes: { negarEdicao?: boole
   return { servico: new AssistenteService(iaService as never, demandaService as never, promptService as never, iaUsoService as never), chamadas, verificacoes, usos };
 }
 
-test('alterarTrecho: devolve o bloco com só a seleção alterada, no nível analítico, com os dois prompts e o pedido', async () => {
+test('alterarTrecho: devolve o bloco com só a seleção alterada, no nível padrão, com os dois prompts e o pedido', async () => {
   const { servico, chamadas, verificacoes } = criarParaTrecho('O sistema deve **gerar o relatório** em PDF.');
   const resposta = await servico.alterarTrecho(PEDIDO, GESTOR);
 
   assert.equal(resposta.dados?.bloco, BLOCO);
   assert.equal(resposta.dados?.blocoNovo, 'O sistema deve **gerar o relatório** em PDF.');
-  assert.equal(chamadas[0].nivel, NivelIaEnum.ANALITICO);
+  assert.equal(chamadas[0].nivel, NivelIaEnum.PADRAO);
   const instrucoes = chamadas[0].instrucoes as string;
   assert.ok(instrucoes.includes(`PROMPT ${TipoPromptEnum.ALTERAR_TRECHO}`));
   assert.ok(instrucoes.includes(`PROMPT ${TipoPromptEnum.PLANO_DESCRICAO_TECNICA}`));
@@ -138,7 +138,7 @@ test('alterarTrecho: a chamada entra na conta de custos com o modelo e os tokens
   const sucesso = criarParaTrecho('O sistema deve **gerar o relatório** em PDF.');
   await sucesso.servico.alterarTrecho(PEDIDO, GESTOR);
   assert.deepEqual(sucesso.usos, [{
-    usuarioId: 1, descricao: 'Alterar trecho (Documentações)', nivel: NivelIaEnum.ANALITICO, modelo: 'modelo-teste',
+    usuarioId: 1, descricao: 'Alterar trecho (Documentações)', nivel: NivelIaEnum.PADRAO, modelo: 'modelo-teste',
     tokensEntrada: 100, tokensSaida: 20, tokensCache: 5, demandaId: 5,
   }]);
 
