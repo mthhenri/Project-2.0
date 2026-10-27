@@ -134,6 +134,14 @@
 - **Correção:** a decidir pelo autor (ajuste adiado): alinhar o detalhe do projeto à Árvore nova ou reaproveitar os componentes dela.
 - **Desde:** 2026-10-27 (apontado pelo autor).
 
+### P-039 — O exibidor de Markdown da resposta da IA não renderiza tabelas · `ABERTO` · frontend/markdown/chat IA
+
+- **Sintoma:** quando a IA responde com uma tabela Markdown (`| Opção | Como funciona | ... |` com a linha `|---|---|`), o chat mostra o texto cru, com as barras verticais e os hifens, tudo corrido em parágrafos, em vez de uma tabela.
+- **Causa:** não investigada; o subconjunto de Markdown do editor/visualizador não inclui tabela (`markdown-formatado.ts` trata `table` como fora do subconjunto), e o visualizador da resposta parece seguir o mesmo subconjunto.
+- **Contorno:** pedir à IA para responder em lista em vez de tabela.
+- **Correção:** a decidir pelo autor: fazer o visualizador (`markdown-visualizador`) renderizar tabela GFM só na leitura (sem criá-la no editor), ou orientar o prompt da IA a não usar tabela.
+- **Desde:** 2026-10-27 (apontado pelo autor, com captura de uma resposta com três opções de sincronização).
+
 ### P-001 — Projeto sem lint · `CONTORNADO` · repositório
 
 - **Sintoma:** não há ESLint nem Prettier em nenhum workspace; o gate de qualidade do `CLAUDE.md` pede lint e hoje a lacuna é só declarada no fecho de cada task.
