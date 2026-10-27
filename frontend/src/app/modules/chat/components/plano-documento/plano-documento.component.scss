@@ -102,6 +102,12 @@
     overflow: auto;
   }
 
+  &__vazio {
+    margin: 0;
+    color: var(--p-text-muted-color);
+    font-size: 0.875rem;
+  }
+
   &__rodape {
     display: flex;
     align-items: center;

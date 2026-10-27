@@ -1412,7 +1412,7 @@ O **administrador** é um gestor com mais permissões: tem tudo o que a coluna "
 | Criar demanda raiz | ✅ | ❌ — só pode criar **sub-demanda** (`demandaPaiId` obrigatório) |
 | Ver demanda | ✅ todas | ❌ ver qualquer demanda de **projeto acessível** (não só as que é membro) |
 | Editar demanda | ✅ todas | ❌ editar apenas demandas das quais **é membro** (`podeEditar`) |
-| Editar `descricaoCliente` da demanda | ✅ | ❌ — exclusiva do gestor (demais descrições liberadas ao membro) |
+| Editar `descricaoCliente` da demanda | ✅ | ❌ — exclusiva do gestor (demais descrições liberadas ao membro); **todos leem** (task 254), no chat e no plano também |
 | Atribuir usuário a demanda manualmente | ✅ | ❌ — exceto **incluir/remover a si mesmo** como membro |
 | Criar tag | ✅ | ❌ |
 | Atribuir tag | ✅ | ✅ apenas em demandas das quais é membro (inclusive a que ele acabou de criar) e em atividades que pode alterar |
@@ -1426,7 +1426,7 @@ O **administrador** é um gestor com mais permissões: tem tudo o que a coluna "
 
 - Ao criar uma demanda, o sistema **auto-atribui apenas o criador desenvolvedor** via `demanda_usuario` (além de quaisquer membros explicitamente selecionados na criação). O **gestor não é atribuído** — tem acesso total a qualquer demanda/projeto por ser gestor, independentemente de `demanda_usuario`
 - O desenvolvedor só cria **sub-demanda** (informando `demandaPaiId`); a criação de demanda raiz é exclusiva do gestor
-- Desenvolvedor **vê** qualquer demanda de um projeto a que tem acesso, mas só **edita** as que é membro (a `descricaoCliente` é sempre exclusiva do gestor)
+- Desenvolvedor **vê** qualquer demanda de um projeto a que tem acesso, mas só **edita** as que é membro (a `descricaoCliente` é lida por todos, mas só o gestor a altera)
 - Gestor pode atribuir e remover usuários manualmente após a criação
 - Desenvolvedor não gerencia atribuições de terceiros, mas **pode incluir e remover a si mesmo** como membro de uma demanda em projeto acessível — esta é a exceção à regra "Atribuir usuário manualmente — Dev ❌"
 - O **último membro** de uma demanda não pode ser removido

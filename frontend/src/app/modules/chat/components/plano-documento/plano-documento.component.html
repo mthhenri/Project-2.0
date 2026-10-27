@@ -45,7 +45,7 @@
       <p-tablist>
         @for (opcao of abasVisiveis(); track opcao) {
           <p-tab [value]="opcao">
-            <i class="pi" [class]="iconeAba[opcao]" aria-hidden="true"></i>
+            <i class="pi" [class]="opcao === Aba.DESCRICAO_CLIENTE && !podeEditarCliente() ? 'pi-lock' : iconeAba[opcao]" aria-hidden="true"></i>
             {{ rotuloAba[opcao] }}
             @if ((opcao === Aba.DESCRICAO_TECNICA && alterados().tecnica) || (opcao === Aba.DESCRICAO_CLIENTE && alterados().cliente) || (opcao === Aba.DOCUMENTACAO && alterados().documentacao)) {
               <span class="plano-documento__ponto" aria-label="Alterações sem gravar"></span>
@@ -58,7 +58,16 @@
     <div class="plano-documento__editor">
       @switch (aba()) {
         @case (Aba.DESCRICAO_CLIENTE) {
-          <app-markdown-editor [formControl]="controleCliente" [alturaMinima]="16" rotulo="Descrição do cliente" placeholder="Escreva a descrição do cliente…" [emitirMenuContexto]="podePedirIa()" (aoMenuContexto)="abrirPedidoDeAlteracao($event)" />
+          @if (podeEditarCliente()) {
+            <app-markdown-editor [formControl]="controleCliente" [alturaMinima]="16" rotulo="Descrição do cliente" placeholder="Escreva a descrição do cliente…" [emitirMenuContexto]="podePedirIa()" (aoMenuContexto)="abrirPedidoDeAlteracao($event)" />
+          } @else {
+            <app-aviso-pedido-do-cliente />
+            @if (controleCliente.value.trim() !== '') {
+              <app-markdown-visualizador [texto]="controleCliente.value" />
+            } @else {
+              <p class="plano-documento__vazio">Nada escrito nesta aba ainda.</p>
+            }
+          }
         }
         @case (Aba.DOCUMENTACAO) {
           <app-markdown-editor [formControl]="controleDocumentacao" [alturaMinima]="16" rotulo="Documentação" placeholder="Escreva a documentação…" [emitirMenuContexto]="podePedirIa()" (aoMenuContexto)="abrirPedidoDeAlteracao($event)" />

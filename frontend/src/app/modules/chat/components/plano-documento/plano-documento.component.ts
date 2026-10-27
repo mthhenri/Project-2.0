@@ -9,12 +9,14 @@ import { Popover, PopoverModule } from 'primeng/popover';
 import { TextareaModule } from 'primeng/textarea';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TabsModule } from 'primeng/tabs';
-import { DemandaCriadaDto, PlanoAbaEnum, PlanoAlterarDto, PlanoRecuperadoDto, podeVerAbaDoPlano } from '@project20/shared';
+import { DemandaCriadaDto, PlanoAbaEnum, PlanoAlterarDto, PlanoRecuperadoDto, podeEditarAbaDoPlano, podeVerAbaDoPlano } from '@project20/shared';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { MarkdownEditorComponent, MenuContextoEditorEvento } from '../../../../shared/components/markdown-editor/markdown-editor.component';
+import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
 import { DemandaFormularioDialogComponent } from '../../../demanda/components/demanda-formulario-dialog/demanda-formulario-dialog.component';
 import { PlanoService } from '../../services/plano.service';
 import { ROTULO_ABA_DO_PLANO } from '../../utils/plano.util';
+import { AvisoPedidoDoClienteComponent } from '../aviso-pedido-do-cliente/aviso-pedido-do-cliente.component';
 import { PlanoCabecalhoComponent } from '../plano-cabecalho/plano-cabecalho.component';
 import { PlanoFontesComponent } from '../plano-fontes/plano-fontes.component';
 import { PlanoPontosComponent } from '../plano-pontos/plano-pontos.component';
@@ -35,13 +37,13 @@ const AVISO_DE_ALTERACAO_DA_IA = 'A IA alterou o documento. O que você escreveu
 
 /**
  * O documento do plano (task 233): cabeçalho, as abas dos textos e o editor de Markdown, editados à mão e gravados com a `versao` lida.
- * Gravar sobre versão mais nova (409) não perde o que a pessoa escreveu: avisa e oferece recarregar. A aba do cliente só existe para
- * gestor e administrador (`podeVerAbaDoPlano`, do `shared`). Análogo visual: o painel de edição da demanda.
+ * Gravar sobre versão mais nova (409) não perde o que a pessoa escreveu: avisa e oferece recarregar. A aba do cliente todos leem, mas só
+ * gestor e administrador a alteram (`podeEditarAbaDoPlano`, do `shared`): para o desenvolvedor ela é o visualizador, com o aviso. Análogo visual: o painel de edição da demanda.
  */
 @Component({
   selector: 'app-plano-documento',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonModule, PopoverModule, SkeletonModule, TabsModule, TextareaModule, MarkdownEditorComponent, PlanoCabecalhoComponent, PlanoPontosComponent, PlanoFontesComponent, PlanoPublicarDialogComponent, DemandaFormularioDialogComponent],
+  imports: [ReactiveFormsModule, ButtonModule, PopoverModule, SkeletonModule, TabsModule, TextareaModule, MarkdownEditorComponent, MarkdownVisualizadorComponent, AvisoPedidoDoClienteComponent, PlanoCabecalhoComponent, PlanoPontosComponent, PlanoFontesComponent, PlanoPublicarDialogComponent, DemandaFormularioDialogComponent],
   templateUrl: './plano-documento.component.html',
   styleUrl: './plano-documento.component.scss',
 })
@@ -99,6 +101,11 @@ export class PlanoDocumentoComponent {
     const tipo = this.sessao.usuarioAtual()?.tipo;
     return (Object.values(PlanoAbaEnum) as PlanoAbaEnum[]).filter((aba) => !!tipo && podeVerAbaDoPlano(aba, tipo));
   });
+  /** Quem altera a descrição do cliente; os demais a leem no visualizador. */
+  readonly podeEditarCliente = computed(() => {
+    const tipo = this.sessao.usuarioAtual()?.tipo;
+    return !!tipo && podeEditarAbaDoPlano(PlanoAbaEnum.DESCRICAO_CLIENTE, tipo);
+  });
   readonly controleDaAba = computed(() => {
     switch (this.aba()) {
       case PlanoAbaEnum.DESCRICAO_CLIENTE:
@@ -116,7 +123,7 @@ export class PlanoDocumentoComponent {
     const gravados = this.textosGravados();
     return {
       tecnica: editados.tecnica !== gravados.tecnica,
-      cliente: editados.cliente !== gravados.cliente && this.abasVisiveis().includes(PlanoAbaEnum.DESCRICAO_CLIENTE),
+      cliente: editados.cliente !== gravados.cliente && this.podeEditarCliente(),
       documentacao: editados.documentacao !== gravados.documentacao,
     };
   });

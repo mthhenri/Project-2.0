@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { campoDaAbaDoPlano, PlanoEscreverDto, PlanoInternoAlterarDto, podeVerAbaDoPlano, textoDaAbaDoPlano } from '@project20/shared';
+import { campoDaAbaDoPlano, PlanoEscreverDto, PlanoInternoAlterarDto, podeEditarAbaDoPlano, textoDaAbaDoPlano } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { ConflictException } from '../../../core/exceptions/conflict.exception';
 import { UnauthorizedAccessException } from '../../../core/exceptions/unauthorized-access.exception';
@@ -29,7 +29,7 @@ export class EscreverNoPlanoFerramenta extends FerramentaIa<PlanoEscreverDto> {
   }
 
   async executar(entrada: PlanoEscreverDto, usuarioAtivo: JwtPayload): Promise<unknown> {
-    if (!podeVerAbaDoPlano(entrada.aba, usuarioAtivo.tipo)) {
+    if (!podeEditarAbaDoPlano(entrada.aba, usuarioAtivo.tipo)) {
       throw new UnauthorizedAccessException('A descrição do cliente é só de gestor e administrador: não escreva nela nesta conversa');
     }
     if (entrada.texto.trim() === '') throw new BusinessException('Informe o texto a escrever');

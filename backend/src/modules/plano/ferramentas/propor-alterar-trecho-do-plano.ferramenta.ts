@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import {
   contarOcorrenciasDoTrecho,
-  podeVerAbaDoPlano,
+  podeEditarAbaDoPlano,
   ProporAlterarTrechoPlanoDto,
   PropostaAlterarTrechoPlanoDadosDto,
   textoDaAbaDoPlano,
@@ -38,7 +38,7 @@ export class ProporAlterarTrechoDoPlanoFerramenta extends FerramentaPropostaIa<P
   }
 
   protected async montarDados(entrada: ProporAlterarTrechoPlanoDto, usuarioAtivo: JwtPayload): Promise<Record<string, unknown>> {
-    if (!podeVerAbaDoPlano(entrada.aba, usuarioAtivo.tipo)) {
+    if (!podeEditarAbaDoPlano(entrada.aba, usuarioAtivo.tipo)) {
       throw new UnauthorizedAccessException('A descrição do cliente é só de gestor e administrador: não altere trechos dela nesta conversa');
     }
     if (entrada.trechoAntigo === entrada.trechoNovo) throw new BusinessException('O trecho novo é igual ao antigo: não há o que alterar');

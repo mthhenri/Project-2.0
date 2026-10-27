@@ -5,7 +5,7 @@ import {
   PlanoAbaEnum,
   PlanoInternoAlterarDto,
   PlanoRecuperadoDto,
-  podeVerAbaDoPlano,
+  podeEditarAbaDoPlano,
   PropostaAlterarTrechoPlanoDadosDto,
   substituirTrechoUnico,
   textoDaAbaDoPlano,
@@ -79,9 +79,9 @@ export class AlterarTrechoDoPlanoExecutor implements ExecutorPropostaIa {
     }
   }
 
-  /** O plano como a pessoa o vê (sem a aba do cliente para o desenvolvedor); recusa a aba que ela não pode mexer. */
+  /** O plano como a pessoa o vê; recusa a aba que ela não pode alterar. */
   private async lerPlano(planoId: number, aba: PlanoAbaEnum, usuarioAtivo: JwtPayload): Promise<PlanoRecuperadoDto> {
-    if (!podeVerAbaDoPlano(aba, usuarioAtivo.tipo)) {
+    if (!podeEditarAbaDoPlano(aba, usuarioAtivo.tipo)) {
       throw new UnauthorizedAccessException('A descrição do cliente é só de gestor e administrador');
     }
     const plano = (await this.planoService.recuperar({ id: planoId }, usuarioAtivo)).dados;

@@ -10,6 +10,7 @@ import {
   montarConversaIdDoPlano,
   podeAcessarPlano,
   podeArquivarOuExcluirPlano,
+  podeEditarAbaDoPlano,
   podeVerAbaDoPlano,
   substituirTrechoUnico,
   textoDaAbaDoPlano,
@@ -18,13 +19,19 @@ import {
 
 const base = { usuarioId: 2, criadorId: 1, projetoId: 10, isSolo: false, temAcessoAoProjeto: false };
 
-test('a aba do cliente é só do gestor e do administrador; as outras são de todos', () => {
-  for (const aba of [PlanoAbaEnum.DESCRICAO_TECNICA, PlanoAbaEnum.DOCUMENTACAO]) {
+test('todas as abas, a do cliente inclusive, são vistas por todos os tipos', () => {
+  for (const aba of Object.values(PlanoAbaEnum)) {
     for (const tipo of Object.values(TipoUsuarioEnum)) assert.equal(podeVerAbaDoPlano(aba, tipo), true);
   }
-  assert.equal(podeVerAbaDoPlano(PlanoAbaEnum.DESCRICAO_CLIENTE, TipoUsuarioEnum.DESENVOLVEDOR), false);
-  assert.equal(podeVerAbaDoPlano(PlanoAbaEnum.DESCRICAO_CLIENTE, TipoUsuarioEnum.GESTOR), true);
-  assert.equal(podeVerAbaDoPlano(PlanoAbaEnum.DESCRICAO_CLIENTE, TipoUsuarioEnum.ADMINISTRADOR), true);
+});
+
+test('a aba do cliente é editada só por gestor e administrador; as outras, por todos', () => {
+  for (const aba of [PlanoAbaEnum.DESCRICAO_TECNICA, PlanoAbaEnum.DOCUMENTACAO]) {
+    for (const tipo of Object.values(TipoUsuarioEnum)) assert.equal(podeEditarAbaDoPlano(aba, tipo), true);
+  }
+  assert.equal(podeEditarAbaDoPlano(PlanoAbaEnum.DESCRICAO_CLIENTE, TipoUsuarioEnum.DESENVOLVEDOR), false);
+  assert.equal(podeEditarAbaDoPlano(PlanoAbaEnum.DESCRICAO_CLIENTE, TipoUsuarioEnum.GESTOR), true);
+  assert.equal(podeEditarAbaDoPlano(PlanoAbaEnum.DESCRICAO_CLIENTE, TipoUsuarioEnum.ADMINISTRADOR), true);
 });
 
 test('plano de projeto: gestor e administrador por tipo, desenvolvedor só com acesso ao projeto', () => {

@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { TipoUsuarioEnum } from '@project20/shared';
+import { PlanoAbaEnum, TipoUsuarioEnum } from '@project20/shared';
 import { montarComponente, ComponenteMontado } from '../../../../../testes/montar-componente';
 import { esperarRequisicao, responderErro, responderSucesso } from '../../../../../testes/http-teste';
 import { PlanoDocumentoComponent } from './plano-documento.component';
 
-// Documento do plano (task 233, API da 232): carregar, abas por perfil (a do cliente é só de gestor e administrador), gravar com a `versao` lida,
+// Documento do plano (task 233, API da 232): carregar, abas por perfil (a do cliente todos leem, só gestor e administrador alteram), gravar com a `versao` lida,
 // conflito de versão (409), e as ações do cabeçalho. O usuário de teste tem id 1; o criador do plano é 1 ou 2 conforme o cenário.
 
 type Montado = ComponenteMontado<PlanoDocumentoComponent>;
@@ -30,12 +30,12 @@ const botao = (montado: Montado, rotulo: string) =>
   Array.from(montado.elemento.querySelectorAll<HTMLButtonElement>('button')).find((item) => item.textContent?.includes(rotulo) || item.getAttribute('aria-label') === rotulo);
 
 describe('PlanoDocumentoComponent — carregar', () => {
-  it('mostra o título, o projeto e as abas; o desenvolvedor não vê a descrição do cliente', async () => {
+  it('mostra o título, o projeto e as três abas, a do cliente também para o desenvolvedor', async () => {
     const montado = await montarDocumento(TipoUsuarioEnum.DESENVOLVEDOR);
 
     expect(texto(montado)).toContain('Plano da semana');
     expect(texto(montado)).toContain('Projeto Demo');
-    expect(abas(montado)).toEqual(['Descrição técnica', 'Documentação']);
+    expect(abas(montado)).toEqual(['Descrição técnica', 'Descrição do cliente', 'Documentação']);
     expect(montado.componente.controleTecnica.value).toBe('Texto técnico');
     expect(texto(montado)).toContain('Tudo gravado');
   });
@@ -44,6 +44,33 @@ describe('PlanoDocumentoComponent — carregar', () => {
     const montado = await montarDocumento(TipoUsuarioEnum.GESTOR, plano({ descricaoCliente: 'Texto do cliente' }));
     expect(abas(montado)).toEqual(['Descrição técnica', 'Descrição do cliente', 'Documentação']);
     expect(montado.componente.controleCliente.value).toBe('Texto do cliente');
+  });
+
+  it('o desenvolvedor lê a descrição do cliente: visualizador, aviso, cadeado e sem editor', async () => {
+    const montado = await montarDocumento(TipoUsuarioEnum.DESENVOLVEDOR, plano({ descricaoCliente: 'Pedido do cliente' }));
+    montado.componente.escolherAba(PlanoAbaEnum.DESCRICAO_CLIENTE);
+    await montado.atualizar();
+
+    expect(montado.elemento.querySelector('[role="tab"] .pi-lock')).not.toBeNull();
+    expect(texto(montado)).toContain('O pedido do cliente: você lê, só gestores alteram');
+    expect(texto(montado)).toContain('Pedido do cliente');
+    expect(montado.elemento.querySelector('app-markdown-editor')).toBeNull();
+  });
+
+  it('o desenvolvedor sem texto do cliente vê o aviso e "Nada escrito"', async () => {
+    const montado = await montarDocumento(TipoUsuarioEnum.DESENVOLVEDOR);
+    montado.componente.escolherAba(PlanoAbaEnum.DESCRICAO_CLIENTE);
+    await montado.atualizar();
+    expect(texto(montado)).toContain('você lê, só gestores alteram');
+    expect(texto(montado)).toContain('Nada escrito nesta aba ainda');
+  });
+
+  it('o gestor edita a descrição do cliente sem o aviso', async () => {
+    const montado = await montarDocumento(TipoUsuarioEnum.GESTOR, plano({ descricaoCliente: 'Texto do cliente' }));
+    montado.componente.escolherAba(PlanoAbaEnum.DESCRICAO_CLIENTE);
+    await montado.atualizar();
+    expect(montado.elemento.querySelector('app-markdown-editor')).not.toBeNull();
+    expect(texto(montado)).not.toContain('você lê, só gestores alteram');
   });
 
   it('o administrador também vê a aba da descrição do cliente', async () => {

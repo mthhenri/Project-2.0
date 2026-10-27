@@ -106,10 +106,10 @@ test('recuperar: plano inexistente é "não encontrado"', async () => {
   await assert.rejects(() => servico.recuperar({ id: 7 }, GESTOR), ResourceNotFoundException);
 });
 
-test('recuperar: a descrição do cliente não vai para o desenvolvedor, mas vai para gestor e administrador', async () => {
+test('recuperar: a descrição do cliente vai para todos — o desenvolvedor a lê (task 254)', async () => {
   const { servico } = criarServico({ comAcessoAoProjeto: [1] });
   const paraDev = (await servico.recuperar({ id: 7 }, CRIADOR_DEV)).dados;
-  assert.equal('descricaoCliente' in paraDev, false);
+  assert.equal(paraDev.descricaoCliente, 'Texto do cliente');
   assert.equal(paraDev.versao, 3);
   assert.equal((await servico.recuperar({ id: 7 }, GESTOR)).dados.descricaoCliente, 'Texto do cliente');
   assert.equal((await servico.recuperar({ id: 7 }, ADMINISTRADOR)).dados.descricaoCliente, 'Texto do cliente');

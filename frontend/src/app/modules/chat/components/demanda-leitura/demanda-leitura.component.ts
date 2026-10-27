@@ -14,8 +14,9 @@ import { DemandaBarraHorasComponent } from '../../../demanda/components/demanda-
 import { DemandaStatusMarcaComponent } from '../../../demanda/components/demanda-status-marca/demanda-status-marca.component';
 import { DemandaService } from '../../../demanda/services/demanda.service';
 import { ItemDoChecklist, ordenarChecklist } from '../../utils/minhas-demandas.util';
+import { AvisoPedidoDoClienteComponent } from '../aviso-pedido-do-cliente/aviso-pedido-do-cliente.component';
 
-/** As abas da demanda aberta no chat; a Cliente só aparece para gestor e administrador. */
+/** As abas da demanda aberta no chat; a Cliente aparece para todos (o desenvolvedor só lê, com aviso). */
 export type AbaDemandaLeitura = 'checklist' | 'tecnica' | 'cliente' | 'documentacao';
 
 /** Até quantas atividades o checklist pede à API. */
@@ -23,7 +24,7 @@ const LIMITE_DE_ATIVIDADES = 100;
 
 /**
  * A demanda aberta ao lado da conversa (task 245), **só para leitura**: caminho, nome, status e barra de horas, e as abas Checklist (abre
- * primeiro: desenvolvidas riscadas, a que roda destacada e as que faltam), Técnica, Cliente (só gestor e administrador) e Documentação, com
+ * primeiro: desenvolvidas riscadas, a que roda destacada e as que faltam), Técnica, Cliente (todos leem; só gestor e administrador alteram, e o aviso diz isso ao desenvolvedor) e Documentação, com
  * Editar (leva à tela de Demandas) e "Planejar com a IA" (o modo planejamento do chat). Não reaproveita a `app-demanda-aberta` da task 239:
  * ela é uma tela de edição (título, status, membros, tags, atividades e conexões editáveis, diálogos) e adaptá-la a leitura exigiria
  * desligar quase tudo, então esta monta o mesmo desenho com os componentes pequenos que servem (barra de horas, bolinha de status,
@@ -38,6 +39,7 @@ const LIMITE_DE_ATIVIDADES = 100;
     TabsModule,
     TooltipModule,
     MarkdownVisualizadorComponent,
+    AvisoPedidoDoClienteComponent,
     TempoExibicaoPipe,
     DemandaBarraHorasComponent,
     DemandaStatusMarcaComponent,
@@ -82,8 +84,8 @@ export class DemandaLeituraComponent {
   readonly minutosExecutados = computed(() => this.atividades().reduce((soma, atividade) => soma + atividade.totalMinutosExecutados, 0));
   readonly desenvolvidas = computed(() => this.atividades().filter((atividade) => atividade.status === TipoAtividadeStatusEnum.DESENVOLVIDA).length);
 
-  /** A aba que vale: a Cliente só para quem é gestor ou administrador; sem isso volta ao Checklist. */
-  readonly abaAtiva = computed<AbaDemandaLeitura>(() => (this.aba() === 'cliente' && !this.sessao.eGestor() ? 'checklist' : this.aba()));
+  /** A aba que vale. */
+  readonly abaAtiva = computed<AbaDemandaLeitura>(() => this.aba());
 
   constructor() {
     effect(() => {

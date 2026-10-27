@@ -1,0 +1,12 @@
+.aviso-pedido-do-cliente {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: var(--p-border-radius-md);
+  background: var(--p-content-hover-background);
+  color: var(--p-text-muted-color);
+  font-size: 0.8125rem;
+}

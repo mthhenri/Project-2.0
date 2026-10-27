@@ -39,9 +39,9 @@
         <p-tablist>
           <p-tab value="checklist"><i class="pi pi-check-square demanda-leitura__aba-icone"></i>Checklist</p-tab>
           <p-tab value="tecnica"><i class="pi pi-code demanda-leitura__aba-icone"></i>Técnica</p-tab>
-          @if (sessao.eGestor()) {
-            <p-tab value="cliente"><i class="pi pi-user demanda-leitura__aba-icone"></i>Cliente</p-tab>
-          }
+          <p-tab value="cliente">
+            <i class="pi demanda-leitura__aba-icone" [class.pi-user]="sessao.eGestor()" [class.pi-lock]="!sessao.eGestor()"></i>Cliente
+          </p-tab>
           <p-tab value="documentacao"><i class="pi pi-book demanda-leitura__aba-icone"></i>Documentação</p-tab>
         </p-tablist>
       </p-tabs>
@@ -78,10 +78,15 @@
             }
           </ul>
         }
-      } @else if (textoDaAba()) {
-        <app-markdown-visualizador [texto]="textoDaAba()" />
       } @else {
-        <p class="demanda-leitura__vazio">Nada escrito nesta aba ainda.</p>
+        @if (abaAtiva() === 'cliente' && !sessao.eGestor()) {
+          <app-aviso-pedido-do-cliente />
+        }
+        @if (textoDaAba()) {
+          <app-markdown-visualizador [texto]="textoDaAba()" />
+        } @else {
+          <p class="demanda-leitura__vazio">Nada escrito nesta aba ainda.</p>
+        }
       }
     </div>
   }

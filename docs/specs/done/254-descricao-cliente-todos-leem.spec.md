@@ -1,6 +1,6 @@
 # 254-descricao-cliente-todos-leem.spec.md
 
-> Task 1/7 da guarda-chuva [`documentacoes-e-pad.spec.md`](documentacoes-e-pad.spec.md) (decisão 1): a descrição do cliente passa a ser
+> Task 1/7 da guarda-chuva [`documentacoes-e-pad.spec.md`](../../backlog/documentacoes-e-pad.spec.md) (decisão 1): a descrição do cliente passa a ser
 > **lida por todos** em todo lugar; alterar continua só do gestor e do administrador.
 
 ## Objetivo

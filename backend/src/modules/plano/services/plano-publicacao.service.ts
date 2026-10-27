@@ -20,7 +20,7 @@ import {
   StandardResponse,
   TipoPropostaIaEnum,
   campoDaAbaDoPlano,
-  podeVerAbaDoPlano,
+  podeEditarAbaDoPlano,
   situacaoDaAbaNaPublicacao,
   textoDaAbaDoPlano,
 } from '@project20/shared';
@@ -48,7 +48,7 @@ export class PlanoPublicacaoService {
   async publicar(dto: PlanoInternoPublicarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<PlanoPublicadoDto>> {
     const plano = (await this.planoService.recuperar({ id: dto.id }, usuarioAtivo)).dados;
     if (plano.demandaId === null) throw new BusinessException('O plano não está ligado a uma demanda');
-    if (dto.abas.includes(PlanoAbaEnum.DESCRICAO_CLIENTE) && !podeVerAbaDoPlano(PlanoAbaEnum.DESCRICAO_CLIENTE, usuarioAtivo.tipo)) {
+    if (dto.abas.includes(PlanoAbaEnum.DESCRICAO_CLIENTE) && !podeEditarAbaDoPlano(PlanoAbaEnum.DESCRICAO_CLIENTE, usuarioAtivo.tipo)) {
       throw new UnauthorizedAccessException('Apenas gestores publicam a descrição do cliente');
     }
     if (plano.versao !== dto.versao) throw new ConflictException(MENSAGEM_PLANO_MUDOU);

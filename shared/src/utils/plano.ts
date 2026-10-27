@@ -6,8 +6,13 @@ import { temPermissaoDeGestor } from './permissao-usuario';
 /** Título do plano quando a pessoa não dá um. */
 export const TITULO_PADRAO_DO_PLANO = 'Plano sem título';
 
-/** A aba é visível a quem? A descrição do cliente é exclusiva de gestor e administrador (`SYSTEM.SPEC.md` §14); as outras são de todos. */
-export function podeVerAbaDoPlano(aba: PlanoAbaEnum, tipoUsuario: TipoUsuarioEnum): boolean {
+/** A aba é visível a quem? Todas são de todos: o desenvolvedor lê o pedido do cliente para trabalhar (`SYSTEM.SPEC.md` §14, task 254). */
+export function podeVerAbaDoPlano(_aba: PlanoAbaEnum, _tipoUsuario: TipoUsuarioEnum): boolean {
+  return true;
+}
+
+/** A aba é editável por quem? A descrição do cliente só por gestor e administrador (`SYSTEM.SPEC.md` §14); as outras, por todos. */
+export function podeEditarAbaDoPlano(aba: PlanoAbaEnum, tipoUsuario: TipoUsuarioEnum): boolean {
   return aba !== PlanoAbaEnum.DESCRICAO_CLIENTE || temPermissaoDeGestor(tipoUsuario);
 }
 

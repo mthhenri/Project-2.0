@@ -14,7 +14,7 @@ import {
   SituacaoDaAbaNaPublicacaoEnum,
   TipoPlanoPontoSituacaoEnum,
   campoDaAbaDoPlano,
-  podeVerAbaDoPlano,
+  podeEditarAbaDoPlano,
   situacaoDaAbaNaPublicacao,
   textoDaAbaDoPlano,
 } from '@project20/shared';
@@ -76,7 +76,7 @@ export class PlanoPublicarDialogComponent {
     const plano = this.plano();
     const tipo = this.sessao.usuarioAtual()?.tipo;
     return (Object.values(PlanoAbaEnum) as PlanoAbaEnum[])
-      .filter((aba) => !!tipo && podeVerAbaDoPlano(aba, tipo))
+      .filter((aba) => !!tipo && podeEditarAbaDoPlano(aba, tipo))
       .map((aba) => {
         const antes = demanda[campoDaAbaDoPlano(aba)] ?? '';
         const depois = textoDaAbaDoPlano(plano, aba) ?? '';

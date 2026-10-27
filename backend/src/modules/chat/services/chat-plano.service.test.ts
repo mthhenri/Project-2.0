@@ -39,10 +39,9 @@ function criarServico(opcoes: { historico?: ChatMensagemNova[]; semAcesso?: bool
     },
   };
   const planoService = {
-    recuperar: async (_dto: unknown, usuario: { tipo: TipoUsuarioEnum }) => {
+    recuperar: async () => {
       if (opcoes.semAcesso) throw new ResourceNotFoundException('Plano');
-      const { descricaoCliente, ...semCliente } = { ...PLANO, ...opcoes.plano };
-      return { dados: usuario.tipo === TipoUsuarioEnum.DESENVOLVEDOR ? semCliente : { ...semCliente, descricaoCliente } };
+      return { dados: { ...PLANO, ...opcoes.plano } };
     },
   };
   const promptService = { obterAtivo: async (tipo: TipoPromptEnum) => ({ conteudo: `PROMPT ${tipo}` }) };
@@ -96,7 +95,7 @@ test('o envio usa o contexto, a conversa, o nível analítico, o teto e o escopo
   assert.equal(opcoes.escopoDeFerramentas, 'PLANEJAMENTO');
 });
 
-test('as instruções do desenvolvedor trazem o prompt do planejamento, como escrever as duas abas dele, o plano e a versão, e nada do cliente', async () => {
+test('as instruções do desenvolvedor trazem o prompt do planejamento, como escrever as duas abas que ele altera, o plano com a descrição do cliente só para leitura e a versão', async () => {
   const { servico, enviadas } = criarServico();
   await servico.enviarMensagem({ id: 7 }, { texto: 'Oi' }, DESENVOLVEDOR, () => undefined);
 
@@ -105,8 +104,9 @@ test('as instruções do desenvolvedor trazem o prompt do planejamento, como esc
   assert.ok(instrucoes.includes(`PROMPT ${TipoPromptEnum.PLANEJAMENTO}`));
   assert.ok(instrucoes.includes(`PROMPT ${TipoPromptEnum.PLANO_DESCRICAO_TECNICA}`));
   assert.ok(instrucoes.includes(`PROMPT ${TipoPromptEnum.PLANO_DOCUMENTACAO}`));
-  assert.equal(instrucoes.includes(`PROMPT ${TipoPromptEnum.PLANO_DESCRICAO_CLIENTE}`), false, 'o prompt da aba do cliente não vai numa conversa de desenvolvedor');
-  assert.equal(instrucoes.includes('Texto do cliente.'), false, 'nem o texto da aba do cliente');
+  assert.equal(instrucoes.includes(`PROMPT ${TipoPromptEnum.PLANO_DESCRICAO_CLIENTE}`), false, 'o prompt de como escrever a aba do cliente não vai numa conversa de desenvolvedor');
+  assert.ok(instrucoes.includes('Texto do cliente.'), 'o texto do cliente ele lê (task 254)');
+  assert.ok(instrucoes.includes('Abas que esta pessoa pode alterar: DESCRICAO_TECNICA, DOCUMENTACAO.'));
   assert.ok(instrucoes.includes('Texto técnico.'));
   assert.ok(instrucoes.includes('Relatório mensal'));
   assert.ok(instrucoes.includes('Projeto: Projeto Demo.'));

@@ -6,7 +6,7 @@ import { esperarRequisicao, responderErro, responderSucesso } from '../../../../
 import { montarComponente } from '../../../../../testes/montar-componente';
 import { DemandaLeituraComponent } from './demanda-leitura.component';
 
-// Demanda aberta no chat (task 245): só leitura, com Checklist (primeiro), Técnica, Cliente (só gestor e administrador) e Documentação.
+// Demanda aberta no chat (task 245): só leitura, com Checklist (primeiro), Técnica, Cliente (todos leem, só gestor e administrador alteram) e Documentação.
 
 const DEMANDA = {
   id: 9, nome: 'Cadastro de usuário', projetoId: 3, status: TipoDemandaStatusEnum.PENDENTE, horasEstimadas: 8,
@@ -48,22 +48,27 @@ describe('DemandaLeituraComponent', () => {
     expect(montado.elemento.textContent).toContain('ainda não tem atividades');
   });
 
-  it('o desenvolvedor não vê a aba Cliente', async () => {
-    const montado = await montar(TipoUsuarioEnum.DESENVOLVEDOR);
-    expect(abas(montado.elemento)).toEqual(['Checklist', 'Técnica', 'Documentação']);
-  });
-
-  it.each([TipoUsuarioEnum.GESTOR, TipoUsuarioEnum.ADMINISTRADOR])('o %s vê a aba Cliente', async (tipo) => {
+  it.each([TipoUsuarioEnum.DESENVOLVEDOR, TipoUsuarioEnum.GESTOR, TipoUsuarioEnum.ADMINISTRADOR])('o %s vê a aba Cliente', async (tipo) => {
     const montado = await montar(tipo);
     expect(abas(montado.elemento)).toEqual(['Checklist', 'Técnica', 'Cliente', 'Documentação']);
   });
 
-  it('o desenvolvedor não lê o texto do cliente nem forçando a aba', async () => {
+  it('o desenvolvedor lê o texto do cliente, com cadeado na aba e o aviso de que só gestores alteram', async () => {
     const montado = await montar(TipoUsuarioEnum.DESENVOLVEDOR);
+    expect(montado.elemento.querySelector('p-tab .pi-lock')).not.toBeNull();
     montado.componente.aba.set('cliente');
     await montado.atualizar();
-    expect(montado.componente.abaAtiva()).toBe('checklist');
-    expect(montado.elemento.textContent).not.toContain('Texto do cliente');
+    expect(montado.componente.abaAtiva()).toBe('cliente');
+    expect(montado.elemento.textContent).toContain('Texto do cliente');
+    expect(montado.elemento.textContent).toContain('O pedido do cliente: você lê, só gestores alteram');
+  });
+
+  it('o gestor lê o texto do cliente sem o aviso nem o cadeado', async () => {
+    const montado = await montar(TipoUsuarioEnum.GESTOR);
+    expect(montado.elemento.querySelector('p-tab .pi-lock')).toBeNull();
+    montado.componente.aba.set('cliente');
+    await montado.atualizar();
+    expect(montado.elemento.textContent).not.toContain('você lê, só gestores alteram');
   });
 
   it('o gestor lê o texto do cliente; aba sem texto diz que está vazia', async () => {

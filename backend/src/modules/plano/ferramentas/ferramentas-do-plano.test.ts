@@ -22,10 +22,7 @@ function criarPlanoService(texto: { tecnica?: string | null; cliente?: string | 
   const plano = { id: 7, titulo: 'Plano', projetoNome: 'Projeto', demandaNome: null, versao: 3, descricaoTecnica: texto.tecnica ?? 'Um. Dois. Três.', descricaoCliente: texto.cliente ?? 'Cliente.', documentacao: texto.documentacao ?? null };
   const gravacoes: Array<Record<string, unknown>> = [];
   const servico = {
-    recuperar: async (_dto: unknown, usuario: { tipo: TipoUsuarioEnum }) => {
-      const { descricaoCliente, ...semCliente } = plano;
-      return { dados: usuario.tipo === TipoUsuarioEnum.DESENVOLVEDOR ? semCliente : { ...semCliente, descricaoCliente } };
-    },
+    recuperar: async () => ({ dados: plano }),
     alterar: async (dto: Record<string, unknown>) => {
       gravacoes.push(dto);
       plano.versao += 1;
@@ -35,7 +32,7 @@ function criarPlanoService(texto: { tecnica?: string | null; cliente?: string | 
   return { servico: servico as unknown as PlanoService, plano, gravacoes };
 }
 
-test('consultar_plano devolve as abas e a versão de agora; a descrição do cliente nem aparece para o desenvolvedor', async () => {
+test('consultar_plano devolve as abas e a versão de agora; o desenvolvedor lê a descrição do cliente', async () => {
   const ferramenta = new ConsultarPlanoFerramenta(criarPlanoService().servico);
   assert.equal(ferramenta.somentePlanejamento, true);
   assert.equal(ferramenta.tipo, 'LEITURA');
@@ -43,7 +40,7 @@ test('consultar_plano devolve as abas e a versão de agora; a descrição do cli
   const paraDev = (await ferramenta.executar({ planoId: 7 }, DESENVOLVEDOR)) as Record<string, unknown>;
   assert.equal(paraDev['versao'], 3);
   assert.equal(paraDev['descricaoTecnica'], 'Um. Dois. Três.');
-  assert.equal('descricaoCliente' in paraDev, false);
+  assert.equal(paraDev['descricaoCliente'], 'Cliente.');
 
   const paraGestor = (await ferramenta.executar({ planoId: 7 }, GESTOR)) as Record<string, unknown>;
   assert.equal(paraGestor['descricaoCliente'], 'Cliente.');

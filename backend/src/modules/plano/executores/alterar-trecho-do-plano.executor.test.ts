@@ -18,10 +18,9 @@ function criarCenario(textos: { tecnica?: string; cliente?: string; documentacao
   const plano = { id: 7, titulo: 'Plano', versao: 3, descricaoTecnica: textos.tecnica ?? 'Primeira frase. Segunda frase. Terceira frase.', descricaoCliente: textos.cliente ?? 'Texto do cliente.', documentacao: textos.documentacao ?? null };
   const gravacoes: Array<Record<string, unknown>> = [];
   const servico = {
-    recuperar: async (_dto: unknown, usuario: { tipo: TipoUsuarioEnum }) => {
+    recuperar: async () => {
       if (quemVe === 'ninguem') throw new ResourceNotFoundException('Plano');
-      const { descricaoCliente, ...semCliente } = plano;
-      return { dados: usuario.tipo === TipoUsuarioEnum.DESENVOLVEDOR ? semCliente : { ...semCliente, descricaoCliente } };
+      return { dados: plano };
     },
     alterar: async (dto: Record<string, unknown>) => {
       gravacoes.push(dto);

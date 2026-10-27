@@ -12,6 +12,7 @@ import {
   PlanoFonteRecuperadaDto,
   PlanoPontoResumoDto,
   PlanoRecuperarDto,
+  podeEditarAbaDoPlano,
   podeVerAbaDoPlano,
   StandardResponse,
   TipoPlanoPontoSituacaoEnum,
@@ -112,16 +113,17 @@ export class ChatPlanoService {
   }
 
   /**
-   * As instruções do turno: o prompt do planejamento, como escrever cada aba que **esta pessoa** pode ver (a do cliente só para gestor e
-   * administrador, também no prompt) e o plano como está agora. Montadas a cada resposta, porque o documento muda entre uma e outra.
+   * As instruções do turno: o prompt do planejamento, como escrever cada aba que **esta pessoa** pode alterar (a do cliente só para gestor e
+   * administrador, também no prompt) e o plano como está agora, com as abas que ela lê (todas). Montadas a cada resposta, porque o documento muda entre uma e outra.
    */
   private async montarInstrucoes(dto: PlanoRecuperarDto, usuarioAtivo: JwtPayload, autores: Map<number, string>): Promise<string> {
     const plano = (await this.planoService.recuperar(dto, usuarioAtivo)).dados as PlanoRecuperadoDto;
     const abas = (Object.values(PlanoAbaEnum) as PlanoAbaEnum[]).filter((aba) => podeVerAbaDoPlano(aba, usuarioAtivo.tipo));
+    const abasEditaveis = abas.filter((aba) => podeEditarAbaDoPlano(aba, usuarioAtivo.tipo));
 
     const prompt = await this.promptService.obterAtivo(TipoPromptEnum.PLANEJAMENTO);
     const comoEscrever: string[] = [];
-    for (const aba of abas) comoEscrever.push(`${ROTULO_DA_ABA[aba]}:\n${(await this.promptService.obterAtivo(PROMPT_DA_ABA[aba])).conteudo}`);
+    for (const aba of abasEditaveis) comoEscrever.push(`${ROTULO_DA_ABA[aba]}:\n${(await this.promptService.obterAtivo(PROMPT_DA_ABA[aba])).conteudo}`);
 
     const pontos = (await this.planoPontoService.listar({ planoId: plano.id }, usuarioAtivo)).dados ?? [];
     const fontes = (await this.planoFonteService.listarComConteudo({ planoId: plano.id }, usuarioAtivo)).dados ?? [];
@@ -129,7 +131,7 @@ export class ChatPlanoService {
       prompt.conteudo,
       `Como escrever cada texto:\n\n${comoEscrever.join('\n\n')}`,
       ORIENTACAO_DOS_PONTOS,
-      this.descreverPlano(plano, abas, usuarioAtivo, autores),
+      this.descreverPlano(plano, abas, abasEditaveis, usuarioAtivo, autores),
       this.descreverPontos(pontos),
       this.descreverFontes(fontes),
     ].join('\n\n');
@@ -142,7 +144,7 @@ export class ChatPlanoService {
     return `${ORIENTACAO_DAS_FONTES}\n\n${blocos.join('\n\n')}`;
   }
 
-  private descreverPlano(plano: PlanoRecuperadoDto, abas: PlanoAbaEnum[], usuarioAtivo: JwtPayload, autores: Map<number, string>): string {
+  private descreverPlano(plano: PlanoRecuperadoDto, abas: PlanoAbaEnum[], abasEditaveis: PlanoAbaEnum[], usuarioAtivo: JwtPayload, autores: Map<number, string>): string {
     const nomeDeQuemFala = autores.get(usuarioAtivo.sub);
     const cabecalho = [
       `O plano aberto: id ${plano.id}, "${plano.titulo}".`,
@@ -151,6 +153,7 @@ export class ChatPlanoService {
       nomeDeQuemFala ? `Quem está falando agora: ${nomeDeQuemFala} (${usuarioAtivo.tipo === TipoUsuarioEnum.DESENVOLVEDOR ? 'desenvolvedor' : 'gestor ou administrador'}).` : '',
       `Versão do documento agora: ${plano.versao}. Use-a em escrever_no_plano; depois de escrever, use a versão que o resultado devolver.`,
       `Abas que esta pessoa vê: ${abas.join(', ')}.`,
+      `Abas que esta pessoa pode alterar: ${abasEditaveis.join(', ')}. As outras ela só lê: não escreva nelas nem proponha alterar trechos delas nesta conversa.`,
     ].filter((linha) => linha !== '');
     const textos = abas.map((aba) => {
       const texto = this.textoDaAba(plano, aba);

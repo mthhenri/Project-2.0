@@ -31,7 +31,7 @@ import {
   TipoUsuarioEnum,
   podeAcessarPlano,
   podeArquivarOuExcluirPlano,
-  podeVerAbaDoPlano,
+  podeEditarAbaDoPlano,
   temPermissaoDeGestor,
   textoInicialDaAba,
 } from '@project20/shared';
@@ -91,13 +91,9 @@ export class PlanoService {
     return { sucesso: true, dados: planos, mensagem: 'Planos listados com sucesso' };
   }
 
-  /** Recupera o plano com os textos que a pessoa pode ver: a descrição do cliente vem só para gestor e administrador. */
+  /** Recupera o plano com os três textos: a descrição do cliente é lida por todos, só a alteração é de gestor e administrador. */
   async recuperar(dto: PlanoRecuperarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<PlanoRecuperadoDto>> {
-    const plano = await this.recuperarPlanoAcessivel(dto.id, usuarioAtivo);
-    const { descricaoCliente, ...planoSemCliente } = plano;
-    const dados: PlanoRecuperadoDto = podeVerAbaDoPlano(PlanoAbaEnum.DESCRICAO_CLIENTE, usuarioAtivo.tipo)
-      ? { ...planoSemCliente, descricaoCliente }
-      : planoSemCliente;
+    const dados = await this.recuperarPlanoAcessivel(dto.id, usuarioAtivo);
 
     return { sucesso: true, dados, mensagem: 'Plano recuperado com sucesso' };
   }
@@ -109,7 +105,7 @@ export class PlanoService {
   async alterar(dto: PlanoInternoAlterarDto, usuarioAtivo: JwtPayload): Promise<StandardResponse<PlanoAlteradoDto>> {
     await this.recuperarPlanoAcessivel(dto.id, usuarioAtivo);
 
-    if (dto.descricaoCliente !== undefined && !podeVerAbaDoPlano(PlanoAbaEnum.DESCRICAO_CLIENTE, usuarioAtivo.tipo)) {
+    if (dto.descricaoCliente !== undefined && !podeEditarAbaDoPlano(PlanoAbaEnum.DESCRICAO_CLIENTE, usuarioAtivo.tipo)) {
       throw new UnauthorizedAccessException('Apenas gestores podem alterar a descrição do cliente');
     }
     if (
