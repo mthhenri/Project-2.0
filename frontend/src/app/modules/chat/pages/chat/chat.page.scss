@@ -520,11 +520,9 @@
   &__legenda {
     flex: 1;
     min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
     color: var(--p-text-muted-color);
     font-size: 0.75rem;
+    line-height: 1.25;
     text-align: right;
   }
 }
