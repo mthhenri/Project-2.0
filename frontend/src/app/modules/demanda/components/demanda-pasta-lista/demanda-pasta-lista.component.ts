@@ -28,6 +28,8 @@ export class DemandaPastaListaComponent {
   readonly termo = input<string>('');
   /** Na busca a lista traz resultados de várias pastas; o nome de cada uma aparece na linha. */
   readonly nomesDasPastas = input<ReadonlyMap<number, string> | null>(null);
+  /** No "Projeto inteiro": o caminho de cada demanda (por id), mostrado acima do nome. */
+  readonly caminhosDasDemandas = input<ReadonlyMap<number, string> | null>(null);
   /** O filtro de status ou tags (ou a busca) está escondendo demandas da pasta. */
   readonly filtroAtivo = input<boolean>(false);
   readonly acoes = input.required<DemandaMenuAcoes>();
@@ -42,6 +44,10 @@ export class DemandaPastaListaComponent {
   readonly demandaAquiSolicitada = output<void>();
   readonly abrirPastaSolicitada = output<number>();
   readonly filtrosLimpos = output<void>();
+
+  caminhoDe(no: DemandaGrafoNoDto): string {
+    return this.caminhosDasDemandas()?.get(no.id) ?? '';
+  }
 
   nomeDaPastaDe(no: DemandaGrafoNoDto): string {
     const nomes = this.nomesDasPastas();

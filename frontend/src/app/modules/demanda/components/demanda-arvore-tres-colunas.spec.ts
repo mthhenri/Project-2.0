@@ -68,6 +68,7 @@ describe('DemandaPastasComponent', () => {
     const escolhidas: Array<number | null> = [];
     const alternadas: number[] = [];
     montado.componente.pastaEscolhida.subscribe((valor) => escolhidas.push(valor));
+    montado.componente.projetoInteiroEscolhido.subscribe(() => escolhidas.push(-1));
     montado.componente.expansaoAlternada.subscribe((valor) => alternadas.push(valor));
     return { montado, escolhidas, alternadas };
   }
@@ -76,27 +77,44 @@ describe('DemandaPastasComponent', () => {
 
   it('mostra "Sem pasta" no topo e só as pastas de nível um com a contagem; as filhas só com a mãe aberta', async () => {
     const fechadas = await montar();
-    expect(nomes(fechadas.montado)).toEqual(['Sem pasta', 'Autenticação', 'Relatórios']);
-    expect(Array.from(fechadas.montado.elemento.querySelectorAll('.demanda-pastas__conta')).map((item) => item.textContent?.trim())).toEqual(['1', '2', '0']);
+    expect(nomes(fechadas.montado)).toEqual(['Projeto inteiro', 'Sem pasta', 'Autenticação', 'Relatórios']);
+    expect(Array.from(fechadas.montado.elemento.querySelectorAll('.demanda-pastas__conta')).map((item) => item.textContent?.trim())).toEqual(['0', '1', '2', '0']);
     expect(fechadas.montado.elemento.querySelectorAll('.demanda-pastas__item--ativa').length).toBe(1);
   });
 
   it('com a mãe aberta mostra as filhas; a pasta escolhida fica realçada', async () => {
     const { montado } = await montar(5, [2]);
-    expect(nomes(montado)).toEqual(['Sem pasta', 'Autenticação', 'Sessão e segurança', 'Relatórios']);
+    expect(nomes(montado)).toEqual(['Projeto inteiro', 'Sem pasta', 'Autenticação', 'Sessão e segurança', 'Relatórios']);
     expect(montado.elemento.querySelector('.demanda-pastas__item--ativa')?.textContent).toContain('Sessão e segurança');
   });
 
   it('clicar escolhe a pasta; o chevron só abre e fecha, sem escolher', async () => {
-    const { montado, escolhidas, alternadas } = await montar();
+    const { montado, escolhidas, alternadas } = await montar(5);
     const itens = Array.from(montado.elemento.querySelectorAll<HTMLButtonElement>('.demanda-pastas__item'));
-    itens[1].click();
+    itens[2].click();
     expect(escolhidas).toEqual([2]);
-    itens[0].click();
+    itens[1].click();
     expect(escolhidas).toEqual([2, null]);
     montado.elemento.querySelector<HTMLElement>('.demanda-pastas__chevron')!.click();
     expect(alternadas).toEqual([2]);
     expect(escolhidas).toEqual([2, null]);
+  });
+
+  it('clicar de novo na pasta já escolhida passa para "Projeto inteiro"; com ele escolhido nenhuma pasta fica realçada', async () => {
+    const { montado, escolhidas } = await montar(2);
+    const itens = Array.from(montado.elemento.querySelectorAll<HTMLButtonElement>('.demanda-pastas__item'));
+    itens[2].click();
+    expect(escolhidas).toEqual([-1]);
+    TestBed.resetTestingModule();
+    const inteiro = await montarComponente(DemandaPastasComponent, { entradas: { pastas: construirPastas(NOS), projetoInteiro: true, pastaId: 2 } });
+    expect(inteiro.elemento.querySelectorAll('.demanda-pastas__item--ativa').length).toBe(1);
+    expect(inteiro.elemento.querySelector('.demanda-pastas__item--ativa')?.textContent).toContain('Projeto inteiro');
+  });
+
+  it('teclado: ↑ de "Sem pasta" vai a "Projeto inteiro"', async () => {
+    const { montado, escolhidas } = await montar(null);
+    montado.componente.aoTeclar({ key: 'ArrowUp', preventDefault: () => undefined } as KeyboardEvent);
+    expect(escolhidas).toEqual([-1]);
   });
 
   it('sem pasta nenhuma (busca) não realça nada', async () => {

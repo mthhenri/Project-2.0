@@ -11,11 +11,26 @@
   <button
     type="button"
     class="demanda-pastas__item"
-    [class.demanda-pastas__item--ativa]="pastaId() === null"
+    [class.demanda-pastas__item--ativa]="projetoInteiro()"
     role="treeitem"
-    [attr.aria-selected]="pastaId() === null"
-    (click)="pastaEscolhida.emit(null)"
+    [attr.aria-selected]="projetoInteiro()"
+    (click)="projetoInteiroEscolhido.emit()"
   >
+    <span class="demanda-pastas__chevron-vazio"></span>
+    <i class="pi pi-sitemap demanda-pastas__icone"></i>
+    <span class="demanda-pastas__nome">Projeto inteiro</span>
+    <span class="demanda-pastas__conta">{{ totalQuantidade() }}</span>
+  </button>
+
+  <button
+    type="button"
+    class="demanda-pastas__item"
+    [class.demanda-pastas__item--ativa]="!projetoInteiro() && pastaId() === null"
+    role="treeitem"
+    [attr.aria-selected]="!projetoInteiro() && pastaId() === null"
+    (click)="aoClicar(null)"
+  >
+    <span class="demanda-pastas__chevron-vazio"></span>
     <i class="pi pi-list demanda-pastas__icone"></i>
     <span class="demanda-pastas__nome">Sem pasta</span>
     <span class="demanda-pastas__conta">{{ semPastaQuantidade() }}</span>
@@ -25,15 +40,15 @@
     <button
       type="button"
       class="demanda-pastas__item"
-      [class.demanda-pastas__item--ativa]="pastaId() === linha.pasta.id"
+      [class.demanda-pastas__item--ativa]="!projetoInteiro() && pastaId() === linha.pasta.id"
       [style.padding-left.rem]="0.5 + linha.pasta.nivel * 1.1"
       role="treeitem"
-      [attr.aria-selected]="pastaId() === linha.pasta.id"
+      [attr.aria-selected]="!projetoInteiro() && pastaId() === linha.pasta.id"
       [attr.aria-expanded]="linha.pasta.filhas.length ? linha.aberta : null"
       [pTooltip]="linha.pasta.nome"
       tooltipPosition="right"
       [showDelay]="600"
-      (click)="pastaEscolhida.emit(linha.pasta.id)"
+      (click)="aoClicar(linha.pasta.id)"
     >
       @if (linha.pasta.filhas.length) {
         <span

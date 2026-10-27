@@ -38,6 +38,8 @@ export class DemandaPastaLinhaComponent implements OnChanges {
   readonly termo = input<string>('');
   /** Na busca a lista mistura pastas: o nome da pasta de cada resultado aparece embaixo. */
   readonly nomeDaPasta = input<string>('');
+  /** No "Projeto inteiro" o caminho até a demanda ("Suporte › GR Sisger") aparece acima do nome. */
+  readonly caminho = input<string>('');
   readonly acoes = input.required<DemandaMenuAcoes>();
 
   readonly escolhida = output<void>();

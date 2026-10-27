@@ -61,6 +61,8 @@ export class DemandaArvoreTelaComponent {
   readonly aba = signal<AbaDemandaAberta>('tecnica');
   readonly expandidas = signal<ReadonlySet<number>>(new Set());
   readonly mostrarDemandaAqui = signal<boolean>(false);
+  /** O filtro "Projeto inteiro": a lista traz todas as demandas, cada uma com o caminho acima do nome. Só da tela; escolher uma pasta o desfaz. */
+  readonly projetoInteiro = signal<boolean>(false);
 
   readonly pastas = computed(() => construirPastas(this.nos()));
   readonly semPastaQuantidade = computed(() => contarSemPasta(this.nos()));
@@ -70,26 +72,44 @@ export class DemandaArvoreTelaComponent {
   /** As demandas da lista: as da pasta escolhida ou, com busca, as de todas as pastas; em qualquer caso, só as que passam no filtro. */
   readonly itens = computed<DemandaGrafoNoDto[]>(() => {
     const todos = this.nos();
-    return this.emBusca() ? nosCorrespondentes(todos, this.filtro()) : nosCorrespondentes(demandasDaPasta(todos, this.pastaId()), this.filtro());
+    return this.emBusca() || this.projetoInteiro() ? nosCorrespondentes(todos, this.filtro()) : nosCorrespondentes(demandasDaPasta(todos, this.pastaId()), this.filtro());
   });
 
   readonly nomesDasPastas = computed<ReadonlyMap<number, string> | null>(() =>
     this.emBusca() ? new Map(this.nos().filter((no) => no.isEstrutural).map((no) => [no.id, no.nome])) : null,
   );
 
+  /** O caminho de cada demanda até a raiz ("Suporte › GR Sisger"), só no "Projeto inteiro" e fora da busca. */
+  readonly caminhosDasDemandas = computed<ReadonlyMap<number, string> | null>(() => {
+    if (this.emBusca() || !this.projetoInteiro()) return null;
+    const porId = new Map(this.nos().map((no) => [no.id, no]));
+    const caminhos = new Map<number, string>();
+    for (const no of this.nos()) {
+      const nomes: string[] = [];
+      let pai = no.demandaPaiId ?? null;
+      while (pai !== null && porId.has(pai) && nomes.length < 50) {
+        nomes.unshift(porId.get(pai)!.nome);
+        pai = porId.get(pai)!.demandaPaiId ?? null;
+      }
+      caminhos.set(no.id, nomes.join(' › '));
+    }
+    return caminhos;
+  });
+
   readonly tituloDaLista = computed(() => {
     if (this.emBusca()) return 'Resultados da busca';
+    if (this.projetoInteiro()) return 'Projeto inteiro';
     const caminho = caminhoDaPasta(this.nos(), this.pastaId());
     return caminho[caminho.length - 1];
   });
 
   readonly caminhoDaLista = computed(() => {
-    if (this.emBusca()) return `${this.itens().length} ${this.itens().length === 1 ? 'demanda' : 'demandas'} em todas as pastas`;
+    if (this.emBusca() || this.projetoInteiro()) return `${this.itens().length} ${this.itens().length === 1 ? 'demanda' : 'demandas'} em todas as pastas`;
     return caminhoDaPasta(this.nos(), this.pastaId()).slice(0, -1).join(' › ');
   });
 
   /** O id da demanda que é a própria pasta (para "Abrir pasta"); nada em "Sem pasta" e na busca. */
-  readonly pastaDemandaId = computed<number | null>(() => (this.emBusca() ? null : this.pastaId()));
+  readonly pastaDemandaId = computed<number | null>(() => (this.emBusca() || this.projetoInteiro() ? null : this.pastaId()));
 
   readonly noAberto = computed(() => this.nos().find((no) => no.id === this.demandaAbertaId()) ?? null);
 
@@ -135,7 +155,10 @@ export class DemandaArvoreTelaComponent {
     effect(() => {
       const pedido = this.abrirDemanda();
       if (!pedido) return;
-      untracked(() => this.escolherDemanda(pedido.id));
+      untracked(() => {
+        this.projetoInteiro.set(false);
+        this.escolherDemanda(pedido.id);
+      });
     });
   }
 
@@ -165,10 +188,16 @@ export class DemandaArvoreTelaComponent {
 
   /** Clicar numa pasta: ela vira a escolhida e a primeira demanda dela abre. */
   escolherPasta(pasta: PastaId): void {
+    this.projetoInteiro.set(false);
     this.pastaChange.emit(pasta);
     const primeira = nosCorrespondentes(demandasDaPasta(this.nos(), pasta), { ...this.filtro(), termo: '' })[0];
     this.demandaAbertaId.set(primeira?.id ?? null);
     this.aba.set('tecnica');
+  }
+
+  /** "Projeto inteiro": a lista mostra todas as demandas; a demanda aberta continua aberta. */
+  escolherProjetoInteiro(): void {
+    this.projetoInteiro.set(true);
   }
 
   /** Abre uma demanda na terceira coluna; vinda da busca ou de fora, a pasta dela passa a ser a escolhida. */
