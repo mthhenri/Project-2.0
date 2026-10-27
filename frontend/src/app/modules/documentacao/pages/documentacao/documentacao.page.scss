@@ -1,0 +1,123 @@
+:host {
+  display: block;
+  height: 100%;
+  min-height: 0;
+}
+
+.documentacao {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  height: 100%;
+  min-height: 0;
+
+  &__topo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+  }
+
+  &__titulo {
+    margin: 0;
+    color: var(--p-primary-600);
+    font-size: 1.375rem;
+    font-weight: 600;
+  }
+
+  &__espaco {
+    flex: 1;
+  }
+
+  &__estado {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 3rem 1rem;
+    color: var(--p-text-muted-color);
+    text-align: center;
+  }
+
+  // A demanda à esquerda, o divisor e o pad à direita; a demanda ocupa `--divisao` da largura.
+  &__area {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    --divisao: 56%;
+  }
+
+  &__demanda {
+    flex: 0 0 var(--divisao);
+    min-width: 0;
+    min-height: 0;
+  }
+
+  &__area--sem-pad &__demanda {
+    flex: 1;
+  }
+
+  &__sem-demanda {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.625rem;
+    height: 100%;
+    padding: 2rem 1rem;
+    border: 1px dashed var(--app-surface-300);
+    border-radius: 12px;
+    color: var(--p-text-muted-color);
+    text-align: center;
+
+    i {
+      font-size: 1.75rem;
+    }
+
+    strong {
+      color: var(--p-text-color);
+      font-size: 1rem;
+    }
+  }
+
+  // O divisor: uma faixa fina que se destaca ao passar o mouse, arrastar ou focar pelo teclado (como o do chat).
+  &__divisor {
+    position: relative;
+    flex: 0 0 0.75rem;
+    cursor: col-resize;
+    touch-action: none;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 2px;
+      transform: translateX(-50%);
+      border-radius: 1px;
+      background: var(--app-surface-200);
+      transition: background 0.15s ease;
+    }
+
+    &:hover::after,
+    &:focus-visible::after,
+    &--arrastando::after {
+      background: var(--p-primary-500);
+    }
+
+    &:focus-visible {
+      outline: none;
+    }
+  }
+
+  &__pad {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    border: 1px solid var(--app-surface-200);
+    border-radius: 12px;
+    background: var(--app-surface-0);
+  }
+}

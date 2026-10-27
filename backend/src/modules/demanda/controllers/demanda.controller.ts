@@ -124,6 +124,14 @@ export class DemandaController {
     return this.demandaService.listarPlanejamento({ projetoId }, usuarioAtivo);
   }
 
+  @ApiOperation({ summary: 'Listar as demandas da tela de Documentações, sem os textos (gestor vê todas; desenvolvedor, as de projeto acessível)' })
+  @ApiResponse({ status: 200, description: 'Demandas listadas com sucesso' })
+  @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })
+  @Get('documentacao')
+  listarParaDocumentacao(@ActiveUser() usuarioAtivo: JwtPayload) {
+    return this.demandaService.listarParaDocumentacao(usuarioAtivo);
+  }
+
   @ApiOperation({ summary: 'Recuperar demanda por ID' })
   @ApiResponse({ status: 200, description: 'Demanda recuperada com sucesso' })
   @ApiResponse({ status: 401, description: 'Não autenticado', schema: { example: NAO_AUTORIZADO_EXEMPLO } })

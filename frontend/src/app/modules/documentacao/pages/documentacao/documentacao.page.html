@@ -1,0 +1,86 @@
+<div class="documentacao">
+  <header class="documentacao__topo">
+    <h1 class="documentacao__titulo">Documentações</h1>
+    <app-documentacao-seletor
+      [demandas]="demandas()"
+      [escolhidaId]="escolhidaId()"
+      [carregando]="carregando()"
+      [erro]="erro()"
+      (escolheu)="escolher($event)"
+      (recarregar)="carregar()"
+    />
+    <span class="documentacao__espaco"></span>
+    @if (padRecolhido()) {
+      <p-button label="Mostrar o pad" icon="pi pi-bookmark" size="small" severity="secondary" [outlined]="true" (onClick)="alternarPad()" />
+    }
+  </header>
+
+  @if (carregando() && demandas().length === 0) {
+    <div class="documentacao__estado" aria-busy="true">
+      <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+      <span>Carregando as demandas…</span>
+    </div>
+  } @else if (erro() && demandas().length === 0) {
+    <div class="documentacao__estado" role="alert">
+      <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+      <span>Não foi possível carregar as demandas.</span>
+      <p-button label="Tentar de novo" icon="pi pi-refresh" size="small" [outlined]="true" (onClick)="carregar()" />
+    </div>
+  } @else {
+    <div
+      #area
+      class="documentacao__area"
+      [class.documentacao__area--sem-pad]="padRecolhido()"
+      [style.--divisao]="divisao() + '%'"
+    >
+      <div class="documentacao__demanda">
+        @if (escolhidaId(); as idDaDemanda) {
+          <app-documentacao-demanda [demandaId]="idDaDemanda" (sujoMudou)="sujo.set($event)" />
+        } @else {
+          <div class="documentacao__sem-demanda">
+            <i class="pi pi-book" aria-hidden="true"></i>
+            <strong>Em que demanda você está trabalhando?</strong>
+            <span>Escolha uma para escrever os textos dela aqui, com o seu pad ao lado.</span>
+            <p-button label="Escolher demanda" icon="pi pi-search" size="small" (onClick)="abrirSeletor()" />
+          </div>
+        }
+      </div>
+
+      @if (!padRecolhido()) {
+        <div
+          class="documentacao__divisor"
+          [class.documentacao__divisor--arrastando]="arrastando()"
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Largura da demanda e do pad"
+          tabindex="0"
+          [attr.aria-valuenow]="divisao()"
+          [attr.aria-valuemin]="limites.minima"
+          [attr.aria-valuemax]="limites.maxima"
+          (pointerdown)="iniciarArrasto($event)"
+          (pointermove)="aoArrastar($event)"
+          (pointerup)="finalizarArrasto()"
+          (pointercancel)="finalizarArrasto()"
+          (dblclick)="restaurarDivisao()"
+          (keydown)="aoTeclarNoDivisor($event)"
+        ></div>
+        <div class="documentacao__pad">
+          <app-pad-painel>
+            <p-button
+              padAcoes
+              icon="pi pi-angle-double-right"
+              [text]="true"
+              severity="secondary"
+              ariaLabel="Recolher o pad"
+              pTooltip="Recolher o pad"
+              tooltipPosition="left"
+              (onClick)="alternarPad()"
+            />
+          </app-pad-painel>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<p-confirmdialog />

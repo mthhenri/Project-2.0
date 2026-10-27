@@ -15,7 +15,7 @@ test('rotas @GestorOnly: planejamento, excluir, restaurar, criar conexão e excl
 });
 
 test('criar, alterar, tags e membros ficam abertos: a service decide por tipo e participação', () => {
-  for (const nome of ['criar', 'alterar', 'alterarTextos', 'alterarTagsDemanda', 'atribuirMembro', 'removerMembro', 'recuperar', 'listar', 'listarExecutadas', 'recuperarGrafo']) {
+  for (const nome of ['criar', 'alterar', 'alterarTextos', 'alterarTagsDemanda', 'atribuirMembro', 'removerMembro', 'recuperar', 'listar', 'listarExecutadas', 'listarParaDocumentacao', 'recuperarGrafo']) {
     assert.equal(rotas()[nome].gestorOnly, false, nome);
   }
 });
@@ -29,7 +29,7 @@ test('nenhuma rota de demanda é pública nem exclusiva de administrador', () =>
 
 test('verbos e caminhos de todas as rotas', () => {
   const esperado = [
-    'POST /', 'GET /', 'GET grafo', 'GET :id/arvore', 'GET :id/ancestral', 'GET atribuidas', 'GET executadas', 'GET planejamento', 'GET :id', 'PUT :id', 'PATCH :id/textos',
+    'POST /', 'GET /', 'GET grafo', 'GET :id/arvore', 'GET :id/ancestral', 'GET atribuidas', 'GET executadas', 'GET planejamento', 'GET documentacao', 'GET :id', 'PUT :id', 'PATCH :id/textos',
     'DELETE :id', 'PATCH :id/restaurar', 'POST :id/conexao', 'GET :id/conexao', 'DELETE :id/conexao/:conexaoId', 'PUT :id/tag', 'GET :id/tag',
     'GET :id/membro', 'POST :id/membro', 'DELETE :id/membro/:usuarioId',
   ];

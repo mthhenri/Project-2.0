@@ -43,6 +43,8 @@ import {
   DemandaExecutadaResumoDto,
   DemandaAtribuidasListarDto,
   DemandaInternoAlterarDto,
+  DemandaDocumentacaoListarDto,
+  DemandaDocumentacaoResumoDto,
   DemandaTextosAlteradosDto,
   DemandaTextosInternoAlterarDto,
   DemandaPlanejamentoDto,
@@ -801,6 +803,78 @@ export class DemandaRepository extends BaseRepository<Demanda> {
       { id: dto.id },
     );
     return resultado[0] ?? null;
+  }
+
+  /**
+   * As demandas da tela de Documentações, sem os textos (task 259): projeto, caminho (CTE recursiva), status, se cada texto está preenchido, se há
+   * execução ativa da pessoa e se ela pode editar. `todosOsProjetos` (gestor e administrador) não filtra; o desenvolvedor só vê projetos em que tem ao
+   * menos uma linha em `demanda_usuario`.
+   */
+  async listarParaDocumentacao(dto: DemandaDocumentacaoListarDto): Promise<DemandaDocumentacaoResumoDto[]> {
+    return this.executarConsulta<DemandaDocumentacaoResumoDto>(
+      `WITH RECURSIVE caminho_demanda AS (
+         SELECT demanda.id, demanda.nome::text AS caminho
+         FROM demanda
+         WHERE demanda.demanda_pai_id IS NULL
+           AND demanda.is_deleted = false
+         UNION ALL
+         SELECT demanda_filho.id,
+                (caminho_demanda.caminho || :separadorCaminho || demanda_filho.nome)::text
+         FROM demanda AS demanda_filho
+         INNER JOIN caminho_demanda ON demanda_filho.demanda_pai_id = caminho_demanda.id
+         WHERE demanda_filho.is_deleted = false
+       )
+       SELECT
+         demanda.id,
+         demanda.projeto_id         AS "projetoId",
+         projeto.nome               AS "projetoNome",
+         demanda.demanda_pai_id     AS "demandaPaiId",
+         demanda.nome,
+         COALESCE(caminho_demanda.caminho, demanda.nome) AS "caminho",
+         tipo_demanda_status.codigo AS status,
+         (demanda.descricao_tecnica IS NOT NULL AND btrim(demanda.descricao_tecnica) <> '') AS "temDescricaoTecnica",
+         (demanda.descricao_cliente IS NOT NULL AND btrim(demanda.descricao_cliente) <> '') AS "temDescricaoCliente",
+         (demanda.documentacao IS NOT NULL AND btrim(demanda.documentacao) <> '') AS "temDocumentacao",
+         EXISTS (
+           SELECT 1
+           FROM atividade
+           INNER JOIN execucao
+             ON execucao.atividade_id = atividade.id
+             AND execucao.fim_data IS NULL
+             AND execucao.is_deleted = false
+           WHERE atividade.demanda_id = demanda.id
+             AND atividade.usuario_id = :usuarioId
+             AND atividade.is_deleted = false
+         ) AS "emExecucao",
+         (CAST(:todosOsProjetos AS boolean) OR EXISTS (
+           SELECT 1
+           FROM demanda_usuario
+           WHERE demanda_usuario.demanda_id = demanda.id
+             AND demanda_usuario.usuario_id = :usuarioId
+             AND demanda_usuario.is_deleted = false
+         )) AS "podeEditar"
+       FROM demanda
+       INNER JOIN projeto
+         ON projeto.id = demanda.projeto_id
+         AND projeto.is_deleted = false
+       INNER JOIN tipo_demanda_status
+         ON tipo_demanda_status.id = demanda.tipo_demanda_status_id
+         AND tipo_demanda_status.is_deleted = false
+       LEFT JOIN caminho_demanda ON caminho_demanda.id = demanda.id
+       WHERE demanda.is_deleted = false
+         AND (CAST(:todosOsProjetos AS boolean) OR EXISTS (
+           SELECT 1
+           FROM demanda AS demanda_do_projeto
+           INNER JOIN demanda_usuario
+             ON demanda_usuario.demanda_id = demanda_do_projeto.id
+             AND demanda_usuario.usuario_id = :usuarioId
+             AND demanda_usuario.is_deleted = false
+           WHERE demanda_do_projeto.projeto_id = demanda.projeto_id
+             AND demanda_do_projeto.is_deleted = false
+         ))
+       ORDER BY projeto.nome ASC, demanda.nome ASC`,
+      { usuarioId: dto.usuarioId, todosOsProjetos: dto.todosOsProjetos, separadorCaminho: SEPARADOR_CAMINHO },
+    );
   }
 
   /**

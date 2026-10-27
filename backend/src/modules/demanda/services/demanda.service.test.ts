@@ -110,3 +110,19 @@ test('alterarTextos: demanda inexistente e pedido sem nenhum texto são recusado
   const { servico } = criarServicoDeTextos();
   await assert.rejects(() => servico.alterarTextos({ id: 5, versao: 3 }, GESTOR_ATIVO), BusinessException);
 });
+
+// listarParaDocumentacao() (task 259): quem vê tudo e quem só os projetos acessíveis.
+test('listarParaDocumentacao: gestor e administrador pedem todos os projetos; o desenvolvedor, só os acessíveis', async () => {
+  const pedidos: unknown[] = [];
+  const servico = criarServico({ listarParaDocumentacao: async (dto: unknown) => { pedidos.push(dto); return []; } });
+
+  await servico.listarParaDocumentacao({ sub: 1, login: 'g', tipo: TipoUsuarioEnum.GESTOR } as never);
+  await servico.listarParaDocumentacao({ sub: 2, login: 'a', tipo: TipoUsuarioEnum.ADMINISTRADOR } as never);
+  await servico.listarParaDocumentacao({ sub: 7, login: 'd', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never);
+
+  assert.deepEqual(pedidos, [
+    { usuarioId: 1, todosOsProjetos: true },
+    { usuarioId: 2, todosOsProjetos: true },
+    { usuarioId: 7, todosOsProjetos: false },
+  ]);
+});

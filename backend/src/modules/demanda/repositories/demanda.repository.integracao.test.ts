@@ -610,3 +610,71 @@ testarComBanco('alterarTextos: com a versão lida grava, devolve os textos e a v
   assert.equal(atual?.documentacao, 'Doc');
   assert.equal(atual?.versao, 2);
 });
+
+// ---------------------------------------------------------------------------
+// Árvore da tela de Documentações (task 259)
+// ---------------------------------------------------------------------------
+
+testarComBanco('documentação: o gestor vê as demandas de todos os projetos, com projeto, caminho e marcas de preenchimento', async (conexao) => {
+  const repositorio = criarRepositorio(DemandaRepository, conexao);
+  const gestor = await criarGestor(conexao);
+  const projeto = await criarProjeto(conexao, { nome: 'Projeto Doc' });
+  const raiz = await criarDemanda(conexao, { projetoId: projeto.id, nome: 'Raiz', isEstrutural: true });
+  const filha = await criarDemanda(conexao, {
+    projetoId: projeto.id, demandaPaiId: raiz.id, nome: 'Filha', descricaoTecnica: 'Técnica', descricaoCliente: '   ', documentacao: null,
+  });
+  const outroProjeto = await criarProjeto(conexao);
+  await criarDemanda(conexao, { projetoId: outroProjeto.id, nome: 'De outro projeto' });
+
+  const lista = await repositorio.listarParaDocumentacao({ usuarioId: gestor.id, todosOsProjetos: true });
+  assert.ok(lista.length >= 3);
+  const resumoDaFilha = lista.find((item) => item.id === filha.id)!;
+  assert.equal(resumoDaFilha.projetoNome, 'Projeto Doc');
+  assert.equal(resumoDaFilha.demandaPaiId, raiz.id);
+  assert.equal(resumoDaFilha.caminho, 'Raiz › Filha');
+  assert.equal(resumoDaFilha.temDescricaoTecnica, true);
+  assert.equal(resumoDaFilha.temDescricaoCliente, false, 'só espaços não conta como preenchido');
+  assert.equal(resumoDaFilha.temDocumentacao, false);
+  assert.equal(resumoDaFilha.podeEditar, true, 'gestor edita todas');
+});
+
+testarComBanco('documentação: o desenvolvedor só vê projetos em que é membro de alguma demanda, e edita só as próprias', async (conexao) => {
+  const repositorio = criarRepositorio(DemandaRepository, conexao);
+  const desenvolvedor = await criarDesenvolvedor(conexao);
+  const projetoDele = await criarProjeto(conexao);
+  const minha = await criarDemanda(conexao, { projetoId: projetoDele.id, nome: 'Minha' });
+  const colega = await criarDemanda(conexao, { projetoId: projetoDele.id, nome: 'Do colega' });
+  await criarDemandaUsuario(conexao, { demandaId: minha.id, usuarioId: desenvolvedor.id });
+  const projetoAlheio = await criarProjeto(conexao);
+  const alheia = await criarDemanda(conexao, { projetoId: projetoAlheio.id, nome: 'Alheia' });
+
+  const lista = await repositorio.listarParaDocumentacao({ usuarioId: desenvolvedor.id, todosOsProjetos: false });
+  assert.deepEqual(ids(lista).sort(), [minha.id, colega.id].sort());
+  assert.equal(lista.some((item) => item.id === alheia.id), false);
+  assert.equal(lista.find((item) => item.id === minha.id)!.podeEditar, true);
+  assert.equal(lista.find((item) => item.id === colega.id)!.podeEditar, false, 'de fora da demanda: só leitura');
+});
+
+testarComBanco('documentação: emExecucao só acende com execução ativa da própria pessoa na demanda', async (conexao) => {
+  const repositorio = criarRepositorio(DemandaRepository, conexao);
+  const desenvolvedor = await criarDesenvolvedor(conexao);
+  const colega = await criarDesenvolvedor(conexao);
+  const projeto = await criarProjeto(conexao);
+  const rodando = await criarDemanda(conexao, { projetoId: projeto.id, nome: 'Rodando' });
+  const encerrada = await criarDemanda(conexao, { projetoId: projeto.id, nome: 'Encerrada' });
+  const doColega = await criarDemanda(conexao, { projetoId: projeto.id, nome: 'Do colega' });
+  for (const demanda of [rodando, encerrada, doColega]) await criarDemandaUsuario(conexao, { demandaId: demanda.id, usuarioId: desenvolvedor.id });
+
+  const minhaRodando = await criarAtividade(conexao, { demandaId: rodando.id, usuarioId: desenvolvedor.id });
+  await criarExecucao(conexao, { atividadeId: minhaRodando.id, inicioData: '2026-01-10T10:00:00Z', fimData: null });
+  const minhaEncerrada = await criarAtividade(conexao, { demandaId: encerrada.id, usuarioId: desenvolvedor.id });
+  await criarExecucao(conexao, { atividadeId: minhaEncerrada.id, inicioData: '2026-01-10T10:00:00Z', fimData: '2026-01-10T11:00:00Z' });
+  const atividadeDoColega = await criarAtividade(conexao, { demandaId: doColega.id, usuarioId: colega.id });
+  await criarExecucao(conexao, { atividadeId: atividadeDoColega.id, inicioData: '2026-01-10T10:00:00Z', fimData: null });
+
+  const lista = await repositorio.listarParaDocumentacao({ usuarioId: desenvolvedor.id, todosOsProjetos: false });
+  const rodandoPorDemanda = Object.fromEntries(lista.map((item) => [item.id, item.emExecucao]));
+  assert.equal(rodandoPorDemanda[rodando.id], true);
+  assert.equal(rodandoPorDemanda[encerrada.id], false);
+  assert.equal(rodandoPorDemanda[doColega.id], false);
+});

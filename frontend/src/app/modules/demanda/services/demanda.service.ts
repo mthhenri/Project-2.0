@@ -25,6 +25,9 @@ import {
   PaginatedResult,
   DemandaRestauradaDto,
   DemandaExecutadaResumoDto,
+  DemandaDocumentacaoResumoDto,
+  DemandaTextosAlterarDto,
+  DemandaTextosAlteradosDto,
 } from '@project20/shared';
 import { ambiente } from '../../../../environments/environment';
 import { comFeedbackProprio } from '../../../core/interceptors/loading.interceptor';
@@ -76,6 +79,16 @@ export class DemandaService {
 
   alterar(id: number, dto: DemandaAlterarDto): Observable<StandardResponse<DemandaAlteradaDto>> {
     return this.httpClient.put<StandardResponse<DemandaAlteradaDto>>(`${this.urlBase}/${id}`, dto);
+  }
+
+  /** As demandas da tela de Documentações, sem os textos: projeto, status, o que está preenchido, "Rodando" e se a pessoa edita (task 259). */
+  listarParaDocumentacao(): Observable<StandardResponse<DemandaDocumentacaoResumoDto[]>> {
+    return this.httpClient.get<StandardResponse<DemandaDocumentacaoResumoDto[]>>(`${this.urlBase}/documentacao`);
+  }
+
+  /** Grava os textos com a versão lida; versão mais nova no banco responde 409 (task 258). */
+  alterarTextos(id: number, dto: DemandaTextosAlterarDto): Observable<StandardResponse<DemandaTextosAlteradosDto>> {
+    return this.httpClient.patch<StandardResponse<DemandaTextosAlteradosDto>>(`${this.urlBase}/${id}/textos`, dto);
   }
 
   excluir(id: number): Observable<StandardResponse<void>> {

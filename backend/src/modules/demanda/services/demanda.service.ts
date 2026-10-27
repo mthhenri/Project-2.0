@@ -14,6 +14,7 @@ import {
   DemandaRecuperadaDto,
   DemandaRecuperarDto,
   DemandaInternoAlterarDto,
+  DemandaDocumentacaoResumoDto,
   DemandaTextosAlteradosDto,
   DemandaTextosInternoAlterarDto,
   DemandaGrafoDto,
@@ -362,6 +363,18 @@ export class DemandaService {
       dados:    demandaAlterada,
       mensagem: 'Demanda alterada com sucesso',
     };
+  }
+
+  /**
+   * A árvore da tela de Documentações (task 259): gestor e administrador veem todas as demandas; o desenvolvedor, as dos projetos em que tem ao menos
+   * uma linha em `demanda_usuario`. Sem os textos, só as marcas de preenchimento.
+   */
+  async listarParaDocumentacao(usuarioAtivo: JwtPayload): Promise<StandardResponse<DemandaDocumentacaoResumoDto[]>> {
+    const demandas = await this.demandaRepositorio.listarParaDocumentacao({
+      usuarioId:       usuarioAtivo.sub,
+      todosOsProjetos: temPermissaoDeGestor(usuarioAtivo.tipo),
+    });
+    return { sucesso: true, dados: demandas, mensagem: 'Demandas listadas com sucesso' };
   }
 
   /**

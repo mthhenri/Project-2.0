@@ -34,6 +34,7 @@ export const ITENS_NAVEGACAO: readonly ItemNavegacao[] = [
   { label: 'Atividades', icone: 'pi pi-check-square', rotaLink: '/atividade',  tecla: 'a', somenteGestor: false, grupo: 'DIA_A_DIA' },
   { label: 'Execuções',  icone: 'pi pi-play',         rotaLink: '/execucao',   tecla: 'e', somenteGestor: false, grupo: 'DIA_A_DIA' },
   { label: 'Ponto',      icone: 'pi pi-clock',        rotaLink: '/ponto',      tecla: 'p', somenteGestor: false, grupo: 'DIA_A_DIA' },
+  { label: 'Documentações', icone: 'pi pi-book',      rotaLink: '/documentacao', tecla: 'o', somenteGestor: false, grupo: 'DIA_A_DIA' },
   { label: 'Projetos',   icone: 'pi pi-folder',       rotaLink: '/projeto',    tecla: 'j', somenteGestor: true,  grupo: 'PROJETOS' },
   { label: 'Demandas',   icone: 'pi pi-sitemap',      rotaLink: '/demanda',    tecla: 'd', somenteGestor: false, grupo: 'PROJETOS' },
   { label: 'Calendário', icone: 'pi pi-calendar',     rotaLink: '/calendario', tecla: 'c', somenteGestor: true,  grupo: 'GESTAO' },

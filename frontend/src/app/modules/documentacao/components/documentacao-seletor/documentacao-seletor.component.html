@@ -1,0 +1,126 @@
+<button
+  #gatilho
+  type="button"
+  class="documentacao-seletor__gatilho"
+  aria-haspopup="dialog"
+  aria-label="Escolher a demanda"
+  (click)="popover.toggle($event)"
+>
+  @if (escolhida(); as demanda) {
+    <app-demanda-status-marca [status]="demanda.status" [tamanho]="18" />
+    <span class="documentacao-seletor__gatilho-textos">
+      <span class="documentacao-seletor__gatilho-nome">{{ demanda.nome }}</span>
+      <span class="documentacao-seletor__gatilho-caminho">{{ caminho(demanda) }}</span>
+    </span>
+    @if (demanda.emExecucao) {
+      <span class="documentacao-seletor__rodando">Rodando</span>
+    }
+  } @else {
+    <i class="pi pi-book documentacao-seletor__gatilho-icone" aria-hidden="true"></i>
+    <span class="documentacao-seletor__gatilho-nome">Escolher demanda</span>
+  }
+  <i class="pi pi-chevron-down documentacao-seletor__gatilho-seta" aria-hidden="true"></i>
+</button>
+
+<p-popover #popover (onShow)="aoAbrir()">
+  <div class="documentacao-seletor__painel" role="dialog" aria-label="Demandas">
+    <span class="documentacao-seletor__busca">
+      <i class="pi pi-search documentacao-seletor__busca-icone" aria-hidden="true"></i>
+      <input
+        pInputText
+        type="text"
+        class="documentacao-seletor__busca-campo"
+        placeholder="Buscar demanda ou projeto…"
+        aria-label="Buscar demanda ou projeto"
+        [formControl]="controleBusca"
+        (keydown.escape)="limparBusca()"
+      />
+    </span>
+
+    <div class="documentacao-seletor__corpo">
+      @if (carregando() && demandas().length === 0) {
+        <div class="documentacao-seletor__esqueleto" aria-busy="true">
+          <p-skeleton height="2rem" />
+          <p-skeleton height="2rem" />
+          <p-skeleton height="2rem" />
+        </div>
+      } @else if (erro() && demandas().length === 0) {
+        <div class="documentacao-seletor__vazio" role="alert">
+          <span>Não foi possível carregar as demandas.</span>
+          <p-button label="Tentar de novo" size="small" [text]="true" (onClick)="recarregar.emit()" />
+        </div>
+      } @else if (demandas().length === 0) {
+        <p class="documentacao-seletor__vazio">Você ainda não tem demandas para documentar.</p>
+      } @else if (buscando() && recorte().correspondentes === 0) {
+        <div class="documentacao-seletor__vazio">
+          <span>Nenhuma demanda encontrada.</span>
+          <p-button label="Limpar busca" size="small" [text]="true" (onClick)="limparBusca()" />
+        </div>
+      } @else {
+        <ul class="documentacao-seletor__arvore" role="tree">
+          @for (no of arvore(); track no.chave) {
+            <ng-container *ngTemplateOutlet="nivel; context: { $implicit: no, profundidade: 0 }" />
+          }
+        </ul>
+      }
+    </div>
+  </div>
+</p-popover>
+
+<ng-template #nivel let-no let-profundidade="profundidade">
+  @if (visivel(no)) {
+    <li role="treeitem" [attr.aria-expanded]="no.filhos.length ? aberto(no) : null">
+      @if (no.tipo === 'projeto') {
+        <button type="button" class="documentacao-seletor__projeto" (click)="alternar(no)">
+          <i class="pi" [class.pi-chevron-down]="aberto(no)" [class.pi-chevron-right]="!aberto(no)" aria-hidden="true"></i>
+          <i class="pi pi-folder" aria-hidden="true"></i>
+          <span>{{ no.nome }}</span>
+        </button>
+      } @else {
+        <div class="documentacao-seletor__linha" [style.--profundidade]="profundidade">
+          @if (no.filhos.length) {
+            <button
+              type="button"
+              class="documentacao-seletor__alternar"
+              [attr.aria-label]="aberto(no) ? 'Recolher ' + no.nome : 'Expandir ' + no.nome"
+              (click)="alternar(no)"
+            >
+              <i class="pi" [class.pi-chevron-down]="aberto(no)" [class.pi-chevron-right]="!aberto(no)" aria-hidden="true"></i>
+            </button>
+          } @else {
+            <span class="documentacao-seletor__alternar documentacao-seletor__alternar--vazio"></span>
+          }
+          <button
+            type="button"
+            class="documentacao-seletor__demanda"
+            [class.documentacao-seletor__demanda--atual]="no.demanda.id === escolhidaId()"
+            [attr.aria-current]="no.demanda.id === escolhidaId() ? 'true' : null"
+            (click)="escolher(no.demanda)"
+          >
+            <app-demanda-status-marca [status]="no.demanda.status" [tamanho]="16" />
+            <span class="documentacao-seletor__nome">
+              @for (trecho of destacar(no.nome); track $index) {
+                @if (trecho.destaque) {<mark>{{ trecho.texto }}</mark>} @else {<span>{{ trecho.texto }}</span>}
+              }
+            </span>
+            @if (no.demanda.emExecucao) {
+              <span class="documentacao-seletor__rodando">Rodando</span>
+            }
+            <span class="documentacao-seletor__marcas" aria-hidden="true">
+              <i class="pi pi-code" [class.documentacao-seletor__marca--cheia]="no.demanda.temDescricaoTecnica" pTooltip="Técnica" tooltipPosition="top"></i>
+              <i class="pi pi-user" [class.documentacao-seletor__marca--cheia]="no.demanda.temDescricaoCliente" pTooltip="Cliente" tooltipPosition="top"></i>
+              <i class="pi pi-book" [class.documentacao-seletor__marca--cheia]="no.demanda.temDocumentacao" pTooltip="Documentação" tooltipPosition="top"></i>
+            </span>
+          </button>
+        </div>
+      }
+      @if (no.filhos.length && aberto(no)) {
+        <ul role="group" class="documentacao-seletor__filhos">
+          @for (filho of no.filhos; track filho.chave) {
+            <ng-container *ngTemplateOutlet="nivel; context: { $implicit: filho, profundidade: profundidade + 1 }" />
+          }
+        </ul>
+      }
+    </li>
+  }
+</ng-template>

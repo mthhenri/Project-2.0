@@ -1,0 +1,209 @@
+:host {
+  display: inline-block;
+  min-width: 0;
+}
+
+.documentacao-seletor {
+  &__gatilho {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+    max-width: 28rem;
+    padding: 0.4rem 0.75rem;
+    border: 1px solid var(--app-surface-200);
+    border-radius: 10px;
+    background: var(--app-surface-0);
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--p-primary-400);
+      outline: none;
+    }
+  }
+
+  &__gatilho-textos {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__gatilho-nome {
+    overflow: hidden;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__gatilho-caminho {
+    overflow: hidden;
+    color: var(--p-text-muted-color);
+    font-size: 0.75rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__gatilho-icone,
+  &__gatilho-seta {
+    color: var(--p-text-muted-color);
+    font-size: 0.85rem;
+  }
+
+  &__rodando {
+    padding: 0 0.4rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--p-green-500) 18%, transparent);
+    color: var(--p-green-600);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    line-height: 1.25rem;
+    white-space: nowrap;
+  }
+
+  &__painel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: min(92vw, 34rem);
+  }
+
+  &__busca {
+    position: relative;
+    display: block;
+  }
+
+  &__busca-icone {
+    position: absolute;
+    top: 50%;
+    left: 0.75rem;
+    transform: translateY(-50%);
+    color: var(--p-text-muted-color);
+  }
+
+  &__busca-campo {
+    width: 100%;
+    padding-left: 2.25rem;
+  }
+
+  &__corpo {
+    max-height: min(60vh, 26rem);
+    overflow-y: auto;
+  }
+
+  &__esqueleto {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__vazio {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    margin: 0;
+    padding: 1rem 0.5rem;
+    color: var(--p-text-muted-color);
+    font-size: 0.875rem;
+    text-align: center;
+  }
+
+  &__arvore,
+  &__filhos {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__projeto {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.4rem 0.25rem;
+    border: 0;
+    background: transparent;
+    color: var(--p-text-muted-color);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  &__linha {
+    display: flex;
+    align-items: center;
+    padding-left: calc(var(--profundidade, 0) * 1rem);
+  }
+
+  &__alternar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 1.5rem;
+    height: 1.75rem;
+    border: 0;
+    background: transparent;
+    color: var(--p-text-muted-color);
+    font-size: 0.7rem;
+    cursor: pointer;
+
+    &--vazio {
+      cursor: default;
+    }
+  }
+
+  &__demanda {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+    padding: 0.35rem 0.5rem;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      background: var(--app-surface-100);
+      outline: none;
+    }
+
+    &--atual {
+      background: var(--p-primary-50);
+    }
+  }
+
+  &__nome {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    mark {
+      padding: 0;
+      border-radius: 2px;
+      background: color-mix(in srgb, var(--p-yellow-400) 55%, transparent);
+      color: inherit;
+    }
+  }
+
+  &__marcas {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--app-surface-300);
+    font-size: 0.8rem;
+
+    .documentacao-seletor__marca--cheia {
+      color: var(--p-primary-500);
+    }
+  }
+}

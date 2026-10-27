@@ -25,12 +25,12 @@ const resumo = (itens: readonly ItemNavegacao[]) => {
 };
 
 test('o desenvolvedor vê Chat, Atividades, Execuções, Ponto, Demandas e Modelagem', () => {
-  assert.deepEqual(doDesenvolvedor.map((item) => item.rotaLink), ['/chat', '/atividade', '/execucao', '/ponto', '/demanda', '/modelagem']);
+  assert.deepEqual(doDesenvolvedor.map((item) => item.rotaLink), ['/chat', '/atividade', '/execucao', '/ponto', '/documentacao', '/demanda', '/modelagem']);
 });
 
 test('o gestor vê tudo menos o que é só do administrador', () => {
   assert.deepEqual(doGestor.map((item) => item.rotaLink), [
-    '/chat', '/atividade', '/execucao', '/ponto', '/projeto', '/demanda', '/calendario', '/tag', '/usuario', '/modelagem',
+    '/chat', '/atividade', '/execucao', '/ponto', '/documentacao', '/projeto', '/demanda', '/calendario', '/tag', '/usuario', '/modelagem',
   ]);
 });
 
@@ -64,7 +64,7 @@ test('só a Modelagem fica fora dos grupos', () => {
 
 test('desenvolvedor: Dia a dia e Projetos (só Demandas); Gestão e IA somem por ficarem vazios', () => {
   assert.deepEqual(resumo(doDesenvolvedor), {
-    grupos: [['Dia a dia', ['Chat', 'Atividades', 'Execuções', 'Ponto']], ['Projetos', ['Demandas']]],
+    grupos: [['Dia a dia', ['Chat', 'Atividades', 'Execuções', 'Ponto', 'Documentações']], ['Projetos', ['Demandas']]],
     fundo: ['Modelagem'],
   });
 });
@@ -72,7 +72,7 @@ test('desenvolvedor: Dia a dia e Projetos (só Demandas); Gestão e IA somem por
 test('gestor: os grupos de gestão aparecem e a IA some (IA Config. é só do administrador)', () => {
   assert.deepEqual(resumo(doGestor), {
     grupos: [
-      ['Dia a dia', ['Chat', 'Atividades', 'Execuções', 'Ponto']],
+      ['Dia a dia', ['Chat', 'Atividades', 'Execuções', 'Ponto', 'Documentações']],
       ['Projetos', ['Projetos', 'Demandas']],
       ['Gestão', ['Calendário', 'Tags', 'Usuários']],
     ],
@@ -89,6 +89,6 @@ test('administrador: os quatro grupos, com IA Config. no grupo IA', () => {
 
 test('dentro do grupo vale a ordem recebida, e a lista vazia não gera grupo nem fundo', () => {
   const invertida = [...ITENS_NAVEGACAO].reverse();
-  assert.deepEqual(agruparItensNavegacao(invertida).grupos[0].itens.map((item) => item.label), ['Ponto', 'Execuções', 'Atividades', 'Chat']);
+  assert.deepEqual(agruparItensNavegacao(invertida).grupos[0].itens.map((item) => item.label), ['Documentações', 'Ponto', 'Execuções', 'Atividades', 'Chat']);
   assert.deepEqual(agruparItensNavegacao([]), { grupos: [], fundo: [] });
 });

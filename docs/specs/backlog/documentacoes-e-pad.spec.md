@@ -106,7 +106,7 @@ demanda está em outra tela. A guarda-chuva junta os dois e corrige o que atrapa
 | 256 | [Pad reaproveitável, ajustável e em tela cheia](../done/256-pad-ajustavel-e-tela-cheia.spec.md) | Componente de pad único; drawer com largura pela borda e tela cheia | — |
 | 257 | [Anotações como aba da demanda no chat](../done/257-chat-aba-anotacoes.spec.md) | Aba Anotações entre Checklist e Técnica, aberta por padrão | 254, 256 |
 | 258 | [Trava de versão nos textos da demanda](../done/258-demanda-versao-dos-textos.spec.md) | Coluna `versao`, endpoint de textos com recusa por versão | — |
-| 259 | [Tela de Documentações](259-tela-documentacoes.spec.md) | Rota, seletor em árvore, demanda à esquerda e pad à direita, divisor | 254, 256, 258 |
+| 259 | [Tela de Documentações](../done/259-tela-documentacoes.spec.md) | Rota, seletor em árvore, demanda à esquerda e pad à direita, divisor | 254, 256, 258 |
 | 260 | [Alterar trecho com IA em Documentações](260-documentacoes-alterar-trecho-com-ia.spec.md) | Pedido direto à IA, proposta com diff no texto, aceitar sem gravar | 255, 259 |
 
 Para UI, os análogos aprovados são o documento do plano (`modules/chat/components/plano-documento/`) para a edição, o seletor do chat

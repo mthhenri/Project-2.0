@@ -1,6 +1,6 @@
 # 259-tela-documentacoes.spec.md
 
-> Task 6/7 da guarda-chuva [`documentacoes-e-pad.spec.md`](documentacoes-e-pad.spec.md) (decisões 2 a 5): a tela **Documentações** no
+> Task 6/7 da guarda-chuva [`documentacoes-e-pad.spec.md`](../../backlog/documentacoes-e-pad.spec.md) (decisões 2 a 5): a tela **Documentações** no
 > grupo Dia a dia, com a demanda em que estou trabalhando à esquerda e o pad à direita.
 
 ## Objetivo

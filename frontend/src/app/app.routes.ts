@@ -22,6 +22,7 @@ export const rotas: Routes = [
       { path: 'atividade',  loadChildren: () => import('./modules/atividade/atividade.routes').then((m) => m.atividadeRotas) },
       { path: 'execucao',   loadChildren: () => import('./modules/execucao/execucao.routes').then((m) => m.execucaoRotas) },
       { path: 'ponto',      loadChildren: () => import('./modules/ponto/ponto.routes').then((m) => m.pontoRotas) },
+      { path: 'documentacao', loadChildren: () => import('./modules/documentacao/documentacao.routes').then((m) => m.documentacaoRotas) },
       { path: 'calendario', loadChildren: () => import('./modules/calendario/calendario.routes').then((m) => m.calendarioRotas) },
       { path: 'tag',        loadChildren: () => import('./modules/tag/tag.routes').then((m) => m.tagRotas) },
       { path: 'chat',       loadChildren: () => import('./modules/chat/chat.routes').then((m) => m.chatRotas) },

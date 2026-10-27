@@ -17,8 +17,8 @@ class PaginaFalsaComponent {}
 const ROTAS = ['/ponto', '/calendario', '/projeto', '/demanda', '/chat', '/atividade', '/execucao', '/tag', '/usuario', '/configuracao-ia', '/modelagem']
   .map((caminho) => ({ path: caminho.slice(1), component: PaginaFalsaComponent }));
 
-const ITENS_DESENVOLVEDOR = ['Chat', 'Atividades', 'Execuções', 'Ponto', 'Demandas', 'Modelagem'];
-const ITENS_GESTOR = ['Chat', 'Atividades', 'Execuções', 'Ponto', 'Projetos', 'Demandas', 'Calendário', 'Tags', 'Usuários', 'Modelagem'];
+const ITENS_DESENVOLVEDOR = ['Chat', 'Atividades', 'Execuções', 'Ponto', 'Documentações', 'Demandas', 'Modelagem'];
+const ITENS_GESTOR = ['Chat', 'Atividades', 'Execuções', 'Ponto', 'Documentações', 'Projetos', 'Demandas', 'Calendário', 'Tags', 'Usuários', 'Modelagem'];
 // IA Config. é exclusiva do administrador e a Modelagem, de todos: ela fica sempre por último, no fundo.
 const ITENS_ADMINISTRADOR = [...ITENS_GESTOR.slice(0, -1), 'IA Config.', 'Modelagem'];
 
@@ -59,7 +59,7 @@ function teclar(tecla: string, alvo: EventTarget = document.body, init: Keyboard
 afterEach(() => vi.useRealTimers());
 
 describe('SidebarComponent — itens por tipo de usuário', () => {
-  it('desenvolvedor vê só Ponto, Demandas, Chat, Atividades, Execuções e Modelagem', async () => {
+  it('desenvolvedor vê só Ponto, Documentações, Demandas, Chat, Atividades, Execuções e Modelagem', async () => {
     const montado = await montarBarra(TipoUsuarioEnum.DESENVOLVEDOR);
     expect(rotulosNavegacao(montado)).toEqual(ITENS_DESENVOLVEDOR);
   });
@@ -100,7 +100,7 @@ describe('SidebarComponent — grupos (task 223)', () => {
   it('administrador vê os quatro grupos, com IA Config. no grupo IA', async () => {
     const montado = await montarBarra(TipoUsuarioEnum.ADMINISTRADOR, null, { 'sidebar.recolhida': 'false' });
     expect(titulosDosGrupos(montado)).toEqual(['Dia a dia', 'Projetos', 'Gestão', 'IA']);
-    expect(itensDoGrupo(montado, 'Dia a dia')).toEqual(['Chat', 'Atividades', 'Execuções', 'Ponto']);
+    expect(itensDoGrupo(montado, 'Dia a dia')).toEqual(['Chat', 'Atividades', 'Execuções', 'Ponto', 'Documentações']);
     expect(itensDoGrupo(montado, 'IA')).toEqual(['IA Config.']);
   });
 

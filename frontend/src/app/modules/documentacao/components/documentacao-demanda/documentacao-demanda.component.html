@@ -1,0 +1,92 @@
+<section class="documentacao-demanda" aria-label="Textos da demanda">
+  @if (carregando() && !demanda()) {
+    <div class="documentacao-demanda__esqueleto" aria-busy="true">
+      <p-skeleton height="1.75rem" width="55%" />
+      <p-skeleton height="1.25rem" width="35%" />
+      <p-skeleton height="12rem" />
+    </div>
+  } @else if (erro() || !demanda()) {
+    <div class="documentacao-demanda__erro" role="alert">
+      <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+      <span>Não foi possível abrir a demanda.</span>
+      <p-button label="Tentar de novo" icon="pi pi-refresh" size="small" [outlined]="true" (onClick)="carregar()" />
+    </div>
+  } @else {
+    @let atual = demanda()!;
+    <header class="documentacao-demanda__cabecalho">
+      <div class="documentacao-demanda__titulo-area">
+        <app-demanda-status-marca [status]="atual.status" [tamanho]="20" />
+        <h2 class="documentacao-demanda__titulo">{{ atual.nome }}</h2>
+        <span class="documentacao-demanda__status">{{ rotuloStatus[atual.status] }}</span>
+      </div>
+      <p-button label="Abrir em Demandas" icon="pi pi-external-link" size="small" severity="secondary" [outlined]="true" (onClick)="abrirEmDemandas()" />
+    </header>
+
+    @if (!podeEditar()) {
+      <p class="documentacao-demanda__leitura" role="note">
+        <i class="pi pi-eye" aria-hidden="true"></i>
+        <span>Você não é membro desta demanda: lê os textos, mas não os altera.</span>
+      </p>
+    }
+
+    @if (aviso(); as textoDoAviso) {
+      <p class="documentacao-demanda__aviso" role="alert">
+        <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+        <span>{{ textoDoAviso }}</span>
+        <p-button label="Recarregar" icon="pi pi-refresh" size="small" [text]="true" (onClick)="carregar()" />
+      </p>
+    }
+
+    <p-tabs class="documentacao-demanda__abas" [value]="aba()" (valueChange)="escolherAba($any($event))" [scrollable]="false">
+      <p-tablist>
+        @for (opcao of abas; track opcao) {
+          <p-tab [value]="opcao">
+            <i class="pi" [class]="opcao === Aba.DESCRICAO_CLIENTE && !editaAba()(opcao) ? 'pi-lock' : iconeDaAba[opcao]" aria-hidden="true"></i>
+            {{ rotuloDaAba[opcao] }}
+            @if (alteradaNaAba(opcao)) {
+              <span class="documentacao-demanda__ponto" aria-label="Alterações sem gravar"></span>
+            }
+          </p-tab>
+        }
+      </p-tablist>
+    </p-tabs>
+
+    <div class="documentacao-demanda__editor">
+      @if (editaAba()(aba())) {
+        <app-markdown-editor
+          [formControl]="controleDaAba(aba())"
+          [alturaMinima]="16"
+          [rotulo]="rotuloDaAba[aba()]"
+          [placeholder]="'Escreva ' + rotuloDaAba[aba()].toLowerCase() + '…'"
+        />
+      } @else {
+        @if (aba() === Aba.DESCRICAO_CLIENTE && podeEditar()) {
+          <app-aviso-pedido-do-cliente />
+        }
+        @if (textoDaAba(aba()).trim() !== '') {
+          <app-markdown-visualizador [texto]="textoDaAba(aba())" />
+        } @else {
+          <p class="documentacao-demanda__vazio">Nada escrito nesta aba ainda.</p>
+        }
+      }
+    </div>
+
+    @if (podeEditar()) {
+      <footer class="documentacao-demanda__rodape">
+        <span class="documentacao-demanda__estado" role="status">
+          @if (salvando()) {
+            Gravando…
+          } @else if (sujo()) {
+            Alterações sem gravar
+          } @else {
+            Tudo gravado
+          }
+        </span>
+        <div class="documentacao-demanda__botoes">
+          <p-button label="Descartar" icon="pi pi-undo" size="small" severity="secondary" [text]="true" [disabled]="!sujo() || salvando()" (onClick)="descartar()" />
+          <p-button label="Gravar" icon="pi pi-save" size="small" [disabled]="!sujo() || salvando()" [loading]="salvando()" (onClick)="salvar()" />
+        </div>
+      </footer>
+    }
+  }
+</section>
