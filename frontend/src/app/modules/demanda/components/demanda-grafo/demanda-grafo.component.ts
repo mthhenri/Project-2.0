@@ -9,7 +9,6 @@ import {
   ElementRef,
   inject,
   signal,
-  computed,
   SimpleChanges,
 } from '@angular/core';
 import * as d3 from 'd3';
@@ -23,8 +22,6 @@ import {
   TipoDemandaStatusEnum,
 } from '@project20/shared';
 import { COR_NO_BORDA, OPCOES_STATUS_DEMANDA, ROTULO_STATUS_DEMANDA, corPreenchimentoNo } from '../../constants/demanda-cores.constants';
-import { PastaId } from '../../utils/demanda-pasta.util';
-import { idsDoFoco, pastaAcimaDoFoco, subpastasDoFoco } from '../../utils/demanda-foco-grafo.util';
 import { DemandaBarraControleHorasComponent } from '../demanda-barra-controle-horas/demanda-barra-controle-horas.component';
 import { DemandaStatusComponent } from '../demanda-status/demanda-status.component';
 import { DemandaStatusMarcaComponent } from '../demanda-status-marca/demanda-status-marca.component';
@@ -42,8 +39,8 @@ const TODOS_OS_STATUS = Object.values(TipoDemandaStatusEnum);
  * Grafo de demandas (d3) integrado ao tema (task 107): cores por tokens, cartão no hover, legenda em popover
  * cujos status filtram o grafo e controles de zoom. Os filtros da toolbar chegam já aplicados em `grafo`.
  *
- * Task 241: o nó leva a marca do status, o cartão usa a barra do Controle de horas, o clique abre a demanda na Árvore e o clique numa pasta troca
- * o **foco**. O foco é a pasta escolhida (a mesma das outras visões) com tudo que está dentro; o resto fica apagado, sem clique, e o layout não muda.
+ * Task 241: o nó leva a marca do status, o cartão usa a barra do Controle de horas e o clique abre a demanda (ou a pasta) na Árvore. O grafo sempre
+ * mostra o projeto todo: não há foco por pasta.
  */
 @Component({
   selector: 'app-demanda-grafo',
@@ -56,13 +53,7 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
   @Input({ required: true }) grafo!: DemandaGrafoDto;
   /** Status exibidos (a legenda mostra os demais como desligados). */
   @Input() statusVisiveis: TipoDemandaStatusEnum[] = TODOS_OS_STATUS;
-  /** Todas as demandas do projeto, sem o filtro da toolbar: o foco parte delas (o filtro recorta depois). Vazio: vale `grafo.nos`. */
-  @Input() todosOsNos: DemandaGrafoNoDto[] = [];
-  /** A pasta em foco (`null` é "Sem pasta"); sem ela o grafo mostra o projeto inteiro. */
-  @Input() pastaId: PastaId | undefined = undefined;
   @Output() demandaSelecionada = new EventEmitter<number>();
-  /** Clicou numa pasta, ou escolheu uma nos botões de foco: quem hospeda troca a pasta das três visões. */
-  @Output() pastaChange = new EventEmitter<PastaId>();
   /** Um status da legenda foi clicado (liga/desliga): quem hospeda aplica no filtro da toolbar. */
   @Output() statusAlternado = new EventEmitter<TipoDemandaStatusEnum>();
 
@@ -80,35 +71,8 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
   readonly itensLegenda = OPCOES_STATUS_DEMANDA;
   readonly rotuloStatus = ROTULO_STATUS_DEMANDA;
 
-  /** "Projeto inteiro": desliga o foco só aqui, sem mexer na pasta das outras visões. */
-  readonly projetoInteiro = signal(false);
-  /** Os ids dentro do foco; `null` sem foco. */
-  readonly focoIds = signal<Set<number> | null>(null);
-  readonly subpastas = signal<DemandaGrafoNoDto[]>([]);
-  readonly pastaAcima = signal<number | undefined>(undefined);
-  readonly nomeDoFoco = signal<string>('');
-  private readonly focoVazioNaTela = signal(false);
-  /** Há foco e nenhuma demanda dele passa nos filtros da toolbar. */
-  readonly nadaNoFoco = computed(() => this.focoIds() !== null && this.focoVazioNaTela());
-
   statusEstaVisivel(status: TipoDemandaStatusEnum): boolean {
     return this.statusVisiveis.includes(status);
-  }
-
-  /** Os botões do foco: volta ao projeto inteiro, sobe uma pasta ou desce para uma subpasta. */
-  verProjetoInteiro(): void {
-    this.projetoInteiro.set(true);
-    this.atualizarFoco();
-  }
-
-  subirPasta(): void {
-    const acima = this.pastaAcima();
-    if (acima !== undefined) this.escolherPasta(acima);
-  }
-
-  escolherPasta(pastaId: PastaId): void {
-    this.projetoInteiro.set(false);
-    this.pastaChange.emit(pastaId);
   }
 
   alternarLegenda(evento: Event, popover: Popover): void {
@@ -135,43 +99,13 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
     if (!mudancas['grafo']?.firstChange && mudancas['grafo']?.currentValue) {
       this.destruirGrafo();
       this.inicializarGrafo();
-    } else if (!mudancas['pastaId']?.firstChange && (mudancas['pastaId'] || mudancas['todosOsNos'])) {
-      if (mudancas['pastaId']) this.projetoInteiro.set(false);
-      this.atualizarFoco(Boolean(mudancas['pastaId']));
     }
   }
 
-  /** Recalcula o foco e apaga o que ficou de fora, sem refazer o layout; `ajustar` leva a visão até as demandas do foco. */
-  private atualizarFoco(ajustar = true): void {
-    const todos = this.todosOsNos.length ? this.todosOsNos : (this.grafo?.nos ?? []);
-    const comFoco = this.pastaId !== undefined && !this.projetoInteiro();
-    this.focoIds.set(comFoco ? idsDoFoco(todos, this.pastaId as PastaId) : null);
-    this.subpastas.set(this.pastaId === undefined ? [] : subpastasDoFoco(todos, this.pastaId));
-    this.pastaAcima.set(this.pastaId === undefined ? undefined : pastaAcimaDoFoco(todos, this.pastaId));
-    this.nomeDoFoco.set(this.pastaId === undefined ? '' : this.pastaId === null ? 'Sem pasta' : (todos.find((no) => no.id === this.pastaId)?.nome ?? ''));
-    this.aplicarFoco();
-    if (ajustar) this.ajustarAoFoco();
-  }
-
-  private estaNoFoco(no: DemandaGrafoNoDto): boolean {
-    const foco = this.focoIds();
-    return foco === null || foco.has(no.id);
-  }
-
-  private aplicarFoco(): void {
-    this.gruposNo
-      ?.style('opacity', (no) => (this.estaNoFoco(no) ? (no.status === TipoDemandaStatusEnum.CANCELADA ? 0.4 : 1) : 0.1))
-      .style('pointer-events', (no) => (this.estaNoFoco(no) ? null : 'none'));
-    this.linhasAresta?.style('opacity', (aresta: any) => (this.estaNoFoco(aresta.source) && this.estaNoFoco(aresta.target) ? 1 : 0.06));
-    this.focoVazioNaTela.set(this.focoIds() !== null && this.nosSimulados.length > 0 && !this.nosSimulados.some((no) => this.estaNoFoco(no)));
-  }
-
-  /** Enquadra as demandas do foco (ou o projeto inteiro) na tela, sem aproximar além do tamanho normal. */
-  private ajustarAoFoco(): void {
-    const foco = this.focoIds();
-    if (!this.svgSelecao || !this.comportamentoZoom || (foco === null && this.pastaId === undefined)) return;
-    // Sem foco (o "Projeto inteiro" dos botões) enquadra o projeto todo.
-    const dentro = this.nosSimulados.filter((no) => (foco === null || foco.has(no.id)) && no.x !== undefined && no.y !== undefined);
+  /** Enquadra o projeto todo na tela, sem aproximar além do tamanho normal. */
+  private ajustarAoGrafo(): void {
+    if (!this.svgSelecao || !this.comportamentoZoom) return;
+    const dentro = this.nosSimulados.filter((no) => no.x !== undefined && no.y !== undefined);
     if (!dentro.length) return;
     const largura = this.elementRef.nativeElement.clientWidth;
     const altura = this.elementRef.nativeElement.clientHeight;
@@ -333,7 +267,7 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
             no.fy = null;
           }),
       )
-      .on('click', (_evento: any, no: DemandaGrafoNoDto) => (no.isEstrutural ? this.escolherPasta(no.id) : this.demandaSelecionada.emit(no.id)))
+      .on('click', (_evento: any, no: DemandaGrafoNoDto) => this.demandaSelecionada.emit(no.id))
       .on('mouseover', (evento: MouseEvent, no: DemandaGrafoNoDto) => this.mostrarCartao(evento, no))
       .on('mousemove', (evento: MouseEvent, no: DemandaGrafoNoDto) => this.mostrarCartao(evento, no))
       .on('mouseout', () => this.cartao.set(null));
@@ -383,14 +317,13 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
         });
 
       gruposNo.attr('transform', (no: any) => `translate(${no.x},${no.y})`);
-      // Com o layout já quase assentado, enquadra o foco uma vez; depois a pessoa mexe no zoom à vontade.
+      // Com o layout já quase assentado, enquadra o projeto uma vez; depois a pessoa mexe no zoom à vontade.
       if (!this.ajusteInicialFeito && (this.simulacao?.alpha() ?? 1) < 0.35) {
         this.ajusteInicialFeito = true;
-        this.ajustarAoFoco();
+        this.ajustarAoGrafo();
       }
     });
 
-    this.atualizarFoco(false);
   }
 
   /** Posiciona o cartão ao lado do cursor, virando para o outro lado perto das bordas do canvas. */

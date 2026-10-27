@@ -148,95 +148,15 @@ describe('DemandaGrafoComponent', () => {
     expect(montado.elemento.querySelector('.demanda-grafo__cartao app-demanda-barra-controle-horas')).toBeNull();
   });
 
-  describe('foco na pasta (task 241)', () => {
-    const NOS_FOCO = [
-      criarNo(1, { isEstrutural: true }),
-      criarNo(2, { demandaPaiId: 1 }),
-      criarNo(3, { isEstrutural: true, demandaPaiId: 1 }),
-      criarNo(4, { demandaPaiId: 3 }),
-      criarNo(5, { isEstrutural: true }),
-      criarNo(6),
-    ];
-    const GRAFO_FOCO: DemandaGrafoDto = { nos: NOS_FOCO, arestas: [{ id: 1, origemId: 1, destinoId: 2, tipo: 'hierarquia', ehBidirecional: false }, { id: 2, origemId: 2, destinoId: 6, tipo: 'conexao', ehBidirecional: false }] };
-
-    const opacidades = (elemento: HTMLElement) =>
-      Array.from(svg(elemento).querySelectorAll('g > g > g')).map((grupo) => (grupo as SVGGElement).style.opacity);
-
-    it('apaga o que está fora da pasta e das demandas dentro dela, em qualquer nível; as arestas que saem também', async () => {
-      const { montado } = await montar(GRAFO_FOCO, { todosOsNos: NOS_FOCO, pastaId: 1 });
-      expect(opacidades(montado.elemento)).toEqual(['1', '1', '1', '1', '0.1', '0.1']);
-      const grupos = Array.from(svg(montado.elemento).querySelectorAll('g > g > g')) as SVGGElement[];
-      expect(grupos[5].style.pointerEvents).toBe('none');
-      expect(grupos[1].style.pointerEvents).toBe('');
-      const linhas = Array.from(svg(montado.elemento).querySelectorAll('line')) as SVGLineElement[];
-      expect(linhas.map((linha) => linha.style.opacity)).toEqual(['1', '0.06']);
-    });
-
-    it('sem pasta de foco o grafo mostra tudo; "Sem pasta" foca só as demandas soltas', async () => {
-      const semFoco = await montar(GRAFO_FOCO, { todosOsNos: NOS_FOCO });
-      expect(new Set(opacidades(semFoco.montado.elemento))).toEqual(new Set(['1']));
-      const soltas = await montar(GRAFO_FOCO, { todosOsNos: NOS_FOCO, pastaId: null });
-      expect(opacidades(soltas.montado.elemento)).toEqual(['0.1', '0.1', '0.1', '0.1', '0.1', '1']);
-    });
-
-    it('trocar a pasta apaga de novo sem redesenhar o grafo', async () => {
-      const { montado } = await montar(GRAFO_FOCO, { todosOsNos: NOS_FOCO, pastaId: 1 });
-      const antes = svg(montado.elemento).querySelectorAll('g > g > g')[0];
-      montado.fixture.componentRef.setInput('pastaId', 5);
-      await montado.atualizar();
-      expect(opacidades(montado.elemento)).toEqual(['0.1', '0.1', '0.1', '0.1', '1', '0.1']);
-      expect(svg(montado.elemento).querySelectorAll('g > g > g')[0]).toBe(antes);
-    });
-
-    it('clicar numa pasta troca o foco em vez de abrir a demanda; clicar numa demanda abre', async () => {
-      const { montado, selecionadas } = await montar(GRAFO_FOCO, { todosOsNos: NOS_FOCO, pastaId: 1 });
-      const trocadas: unknown[] = [];
-      montado.componente.pastaChange.subscribe((pasta) => trocadas.push(pasta));
-      const grupos = svg(montado.elemento).querySelectorAll('g > g > g');
-      grupos[2].dispatchEvent(new MouseEvent('click', { bubbles: true }));
-      expect(trocadas).toEqual([3]);
-      expect(selecionadas).toEqual([]);
-      grupos[1].dispatchEvent(new MouseEvent('click', { bubbles: true }));
-      expect(selecionadas).toEqual([2]);
-    });
-
-    it('os botões: projeto inteiro tira o foco só aqui; pasta acima e subpastas trocam a pasta', async () => {
-      const { montado } = await montar(GRAFO_FOCO, { todosOsNos: NOS_FOCO, pastaId: 3 });
-      const trocadas: unknown[] = [];
-      montado.componente.pastaChange.subscribe((pasta) => trocadas.push(pasta));
-      expect(montado.componente.pastaAcima()).toBe(1);
-      expect(montado.componente.subpastas()).toHaveLength(0);
-
-      montado.componente.subirPasta();
-      expect(trocadas).toEqual([1]);
-
-      montado.componente.verProjetoInteiro();
-      expect(montado.componente.projetoInteiro()).toBe(true);
-      expect(new Set(opacidades(montado.elemento))).toEqual(new Set(['1']));
-      expect(trocadas).toEqual([1]);
-
-      montado.componente.escolherPasta(5);
-      expect(montado.componente.projetoInteiro()).toBe(false);
-      expect(trocadas).toEqual([1, 5]);
-    });
-
-    it('os botões de foco só aparecem quando o grafo recebe a pasta', async () => {
-      const comPasta = await montar(GRAFO_FOCO, { todosOsNos: NOS_FOCO, pastaId: 1 });
-      expect(comPasta.montado.elemento.querySelector('.demanda-grafo__foco')).not.toBeNull();
-      const semPasta = await montar(GRAFO_FOCO);
-      expect(semPasta.montado.elemento.querySelector('.demanda-grafo__foco')).toBeNull();
-    });
-
-    it('o filtro recorta depois do foco: nada do foco na tela mostra o aviso com atalho para o projeto inteiro', async () => {
-      const filtrado: DemandaGrafoDto = { nos: [NOS_FOCO[5]], arestas: [] };
-      const { montado } = await montar(filtrado, { todosOsNos: NOS_FOCO, pastaId: 1 });
-      expect(montado.componente.nadaNoFoco()).toBe(true);
-      expect(montado.elemento.textContent).toContain('Nada neste foco');
-      montado.componente.verProjetoInteiro();
-      await montado.atualizar();
-      expect(montado.componente.nadaNoFoco()).toBe(false);
-      expect(montado.elemento.textContent).not.toContain('Nada neste foco');
-    });
+  it('sempre mostra o projeto todo: sem foco por pasta, e clicar numa pasta ou numa demanda abre na Árvore', async () => {
+    const nos = [criarNo(1, { isEstrutural: true }), criarNo(2, { demandaPaiId: 1 }), criarNo(3)];
+    const { montado, selecionadas } = await montar({ nos, arestas: [] });
+    const grupos = Array.from(svg(montado.elemento).querySelectorAll('g > g > g')) as SVGGElement[];
+    expect(new Set(grupos.map((grupo) => grupo.style.opacity || '1'))).toEqual(new Set(['1']));
+    expect(montado.elemento.querySelector('.demanda-grafo__foco')).toBeNull();
+    grupos[0].dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    grupos[1].dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(selecionadas).toEqual([1, 2]);
   });
 
   it('destruir o componente para a simulação (sem timers soltos)', async () => {
