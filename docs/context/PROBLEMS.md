@@ -174,6 +174,14 @@
 - **Correção:** a investigar: achar onde a resposta se perde (timeout do provedor, do streaming ou do front), avisar o usuário quando falhar em vez de silêncio, e decidir como contabilizar o custo de uma chamada que não entregou resposta.
 - **Desde:** 2026-10-27 (apontado pelo autor; pergunta e conversa não anexadas).
 
+### P-044 — Tela de Atividades não re-lista ao mudar o status de uma atividade · `ABERTO` · atividade/frontend
+
+- **Sintoma:** ao mudar o status de uma atividade na tela de Atividades (por exemplo, para desenvolvida, que o filtro padrão não mostra), ela continua na lista em vez de sumir.
+- **Causa:** não investigada; é uma regressão (isso funcionava antes), então vale olhar o que mudou na tela e no recarregamento depois da troca de status.
+- **Contorno:** recarregar a tela ou refazer o filtro.
+- **Correção:** voltar a re-listar com o filtro atual depois de alterar o status.
+- **Desde:** 2026-10-27 (apontado pelo autor; funcionava antes).
+
 ### P-001 — Projeto sem lint · `CONTORNADO` · repositório
 
 - **Sintoma:** não há ESLint nem Prettier em nenhum workspace; o gate de qualidade do `CLAUDE.md` pede lint e hoje a lacuna é só declarada no fecho de cada task.
