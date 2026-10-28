@@ -13,6 +13,9 @@ Plataforma interna para gestão de times de desenvolvimento, com controle de ace
   demandas/atividades e blocos de código.
 - **Project Desktop:** app Electron com janela própria, bandeja, atalho global e janelinha de check-in.
 
+**Stack:** NestJS + Angular 21 + PostgreSQL, em monorepo com npm workspaces, desenvolvido com
+Spec-Driven Development e agentes de código (Claude Code e Codex).
+
 ---
 
 ## Stack Técnica
