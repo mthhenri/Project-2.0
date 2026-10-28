@@ -164,3 +164,24 @@
 - **Por quê:** o custo da IA passa a ser ajustável sem mexer em código, tipo a tipo.
 - **Custo aparente:** médio: guardar o nível por tipo (na versão do prompt ou na configuração ativa, por migration), a service ler dele no lugar da constante (chat, planejamento, assistente e teste de prompt) e um seletor por tipo na aba Prompts.
 
+
+### I-032 — Fundo da mensagem do chat da IA em um tom mais apagado (cinza) · chat IA/frontend
+
+- **Ideia:** trocar a cor de fundo da mensagem do chat da IA por uma cor mais "morta", tipo um cinza. Conferir se a mudança vale também para o chat entre colaboradores (provavelmente sim, se o fundo vier do mesmo estilo/token compartilhado).
+- **Origem:** pedido do autor em 2026-10-27, só anotado, sem decisão de tom nem de escopo.
+- **Por quê:** a cor atual da mensagem chama mais atenção do que o conteúdo.
+- **Custo aparente:** só UI (estilo/token de cor); antes de mexer, rodar a skill `gerenciamento-de-impacto` para ver quais telas consomem o mesmo estilo e confirmar com o autor o que mudar além do chat da IA.
+
+### I-033 — O diff da proposta da IA aparecer no documento, não no chat · chat IA/frontend
+
+- **Ideia:** quando a IA propõe uma alteração num documento (descrição, pad), o diff deveria aparecer no próprio documento, e não no chat como cartão de proposta. O chat ficaria só com o aviso/ações da proposta (Confirmar, Recusar).
+- **Origem:** pedido do autor em 2026-10-27, só anotado; o alcance (quais propostas, se o cartão some ou fica enxuto) não foi definido.
+- **Por quê:** o autor vê a mudança no contexto do texto em que ela cai, em vez de lê-la fora do lugar, no chat.
+- **Custo aparente:** médio, só frontend: hoje o diff por palavra (task 224) é desenhado no cartão do chat; teria de ser levado ao visualizador/editor do documento. Rodar `gerenciamento-de-impacto` no componente do diff antes de mexer.
+
+### I-034 — Vários provedores de IA ao mesmo tempo, um por nível · configuração da IA
+
+- **Ideia:** usar provedores diferentes ao mesmo tempo, um por nível: por exemplo Anthropic no rápido, Gemini no padrão e OpenAI no analítico.
+- **Origem:** pedido do autor em 2026-10-27, só anotado.
+- **Por quê:** escolher o provedor melhor ou mais barato para cada nível, em vez de um provedor para tudo.
+- **Custo aparente:** a conferir antes de especificar: como a task 203 (provedores e fallback) e a configuração ativa tratam o provedor hoje (um só por vez, ou por nível), o preço por provedor nos custos e a ligação com I-031 (escolher o nível de cada tipo de prompt pelo sistema).

@@ -134,6 +134,62 @@
 - **Correção:** a decidir pelo autor (ajuste adiado): alinhar o detalhe do projeto à Árvore nova ou reaproveitar os componentes dela.
 - **Desde:** 2026-10-27 (apontado pelo autor).
 
+### P-039 — O exibidor de Markdown da resposta da IA não renderiza tabelas · `ABERTO` · frontend/markdown/chat IA
+
+- **Sintoma:** quando a IA responde com uma tabela Markdown (`| Opção | Como funciona | ... |` com a linha `|---|---|`), o chat mostra o texto cru, com as barras verticais e os hifens, tudo corrido em parágrafos, em vez de uma tabela.
+- **Causa:** não investigada; o subconjunto de Markdown do editor/visualizador não inclui tabela (`markdown-formatado.ts` trata `table` como fora do subconjunto), e o visualizador da resposta parece seguir o mesmo subconjunto.
+- **Contorno:** pedir à IA para responder em lista em vez de tabela.
+- **Correção:** a decidir pelo autor: fazer o visualizador (`markdown-visualizador`) renderizar tabela GFM só na leitura (sem criá-la no editor), ou orientar o prompt da IA a não usar tabela.
+- **Desde:** 2026-10-27 (apontado pelo autor, com captura de uma resposta com três opções de sincronização).
+
+### P-040 — Check-in da IA: execução ativa na topbar não recarrega, barra de mensagem e fechamento automático · `ABERTO` · frontend/checkin/chat IA
+
+- **Sintoma:** no check-in da IA (e em outros fluxos que mudam a execução), a execução ativa mostrada na topbar não recarrega sozinha; a barra de mensagem precisa de ajuste; e o check-in vem "fechando sozinho", por causa do auto-confirmar da IA na descrição da execução.
+- **Causa:** não investigada (o fechamento parece vir da confirmação automática da proposta de descrição da execução).
+- **Contorno:** recarregar a tela à mão para ver a execução ativa atualizada.
+- **Correção:** a decidir: recarregar a execução ativa da topbar ao fim das ações da IA/check-in e nos demais fluxos que a alteram; ajustar a barra de mensagem; impedir que o auto-confirmar da descrição da execução encerre o check-in.
+- **Desde:** 2026-10-27 (apontado pelo autor).
+
+### P-041 — Chat: as anotações não recarregam quando a IA mexe nelas · `ABERTO` · frontend/chat IA/pad
+
+- **Sintoma:** na visão de chat, quando a IA altera as anotações (pad), a tela não recarrega e continua mostrando o conteúdo antigo.
+- **Causa:** não investigada.
+- **Contorno:** recarregar a tela ou reabrir o pad.
+- **Correção:** recarregar as anotações depois de a IA aplicar a alteração (cuidando do risco do P-024, sobrescrever o que o usuário digita).
+- **Desde:** 2026-10-27 (apontado pelo autor).
+
+### P-042 — Ícones das descrições fora de padrão; o da descrição técnica está no lugar errado em algumas telas · `ABERTO` · frontend/descrição
+
+- **Sintoma:** os ícones das descrições (a do cliente, a técnica etc.) não seguem um padrão entre as telas, e o da descrição técnica aparece no lugar errado em algumas.
+- **Causa:** não investigada; provavelmente cada tela posiciona o ícone por conta própria.
+- **Contorno:** nenhum.
+- **Correção:** padronizar ícone e posição das descrições (antes, `gerenciamento-de-impacto` para listar as telas que os usam).
+- **Desde:** 2026-10-27 (apontado pelo autor).
+
+### P-043 — Chat IA: pergunta sem resposta (falha ou timeout) mas com custo registrado · `ABERTO` · chat IA/backend
+
+- **Sintoma:** o autor fez uma pergunta no chat da IA e não veio nenhuma resposta, mas o gasto da chamada apareceu nos custos. Há falhas na resposta da IA e timeouts.
+- **Causa:** não investigada (a hipótese a verificar é a chamada gastar tokens e a resposta se perder, por timeout ou erro no streaming, sem chegar ao chat).
+- **Contorno:** repetir a pergunta (e arcar com o custo de novo).
+- **Correção:** a investigar: achar onde a resposta se perde (timeout do provedor, do streaming ou do front), avisar o usuário quando falhar em vez de silêncio, e decidir como contabilizar o custo de uma chamada que não entregou resposta.
+- **Desde:** 2026-10-27 (apontado pelo autor; pergunta e conversa não anexadas).
+
+### P-044 — Tela de Atividades não re-lista ao mudar o status de uma atividade · `ABERTO` · atividade/frontend
+
+- **Sintoma:** ao mudar o status de uma atividade na tela de Atividades (por exemplo, para desenvolvida, que o filtro padrão não mostra), ela continua na lista em vez de sumir.
+- **Causa:** não investigada; é uma regressão (isso funcionava antes), então vale olhar o que mudou na tela e no recarregamento depois da troca de status.
+- **Contorno:** recarregar a tela ou refazer o filtro.
+- **Correção:** voltar a re-listar com o filtro atual depois de alterar o status.
+- **Desde:** 2026-10-27 (apontado pelo autor; funcionava antes).
+
+### P-045 — Tela de Execuções não recalcula ao mudar a data de uma execução · `ABERTO` · execucao/frontend
+
+- **Sintoma:** na tela de Execuções, ao alterar a data de uma execução, os valores que dependem dela (totais, durações) não são recalculados.
+- **Causa:** não investigada; o relato não diz se é regressão nem se ao recarregar a tela os valores aparecem certos.
+- **Contorno:** recarregar a tela (a confirmar).
+- **Correção:** recalcular (ou recarregar a lista) depois de salvar a nova data.
+- **Desde:** 2026-10-27 (apontado pelo autor).
+
 ### P-001 — Projeto sem lint · `CONTORNADO` · repositório
 
 - **Sintoma:** não há ESLint nem Prettier em nenhum workspace; o gate de qualidade do `CLAUDE.md` pede lint e hoje a lacuna é só declarada no fecho de cada task.
