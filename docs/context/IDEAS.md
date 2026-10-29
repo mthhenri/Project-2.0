@@ -212,3 +212,10 @@
 - **Por quê:** o cliente acompanha o andamento sem depender de contato com o gestor.
 - **Restrição já dita pelo autor:** não expõe quem está executando nem o tempo gasto (sem atividades, responsáveis, horas nem ponto para o cliente).
 - **Custo aparente:** alto e transversal: novo tipo de usuário ou de acesso em `shared` (`TipoUsuarioEnum`), regra de visibilidade que não passa por `demanda_usuario` (hoje o acesso é só por tipo e por vínculo), e DTOs de visão reduzida, sem os campos de responsável e de tempo. Antes de especificar, definir com o autor o que é "fila" e "pronto" para o cliente e rodar `gerenciamento-de-impacto` nas permissões e nos DTOs de demanda.
+
+### I-038 — Reduzir os dialogs do sistema e deixar só o essencial · frontend/UX
+
+- **Ideia:** diminuir a quantidade de dialogs (modais) do sistema e manter só os que são realmente necessários. Algumas coisas não deveriam ser dialog, como a descrição das demandas, que pede mais espaço e edição contínua, não uma janela sobreposta.
+- **Origem:** pedido do autor em 2026-10-29, só anotado.
+- **Por quê:** dialog interrompe o fluxo, esconde o contexto da tela e atrapalha quem trabalha com muitas demandas em sequência. Menos dialogs deixa a interação mais direta.
+- **Custo aparente:** médio e espalhado: exige revisar tela a tela os dialogs e as ações que cada um abriga, para decidir o que vira painel, seção inline ou página própria, e o que fica como dialog. Antes de mexer, rodar `gerenciamento-de-impacto` no componente de diálogo compartilhado e levantar, por tela, as ações que hoje dependem de um dialog.
