@@ -185,3 +185,22 @@
 - **Origem:** pedido do autor em 2026-10-27, só anotado.
 - **Por quê:** escolher o provedor melhor ou mais barato para cada nível, em vez de um provedor para tudo.
 - **Custo aparente:** a conferir antes de especificar: como a task 203 (provedores e fallback) e a configuração ativa tratam o provedor hoje (um só por vez, ou por nível), o preço por provedor nos custos e a ligação com I-031 (escolher o nível de cada tipo de prompt pelo sistema).
+
+### I-035 — Tipo de usuário "ajudante", entre desenvolvedor e gestor · permissões
+
+- **Ideia:** um novo tipo de usuário no meio termo entre `DESENVOLVEDOR` e `GESTOR`, chamado de "ajudante" (nome provisório). Ele não entra automaticamente nas demandas e tem alguns poderes de gestão, mas não todos os do gestor.
+- **Origem:** pedido do autor em 2026-10-29, só anotado; os poderes exatos e o nome final não foram definidos.
+- **Por quê:** hoje o acesso é binário: o desenvolvedor só vê o que tem em `demanda_usuario`, e o gestor tem acesso total por tipo. Falta um papel que ajude a conduzir o trabalho sem ter a visão e o poder completos do gestor.
+- **Custo aparente:** alto e transversal: novo valor em `TipoUsuarioEnum` (`shared`) e migração do tipo; cada checagem de permissão que hoje trata gestor como "total" precisa ser revista, uma a uma; e a regra "gestor não entra em `demanda_usuario`" teria de ser repensada para o ajudante. Antes de especificar, definir com o autor a lista de poderes (quais ações de gestão, em quais telas) e rodar `gerenciamento-de-impacto` nas permissões.
+
+### I-036 — Status de usuário vira coluna `ativo` e booleanos sem prefixo `is_` · banco/schema
+
+- **Ideia:** trocar a tabela de referência `tipo_usuario_status` (só `ATIVO` e `INATIVO`) por uma coluna booleana `ativo` em `usuario`. Na mesma linha, `demanda.is_estrutural` passa a se chamar `estrutural`. O `is_deleted` fica, por ser genérico (soft delete em todas as tabelas).
+- **Origem:** pedido do autor em 2026-10-29, só anotado. Ele pediu para avaliar também os outros casos antes de decidir.
+- **Por quê:** uma tabela de referência com dois valores fixos é mais custo que benefício (join em 16 SQLs de `usuario.repository.ts`, subselect para gravar, `codigo` para filtrar). Um booleano diz o mesmo e some do join.
+- **Casos a avaliar antes de especificar:**
+  - `tipo_usuario_status` → `usuario.ativo`: confirmar se há outros estados previstos (ex.: afastado, férias) antes de fechar em booleano.
+  - Demais tabelas `tipo_*_status` (`tipo_projeto_status`, `tipo_demanda_status`, `tipo_atividade_status`, `tipo_proposta_ia_status`): ver quantos valores cada uma tem e se alguma também é só booleana ou um enum fixo, que poderia ser coluna.
+  - Booleanos com prefixo `is_`: `is_estrutural` (`demanda`, `demanda_filho`, `caminho_demanda`, `arvore_demanda` e a DTO `isEstrutural`), e `is_solo` e `is_arquivado` em `plano` (migração 0059). Decidir o padrão de nome de booleanos antes de renomear qualquer um, e checar `docs/CONVENTIONS.md`.
+  - `is_deleted` fica como está (genérico, em `BaseEntity`).
+- **Custo aparente:** migrations de renomear e converter (sem editar migration já aplicada, ver `sql-migrations`); ajustar DTOs no `shared` (`isEstrutural` e `status` de usuário), repositories e a UI; e atualizar `docs/SCHEMA.md`. A troca de `status` de usuário mexe em filtros de tela e em alguns testes de integração. Rodar `gerenciamento-de-impacto` nos DTOs e enums antes de mexer.
