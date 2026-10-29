@@ -190,6 +190,102 @@
 - **Correção:** recalcular (ou recarregar a lista) depois de salvar a nova data.
 - **Desde:** 2026-10-27 (apontado pelo autor).
 
+### P-046 — A árvore de demandas abre sempre na primeira pasta, não em "Projeto inteiro" · `ABERTO` · demanda/frontend
+
+- **Sintoma:** ao abrir a Árvore, ela mostra a primeira pasta; deveria abrir no "Projeto inteiro".
+- **Causa:** não investigada.
+- **Contorno:** escolher "Projeto inteiro" manualmente a cada abertura.
+- **Correção:** definir "Projeto inteiro" como seleção inicial.
+- **Desde:** 2026-10-29 (apontado pelo autor).
+
+### P-047 — Grafo: tirar um item do filtro só o apaga para cerca de 25% de opacidade · `ABERTO` · demanda/frontend
+
+- **Sintoma:** ao remover algo do filtro do grafo, o item fica só meio apagado (cerca de 25% de opacidade) em vez de sair da visão.
+- **Causa:** o filtro esmaece em vez de ocultar; comportamento a confirmar com o autor (pode ser o desejado).
+- **Contorno:** nenhum; o item continua visível.
+- **Correção:** decidir entre ocultar o item ou manter o esmaecimento, e ajustar o filtro conforme a decisão.
+- **Desde:** 2026-10-29 (apontado pelo autor).
+
+### P-048 — Controle de horas sem o filtro "apenas abertas" · `ABERTO` · demanda/frontend
+
+- **Sintoma:** no Controle de horas não há como mostrar só as atividades abertas (planejadas ou pendentes).
+- **Causa:** o filtro ainda não existe.
+- **Contorno:** filtrar a olho pelo status.
+- **Correção:** adicionar o botão "apenas abertas", que filtra pelos status planejada e pendente.
+- **Desde:** 2026-10-29 (apontado pelo autor).
+
+### P-049 — Campo `codigo` do modelo do projeto na base não tem uso · `ABERTO` · banco/schema
+
+- **Sintoma:** o modelo do projeto guarda um campo `codigo` que, segundo o autor, é quase inútil.
+- **Causa:** não investigada quanto a consumidores; o campo existe no schema e no modelo.
+- **Contorno:** nenhum; o campo fica sem efeito.
+- **Correção:** remover a coluna por migration nova (sem editar a já aplicada), ajustando DTOs, repository e `docs/SCHEMA.md`. Rodar `gerenciamento-de-impacto` antes.
+- **Desde:** 2026-10-29 (apontado pelo autor).
+
+### P-050 — Tags exibidas apertadas, com aparência encavalada · `ABERTO` · frontend
+
+- **Sintoma:** a forma como as tags são exibidas está apertada e sobreposta.
+- **Causa:** não investigada no layout.
+- **Contorno:** nenhum.
+- **Correção:** redesenhar a exibição das tags com espaçamento e quebra adequados.
+- **Desde:** 2026-10-29 (apontado pelo autor).
+
+### P-051 — Conexões na aba de conexões da demanda são exibidas de forma ruim · `ABERTO` · demanda/frontend
+
+- **Sintoma:** a forma de exibir as conexões na aba de conexões da demanda não está boa.
+- **Causa:** não investigada no layout.
+- **Contorno:** nenhum.
+- **Correção:** redesenhar a lista de conexões da aba.
+- **Desde:** 2026-10-29 (apontado pelo autor).
+
+### P-052 — Exibição da cor do projeto na tela de projetos · `ABERTO` · projeto/frontend
+
+- **Sintoma:** a cor do projeto aparece de um jeito que o autor quer alterar.
+- **Causa:** não investigada; o relato não diz qual forma de exibição é a desejada.
+- **Contorno:** nenhum.
+- **Correção:** definir com o autor a nova exibição e aplicar na tela de projetos.
+- **Desde:** 2026-10-29 (apontado pelo autor).
+
+### P-053 — Modelagem sem documentação de cada campo e tabela · `ABERTO` · docs/modelagem
+
+- **Sintoma:** a tela de modelagem não documenta cada campo nem cada tabela.
+- **Causa:** a documentação por campo e tabela ainda não foi feita.
+- **Contorno:** consultar `docs/SCHEMA.md`.
+- **Correção:** documentar cada campo e cada tabela na modelagem.
+- **Desde:** 2026-10-29 (apontado pelo autor).
+
+### P-054 — Detalhes do dia no ponto com filtro de usuário em layout vertical · `ABERTO` · ponto/frontend
+
+- **Sintoma:** os detalhes do dia no ponto, com filtro de usuário, são exibidos em lista vertical, que o autor quer rever.
+- **Causa:** o layout vertical foi o escolhido na primeira versão.
+- **Contorno:** nenhum.
+- **Correção:** avaliar outro formato, como uma exibição em serpentina, e aplicar o escolhido.
+- **Desde:** 2026-10-29 (apontado pelo autor).
+
+### P-055 — Tela de Atividades fora do esquema compacto da Execução · `ABERTO` · atividade/frontend
+
+- **Sintoma:** a tela de Atividades ocupa mais espaço do que o necessário; a Execução já usa atividade compacta.
+- **Causa:** a tela de Atividades não reaproveita o formato compacto da Execução.
+- **Contorno:** nenhum.
+- **Correção:** aplicar à Atividades o mesmo esquema compacto da Execução, para otimizar o espaço.
+- **Desde:** 2026-10-29 (apontado pelo autor).
+
+### P-056 — Texto abaixo da barra de pergunta no modo planejamento difere do chat · `ABERTO` · chat IA/planejamento
+
+- **Sintoma:** o texto abaixo da barra de pergunta no modo de planejamento não é o mesmo do modo de chat.
+- **Causa:** os dois modos têm textos separados.
+- **Contorno:** nenhum.
+- **Correção:** usar o mesmo texto do chat e acrescentar "Quem tem acesso ao plano vê esta conversa."
+- **Desde:** 2026-10-29 (apontado pelo autor).
+
+### P-057 — Tela de login e lembrança do usuário pedem ajustes · `ABERTO` · autenticacao/frontend
+
+- **Sintoma:** a tela de login precisa de ajustes, e a retenção e lembrança do usuário precisa ser revista.
+- **Causa:** não investigada; o relato não detalha os ajustes.
+- **Contorno:** nenhum.
+- **Correção:** levantar com o autor os ajustes de layout e o comportamento desejado de lembrar o usuário, e aplicar.
+- **Desde:** 2026-10-29 (apontado pelo autor).
+
 ### P-001 — Projeto sem lint · `CONTORNADO` · repositório
 
 - **Sintoma:** não há ESLint nem Prettier em nenhum workspace; o gate de qualidade do `CLAUDE.md` pede lint e hoje a lacuna é só declarada no fecho de cada task.
