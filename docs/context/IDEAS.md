@@ -185,3 +185,10 @@
 - **Origem:** pedido do autor em 2026-10-27, só anotado.
 - **Por quê:** escolher o provedor melhor ou mais barato para cada nível, em vez de um provedor para tudo.
 - **Custo aparente:** a conferir antes de especificar: como a task 203 (provedores e fallback) e a configuração ativa tratam o provedor hoje (um só por vez, ou por nível), o preço por provedor nos custos e a ligação com I-031 (escolher o nível de cada tipo de prompt pelo sistema).
+
+### I-035 — Tipo de usuário "ajudante", entre desenvolvedor e gestor · permissões
+
+- **Ideia:** um novo tipo de usuário no meio termo entre `DESENVOLVEDOR` e `GESTOR`, chamado de "ajudante" (nome provisório). Ele não entra automaticamente nas demandas e tem alguns poderes de gestão, mas não todos os do gestor.
+- **Origem:** pedido do autor em 2026-10-29, só anotado; os poderes exatos e o nome final não foram definidos.
+- **Por quê:** hoje o acesso é binário: o desenvolvedor só vê o que tem em `demanda_usuario`, e o gestor tem acesso total por tipo. Falta um papel que ajude a conduzir o trabalho sem ter a visão e o poder completos do gestor.
+- **Custo aparente:** alto e transversal: novo valor em `TipoUsuarioEnum` (`shared`) e migração do tipo; cada checagem de permissão que hoje trata gestor como "total" precisa ser revista, uma a uma; e a regra "gestor não entra em `demanda_usuario`" teria de ser repensada para o ajudante. Antes de especificar, definir com o autor a lista de poderes (quais ações de gestão, em quais telas) e rodar `gerenciamento-de-impacto` nas permissões.
