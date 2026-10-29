@@ -204,3 +204,11 @@
   - Booleanos com prefixo `is_`: `is_estrutural` (`demanda`, `demanda_filho`, `caminho_demanda`, `arvore_demanda` e a DTO `isEstrutural`), e `is_solo` e `is_arquivado` em `plano` (migração 0059). Decidir o padrão de nome de booleanos antes de renomear qualquer um, e checar `docs/CONVENTIONS.md`.
   - `is_deleted` fica como está (genérico, em `BaseEntity`).
 - **Custo aparente:** migrations de renomear e converter (sem editar migration já aplicada, ver `sql-migrations`); ajustar DTOs no `shared` (`isEstrutural` e `status` de usuário), repositories e a UI; e atualizar `docs/SCHEMA.md`. A troca de `status` de usuário mexe em filtros de tela e em alguns testes de integração. Rodar `gerenciamento-de-impacto` nos DTOs e enums antes de mexer.
+
+### I-037 — Visão do cliente sobre as demandas do próprio projeto · cliente/permissões
+
+- **Ideia:** um perfil de cliente que enxerga só o projeto dele: as demandas, se estão prontas, quais estão na fila, etc.
+- **Origem:** pedido do autor em 2026-10-29, só anotado (`"Tudo uma ideia"`).
+- **Por quê:** o cliente acompanha o andamento sem depender de contato com o gestor.
+- **Restrição já dita pelo autor:** não expõe quem está executando nem o tempo gasto (sem atividades, responsáveis, horas nem ponto para o cliente).
+- **Custo aparente:** alto e transversal: novo tipo de usuário ou de acesso em `shared` (`TipoUsuarioEnum`), regra de visibilidade que não passa por `demanda_usuario` (hoje o acesso é só por tipo e por vínculo), e DTOs de visão reduzida, sem os campos de responsável e de tempo. Antes de especificar, definir com o autor o que é "fila" e "pronto" para o cliente e rodar `gerenciamento-de-impacto` nas permissões e nos DTOs de demanda.
