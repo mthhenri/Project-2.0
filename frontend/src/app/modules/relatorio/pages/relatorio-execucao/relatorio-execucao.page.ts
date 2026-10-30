@@ -24,6 +24,7 @@ import {
 import { ambiente } from '../../../../../environments/environment';
 import { RelatorioService, RelatorioParametros } from '../../services/relatorio.service';
 import { ProjetoService } from '../../../projeto/services/projeto.service';
+import { corTextoSobre, siglaDoProjeto } from '../../../projeto/utils/projeto-identidade.util';
 import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-horas.pipe';
 import { BarraRecargaComponent } from '../../../../shared/components/barra-recarga/barra-recarga.component';
 import {
@@ -72,6 +73,12 @@ export class RelatorioExecucaoPage implements OnInit {
   readonly projetos = signal<ProjetoResumoDto[]>([]);
   /** Aberto pela rota do projeto (`/projeto/:id/relatorio`): o projeto vem definido e não se troca. */
   readonly projetoFixo = signal<boolean>(false);
+
+  /** O projeto do relatório, para a identidade (selo, nome e código) no cabeçalho. */
+  private readonly projetoIdEscolhido = signal<number | null>(null);
+  readonly projetoEscolhido = computed(() => this.projetos().find((projeto) => projeto.id === this.projetoIdEscolhido()) ?? null);
+  readonly siglaDoSelo = computed(() => siglaDoProjeto(this.projetoEscolhido()?.nome ?? ''));
+  readonly corTextoSelo = computed(() => corTextoSobre(this.projetoEscolhido()?.cor ?? ''));
 
   readonly carregandoPreview = signal<boolean>(false);
   readonly carregandoRevisao = signal<boolean>(false);
@@ -138,6 +145,7 @@ export class RelatorioExecucaoPage implements OnInit {
 
   ngOnInit(): void {
     this.formulario.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.projetoIdEscolhido.set(this.formulario.getRawValue().projetoId);
       this.sincronizado.set(false);
       this.revisao.set(null);
       this.pedidoPreview.next(ATRASO_MUDANCA_FILTRO_MS);
@@ -179,6 +187,7 @@ export class RelatorioExecucaoPage implements OnInit {
       mes: atalho.mes,
       periodo: null,
     }, { emitEvent: false });
+    this.projetoIdEscolhido.set(this.formulario.getRawValue().projetoId);
     this.carregarProjetos();
     this.pedidoPreview.next(0);
   }

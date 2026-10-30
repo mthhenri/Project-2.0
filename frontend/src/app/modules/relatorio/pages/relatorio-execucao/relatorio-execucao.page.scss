@@ -27,14 +27,57 @@
     color: var(--p-primary-600);
   }
 
+  &__identidade {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-left: 0.75rem;
+    border-left: 1px solid var(--app-surface-200);
+  }
+
+  &__selo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    user-select: none;
+  }
+
+  &__identidade-nome {
+    font-weight: 600;
+  }
+
+  &__identidade-codigo {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--p-text-muted-color);
+    background: var(--app-surface-100);
+    padding: 0.125rem 0.375rem;
+    border-radius: 4px;
+  }
+
+  // Filtros num cartão só, como a barra de filtros das outras telas.
   &__form {
     display: flex;
-    flex-direction: column;
-    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.75rem 1.5rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--app-surface-200);
+    border-radius: 0.625rem;
+    background: var(--app-surface-0);
   }
 
   &__periodo {
     display: flex;
+    flex: 1 1 auto;
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
@@ -57,7 +100,7 @@
   &__campo {
     @include form-campo;
     min-width: 12rem;
-    flex: 1;
+    flex: 0 1 22rem;
   }
 
   &__label { @include form-label; }

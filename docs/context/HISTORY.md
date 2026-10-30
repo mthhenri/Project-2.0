@@ -15,6 +15,13 @@
 
 
 
+
+## 2026-10-30 — POC da tela de relatório (sem spec): identidade do projeto, filtros num cartão
+
+- **Pedido do autor:** um POC da tela de relatório para ir ajustando, com sugestões. Sem spec própria (é iteração sobre a 269); as sugestões que o autor aceitar viram task.
+- **O que mudou (só frontend):** com o projeto fixo (`/projeto/:id/relatorio`) o seletor de projeto some e o cabeçalho mostra a identidade (selo com a cor, nome e código) ao lado do título, e o resumo não repete o nome; os filtros (projeto quando livre, atalhos de período, mês e ano) ficam num cartão só, como a barra de filtros das outras telas; o seletor de projeto livre deixou de esticar a linha inteira.
+- **Testes:** 21 testes de relatório verdes e build ok; ao vivo (API mockada) em 1920×1080, 1366×768 e 1080×1920, capturas em `.artifacts/269/ui-poc/`. Não rodei a suíte completa depois desta mudança (a última, com 2369 testes, é da 271).
+
 ## 2026-10-30 — 271: cabeçalho do projeto edita no lugar e perde a faixa de resumo
 
 - **Pedido do autor** (com a captura do cabeçalho): tirar a faixa "N demandas — Executado X de Y"; datas depois do status ("Fim: indefinido" sem data); datas, nome e cor editados como as horas em Execuções (botão direito → "Editar" → campo no lugar); "Editar" vira "Configurar volume".

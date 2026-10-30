@@ -10,6 +10,13 @@
         (onClick)="voltar()"
       />
       <h1 class="relatorio-execucao__pagina-titulo">Relatório de Execuções</h1>
+      @if (projetoFixo() && projetoEscolhido(); as projeto) {
+        <span class="relatorio-execucao__identidade">
+          <span class="relatorio-execucao__selo" aria-hidden="true" [style.background-color]="projeto.cor" [style.color]="corTextoSelo()">{{ siglaDoSelo() }}</span>
+          <span class="relatorio-execucao__identidade-nome">{{ projeto.nome }}</span>
+          <span class="relatorio-execucao__identidade-codigo">{{ projeto.codigo }}</span>
+        </span>
+      }
     </div>
     <div class="relatorio-execucao__cabecalho-acoes">
       <p-button
@@ -32,6 +39,7 @@
   </div>
 
   <form [formGroup]="formulario" class="relatorio-execucao__form">
+    @if (!projetoFixo()) {
     <div class="relatorio-execucao__campo relatorio-execucao__campo--projeto">
       <label class="relatorio-execucao__label" for="relatorio-projeto">Projeto</label>
       <p-select
@@ -48,6 +56,7 @@
         class="w-full"
       />
     </div>
+    }
 
     <div class="relatorio-execucao__periodo">
       <p-selectbutton
@@ -118,7 +127,9 @@
       <app-barra-recarga [ativa]="carregandoPreview()" />
       <div class="relatorio-execucao__resumo">
         <div class="relatorio-execucao__titulo-resumo">
-          <span class="relatorio-execucao__resumo-projeto">{{ dados.nomeProjeto }}</span>
+          @if (!projetoFixo()) {
+            <span class="relatorio-execucao__resumo-projeto">{{ dados.nomeProjeto }}</span>
+          }
           <span class="relatorio-execucao__resumo-periodo">{{ dados.periodoDescricao }}</span>
         </div>
         <div class="relatorio-execucao__totais">
