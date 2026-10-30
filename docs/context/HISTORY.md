@@ -12,6 +12,13 @@
 
 ---
 
+## 2026-10-30 — Editor de código do chat: código colado se perdia das linhas
+
+- **Origem:** o autor mandou a captura: ao colar um bloco de código no bloco de código do chat entre colaboradores, o texto não batia com a numeração. Trabalho fora do fluxo de spec; o componente é o `app-editor-codigo` (task 216).
+- **Duas causas**, as duas reproduzidas no Chromium com o editor sozinho numa rota temporária (não versionada) e um código de 40 linhas colado: (1) o `<code>` da camada de realce usava a fonte e o corpo do navegador, não os do editor, e as linhas dela ficavam com ~21,8 px contra os 20 px do campo e dos números (a camada tinha 872 px de rolagem contra 832 do campo) — o texto se afastava a cada linha; (2) a rolagem do campo era copiada só no evento de rolagem, que chega **antes** de as camadas renderizarem o texto colado: com o cursor levado ao fim, o campo rolava 567 px e o realce e os números ficavam em 0.
+- **Correção:** `.editor-codigo__realce code { font: inherit; line-height: inherit }` e um `afterRenderEffect` que copia a rolagem de novo depois de cada renderização do texto.
+- **Testes:** +1 (rolagem copiada depois de colar; falha sem a correção, passa com ela); frontend inteiro e build verdes; sem lint (P-001). **Ao vivo** (1366×768, Chromium com a API simulada): antes, realce 0 e números 0 contra campo 567 e linhas desalinhadas; depois, 567/567/567, alturas iguais (832/832) e a numeração batendo com as linhas. Não verifiquei no Project Desktop nem no Windows do autor.
+
 ## 2026-10-30 — I-007 refeita: a pesquisa na internet é a do próprio provedor (task 263)
 
 - **Origem:** o autor reclamou de eu ter escolhido o Brave sem perguntar e decidiu: cada provedor usa a sua pesquisa (o `web_search` da Anthropic, o Google Search do Gemini). A 262 fica como registro; a [263](../specs/done/263-ia-pesquisa-na-internet-do-provedor.spec.md) a substitui nesse ponto.

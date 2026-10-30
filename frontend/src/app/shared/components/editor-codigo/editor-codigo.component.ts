@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, input, model, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, afterRenderEffect, computed, effect, input, model, signal, viewChild } from '@angular/core';
 import { carregarRealce } from '../markdown-bloco-codigo/carregador-realce';
 import { linguagemDoRealce, TrechoDeCodigo } from '../markdown-bloco-codigo/realce-codigo';
 import { desindentar, diferencaDeTexto, EdicaoDoEditor, indentar, quebrarLinha } from './editor-codigo.util';
@@ -59,6 +59,14 @@ export class EditorCodigoComponent {
         .catch(() => {
           // Sem rede ou sem a gramática: o código continua editável, só sem cor.
         });
+    });
+
+    // O campo rola para o cursor assim que o texto muda (um código colado leva o cursor ao fim), mas as camadas só crescem depois da renderização: a
+    // rolagem copiada no evento chegava a elas ainda curta e ficava assim. Depois de cada renderização, a rolagem é copiada de novo.
+    afterRenderEffect(() => {
+      this.exibicao();
+      this.numerosDasLinhas();
+      this.sincronizarRolagem();
     });
 
     // Quem muda o `valor` por fora (o painel abre com o trecho selecionado) escreve no campo; o que o usuário digita já está nele.
