@@ -14,6 +14,16 @@
 
 
 
+
+## 2026-10-30 — 271: cabeçalho do projeto edita no lugar e perde a faixa de resumo
+
+- **Pedido do autor** (com a captura do cabeçalho): tirar a faixa "N demandas — Executado X de Y"; datas depois do status ("Fim: indefinido" sem data); datas, nome e cor editados como as horas em Execuções (botão direito → "Editar" → campo no lugar); "Editar" vira "Configurar volume".
+- **O que mudou:** novo `ProjetoCampoEditavelComponent` (texto, data ou cor; Enter ou sair com mudança pergunta "Salvar alteração? Sim / Não"; Esc cancela; nome com ao menos 3 caracteres; sair da data vazia é desistir). A página aplica de forma otimista com rollback (`alterarCampo`, que substituiu `alterarStatus`) e confere "fim depois do início" antes da API. Grafo e Controle de horas foram para as ações do cabeçalho (o Grafo continua visível ao desenvolvedor); novo `ProjetoVolumeDialogComponent` com as vigências. Saíram `resumo()`, a barra, a linha de metas, "Definir datas" e o uso do dialog completo na página.
+- **Divergência anotada:** o autor lembrou a edição de horas em Execuções como botão direito; ela é por clique, com a pergunta "Salvar alteração? Sim / Não". Foi seguida a descrição do autor para o gesto (botão direito) e a pergunta de Execuções para a confirmação.
+- **Testes:** `ng test` completo com 188 arquivos e 2369 testes verdes; build ok. Sem lint (P-001).
+- **Ao vivo (API mockada):** 1920×1080, 1366×768 e 1080×1920; menu, edição do nome, da data de fim e da cor, e o dialog do volume; cada edição gerou um `PUT` só com o campo. Achado na verificação: com os cinco botões o cabeçalho quebrava em três linhas a 1366; agora as ações descem para uma linha própria quando não cabem.
+- **Pendente:** a descoberta do gesto (só um `title` "Botão direito para editar" avisa) e o toque (sem botão direito) ficam como sugestão para o autor.
+
 ## 2026-10-30 — 270: prompt da revisão do relatório vira tipo de prompt editável, com início e fim das execuções
 
 - **O que mudou:** o prompt da revisão por IA (task 111) estava escrito em `relatorio.service.ts`. Agora é o tipo `REVISAO_RELATORIO` (enum do `shared`, nível PADRÃO), com a versão 1 ativa na migration `0073`, editável em Configurações da IA. A service lê o prompt ativo pela `PromptService`, envia-o como `instrucoes` e leva na mensagem só os dados. Cada execução enviada traz início e fim (fuso da aplicação; "em andamento" sem fim), porque o prompt antigo pedia checar sobreposição e horário mas só recebia a data. O texto do prompt também passou a mandar citar o número da linha em `referencia` e a não inventar fatos.
