@@ -109,6 +109,25 @@ describe('MarkdownEditorComponent — barra e alternância de modo', () => {
     expect(montado.elemento.querySelector('textarea')).toBeNull();
   });
 
+  it('o botão Tabela insere uma tabela com o cursor nela, e só então aparecem os botões de linha e coluna (I-003)', async () => {
+    const montado = await montarComponente(AnfitriaoComponent);
+    const componente = montado.fixture.debugElement.query(By.directive(MarkdownEditorComponent)).componentInstance as unknown as { editorFormatado: EditorFormatado | null };
+    await vi.waitFor(() => expect(componente.editorFormatado).not.toBeNull(), { timeout: 8000 });
+    expect(botaoPorRotulo(montado, 'Linha abaixo')).toBeNull();
+
+    botaoPorRotulo(montado, 'Tabela').click();
+    await montado.atualizar();
+    expect(montado.elemento.querySelectorAll('.ProseMirror table').length).toBe(1);
+    expect(botaoPorRotulo(montado, 'Tabela').getAttribute('aria-pressed')).toBe('true');
+    expect(botaoPorRotulo(montado, 'Linha abaixo')).toBeTruthy();
+    expect(botaoPorRotulo(montado, 'Excluir tabela')).toBeTruthy();
+
+    botaoPorRotulo(montado, 'Excluir tabela').click();
+    await montado.atualizar();
+    expect(montado.elemento.querySelector('.ProseMirror table')).toBeNull();
+    expect(botaoPorRotulo(montado, 'Linha abaixo')).toBeNull();
+  });
+
   it('"Markdown cru" troca para o textarea (com o valor do formulário) e "Voltar" retorna ao formatado', async () => {
     const montado = await montarEmTexto('um **texto**');
     expect(campo(montado).value).toBe('um **texto**');

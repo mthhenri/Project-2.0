@@ -359,3 +359,56 @@ test('cursorNoFim leva o cursor ao fim do documento: o que se escreve depois ent
     assert.equal(editor.obterMarkdown(), '**um** dois três');
   });
 });
+
+// I-003: a tabela nasce pelo botão e volta como Markdown GFM que o `interpretarMarkdown` entende.
+test('tabela: o botão insere cabeçalho e duas linhas; dentro de uma tabela não insere outra', async () => {
+  await comEditor('antes', (editor) => {
+    cursorApos(editor, 'antes');
+    editor.executar('tabela');
+    assert.ok(editor.ativas().has('tabela'), 'o cursor fica dentro da tabela');
+    assert.match(editor.obterMarkdown(), /^antes\n\n\|( +\|){3}\n\| :-( \| :-){2} \|/);
+    assert.equal(editor.obterMarkdown().split('\n').filter((linha) => linha.startsWith('|')).length, 4, 'cabeçalho, separador e duas linhas de corpo');
+    editor.executar('tabela');
+    assert.equal(editor.obterMarkdown().split('\n').filter((linha) => linha.startsWith('|')).length, 4, 'nada novo');
+  });
+});
+
+test('tabela: linha e coluna novas, e excluir (o cabeçalho fica)', async () => {
+  // Linhas da tabela sem a de separação (a segunda).
+  const celulas = (markdown: string) => markdown.split('\n').filter((linha) => linha.startsWith('|')).filter((_, indice) => indice !== 1);
+  await comEditor('| a | b |\n|---|---|\n| 1 | 2 |', (editor) => {
+    cursorApos(editor, '1');
+    editor.executar('linhaNova');
+    assert.equal(celulas(editor.obterMarkdown()).length, 3);
+    editor.executar('colunaNova');
+    assert.equal(celulas(editor.obterMarkdown())[0].split('|').length - 2, 3, 'três colunas no cabeçalho');
+
+    cursorApos(editor, '2');
+    editor.executar('colunaExcluir');
+    assert.equal(celulas(editor.obterMarkdown())[0].split('|').length - 2, 2);
+    assert.ok(!editor.obterMarkdown().includes('2'), 'saiu a coluna do cursor');
+    cursorApos(editor, '1');
+    editor.executar('linhaExcluir');
+    assert.equal(celulas(editor.obterMarkdown()).length, 2);
+
+    cursorApos(editor, 'a');
+    editor.executar('linhaExcluir');
+    assert.equal(celulas(editor.obterMarkdown()).length, 2, 'a linha do cabeçalho não sai');
+  });
+});
+
+test('tabela: excluir a tabela deixa o resto do texto', async () => {
+  await comEditor('antes\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\ndepois', (editor) => {
+    cursorApos(editor, '1');
+    editor.executar('tabelaExcluir');
+    assert.equal(editor.obterMarkdown(), 'antes\n\ndepois');
+  });
+});
+
+test('tabela: fora de uma tabela os botões da tabela não fazem nada', async () => {
+  await comEditor('só texto', (editor) => {
+    cursorApos(editor, 'texto');
+    for (const acao of ['linhaNova', 'colunaNova', 'linhaExcluir', 'colunaExcluir', 'tabelaExcluir'] as const) editor.executar(acao);
+    assert.equal(editor.obterMarkdown(), 'só texto');
+  });
+});

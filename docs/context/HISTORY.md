@@ -12,6 +12,16 @@
 
 ---
 
+## 2026-10-30 — I-007 (pesquisa na internet), I-032 (balão cinza) e I-003 (tabelas no Markdown)
+
+- **Origem:** o autor escolheu as três na conversa sobre as ideias; na I-007 pediu para **não** subir o modelo e usar uma ferramenta de pesquisa na internet. Spec `done/262-ia-pesquisa-na-internet-e-ajustes-de-chat.spec.md` (feita junto, sem backlog). Saem do `IDEAS.md`: I-003, I-007 e I-032.
+- **I-007:** não havia nenhuma ferramenta de busca no backend. Entrou `pesquisar_na_internet` (`FerramentaIa` de leitura), com `BuscaWeb` abstrata e `BuscaWebBrave` (`GET` na API do Brave com `X-Subscription-Token`, 8 s de prazo, HTML e entidades tiradas dos trechos). `BUSCA_WEB_CHAVE` é opcional (`.env.example`, README, `ConfigService`): sem ela `habilitada()` é falso e a ferramenta some da lista. Decisão minha, a confirmar: **Brave** como serviço (preço por consulta, sem treinar com a consulta, API simples); trocar é escrever outra implementação de `BuscaWeb`. A consulta sai do servidor para o Brave, por isso a descrição da ferramenta manda não pôr dados da empresa nela.
+- **I-032:** só o `chat__balao`; checado com `gerenciamento-de-impacto` (a classe é da página do chat; o check-in tem a sua e **não** mudou). O chat entre colaboradores tem fundo próprio (azul a 14%), não compartilha token: não mudou.
+- **I-003:** o interpretador e o visualizador já tinham tabela (P-039, ligada só para a IA); faltava o editor. O esquema da tabela já estava carregado; entrou o botão (3×3, cursor na primeira célula) e os botões de linha e coluna, que só aparecem com o cursor numa tabela. Visualizador agora liga tabelas **por padrão**; chat entre colaboradores e as mensagens do usuário no chat da IA e no check-in continuam sem (`[comTabelas]="false"`, para não mudar o que já era texto).
+- **Testes:** backend 1.560 (inclui 11 novos: busca, ferramenta e configuração), shared 294; frontend 2.353 em 187 arquivos (+6 do editor, +1 do visualizador) e build dos dois verdes; sem lint (P-001).
+- **Ao vivo** (`ng serve` com a API simulada no navegador; sem PostgreSQL nem chave do Brave): balão cinza no chat em `1920×1080`, `1366×768` e `1080×1920`, claro e escuro; tabela criada e preenchida com Tab no pad ("Minhas anotações"), `+L` e `+C` somaram linha e coluna. **Não verificado:** a pesquisa real e o prompt `DUVIDA_CODIGO` citando a ferramenta.
+- **Decisão:** a ação de excluir linha ignora a primeira linha (o cabeçalho) por precaução, já que o Markdown exige um; não testei o que o Milkdown faria sem essa guarda.
+
 ## 2026-10-30 — Chip da execução sobre o logo, P-062 e P-060
 
 - **Origem:** o autor trouxe a captura do chip verde da execução invadindo o "Project 2.0" da barra lateral (janela de ~720 px) e pediu para resolver junto do P-062 e do P-060. Trabalho fora do fluxo de spec.

@@ -20,6 +20,23 @@
             <span [class]="botao.classe">{{ botao.glifo }}</span>
           </button>
         }
+        @if (modo() === 'formatado' && ativos().has('tabela')) {
+          <span class="markdown-editor__separador" aria-hidden="true"></span>
+          @for (botao of botoesTabela; track botao.acao) {
+            <button
+              type="button"
+              class="markdown-editor__botao"
+              [attr.aria-label]="botao.rotulo"
+              [pTooltip]="botao.dica"
+              tooltipPosition="top"
+              [disabled]="desabilitado()"
+              (mousedown)="$event.preventDefault()"
+              (click)="executarBotao(botao.acao)"
+            >
+              <span [class]="botao.classe">{{ botao.glifo }}</span>
+            </button>
+          }
+        }
       </div>
 
       <button

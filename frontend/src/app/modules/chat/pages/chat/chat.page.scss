@@ -371,8 +371,9 @@
   &__balao {
     padding: 0.625rem 0.875rem;
     border-radius: 14px 14px 4px 14px;
-    background: var(--p-primary-600);
-    color: var(--p-primary-contrast-color);
+    // Cinza apagado (I-032): o azul cheio chamava mais atenção que o conteúdo da conversa.
+    background: var(--app-surface-200);
+    color: var(--p-text-color);
     line-height: 1.45;
     overflow-wrap: anywhere;
   }

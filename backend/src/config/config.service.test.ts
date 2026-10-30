@@ -117,6 +117,13 @@ test('GOOGLE_API_KEY e OPENAI_API_KEY são opcionais e chegam à configuração'
   assert.equal(comChaves.openAi.apiKey, 'chave-openai');
 });
 
+test('BUSCA_WEB_CHAVE é opcional e chega à configuração', () => {
+  definirAmbiente({ BUSCA_WEB_CHAVE: undefined });
+  assert.equal(new ConfigService().obter().buscaWeb.chave, undefined);
+  definirAmbiente({ BUSCA_WEB_CHAVE: 'chave-brave' });
+  assert.equal(new ConfigService().obter().buscaWeb.chave, 'chave-brave');
+});
+
 test('o .env.example sozinho (com os valores que ele traz) é uma configuração válida e os padrões documentados valem', () => {
   const exemplo = dotenv.parse(fs.readFileSync(path.resolve(__dirname, '../../../.env.example')));
   definirAmbiente({}, exemplo as Record<string, string>);

@@ -16,7 +16,7 @@
             @if (aviso.mencionaVoce) {
               <span class="aviso-direto__mencao">&#64;você</span>
             }
-            <app-markdown-visualizador [texto]="aviso.markdown ?? aviso.texto" />
+            <app-markdown-visualizador [texto]="aviso.markdown ?? aviso.texto" [comTabelas]="false" />
           </span>
           @if (rotuloDaQuantidade(aviso.quantidade); as quantidade) {
             <span class="aviso-direto__quantidade">{{ quantidade }}</span>

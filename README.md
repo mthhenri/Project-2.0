@@ -188,6 +188,7 @@ O projeto é um monorepo com quatro workspaces conectados via npm workspaces:
 | `INTERVALO_MINIMO_MINUTOS` | Gap mínimo entre execuções para ser considerado intervalo | `15` |
 | `ANTHROPIC_API_KEY` | Chave da API Anthropic (opcional: sem ela a IA fica "fora do ar"). O modelo de cada nível e o resto da configuração da IA ficam na tela Configurações da IA, não no `.env` | `sk-ant-...` |
 | `GOOGLE_API_KEY` / `OPENAI_API_KEY` | Chaves do Gemini e da OpenAI (opcionais): só servem para o fallback entre provedores, escolhido em Configurações da IA. Sem a chave, o provedor é pulado na cadeia | `sk-...` |
+| `BUSCA_WEB_CHAVE` | Chave da API do Brave Search (opcional): dá à IA a ferramenta `pesquisar_na_internet`, para dúvidas de código difíceis ou recentes. As buscas saem do servidor para o Brave. Sem a chave, a ferramenta não aparece | `BSA...` |
 | `CHAT_ARMAZENAMENTO` | Onde ficam as mensagens do chat: `opensearch` (desenvolvimento, padrão) ou `postgres` (tabelas **provisórias** para a produção de teste, sem serviço de busca) ou `elasticsearch` (produção de verdade) | `opensearch` |
 | `CHAT_EVENTOS` | Por onde os eventos do chat entre colaboradores (mensagem nova, "Lida", online) chegam a todas as instâncias da API: `memoria` (desenvolvimento, padrão; só uma instância) ou `postgres` (`LISTEN`/`NOTIFY`; obrigatório com mais de uma instância). |
 | `OPENSEARCH_URL` | Endereço do OpenSearch (sobe com `npm run db:up`); obrigatório só com `CHAT_ARMAZENAMENTO=opensearch` | `http://localhost:9200` |

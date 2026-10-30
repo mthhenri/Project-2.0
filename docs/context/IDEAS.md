@@ -56,14 +56,6 @@
 - **Situação (2026-10-18):** a parte de **testes** foi entregue nas tasks 171–187
   (`docs/specs/done/testes-automatizados.spec.md`, concluída em 2026-10-19); o **lint** continua ideia aberta.
 
-### I-003 — Tabelas no editor e no visualizador de Markdown · frontend/shared
-
-- **Ideia:** aceitar tabelas (GFM) no `interpretarMarkdown`, no `app-markdown-visualizador` e no editor formatado, com botão de tabela na barra.
-- **Origem:** conversa da task 134 (2026-10-17): o editor de outro projeto do autor tem o botão; o autor não precisa por ora.
-- **Por quê:** descrições técnicas e documentação de demanda às vezes pedem comparação em colunas; a IA também escreve tabelas com naturalidade.
-- **Custo aparente:** estender o interpretador (nó de tabela, sem HTML), o visualizador e o esquema do editor (Milkdown tem o preset GFM), mais testes
-  de ida e volta; decidir o que a IA pode gerar.
-
 ### I-005 — IA lê o código dos projetos · chat IA/backend
 
 - **Ideia:** dar à IA acesso de leitura ao código-fonte dos projetos cadastrados, para responder dúvidas e relacionar
@@ -84,15 +76,6 @@
 - **Custo aparente:** ferramenta da IA para ler e resumir conversas de outros usuários (permissão de gestor), depende da
   marcação de assunto das mensagens (I-004) para filtrar dúvidas de código; decidir o que o desenvolvedor sabe sobre essa
   leitura. A marcação de assunto entra na task 191.
-
-### I-007 — Dúvida de código complexa escala para um nível mais forte · chat IA/backend
-
-- **Ideia:** quando a IA perceber que uma dúvida de código ficou complexa, ela escala para o nível padrão ou analítico, no
-  mesmo molde das tarefas pesadas: uma ferramenta "responder dúvida de código complexa" que roda num modelo mais forte.
-- **Origem:** conversa sobre a I-004 (2026-10-19); o autor quer a possibilidade anotada, com a dúvida de código começando no rápido.
-- **Por quê:** o rápido basta para sintaxe, mas não para dúvida de arquitetura ou depuração; o usuário nunca escolhe modelo.
-- **Custo aparente:** ferramenta nova; decidir como a resposta dela chega ao usuário com streaming (hoje o resultado de uma
-  ferramenta volta ao modelo rápido, que reescreve) e o custo. O selo de nível verdadeiro (task 188) é pré-requisito.
 
 ### I-010 — Revisar os prompts da revisão das descrições · chat IA/prompts
 
@@ -164,13 +147,6 @@
 - **Por quê:** o custo da IA passa a ser ajustável sem mexer em código, tipo a tipo.
 - **Custo aparente:** médio: guardar o nível por tipo (na versão do prompt ou na configuração ativa, por migration), a service ler dele no lugar da constante (chat, planejamento, assistente e teste de prompt) e um seletor por tipo na aba Prompts.
 
-
-### I-032 — Fundo da mensagem do chat da IA em um tom mais apagado (cinza) · chat IA/frontend
-
-- **Ideia:** trocar a cor de fundo da mensagem do chat da IA por uma cor mais "morta", tipo um cinza. Conferir se a mudança vale também para o chat entre colaboradores (provavelmente sim, se o fundo vier do mesmo estilo/token compartilhado).
-- **Origem:** pedido do autor em 2026-10-27, só anotado, sem decisão de tom nem de escopo.
-- **Por quê:** a cor atual da mensagem chama mais atenção do que o conteúdo.
-- **Custo aparente:** só UI (estilo/token de cor); antes de mexer, rodar a skill `gerenciamento-de-impacto` para ver quais telas consomem o mesmo estilo e confirmar com o autor o que mudar além do chat da IA.
 
 ### I-033 — O diff da proposta da IA aparecer no documento, não no chat · chat IA/frontend
 

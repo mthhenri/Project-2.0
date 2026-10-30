@@ -9,14 +9,24 @@ import {
   wrapInHeadingCommand,
   wrapInOrderedListCommand,
 } from '@milkdown/kit/preset/commonmark';
-import { gfm, toggleStrikethroughCommand } from '@milkdown/kit/preset/gfm';
+import {
+  addColAfterCommand,
+  addRowAfterCommand,
+  deleteSelectedCellsCommand,
+  gfm,
+  insertTableCommand,
+  selectColCommand,
+  selectRowCommand,
+  selectTableCommand,
+  toggleStrikethroughCommand,
+} from '@milkdown/kit/preset/gfm';
 import { history, redoCommand, undoCommand } from '@milkdown/kit/plugin/history';
 import { listener, listenerCtx } from '@milkdown/kit/plugin/listener';
 import { $prose, callCommand, getMarkdown, replaceAll } from '@milkdown/kit/utils';
 import { toggleLinkCommand, turnIntoTextCommand } from '@milkdown/kit/preset/commonmark';
 import { lift, liftEmptyBlock, splitBlock } from '@milkdown/kit/prose/commands';
 import { liftListItem, splitListItem } from '@milkdown/kit/prose/schema-list';
-import { Plugin, TextSelection } from '@milkdown/kit/prose/state';
+import { Plugin, Selection, TextSelection } from '@milkdown/kit/prose/state';
 import type { EditorState } from '@milkdown/kit/prose/state';
 import type { MilkdownPlugin } from '@milkdown/kit/ctx';
 import type { Node as NoProse, ResolvedPos } from '@milkdown/kit/prose/model';
@@ -45,13 +55,23 @@ export type AcaoFormatada =
   | 'numerada'
   | 'citacao'
   | 'tarefa'
-  | 'link';
+  | 'link'
+  | 'tabela'
+  | 'linhaNova'
+  | 'colunaNova'
+  | 'linhaExcluir'
+  | 'colunaExcluir'
+  | 'tabelaExcluir';
+
+/** Tabela criada pelo botão (I-003): cabeçalho mais duas linhas, três colunas. */
+const LINHAS_DA_TABELA_NOVA = 3;
+const COLUNAS_DA_TABELA_NOVA = 3;
 
 /**
  * Também sai o plugin que grava parágrafo vazio como `<br />` (o texto guardado não leva HTML: parágrafo vazio some).
  *
- * Tabela e imagem não são geradas pelo editor (o botão não existe e a regra de digitação e de colar que as criam
- * sai). O esquema delas continua carregado de propósito: um texto que já as tenha (vindo da IA, por exemplo) abre
+ * Imagem não é gerada pelo editor, e a tabela só nasce pelo botão da barra (I-003): a regra de digitação e de colar que
+ * criam uma e outra saem. O esquema delas fica carregado: um texto que já as tenha (vindo da IA, por exemplo) abre
  * sem quebrar o editor e volta igual ao gravar.
  */
 const CRIACAO_FORA_DO_SUBCONJUNTO = /^(InputRule|PasteRule)<.*(table|image)|preserveEmptyLine/i;
@@ -237,7 +257,63 @@ export class EditorFormatado {
         return this.alternarCitacao();
       case 'link':
         return this.inserirLink();
+      case 'tabela':
+        return this.inserirTabela();
+      case 'linhaNova':
+        return void this.editor.action(callCommand(addRowAfterCommand.key));
+      case 'colunaNova':
+        return void this.editor.action(callCommand(addColAfterCommand.key));
+      case 'linhaExcluir':
+        return this.excluirPosicaoNaTabela('linha');
+      case 'colunaExcluir':
+        return this.excluirPosicaoNaTabela('coluna');
+      case 'tabelaExcluir':
+        return this.excluirTabela();
     }
+  }
+
+  /** Insere a tabela no cursor; dentro de uma tabela não faz nada (o botão só fica aceso). */
+  private inserirTabela(): void {
+    if (this.ativas().has('tabela')) return;
+    const posicaoAntes = this.editor.action((contexto) => contexto.get(editorViewCtx).state.selection.from);
+    this.editor.action(callCommand(insertTableCommand.key, { row: LINHAS_DA_TABELA_NOVA, col: COLUNAS_DA_TABELA_NOVA }));
+    // O comando deixa o cursor onde estava: leva-o para a primeira célula da tabela nova, para a pessoa já escrever e ver os botões da tabela.
+    this.editor.action((contexto) => {
+      const view = contexto.get(editorViewCtx);
+      let inicioDaTabela = -1;
+      view.state.doc.descendants((no, posicao) => {
+        if (inicioDaTabela < 0 && no.type.name === 'table' && posicao >= posicaoAntes - 1) inicioDaTabela = posicao;
+        return inicioDaTabela < 0;
+      });
+      if (inicioDaTabela < 0) return;
+      view.dispatch(view.state.tr.setSelection(Selection.near(view.state.doc.resolve(inicioDaTabela + 1))).scrollIntoView());
+    });
+  }
+
+  /** Onde o cursor está na tabela: a linha e a coluna da célula, ou `null` fora de uma tabela. */
+  private posicaoNaTabela(): { linha: number; coluna: number } | null {
+    return this.editor.action((contexto) => {
+      const { $from } = contexto.get(editorViewCtx).state.selection;
+      for (let profundidade = $from.depth; profundidade > 0; profundidade--) {
+        if ($from.node(profundidade).type.name !== 'table') continue;
+        return { linha: $from.index(profundidade), coluna: $from.index(profundidade + 1) };
+      }
+      return null;
+    });
+  }
+
+  /** Apaga a linha ou a coluna do cursor. A primeira linha é o cabeçalho (o Markdown exige um) e fica. */
+  private excluirPosicaoNaTabela(alvo: 'linha' | 'coluna'): void {
+    const posicao = this.posicaoNaTabela();
+    if (!posicao || (alvo === 'linha' && posicao.linha === 0)) return;
+    this.editor.action(callCommand(alvo === 'linha' ? selectRowCommand.key : selectColCommand.key, { index: alvo === 'linha' ? posicao.linha : posicao.coluna }));
+    this.editor.action(callCommand(deleteSelectedCellsCommand.key));
+  }
+
+  private excluirTabela(): void {
+    if (!this.posicaoNaTabela()) return;
+    this.editor.action(callCommand(selectTableCommand.key));
+    this.editor.action(callCommand(deleteSelectedCellsCommand.key));
   }
 
   /** Marca na seleção; sem seleção, na palavra do cursor (ou a que acabou de ser digitada). */
@@ -361,6 +437,7 @@ export class EditorFormatado {
         if (no.type.name === 'bullet_list' && !ativas.has('tarefa')) ativas.add('lista');
         if (no.type.name === 'ordered_list') ativas.add('numerada');
         if (no.type.name === 'blockquote') ativas.add('citacao');
+        if (no.type.name === 'table') ativas.add('tabela');
       }
       return ativas;
     });

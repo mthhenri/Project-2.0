@@ -27,6 +27,11 @@ export interface ConfiguracaoOpenAi {
   apiKey: string | undefined;
 }
 
+export interface ConfiguracaoBuscaWeb {
+  /** Chave da API de busca (Brave Search). Sem ela, a ferramenta `pesquisar_na_internet` some da lista da IA. */
+  chave: string | undefined;
+}
+
 export interface ConfiguracaoChat {
   armazenamento: ArmazenamentoDoChat;
   /** Barramento dos eventos do chat entre colaboradores (task 209). */
@@ -77,4 +82,5 @@ export interface Configuracao {
   aplicacao:   ConfiguracaoAplicacao;
   negocio:     ConfiguracaoNegocio;
   desktop:     ConfiguracaoDesktop;
+  buscaWeb:    ConfiguracaoBuscaWeb;
 }

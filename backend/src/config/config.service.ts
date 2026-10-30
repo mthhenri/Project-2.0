@@ -55,6 +55,9 @@ export class ConfigService {
       desktop: {
         pastaExecutaveis: this.opcional('DESKTOP_PASTA_EXECUTAVEIS'),
       },
+      buscaWeb: {
+        chave: this.opcional('BUSCA_WEB_CHAVE'),
+      },
     };
   }
 

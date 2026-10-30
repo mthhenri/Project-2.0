@@ -81,18 +81,18 @@
           <div #fluxo class="checkin__fluxo">
             <div class="checkin__linha checkin__linha--ia">
               <span class="checkin__avatar" aria-hidden="true">IA</span>
-              <div class="checkin__ia-conteudo"><app-markdown-visualizador [texto]="textoDeAbertura()" [comTabelas]="true" /></div>
+              <div class="checkin__ia-conteudo"><app-markdown-visualizador [texto]="textoDeAbertura()" /></div>
             </div>
 
             @for (mensagem of itens(); track mensagem.chave) {
               @if (mensagem.autor === 'USUARIO') {
-                <div class="checkin__linha checkin__linha--usuario"><div class="checkin__balao"><app-markdown-visualizador [texto]="mensagem.texto" [herdaCor]="true" /></div></div>
+                <div class="checkin__linha checkin__linha--usuario"><div class="checkin__balao"><app-markdown-visualizador [texto]="mensagem.texto" [herdaCor]="true" [comTabelas]="false" /></div></div>
               } @else {
                 <div class="checkin__linha checkin__linha--ia">
                   <span class="checkin__avatar" aria-hidden="true">IA</span>
                   <div class="checkin__ia-conteudo" [attr.aria-busy]="mensagem.aoVivo ? true : null">
                     @if (mensagem.texto) {
-                      <app-markdown-visualizador [texto]="mensagem.texto" [comTabelas]="true" />
+                      <app-markdown-visualizador [texto]="mensagem.texto" />
                     }
                     @if (mensagem.aoVivo) {
                       @if (mensagem.ferramenta) {

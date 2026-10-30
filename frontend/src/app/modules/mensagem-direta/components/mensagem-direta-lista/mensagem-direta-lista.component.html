@@ -105,7 +105,7 @@
                   } @else {
                     <span class="lista-direta__previa lista-direta__previa--markdown">
                       @if (ultima.autorUsuarioId === meuId()) { <span class="lista-direta__voce">Você:</span> }
-                      <app-markdown-visualizador class="lista-direta__markdown" [texto]="ultima.texto" />
+                      <app-markdown-visualizador class="lista-direta__markdown" [texto]="ultima.texto" [comTabelas]="false" />
                     </span>
                   }
                 } @else {
