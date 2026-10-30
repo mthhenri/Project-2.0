@@ -20,7 +20,7 @@ const servicoDe = (conexao: ConexaoTeste) => new PontoService(
   criarRepositorio(CalendarioRepository, conexao),
   criarRepositorio(UsuarioRepository, conexao),
   criarRepositorio(PontoJustificativaRepository, conexao),
-  { obter: () => ({ negocio: { intervaloMinimoMinutos: 15 } }) } as never,
+  { obter: () => ({ negocio: { intervaloMinimoMinutos: 15 }, aplicacao: { fusoHorario: 'America/Sao_Paulo' } }) } as never,
 );
 
 const comoDesenvolvedor = (usuario: { id: number }) => ({ sub: usuario.id, login: 'dev', tipo: TipoUsuarioEnum.DESENVOLVEDOR }) as never;
@@ -120,3 +120,23 @@ testarComBanco('execução de atividade de outro usuário não entra no ponto', 
   const mensal = await servicoDe(conexao).consultarMensal({ ano: 2031, mes: 3 }, comoDesenvolvedor(usuario));
   assert.equal(mensal.totalMinutosTrabalhadosMes, 60);
 });
+
+testarComBanco('antes do cadastro: o mês anterior ao cadastro (created_date real, fuso do sistema) não tem meta no mensal, no diário e em todos', async (conexao) => {
+  // O usuário da fábrica nasce agora; março de 2020 é anterior ao cadastro e março de 2031 é posterior.
+  const { usuario } = await desenvolvedorComAtividade(conexao);
+  const gestor = await criarGestor(conexao);
+
+  const antigo = await servicoDe(conexao).consultarMensal({ ano: 2020, mes: 3 }, comoDesenvolvedor(usuario));
+  assert.deepEqual([antigo.diasUteisMes, antigo.metaMinutosMes, antigo.saldoMinutosMes], [0, 0, 0]);
+  assert.equal(antigo.dias.find((item) => item.data === '2020-03-02')!.motivoNaoUtil, 'Antes do cadastro');
+
+  const futuro = await servicoDe(conexao).consultarMensal({ ano: 2031, mes: 3 }, comoDesenvolvedor(usuario));
+  assert.equal(futuro.diasUteisMes, 21);
+
+  const diario = await servicoDe(conexao).consultarDiario({ data: '2020-03-02' }, comoDesenvolvedor(usuario));
+  assert.deepEqual([diario.ehDiaUtil, diario.metaMinutos, diario.motivoNaoUtil], [false, 0, 'Antes do cadastro']);
+
+  const todos = await servicoDe(conexao).consultarTodos({ data: '2020-03-02' }, comoGestor(gestor));
+  assert.equal(todos.find((ponto) => ponto.usuarioId === usuario.id)!.metaMinutos, 0);
+});
+

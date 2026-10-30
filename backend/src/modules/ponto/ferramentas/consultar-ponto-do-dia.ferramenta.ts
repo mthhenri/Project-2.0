@@ -15,7 +15,8 @@ export class ConsultarPontoDoDiaFerramenta extends FerramentaIa<PontoDoDiaConsul
   readonly nome = 'consultar_ponto_do_dia';
   readonly descricao =
     'Diz quantas horas o usuário trabalhou num dia (hoje, se não informar `data` em yyyy-mm-dd), a meta do dia, o saldo (negativo é o que falta) e se o dia é útil. ' +
-    'Use para "quantas horas fiz hoje?" e "quanto falta para fechar o dia?". O gestor pode informar `usuarioId` (de listar_usuarios) para ver o ponto de outra pessoa.';
+    'Use para "quantas horas fiz hoje?" e "quanto falta para fechar o dia?". Dia anterior ao cadastro do usuário não tem meta: volta como não útil, com o motivo "Antes do cadastro". ' +
+    'O gestor pode informar `usuarioId` (de listar_usuarios) para ver o ponto de outra pessoa.';
   readonly tipo = 'LEITURA' as const;
   readonly permissao = 'QUALQUER' as const;
   readonly classeDeEntrada = PontoDoDiaConsultarDto;

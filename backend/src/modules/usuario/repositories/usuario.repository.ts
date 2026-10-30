@@ -385,17 +385,19 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
    * para montar o resumo diário de cada usuário na visão "todos hoje".
    */
   async listarAtivosComMeta(): Promise<
-    { id: number; nomeCompleto: string; horasDiariasNecessarias: number }[]
+    { id: number; nomeCompleto: string; horasDiariasNecessarias: number; createdDate: Date }[]
   > {
     return this.executarConsulta<{
       id: number;
       nomeCompleto: string;
       horasDiariasNecessarias: number;
+      createdDate: Date;
     }>(
       `SELECT
          usuario.id,
          usuario.nome_completo             AS "nomeCompleto",
-         usuario.horas_diarias_necessarias AS "horasDiariasNecessarias"
+         usuario.horas_diarias_necessarias AS "horasDiariasNecessarias",
+         usuario.created_date              AS "createdDate"
        FROM usuario
        WHERE usuario.tipo_usuario_status_id = (
                SELECT tipo_usuario_status.id FROM tipo_usuario_status
