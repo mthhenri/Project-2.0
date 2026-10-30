@@ -1,12 +1,25 @@
 .projeto-detalhe {
   padding: 1.5rem;
 
+  // Mesmo cartão da listagem de projetos: a faixa de 8px no topo leva a cor do projeto.
+  &__cabecalho-cartao {
+    background: var(--app-surface-0);
+    border: 1px solid var(--app-surface-200);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+  }
+
+  &__faixa {
+    height: 8px;
+  }
+
   &__cabecalho {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
     gap: 1rem;
-    margin-bottom: 1.5rem;
+    padding: 1rem 1.25rem;
   }
 
   &__cabecalho-esquerda {
@@ -40,13 +53,19 @@
     border-radius: 4px;
   }
 
-  &__cor-bolinha {
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    border: 2px solid var(--app-surface-200);
+  // Selo com a sigla do nome; fundo e cor do texto vêm da cor do projeto.
+  &__selo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
     flex-shrink: 0;
+    user-select: none;
   }
 
   &__cabecalho-acoes {

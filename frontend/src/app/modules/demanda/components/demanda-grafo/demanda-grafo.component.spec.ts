@@ -159,6 +159,37 @@ describe('DemandaGrafoComponent', () => {
     expect(selecionadas).toEqual([1, 2]);
   });
 
+  it('o filtro esmaece os nós e as arestas que não atendem, sem tirá-los nem redesenhar o grafo', async () => {
+    const { montado } = await montar();
+    const opacidades = () => (Array.from(svg(montado.elemento).querySelectorAll('g > g > g')) as SVGGElement[]).map((grupo) => grupo.style.opacity);
+    const opacidadesArestas = () => (Array.from(svg(montado.elemento).querySelectorAll('line')) as SVGLineElement[]).map((linha) => linha.style.opacity);
+    const circuloAntes = svg(montado.elemento).querySelector('circle.demanda-grafo__no');
+    expect(opacidades()).toEqual(['1', '1', '0.4']);
+
+    montado.fixture.componentRef.setInput('idsEmDestaque', new Set([1, 2]));
+    await montado.atualizar();
+    expect(opacidades()).toEqual(['1', '1', '0.25']);
+    expect(opacidadesArestas()).toEqual(['1', '0.25']);
+    expect(svg(montado.elemento).querySelectorAll('circle.demanda-grafo__no')).toHaveLength(3);
+    expect(svg(montado.elemento).querySelector('circle.demanda-grafo__no')).toBe(circuloAntes);
+
+    montado.fixture.componentRef.setInput('idsEmDestaque', new Set<number>());
+    await montado.atualizar();
+    expect(opacidades()).toEqual(['0.25', '0.25', '0.25']);
+
+    montado.fixture.componentRef.setInput('idsEmDestaque', null);
+    await montado.atualizar();
+    expect(opacidades()).toEqual(['1', '1', '0.4']);
+  });
+
+  it('o nó esmaecido pelo filtro continua abrindo a demanda ao clicar', async () => {
+    const { montado, selecionadas } = await montar(GRAFO, { idsEmDestaque: new Set([1]) });
+    const grupo = svg(montado.elemento).querySelectorAll('g > g > g')[1] as SVGGElement;
+    expect(grupo.style.opacity).toBe('0.25');
+    grupo.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(selecionadas).toEqual([2]);
+  });
+
   it('destruir o componente para a simulação (sem timers soltos)', async () => {
     const { montado } = await montar();
     expect(() => montado.fixture.destroy()).not.toThrow();

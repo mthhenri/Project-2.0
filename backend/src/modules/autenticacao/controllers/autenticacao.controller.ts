@@ -32,13 +32,13 @@ export class AutenticacaoController {
   })
   @ApiResponse({
     status: 400,
-    description: 'Credenciais inválidas ou usuário inativo',
+    description: 'Usuário ou senha incorretos, ou usuário inativo',
     schema: {
       example: {
         sucesso: false,
         dados: null,
-        mensagem: 'Credenciais inválidas',
-        erros: ['Credenciais inválidas'],
+        mensagem: 'Usuário ou senha incorretos. Confira e tente de novo.',
+        erros: ['Usuário ou senha incorretos. Confira e tente de novo.'],
       },
     },
   })

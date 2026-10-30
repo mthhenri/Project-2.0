@@ -37,6 +37,16 @@ const comRegistro = (sobrescrita: Partial<PontoDiaResumoDto> = {}) => dia({
   totalMinutosTrabalhados: 420, saldoMinutos: -60, ...sobrescrita,
 });
 
+// Instante que no fuso do sistema (-03:00) marca h:m: os rótulos Manhã/Tarde/Noite não dependem do fuso da máquina que roda o teste.
+const brt = (hora: number, minuto = 0) => new Date(Date.UTC(2026, 2, 2, hora + 3, minuto));
+const intervalo = (inicio: [number, number], fim: [number, number]) => {
+  const inicioData = brt(inicio[0], inicio[1]);
+  const fimData = brt(fim[0], fim[1]);
+  return { inicioData, fimData, duracaoMinutos: Math.round((fimData.getTime() - inicioData.getTime()) / 60000) };
+};
+const INTERVALO_DO_ALMOCO = [intervalo([12, 0], [13, 0])];
+const COM_ALMOCO = { primeiroInicioData: brt(9), ultimoFimData: brt(17), intervalos: INTERVALO_DO_ALMOCO };
+
 const montar = (valor: PontoDiaResumoDto, podeJustificar = false) =>
   montarComponente(PontoMesDiaComponent, {
     usuario: podeJustificar ? TipoUsuarioEnum.GESTOR : TipoUsuarioEnum.DESENVOLVEDOR,
@@ -162,10 +172,9 @@ describe('PontoMesDiaComponent: expandir o dia', () => {
   const detalhe = (): PontoDiarioDto => ({
     data: '2026-03-02', usuarioId: 3, nomeUsuario: 'Ana', ehDiaUtil: true, motivoNaoUtil: null, metaMinutos: 480,
     minutosTrabalhadosDiaUtil: 420, minutosTrabalhadosExtra: 0, totalMinutosTrabalhados: 420, saldoMinutos: -60,
-    intervalos: [{ inicioData: new Date(2026, 2, 2, 12, 0), fimData: new Date(2026, 2, 2, 13, 0), duracaoMinutos: 60 }],
+    intervalos: INTERVALO_DO_ALMOCO,
     execucoes: [{
-      id: 1, atividadeId: 41, nomeAtividade: 'Atividade um', inicioData: new Date(2026, 2, 2, 9, 0),
-      fimData: new Date(2026, 2, 2, 12, 0), duracaoMinutos: 180,
+      id: 1, atividadeId: 41, nomeAtividade: 'Atividade um', inicioData: brt(9), fimData: brt(12), duracaoMinutos: 180,
     } as never],
   });
 
@@ -177,8 +186,8 @@ describe('PontoMesDiaComponent: expandir o dia', () => {
     montado.http.expectNone(() => true);
   });
 
-  it('dia com registro consulta o diário do usuário uma vez e mostra a timeline e os intervalos', async () => {
-    const montado = await montar(comRegistro());
+  it('dia com registro consulta o diário do usuário uma vez e mostra os períodos com as execuções e os intervalos', async () => {
+    const montado = await montar(comRegistro(COM_ALMOCO));
     (montado.elemento.querySelector('.ponto-mes-dia__linha') as HTMLElement).click();
     await montado.atualizar();
     expect(montado.componente.carregando()).toBe(true);
@@ -190,8 +199,12 @@ describe('PontoMesDiaComponent: expandir o dia', () => {
 
     expect(montado.componente.carregando()).toBe(false);
     expect(texto(montado.elemento)).toContain('Atividade um');
-    expect(texto(montado.elemento)).toContain('Intervalo (1h');
+    expect(montado.elemento.querySelectorAll('.ponto-mes-dia__bloco')).toHaveLength(2);
+    expect(texto(montado.elemento.querySelector('.ponto-mes-dia__bloco') as HTMLElement)).toContain('Manhã ·');
+    expect(texto(montado.elemento.querySelector('.ponto-mes-dia__bloco') as HTMLElement)).toContain('Atividade um');
     expect(montado.elemento.querySelectorAll('.ponto-mes-dia__intervalo')).toHaveLength(1);
+    expect(texto(montado.elemento.querySelector('.ponto-mes-dia__intervalo') as HTMLElement)).toContain('Intervalo ·');
+    expect(texto(montado.elemento.querySelector('.ponto-mes-dia__intervalo') as HTMLElement)).toContain('1h 0min');
 
     // recolher e abrir de novo reaproveita o detalhe, sem nova consulta
     (montado.elemento.querySelector('.ponto-mes-dia__linha') as HTMLElement).click();
@@ -201,8 +214,8 @@ describe('PontoMesDiaComponent: expandir o dia', () => {
     expect(montado.componente.expandido()).toBe(true);
   });
 
-  it('clicar numa atividade da timeline emite a atividade', async () => {
-    const montado = await montar(comRegistro());
+  it('clicar numa atividade do detalhe emite a atividade', async () => {
+    const montado = await montar(comRegistro(COM_ALMOCO));
     const atividades: number[] = [];
     montado.componente.atividadeSelecionada.subscribe((id) => atividades.push(id));
     (montado.elemento.querySelector('.ponto-mes-dia__linha') as HTMLElement).click();
@@ -210,5 +223,81 @@ describe('PontoMesDiaComponent: expandir o dia', () => {
     await montado.atualizar();
     (montado.elemento.querySelector('.ponto-mes-dia__execucao-atividade') as HTMLElement).click();
     expect(atividades).toEqual([41]);
+  });
+});
+
+const detalheVazio = (): PontoDiarioDto => ({
+  data: '2026-03-02', usuarioId: 3, nomeUsuario: 'Ana', ehDiaUtil: true, motivoNaoUtil: null, metaMinutos: 480, minutosTrabalhadosDiaUtil: 0,
+  minutosTrabalhadosExtra: 0, totalMinutosTrabalhados: 0, saldoMinutos: 0, intervalos: [], execucoes: [],
+});
+
+describe('PontoMesDiaComponent: resumo da linha (P-054)', () => {
+  const linha = (montado: Awaited<ReturnType<typeof montar>>) => texto(montado.elemento.querySelector('.ponto-mes-dia__periodo') as HTMLElement);
+
+  it('mostra um chip por período e por intervalo, sem abrir o detalhe', async () => {
+    const montado = await montar(comRegistro({ primeiroInicioData: brt(8), ultimoFimData: brt(17, 50), intervalos: [intervalo([12, 15], [13, 15])] }));
+    const rotulos = Array.from(montado.elemento.querySelectorAll('.ponto-mes-dia__chip-rotulo')).map((rotulo) => texto(rotulo as HTMLElement));
+    expect(rotulos).toEqual(['Manhã', 'Intervalo', 'Tarde']);
+    expect(texto(montado.elemento.querySelector('.ponto-mes-dia__chip--intervalo') as HTMLElement)).toBe('Intervalo 1h 0min');
+    montado.http.expectNone(() => true);
+  });
+
+  it('vários períodos e intervalos ganham número', async () => {
+    const montado = await montar(comRegistro({
+      primeiroInicioData: brt(8), ultimoFimData: brt(17, 20),
+      intervalos: [intervalo([10, 0], [10, 15]), intervalo([12, 30], [13, 30]), intervalo([15, 10], [15, 25])],
+    }));
+    expect(linha(montado)).toContain('Manhã 1');
+    expect(linha(montado)).toContain('Manhã 2');
+    expect(linha(montado)).toContain('Tarde 2');
+    expect(linha(montado)).toContain('1º intervalo');
+    expect(linha(montado)).toContain('3º intervalo');
+  });
+
+  it('a cor do intervalo por faixa só aparece no detalhe (1h verde, 50 min amarelo, 40 min laranja, 20 min vermelho); na linha é a cor do tema', async () => {
+    const faixas = async (duracaoMinutos: number) => {
+      const fim: [number, number] = [12 + Math.floor(duracaoMinutos / 60), duracaoMinutos % 60];
+      const montado = await montar(comRegistro({ intervalos: [intervalo([12, 0], fim)] }));
+      expect(montado.elemento.querySelector('.ponto-mes-dia__chip--intervalo')!.className).not.toContain('faixa');
+      (montado.elemento.querySelector('.ponto-mes-dia__linha') as HTMLElement).click();
+      responderSucesso(esperarRequisicao(montado.http, 'GET', '/ponto/diario'), { ...detalheVazio(), intervalos: [intervalo([12, 0], fim)] });
+      await montado.atualizar();
+      return montado.elemento.querySelector('.ponto-mes-dia__intervalo')!.className;
+    };
+    expect(await faixas(60)).toContain('ponto-mes-dia__faixa--esperado');
+    expect(await faixas(50)).toContain('ponto-mes-dia__faixa--atencao');
+    expect(await faixas(40)).toContain('ponto-mes-dia__faixa--alerta');
+    expect(await faixas(20)).toContain('ponto-mes-dia__faixa--critico');
+  });
+
+  it('dia útil encerrado, com hora a menos e sem justificativa, mostra o alerta "Faltaram"', async () => {
+    const montado = await montar(comRegistro({ data: dataRelativa(-3), totalMinutosTrabalhados: 400, saldoMinutos: -80 }));
+    const alerta = montado.elemento.querySelector('.ponto-mes-dia__alerta--aviso') as HTMLElement;
+    expect(texto(alerta)).toBe('Faltaram 1h 20min');
+  });
+
+  it('o dia de hoje, o dia justificado e o dia sem falta relevante não alertam hora a menos', async () => {
+    const hoje = await montar(comRegistro({ data: dataRelativa(0), totalMinutosTrabalhados: 400, saldoMinutos: -80 }));
+    expect(hoje.elemento.querySelector('.ponto-mes-dia__alerta')).toBeNull();
+    const justificado = await montar(comRegistro({ data: dataRelativa(-3), saldoMinutos: -80, justificativaNome: 'Atestado', justificativaMinutosCobertos: 480 }));
+    expect(justificado.elemento.querySelector('.ponto-mes-dia__alerta')).toBeNull();
+    const tolerancia = await montar(comRegistro({ data: dataRelativa(-3), totalMinutosTrabalhados: 470, saldoMinutos: -10 }));
+    expect(tolerancia.elemento.querySelector('.ponto-mes-dia__alerta')).toBeNull();
+  });
+
+  it('mais de 10h trabalhadas mostra o alerta de erro, inclusive hoje', async () => {
+    const montado = await montar(comRegistro({ data: dataRelativa(0), totalMinutosTrabalhados: 670, saldoMinutos: 190 }));
+    expect(texto(montado.elemento.querySelector('.ponto-mes-dia__alerta--erro') as HTMLElement)).toBe('Acima de 10h (+1h 10min)');
+  });
+
+  it('ao abrir o dia com alerta, o detalhe explica o alerta', async () => {
+    const montado = await montar(comRegistro({ data: dataRelativa(-3), totalMinutosTrabalhados: 400, saldoMinutos: -80 }));
+    (montado.elemento.querySelector('.ponto-mes-dia__linha') as HTMLElement).click();
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/ponto/diario'), {
+      data: '2026-03-02', usuarioId: 3, nomeUsuario: 'Ana', ehDiaUtil: true, motivoNaoUtil: null, metaMinutos: 480, minutosTrabalhadosDiaUtil: 400,
+      minutosTrabalhadosExtra: 0, totalMinutosTrabalhados: 400, saldoMinutos: -80, intervalos: [], execucoes: [],
+    });
+    await montado.atualizar();
+    expect(texto(montado.elemento.querySelector('.ponto-mes-dia__aviso') as HTMLElement)).toContain('sem justificativa');
   });
 });

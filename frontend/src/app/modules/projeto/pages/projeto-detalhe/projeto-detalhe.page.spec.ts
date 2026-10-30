@@ -47,6 +47,16 @@ describe('ProjetoDetalhePage', () => {
     expect(montado.componente.resumo()).toMatchObject({ total: 0, percentual: 0, estourou: false });
   });
 
+  it('o cabeçalho leva a cor do projeto na faixa do topo e no selo com a sigla do nome', async () => {
+    const { montado } = await montarDetalhe(TipoUsuarioEnum.GESTOR);
+    await carregar(montado);
+    const faixa = montado.elemento.querySelector('.projeto-detalhe__faixa') as HTMLElement;
+    const selo = montado.elemento.querySelector('.projeto-detalhe__selo') as HTMLElement;
+    expect(faixa.style.backgroundColor).toBe('rgb(51, 102, 153)');
+    expect(selo.style.backgroundColor).toBe('rgb(51, 102, 153)');
+    expect(selo.textContent?.trim()).toBe('PC');
+  });
+
   it('gestor vê Nova Demanda, Relatório, Editar, Controle de horas e "Definir datas"', async () => {
     const { montado } = await montarDetalhe(TipoUsuarioEnum.GESTOR);
     await carregar(montado);

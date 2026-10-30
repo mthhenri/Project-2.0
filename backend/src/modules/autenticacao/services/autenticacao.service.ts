@@ -64,7 +64,7 @@ export class AutenticacaoService {
     const usuarioValidado = await this.validarCredenciais(dto.login, dto.senha);
 
     if (!usuarioValidado) {
-      throw new BusinessException('Credenciais inválidas');
+      throw new BusinessException('Usuário ou senha incorretos. Confira e tente de novo.');
     }
 
     const tokenGerado = await this.gerarToken(usuarioValidado);

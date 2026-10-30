@@ -37,7 +37,7 @@ describe('LoginPage', () => {
   it('abre com o formulário completo e o botão Entrar', async () => {
     const { montado } = await montarLogin();
     expect(montado.elemento.querySelector('#login-input')).not.toBeNull();
-    expect(texto(montado)).toContain('Faça login para continuar');
+    expect(texto(montado)).toContain('Entre para continuar');
     expect(texto(montado)).toContain('Entrar');
   });
 
@@ -45,8 +45,8 @@ describe('LoginPage', () => {
     const { montado } = await montarLogin();
     await enviar(montado);
     montado.http.expectNone(() => true);
-    expect(texto(montado)).toContain('Login é obrigatório');
-    expect(texto(montado)).toContain('Senha é obrigatória');
+    expect(texto(montado)).toContain('Informe seu usuário');
+    expect(texto(montado)).toContain('Informe sua senha');
   });
 
   it('login com menos de 4 caracteres é recusado antes de chamar a API', async () => {
@@ -54,7 +54,7 @@ describe('LoginPage', () => {
     await preencher(montado, 'abc', 'segredo');
     await enviar(montado);
     montado.http.expectNone(() => true);
-    expect(texto(montado)).toContain('Mínimo de 4 caracteres');
+    expect(texto(montado)).toContain('Use pelo menos 4 caracteres');
   });
 
   it('normaliza o login (espaços e maiúsculas) como o backend antes de enviar', async () => {
@@ -70,10 +70,11 @@ describe('LoginPage', () => {
     await enviar(montado);
     expect(montado.componente.carregando()).toBe(true);
 
-    responderErro(esperarRequisicao(montado.http, 'POST', '/autenticacao/login'), 400, 'Credenciais inválidas');
+    responderErro(esperarRequisicao(montado.http, 'POST', '/autenticacao/login'), 400, 'Usuário ou senha incorretos. Confira e tente de novo.');
     await montado.atualizar();
 
-    expect(texto(montado)).toContain('Credenciais inválidas');
+    expect(texto(montado)).toContain('Usuário ou senha incorretos');
+    expect(montado.elemento.querySelector('#senha-input')!.getAttribute('aria-invalid')).toBe('true');
     expect(montado.componente.carregando()).toBe(false);
     expect(montado.componente.formulario.enabled).toBe(true);
     expect(irPara).not.toHaveBeenCalled();
@@ -87,13 +88,14 @@ describe('LoginPage', () => {
     esperarRequisicao(montado.http, 'POST', '/autenticacao/login').error(new ProgressEvent('error'), { status: 0 });
     await montado.atualizar();
     expect(texto(montado)).toContain('Servidor indisponível');
+    expect(montado.elemento.querySelector('#senha-input')!.getAttribute('aria-invalid')).toBeNull();
   });
 
   it('digitar de novo apaga o erro da tentativa anterior', async () => {
     const { montado } = await montarLogin();
     await preencher(montado, 'maria', 'errada');
     await enviar(montado);
-    responderErro(esperarRequisicao(montado.http, 'POST', '/autenticacao/login'), 400, 'Credenciais inválidas');
+    responderErro(esperarRequisicao(montado.http, 'POST', '/autenticacao/login'), 400, 'Usuário ou senha incorretos. Confira e tente de novo.');
     await montado.atualizar();
     montado.componente.formulario.patchValue({ senha: 'outra' });
     await montado.atualizar();
@@ -133,7 +135,7 @@ describe('LoginPage', () => {
     expect(irPara).toHaveBeenCalledWith('/atividade');
   });
 
-  it('"lembrar" guarda só login e nome, nunca a senha; desmarcado apaga o que havia', async () => {
+  it('o usuário é sempre lembrado: guarda só login e nome, nunca a senha', async () => {
     const { montado } = await montarLogin();
     await entrarComSucesso(montado, EstadoIaEnum.DESLIGADA);
     const guardado = JSON.parse(localStorage.getItem('ultimo_login')!);
@@ -149,7 +151,7 @@ describe('LoginPage', () => {
 
     montado.componente.entrarComOutroUsuario();
     await montado.atualizar();
-    expect(texto(montado)).toContain('Faça login para continuar');
+    expect(texto(montado)).toContain('Entre para continuar');
     expect(montado.elemento.querySelector('#login-input')).not.toBeNull();
   });
 
@@ -159,11 +161,30 @@ describe('LoginPage', () => {
     expect(montado.elemento.querySelector('#login-input')).not.toBeNull();
   });
 
-  it('com o lembrete desmarcado o login seguinte apaga o usuário guardado', async () => {
+  it('o login seguinte sobrescreve o usuário guardado', async () => {
     const { montado } = await montarLogin();
     localStorage.setItem('ultimo_login', JSON.stringify({ login: 'antigo', nomeCompleto: 'Antigo' }));
-    montado.componente.formulario.patchValue({ lembrar: false });
     await entrarComSucesso(montado, EstadoIaEnum.DESLIGADA);
-    expect(localStorage.getItem('ultimo_login')).toBeNull();
+    expect(JSON.parse(localStorage.getItem('ultimo_login')!)).toEqual({ login: 'maria', nomeCompleto: 'Maria Souza' });
+  });
+
+  it('não tem mais o checkbox de lembrar e avisa que a sessão dura 7 dias', async () => {
+    const { montado } = await montarLogin();
+    expect(montado.elemento.querySelector('p-checkbox')).toBeNull();
+    expect(texto(montado)).toContain('conectado por 7 dias');
+    expect(montado.elemento.querySelector('main')).not.toBeNull();
+  });
+
+  it('o olho é um botão com nome que mostra e oculta a senha', async () => {
+    const { montado } = await montarLogin();
+    const botao = () => montado.elemento.querySelector<HTMLButtonElement>('.login-pagina__olho')!;
+    const senha = () => montado.elemento.querySelector<HTMLInputElement>('#senha-input')!;
+    expect(botao().getAttribute('aria-label')).toBe('Mostrar senha');
+    expect(senha().type).toBe('password');
+    botao().click();
+    await montado.atualizar();
+    expect(senha().type).toBe('text');
+    expect(botao().getAttribute('aria-label')).toBe('Mostrar senha');
+    expect(botao().getAttribute('aria-pressed')).toBe('true');
   });
 });
