@@ -31,7 +31,8 @@ export const MOTIVO_ANTES_DO_CADASTRO = 'Antes do cadastro';
 /**
  * Status de utilidade de uma data específica, compartilhado entre os usuários do mesmo dia.
  * `fracaoMeta` é a fração da jornada exigida no dia: 1 (dia útil integral), 0.5 (meio período)
- * ou 0 (fim de semana ou dia não útil integral).
+ * ou 0 (fim de semana ou dia não útil integral). Para o usuário que ainda não existia na data, o
+ * `montarPontoDiario` troca por 0 ("Antes do cadastro").
  */
 interface InfoDia {
   fracaoMeta: number;
@@ -140,13 +141,15 @@ export class PontoService {
       const ehFimDeSemana = diaDaSemana === 0 || diaDaSemana === 6;
 
       const dataIso = this.formatarDataIso(ano, mes, numeroDoDia);
-      const antesDoCadastro = !ehFimDeSemana && dataIso < diaDoCadastro;
-
       const diaNaoUtil = mapaDiaNaoUtilPorDia.get(numeroDoDia) ?? null;
+      // Só um dia com meta passa a "Antes do cadastro": feriado integral anterior ao cadastro segue como feriado, como no diário.
+      const naoUtilIntegral = !ehFimDeSemana && diaNaoUtil?.duracao === TipoDiaNaoUtilDuracaoEnum.INTEGRAL;
+      const antesDoCadastro = !ehFimDeSemana && !naoUtilIntegral && dataIso < diaDoCadastro;
+
       const registradoComoNaoUtil = !ehFimDeSemana && !antesDoCadastro && diaNaoUtil !== null;
 
       // Fração da jornada exigida no dia: 1 (útil integral), 0.5 (meio período), 0 (fim de
-      // semana ou dia não útil integral). Soma das frações compõe a meta do mês.
+      // semana, dia não útil integral ou dia anterior ao cadastro do usuário). Soma das frações compõe a meta do mês.
       let fracaoMeta: number;
       if (ehFimDeSemana || antesDoCadastro || (registradoComoNaoUtil && diaNaoUtil!.duracao === TipoDiaNaoUtilDuracaoEnum.INTEGRAL)) {
         fracaoMeta = 0;

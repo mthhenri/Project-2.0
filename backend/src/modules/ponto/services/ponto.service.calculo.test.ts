@@ -416,7 +416,7 @@ test('mensal: o ponto de um usuário não soma execuções de outro', async () =
 });
 
 // ---------------------------------------------------------------------------
-// Meta a partir do cadastro (P-063): os dias anteriores ao cadastro do usuário não têm meta
+// Meta a partir do cadastro: os dias anteriores ao cadastro do usuário não têm meta
 // ---------------------------------------------------------------------------
 
 /** Cadastrado em 10/03/2026 (terça) às 09:00 no fuso do sistema. */
@@ -481,5 +481,13 @@ test('todos: a data vale para cada usuário pelo seu cadastro (quem já estava c
   ] });
   const pontos = await servico.consultarTodos({ data: SEGUNDA }, GESTOR);
   assert.deepEqual(pontos.map((ponto) => [ponto.nomeUsuario, ponto.metaMinutos, ponto.motivoNaoUtil]), [['Ana', 480, null], ['Beto', 0, 'Antes do cadastro']]);
+});
+
+test('antes do cadastro, feriado integral: mensal e diário mostram o mesmo motivo (o feriado), sem meta nos dois', async () => {
+  const { servico } = criarServico({ usuarios: CADASTRADA_EM_10_DE_MARCO, diasNaoUteis: { [SEGUNDA]: FERIADO_INTEGRAL } });
+  const dia = (await servico.consultarMensal({ ano: 2026, mes: 3 }, DESENVOLVEDOR)).dias.find((item) => item.data === SEGUNDA)!;
+  const diario = await servico.consultarDiario({ data: SEGUNDA }, DESENVOLVEDOR);
+  assert.deepEqual([dia.motivoNaoUtil, dia.metaMinutos], ['Feriado - Dia do Trabalho', 0]);
+  assert.deepEqual([diario.motivoNaoUtil, diario.metaMinutos], ['Feriado - Dia do Trabalho', 0]);
 });
 
