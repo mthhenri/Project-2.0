@@ -86,11 +86,12 @@
     padding: 3rem 0;
   }
 
-  &__demandas-lista {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    padding-top: 0.5rem;
+  // A Árvore em três colunas pede altura própria: cada coluna rola por dentro.
+  &__demandas-arvore {
+    height: clamp(30rem, calc(100dvh - 22rem), 60rem);
+    border: 1px solid var(--app-surface-200);
+    border-radius: 0.625rem;
+    overflow: hidden;
   }
 
   &__demanda-item {

@@ -201,6 +201,33 @@ describe('UsuarioAnotacoesDialogComponent — salvar', () => {
   });
 });
 
+describe('UsuarioAnotacoesDialogComponent — releitura depois da IA (P-041)', () => {
+  it('adota o que a IA gravou nas seções sem mudança local e deixa a seção que está sendo digitada como está', async () => {
+    const montado = await abrirPad(TipoUsuarioEnum.DESENVOLVEDOR, ID_LOGADO, { PENDENCIA: '- [ ] antiga', LEMBRETE: 'meu' });
+    const pendencias = secao(montado, TipoAnotacaoEnum.PENDENCIA);
+    const lembretes = secao(montado, TipoAnotacaoEnum.LEMBRETE);
+    lembretes.controle.setValue('meu, digitando');
+
+    pad().recarregarSecoesSemMudancaLocal();
+    const recarga = esperarRequisicao(montado.http, 'GET', '/anotacao');
+    responderSucesso(recarga, secoesDe(ID_LOGADO, { PENDENCIA: '- [ ] antiga\n- [ ] nova da IA', LEMBRETE: 'meu, pela IA' }).map((lida) => ({ ...lida, updatedDate: VERSAO_NOVA })));
+    await montado.atualizar();
+
+    expect(pendencias.textoAtual).toBe('- [ ] antiga\n- [ ] nova da IA');
+    expect(pendencias.versaoLida).toBe(VERSAO_NOVA);
+    expect(pad().pendenciasEmAberto()).toBe(2);
+    // A que a pessoa está digitando não é pisada.
+    expect(lembretes.textoAtual).toBe('meu, digitando');
+    expect(lembretes.versaoLida).toBe(VERSAO);
+  });
+
+  it('sem pad carregado, não faz requisição nenhuma', async () => {
+    const montado = await montarComponente(UsuarioAnotacoesDialogComponent, { usuario: TipoUsuarioEnum.DESENVOLVEDOR });
+    pad().recarregarSecoesSemMudancaLocal();
+    montado.http.expectNone((requisicao) => requisicao.url.includes('/anotacao'));
+  });
+});
+
 describe('UsuarioAnotacoesDialogComponent — "Enviar para" outra seção', () => {
   async function enviar(montado: Montado, trecho: string, destino: TipoAnotacaoEnum) {
     painel(montado).abrirMenuDoTrecho(secao(montado, TipoAnotacaoEnum.EM_ANDAMENTO), { inicio: 0, fim: trecho.length, texto: trecho, selecao: trecho, evento: new MouseEvent('contextmenu') });

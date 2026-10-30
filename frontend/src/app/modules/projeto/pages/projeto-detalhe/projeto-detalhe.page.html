@@ -100,7 +100,6 @@
       </span>
 
       <span class="projeto-detalhe__visoes" role="group" aria-label="Abrir demandas em outra visão">
-        <p-button label="Lista" icon="pi pi-list" severity="secondary" [outlined]="true" size="small" (onClick)="abrirVisao('lista')" />
         <p-button label="Grafo" icon="pi pi-share-alt" severity="secondary" [outlined]="true" size="small" (onClick)="abrirVisao('grafo')" />
         @if (sessao.eGestor()) {
           <p-button label="Controle de horas" icon="pi pi-chart-bar" severity="secondary" [outlined]="true" size="small" (onClick)="abrirVisao('controle-de-horas')" />
@@ -143,21 +142,36 @@
           (expansaoAlternada)="alternarExpansaoGeral()"
         />
 
-        @if (arvoreRaizes().length === 0) {
-          <div class="projeto-detalhe__demandas-vazio">
-            <i class="pi pi-search text-4xl text-muted-color"></i>
-            <p class="text-muted-color mt-2">Nenhuma demanda corresponde aos filtros.</p>
-            <p-button label="Limpar filtros" icon="pi pi-filter-slash" severity="secondary" [outlined]="true" size="small" class="mt-3" (onClick)="aoAlterarFiltro(filtroVazio)" />
+        <!-- Bloco próprio: a Árvore nasce depois da toolbar, que lê a expansão dela. -->
+        @if (nos().length > 0) {
+          <div class="projeto-detalhe__demandas-arvore">
+            <app-demanda-arvore-tela
+              #arvoreTela
+              [nos]="nos()"
+              [filtro]="filtro()"
+              [projetoId]="projeto()!.id"
+              [pastaId]="pastaId()"
+              (pastaChange)="pastaId.set($event)"
+              (alterado)="recarregarDemandas()"
+              (statusAlterado)="aoStatusAlterado($event)"
+              (tagsAlteradas)="aoTagsAlteradas($event)"
+              (filtrosLimpos)="aoAlterarFiltro(filtroVazio)"
+              (demandaEditarSolicitada)="painel.abrirEdicao($event)"
+              (demandaNovaFilhaSolicitada)="painel.abrirNovaFilha($event)"
+              (demandaTagsSolicitadas)="painel.abrirDialogTagsPorId($event)"
+              (demandaMembrosSolicitados)="painel.abrirDialogMembros($event)"
+              (demandaDescricaoSolicitada)="painel.abrirDialogDescricaoPorId($event.id, $event.campo)"
+            />
           </div>
         }
 
-        <div class="projeto-detalhe__demandas-lista" [hidden]="arvoreRaizes().length === 0">
+        <!-- O painel da árvore antiga fica escondido: hospeda só os diálogos de editar, nova filha, tags, membros e descrição que o menu de
+             contexto da Árvore abre (o mesmo arranjo da tela de Demandas). -->
+        <div hidden>
           <app-demanda-arvore-painel
             #painel
-            [raizes]="arvoreRaizes()"
+            [raizes]="[]"
             [projetoId]="projeto()!.id"
-            [termoBusca]="filtro().termo"
-            [expandirIds]="expandirPorFiltro()"
             (alterado)="recarregarDemandas()"
             (tagsAlteradas)="aoTagsAlteradas($event)"
             (statusAlterado)="aoStatusAlterado($event)"

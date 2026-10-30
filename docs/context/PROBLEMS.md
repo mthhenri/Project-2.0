@@ -87,22 +87,6 @@
 - **Desde:** 2026-10-26 (visto no fecho da task 245).
 - **Nota (2026-10-30):** não reproduzido; passa sozinho (16 testes) e na suíte inteira do frontend. Se não voltar a aparecer, pode virar flaky de ambiente e o item sair.
 
-### P-035 — Check-in: a resposta da IA com proposta some e volta no fim do fluxo · `ABERTO` · frontend/checkin
-
-- **Sintoma:** igual ao que a task 225 corrigiu no chat: no evento `fim` a bolha da resposta é apagada e a mensagem gravada entra no lugar, então os cartões de proposta são destruídos e recriados (piscam em "Carregando proposta…") e a rolagem pode parar antes do cartão terminar de crescer.
-- **Causa:** `checkin.page` mantém `aoVivo` num bloco separado da lista de mensagens (`@if (aoVivo(); as resposta)`), sem a chave comum que a `chat.page` passou a usar.
-- **Contorno:** nenhum; o cartão volta a aparecer sozinho em instantes.
-- **Correção:** aplicar à `checkin.page` o mesmo item único (`itens` com `track` por `chave`) e a mesma regra de rolagem por interação do usuário, com teste de componente.
-- **Desde:** achado na task 225 (2026-10-25); não reproduzido ao vivo, só visto no código.
-
-### P-038 — A tela de detalhe do projeto ainda usa a visão antiga de demandas · `ABERTO` · frontend/projeto
-
-- **Sintoma:** o detalhe do projeto (`projeto-detalhe`) ainda desenha as demandas à moda antiga (toolbar própria e botões de visão "Lista", "Grafo" e "Controle de horas"), sem a Árvore em três colunas nem o "Projeto inteiro" da tela de Demandas.
-- **Causa:** as tasks 238–241 reorganizaram só a tela de Demandas; o detalhe do projeto não foi revisto.
-- **Contorno:** usar a tela de Demandas, que já tem a Árvore nova.
-- **Correção:** a decidir pelo autor (ajuste adiado): alinhar o detalhe do projeto à Árvore nova ou reaproveitar os componentes dela.
-- **Desde:** 2026-10-27 (apontado pelo autor).
-
 ### P-039 — O exibidor de Markdown da resposta da IA não renderiza tabelas · `ABERTO` · frontend/markdown/chat IA
 
 - **Sintoma:** quando a IA responde com uma tabela Markdown (`| Opção | Como funciona | ... |` com a linha `|---|---|`), o chat mostra o texto cru, com as barras verticais e os hifens, tudo corrido em parágrafos, em vez de uma tabela.
@@ -117,14 +101,6 @@
 - **Causa:** não investigada (o fechamento parece vir da confirmação automática da proposta de descrição da execução).
 - **Contorno:** recarregar a tela à mão para ver a execução ativa atualizada.
 - **Correção:** a decidir: recarregar a execução ativa da topbar ao fim das ações da IA/check-in e nos demais fluxos que a alteram; impedir que o auto-confirmar da descrição da execução encerre o check-in.
-- **Desde:** 2026-10-27 (apontado pelo autor).
-
-### P-041 — Chat: as anotações não recarregam quando a IA mexe nelas · `ABERTO` · frontend/chat IA/pad
-
-- **Sintoma:** na visão de chat, quando a IA altera as anotações (pad), a tela não recarrega e continua mostrando o conteúdo antigo.
-- **Causa:** não investigada.
-- **Contorno:** recarregar a tela ou reabrir o pad.
-- **Correção:** recarregar as anotações depois de a IA aplicar a alteração (cuidando do risco do P-024, sobrescrever o que o usuário digita).
 - **Desde:** 2026-10-27 (apontado pelo autor).
 
 ### P-043 — Chat IA: pergunta sem resposta (falha ou timeout) mas com custo registrado · `ABERTO` · chat IA/backend
@@ -175,28 +151,12 @@
 - **Correção:** definir com o autor a nova exibição e aplicar na tela de projetos.
 - **Desde:** 2026-10-29 (apontado pelo autor).
 
-### P-053 — Modelagem sem documentação de cada campo e tabela · `ABERTO` · docs/modelagem
-
-- **Sintoma:** a tela de modelagem não documenta cada campo nem cada tabela.
-- **Causa:** a documentação por campo e tabela ainda não foi feita.
-- **Contorno:** consultar `docs/SCHEMA.md`.
-- **Correção:** documentar cada campo e cada tabela na modelagem.
-- **Desde:** 2026-10-29 (apontado pelo autor).
-
 ### P-054 — Detalhes do dia no ponto com filtro de usuário em layout vertical · `ABERTO` · ponto/frontend
 
 - **Sintoma:** os detalhes do dia no ponto, com filtro de usuário, são exibidos em lista vertical, que o autor quer rever.
 - **Causa:** o layout vertical foi o escolhido na primeira versão.
 - **Contorno:** nenhum.
 - **Correção:** avaliar outro formato, como uma exibição em serpentina, e aplicar o escolhido.
-- **Desde:** 2026-10-29 (apontado pelo autor).
-
-### P-055 — Tela de Atividades fora do esquema compacto da Execução · `ABERTO` · atividade/frontend
-
-- **Sintoma:** a tela de Atividades ocupa mais espaço do que o necessário; a Execução já usa atividade compacta.
-- **Causa:** a tela de Atividades não reaproveita o formato compacto da Execução.
-- **Contorno:** nenhum.
-- **Correção:** aplicar à Atividades o mesmo esquema compacto da Execução, para otimizar o espaço.
 - **Desde:** 2026-10-29 (apontado pelo autor).
 
 ### P-057 — Tela de login e lembrança do usuário pedem ajustes · `ABERTO` · autenticacao/frontend
@@ -214,6 +174,14 @@
 - **Contorno:** recarregar a tela e observar o aviso de erro.
 - **Correção:** distinguir falha de lista realmente vazia e oferecer nova tentativa, preservando dados anteriores quando houver.
 - **Desde:** reproduzido em 2026-10-30 durante a verificação das tasks 262 e 263, com erro HTTP simulado; o comportamento da lista de Atividades já tinha teste próprio anterior às correções.
+
+### P-059 — Teste de `modelagem.page.spec` instável na suíte inteira · `ABERTO` · frontend/testes
+
+- **Sintoma:** `escolher uma relação no painel passa para a outra tabela` falha às vezes em `npm run test --workspace=frontend` (por tempo esgotado com o limite antigo de 5 s; uma vez com o limite de 20 s) e passa na rodada seguinte, sem mudança de código.
+- **Causa:** não investigada; parece carga da suíte inteira, como o antigo P-034.
+- **Contorno:** rodar o arquivo sozinho ou repetir a suíte.
+- **Correção:** medir o teste sob carga e ver o que ele espera (renderização do diagrama?) antes de mexer no limite.
+- **Desde:** 2026-10-30 (visto no fecho dos P-035, P-038, P-041 e P-055; 4 rodadas completas, 2 falhas dele).
 
 ### P-001 — Projeto sem lint · `CONTORNADO` · repositório
 

@@ -7,6 +7,7 @@ import { campoDeMensagem, digitarNaMensagem, esperarCampoDeMensagem, teclarNaMen
 import { esperarRequisicao, responderSucesso } from '../../../../../testes/http-teste';
 import { DesfazerService } from '../../../../core/services/desfazer.service';
 import { IaDisponibilidadeService } from '../../../../core/services/ia-disponibilidade.service';
+import { PadService } from '../../../usuario/services/pad.service';
 import { ChatService, ErroDoChat } from '../../services/chat.service';
 import { ModoDoChatEnum } from '../../utils/plano.util';
 import { ChatPage } from './chat.page';
@@ -271,6 +272,22 @@ describe('ChatPage — enviar e receber a resposta', () => {
     // O fim relê o estado da IA e a lista do histórico (a conversa pode ter ganhado nome).
     expect(montado.http.match((requisicao) => requisicao.url.endsWith('/ia/disponibilidade'))).toHaveLength(1);
     expect(montado.http.match((requisicao) => requisicao.url.endsWith('/chat/conversas'))).toHaveLength(1);
+  });
+
+  it('a IA anotar no pad faz o pad reler o servidor ao concluir a ferramenta (P-041); outra ferramenta não', async () => {
+    const montado = await montarChat({ mensagens: [DA_IA('Olá!')] });
+    const releitura = vi.spyOn(TestBed.inject(PadService), 'recarregarSecoesSemMudancaLocal').mockImplementation(() => undefined);
+    const fluxo = controlarFluxo(enviarMensagemEspiao, 1);
+    await enviarPeloTeclado(montado, 'Anota nas pendências');
+
+    fluxo.emitir({ tipo: 'ferramenta', nome: 'consultar_pad', situacao: 'CONCLUIDA' });
+    fluxo.emitir({ tipo: 'ferramenta', nome: 'propor_anotar_pad', situacao: 'EXECUTANDO' });
+    expect(releitura).not.toHaveBeenCalled();
+    fluxo.emitir({ tipo: 'ferramenta', nome: 'propor_anotar_pad', situacao: 'CONCLUIDA' });
+    expect(releitura).toHaveBeenCalledTimes(1);
+
+    fluxo.terminar();
+    await montado.atualizar();
   });
 
   it('ferramenta executando mostra "consultando"; ao concluir, o aviso some', async () => {

@@ -150,8 +150,6 @@
           @if (sessao.eGestor()) {
             <th class="atividade-listagem__coluna-selecao"><p-tableHeaderCheckbox ariaLabel="Selecionar todas as atividades da página" /></th>
           }
-          <th>Projeto</th>
-          <th>Demanda</th>
           <th>Atividade</th>
           @if (sessao.eGestor()) {
             <th>Usuário</th>
@@ -169,19 +167,16 @@
           @if (sessao.eGestor()) {
             <td class="atividade-listagem__coluna-selecao"><p-tableCheckbox [value]="atividade" [ariaLabel]="'Selecionar ' + atividade.nome" /></td>
           }
-          <td>{{ atividade.nomeProjeto }}</td>
-          <td>
-            <div class="atividade-listagem__demanda">
-              <app-atividade-documentos-indicador [atividade]="atividade" (abrir)="abrirDescricaoDemanda(atividade, $event)" />
-              <span class="atividade-listagem__demanda-nome">{{ atividade.nomeDemanda }}</span>
-            </div>
-          </td>
           <td>
             <div class="atividade-listagem__atividade">
-              <span>{{ atividade.nome }}</span>
+              <span class="atividade-listagem__atividade-nome">{{ atividade.nome }}</span>
               @if (atividadeEmExecucao(atividade)) {
                 <app-atividade-em-execucao [inicio]="inicioDaExecucaoPropria(atividade)" />
               }
+              <div class="atividade-listagem__demanda">
+                <app-atividade-documentos-indicador [atividade]="atividade" (abrir)="abrirDescricaoDemanda(atividade, $event)" />
+                <span class="atividade-listagem__demanda-nome">{{ atividade.nomeProjeto }} › {{ atividade.nomeDemanda }}</span>
+              </div>
             </div>
           </td>
           @if (sessao.eGestor()) {

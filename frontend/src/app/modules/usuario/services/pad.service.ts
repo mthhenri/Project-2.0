@@ -111,6 +111,33 @@ export class PadService implements OnDestroy {
     this.carregar(usuarioId);
   }
 
+  /**
+   * A IA (ou outro lugar) pode ter alterado o pad: relê o servidor e adota o que mudou, **só nas seções sem nada digitado, em gravação ou em
+   * limpeza**, para nunca pisar no texto do usuário (P-041). Seção com mudança local fica como está; se o servidor já tem versão mais nova,
+   * o conflito (409) da próxima gravação a recarrega com aviso. Sem pad carregado, não faz nada.
+   */
+  recarregarSecoesSemMudancaLocal(): void {
+    const usuarioId = this.usuarioId();
+    if (!usuarioId || this.secoes().length === 0 || this.carregando()) return;
+    this.anotacaoService.listar(usuarioId).subscribe({
+      next: (resposta) => {
+        if (!resposta.sucesso || !resposta.dados || this.usuarioId() !== usuarioId) return;
+        let mudou = false;
+        for (const lida of resposta.dados) {
+          const secao = this.secoes().find((candidata) => candidata.tipo === lida.tipo);
+          const limpa = secao && secao.textoAtual === secao.conteudoSalvo && !secao.salvandoRequisicao && !secao.limpando;
+          if (!secao || !limpa || new Date(secao.versaoLida).getTime() === new Date(lida.updatedDate).getTime()) continue;
+          secao.adotar(lida);
+          mudou = true;
+        }
+        if (!mudou) return;
+        this.agora.set(new Date());
+        this.avisarAlteracao(usuarioId);
+      },
+      error: () => undefined,
+    });
+  }
+
   private temMudancaSemGravar(usuarioId: number): boolean {
     return this.usuarioId() === usuarioId && this.secoes().some((secao) => secao.textoAtual !== secao.conteudoSalvo || secao.salvandoRequisicao);
   }

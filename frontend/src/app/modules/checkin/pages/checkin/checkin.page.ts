@@ -25,6 +25,10 @@ const ESPERA_PARA_FECHAR_MS = 5000;
 /** Dentro do Project, depois de registrar, quanto a janelinha espera antes de sumir sozinha. */
 const ESPERA_PARA_SUMIR_REGISTRADO_MS = 2500;
 const CAMINHO_DA_CONVERSA = '/checkin/mensagem';
+/** Até onde do fim da conversa (px) o usuário ainda conta como "no fim". */
+const MARGEM_DO_FIM_PX = 80;
+/** Quanto tempo (ms) depois de uma roda, toque, tecla ou clique um evento de rolagem ainda conta como do usuário. */
+const JANELA_DA_INTERACAO_MS = 400;
 
 /** A ponte que o Project Desktop expõe à página (`desktop/src/preload.ts`); no navegador comum não existe. */
 interface PonteDoDesktop {
@@ -37,12 +41,17 @@ const SUGESTOES = ['Terminei o que estava fazendo', 'Vou trocar de atividade', '
 
 interface MensagemDoCheckin {
   id: number;
+  /** Identidade do item na lista: a resposta em andamento e a mensagem gravada que a substitui têm a mesma, então os cartões não são recriados. */
+  chave: string;
+  aoVivo?: boolean;
+  ferramenta?: string | null;
   autor: 'USUARIO' | 'IA';
   texto: string;
   propostaIds: number[];
 }
 
 interface RespostaAoVivo {
+  chave: string;
   texto: string;
   ferramenta: string | null;
   propostaIds: number[];
@@ -74,6 +83,7 @@ export class CheckinPage implements OnInit {
   private readonly roteador = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
   private readonly areaDeRolagem = viewChild<ElementRef<HTMLElement>>('rolagem');
+  private readonly fluxo = viewChild<ElementRef<HTMLElement>>('fluxo');
   private readonly campoDeTexto = viewChild(EditorMensagemComponent);
 
   readonly formatarDuracao = formatarDuracao;
@@ -91,11 +101,23 @@ export class CheckinPage implements OnInit {
   readonly estadoDaSituacao = signal<EstadoDoCheckin>('CARREGANDO');
   readonly mensagens = signal<MensagemDoCheckin[]>([]);
   readonly aoVivo = signal<RespostaAoVivo | null>(null);
+  /** O que a conversa mostra: as mensagens e, no fim, a resposta em andamento como mais um item (que vira a gravada sem sumir). */
+  readonly itens = computed<MensagemDoCheckin[]>(() => {
+    const resposta = this.aoVivo();
+    if (!resposta) return this.mensagens();
+    const emAndamento: MensagemDoCheckin = {
+      id: 0, chave: resposta.chave, autor: 'IA', texto: resposta.texto, propostaIds: resposta.propostaIds, aoVivo: true, ferramenta: resposta.ferramenta,
+    };
+    return [...this.mensagens(), emAndamento];
+  });
   readonly enviando = signal(false);
   readonly controleTexto = new FormControl<string>('', { nonNullable: true });
   private readonly textoDigitado = signal('');
   private execucaoDaAbertura: number | null = null;
   private contadorLocal = 0;
+  /** O usuário subiu para ler: a conversa deixa de acompanhar até ele voltar ao fim. */
+  private longeDoFim = false;
+  private ultimaInteracaoDoUsuario = 0;
   private temporizadorSituacao: ReturnType<typeof setInterval> | null = null;
 
   /** O estado da janela: a IA indisponível tem precedência sobre o check-in (o fallback da task 157 assume dali). */
@@ -129,7 +151,19 @@ export class CheckinPage implements OnInit {
     effect(() => {
       this.mensagens();
       this.aoVivo();
-      untracked(() => setTimeout(() => this.rolarParaOFim()));
+      untracked(() => {
+        if (!this.longeDoFim) this.rolarParaOFim();
+      });
+    });
+    // Cartões e respostas crescem depois de renderizados: acompanha o tamanho do conteúdo, não só as mensagens.
+    effect((aoLimpar) => {
+      const alvo = this.fluxo()?.nativeElement;
+      if (!alvo || typeof ResizeObserver === 'undefined') return;
+      const observador = new ResizeObserver(() => {
+        if (!this.longeDoFim) this.rolarParaOFim();
+      });
+      observador.observe(alvo);
+      aoLimpar(() => observador.disconnect());
     });
     // Sem execução em andamento, a janela explica e se fecha sozinha.
     effect((aoLimpar) => {
@@ -174,6 +208,23 @@ export class CheckinPage implements OnInit {
     });
   }
 
+  /** O usuário mexeu na área de rolagem (roda, toque, tecla ou clique): o próximo evento de rolagem é dele. */
+  aoInteragirComARolagem(): void {
+    this.ultimaInteracaoDoUsuario = Date.now();
+  }
+
+  /** Só conta como "subiu" a rolagem que veio de uma interação do usuário; um cartão que cresce não larga ele no meio do caminho. */
+  aoRolar(): void {
+    const area = this.areaDeRolagem()?.nativeElement;
+    if (!area) return;
+    if (area.scrollHeight - area.scrollTop - area.clientHeight <= MARGEM_DO_FIM_PX) {
+      this.longeDoFim = false;
+      return;
+    }
+    if (Date.now() - this.ultimaInteracaoDoUsuario < JANELA_DA_INTERACAO_MS) this.longeDoFim = true;
+    else if (!this.longeDoFim) this.rolarParaOFim();
+  }
+
   aoMudarTexto(markdown: string): void {
     this.controleTexto.setValue(markdown);
   }
@@ -210,9 +261,10 @@ export class CheckinPage implements OnInit {
     if (!texto || texto.length > LIMITE_MENSAGEM_CHAT || (textoPronto === undefined && this.excedeuOLimite()) || this.enviando() || this.estado() !== 'EM_ANDAMENTO') return;
 
     this.enviando.set(true);
-    this.mensagens.update((lista) => [...lista, { id: ++this.contadorLocal, autor: 'USUARIO', texto, propostaIds: [] }]);
+    this.mensagens.update((lista) => [...lista, { id: ++this.contadorLocal, chave: `local-${this.contadorLocal}`, autor: 'USUARIO', texto, propostaIds: [] }]);
     if (textoPronto === undefined) this.campoDeTexto()?.limpar();
-    this.aoVivo.set({ texto: '', ferramenta: null, propostaIds: [] });
+    this.longeDoFim = false;
+    this.aoVivo.set({ chave: `ao-vivo-${++this.contadorLocal}`, texto: '', ferramenta: null, propostaIds: [] });
     let terminou = false;
     try {
       await this.chatService.enviarMensagem(
@@ -273,9 +325,12 @@ export class CheckinPage implements OnInit {
         this.aoVivo.update((atual) => atual && { ...atual, propostaIds: [...atual.propostaIds, evento.propostaId] });
         break;
       case 'fim': {
-        const propostas = [...new Set([...(this.aoVivo()?.propostaIds ?? []), ...evento.mensagem.propostaIds])];
+        const resposta = this.aoVivo();
+        const propostas = [...new Set([...(resposta?.propostaIds ?? []), ...evento.mensagem.propostaIds])];
+        // A mesma chave faz a lista trocar a resposta em andamento pela gravada sem recriar o elemento nem os cartões.
+        const chave = resposta?.chave ?? `local-${++this.contadorLocal}`;
+        this.mensagens.update((lista) => [...lista, { id: ++this.contadorLocal, chave, autor: 'IA', texto: evento.mensagem.texto, propostaIds: propostas }]);
         this.aoVivo.set(null);
-        this.mensagens.update((lista) => [...lista, { id: ++this.contadorLocal, autor: 'IA', texto: evento.mensagem.texto, propostaIds: propostas }]);
         break;
       }
       case 'erro':
@@ -316,7 +371,9 @@ export class CheckinPage implements OnInit {
   }
 
   private rolarParaOFim(): void {
-    const area = this.areaDeRolagem()?.nativeElement;
-    if (area) area.scrollTop = area.scrollHeight;
+    setTimeout(() => {
+      const area = this.areaDeRolagem()?.nativeElement;
+      if (area) area.scrollTop = area.scrollHeight;
+    });
   }
 }

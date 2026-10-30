@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
-import { DemandaGrafoNoDto, TipoProjetoStatusEnum, TipoUsuarioEnum } from '@project20/shared';
+import { DemandaGrafoNoDto, TipoDemandaStatusEnum, TipoProjetoStatusEnum, TipoUsuarioEnum } from '@project20/shared';
 import { montarComponente, ComponenteMontado } from '../../../../../testes/montar-componente';
 import { esperarRequisicao, responderErro, responderSucesso } from '../../../../../testes/http-teste';
 import { ProjetoDetalhePage } from './projeto-detalhe.page';
@@ -105,6 +105,21 @@ describe('ProjetoDetalhePage', () => {
     montado.componente.voltarParaListagem();
     expect(irPara).toHaveBeenNthCalledWith(1, ['/demanda'], { queryParams: { projetoId: 5, modo: 'grafo' } });
     expect(irPara).toHaveBeenNthCalledWith(2, ['/projeto']);
+  });
+
+  it('com demandas mostra a Árvore em três colunas no "Projeto inteiro", sem a visão "Lista" antiga (P-038)', async () => {
+    const { montado } = await montarDetalhe(TipoUsuarioEnum.GESTOR);
+    const no = (id: number, sobrescritas: Partial<DemandaGrafoNoDto> = {}): DemandaGrafoNoDto => ({
+      id, nome: `Demanda ${id}`, status: TipoDemandaStatusEnum.PENDENTE, isEstrutural: false, horasEstimadas: 4, minutosExecutados: 0,
+      demandaPaiId: null, temDescricaoTecnica: false, temDescricaoCliente: false, temDocumentacao: false, tags: [], ...sobrescritas,
+    });
+    await carregar(montado, PROJETO, { nos: [no(1), no(2, { demandaPaiId: 1 })], arestas: [] });
+
+    expect(montado.elemento.querySelector('app-demanda-arvore-tela')).not.toBeNull();
+    expect(texto(montado)).toContain('Projeto inteiro');
+    expect(texto(montado)).toContain('Demanda 2');
+    expect(texto(montado)).toContain('Grafo');
+    expect(montado.elemento.querySelector('[aria-label="Abrir demandas em outra visão"]')?.textContent).not.toContain('Lista');
   });
 
   it('projeto inexistente (404) não mostra o cabeçalho e sai do carregamento', async () => {

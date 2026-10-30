@@ -393,6 +393,7 @@ describe('CheckinPage — conversa', () => {
     montado.fixture.detectChanges();
     expect(conversaDa(montado)).toContain('Tela de login');
     expect(botao(montado, 'Confirmar')).toBeDefined();
+    const cartaoAoVivo = montado.elemento.querySelector('app-chat-proposta-cartao');
 
     fluxo.emitir({ tipo: 'fim', mensagem: mensagemDaIa('Posso registrar?', { propostaIds: [31] }) as never });
     fluxo.terminar();
@@ -400,6 +401,8 @@ describe('CheckinPage — conversa', () => {
 
     // A proposta que chegou ao vivo e a que vem na mensagem final são a mesma: um cartão só.
     expect(montado.elemento.querySelectorAll('app-chat-proposta-cartao')).toHaveLength(1);
+    // E não é recriado no fim (P-035): é o mesmo elemento, sem piscar em "Carregando proposta…".
+    expect(montado.elemento.querySelector('app-chat-proposta-cartao')).toBe(cartaoAoVivo);
     responderSituacoes(montado);
   });
 

@@ -201,6 +201,18 @@ describe('AtividadeListagemPage: estados da tabela', () => {
     }
   });
 
+  it('projeto, demanda e atividade ficam numa coluna só: o nome e, embaixo, "Projeto › Demanda" (P-055)', async () => {
+    const { montado } = await montarPagina();
+    await carregar(montado, [criarAtividade(1)]);
+    const cabecalhos = Array.from(montado.elemento.querySelectorAll('th')).map((cabecalho) => cabecalho.textContent?.trim());
+    expect(cabecalhos).toContain('Atividade');
+    expect(cabecalhos).not.toContain('Projeto');
+    expect(cabecalhos).not.toContain('Demanda');
+    const celula = montado.elemento.querySelector('.atividade-listagem__atividade')!;
+    expect(celula.querySelector('.atividade-listagem__atividade-nome')?.textContent).toBe('Atividade 1');
+    expect(celula.querySelector('.atividade-listagem__demanda-nome')?.textContent).toBe('Portal › Demanda dez');
+  });
+
   it('o gestor vê as colunas de seleção e de usuário; o desenvolvedor não', async () => {
     const gestor = await montarPagina();
     await carregar(gestor.montado, [criarAtividade(1)]);
