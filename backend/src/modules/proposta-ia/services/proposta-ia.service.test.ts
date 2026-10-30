@@ -63,10 +63,10 @@ function criarRepositorio() {
   return { repositorio, propostas };
 }
 
-function criarExecutor(opcoes: { falharAoExecutar?: boolean | 'obsoleta'; falharAoDesfazer?: boolean; atraso?: boolean; obsoleta?: boolean | 'falha'; podeResolver?: boolean } = {}) {
+function criarExecutor(opcoes: { falharAoExecutar?: boolean | 'obsoleta'; falharAoDesfazer?: boolean; atraso?: boolean; obsoleta?: boolean | 'falha'; podeResolver?: boolean; tipo?: TipoPropostaIaEnum } = {}) {
   const chamadas = { executar: [] as Record<string, unknown>[], desfazer: 0 };
   const executor: ExecutorPropostaIa = {
-    tipo: TIPO,
+    tipo: opcoes.tipo ?? TIPO,
     validar(dados) {
       if (typeof dados['nome'] !== 'string') throw new BusinessException('Informe o nome');
     },
@@ -464,6 +464,19 @@ test('autonomia: em nome de outra pessoa sempre pergunta, mesmo com o tipo em "F
   assert.equal(proposta.status, StatusPropostaIaEnum.PENDENTE);
   assert.equal(proposta.aplicadaPelaIa, false);
   assert.equal(chamadas.executar.length, 0);
+});
+
+test('autonomia: descrever a execução no check-in pergunta mesmo em "Faz e avisa"; no chat age (P-040)', async () => {
+  const tipo = TipoPropostaIaEnum.DESCREVER_EXECUCAO;
+  const configuracao = criarConfiguracao({ [tipo]: 'FAZ_E_AVISA' });
+  const noCheckin = criarServico({ tipo }, true, configuracao);
+  const naoConfirmada = await noCheckin.servico.criarComAutonomia({ usuarioId: 1, tipo, dados: DADOS }, DONO, { noCheckin: true });
+  assert.equal(naoConfirmada.status, StatusPropostaIaEnum.PENDENTE);
+  assert.equal(noCheckin.chamadas.executar.length, 0);
+
+  const noChat = criarServico({ tipo }, true, configuracao);
+  const confirmada = await noChat.servico.criarComAutonomia({ usuarioId: 1, tipo, dados: DADOS }, DONO);
+  assert.equal(confirmada.status, StatusPropostaIaEnum.CONFIRMADA);
 });
 
 test('autonomia: sem a configuração da IA, a IA pergunta em vez de agir', async () => {

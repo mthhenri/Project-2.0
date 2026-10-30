@@ -95,14 +95,6 @@
 - **Correção:** a decidir pelo autor: fazer o visualizador (`markdown-visualizador`) renderizar tabela GFM só na leitura (sem criá-la no editor), ou orientar o prompt da IA a não usar tabela.
 - **Desde:** 2026-10-27 (apontado pelo autor, com captura de uma resposta com três opções de sincronização).
 
-### P-040 — Check-in da IA: execução ativa na topbar não recarrega e fechamento automático · `ABERTO` · frontend/checkin/chat IA
-
-- **Sintoma:** no check-in da IA (e em outros fluxos que mudam a execução), a execução ativa mostrada na topbar não recarrega sozinha; o check-in vem "fechando sozinho", por causa do auto-confirmar da IA na descrição da execução.
-- **Causa:** não investigada (o fechamento parece vir da confirmação automática da proposta de descrição da execução).
-- **Contorno:** recarregar a tela à mão para ver a execução ativa atualizada.
-- **Correção:** a decidir: recarregar a execução ativa da topbar ao fim das ações da IA/check-in e nos demais fluxos que a alteram; impedir que o auto-confirmar da descrição da execução encerre o check-in.
-- **Desde:** 2026-10-27 (apontado pelo autor).
-
 ### P-043 — Chat IA: pergunta sem resposta (falha ou timeout) mas com custo registrado · `ABERTO` · chat IA/backend
 
 - **Sintoma:** o autor fez uma pergunta no chat da IA e não veio nenhuma resposta, mas o gasto da chamada apareceu nos custos. Há falhas na resposta da IA e timeouts.
@@ -153,11 +145,11 @@
 
 ### P-059 — Teste de `modelagem.page.spec` instável na suíte inteira · `ABERTO` · frontend/testes
 
-- **Sintoma:** `escolher uma relação no painel passa para a outra tabela` falha às vezes em `npm run test --workspace=frontend` (por tempo esgotado com o limite antigo de 5 s; duas vezes com o limite de 20 s, o que indica trava e não só lentidão) e passa sozinho (22 testes) e na rodada seguinte, sem mudança de código.
+- **Sintoma:** `escolher uma relação no painel passa para a outra tabela` falha às vezes em `npm run test --workspace=frontend` (por tempo esgotado com o limite antigo de 5 s; três vezes com o limite de 20 s, o que indica trava e não só lentidão; o teste espera `whenStable` depois de clicar na relação do painel, e o diagrama parece manter algo pendente sob carga) e passa sozinho (22 testes) e na rodada seguinte, sem mudança de código.
 - **Causa:** não investigada; parece carga da suíte inteira, como o antigo P-034.
 - **Contorno:** rodar o arquivo sozinho ou repetir a suíte.
 - **Correção:** medir o teste sob carga e ver o que ele espera (renderização do diagrama?) antes de mexer no limite.
-- **Desde:** 2026-10-30 (visto nos fechos dos P-035/P-038/P-041/P-055 e dos P-050/P-051/P-058; 7 rodadas completas, 3 falhas dele).
+- **Desde:** 2026-10-30 (visto nos fechos dos P-035/P-038/P-041/P-055 e dos P-050/P-051/P-058; 10 rodadas completas, 4 falhas dele).
 
 ### P-001 — Projeto sem lint · `CONTORNADO` · repositório
 

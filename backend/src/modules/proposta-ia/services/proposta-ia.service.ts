@@ -44,6 +44,11 @@ import { PropostaIaRepository } from '../repositories/proposta-ia.repository';
  * A exceção é a autonomia da IA (task 228): quando o nível da proposta é "Faz e avisa" (`criarComAutonomia`), a própria criação confirma a
  * proposta na hora, pelo mesmo caminho do cartão (mesmo executor, mesmas permissões, mesmo desfazer), e ela fica marcada como `aplicadaPelaIa`.
  */
+/** De onde a proposta nasceu, quando isso muda o nível dela. */
+export interface OrigemDaProposta {
+  noCheckin?: boolean;
+}
+
 @Injectable()
 export class PropostaIaService {
   private readonly logger = new Logger(PropostaIaService.name);
@@ -67,8 +72,8 @@ export class PropostaIaService {
    * decidido aqui, no backend, pelos dados da proposta e pela configuração ativa (`nivelDaProposta`), nunca pelo modelo. Se a ação falha, a
    * proposta não fica solta como pendente: expira e o erro volta ao modelo, que avisa o usuário.
    */
-  async criarComAutonomia(dto: PropostaIaCriarDto, usuarioAtivo: JwtPayload): Promise<PropostaIaResumoDto> {
-    const nivel = await this.decidirNivel(dto);
+  async criarComAutonomia(dto: PropostaIaCriarDto, usuarioAtivo: JwtPayload, origem: OrigemDaProposta = {}): Promise<PropostaIaResumoDto> {
+    const nivel = await this.decidirNivel(dto, origem);
     if (nivel !== PropostaIaNivelEnum.FAZ_E_AVISA) return this.criar(dto);
 
     const criada = await this.criar({ ...dto, aplicadaPelaIa: true });
@@ -81,10 +86,10 @@ export class PropostaIaService {
   }
 
   /** Sem a configuração (banco indisponível, por exemplo), a IA pergunta: o erro de uma pergunta a mais custa menos que o de uma ação sozinha. */
-  private async decidirNivel(dto: PropostaIaCriarDto): Promise<PropostaIaNivelEnum> {
+  private async decidirNivel(dto: PropostaIaCriarDto, origem: OrigemDaProposta): Promise<PropostaIaNivelEnum> {
     try {
       const { niveisProposta } = await this.configuracaoIaService.obterAtiva();
-      return nivelDaProposta({ tipo: dto.tipo, dados: dto.dados, usuarioId: dto.usuarioId, niveis: niveisProposta });
+      return nivelDaProposta({ tipo: dto.tipo, dados: dto.dados, usuarioId: dto.usuarioId, niveis: niveisProposta, noCheckin: origem.noCheckin });
     } catch (erro) {
       this.logger.warn(`Sem a configuração da IA para decidir o nível da proposta ${dto.tipo}: a IA vai perguntar. ${erro instanceof Error ? erro.message : String(erro)}`);
       return PropostaIaNivelEnum.PERGUNTA;

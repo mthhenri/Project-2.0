@@ -12,6 +12,13 @@
 
 ---
 
+## 2026-10-30 — P-040: execução ativa da topbar depois da IA e descrição no check-in
+
+- **Topbar:** a execução ativa só se ressincronizava por `HttpClient` (interceptor de iniciar, encerrar e confirmar/desfazer proposta). Uma proposta "Faz e avisa" roda dentro do fluxo `text/event-stream` (lido por `fetch`), que o interceptor não vê. `ChatService.lerFluxo` passou a chamar `ExecucaoAtivaService.carregar()` ao fim do fluxo se alguma ferramenta `propor_*` concluiu (chat, bom dia, retomada e check-in passam por ali). Teste: consulta não recarrega, proposta recarrega uma vez.
+- **Fechamento do check-in:** a causa era a descrição da execução em "Faz e avisa" (task 228): confirmada sozinha, ela encerra a execução e abre o trecho seguinte, e a janela se fecha por `decidirEstado` → `REGISTRADO`. Decisão do autor (opção "perguntar só no check-in"): no check-in `DESCREVER_EXECUCAO` sempre pergunta; no chat comum segue a configuração. Implementação: `TIPOS_QUE_PERGUNTAM_NO_CHECKIN` e `noCheckin` em `nivelDaProposta` (`shared`); `FerramentaIa.executar` ganhou o argumento opcional `origem` (`OrigemDaFerramentaIa`, o contexto da conversa), passado pelo `ChatService` via `FerramentaIaRegistro.executar` até `PropostaIaService.criarComAutonomia`. A tela de autonomia diz "No check-in, sempre pergunta." Registrado em `SYSTEM.SPEC.md` (proposta-ia).
+- **Testes:** shared 286, backend 1.534 (novos: nível no check-in, serviço, ferramenta), frontend 2.310; build do backend e do frontend aprovados. Não há lint (P-001).
+- **Não verificado ao vivo:** o ambiente não tem chave da IA, então nem o recarregamento da topbar depois de uma proposta executada pela IA nem o cartão de descrição no check-in foram vistos na aplicação; só por teste. O sintoma do autor ("o check-in fecha sozinho") deve ser reconferido no uso real.
+
 ## 2026-10-30 — P-050, P-051 e P-058: tags, conexões da demanda e falha de carga
 
 - **P-058:** Atividades (`erroAoCarregar`), Demandas (`erroAoCarregarGrafo`) e o detalhe do projeto (`erroAoCarregarDemandas`) deixaram de tratar falha como lista vazia. Sem dado na tela, mostram "Não foi possível carregar…" com "Tentar de novo" (e o detalhe esconde a faixa "0 demandas, 0h de 0h"); com linhas já na tela, Atividades as mantém e avisa que podem estar desatualizadas. O toast de erro continua. Um teste de componente por tela; a nova tentativa foi exercitada ao vivo com falha 500 simulada (Playwright `route`) e voltou a mostrar a lista e a árvore.

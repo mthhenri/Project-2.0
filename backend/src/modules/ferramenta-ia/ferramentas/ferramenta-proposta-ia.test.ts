@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { StatusPropostaIaEnum, TipoPropostaIaEnum, TipoUsuarioEnum } from '@project20/shared';
+import { ContextoChatEnum, StatusPropostaIaEnum, TipoPropostaIaEnum, TipoUsuarioEnum } from '@project20/shared';
 import { PropostaIaService } from '../../proposta-ia/services/proposta-ia.service';
 import { FerramentaPropostaIa } from './ferramenta-proposta-ia';
 
@@ -81,6 +81,16 @@ test('a ferramenta entrega o usuário do token ao serviço, que decide o nível 
     criarComAutonomia: async (...argumentos: unknown[]) => { recebidos.push(argumentos); return { id: 57, status: StatusPropostaIaEnum.PENDENTE }; },
   } as unknown as PropostaIaService);
   await ferramenta.executar({ atividadeId: 3 }, USUARIO);
-  assert.deepEqual(recebidos[0], [{ usuarioId: 9, tipo: TipoPropostaIaEnum.INICIAR_EXECUCAO, dados: { atividadeId: 3 } }, USUARIO]);
+  assert.deepEqual(recebidos[0], [{ usuarioId: 9, tipo: TipoPropostaIaEnum.INICIAR_EXECUCAO, dados: { atividadeId: 3 } }, USUARIO, { noCheckin: false }]);
+});
+
+test('dentro do check-in a ferramenta avisa o serviço (P-040); no chat, não', async () => {
+  const origens: unknown[] = [];
+  const ferramenta = new FerramentaFicticia({
+    criarComAutonomia: async (_dto: unknown, _usuario: unknown, origem: unknown) => { origens.push(origem); return { id: 58, status: StatusPropostaIaEnum.PENDENTE }; },
+  } as unknown as PropostaIaService);
+  await ferramenta.executar({ atividadeId: 3 }, USUARIO, { contexto: ContextoChatEnum.CHECKIN });
+  await ferramenta.executar({ atividadeId: 3 }, USUARIO, { contexto: ContextoChatEnum.CHAT });
+  assert.deepEqual(origens, [{ noCheckin: true }, { noCheckin: false }]);
 });
 

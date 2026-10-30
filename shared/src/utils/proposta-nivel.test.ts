@@ -104,6 +104,19 @@ test('o tipo fixo sempre pergunta, mesmo que a configuração diga outra coisa',
   }
 });
 
+test('descrever a execução pergunta dentro do check-in mesmo em "Faz e avisa", e segue a configuração fora dele (P-040)', () => {
+  const tipo = TipoPropostaIaEnum.DESCREVER_EXECUCAO;
+  const faz = { [tipo]: PropostaIaNivelEnum.FAZ_E_AVISA };
+  assert.equal(nivelDaProposta({ tipo, dados: {}, usuarioId: USUARIO, niveis: faz, noCheckin: true }), PropostaIaNivelEnum.PERGUNTA);
+  assert.equal(nivelDaProposta({ tipo, dados: {}, usuarioId: USUARIO, niveis: faz }), PropostaIaNivelEnum.FAZ_E_AVISA);
+  assert.equal(nivelDaProposta({ tipo, dados: {}, usuarioId: USUARIO, niveis: faz, noCheckin: false }), PropostaIaNivelEnum.FAZ_E_AVISA);
+});
+
+test('no check-in os outros tipos seguem a configuração', () => {
+  const tipo = TipoPropostaIaEnum.ANOTAR_PAD;
+  assert.equal(nivelDaProposta({ tipo, dados: {}, usuarioId: USUARIO, noCheckin: true }), PropostaIaNivelEnum.FAZ_E_AVISA);
+});
+
 test('sem configuração vale o padrão; com configuração vale o que o administrador escolheu', () => {
   const entrada = { tipo: TipoPropostaIaEnum.ANOTAR_PAD, dados: { secao: TipoAnotacaoEnum.FEITO }, usuarioId: USUARIO };
   assert.equal(nivelDaProposta(entrada), PropostaIaNivelEnum.FAZ_E_AVISA);
