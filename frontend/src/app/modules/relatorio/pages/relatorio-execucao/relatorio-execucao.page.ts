@@ -1,4 +1,5 @@
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpResponse } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
@@ -7,7 +8,6 @@ import { ButtonModule } from 'primeng/button';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { Select } from 'primeng/select';
 import { DatePickerModule } from 'primeng/datepicker';
-import { DialogModule } from 'primeng/dialog';
 import { TableModule } from 'primeng/table';
 import { Tag } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
@@ -38,12 +38,12 @@ const CHAVE_PROJETO_LEMBRADO = 'relatorio.projeto';
 const ATRASO_MUDANCA_FILTRO_MS = 400;
 
 /**
- * Relatório de execuções de um projeto (tasks 111/110). Abre já carregado: os padrões (Este mês) são
+ * Tela do relatório de execuções de um projeto (tasks 111/110; era um dialog até a 269). Abre já carregado: os padrões (Este mês) são
  * sempre válidos, então cada mudança de filtro recarrega sozinha; o resultado antigo fica esmaecido
  * enquanto o novo não chega e o CSV/IA só usam os parâmetros do que está na tela.
  */
 @Component({
-  selector: 'app-relatorio-execucao-dialog',
+  selector: 'app-relatorio-execucao-page',
   standalone: true,
   imports: [
     ReactiveFormsModule,
@@ -52,25 +52,25 @@ const ATRASO_MUDANCA_FILTRO_MS = 400;
     ButtonModule,
     Select,
     DatePickerModule,
-    DialogModule,
     TableModule,
     Tag,
     TooltipModule,
     MinutosParaHorasPipe,
     BarraRecargaComponent,
   ],
-  templateUrl: './relatorio-execucao-dialog.component.html',
-  styleUrl: './relatorio-execucao-dialog.component.scss',
+  templateUrl: './relatorio-execucao.page.html',
+  styleUrl: './relatorio-execucao.page.scss',
 })
-export class RelatorioExecucaoDialogComponent implements OnInit {
+export class RelatorioExecucaoPage implements OnInit {
   private readonly relatorioService = inject(RelatorioService);
   private readonly projetoService = inject(ProjetoService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly router = inject(Router);
+  private readonly rota = inject(ActivatedRoute);
 
-  readonly mostrarDialog = signal<boolean>(false);
   readonly projetos = signal<ProjetoResumoDto[]>([]);
-  /** Aberto a partir do detalhe de um projeto: o projeto vem definido e não se troca. */
+  /** Aberto pela rota do projeto (`/projeto/:id/relatorio`): o projeto vem definido e não se troca. */
   readonly projetoFixo = signal<boolean>(false);
 
   readonly carregandoPreview = signal<boolean>(false);
@@ -150,10 +150,21 @@ export class RelatorioExecucaoDialogComponent implements OnInit {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe();
+
+    this.iniciar(this.projetoIdDaRota() || undefined);
   }
 
-  /** Abre já carregando: `projetoId` do detalhe do projeto, ou o último projeto escolhido nesta máquina. */
-  abrir(projetoId?: number): void {
+  /** Volta para o projeto (rota do projeto) ou para Execuções (rota sem projeto). */
+  voltar(): void {
+    void this.router.navigate(this.projetoFixo() ? ['/projeto', this.projetoIdDaRota()] : ['/execucao']);
+  }
+
+  private projetoIdDaRota(): number {
+    return Number(this.rota.snapshot.paramMap.get('id'));
+  }
+
+  /** Carrega já: `projetoId` da rota do projeto, ou o último projeto escolhido nesta máquina. */
+  private iniciar(projetoId?: number): void {
     this.projetoFixo.set(projetoId !== undefined);
     const atalho = periodoDoAtalho('MES', this.hoje());
     this.relatorio.set(null);
@@ -168,7 +179,6 @@ export class RelatorioExecucaoDialogComponent implements OnInit {
       mes: atalho.mes,
       periodo: null,
     }, { emitEvent: false });
-    this.mostrarDialog.set(true);
     this.carregarProjetos();
     this.pedidoPreview.next(0);
   }

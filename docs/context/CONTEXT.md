@@ -81,7 +81,7 @@ project-2.0/
 | ponto | ✅ implementado (task 29) — + Imprimir/Justificar quando gestor filtra usuário (task 82) |
 | calendario | ✅ implementado (task 30) |
 | tag | ✅ implementado (task 25) |
-| relatorio | ✅ implementado (task 80) — dialog de relatório de execuções na tela de projeto |
+| relatorio | ✅ implementado (task 80; tela própria desde a 269) — `/projeto/:id/relatorio` e `/relatorio`, só gestor |
 
 ### Banco de dados
 
@@ -110,9 +110,9 @@ project-2.0/
   dia continua somando a ativa. Pausar = `PATCH /execucao/:id/encerrar` com a descrição (obrigatória para dev). `/chat?mensagem=<texto>` deixa o texto
   digitado no campo, sem enviar (consumido e tirado da URL); com a IA fora do ar o atalho vai a `/atividade`.
 - **[tasks 110–111]** O histórico de Execuções guarda dia e usuário na URL (`?data=&usuario=`, `replaceUrl`): a URL é a
-  fonte do estado e cada mudança recarrega; atalhos ←/→/Home reutilizam os guardas de `core/utils/atalhos.ts`. O dialog de
-  relatório abre carregado, recarrega a cada filtro (debounce 400 ms) e só exporta/revisa os parâmetros do relatório
-  exibido; `abrir(id)` fixa o projeto (detalhe do projeto), `abrir()` lembra o último em `localStorage` `relatorio.projeto`.
+  fonte do estado e cada mudança recarrega; atalhos ←/→/Home reutilizam os guardas de `core/utils/atalhos.ts`. A tela
+  de relatório (era dialog até a 269) abre carregada, recarrega a cada filtro (debounce 400 ms) e só exporta/revisa os parâmetros do relatório
+  exibido; a rota `/projeto/:id/relatorio` fixa o projeto, `/relatorio` lembra o último em `localStorage` `relatorio.projeto`.
   A tabela é a mesma para gestor e desenvolvedor (Atividade com "Projeto › Demanda" embaixo; horário em cima e dia/mês embaixo). O
   gestor edita descrição, início e fim inline na célula (confirma com Sim/Não) e exclui pela lixeira; não há mais dialog de edição.
 - **[tasks 97–99]** Todo dialog de formulário usa `p-dialog[dialogFormulario]` (autofocus no primeiro campo

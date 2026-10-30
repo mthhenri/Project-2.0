@@ -196,13 +196,6 @@
 - **Por quê:** dialog interrompe o fluxo, esconde o contexto da tela e atrapalha quem trabalha com muitas demandas em sequência. Menos dialogs deixa a interação mais direta.
 - **Custo aparente:** médio e espalhado: exige revisar tela a tela os dialogs e as ações que cada um abriga, para decidir o que vira painel, seção inline ou página própria, e o que fica como dialog. Antes de mexer, rodar `gerenciamento-de-impacto` no componente de diálogo compartilhado e levantar, por tela, as ações que hoje dependem de um dialog.
 
-### I-039 — Relatório deixa de ser dialog e vira tela dentro do projeto · frontend/UX
-
-- **Ideia:** a janela de relatório passa a ser uma tela própria, dentro do projeto, em vez de um dialog sobreposto.
-- **Origem:** pedido do autor em 2026-10-29, só anotado, marcado como ideia.
-- **Por quê:** um relatório é conteúdo para ler e navegar, e cabe melhor numa tela do que numa janela sobreposta; faz parte da redução de dialogs da I-038.
-- **Custo aparente:** médio, só frontend: nova rota dentro do projeto e migração do conteúdo do dialog. Antes, levantar com o autor quais ações o relatório tem hoje e rodar `gerenciamento-de-impacto` no componente do dialog.
-
 ### I-040 — Documentar cada tabela e cada campo na tela de Modelagem · frontend/modelagem
 
 - **Ideia:** a tela de Modelagem passa a mostrar uma descrição de cada tabela e de cada campo (o que é, regra, quem escreve), em vez de só o desenho do schema.

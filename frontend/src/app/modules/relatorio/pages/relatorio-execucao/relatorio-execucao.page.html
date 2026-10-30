@@ -1,14 +1,39 @@
-<p-dialog
-  header="Relatório de Execuções"
-  [(visible)]="mostrarDialog"
-  [modal]="true"
-  [style]="{ width: '920px' }"
-  [draggable]="false"
-  appendTo="body"
->
-  <form [formGroup]="formulario" class="relatorio-dialog__form">
-    <div class="relatorio-dialog__campo relatorio-dialog__campo--projeto">
-      <label class="relatorio-dialog__label" for="relatorio-projeto">Projeto</label>
+<div class="relatorio-execucao">
+  <div class="relatorio-execucao__cabecalho">
+    <div class="relatorio-execucao__cabecalho-esquerda">
+      <p-button
+        icon="pi pi-arrow-left"
+        [text]="true"
+        severity="secondary"
+        size="small"
+        [label]="projetoFixo() ? 'Projeto' : 'Execuções'"
+        (onClick)="voltar()"
+      />
+      <h1 class="relatorio-execucao__pagina-titulo">Relatório de Execuções</h1>
+    </div>
+    <div class="relatorio-execucao__cabecalho-acoes">
+      <p-button
+        label="Revisar com IA"
+        icon="pi pi-sparkles"
+        severity="help"
+        [outlined]="true"
+        [disabled]="!podeExportar()"
+        [loading]="carregandoRevisao()"
+        (onClick)="revisarComIa()"
+      />
+      <p-button
+        label="Baixar CSV"
+        icon="pi pi-download"
+        [disabled]="!podeExportar()"
+        [loading]="baixando()"
+        (onClick)="baixarCsv()"
+      />
+    </div>
+  </div>
+
+  <form [formGroup]="formulario" class="relatorio-execucao__form">
+    <div class="relatorio-execucao__campo relatorio-execucao__campo--projeto">
+      <label class="relatorio-execucao__label" for="relatorio-projeto">Projeto</label>
       <p-select
         inputId="relatorio-projeto"
         formControlName="projetoId"
@@ -24,9 +49,9 @@
       />
     </div>
 
-    <div class="relatorio-dialog__periodo">
+    <div class="relatorio-execucao__periodo">
       <p-selectbutton
-        class="relatorio-dialog__atalhos"
+        class="relatorio-execucao__atalhos"
         [options]="atalhos"
         optionLabel="rotulo"
         optionValue="valor"
@@ -38,7 +63,7 @@
       />
 
       @if (formulario.value.periodoTipo !== TipoPeriodo.CUSTOM) {
-        <div class="relatorio-dialog__ajuste">
+        <div class="relatorio-execucao__ajuste">
           @if (formulario.value.periodoTipo === TipoPeriodo.MENSAL) {
             <p-select
               formControlName="mes"
@@ -59,7 +84,7 @@
           />
         </div>
       } @else {
-        <div class="relatorio-dialog__ajuste">
+        <div class="relatorio-execucao__ajuste">
           <p-datepicker
             formControlName="periodo"
             selectionMode="range"
@@ -70,7 +95,7 @@
             appendTo="body"
           />
           @if (periodoIncompleto) {
-            <small class="relatorio-dialog__dica">Selecione a data inicial e a final</small>
+            <small class="relatorio-execucao__dica">Selecione a data inicial e a final</small>
           }
         </div>
       }
@@ -78,41 +103,39 @@
   </form>
 
   @if (!formulario.controls.projetoId.value && !formulario.controls.projetoId.disabled) {
-    <div class="relatorio-dialog__vazio-estado">
+    <div class="relatorio-execucao__vazio-estado">
       <i class="pi pi-folder-open"></i>
       <p>Escolha um projeto para ver o relatório.</p>
     </div>
   } @else if (erroPreview()) {
-    <div class="relatorio-dialog__vazio-estado">
+    <div class="relatorio-execucao__vazio-estado">
       <i class="pi pi-exclamation-triangle"></i>
       <p>Não foi possível carregar o relatório.</p>
       <p-button label="Tentar de novo" size="small" severity="secondary" [outlined]="true" (onClick)="tentarNovamente()" />
     </div>
   } @else if (relatorio(); as dados) {
-    <div class="relatorio-dialog__resultado lista-recarga" [class.relatorio-dialog__resultado--esmaecido]="esmaecido()">
+    <div class="relatorio-execucao__resultado lista-recarga" [class.relatorio-execucao__resultado--esmaecido]="esmaecido()">
       <app-barra-recarga [ativa]="carregandoPreview()" />
-      <div class="relatorio-dialog__resumo">
-        <div class="relatorio-dialog__titulo-resumo">
-          <span class="relatorio-dialog__resumo-projeto">{{ dados.nomeProjeto }}</span>
-          <span class="relatorio-dialog__resumo-periodo">{{ dados.periodoDescricao }}</span>
+      <div class="relatorio-execucao__resumo">
+        <div class="relatorio-execucao__titulo-resumo">
+          <span class="relatorio-execucao__resumo-projeto">{{ dados.nomeProjeto }}</span>
+          <span class="relatorio-execucao__resumo-periodo">{{ dados.periodoDescricao }}</span>
         </div>
-        <div class="relatorio-dialog__totais">
-          <div class="relatorio-dialog__total">
-            <span class="relatorio-dialog__total-valor">{{ dados.totalExecucoes }}</span>
-            <span class="relatorio-dialog__total-rotulo">{{ dados.totalExecucoes === 1 ? 'execução' : 'execuções' }}</span>
+        <div class="relatorio-execucao__totais">
+          <div class="relatorio-execucao__total">
+            <span class="relatorio-execucao__total-valor">{{ dados.totalExecucoes }}</span>
+            <span class="relatorio-execucao__total-rotulo">{{ dados.totalExecucoes === 1 ? 'execução' : 'execuções' }}</span>
           </div>
-          <div class="relatorio-dialog__total">
-            <span class="relatorio-dialog__total-valor">{{ dados.totalMinutos | minutosParagHoras }}</span>
-            <span class="relatorio-dialog__total-rotulo">tempo total</span>
+          <div class="relatorio-execucao__total">
+            <span class="relatorio-execucao__total-valor">{{ dados.totalMinutos | minutosParagHoras }}</span>
+            <span class="relatorio-execucao__total-rotulo">tempo total</span>
           </div>
         </div>
       </div>
 
       <p-table
         [value]="dados.linhas"
-        [scrollable]="true"
-        scrollHeight="320px"
-        styleClass="p-datatable-sm"
+                    styleClass="p-datatable-sm"
       >
         <ng-template pTemplate="header">
           <tr>
@@ -133,12 +156,12 @@
             <td>{{ dataHora(linha.inicioData) }}</td>
             <td>{{ linha.fimData ? dataHora(linha.fimData) : 'Em andamento' }}</td>
             <td>{{ linha.duracaoMinutos | minutosParagHoras }}</td>
-            <td class="relatorio-dialog__descricao-celula">{{ linha.descricao }}</td>
+            <td class="relatorio-execucao__descricao-celula">{{ linha.descricao }}</td>
           </tr>
         </ng-template>
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="7" class="relatorio-dialog__vazio">
+            <td colspan="7" class="relatorio-execucao__vazio">
               Nenhuma execução encontrada no período.
             </td>
           </tr>
@@ -146,45 +169,45 @@
       </p-table>
     </div>
   } @else if (carregandoPreview()) {
-    <div class="relatorio-dialog__vazio-estado">
+    <div class="relatorio-execucao__vazio-estado">
       <i class="pi pi-spin pi-spinner"></i>
       <p>Carregando o relatório…</p>
     </div>
   }
 
   @if (carregandoRevisao()) {
-    <div class="relatorio-dialog__revisao">
-      <h3 class="relatorio-dialog__revisao-titulo"><i class="pi pi-sparkles"></i> Revisão por IA</h3>
+    <div class="relatorio-execucao__revisao">
+      <h3 class="relatorio-execucao__revisao-titulo"><i class="pi pi-sparkles"></i> Revisão por IA</h3>
       <p class="text-muted-color"><i class="pi pi-spin pi-spinner"></i> Analisando as execuções…</p>
     </div>
   } @else if (revisao(); as dadosRevisao) {
-    <div class="relatorio-dialog__revisao">
-      <h3 class="relatorio-dialog__revisao-titulo">
+    <div class="relatorio-execucao__revisao">
+      <h3 class="relatorio-execucao__revisao-titulo">
         <i class="pi pi-sparkles"></i> Revisão por IA
       </h3>
-      <p class="relatorio-dialog__revisao-resumo">{{ dadosRevisao.resumo }}</p>
+      <p class="relatorio-execucao__revisao-resumo">{{ dadosRevisao.resumo }}</p>
 
       @if (achados().length === 0) {
         <p class="text-muted-color">Nenhuma inconsistência apontada.</p>
       } @else {
-        <p class="relatorio-dialog__contadores">
+        <p class="relatorio-execucao__contadores">
           @for (contador of contadores(); track contador.severidade; let ultimo = $last) {
-            <span class="relatorio-dialog__contador relatorio-dialog__contador--{{ contador.severidade.toLowerCase() }}">
+            <span class="relatorio-execucao__contador relatorio-execucao__contador--{{ contador.severidade.toLowerCase() }}">
               {{ contador.total }} {{ contador.rotulo }}
             </span>
             @if (!ultimo) { <span aria-hidden="true">·</span> }
           }
         </p>
-        <ul class="relatorio-dialog__inconsistencias">
+        <ul class="relatorio-execucao__inconsistencias">
           @for (item of achados(); track $index) {
-            <li class="relatorio-dialog__inconsistencia">
-              <div class="relatorio-dialog__inconsistencia-cabecalho">
-                <span class="relatorio-dialog__inconsistencia-tipo">{{ item.tipo }}</span>
+            <li class="relatorio-execucao__inconsistencia">
+              <div class="relatorio-execucao__inconsistencia-cabecalho">
+                <span class="relatorio-execucao__inconsistencia-tipo">{{ item.tipo }}</span>
                 <p-tag [value]="item.severidade" [severity]="severidadeInconsistencia(item.severidade)" />
               </div>
-              <p class="relatorio-dialog__inconsistencia-descricao">{{ item.descricao }}</p>
+              <p class="relatorio-execucao__inconsistencia-descricao">{{ item.descricao }}</p>
               @if (item.referencia) {
-                <small class="relatorio-dialog__inconsistencia-ref">{{ item.referencia }}</small>
+                <small class="relatorio-execucao__inconsistencia-ref">{{ item.referencia }}</small>
               }
             </li>
           }
@@ -192,23 +215,4 @@
       }
     </div>
   }
-
-  <ng-template pTemplate="footer">
-    <p-button
-      label="Revisar com IA"
-      icon="pi pi-sparkles"
-      severity="help"
-      [outlined]="true"
-      [disabled]="!podeExportar()"
-      [loading]="carregandoRevisao()"
-      (onClick)="revisarComIa()"
-    />
-    <p-button
-      label="Baixar CSV"
-      icon="pi pi-download"
-      [disabled]="!podeExportar()"
-      [loading]="baixando()"
-      (onClick)="baixarCsv()"
-    />
-  </ng-template>
-</p-dialog>
+</div>

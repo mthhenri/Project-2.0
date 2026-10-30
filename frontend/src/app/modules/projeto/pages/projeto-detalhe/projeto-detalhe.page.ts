@@ -23,7 +23,6 @@ import { DemandaFormularioDialogComponent } from '../../../demanda/components/de
 import { DemandaToolbarComponent } from '../../../demanda/components/demanda-toolbar/demanda-toolbar.component';
 import { ProjetoFormularioDialogComponent } from '../../components/projeto-formulario-dialog/projeto-formulario-dialog.component';
 import { ProjetoStatusChipComponent } from '../../components/projeto-status-chip/projeto-status-chip.component';
-import { RelatorioExecucaoDialogComponent } from '../../../relatorio/components/relatorio-execucao-dialog/relatorio-execucao-dialog.component';
 import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
 import { PastaId, pastaInicial } from '../../../demanda/utils/demanda-pasta.util';
 import {
@@ -50,7 +49,6 @@ import { focoEmCampo, haSobreposicaoAberta } from '../../../../core/utils/atalho
     DemandaToolbarComponent,
     ProjetoFormularioDialogComponent,
     ProjetoStatusChipComponent,
-    RelatorioExecucaoDialogComponent,
   ],
   templateUrl: './projeto-detalhe.page.html',
   styleUrl: './projeto-detalhe.page.scss',
@@ -165,6 +163,11 @@ export class ProjetoDetalhePage implements OnInit {
   abrirVisao(modo: 'grafo' | 'controle-de-horas'): void {
     const projetoDados = this.projeto();
     if (projetoDados) this.router.navigate(['/demanda'], { queryParams: { projetoId: projetoDados.id, modo } });
+  }
+
+  abrirRelatorio(): void {
+    const projetoDados = this.projeto();
+    if (projetoDados) this.router.navigate(['/projeto', projetoDados.id, 'relatorio']);
   }
 
   voltarParaListagem(): void {

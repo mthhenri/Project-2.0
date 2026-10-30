@@ -1,13 +1,15 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
+import { TestBed } from '@angular/core/testing';
+import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import { RelatorioPeriodoTipoEnum, TipoUsuarioEnum } from '@project20/shared';
 import { montarComponente, ComponenteMontado } from '../../../../../testes/montar-componente';
 import { esperarRequisicao, responderErro, responderSucesso } from '../../../../../testes/http-teste';
-import { RelatorioExecucaoDialogComponent } from './relatorio-execucao-dialog.component';
+import { RelatorioExecucaoPage } from './relatorio-execucao.page';
 
 // Relatório de execuções (SYSTEM.SPEC.md §14 "Ver execuções de todos": só gestor — a tela é aberta pelo gestor; o
 // acesso é do backend). Abre já carregado em "Este mês"; CSV e IA usam os parâmetros do que está na tela.
 
-type Montado = ComponenteMontado<RelatorioExecucaoDialogComponent>;
+type Montado = ComponenteMontado<RelatorioExecucaoPage>;
 
 function linha(sobrescrita: Record<string, unknown> = {}) {
   return {
@@ -26,15 +28,24 @@ function relatorioDe(linhas: ReturnType<typeof linha>[]) {
   };
 }
 
+/** Monta a tela como a rota a entrega: `/projeto/:id/relatorio` (com `projetoId`) ou `/relatorio` (sem). */
+function montarPagina(projetoId?: number, armazenamento?: Record<string, string>) {
+  const parametros = projetoId === undefined ? {} : { id: String(projetoId) };
+  return montarComponente(RelatorioExecucaoPage, {
+    usuario: TipoUsuarioEnum.GESTOR,
+    armazenamento,
+    provedores: [{ provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap(parametros) } } }],
+  });
+}
+
 const esperarFiltro = () => new Promise((resolver) => setTimeout(resolver, 450));
 const textoDaTela = () => document.body.textContent ?? '';
 const botao = (rotulo: string) =>
   Array.from(document.body.querySelectorAll('button')).find((candidato) => candidato.textContent?.includes(rotulo)) as HTMLButtonElement;
 
-/** Abre o dialog pelo detalhe de um projeto e responde a lista de projetos e o relatório. */
+/** Abre a tela pelo projeto e responde a lista de projetos e o relatório. */
 async function abrirComRelatorio(linhas: ReturnType<typeof linha>[], projetoId = 3): Promise<Montado> {
-  const montado = await montarComponente(RelatorioExecucaoDialogComponent, { usuario: TipoUsuarioEnum.GESTOR });
-  montado.componente.abrir(projetoId);
+  const montado = await montarPagina(projetoId);
   await montado.atualizar();
   responderSucesso(esperarRequisicao(montado.http, 'GET', '/projeto'), { itens: [{ id: 3, nome: 'Loja', codigo: 'LOJA' }] });
   await new Promise((resolver) => setTimeout(resolver, 10));
@@ -45,10 +56,22 @@ async function abrirComRelatorio(linhas: ReturnType<typeof linha>[], projetoId =
 
 afterEach(() => vi.restoreAllMocks());
 
-describe('RelatorioExecucaoDialogComponent — abrir e mostrar', () => {
+describe('RelatorioExecucaoPage — voltar', () => {
+  it('pela rota do projeto volta ao projeto; pela rota sem projeto, a Execuções', async () => {
+    for (const [projetoId, destino] of [[3, ['/projeto', 3]], [undefined, ['/execucao']]] as const) {
+      const montado = await montarPagina(projetoId);
+      const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      await montado.atualizar();
+      botao(projetoId === undefined ? 'Execuções' : 'Projeto').click();
+      expect(navegar).toHaveBeenCalledWith(destino);
+      TestBed.resetTestingModule();
+    }
+  });
+});
+
+describe('RelatorioExecucaoPage — abrir e mostrar', () => {
   it('aberto pelo detalhe do projeto: pede o relatório de "Este mês" desse projeto e mostra resumo, totais e linhas', async () => {
-    const montado = await montarComponente(RelatorioExecucaoDialogComponent, { usuario: TipoUsuarioEnum.GESTOR });
-    montado.componente.abrir(3);
+    const montado = await montarPagina(3);
     await montado.atualizar();
     responderSucesso(esperarRequisicao(montado.http, 'GET', '/projeto'), { itens: [] });
     await new Promise((resolver) => setTimeout(resolver, 10));
@@ -69,8 +92,7 @@ describe('RelatorioExecucaoDialogComponent — abrir e mostrar', () => {
   });
 
   it('sem projeto escolhido não pede o relatório e orienta a escolher, com CSV e IA desligados', async () => {
-    const montado = await montarComponente(RelatorioExecucaoDialogComponent, { usuario: TipoUsuarioEnum.GESTOR });
-    montado.componente.abrir();
+    const montado = await montarPagina(undefined);
     await montado.atualizar();
     responderSucesso(esperarRequisicao(montado.http, 'GET', '/projeto'), { itens: [] });
     await new Promise((resolver) => setTimeout(resolver, 10));
@@ -83,10 +105,7 @@ describe('RelatorioExecucaoDialogComponent — abrir e mostrar', () => {
   });
 
   it('lembra o último projeto escolhido nesta máquina e já abre carregado com ele', async () => {
-    const montado = await montarComponente(RelatorioExecucaoDialogComponent, {
-      usuario: TipoUsuarioEnum.GESTOR, armazenamento: { 'relatorio.projeto': '3' },
-    });
-    montado.componente.abrir();
+    const montado = await montarPagina(undefined, { 'relatorio.projeto': '3' });
     await montado.atualizar();
     responderSucesso(esperarRequisicao(montado.http, 'GET', '/projeto'), { itens: [] });
     await new Promise((resolver) => setTimeout(resolver, 10));
@@ -103,8 +122,7 @@ describe('RelatorioExecucaoDialogComponent — abrir e mostrar', () => {
   });
 
   it('falha ao carregar mostra o erro e "Tentar de novo" refaz o pedido', async () => {
-    const montado = await montarComponente(RelatorioExecucaoDialogComponent, { usuario: TipoUsuarioEnum.GESTOR });
-    montado.componente.abrir(3);
+    const montado = await montarPagina(3);
     await montado.atualizar();
     responderSucesso(esperarRequisicao(montado.http, 'GET', '/projeto'), { itens: [] });
     await new Promise((resolver) => setTimeout(resolver, 10));
@@ -123,7 +141,7 @@ describe('RelatorioExecucaoDialogComponent — abrir e mostrar', () => {
   });
 });
 
-describe('RelatorioExecucaoDialogComponent — período', () => {
+describe('RelatorioExecucaoPage — período', () => {
   it('trocar o atalho recarrega sozinho com o novo período', async () => {
     const montado = await abrirComRelatorio([linha()]);
     montado.componente.escolherAtalho('ANO');
@@ -167,7 +185,7 @@ describe('RelatorioExecucaoDialogComponent — período', () => {
   });
 });
 
-describe('RelatorioExecucaoDialogComponent — baixar CSV', () => {
+describe('RelatorioExecucaoPage — baixar CSV', () => {
   it('pede o download do que está na tela e baixa com o nome do cabeçalho', async () => {
     const montado = await abrirComRelatorio([linha()]);
     const criarUrl = vi.fn(() => 'blob:teste');
@@ -218,7 +236,7 @@ describe('RelatorioExecucaoDialogComponent — baixar CSV', () => {
   });
 });
 
-describe('RelatorioExecucaoDialogComponent — revisão por IA', () => {
+describe('RelatorioExecucaoPage — revisão por IA', () => {
   it('mostra o resumo e os achados ordenados da mais grave para a mais leve, com a contagem por severidade', async () => {
     const montado = await abrirComRelatorio([linha()]);
     botao('Revisar com IA').click();

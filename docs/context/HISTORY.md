@@ -12,6 +12,14 @@
 
 ---
 
+
+## 2026-10-30 — 269 (I-039): relatório de execuções deixa de ser dialog e vira tela
+
+- **O que mudou:** o `RelatorioExecucaoDialogComponent` virou `RelatorioExecucaoPage` (`modules/relatorio/pages/relatorio-execucao/`), com os mesmos filtros, preview, revisão por IA e CSV; as ações foram para o cabeçalho da página, com botão de voltar. Duas rotas, ambas com `gestorGuard`: `/projeto/:id/relatorio` (projeto fixo, vinda do detalhe do projeto) e `/relatorio` (projeto escolhido na tela, vinda de Execuções). O detalhe do projeto e Execuções navegam em vez de abrir o dialog. Sem backend. A tabela perdeu a altura fixa de 320 px: a página rola. I-039 saiu de `IDEAS.md`; a I-038 segue aberta.
+- **Testes:** componente migrado (mais um teste do botão de voltar nas duas rotas); `ng test` completo com 187 arquivos e 2355 testes verdes; build do frontend ok. Sem lint (P-001).
+- **Ao vivo (API mockada, sem PostgreSQL/Docker):** `/projeto/3/relatorio` e `/relatorio` em 1920×1080, 1366×768 e 1080×1920, sem rolagem horizontal; estados vazio (sem projeto), cheio e com revisão por IA. Erro e carregando só nos testes de componente. A revisão real contra um provedor de IA não foi exercitada (sem chave).
+- **Pendente:** o item "Execuções" do menu não fica destacado em `/relatorio` (decisão estética, não tratada).
+
 ## 2026-10-30 — Editor de código do chat: código colado se perdia das linhas
 
 - **Origem:** o autor mandou a captura: ao colar um bloco de código no bloco de código do chat entre colaboradores, o texto não batia com a numeração. Trabalho fora do fluxo de spec; o componente é o `app-editor-codigo` (task 216).

@@ -46,7 +46,7 @@
             icon="pi pi-file"
             severity="secondary"
             [outlined]="true"
-            (onClick)="relatorioDialog.abrir(projeto()!.id)"
+            (onClick)="abrirRelatorio()"
           />
           <p-button
             label="Editar"
@@ -208,6 +208,3 @@
     (demandaCriada)="recarregarDemandas()"
   />
 }
-
-<!-- Dialog de relatório de execuções (gestor) -->
-<app-relatorio-execucao-dialog #relatorioDialog />

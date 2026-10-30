@@ -21,6 +21,7 @@ export const rotas: Routes = [
       { path: 'demanda',    loadChildren: () => import('./modules/demanda/demanda.routes').then((m) => m.demandaRotas) },
       { path: 'atividade',  loadChildren: () => import('./modules/atividade/atividade.routes').then((m) => m.atividadeRotas) },
       { path: 'execucao',   loadChildren: () => import('./modules/execucao/execucao.routes').then((m) => m.execucaoRotas) },
+      { path: 'relatorio',  loadChildren: () => import('./modules/relatorio/relatorio.routes').then((m) => m.relatorioRotas) },
       { path: 'ponto',      loadChildren: () => import('./modules/ponto/ponto.routes').then((m) => m.pontoRotas) },
       { path: 'documentacao', loadChildren: () => import('./modules/documentacao/documentacao.routes').then((m) => m.documentacaoRotas) },
       { path: 'calendario', loadChildren: () => import('./modules/calendario/calendario.routes').then((m) => m.calendarioRotas) },
