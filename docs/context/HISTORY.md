@@ -12,6 +12,16 @@
 
 ---
 
+## 2026-10-30 — Chip da execução sobre o logo, P-062 e P-060
+
+- **Origem:** o autor trouxe a captura do chip verde da execução invadindo o "Project 2.0" da barra lateral (janela de ~720 px) e pediu para resolver junto do P-062 e do P-060. Trabalho fora do fluxo de spec.
+- **Chip:** a topbar é `justify-end` e seus itens não encolhiam (`flex-shrink-0`), então, quando a soma passava da largura, o bloco transbordava para a **esquerda**, por cima da barra lateral. Agora o bloco da direita pode encolher, só o chip cede (`:host { display: flex; min-width: 0 }`, o texto já tinha reticências) e, abaixo de 1100 px, saem a data do relógio e o nome do perfil (`topbar__data`, `topbar__perfil-nome`; `horaAtual` virou `horaAtual` + `dataAtual`).
+- **P-062:** `AutenticacaoService.atualizarSessao()` chama `GET /usuario/:id` (o desenvolvedor já pode ler o próprio perfil) e troca o `usuario_sessao`; a `LayoutComponent` chama no construtor, uma vez a cada abertura do app. Sem backend novo. Falha de rede mantém a sessão; 401 segue o redirecionamento global; resposta de outro usuário é descartada.
+- **P-060:** o enquadramento rodava uma vez com `alpha < 0.35` (~46 ticks de ~300) e a repulsão continuava afastando os blocos. Agora a simulação reenquadra uma vez no evento `end`, salvo se a pessoa já mexeu no zoom (`sourceEvent` do zoom do d3). O primeiro enquadramento rápido ficou.
+- **Testes:** +4 (sessão) e +2 (grafo); frontend inteiro 2.347 em 187 arquivos e `ng build` verdes. Sem lint (P-001).
+- **Ao vivo** (`ng serve` com a API simulada por `page.route`: **sem PostgreSQL**, o ambiente não tem Docker): chip a 719 px com a barra aberta e recolhida (antes x=30, sobre a barra; depois x=264/212, fora dela); `1280×720`, `1366×768` e `1920×1080` sem mudança de posição; P-062 com sessão gravada como gestor e servidor dizendo desenvolvedor, o `usuario_sessao` virou `DESENVOLVEDOR`; grafo com dois blocos desconectados em `1920×1080`, `1366×768` e `1080×1920`: antes 3 de 10 nós cortados na vertical, depois 0.
+- **Pendências:** o P-027 ficou com uma nota (provavelmente era este chip; o autor confirma). A janela do Project Desktop real não foi aberta.
+
 ## 2026-10-30 — Ponto: a meta só vale a partir do cadastro do usuário
 
 - **Origem:** na conversa do P-054 o autor viu que o alerta "Faltaram 8h" aparecia nos dias anteriores ao cadastro de um usuário criado no meio do mês, e o saldo já os contava como falta. Escolheu a opção A (corrigir na regra, não só no alerta): **a meta começa no dia do cadastro**. Trabalho separado, em branch e PR próprios.

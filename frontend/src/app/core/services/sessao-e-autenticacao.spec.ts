@@ -104,6 +104,59 @@ describe('AutenticacaoService', () => {
   });
 });
 
+describe('AutenticacaoService.atualizarSessao (P-062)', () => {
+  const sessaoSalva = () => criarUsuarioTeste(TipoUsuarioEnum.GESTOR);
+
+  it('troca o usuário guardado pelo do servidor: um gestor rebaixado perde os menus de gestor', () => {
+    localStorage.setItem('access_token', 'abc');
+    const sessao = TestBed.inject(UsuarioSessaoService);
+    sessao.definirUsuario(sessaoSalva());
+    const http = TestBed.inject(HttpTestingController);
+
+    TestBed.inject(AutenticacaoService).atualizarSessao();
+    const requisicao = http.expectOne((r) => r.url.endsWith(`/usuario/${sessaoSalva().id}`));
+    expect(requisicao.request.method).toBe('GET');
+    requisicao.flush({ sucesso: true, mensagem: 'ok', dados: { ...sessaoSalva(), tipo: TipoUsuarioEnum.DESENVOLVEDOR } });
+
+    expect(sessao.eGestor()).toBe(false);
+    expect(JSON.parse(localStorage.getItem('usuario_sessao')!).tipo).toBe(TipoUsuarioEnum.DESENVOLVEDOR);
+  });
+
+  it('sem token ou sem usuário guardado não pede nada', () => {
+    const http = TestBed.inject(HttpTestingController);
+    TestBed.inject(AutenticacaoService).atualizarSessao();
+    TestBed.inject(UsuarioSessaoService).definirUsuario(sessaoSalva());
+    TestBed.inject(AutenticacaoService).atualizarSessao();
+    http.expectNone(() => true);
+  });
+
+  it('falha da leitura mantém a sessão como estava', () => {
+    localStorage.setItem('access_token', 'abc');
+    const sessao = TestBed.inject(UsuarioSessaoService);
+    sessao.definirUsuario(sessaoSalva());
+    const http = TestBed.inject(HttpTestingController);
+
+    TestBed.inject(AutenticacaoService).atualizarSessao();
+    http.expectOne((r) => r.url.endsWith(`/usuario/${sessaoSalva().id}`)).flush({}, { status: 500, statusText: 'Erro' });
+
+    expect(sessao.eGestor()).toBe(true);
+  });
+
+  it('descarta a resposta se o usuário da sessão mudou enquanto ela voltava', () => {
+    localStorage.setItem('access_token', 'abc');
+    const sessao = TestBed.inject(UsuarioSessaoService);
+    sessao.definirUsuario(sessaoSalva());
+    const http = TestBed.inject(HttpTestingController);
+
+    TestBed.inject(AutenticacaoService).atualizarSessao();
+    const requisicao = http.expectOne((r) => r.url.endsWith(`/usuario/${sessaoSalva().id}`));
+    sessao.limpar();
+    requisicao.flush({ sucesso: true, mensagem: 'ok', dados: sessaoSalva() });
+
+    expect(sessao.usuarioAtual()).toBeNull();
+  });
+});
+
 describe('usuarioAutenticado (signal)', () => {
   it('começa nulo e guarda o usuário que lhe derem', () => {
     expect(usuarioAutenticado()).toBeNull();

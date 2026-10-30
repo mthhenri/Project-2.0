@@ -9,7 +9,20 @@
   border-color: var(--app-surface-200);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 
+  // O bloco da direita encolhe em vez de transbordar para a esquerda (sobre a barra lateral): o chip da execução cede
+  // primeiro (o texto vira reticências) e, em janela estreita, a data do relógio e o nome do perfil saem.
+  &__acoes > * {
+    flex-shrink: 0;
+  }
+
+  &__acoes > app-chip-execucao-ativa {
+    flex-shrink: 1;
+    min-width: 0;
+  }
+
   &__hora {
+    white-space: nowrap;
+
     // O relógio usa font-mono; suas métricas verticais diferem da fonte sans
     // do label "Minhas Anotações" ao lado. O flex centraliza pelas caixas, mas
     // as baselines não coincidem — este nudge de 1px casa as baselines.
@@ -142,6 +155,14 @@
 
     &:hover {
       text-decoration: underline;
+    }
+  }
+
+  @media (max-width: 1099px) {
+    &__data,
+    &__perfil-nome,
+    &__perfil-seta {
+      display: none;
     }
   }
 }

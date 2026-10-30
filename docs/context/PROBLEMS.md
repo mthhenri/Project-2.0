@@ -53,6 +53,7 @@
 - **Contorno:** nenhum conhecido.
 - **Correção:** precisa de uma captura da tela quebrada e do ambiente (sistema, navegador ou Project Desktop, largura da janela).
 - **Desde:** 2026-10-20.
+- **Nota (2026-10-30):** o autor trouxe a captura: o chip da execução na topbar invadia o logo e a barra lateral numa janela de ~720 px (corrigido, ver `HISTORY.md`). O chip aparece em toda tela e tem o cronômetro correndo, então provavelmente era esta a "quebra" de Ponto/Execuções; confirmar com o autor antes de fechar o item.
 
 ### P-029 — Custos da IA: alias que não é prefixo do id datado aparece como modelo sem preço · `ACEITO` · ia-custo
 
@@ -96,14 +97,6 @@
 - **Correção:** reconferir o usuário na batida do stream, ou encerrar as conexões do usuário ao desativar ou excluir (com o aviso entre instâncias).
 - **Desde:** 2026-10-30 (revisão do P-031).
 
-### P-062 — Menus do front seguem o tipo gravado no login, que agora dura 7 dias · `ABERTO` · autenticacao/frontend
-
-- **Sintoma:** um gestor rebaixado continua vendo os menus de gestor e leva 403 nas ações; um desenvolvedor promovido não vê as telas novas até sair e entrar.
-- **Causa:** `UsuarioSessaoService` decide `eGestor` e `eAdministrador` pelo `usuario_sessao` do `localStorage`, gravado no login. O backend já usa o tipo atual do banco (P-031), então não há brecha de segurança, só a tela defasada.
-- **Contorno:** sair e entrar de novo.
-- **Correção:** atualizar o `usuario_sessao` a partir do servidor (por exemplo, numa consulta ao abrir o app).
-- **Desde:** 2026-10-30 (revisão do P-031).
-
 ### P-063 — Ponto: o dia de hoje com execução em andamento não mostra o período corrente na linha · `ABERTO` · ponto/backend
 
 - **Sintoma:** com uma execução rodando depois de um bloco já encerrado (ex.: 07:40–10:00 e uma nova desde 11:10), a linha do dia mostra só "Dia todo 07:40 → 10:00": o período em curso e o intervalo de 1h10 não aparecem. Só quando **todas** as execuções do dia estão em andamento a linha diz "em andamento".
@@ -119,15 +112,6 @@
 - **Contorno:** nenhum; o campo fica sem efeito.
 - **Correção:** remover a coluna por migration nova (sem editar a já aplicada), ajustando DTOs, repository e `docs/SCHEMA.md`. Rodar `gerenciamento-de-impacto` antes.
 - **Desde:** 2026-10-29 (apontado pelo autor).
-
-
-### P-060 — Grafo de demandas: o enquadramento inicial corta nós quando o projeto tem blocos desconectados · `ABERTO` · demanda/frontend
-
-- **Sintoma:** com dois blocos de demandas sem conexão entre si (ex.: duas demandas de estrutura com filhos), os blocos se afastam e, em 1920×1080, 1366×768 e 1080×1920, o grafo abre com nós cortados no topo e na base (o cenário de teste do P-047 mostrou "Tela de login" e "Filtro por período" parcialmente fora da área). Idêntico no código anterior ao P-047.
-- **Causa:** `ajustarAoGrafo` enquadra uma vez, quando `alpha < 0.35`, e a simulação (repulsão -700) continua afastando os blocos depois disso; não foi confirmado se o `clientHeight` do contêiner também conta.
-- **Contorno:** o botão "Centralizar" do grafo, ou zoom/arrasto.
-- **Correção:** reenquadrar quando a simulação assenta (`end`) ou reduzir a repulsão entre blocos desconectados; medir antes de mexer.
-- **Desde:** 2026-10-30 (visto na verificação do P-047).
 
 
 ### P-059 — Teste de `modelagem.page.spec` instável na suíte inteira · `ABERTO` · frontend/testes

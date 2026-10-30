@@ -1,6 +1,6 @@
-<header class="topbar flex items-center justify-end px-6 py-3 border-b-2 gap-6">
+<header class="topbar flex items-center justify-end px-6 py-3 border-b-2 gap-6 min-w-0">
   <!-- Actions -->
-  <div class="topbar__acoes flex items-center gap-2 flex-shrink-0">
+  <div class="topbar__acoes flex items-center gap-2 min-w-0">
     <app-chip-execucao-ativa />
 
     @if (podeVoltarParaAIa()) {
@@ -10,7 +10,7 @@
     <!-- Ponto de extensão do próximo check-in (bloco 7): sem conteúdo projetado, nada é renderizado. -->
     <ng-content select="[slotCheckin]" />
 
-    <span class="topbar__hora text-sm text-muted-color font-mono tabular-nums">{{ horaAtual() }}</span>
+    <span class="topbar__hora text-sm text-muted-color font-mono tabular-nums"><span>{{ horaAtual() }}</span><span class="topbar__data"> {{ dataAtual() }}</span></span>
 
     <p-button
       [icon]="tema.eEscuro() ? 'pi pi-sun' : 'pi pi-moon'"
