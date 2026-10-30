@@ -15,7 +15,7 @@ Impacto: `npm run impacto` identificou os três locais que exibem `PadPainelComp
 
 ## Pendências para fecho
 
-A inspeção visual ainda não percorreu os estados vazio, carregando e erro de cada tela alterada, mas ainda faltam cenários específicos de erro e carregamento. O menu de Minhas demandas com item real foi posteriormente observado em gestor nos três viewports, conforme o relatório da task 263. A movimentação do pad, a troca de status e a Árvore nos três tamanhos foram verificadas depois, conforme abaixo. Por isso a task continua em `active/` e os problemas de origem não foram removidos. Nenhuma captura bruta é necessária para entender este relato.
+A inspeção visual ainda não percorreu os estados vazio, carregando e erro de cada tela alterada, mas ainda faltam cenários específicos de erro e carregamento. O menu de Minhas demandas com item real foi posteriormente observado em gestor nos três viewports, conforme o relatório da task 263. A movimentação do pad, a troca de status e a Árvore nos três tamanhos foram verificadas depois, conforme abaixo. Por isso a task continua em `active/`; os problemas corrigidos foram retirados de `PROBLEMS.md` a pedido do autor, e as verificações restantes seguem registradas aqui. Nenhuma captura bruta é necessária para entender este relato.
 
 Em 2026-10-29, com o desenvolvedor de teste, a tentativa de abrir o menu do pad sobre uma seleção por teclado não mostrou o menu, e não comprovou o movimento. O texto temporário foi apagado e o pad reaberto vazio. Ao abrir a sessão, o chat gerou automaticamente uma saudação da IA na conversa de teste.
 

@@ -46,14 +46,6 @@
 - **Correção:** decidir se o desfazer de uma entrada que acabou de acontecer deve valer mesmo com a regra (por exemplo, o executor desfaz direto a linha que ele mesmo criou) ou se a recusa é o comportamento esperado (então este item vira `ACEITO`).
 - **Desde:** 2026-10-19 (observado na verificação ao vivo da task 170, `VERIFICACAO-170-FECHAMENTO.md`).
 
-### P-024 — Mover trecho do pad sobrescreve o que o usuário digita durante a chamada · `ABERTO` · pad/frontend
-
-- **Sintoma:** durante `POST /anotacao/:id/mover`, o que o usuário digita na seção de origem ou de destino é sobrescrito quando a resposta chega (`aplicarMovimento` → `adotar()` regrava o controle sem emitir evento).
-- **Causa:** a task 201 tirou o overlay global dessa chamada (e do autosave do pad); antes o overlay bloqueava a digitação depois de 250 ms.
-- **Contorno:** esperar a resposta (rápida) antes de digitar nas duas seções.
-- **Correção:** desabilitar as duas seções (ou só as duas envolvidas) enquanto o movimento está em andamento.
-- **Desde:** 2026-10-20 (achado da revisão independente da task 201).
-
 ### P-025 — Conversas dos desenvolvedores: o período e a busca olham só uma janela do histórico · `ABERTO` · chat IA/gestor
 
 - **Sintoma:** com mais de 100 dias de chat, `listar_conversas_do_desenvolvedor` com `inicio`/`fim` antigos devolve lista vazia e `haMais: false`; `buscar_nas_conversas_do_desenvolvedor` pede 50 achados ao armazenamento antes de filtrar o contexto `CHAT`, então mensagens de check-in ocupam vagas.
@@ -158,14 +150,6 @@
 - **Correção:** recarregar as anotações depois de a IA aplicar a alteração (cuidando do risco do P-024, sobrescrever o que o usuário digita).
 - **Desde:** 2026-10-27 (apontado pelo autor).
 
-### P-042 — Ícones das descrições fora de padrão; o da descrição técnica está no lugar errado em algumas telas · `ABERTO` · frontend/descrição
-
-- **Sintoma:** os ícones das descrições (a do cliente, a técnica etc.) não seguem um padrão entre as telas, e o da descrição técnica aparece no lugar errado em algumas.
-- **Causa:** não investigada; provavelmente cada tela posiciona o ícone por conta própria.
-- **Contorno:** nenhum.
-- **Correção:** padronizar ícone e posição das descrições (antes, `gerenciamento-de-impacto` para listar as telas que os usam).
-- **Desde:** 2026-10-27 (apontado pelo autor).
-
 ### P-043 — Chat IA: pergunta sem resposta (falha ou timeout) mas com custo registrado · `ABERTO` · chat IA/backend
 
 - **Sintoma:** o autor fez uma pergunta no chat da IA e não veio nenhuma resposta, mas o gasto da chamada apareceu nos custos. Há falhas na resposta da IA e timeouts.
@@ -173,14 +157,6 @@
 - **Contorno:** repetir a pergunta (e arcar com o custo de novo).
 - **Correção:** a investigar: achar onde a resposta se perde (timeout do provedor, do streaming ou do front), avisar o usuário quando falhar em vez de silêncio, e decidir como contabilizar o custo de uma chamada que não entregou resposta.
 - **Desde:** 2026-10-27 (apontado pelo autor; pergunta e conversa não anexadas).
-
-### P-044 — Tela de Atividades não re-lista ao mudar o status de uma atividade · `ABERTO` · atividade/frontend
-
-- **Sintoma:** ao mudar o status de uma atividade na tela de Atividades (por exemplo, para desenvolvida, que o filtro padrão não mostra), ela continua na lista em vez de sumir.
-- **Causa:** não investigada; é uma regressão (isso funcionava antes), então vale olhar o que mudou na tela e no recarregamento depois da troca de status.
-- **Contorno:** recarregar a tela ou refazer o filtro.
-- **Correção:** voltar a re-listar com o filtro atual depois de alterar o status.
-- **Desde:** 2026-10-27 (apontado pelo autor; funcionava antes).
 
 ### P-045 — Tela de Execuções não recalcula ao mudar a data de uma execução · `ABERTO` · execucao/frontend
 
@@ -190,28 +166,12 @@
 - **Correção:** recalcular (ou recarregar a lista) depois de salvar a nova data.
 - **Desde:** 2026-10-27 (apontado pelo autor).
 
-### P-046 — A árvore de demandas abre sempre na primeira pasta, não em "Projeto inteiro" · `ABERTO` · demanda/frontend
-
-- **Sintoma:** ao abrir a Árvore, ela mostra a primeira pasta; deveria abrir no "Projeto inteiro".
-- **Causa:** não investigada.
-- **Contorno:** escolher "Projeto inteiro" manualmente a cada abertura.
-- **Correção:** definir "Projeto inteiro" como seleção inicial.
-- **Desde:** 2026-10-29 (apontado pelo autor).
-
 ### P-047 — Grafo: tirar um item do filtro só o apaga para cerca de 25% de opacidade · `ABERTO` · demanda/frontend
 
 - **Sintoma:** ao remover algo do filtro do grafo, o item fica só meio apagado (cerca de 25% de opacidade) em vez de sair da visão.
 - **Causa:** o filtro esmaece em vez de ocultar; comportamento a confirmar com o autor (pode ser o desejado).
 - **Contorno:** nenhum; o item continua visível.
 - **Correção:** decidir entre ocultar o item ou manter o esmaecimento, e ajustar o filtro conforme a decisão.
-- **Desde:** 2026-10-29 (apontado pelo autor).
-
-### P-048 — Controle de horas sem o filtro "apenas abertas" · `ABERTO` · demanda/frontend
-
-- **Sintoma:** no Controle de horas não há como mostrar só as atividades abertas (planejadas ou pendentes).
-- **Causa:** o filtro ainda não existe.
-- **Contorno:** filtrar a olho pelo status.
-- **Correção:** adicionar o botão "apenas abertas", que filtra pelos status planejada e pendente.
 - **Desde:** 2026-10-29 (apontado pelo autor).
 
 ### P-049 — Campo `codigo` do modelo do projeto na base não tem uso · `ABERTO` · banco/schema
@@ -268,14 +228,6 @@
 - **Causa:** a tela de Atividades não reaproveita o formato compacto da Execução.
 - **Contorno:** nenhum.
 - **Correção:** aplicar à Atividades o mesmo esquema compacto da Execução, para otimizar o espaço.
-- **Desde:** 2026-10-29 (apontado pelo autor).
-
-### P-056 — Texto abaixo da barra de pergunta no modo planejamento difere do chat · `ABERTO` · chat IA/planejamento
-
-- **Sintoma:** o texto abaixo da barra de pergunta no modo de planejamento não é o mesmo do modo de chat.
-- **Causa:** os dois modos têm textos separados.
-- **Contorno:** nenhum.
-- **Correção:** usar o mesmo texto do chat e acrescentar "Quem tem acesso ao plano vê esta conversa."
 - **Desde:** 2026-10-29 (apontado pelo autor).
 
 ### P-057 — Tela de login e lembrança do usuário pedem ajustes · `ABERTO` · autenticacao/frontend

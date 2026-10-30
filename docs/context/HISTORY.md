@@ -12,6 +12,10 @@
 
 ---
 
+## 2026-10-30 — Lista de problemas: retirar os itens corrigidos das tasks 262 e 263
+
+A pedido do autor, P-024, P-042, P-044, P-046, P-048 e P-056 saíram de `PROBLEMS.md`: as correções estão implementadas e as evidências estão nos relatórios das tasks 262 e 263. Essas tasks continuam em `active/` enquanto suas verificações visuais pendentes não terminam. P-040 permanece aberto pelos pontos de execução ativa e fechamento automático; a parte da barra do check-in foi corrigida na task 265.
+
 ## 2026-10-30 — Task 265: campo do check-in no padrão do chat
 
 O check-in usa o editor formatado do chat, com barra sobre a seleção, limite e contador de 4.000 caracteres, atalhos de envio e leitura formatada das mensagens. A aparência da caixa e do botão acompanha o chat. A recuperação do texto em falha e o bloqueio durante o envio foram preservados. O ajuste da barra saiu de P-040; os demais pontos continuam abertos.
