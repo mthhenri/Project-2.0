@@ -54,14 +54,6 @@
 - **Correção:** passar o intervalo e o contexto à consulta do armazenamento (`ArmazenamentoDeChat`, nos três repositórios) ou, no mínimo, sinalizar o truncamento.
 - **Desde:** 2026-10-20 (task 201).
 
-### P-026 — Tabela de Atividades do gestor passa da largura do conteúdo em 1366×768 · `ABERTO` · atividade/frontend
-
-- **Sintoma:** com as colunas de seleção e Usuário (gestor), a tabela mede 1081 px num conteúdo de 1030 px e a coluna Ações fica cortada.
-- **Causa:** não investigada a fundo (soma das larguras das colunas com os selos de prioridade e status).
-- **Contorno:** rolar a tabela na horizontal ou recolher a barra lateral.
-- **Correção:** rever as larguras das colunas ou deixar a tabela rolar dentro do cartão com a coluna Ações fixa.
-- **Desde:** 2026-10-20 (visto na verificação da task 201; anterior a ela).
-
 ### P-027 — Quebra visual do cronômetro correndo em Ponto/Execuções não reproduzida · `ABERTO` · ponto/execucao/frontend
 
 - **Sintoma:** o autor relatou que as telas de Ponto e Execuções "quebram visualmente" com o horário rodando.
@@ -85,14 +77,6 @@
 - **Contorno:** o armazenamento Postgres é provisório (só o ambiente de teste, `SCHEMA.md` "Tabelas provisórias"), e a consulta é só do administrador. OpenSearch e Elasticsearch filtram por `range` indexado.
 - **Correção:** índice em `created_date` e filtro por intervalo de `timestamptz`, se a tabela provisória crescer.
 - **Desde:** 2026-10-20 (task 202).
-
-### P-033 — Editor formatado: o valor do formulário só chega 200 ms depois da última tecla · `ABERTO` · frontend/markdown
-
-- **Sintoma:** não observado ao vivo. Na leitura do código, confirmar um dialog com `Ctrl+Enter` (ou fechar) em menos de 200 ms depois de digitar no `app-markdown-editor` usaria o valor anterior do controle.
-- **Causa:** o `aoMudar` do `EditorFormatado` vem do ouvinte `updated` do Milkdown, que tem `debounce` de 200 ms (`@milkdown/plugin-listener`). O comentário antigo de `OuvintesEditor` dizia "sem espera"; foi corrigido na task 218.
-- **Contorno:** nenhum conhecido; quase ninguém confirma tão rápido.
-- **Correção:** o `app-markdown-editor` passar a sincronizar o valor por `aoAplicar` (depois de cada transação, criado na task 218 e usado pelo chat) ou ler `obterMarkdown()` na hora de confirmar. Confirmar o sintoma antes (teste de componente digitando e confirmando em seguida).
-- **Desde:** 2026-10-23 (achado na task 218).
 
 ### P-034 — Testes de componente do editor e do chat entre colaboradores estouram o tempo na suíte inteira · `ABERTO` · frontend/testes
 

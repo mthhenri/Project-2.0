@@ -3,6 +3,8 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
 import { montarComponente, ComponenteMontado } from '../../../../testes/montar-componente';
 import { MarkdownEditorComponent, MenuContextoEditorEvento } from './markdown-editor.component';
+import { By } from '@angular/platform-browser';
+import type { EditorFormatado } from './markdown-formatado';
 
 // Editor de Markdown (task 134). O interpretador e o editor formatado (Milkdown) têm testes próprios; aqui, o contrato com o formulário
 // (ControlValueAccessor), o modo Markdown cru (textarea) e o teclado: Enter é nova linha (continua listas) e Ctrl+Enter não é consumido,
@@ -18,12 +20,14 @@ import { MarkdownEditorComponent, MenuContextoEditorEvento } from './markdown-ed
     [maxlength]="500"
     placeholder="Escreva aqui"
     rotulo="Descrição"
+    (keydown.control.enter)="confirmado = controle.value"
     (aoMenuContexto)="menus.push($event)"
   />`,
 })
 class AnfitriaoComponent {
   controle = new FormControl<string>('', { nonNullable: true });
   somenteLeitura = false;
+  confirmado = '';
   menus: MenuContextoEditorEvento[] = [];
 }
 
@@ -76,6 +80,26 @@ describe('MarkdownEditorComponent — modo somente leitura', () => {
 });
 
 describe('MarkdownEditorComponent — barra e alternância de modo', () => {
+  it('ao digitar no editor formatado o formulário já recebe o texto antes da confirmação imediata', async () => {
+    const montado = await montarComponente(AnfitriaoComponent);
+    const componente = montado.fixture.debugElement.query(By.directive(MarkdownEditorComponent)).componentInstance as unknown as { editorFormatado: EditorFormatado | null };
+    await vi.waitFor(() => expect(componente.editorFormatado).not.toBeNull(), { timeout: 8000 });
+    componente.editorFormatado!.inserirTexto('Texto recém digitado');
+    montado.elemento.querySelector('.ProseMirror')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true, bubbles: true }));
+    expect(montado.componente.confirmado).toBe('Texto recém digitado');
+  });
+
+  it('valor externo no editor formatado não dispara outra alteração nem perde a forma original', async () => {
+    const montado = await montarComponente(AnfitriaoComponent);
+    const componente = montado.fixture.debugElement.query(By.directive(MarkdownEditorComponent)).componentInstance as unknown as { editorFormatado: EditorFormatado | null };
+    await vi.waitFor(() => expect(componente.editorFormatado).not.toBeNull(), { timeout: 8000 });
+    const valores: string[] = [];
+    montado.componente.controle.valueChanges.subscribe((valor) => valores.push(valor));
+    montado.componente.controle.setValue('texto **externo**');
+    expect(valores).toEqual(['texto **externo**']);
+    expect(componente.editorFormatado!.obterMarkdown()).toBe('texto **externo**');
+    expect(montado.componente.controle.dirty).toBe(false);
+  });
   it('começa no modo formatado: barra de formatação com desfazer/refazer e o botão do Markdown cru sem pressão', async () => {
     const montado = await montarComponente(AnfitriaoComponent);
     expect(montado.elemento.querySelector('[role="toolbar"]')).not.toBeNull();

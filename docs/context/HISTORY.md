@@ -12,6 +12,12 @@
 
 ---
 
+## 2026-10-30 — Tasks 267 e 268: ações de Atividades e editor formatado
+
+- P-026: a tabela de Atividades mantém a coluna de ações fixa enquanto as demais colunas rolam; conferida em 1920×1080, 1366×768 e 1080×1920, inclusive o menu e a barra lateral. Um estilo de dialog sem uso saiu para preservar o limite do build.
+- P-033: o editor formatado sincroniza o formulário após cada transação, sem esperar o debounce, e protege a escrita externa. O teste reproduziu o valor antigo e depois comprovou Ctrl+Enter imediato; os usos em Atividades, Demandas, projeto, Documentações, plano, prompts e pad foram inspecionados. Dados temporários foram removidos logicamente. O mapa e limites estão em `docs/specs/done/268-sincronizar-editor-formatado/VERIFICACAO.md`.
+- Testes focados: 48 de Atividades e 22 do editor; suíte frontend: 2.296 testes em 185 arquivos; build frontend aprovado com avisos de tamanho e CommonJS. Não há lint (P-001).
+
 ## 2026-10-30 — Task 266: recálculo da tela de Execuções (P-045)
 
 - Ao salvar início ou fim, a tela consulta novamente a lista com os filtros e a página atuais; o servidor fornece a duração, o total e a composição do dia. A edição de descrição mantém o comportamento anterior.

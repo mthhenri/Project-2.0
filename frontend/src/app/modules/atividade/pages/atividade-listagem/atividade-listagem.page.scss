@@ -95,11 +95,7 @@
     padding: 0.75rem 1rem;
   }
 
-  &__descricao-form--cheio {
-    flex: 1 1 auto;
-    min-height: 0;
-  }
-
+  &__descricao-form--cheio,
   &__editor {
     flex: 1 1 auto;
     min-height: 0;
@@ -180,6 +176,10 @@
 
   &__coluna-acoes {
     width: 130px;
+    position: sticky;
+    right: 0;
+    z-index: 1;
+    background-color: var(--p-datatable-row-background);
   }
 
   &__coluna-selecao {
@@ -237,15 +237,6 @@
     flex-direction: column;
     gap: 1rem;
     padding-top: 0.25rem;
-  }
-
-  &__dialog-linha {
-    display: flex;
-    gap: 1rem;
-
-    @media (max-width: 640px) {
-      flex-direction: column;
-    }
   }
 
   &__dialog-campo {
@@ -418,7 +409,7 @@
   }
 
   ::ng-deep tr.atividade-listagem__linha--ativa > td {
-    background: color-mix(in srgb, var(--p-primary-color) 7%, transparent);
+    background: color-mix(in srgb, var(--p-primary-color) 7%, var(--p-datatable-row-background));
   }
 
   ::ng-deep tr.atividade-listagem__linha--ativa > td:first-child {

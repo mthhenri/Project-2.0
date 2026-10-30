@@ -128,6 +128,7 @@ export class MarkdownEditorComponent implements ControlValueAccessor {
   /** Markdown que o editor mostra para `original`, já normalizado: igual a ele = nada foi editado. */
   private base = '';
   private geracaoMontagem = 0;
+  private aplicandoValorExterno = false;
   private aoMudar: (valor: string) => void = () => {};
   private aoTocar: () => void = () => {};
 
@@ -155,8 +156,13 @@ export class MarkdownEditorComponent implements ControlValueAccessor {
     this.original = texto;
     const editor = this.editorFormatado;
     if (editor && editor.obterMarkdown() !== texto) {
-      editor.definirMarkdown(texto);
-      this.base = editor.obterMarkdown();
+      this.aplicandoValorExterno = true;
+      try {
+        editor.definirMarkdown(texto);
+        this.base = editor.obterMarkdown();
+      } finally {
+        this.aplicandoValorExterno = false;
+      }
     }
   }
 
@@ -236,9 +242,14 @@ export class MarkdownEditorComponent implements ControlValueAccessor {
     const modulo = await import('./markdown-formatado');
     if (geracao !== this.geracaoMontagem || !hospede.isConnected) return;
     const editor = await modulo.EditorFormatado.criar(hospede, this.valor(), {
-      aoMudar: (markdown) => this.aoMudarFormatado(markdown),
+      aoMudar: () => undefined,
       aoAtualizar: () => this.atualizarAtivos(),
       aoSair: () => this.aoTocar(),
+      aoAplicar: () => {
+        if (!this.aplicandoValorExterno && this.editorFormatado) {
+          this.aoMudarFormatado(this.editorFormatado.obterMarkdown());
+        }
+      },
     });
     if (geracao !== this.geracaoMontagem) {
       void editor.destruir();
