@@ -12,6 +12,12 @@
 
 ---
 
+## 2026-10-29 — Task 264 concluída e verificações das tasks 262 e 263
+
+O hover e o clique dos avisos individuais e do grupo misto foram observados nos temas claro e escuro, com cenário local fictício sem gravar mensagens ou propostas; a apresentação foi conferida nos três tamanhos. Também foram observados o chat vazio e cartões de proposta carregando e com erro. A task 264 foi movida para `done/`; o build e os 2.290 testes do frontend são os registrados no bloco anterior. O projeto não tem lint (P-001).
+
+A Árvore em Projeto inteiro foi observada nos três tamanhos; uma atividade saiu do filtro ao passar a Desenvolvida e foi restaurada para Planejada. O menu do pad exibiu ícones e moveu uma seleção, que foi apagada após o teste. Em Documentações, o perfil desenvolvedor mostrou os três ícones e o cadeado. As tasks 262 e 263 permanecem ativas por verificações pendentes nos relatórios.
+
 ## 2026-10-29 — Task 264: hover nos avisos da IA
 
 Os botões secundários de texto dos avisos azuis individuais e de grupo usam hover e clique em azul derivado da cor primária, com tokens locais do PrimeNG. O build e os 2.290 testes do frontend passaram e o botão Ver detalhes foi visto ao vivo nos temas claro e escuro; a inspeção cobriu os três viewports. O prazo da proposta disponível já havia expirado, portanto faltou ver Desfazer e o grupo misto ao vivo. A task permanece ativa; detalhes em `docs/specs/active/264-hover-avisos-ia/VERIFICACAO.md`.

@@ -15,4 +15,10 @@ Impacto: `npm run impacto` identificou os três locais que exibem `PadPainelComp
 
 ## Pendências para fecho
 
-A inspeção visual ainda não percorreu os estados vazio, carregando e erro de cada tela alterada, nem o menu de Minhas demandas com itens reais (a sessão de gestor estava vazia), nem comprovou a movimentação e o menu do pad ao vivo. Também faltou verificar ao vivo a troca de status da atividade e a Árvore nos três tamanhos. Por isso a task continua em `active/` e os problemas de origem não foram removidos. Nenhuma captura bruta é necessária para entender este relato.
+A inspeção visual ainda não percorreu os estados vazio, carregando e erro de cada tela alterada, mas ainda faltam cenários específicos de erro e carregamento. O menu de Minhas demandas com item real foi posteriormente observado em gestor nos três viewports, conforme o relatório da task 263. A movimentação do pad, a troca de status e a Árvore nos três tamanhos foram verificadas depois, conforme abaixo. Por isso a task continua em `active/` e os problemas de origem não foram removidos. Nenhuma captura bruta é necessária para entender este relato.
+
+Em 2026-10-29, com o desenvolvedor de teste, a tentativa de abrir o menu do pad sobre uma seleção por teclado não mostrou o menu, e não comprovou o movimento. O texto temporário foi apagado e o pad reaberto vazio. Ao abrir a sessão, o chat gerou automaticamente uma saudação da IA na conversa de teste.
+
+Em nova verificação de 2026-10-29, o menu de seleção do pad exibiu os ícones de Pessoal, Pendências, Lembretes e Feito; uma seleção foi movida de Em andamento para Pessoal, com aviso de sucesso. O texto temporário foi removido e as duas seções estavam vazias após recarga. Em Atividades, a atividade de teste passou de Planejada a Pendente e voltou a Planejada; a linha refletiu as duas alterações sem recarga manual. Ao interromper somente a API de teste e recarregar a listagem, ela apresentou o estado vazio; esse cenário não comprova tratamento explícito de erro e precisa de investigação.
+
+Em 2026-10-29, a Árvore foi observada nos três viewports com Projeto inteiro selecionado. Na listagem de Atividades, a atividade de teste foi alterada de Planejada para Desenvolvida e saiu automaticamente do filtro padrão; foi então localizada pelo filtro e restaurada para Planejada.
