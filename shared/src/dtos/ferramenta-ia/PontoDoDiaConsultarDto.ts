@@ -24,7 +24,7 @@ export interface PontoDoDiaConsultadoDto {
   /** Meta do dia já descontada de justificativa. */
   metaMinutos: number;
   trabalhadosMinutos: number;
-  /** Parte dos minutos trabalhados que conta como hora extra (fim de semana, feriado). */
+  /** Parte dos minutos trabalhados que conta como hora extra (fim de semana, feriado, dia anterior ao cadastro). */
   extraMinutos: number;
   /** Trabalhado menos a meta: negativo é o que falta. */
   saldoMinutos: number;

@@ -15,7 +15,8 @@ export class ConsultarPontoDoMesFerramenta extends FerramentaIa<PontoDoMesConsul
   readonly nome = 'consultar_ponto_do_mes';
   readonly descricao =
     'Diz quantas horas o usuário trabalhou no mês (o atual, se não informar `ano` e `mes`), a meta do mês, o saldo (negativo é o que falta) e os dias com trabalho ou justificativa. ' +
-    'Use para "como está meu mês?" e "quanto falta para bater a meta?". O gestor pode informar `usuarioId` (de listar_usuarios) para ver o ponto de outra pessoa.';
+    'Use para "como está meu mês?" e "quanto falta para bater a meta?". A meta e os dias úteis contam só a partir do dia do cadastro do usuário (quem entrou no meio do mês não deve os dias anteriores). ' +
+    'O gestor pode informar `usuarioId` (de listar_usuarios) para ver o ponto de outra pessoa.';
   readonly tipo = 'LEITURA' as const;
   readonly permissao = 'QUALQUER' as const;
   readonly classeDeEntrada = PontoDoMesConsultarDto;

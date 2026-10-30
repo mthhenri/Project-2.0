@@ -22,7 +22,11 @@ import {
   PontoJustificativaResumoDto,
   UsuarioRecuperarDto,
   TipoUsuarioEnum,
+  dataIsoNoFuso,
 } from '@project20/shared';
+
+/** Motivo dos dias anteriores ao cadastro do usuário: a meta só vale a partir do dia em que ele entrou no sistema. */
+export const MOTIVO_ANTES_DO_CADASTRO = 'Antes do cadastro';
 
 /**
  * Status de utilidade de uma data específica, compartilhado entre os usuários do mesmo dia.
@@ -39,6 +43,8 @@ interface UsuarioPonto {
   id: number;
   nomeCompleto: string;
   horasDiariasNecessarias: number;
+  /** Quando o usuário foi cadastrado: os dias anteriores (no fuso do sistema) não têm meta. */
+  createdDate: Date;
 }
 
 @Injectable()
@@ -121,6 +127,7 @@ export class PontoService {
 
     const { intervaloMinimoMinutos } = this.configService.obter().negocio;
     const metaDiariaMinutos = usuarioEncontrado.horasDiariasNecessarias * 60;
+    const diaDoCadastro = this.diaDoCadastro(usuarioEncontrado);
 
     let diasUteisMes = 0;
     let totalMinutosTrabalhadosMes = 0;
@@ -132,13 +139,16 @@ export class PontoService {
       const diaDaSemana = dataObjeto.getUTCDay();
       const ehFimDeSemana = diaDaSemana === 0 || diaDaSemana === 6;
 
+      const dataIso = this.formatarDataIso(ano, mes, numeroDoDia);
+      const antesDoCadastro = !ehFimDeSemana && dataIso < diaDoCadastro;
+
       const diaNaoUtil = mapaDiaNaoUtilPorDia.get(numeroDoDia) ?? null;
-      const registradoComoNaoUtil = !ehFimDeSemana && diaNaoUtil !== null;
+      const registradoComoNaoUtil = !ehFimDeSemana && !antesDoCadastro && diaNaoUtil !== null;
 
       // Fração da jornada exigida no dia: 1 (útil integral), 0.5 (meio período), 0 (fim de
       // semana ou dia não útil integral). Soma das frações compõe a meta do mês.
       let fracaoMeta: number;
-      if (ehFimDeSemana || (registradoComoNaoUtil && diaNaoUtil!.duracao === TipoDiaNaoUtilDuracaoEnum.INTEGRAL)) {
+      if (ehFimDeSemana || antesDoCadastro || (registradoComoNaoUtil && diaNaoUtil!.duracao === TipoDiaNaoUtilDuracaoEnum.INTEGRAL)) {
         fracaoMeta = 0;
       } else if (registradoComoNaoUtil && diaNaoUtil!.duracao === TipoDiaNaoUtilDuracaoEnum.MEIO_PERIODO) {
         fracaoMeta = 0.5;
@@ -152,12 +162,13 @@ export class PontoService {
       let motivoNaoUtil: string | null = null;
       if (ehFimDeSemana) {
         motivoNaoUtil = 'Fim de semana';
+      } else if (antesDoCadastro) {
+        motivoNaoUtil = MOTIVO_ANTES_DO_CADASTRO;
       } else if (registradoComoNaoUtil) {
         const motivoBase = this.mapearTipoParaMotivo(diaNaoUtil!.tipo, diaNaoUtil!.descricao);
         motivoNaoUtil = fracaoMeta === 0.5 ? `${motivoBase} (meio período)` : motivoBase;
       }
 
-      const dataIso = this.formatarDataIso(ano, mes, numeroDoDia);
       const agregado = mapaAgregadoPorData.get(dataIso);
       const totalMinutosTrabalhados = agregado?.totalMinutosTrabalhados ?? 0;
       totalMinutosTrabalhadosMes += totalMinutosTrabalhados;
@@ -256,8 +267,13 @@ export class PontoService {
   private async montarPontoDiario(
     usuario: UsuarioPonto,
     data: string,
-    infoDia: InfoDia,
+    infoDiaDaData: InfoDia,
   ): Promise<PontoDiarioDto> {
+    // O dia vale igual para todos os usuários, menos para quem ainda não tinha sido cadastrado nele.
+    const infoDia = infoDiaDaData.fracaoMeta > 0 && data < this.diaDoCadastro(usuario)
+      ? { fracaoMeta: 0, motivoNaoUtil: MOTIVO_ANTES_DO_CADASTRO }
+      : infoDiaDaData;
+
     const filtrosListagem: ExecucaoListarDto = { data, itensPorPagina: 500 };
     const { itens: execucoesDesordenadas } = await this.execucaoRepositorio.listar(
       filtrosListagem,
@@ -324,6 +340,11 @@ export class PontoService {
       intervalos,
       execucoes,
     };
+  }
+
+  /** Dia (`YYYY-MM-DD`, no fuso do sistema) em que o usuário foi cadastrado: a meta começa nele. */
+  private diaDoCadastro(usuario: UsuarioPonto): string {
+    return dataIsoNoFuso(new Date(usuario.createdDate), this.configService.obter().aplicacao.fusoHorario);
   }
 
   /** Ordena execuções por início — pré-requisito do cálculo de intervalos (gaps consecutivos). */

@@ -1449,6 +1449,7 @@ O **administrador** é um gestor com mais permissões: tem tudo o que a coluna "
 - Finais de semana não precisam ser cadastrados — são ignorados automaticamente pelo módulo de ponto
 - Feriados com `recorrente = true` são considerados em qualquer ano
 - O módulo de ponto cruza as execuções com `dia_nao_util` para calcular métricas corretas
+- **Antes do cadastro:** a meta de cada usuário só vale a partir do dia em que ele foi cadastrado (`usuario.created_date` no fuso do sistema). Os dias úteis anteriores têm fração 0 e o motivo `Antes do cadastro` (fim de semana segue como `Fim de semana`; o dia do cadastro já conta). Isso vale no ponto diário, no mensal e em todos, e portanto no saldo, na meta do mês, nos dias úteis e nas ferramentas de IA `consultar_ponto_do_dia` e `consultar_ponto_do_mes`. Trabalho num dia anterior ao cadastro vira hora extra
 - Cada `dia_nao_util` tem `duracao` (`INTEGRAL` / `MEIO_PERIODO`): **integral** zera a meta do dia (fração 0); **meio período** reduz a meta à metade (fração 0.5 — o excedente vira hora extra e o saldo do dia nunca fica positivo). A `duracao` é independente do `tipo` e não distingue turno
 
 ### Grafo de Demandas

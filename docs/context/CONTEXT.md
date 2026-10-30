@@ -93,6 +93,7 @@ project-2.0/
 
 ## 3. Decisões Vivas
 
+- **[meta a partir do cadastro, 2026-10-30]** O ponto não cobra meta dos dias anteriores ao cadastro do usuário: `PontoService` compara cada data com `usuario.created_date` no fuso do sistema (`diaDoCadastro`) e, antes dele, o dia útil vira fração 0 com o motivo `Antes do cadastro` (constante `MOTIVO_ANTES_DO_CADASTRO`), no diário, no mensal e em "todos" (`listarAtivosComMeta` passou a devolver `createdDate`). Reduz meta do mês, dias úteis e saldo; trabalho anterior ao cadastro vira hora extra. As ferramentas de IA `consultar_ponto_do_dia` e `consultar_ponto_do_mes` leem a mesma service (o dia sai como não útil com esse motivo) e as descrições avisam a IA. Sem migration nem mudança de DTO.
 - **[seed de desenvolvimento]** `npm run db:seed-dev` (raiz ou backend) cria o projeto `DEMO`, demandas, atividades e o desenvolvedor `dev.teste` / `project2026` no banco local. Idempotente; recusa produção (`APP_AMBIENTE=production` ou `DB_SSL=true`). Fica fora das migrations de propósito (`backend/src/database/scripts/seed-desenvolvimento.ts`).
 - **[revisão de UX reativada]** As telas de **Atividades** (102–105: listagem com filtros na URL e ações em massa, dialogs de execução,
   detalhe com faixa de execução, nova atividade só em dialog — não existe página de criação) e de **Execuções** (110/111) foram descartadas em

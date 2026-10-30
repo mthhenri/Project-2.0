@@ -189,6 +189,8 @@ testarComBanco('listarAtivosComMeta devolve só ativos não excluídos, ordenado
 
   const meus = (await repositorio.listarAtivosComMeta()).filter((linha) => linha.nomeCompleto.startsWith(marca));
   assert.deepEqual(meus.map((linha) => [linha.id, linha.horasDiariasNecessarias]), [[a.id, 8], [b.id, 6]]);
+  // A data do cadastro vai junto: o ponto não cobra meta dos dias anteriores a ela.
+  assert.ok(meus.every((linha) => linha.createdDate instanceof Date && !Number.isNaN(linha.createdDate.getTime())));
 });
 
 testarComBanco('listarNomesPorIds: o nome de cada um numa consulta; excluído, inexistente e lista vazia não voltam', async (conexao) => {

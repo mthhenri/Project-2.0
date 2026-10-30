@@ -28,20 +28,22 @@ function execucao(data: string, inicio: string, fim: string | null): ExecucaoDub
 }
 
 interface Cenario {
-  usuarios?: Array<{ id: number; nomeCompleto: string; horasDiariasNecessarias: number }>;
+  usuarios?: Array<{ id: number; nomeCompleto: string; horasDiariasNecessarias: number; createdDate?: Date }>;
   execucoes?: Record<number, ExecucaoDublada[]>;
   diasNaoUteis?: Record<string, DiaNaoUtilDublado>;
   justificativas?: Array<{ usuarioId: number; diaData: string; nome: string; horasCobertas: number }>;
 }
 
 function criarServico(cenario: Cenario = {}) {
-  const usuarios = cenario.usuarios ?? [{ id: 3, nomeCompleto: 'Ana', horasDiariasNecessarias: 8 }];
+  // Cadastrados muito antes dos dias dos testes, salvo quando o cenário diz o contrário (a meta só vale a partir do cadastro).
+  const usuarios = (cenario.usuarios ?? [{ id: 3, nomeCompleto: 'Ana', horasDiariasNecessarias: 8 }])
+    .map((usuario) => ({ createdDate: new Date('2020-01-01T12:00:00Z'), ...usuario }));
   const consultas: string[] = [];
   const execucoesDoDia = (usuarioId: number, data: string) =>
     (cenario.execucoes?.[usuarioId] ?? []).filter((item) => item.inicioData.toLocaleDateString('sv', { timeZone: 'America/Sao_Paulo' }) === data);
 
   const servico = Object.create(PontoService.prototype) as Record<string, unknown>;
-  servico.configService = { obter: () => ({ negocio: { intervaloMinimoMinutos: 15 } }) };
+  servico.configService = { obter: () => ({ negocio: { intervaloMinimoMinutos: 15 }, aplicacao: { fusoHorario: 'America/Sao_Paulo' } }) };
   servico.usuarioRepositorio = {
     recuperar: async ({ id }: { id: number }) => usuarios.find((usuario) => usuario.id === id) ?? null,
     listarAtivosComMeta: async () => usuarios,
@@ -412,3 +414,72 @@ test('mensal: o ponto de um usuário não soma execuções de outro', async () =
   });
   assert.equal((await servico.consultarMensal({ ano: 2026, mes: 3, usuarioId: 3 }, GESTOR)).totalMinutosTrabalhadosMes, 60);
 });
+
+// ---------------------------------------------------------------------------
+// Meta a partir do cadastro (P-063): os dias anteriores ao cadastro do usuário não têm meta
+// ---------------------------------------------------------------------------
+
+/** Cadastrado em 10/03/2026 (terça) às 09:00 no fuso do sistema. */
+const CADASTRADA_EM_10_DE_MARCO = [{ id: 3, nomeCompleto: 'Ana', horasDiariasNecessarias: 8, createdDate: new Date('2026-03-10T09:00:00-03:00') }];
+
+test('mensal, antes do cadastro: os dias úteis anteriores ficam sem meta e com o motivo "Antes do cadastro"; fim de semana segue como fim de semana', async () => {
+  const { servico } = criarServico({ usuarios: CADASTRADA_EM_10_DE_MARCO });
+  const mensal = await servico.consultarMensal({ ano: 2026, mes: 3 }, DESENVOLVEDOR);
+  const dia = (data: string) => mensal.dias.find((item) => item.data === data)!;
+
+  for (const data of ['2026-03-02', '2026-03-06', '2026-03-09']) {
+    assert.deepEqual([dia(data).ehDiaUtil, dia(data).metaMinutos, dia(data).saldoMinutos, dia(data).motivoNaoUtil], [false, 0, 0, 'Antes do cadastro'], data);
+  }
+  assert.equal(dia(SABADO).motivoNaoUtil, 'Fim de semana');
+  // O dia do cadastro já conta, com a meta inteira.
+  assert.deepEqual([dia('2026-03-10').ehDiaUtil, dia('2026-03-10').metaMinutos, dia('2026-03-10').motivoNaoUtil], [true, 480, null]);
+  // Março de 2026 tem 22 dias úteis; 6 vêm antes do cadastro (2 a 6 e 9).
+  assert.equal(mensal.diasUteisMes, 16);
+  assert.equal(mensal.metaMinutosMes, 16 * 480);
+  assert.equal(mensal.saldoMinutosMes, -16 * 480);
+});
+
+test('mensal, antes do cadastro: trabalho anterior ao cadastro conta como hora extra e entra no saldo', async () => {
+  const { servico } = criarServico({ usuarios: CADASTRADA_EM_10_DE_MARCO, execucoes: { 3: [execucao(SEGUNDA, '09:00', '12:00')] } });
+  const mensal = await servico.consultarMensal({ ano: 2026, mes: 3 }, DESENVOLVEDOR);
+  const dia = mensal.dias.find((item) => item.data === SEGUNDA)!;
+  assert.deepEqual([dia.totalMinutosTrabalhados, dia.metaMinutos, dia.saldoMinutos], [180, 0, 180]);
+  assert.equal(mensal.saldoMinutosMes, 180 - 16 * 480);
+});
+
+test('mensal, antes do cadastro: justificativa num dia anterior ao cadastro não muda nada (a meta já é zero)', async () => {
+  const { servico } = criarServico({
+    usuarios: CADASTRADA_EM_10_DE_MARCO,
+    justificativas: [{ usuarioId: 3, diaData: SEGUNDA, nome: 'Atestado', horasCobertas: 4 }],
+  });
+  const dia = (await servico.consultarMensal({ ano: 2026, mes: 3 }, DESENVOLVEDOR)).dias.find((item) => item.data === SEGUNDA)!;
+  assert.deepEqual([dia.metaMinutos, dia.saldoMinutos, dia.justificativaNome], [0, 0, 'Atestado']);
+});
+
+test('o dia do cadastro é o do fuso do sistema, não o do UTC: cadastro às 22:00 de 9/3 em São Paulo (1h de 10/3 em UTC) conta a partir do dia 9', async () => {
+  const { servico } = criarServico({ usuarios: [{ id: 3, nomeCompleto: 'Ana', horasDiariasNecessarias: 8, createdDate: new Date('2026-03-10T01:00:00Z') }] });
+  const mensal = await servico.consultarMensal({ ano: 2026, mes: 3 }, DESENVOLVEDOR);
+  assert.equal(mensal.dias.find((item) => item.data === '2026-03-06')!.motivoNaoUtil, 'Antes do cadastro');
+  assert.equal(mensal.dias.find((item) => item.data === '2026-03-09')!.metaMinutos, 480);
+});
+
+test('diário, antes do cadastro: sem meta, com o motivo, e o trabalho do dia vira extra', async () => {
+  const { servico } = criarServico({ usuarios: CADASTRADA_EM_10_DE_MARCO, execucoes: { 3: [execucao(SEGUNDA, '09:00', '11:00')] } });
+  const ponto = await servico.consultarDiario({ data: SEGUNDA }, DESENVOLVEDOR);
+  assert.deepEqual(
+    [ponto.ehDiaUtil, ponto.motivoNaoUtil, ponto.metaMinutos, ponto.minutosTrabalhadosDiaUtil, ponto.minutosTrabalhadosExtra, ponto.saldoMinutos],
+    [false, 'Antes do cadastro', 0, 0, 120, 120],
+  );
+  const noDia = await servico.consultarDiario({ data: '2026-03-10' }, DESENVOLVEDOR);
+  assert.deepEqual([noDia.ehDiaUtil, noDia.metaMinutos], [true, 480]);
+});
+
+test('todos: a data vale para cada usuário pelo seu cadastro (quem já estava cadastrado tem meta, o novo não)', async () => {
+  const { servico } = criarServico({ usuarios: [
+    { id: 3, nomeCompleto: 'Ana', horasDiariasNecessarias: 8 },
+    { id: 4, nomeCompleto: 'Beto', horasDiariasNecessarias: 8, createdDate: new Date('2026-03-10T09:00:00-03:00') },
+  ] });
+  const pontos = await servico.consultarTodos({ data: SEGUNDA }, GESTOR);
+  assert.deepEqual(pontos.map((ponto) => [ponto.nomeUsuario, ponto.metaMinutos, ponto.motivoNaoUtil]), [['Ana', 480, null], ['Beto', 0, 'Antes do cadastro']]);
+});
+

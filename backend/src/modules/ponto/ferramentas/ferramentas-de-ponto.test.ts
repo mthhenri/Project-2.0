@@ -111,3 +111,25 @@ test('ponto do mês: dia só com justificativa entra na lista, dia sem nada fica
   const resultado = await mes.executar({}, DESENVOLVEDOR);
   assert.deepEqual(resultado.dias.map((dia) => [dia.data, dia.justificativa]), [['2026-10-01', null], ['2026-10-05', 'Consulta médica']]);
 });
+
+test('ponto: as descrições avisam a IA de que a meta só vale a partir do cadastro do usuário (P-063)', () => {
+  const { dia, mes } = criar();
+  assert.match(dia.descricao, /Antes do cadastro/);
+  assert.match(dia.descricao, /não tem meta/);
+  assert.match(mes.descricao, /a partir do dia do cadastro/);
+});
+
+test('ponto do dia: um dia anterior ao cadastro chega à IA como não útil, com meta zero e o motivo', async () => {
+  const { dia } = criar();
+  const original = (dia as unknown as { pontoService: { consultarDiario: unknown } }).pontoService;
+  (dia as unknown as { pontoService: unknown }).pontoService = {
+    ...original,
+    consultarDiario: async () => ({
+      data: '2026-03-02', usuarioId: 7, nomeUsuario: 'Dev', ehDiaUtil: false, motivoNaoUtil: 'Antes do cadastro', metaMinutos: 0,
+      minutosTrabalhadosDiaUtil: 0, minutosTrabalhadosExtra: 0, totalMinutosTrabalhados: 0, saldoMinutos: 0, intervalos: [], execucoes: [],
+    }),
+  };
+  const resposta = await dia.executar({ data: '2026-03-02' } as never, DESENVOLVEDOR);
+  assert.deepEqual([resposta.ehDiaUtil, resposta.motivoNaoUtil, resposta.metaMinutos, resposta.saldoMinutos], [false, 'Antes do cadastro', 0, 0]);
+});
+
