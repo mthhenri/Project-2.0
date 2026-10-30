@@ -45,7 +45,8 @@
       <p-tablist>
         @for (opcao of abasVisiveis(); track opcao) {
           <p-tab [value]="opcao">
-            <i class="pi" [class]="opcao === Aba.DESCRICAO_CLIENTE && !podeEditarCliente() ? 'pi-lock' : iconeAba[opcao]" aria-hidden="true"></i>
+            <i [class]="iconeAba[opcao]" aria-hidden="true"></i>
+            @if (opcao === Aba.DESCRICAO_CLIENTE && !podeEditarCliente()) { <i class="pi pi-lock" aria-hidden="true"></i> }
             {{ rotuloAba[opcao] }}
             @if ((opcao === Aba.DESCRICAO_TECNICA && alterados().tecnica) || (opcao === Aba.DESCRICAO_CLIENTE && alterados().cliente) || (opcao === Aba.DOCUMENTACAO && alterados().documentacao)) {
               <span class="plano-documento__ponto" aria-label="Alterações sem gravar"></span>

@@ -142,6 +142,10 @@
   }
 
   &__descricao {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
     width: 1.35rem;
     height: 1.35rem;
     padding: 0;

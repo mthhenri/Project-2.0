@@ -111,7 +111,25 @@ describe('MinhasDemandasComponent', () => {
       await montado.atualizar();
       montado.elemento.querySelector('li')!.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }));
       const estados = opcoes(montado)[0].items!;
-      expect(estados.every((item) => item.icon === 'pi pi-circle-fill' && !!item.iconStyle?.['color'])).toBe(true);
+      expect(estados.map((item) => item['data'])).toEqual([TipoDemandaStatusEnum.PENDENTE, TipoDemandaStatusEnum.PLANEJADA, TipoDemandaStatusEnum.CONCLUIDA, TipoDemandaStatusEnum.CANCELADA]);
+      await montado.atualizar();
+      const itemStatus = document.body.querySelector<HTMLElement>('.p-contextmenu-item-content');
+      itemStatus?.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+      await montado.atualizar();
+      expect(document.body.querySelectorAll('.p-contextmenu app-demanda-status-marca')).toHaveLength(4);
+    });
+
+    it('abre o submenu para cima quando o clique está na metade inferior da janela', async () => {
+      const montado = await montar();
+      responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/executadas'), [demanda(1)]);
+      await montado.atualizar();
+      const linha = montado.elemento.querySelector('li')!;
+      linha.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientY: window.innerHeight - 10 }));
+      await montado.atualizar();
+      expect(document.body.querySelector('.minhas-demandas-menu--para-cima')).not.toBeNull();
+      linha.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientY: 10 }));
+      await montado.atualizar();
+      expect(document.body.querySelector('.minhas-demandas-menu--para-cima')).toBeNull();
     });
 
     it('trocar para Concluída tira a demanda da lista; para Planejada só muda o status', async () => {

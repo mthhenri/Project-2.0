@@ -20,6 +20,8 @@
 
   // A IA já fez parte do grupo (task 228): linha azul em cima, a mesma cor do aviso de cada proposta feita por ela.
   &__aviso {
+    --p-button-text-secondary-hover-background: color-mix(in srgb, var(--p-primary-color) 22%, var(--app-surface-0));
+    --p-button-text-secondary-active-background: color-mix(in srgb, var(--p-primary-color) 28%, var(--app-surface-0));
     display: flex;
     align-items: center;
     gap: 0.5rem;

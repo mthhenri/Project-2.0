@@ -99,6 +99,10 @@
   }
 
   &__descricao {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
     width: 1.5rem;
     height: 1.5rem;
     padding: 0;

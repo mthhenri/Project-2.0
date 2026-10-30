@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, output, signal } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { MenuItem, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ContextMenu } from 'primeng/contextmenu';
@@ -30,6 +31,7 @@ const QUANTIDADE_DE_DEMANDAS = 20;
   styleUrl: './minhas-demandas.component.scss',
 })
 export class MinhasDemandasComponent implements OnInit {
+  private readonly documento = inject(DOCUMENT);
   private readonly demandaService = inject(DemandaService);
   private readonly messageService = inject(MessageService);
   private readonly desfazerService = inject(DesfazerService);
@@ -47,6 +49,7 @@ export class MinhasDemandasComponent implements OnInit {
 
   /** O menu do botão direito da demanda sob o cursor. */
   readonly itensMenu = signal<MenuItem[]>([]);
+  readonly menuParaCima = signal(false);
 
   readonly rotuloDesenvolvidas = rotuloDesenvolvidas;
   readonly percentualDesenvolvidas = percentualDesenvolvidas;
@@ -79,14 +82,14 @@ export class MinhasDemandasComponent implements OnInit {
   /** Abre o menu da demanda: trocar o status e, para o desenvolvedor (gestor não é membro), sair dela. */
   abrirMenu(evento: MouseEvent, menu: ContextMenu, demanda: DemandaExecutadaResumoDto): void {
     evento.preventDefault();
+    this.menuParaCima.set(evento.clientY > (this.documento.defaultView?.innerHeight ?? 0) / 2);
     const itens: MenuItem[] = [
       {
         label: 'Alterar status',
         icon: 'pi pi-circle',
         items: OPCOES_STATUS_DEMANDA.map((opcao) => ({
           label: opcao.rotulo,
-          icon: 'pi pi-circle-fill',
-          iconStyle: { color: opcao.cor },
+          data: opcao.status,
           disabled: opcao.status === demanda.status,
           command: () => this.alterarStatus(demanda, opcao.status),
         })),

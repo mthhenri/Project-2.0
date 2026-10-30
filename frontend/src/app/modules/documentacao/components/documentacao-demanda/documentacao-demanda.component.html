@@ -41,7 +41,8 @@
       <p-tablist>
         @for (opcao of abas; track opcao) {
           <p-tab [value]="opcao">
-            <i class="pi" [class]="opcao === Aba.DESCRICAO_CLIENTE && !editaAba()(opcao) ? 'pi-lock' : iconeDaAba[opcao]" aria-hidden="true"></i>
+            <i [class]="iconeDaAba[opcao]" aria-hidden="true"></i>
+            @if (opcao === Aba.DESCRICAO_CLIENTE && !editaAba()(opcao)) { <i class="pi pi-lock" aria-hidden="true"></i> }
             {{ rotuloDaAba[opcao] }}
             @if (alteradaNaAba(opcao)) {
               <span class="documentacao-demanda__ponto" aria-label="Alterações sem gravar"></span>

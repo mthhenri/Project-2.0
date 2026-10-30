@@ -266,3 +266,9 @@ body:has(.anotacoes-drawer) .toast-desfazer {
     filter: drop-shadow(0 0 2px color-mix(in srgb, currentColor 55%, transparent));
   }
 }
+
+// O menu de Minhas demandas é anexado ao body; perto do rodapé o submenu abre para cima.
+.minhas-demandas-menu--para-cima .p-contextmenu-submenu {
+  top: auto !important; // PrimeNG posiciona o submenu em top: 0 por estilo inline.
+  bottom: 0;
+}

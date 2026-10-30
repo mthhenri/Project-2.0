@@ -43,9 +43,9 @@ const ROTULO_DA_ABA: Record<PlanoAbaEnum, string> = {
 };
 
 const ICONE_DA_ABA: Record<PlanoAbaEnum, string> = {
-  [PlanoAbaEnum.DESCRICAO_TECNICA]: 'pi-code',
-  [PlanoAbaEnum.DESCRICAO_CLIENTE]: 'pi-user',
-  [PlanoAbaEnum.DOCUMENTACAO]: 'pi-book',
+  [PlanoAbaEnum.DESCRICAO_TECNICA]: 'icone-descricao icone-descricao--tecnica',
+  [PlanoAbaEnum.DESCRICAO_CLIENTE]: 'pi pi-user',
+  [PlanoAbaEnum.DOCUMENTACAO]: 'icone-descricao icone-descricao--doc',
 };
 
 /** O pedido de alteração de um trecho e a resposta da IA (task 260): fica na aba em que foi pedido, até aceitar ou descartar. */

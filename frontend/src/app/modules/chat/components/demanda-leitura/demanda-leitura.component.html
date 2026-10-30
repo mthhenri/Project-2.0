@@ -44,11 +44,11 @@
               <span class="demanda-leitura__aba-contador" aria-label="{{ pendencias() }} pendências em aberto">{{ pendencias() }}</span>
             }
           </p-tab>
-          <p-tab value="tecnica"><i class="pi pi-code demanda-leitura__aba-icone"></i>Técnica</p-tab>
+          <p-tab value="tecnica"><i class="icone-descricao icone-descricao--tecnica demanda-leitura__aba-icone"></i>Técnica</p-tab>
           <p-tab value="cliente">
-            <i class="pi demanda-leitura__aba-icone" [class.pi-user]="sessao.eGestor()" [class.pi-lock]="!sessao.eGestor()"></i>Cliente
+            <i class="pi pi-user demanda-leitura__aba-icone"></i>Cliente @if (!sessao.eGestor()) { <i class="pi pi-lock" aria-hidden="true"></i> }
           </p-tab>
-          <p-tab value="documentacao"><i class="pi pi-book demanda-leitura__aba-icone"></i>Documentação</p-tab>
+          <p-tab value="documentacao"><i class="icone-descricao icone-descricao--doc demanda-leitura__aba-icone"></i>Documentação</p-tab>
         </p-tablist>
       </p-tabs>
     </header>

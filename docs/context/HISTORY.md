@@ -12,6 +12,20 @@
 
 ---
 
+## 2026-10-29 — Task 264: hover nos avisos da IA
+
+Os botões secundários de texto dos avisos azuis individuais e de grupo usam hover e clique em azul derivado da cor primária, com tokens locais do PrimeNG. O build e os 2.290 testes do frontend passaram e o botão Ver detalhes foi visto ao vivo nos temas claro e escuro; a inspeção cobriu os três viewports. O prazo da proposta disponível já havia expirado, portanto faltou ver Desfazer e o grupo misto ao vivo. A task permanece ativa; detalhes em `docs/specs/active/264-hover-avisos-ia/VERIFICACAO.md`.
+
+---
+
+## 2026-10-29 — Task 263: ícones de demanda e menu contextual
+
+O menu de Minhas demandas usa a marca própria de cada status com sua cor; o submenu abre para cima ao clicar na metade inferior da janela, depois de se observar que o PrimeNG o cortava no rodapé. Técnica, Cliente e Documentação passaram a usar os mesmos desenhos nas abas do chat, do plano e de Documentações e no seletor; o cadeado permanece como indicação adicional. Os botões das descrições na Árvore e as abas foram alinhados localmente.
+
+O build passou; a suíte completa após o ajuste da direção teve 2.290 testes aprovados, e o menu passou 14/14. Cinco arquivos relacionados passaram 80/80. As telas foram observadas ao vivo e o menu com demanda real exibiu as quatro marcas; a task continua ativa por faltar a verificação visual dos demais estados e perfis, descrita em `docs/specs/active/263-icones-demanda/VERIFICACAO.md`.
+
+---
+
 ## 2026-10-29 — Task 262: ajustes implementados, verificação visual parcial
 
 Foram implementados os ajustes de P-024, P-044, P-046, P-048 e P-056 e os pedidos de ordem e ícones no pad e no menu de Minhas demandas. O filtro de horas incide sobre demandas, conforme confirmado pelo autor. O pad bloqueia as duas seções até terminar também a recarga após conflito, para não sobrescrever o que for digitado nesse intervalo.

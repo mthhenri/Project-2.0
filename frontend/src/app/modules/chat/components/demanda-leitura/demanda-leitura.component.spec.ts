@@ -75,6 +75,8 @@ describe('DemandaLeituraComponent', () => {
   it.each([TipoUsuarioEnum.DESENVOLVEDOR, TipoUsuarioEnum.GESTOR, TipoUsuarioEnum.ADMINISTRADOR])('o %s vê a aba Cliente', async (tipo) => {
     const montado = await montar(tipo);
     expect(abas(montado.elemento)).toEqual(['Checklist', 'Anotações', 'Técnica', 'Cliente', 'Documentação']);
+    expect(montado.elemento.querySelector('.icone-descricao--tecnica')).not.toBeNull();
+    expect(montado.elemento.querySelector('.icone-descricao--doc')).not.toBeNull();
   });
 
   it('o desenvolvedor lê o texto do cliente, com cadeado na aba e o aviso de que só gestores alteram', async () => {

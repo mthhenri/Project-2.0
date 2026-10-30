@@ -169,6 +169,9 @@
   }
 
   &__aba-icone {
+    align-self: center;
+    line-height: 1;
+    vertical-align: middle;
     margin-right: 0.4rem;
     font-size: 0.9rem;
     color: var(--app-surface-400);

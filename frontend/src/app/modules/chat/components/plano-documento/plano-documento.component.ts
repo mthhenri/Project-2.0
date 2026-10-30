@@ -68,9 +68,9 @@ export class PlanoDocumentoComponent {
   readonly Aba = PlanoAbaEnum;
   readonly rotuloAba = ROTULO_ABA_DO_PLANO;
   readonly iconeAba: Record<PlanoAbaEnum, string> = {
-    [PlanoAbaEnum.DESCRICAO_TECNICA]: 'pi-code',
-    [PlanoAbaEnum.DESCRICAO_CLIENTE]: 'pi-user',
-    [PlanoAbaEnum.DOCUMENTACAO]: 'pi-book',
+    [PlanoAbaEnum.DESCRICAO_TECNICA]: 'icone-descricao icone-descricao--tecnica',
+    [PlanoAbaEnum.DESCRICAO_CLIENTE]: 'pi pi-user',
+    [PlanoAbaEnum.DOCUMENTACAO]: 'icone-descricao icone-descricao--doc',
   };
   /** O diálogo de publicação na demanda (task 237) e o formulário de uma demanda nova a partir do plano. */
   readonly mostrarPublicacao = signal(false);

@@ -1,5 +1,17 @@
 <section class="minhas-demandas" aria-label="Minhas demandas">
-  <p-contextmenu #menu [model]="itensMenu()" appendTo="body" />
+  <p-contextmenu #menu [model]="itensMenu()" [styleClass]="menuParaCima() ? 'minhas-demandas-menu--para-cima' : ''" appendTo="body">
+    <ng-template #item let-item>
+      <a class="p-contextmenu-item-link">
+        @if (item.data) {
+          <app-demanda-status-marca [status]="item.data" [tamanho]="16" />
+        } @else {
+          <i [class]="item.icon" aria-hidden="true"></i>
+        }
+        <span class="p-contextmenu-item-label">{{ item.label }}</span>
+        @if (item.items) { <i class="pi pi-angle-right" aria-hidden="true"></i> }
+      </a>
+    </ng-template>
+  </p-contextmenu>
 
   <header class="minhas-demandas__topo">
     <h2 class="minhas-demandas__titulo">Minhas demandas</h2>

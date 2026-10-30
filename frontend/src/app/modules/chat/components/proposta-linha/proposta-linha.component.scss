@@ -20,6 +20,8 @@
 
   // O aviso da IA (ela executou sozinha, task 228) é azul, a cor primária do tema (clareia sozinha no escuro): não se confunde com o "feito" verde de quem confirmou no cartão.
   &--ia {
+    --p-button-text-secondary-hover-background: color-mix(in srgb, var(--p-primary-color) 22%, var(--app-surface-0));
+    --p-button-text-secondary-active-background: color-mix(in srgb, var(--p-primary-color) 28%, var(--app-surface-0));
     border-color: color-mix(in srgb, var(--p-primary-color) 45%, var(--app-surface-200));
     background: color-mix(in srgb, var(--p-primary-color) 12%, var(--app-surface-0));
   }

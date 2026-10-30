@@ -34,6 +34,8 @@ describe('DocumentacaoDemandaComponent', () => {
     const montado = await montar(TipoUsuarioEnum.GESTOR);
     expect(montado.elemento.querySelector('h2')?.textContent).toContain('Cadastro de usuário');
     expect(Array.from(montado.elemento.querySelectorAll('[role="tab"]')).map((aba) => aba.textContent?.trim())).toEqual(['Técnica', 'Cliente', 'Documentação']);
+    expect(montado.elemento.querySelector('.icone-descricao--tecnica')).not.toBeNull();
+    expect(montado.elemento.querySelector('.icone-descricao--doc')).not.toBeNull();
     expect(montado.componente.editaAba()(PlanoAbaEnum.DESCRICAO_CLIENTE)).toBe(true);
     expect(montado.componente.controleTecnica.value).toBe('Texto técnico');
     expect(texto(montado)).toContain('Tudo gravado');
