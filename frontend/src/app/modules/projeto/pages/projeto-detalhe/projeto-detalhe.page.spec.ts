@@ -56,27 +56,28 @@ describe('ProjetoDetalhePage', () => {
     expect(selo.textContent?.trim()).toBe('PC');
   });
 
-  it('gestor vê Nova Demanda, Relatório, Configurar volume, Grafo e Controle de horas, e não o antigo Editar nem a faixa de resumo', async () => {
+  it('gestor vê Nova Demanda, Relatório e Configurar volume no cabeçalho, e não o antigo Editar, o Grafo nem a faixa de resumo', async () => {
     const { montado } = await montarDetalhe(TipoUsuarioEnum.GESTOR);
     await carregar(montado);
-    for (const esperado of ['Nova Demanda', 'Relatório', 'Configurar volume', 'Grafo', 'Controle de horas', 'Criar primeira demanda']) {
+    for (const esperado of ['Nova Demanda', 'Relatório', 'Configurar volume', 'Criar primeira demanda']) {
       expect(texto(montado), esperado).toContain(esperado);
     }
     const rotulosDosBotoes = Array.from(montado.elemento.querySelectorAll('.projeto-detalhe__cabecalho-acoes button')).map((botao) => botao.textContent?.trim());
     expect(rotulosDosBotoes).not.toContain('Editar');
+    expect(rotulosDosBotoes).not.toContain('Grafo');
+    expect(rotulosDosBotoes).not.toContain('Controle de horas');
     expect(texto(montado)).not.toContain('Executado');
     expect(montado.elemento.querySelector('.projeto-detalhe__resumo')).toBeNull();
     expect(montado.elemento.querySelector('[aria-label="Trocar status do projeto"]')).not.toBeNull();
   });
 
-  it('desenvolvedor não vê as ações de gestão nem troca de status, mas vê o projeto e o Grafo', async () => {
+  it('desenvolvedor não vê as ações de gestão nem troca de status, mas vê o projeto', async () => {
     const { montado } = await montarDetalhe(TipoUsuarioEnum.DESENVOLVEDOR);
     await carregar(montado);
     expect(texto(montado)).toContain('Portal do Cliente');
-    for (const proibido of ['Nova Demanda', 'Relatório', 'Configurar volume', 'Controle de horas', 'Criar primeira demanda']) {
+    for (const proibido of ['Nova Demanda', 'Relatório', 'Configurar volume', 'Criar primeira demanda']) {
       expect(texto(montado), proibido).not.toContain(proibido);
     }
-    expect(texto(montado)).toContain('Grafo');
     expect(montado.elemento.querySelector('[aria-label="Trocar status do projeto"]')).toBeNull();
   });
 
@@ -157,7 +158,27 @@ describe('ProjetoDetalhePage', () => {
     expect(montado.elemento.querySelector('app-demanda-arvore-tela')).not.toBeNull();
     expect(texto(montado)).toContain('Projeto inteiro');
     expect(texto(montado)).toContain('Demanda 2');
-    expect(texto(montado)).toContain('Grafo');
+  });
+
+  const noDeTeste = (id: number): DemandaGrafoNoDto => ({
+    id, nome: `Demanda ${id}`, status: TipoDemandaStatusEnum.PENDENTE, isEstrutural: false, horasEstimadas: 4, minutosExecutados: 0,
+    demandaPaiId: null, temDescricaoTecnica: false, temDescricaoCliente: false, temDocumentacao: false, tags: [],
+  });
+  const iconesDeVisao = (montado: Montado) =>
+    Array.from(montado.elemento.querySelectorAll('.demanda-toolbar [slotVisoes] button')).map((botao) => botao.getAttribute('aria-label'));
+
+  it('Grafo e Controle de horas são ícones no fim da barra de busca, com o gestor chegando ao Controle de horas', async () => {
+    const gestor = await montarDetalhe(TipoUsuarioEnum.GESTOR);
+    await carregar(gestor.montado, PROJETO, { nos: [noDeTeste(1)], arestas: [] });
+    expect(iconesDeVisao(gestor.montado)).toEqual(['Grafo', 'Controle de horas']);
+    (gestor.montado.elemento.querySelector('[aria-label="Controle de horas"]') as HTMLElement).click();
+    expect(gestor.irPara).toHaveBeenCalledWith(['/demanda'], { queryParams: { projetoId: 5, modo: 'controle-de-horas' } });
+  });
+
+  it('o desenvolvedor só vê o ícone do Grafo na barra de busca', async () => {
+    const { montado } = await montarDetalhe(TipoUsuarioEnum.DESENVOLVEDOR);
+    await carregar(montado, PROJETO, { nos: [noDeTeste(1)], arestas: [] });
+    expect(iconesDeVisao(montado)).toEqual(['Grafo']);
   });
 
   it('falha ao carregar as demandas mostra o erro com "Tentar de novo", não "projeto sem demandas" (P-058)', async () => {

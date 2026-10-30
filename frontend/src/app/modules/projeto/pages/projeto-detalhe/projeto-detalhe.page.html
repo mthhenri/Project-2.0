@@ -47,9 +47,7 @@
       </div>
 
       <div class="projeto-detalhe__cabecalho-acoes">
-        <p-button label="Grafo" icon="pi pi-share-alt" severity="secondary" [outlined]="true" (onClick)="abrirVisao('grafo')" />
         @if (sessao.eGestor()) {
-          <p-button label="Controle de horas" icon="pi pi-chart-bar" severity="secondary" [outlined]="true" (onClick)="abrirVisao('controle-de-horas')" />
           <p-button
             label="Nova Demanda"
             icon="pi pi-plus"
@@ -113,7 +111,14 @@
           (filtroAlterado)="aoAlterarFiltro($event)"
           (limpar)="aoAlterarFiltro(filtroVazio)"
           (expansaoAlternada)="alternarExpansaoGeral()"
-        />
+        >
+          <span slotVisoes class="projeto-detalhe__visoes" role="group" aria-label="Abrir demandas em outra visão">
+            <p-button icon="pi pi-share-alt" severity="secondary" [outlined]="true" size="small" ariaLabel="Grafo" pTooltip="Grafo" tooltipPosition="top" (onClick)="abrirVisao('grafo')" />
+            @if (sessao.eGestor()) {
+              <p-button icon="pi pi-chart-bar" severity="secondary" [outlined]="true" size="small" ariaLabel="Controle de horas" pTooltip="Controle de horas" tooltipPosition="top" (onClick)="abrirVisao('controle-de-horas')" />
+            }
+          </span>
+        </app-demanda-toolbar>
 
         <!-- Bloco próprio: a Árvore nasce depois da toolbar, que lê a expansão dela. -->
         @if (nos().length > 0) {

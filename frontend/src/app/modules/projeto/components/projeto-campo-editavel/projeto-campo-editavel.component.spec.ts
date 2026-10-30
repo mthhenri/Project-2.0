@@ -45,6 +45,19 @@ describe('ProjetoCampoEditavelComponent', () => {
     expect(document.body.querySelector('.p-contextmenu')).toBeNull();
   });
 
+  it('o lápis ao lado do campo abre a edição, e só aparece para quem pode editar', async () => {
+    const { montado } = await montar('texto', 'Portal');
+    (montado.elemento.querySelector('.campo-editavel__lapis') as HTMLElement).click();
+    await montado.atualizar();
+    expect(montado.componente.editando()).toBe(true);
+    expect(campoTexto(montado).value).toBe('Portal');
+  });
+
+  it('sem permissão não há lápis', async () => {
+    const { montado } = await montar('texto', 'Portal', false);
+    expect(montado.elemento.querySelector('.campo-editavel__lapis')).toBeNull();
+  });
+
   it('Editar troca o texto pelo campo, já preenchido', async () => {
     const { montado } = await montar('texto', 'Portal');
     montado.componente.iniciarEdicao();

@@ -106,6 +106,111 @@
   &__label { @include form-label; }
   &__erro  { @include form-erro; }
 
+  // A tabela à esquerda e a revisão por IA à direita (task 272); sem revisão a tabela ocupa tudo.
+  &__area {
+    display: flex;
+    align-items: flex-start;
+    --divisao: 62%;
+  }
+
+  &__principal {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__area--com-painel &__principal {
+    flex: 0 0 var(--divisao);
+  }
+
+  &__area--recolhido &__principal {
+    flex: 1;
+  }
+
+  &__painel {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    margin-top: 1.25rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--app-surface-200);
+    border-radius: 0.625rem;
+    background: var(--app-surface-0);
+  }
+
+  &__recolher {
+    position: absolute;
+    top: 0.25rem;
+    right: 0.25rem;
+  }
+
+  &__divisor {
+    position: relative;
+    flex: 0 0 0.75rem;
+    align-self: stretch;
+    cursor: col-resize;
+    touch-action: none;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 2px;
+      transform: translateX(-50%);
+      border-radius: 1px;
+      background: var(--app-surface-200);
+      transition: background 0.15s ease;
+    }
+
+    &:hover::after,
+    &:focus-visible::after,
+    &--arrastando::after {
+      background: var(--p-primary-500);
+    }
+  }
+
+  // Revisão recolhida: uma caixinha por ponto, com o ícone da IA na cor da prioridade.
+  &__barra-ia {
+    display: flex;
+    flex: 0 0 2.75rem;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 1.25rem 0 0 0.75rem;
+    padding: 0.25rem 0;
+    border: 1px solid var(--app-surface-200);
+    border-radius: 0.625rem;
+    background: var(--app-surface-0);
+  }
+
+  &__caixa-ia {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid transparent;
+    border-radius: 0.375rem;
+    cursor: pointer;
+
+    &--alta  { color: var(--p-red-600);    background: color-mix(in srgb, var(--p-red-500) 14%, transparent); }
+    &--media { color: var(--p-orange-600); background: color-mix(in srgb, var(--p-orange-500) 16%, transparent); }
+    &--baixa { color: var(--p-text-muted-color); background: var(--app-surface-100); }
+
+    &:hover,
+    &:focus-visible {
+      border-color: currentColor;
+    }
+  }
+
+  @media (max-width: 900px) {
+    &__area { flex-direction: column; align-items: stretch; }
+    &__area--com-painel &__principal { flex: none; }
+    &__divisor { display: none; }
+    &__barra-ia { flex-direction: row; flex: none; margin-left: 0; padding: 0.25rem 0.5rem; }
+  }
+
   &__resultado {
     display: flex;
     flex-direction: column;
@@ -214,9 +319,6 @@
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
-    margin-top: 1.5rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--app-surface-200);
   }
 
   &__revisao-titulo {

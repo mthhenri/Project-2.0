@@ -305,3 +305,73 @@ describe('RelatorioExecucaoPage — revisão por IA', () => {
     esperarRequisicao(montado.http, 'GET', '/relatorio/execucao');
   });
 });
+
+describe('RelatorioExecucaoPage — painel da revisão (task 272)', () => {
+  async function comRevisao(): Promise<Montado> {
+    const montado = await abrirComRelatorio([linha()]);
+    botao('Revisar com IA').click();
+    await montado.atualizar();
+    responderSucesso(esperarRequisicao(montado.http, 'POST', '/relatorio/execucao/revisar'), {
+      resumo: 'Duas falhas',
+      inconsistencias: [
+        { tipo: 'Duração', severidade: 'baixa', descricao: 'Curta demais', referencia: null },
+        { tipo: 'Descrição vaga', severidade: 'ALTA', descricao: 'Só diz ajustes', referencia: '1' },
+        { tipo: 'Horário', severidade: 'Média', descricao: 'De madrugada', referencia: null },
+      ],
+    });
+    await montado.atualizar();
+    return montado;
+  }
+
+  const caixas = (montado: Montado) => Array.from(montado.elemento.querySelectorAll('.relatorio-execucao__caixa-ia')) as HTMLElement[];
+
+  it('a revisão abre num painel ao lado da tabela, com o divisor entre os dois', async () => {
+    const montado = await comRevisao();
+    expect(montado.elemento.querySelector('.relatorio-execucao__area--com-painel')).not.toBeNull();
+    expect(montado.elemento.querySelector('.relatorio-execucao__painel')?.textContent).toContain('Duas falhas');
+    expect(montado.elemento.querySelector('[role="separator"]')).not.toBeNull();
+    expect(montado.elemento.querySelector('.relatorio-execucao__barra-ia')).toBeNull();
+  });
+
+  it('recolher deixa só uma caixinha por ponto, na cor da prioridade e com o nome do ponto', async () => {
+    const montado = await comRevisao();
+    (montado.elemento.querySelector('[aria-label="Recolher a revisão por IA"]') as HTMLElement).click();
+    await montado.atualizar();
+
+    expect(montado.elemento.querySelector('.relatorio-execucao__painel')).toBeNull();
+    expect(montado.elemento.querySelector('[role="separator"]')).toBeNull();
+    expect(caixas(montado).map((caixa) => caixa.getAttribute('aria-label'))).toEqual([
+      'Descrição vaga, severidade ALTA',
+      'Horário, severidade Média',
+      'Duração, severidade baixa',
+    ]);
+    expect(caixas(montado).map((caixa) => caixa.className.match(/caixa-ia--(\w+)/)?.[1])).toEqual(['alta', 'media', 'baixa']);
+  });
+
+  it('clicar numa caixinha reabre o painel', async () => {
+    const montado = await comRevisao();
+    montado.componente.painelAberto.set(false);
+    await montado.atualizar();
+    caixas(montado)[0].click();
+    await montado.atualizar();
+    expect(montado.componente.painelAberto()).toBe(true);
+    expect(montado.elemento.querySelector('.relatorio-execucao__painel')).not.toBeNull();
+  });
+
+  it('o divisor ajusta pelo teclado, guarda a largura e o duplo clique restaura', async () => {
+    const montado = await comRevisao();
+    const divisor = montado.elemento.querySelector('[role="separator"]') as HTMLElement;
+    divisor.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+    expect(montado.componente.divisao()).toBe(59);
+    expect(localStorage.getItem('relatorio.divisao')).toBe('59');
+    divisor.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+    expect(montado.componente.divisao()).toBe(62);
+  });
+
+  it('sem revisão não há painel, divisor nem barra', async () => {
+    const montado = await abrirComRelatorio([linha()]);
+    expect(montado.elemento.querySelector('.relatorio-execucao__painel')).toBeNull();
+    expect(montado.elemento.querySelector('[role="separator"]')).toBeNull();
+    expect(montado.elemento.querySelector('.relatorio-execucao__barra-ia')).toBeNull();
+  });
+});

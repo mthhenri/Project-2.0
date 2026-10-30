@@ -111,119 +111,172 @@
     </div>
   </form>
 
-  @if (!formulario.controls.projetoId.value && !formulario.controls.projetoId.disabled) {
-    <div class="relatorio-execucao__vazio-estado">
-      <i class="pi pi-folder-open"></i>
-      <p>Escolha um projeto para ver o relatório.</p>
-    </div>
-  } @else if (erroPreview()) {
-    <div class="relatorio-execucao__vazio-estado">
-      <i class="pi pi-exclamation-triangle"></i>
-      <p>Não foi possível carregar o relatório.</p>
-      <p-button label="Tentar de novo" size="small" severity="secondary" [outlined]="true" (onClick)="tentarNovamente()" />
-    </div>
-  } @else if (relatorio(); as dados) {
-    <div class="relatorio-execucao__resultado lista-recarga" [class.relatorio-execucao__resultado--esmaecido]="esmaecido()">
-      <app-barra-recarga [ativa]="carregandoPreview()" />
-      <div class="relatorio-execucao__resumo">
-        <div class="relatorio-execucao__titulo-resumo">
-          @if (!projetoFixo()) {
-            <span class="relatorio-execucao__resumo-projeto">{{ dados.nomeProjeto }}</span>
-          }
-          <span class="relatorio-execucao__resumo-periodo">{{ dados.periodoDescricao }}</span>
-        </div>
-        <div class="relatorio-execucao__totais">
-          <div class="relatorio-execucao__total">
-            <span class="relatorio-execucao__total-valor">{{ dados.totalExecucoes }}</span>
-            <span class="relatorio-execucao__total-rotulo">{{ dados.totalExecucoes === 1 ? 'execução' : 'execuções' }}</span>
-          </div>
-          <div class="relatorio-execucao__total">
-            <span class="relatorio-execucao__total-valor">{{ dados.totalMinutos | minutosParagHoras }}</span>
-            <span class="relatorio-execucao__total-rotulo">tempo total</span>
-          </div>
-        </div>
+  <div #area class="relatorio-execucao__area" [style.--divisao]="divisao() + '%'" [class.relatorio-execucao__area--com-painel]="temPainel()" [class.relatorio-execucao__area--recolhido]="temPainel() && !painelAberto()">
+    <div class="relatorio-execucao__principal">
+    @if (!formulario.controls.projetoId.value && !formulario.controls.projetoId.disabled) {
+      <div class="relatorio-execucao__vazio-estado">
+        <i class="pi pi-folder-open"></i>
+        <p>Escolha um projeto para ver o relatório.</p>
       </div>
+    } @else if (erroPreview()) {
+      <div class="relatorio-execucao__vazio-estado">
+        <i class="pi pi-exclamation-triangle"></i>
+        <p>Não foi possível carregar o relatório.</p>
+        <p-button label="Tentar de novo" size="small" severity="secondary" [outlined]="true" (onClick)="tentarNovamente()" />
+      </div>
+    } @else if (relatorio(); as dados) {
+      <div class="relatorio-execucao__resultado lista-recarga" [class.relatorio-execucao__resultado--esmaecido]="esmaecido()">
+        <app-barra-recarga [ativa]="carregandoPreview()" />
+        <div class="relatorio-execucao__resumo">
+          <div class="relatorio-execucao__titulo-resumo">
+            @if (!projetoFixo()) {
+              <span class="relatorio-execucao__resumo-projeto">{{ dados.nomeProjeto }}</span>
+            }
+            <span class="relatorio-execucao__resumo-periodo">{{ dados.periodoDescricao }}</span>
+          </div>
+          <div class="relatorio-execucao__totais">
+            <div class="relatorio-execucao__total">
+              <span class="relatorio-execucao__total-valor">{{ dados.totalExecucoes }}</span>
+              <span class="relatorio-execucao__total-rotulo">{{ dados.totalExecucoes === 1 ? 'execução' : 'execuções' }}</span>
+            </div>
+            <div class="relatorio-execucao__total">
+              <span class="relatorio-execucao__total-valor">{{ dados.totalMinutos | minutosParagHoras }}</span>
+              <span class="relatorio-execucao__total-rotulo">tempo total</span>
+            </div>
+          </div>
+        </div>
 
-      <p-table
-        [value]="dados.linhas"
-                    styleClass="p-datatable-sm"
-      >
-        <ng-template pTemplate="header">
-          <tr>
-            <th>Demanda</th>
-            <th>Atividade</th>
-            <th>Usuário</th>
-            <th>Data Início</th>
-            <th>Data Fim</th>
-            <th>Tempo</th>
-            <th>Descrição</th>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-linha>
-          <tr>
-            <td>{{ linha.nomeDemanda }}</td>
-            <td>{{ linha.nomeAtividade }}</td>
-            <td>{{ linha.nomeUsuario }}</td>
-            <td>{{ dataHora(linha.inicioData) }}</td>
-            <td>{{ linha.fimData ? dataHora(linha.fimData) : 'Em andamento' }}</td>
-            <td>{{ linha.duracaoMinutos | minutosParagHoras }}</td>
-            <td class="relatorio-execucao__descricao-celula">{{ linha.descricao }}</td>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="emptymessage">
-          <tr>
-            <td colspan="7" class="relatorio-execucao__vazio">
-              Nenhuma execução encontrada no período.
-            </td>
-          </tr>
-        </ng-template>
-      </p-table>
+        <p-table
+          [value]="dados.linhas"
+                      styleClass="p-datatable-sm"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Demanda</th>
+              <th>Atividade</th>
+              <th>Usuário</th>
+              <th>Data Início</th>
+              <th>Data Fim</th>
+              <th>Tempo</th>
+              <th>Descrição</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-linha>
+            <tr>
+              <td>{{ linha.nomeDemanda }}</td>
+              <td>{{ linha.nomeAtividade }}</td>
+              <td>{{ linha.nomeUsuario }}</td>
+              <td>{{ dataHora(linha.inicioData) }}</td>
+              <td>{{ linha.fimData ? dataHora(linha.fimData) : 'Em andamento' }}</td>
+              <td>{{ linha.duracaoMinutos | minutosParagHoras }}</td>
+              <td class="relatorio-execucao__descricao-celula">{{ linha.descricao }}</td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="7" class="relatorio-execucao__vazio">
+                Nenhuma execução encontrada no período.
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    } @else if (carregandoPreview()) {
+      <div class="relatorio-execucao__vazio-estado">
+        <i class="pi pi-spin pi-spinner"></i>
+        <p>Carregando o relatório…</p>
+      </div>
+    }
     </div>
-  } @else if (carregandoPreview()) {
-    <div class="relatorio-execucao__vazio-estado">
-      <i class="pi pi-spin pi-spinner"></i>
-      <p>Carregando o relatório…</p>
-    </div>
-  }
 
-  @if (carregandoRevisao()) {
-    <div class="relatorio-execucao__revisao">
-      <h3 class="relatorio-execucao__revisao-titulo"><i class="pi pi-sparkles"></i> Revisão por IA</h3>
-      <p class="text-muted-color"><i class="pi pi-spin pi-spinner"></i> Analisando as execuções…</p>
-    </div>
-  } @else if (revisao(); as dadosRevisao) {
-    <div class="relatorio-execucao__revisao">
-      <h3 class="relatorio-execucao__revisao-titulo">
-        <i class="pi pi-sparkles"></i> Revisão por IA
-      </h3>
-      <p class="relatorio-execucao__revisao-resumo">{{ dadosRevisao.resumo }}</p>
+    @if (temPainel()) {
+      @if (painelAberto()) {
+        <div
+          class="relatorio-execucao__divisor"
+          [class.relatorio-execucao__divisor--arrastando]="arrastando()"
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Largura da tabela e da revisão"
+          tabindex="0"
+          [attr.aria-valuenow]="divisao()"
+          [attr.aria-valuemin]="limites.minima"
+          [attr.aria-valuemax]="limites.maxima"
+          (pointerdown)="iniciarArrasto($event)"
+          (pointermove)="aoArrastar($event)"
+          (pointerup)="finalizarArrasto()"
+          (pointercancel)="finalizarArrasto()"
+          (dblclick)="restaurarDivisao()"
+          (keydown)="aoTeclarNoDivisor($event)"
+        ></div>
+        <aside class="relatorio-execucao__painel" aria-label="Revisão por IA">
+          <p-button
+            class="relatorio-execucao__recolher"
+            icon="pi pi-angle-right"
+            [text]="true"
+            severity="secondary"
+            size="small"
+            ariaLabel="Recolher a revisão por IA"
+            [disabled]="carregandoRevisao()"
+            (onClick)="painelAberto.set(false)"
+          />
+      @if (carregandoRevisao()) {
+        <div class="relatorio-execucao__revisao">
+          <h3 class="relatorio-execucao__revisao-titulo"><i class="pi pi-sparkles"></i> Revisão por IA</h3>
+          <p class="text-muted-color"><i class="pi pi-spin pi-spinner"></i> Analisando as execuções…</p>
+        </div>
+      } @else if (revisao(); as dadosRevisao) {
+        <div class="relatorio-execucao__revisao">
+          <h3 class="relatorio-execucao__revisao-titulo">
+            <i class="pi pi-sparkles"></i> Revisão por IA
+          </h3>
+          <p class="relatorio-execucao__revisao-resumo">{{ dadosRevisao.resumo }}</p>
 
-      @if (achados().length === 0) {
-        <p class="text-muted-color">Nenhuma inconsistência apontada.</p>
-      } @else {
-        <p class="relatorio-execucao__contadores">
-          @for (contador of contadores(); track contador.severidade; let ultimo = $last) {
-            <span class="relatorio-execucao__contador relatorio-execucao__contador--{{ contador.severidade.toLowerCase() }}">
-              {{ contador.total }} {{ contador.rotulo }}
-            </span>
-            @if (!ultimo) { <span aria-hidden="true">·</span> }
-          }
-        </p>
-        <ul class="relatorio-execucao__inconsistencias">
-          @for (item of achados(); track $index) {
-            <li class="relatorio-execucao__inconsistencia">
-              <div class="relatorio-execucao__inconsistencia-cabecalho">
-                <span class="relatorio-execucao__inconsistencia-tipo">{{ item.tipo }}</span>
-                <p-tag [value]="item.severidade" [severity]="severidadeInconsistencia(item.severidade)" />
-              </div>
-              <p class="relatorio-execucao__inconsistencia-descricao">{{ item.descricao }}</p>
-              @if (item.referencia) {
-                <small class="relatorio-execucao__inconsistencia-ref">{{ item.referencia }}</small>
+          @if (achados().length === 0) {
+            <p class="text-muted-color">Nenhuma inconsistência apontada.</p>
+          } @else {
+            <p class="relatorio-execucao__contadores">
+              @for (contador of contadores(); track contador.severidade; let ultimo = $last) {
+                <span class="relatorio-execucao__contador relatorio-execucao__contador--{{ contador.severidade.toLowerCase() }}">
+                  {{ contador.total }} {{ contador.rotulo }}
+                </span>
+                @if (!ultimo) { <span aria-hidden="true">·</span> }
               }
-            </li>
+            </p>
+            <ul class="relatorio-execucao__inconsistencias">
+              @for (item of achados(); track $index) {
+                <li class="relatorio-execucao__inconsistencia">
+                  <div class="relatorio-execucao__inconsistencia-cabecalho">
+                    <span class="relatorio-execucao__inconsistencia-tipo">{{ item.tipo }}</span>
+                    <p-tag [value]="item.severidade" [severity]="severidadeInconsistencia(item.severidade)" />
+                  </div>
+                  <p class="relatorio-execucao__inconsistencia-descricao">{{ item.descricao }}</p>
+                  @if (item.referencia) {
+                    <small class="relatorio-execucao__inconsistencia-ref">{{ item.referencia }}</small>
+                  }
+                </li>
+              }
+            </ul>
           }
-        </ul>
+        </div>
       }
-    </div>
-  }
+        </aside>
+      } @else {
+        <aside class="relatorio-execucao__barra-ia" aria-label="Revisão por IA recolhida">
+          <p-button icon="pi pi-angle-left" [text]="true" severity="secondary" size="small" ariaLabel="Abrir a revisão por IA" (onClick)="painelAberto.set(true)" />
+          @for (item of achados(); track $index) {
+            <button
+              type="button"
+              class="relatorio-execucao__caixa-ia relatorio-execucao__caixa-ia--{{ severidadeNormalizada(item.severidade).toLowerCase() }}"
+              [pTooltip]="item.tipo"
+              tooltipPosition="left"
+              [attr.aria-label]="item.tipo + ', severidade ' + item.severidade"
+              (click)="painelAberto.set(true)"
+            >
+              <i class="pi pi-sparkles"></i>
+            </button>
+          }
+        </aside>
+      }
+    }
+  </div>
 </div>

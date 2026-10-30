@@ -45,9 +45,13 @@
   <span
     class="campo-editavel__exibicao"
     [class.campo-editavel__exibicao--editavel]="editavel()"
-    [attr.title]="editavel() ? 'Botão direito para editar' : null"
     (contextmenu)="abrirMenu($event, menu)"
   >
     <ng-content />
   </span>
+  @if (editavel()) {
+    <button type="button" class="campo-editavel__lapis" [attr.aria-label]="rotuloMenu()" (click)="iniciarEdicao()">
+      <i class="pi pi-pencil" aria-hidden="true"></i>
+    </button>
+  }
 }

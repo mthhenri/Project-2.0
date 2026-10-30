@@ -52,3 +52,16 @@ export function ordemSeveridade(severidade: string | null | undefined): number {
   const indice = ORDEM_SEVERIDADE.indexOf(normalizarSeveridade(severidade));
   return indice === -1 ? ORDEM_SEVERIDADE.length : indice;
 }
+
+/** Divisão da tela do relatório (task 272): a tabela ocupa `divisao`% da largura e o painel da revisão por IA, o resto. */
+export const DIVISAO_DO_RELATORIO = { minima: 35, maxima: 80, padrao: 62, passoDoTeclado: 3 } as const;
+
+export function limitarDivisao(divisao: number): number {
+  return Math.min(DIVISAO_DO_RELATORIO.maxima, Math.max(DIVISAO_DO_RELATORIO.minima, Math.round(divisao)));
+}
+
+/** A divisão (em %) que o ponteiro em `clientX` pede, numa área que começa em `esquerda` e tem `largura` px. */
+export function divisaoPeloPonteiro(clientX: number, esquerda: number, largura: number): number {
+  if (largura <= 0) return DIVISAO_DO_RELATORIO.padrao;
+  return limitarDivisao(((clientX - esquerda) / largura) * 100);
+}

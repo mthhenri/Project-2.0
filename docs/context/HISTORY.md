@@ -16,6 +16,16 @@
 
 
 
+
+## 2026-10-30 — 272: painel da revisão no relatório, ícones de visão no projeto e lápis ao passar o mouse
+
+- **Origem:** o POC publicado como artefato e a aprovação do autor da configuração escolhida nele. No POC houve uma correção de processo: artefato de tela segue o visual do projeto (tema Aura azul, claro como padrão, tokens `--app-*`), não um visual próprio.
+- **O que mudou:** (1) relatório: a revisão por IA abre num painel à direita da tabela, com divisor arrastável (ponteiro, setas, duplo clique; `relatorio.divisao` no navegador) e uma seta que recolhe o painel numa barra com uma caixinha por ponto (ícone da IA em vermelho, laranja ou cinza conforme a severidade, nome no tooltip; clicar reabre); abaixo de 900px o painel desce. (2) projeto: Grafo e Controle de horas viram ícones com tooltip no fim da barra de busca (`slotVisoes` da `DemandaToolbarComponent`; o de Controle de horas só para gestor) e saem do cabeçalho. (3) lápis ao passar o mouse nos campos editáveis do cabeçalho do projeto (clicar abre a edição) e nos horários de Execuções. Sem backend.
+- **Achado ao investigar:** o Controle de horas **já traz** Estimado, Executado e Estouro no resumo do topo, então a sugestão "executado × estimado dentro do Controle de horas" não precisou de código (o POC a mostrava como se faltasse).
+- **Decisão de escopo:** ligar o achado da IA a uma linha da tabela (como no POC) ficou de fora: o achado traz só uma referência em texto, sem id de execução.
+- **Testes:** frontend 188 arquivos, 2379 testes verdes e 1 falha por tempo-limite de 20 s, diferente a cada rodada completa (modelagem na primeira, grafo na segunda), cada uma verde ao rodar isolada; ocorreu com o `ng serve` ligado na máquina, então tratada como lentidão e não como defeito. Build ok. Sem lint (P-001). Util de divisão com teste próprio.
+- **Ao vivo (API mockada):** 1920×1080, 1366×768 e 1080×1920, sem rolagem horizontal: relatório aberto, alargado, recolhido com tooltip, ícones e tooltip no projeto e lápis em Execuções. Em 1366 a tabela fica estreita com o painel aberto (a descrição quebra em várias linhas); o autor pode arrastar o divisor.
+
 ## 2026-10-30 — POC da tela de relatório (sem spec): identidade do projeto, filtros num cartão
 
 - **Pedido do autor:** um POC da tela de relatório para ir ajustando, com sugestões. Sem spec própria (é iteração sobre a 269); as sugestões que o autor aceitar viram task.

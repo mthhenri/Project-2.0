@@ -1,4 +1,4 @@
-import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, OnInit, computed, inject, signal, viewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpResponse } from '@angular/common/http';
@@ -28,14 +28,18 @@ import { corTextoSobre, siglaDoProjeto } from '../../../projeto/utils/projeto-id
 import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-horas.pipe';
 import { BarraRecargaComponent } from '../../../../shared/components/barra-recarga/barra-recarga.component';
 import {
+  DIVISAO_DO_RELATORIO,
   RelatorioPeriodoAtalho,
   atalhoDoPeriodo,
+  divisaoPeloPonteiro,
+  limitarDivisao,
   normalizarSeveridade,
   ordemSeveridade,
   periodoDoAtalho,
 } from '../../utils/relatorio.util';
 
 const CHAVE_PROJETO_LEMBRADO = 'relatorio.projeto';
+const CHAVE_DIVISAO = 'relatorio.divisao';
 const ATRASO_MUDANCA_FILTRO_MS = 400;
 
 /**
@@ -80,6 +84,13 @@ export class RelatorioExecucaoPage implements OnInit {
   readonly siglaDoSelo = computed(() => siglaDoProjeto(this.projetoEscolhido()?.nome ?? ''));
   readonly corTextoSelo = computed(() => corTextoSobre(this.projetoEscolhido()?.cor ?? ''));
 
+  /** Painel da revisão por IA (task 272): ao lado da tabela, com divisor arrastável, ou recolhido numa barra de caixinhas. */
+  private readonly area = viewChild<ElementRef<HTMLElement>>('area');
+  readonly limites = DIVISAO_DO_RELATORIO;
+  readonly painelAberto = signal<boolean>(true);
+  readonly divisao = signal<number>(this.lerDivisao());
+  readonly arrastando = signal<boolean>(false);
+
   readonly carregandoPreview = signal<boolean>(false);
   readonly carregandoRevisao = signal<boolean>(false);
   readonly baixando = signal<boolean>(false);
@@ -95,6 +106,8 @@ export class RelatorioExecucaoPage implements OnInit {
   readonly podeExportar = computed(
     () => this.sincronizado() && !!this.relatorio() && (this.relatorio()?.totalExecucoes ?? 0) > 0,
   );
+
+  readonly temPainel = computed(() => this.carregandoRevisao() || !!this.revisao());
 
   private readonly pedidoPreview = new Subject<number>();
 
@@ -237,6 +250,7 @@ export class RelatorioExecucaoPage implements OnInit {
     const params = this.parametrosExibidos();
     if (!params || !this.podeExportar()) return;
 
+    this.painelAberto.set(true);
     this.carregandoRevisao.set(true);
     this.relatorioService
       .revisarRelatorio(params)
@@ -247,6 +261,45 @@ export class RelatorioExecucaoPage implements OnInit {
         },
         error: () => undefined, // o interceptor já avisou o motivo
       });
+  }
+
+  /** Severidade da caixinha do painel recolhido: o que não é ALTA nem MÉDIA vale como BAIXA. */
+  severidadeNormalizada(severidade: string): 'ALTA' | 'MEDIA' | 'BAIXA' {
+    const normalizada = normalizarSeveridade(severidade);
+    return normalizada === 'ALTA' || normalizada === 'MEDIA' ? normalizada : 'BAIXA';
+  }
+
+  iniciarArrasto(evento: PointerEvent): void {
+    evento.preventDefault();
+    (evento.currentTarget as HTMLElement).setPointerCapture?.(evento.pointerId);
+    this.arrastando.set(true);
+  }
+
+  aoArrastar(evento: PointerEvent): void {
+    if (!this.arrastando()) return;
+    const area = this.area()?.nativeElement.getBoundingClientRect();
+    if (area) this.divisao.set(divisaoPeloPonteiro(evento.clientX, area.left, area.width));
+  }
+
+  finalizarArrasto(): void {
+    if (!this.arrastando()) return;
+    this.arrastando.set(false);
+    this.guardarDivisao();
+  }
+
+  /** Setas ajustam o divisor pelo teclado: ← diminui a tabela, → aumenta. */
+  aoTeclarNoDivisor(evento: KeyboardEvent): void {
+    const passo = evento.key === 'ArrowRight' ? DIVISAO_DO_RELATORIO.passoDoTeclado : evento.key === 'ArrowLeft' ? -DIVISAO_DO_RELATORIO.passoDoTeclado : 0;
+    if (passo === 0) return;
+    evento.preventDefault();
+    this.divisao.update((atual) => limitarDivisao(atual + passo));
+    this.guardarDivisao();
+  }
+
+  /** Duplo clique no divisor: volta à divisão padrão. */
+  restaurarDivisao(): void {
+    this.divisao.set(DIVISAO_DO_RELATORIO.padrao);
+    this.guardarDivisao();
   }
 
   severidadeInconsistencia(severidade: string): 'danger' | 'warn' | 'secondary' {
@@ -311,6 +364,23 @@ export class RelatorioExecucaoPage implements OnInit {
         if (resposta.sucesso && resposta.dados) this.projetos.set(resposta.dados.itens);
       },
     });
+  }
+
+  private lerDivisao(): number {
+    try {
+      const salva = Number(localStorage.getItem(CHAVE_DIVISAO));
+      return salva > 0 ? limitarDivisao(salva) : DIVISAO_DO_RELATORIO.padrao;
+    } catch {
+      return DIVISAO_DO_RELATORIO.padrao;
+    }
+  }
+
+  private guardarDivisao(): void {
+    try {
+      localStorage.setItem(CHAVE_DIVISAO, String(this.divisao()));
+    } catch {
+      /* armazenamento indisponível: só não lembra */
+    }
   }
 
   private projetoLembrado(): number | null {

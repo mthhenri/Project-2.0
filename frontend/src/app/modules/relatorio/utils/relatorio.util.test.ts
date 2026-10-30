@@ -1,7 +1,7 @@
 import { test } from 'vitest';
 import * as assert from 'node:assert/strict';
 import { RelatorioPeriodoTipoEnum } from '@project20/shared';
-import { atalhoDoPeriodo, normalizarSeveridade, ordemSeveridade, periodoDoAtalho } from './relatorio.util';
+import { DIVISAO_DO_RELATORIO, atalhoDoPeriodo, divisaoPeloPonteiro, limitarDivisao, normalizarSeveridade, ordemSeveridade, periodoDoAtalho } from './relatorio.util';
 
 // `hoje` é `Date` local (como o `hojeNoFuso` entrega); meses do `Date` começam em 0.
 const OUTUBRO_2026 = new Date(2026, 9, 19);
@@ -47,4 +47,16 @@ test('ordemSeveridade: ALTA, MÉDIA, BAIXA e, no fim, o que a IA inventar', () =
   assert.deepEqual(ordenadas.slice(0, 3), ['ALTA', 'Média', 'baixa']);
   assert.equal(ordemSeveridade('crítica'), 3);
   assert.equal(ordemSeveridade(null), 3);
+});
+
+test('divisão do relatório: limita entre o mínimo e o máximo e arredonda', () => {
+  assert.equal(limitarDivisao(10), DIVISAO_DO_RELATORIO.minima);
+  assert.equal(limitarDivisao(99), DIVISAO_DO_RELATORIO.maxima);
+  assert.equal(limitarDivisao(61.6), 62);
+});
+
+test('divisão do relatório: a do ponteiro é a posição relativa à área; área sem largura volta ao padrão', () => {
+  assert.equal(divisaoPeloPonteiro(600, 100, 1000), 50);
+  assert.equal(divisaoPeloPonteiro(5000, 100, 1000), DIVISAO_DO_RELATORIO.maxima);
+  assert.equal(divisaoPeloPonteiro(600, 100, 0), DIVISAO_DO_RELATORIO.padrao);
 });
