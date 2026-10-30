@@ -468,6 +468,7 @@ export class ExecucaoHistoricoPage implements OnInit {
             );
             this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Execução alterada com sucesso' });
             this.encerrarEdicao();
+            if (atual.campo !== 'descricao') this.buscarExecucoes();
           }
         },
         error: () => this.voltarAEditar(),

@@ -158,14 +158,6 @@
 - **Correção:** a investigar: achar onde a resposta se perde (timeout do provedor, do streaming ou do front), avisar o usuário quando falhar em vez de silêncio, e decidir como contabilizar o custo de uma chamada que não entregou resposta.
 - **Desde:** 2026-10-27 (apontado pelo autor; pergunta e conversa não anexadas).
 
-### P-045 — Tela de Execuções não recalcula ao mudar a data de uma execução · `ABERTO` · execucao/frontend
-
-- **Sintoma:** na tela de Execuções, ao alterar a data de uma execução, os valores que dependem dela (totais, durações) não são recalculados.
-- **Causa:** não investigada; o relato não diz se é regressão nem se ao recarregar a tela os valores aparecem certos.
-- **Contorno:** recarregar a tela (a confirmar).
-- **Correção:** recalcular (ou recarregar a lista) depois de salvar a nova data.
-- **Desde:** 2026-10-27 (apontado pelo autor).
-
 ### P-047 — Grafo: tirar um item do filtro só o apaga para cerca de 25% de opacidade · `ABERTO` · demanda/frontend
 
 - **Sintoma:** ao remover algo do filtro do grafo, o item fica só meio apagado (cerca de 25% de opacidade) em vez de sair da visão.

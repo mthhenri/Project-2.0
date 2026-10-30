@@ -444,6 +444,37 @@ describe('ExecucaoHistoricoPage: edição inline (gestor)', () => {
     expect(corpo.descricao).toBe('Descrição 1');
   });
 
+  it('ao alterar o fim recarrega a duração e o total do dia', async () => {
+    const { montado } = await carregada();
+    const original = execucaoUm(montado);
+    montado.componente.iniciarEdicao(original, 'fim');
+    montado.componente.rascunhoData.setValue(new Date(montado.componente.rascunhoData.value!.getTime() + 10 * 60_000));
+    montado.componente.aoSairDaEdicao();
+    montado.componente.confirmarEdicao();
+    const requisicao = esperarRequisicao(montado.http, 'PUT', '/execucao/1');
+    const alterada = { ...original, fimData: requisicao.request.body.fimData, duracaoMinutos: 100 };
+    responderSucesso(requisicao, alterada);
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/execucao'), pagina([alterada], 100));
+    await montado.atualizar();
+    expect(texto(montado)).toContain('1h40');
+    expect(execucaoUm(montado).duracaoMinutos).toBe(100);
+  });
+
+  it('ao mover o início para outro dia a execução sai da lista e o total é recalculado', async () => {
+    const { montado } = await carregada();
+    const original = execucaoUm(montado);
+    montado.componente.iniciarEdicao(original, 'inicio');
+    montado.componente.rascunhoData.setValue(new Date(montado.componente.rascunhoData.value!.getTime() - 24 * 3_600_000));
+    montado.componente.aoSairDaEdicao();
+    montado.componente.confirmarEdicao();
+    const requisicao = esperarRequisicao(montado.http, 'PUT', '/execucao/1');
+    responderSucesso(requisicao, { ...original, inicioData: requisicao.request.body.inicioData, duracaoMinutos: 1530 });
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/execucao'), pagina([], 0));
+    await montado.atualizar();
+    expect(montado.componente.linhas()).toEqual([]);
+    expect(montado.componente.totalMinutosDia()).toBe(0);
+  });
+
   it('fim igual ou anterior ao início avisa e mantém o campo aberto, sem enviar', async () => {
     const { montado } = await carregada();
     const original = execucaoUm(montado);

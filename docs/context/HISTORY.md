@@ -12,6 +12,12 @@
 
 ---
 
+## 2026-10-30 — Task 266: recálculo da tela de Execuções (P-045)
+
+- Ao salvar início ou fim, a tela consulta novamente a lista com os filtros e a página atuais; o servidor fornece a duração, o total e a composição do dia. A edição de descrição mantém o comportamento anterior.
+- Teste de componente reproduziu a falta da consulta antes da correção e passou depois: 43 testes; suíte do frontend: 2.294 testes em 185 arquivos. Build do frontend passou com avisos de orçamento e CommonJS.
+- Na aplicação local, uma execução temporária mudou de 1h para 2h: linha, resumo e total refletiram 2h sem recarregar a página. Conferida a tela em 1920×1080, 1366×768 e 1080×1920; registro temporário removido logicamente. A troca de dia foi coberta por teste de componente. O projeto não tem lint (P-001).
+
 ## 2026-10-30 — Tasks 262 e 263: verificação visual e fecho
 
 Foram observados estados vazios, carregando e de erro de Atividades, Árvore, Controle de horas, pad, Documentações, demanda e plano no chat; atrasos e falhas foram simulados numa interface local ligada à API existente. Em Documentações, demanda e plano, a tentativa de novo recuperou a tela. O filtro Apenas abertas retirou a demanda concluída, e o perfil desenvolvedor exibiu os ícones e a restrição de Cliente. Os três tamanhos e os fluxos anteriores constam dos relatórios das tasks 262 e 263, movidas para `done/`. A suíte e o build mais recentes do frontend são os registrados na task 265: 2.292 testes aprovados, build aprovado; não há lint (P-001).
