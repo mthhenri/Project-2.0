@@ -17,6 +17,11 @@ export function tempoDecorrido(data: Date | string, agora: Date): string {
   return dias === 1 ? 'há 1 dia' : `há ${dias} dias`;
 }
 
+/** Ordem de apresentação das seções em todos os painéis do pad. */
+export const ORDEM_SECOES_PAD: readonly TipoAnotacaoEnum[] = [
+  TipoAnotacaoEnum.PESSOAL, TipoAnotacaoEnum.EM_ANDAMENTO, TipoAnotacaoEnum.PENDENCIA,
+  TipoAnotacaoEnum.LEMBRETE, TipoAnotacaoEnum.FEITO,
+];
 /** Ícone de cada seção do pad (PrimeIcons); acende quando a seção tem texto. */
 export const ICONE_SECAO_ANOTACAO: Record<TipoAnotacaoEnum, string> = {
   [TipoAnotacaoEnum.EM_ANDAMENTO]: 'pi pi-play-circle',
@@ -26,7 +31,7 @@ export const ICONE_SECAO_ANOTACAO: Record<TipoAnotacaoEnum, string> = {
   [TipoAnotacaoEnum.PESSOAL]: 'pi pi-user',
 };
 
-/** Título de cada seção do pad, na ordem de exibição (a ordem vem de `TIPOS_ANOTACAO_ORDENADOS`). */
+/** Título de cada seção do pad, usado no pad e nos menus. */
 export const ROTULO_SECAO_ANOTACAO: Record<TipoAnotacaoEnum, string> = {
   [TipoAnotacaoEnum.EM_ANDAMENTO]: 'Em andamento',
   [TipoAnotacaoEnum.FEITO]: 'Feito',

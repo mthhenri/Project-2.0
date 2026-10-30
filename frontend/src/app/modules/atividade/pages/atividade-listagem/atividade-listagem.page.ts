@@ -494,6 +494,7 @@ export class AtividadeListagemPage implements OnInit {
     this.atividadeService.alterar(atividade.id, dto).subscribe({
       next: () => {
         this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Status alterado' });
+        this.buscarAtividades();
       },
       error: () => this.definirStatusDaAtividade(atividade.id, statusAnterior),
     });

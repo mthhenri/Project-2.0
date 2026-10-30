@@ -105,6 +105,7 @@ export class DemandaControleHorasPainelComponent {
 
   /** Pastas recolhidas: por padrão tudo está aberto. */
   readonly recolhidas = signal<ReadonlySet<number>>(new Set());
+  readonly apenasAbertas = signal(false);
   private readonly controlesDeEstimativa = new Map<number, FormControl<number | null>>();
   readonly salvandoEstimativa = signal<ReadonlySet<number>>(new Set());
 
@@ -114,8 +115,21 @@ export class DemandaControleHorasPainelComponent {
 
   private readonly itensPorDemanda = computed(() => new Map(this.itens().map((item) => [item.demandaId, item])));
 
+  readonly idsAbertos = computed(() => {
+    const ids = new Set<number>();
+    if (!this.apenasAbertas()) return ids;
+    for (const no of this.nos()) {
+      if (!no.isEstrutural && (no.status === TipoDemandaStatusEnum.PENDENTE || no.status === TipoDemandaStatusEnum.PLANEJADA)) {
+        ids.add(no.id);
+        for (const id of ancestraisDe(this.raizes(), no.id)) ids.add(id);
+      }
+    }
+    return ids;
+  });
+
   readonly linhas = computed<LinhaHoras[]>(() =>
-    linhasVisiveisDeHoras(this.raizes(), this.recolhidas()).map((noHoras) => ({
+    linhasVisiveisDeHoras(this.raizes(), this.recolhidas())
+      .filter((no) => !this.apenasAbertas() || this.idsAbertos().has(no.no.id)).map((noHoras) => ({
       noHoras,
       recolhida: this.recolhidas().has(noHoras.no.id),
       executores: executoresUnicos(this.itensPorDemanda().get(noHoras.no.id)?.executoresAtivos ?? []),

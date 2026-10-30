@@ -12,6 +12,14 @@
 
 ---
 
+## 2026-10-29 — Task 262: ajustes implementados, verificação visual parcial
+
+Foram implementados os ajustes de P-024, P-044, P-046, P-048 e P-056 e os pedidos de ordem e ícones no pad e no menu de Minhas demandas. O filtro de horas incide sobre demandas, conforme confirmado pelo autor. O pad bloqueia as duas seções até terminar também a recarga após conflito, para não sobrescrever o que for digitado nesse intervalo.
+
+O build do frontend passou; a suíte teve uma rodada verde (2.289 testes) antes do último ajuste e outra com um timeout no teste do grafo (2.288 passaram); o arquivo do grafo passou 12/12 isolado e o pad 30/30 depois da correção. A inspeção ao vivo foi parcial. A task e os problemas permanecem abertos até completar os cenários e viewports descritos em `docs/specs/active/262-ajustes-pontuais-navegacao-atividades-pad/VERIFICACAO.md`.
+
+---
+
 ## 2026-10-27 — Planejamento no nível padrão, com escalada para o analítico
 
 A conversa do planejamento rodava inteira no analítico (opus), o maior gasto fixo entre as conversas. Por pedido do autor ela desceu para o **nível padrão** (sonnet) e escala para o analítico só quando precisa, no mesmo desenho do chat (conversa barata, chamada à parte no nível forte). `NIVEL_DO_TIPO_DE_PROMPT` passou `PLANEJAMENTO` e os três `PLANO_*` para o padrão (eles entram na mesma conversa). Nova ferramenta `aprofundar_analise_do_plano` (só do planejamento, tipo leitura; entrada `PlanoAnaliseAprofundarDto` com `planoId` e `pedido`): relê o plano em nome do usuário e faz **uma chamada à parte no nível analítico** com o documento e o pedido (teto de 8.000 tokens; pedi concisão), devolvendo só o texto para a conversa usar; não escreve nada. A migration `0072` acrescenta ao padrão (versão 1) do prompt `PLANEJAMENTO` quando usar a ferramenta (lacunas e contradições do documento todo, demanda grande demais e como dividir, texto longo e delicado) e quando não usar (o dia a dia); versões editadas pelo administrador não mudam. O `TurnoIa` junta as chamadas do turno, então o selo da mensagem passa a mostrar "analítico" na mensagem em que houve escalada, e os tokens somam o turno inteiro.

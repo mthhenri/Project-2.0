@@ -7,11 +7,11 @@ import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TooltipModule } from 'primeng/tooltip';
-import { TIPOS_ANOTACAO_ORDENADOS, TipoAnotacaoEnum } from '@project20/shared';
+import { TipoAnotacaoEnum } from '@project20/shared';
 import { MarkdownEditorComponent, MenuContextoEditorEvento } from '../../../../shared/components/markdown-editor/markdown-editor.component';
 import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
 import { PadService } from '../../services/pad.service';
-import { ICONE_SECAO_ANOTACAO, ROTULO_SECAO_ANOTACAO } from '../../utils/anotacoes.util';
+import { ICONE_SECAO_ANOTACAO, ORDEM_SECOES_PAD, ROTULO_SECAO_ANOTACAO } from '../../utils/anotacoes.util';
 import { SecaoAnotacao } from '../usuario-anotacoes-dialog/secao-anotacao';
 
 /**
@@ -59,9 +59,10 @@ export class PadPainelComponent {
     {
       label: 'Enviar para',
       icon: 'pi pi-send',
-      items: TIPOS_ANOTACAO_ORDENADOS.map((tipo): MenuItem => ({
+      items: ORDEM_SECOES_PAD.map((tipo): MenuItem => ({
         id: tipo,
         label: ROTULO_SECAO_ANOTACAO[tipo],
+        icon: ICONE_SECAO_ANOTACAO[tipo],
         command: () => this.enviarTrecho(tipo),
       })),
     },

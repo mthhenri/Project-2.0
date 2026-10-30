@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, output, signal, untracked, viewChild } from '@angular/core';
+import { Component, computed, effect, inject, input, OnInit, output, signal, untracked, viewChild } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { DemandaGrafoNoDto, TagResumoDto, TipoDemandaStatusEnum } from '@project20/shared';
 import { DemandaService } from '../../services/demanda.service';
@@ -31,7 +31,12 @@ import { DemandaPastasComponent } from '../demanda-pastas/demanda-pastas.compone
   templateUrl: './demanda-arvore-tela.component.html',
   styleUrl: './demanda-arvore-tela.component.scss',
 })
-export class DemandaArvoreTelaComponent {
+export class DemandaArvoreTelaComponent implements OnInit {
+  readonly iniciarProjetoInteiro = input(true);
+
+  ngOnInit(): void {
+    this.projetoInteiro.set(this.iniciarProjetoInteiro());
+  }
   private readonly demandaService = inject(DemandaService);
   private readonly messageService = inject(MessageService);
 

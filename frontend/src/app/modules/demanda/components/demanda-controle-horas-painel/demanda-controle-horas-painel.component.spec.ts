@@ -54,6 +54,16 @@ describe('DemandaControleHorasPainelComponent', () => {
     expect([pasta.horasTotais, pasta.minutosTotais]).toEqual([12, 240]);
   });
 
+  it('filtra demandas abertas e conserva as pastas que as contêm', async () => {
+    const { montado } = await montar();
+    montado.elemento.querySelector<HTMLButtonElement>('button[aria-label="Apenas abertas"]')!.click();
+    await montado.atualizar();
+    expect(nomesDasLinhas(montado.componente)).toEqual([1, 2, 6]);
+    montado.elemento.querySelector<HTMLButtonElement>('button[aria-label="Apenas abertas"]')!.click();
+    await montado.atualizar();
+    expect(nomesDasLinhas(montado.componente)).toEqual([1, 3, 4, 2, 6]);
+  });
+
   it('o resumo do topo soma estimado e executado do projeto; sem estouro mostra um traço', async () => {
     const { montado } = await montar();
     expect(montado.componente.resumo().horasEstimadas).toBe(12);

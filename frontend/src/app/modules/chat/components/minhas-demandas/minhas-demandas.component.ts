@@ -85,8 +85,8 @@ export class MinhasDemandasComponent implements OnInit {
         icon: 'pi pi-circle',
         items: OPCOES_STATUS_DEMANDA.map((opcao) => ({
           label: opcao.rotulo,
-          icon: opcao.status === demanda.status ? 'pi pi-check' : 'pi pi-circle-fill',
-          style: { '--p-menuitem-icon-color': opcao.cor },
+          icon: 'pi pi-circle-fill',
+          iconStyle: { color: opcao.cor },
           disabled: opcao.status === demanda.status,
           command: () => this.alterarStatus(demanda, opcao.status),
         })),

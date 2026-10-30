@@ -186,7 +186,7 @@
           </form>
           <div class="chat__base">
             <ng-container [ngTemplateOutlet]="chaveDeModo" />
-            <span class="chat__legenda" title="Quem tem acesso ao plano vê esta conversa. A IA pergunta antes de escrever no documento. Enter envia, Shift+Enter quebra a linha.">Quem tem acesso ao plano vê esta conversa. A IA pergunta antes de escrever no documento. Enter envia, Shift+Enter quebra a linha.</span>
+            <span class="chat__legenda">A IA pode cometer erros. Enter envia, Shift+Enter quebra a linha. Quem tem acesso ao plano vê esta conversa.</span>
             @if (mostrarContador()) {
               <span class="text-xs" [class.text-surface-500]="!excedeuOLimite()" [class.text-red-500]="excedeuOLimite()" [attr.role]="excedeuOLimite() ? 'alert' : null">
                 @if (excedeuOLimite()) { Passou do limite da mensagem: } {{ contador() }}

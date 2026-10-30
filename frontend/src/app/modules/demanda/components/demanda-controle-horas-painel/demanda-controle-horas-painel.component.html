@@ -49,6 +49,12 @@
       </div>
     </section>
 
+    <div>
+      <p-button label="Apenas abertas" ariaLabel="Apenas abertas" icon="pi pi-filter" size="small"
+        [outlined]="!apenasAbertas()" [attr.aria-pressed]="apenasAbertas()"
+        (onClick)="apenasAbertas.set(!apenasAbertas())" />
+    </div>
+
     <!-- Árvore de horas -->
     <section class="controle-horas__arvore" [class.controle-horas__arvore--recarregando]="carregando()" aria-label="Horas por demanda">
       <div class="controle-horas__cabecalho" aria-hidden="true">

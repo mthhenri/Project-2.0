@@ -459,6 +459,19 @@ describe('AtividadeListagemPage: menu ⋮ e permissões da linha', () => {
     expect(montado.componente.atividades()[0].status).toBe(TipoAtividadeStatusEnum.PLANEJADA);
   });
 
+  it('recarrega a lista com os filtros atuais depois de alterar o status', async () => {
+    const { montado } = await montarPagina();
+    const itens = [criarAtividade(1)];
+    await carregar(montado, itens);
+    const popover = { hide: vi.fn(), toggle: vi.fn() } as never;
+    montado.componente.abrirSeletorStatus(new Event('click'), itens[0], popover);
+    montado.componente.alterarStatus(TipoAtividadeStatusEnum.DESENVOLVIDA, popover);
+    responderSucesso(esperarRequisicao(montado.http, 'PUT', '/atividade/1'), {});
+    const lista = esperarRequisicao(montado.http, 'GET', '/atividade');
+    expect(lista.request.params.getAll('status')).toBeTruthy();
+    responderSucesso(lista, { itens: [], totalItens: 0 });
+    expect(montado.componente.atividades()).toEqual([]);
+  });
   it('trocar a prioridade é otimista e envia o código novo; escolher a mesma não chama a API', async () => {
     const { montado } = await montarPagina();
     const itens = [criarAtividade(1)];

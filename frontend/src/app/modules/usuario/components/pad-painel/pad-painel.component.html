@@ -65,7 +65,7 @@
                     severity="danger"
                     [text]="true"
                     size="small"
-                    [disabled]="!secao.temTexto()"
+                    [disabled]="!secao.temTexto() || secao.controle.disabled"
                     (onClick)="limpar(secao)"
                   />
                 </div>

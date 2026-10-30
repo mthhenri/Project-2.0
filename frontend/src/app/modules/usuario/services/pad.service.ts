@@ -7,7 +7,7 @@ import { AnotacaoResumoDto, AnotacaoTrechoMovidoDto, TipoAnotacaoEnum } from '@p
 import { DesfazerService } from '../../../core/services/desfazer.service';
 import { UsuarioSessaoService } from '../../../core/services/usuario-sessao.service';
 import { EstadoSalvamento, SecaoAnotacao } from '../components/usuario-anotacoes-dialog/secao-anotacao';
-import { anotacaoTemTexto, contarItensEmAberto, ROTULO_SECAO_ANOTACAO, tempoDecorrido } from '../utils/anotacoes.util';
+import { anotacaoTemTexto, contarItensEmAberto, ORDEM_SECOES_PAD, ROTULO_SECAO_ANOTACAO, tempoDecorrido } from '../utils/anotacoes.util';
 import { AnotacaoService } from './anotacao.service';
 import { UsuarioService } from './usuario.service';
 
@@ -142,7 +142,7 @@ export class PadService implements OnDestroy {
   /** Esvazia a seção e deixa 7 s para desfazer; só depois o vazio é gravado. */
   limpar(secao: SecaoAnotacao): void {
     const anterior = secao.textoAtual;
-    if (!anotacaoTemTexto(anterior) || secao.limpando) return;
+    if (!anotacaoTemTexto(anterior) || secao.limpando || secao.controle.disabled) return;
 
     secao.cancelarAgendamento();
     secao.conteudoAntesDeLimpar = anterior;
@@ -180,7 +180,10 @@ export class PadService implements OnDestroy {
 
   /** Salva as duas seções, move o trecho e atualiza as duas na tela. `null` se não moveu (já avisou o usuário). */
   private executarMover(origem: SecaoAnotacao, destino: SecaoAnotacao, trecho: string): Observable<AnotacaoTrechoMovidoDto | null> {
+    if (origem.controle.disabled || destino.controle.disabled) return of(null);
     if (origem.limpando || destino.limpando) this.desfazerService.dispensar();
+    origem.controle.disable({ emitEvent: false });
+    destino.controle.disable({ emitEvent: false });
     return from(Promise.all([this.garantirSalva(origem), this.garantirSalva(destino)])).pipe(
       switchMap(([origemSalva, destinoSalva]) => {
         if (!origemSalva || !destinoSalva) {
@@ -197,15 +200,16 @@ export class PadService implements OnDestroy {
           })
           .pipe(
             map((resposta) => resposta.dados ?? null),
-            catchError((erro: HttpErrorResponse) => {
-              this.recarregarPorFalhaAoMover(origem, destino, erro);
-              return of(null);
-            }),
+            catchError((erro: HttpErrorResponse) => this.recarregarPorFalhaAoMover(origem, destino, erro)),
           );
       }),
       map((movido) => {
         if (movido) this.aplicarMovimento(origem, destino, movido);
         return movido;
+      }),
+      finalize(() => {
+        origem.controle.enable({ emitEvent: false });
+        destino.controle.enable({ emitEvent: false });
       }),
     );
   }
@@ -223,23 +227,28 @@ export class PadService implements OnDestroy {
   }
 
   /** Trecho ausente ou repetido (400) ou seção alterada em outro lugar (409): nada foi movido; recarrega as duas. */
-  private recarregarPorFalhaAoMover(origem: SecaoAnotacao, destino: SecaoAnotacao, erro: HttpErrorResponse): void {
+  private recarregarPorFalhaAoMover(origem: SecaoAnotacao, destino: SecaoAnotacao, erro: HttpErrorResponse): Observable<null> {
     if (erro.status !== 400 && erro.status !== 409) {
       this.avisar('error', 'Erro', 'Não foi possível enviar o trecho.');
-      return;
+      return of(null);
     }
-    this.anotacaoService.listar(origem.usuarioId, [origem.tipo, destino.tipo]).subscribe({
-      next: (resposta) => {
-        resposta.dados?.forEach((lida) => [origem, destino].find((secao) => secao.tipo === lida.tipo)?.adotar(lida));
-        this.avisarAlteracao(origem.usuarioId);
-      },
-    });
     this.avisar(
       'warn',
       'Trecho não enviado',
       erro.status === 409
         ? 'As seções mudaram em outro lugar. Mostrando as versões mais recentes; nada foi movido.'
         : 'O trecho não foi encontrado ou aparece mais de uma vez na seção. Nada foi movido.',
+    );
+    return this.anotacaoService.listar(origem.usuarioId, [origem.tipo, destino.tipo]).pipe(
+      map((resposta) => {
+        resposta.dados?.forEach((lida) => [origem, destino].find((secao) => secao.tipo === lida.tipo)?.adotar(lida));
+        this.avisarAlteracao(origem.usuarioId);
+        return null;
+      }),
+      catchError(() => {
+        this.avisar('error', 'Erro', 'Não foi possível recarregar as seções.');
+        return of(null);
+      }),
     );
   }
 
@@ -424,7 +433,7 @@ export class PadService implements OnDestroy {
             secao.assinatura = secao.controle.valueChanges.subscribe((conteudo) => this.aoDigitar(secao, conteudo));
             return secao;
           });
-          this.secoes.set(novas);
+          this.secoes.set(novas.sort((primeira, segunda) => ORDEM_SECOES_PAD.indexOf(primeira.tipo) - ORDEM_SECOES_PAD.indexOf(segunda.tipo)));
           this.secoesAbertas.set(this.secoesAbertasAoAbrir);
           this.recalcularPendencias();
           const comTexto = novas.filter((secao) => anotacaoTemTexto(secao.conteudoSalvo)).map((secao) => secao.versaoLida);

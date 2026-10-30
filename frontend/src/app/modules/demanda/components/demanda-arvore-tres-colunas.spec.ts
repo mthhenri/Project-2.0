@@ -260,10 +260,10 @@ describe('DemandaPastaListaComponent', () => {
 });
 
 describe('DemandaArvoreTelaComponent', () => {
-  async function montar(opcoes: { usuario?: TipoUsuarioEnum; pastaId?: number | null; filtro?: typeof FILTRO_VAZIO } = {}) {
+  async function montar(opcoes: { usuario?: TipoUsuarioEnum; pastaId?: number | null; filtro?: typeof FILTRO_VAZIO; iniciarProjetoInteiro?: boolean } = {}) {
     const montado = await montarComponente(DemandaArvoreTelaComponent, {
       usuario: opcoes.usuario ?? TipoUsuarioEnum.GESTOR,
-      entradas: { nos: NOS, filtro: opcoes.filtro ?? FILTRO_VAZIO, projetoId: 7, pastaId: opcoes.pastaId ?? 2 },
+      entradas: { nos: NOS, filtro: opcoes.filtro ?? FILTRO_VAZIO, projetoId: 7, pastaId: opcoes.pastaId ?? 2, iniciarProjetoInteiro: opcoes.iniciarProjetoInteiro ?? false },
     });
     const eventos = { pastas: [] as Array<number | null>, status: [] as unknown[], alterado: 0 };
     montado.componente.pastaChange.subscribe((valor) => eventos.pastas.push(valor));
@@ -273,6 +273,14 @@ describe('DemandaArvoreTelaComponent', () => {
     montado.http.match(() => true);
     return { montado, eventos };
   }
+
+  it('abre em Projeto inteiro e permite escolher uma pasta', async () => {
+    const { montado } = await montar({ iniciarProjetoInteiro: true });
+    expect(montado.componente.projetoInteiro()).toBe(true);
+    expect(montado.componente.tituloDaLista()).toBe('Projeto inteiro');
+    montado.componente.escolherPasta(2);
+    expect(montado.componente.projetoInteiro()).toBe(false);
+  });
 
   it('a lista mostra só as demandas direto na pasta e abre a primeira', async () => {
     const { montado } = await montar();

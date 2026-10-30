@@ -105,6 +105,15 @@ describe('MinhasDemandasComponent', () => {
       expect(itens[0].items!.filter((item) => item.disabled).map((item) => item.label)).toEqual(['Pendente']);
     });
 
+    it('mostra uma marca colorida para cada status no menu', async () => {
+      const montado = await montar();
+      responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/executadas'), [demanda(1)]);
+      await montado.atualizar();
+      montado.elemento.querySelector('li')!.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }));
+      const estados = opcoes(montado)[0].items!;
+      expect(estados.every((item) => item.icon === 'pi pi-circle-fill' && !!item.iconStyle?.['color'])).toBe(true);
+    });
+
     it('trocar para Concluída tira a demanda da lista; para Planejada só muda o status', async () => {
       const montado = await montar();
       responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/executadas'), [demanda(1), demanda(2)]);
