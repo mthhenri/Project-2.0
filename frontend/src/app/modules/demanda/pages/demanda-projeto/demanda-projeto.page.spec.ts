@@ -277,21 +277,15 @@ describe('DemandaProjetoPage', () => {
       expect(montado.componente.contagemPorStatus()).toMatchObject({ PENDENTE: 1, CONCLUIDA: 1 });
     });
 
-    it('o filtro de status recorta a árvore e o grafo exibido (este com atraso de 200 ms)', async () => {
-      vi.useFakeTimers();
-      try {
-        const { montado } = await comGrafo();
-        montado.componente.alternarStatusVisivel(TipoDemandaStatusEnum.CONCLUIDA);
-        expect(montado.componente.filtro().status).not.toContain(TipoDemandaStatusEnum.CONCLUIDA);
-        expect(montado.componente.grafoExibido()?.nos).toHaveLength(2);
-        vi.advanceTimersByTime(250);
-        expect(montado.componente.grafoExibido()?.nos.map((no) => no.id)).toEqual([1]);
-        montado.componente.limparFiltros();
-        vi.advanceTimersByTime(250);
-        expect(montado.componente.grafoExibido()?.nos).toHaveLength(2);
-      } finally {
-        vi.useRealTimers();
-      }
+    it('o filtro de status recorta a árvore e só esmaece o grafo: o grafo segue com todos os nós e os ids em destaque mudam', async () => {
+      const { montado } = await comGrafo();
+      expect(montado.componente.idsEmDestaqueNoGrafo()).toBeNull();
+      montado.componente.alternarStatusVisivel(TipoDemandaStatusEnum.CONCLUIDA);
+      expect(montado.componente.filtro().status).not.toContain(TipoDemandaStatusEnum.CONCLUIDA);
+      expect(montado.componente.grafo()?.nos).toHaveLength(2);
+      expect([...montado.componente.idsEmDestaqueNoGrafo()!]).toEqual([1]);
+      montado.componente.limparFiltros();
+      expect(montado.componente.idsEmDestaqueNoGrafo()).toBeNull();
     });
 
     it('aoStatusAlterado aplica no grafo e no planejamento; concluída sai do planejamento', async () => {

@@ -109,11 +109,10 @@
                 <p-button label="Nova Demanda" icon="pi pi-plus" (onClick)="mostrarDialogNovaDemanda.set(true)" />
               }
             </div>
-          } @else if (filtroEstaAtivo() && modoVisualizacao() === 'grafo' && grafoExibido()!.nos.length === 0 && filtroGrafo() === filtro()) {
-            <ng-container *ngTemplateOutlet="semResultado" />
-          } @else if (modoVisualizacao() === 'grafo' && grafoExibido()) {
+          } @else if (modoVisualizacao() === 'grafo' && grafo()) {
             <app-demanda-grafo
-              [grafo]="grafoExibido()!"
+              [grafo]="grafo()!"
+              [idsEmDestaque]="idsEmDestaqueNoGrafo()"
               [statusVisiveis]="statusDoFiltro()"
               (statusAlternado)="alternarStatusVisivel($event)"
               (demandaSelecionada)="abrirNaArvore($event)"
@@ -186,11 +185,3 @@
     (demandaCriada)="recarregarGrafo()"
   />
 }
-
-<ng-template #semResultado>
-  <div class="demanda-projeto__vazio demanda-projeto__vazio--lista">
-    <i class="pi pi-search demanda-projeto__vazio-icone"></i>
-    <p class="demanda-projeto__vazio-texto">Nenhuma demanda corresponde aos filtros.</p>
-    <p-button label="Limpar filtros" icon="pi pi-filter-slash" severity="secondary" [outlined]="true" (onClick)="limparFiltros()" />
-  </div>
-</ng-template>
