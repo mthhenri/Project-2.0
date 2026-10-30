@@ -86,7 +86,7 @@
 
             @for (mensagem of mensagens(); track mensagem.id) {
               @if (mensagem.autor === 'USUARIO') {
-                <div class="checkin__linha checkin__linha--usuario"><div class="checkin__balao">{{ mensagem.texto }}</div></div>
+                <div class="checkin__linha checkin__linha--usuario"><div class="checkin__balao"><app-markdown-visualizador [texto]="mensagem.texto" [herdaCor]="true" /></div></div>
               } @else {
                 <div class="checkin__linha checkin__linha--ia">
                   <span class="checkin__avatar" aria-hidden="true">IA</span>
@@ -130,22 +130,24 @@
             </div>
           }
           <form class="checkin__entrada" (submit)="$event.preventDefault(); enviar()">
-            <textarea
-              #campoTexto
-              pTextarea
+            <app-editor-mensagem
               class="checkin__campo"
-              rows="2"
-              [autoResize]="true"
-              [formControl]="controleTexto"
+              [embutido]="true"
+              rotulo="Resposta do check-in"
               placeholder="Conte do seu jeito o que você fez…"
-              aria-label="Resposta do check-in"
-              maxlength="4000"
-              (keydown)="aoTeclar($event)"
-            ></textarea>
+              [desabilitado]="enviando() || estado() !== 'EM_ANDAMENTO'"
+              (mudou)="aoMudarTexto($event)"
+              (teclou)="aoTeclar($event)"
+            />
             <button type="submit" class="checkin__enviar" aria-label="Enviar" [disabled]="!podeEnviar()">
-              <i class="pi" [class.pi-arrow-right]="!enviando()" [class.pi-spin]="enviando()" [class.pi-spinner]="enviando()"></i>
+              <i class="pi" [class.pi-send]="!enviando()" [class.pi-spin]="enviando()" [class.pi-spinner]="enviando()"></i>
             </button>
           </form>
+          @if (mostrarContador()) {
+            <span class="checkin__contador" [class.checkin__contador--excedido]="excedeuOLimite()" [attr.role]="excedeuOLimite() ? 'alert' : null">
+              @if (excedeuOLimite()) { Passou do limite da mensagem: } {{ contador() }}
+            </span>
+          }
           <span class="checkin__legenda">A janela fica aberta até a descrição ser registrada ou os check-ins serem suspensos. Enter envia, Shift+Enter quebra a linha.</span>
         </div>
       }

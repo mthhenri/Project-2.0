@@ -285,10 +285,10 @@
   &__entrada {
     display: flex;
     align-items: flex-end;
-    gap: 0.625rem;
-    padding: 0.625rem 0.625rem 0.625rem 1rem;
+    gap: 0.5rem;
+    padding: 0.3125rem 0.3125rem 0.3125rem 0.75rem;
     border: 1px solid var(--app-surface-300);
-    border-radius: 14px;
+    border-radius: 12px;
     background: var(--app-surface-0);
 
     &:focus-within {
@@ -298,13 +298,15 @@
 
   &__campo {
     flex: 1;
-    max-height: 10rem;
-    resize: none;
-    padding: 0.25rem 0;
-    border: none;
-    background: transparent;
-    box-shadow: none;
-    outline: none;
+    min-width: 0;
+  }
+
+  &__contador {
+    color: var(--p-text-muted-color);
+    font-size: 0.75rem;
+    text-align: right;
+
+    &--excedido { color: var(--p-red-500); }
   }
 
   &__enviar {
@@ -312,10 +314,10 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 2.75rem;
-    height: 2.75rem;
+    width: 2rem;
+    height: 2rem;
     border: none;
-    border-radius: 10px;
+    border-radius: 9px;
     background: var(--p-primary-600);
     color: var(--p-primary-contrast-color);
     cursor: pointer;

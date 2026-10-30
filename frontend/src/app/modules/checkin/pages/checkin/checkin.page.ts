@@ -1,20 +1,20 @@
 import { Component, DestroyRef, ElementRef, OnInit, computed, effect, inject, input, output, signal, untracked, viewChild } from '@angular/core';
 import { Router } from '@angular/router';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { FormControl } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { SkeletonModule } from 'primeng/skeleton';
-import { TextareaModule } from 'primeng/textarea';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { CheckinSituacaoConsultadaDto, ChatEventoDto, EstadoIaEnum } from '@project20/shared';
 import { IaDisponibilidadeService } from '../../../../core/services/ia-disponibilidade.service';
+import { EditorMensagemComponent } from '../../../../shared/components/editor-mensagem/editor-mensagem.component';
 import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
 import { ToastDesfazerComponent } from '../../../../shared/components/toast-desfazer/toast-desfazer.component';
 import { PropostaCartaoComponent } from '../../../chat/components/proposta-cartao/proposta-cartao.component';
 import { ChatService, ErroDoChat } from '../../../chat/services/chat.service';
-import { formatarDuracao } from '../../../chat/utils/chat.util';
+import { COMECO_DO_AVISO_DE_LIMITE, formatarDuracao, LIMITE_MENSAGEM_CHAT } from '../../../chat/utils/chat.util';
 import { CheckinService } from '../../services/checkin.service';
 import { EstadoDoCheckin, decidirEstado } from '../../utils/checkin.util';
 
@@ -61,7 +61,7 @@ interface RespostaAoVivo {
 @Component({
   selector: 'app-checkin-page',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonModule, SkeletonModule, TextareaModule, ToastModule, TooltipModule, MarkdownVisualizadorComponent, PropostaCartaoComponent, ToastDesfazerComponent],
+  imports: [ButtonModule, SkeletonModule, EditorMensagemComponent, ToastModule, TooltipModule, MarkdownVisualizadorComponent, PropostaCartaoComponent, ToastDesfazerComponent],
   templateUrl: './checkin.page.html',
   styleUrl: './checkin.page.scss',
   host: { '[class.checkin-embutido]': 'embutido()', '[class.checkin-no-desktop]': 'noDesktop' },
@@ -74,7 +74,7 @@ export class CheckinPage implements OnInit {
   private readonly roteador = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
   private readonly areaDeRolagem = viewChild<ElementRef<HTMLElement>>('rolagem');
-  private readonly campoDeTexto = viewChild<ElementRef<HTMLTextAreaElement>>('campoTexto');
+  private readonly campoDeTexto = viewChild(EditorMensagemComponent);
 
   readonly formatarDuracao = formatarDuracao;
   readonly sugestoes = SUGESTOES;
@@ -106,7 +106,10 @@ export class CheckinPage implements OnInit {
     return base;
   });
   readonly acimaDoRecomendado = computed(() => this.situacao()?.acimaDoRecomendado ?? false);
-  readonly podeEnviar = computed(() => !this.enviando() && this.estado() === 'EM_ANDAMENTO' && this.textoDigitado().trim() !== '');
+  readonly podeEnviar = computed(() => !this.enviando() && this.estado() === 'EM_ANDAMENTO' && this.textoDigitado().trim() !== '' && !this.excedeuOLimite());
+  readonly excedeuOLimite = computed(() => this.textoDigitado().length > LIMITE_MENSAGEM_CHAT);
+  readonly mostrarContador = computed(() => this.textoDigitado().length >= COMECO_DO_AVISO_DE_LIMITE);
+  readonly contador = computed(() => `${this.textoDigitado().length.toLocaleString('pt-BR')} / ${LIMITE_MENSAGEM_CHAT.toLocaleString('pt-BR')}`);
   readonly podeSugerir = computed(() => !this.enviando() && this.estado() === 'EM_ANDAMENTO' && this.textoDigitado().trim() === '');
   readonly textoDeAbertura = computed(() => {
     const dados = this.situacao();
@@ -171,20 +174,44 @@ export class CheckinPage implements OnInit {
     });
   }
 
-  /** Enter envia, Shift+Enter quebra a linha (como no chat). */
+  aoMudarTexto(markdown: string): void {
+    this.controleTexto.setValue(markdown);
+  }
+
+  /** Segue o chat: Enter envia fora de listas e código; Ctrl+Enter envia em qualquer bloco. */
   aoTeclar(evento: KeyboardEvent): void {
-    if (evento.key !== 'Enter' || evento.shiftKey || evento.isComposing) return;
-    evento.preventDefault();
-    void this.enviar();
+    if (evento.key !== 'Enter' || evento.isComposing) return;
+    const editor = this.campoDeTexto()?.editor();
+    if (!editor) return;
+    if (evento.ctrlKey || evento.metaKey) {
+      evento.preventDefault();
+      evento.stopPropagation();
+      void this.enviar();
+      return;
+    }
+    const contexto = editor.contextoDoCursor();
+    if (evento.shiftKey) {
+      if (!contexto.emCodigo) {
+        evento.preventDefault();
+        evento.stopPropagation();
+        editor.dividirBloco();
+      }
+      return;
+    }
+    if (!contexto.emLista && !contexto.emCodigo) {
+      evento.preventDefault();
+      evento.stopPropagation();
+      void this.enviar();
+    }
   }
 
   async enviar(textoPronto?: string): Promise<void> {
     const texto = (textoPronto ?? this.controleTexto.value).trim();
-    if (!texto || this.enviando() || this.estado() !== 'EM_ANDAMENTO') return;
+    if (!texto || texto.length > LIMITE_MENSAGEM_CHAT || (textoPronto === undefined && this.excedeuOLimite()) || this.enviando() || this.estado() !== 'EM_ANDAMENTO') return;
 
     this.enviando.set(true);
     this.mensagens.update((lista) => [...lista, { id: ++this.contadorLocal, autor: 'USUARIO', texto, propostaIds: [] }]);
-    if (textoPronto === undefined) this.controleTexto.setValue('');
+    if (textoPronto === undefined) this.campoDeTexto()?.limpar();
     this.aoVivo.set({ texto: '', ferramenta: null, propostaIds: [] });
     let terminou = false;
     try {
@@ -202,13 +229,13 @@ export class CheckinPage implements OnInit {
       const falha = erro as ErroDoChat;
       // Recusada antes de começar (IA desligada, sem execução em andamento): o texto volta ao campo.
       this.mensagens.update((lista) => lista.slice(0, -1));
-      if (textoPronto === undefined) this.controleTexto.setValue(texto);
+      if (textoPronto === undefined) this.campoDeTexto()?.definirTexto(texto);
       this.messageService.add({ severity: falha.status === 409 ? 'info' : 'warn', summary: 'Check-in', detail: falha.mensagem ?? 'Não foi possível enviar a mensagem' });
       if (falha.status === 409) this.conferirSituacao();
     } finally {
       this.aoVivo.set(null);
       this.enviando.set(false);
-      setTimeout(() => this.campoDeTexto()?.nativeElement.focus(), 50);
+      setTimeout(() => this.campoDeTexto()?.focar(), 50);
       this.conferirSituacao();
     }
   }

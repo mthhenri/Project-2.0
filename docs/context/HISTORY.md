@@ -12,6 +12,12 @@
 
 ---
 
+## 2026-10-30 — Task 265: campo do check-in no padrão do chat
+
+O check-in usa o editor formatado do chat, com barra sobre a seleção, limite e contador de 4.000 caracteres, atalhos de envio e leitura formatada das mensagens. A aparência da caixa e do botão acompanha o chat. A recuperação do texto em falha e o bloqueio durante o envio foram preservados. O ajuste da barra saiu de P-040; os demais pontos continuam abertos.
+
+O teste focado passou 38/38; a suíte do frontend passou 2.292/2.292 com dois processos após o ajuste final; uma rodada anterior com concorrência padrão teve 12 tempos limite em telas distintas. O teste focado e o build também passaram após o ajuste. A página e a janela embutida foram observadas nos três viewports, além da seleção com barra, campo vazio, carregamento, erro de consulta e envio simulado. A verificação usou situação e resposta fictícias em um intermediário local, sem iniciar execução real nem chamar a IA. O projeto não tem lint (P-001). Detalhes e limites em `docs/specs/done/265-campo-checkin-padrao-chat/VERIFICACAO.md`.
+
 ## 2026-10-29 — Task 264 concluída e verificações das tasks 262 e 263
 
 O hover e o clique dos avisos individuais e do grupo misto foram observados nos temas claro e escuro, com cenário local fictício sem gravar mensagens ou propostas; a apresentação foi conferida nos três tamanhos. Também foram observados o chat vazio e cartões de proposta carregando e com erro. A task 264 foi movida para `done/`; o build e os 2.290 testes do frontend são os registrados no bloco anterior. O projeto não tem lint (P-001).

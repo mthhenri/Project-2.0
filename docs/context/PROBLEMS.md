@@ -142,12 +142,12 @@
 - **Correção:** a decidir pelo autor: fazer o visualizador (`markdown-visualizador`) renderizar tabela GFM só na leitura (sem criá-la no editor), ou orientar o prompt da IA a não usar tabela.
 - **Desde:** 2026-10-27 (apontado pelo autor, com captura de uma resposta com três opções de sincronização).
 
-### P-040 — Check-in da IA: execução ativa na topbar não recarrega, barra de mensagem e fechamento automático · `ABERTO` · frontend/checkin/chat IA
+### P-040 — Check-in da IA: execução ativa na topbar não recarrega e fechamento automático · `ABERTO` · frontend/checkin/chat IA
 
-- **Sintoma:** no check-in da IA (e em outros fluxos que mudam a execução), a execução ativa mostrada na topbar não recarrega sozinha; a barra de mensagem precisa de ajuste; e o check-in vem "fechando sozinho", por causa do auto-confirmar da IA na descrição da execução.
+- **Sintoma:** no check-in da IA (e em outros fluxos que mudam a execução), a execução ativa mostrada na topbar não recarrega sozinha; o check-in vem "fechando sozinho", por causa do auto-confirmar da IA na descrição da execução.
 - **Causa:** não investigada (o fechamento parece vir da confirmação automática da proposta de descrição da execução).
 - **Contorno:** recarregar a tela à mão para ver a execução ativa atualizada.
-- **Correção:** a decidir: recarregar a execução ativa da topbar ao fim das ações da IA/check-in e nos demais fluxos que a alteram; ajustar a barra de mensagem; impedir que o auto-confirmar da descrição da execução encerre o check-in.
+- **Correção:** a decidir: recarregar a execução ativa da topbar ao fim das ações da IA/check-in e nos demais fluxos que a alteram; impedir que o auto-confirmar da descrição da execução encerre o check-in.
 - **Desde:** 2026-10-27 (apontado pelo autor).
 
 ### P-041 — Chat: as anotações não recarregam quando a IA mexe nelas · `ABERTO` · frontend/chat IA/pad

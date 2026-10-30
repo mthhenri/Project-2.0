@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { AutorChatEnum, ChatEventoDto, CheckinSituacaoConsultadaDto, ContextoChatEnum, EstadoIaEnum, NivelIaEnum, StatusPropostaIaEnum, TipoPropostaIaEnum, TipoUsuarioEnum } from '@project20/shared';
 import { montarComponente, ComponenteMontado } from '../../../../../testes/montar-componente';
+import { campoDeMensagem, digitarNaMensagem, esperarCampoDeMensagem, teclarNaMensagem, textoDaMensagem } from '../../../../../testes/campo-mensagem';
 import { esperarRequisicao, responderSucesso } from '../../../../../testes/http-teste';
 import { DesfazerService } from '../../../../core/services/desfazer.service';
 import { ChatService, ErroDoChat } from '../../../chat/services/chat.service';
@@ -97,7 +98,8 @@ function controlarFluxo(espiao: ReturnType<typeof vi.spyOn>) {
 
 const texto = (montado: Montado) => montado.elemento.textContent ?? '';
 const conversaDa = (montado: Montado) => montado.elemento.querySelector('[aria-label="Conversa do check-in"]')?.textContent ?? '';
-const campo = (montado: Montado) => montado.elemento.querySelector<HTMLTextAreaElement>('[aria-label="Resposta do check-in"]')!;
+const textoDoCampo = (montado: Montado) => textoDaMensagem(montado.fixture);
+const campoDesabilitado = (montado: Montado) => campoDeMensagem(montado.fixture).desabilitado();
 const botaoEnviar = (montado: Montado) => montado.elemento.querySelector<HTMLButtonElement>('[aria-label="Enviar"]')!;
 /** O botão pelo texto ou pelo rótulo de acessibilidade (os ícones da linha compacta da proposta). */
 const botao = (montado: Montado, rotulo: string) =>
@@ -111,15 +113,15 @@ const avisosDe = (montado: Montado) => {
 };
 
 async function digitar(montado: Montado, conteudo: string) {
-  campo(montado).value = conteudo;
-  campo(montado).dispatchEvent(new Event('input'));
+  await esperarCampoDeMensagem(montado.fixture, montado.atualizar);
+  digitarNaMensagem(montado.fixture, conteudo);
   await montado.atualizar();
 }
 
 async function enviarPeloTeclado(montado: Montado, conteudo: string) {
   await digitar(montado, conteudo);
   expect(botaoEnviar(montado).disabled).toBe(false);
-  campo(montado).dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', cancelable: true }));
+  teclarNaMensagem(montado.fixture, 'Enter');
   await montado.atualizar();
 }
 
@@ -274,7 +276,7 @@ describe('CheckinPage — conversa', () => {
 
     expect(enviarMensagemEspiao).toHaveBeenCalledTimes(1);
     expect(enviarMensagemEspiao.mock.calls[0][0]).toBe('Terminei o formulário de login');
-    expect(campo(montado).value).toBe('');
+    expect(textoDoCampo(montado)).toBe('');
   });
 
 
@@ -293,7 +295,28 @@ describe('CheckinPage — conversa', () => {
     expect(argumentos[2]).toBeUndefined();
     expect(argumentos[3]).toBe('/checkin/mensagem');
     expect(conversaDa(montado)).toContain('Terminei o formulário de login');
-    expect(campo(montado).value).toBe('');
+    expect(textoDoCampo(montado)).toBe('');
+  });
+
+  it('envia e apresenta a mensagem formatada como no chat', async () => {
+    const montado = await montarCheckin();
+    controlarFluxo(enviarMensagemEspiao);
+    await esperarCampoDeMensagem(montado.fixture, montado.atualizar);
+    campoDeMensagem(montado.fixture).definirTexto('**Feito** hoje');
+    await montado.atualizar();
+    botaoEnviar(montado).click();
+    await montado.atualizar();
+    expect(enviarMensagemEspiao.mock.calls[0][0]).toBe('**Feito** hoje');
+    expect(montado.elemento.querySelector('.checkin__balao strong')?.textContent).toBe('Feito');
+  });
+
+  it('mantém o limite de 4.000 caracteres e impede envio acima dele', async () => {
+    const montado = await montarCheckin();
+    await digitar(montado, 'a'.repeat(4001));
+    expect(botaoEnviar(montado).disabled).toBe(true);
+    expect(texto(montado)).toContain('Passou do limite da mensagem');
+    await montado.componente.enviar();
+    expect(enviarMensagemEspiao).not.toHaveBeenCalled();
   });
 
   it('Enter envia; Shift+Enter não envia (quebra a linha)', async () => {
@@ -301,11 +324,11 @@ describe('CheckinPage — conversa', () => {
     controlarFluxo(enviarMensagemEspiao);
     await digitar(montado, 'oi');
 
-    campo(montado).dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', shiftKey: true, cancelable: true }));
+    teclarNaMensagem(montado.fixture, 'Enter', { shiftKey: true });
     await montado.atualizar();
     expect(enviarMensagemEspiao).not.toHaveBeenCalled();
 
-    campo(montado).dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', cancelable: true }));
+    teclarNaMensagem(montado.fixture, 'Enter');
     await montado.atualizar();
     expect(enviarMensagemEspiao).toHaveBeenCalledTimes(1);
   });
@@ -317,7 +340,7 @@ describe('CheckinPage — conversa', () => {
     await enviarPeloTeclado(montado, 'Terminei o login');
     expect(montado.elemento.querySelector('[aria-label="A IA está pensando"]')).not.toBeNull();
     expect(botaoEnviar(montado).disabled).toBe(true);
-    expect(campo(montado).disabled).toBe(true);
+    expect(campoDesabilitado(montado)).toBe(true);
 
     fluxo.emitir({ tipo: 'trecho', texto: 'Entendi, ' });
     montado.fixture.detectChanges();
@@ -332,7 +355,7 @@ describe('CheckinPage — conversa', () => {
 
     expect(montado.elemento.querySelector('.checkin__ia-conteudo[aria-busy="true"]')).toBeNull();
     expect(conversaDa(montado).match(/Entendi, registro a descrição\./g)).toHaveLength(1);
-    expect(campo(montado).disabled).toBe(false);
+    expect(campoDesabilitado(montado)).toBe(false);
     // Ao terminar, confere a situação (a descrição pode ter sido confirmada).
     expect(responderSituacoes(montado)).toBe(1);
   });
@@ -392,7 +415,7 @@ describe('CheckinPage — conversa', () => {
 
     expect(avisos).toEqual([expect.objectContaining({ severity: 'warn', summary: 'Check-in', detail: 'A IA não conseguiu responder agora.' })]);
     expect(montado.elemento.querySelector('[aria-label="A IA está pensando"]')).toBeNull();
-    expect(campo(montado).disabled).toBe(false);
+    expect(campoDesabilitado(montado)).toBe(false);
     responderSituacoes(montado);
   });
 
@@ -420,7 +443,7 @@ describe('CheckinPage — conversa', () => {
     await montado.atualizar();
 
     expect(conversaDa(montado)).not.toContain('Terminei a tarefa');
-    expect(campo(montado).value).toBe('Terminei a tarefa');
+    expect(textoDoCampo(montado)).toBe('Terminei a tarefa');
     expect(avisos).toEqual([expect.objectContaining({ severity: 'info', summary: 'Check-in', detail: 'Você não tem execução em andamento.' })]);
     // A execução acabou: a conferência leva a janela para "registrado" (já havia execução na abertura).
     expect(responderSituacoes(montado, situacao({ execucaoId: null }))).toBeGreaterThanOrEqual(1);
@@ -438,7 +461,7 @@ describe('CheckinPage — conversa', () => {
     await montado.atualizar();
 
     expect(avisos).toEqual([expect.objectContaining({ severity: 'warn', detail: 'Sem conexão com o servidor. Tente de novo.' })]);
-    expect(campo(montado).value).toBe('Oi de novo');
+    expect(textoDoCampo(montado)).toBe('Oi de novo');
     // Só a conferência do fim do envio (não a extra do 409).
     expect(responderSituacoes(montado)).toBe(1);
   });
@@ -491,7 +514,7 @@ describe('CheckinPage — conferência da situação', () => {
     await montado.atualizar();
 
     expect(texto(montado)).toContain('48 min');
-    expect(montado.elemento.querySelector('[aria-label="Resposta do check-in"]')).not.toBeNull();
+    expect(montado.elemento.querySelector('app-editor-mensagem')).not.toBeNull();
 
     vi.advanceTimersByTime(3000);
     responderSucesso(esperarRequisicao(montado.http, 'GET', '/checkin/situacao'), situacao({ minutos: 51 }));
@@ -540,7 +563,7 @@ describe('CheckinPage — conferência da situação', () => {
     esperarRequisicao(montado.http, 'GET', '/checkin/situacao').flush({ mensagem: 'falhou' }, { status: 500, statusText: 'Erro' });
     await montado.atualizar();
 
-    expect(montado.elemento.querySelector('[aria-label="Resposta do check-in"]')).not.toBeNull();
+    expect(montado.elemento.querySelector('app-editor-mensagem')).not.toBeNull();
     expect(avisos.some((aviso) => aviso.summary === 'Check-in')).toBe(false);
     vi.advanceTimersByTime(3000);
     responderSucesso(esperarRequisicao(montado.http, 'GET', '/checkin/situacao'), situacao());
