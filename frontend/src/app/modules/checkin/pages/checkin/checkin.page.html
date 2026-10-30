@@ -81,7 +81,7 @@
           <div #fluxo class="checkin__fluxo">
             <div class="checkin__linha checkin__linha--ia">
               <span class="checkin__avatar" aria-hidden="true">IA</span>
-              <div class="checkin__ia-conteudo"><app-markdown-visualizador [texto]="textoDeAbertura()" /></div>
+              <div class="checkin__ia-conteudo"><app-markdown-visualizador [texto]="textoDeAbertura()" [comTabelas]="true" /></div>
             </div>
 
             @for (mensagem of itens(); track mensagem.chave) {
@@ -92,7 +92,7 @@
                   <span class="checkin__avatar" aria-hidden="true">IA</span>
                   <div class="checkin__ia-conteudo" [attr.aria-busy]="mensagem.aoVivo ? true : null">
                     @if (mensagem.texto) {
-                      <app-markdown-visualizador [texto]="mensagem.texto" />
+                      <app-markdown-visualizador [texto]="mensagem.texto" [comTabelas]="true" />
                     }
                     @if (mensagem.aoVivo) {
                       @if (mensagem.ferramenta) {

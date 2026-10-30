@@ -244,6 +244,14 @@ describe('ChatPage — enviar e receber a resposta', () => {
     expect(enviarMensagemEspiao).toHaveBeenCalledTimes(1);
   });
 
+  it('a resposta da IA mostra tabela Markdown como tabela; a mensagem do usuário continua texto (P-039)', async () => {
+    const tabela = '| Opção | Custo |\n|---|---|\n| A | 10 |';
+    const montado = await montarChat({ mensagens: [mensagem(AutorChatEnum.USUARIO, tabela), DA_IA(tabela)] });
+    expect(montado.elemento.querySelectorAll('table')).toHaveLength(1);
+    expect(montado.elemento.querySelector('.chat__ia-conteudo table td')?.textContent?.trim()).toBe('A');
+    expect(montado.elemento.querySelector('.chat__balao table')).toBeNull();
+  });
+
   it('enquanto a resposta não traz texto mostra "pensando"; os trechos vão se acumulando; no fim vira uma mensagem da IA', async () => {
     const montado = await montarChat({ mensagens: [DA_IA('Olá!')] });
     const fluxo = controlarFluxo(enviarMensagemEspiao, 1);

@@ -87,14 +87,6 @@
 - **Desde:** 2026-10-26 (visto no fecho da task 245).
 - **Nota (2026-10-30):** não reproduzido; passa sozinho (16 testes) e na suíte inteira do frontend. Se não voltar a aparecer, pode virar flaky de ambiente e o item sair.
 
-### P-039 — O exibidor de Markdown da resposta da IA não renderiza tabelas · `ABERTO` · frontend/markdown/chat IA
-
-- **Sintoma:** quando a IA responde com uma tabela Markdown (`| Opção | Como funciona | ... |` com a linha `|---|---|`), o chat mostra o texto cru, com as barras verticais e os hifens, tudo corrido em parágrafos, em vez de uma tabela.
-- **Causa:** não investigada; o subconjunto de Markdown do editor/visualizador não inclui tabela (`markdown-formatado.ts` trata `table` como fora do subconjunto), e o visualizador da resposta parece seguir o mesmo subconjunto.
-- **Contorno:** pedir à IA para responder em lista em vez de tabela.
-- **Correção:** a decidir pelo autor: fazer o visualizador (`markdown-visualizador`) renderizar tabela GFM só na leitura (sem criá-la no editor), ou orientar o prompt da IA a não usar tabela.
-- **Desde:** 2026-10-27 (apontado pelo autor, com captura de uma resposta com três opções de sincronização).
-
 ### P-043 — Chat IA: pergunta sem resposta (falha ou timeout) mas com custo registrado · `ABERTO` · chat IA/backend
 
 - **Sintoma:** o autor fez uma pergunta no chat da IA e não veio nenhuma resposta, mas o gasto da chamada apareceu nos custos. Há falhas na resposta da IA e timeouts.

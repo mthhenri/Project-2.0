@@ -12,6 +12,12 @@
 
 ---
 
+## 2026-10-30 — P-039: tabela Markdown na resposta da IA
+
+- `interpretarMarkdown(texto, { tabelas: true })` (`shared`) reconhece tabela GFM (cabeçalho com barra + linha `|---|:--:|---:|` com o mesmo número de colunas): alinhamento por coluna, `\|` como barra, barras das pontas opcionais, linha curta ganha células vazias e a que passa do cabeçalho perde o excesso; a tabela interrompe o parágrafo, pode estar numa citação e acaba na linha em branco ou sem barra. Limites: 20 colunas e 500 linhas, tempo linear. Sem a opção, tabela segue como texto, então **os editores não mudam** (a decisão do autor: tabela só na leitura da resposta da IA).
+- `app-markdown-visualizador` ganhou `comTabelas` (padrão `false`), ligado só na resposta da IA no chat, no check-in e na saída do teste de prompts. A tabela fica num contêiner com rolagem horizontal (`role="region"`, focável) e sem HTML (célula é texto/inline como o resto).
+- Testes: shared 294 (7 novos), visualizador (3), chat (resposta da IA vira tabela, mensagem do usuário não); backend 1.534 e frontend 2.314 verdes; builds do backend e do frontend aprovados. Ao vivo (PostgreSQL local, mensagem da IA inserida na conversa do dia), 1920×1080, 1366×768 e 1080×1920, sem erro de console. Não verificado: tabela larga com rolagem horizontal na tela, e resposta ao vivo vinda do provedor da IA (sem chave no ambiente). Não há lint (P-001).
+
 ## 2026-10-30 — P-040: execução ativa da topbar depois da IA e descrição no check-in
 
 - **Topbar:** a execução ativa só se ressincronizava por `HttpClient` (interceptor de iniciar, encerrar e confirmar/desfazer proposta). Uma proposta "Faz e avisa" roda dentro do fluxo `text/event-stream` (lido por `fetch`), que o interceptor não vê. `ChatService.lerFluxo` passou a chamar `ExecucaoAtivaService.carregar()` ao fim do fluxo se alguma ferramenta `propor_*` concluiu (chat, bom dia, retomada e check-in passam por ali). Teste: consulta não recarrega, proposta recarrega uma vez.

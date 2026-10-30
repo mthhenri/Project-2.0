@@ -105,7 +105,7 @@
                       <span class="chat__avatar" aria-hidden="true">IA</span>
                       <div class="chat__ia-conteudo" [attr.aria-busy]="mensagem.aoVivo ? true : null">
                         @if (mensagem.texto) {
-                          <app-markdown-visualizador [texto]="mensagem.texto" />
+                          <app-markdown-visualizador [texto]="mensagem.texto" [comTabelas]="true" />
                         }
                         @if (mensagem.aoVivo) {
                           @if (mensagem.ferramenta) {

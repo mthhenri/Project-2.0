@@ -50,6 +50,32 @@
       @case ('regua') {
         <hr class="markdown__regua" />
       }
+      @case ('tabela') {
+        <div class="markdown__tabela-rolagem" tabindex="0" role="region" aria-label="Tabela">
+          <table class="markdown__tabela">
+            <thead>
+              <tr>
+                @for (celula of bloco.cabecalho; track $index) {
+                  <th scope="col" [attr.data-alinha]="bloco.alinhamentos[$index]">
+                    <ng-container *ngTemplateOutlet="modeloTrechos; context: { $implicit: celula }" />
+                  </th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (linha of bloco.linhas; track $index) {
+                <tr>
+                  @for (celula of linha; track $index) {
+                    <td [attr.data-alinha]="bloco.alinhamentos[$index]">
+                      <ng-container *ngTemplateOutlet="modeloTrechos; context: { $implicit: celula }" />
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
     }
   }
 </ng-template>

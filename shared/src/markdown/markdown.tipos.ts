@@ -28,13 +28,24 @@ export interface MarkdownListaNo {
   itens: MarkdownItemLista[];
 }
 
-/** Blocos de nível superior: títulos, parágrafos, listas, citações, código e régua. */
+export type MarkdownAlinhamento = 'esquerda' | 'centro' | 'direita' | null;
+
+/** Tabela (só com `opcoes.tabelas`, P-039): `alinhamentos` e cada linha têm uma entrada por coluna do cabeçalho. */
+export interface MarkdownTabelaNo {
+  tipo: 'tabela';
+  alinhamentos: MarkdownAlinhamento[];
+  cabecalho: MarkdownInlineNo[][];
+  linhas: MarkdownInlineNo[][][];
+}
+
+/** Blocos de nível superior: títulos, parágrafos, listas, citações, código, régua e (opcional) tabela. */
 export type MarkdownBlocoNo =
   | { tipo: 'titulo'; nivel: 1 | 2 | 3 | 4; filhos: MarkdownInlineNo[] }
   | { tipo: 'paragrafo'; filhos: MarkdownInlineNo[] }
   | MarkdownListaNo
   | { tipo: 'citacao'; filhos: MarkdownBlocoNo[] }
   | { tipo: 'bloco-codigo'; linguagem: string | null; valor: string }
-  | { tipo: 'regua' };
+  | { tipo: 'regua' }
+  | MarkdownTabelaNo;
 
 export type MarkdownNo = MarkdownBlocoNo | MarkdownInlineNo;
