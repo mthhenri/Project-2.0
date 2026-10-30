@@ -93,6 +93,7 @@ project-2.0/
 
 ## 3. Decisões Vivas
 
+- **[P-031 e P-057, 2026-10-30]** A sessão dura **7 dias** (`JWT_EXPIRACAO=7d`; em produção o valor é do host do deploy, não do repositório) e a `JwtStrategy.validate` confere a cada requisição que o usuário existe e está ativo, devolvendo o login e o tipo **atuais** do banco (token de usuário desativado ou excluído dá 401; troca de tipo vale na hora **no backend**; o menu do front segue o `usuario_sessao` gravado no login, P-062). A tela de login não tem mais o checkbox: o usuário é sempre lembrado (`ultimo_login`: só login e nome, nunca a senha), o campo se chama "Usuário" e o olho da senha é um botão. A mensagem de credencial errada é "Usuário ou senha incorretos. Confira e tente de novo.".
 - **[seed de desenvolvimento]** `npm run db:seed-dev` (raiz ou backend) cria o projeto `DEMO`, demandas, atividades e o desenvolvedor `dev.teste` / `project2026` no banco local. Idempotente; recusa produção (`APP_AMBIENTE=production` ou `DB_SSL=true`). Fica fora das migrations de propósito (`backend/src/database/scripts/seed-desenvolvimento.ts`).
 - **[revisão de UX reativada]** As telas de **Atividades** (102–105: listagem com filtros na URL e ações em massa, dialogs de execução,
   detalhe com faixa de execução, nova atividade só em dialog — não existe página de criação) e de **Execuções** (110/111) foram descartadas em

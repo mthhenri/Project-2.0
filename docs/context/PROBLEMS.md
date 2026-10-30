@@ -16,15 +16,7 @@
 > número de item removido**:
 >
 > ```markdown
-> ### P-031 — Token continua valendo depois que o usuário é desativado ou excluído · `ABERTO` · autenticacao
-
-- **Sintoma:** quem foi desativado ou excluído continua chamando a API (inclusive enviando mensagem no chat entre colaboradores) até o token expirar; a modelagem do chat pede "remetente ativo".
-- **Causa:** `JwtStrategy.validate` só devolve o payload; o status do usuário é conferido apenas no login (`autenticacao.service.ts`).
-- **Contorno:** o token vence sozinho; a service do chat confere o **destinatário**, não o remetente.
-- **Correção:** conferir o usuário (existe, ativo) na estratégia JWT ou num guard global, com o custo de uma consulta por requisição (ou cache curto).
-- **Desde:** achado na revisão da task 208 (2026-10-21); a lacuna é do projeto inteiro, não do chat.
-
-### P-0NN — <título curto> · `ABERTO|CONTORNADO|ACEITO` · <área>
+> ### P-0NN — <título curto> · `ABERTO|CONTORNADO|ACEITO` · <área>
 >
 > - **Sintoma:** o que se observa.
 > - **Causa:** a raiz, se conhecida — ou "não investigada".
@@ -96,6 +88,22 @@
 - **Desde:** 2026-10-27 (apontado pelo autor; pergunta e conversa não anexadas).
 
 
+### P-061 — Stream de eventos do chat entre colaboradores continua aberto depois de o usuário ser desativado · `ABERTO` · mensagem-direta/backend
+
+- **Sintoma:** com o app aberto, um usuário desativado ou excluído deixa de conseguir enviar (401), mas continua recebendo mensagens e presença em `GET /mensagem-direta/eventos` e aparecendo como online até recarregar a página ou a rede cair.
+- **Causa:** a `JwtStrategy` confere o usuário só quando a requisição abre (P-031); o stream fica aberto sem prazo, com batida a cada 25 s, e nada o fecha na desativação. O serviço roda em mais de uma instância (publica por canal), então fechar a conexão exige avisar as outras.
+- **Contorno:** o usuário desativado não envia nada; o stream cai no próximo recarregamento ou queda de rede.
+- **Correção:** reconferir o usuário na batida do stream, ou encerrar as conexões do usuário ao desativar ou excluir (com o aviso entre instâncias).
+- **Desde:** 2026-10-30 (revisão do P-031).
+
+### P-062 — Menus do front seguem o tipo gravado no login, que agora dura 7 dias · `ABERTO` · autenticacao/frontend
+
+- **Sintoma:** um gestor rebaixado continua vendo os menus de gestor e leva 403 nas ações; um desenvolvedor promovido não vê as telas novas até sair e entrar.
+- **Causa:** `UsuarioSessaoService` decide `eGestor` e `eAdministrador` pelo `usuario_sessao` do `localStorage`, gravado no login. O backend já usa o tipo atual do banco (P-031), então não há brecha de segurança, só a tela defasada.
+- **Contorno:** sair e entrar de novo.
+- **Correção:** atualizar o `usuario_sessao` a partir do servidor (por exemplo, numa consulta ao abrir o app).
+- **Desde:** 2026-10-30 (revisão do P-031).
+
 ### P-049 — Campo `codigo` do modelo do projeto na base não tem uso · `ABERTO` · banco/schema
 
 - **Sintoma:** o modelo do projeto guarda um campo `codigo` que, segundo o autor, é quase inútil.
@@ -121,13 +129,6 @@
 - **Correção:** avaliar outro formato, como uma exibição em serpentina, e aplicar o escolhido.
 - **Desde:** 2026-10-29 (apontado pelo autor).
 
-### P-057 — Tela de login e lembrança do usuário pedem ajustes · `ABERTO` · autenticacao/frontend
-
-- **Sintoma:** a tela de login precisa de ajustes, e a retenção e lembrança do usuário precisa ser revista.
-- **Causa:** não investigada; o relato não detalha os ajustes.
-- **Contorno:** nenhum.
-- **Correção:** levantar com o autor os ajustes de layout e o comportamento desejado de lembrar o usuário, e aplicar.
-- **Desde:** 2026-10-29 (apontado pelo autor).
 
 ### P-059 — Teste de `modelagem.page.spec` instável na suíte inteira · `ABERTO` · frontend/testes
 

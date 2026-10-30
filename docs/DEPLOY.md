@@ -92,7 +92,7 @@ com `--include=dev`** (ver abaixo). Não use `tsx`/esbuild: ele não emite
    |---------------------------|----------------------------------------------------|
    | `DB_HOST` … `DB_SSL`      | do passo 1 (`DB_SSL=true`)                         |
    | `JWT_SECRETO`             | **gere um valor forte e único** (ex.: `openssl rand -hex 32`) |
-   | `JWT_EXPIRACAO`           | `8h`                                               |
+   | `JWT_EXPIRACAO`           | `7d` *(sessão de 7 dias; no Render, troque o valor antigo `8h` por este)* |
    | `INTERVALO_MINIMO_MINUTOS`| `15`                                               |
    | `APP_PORTA`               | `10000` *(fallback; o Render injeta `PORT` automaticamente e o app prioriza `PORT`)* |
    | `APP_AMBIENTE`            | `production`                                        |
