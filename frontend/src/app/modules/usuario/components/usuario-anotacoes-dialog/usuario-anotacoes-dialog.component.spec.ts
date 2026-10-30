@@ -228,6 +228,17 @@ describe('UsuarioAnotacoesDialogComponent — releitura depois da IA (P-041)', (
   });
 });
 
+describe('UsuarioAnotacoesDialogComponent — rolagem do painel', () => {
+  it('o host do painel tem altura do contêiner, senão a lista de seções cresce com as abertas e a rolagem some', async () => {
+    await abrirPad(TipoUsuarioEnum.DESENVOLVEDOR, ID_LOGADO);
+    const host = document.querySelector('app-pad-painel') as HTMLElement;
+    const estilo = getComputedStyle(host);
+    expect(estilo.display).toBe('block');
+    expect(estilo.height).toBe('100%');
+    expect(getComputedStyle(host.querySelector('.pad-painel__secoes') as HTMLElement).overflowY).toBe('auto');
+  });
+});
+
 describe('UsuarioAnotacoesDialogComponent — "Enviar para" outra seção', () => {
   async function enviar(montado: Montado, trecho: string, destino: TipoAnotacaoEnum) {
     painel(montado).abrirMenuDoTrecho(secao(montado, TipoAnotacaoEnum.EM_ANDAMENTO), { inicio: 0, fim: trecho.length, texto: trecho, selecao: trecho, evento: new MouseEvent('contextmenu') });

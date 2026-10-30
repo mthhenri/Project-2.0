@@ -12,6 +12,13 @@
 
 ---
 
+## 2026-10-30 — Pad (Minhas anotações) sem rolagem no drawer da topbar
+
+- **Sintoma (apontado pelo autor, com captura):** abrindo "Minhas anotações" pelo botão da topbar com várias seções abertas, a lista não rolava e o rodapé/seções de baixo ficavam inalcançáveis.
+- **Causa:** o `app-pad-painel` não declarava altura. Com `.pad-painel { height: 100% }` sem pai de altura definida, o painel crescia com as seções abertas (1248 px num drawer de 768 px) e `.pad-painel__secoes` (`overflow-y: auto`) ficava do tamanho do conteúdo, sem o que rolar. Com uma seção só aberta cabia na tela e o defeito não aparecia. Vem da task 256 (painel reaproveitável).
+- **Correção:** `:host { display: block; height: 100%; min-height: 0 }` em `pad-painel.component.scss`. Ao vivo, com as cinco seções abertas: 1629 px de conteúdo para 629 px visíveis (notebook) e a roda do mouse move a lista; "Salvar" fica fixo no rodapé; a tela de Documentações, que usa o mesmo painel, não mudou. Teste de componente (falha sem a correção): o host é `block`, tem `height: 100%` e a lista de seções é `overflow-y: auto`. Não verificado: a aba Anotações do chat (mesmo componente) e a tela cheia do pad.
+- Testes: frontend 2.315 verdes na última rodada; build aprovado. Duas rodadas antes dela travaram no `demanda-grafo.component.spec` (registrado em P-059).
+
 ## 2026-10-30 — P-039: tabela Markdown na resposta da IA
 
 - `interpretarMarkdown(texto, { tabelas: true })` (`shared`) reconhece tabela GFM (cabeçalho com barra + linha `|---|:--:|---:|` com o mesmo número de colunas): alinhamento por coluna, `\|` como barra, barras das pontas opcionais, linha curta ganha células vazias e a que passa do cabeçalho perde o excesso; a tabela interrompe o parágrafo, pode estar numa citação e acaba na linha em branco ou sem barra. Limites: 20 colunas e 500 linhas, tempo linear. Sem a opção, tabela segue como texto, então **os editores não mudam** (a decisão do autor: tabela só na leitura da resposta da IA).
