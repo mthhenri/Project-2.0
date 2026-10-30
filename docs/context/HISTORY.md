@@ -13,6 +13,13 @@
 ---
 
 
+
+## 2026-10-30 — 270: prompt da revisão do relatório vira tipo de prompt editável, com início e fim das execuções
+
+- **O que mudou:** o prompt da revisão por IA (task 111) estava escrito em `relatorio.service.ts`. Agora é o tipo `REVISAO_RELATORIO` (enum do `shared`, nível PADRÃO), com a versão 1 ativa na migration `0073`, editável em Configurações da IA. A service lê o prompt ativo pela `PromptService`, envia-o como `instrucoes` e leva na mensagem só os dados. Cada execução enviada traz início e fim (fuso da aplicação; "em andamento" sem fim), porque o prompt antigo pedia checar sobreposição e horário mas só recebia a data. O texto do prompt também passou a mandar citar o número da linha em `referencia` e a não inventar fatos.
+- **Testes:** backend 1556 (um a mais), shared 294, build do backend ok. Sem lint (P-001).
+- **Não verificado:** a migration não rodou em PostgreSQL real (sem Docker aqui) e a revisão não foi chamada num provedor real (sem chave). O custo da revisão continua fora da aba Custos (sem task).
+
 ## 2026-10-30 — 269 (I-039): relatório de execuções deixa de ser dialog e vira tela
 
 - **O que mudou:** o `RelatorioExecucaoDialogComponent` virou `RelatorioExecucaoPage` (`modules/relatorio/pages/relatorio-execucao/`), com os mesmos filtros, preview, revisão por IA e CSV; as ações foram para o cabeçalho da página, com botão de voltar. Duas rotas, ambas com `gestorGuard`: `/projeto/:id/relatorio` (projeto fixo, vinda do detalhe do projeto) e `/relatorio` (projeto escolhido na tela, vinda de Execuções). O detalhe do projeto e Execuções navegam em vez de abrir o dialog. Sem backend. A tabela perdeu a altura fixa de 320 px: a página rola. I-039 saiu de `IDEAS.md`; a I-038 segue aberta.

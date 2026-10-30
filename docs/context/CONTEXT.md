@@ -112,7 +112,7 @@ project-2.0/
 - **[tasks 110–111]** O histórico de Execuções guarda dia e usuário na URL (`?data=&usuario=`, `replaceUrl`): a URL é a
   fonte do estado e cada mudança recarrega; atalhos ←/→/Home reutilizam os guardas de `core/utils/atalhos.ts`. A tela
   de relatório (era dialog até a 269) abre carregada, recarrega a cada filtro (debounce 400 ms) e só exporta/revisa os parâmetros do relatório
-  exibido; a rota `/projeto/:id/relatorio` fixa o projeto, `/relatorio` lembra o último em `localStorage` `relatorio.projeto`.
+  exibido (a revisão por IA usa o prompt `REVISAO_RELATORIO`, editável em Configurações da IA, e recebe início e fim de cada execução, task 270); a rota `/projeto/:id/relatorio` fixa o projeto, `/relatorio` lembra o último em `localStorage` `relatorio.projeto`.
   A tabela é a mesma para gestor e desenvolvedor (Atividade com "Projeto › Demanda" embaixo; horário em cima e dia/mês embaixo). O
   gestor edita descrição, início e fim inline na célula (confirma com Sim/Não) e exclui pela lixeira; não há mais dialog de edição.
 - **[tasks 97–99]** Todo dialog de formulário usa `p-dialog[dialogFormulario]` (autofocus no primeiro campo

@@ -8,7 +8,8 @@ import {
   RelatorioInconsistenciaDto,
   RelatorioPeriodoTipoEnum,
   RelatorioFormatoEnum,
-  NivelIaEnum,
+  TipoPromptEnum,
+  NIVEL_DO_TIPO_DE_PROMPT,
 } from '@project20/shared';
 import { ExecucaoRepository } from '../../execucao/repositories/execucao.repository';
 import { ProjetoRepository } from '../../projeto/repositories/projeto.repository';
@@ -16,6 +17,7 @@ import { ConfigService } from '../../../config/config.service';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { traduzirFalhaDeIa } from '../../ia/domain/ia.exception';
 import { IaService } from '../../ia/services/ia.service';
+import { PromptService } from '../../prompt/services/prompt.service';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
 import { StandardResponse } from '../../../core/interfaces/standard-response.interface';
 
@@ -57,6 +59,7 @@ export class RelatorioService {
     private readonly projetoRepositorio: ProjetoRepository,
     private readonly configService: ConfigService,
     private readonly iaService: IaService,
+    private readonly promptService: PromptService,
   ) {}
 
   /**
@@ -97,12 +100,14 @@ export class RelatorioService {
     dto: RelatorioRevisaoSolicitarDto & { projetoId: number },
   ): Promise<StandardResponse<RelatorioRevisaoDto>> {
     const { relatorio } = await this.montarRelatorio(dto);
-    const prompt = this.montarPromptRevisao(relatorio);
+    const promptDaRevisao = await this.promptService.obterAtivo(TipoPromptEnum.REVISAO_RELATORIO);
+    const dados = this.montarDadosDaRevisao(relatorio);
 
     try {
       const resposta = await this.iaService.gerar({
-        nivel: NivelIaEnum.PADRAO,
-        mensagens: [{ papel: 'usuario', conteudo: prompt }],
+        nivel: NIVEL_DO_TIPO_DE_PROMPT[TipoPromptEnum.REVISAO_RELATORIO],
+        instrucoes: promptDaRevisao.conteudo,
+        mensagens: [{ papel: 'usuario', conteudo: dados }],
         maximoTokens: MAXIMO_TOKENS_IA,
       });
       const textoResposta = resposta.texto;
@@ -273,12 +278,15 @@ export class RelatorioService {
   }
 
   /** Monta o prompt de revisão a partir de uma amostra limitada das linhas + agregados. */
-  private montarPromptRevisao(relatorio: RelatorioExecucaoDto): string {
+  /** Os dados da revisão (as instruções vêm do prompt `REVISAO_RELATORIO`): projeto, período, totais e as execuções com início e fim. */
+  private montarDadosDaRevisao(relatorio: RelatorioExecucaoDto): string {
     const linhasEnviadas = relatorio.linhas.slice(0, LIMITE_LINHAS_IA);
     const linhasTexto = linhasEnviadas
       .map((linha, indice) => {
         const descricao = (linha.descricao ?? '').replace(/\s+/g, ' ').trim();
-        return `${indice + 1}. [${linha.dataExecucao}] ${linha.nomeDemanda} / ${linha.nomeAtividade} — ${linha.nomeUsuario} — ${linha.duracaoMinutos} min — status ${linha.statusAtividade} — "${descricao}"`;
+        const inicio = this.formatarDataHora(linha.inicioData);
+        const fim = linha.fimData ? this.formatarDataHora(linha.fimData) : 'em andamento';
+        return `${indice + 1}. ${linha.nomeDemanda} / ${linha.nomeAtividade} — ${linha.nomeUsuario} — de ${inicio} a ${fim} — ${linha.duracaoMinutos} min — status ${linha.statusAtividade} — "${descricao}"`;
       })
       .join('\n');
 
@@ -286,21 +294,14 @@ export class RelatorioService {
       ? ` (amostra de ${linhasEnviadas.length} de ${relatorio.totalExecucoes} execuções — restante truncado)`
       : '';
 
-    return `Você é um auditor que revisa relatórios de apontamento de horas de desenvolvedores em busca de inconsistências.
-
-Projeto: ${relatorio.nomeProjeto}
+    return `Projeto: ${relatorio.nomeProjeto}
 Período: ${relatorio.periodoDescricao}
 Total de execuções: ${relatorio.totalExecucoes}
 Total de minutos: ${relatorio.totalMinutos}
 Linhas analisadas: ${linhasEnviadas.length}${nota}
 
 Execuções:
-${linhasTexto}
-
-Aponte possíveis inconsistências, como: descrições vazias, vagas ou genéricas; durações desproporcionais à atividade; execuções concentradas fora do horário usual; possíveis sobreposições de horário; descrição que não condiz com o nome da atividade/demanda.
-
-Responda EXCLUSIVAMENTE com um JSON válido, sem texto antes ou depois, no formato:
-{"resumo": "string", "inconsistencias": [{"tipo": "string", "severidade": "BAIXA|MEDIA|ALTA", "descricao": "string", "referencia": "string ou null"}]}`;
+${linhasTexto}`;
   }
 
   /** Parse defensivo do JSON da IA para `RelatorioRevisaoDto`; lança em resposta irreconhecível. */
