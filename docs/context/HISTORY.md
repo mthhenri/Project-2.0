@@ -12,6 +12,14 @@
 
 ---
 
+## 2026-10-30 — I-007 refeita: a pesquisa na internet é a do próprio provedor (task 263)
+
+- **Origem:** o autor reclamou de eu ter escolhido o Brave sem perguntar e decidiu: cada provedor usa a sua pesquisa (o `web_search` da Anthropic, o Google Search do Gemini). A 262 fica como registro; a [263](../specs/done/263-ia-pesquisa-na-internet-do-provedor.spec.md) a substitui nesse ponto.
+- **O que saiu:** `pesquisar_na_internet`, `BuscaWeb`/`BuscaWebBrave`, o DTO e `BUSCA_WEB_CHAVE`. **O que entrou:** `IaSolicitacao.pesquisaWeb`, tratado em cada adaptador (Anthropic liga o `web_search_20250305` com até 3 buscas; Google liga o `googleSearch`, misturado com as ferramentas só no Gemini 3; OpenAI ignora). O chat liga com as dúvidas de código ligadas.
+- **Limites a saber:** a OpenAI fica sem pesquisa até a Responses API (spec 261); o custo da busca não entra na aba Custos (I-041); com o Gemini 2.5 e ferramentas na chamada (o chat sempre tem) não há pesquisa.
+- **Testes:** backend 1.555 e shared 294 verdes, `nest build` aprovado; sem lint (P-001). **Não verificado:** nenhuma chamada real aos provedores (sem chaves aqui). O formato aceito pela API para a mistura no Gemini 3 e o `pause_turn` da Anthropic são suposições a conferir com chave.
+- **Lição:** escolha de serviço externo com custo e dado saindo da empresa é pergunta antes do código; aqui eu tinha avisado que era decisão do autor e fui em frente mesmo assim.
+
 ## 2026-10-30 — I-007 (pesquisa na internet), I-032 (balão cinza) e I-003 (tabelas no Markdown)
 
 - **Origem:** o autor escolheu as três na conversa sobre as ideias; na I-007 pediu para **não** subir o modelo e usar uma ferramenta de pesquisa na internet. Spec `done/262-ia-pesquisa-na-internet-e-ajustes-de-chat.spec.md` (feita junto, sem backlog). Saem do `IDEAS.md`: I-003, I-007 e I-032.

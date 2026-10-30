@@ -872,6 +872,16 @@ test('dúvidas de código ligadas: classifica antes de gravar (nível rápido, s
   assert.ok(tiposDePrompt.includes(TipoPromptEnum.DUVIDA_CODIGO));
 });
 
+test('a pesquisa na internet do provedor só liga no chat com as dúvidas de código ligadas', async () => {
+  const ligado = montar({ configuracao: { duvidasCodigo: true }, assunto: () => 'CODIGO', chamadas: [async () => resposta({ texto: 'ok' })] });
+  await enviar(ligado.servico, 'como funciona o useEffect?');
+  assert.equal(ligado.solicitacoes[0].pesquisaWeb, true);
+
+  const desligado = montar({ configuracao: { duvidasCodigo: false }, chamadas: [async () => resposta({ texto: 'ok' })] });
+  await enviar(desligado.servico, 'como funciona o useEffect?');
+  assert.equal(desligado.solicitacoes[0].pesquisaWeb, false);
+});
+
 test('dúvidas de código ligadas: pergunta do sistema grava SISTEMA nas duas mensagens', async () => {
   const { servico, gravadas } = montar({ configuracao: { duvidasCodigo: true }, assunto: () => 'SISTEMA', chamadas: [async () => resposta({ texto: 'ok' })] });
   await enviar(servico, 'quais minhas atividades de hoje?');

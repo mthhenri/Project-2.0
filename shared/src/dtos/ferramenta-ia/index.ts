@@ -1,6 +1,5 @@
 export * from './DataHoraConsultarDto';
 export * from './DataHoraConsultadaDto';
-export * from './PesquisaWebConsultarDto';
 export * from './MinhasAtividadesListarDto';
 export * from './MinhasAtividadesListadasDto';
 export * from './ExecucaoAtivaConsultarDto';

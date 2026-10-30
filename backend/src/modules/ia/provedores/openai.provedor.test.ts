@@ -162,3 +162,10 @@ test('erros do SDK viram IaException pelo status, nunca o erro cru', async () =>
   assert.equal(((await tentar({ status: 503 })) as IaException).motivo, 'INDISPONIVEL');
   assert.equal(((await tentar(new Error('rede'))) as IaException).motivo, 'INDISPONIVEL');
 });
+
+test('pesquisaWeb é ignorado: a Chat Completions da OpenAI não pesquisa, e nada de pesquisa vai nos parâmetros', async () => {
+  const { cliente, chamadas } = clienteFalso();
+  await new OpenAiProvedor(cliente).gerar({ ...SOLICITACAO, pesquisaWeb: true });
+  assert.equal(chamadas[0]['tools'], undefined);
+  assert.equal(chamadas[0]['web_search_options'], undefined);
+});

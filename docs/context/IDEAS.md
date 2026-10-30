@@ -209,3 +209,11 @@
 - **Origem:** apontado pelo autor em 2026-10-29 como problema (P-053) e reclassificado como ideia em 2026-10-30; o autor ainda não detalhou o formato.
 - **Por quê:** quem lê o desenho não sabe o que cada coluna significa sem abrir `docs/SCHEMA.md`.
 - **Custo aparente:** a decidir onde a descrição mora: tabela nova (migration) ou o arquivo JSON local da spec 222 (`modelagem-em-arquivo-json.spec.md`), que muda onde a Modelagem guarda a organização; ou só texto em `docs/SCHEMA.md` lido pela tela. Definir isso com o autor antes de especificar.
+
+### I-041 — Custo da pesquisa na internet e da OpenAI com pesquisa · chat IA/custos
+
+- **Ideia:** mostrar na aba Custos quantas buscas o provedor fez (o `web_search` da Anthropic devolve `server_tool_use.web_search_requests`; o Gemini cobra por resposta com pesquisa) e, na migração da OpenAI para a Responses API (spec 261), ligar a `web_search` dela.
+- **Origem:** task 263 (2026-10-30): a pesquisa entrou usando a ferramenta de cada provedor, e o custo dela não é de token.
+- **Por quê:** o gasto da IA hoje some de uma parte: cada busca é cobrada à parte e o administrador não vê.
+- **Custo aparente:** ler o contador de buscas de cada provedor na resposta, gravar na mensagem (sem tabela de uso, como a 202) e preço por busca na configuração; a parte da OpenAI depende da 261.
+

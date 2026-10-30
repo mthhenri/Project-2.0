@@ -137,3 +137,38 @@ test('sem chave (sem cliente) o provedor fica indisponível e recusa com IaExcep
     (erro: unknown) => erro instanceof IaException && erro.motivo === 'INDISPONIVEL' && erro.mensagem === 'IA indisponível neste ambiente',
   );
 });
+
+test('pesquisaWeb liga o web_search da Anthropic ao lado das ferramentas do projeto; sem o pedido, nada muda', async () => {
+  const ferramenta = { nome: 'listar', descricao: 'Lista.', esquemaEntrada: { type: 'object' } };
+  const com = clienteFalso();
+  await new AnthropicProvedor(com.cliente).gerar({ ...SOLICITACAO, ferramentas: [ferramenta], pesquisaWeb: true });
+  const ferramentas = com.chamadas[0]['tools'] as Array<Record<string, unknown>>;
+  assert.equal(ferramentas.length, 2);
+  assert.deepEqual(ferramentas[1], { type: 'web_search_20250305', name: 'web_search', max_uses: 3 });
+
+  const sozinha = clienteFalso();
+  await new AnthropicProvedor(sozinha.cliente).gerar({ ...SOLICITACAO, pesquisaWeb: true });
+  assert.equal((sozinha.chamadas[0]['tools'] as unknown[]).length, 1);
+
+  const sem = clienteFalso();
+  await new AnthropicProvedor(sem.cliente).gerar(SOLICITACAO);
+  assert.equal(sem.chamadas[0]['tools'], undefined);
+});
+
+test('os blocos da pesquisa do servidor não viram ferramenta do projeto: só o texto final chega', async () => {
+  const { cliente } = clienteFalso({
+    mensagem: {
+      model: 'modelo-x',
+      stop_reason: 'end_turn',
+      content: [
+        { type: 'text', text: 'Vou procurar. ' },
+        { type: 'server_tool_use', id: 'srv-1', name: 'web_search', input: { query: 'react 19' } },
+        { type: 'web_search_tool_result' },
+        { type: 'text', text: 'O React 19 trouxe actions.' },
+      ],
+    },
+  });
+  const resposta = await new AnthropicProvedor(cliente).gerar({ ...SOLICITACAO, pesquisaWeb: true });
+  assert.equal(resposta.texto, 'Vou procurar. O React 19 trouxe actions.');
+  assert.ok(resposta.blocos.every((bloco) => bloco.tipo === 'texto'));
+});

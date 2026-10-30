@@ -49,6 +49,14 @@ function configurarPensamentoLeve(modelo: string): { thinkingConfig: Record<stri
   return null;
 }
 
+/**
+ * O Google Search do Gemini junto das ferramentas do projeto (`functionDeclarations`) só vale na série 3; nos modelos anteriores a API recusa a
+ * mistura. Sem ferramentas do projeto na chamada, a pesquisa vale em qualquer modelo.
+ */
+function aceitaPesquisaComFerramentas(modelo: string): boolean {
+  return modelo.toLowerCase().startsWith('gemini-3');
+}
+
 export class GoogleProvedor implements IaProvedor {
   /** `cliente` é `null` quando não há chave de API no ambiente. */
   constructor(private readonly cliente: ClienteGoogle | null) {}
@@ -103,17 +111,23 @@ export class GoogleProvedor implements IaProvedor {
       configuracao['maxOutputTokens'] = solicitacao.maximoTokens + pensamentoLeve.folga;
     }
     if (solicitacao.instrucoes) configuracao['systemInstruction'] = solicitacao.instrucoes;
-    if (solicitacao.ferramentas?.length) {
-      configuracao['tools'] = [
-        {
-          functionDeclarations: solicitacao.ferramentas.map((ferramenta) => ({
-            name: ferramenta.nome,
-            description: ferramenta.descricao,
-            parametersJsonSchema: ferramenta.esquemaEntrada,
-          })),
-        },
-      ];
+    const temFerramentas = !!solicitacao.ferramentas?.length;
+    const ferramentas: Record<string, unknown>[] = [];
+    if (temFerramentas) {
+      ferramentas.push({
+        functionDeclarations: solicitacao.ferramentas!.map((ferramenta) => ({
+          name: ferramenta.nome,
+          description: ferramenta.descricao,
+          parametersJsonSchema: ferramenta.esquemaEntrada,
+        })),
+      });
     }
+    if (solicitacao.pesquisaWeb && (!temFerramentas || aceitaPesquisaComFerramentas(solicitacao.modelo))) {
+      ferramentas.push({ googleSearch: {} });
+      // Misturada com as nossas, a pesquisa pede que a API devolva também as chamadas que ela mesma fez.
+      if (temFerramentas) configuracao['toolConfig'] = { includeServerSideToolInvocations: true };
+    }
+    if (ferramentas.length) configuracao['tools'] = ferramentas;
     return {
       model: solicitacao.modelo,
       contents: solicitacao.mensagens.map((mensagem) => this.traduzirMensagem(mensagem, nomesDasChamadas)),

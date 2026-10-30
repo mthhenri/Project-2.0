@@ -200,3 +200,28 @@ test('erros do SDK viram IaException pelo status, nunca o erro cru', async () =>
   assert.equal(((await tentar({ status: 403 })) as IaException).motivo, 'CONFIGURACAO');
   assert.equal(((await tentar({ status: 500 })) as IaException).motivo, 'INDISPONIVEL');
 });
+
+test('pesquisaWeb: sem ferramentas do projeto liga o Google Search em qualquer modelo', async () => {
+  const { cliente, chamadas } = clienteFalso();
+  await new GoogleProvedor(cliente).gerar({ ...SOLICITACAO, pesquisaWeb: true });
+  const config = (chamadas[0]['config'] as Record<string, unknown>);
+  assert.deepEqual(config['tools'], [{ googleSearch: {} }]);
+  assert.equal(config['toolConfig'], undefined);
+});
+
+test('pesquisaWeb com ferramentas do projeto: só a série 3 mistura (e pede as chamadas do servidor); a 2.5 segue só com as ferramentas', async () => {
+  const ferramenta = { nome: 'listar', descricao: 'Lista.', esquemaEntrada: { type: 'object' } };
+
+  const gemini3 = clienteFalso();
+  await new GoogleProvedor(gemini3.cliente).gerar({ ...SOLICITACAO, modelo: 'gemini-3-pro', ferramentas: [ferramenta], pesquisaWeb: true });
+  const config3 = gemini3.chamadas[0]['config'] as Record<string, unknown>;
+  assert.equal((config3['tools'] as unknown[]).length, 2);
+  assert.deepEqual((config3['tools'] as unknown[])[1], { googleSearch: {} });
+  assert.deepEqual(config3['toolConfig'], { includeServerSideToolInvocations: true });
+
+  const gemini25 = clienteFalso();
+  await new GoogleProvedor(gemini25.cliente).gerar({ ...SOLICITACAO, ferramentas: [ferramenta], pesquisaWeb: true });
+  const config25 = gemini25.chamadas[0]['config'] as Record<string, unknown>;
+  assert.equal((config25['tools'] as unknown[]).length, 1);
+  assert.equal(config25['toolConfig'], undefined);
+});

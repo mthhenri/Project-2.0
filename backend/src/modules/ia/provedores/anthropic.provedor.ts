@@ -31,6 +31,9 @@ const ESFORCO_ANTHROPIC: Record<EsforcoIaEnum, string> = {
   [EsforcoIaEnum.ALTO]: 'high',
 };
 
+/** A pesquisa na internet da própria Anthropic (roda no servidor deles, na mesma chamada). Poucas buscas por resposta: cada uma é cobrada à parte dos tokens. */
+const PESQUISA_WEB_ANTHROPIC = { type: 'web_search_20250305', name: 'web_search', max_uses: 3 };
+
 const MOTIVOS_DE_PARADA: Record<string, IaMotivoParada> = {
   end_turn: 'fim',
   stop_sequence: 'fim',
@@ -78,13 +81,13 @@ export class AnthropicProvedor implements IaProvedor {
       messages: solicitacao.mensagens.map((mensagem) => this.traduzirMensagem(mensagem)),
     };
     if (solicitacao.instrucoes) parametros['system'] = solicitacao.instrucoes;
-    if (solicitacao.ferramentas?.length) {
-      parametros['tools'] = solicitacao.ferramentas.map((ferramenta) => ({
-        name: ferramenta.nome,
-        description: ferramenta.descricao,
-        input_schema: ferramenta.esquemaEntrada,
-      }));
-    }
+    const ferramentas: Record<string, unknown>[] = (solicitacao.ferramentas ?? []).map((ferramenta) => ({
+      name: ferramenta.nome,
+      description: ferramenta.descricao,
+      input_schema: ferramenta.esquemaEntrada,
+    }));
+    if (solicitacao.pesquisaWeb) ferramentas.push(PESQUISA_WEB_ANTHROPIC);
+    if (ferramentas.length) parametros['tools'] = ferramentas;
     if (solicitacao.esforco) parametros['output_config'] = { effort: ESFORCO_ANTHROPIC[solicitacao.esforco] };
     return parametros;
   }
