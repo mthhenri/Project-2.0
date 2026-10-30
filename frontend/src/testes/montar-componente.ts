@@ -21,6 +21,9 @@ rxjsConfig.onUnhandledError = (erro) => {
   else throw erro;
 };
 
+/** Quanto `atualizar()` espera a zona estabilizar antes de seguir (metade do limite de tempo de um teste, 20 s). */
+const TETO_DA_ESTABILIDADE_MS = 8000;
+
 export interface OpcoesMontagem {
   /** Tipo do usuário autenticado; omitido = ninguém autenticado. */
   usuario?: TipoUsuarioEnum;
@@ -87,7 +90,15 @@ export async function montarComponente<T>(componente: Type<T>, opcoes: OpcoesMon
     mensagens: TestBed.inject(MessageService),
     async atualizar() {
       fixture.detectChanges();
-      await fixture.whenStable();
+      // `whenStable` espera todo temporizador pendente da zona. Às vezes um deles (a transição do d3 no diagrama da Modelagem e no grafo) não
+      // termina e o teste fica preso até o limite de 20 s (P-059), embora passe sozinho. Com o teto, a trava vira só uma espera: a seguir
+      // as afirmações do teste conferem se a tela chegou ao estado esperado, então um estado não alcançado continua falhando.
+      let teto: ReturnType<typeof setTimeout> | undefined;
+      try {
+        await Promise.race([fixture.whenStable(), new Promise<void>((resolver) => { teto = setTimeout(resolver, TETO_DA_ESTABILIDADE_MS); })]);
+      } finally {
+        clearTimeout(teto); // não deixa um temporizador a mais para os testes que contam os pendentes
+      }
       fixture.detectChanges();
     },
   };

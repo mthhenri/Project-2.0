@@ -17,6 +17,14 @@
 
 
 
+
+## 2026-10-30 — CI do PR 27: teste da Modelagem trava e o `atualizar()` ganha teto de espera (P-059)
+
+- **O que aconteceu:** o job "Organização e build" do PR 27 falhou com 1 teste de 2380: `escolher uma relação no painel passa para a outra tabela` (`modelagem.page.spec`) estourou os 20 s. Os testes de integração e o deploy do Cloudflare Pages passaram. Era o P-059, que eu tinha tratado como lentidão da minha máquina: o CI, limpo, o reproduziu, então não era carga local.
+- **Investigação:** o arquivo sozinho leva 3 s; com a CPU três vezes sobrecarregada, 11 s e passa. Logo o teste não é lento: às vezes trava no `whenStable` (algo pendente na zona), o que aponta para a transição do d3 do diagrama. A causa não foi provada.
+- **Mudança:** `atualizar()` de `src/testes/montar-componente.ts` espera a estabilidade no máximo 8 s e segue; o temporizador do teto é limpo no `finally` (a primeira versão deixava um temporizador a mais e quebrou um teste do chip da execução que conta os pendentes). Um estado não alcançado continua falhando nas afirmações.
+- **Testes:** frontend 188 arquivos, 2380 testes verdes. Não foi possível reproduzir a trava localmente, então **a eficácia do teto só se confirma no CI**; o P-059 segue aberto com a correção de causa descrita.
+
 ## 2026-10-30 — 272: painel da revisão no relatório, ícones de visão no projeto e lápis ao passar o mouse
 
 - **Origem:** o POC publicado como artefato e a aprovação do autor da configuração escolhida nele. No POC houve uma correção de processo: artefato de tela segue o visual do projeto (tema Aura azul, claro como padrão, tokens `--app-*`), não um visual próprio.
