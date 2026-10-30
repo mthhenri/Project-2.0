@@ -83,36 +83,44 @@
     </div>
 
     <!-- Faixa de resumo: demandas, executado × estimado e visões -->
-    <div class="projeto-detalhe__resumo">
-      <span class="projeto-detalhe__resumo-total"><strong>{{ resumo().total }}</strong> {{ resumo().total === 1 ? 'demanda' : 'demandas' }}</span>
+    @if (!erroAoCarregarDemandas()) {
+      <div class="projeto-detalhe__resumo">
+        <span class="projeto-detalhe__resumo-total"><strong>{{ resumo().total }}</strong> {{ resumo().total === 1 ? 'demanda' : 'demandas' }}</span>
 
-      <span class="projeto-detalhe__resumo-progresso">
-        <span class="projeto-detalhe__resumo-rotulo">Executado</span>
-        <strong>{{ resumo().minutosExecutados | tempoExibicao: unidadeTempo.emDias() : 'minutos' }}</strong>
-        <span class="projeto-detalhe__resumo-rotulo">de</span>
-        <strong>{{ resumo().horasEstimadas | tempoExibicao: unidadeTempo.emDias() : 'horas' }}</strong>
-        @if (resumo().horasEstimadas > 0) {
-          <span class="projeto-detalhe__barra" [class.projeto-detalhe__barra--estouro]="resumo().estourou">
-            <span class="projeto-detalhe__barra-preenchimento" [style.width.%]="resumo().percentual > 100 ? 100 : resumo().percentual"></span>
-          </span>
-          <span class="projeto-detalhe__resumo-percentual">{{ resumo().percentual }}%</span>
-        }
-      </span>
+        <span class="projeto-detalhe__resumo-progresso">
+          <span class="projeto-detalhe__resumo-rotulo">Executado</span>
+          <strong>{{ resumo().minutosExecutados | tempoExibicao: unidadeTempo.emDias() : 'minutos' }}</strong>
+          <span class="projeto-detalhe__resumo-rotulo">de</span>
+          <strong>{{ resumo().horasEstimadas | tempoExibicao: unidadeTempo.emDias() : 'horas' }}</strong>
+          @if (resumo().horasEstimadas > 0) {
+            <span class="projeto-detalhe__barra" [class.projeto-detalhe__barra--estouro]="resumo().estourou">
+              <span class="projeto-detalhe__barra-preenchimento" [style.width.%]="resumo().percentual > 100 ? 100 : resumo().percentual"></span>
+            </span>
+            <span class="projeto-detalhe__resumo-percentual">{{ resumo().percentual }}%</span>
+          }
+        </span>
 
-      <span class="projeto-detalhe__visoes" role="group" aria-label="Abrir demandas em outra visão">
-        <p-button label="Grafo" icon="pi pi-share-alt" severity="secondary" [outlined]="true" size="small" (onClick)="abrirVisao('grafo')" />
-        @if (sessao.eGestor()) {
-          <p-button label="Controle de horas" icon="pi pi-chart-bar" severity="secondary" [outlined]="true" size="small" (onClick)="abrirVisao('controle-de-horas')" />
-        }
-      </span>
-    </div>
+        <span class="projeto-detalhe__visoes" role="group" aria-label="Abrir demandas em outra visão">
+          <p-button label="Grafo" icon="pi pi-share-alt" severity="secondary" [outlined]="true" size="small" (onClick)="abrirVisao('grafo')" />
+          @if (sessao.eGestor()) {
+            <p-button label="Controle de horas" icon="pi pi-chart-bar" severity="secondary" [outlined]="true" size="small" (onClick)="abrirVisao('controle-de-horas')" />
+          }
+        </span>
+      </div>
+    }
 
     @if (carregandoDemandas()) {
       <app-skeleton-lista variante="linhas" [quantidade]="6" />
     }
 
     @if (!carregandoDemandas()) {
-      @if (nos().length === 0) {
+      @if (erroAoCarregarDemandas()) {
+        <div class="projeto-detalhe__demandas-vazio" role="alert">
+          <i class="pi pi-exclamation-triangle text-4xl text-muted-color"></i>
+          <p class="text-muted-color mt-2">Não foi possível carregar as demandas.</p>
+          <p-button label="Tentar de novo" icon="pi pi-refresh" severity="secondary" [outlined]="true" size="small" class="mt-3" (onClick)="carregarArvore(projeto()!.id)" />
+        </div>
+      } @else if (nos().length === 0) {
         <div class="projeto-detalhe__demandas-vazio">
           <i class="pi pi-inbox text-4xl text-muted-color"></i>
           <p class="text-muted-color mt-2">Este projeto ainda não tem demandas.</p>

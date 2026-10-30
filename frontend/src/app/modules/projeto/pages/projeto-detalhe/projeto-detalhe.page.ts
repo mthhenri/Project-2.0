@@ -71,6 +71,8 @@ export class ProjetoDetalhePage implements OnInit {
   readonly nos = signal<DemandaGrafoNoDto[]>([]);
   readonly carregando = signal<boolean>(false);
   readonly carregandoDemandas = signal<boolean>(false);
+  /** A carga das demandas falhou: o detalhe oferece "Tentar de novo" em vez de dizer que o projeto não tem demandas (P-058). */
+  readonly erroAoCarregarDemandas = signal<boolean>(false);
   readonly mostrarDialogNovaDemanda = signal<boolean>(false);
   readonly filtro = signal<DemandaFiltro>(FILTRO_VAZIO);
   readonly filtroVazio = FILTRO_VAZIO;
@@ -198,8 +200,9 @@ export class ProjetoDetalhePage implements OnInit {
       });
   }
 
-  private carregarArvore(projetoId: number): void {
+  carregarArvore(projetoId: number): void {
     this.carregandoDemandas.set(true);
+    this.erroAoCarregarDemandas.set(false);
     this.demandaService
       .recuperarGrafo(projetoId)
       .pipe(finalize(() => this.carregandoDemandas.set(false)))
@@ -210,6 +213,7 @@ export class ProjetoDetalhePage implements OnInit {
             this.pastaId.set(pastaInicial(resposta.dados.nos, undefined));
           }
         },
+        error: () => this.erroAoCarregarDemandas.set(true),
       });
   }
 

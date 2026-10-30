@@ -103,6 +103,8 @@ export class DemandaProjetoPage implements OnInit, OnDestroy {
   readonly projetoControle = new FormControl<number | null>(null);
   readonly grafo = signal<DemandaGrafoDto | null>(null);
   readonly carregando = signal<boolean>(false);
+  /** A carga do grafo do projeto falhou: a tela oferece "Tentar de novo" em vez de dizer que o projeto não tem demandas (P-058). */
+  readonly erroAoCarregarGrafo = signal<boolean>(false);
   readonly carregandoProjetos = signal<boolean>(false);
   readonly modoVisualizacao = signal<ModoVisualizacao>(this.modoInicial());
   readonly mostrarDialogNovaDemanda = signal<boolean>(false);
@@ -414,8 +416,9 @@ export class DemandaProjetoPage implements OnInit, OnDestroy {
     return projetos.length === 1 ? projetos[0].id : null;
   }
 
-  private carregarGrafo(): void {
+  carregarGrafo(): void {
     this.carregando.set(true);
+    this.erroAoCarregarGrafo.set(false);
     this.grafo.set(null);
     this.demandaService
       .recuperarGrafo(this.projetoId())
@@ -430,6 +433,7 @@ export class DemandaProjetoPage implements OnInit, OnDestroy {
           }
         },
         error: () => {
+          this.erroAoCarregarGrafo.set(true);
           this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Não foi possível carregar as demandas' });
         },
       });

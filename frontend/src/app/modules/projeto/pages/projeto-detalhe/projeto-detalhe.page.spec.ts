@@ -122,6 +122,22 @@ describe('ProjetoDetalhePage', () => {
     expect(montado.elemento.querySelector('[aria-label="Abrir demandas em outra visão"]')?.textContent).not.toContain('Lista');
   });
 
+  it('falha ao carregar as demandas mostra o erro com "Tentar de novo", não "projeto sem demandas" (P-058)', async () => {
+    const { montado } = await montarDetalhe(TipoUsuarioEnum.GESTOR);
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/projeto/5'), PROJETO);
+    responderErro(esperarRequisicao(montado.http, 'GET', '/demanda/grafo'), 500, 'falhou');
+    await montado.atualizar();
+    expect(texto(montado)).toContain('Não foi possível carregar as demandas');
+    expect(texto(montado)).not.toContain('ainda não tem demandas');
+    expect(texto(montado)).not.toContain('0 demandas');
+
+    Array.from(montado.elemento.querySelectorAll('button')).find((botao) => botao.textContent?.includes('Tentar de novo'))!.click();
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/grafo'), GRAFO_VAZIO);
+    await montado.atualizar();
+    expect(texto(montado)).toContain('Este projeto ainda não tem demandas');
+    expect(texto(montado)).not.toContain('Não foi possível carregar');
+  });
+
   it('projeto inexistente (404) não mostra o cabeçalho e sai do carregamento', async () => {
     const { montado } = await montarDetalhe(TipoUsuarioEnum.DESENVOLVEDOR);
     responderErro(esperarRequisicao(montado.http, 'GET', '/projeto/5'), 404, 'Projeto não encontrado');

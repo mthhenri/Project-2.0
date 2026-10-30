@@ -197,6 +197,18 @@ describe('DemandaConexaoListaComponent', () => {
     ]);
   });
 
+  it('agrupa as conexões pelo sentido, com o rótulo escrito, e esconde o grupo vazio (P-051)', async () => {
+    const montado = await montar();
+    const titulos = () => Array.from(montado.elemento.querySelectorAll('.demanda-conexao-lista__grupo-titulo')).map((titulo) => titulo.textContent?.replace(/\s+/g, ' ').trim());
+    expect(titulos()).toEqual(['Esta demanda depende de 1', 'Dependem desta demanda 1', 'Dependência mútua 1']);
+    const dependem = montado.elemento.querySelector('[aria-label="Dependem desta demanda"]')!;
+    expect(dependem.querySelector('.demanda-conexao-lista__nome')?.textContent?.trim()).toBe('Entrada');
+
+    montado.componente.conexoes.set(CONEXOES.filter((conexao) => conexao.direcao === 'saida'));
+    montado.fixture.detectChanges();
+    expect(titulos()).toEqual(['Esta demanda depende de 1']);
+  });
+
   it('adicionar sem destino escolhido não chama a API', async () => {
     const montado = await montar();
     montado.componente.adicionar();

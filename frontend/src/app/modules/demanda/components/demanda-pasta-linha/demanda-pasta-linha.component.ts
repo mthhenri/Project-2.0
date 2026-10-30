@@ -6,6 +6,7 @@ import { DemandaGrafoNoDto, TipoDemandaStatusEnum } from '@project20/shared';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { CampoDescricaoDemanda, DemandaMenuAcoes, construirMenuDemanda } from '../../utils/demanda-context-menu.factory';
 import { dividirDestaque } from '../../utils/demanda-filtro.util';
+import { TagListaComponent } from '../../../../shared/components/tag-lista/tag-lista.component';
 import { DemandaBarraHorasComponent } from '../demanda-barra-horas/demanda-barra-horas.component';
 import { DemandaStatusComponent } from '../demanda-status/demanda-status.component';
 
@@ -23,7 +24,7 @@ interface DescricaoDaLinha {
 @Component({
   selector: 'app-demanda-pasta-linha',
   standalone: true,
-  imports: [ContextMenu, TooltipModule, DemandaBarraHorasComponent, DemandaStatusComponent],
+  imports: [ContextMenu, TooltipModule, DemandaBarraHorasComponent, DemandaStatusComponent, TagListaComponent],
   templateUrl: './demanda-pasta-linha.component.html',
   styleUrl: './demanda-pasta-linha.component.scss',
 })

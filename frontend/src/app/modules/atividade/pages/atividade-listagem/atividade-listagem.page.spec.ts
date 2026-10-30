@@ -225,13 +225,34 @@ describe('AtividadeListagemPage: estados da tabela', () => {
     expect(desenvolvedor.montado.elemento.querySelector('th.atividade-listagem__coluna-selecao')).toBeNull();
   });
 
-  it('erro ao listar: o carregamento termina e a lista fica vazia', async () => {
+  it('erro ao listar: o carregamento termina e a tela diz que falhou, sem afirmar que não há atividades (P-058)', async () => {
     const { montado } = await montarPagina();
     for (const requisicao of montado.http.match((r) => r.url.endsWith('/atividade-prioridade') || r.url.endsWith('/usuario'))) responderSucesso(requisicao, []);
     responderErro(esperarRequisicao(montado.http, 'GET', '/atividade'), 500, 'falhou');
     await montado.atualizar();
     expect(montado.componente.carregando()).toBe(false);
     expect(montado.componente.atividades()).toEqual([]);
+    expect(texto(montado)).toContain('Não foi possível carregar as atividades');
+    expect(texto(montado)).not.toContain('Ainda não há atividades em aberto');
+    expect(texto(montado)).not.toContain('Nenhuma atividade com esses filtros');
+
+    // "Tentar de novo" consulta de novo e, dando certo, mostra a lista.
+    Array.from(montado.elemento.querySelectorAll('button')).find((botao) => botao.textContent?.includes('Tentar de novo'))!.click();
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/atividade'), pagina([criarAtividade(1)]));
+    await montado.atualizar();
+    expect(montado.componente.erroAoCarregar()).toBe(false);
+    expect(texto(montado)).toContain('Atividade 1');
+    expect(texto(montado)).not.toContain('Não foi possível');
+  });
+
+  it('erro ao recarregar com a lista na tela mantém as linhas e avisa que podem estar desatualizadas', async () => {
+    const { montado } = await montarPagina();
+    await carregar(montado, [criarAtividade(1)]);
+    montado.componente.buscarAtividades();
+    responderErro(esperarRequisicao(montado.http, 'GET', '/atividade'), 500, 'falhou');
+    await montado.atualizar();
+    expect(texto(montado)).toContain('Atividade 1');
+    expect(texto(montado)).toContain('podem estar desatualizadas');
   });
 });
 

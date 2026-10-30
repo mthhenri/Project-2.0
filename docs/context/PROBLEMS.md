@@ -127,22 +127,6 @@
 - **Correção:** remover a coluna por migration nova (sem editar a já aplicada), ajustando DTOs, repository e `docs/SCHEMA.md`. Rodar `gerenciamento-de-impacto` antes.
 - **Desde:** 2026-10-29 (apontado pelo autor).
 
-### P-050 — Tags exibidas apertadas, com aparência encavalada · `ABERTO` · frontend
-
-- **Sintoma:** a forma como as tags são exibidas está apertada e sobreposta.
-- **Causa:** não investigada no layout.
-- **Contorno:** nenhum.
-- **Correção:** redesenhar a exibição das tags com espaçamento e quebra adequados.
-- **Desde:** 2026-10-29 (apontado pelo autor).
-
-### P-051 — Conexões na aba de conexões da demanda são exibidas de forma ruim · `ABERTO` · demanda/frontend
-
-- **Sintoma:** a forma de exibir as conexões na aba de conexões da demanda não está boa.
-- **Causa:** não investigada no layout.
-- **Contorno:** nenhum.
-- **Correção:** redesenhar a lista de conexões da aba.
-- **Desde:** 2026-10-29 (apontado pelo autor).
-
 ### P-052 — Exibição da cor do projeto na tela de projetos · `ABERTO` · projeto/frontend
 
 - **Sintoma:** a cor do projeto aparece de um jeito que o autor quer alterar.
@@ -167,21 +151,13 @@
 - **Correção:** levantar com o autor os ajustes de layout e o comportamento desejado de lembrar o usuário, e aplicar.
 - **Desde:** 2026-10-29 (apontado pelo autor).
 
-### P-058 — Falha ao carregar atividades ou demandas pode parecer lista vazia · `ABERTO` · frontend/atividade/demanda
-
-- **Sintoma:** se a consulta de Atividades falha, surge aviso temporário e a tabela passa a dizer que não há atividades em aberto. Se a consulta do grafo de demandas falha, a Árvore pode dizer que o projeto não tem demandas, apesar de existirem.
-- **Causa:** na primeira carga, o erro termina o carregamento sem um estado persistente de falha; a apresentação reutiliza a lista vazia. A consulta do grafo também emite aviso temporário.
-- **Contorno:** recarregar a tela e observar o aviso de erro.
-- **Correção:** distinguir falha de lista realmente vazia e oferecer nova tentativa, preservando dados anteriores quando houver.
-- **Desde:** reproduzido em 2026-10-30 durante a verificação das tasks 262 e 263, com erro HTTP simulado; o comportamento da lista de Atividades já tinha teste próprio anterior às correções.
-
 ### P-059 — Teste de `modelagem.page.spec` instável na suíte inteira · `ABERTO` · frontend/testes
 
-- **Sintoma:** `escolher uma relação no painel passa para a outra tabela` falha às vezes em `npm run test --workspace=frontend` (por tempo esgotado com o limite antigo de 5 s; uma vez com o limite de 20 s) e passa na rodada seguinte, sem mudança de código.
+- **Sintoma:** `escolher uma relação no painel passa para a outra tabela` falha às vezes em `npm run test --workspace=frontend` (por tempo esgotado com o limite antigo de 5 s; duas vezes com o limite de 20 s, o que indica trava e não só lentidão) e passa sozinho (22 testes) e na rodada seguinte, sem mudança de código.
 - **Causa:** não investigada; parece carga da suíte inteira, como o antigo P-034.
 - **Contorno:** rodar o arquivo sozinho ou repetir a suíte.
 - **Correção:** medir o teste sob carga e ver o que ele espera (renderização do diagrama?) antes de mexer no limite.
-- **Desde:** 2026-10-30 (visto no fecho dos P-035, P-038, P-041 e P-055; 4 rodadas completas, 2 falhas dele).
+- **Desde:** 2026-10-30 (visto nos fechos dos P-035/P-038/P-041/P-055 e dos P-050/P-051/P-058; 7 rodadas completas, 3 falhas dele).
 
 ### P-001 — Projeto sem lint · `CONTORNADO` · repositório
 
