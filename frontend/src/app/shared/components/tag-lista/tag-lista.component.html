@@ -1,0 +1,6 @@
+@for (tag of visiveis(); track tag.id) {
+  <span class="tag-lista__chip" [attr.title]="tag.nome" [style.background-color]="tag.cor + '22'" [style.border-color]="tag.cor + '55'" [style.color]="tag.cor">{{ tag.nome }}</span>
+}
+@if (ocultas().length > 0) {
+  <span class="tag-lista__mais" [pTooltip]="nomesOcultos()" tooltipPosition="top" [attr.aria-label]="'Mais ' + ocultas().length + ' tags: ' + nomesOcultos()">+{{ ocultas().length }}</span>
+}

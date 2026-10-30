@@ -75,7 +75,7 @@
                   @if (saida.dados.erro) {
                     <p class="prompt-teste__erro" role="alert"><i class="pi pi-exclamation-triangle"></i>{{ saida.dados.erro }}</p>
                   } @else {
-                    <app-markdown-visualizador [texto]="saida.dados.texto ?? ''" />
+                    <app-markdown-visualizador [texto]="saida.dados.texto ?? ''" [comTabelas]="true" />
                   }
                 </section>
               }

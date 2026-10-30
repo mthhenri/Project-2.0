@@ -77,46 +77,36 @@
         </div>
       }
       @default {
-        <div #rolagem class="checkin__conversa" role="log" aria-live="polite" aria-label="Conversa do check-in">
-          <div class="checkin__fluxo">
+        <div #rolagem class="checkin__conversa" role="log" aria-live="polite" aria-label="Conversa do check-in" (scroll)="aoRolar()" (wheel)="aoInteragirComARolagem()" (touchmove)="aoInteragirComARolagem()" (pointerdown)="aoInteragirComARolagem()" (keydown)="aoInteragirComARolagem()">
+          <div #fluxo class="checkin__fluxo">
             <div class="checkin__linha checkin__linha--ia">
               <span class="checkin__avatar" aria-hidden="true">IA</span>
-              <div class="checkin__ia-conteudo"><app-markdown-visualizador [texto]="textoDeAbertura()" /></div>
+              <div class="checkin__ia-conteudo"><app-markdown-visualizador [texto]="textoDeAbertura()" [comTabelas]="true" /></div>
             </div>
 
-            @for (mensagem of mensagens(); track mensagem.id) {
+            @for (mensagem of itens(); track mensagem.chave) {
               @if (mensagem.autor === 'USUARIO') {
                 <div class="checkin__linha checkin__linha--usuario"><div class="checkin__balao"><app-markdown-visualizador [texto]="mensagem.texto" [herdaCor]="true" /></div></div>
               } @else {
                 <div class="checkin__linha checkin__linha--ia">
                   <span class="checkin__avatar" aria-hidden="true">IA</span>
-                  <div class="checkin__ia-conteudo">
-                    <app-markdown-visualizador [texto]="mensagem.texto" />
+                  <div class="checkin__ia-conteudo" [attr.aria-busy]="mensagem.aoVivo ? true : null">
+                    @if (mensagem.texto) {
+                      <app-markdown-visualizador [texto]="mensagem.texto" [comTabelas]="true" />
+                    }
+                    @if (mensagem.aoVivo) {
+                      @if (mensagem.ferramenta) {
+                        <span class="checkin__ferramenta"><span class="checkin__pontos" aria-hidden="true"><i></i><i></i><i></i></span>consultando</span>
+                      } @else if (!mensagem.texto) {
+                        <span class="checkin__ferramenta" role="status" aria-label="A IA está pensando"><span class="checkin__pontos" aria-hidden="true"><i></i><i></i><i></i></span></span>
+                      }
+                    }
                     @for (propostaId of mensagem.propostaIds; track propostaId) {
                       <app-chat-proposta-cartao [propostaId]="propostaId" />
                     }
                   </div>
                 </div>
               }
-            }
-
-            @if (aoVivo(); as resposta) {
-              <div class="checkin__linha checkin__linha--ia">
-                <span class="checkin__avatar" aria-hidden="true">IA</span>
-                <div class="checkin__ia-conteudo" aria-busy="true">
-                  @if (resposta.texto) {
-                    <app-markdown-visualizador [texto]="resposta.texto" />
-                  }
-                  @if (resposta.ferramenta) {
-                    <span class="checkin__ferramenta"><span class="checkin__pontos" aria-hidden="true"><i></i><i></i><i></i></span>consultando</span>
-                  } @else if (!resposta.texto) {
-                    <span class="checkin__ferramenta" role="status" aria-label="A IA está pensando"><span class="checkin__pontos" aria-hidden="true"><i></i><i></i><i></i></span></span>
-                  }
-                  @for (propostaId of resposta.propostaIds; track propostaId) {
-                    <app-chat-proposta-cartao [propostaId]="propostaId" />
-                  }
-                </div>
-              </div>
             }
           </div>
         </div>

@@ -95,7 +95,13 @@
             <app-skeleton-lista variante="linhas" [quantidade]="8" />
           </div>
         } @else {
-          @if (!projetoTemDemandas() && modoVisualizacao() !== 'controle-de-horas') {
+          @if (erroAoCarregarGrafo()) {
+            <div class="demanda-projeto__vazio demanda-projeto__vazio--lista" role="alert">
+              <i class="pi pi-exclamation-triangle demanda-projeto__vazio-icone"></i>
+              <p class="demanda-projeto__vazio-texto">Não foi possível carregar as demandas.</p>
+              <p-button label="Tentar de novo" icon="pi pi-refresh" severity="secondary" [outlined]="true" (onClick)="carregarGrafo()" />
+            </div>
+          } @else if (!projetoTemDemandas() && modoVisualizacao() !== 'controle-de-horas') {
             <div class="demanda-projeto__vazio demanda-projeto__vazio--lista">
               <i class="pi pi-inbox demanda-projeto__vazio-icone"></i>
               <p class="demanda-projeto__vazio-texto">Este projeto ainda não tem demandas.</p>
@@ -148,7 +154,7 @@
             />
           </div>
 
-          @if (modoVisualizacao() === 'controle-de-horas') {
+          @if (modoVisualizacao() === 'controle-de-horas' && !erroAoCarregarGrafo()) {
             <app-demanda-controle-horas-painel
               [nos]="grafo()?.nos ?? []"
               [itens]="planejamento()"

@@ -40,6 +40,13 @@ const NIVEL_PADRAO_POR_TIPO: Readonly<Record<TipoPropostaIaEnum, PropostaIaNivel
   [TipoPropostaIaEnum.ALTERAR_TRECHO_PLANO]: PropostaIaNivelEnum.SEMPRE_PERGUNTA,
 };
 
+/**
+ * Os tipos que **sempre perguntam dentro do check-in**, qualquer que seja o nível configurado (P-040): confirmar a descrição encerra a
+ * execução e abre o trecho seguinte, e é isso que fecha a janela do check-in; a pessoa precisa fazer esse clique. No chat comum o tipo
+ * segue o nível configurado.
+ */
+export const TIPOS_QUE_PERGUNTAM_NO_CHECKIN: readonly TipoPropostaIaEnum[] = [TipoPropostaIaEnum.DESCREVER_EXECUCAO];
+
 /** Os tipos que mexem em horas, em ponto, em projeto ou no texto do plano: sempre perguntam, não aparecem na configuração. */
 export const TIPOS_COM_NIVEL_FIXO: readonly TipoPropostaIaEnum[] = (Object.values(TipoPropostaIaEnum) as TipoPropostaIaEnum[]).filter(
   (tipo) => NIVEL_PADRAO_POR_TIPO[tipo] === PropostaIaNivelEnum.SEMPRE_PERGUNTA,
@@ -119,6 +126,8 @@ export interface NivelDaPropostaEntrada {
   usuarioId: number;
   /** O mapa da configuração ativa; ausente ou incompleto, vale o padrão. */
   niveis?: PropostaIaNiveisDto | null;
+  /** A proposta nasceu de uma conversa de check-in (ver `TIPOS_QUE_PERGUNTAM_NO_CHECKIN`). */
+  noCheckin?: boolean;
 }
 
 /**
@@ -129,6 +138,7 @@ export interface NivelDaPropostaEntrada {
 export function nivelDaProposta(entrada: NivelDaPropostaEntrada): PropostaIaNivelEnum {
   const { tipo, dados, usuarioId } = entrada;
   if (TIPOS_COM_NIVEL_FIXO.includes(tipo)) return PropostaIaNivelEnum.SEMPRE_PERGUNTA;
+  if (entrada.noCheckin && TIPOS_QUE_PERGUNTAM_NO_CHECKIN.includes(tipo)) return PropostaIaNivelEnum.PERGUNTA;
   if (ehEmNomeDeOutraPessoa(dados, usuarioId)) return PropostaIaNivelEnum.SEMPRE_PERGUNTA;
   if (tipo === TipoPropostaIaEnum.ANOTAR_PAD && dados['secao'] === TipoAnotacaoEnum.PESSOAL) return PropostaIaNivelEnum.SEMPRE_PERGUNTA;
   const chave: ChaveDeNivelDaProposta =

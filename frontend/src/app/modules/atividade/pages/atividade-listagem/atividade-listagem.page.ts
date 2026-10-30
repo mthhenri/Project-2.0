@@ -70,6 +70,7 @@ import { ExecucaoAtivaService } from '../../../../core/services/execucao-ativa.s
 import { PrioridadeSeloComponent } from '../../../../shared/components/prioridade-selo/prioridade-selo.component';
 import { focoEmCampo, haSobreposicaoAberta } from '../../../../core/utils/atalhos';
 import { AtividadeEmExecucaoComponent } from '../../components/atividade-em-execucao/atividade-em-execucao.component';
+import { TagListaComponent } from '../../../../shared/components/tag-lista/tag-lista.component';
 import { AtividadeTagsPopoverComponent } from '../../components/atividade-tags-popover/atividade-tags-popover.component';
 import { AtividadeDocumentosIndicadorComponent } from '../../components/atividade-documentos-indicador/atividade-documentos-indicador.component';
 import { AtividadeBarraEmMassaComponent } from '../../components/atividade-barra-em-massa/atividade-barra-em-massa.component';
@@ -88,6 +89,7 @@ type CampoDescricaoDemanda = 'descricaoCliente' | 'descricaoTecnica' | 'document
   selector: 'app-atividade-listagem',
   standalone: true,
   imports: [
+    TagListaComponent,
     PrioridadeSeloComponent,
     SkeletonListaComponent,
     BarraRecargaComponent,
@@ -179,6 +181,8 @@ export class AtividadeListagemPage implements OnInit {
   readonly totalRegistros = signal<number>(0);
   readonly carregando = signal<boolean>(false);
   private readonly jaCarregou = signal<boolean>(false);
+  /** A última consulta falhou: a tela mostra o aviso com "Tentar de novo" em vez de dizer que não há atividades (P-058). */
+  readonly erroAoCarregar = signal<boolean>(false);
   readonly primeiraCarga = computed(() => this.carregando() && !this.jaCarregou());
   readonly recarregando = computed(() => this.carregando() && this.jaCarregou());
   readonly paginaAtual = signal<number>(1);
@@ -311,6 +315,7 @@ export class AtividadeListagemPage implements OnInit {
 
   buscarAtividades(): void {
     this.carregando.set(true);
+    this.erroAoCarregar.set(false);
 
     const aplicados = this.filtros();
     const filtros: AtividadeListarDto = {
@@ -340,6 +345,8 @@ export class AtividadeListagemPage implements OnInit {
             this.visualizarDialog().sincronizar(resposta.dados.itens);
           }
         },
+        // Mantém as linhas que já estavam na tela; o aviso diz que elas podem estar desatualizadas.
+        error: () => this.erroAoCarregar.set(true),
       });
   }
 

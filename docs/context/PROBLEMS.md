@@ -78,14 +78,6 @@
 - **Correção:** índice em `created_date` e filtro por intervalo de `timestamptz`, se a tabela provisória crescer.
 - **Desde:** 2026-10-20 (task 202).
 
-### P-034 — Testes de componente do editor e do chat entre colaboradores estouram o tempo na suíte inteira · `ABERTO` · frontend/testes
-
-- **Sintoma:** em `npm run test --workspace=frontend`, 6 testes falham levando de 6 a 12 s cada (`markdown-editor`, `mensagem-direta-compositor`, `-conversa`, `-editor-mensagem`, `-popup` e `chat-popup`); rodados sozinhos (`ng test --include` nesses arquivos), os 173 testes passam.
-- **Causa:** não investigada; a suspeita é o limite de tempo padrão do Vitest com o editor Milkdown montado sob a carga da suíte inteira.
-- **Contorno:** rodar esses arquivos à parte para confirmar que passam.
-- **Correção:** medir o tempo desses testes na suíte inteira e decidir entre limite de tempo maior para eles e montagem mais leve do editor.
-- **Desde:** 2026-10-25 (visto no fecho da task 223, que não toca esses componentes).
-
 ### P-036 — Dois testes de `mensagem-direta-notificacoes` falham, inclusive sozinhos · `ABERTO` · frontend/mensagem-direta
 
 - **Sintoma:** `escolher uma posição grava o conjunto com ela e descarta o arranjo arrastado` e `se o servidor recusa a posição, a tela volta à anterior e o menu avisa` falham (`querySelector`/`textContent` de `null`) em `mensagem-direta-notificacoes.component.spec.ts`, rodando só esse arquivo.
@@ -93,46 +85,7 @@
 - **Contorno:** nenhum; a tela funciona (verificada ao vivo na 221).
 - **Correção:** reproduzir o teste, ver se o popover abre e ajustar o teste ou o componente.
 - **Desde:** 2026-10-26 (visto no fecho da task 245).
-
-### P-035 — Check-in: a resposta da IA com proposta some e volta no fim do fluxo · `ABERTO` · frontend/checkin
-
-- **Sintoma:** igual ao que a task 225 corrigiu no chat: no evento `fim` a bolha da resposta é apagada e a mensagem gravada entra no lugar, então os cartões de proposta são destruídos e recriados (piscam em "Carregando proposta…") e a rolagem pode parar antes do cartão terminar de crescer.
-- **Causa:** `checkin.page` mantém `aoVivo` num bloco separado da lista de mensagens (`@if (aoVivo(); as resposta)`), sem a chave comum que a `chat.page` passou a usar.
-- **Contorno:** nenhum; o cartão volta a aparecer sozinho em instantes.
-- **Correção:** aplicar à `checkin.page` o mesmo item único (`itens` com `track` por `chave`) e a mesma regra de rolagem por interação do usuário, com teste de componente.
-- **Desde:** achado na task 225 (2026-10-25); não reproduzido ao vivo, só visto no código.
-
-### P-038 — A tela de detalhe do projeto ainda usa a visão antiga de demandas · `ABERTO` · frontend/projeto
-
-- **Sintoma:** o detalhe do projeto (`projeto-detalhe`) ainda desenha as demandas à moda antiga (toolbar própria e botões de visão "Lista", "Grafo" e "Controle de horas"), sem a Árvore em três colunas nem o "Projeto inteiro" da tela de Demandas.
-- **Causa:** as tasks 238–241 reorganizaram só a tela de Demandas; o detalhe do projeto não foi revisto.
-- **Contorno:** usar a tela de Demandas, que já tem a Árvore nova.
-- **Correção:** a decidir pelo autor (ajuste adiado): alinhar o detalhe do projeto à Árvore nova ou reaproveitar os componentes dela.
-- **Desde:** 2026-10-27 (apontado pelo autor).
-
-### P-039 — O exibidor de Markdown da resposta da IA não renderiza tabelas · `ABERTO` · frontend/markdown/chat IA
-
-- **Sintoma:** quando a IA responde com uma tabela Markdown (`| Opção | Como funciona | ... |` com a linha `|---|---|`), o chat mostra o texto cru, com as barras verticais e os hifens, tudo corrido em parágrafos, em vez de uma tabela.
-- **Causa:** não investigada; o subconjunto de Markdown do editor/visualizador não inclui tabela (`markdown-formatado.ts` trata `table` como fora do subconjunto), e o visualizador da resposta parece seguir o mesmo subconjunto.
-- **Contorno:** pedir à IA para responder em lista em vez de tabela.
-- **Correção:** a decidir pelo autor: fazer o visualizador (`markdown-visualizador`) renderizar tabela GFM só na leitura (sem criá-la no editor), ou orientar o prompt da IA a não usar tabela.
-- **Desde:** 2026-10-27 (apontado pelo autor, com captura de uma resposta com três opções de sincronização).
-
-### P-040 — Check-in da IA: execução ativa na topbar não recarrega e fechamento automático · `ABERTO` · frontend/checkin/chat IA
-
-- **Sintoma:** no check-in da IA (e em outros fluxos que mudam a execução), a execução ativa mostrada na topbar não recarrega sozinha; o check-in vem "fechando sozinho", por causa do auto-confirmar da IA na descrição da execução.
-- **Causa:** não investigada (o fechamento parece vir da confirmação automática da proposta de descrição da execução).
-- **Contorno:** recarregar a tela à mão para ver a execução ativa atualizada.
-- **Correção:** a decidir: recarregar a execução ativa da topbar ao fim das ações da IA/check-in e nos demais fluxos que a alteram; impedir que o auto-confirmar da descrição da execução encerre o check-in.
-- **Desde:** 2026-10-27 (apontado pelo autor).
-
-### P-041 — Chat: as anotações não recarregam quando a IA mexe nelas · `ABERTO` · frontend/chat IA/pad
-
-- **Sintoma:** na visão de chat, quando a IA altera as anotações (pad), a tela não recarrega e continua mostrando o conteúdo antigo.
-- **Causa:** não investigada.
-- **Contorno:** recarregar a tela ou reabrir o pad.
-- **Correção:** recarregar as anotações depois de a IA aplicar a alteração (cuidando do risco do P-024, sobrescrever o que o usuário digita).
-- **Desde:** 2026-10-27 (apontado pelo autor).
+- **Nota (2026-10-30):** não reproduzido; passa sozinho (16 testes) e na suíte inteira do frontend. Se não voltar a aparecer, pode virar flaky de ambiente e o item sair.
 
 ### P-043 — Chat IA: pergunta sem resposta (falha ou timeout) mas com custo registrado · `ABERTO` · chat IA/backend
 
@@ -158,36 +111,12 @@
 - **Correção:** remover a coluna por migration nova (sem editar a já aplicada), ajustando DTOs, repository e `docs/SCHEMA.md`. Rodar `gerenciamento-de-impacto` antes.
 - **Desde:** 2026-10-29 (apontado pelo autor).
 
-### P-050 — Tags exibidas apertadas, com aparência encavalada · `ABERTO` · frontend
-
-- **Sintoma:** a forma como as tags são exibidas está apertada e sobreposta.
-- **Causa:** não investigada no layout.
-- **Contorno:** nenhum.
-- **Correção:** redesenhar a exibição das tags com espaçamento e quebra adequados.
-- **Desde:** 2026-10-29 (apontado pelo autor).
-
-### P-051 — Conexões na aba de conexões da demanda são exibidas de forma ruim · `ABERTO` · demanda/frontend
-
-- **Sintoma:** a forma de exibir as conexões na aba de conexões da demanda não está boa.
-- **Causa:** não investigada no layout.
-- **Contorno:** nenhum.
-- **Correção:** redesenhar a lista de conexões da aba.
-- **Desde:** 2026-10-29 (apontado pelo autor).
-
 ### P-052 — Exibição da cor do projeto na tela de projetos · `ABERTO` · projeto/frontend
 
 - **Sintoma:** a cor do projeto aparece de um jeito que o autor quer alterar.
 - **Causa:** não investigada; o relato não diz qual forma de exibição é a desejada.
 - **Contorno:** nenhum.
 - **Correção:** definir com o autor a nova exibição e aplicar na tela de projetos.
-- **Desde:** 2026-10-29 (apontado pelo autor).
-
-### P-053 — Modelagem sem documentação de cada campo e tabela · `ABERTO` · docs/modelagem
-
-- **Sintoma:** a tela de modelagem não documenta cada campo nem cada tabela.
-- **Causa:** a documentação por campo e tabela ainda não foi feita.
-- **Contorno:** consultar `docs/SCHEMA.md`.
-- **Correção:** documentar cada campo e cada tabela na modelagem.
 - **Desde:** 2026-10-29 (apontado pelo autor).
 
 ### P-054 — Detalhes do dia no ponto com filtro de usuário em layout vertical · `ABERTO` · ponto/frontend
@@ -198,14 +127,6 @@
 - **Correção:** avaliar outro formato, como uma exibição em serpentina, e aplicar o escolhido.
 - **Desde:** 2026-10-29 (apontado pelo autor).
 
-### P-055 — Tela de Atividades fora do esquema compacto da Execução · `ABERTO` · atividade/frontend
-
-- **Sintoma:** a tela de Atividades ocupa mais espaço do que o necessário; a Execução já usa atividade compacta.
-- **Causa:** a tela de Atividades não reaproveita o formato compacto da Execução.
-- **Contorno:** nenhum.
-- **Correção:** aplicar à Atividades o mesmo esquema compacto da Execução, para otimizar o espaço.
-- **Desde:** 2026-10-29 (apontado pelo autor).
-
 ### P-057 — Tela de login e lembrança do usuário pedem ajustes · `ABERTO` · autenticacao/frontend
 
 - **Sintoma:** a tela de login precisa de ajustes, e a retenção e lembrança do usuário precisa ser revista.
@@ -214,13 +135,13 @@
 - **Correção:** levantar com o autor os ajustes de layout e o comportamento desejado de lembrar o usuário, e aplicar.
 - **Desde:** 2026-10-29 (apontado pelo autor).
 
-### P-058 — Falha ao carregar atividades ou demandas pode parecer lista vazia · `ABERTO` · frontend/atividade/demanda
+### P-059 — Teste de `modelagem.page.spec` instável na suíte inteira · `ABERTO` · frontend/testes
 
-- **Sintoma:** se a consulta de Atividades falha, surge aviso temporário e a tabela passa a dizer que não há atividades em aberto. Se a consulta do grafo de demandas falha, a Árvore pode dizer que o projeto não tem demandas, apesar de existirem.
-- **Causa:** na primeira carga, o erro termina o carregamento sem um estado persistente de falha; a apresentação reutiliza a lista vazia. A consulta do grafo também emite aviso temporário.
-- **Contorno:** recarregar a tela e observar o aviso de erro.
-- **Correção:** distinguir falha de lista realmente vazia e oferecer nova tentativa, preservando dados anteriores quando houver.
-- **Desde:** reproduzido em 2026-10-30 durante a verificação das tasks 262 e 263, com erro HTTP simulado; o comportamento da lista de Atividades já tinha teste próprio anterior às correções.
+- **Sintoma:** `escolher uma relação no painel passa para a outra tabela` falha às vezes em `npm run test --workspace=frontend` (por tempo esgotado com o limite antigo de 5 s; três vezes com o limite de 20 s, o que indica trava e não só lentidão; o teste espera `whenStable` depois de clicar na relação do painel, e o diagrama parece manter algo pendente sob carga) e passa sozinho (22 testes) e na rodada seguinte, sem mudança de código.
+- **Causa:** não investigada; parece carga da suíte inteira, como o antigo P-034. O `demanda-grafo.component.spec` (também SVG) travou do mesmo jeito em duas rodadas seguidas em 2026-10-30 e passou sozinho: o padrão é de teste que espera estabilizar um diagrama SVG. Ajudou a limpar processos `node --watch` do backend que sobraram da verificação ao vivo antes de rodar a suíte.
+- **Contorno:** rodar o arquivo sozinho ou repetir a suíte.
+- **Correção:** medir o teste sob carga e ver o que ele espera (renderização do diagrama?) antes de mexer no limite.
+- **Desde:** 2026-10-30 (visto nos fechos dos P-035/P-038/P-041/P-055 e dos P-050/P-051/P-058; 10 rodadas completas, 4 falhas dele).
 
 ### P-001 — Projeto sem lint · `CONTORNADO` · repositório
 

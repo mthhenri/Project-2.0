@@ -129,6 +129,13 @@
   }
   <div class="lista-recarga" [hidden]="primeiraCarga()" [class.conteudo-recarregando]="recarregando()">
     <app-barra-recarga [ativa]="recarregando()" />
+    @if (erroAoCarregar() && atividades().length > 0) {
+      <div class="flex items-center gap-3 px-3 py-2 text-sm text-red-600" role="alert">
+        <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+        <span>Não foi possível atualizar a lista; as atividades abaixo podem estar desatualizadas.</span>
+        <p-button label="Tentar de novo" icon="pi pi-refresh" size="small" [outlined]="true" (onClick)="buscarAtividades()" />
+      </div>
+    }
     <p-table
       [value]="atividades()"
       [lazy]="true"
@@ -150,8 +157,6 @@
           @if (sessao.eGestor()) {
             <th class="atividade-listagem__coluna-selecao"><p-tableHeaderCheckbox ariaLabel="Selecionar todas as atividades da página" /></th>
           }
-          <th>Projeto</th>
-          <th>Demanda</th>
           <th>Atividade</th>
           @if (sessao.eGestor()) {
             <th>Usuário</th>
@@ -169,19 +174,16 @@
           @if (sessao.eGestor()) {
             <td class="atividade-listagem__coluna-selecao"><p-tableCheckbox [value]="atividade" [ariaLabel]="'Selecionar ' + atividade.nome" /></td>
           }
-          <td>{{ atividade.nomeProjeto }}</td>
-          <td>
-            <div class="atividade-listagem__demanda">
-              <app-atividade-documentos-indicador [atividade]="atividade" (abrir)="abrirDescricaoDemanda(atividade, $event)" />
-              <span class="atividade-listagem__demanda-nome">{{ atividade.nomeDemanda }}</span>
-            </div>
-          </td>
           <td>
             <div class="atividade-listagem__atividade">
-              <span>{{ atividade.nome }}</span>
+              <span class="atividade-listagem__atividade-nome">{{ atividade.nome }}</span>
               @if (atividadeEmExecucao(atividade)) {
                 <app-atividade-em-execucao [inicio]="inicioDaExecucaoPropria(atividade)" />
               }
+              <div class="atividade-listagem__demanda">
+                <app-atividade-documentos-indicador [atividade]="atividade" (abrir)="abrirDescricaoDemanda(atividade, $event)" />
+                <span class="atividade-listagem__demanda-nome">{{ atividade.nomeProjeto }} › {{ atividade.nomeDemanda }}</span>
+              </div>
             </div>
           </td>
           @if (sessao.eGestor()) {
@@ -249,27 +251,17 @@
                 tooltipPosition="top"
                 (click)="abrirTagsDaLinha($event, atividade, celulaTags)"
               >
-                @for (tag of atividade.tags; track tag.id) {
-                  <span
-                    class="atividade-listagem__chip"
-                    [style.background-color]="tag.cor + '22'"
-                    [style.color]="tag.cor"
-                    [style.border-color]="tag.cor + '55'"
-                  >{{ tag.nome }}</span>
-                } @empty {
+                @if (atividade.tags.length > 0) {
+                  <app-tag-lista [tags]="atividade.tags" [compacto]="true" />
+                } @else {
                   <span class="atividade-listagem__tags-vazio"><i class="pi pi-plus" aria-hidden="true"></i> Tag</span>
                 }
               </button>
             } @else {
               <div class="atividade-listagem__tags">
-                @for (tag of atividade.tags; track tag.id) {
-                  <span
-                    class="atividade-listagem__chip"
-                    [style.background-color]="tag.cor + '22'"
-                    [style.color]="tag.cor"
-                    [style.border-color]="tag.cor + '55'"
-                  >{{ tag.nome }}</span>
-                } @empty {
+                @if (atividade.tags.length > 0) {
+                  <app-tag-lista [tags]="atividade.tags" [compacto]="true" />
+                } @else {
                   <span class="text-muted-color">—</span>
                 }
               </div>
@@ -326,18 +318,26 @@
         <tr>
           <td [attr.colspan]="sessao.eGestor() ? 10 : 8">
             <div class="atividade-listagem__vazio">
-              <i class="pi pi-list text-4xl text-muted-color"></i>
-              @if (filtrosAtivos() > 0) {
-                <p class="text-muted-color mt-3">Nenhuma atividade com esses filtros</p>
+              @if (erroAoCarregar()) {
+                <i class="pi pi-exclamation-triangle text-4xl text-muted-color" aria-hidden="true"></i>
+                <p class="text-muted-color mt-3" role="alert">Não foi possível carregar as atividades.</p>
                 <div class="atividade-listagem__vazio-acoes">
-                  <p-button label="Limpar filtros" icon="pi pi-filter-slash" [outlined]="true" (onClick)="limparFiltros()" />
-                  <p-button label="Nova Atividade" icon="pi pi-plus" (onClick)="novaDialog.abrir(demandaId())" />
+                  <p-button label="Tentar de novo" icon="pi pi-refresh" [outlined]="true" (onClick)="buscarAtividades()" />
                 </div>
               } @else {
-                <p class="text-muted-color mt-3">Ainda não há atividades em aberto</p>
-                <div class="atividade-listagem__vazio-acoes">
-                  <p-button label="Nova Atividade" icon="pi pi-plus" (onClick)="novaDialog.abrir(demandaId())" />
-                </div>
+                <i class="pi pi-list text-4xl text-muted-color"></i>
+                @if (filtrosAtivos() > 0) {
+                  <p class="text-muted-color mt-3">Nenhuma atividade com esses filtros</p>
+                  <div class="atividade-listagem__vazio-acoes">
+                    <p-button label="Limpar filtros" icon="pi pi-filter-slash" [outlined]="true" (onClick)="limparFiltros()" />
+                    <p-button label="Nova Atividade" icon="pi pi-plus" (onClick)="novaDialog.abrir(demandaId())" />
+                  </div>
+                } @else {
+                  <p class="text-muted-color mt-3">Ainda não há atividades em aberto</p>
+                  <div class="atividade-listagem__vazio-acoes">
+                    <p-button label="Nova Atividade" icon="pi pi-plus" (onClick)="novaDialog.abrir(demandaId())" />
+                  </div>
+                }
               }
             </div>
           </td>

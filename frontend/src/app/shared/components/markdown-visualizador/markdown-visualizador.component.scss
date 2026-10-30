@@ -117,6 +117,46 @@
     border-top: 1px solid var(--app-surface-200);
   }
 
+  // Tabela da resposta da IA: a rolagem é do contêiner, para a tabela larga não estourar o balão.
+  &__tabela-rolagem {
+    max-width: 100%;
+    margin: 0.75em 0;
+    overflow-x: auto;
+    border: 1px solid var(--app-surface-200);
+    border-radius: 0.5rem;
+  }
+
+  &__tabela {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95em;
+
+    th,
+    td {
+      padding: 0.4rem 0.75rem;
+      border-top: 1px solid var(--app-surface-200);
+      text-align: left;
+      vertical-align: top;
+      overflow-wrap: normal;
+      word-break: normal;
+      min-width: 6rem;
+    }
+
+    thead th {
+      border-top: 0;
+      background: var(--app-surface-100);
+      font-weight: 600;
+    }
+
+    [data-alinha='centro'] {
+      text-align: center;
+    }
+
+    [data-alinha='direita'] {
+      text-align: right;
+    }
+  }
+
   &__link {
     color: var(--p-primary-color);
     text-decoration: underline;

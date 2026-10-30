@@ -12,6 +12,7 @@ import {
 } from '@project20/shared';
 import { ambiente } from '../../../../environments/environment';
 import { comFeedbackProprio } from '../../../core/interceptors/loading.interceptor';
+import { ExecucaoAtivaService } from '../../../core/services/execucao-ativa.service';
 import { extrairEventos } from '../utils/chat.util';
 
 /** A resposta de erro do envio (HTTP) ou da conexão: a tela mostra `mensagem` e decide o que fazer pelo `status`. */
@@ -28,6 +29,7 @@ export class ErroDoChat extends Error {
 @Injectable({ providedIn: 'root' })
 export class ChatService {
   private readonly httpClient = inject(HttpClient);
+  private readonly execucaoAtiva = inject(ExecucaoAtivaService);
   private readonly urlBase = `${ambiente.apiUrl}/chat`;
 
   recuperarHoje(): Observable<StandardResponse<ChatHojeRecuperadoDto>> {
@@ -120,13 +122,23 @@ export class ChatService {
     const leitor = resposta.body.getReader();
     const decodificador = new TextDecoder();
     let acumulado = '';
-    while (true) {
-      const { done, value } = await leitor.read();
-      if (done) break;
-      acumulado += decodificador.decode(value, { stream: true });
-      const { eventos, resto } = extrairEventos(acumulado);
-      acumulado = resto;
-      eventos.forEach(aoEvento);
+    // Uma proposta "Faz e avisa" é executada dentro do fluxo, sem passar pelo `HttpClient` (o interceptor da execução ativa não a vê): ao
+    // fim do fluxo, se alguma ferramenta de proposta rodou, a execução ativa da topbar se ressincroniza (P-040).
+    let propostaExecutada = false;
+    try {
+      while (true) {
+        const { done, value } = await leitor.read();
+        if (done) break;
+        acumulado += decodificador.decode(value, { stream: true });
+        const { eventos, resto } = extrairEventos(acumulado);
+        acumulado = resto;
+        for (const evento of eventos) {
+          if (evento.tipo === 'ferramenta' && evento.situacao === 'CONCLUIDA' && evento.nome.startsWith('propor_')) propostaExecutada = true;
+          aoEvento(evento);
+        }
+      }
+    } finally {
+      if (propostaExecutada) this.execucaoAtiva.carregar();
     }
   }
 }

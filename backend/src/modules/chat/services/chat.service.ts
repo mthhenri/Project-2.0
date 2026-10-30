@@ -24,7 +24,7 @@ import { ConflictException } from '../../../core/exceptions/conflict.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { ConfiguracaoIaService } from '../../configuracao-ia/services/configuracao-ia.service';
-import { EscopoDaFerramentaIa } from '../../ferramenta-ia/domain/ferramenta-ia';
+import { EscopoDaFerramentaIa, OrigemDaFerramentaIa } from '../../ferramenta-ia/domain/ferramenta-ia';
 import { FerramentaIaRegistro } from '../../ferramenta-ia/services/ferramenta-ia.registro';
 import { IaException } from '../../ia/domain/ia.exception';
 import { IaBloco, IaMensagem } from '../../ia/domain/ia.tipos';
@@ -381,7 +381,7 @@ export class ChatService {
       trocasDoTurno.push(mensagemDaIa);
       if (resposta.motivoParada !== 'uso_ferramenta') break;
 
-      const resultados = await this.executarFerramentas(resposta.blocos, usuarioAtivo, propostasDoTurno, emitir);
+      const resultados = await this.executarFerramentas(resposta.blocos, usuarioAtivo, propostasDoTurno, emitir, { contexto });
       const mensagemDeResultados: IaMensagem = { papel: 'usuario', conteudo: resultados };
       mensagens.push(mensagemDeResultados);
       trocasDoTurno.push(mensagemDeResultados);
@@ -513,12 +513,13 @@ export class ChatService {
     usuarioAtivo: JwtPayload,
     propostasDoTurno: number[],
     emitir: (evento: ChatEventoDto) => void,
+    origem: OrigemDaFerramentaIa,
   ): Promise<IaBloco[]> {
     const resultados: IaBloco[] = [];
     for (const bloco of blocos) {
       if (bloco.tipo !== 'uso_ferramenta') continue;
       emitir({ tipo: 'ferramenta', nome: bloco.nome, situacao: 'EXECUTANDO' });
-      const resultado = await this.ferramentaIaRegistro.executar(bloco.nome, bloco.entrada, usuarioAtivo);
+      const resultado = await this.ferramentaIaRegistro.executar(bloco.nome, bloco.entrada, usuarioAtivo, origem);
       emitir({ tipo: 'ferramenta', nome: bloco.nome, situacao: resultado.erro ? 'ERRO' : 'CONCLUIDA' });
       if (resultado.propostaId !== undefined) {
         propostasDoTurno.push(resultado.propostaId);

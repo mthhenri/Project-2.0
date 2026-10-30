@@ -17,6 +17,7 @@ import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.s
 import { DataBrasileiraPipe } from '../../../../shared/pipes/data-brasileira.pipe';
 import { TempoExibicaoPipe } from '../../../../shared/pipes/tempo-exibicao.pipe';
 import { VisualizacaoTempoService } from '../../../../core/services/visualizacao-tempo.service';
+import { DemandaArvoreTelaComponent } from '../../../demanda/components/demanda-arvore-tela/demanda-arvore-tela.component';
 import { DemandaArvorePainelComponent } from '../../../demanda/components/demanda-arvore-painel/demanda-arvore-painel.component';
 import { DemandaFormularioDialogComponent } from '../../../demanda/components/demanda-formulario-dialog/demanda-formulario-dialog.component';
 import { DemandaToolbarComponent } from '../../../demanda/components/demanda-toolbar/demanda-toolbar.component';
@@ -24,13 +25,12 @@ import { ProjetoFormularioDialogComponent } from '../../components/projeto-formu
 import { ProjetoStatusChipComponent } from '../../components/projeto-status-chip/projeto-status-chip.component';
 import { RelatorioExecucaoDialogComponent } from '../../../relatorio/components/relatorio-execucao-dialog/relatorio-execucao-dialog.component';
 import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
-import { construirArvoreDemandas } from '../../../demanda/utils/demanda-arvore.util';
+import { PastaId, pastaInicial } from '../../../demanda/utils/demanda-pasta.util';
 import {
   DemandaFiltro,
   FILTRO_VAZIO,
   contarPorStatus,
   filtroAtivo,
-  recortarArvore,
 } from '../../../demanda/utils/demanda-filtro.util';
 import { focoEmCampo, haSobreposicaoAberta } from '../../../../core/utils/atalhos';
 
@@ -44,6 +44,7 @@ import { focoEmCampo, haSobreposicaoAberta } from '../../../../core/utils/atalho
     DataBrasileiraPipe,
     TempoExibicaoPipe,
     DemandaArvorePainelComponent,
+    DemandaArvoreTelaComponent,
     DemandaFormularioDialogComponent,
     DemandaToolbarComponent,
     ProjetoFormularioDialogComponent,
@@ -62,7 +63,7 @@ export class ProjetoDetalhePage implements OnInit {
   readonly unidadeTempo = inject(VisualizacaoTempoService);
 
   private readonly toolbar = viewChild<DemandaToolbarComponent>('toolbar');
-  private readonly painel = viewChild<DemandaArvorePainelComponent>('painel');
+  private readonly arvoreTela = viewChild<DemandaArvoreTelaComponent>('arvoreTela');
   private readonly editarDialog = viewChild.required(ProjetoFormularioDialogComponent);
 
   readonly projeto = signal<ProjetoRecuperadoDto | null>(null);
@@ -70,13 +71,14 @@ export class ProjetoDetalhePage implements OnInit {
   readonly nos = signal<DemandaGrafoNoDto[]>([]);
   readonly carregando = signal<boolean>(false);
   readonly carregandoDemandas = signal<boolean>(false);
+  /** A carga das demandas falhou: o detalhe oferece "Tentar de novo" em vez de dizer que o projeto não tem demandas (P-058). */
+  readonly erroAoCarregarDemandas = signal<boolean>(false);
   readonly mostrarDialogNovaDemanda = signal<boolean>(false);
   readonly filtro = signal<DemandaFiltro>(FILTRO_VAZIO);
   readonly filtroVazio = FILTRO_VAZIO;
 
-  private readonly recorte = computed(() => recortarArvore(this.nos(), this.filtro()));
-  readonly expandirPorFiltro = computed(() => this.recorte().expandir);
-  readonly arvoreRaizes = computed(() => (this.recorte().nos.length ? construirArvoreDemandas(this.recorte().nos) : []));
+  /** A pasta escolhida da Árvore (`null` é "Sem pasta"); o detalhe não a guarda na URL. */
+  readonly pastaId = signal<PastaId>(null);
   readonly filtroEstaAtivo = computed(() => filtroAtivo(this.filtro()));
   readonly contagemPorStatus = computed(() => contarPorStatus(this.nos(), this.filtro()));
 
@@ -114,12 +116,12 @@ export class ProjetoDetalhePage implements OnInit {
       this.toolbar()?.focarBusca();
     } else if (evento.key.toLowerCase() === 'e') {
       evento.preventDefault();
-      this.painel()?.alternarExpansaoGeral();
+      this.arvoreTela()?.alternarExpansaoGeral();
     }
   }
 
   get todosExpandidos(): boolean {
-    return this.painel()?.todosExpandidos() ?? false;
+    return this.arvoreTela()?.todosExpandidos() ?? false;
   }
 
   aoAlterarFiltro(filtro: DemandaFiltro): void {
@@ -127,7 +129,7 @@ export class ProjetoDetalhePage implements OnInit {
   }
 
   alternarExpansaoGeral(): void {
-    this.painel()?.alternarExpansaoGeral();
+    this.arvoreTela()?.alternarExpansaoGeral();
   }
 
   // ---------------------------------------------------------------------------
@@ -155,8 +157,8 @@ export class ProjetoDetalhePage implements OnInit {
     });
   }
 
-  /** Abre a visão escolhida (Árvore, Grafo ou Controle de horas) já com o projeto selecionado. */
-  abrirVisao(modo: 'lista' | 'grafo' | 'controle-de-horas'): void {
+  /** Abre a visão escolhida (Grafo ou Controle de horas; a Árvore já está nesta tela) já com o projeto selecionado. */
+  abrirVisao(modo: 'grafo' | 'controle-de-horas'): void {
     const projetoDados = this.projeto();
     if (projetoDados) this.router.navigate(['/demanda'], { queryParams: { projetoId: projetoDados.id, modo } });
   }
@@ -173,6 +175,7 @@ export class ProjetoDetalhePage implements OnInit {
   recarregarDemandas(): void {
     const projetoDados = this.projeto();
     if (projetoDados) this.recarregarArvore(projetoDados.id);
+    this.arvoreTela()?.recarregar();
   }
 
   /** Tags já gravadas pelo painel: troca no nó, sem recarregar (task 98). */
@@ -197,15 +200,20 @@ export class ProjetoDetalhePage implements OnInit {
       });
   }
 
-  private carregarArvore(projetoId: number): void {
+  carregarArvore(projetoId: number): void {
     this.carregandoDemandas.set(true);
+    this.erroAoCarregarDemandas.set(false);
     this.demandaService
       .recuperarGrafo(projetoId)
       .pipe(finalize(() => this.carregandoDemandas.set(false)))
       .subscribe({
         next: (resposta) => {
-          if (resposta.sucesso && resposta.dados) this.nos.set(resposta.dados.nos);
+          if (resposta.sucesso && resposta.dados) {
+            this.nos.set(resposta.dados.nos);
+            this.pastaId.set(pastaInicial(resposta.dados.nos, undefined));
+          }
         },
+        error: () => this.erroAoCarregarDemandas.set(true),
       });
   }
 

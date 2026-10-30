@@ -1,7 +1,7 @@
-import { StatusPropostaIaEnum, TipoPropostaIaEnum } from '@project20/shared';
+import { ContextoChatEnum, StatusPropostaIaEnum, TipoPropostaIaEnum } from '@project20/shared';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { PropostaIaService } from '../../proposta-ia/services/proposta-ia.service';
-import { FerramentaIa } from '../domain/ferramenta-ia';
+import { FerramentaIa, OrigemDaFerramentaIa } from '../domain/ferramenta-ia';
 
 /**
  * Base das ferramentas que **propõem** uma ação. Ela só conhece a `PropostaIaService`: cria uma proposta e devolve ao modelo o que
@@ -22,10 +22,11 @@ export abstract class FerramentaPropostaIa<TEntrada extends object = object> ext
     return { ...entrada } as Record<string, unknown>;
   }
 
-  async executar(entrada: TEntrada, usuarioAtivo: JwtPayload): Promise<unknown> {
+  async executar(entrada: TEntrada, usuarioAtivo: JwtPayload, origem?: OrigemDaFerramentaIa): Promise<unknown> {
     const proposta = await this.propostaIaService.criarComAutonomia(
       { usuarioId: usuarioAtivo.sub, tipo: this.tipoProposta, dados: await this.montarDados(entrada, usuarioAtivo) },
       usuarioAtivo,
+      { noCheckin: origem?.contexto === ContextoChatEnum.CHECKIN },
     );
     const feita = proposta.status === StatusPropostaIaEnum.CONFIRMADA;
     return {

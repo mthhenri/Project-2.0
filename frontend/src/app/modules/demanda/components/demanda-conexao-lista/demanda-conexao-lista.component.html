@@ -56,39 +56,46 @@
     </div>
   }
 
-  <div class="demanda-conexao-lista__lista">
-    @for (conexao of conexoes(); track conexao.id) {
-      <div class="demanda-conexao-lista__item">
+  @for (grupo of grupos(); track grupo.direcao) {
+    <section class="demanda-conexao-lista__grupo" [attr.aria-label]="grupo.titulo">
+      <h4 class="demanda-conexao-lista__grupo-titulo">
         <span
           class="demanda-conexao-lista__direcao"
-          [class.demanda-conexao-lista__direcao--saida]="conexao.direcao === 'saida'"
-          [class.demanda-conexao-lista__direcao--entrada]="conexao.direcao === 'entrada'"
-          [class.demanda-conexao-lista__direcao--bidirecional]="conexao.direcao === 'bidirecional'"
-          [pTooltip]="tooltipDirecao(conexao)"
-          tooltipPosition="top"
-        >
-          @switch (conexao.direcao) {
-            @case ('saida') { <i class="pi pi-arrow-right"></i> }
-            @case ('entrada') { <i class="pi pi-arrow-left"></i> }
-            @default { <i class="pi pi-arrows-h"></i> }
-          }
-        </span>
-        <button type="button" class="demanda-conexao-lista__nome" (click)="demandaAbrir.emit(conexao.demandaConectadaId)">
-          {{ conexao.nomeDemandaConectada }}
-        </button>
-        @if (sessao.eGestor()) {
-          <p-button
-            icon="pi pi-trash"
-            severity="danger"
-            [text]="true"
-            size="small"
-            ariaLabel="Remover conexão"
-            pTooltip="Remover conexão"
-            tooltipPosition="top"
-            (onClick)="excluir(conexao)"
-          />
+          [class.demanda-conexao-lista__direcao--saida]="grupo.direcao === 'saida'"
+          [class.demanda-conexao-lista__direcao--entrada]="grupo.direcao === 'entrada'"
+          [class.demanda-conexao-lista__direcao--bidirecional]="grupo.direcao === 'bidirecional'"
+          aria-hidden="true"
+        ><i [class]="'pi ' + grupo.icone"></i></span>
+        {{ grupo.titulo }}
+        <span class="demanda-conexao-lista__grupo-contador">{{ grupo.itens.length }}</span>
+      </h4>
+      <ul class="demanda-conexao-lista__lista">
+        @for (conexao of grupo.itens; track conexao.id) {
+          <li class="demanda-conexao-lista__item">
+            <button
+              type="button"
+              class="demanda-conexao-lista__nome"
+              [pTooltip]="tooltipDirecao(conexao)"
+              tooltipPosition="top"
+              (click)="demandaAbrir.emit(conexao.demandaConectadaId)"
+            >
+              {{ conexao.nomeDemandaConectada }}
+            </button>
+            @if (sessao.eGestor()) {
+              <p-button
+                icon="pi pi-trash"
+                severity="danger"
+                [text]="true"
+                size="small"
+                ariaLabel="Remover conexão"
+                pTooltip="Remover conexão"
+                tooltipPosition="top"
+                (onClick)="excluir(conexao)"
+              />
+            }
+          </li>
         }
-      </div>
-    }
-  </div>
+      </ul>
+    </section>
+  }
 </div>

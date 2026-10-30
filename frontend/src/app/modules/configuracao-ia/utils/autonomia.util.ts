@@ -32,7 +32,7 @@ export const EXPLICACAO_DOS_NIVEIS: Record<PropostaIaNivelEnum, string> = {
 const DESCRICAO_DA_REGRA: Record<ChaveDeNivelDaProposta, Pick<RegraDeAutonomia, 'rotulo' | 'descricao'>> = {
   [TipoPropostaIaEnum.ANOTAR_PAD]: { rotulo: 'Anotar no pad', descricao: 'Nas seções do próprio pad, menos a Pessoal.' },
   [TipoPropostaIaEnum.ATRIBUIR_TAG]: { rotulo: 'Colocar e tirar tags', descricao: 'Em demandas e atividades.' },
-  [TipoPropostaIaEnum.DESCREVER_EXECUCAO]: { rotulo: 'Descrever a execução', descricao: 'Continuando na mesma atividade ou trocando para outra.' },
+  [TipoPropostaIaEnum.DESCREVER_EXECUCAO]: { rotulo: 'Descrever a execução', descricao: 'Continuando na mesma atividade ou trocando para outra. No check-in, sempre pergunta.' },
   [TipoPropostaIaEnum.CONECTAR_DEMANDA]: { rotulo: 'Conectar e desconectar demandas', descricao: 'No grafo do projeto. Só gestor.' },
   [TipoPropostaIaEnum.CRIAR_ATIVIDADE]: { rotulo: 'Criar atividade', descricao: 'No próprio trabalho.' },
   [TipoPropostaIaEnum.INICIAR_EXECUCAO]: { rotulo: 'Iniciar execução', descricao: 'A própria execução.' },

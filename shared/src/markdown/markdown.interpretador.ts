@@ -1,8 +1,10 @@
 import type {
   MarkdownBlocoNo,
   MarkdownInlineNo,
+  MarkdownAlinhamento,
   MarkdownItemLista,
   MarkdownListaNo,
+  MarkdownTabelaNo,
 } from './markdown.tipos';
 
 /**
@@ -12,7 +14,8 @@ import type {
  *
  * Decisões que importam para quem lê o resultado:
  * - **HTML embutido não existe**: `<tag>` é texto literal; entidades (`&lt;`) também não são decodificadas.
- * - **Sem imagens, sem tabelas** (viram texto).
+ * - **Sem imagens**; **tabelas só sob pedido** (`opcoes.tabelas`, para a resposta da IA; sem a opção viram texto, e os editores
+ *   do sistema não as criam).
  * - **Quebra de linha dentro do parágrafo é quebra** (como em comentário de GitHub), não espaço.
  * - **Nunca lança**: construção não terminada (`**sem fechar`, link incompleto) vira texto.
  * - **Tempo linear**: nenhuma regex com retrocesso e nenhuma busca de fechamento que reinicie a cada
@@ -24,10 +27,15 @@ const MAX_ANINHAMENTO_CITACAO = 6;
 const MAX_ANINHAMENTO_ENFASE = 20;
 const ESQUEMAS_PERMITIDOS = /^(https?:\/\/|mailto:)/i;
 
-export function interpretarMarkdown(texto: string): MarkdownBlocoNo[] {
+export interface OpcoesDoMarkdown {
+  /** Reconhece tabelas no estilo GFM (`| a | b |` + `|---|---|`). Desligado por padrão. */
+  tabelas?: boolean;
+}
+
+export function interpretarMarkdown(texto: string, opcoes: OpcoesDoMarkdown = {}): MarkdownBlocoNo[] {
   if (typeof texto !== 'string' || texto.length === 0) return [];
   const linhas = texto.split(/\r\n|\r|\n/);
-  return interpretarBlocos(linhas, 0);
+  return interpretarBlocos(linhas, 0, opcoes);
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -162,14 +170,16 @@ function marcadorDeLista(linha: string): Marcador | null {
 }
 
 /** Linha que encerra um parágrafo: outro bloco começa. Só `1.` e marcadores de bullet interrompem. */
-function interrompeParagrafo(linha: string, profundidade: number): boolean {
+function interrompeParagrafo(linhas: string[], indice: number, profundidade: number, opcoes: OpcoesDoMarkdown): boolean {
+  const linha = linhas[indice];
+  if (opcoes.tabelas && inicioDeTabela(linhas, indice)) return true;
   if (cercaDeAbertura(linha) || tituloDaLinha(linha) || ehRegua(linha)) return true;
   if (profundidade < MAX_ANINHAMENTO_CITACAO && ehCitacao(linha)) return true;
   const marcador = marcadorDeLista(linha);
   return marcador !== null && (!marcador.ordenada || marcador.numero === 1) && marcador.resto.length > 0;
 }
 
-function interpretarBlocos(linhas: string[], profundidade: number): MarkdownBlocoNo[] {
+function interpretarBlocos(linhas: string[], profundidade: number, opcoes: OpcoesDoMarkdown): MarkdownBlocoNo[] {
   const blocos: MarkdownBlocoNo[] = [];
   let i = 0;
 
@@ -213,7 +223,14 @@ function interpretarBlocos(linhas: string[], profundidade: number): MarkdownBloc
         interno.push(removerMarcaDeCitacao(linhas[i]));
         i++;
       }
-      blocos.push({ tipo: 'citacao', filhos: interpretarBlocos(interno, profundidade + 1) });
+      blocos.push({ tipo: 'citacao', filhos: interpretarBlocos(interno, profundidade + 1, opcoes) });
+      continue;
+    }
+
+    if (opcoes.tabelas && inicioDeTabela(linhas, i)) {
+      const resultado = interpretarTabela(linhas, i);
+      blocos.push(resultado.tabela);
+      i = resultado.proximaLinha;
       continue;
     }
 
@@ -227,7 +244,7 @@ function interpretarBlocos(linhas: string[], profundidade: number): MarkdownBloc
     // Parágrafo: linhas seguidas até uma em branco ou o início de outro bloco.
     const paragrafo: string[] = [linha.trim()];
     i++;
-    while (i < linhas.length && !linhaEmBranco(linhas[i]) && !interrompeParagrafo(linhas[i], profundidade)) {
+    while (i < linhas.length && !linhaEmBranco(linhas[i]) && !interrompeParagrafo(linhas, i, profundidade, opcoes)) {
       paragrafo.push(linhas[i].trim());
       i++;
     }
@@ -235,6 +252,97 @@ function interpretarBlocos(linhas: string[], profundidade: number): MarkdownBloc
   }
 
   return blocos;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Tabelas (GFM, só com `opcoes.tabelas`)
+// ---------------------------------------------------------------------------------------------
+
+const MAX_COLUNAS_DA_TABELA = 20;
+const MAX_LINHAS_DA_TABELA = 500;
+
+/** As células de uma linha de tabela (`| a | b |`), ou `null` se a linha não tem barra. `\|` fica como barra dentro da célula. */
+function celulasDaLinha(linha: string): string[] | null {
+  const texto = linha.trim();
+  if (!texto.includes('|')) return null;
+  const celulas: string[] = [];
+  let atual = '';
+  for (let i = 0; i < texto.length; i++) {
+    const c = texto[i];
+    if (c === '\\' && texto[i + 1] === '|') {
+      atual += '|';
+      i++;
+    } else if (c === '|') {
+      celulas.push(atual);
+      atual = '';
+    } else {
+      atual += c;
+    }
+  }
+  celulas.push(atual);
+  // A barra inicial e a final são enfeite: não criam célula vazia nas pontas.
+  if (texto[0] === '|') celulas.shift();
+  if (celulas.length > 0 && texto[texto.length - 1] === '|' && texto[texto.length - 2] !== '\\') celulas.pop();
+  return celulas.map((celula) => celula.trim());
+}
+
+/** `---`, `:--`, `--:` ou `:-:`: a célula da linha que separa o cabeçalho do corpo. */
+function alinhamentoDaCelula(celula: string): MarkdownAlinhamento | undefined {
+  let inicio = 0;
+  let fim = celula.length;
+  const esquerda = celula[0] === ':';
+  const direita = celula.length > 1 && celula[celula.length - 1] === ':';
+  if (esquerda) inicio++;
+  if (direita) fim--;
+  if (fim - inicio < 1) return undefined;
+  for (let i = inicio; i < fim; i++) if (celula[i] !== '-') return undefined;
+  if (esquerda && direita) return 'centro';
+  if (direita) return 'direita';
+  if (esquerda) return 'esquerda';
+  return null;
+}
+
+function alinhamentosDaLinha(linha: string): MarkdownAlinhamento[] | null {
+  const celulas = celulasDaLinha(linha);
+  if (!celulas || celulas.length === 0) return null;
+  const alinhamentos: MarkdownAlinhamento[] = [];
+  for (const celula of celulas) {
+    const alinhamento = alinhamentoDaCelula(celula);
+    if (alinhamento === undefined) return null;
+    alinhamentos.push(alinhamento);
+  }
+  return alinhamentos;
+}
+
+/** A linha `indice` abre uma tabela: cabeçalho com barra e, logo abaixo, a linha de separação com o mesmo número de colunas. */
+function inicioDeTabela(linhas: string[], indice: number): boolean {
+  if (indice + 1 >= linhas.length || larguraDoRecuo(linhas[indice]).recuo > 3) return false;
+  const cabecalho = celulasDaLinha(linhas[indice]);
+  if (!cabecalho || cabecalho.length === 0 || cabecalho.length > MAX_COLUNAS_DA_TABELA) return false;
+  const separacao = alinhamentosDaLinha(linhas[indice + 1]);
+  return separacao !== null && separacao.length === cabecalho.length;
+}
+
+function interpretarTabela(linhas: string[], inicio: number): { tabela: MarkdownTabelaNo; proximaLinha: number } {
+  const cabecalho = celulasDaLinha(linhas[inicio])!;
+  const alinhamentos = alinhamentosDaLinha(linhas[inicio + 1])!;
+  const colunas = cabecalho.length;
+  const corpo: MarkdownInlineNo[][][] = [];
+  let i = inicio + 2;
+  while (i < linhas.length && corpo.length < MAX_LINHAS_DA_TABELA) {
+    const linha = linhas[i];
+    if (linhaEmBranco(linha) || cercaDeAbertura(linha) || tituloDaLinha(linha) || ehCitacao(linha)) break;
+    const celulas = celulasDaLinha(linha);
+    if (!celulas) break;
+    // Linha curta ganha células vazias; a que passa do cabeçalho perde o excesso (como no GFM).
+    const ajustadas = Array.from({ length: colunas }, (_, coluna) => celulas[coluna] ?? '');
+    corpo.push(ajustadas.map((celula) => interpretarInline(celula)));
+    i++;
+  }
+  return {
+    tabela: { tipo: 'tabela', alinhamentos, cabecalho: cabecalho.map((celula) => interpretarInline(celula)), linhas: corpo },
+    proximaLinha: i,
+  };
 }
 
 // ---------------------------------------------------------------------------------------------

@@ -15,6 +15,12 @@ interface DestinoConexao {
   nomeDemandaConectada: string;
 }
 
+const GRUPOS_DE_DIRECAO: { direcao: DemandaConexaoResumoDto['direcao']; titulo: string; icone: string }[] = [
+  { direcao: 'saida', titulo: 'Esta demanda depende de', icone: 'pi-arrow-right' },
+  { direcao: 'entrada', titulo: 'Dependem desta demanda', icone: 'pi-arrow-left' },
+  { direcao: 'bidirecional', titulo: 'Dependência mútua', icone: 'pi-arrows-h' },
+];
+
 /**
  * Conexões da demanda (task 108): criação inline (autocomplete com busca + direção + "Adicionar"), erro de
  * ciclo mostrado na própria linha, tooltip semântico da direção, link que navega dentro do detalhe e lixeira
@@ -56,6 +62,11 @@ export class DemandaConexaoListaComponent {
     const conectadas = new Set(this.conexoes().map((conexao) => conexao.demandaConectadaId));
     return this.todasDemandas().filter((demanda) => !conectadas.has(demanda.demandaConectadaId));
   });
+
+  /** As conexões agrupadas pelo que significam (o rótulo diz o sentido, sem depender de ícone nem de tooltip). Grupo vazio não aparece. */
+  readonly grupos = computed(() =>
+    GRUPOS_DE_DIRECAO.map((grupo) => ({ ...grupo, itens: this.conexoes().filter((conexao) => conexao.direcao === grupo.direcao) })).filter((grupo) => grupo.itens.length > 0),
+  );
 
   tooltipDirecao(conexao: DemandaConexaoResumoDto): string {
     const outra = `"${conexao.nomeDemandaConectada}"`;

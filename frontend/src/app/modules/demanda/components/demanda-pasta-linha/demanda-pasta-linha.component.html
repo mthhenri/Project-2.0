@@ -24,8 +24,8 @@
     </span>
     <span class="demanda-pasta-linha__detalhe">
       <app-demanda-barra-horas [minutosExecutados]="no().minutosExecutados" [horasEstimadas]="no().horasEstimadas" />
-      @for (tag of no().tags; track tag.id) {
-        <span class="demanda-pasta-linha__tag" [style.background-color]="tag.cor + '22'" [style.border-color]="tag.cor + '55'" [style.color]="tag.cor">{{ tag.nome }}</span>
+      @if (no().tags?.length) {
+        <app-tag-lista [tags]="no().tags!" />
       }
       @if (nomeDaPasta()) {
         <span class="demanda-pasta-linha__pasta"><i class="pi pi-folder"></i>{{ nomeDaPasta() }}</span>

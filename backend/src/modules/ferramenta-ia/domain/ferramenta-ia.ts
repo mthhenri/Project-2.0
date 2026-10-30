@@ -1,4 +1,4 @@
-import { temPermissaoDeAdministrador, temPermissaoDeGestor, TipoUsuarioEnum } from '@project20/shared';
+import { ContextoChatEnum, temPermissaoDeAdministrador, temPermissaoDeGestor, TipoUsuarioEnum } from '@project20/shared';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 
 /**
@@ -27,6 +27,11 @@ export type ClasseDeEntrada<T extends object> = new () => T;
  * Uma função que a IA pode pedir. Roda **em nome do usuário**: recebe o `JwtPayload` dele e chama as mesmas services de hoje, com as
  * mesmas permissões. O esquema JSON mostrado ao modelo é gerado da classe de entrada validada (um só lugar, sem duplicar).
  */
+/** De onde a IA está chamando a ferramenta; só quem decide algo por isso lê (as propostas, para o nível). */
+export interface OrigemDaFerramentaIa {
+  contexto: ContextoChatEnum;
+}
+
 export abstract class FerramentaIa<TEntrada extends object = object> {
   abstract readonly nome: string;
   /** O que o modelo lê para decidir quando usar a ferramenta. */
@@ -44,7 +49,7 @@ export abstract class FerramentaIa<TEntrada extends object = object> {
   habilitada?(): boolean;
 
   /** Devolve algo serializável em JSON; limitar o tamanho do que devolve é responsabilidade de cada ferramenta. */
-  abstract executar(entrada: TEntrada, usuarioAtivo: JwtPayload): Promise<unknown>;
+  abstract executar(entrada: TEntrada, usuarioAtivo: JwtPayload, origem?: OrigemDaFerramentaIa): Promise<unknown>;
 }
 
 export function usuarioPodeUsar(permissao: PermissaoFerramentaIa, tipo: TipoUsuarioEnum): boolean {

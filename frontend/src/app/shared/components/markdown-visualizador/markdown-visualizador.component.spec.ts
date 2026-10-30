@@ -24,6 +24,34 @@ describe('MarkdownVisualizadorComponent', () => {
     expect(herdando.elemento.querySelector('.markdown--herda-cor')).not.toBeNull();
   });
 
+  describe('tabelas (P-039)', () => {
+    const TABELA = '| Opção | Custo |\n|:---|---:|\n| **A** | 10 |\n| B | 20 |';
+
+    it('sem comTabelas, a tabela segue como texto', async () => {
+      const montado = await renderizar(TABELA);
+      expect(montado.elemento.querySelector('table')).toBeNull();
+      expect(montado.elemento.querySelector('p')?.textContent).toContain('| Opção | Custo |');
+    });
+
+    it('com comTabelas, vira table com cabeçalho, corpo, formatação e alinhamento', async () => {
+      const montado = await montarComponente(MarkdownVisualizadorComponent, { entradas: { texto: TABELA, comTabelas: true } });
+      const cabecalhos = Array.from(montado.elemento.querySelectorAll('thead th'));
+      expect(cabecalhos.map((celula) => celula.textContent?.trim())).toEqual(['Opção', 'Custo']);
+      expect(cabecalhos.map((celula) => celula.getAttribute('data-alinha'))).toEqual(['esquerda', 'direita']);
+      const linhas = Array.from(montado.elemento.querySelectorAll('tbody tr'));
+      expect(linhas).toHaveLength(2);
+      expect(linhas[0].querySelector('td strong')?.textContent).toBe('A');
+      expect(linhas[1].querySelectorAll('td')[1].textContent?.trim()).toBe('20');
+      expect(montado.elemento.querySelector('.markdown__tabela-rolagem')?.getAttribute('aria-label')).toBe('Tabela');
+    });
+
+    it('marcação dentro da célula continua texto', async () => {
+      const montado = await montarComponente(MarkdownVisualizadorComponent, { entradas: { texto: '| <b>x</b> |\n|---|\n| <i>y</i> |', comTabelas: true } });
+      expect(montado.elemento.querySelector('table b, table i')).toBeNull();
+      expect(montado.elemento.querySelector('tbody td')?.textContent).toContain('<i>y</i>');
+    });
+  });
+
   it('títulos viram h1 a h4 e níveis acima de 4 caem no h4', async () => {
     const montado = await renderizar('# Um\n\n## Dois\n\n### Três\n\n#### Quatro');
     expect(montado.elemento.querySelector('h1')?.textContent).toContain('Um');

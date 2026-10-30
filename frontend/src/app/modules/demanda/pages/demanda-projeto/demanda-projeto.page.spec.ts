@@ -125,6 +125,24 @@ describe('DemandaProjetoPage', () => {
     expect(avisosGrafo).toContain('Não foi possível carregar as demandas');
   });
 
+  it('falha ao carregar o grafo mostra o erro com "Tentar de novo", não "projeto sem demandas" (P-058)', async () => {
+    const { montado } = await montarPagina({ consulta: { projetoId: '5' } });
+    montado.mensagens.add = (() => undefined) as never;
+    await carregarProjetos(montado);
+    responderErro(esperarRequisicao(montado.http, 'GET', '/demanda/grafo'), 500, 'falhou');
+    await montado.atualizar();
+    const texto = () => montado.elemento.textContent ?? '';
+    expect(texto()).toContain('Não foi possível carregar as demandas');
+    expect(texto()).not.toContain('ainda não tem demandas');
+
+    Array.from(montado.elemento.querySelectorAll('button')).find((botao) => botao.textContent?.includes('Tentar de novo'))!.click();
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/grafo'), GRAFO);
+    await montado.atualizar();
+    expect(montado.componente.erroAoCarregarGrafo()).toBe(false);
+    expect(texto()).not.toContain('Não foi possível carregar as demandas');
+    expect(montado.elemento.querySelector('app-demanda-arvore-tela')).not.toBeNull();
+  });
+
   describe('modos', () => {
     it('padrão é a Árvore; o gestor tem Árvore, Grafo e Controle de horas; o desenvolvedor só Árvore e Grafo', async () => {
       const gestor = await montarPagina();

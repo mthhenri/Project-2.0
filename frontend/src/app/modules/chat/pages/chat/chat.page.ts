@@ -15,6 +15,7 @@ import { PropostaGrupoComponent } from '../../components/proposta-grupo/proposta
 import { DemandaLeituraComponent } from '../../components/demanda-leitura/demanda-leitura.component';
 import { MinhasDemandasComponent } from '../../components/minhas-demandas/minhas-demandas.component';
 import { MensagemDoSeletor, SeletorComponent } from '../../components/seletor/seletor.component';
+import { PadService } from '../../../usuario/services/pad.service';
 import { ChatService, ErroDoChat } from '../../services/chat.service';
 import { PlanoService } from '../../services/plano.service';
 import { EditorMensagemComponent } from '../../../../shared/components/editor-mensagem/editor-mensagem.component';
@@ -103,6 +104,7 @@ export class ChatPage implements OnInit {
   private readonly documento = viewChild(PlanoDocumentoComponent);
   private readonly areaDoChat = viewChild<ElementRef<HTMLElement>>('area');
   private readonly planoService = inject(PlanoService);
+  private readonly pad = inject(PadService);
 
   readonly Autor = AutorChatEnum;
   readonly Estado = EstadoIaEnum;
@@ -202,6 +204,8 @@ export class ChatPage implements OnInit {
     // Aceitar ou desfazer uma alteração de trecho muda o documento: ele se relê.
     const mudouODocumento = proposta.status === StatusPropostaIaEnum.CONFIRMADA || proposta.status === StatusPropostaIaEnum.DESFEITA;
     if (proposta.tipo === TipoPropostaIaEnum.ALTERAR_TRECHO_PLANO && mudouODocumento) this.documento()?.recarregarDepoisDaIa();
+    // Confirmar ou desfazer uma anotação mexe no pad no servidor: a aba Anotações se relê.
+    if (proposta.tipo === TipoPropostaIaEnum.ANOTAR_PAD && mudouODocumento) this.pad.recarregarSecoesSemMudancaLocal();
   }
 
   /** A última mensagem é a do sistema (falha): oferece "Tentar de novo". */
@@ -692,6 +696,8 @@ export class ChatPage implements OnInit {
         this.aoVivo.update((atual) => atual && { ...atual, ferramenta: evento.situacao === 'EXECUTANDO' ? evento.nome : null });
         // A IA escreveu no rascunho: o documento se relê (sem pisar no que a pessoa ainda não gravou).
         if (this.destinoDaResposta === 'PLANO' && evento.nome === 'escrever_no_plano' && evento.situacao === 'CONCLUIDA') this.documento()?.recarregarDepoisDaIa();
+        // A IA anotou no pad (a proposta de anotar pode ter sido confirmada na hora): as anotações se relêem, sem pisar no que está sendo digitado.
+        if (evento.nome === 'propor_anotar_pad' && evento.situacao === 'CONCLUIDA') this.pad.recarregarSecoesSemMudancaLocal();
         // A IA anotou ou fechou um ponto em aberto: o painel se relê.
         if (this.destinoDaResposta === 'PLANO' && (evento.nome === 'anotar_ponto_em_aberto' || evento.nome === 'resolver_ponto_do_plano') && evento.situacao === 'CONCLUIDA') this.documento()?.recarregarPontos();
         break;

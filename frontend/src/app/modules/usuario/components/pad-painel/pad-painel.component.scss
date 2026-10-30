@@ -1,3 +1,10 @@
+// O host precisa de altura própria: sem ela o `.pad-painel` (100%) cresce com as seções abertas, a lista nunca passa do contêiner e não há o que rolar.
+:host {
+  display: block;
+  height: 100%;
+  min-height: 0;
+}
+
 .pad-painel {
   display: flex;
   flex-direction: column;

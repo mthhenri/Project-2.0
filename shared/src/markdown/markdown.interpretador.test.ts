@@ -288,3 +288,67 @@ test('entrada que não é string não lança', () => {
   assert.deepEqual(interpretarMarkdown(undefined as unknown as string), []);
   assert.deepEqual(interpretarMarkdown(null as unknown as string), []);
 });
+
+// --- Tabelas, só sob pedido (P-039) ---
+
+const COM_TABELAS = { tabelas: true };
+const valoresDe = (celula: MarkdownInlineNo[]) => celula.map((no) => (no.tipo === 'texto' ? no.valor : `<${no.tipo}>`)).join('');
+
+test('sem a opção, a tabela segue sendo texto (os editores não a criam)', () => {
+  const blocos = interpretarMarkdown('| a | b |\n|---|---|\n| 1 | 2 |');
+  assert.equal(blocos.length, 1);
+  assert.equal(blocos[0].tipo, 'paragrafo');
+});
+
+test('tabela GFM: cabeçalho, alinhamentos e linhas, com formatação dentro das células', () => {
+  const blocos = interpretarMarkdown('| Opção | Custo | Nota |\n|:---|---:|:---:|\n| **A** | 10 | `x` |\n| B | 20 | ok |', COM_TABELAS);
+  assert.equal(blocos.length, 1);
+  const tabela = blocos[0] as Extract<MarkdownBlocoNo, { tipo: 'tabela' }>;
+  assert.equal(tabela.tipo, 'tabela');
+  assert.deepEqual(tabela.alinhamentos, ['esquerda', 'direita', 'centro']);
+  assert.deepEqual(tabela.cabecalho.map(valoresDe), ['Opção', 'Custo', 'Nota']);
+  assert.deepEqual(tabela.linhas.map((linha) => linha.map(valoresDe)), [['<negrito>', '10', '<codigo>'], ['B', '20', 'ok']]);
+});
+
+test('tabela sem as barras das pontas, com barra escapada e com colunas faltando ou sobrando', () => {
+  const blocos = interpretarMarkdown('a | b\n--- | ---\nx \\| y | z\n| 1 |\n1 | 2 | 3', COM_TABELAS);
+  assert.equal(blocos.length, 1);
+  const tabela = blocos[0] as Extract<MarkdownBlocoNo, { tipo: 'tabela' }>;
+  assert.deepEqual(tabela.cabecalho.map(valoresDe), ['a', 'b']);
+  assert.deepEqual(tabela.linhas.map((linha) => linha.map(valoresDe)), [['x | y', 'z'], ['1', ''], ['1', '2']]);
+});
+
+test('a linha sem barra encerra a tabela e o texto seguinte é outro bloco', () => {
+  const blocos = interpretarMarkdown('| a |\n|---|\n| 1 |\n\nDepois da tabela.', COM_TABELAS);
+  assert.deepEqual(blocos.map((bloco) => bloco.tipo), ['tabela', 'paragrafo']);
+});
+
+test('a tabela interrompe o parágrafo e pode ficar numa citação', () => {
+  const colada = interpretarMarkdown('Veja:\n| a | b |\n|---|---|\n| 1 | 2 |', COM_TABELAS);
+  assert.deepEqual(colada.map((bloco) => bloco.tipo), ['paragrafo', 'tabela']);
+  const citada = interpretarMarkdown('> | a |\n> |---|\n> | 1 |', COM_TABELAS);
+  assert.equal(citada[0].tipo, 'citacao');
+  assert.equal((citada[0] as Extract<MarkdownBlocoNo, { tipo: 'citacao' }>).filhos[0].tipo, 'tabela');
+});
+
+test('o que parece tabela mas não é segue como texto: separação com outro número de colunas, sem barra, ou colunas demais', () => {
+  assert.equal(interpretarMarkdown('| a | b |\n|---|', COM_TABELAS)[0].tipo, 'paragrafo');
+  assert.equal(interpretarMarkdown('título\n---', COM_TABELAS)[0].tipo, interpretarMarkdown('título\n---')[0].tipo, 'a régua sob uma linha sem barra não vira tabela');
+  assert.equal(interpretarMarkdown('a | b\nsem separação', COM_TABELAS)[0].tipo, 'paragrafo');
+  const larga = Array.from({ length: 21 }, (_, i) => `c${i}`);
+  assert.equal(interpretarMarkdown(`| ${larga.join(' | ')} |\n|${larga.map(() => '---').join('|')}|\n`, COM_TABELAS)[0].tipo, 'paragrafo');
+});
+
+test('tabela nunca vira HTML: marcação dentro da célula é texto', () => {
+  const tabela = interpretarMarkdown('| <b>x</b> |\n|---|\n| <script>1</script> |', COM_TABELAS)[0] as Extract<MarkdownBlocoNo, { tipo: 'tabela' }>;
+  assert.deepEqual(tabela.cabecalho.map(valoresDe), ['<b>x</b>']);
+  assert.deepEqual([...tiposDeNo(tabela)].sort(), ['tabela', 'texto']);
+});
+
+test('tabela enorme é cortada no limite de linhas e termina rápido', () => {
+  const linhas = Array.from({ length: 2000 }, (_, i) => `| ${i} |`).join('\n');
+  const inicio = Date.now();
+  const tabela = interpretarMarkdown(`| n |\n|---|\n${linhas}`, COM_TABELAS)[0] as Extract<MarkdownBlocoNo, { tipo: 'tabela' }>;
+  assert.equal(tabela.linhas.length, 500);
+  assert.ok(Date.now() - inicio < 1000);
+});

@@ -5,7 +5,7 @@ import { TipoUsuarioEnum } from '@project20/shared';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { IaFerramenta } from '../../ia/domain/ia.tipos';
 import { gerarEsquemaDeClasse } from '../domain/esquema-da-classe';
-import { EscopoDaFerramentaIa, FerramentaIa, ResultadoFerramentaIa, usuarioPodeUsar } from '../domain/ferramenta-ia';
+import { EscopoDaFerramentaIa, FerramentaIa, OrigemDaFerramentaIa, ResultadoFerramentaIa, usuarioPodeUsar } from '../domain/ferramenta-ia';
 import { exclusaoNaoPermitida } from '../domain/sem-exclusao';
 
 /**
@@ -60,7 +60,7 @@ export class FerramentaIaRegistro {
       }));
   }
 
-  async executar(nome: string, entradaBruta: unknown, usuarioAtivo: JwtPayload): Promise<ResultadoFerramentaIa> {
+  async executar(nome: string, entradaBruta: unknown, usuarioAtivo: JwtPayload, origem?: OrigemDaFerramentaIa): Promise<ResultadoFerramentaIa> {
     const ferramenta = this.ferramentas.get(nome);
     if (!ferramenta) return this.erro(`A ferramenta "${nome}" não existe.`);
     if (!usuarioPodeUsar(ferramenta.permissao, usuarioAtivo.tipo as TipoUsuarioEnum)) {
@@ -77,7 +77,7 @@ export class FerramentaIaRegistro {
     }
 
     try {
-      const resultado = await ferramenta.executar(entrada, usuarioAtivo);
+      const resultado = await ferramenta.executar(entrada, usuarioAtivo, origem);
       const conteudo = this.limitar(JSON.stringify(resultado ?? null));
       const propostaId = ferramenta.tipo === 'PROPOSTA' ? (resultado as { propostaId?: number } | null)?.propostaId : undefined;
       return { conteudo, erro: false, ...(typeof propostaId === 'number' ? { propostaId } : {}) };

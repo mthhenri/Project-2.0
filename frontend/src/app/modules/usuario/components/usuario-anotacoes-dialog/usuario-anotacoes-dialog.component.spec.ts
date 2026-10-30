@@ -201,6 +201,44 @@ describe('UsuarioAnotacoesDialogComponent — salvar', () => {
   });
 });
 
+describe('UsuarioAnotacoesDialogComponent — releitura depois da IA (P-041)', () => {
+  it('adota o que a IA gravou nas seções sem mudança local e deixa a seção que está sendo digitada como está', async () => {
+    const montado = await abrirPad(TipoUsuarioEnum.DESENVOLVEDOR, ID_LOGADO, { PENDENCIA: '- [ ] antiga', LEMBRETE: 'meu' });
+    const pendencias = secao(montado, TipoAnotacaoEnum.PENDENCIA);
+    const lembretes = secao(montado, TipoAnotacaoEnum.LEMBRETE);
+    lembretes.controle.setValue('meu, digitando');
+
+    pad().recarregarSecoesSemMudancaLocal();
+    const recarga = esperarRequisicao(montado.http, 'GET', '/anotacao');
+    responderSucesso(recarga, secoesDe(ID_LOGADO, { PENDENCIA: '- [ ] antiga\n- [ ] nova da IA', LEMBRETE: 'meu, pela IA' }).map((lida) => ({ ...lida, updatedDate: VERSAO_NOVA })));
+    await montado.atualizar();
+
+    expect(pendencias.textoAtual).toBe('- [ ] antiga\n- [ ] nova da IA');
+    expect(pendencias.versaoLida).toBe(VERSAO_NOVA);
+    expect(pad().pendenciasEmAberto()).toBe(2);
+    // A que a pessoa está digitando não é pisada.
+    expect(lembretes.textoAtual).toBe('meu, digitando');
+    expect(lembretes.versaoLida).toBe(VERSAO);
+  });
+
+  it('sem pad carregado, não faz requisição nenhuma', async () => {
+    const montado = await montarComponente(UsuarioAnotacoesDialogComponent, { usuario: TipoUsuarioEnum.DESENVOLVEDOR });
+    pad().recarregarSecoesSemMudancaLocal();
+    montado.http.expectNone((requisicao) => requisicao.url.includes('/anotacao'));
+  });
+});
+
+describe('UsuarioAnotacoesDialogComponent — rolagem do painel', () => {
+  it('o host do painel tem altura do contêiner, senão a lista de seções cresce com as abertas e a rolagem some', async () => {
+    await abrirPad(TipoUsuarioEnum.DESENVOLVEDOR, ID_LOGADO);
+    const host = document.querySelector('app-pad-painel') as HTMLElement;
+    const estilo = getComputedStyle(host);
+    expect(estilo.display).toBe('block');
+    expect(estilo.height).toBe('100%');
+    expect(getComputedStyle(host.querySelector('.pad-painel__secoes') as HTMLElement).overflowY).toBe('auto');
+  });
+});
+
 describe('UsuarioAnotacoesDialogComponent — "Enviar para" outra seção', () => {
   async function enviar(montado: Montado, trecho: string, destino: TipoAnotacaoEnum) {
     painel(montado).abrirMenuDoTrecho(secao(montado, TipoAnotacaoEnum.EM_ANDAMENTO), { inicio: 0, fim: trecho.length, texto: trecho, selecao: trecho, evento: new MouseEvent('contextmenu') });

@@ -5,6 +5,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { AutorChatEnum, ChatEventoDto, ChatMensagemResumoDto, ContextoChatEnum, NivelIaEnum } from '@project20/shared';
 import { esperarRequisicao, responderSucesso } from '../../../../testes/http-teste';
 import { SEM_OVERLAY_GLOBAL } from '../../../core/interceptors/loading.interceptor';
+import { ExecucaoAtivaService } from '../../../core/services/execucao-ativa.service';
 import { ChatService, ErroDoChat } from './chat.service';
 
 // Chat (SYSTEM.SPEC.md §12 "chat"): o envio é `POST` com resposta `text/event-stream` lida por `fetch`
@@ -101,6 +102,28 @@ describe('ChatService — envio e leitura do fluxo', () => {
     expect(eventos.map((recebido) => recebido.tipo)).toEqual(['trecho', 'ferramenta', 'ferramenta', 'proposta', 'trecho', 'fim', 'sugestoes']);
     expect(eventos[3]).toEqual({ tipo: 'proposta', propostaId: 9 });
     expect(eventos[6]).toEqual({ tipo: 'sugestoes', itens: ['Sim', 'Não'] });
+  });
+
+  it('uma ferramenta de proposta que conclui no fluxo faz a execução ativa da topbar se ressincronizar; consulta não (P-040)', async () => {
+    const recarga = vi.spyOn(TestBed.inject(ExecucaoAtivaService), 'carregar').mockImplementation(() => undefined);
+    fetchFalso.mockResolvedValue(
+      respostaEmPedacos([
+        evento({ tipo: 'ferramenta', nome: 'consultar_execucao_ativa', situacao: 'CONCLUIDA' }),
+        evento({ tipo: 'fim', mensagem: mensagemFinal }),
+      ]),
+    );
+    await servico.enviarMensagem('como estou?', () => undefined);
+    expect(recarga).not.toHaveBeenCalled();
+
+    fetchFalso.mockResolvedValue(
+      respostaEmPedacos([
+        evento({ tipo: 'ferramenta', nome: 'propor_pausar_execucao', situacao: 'EXECUTANDO' }),
+        evento({ tipo: 'ferramenta', nome: 'propor_pausar_execucao', situacao: 'CONCLUIDA' }),
+        evento({ tipo: 'fim', mensagem: mensagemFinal }),
+      ]),
+    );
+    await servico.enviarMensagem('almoço', () => undefined);
+    expect(recarga).toHaveBeenCalledTimes(1);
   });
 
   it('um evento cortado no meio entre duas leituras só é entregue quando completo', async () => {
