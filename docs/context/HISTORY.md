@@ -12,6 +12,12 @@
 
 ---
 
+## 2026-10-30 — P-034 e P-036: limite de tempo dos testes do frontend
+
+- P-034: `frontend/vitest.config.ts` ganhou `testTimeout: 20000` (padrão 5 s). Na suíte inteira falhou 1 teste por tempo esgotado (`modelagem.page.spec`, fora dos seis do relato), o que confirma carga e não um componente; com o limite novo a suíte passou: 2.296 testes em 185 arquivos. O item saiu de `PROBLEMS.md`.
+- P-036: não reproduzido; `mensagem-direta-notificacoes.component.spec.ts` passou sozinho (16 testes) e na suíte inteira. O item segue em `PROBLEMS.md` como `ABERTO`, com essa nota, até aparecer de novo.
+- Não verificado: P-049 e P-053 não foram tocados (decisão do autor pendente). Não há lint (P-001).
+
 ## 2026-10-30 — Tasks 267 e 268: ações de Atividades e editor formatado
 
 - P-026: a tabela de Atividades mantém a coluna de ações fixa enquanto as demais colunas rolam; conferida em 1920×1080, 1366×768 e 1080×1920, inclusive o menu e a barra lateral. Um estilo de dialog sem uso saiu para preservar o limite do build.

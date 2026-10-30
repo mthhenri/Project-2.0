@@ -78,14 +78,6 @@
 - **Correção:** índice em `created_date` e filtro por intervalo de `timestamptz`, se a tabela provisória crescer.
 - **Desde:** 2026-10-20 (task 202).
 
-### P-034 — Testes de componente do editor e do chat entre colaboradores estouram o tempo na suíte inteira · `ABERTO` · frontend/testes
-
-- **Sintoma:** em `npm run test --workspace=frontend`, 6 testes falham levando de 6 a 12 s cada (`markdown-editor`, `mensagem-direta-compositor`, `-conversa`, `-editor-mensagem`, `-popup` e `chat-popup`); rodados sozinhos (`ng test --include` nesses arquivos), os 173 testes passam.
-- **Causa:** não investigada; a suspeita é o limite de tempo padrão do Vitest com o editor Milkdown montado sob a carga da suíte inteira.
-- **Contorno:** rodar esses arquivos à parte para confirmar que passam.
-- **Correção:** medir o tempo desses testes na suíte inteira e decidir entre limite de tempo maior para eles e montagem mais leve do editor.
-- **Desde:** 2026-10-25 (visto no fecho da task 223, que não toca esses componentes).
-
 ### P-036 — Dois testes de `mensagem-direta-notificacoes` falham, inclusive sozinhos · `ABERTO` · frontend/mensagem-direta
 
 - **Sintoma:** `escolher uma posição grava o conjunto com ela e descarta o arranjo arrastado` e `se o servidor recusa a posição, a tela volta à anterior e o menu avisa` falham (`querySelector`/`textContent` de `null`) em `mensagem-direta-notificacoes.component.spec.ts`, rodando só esse arquivo.
@@ -93,6 +85,7 @@
 - **Contorno:** nenhum; a tela funciona (verificada ao vivo na 221).
 - **Correção:** reproduzir o teste, ver se o popover abre e ajustar o teste ou o componente.
 - **Desde:** 2026-10-26 (visto no fecho da task 245).
+- **Nota (2026-10-30):** não reproduzido; passa sozinho (16 testes) e na suíte inteira do frontend. Se não voltar a aparecer, pode virar flaky de ambiente e o item sair.
 
 ### P-035 — Check-in: a resposta da IA com proposta some e volta no fim do fluxo · `ABERTO` · frontend/checkin
 
