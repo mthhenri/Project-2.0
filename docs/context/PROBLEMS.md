@@ -104,6 +104,14 @@
 - **Correção:** atualizar o `usuario_sessao` a partir do servidor (por exemplo, numa consulta ao abrir o app).
 - **Desde:** 2026-10-30 (revisão do P-031).
 
+### P-063 — Ponto: o dia de hoje com execução em andamento não mostra o período corrente na linha · `ABERTO` · ponto/backend
+
+- **Sintoma:** com uma execução rodando depois de um bloco já encerrado (ex.: 07:40–10:00 e uma nova desde 11:10), a linha do dia mostra só "Dia todo 07:40 → 10:00": o período em curso e o intervalo de 1h10 não aparecem. Só quando **todas** as execuções do dia estão em andamento a linha diz "em andamento".
+- **Causa:** `ExecucaoRepository.agruparPorDia` calcula `ultimoFimData` com `MAX(fim_data)`, que ignora as execuções sem fim, e o intervalo só é detectado entre execuções já encerradas. Já era assim antes da linha resumida (P-054).
+- **Contorno:** abrir o detalhe do dia ou olhar o cartão "Trabalhando agora" da equipe.
+- **Correção:** `ultimoFimData` nulo quando houver execução ativa no dia e o intervalo até a execução ativa contado como intervalo; confirmar antes os outros consumidores de `ExecucaoDiaResumoDto`.
+- **Desde:** 2026-10-30 (visto na verificação do P-054).
+
 ### P-049 — Campo `codigo` do modelo do projeto na base não tem uso · `ABERTO` · banco/schema
 
 - **Sintoma:** o modelo do projeto guarda um campo `codigo` que, segundo o autor, é quase inútil.
@@ -120,14 +128,6 @@
 - **Contorno:** o botão "Centralizar" do grafo, ou zoom/arrasto.
 - **Correção:** reenquadrar quando a simulação assenta (`end`) ou reduzir a repulsão entre blocos desconectados; medir antes de mexer.
 - **Desde:** 2026-10-30 (visto na verificação do P-047).
-
-### P-054 — Detalhes do dia no ponto com filtro de usuário em layout vertical · `ABERTO` · ponto/frontend
-
-- **Sintoma:** os detalhes do dia no ponto, com filtro de usuário, são exibidos em lista vertical, que o autor quer rever.
-- **Causa:** o layout vertical foi o escolhido na primeira versão.
-- **Contorno:** nenhum.
-- **Correção:** avaliar outro formato, como uma exibição em serpentina, e aplicar o escolhido.
-- **Desde:** 2026-10-29 (apontado pelo autor).
 
 
 ### P-059 — Teste de `modelagem.page.spec` instável na suíte inteira · `ABERTO` · frontend/testes
