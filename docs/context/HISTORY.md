@@ -12,6 +12,15 @@
 
 ---
 
+## 2026-10-30 — P-047 e P-052: o filtro esmaece o grafo e o detalhe do projeto ganha faixa e selo
+
+- **P-047 (grafo):** o filtro da toolbar (busca, status, tags) não tira mais nós do grafo, esmaece a 25% o nó e a aresta que toca nele. `DemandaGrafoComponent` ganhou `idsEmDestaque` (`null` = sem filtro); mudar a entrada só troca a opacidade (`aplicarDestaque`), sem destruir o SVG nem recomeçar a simulação. O nó esmaecido segue clicável e com cartão; a cancelada continua a 0,4 sem filtro. Na página saíram o grafo filtrado (`grafoExibido`), o atraso de 200 ms (`filtroGrafo`) e o aviso "sem resultado" do modo grafo: com nada casando, todos ficam esmaecidos. O pedido original era "esmaecer em vez de remover", ao contrário do que o registro supunha: o código já removia, e a opacidade de ~25% vinha dos chips desligados (0,55) e da legenda (0,5), não do nó.
+- **P-052 (detalhe do projeto):** o cabeçalho virou o cartão da listagem (borda, raio 8, **faixa de 8px** na cor do projeto) e a bolinha deu lugar a um **selo de 44px** com a sigla do nome: iniciais das duas primeiras palavras, ignorando conectivos ("Portal do Cliente" → `PC`), ou as duas primeiras letras se o nome tem uma palavra só ("Gestão" → `GE`). O código **não** entra na sigla, a pedido do autor, que pensa em remover o campo (P-049). Texto do selo branco ou escuro conforme a luminância da cor. `siglaDoProjeto` e `corTextoSobre` em `modules/projeto/utils/projeto-identidade.util.ts`. A listagem não mudou.
+- **Decisão do autor:** a escolha da combinação (faixa + selo) veio de uma comparação visual de sete variantes (artifact descartável, não versionado).
+- Testes: frontend 2.322 (187 arquivos) verdes, build do frontend aprovado; novos: `projeto-identidade.util.test.ts` (4), selo no `projeto-detalhe.page.spec`, 2 no `demanda-grafo.component.spec` (esmaecer sem redesenhar, clique no esmaecido) e o da página reescrito. Sem lint (P-001). O `NG8107` de `demanda-pasta-linha` é preexistente.
+- **Ao vivo** (PostgreSQL local, 3 projetos de cores azul, amarelo e grafite; 8 demandas com tags e uma conexão), em `1920×1080`, `1366×768` e `1080×1920`: selo `PC`/`GE`/`AP` com texto branco, escuro e branco; busca "login" deixou 2 nós a 1 e 6 a 0,25, as posições não mudaram e um marcador em `window` sobreviveu (sem recarga); busca sem resultado deixou os 8 a 0,25; sem erro de console. **Não verificado:** tema escuro, mobile (fora do escopo), estado de erro/carregando do detalhe. Capturas em `.artifacts/p047-p052/` (fora do Git).
+- **Achado na verificação:** o enquadramento inicial do grafo corta nós com blocos desconectados, idêntico ao código anterior: registrado como P-060.
+
 ## 2026-10-30 — Pad (Minhas anotações) sem rolagem no drawer da topbar
 
 - **Sintoma (apontado pelo autor, com captura):** abrindo "Minhas anotações" pelo botão da topbar com várias seções abertas, a lista não rolava e o rodapé/seções de baixo ficavam inalcançáveis.

@@ -281,7 +281,8 @@ project-2.0/
   ligados por padrão; `alternarStatusVisivel`), o que substitui a seleção "só este status" da 106. As cores
   de status são tokens (`constants/demanda-cores.constants.ts`); o grafo não tem mais painel lateral.
 - **[task 106]** Em Demandas, a toolbar filtra no cliente (busca sem acento, status, tags) e o filtro vale para
-  Lista e Grafo (o grafo recebe só os nós que atendem; a Lista mantém os ancestrais e abre os ramos). O clique
+  Lista e Grafo (o grafo mostra o projeto todo e **esmaece a 25%** o nó, e a aresta que o toca, que não atende — `idsEmDestaque`, sem
+  redesenhar nem mover os nós, P-047; a Lista mantém os ancestrais e abre os ramos). O clique
   na linha abre o Detalhe e só o chevron expande; o status troca pelo chip (otimista, gestor). O projeto
   fica em `localStorage` (`demanda.ultimoProjetoId`) e o modo na URL (`?modo=`); a aba **não** é lembrada: a tela sempre abre na Árvore. `C` cria demanda: o `N`
   global é das Anotações (task 96).

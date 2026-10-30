@@ -95,13 +95,6 @@
 - **Correção:** a investigar: achar onde a resposta se perde (timeout do provedor, do streaming ou do front), avisar o usuário quando falhar em vez de silêncio, e decidir como contabilizar o custo de uma chamada que não entregou resposta.
 - **Desde:** 2026-10-27 (apontado pelo autor; pergunta e conversa não anexadas).
 
-### P-047 — Grafo: tirar um item do filtro só o apaga para cerca de 25% de opacidade · `ABERTO` · demanda/frontend
-
-- **Sintoma:** ao remover algo do filtro do grafo, o item fica só meio apagado (cerca de 25% de opacidade) em vez de sair da visão.
-- **Causa:** o filtro esmaece em vez de ocultar; comportamento a confirmar com o autor (pode ser o desejado).
-- **Contorno:** nenhum; o item continua visível.
-- **Correção:** decidir entre ocultar o item ou manter o esmaecimento, e ajustar o filtro conforme a decisão.
-- **Desde:** 2026-10-29 (apontado pelo autor).
 
 ### P-049 — Campo `codigo` do modelo do projeto na base não tem uso · `ABERTO` · banco/schema
 
@@ -111,13 +104,14 @@
 - **Correção:** remover a coluna por migration nova (sem editar a já aplicada), ajustando DTOs, repository e `docs/SCHEMA.md`. Rodar `gerenciamento-de-impacto` antes.
 - **Desde:** 2026-10-29 (apontado pelo autor).
 
-### P-052 — Exibição da cor do projeto na tela de projetos · `ABERTO` · projeto/frontend
 
-- **Sintoma:** a cor do projeto aparece de um jeito que o autor quer alterar.
-- **Causa:** não investigada; o relato não diz qual forma de exibição é a desejada.
-- **Contorno:** nenhum.
-- **Correção:** definir com o autor a nova exibição e aplicar na tela de projetos.
-- **Desde:** 2026-10-29 (apontado pelo autor).
+### P-060 — Grafo de demandas: o enquadramento inicial corta nós quando o projeto tem blocos desconectados · `ABERTO` · demanda/frontend
+
+- **Sintoma:** com dois blocos de demandas sem conexão entre si (ex.: duas demandas de estrutura com filhos), os blocos se afastam e, em 1920×1080, 1366×768 e 1080×1920, o grafo abre com nós cortados no topo e na base (o cenário de teste do P-047 mostrou "Tela de login" e "Filtro por período" parcialmente fora da área). Idêntico no código anterior ao P-047.
+- **Causa:** `ajustarAoGrafo` enquadra uma vez, quando `alpha < 0.35`, e a simulação (repulsão -700) continua afastando os blocos depois disso; não foi confirmado se o `clientHeight` do contêiner também conta.
+- **Contorno:** o botão "Centralizar" do grafo, ou zoom/arrasto.
+- **Correção:** reenquadrar quando a simulação assenta (`end`) ou reduzir a repulsão entre blocos desconectados; medir antes de mexer.
+- **Desde:** 2026-10-30 (visto na verificação do P-047).
 
 ### P-054 — Detalhes do dia no ponto com filtro de usuário em layout vertical · `ABERTO` · ponto/frontend
 
