@@ -12,6 +12,12 @@
 
 ---
 
+## 2026-10-30 — Tasks 262 e 263: verificação visual e fecho
+
+Foram observados estados vazios, carregando e de erro de Atividades, Árvore, Controle de horas, pad, Documentações, demanda e plano no chat; atrasos e falhas foram simulados numa interface local ligada à API existente. Em Documentações, demanda e plano, a tentativa de novo recuperou a tela. O filtro Apenas abertas retirou a demanda concluída, e o perfil desenvolvedor exibiu os ícones e a restrição de Cliente. Os três tamanhos e os fluxos anteriores constam dos relatórios das tasks 262 e 263, movidas para `done/`. A suíte e o build mais recentes do frontend são os registrados na task 265: 2.292 testes aprovados, build aprovado; não há lint (P-001).
+
+A verificação reproduziu um problema preexistente: erro ao carregar Atividades ou Árvore pode terminar com mensagem de lista vazia. Foi registrado como P-058, fora do escopo das correções. Os seis problemas que originaram as tasks já tinham sido removidos de `PROBLEMS.md` a pedido do autor.
+
 ## 2026-10-30 — Lista de problemas: retirar os itens corrigidos das tasks 262 e 263
 
 A pedido do autor, P-024, P-042, P-044, P-046, P-048 e P-056 saíram de `PROBLEMS.md`: as correções estão implementadas e as evidências estão nos relatórios das tasks 262 e 263. Essas tasks continuam em `active/` enquanto suas verificações visuais pendentes não terminam. P-040 permanece aberto pelos pontos de execução ativa e fechamento automático; a parte da barra do check-in foi corrigida na task 265.

@@ -238,6 +238,14 @@
 - **Correção:** levantar com o autor os ajustes de layout e o comportamento desejado de lembrar o usuário, e aplicar.
 - **Desde:** 2026-10-29 (apontado pelo autor).
 
+### P-058 — Falha ao carregar atividades ou demandas pode parecer lista vazia · `ABERTO` · frontend/atividade/demanda
+
+- **Sintoma:** se a consulta de Atividades falha, surge aviso temporário e a tabela passa a dizer que não há atividades em aberto. Se a consulta do grafo de demandas falha, a Árvore pode dizer que o projeto não tem demandas, apesar de existirem.
+- **Causa:** na primeira carga, o erro termina o carregamento sem um estado persistente de falha; a apresentação reutiliza a lista vazia. A consulta do grafo também emite aviso temporário.
+- **Contorno:** recarregar a tela e observar o aviso de erro.
+- **Correção:** distinguir falha de lista realmente vazia e oferecer nova tentativa, preservando dados anteriores quando houver.
+- **Desde:** reproduzido em 2026-10-30 durante a verificação das tasks 262 e 263, com erro HTTP simulado; o comportamento da lista de Atividades já tinha teste próprio anterior às correções.
+
 ### P-001 — Projeto sem lint · `CONTORNADO` · repositório
 
 - **Sintoma:** não há ESLint nem Prettier em nenhum workspace; o gate de qualidade do `CLAUDE.md` pede lint e hoje a lacuna é só declarada no fecho de cada task.

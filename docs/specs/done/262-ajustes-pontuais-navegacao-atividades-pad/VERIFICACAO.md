@@ -1,4 +1,4 @@
-# Verificação parcial — task 262
+# Verificação — task 262
 
 ## Implementação e impacto
 
@@ -13,12 +13,14 @@ Impacto: `npm run impacto` identificou os três locais que exibem `PadPainelComp
 - Aplicação já em execução, sessão do gestor: Árvore iniciou em Projeto inteiro; o filtro retirou a demanda concluída; Controle de horas e pad foram inspecionados em 1920×1080, 1366×768 e 1080×1920. O aviso do planejamento foi observado nos três tamanhos. Análogos: Controle de horas anterior e chat de perguntas. A leitura dos rótulos do pad confirmou a ordem.
 - `npm run repo:verificar` e `git diff --check` aprovados. Não há lint no projeto (P-001).
 
-## Pendências para fecho
+## Verificações complementares e limites
 
-A inspeção visual ainda não percorreu os estados vazio, carregando e erro de cada tela alterada, mas ainda faltam cenários específicos de erro e carregamento. O menu de Minhas demandas com item real foi posteriormente observado em gestor nos três viewports, conforme o relatório da task 263. A movimentação do pad, a troca de status e a Árvore nos três tamanhos foram verificadas depois, conforme abaixo. Por isso a task continua em `active/`; os problemas corrigidos foram retirados de `PROBLEMS.md` a pedido do autor, e as verificações restantes seguem registradas aqui. Nenhuma captura bruta é necessária para entender este relato.
+Em 2026-10-30 foram simuladas respostas lentas, vazias e falhas HTTP num intermediário local ligado à aplicação real, sem mudar dados. Em Atividades, a lista mostrou esqueleto durante o carregamento; a falha exibiu aviso temporário seguido da mensagem de lista vazia. Na Árvore, foram observados esqueleto, projeto sem demandas e falha; a falha também pode terminar com mensagem de projeto vazio. Esses comportamentos anteriores foram registrados separadamente em P-058. No pad, o carregamento exibiu esqueleto e a falha avisou que não era possível carregar as anotações. No Controle de horas, a lista apareceu atenuada enquanto os dados de planejamento carregavam; foram observados a falha de planejamento, o projeto sem demandas e o filtro Apenas abertas removendo a demanda concluída. O aviso de planejamento, os tamanhos de tela, a movimentação do pad e a troca de status estão registrados abaixo e na seção anterior.
+
+As verificações de falha usaram simulação de HTTP, não uma interrupção real do servidor. A aplicação existente foi usada sem iniciar outra API; os testes automatizados e o build do frontend passaram na task 265 (2.292 testes, build e 38 testes de check-in). A ausência de lint continua em P-001.
 
 Em 2026-10-29, com o desenvolvedor de teste, a tentativa de abrir o menu do pad sobre uma seleção por teclado não mostrou o menu, e não comprovou o movimento. O texto temporário foi apagado e o pad reaberto vazio. Ao abrir a sessão, o chat gerou automaticamente uma saudação da IA na conversa de teste.
 
-Em nova verificação de 2026-10-29, o menu de seleção do pad exibiu os ícones de Pessoal, Pendências, Lembretes e Feito; uma seleção foi movida de Em andamento para Pessoal, com aviso de sucesso. O texto temporário foi removido e as duas seções estavam vazias após recarga. Em Atividades, a atividade de teste passou de Planejada a Pendente e voltou a Planejada; a linha refletiu as duas alterações sem recarga manual. Ao interromper somente a API de teste e recarregar a listagem, ela apresentou o estado vazio; esse cenário não comprova tratamento explícito de erro e precisa de investigação.
+Em nova verificação de 2026-10-29, o menu de seleção do pad exibiu os ícones de Pessoal, Pendências, Lembretes e Feito; uma seleção foi movida de Em andamento para Pessoal, com aviso de sucesso. O texto temporário foi removido e as duas seções estavam vazias após recarga. Em Atividades, a atividade de teste passou de Planejada a Pendente e voltou a Planejada; a linha refletiu as duas alterações sem recarga manual. Ao interromper somente a API de teste e recarregar a listagem, ela apresentou o estado vazio; esse cenário foi reproduzido e registrado como P-058.
 
 Em 2026-10-29, a Árvore foi observada nos três viewports com Projeto inteiro selecionado. Na listagem de Atividades, a atividade de teste foi alterada de Planejada para Desenvolvida e saiu automaticamente do filtro padrão; foi então localizada pelo filtro e restaurada para Planejada.

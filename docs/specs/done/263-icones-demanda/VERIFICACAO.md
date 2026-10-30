@@ -1,4 +1,4 @@
-# Verificação parcial — task 263
+# Verificação — task 263
 
 ## Implementação e impacto
 
@@ -12,6 +12,8 @@ As abas da demanda no chat, do plano e da tela de Documentações e os indicador
 - A demanda no chat, a Árvore e a tela de Documentações foram inspecionadas em 1920×1080, 1366×768 e 1080×1920; a Árvore foi o análogo dos ícones. A sessão disponível era de gestor e não foram alterados dados de demandas.
 - Testes focados: menu 14/14; chat, Documentações, seletor, plano e teste do popup de chat anteriormente temporizado passaram 80/80. A suíte completa após o ajuste passou 2.290/2.290. O build passou, com os avisos de orçamento e CommonJS já registrados no projeto.
 
-## Limites para fecho
+## Verificações complementares e limites
 
-Em 2026-10-29 o menu foi inspecionado também nos três viewports e o desenvolvedor de teste viu a aba Cliente com ícone, cadeado e aviso de leitura. Permanecem pendentes os estados carregando e erro nas telas alteradas e a conferência visual dos demais consumidores no perfil desenvolvedor. Na tela de Documentações, também foram observados os três ícones e o cadeado do perfil desenvolvedor, com uma demanda real; o estado inicial sem demanda selecionada foi inspecionado. A task permanece em `active/` até esses gates; P-042 foi retirado de `PROBLEMS.md` a pedido do autor após a implementação da correção. Os testes do frontend cobrem a presença do cadeado, sem substituir a verificação visual. O projeto não tem lint (P-001).
+Em 2026-10-29 o menu foi inspecionado nos três viewports e o desenvolvedor viu a aba Cliente com ícone, cadeado e aviso de leitura. Em 2026-10-30 o perfil desenvolvedor foi inspecionado também na Árvore, em Documentações, na demanda aberta ao lado do chat e no documento do plano: os ícones de técnica, cliente e documentação e a indicação de leitura restrita apareceram. A conversa e o plano vazios foram observados.
+
+Com respostas HTTP simuladas em um intermediário local, Documentações mostrou carregamento, falha e recuperação ao tentar novamente; a demanda aberta no chat e o documento do plano mostraram esqueleto, falha e recuperação. A Árvore mostrou carregamento, vazio e falha; o comportamento de falha que pode parecer vazio foi registrado como P-058. Os erros foram simulados e não representam uma interrupção real da API. As inspeções de estados foram feitas em 1366×768; as telas cheias e o menu já haviam sido observados nos três viewports, como descrito acima. O projeto não tem lint (P-001).
