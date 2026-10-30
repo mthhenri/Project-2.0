@@ -88,7 +88,7 @@
                         @if (mensagem.autorNome) {
                           <span class="chat__autor">{{ mensagem.autorNome }}</span>
                         }
-                        <div class="chat__balao"><app-markdown-visualizador [texto]="mensagem.texto" [herdaCor]="true" /></div>
+                        <div class="chat__balao"><app-markdown-visualizador [texto]="mensagem.texto" [herdaCor]="true" [comTabelas]="false" /></div>
                         <div class="chat__rodape-mensagem">
                           @if (mensagem.criadaEm) {
                             <span class="chat__hora">{{ mensagem.criadaEm | date: 'dd/MM/yyyy HH:mm' }}</span>
@@ -105,7 +105,7 @@
                       <span class="chat__avatar" aria-hidden="true">IA</span>
                       <div class="chat__ia-conteudo" [attr.aria-busy]="mensagem.aoVivo ? true : null">
                         @if (mensagem.texto) {
-                          <app-markdown-visualizador [texto]="mensagem.texto" [comTabelas]="true" />
+                          <app-markdown-visualizador [texto]="mensagem.texto" />
                         }
                         @if (mensagem.aoVivo) {
                           @if (mensagem.ferramenta) {

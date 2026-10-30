@@ -27,8 +27,13 @@ describe('MarkdownVisualizadorComponent', () => {
   describe('tabelas (P-039)', () => {
     const TABELA = '| Opção | Custo |\n|:---|---:|\n| **A** | 10 |\n| B | 20 |';
 
-    it('sem comTabelas, a tabela segue como texto', async () => {
+    it('por padrão a tabela aparece (o editor as cria, I-003)', async () => {
       const montado = await renderizar(TABELA);
+      expect(montado.elemento.querySelector('table')).not.toBeNull();
+    });
+
+    it('com comTabelas desligado, a tabela segue como texto', async () => {
+      const montado = await montarComponente(MarkdownVisualizadorComponent, { entradas: { texto: TABELA, comTabelas: false } });
       expect(montado.elemento.querySelector('table')).toBeNull();
       expect(montado.elemento.querySelector('p')?.textContent).toContain('| Opção | Custo |');
     });

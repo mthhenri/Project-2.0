@@ -72,6 +72,13 @@
     overflow-wrap: normal;
   }
 
+  // O `<code>` traz a fonte e o corpo do navegador (e do reset do Tailwind) em vez da fonte do editor: as linhas da camada ficavam mais altas que as
+  // do campo e dos números, e um código colado de várias linhas se afastava da numeração a cada linha.
+  &__realce code {
+    font: inherit;
+    line-height: inherit;
+  }
+
   &__realce {
     overflow: hidden;
     padding-right: calc(0.75rem + var(--editor-codigo-folga));

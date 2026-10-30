@@ -117,6 +117,16 @@ export class MarkdownEditorComponent implements ControlValueAccessor {
     { acao: 'tarefa', rotulo: 'Lista de tarefas', dica: 'Lista de tarefas', glifo: '☐', classe: '' },
     { acao: 'citacao', rotulo: 'Citação', dica: 'Citação', glifo: '❝', classe: '' },
     { acao: 'link', rotulo: 'Link', dica: 'Link (Ctrl+K)', glifo: '🔗', classe: '' },
+    { acao: 'tabela', rotulo: 'Tabela', dica: 'Inserir tabela', glifo: '▦', classe: '' },
+  ];
+
+  /** Só aparecem com o cursor dentro de uma tabela (I-003). */
+  readonly botoesTabela: readonly BotaoDaBarra[] = [
+    { acao: 'linhaNova', rotulo: 'Linha abaixo', dica: 'Nova linha abaixo', glifo: '+L', classe: '' },
+    { acao: 'colunaNova', rotulo: 'Coluna à direita', dica: 'Nova coluna à direita', glifo: '+C', classe: '' },
+    { acao: 'linhaExcluir', rotulo: 'Excluir linha', dica: 'Excluir a linha (o cabeçalho fica)', glifo: '−L', classe: '' },
+    { acao: 'colunaExcluir', rotulo: 'Excluir coluna', dica: 'Excluir a coluna', glifo: '−C', classe: '' },
+    { acao: 'tabelaExcluir', rotulo: 'Excluir tabela', dica: 'Excluir a tabela', glifo: '✕', classe: '' },
   ];
 
   private readonly destroyRef = inject(DestroyRef);

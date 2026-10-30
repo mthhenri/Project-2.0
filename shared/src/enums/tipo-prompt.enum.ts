@@ -15,4 +15,6 @@ export enum TipoPromptEnum {
   PLANO_DOCUMENTACAO      = 'PLANO_DOCUMENTACAO',
   // Tela de Documentações (task 260): alterar só a seleção de um texto da demanda, sem conversa.
   ALTERAR_TRECHO          = 'ALTERAR_TRECHO',
+  // Relatório de execuções (task 270): a revisão por IA que aponta inconsistências nas execuções do período.
+  REVISAO_RELATORIO       = 'REVISAO_RELATORIO',
 }

@@ -89,6 +89,17 @@ describe('EditorCodigoComponent', () => {
     expect(numeros.scrollTop).toBe(editor.campo().scrollTop);
   });
 
+  it('depois de um código colado, a rolagem do campo é copiada de novo quando as camadas já cresceram (sem evento de rolagem)', async () => {
+    const editor = await montar('a');
+    // Colar leva o cursor ao fim e o campo rola; o evento chega antes de as camadas renderizarem o texto novo, e nenhum outro evento vem depois.
+    editor.campo().scrollTop = 80;
+    await editor.digitar(Array.from({ length: 60 }, (_, indice) => `linha ${indice}`).join('\n'));
+    const camada = editor.elemento.querySelector<HTMLElement>('.editor-codigo__realce')!;
+    const numeros = editor.elemento.querySelector<HTMLElement>('.editor-codigo__numeros')!;
+    expect(camada.scrollTop).toBe(editor.campo().scrollTop);
+    expect(numeros.scrollTop).toBe(editor.campo().scrollTop);
+  });
+
   it('linguagem conhecida realça com spans por tipo (as mesmas classes de tipo do bloco enviado) e o texto continua idêntico', async () => {
     const editor = await montar('function soma(a) { return a; } // fim', 'ts');
     await vi.waitFor(() => expect(editor.componente['realcar']()).not.toBeNull(), { timeout: 5000 });

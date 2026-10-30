@@ -28,6 +28,11 @@ export interface IaSolicitacao {
   ferramentas?: IaFerramenta[];
   /** Teto de tokens da resposta (padrão 1024). */
   maximoTokens?: number;
+  /**
+   * Liga a pesquisa na internet **do próprio provedor** (o `web_search` da Anthropic, o Google Search do Gemini): o modelo decide quando buscar e já
+   * responde com o que achou, sem ferramenta nossa nem laço extra. Provedor ou modelo sem suporte ignora o pedido e responde sem pesquisar.
+   */
+  pesquisaWeb?: boolean;
 }
 
 /** O que o provedor recebe: o nível já resolvido em modelo (e esforço, só no analítico). */

@@ -1,0 +1,380 @@
+@use '../../../../shared/styles/form' as *;
+
+.relatorio-execucao {
+  padding: 1.5rem;
+
+  &__cabecalho {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+
+  &__cabecalho-esquerda,
+  &__cabecalho-acoes {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  &__pagina-titulo {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--p-primary-600);
+  }
+
+  &__identidade {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-left: 0.75rem;
+    border-left: 1px solid var(--app-surface-200);
+  }
+
+  &__selo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    user-select: none;
+  }
+
+  &__identidade-nome {
+    font-weight: 600;
+  }
+
+  &__identidade-codigo {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--p-text-muted-color);
+    background: var(--app-surface-100);
+    padding: 0.125rem 0.375rem;
+    border-radius: 4px;
+  }
+
+  // Filtros num cartão só, como a barra de filtros das outras telas.
+  &__form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.75rem 1.5rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--app-surface-200);
+    border-radius: 0.625rem;
+    background: var(--app-surface-0);
+  }
+
+  &__periodo {
+    display: flex;
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  &__atalhos,
+  &__ajuste {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__dica {
+    font-size: 0.75rem;
+    color: var(--p-text-muted-color);
+  }
+
+  &__campo {
+    @include form-campo;
+    min-width: 12rem;
+    flex: 0 1 22rem;
+  }
+
+  &__label { @include form-label; }
+  &__erro  { @include form-erro; }
+
+  // A tabela à esquerda e a revisão por IA à direita (task 272); sem revisão a tabela ocupa tudo.
+  &__area {
+    display: flex;
+    align-items: flex-start;
+    --divisao: 62%;
+  }
+
+  &__principal {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__area--com-painel &__principal {
+    flex: 0 0 var(--divisao);
+  }
+
+  &__area--recolhido &__principal {
+    flex: 1;
+  }
+
+  &__painel {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    margin-top: 1.25rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--app-surface-200);
+    border-radius: 0.625rem;
+    background: var(--app-surface-0);
+  }
+
+  &__recolher {
+    position: absolute;
+    top: 0.25rem;
+    right: 0.25rem;
+  }
+
+  &__divisor {
+    position: relative;
+    flex: 0 0 0.75rem;
+    align-self: stretch;
+    cursor: col-resize;
+    touch-action: none;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 2px;
+      transform: translateX(-50%);
+      border-radius: 1px;
+      background: var(--app-surface-200);
+      transition: background 0.15s ease;
+    }
+
+    &:hover::after,
+    &:focus-visible::after,
+    &--arrastando::after {
+      background: var(--p-primary-500);
+    }
+  }
+
+  // Revisão recolhida: uma caixinha por ponto, com o ícone da IA na cor da prioridade.
+  &__barra-ia {
+    display: flex;
+    flex: 0 0 2.75rem;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 1.25rem 0 0 0.75rem;
+    padding: 0.25rem 0;
+    border: 1px solid var(--app-surface-200);
+    border-radius: 0.625rem;
+    background: var(--app-surface-0);
+  }
+
+  &__caixa-ia {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid transparent;
+    border-radius: 0.375rem;
+    cursor: pointer;
+
+    &--alta  { color: var(--p-red-600);    background: color-mix(in srgb, var(--p-red-500) 14%, transparent); }
+    &--media { color: var(--p-orange-600); background: color-mix(in srgb, var(--p-orange-500) 16%, transparent); }
+    &--baixa { color: var(--p-text-muted-color); background: var(--app-surface-100); }
+
+    &:hover,
+    &:focus-visible {
+      border-color: currentColor;
+    }
+  }
+
+  @media (max-width: 900px) {
+    &__area { flex-direction: column; align-items: stretch; }
+    &__area--com-painel &__principal { flex: none; }
+    &__divisor { display: none; }
+    &__barra-ia { flex-direction: row; flex: none; margin-left: 0; padding: 0.25rem 0.5rem; }
+  }
+
+  &__resultado {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+    transition: opacity 0.15s ease;
+
+    &--esmaecido {
+      opacity: 0.5;
+    }
+  }
+
+  &__vazio-estado {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 2.5rem 1rem;
+    color: var(--p-text-muted-color);
+
+    .pi {
+      font-size: 1.75rem;
+    }
+
+    p {
+      margin: 0;
+    }
+  }
+
+  &__titulo-resumo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+
+  &__totais {
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  &__total {
+    display: flex;
+    flex-direction: column;
+    min-width: 7rem;
+    padding: 0.5rem 0.875rem;
+    border: 1px solid var(--app-surface-200);
+    border-radius: 8px;
+    background: var(--app-realce-sutil);
+  }
+
+  &__total-valor {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--app-realce-primario);
+    white-space: nowrap;
+  }
+
+  &__total-rotulo {
+    font-size: 0.75rem;
+    color: var(--p-text-muted-color);
+  }
+
+  &__contadores {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  &__contador--alta  { color: var(--p-red-500); }
+  &__contador--media { color: var(--p-orange-500); }
+  &__contador--baixa { color: var(--p-text-muted-color); }
+
+  &__resumo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+
+    &-projeto {
+      font-weight: 600;
+      color: var(--app-realce-primario);
+    }
+
+    &-periodo {
+      font-size: 0.875rem;
+      color: var(--p-text-muted-color);
+    }
+  }
+
+  &__descricao-celula {
+    max-width: 20rem;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  &__vazio {
+    text-align: center;
+    padding: 1.5rem;
+    color: var(--p-text-muted-color);
+  }
+
+  &__revisao {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  &__revisao-titulo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--app-realce-primario);
+  }
+
+  &__revisao-resumo {
+    font-size: 0.9375rem;
+    color: var(--app-surface-700);
+  }
+
+  &__inconsistencias {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  &__inconsistencia {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.75rem;
+    border: 1px solid var(--app-surface-200);
+    border-radius: 8px;
+    background: var(--app-realce-sutil);
+
+    &-cabecalho {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    &-tipo {
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: var(--app-surface-700);
+    }
+
+    &-descricao {
+      font-size: 0.875rem;
+      color: var(--app-surface-700);
+    }
+
+    &-ref {
+      font-size: 0.75rem;
+      color: var(--p-text-muted-color);
+      font-family: monospace;
+    }
+  }
+}

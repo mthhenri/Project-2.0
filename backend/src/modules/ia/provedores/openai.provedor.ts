@@ -4,6 +4,12 @@ import { traduzirErroDeProvedor } from '../domain/ia-erro-provedor';
 import { IaProvedor } from '../domain/ia-provedor';
 import { IaBloco, IaMensagem, IaMotivoParada, IaRespostaProvedor, IaSolicitacaoProvedor } from '../domain/ia.tipos';
 
+/**
+ * A OpenAI **não pesquisa na internet** por aqui: a pesquisa dela é uma ferramenta da Responses API (`web_search`), e este provedor usa a Chat
+ * Completions, onde só os modelos `*-search-preview` pesquisam. `IaSolicitacao.pesquisaWeb` é ignorado e a resposta sai sem pesquisa; o dia em que o
+ * provedor migrar para a Responses API (spec 261) a ferramenta entra aqui.
+ */
+
 /** O pedaço do SDK da OpenAI que o provedor usa (Chat Completions); o módulo adapta o SDK real a isto e os testes usam um cliente falso. */
 export interface ClienteOpenAi {
   gerar(parametros: Record<string, unknown>): Promise<CompletudeOpenAi>;

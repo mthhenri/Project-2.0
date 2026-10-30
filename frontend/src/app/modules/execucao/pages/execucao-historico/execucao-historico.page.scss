@@ -106,6 +106,7 @@
 
     // Gestor: o horário é um botão que abre a edição no lugar.
     &--editavel {
+      position: relative;
       padding: 0.125rem 0.25rem;
       margin: -0.125rem -0.25rem;
       border: none;
@@ -119,11 +120,29 @@
         color: var(--p-primary-600);
       }
 
+      &:hover .execucao-historico__momento-lapis,
+      &:focus-visible .execucao-historico__momento-lapis {
+        opacity: 1;
+      }
+
       &:focus-visible {
         outline: 2px solid var(--p-primary-color);
         outline-offset: 2px;
       }
     }
+  }
+
+  // O lápis avisa, ao passar o mouse, que o horário se edita com o clique (task 272).
+  &__momento-lapis {
+    position: absolute;
+    top: 0.25rem;
+    left: 100%;
+    margin-left: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--p-text-muted-color);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    pointer-events: none;
   }
 
   &__momento-hora {

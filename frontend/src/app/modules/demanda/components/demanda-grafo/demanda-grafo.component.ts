@@ -70,7 +70,11 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
   private gruposNo?: d3.Selection<SVGGElement, DemandaGrafoNoDto & d3.SimulationNodeDatum, SVGGElement, unknown>;
   private linhasAresta?: d3.Selection<SVGLineElement, any, SVGGElement, unknown>;
   private nosSimulados: Array<DemandaGrafoNoDto & d3.SimulationNodeDatum> = [];
+  /** Primeiro enquadramento, com o layout ainda se assentando (dá uma vista rápida); o final vem quando a simulação termina (P-060). */
   private ajusteInicialFeito = false;
+  private ajusteFinalFeito = false;
+  /** A pessoa já mexeu no zoom ou no arrasto: o enquadramento final não sobrescreve a vista dela. */
+  private zoomManual = false;
 
   readonly cartao = signal<CartaoNo | null>(null);
 
@@ -185,6 +189,8 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
     this.linhasAresta = undefined;
     this.nosSimulados = [];
     this.ajusteInicialFeito = false;
+    this.ajusteFinalFeito = false;
+    this.zoomManual = false;
     if (this.simulacao) {
       this.simulacao.stop();
       this.simulacao = undefined;
@@ -222,6 +228,7 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
       .scaleExtent([0.1, 4])
       .on('zoom', (evento) => {
         grupoZoom.attr('transform', evento.transform.toString());
+        if (evento.sourceEvent) this.zoomManual = true;
         this.cartao.set(null);
       });
     svg.call(this.comportamentoZoom);
@@ -345,6 +352,13 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
         this.ajusteInicialFeito = true;
         this.ajustarAoGrafo();
       }
+    });
+
+    // A repulsão continua afastando os blocos desconectados depois do primeiro enquadramento: ao assentar, enquadra de novo (P-060).
+    this.simulacao.on('end', () => {
+      if (this.ajusteFinalFeito) return;
+      this.ajusteFinalFeito = true;
+      if (!this.zoomManual) this.ajustarAoGrafo();
     });
 
   }

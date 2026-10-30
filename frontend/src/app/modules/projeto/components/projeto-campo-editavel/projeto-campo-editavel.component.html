@@ -1,0 +1,57 @@
+@if (editando()) {
+  <span class="campo-editavel__editor" (keydown.escape)="descartar()">
+    @switch (tipo()) {
+      @case ('texto') {
+        <input
+          pInputText
+          appBloquearCaracteresProibidos
+          class="campo-editavel__texto"
+          spellcheck="true"
+          [formControl]="rascunhoTexto"
+          [attr.aria-label]="rotulo()"
+          (keydown.enter)="sair()"
+          (blur)="sair()"
+        />
+      }
+      @case ('data') {
+        <p-datepicker
+          #seletor
+          [formControl]="rascunhoData"
+          dateFormat="dd/mm/yy"
+          placeholder="dd/mm/aaaa"
+          appendTo="body"
+          [ariaLabel]="rotulo()"
+          (onClose)="aoSairDoSeletor(seletor)"
+          (onBlur)="aoSairDoSeletor(seletor)"
+        />
+      }
+      @case ('cor') {
+        <app-seletor-cor [formControl]="rascunhoCor" [compacto]="true" />
+      }
+    }
+    @if (erro()) {
+      <small class="campo-editavel__erro" role="alert">{{ erro() }}</small>
+    }
+    @if (confirmando()) {
+      <span class="campo-editavel__confirmar" role="group" aria-label="Confirmar alteração">
+        <span class="campo-editavel__confirmar-texto">Salvar alteração?</span>
+        <p-button label="Sim" size="small" (onClick)="confirmar()" />
+        <p-button label="Não" size="small" severity="secondary" [text]="true" (onClick)="descartar()" />
+      </span>
+    }
+  </span>
+} @else {
+  <p-contextmenu #menu [model]="itensMenu" appendTo="body" />
+  <span
+    class="campo-editavel__exibicao"
+    [class.campo-editavel__exibicao--editavel]="editavel()"
+    (contextmenu)="abrirMenu($event, menu)"
+  >
+    <ng-content />
+  </span>
+  @if (editavel()) {
+    <button type="button" class="campo-editavel__lapis" [attr.aria-label]="rotuloMenu()" (click)="iniciarEdicao()">
+      <i class="pi pi-pencil" aria-hidden="true"></i>
+    </button>
+  }
+}

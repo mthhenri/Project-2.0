@@ -71,7 +71,7 @@
                     <span class="conversa-direta__citacao-trecho">{{ citacao.trecho }}</span>
                   </button>
                 }
-                <app-markdown-visualizador [texto]="mensagem.texto" [destaques]="destaquesDe(mensagem)" />
+                <app-markdown-visualizador [texto]="mensagem.texto" [destaques]="destaquesDe(mensagem)" [comTabelas]="false" />
                 @for (referencia of mensagem.referencias; track referencia.tipo + referencia.id) {
                   <app-mensagem-direta-referencia-cartao [tipo]="referencia.tipo" [id]="referencia.id" />
                 }

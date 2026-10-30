@@ -53,6 +53,7 @@
 - **Contorno:** nenhum conhecido.
 - **Correção:** precisa de uma captura da tela quebrada e do ambiente (sistema, navegador ou Project Desktop, largura da janela).
 - **Desde:** 2026-10-20.
+- **Nota (2026-10-30):** o autor trouxe a captura: o chip da execução na topbar invadia o logo e a barra lateral numa janela de ~720 px (corrigido, ver `HISTORY.md`). O chip aparece em toda tela e tem o cronômetro correndo, então provavelmente era esta a "quebra" de Ponto/Execuções; confirmar com o autor antes de fechar o item.
 
 ### P-029 — Custos da IA: alias que não é prefixo do id datado aparece como modelo sem preço · `ACEITO` · ia-custo
 
@@ -96,14 +97,6 @@
 - **Correção:** reconferir o usuário na batida do stream, ou encerrar as conexões do usuário ao desativar ou excluir (com o aviso entre instâncias).
 - **Desde:** 2026-10-30 (revisão do P-031).
 
-### P-062 — Menus do front seguem o tipo gravado no login, que agora dura 7 dias · `ABERTO` · autenticacao/frontend
-
-- **Sintoma:** um gestor rebaixado continua vendo os menus de gestor e leva 403 nas ações; um desenvolvedor promovido não vê as telas novas até sair e entrar.
-- **Causa:** `UsuarioSessaoService` decide `eGestor` e `eAdministrador` pelo `usuario_sessao` do `localStorage`, gravado no login. O backend já usa o tipo atual do banco (P-031), então não há brecha de segurança, só a tela defasada.
-- **Contorno:** sair e entrar de novo.
-- **Correção:** atualizar o `usuario_sessao` a partir do servidor (por exemplo, numa consulta ao abrir o app).
-- **Desde:** 2026-10-30 (revisão do P-031).
-
 ### P-063 — Ponto: o dia de hoje com execução em andamento não mostra o período corrente na linha · `ABERTO` · ponto/backend
 
 - **Sintoma:** com uma execução rodando depois de um bloco já encerrado (ex.: 07:40–10:00 e uma nova desde 11:10), a linha do dia mostra só "Dia todo 07:40 → 10:00": o período em curso e o intervalo de 1h10 não aparecem. Só quando **todas** as execuções do dia estão em andamento a linha diz "em andamento".
@@ -121,22 +114,13 @@
 - **Desde:** 2026-10-29 (apontado pelo autor).
 
 
-### P-060 — Grafo de demandas: o enquadramento inicial corta nós quando o projeto tem blocos desconectados · `ABERTO` · demanda/frontend
-
-- **Sintoma:** com dois blocos de demandas sem conexão entre si (ex.: duas demandas de estrutura com filhos), os blocos se afastam e, em 1920×1080, 1366×768 e 1080×1920, o grafo abre com nós cortados no topo e na base (o cenário de teste do P-047 mostrou "Tela de login" e "Filtro por período" parcialmente fora da área). Idêntico no código anterior ao P-047.
-- **Causa:** `ajustarAoGrafo` enquadra uma vez, quando `alpha < 0.35`, e a simulação (repulsão -700) continua afastando os blocos depois disso; não foi confirmado se o `clientHeight` do contêiner também conta.
-- **Contorno:** o botão "Centralizar" do grafo, ou zoom/arrasto.
-- **Correção:** reenquadrar quando a simulação assenta (`end`) ou reduzir a repulsão entre blocos desconectados; medir antes de mexer.
-- **Desde:** 2026-10-30 (visto na verificação do P-047).
-
-
 ### P-059 — Teste de `modelagem.page.spec` instável na suíte inteira · `ABERTO` · frontend/testes
 
 - **Sintoma:** `escolher uma relação no painel passa para a outra tabela` falha às vezes em `npm run test --workspace=frontend` (por tempo esgotado com o limite antigo de 5 s; três vezes com o limite de 20 s, o que indica trava e não só lentidão; o teste espera `whenStable` depois de clicar na relação do painel, e o diagrama parece manter algo pendente sob carga) e passa sozinho (22 testes) e na rodada seguinte, sem mudança de código.
 - **Causa:** não investigada; parece carga da suíte inteira, como o antigo P-034. O `demanda-grafo.component.spec` (também SVG) travou do mesmo jeito em duas rodadas seguidas em 2026-10-30 e passou sozinho: o padrão é de teste que espera estabilizar um diagrama SVG. Ajudou a limpar processos `node --watch` do backend que sobraram da verificação ao vivo antes de rodar a suíte.
-- **Contorno:** rodar o arquivo sozinho ou repetir a suíte.
-- **Correção:** medir o teste sob carga e ver o que ele espera (renderização do diagrama?) antes de mexer no limite.
-- **Desde:** 2026-10-30 (visto nos fechos dos P-035/P-038/P-041/P-055 e dos P-050/P-051/P-058; 10 rodadas completas, 4 falhas dele).
+- **Contorno:** o `atualizar()` de `montarComponente` agora espera a estabilidade da zona no máximo 8 s e segue (a trava vira só uma espera, e as afirmações do teste continuam conferindo o estado); rodar o arquivo sozinho ou repetir a suíte também resolve. Aplicado em 2026-10-30 depois de o teste falhar no CI do PR 27; **a causa da trava segue desconhecida**.
+- **Correção:** achar o temporizador que não termina (suspeita: transição do d3, no diagrama da Modelagem e no grafo, que roda dentro da zona) e tirá-lo da zona ou pará-lo; só então remover o teto. Observação: com a CPU três vezes sobrecarregada o arquivo passou (3 s viraram 11 s), então não é só lentidão.
+- **Desde:** 2026-10-30 (visto nos fechos dos P-035/P-038/P-041/P-055 e dos P-050/P-051/P-058; 10 rodadas completas, 4 falhas dele; depois mais 3 rodadas com falha e uma no CI do PR 27).
 
 ### P-001 — Projeto sem lint · `CONTORNADO` · repositório
 

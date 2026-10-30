@@ -43,6 +43,14 @@
     gap: 0.125rem;
   }
 
+  // Divide o grupo de botões da tabela (só com o cursor numa tabela) dos de formatação.
+  &__separador {
+    align-self: stretch;
+    width: 1px;
+    margin: 0.25rem 0.25rem;
+    background: var(--app-surface-200);
+  }
+
   &__botao {
     display: inline-flex;
     align-items: center;

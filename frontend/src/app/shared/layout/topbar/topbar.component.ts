@@ -64,6 +64,7 @@ export class TopbarComponent {
   @ViewChild('anotacoesDialog') private anotacoesDialog?: UsuarioAnotacoesDialogComponent;
   readonly rotuloTipo = rotuloTipoUsuario;
   readonly horaAtual = signal<string>('');
+  readonly dataAtual = signal<string>('');
 
   voltarParaAIa(): void {
     this.iaDisponibilidade.voltarParaAIa();
@@ -152,7 +153,8 @@ export class TopbarComponent {
 
   private atualizarHora(): void {
     const [data, hora] = dataHoraNoFuso(new Date(), ambiente.fusoHorario).split(' ');
-    this.horaAtual.set(`${hora} ${data}`);
+    this.horaAtual.set(hora);
+    this.dataAtual.set(data);
   }
 
   sair(): void {

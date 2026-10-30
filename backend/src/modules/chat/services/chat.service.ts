@@ -364,7 +364,15 @@ export class ChatService {
       const separador = separadorEntreVoltas(texto);
       let separadorEmitido = separador === '';
       const resposta = await this.iaService.transmitir(
-        { nivel: opcoes.nivel ?? NivelIaEnum.RAPIDO, instrucoes, mensagens, ferramentas, maximoTokens: opcoes.maximoTokens ?? MAXIMO_TOKENS_DO_CHAT },
+        {
+          nivel: opcoes.nivel ?? NivelIaEnum.RAPIDO,
+          instrucoes,
+          mensagens,
+          ferramentas,
+          maximoTokens: opcoes.maximoTokens ?? MAXIMO_TOKENS_DO_CHAT,
+          // A dúvida de código (ligada pelo administrador) pode precisar de documentação atual: o provedor pesquisa por conta própria quando o modelo achar útil.
+          pesquisaWeb: doChat && configuracao.duvidasCodigo,
+        },
         (trecho) => {
           if (trecho === '') return;
           if (!separadorEmitido) {

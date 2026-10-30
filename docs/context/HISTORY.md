@@ -12,6 +12,91 @@
 
 ---
 
+
+
+
+
+
+
+## 2026-10-30 — CI do PR 27: teste da Modelagem trava e o `atualizar()` ganha teto de espera (P-059)
+
+- **O que aconteceu:** o job "Organização e build" do PR 27 falhou com 1 teste de 2380: `escolher uma relação no painel passa para a outra tabela` (`modelagem.page.spec`) estourou os 20 s. Os testes de integração e o deploy do Cloudflare Pages passaram. Era o P-059, que eu tinha tratado como lentidão da minha máquina: o CI, limpo, o reproduziu, então não era carga local.
+- **Investigação:** o arquivo sozinho leva 3 s; com a CPU três vezes sobrecarregada, 11 s e passa. Logo o teste não é lento: às vezes trava no `whenStable` (algo pendente na zona), o que aponta para a transição do d3 do diagrama. A causa não foi provada.
+- **Mudança:** `atualizar()` de `src/testes/montar-componente.ts` espera a estabilidade no máximo 8 s e segue; o temporizador do teto é limpo no `finally` (a primeira versão deixava um temporizador a mais e quebrou um teste do chip da execução que conta os pendentes). Um estado não alcançado continua falhando nas afirmações.
+- **Testes:** frontend 188 arquivos, 2380 testes verdes. Não foi possível reproduzir a trava localmente, então **a eficácia do teto só se confirma no CI**; o P-059 segue aberto com a correção de causa descrita.
+
+## 2026-10-30 — 272: painel da revisão no relatório, ícones de visão no projeto e lápis ao passar o mouse
+
+- **Origem:** o POC publicado como artefato e a aprovação do autor da configuração escolhida nele. No POC houve uma correção de processo: artefato de tela segue o visual do projeto (tema Aura azul, claro como padrão, tokens `--app-*`), não um visual próprio.
+- **O que mudou:** (1) relatório: a revisão por IA abre num painel à direita da tabela, com divisor arrastável (ponteiro, setas, duplo clique; `relatorio.divisao` no navegador) e uma seta que recolhe o painel numa barra com uma caixinha por ponto (ícone da IA em vermelho, laranja ou cinza conforme a severidade, nome no tooltip; clicar reabre); abaixo de 900px o painel desce. (2) projeto: Grafo e Controle de horas viram ícones com tooltip no fim da barra de busca (`slotVisoes` da `DemandaToolbarComponent`; o de Controle de horas só para gestor) e saem do cabeçalho. (3) lápis ao passar o mouse nos campos editáveis do cabeçalho do projeto (clicar abre a edição) e nos horários de Execuções. Sem backend.
+- **Achado ao investigar:** o Controle de horas **já traz** Estimado, Executado e Estouro no resumo do topo, então a sugestão "executado × estimado dentro do Controle de horas" não precisou de código (o POC a mostrava como se faltasse).
+- **Decisão de escopo:** ligar o achado da IA a uma linha da tabela (como no POC) ficou de fora: o achado traz só uma referência em texto, sem id de execução.
+- **Testes:** frontend 188 arquivos, 2379 testes verdes e 1 falha por tempo-limite de 20 s, diferente a cada rodada completa (modelagem na primeira, grafo na segunda), cada uma verde ao rodar isolada; ocorreu com o `ng serve` ligado na máquina, então tratada como lentidão e não como defeito. Build ok. Sem lint (P-001). Util de divisão com teste próprio.
+- **Ao vivo (API mockada):** 1920×1080, 1366×768 e 1080×1920, sem rolagem horizontal: relatório aberto, alargado, recolhido com tooltip, ícones e tooltip no projeto e lápis em Execuções. Em 1366 a tabela fica estreita com o painel aberto (a descrição quebra em várias linhas); o autor pode arrastar o divisor.
+
+## 2026-10-30 — POC da tela de relatório (sem spec): identidade do projeto, filtros num cartão
+
+- **Pedido do autor:** um POC da tela de relatório para ir ajustando, com sugestões. Sem spec própria (é iteração sobre a 269); as sugestões que o autor aceitar viram task.
+- **O que mudou (só frontend):** com o projeto fixo (`/projeto/:id/relatorio`) o seletor de projeto some e o cabeçalho mostra a identidade (selo com a cor, nome e código) ao lado do título, e o resumo não repete o nome; os filtros (projeto quando livre, atalhos de período, mês e ano) ficam num cartão só, como a barra de filtros das outras telas; o seletor de projeto livre deixou de esticar a linha inteira.
+- **Testes:** 21 testes de relatório verdes e build ok; ao vivo (API mockada) em 1920×1080, 1366×768 e 1080×1920, capturas em `.artifacts/269/ui-poc/`. Não rodei a suíte completa depois desta mudança (a última, com 2369 testes, é da 271).
+
+## 2026-10-30 — 271: cabeçalho do projeto edita no lugar e perde a faixa de resumo
+
+- **Pedido do autor** (com a captura do cabeçalho): tirar a faixa "N demandas — Executado X de Y"; datas depois do status ("Fim: indefinido" sem data); datas, nome e cor editados como as horas em Execuções (botão direito → "Editar" → campo no lugar); "Editar" vira "Configurar volume".
+- **O que mudou:** novo `ProjetoCampoEditavelComponent` (texto, data ou cor; Enter ou sair com mudança pergunta "Salvar alteração? Sim / Não"; Esc cancela; nome com ao menos 3 caracteres; sair da data vazia é desistir). A página aplica de forma otimista com rollback (`alterarCampo`, que substituiu `alterarStatus`) e confere "fim depois do início" antes da API. Grafo e Controle de horas foram para as ações do cabeçalho (o Grafo continua visível ao desenvolvedor); novo `ProjetoVolumeDialogComponent` com as vigências. Saíram `resumo()`, a barra, a linha de metas, "Definir datas" e o uso do dialog completo na página.
+- **Divergência anotada:** o autor lembrou a edição de horas em Execuções como botão direito; ela é por clique, com a pergunta "Salvar alteração? Sim / Não". Foi seguida a descrição do autor para o gesto (botão direito) e a pergunta de Execuções para a confirmação.
+- **Testes:** `ng test` completo com 188 arquivos e 2369 testes verdes; build ok. Sem lint (P-001).
+- **Ao vivo (API mockada):** 1920×1080, 1366×768 e 1080×1920; menu, edição do nome, da data de fim e da cor, e o dialog do volume; cada edição gerou um `PUT` só com o campo. Achado na verificação: com os cinco botões o cabeçalho quebrava em três linhas a 1366; agora as ações descem para uma linha própria quando não cabem.
+- **Pendente:** a descoberta do gesto (só um `title` "Botão direito para editar" avisa) e o toque (sem botão direito) ficam como sugestão para o autor.
+
+## 2026-10-30 — 270: prompt da revisão do relatório vira tipo de prompt editável, com início e fim das execuções
+
+- **O que mudou:** o prompt da revisão por IA (task 111) estava escrito em `relatorio.service.ts`. Agora é o tipo `REVISAO_RELATORIO` (enum do `shared`, nível PADRÃO), com a versão 1 ativa na migration `0073`, editável em Configurações da IA. A service lê o prompt ativo pela `PromptService`, envia-o como `instrucoes` e leva na mensagem só os dados. Cada execução enviada traz início e fim (fuso da aplicação; "em andamento" sem fim), porque o prompt antigo pedia checar sobreposição e horário mas só recebia a data. O texto do prompt também passou a mandar citar o número da linha em `referencia` e a não inventar fatos.
+- **Testes:** backend 1556 (um a mais), shared 294, build do backend ok. Sem lint (P-001).
+- **Não verificado:** a migration não rodou em PostgreSQL real (sem Docker aqui) e a revisão não foi chamada num provedor real (sem chave). O custo da revisão continua fora da aba Custos (sem task).
+
+## 2026-10-30 — 269 (I-039): relatório de execuções deixa de ser dialog e vira tela
+
+- **O que mudou:** o `RelatorioExecucaoDialogComponent` virou `RelatorioExecucaoPage` (`modules/relatorio/pages/relatorio-execucao/`), com os mesmos filtros, preview, revisão por IA e CSV; as ações foram para o cabeçalho da página, com botão de voltar. Duas rotas, ambas com `gestorGuard`: `/projeto/:id/relatorio` (projeto fixo, vinda do detalhe do projeto) e `/relatorio` (projeto escolhido na tela, vinda de Execuções). O detalhe do projeto e Execuções navegam em vez de abrir o dialog. Sem backend. A tabela perdeu a altura fixa de 320 px: a página rola. I-039 saiu de `IDEAS.md`; a I-038 segue aberta.
+- **Testes:** componente migrado (mais um teste do botão de voltar nas duas rotas); `ng test` completo com 187 arquivos e 2355 testes verdes; build do frontend ok. Sem lint (P-001).
+- **Ao vivo (API mockada, sem PostgreSQL/Docker):** `/projeto/3/relatorio` e `/relatorio` em 1920×1080, 1366×768 e 1080×1920, sem rolagem horizontal; estados vazio (sem projeto), cheio e com revisão por IA. Erro e carregando só nos testes de componente. A revisão real contra um provedor de IA não foi exercitada (sem chave).
+- **Pendente:** o item "Execuções" do menu não fica destacado em `/relatorio` (decisão estética, não tratada).
+
+## 2026-10-30 — Editor de código do chat: código colado se perdia das linhas
+
+- **Origem:** o autor mandou a captura: ao colar um bloco de código no bloco de código do chat entre colaboradores, o texto não batia com a numeração. Trabalho fora do fluxo de spec; o componente é o `app-editor-codigo` (task 216).
+- **Duas causas**, as duas reproduzidas no Chromium com o editor sozinho numa rota temporária (não versionada) e um código de 40 linhas colado: (1) o `<code>` da camada de realce usava a fonte e o corpo do navegador, não os do editor, e as linhas dela ficavam com ~21,8 px contra os 20 px do campo e dos números (a camada tinha 872 px de rolagem contra 832 do campo) — o texto se afastava a cada linha; (2) a rolagem do campo era copiada só no evento de rolagem, que chega **antes** de as camadas renderizarem o texto colado: com o cursor levado ao fim, o campo rolava 567 px e o realce e os números ficavam em 0.
+- **Correção:** `.editor-codigo__realce code { font: inherit; line-height: inherit }` e um `afterRenderEffect` que copia a rolagem de novo depois de cada renderização do texto.
+- **Testes:** +1 (rolagem copiada depois de colar; falha sem a correção, passa com ela); frontend inteiro e build verdes; sem lint (P-001). **Ao vivo** (1366×768, Chromium com a API simulada): antes, realce 0 e números 0 contra campo 567 e linhas desalinhadas; depois, 567/567/567, alturas iguais (832/832) e a numeração batendo com as linhas. Não verifiquei no Project Desktop nem no Windows do autor.
+
+## 2026-10-30 — I-007 refeita: a pesquisa na internet é a do próprio provedor (task 263)
+
+- **Origem:** o autor reclamou de eu ter escolhido o Brave sem perguntar e decidiu: cada provedor usa a sua pesquisa (o `web_search` da Anthropic, o Google Search do Gemini). A 262 fica como registro; a [263](../specs/done/263-ia-pesquisa-na-internet-do-provedor.spec.md) a substitui nesse ponto.
+- **O que saiu:** `pesquisar_na_internet`, `BuscaWeb`/`BuscaWebBrave`, o DTO e `BUSCA_WEB_CHAVE`. **O que entrou:** `IaSolicitacao.pesquisaWeb`, tratado em cada adaptador (Anthropic liga o `web_search_20250305` com até 3 buscas; Google liga o `googleSearch`, misturado com as ferramentas só no Gemini 3; OpenAI ignora). O chat liga com as dúvidas de código ligadas.
+- **Limites a saber:** a OpenAI fica sem pesquisa até a Responses API (spec 261); o custo da busca não entra na aba Custos (I-041); com o Gemini 2.5 e ferramentas na chamada (o chat sempre tem) não há pesquisa.
+- **Testes:** backend 1.555 e shared 294 verdes, `nest build` aprovado; sem lint (P-001). **Não verificado:** nenhuma chamada real aos provedores (sem chaves aqui). O formato aceito pela API para a mistura no Gemini 3 e o `pause_turn` da Anthropic são suposições a conferir com chave.
+- **Lição:** escolha de serviço externo com custo e dado saindo da empresa é pergunta antes do código; aqui eu tinha avisado que era decisão do autor e fui em frente mesmo assim.
+
+## 2026-10-30 — I-007 (pesquisa na internet), I-032 (balão cinza) e I-003 (tabelas no Markdown)
+
+- **Origem:** o autor escolheu as três na conversa sobre as ideias; na I-007 pediu para **não** subir o modelo e usar uma ferramenta de pesquisa na internet. Spec `done/262-ia-pesquisa-na-internet-e-ajustes-de-chat.spec.md` (feita junto, sem backlog). Saem do `IDEAS.md`: I-003, I-007 e I-032.
+- **I-007:** não havia nenhuma ferramenta de busca no backend. Entrou `pesquisar_na_internet` (`FerramentaIa` de leitura), com `BuscaWeb` abstrata e `BuscaWebBrave` (`GET` na API do Brave com `X-Subscription-Token`, 8 s de prazo, HTML e entidades tiradas dos trechos). `BUSCA_WEB_CHAVE` é opcional (`.env.example`, README, `ConfigService`): sem ela `habilitada()` é falso e a ferramenta some da lista. Decisão minha, a confirmar: **Brave** como serviço (preço por consulta, sem treinar com a consulta, API simples); trocar é escrever outra implementação de `BuscaWeb`. A consulta sai do servidor para o Brave, por isso a descrição da ferramenta manda não pôr dados da empresa nela.
+- **I-032:** só o `chat__balao`; checado com `gerenciamento-de-impacto` (a classe é da página do chat; o check-in tem a sua e **não** mudou). O chat entre colaboradores tem fundo próprio (azul a 14%), não compartilha token: não mudou.
+- **I-003:** o interpretador e o visualizador já tinham tabela (P-039, ligada só para a IA); faltava o editor. O esquema da tabela já estava carregado; entrou o botão (3×3, cursor na primeira célula) e os botões de linha e coluna, que só aparecem com o cursor numa tabela. Visualizador agora liga tabelas **por padrão**; chat entre colaboradores e as mensagens do usuário no chat da IA e no check-in continuam sem (`[comTabelas]="false"`, para não mudar o que já era texto).
+- **Testes:** backend 1.560 (inclui 11 novos: busca, ferramenta e configuração), shared 294; frontend 2.353 em 187 arquivos (+6 do editor, +1 do visualizador) e build dos dois verdes; sem lint (P-001).
+- **Ao vivo** (`ng serve` com a API simulada no navegador; sem PostgreSQL nem chave do Brave): balão cinza no chat em `1920×1080`, `1366×768` e `1080×1920`, claro e escuro; tabela criada e preenchida com Tab no pad ("Minhas anotações"), `+L` e `+C` somaram linha e coluna. **Não verificado:** a pesquisa real e o prompt `DUVIDA_CODIGO` citando a ferramenta.
+- **Decisão:** a ação de excluir linha ignora a primeira linha (o cabeçalho) por precaução, já que o Markdown exige um; não testei o que o Milkdown faria sem essa guarda.
+
+## 2026-10-30 — Chip da execução sobre o logo, P-062 e P-060
+
+- **Origem:** o autor trouxe a captura do chip verde da execução invadindo o "Project 2.0" da barra lateral (janela de ~720 px) e pediu para resolver junto do P-062 e do P-060. Trabalho fora do fluxo de spec.
+- **Chip:** a topbar é `justify-end` e seus itens não encolhiam (`flex-shrink-0`), então, quando a soma passava da largura, o bloco transbordava para a **esquerda**, por cima da barra lateral. Agora o bloco da direita pode encolher, só o chip cede (`:host { display: flex; min-width: 0 }`, o texto já tinha reticências) e, abaixo de 1100 px, saem a data do relógio e o nome do perfil (`topbar__data`, `topbar__perfil-nome`; `horaAtual` virou `horaAtual` + `dataAtual`).
+- **P-062:** `AutenticacaoService.atualizarSessao()` chama `GET /usuario/:id` (o desenvolvedor já pode ler o próprio perfil) e troca o `usuario_sessao`; a `LayoutComponent` chama no construtor, uma vez a cada abertura do app. Sem backend novo. Falha de rede mantém a sessão; 401 segue o redirecionamento global; resposta de outro usuário é descartada.
+- **P-060:** o enquadramento rodava uma vez com `alpha < 0.35` (~46 ticks de ~300) e a repulsão continuava afastando os blocos. Agora a simulação reenquadra uma vez no evento `end`, salvo se a pessoa já mexeu no zoom (`sourceEvent` do zoom do d3). O primeiro enquadramento rápido ficou.
+- **Testes:** +4 (sessão) e +2 (grafo); frontend inteiro 2.347 em 187 arquivos e `ng build` verdes. Sem lint (P-001).
+- **Ao vivo** (`ng serve` com a API simulada por `page.route`: **sem PostgreSQL**, o ambiente não tem Docker): chip a 719 px com a barra aberta e recolhida (antes x=30, sobre a barra; depois x=264/212, fora dela); `1280×720`, `1366×768` e `1920×1080` sem mudança de posição; P-062 com sessão gravada como gestor e servidor dizendo desenvolvedor, o `usuario_sessao` virou `DESENVOLVEDOR`; grafo com dois blocos desconectados em `1920×1080`, `1366×768` e `1080×1920`: antes 3 de 10 nós cortados na vertical, depois 0.
+- **Pendências:** o P-027 ficou com uma nota (provavelmente era este chip; o autor confirma). A janela do Project Desktop real não foi aberta.
+
 ## 2026-10-30 — Ponto: a meta só vale a partir do cadastro do usuário
 
 - **Origem:** na conversa do P-054 o autor viu que o alerta "Faltaram 8h" aparecia nos dias anteriores ao cadastro de um usuário criado no meio do mês, e o saldo já os contava como falta. Escolheu a opção A (corrigir na regra, não só no alerta): **a meta começa no dia do cadastro**. Trabalho separado, em branch e PR próprios.

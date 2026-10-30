@@ -10,7 +10,7 @@
         icon="pi pi-file-export"
         severity="secondary"
         [outlined]="true"
-        (onClick)="relatorioDialog.abrir()"
+        (onClick)="abrirRelatorio()"
       />
     }
   </div>
@@ -274,6 +274,7 @@
     <button type="button" class="execucao-historico__momento execucao-historico__momento--editavel" (click)="iniciarEdicao(execucao, campo)">
       <span class="execucao-historico__momento-hora">{{ hora(instante) }}</span>
       <span class="execucao-historico__momento-data">{{ diaMes(instante) }}</span>
+      <i class="pi pi-pencil execucao-historico__momento-lapis" aria-hidden="true"></i>
     </button>
   } @else {
     <div class="execucao-historico__momento">
@@ -316,4 +317,3 @@
 
 <p-confirmpopup />
 <app-atividade-visualizar-dialog #visualizarDialog />
-<app-relatorio-execucao-dialog #relatorioDialog />

@@ -3,13 +3,14 @@ import { RelatorioController } from './controllers/relatorio.controller';
 import { RelatorioService } from './services/relatorio.service';
 import { ExecucaoModule } from '../execucao/execucao.module';
 import { ProjetoModule } from '../projeto/projeto.module';
+import { PromptModule } from '../prompt/prompt.module';
 import { IaModule } from '../ia/ia.module';
 import { FerramentaIaModule } from '../ferramenta-ia/ferramenta-ia.module';
 import { FerramentaIaRegistro } from '../ferramenta-ia/services/ferramenta-ia.registro';
 import { ConsultarRelatorioDeExecucoesFerramenta } from './ferramentas/consultar-relatorio-de-execucoes.ferramenta';
 
 @Module({
-  imports:     [ExecucaoModule, ProjetoModule, IaModule, FerramentaIaModule],
+  imports:     [ExecucaoModule, ProjetoModule, IaModule, PromptModule, FerramentaIaModule],
   controllers: [RelatorioController],
   providers:   [RelatorioService, ConsultarRelatorioDeExecucoesFerramenta],
 })

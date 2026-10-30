@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { DemandaGrafoDto, DemandaGrafoNoDto, TipoDemandaStatusEnum } from '@project20/shared';
 import { montarComponente } from '../../../../../testes/montar-componente';
@@ -194,5 +194,28 @@ describe('DemandaGrafoComponent', () => {
     const { montado } = await montar();
     expect(() => montado.fixture.destroy()).not.toThrow();
     expect(montado.componente.cartao()).toBeNull();
+  });
+
+  // P-060: o enquadramento do primeiro quadro acontece com o layout ainda se assentando; ao terminar a simulação enquadra de novo.
+  describe('enquadramento ao assentar', () => {
+    type Interno = { ajustarAoGrafo: () => void; zoomManual: boolean; simulacao: { on: (evento: string) => () => void } };
+
+    it('reenquadra uma vez quando a simulação termina', async () => {
+      const { montado } = await montar();
+      const interno = montado.componente as unknown as Interno;
+      const ajustar = vi.spyOn(interno, 'ajustarAoGrafo').mockImplementation(() => undefined);
+      interno.simulacao.on('end')();
+      interno.simulacao.on('end')();
+      expect(ajustar).toHaveBeenCalledTimes(1);
+    });
+
+    it('não reenquadra se a pessoa já mexeu no zoom ou arrastou', async () => {
+      const { montado } = await montar();
+      const interno = montado.componente as unknown as Interno;
+      const ajustar = vi.spyOn(interno, 'ajustarAoGrafo').mockImplementation(() => undefined);
+      interno.zoomManual = true;
+      interno.simulacao.on('end')();
+      expect(ajustar).not.toHaveBeenCalled();
+    });
   });
 });

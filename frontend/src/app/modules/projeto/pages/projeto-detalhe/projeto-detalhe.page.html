@@ -18,19 +18,31 @@
           (onClick)="voltarParaListagem()"
         />
         <div class="projeto-detalhe__identidade">
-          <span
-            class="projeto-detalhe__selo"
-            aria-hidden="true"
-            [style.background-color]="projeto()!.cor"
-            [style.color]="corTextoSelo()"
-          >{{ siglaDoSelo() }}</span>
-          <h1 class="projeto-detalhe__titulo">{{ projeto()!.nome }}</h1>
+          <app-projeto-campo-editavel tipo="cor" rotulo="cor do projeto" [valor]="projeto()!.cor" [editavel]="sessao.eGestor()" (confirmado)="alterarCampo({ cor: $event })">
+            <span
+              class="projeto-detalhe__selo"
+              aria-hidden="true"
+              [style.background-color]="projeto()!.cor"
+              [style.color]="corTextoSelo()"
+            >{{ siglaDoSelo() }}</span>
+          </app-projeto-campo-editavel>
+          <app-projeto-campo-editavel tipo="texto" rotulo="nome do projeto" [valor]="projeto()!.nome" [editavel]="sessao.eGestor()" (confirmado)="alterarCampo({ nome: $event })">
+            <h1 class="projeto-detalhe__titulo">{{ projeto()!.nome }}</h1>
+          </app-projeto-campo-editavel>
           <span class="projeto-detalhe__codigo">{{ projeto()!.codigo }}</span>
           <app-projeto-status-chip
             [status]="projeto()!.status"
             [editavel]="sessao.eGestor()"
-            (statusEscolhido)="alterarStatus($event)"
+            (statusEscolhido)="alterarCampo({ status: $event })"
           />
+          <span class="projeto-detalhe__periodo">
+            <app-projeto-campo-editavel tipo="data" rotulo="data de início" [valor]="projeto()!.inicioData" [editavel]="sessao.eGestor()" (confirmado)="alterarCampo({ inicioData: $event })">
+              <span class="projeto-detalhe__periodo-item">Início: <strong>{{ projeto()!.inicioData ? (projeto()!.inicioData | dataBrasileira) : 'indefinido' }}</strong></span>
+            </app-projeto-campo-editavel>
+            <app-projeto-campo-editavel tipo="data" rotulo="data de término" [valor]="projeto()!.previsaoFimData" [editavel]="sessao.eGestor()" (confirmado)="alterarCampo({ previsaoFimData: $event })">
+              <span class="projeto-detalhe__periodo-item">Fim: <strong>{{ projeto()!.previsaoFimData ? (projeto()!.previsaoFimData | dataBrasileira) : 'indefinido' }}</strong></span>
+            </app-projeto-campo-editavel>
+          </span>
         </div>
       </div>
 
@@ -46,73 +58,19 @@
             icon="pi pi-file"
             severity="secondary"
             [outlined]="true"
-            (onClick)="relatorioDialog.abrir(projeto()!.id)"
+            (onClick)="abrirRelatorio()"
           />
           <p-button
-            label="Editar"
-            icon="pi pi-pencil"
+            label="Configurar volume"
+            icon="pi pi-sliders-h"
             severity="secondary"
             [outlined]="true"
-            (onClick)="abrirDialogEditar()"
+            (onClick)="volumeDialog.abrir(projeto()!.id)"
           />
         }
       </div>
     </div>
     </div>
-
-    <!-- Metas: datas com lápis, ou "+ Definir datas" quando não há -->
-    <div class="projeto-detalhe__meta">
-      @if (projeto()!.inicioData || projeto()!.previsaoFimData) {
-        @if (projeto()!.inicioData) {
-          <span class="projeto-detalhe__meta-item">
-            <i class="pi pi-calendar"></i>
-            Início: <strong>{{ projeto()!.inicioData | dataBrasileira }}</strong>
-          </span>
-        }
-        @if (projeto()!.previsaoFimData) {
-          <span class="projeto-detalhe__meta-item">
-            <i class="pi pi-flag"></i>
-            Término: <strong>{{ projeto()!.previsaoFimData | dataBrasileira }}</strong>
-          </span>
-        }
-        @if (sessao.eGestor()) {
-          <button type="button" class="projeto-detalhe__meta-lapis" aria-label="Editar datas" pTooltip="Editar datas" tooltipPosition="top" (click)="abrirDialogEditar(true)">
-            <i class="pi pi-pencil"></i>
-          </button>
-        }
-      } @else if (sessao.eGestor()) {
-        <button type="button" class="projeto-detalhe__definir-datas" (click)="abrirDialogEditar(true)">
-          <i class="pi pi-plus"></i> Definir datas
-        </button>
-      }
-    </div>
-
-    <!-- Faixa de resumo: demandas, executado × estimado e visões -->
-    @if (!erroAoCarregarDemandas()) {
-      <div class="projeto-detalhe__resumo">
-        <span class="projeto-detalhe__resumo-total"><strong>{{ resumo().total }}</strong> {{ resumo().total === 1 ? 'demanda' : 'demandas' }}</span>
-
-        <span class="projeto-detalhe__resumo-progresso">
-          <span class="projeto-detalhe__resumo-rotulo">Executado</span>
-          <strong>{{ resumo().minutosExecutados | tempoExibicao: unidadeTempo.emDias() : 'minutos' }}</strong>
-          <span class="projeto-detalhe__resumo-rotulo">de</span>
-          <strong>{{ resumo().horasEstimadas | tempoExibicao: unidadeTempo.emDias() : 'horas' }}</strong>
-          @if (resumo().horasEstimadas > 0) {
-            <span class="projeto-detalhe__barra" [class.projeto-detalhe__barra--estouro]="resumo().estourou">
-              <span class="projeto-detalhe__barra-preenchimento" [style.width.%]="resumo().percentual > 100 ? 100 : resumo().percentual"></span>
-            </span>
-            <span class="projeto-detalhe__resumo-percentual">{{ resumo().percentual }}%</span>
-          }
-        </span>
-
-        <span class="projeto-detalhe__visoes" role="group" aria-label="Abrir demandas em outra visão">
-          <p-button label="Grafo" icon="pi pi-share-alt" severity="secondary" [outlined]="true" size="small" (onClick)="abrirVisao('grafo')" />
-          @if (sessao.eGestor()) {
-            <p-button label="Controle de horas" icon="pi pi-chart-bar" severity="secondary" [outlined]="true" size="small" (onClick)="abrirVisao('controle-de-horas')" />
-          }
-        </span>
-      </div>
-    }
 
     @if (carregandoDemandas()) {
       <app-skeleton-lista variante="linhas" [quantidade]="6" />
@@ -153,7 +111,14 @@
           (filtroAlterado)="aoAlterarFiltro($event)"
           (limpar)="aoAlterarFiltro(filtroVazio)"
           (expansaoAlternada)="alternarExpansaoGeral()"
-        />
+        >
+          <span slotVisoes class="projeto-detalhe__visoes" role="group" aria-label="Abrir demandas em outra visão">
+            <p-button icon="pi pi-share-alt" severity="secondary" [outlined]="true" size="small" ariaLabel="Grafo" pTooltip="Grafo" tooltipPosition="top" (onClick)="abrirVisao('grafo')" />
+            @if (sessao.eGestor()) {
+              <p-button icon="pi pi-chart-bar" severity="secondary" [outlined]="true" size="small" ariaLabel="Controle de horas" pTooltip="Controle de horas" tooltipPosition="top" (onClick)="abrirVisao('controle-de-horas')" />
+            }
+          </span>
+        </app-demanda-toolbar>
 
         <!-- Bloco próprio: a Árvore nasce depois da toolbar, que lê a expansão dela. -->
         @if (nos().length > 0) {
@@ -196,8 +161,8 @@
 
 </div>
 
-<!-- Dialog de edição do projeto (o mesmo da listagem; "Definir datas" abre com o foco no período) -->
-<app-projeto-formulario-dialog (aoAlterar)="aoAlterarProjeto($event)" />
+<!-- Volume esperado por vigência (o resto do projeto se edita no próprio cabeçalho) -->
+<app-projeto-volume-dialog #volumeDialog />
 
 <!-- Dialog de nova demanda (raiz) -->
 @if (projeto()) {
@@ -208,6 +173,3 @@
     (demandaCriada)="recarregarDemandas()"
   />
 }
-
-<!-- Dialog de relatório de execuções (gestor) -->
-<app-relatorio-execucao-dialog #relatorioDialog />

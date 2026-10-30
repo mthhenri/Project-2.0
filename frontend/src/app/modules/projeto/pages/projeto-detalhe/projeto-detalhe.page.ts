@@ -1,12 +1,12 @@
 import { Component, HostListener, OnInit, computed, inject, signal, viewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
+import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import {
-  ProjetoAlteradoDto,
+  ProjetoAlterarDto,
   ProjetoRecuperadoDto,
-  TipoProjetoStatusEnum,
   TipoDemandaStatusEnum,
   DemandaGrafoNoDto,
   TagResumoDto,
@@ -15,15 +15,13 @@ import { ProjetoService } from '../../services/projeto.service';
 import { DemandaService } from '../../../demanda/services/demanda.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { DataBrasileiraPipe } from '../../../../shared/pipes/data-brasileira.pipe';
-import { TempoExibicaoPipe } from '../../../../shared/pipes/tempo-exibicao.pipe';
-import { VisualizacaoTempoService } from '../../../../core/services/visualizacao-tempo.service';
 import { DemandaArvoreTelaComponent } from '../../../demanda/components/demanda-arvore-tela/demanda-arvore-tela.component';
 import { DemandaArvorePainelComponent } from '../../../demanda/components/demanda-arvore-painel/demanda-arvore-painel.component';
 import { DemandaFormularioDialogComponent } from '../../../demanda/components/demanda-formulario-dialog/demanda-formulario-dialog.component';
 import { DemandaToolbarComponent } from '../../../demanda/components/demanda-toolbar/demanda-toolbar.component';
-import { ProjetoFormularioDialogComponent } from '../../components/projeto-formulario-dialog/projeto-formulario-dialog.component';
+import { ProjetoCampoEditavelComponent } from '../../components/projeto-campo-editavel/projeto-campo-editavel.component';
+import { ProjetoVolumeDialogComponent } from '../../components/projeto-volume-dialog/projeto-volume-dialog.component';
 import { ProjetoStatusChipComponent } from '../../components/projeto-status-chip/projeto-status-chip.component';
-import { RelatorioExecucaoDialogComponent } from '../../../relatorio/components/relatorio-execucao-dialog/relatorio-execucao-dialog.component';
 import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
 import { PastaId, pastaInicial } from '../../../demanda/utils/demanda-pasta.util';
 import {
@@ -43,14 +41,13 @@ import { focoEmCampo, haSobreposicaoAberta } from '../../../../core/utils/atalho
     ButtonModule,
     TooltipModule,
     DataBrasileiraPipe,
-    TempoExibicaoPipe,
     DemandaArvorePainelComponent,
     DemandaArvoreTelaComponent,
     DemandaFormularioDialogComponent,
     DemandaToolbarComponent,
-    ProjetoFormularioDialogComponent,
+    ProjetoCampoEditavelComponent,
+    ProjetoVolumeDialogComponent,
     ProjetoStatusChipComponent,
-    RelatorioExecucaoDialogComponent,
   ],
   templateUrl: './projeto-detalhe.page.html',
   styleUrl: './projeto-detalhe.page.scss',
@@ -60,12 +57,11 @@ export class ProjetoDetalhePage implements OnInit {
   private readonly demandaService = inject(DemandaService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly messageService = inject(MessageService);
   readonly sessao = inject(UsuarioSessaoService);
-  readonly unidadeTempo = inject(VisualizacaoTempoService);
 
   private readonly toolbar = viewChild<DemandaToolbarComponent>('toolbar');
   private readonly arvoreTela = viewChild<DemandaArvoreTelaComponent>('arvoreTela');
-  private readonly editarDialog = viewChild.required(ProjetoFormularioDialogComponent);
 
   readonly projeto = signal<ProjetoRecuperadoDto | null>(null);
   /** Selo do cabeçalho: sigla do nome e texto legível sobre a cor do projeto. */
@@ -90,15 +86,6 @@ export class ProjetoDetalhePage implements OnInit {
     const porId = new Map<number, TagResumoDto>();
     for (const no of this.nos()) for (const tag of no.tags ?? []) porId.set(tag.id, tag);
     return [...porId.values()].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
-  });
-
-  /** Resumo do projeto: executado e estimado somam todas as demandas (as estruturais costumam ter 0 estimado). */
-  readonly resumo = computed(() => {
-    const nos = this.nos();
-    const minutosExecutados = nos.reduce((soma, no) => soma + no.minutosExecutados, 0);
-    const horasEstimadas = nos.reduce((soma, no) => soma + no.horasEstimadas, 0);
-    const percentual = horasEstimadas > 0 ? Math.round((minutosExecutados / (horasEstimadas * 60)) * 100) : 0;
-    return { total: nos.length, minutosExecutados, horasEstimadas, percentual, estourou: percentual >= 100 };
   });
 
   ngOnInit(): void {
@@ -140,24 +127,26 @@ export class ProjetoDetalhePage implements OnInit {
   // Projeto: edição, status e visões
   // ---------------------------------------------------------------------------
 
-  abrirDialogEditar(focarDatas = false): void {
-    const projetoDados = this.projeto();
-    if (projetoDados) this.editarDialog().abrirEdicao(projetoDados, { focarDatas });
-  }
-
-  /** O DTO retornado traz os campos exibidos: aplica direto, sem novo GET nem spinner. */
-  aoAlterarProjeto(alterado: ProjetoAlteradoDto): void {
-    this.projeto.update((atual) => (atual ? { ...atual, ...alterado } : atual));
-  }
-
-  /** Status pela tag do cabeçalho: otimista, com rollback se a API recusar. */
-  alterarStatus(status: TipoProjetoStatusEnum): void {
+  /**
+   * Alteração de um campo do cabeçalho (nome, cor, datas, status): otimista, com rollback se a API recusar. As datas chegam como
+   * `yyyy-mm-dd`; a previsão de fim tem de ser posterior ao início (a API confere de novo).
+   */
+  alterarCampo(alteracao: ProjetoAlterarDto): void {
     const projetoDados = this.projeto();
     if (!projetoDados) return;
-    const anterior = projetoDados.status;
-    this.projeto.set({ ...projetoDados, status });
-    this.projetoService.alterar(projetoDados.id, { status }).subscribe({
-      error: () => this.projeto.update((atual) => (atual ? { ...atual, status: anterior } : atual)),
+    const inicio = alteracao.inicioData ?? projetoDados.inicioData;
+    const fim = alteracao.previsaoFimData ?? projetoDados.previsaoFimData;
+    if (inicio && fim && fim <= inicio) {
+      this.messageService.add({ severity: 'warn', summary: 'Atenção', detail: 'A previsão de fim deve ser posterior à data de início' });
+      return;
+    }
+    const anterior = projetoDados;
+    this.projeto.set({ ...projetoDados, ...alteracao });
+    this.projetoService.alterar(projetoDados.id, alteracao).subscribe({
+      next: (resposta) => {
+        if (resposta.sucesso && resposta.dados) this.projeto.update((atual) => (atual ? { ...atual, ...resposta.dados! } : atual));
+      },
+      error: () => this.projeto.set(anterior),
     });
   }
 
@@ -165,6 +154,11 @@ export class ProjetoDetalhePage implements OnInit {
   abrirVisao(modo: 'grafo' | 'controle-de-horas'): void {
     const projetoDados = this.projeto();
     if (projetoDados) this.router.navigate(['/demanda'], { queryParams: { projetoId: projetoDados.id, modo } });
+  }
+
+  abrirRelatorio(): void {
+    const projetoDados = this.projeto();
+    if (projetoDados) this.router.navigate(['/projeto', projetoDados.id, 'relatorio']);
   }
 
   voltarParaListagem(): void {

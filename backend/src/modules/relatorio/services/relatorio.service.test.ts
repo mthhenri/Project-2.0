@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { RelatorioFormatoEnum, RelatorioPeriodoTipoEnum, NivelIaEnum } from '@project20/shared';
+import { RelatorioFormatoEnum, RelatorioPeriodoTipoEnum, NivelIaEnum, TipoPromptEnum } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { ResourceNotFoundException } from '../../../core/exceptions/resource-not-found.exception';
 import { IaException } from '../../ia/domain/ia.exception';
@@ -20,6 +20,8 @@ function linha(sobrescrita: Record<string, unknown> = {}) {
   };
 }
 
+const TEXTO_DO_PROMPT = 'Você é um auditor de teste';
+
 interface Cenario {
   linhas?: ReturnType<typeof linha>[];
   projeto?: { id: number; nome: string; codigo: string } | null;
@@ -30,6 +32,7 @@ function criar(cenario: Cenario = {}) {
   const filtrosDasConsultas: Record<string, unknown>[] = [];
   const consultasAoProjeto: Record<string, unknown>[] = [];
   const chamadasIa: Record<string, unknown>[] = [];
+  const pedidosDePrompt: string[] = [];
   const projeto = cenario.projeto === undefined ? { id: 3, nome: 'Loja', codigo: 'LOJA' } : cenario.projeto;
   const servico = Object.create(RelatorioService.prototype) as Record<string, unknown>;
   servico.execucaoRepositorio = {
@@ -39,6 +42,9 @@ function criar(cenario: Cenario = {}) {
     recuperar: async (consulta: Record<string, unknown>) => { consultasAoProjeto.push(consulta); return projeto; },
   };
   servico.configService = { obter: () => ({ aplicacao: { fusoHorario: FUSO } }) };
+  servico.promptService = {
+    obterAtivo: async (tipo: string) => { pedidosDePrompt.push(tipo); return { conteudo: TEXTO_DO_PROMPT }; },
+  };
   servico.iaService = {
     gerar: async (pedido: Record<string, unknown>) => {
       chamadasIa.push(pedido);
@@ -46,7 +52,7 @@ function criar(cenario: Cenario = {}) {
       return { texto: cenario.respostaIa ?? '{"resumo":"ok","inconsistencias":[]}' };
     },
   };
-  return { servico: servico as unknown as RelatorioService, filtrosDasConsultas, consultasAoProjeto, chamadasIa };
+  return { servico: servico as unknown as RelatorioService, filtrosDasConsultas, consultasAoProjeto, chamadasIa, pedidosDePrompt };
 }
 
 const MENSAL = (ano: number, mes: number) => ({ projetoId: 3, periodoTipo: RelatorioPeriodoTipoEnum.MENSAL, ano, mes });
@@ -212,16 +218,26 @@ test('XLSX ainda não existe: recusa com BusinessException', async () => {
 
 const REVISAR = MENSAL(2026, 10);
 
-test('revisão: chama a IA no nível padrão com o prompt do período, dos totais e das linhas', async () => {
-  const { servico, chamadasIa } = criar({ linhas: [linha()] });
+test('revisão: chama a IA no nível padrão com o prompt ativo como instruções e só os dados na mensagem', async () => {
+  const { servico, chamadasIa, pedidosDePrompt } = criar({ linhas: [linha()] });
   await servico.revisarRelatorio(REVISAR);
+  assert.deepEqual(pedidosDePrompt, [TipoPromptEnum.REVISAO_RELATORIO]);
   assert.equal(chamadasIa.length, 1);
   assert.equal(chamadasIa[0].nivel, NivelIaEnum.PADRAO);
-  const prompt = (chamadasIa[0].mensagens as { papel: string; conteudo: string }[])[0].conteudo;
-  assert.ok(prompt.includes('Projeto: Loja'));
-  assert.ok(prompt.includes('Período: Outubro/2026'));
-  assert.ok(prompt.includes('Total de execuções: 1'));
-  assert.ok(prompt.includes('Login / Formulário — Ana — 90 min'));
+  assert.equal(chamadasIa[0].instrucoes, TEXTO_DO_PROMPT);
+  const dados = (chamadasIa[0].mensagens as { papel: string; conteudo: string }[])[0].conteudo;
+  assert.equal(dados.includes(TEXTO_DO_PROMPT), false);
+  assert.ok(dados.includes('Projeto: Loja'));
+  assert.ok(dados.includes('Período: Outubro/2026'));
+  assert.ok(dados.includes('Total de execuções: 1'));
+});
+
+test('revisão: cada linha leva o início e o fim no fuso da aplicação, e "em andamento" quando não há fim', async () => {
+  const { servico, chamadasIa } = criar({ linhas: [linha(), linha({ fimData: null })] });
+  await servico.revisarRelatorio(REVISAR);
+  const dados = (chamadasIa[0].mensagens as { conteudo: string }[])[0].conteudo;
+  assert.match(dados, /1\. Login \/ Formulário — Ana — de \d{2}\/\d{2}\/\d{4} \d{2}:\d{2} a \d{2}\/\d{2}\/\d{4} \d{2}:\d{2} — 90 min/);
+  assert.match(dados, /2\. .* a em andamento — 90 min/);
 });
 
 test('revisão: só as primeiras 200 linhas vão à IA, e o prompt avisa da amostra', async () => {
@@ -229,7 +245,7 @@ test('revisão: só as primeiras 200 linhas vão à IA, e o prompt avisa da amos
   await servico.revisarRelatorio(REVISAR);
   const prompt = (chamadasIa[0].mensagens as { conteudo: string }[])[0].conteudo;
   assert.ok(prompt.includes('Linhas analisadas: 200 (amostra de 200 de 205 execuções'));
-  assert.equal(prompt.includes('201. ['), false);
+  assert.equal(prompt.includes('201. '), false);
 });
 
 test('revisão: devolve resumo e inconsistências lidos do JSON, mesmo com texto em volta e campos faltando', async () => {

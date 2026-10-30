@@ -53,7 +53,6 @@ import { AtividadeVisualizarDialogComponent } from '../../../atividade/component
 import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
 import { BarraRecargaComponent } from '../../../../shared/components/barra-recarga/barra-recarga.component';
 import { focoEmCampo, haSobreposicaoAberta } from '../../../../core/utils/atalhos';
-import { RelatorioExecucaoDialogComponent } from '../../../relatorio/components/relatorio-execucao-dialog/relatorio-execucao-dialog.component';
 import { ExecucaoAgoraComponent, ExecucaoPausaPedida } from '../../components/execucao-agora/execucao-agora.component';
 import { dataParaIso, isoParaData, mensagemInicialDoChat, mesmoDia, resumoDoDia, separarExecucoes } from '../../utils/execucao.util';
 
@@ -78,7 +77,6 @@ type CampoEdicao = 'descricao' | 'inicio' | 'fim';
     MinutosParaHorasPipe,
     AtividadeVisualizarDialogComponent,
     BloquearCaracteresProibidosDirective,
-    RelatorioExecucaoDialogComponent,
     ExecucaoAgoraComponent,
   ],
   templateUrl: './execucao-historico.page.html',
@@ -544,5 +542,9 @@ export class ExecucaoHistoricoPage implements OnInit {
 
   private inicioDoDia(data: Date): Date {
     return new Date(data.getFullYear(), data.getMonth(), data.getDate());
+  }
+
+  abrirRelatorio(): void {
+    this.router.navigate(['/relatorio']);
   }
 }

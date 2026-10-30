@@ -1,4 +1,5 @@
-import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, OnInit, computed, inject, signal, viewChild } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpResponse } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
@@ -7,7 +8,6 @@ import { ButtonModule } from 'primeng/button';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { Select } from 'primeng/select';
 import { DatePickerModule } from 'primeng/datepicker';
-import { DialogModule } from 'primeng/dialog';
 import { TableModule } from 'primeng/table';
 import { Tag } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
@@ -24,26 +24,31 @@ import {
 import { ambiente } from '../../../../../environments/environment';
 import { RelatorioService, RelatorioParametros } from '../../services/relatorio.service';
 import { ProjetoService } from '../../../projeto/services/projeto.service';
+import { corTextoSobre, siglaDoProjeto } from '../../../projeto/utils/projeto-identidade.util';
 import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-horas.pipe';
 import { BarraRecargaComponent } from '../../../../shared/components/barra-recarga/barra-recarga.component';
 import {
+  DIVISAO_DO_RELATORIO,
   RelatorioPeriodoAtalho,
   atalhoDoPeriodo,
+  divisaoPeloPonteiro,
+  limitarDivisao,
   normalizarSeveridade,
   ordemSeveridade,
   periodoDoAtalho,
 } from '../../utils/relatorio.util';
 
 const CHAVE_PROJETO_LEMBRADO = 'relatorio.projeto';
+const CHAVE_DIVISAO = 'relatorio.divisao';
 const ATRASO_MUDANCA_FILTRO_MS = 400;
 
 /**
- * Relatório de execuções de um projeto (tasks 111/110). Abre já carregado: os padrões (Este mês) são
+ * Tela do relatório de execuções de um projeto (tasks 111/110; era um dialog até a 269). Abre já carregado: os padrões (Este mês) são
  * sempre válidos, então cada mudança de filtro recarrega sozinha; o resultado antigo fica esmaecido
  * enquanto o novo não chega e o CSV/IA só usam os parâmetros do que está na tela.
  */
 @Component({
-  selector: 'app-relatorio-execucao-dialog',
+  selector: 'app-relatorio-execucao-page',
   standalone: true,
   imports: [
     ReactiveFormsModule,
@@ -52,26 +57,39 @@ const ATRASO_MUDANCA_FILTRO_MS = 400;
     ButtonModule,
     Select,
     DatePickerModule,
-    DialogModule,
     TableModule,
     Tag,
     TooltipModule,
     MinutosParaHorasPipe,
     BarraRecargaComponent,
   ],
-  templateUrl: './relatorio-execucao-dialog.component.html',
-  styleUrl: './relatorio-execucao-dialog.component.scss',
+  templateUrl: './relatorio-execucao.page.html',
+  styleUrl: './relatorio-execucao.page.scss',
 })
-export class RelatorioExecucaoDialogComponent implements OnInit {
+export class RelatorioExecucaoPage implements OnInit {
   private readonly relatorioService = inject(RelatorioService);
   private readonly projetoService = inject(ProjetoService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly router = inject(Router);
+  private readonly rota = inject(ActivatedRoute);
 
-  readonly mostrarDialog = signal<boolean>(false);
   readonly projetos = signal<ProjetoResumoDto[]>([]);
-  /** Aberto a partir do detalhe de um projeto: o projeto vem definido e não se troca. */
+  /** Aberto pela rota do projeto (`/projeto/:id/relatorio`): o projeto vem definido e não se troca. */
   readonly projetoFixo = signal<boolean>(false);
+
+  /** O projeto do relatório, para a identidade (selo, nome e código) no cabeçalho. */
+  private readonly projetoIdEscolhido = signal<number | null>(null);
+  readonly projetoEscolhido = computed(() => this.projetos().find((projeto) => projeto.id === this.projetoIdEscolhido()) ?? null);
+  readonly siglaDoSelo = computed(() => siglaDoProjeto(this.projetoEscolhido()?.nome ?? ''));
+  readonly corTextoSelo = computed(() => corTextoSobre(this.projetoEscolhido()?.cor ?? ''));
+
+  /** Painel da revisão por IA (task 272): ao lado da tabela, com divisor arrastável, ou recolhido numa barra de caixinhas. */
+  private readonly area = viewChild<ElementRef<HTMLElement>>('area');
+  readonly limites = DIVISAO_DO_RELATORIO;
+  readonly painelAberto = signal<boolean>(true);
+  readonly divisao = signal<number>(this.lerDivisao());
+  readonly arrastando = signal<boolean>(false);
 
   readonly carregandoPreview = signal<boolean>(false);
   readonly carregandoRevisao = signal<boolean>(false);
@@ -88,6 +106,8 @@ export class RelatorioExecucaoDialogComponent implements OnInit {
   readonly podeExportar = computed(
     () => this.sincronizado() && !!this.relatorio() && (this.relatorio()?.totalExecucoes ?? 0) > 0,
   );
+
+  readonly temPainel = computed(() => this.carregandoRevisao() || !!this.revisao());
 
   private readonly pedidoPreview = new Subject<number>();
 
@@ -138,6 +158,7 @@ export class RelatorioExecucaoDialogComponent implements OnInit {
 
   ngOnInit(): void {
     this.formulario.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.projetoIdEscolhido.set(this.formulario.getRawValue().projetoId);
       this.sincronizado.set(false);
       this.revisao.set(null);
       this.pedidoPreview.next(ATRASO_MUDANCA_FILTRO_MS);
@@ -150,10 +171,21 @@ export class RelatorioExecucaoDialogComponent implements OnInit {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe();
+
+    this.iniciar(this.projetoIdDaRota() || undefined);
   }
 
-  /** Abre já carregando: `projetoId` do detalhe do projeto, ou o último projeto escolhido nesta máquina. */
-  abrir(projetoId?: number): void {
+  /** Volta para o projeto (rota do projeto) ou para Execuções (rota sem projeto). */
+  voltar(): void {
+    void this.router.navigate(this.projetoFixo() ? ['/projeto', this.projetoIdDaRota()] : ['/execucao']);
+  }
+
+  private projetoIdDaRota(): number {
+    return Number(this.rota.snapshot.paramMap.get('id'));
+  }
+
+  /** Carrega já: `projetoId` da rota do projeto, ou o último projeto escolhido nesta máquina. */
+  private iniciar(projetoId?: number): void {
     this.projetoFixo.set(projetoId !== undefined);
     const atalho = periodoDoAtalho('MES', this.hoje());
     this.relatorio.set(null);
@@ -168,7 +200,7 @@ export class RelatorioExecucaoDialogComponent implements OnInit {
       mes: atalho.mes,
       periodo: null,
     }, { emitEvent: false });
-    this.mostrarDialog.set(true);
+    this.projetoIdEscolhido.set(this.formulario.getRawValue().projetoId);
     this.carregarProjetos();
     this.pedidoPreview.next(0);
   }
@@ -218,6 +250,7 @@ export class RelatorioExecucaoDialogComponent implements OnInit {
     const params = this.parametrosExibidos();
     if (!params || !this.podeExportar()) return;
 
+    this.painelAberto.set(true);
     this.carregandoRevisao.set(true);
     this.relatorioService
       .revisarRelatorio(params)
@@ -228,6 +261,45 @@ export class RelatorioExecucaoDialogComponent implements OnInit {
         },
         error: () => undefined, // o interceptor já avisou o motivo
       });
+  }
+
+  /** Severidade da caixinha do painel recolhido: o que não é ALTA nem MÉDIA vale como BAIXA. */
+  severidadeNormalizada(severidade: string): 'ALTA' | 'MEDIA' | 'BAIXA' {
+    const normalizada = normalizarSeveridade(severidade);
+    return normalizada === 'ALTA' || normalizada === 'MEDIA' ? normalizada : 'BAIXA';
+  }
+
+  iniciarArrasto(evento: PointerEvent): void {
+    evento.preventDefault();
+    (evento.currentTarget as HTMLElement).setPointerCapture?.(evento.pointerId);
+    this.arrastando.set(true);
+  }
+
+  aoArrastar(evento: PointerEvent): void {
+    if (!this.arrastando()) return;
+    const area = this.area()?.nativeElement.getBoundingClientRect();
+    if (area) this.divisao.set(divisaoPeloPonteiro(evento.clientX, area.left, area.width));
+  }
+
+  finalizarArrasto(): void {
+    if (!this.arrastando()) return;
+    this.arrastando.set(false);
+    this.guardarDivisao();
+  }
+
+  /** Setas ajustam o divisor pelo teclado: ← diminui a tabela, → aumenta. */
+  aoTeclarNoDivisor(evento: KeyboardEvent): void {
+    const passo = evento.key === 'ArrowRight' ? DIVISAO_DO_RELATORIO.passoDoTeclado : evento.key === 'ArrowLeft' ? -DIVISAO_DO_RELATORIO.passoDoTeclado : 0;
+    if (passo === 0) return;
+    evento.preventDefault();
+    this.divisao.update((atual) => limitarDivisao(atual + passo));
+    this.guardarDivisao();
+  }
+
+  /** Duplo clique no divisor: volta à divisão padrão. */
+  restaurarDivisao(): void {
+    this.divisao.set(DIVISAO_DO_RELATORIO.padrao);
+    this.guardarDivisao();
   }
 
   severidadeInconsistencia(severidade: string): 'danger' | 'warn' | 'secondary' {
@@ -292,6 +364,23 @@ export class RelatorioExecucaoDialogComponent implements OnInit {
         if (resposta.sucesso && resposta.dados) this.projetos.set(resposta.dados.itens);
       },
     });
+  }
+
+  private lerDivisao(): number {
+    try {
+      const salva = Number(localStorage.getItem(CHAVE_DIVISAO));
+      return salva > 0 ? limitarDivisao(salva) : DIVISAO_DO_RELATORIO.padrao;
+    } catch {
+      return DIVISAO_DO_RELATORIO.padrao;
+    }
+  }
+
+  private guardarDivisao(): void {
+    try {
+      localStorage.setItem(CHAVE_DIVISAO, String(this.divisao()));
+    } catch {
+      /* armazenamento indisponível: só não lembra */
+    }
   }
 
   private projetoLembrado(): number | null {

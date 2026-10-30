@@ -56,14 +56,6 @@
 - **Situação (2026-10-18):** a parte de **testes** foi entregue nas tasks 171–187
   (`docs/specs/done/testes-automatizados.spec.md`, concluída em 2026-10-19); o **lint** continua ideia aberta.
 
-### I-003 — Tabelas no editor e no visualizador de Markdown · frontend/shared
-
-- **Ideia:** aceitar tabelas (GFM) no `interpretarMarkdown`, no `app-markdown-visualizador` e no editor formatado, com botão de tabela na barra.
-- **Origem:** conversa da task 134 (2026-10-17): o editor de outro projeto do autor tem o botão; o autor não precisa por ora.
-- **Por quê:** descrições técnicas e documentação de demanda às vezes pedem comparação em colunas; a IA também escreve tabelas com naturalidade.
-- **Custo aparente:** estender o interpretador (nó de tabela, sem HTML), o visualizador e o esquema do editor (Milkdown tem o preset GFM), mais testes
-  de ida e volta; decidir o que a IA pode gerar.
-
 ### I-005 — IA lê o código dos projetos · chat IA/backend
 
 - **Ideia:** dar à IA acesso de leitura ao código-fonte dos projetos cadastrados, para responder dúvidas e relacionar
@@ -84,15 +76,6 @@
 - **Custo aparente:** ferramenta da IA para ler e resumir conversas de outros usuários (permissão de gestor), depende da
   marcação de assunto das mensagens (I-004) para filtrar dúvidas de código; decidir o que o desenvolvedor sabe sobre essa
   leitura. A marcação de assunto entra na task 191.
-
-### I-007 — Dúvida de código complexa escala para um nível mais forte · chat IA/backend
-
-- **Ideia:** quando a IA perceber que uma dúvida de código ficou complexa, ela escala para o nível padrão ou analítico, no
-  mesmo molde das tarefas pesadas: uma ferramenta "responder dúvida de código complexa" que roda num modelo mais forte.
-- **Origem:** conversa sobre a I-004 (2026-10-19); o autor quer a possibilidade anotada, com a dúvida de código começando no rápido.
-- **Por quê:** o rápido basta para sintaxe, mas não para dúvida de arquitetura ou depuração; o usuário nunca escolhe modelo.
-- **Custo aparente:** ferramenta nova; decidir como a resposta dela chega ao usuário com streaming (hoje o resultado de uma
-  ferramenta volta ao modelo rápido, que reescreve) e o custo. O selo de nível verdadeiro (task 188) é pré-requisito.
 
 ### I-010 — Revisar os prompts da revisão das descrições · chat IA/prompts
 
@@ -165,13 +148,6 @@
 - **Custo aparente:** médio: guardar o nível por tipo (na versão do prompt ou na configuração ativa, por migration), a service ler dele no lugar da constante (chat, planejamento, assistente e teste de prompt) e um seletor por tipo na aba Prompts.
 
 
-### I-032 — Fundo da mensagem do chat da IA em um tom mais apagado (cinza) · chat IA/frontend
-
-- **Ideia:** trocar a cor de fundo da mensagem do chat da IA por uma cor mais "morta", tipo um cinza. Conferir se a mudança vale também para o chat entre colaboradores (provavelmente sim, se o fundo vier do mesmo estilo/token compartilhado).
-- **Origem:** pedido do autor em 2026-10-27, só anotado, sem decisão de tom nem de escopo.
-- **Por quê:** a cor atual da mensagem chama mais atenção do que o conteúdo.
-- **Custo aparente:** só UI (estilo/token de cor); antes de mexer, rodar a skill `gerenciamento-de-impacto` para ver quais telas consomem o mesmo estilo e confirmar com o autor o que mudar além do chat da IA.
-
 ### I-033 — O diff da proposta da IA aparecer no documento, não no chat · chat IA/frontend
 
 - **Ideia:** quando a IA propõe uma alteração num documento (descrição, pad), o diff deveria aparecer no próprio documento, e não no chat como cartão de proposta. O chat ficaria só com o aviso/ações da proposta (Confirmar, Recusar).
@@ -220,16 +196,17 @@
 - **Por quê:** dialog interrompe o fluxo, esconde o contexto da tela e atrapalha quem trabalha com muitas demandas em sequência. Menos dialogs deixa a interação mais direta.
 - **Custo aparente:** médio e espalhado: exige revisar tela a tela os dialogs e as ações que cada um abriga, para decidir o que vira painel, seção inline ou página própria, e o que fica como dialog. Antes de mexer, rodar `gerenciamento-de-impacto` no componente de diálogo compartilhado e levantar, por tela, as ações que hoje dependem de um dialog.
 
-### I-039 — Relatório deixa de ser dialog e vira tela dentro do projeto · frontend/UX
-
-- **Ideia:** a janela de relatório passa a ser uma tela própria, dentro do projeto, em vez de um dialog sobreposto.
-- **Origem:** pedido do autor em 2026-10-29, só anotado, marcado como ideia.
-- **Por quê:** um relatório é conteúdo para ler e navegar, e cabe melhor numa tela do que numa janela sobreposta; faz parte da redução de dialogs da I-038.
-- **Custo aparente:** médio, só frontend: nova rota dentro do projeto e migração do conteúdo do dialog. Antes, levantar com o autor quais ações o relatório tem hoje e rodar `gerenciamento-de-impacto` no componente do dialog.
-
 ### I-040 — Documentar cada tabela e cada campo na tela de Modelagem · frontend/modelagem
 
 - **Ideia:** a tela de Modelagem passa a mostrar uma descrição de cada tabela e de cada campo (o que é, regra, quem escreve), em vez de só o desenho do schema.
 - **Origem:** apontado pelo autor em 2026-10-29 como problema (P-053) e reclassificado como ideia em 2026-10-30; o autor ainda não detalhou o formato.
 - **Por quê:** quem lê o desenho não sabe o que cada coluna significa sem abrir `docs/SCHEMA.md`.
 - **Custo aparente:** a decidir onde a descrição mora: tabela nova (migration) ou o arquivo JSON local da spec 222 (`modelagem-em-arquivo-json.spec.md`), que muda onde a Modelagem guarda a organização; ou só texto em `docs/SCHEMA.md` lido pela tela. Definir isso com o autor antes de especificar.
+
+### I-041 — Custo da pesquisa na internet e da OpenAI com pesquisa · chat IA/custos
+
+- **Ideia:** mostrar na aba Custos quantas buscas o provedor fez (o `web_search` da Anthropic devolve `server_tool_use.web_search_requests`; o Gemini cobra por resposta com pesquisa) e, na migração da OpenAI para a Responses API (spec 261), ligar a `web_search` dela.
+- **Origem:** task 263 (2026-10-30): a pesquisa entrou usando a ferramenta de cada provedor, e o custo dela não é de token.
+- **Por quê:** o gasto da IA hoje some de uma parte: cada busca é cobrada à parte e o administrador não vê.
+- **Custo aparente:** ler o contador de buscas de cada provedor na resposta, gravar na mensagem (sem tabela de uso, como a 202) e preço por busca na configuração; a parte da OpenAI depende da 261.
+

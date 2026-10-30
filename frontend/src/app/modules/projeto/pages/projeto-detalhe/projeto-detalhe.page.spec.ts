@@ -44,7 +44,6 @@ describe('ProjetoDetalhePage', () => {
     expect(texto(montado)).toContain('Portal do Cliente');
     expect(texto(montado)).toContain('PORTAL');
     expect(texto(montado)).toContain('Este projeto ainda não tem demandas');
-    expect(montado.componente.resumo()).toMatchObject({ total: 0, percentual: 0, estourou: false });
   });
 
   it('o cabeçalho leva a cor do projeto na faixa do topo e no selo com a sigla do nome', async () => {
@@ -57,12 +56,18 @@ describe('ProjetoDetalhePage', () => {
     expect(selo.textContent?.trim()).toBe('PC');
   });
 
-  it('gestor vê Nova Demanda, Relatório, Editar, Controle de horas e "Definir datas"', async () => {
+  it('gestor vê Nova Demanda, Relatório e Configurar volume no cabeçalho, e não o antigo Editar, o Grafo nem a faixa de resumo', async () => {
     const { montado } = await montarDetalhe(TipoUsuarioEnum.GESTOR);
     await carregar(montado);
-    for (const esperado of ['Nova Demanda', 'Relatório', 'Editar', 'Controle de horas', 'Definir datas', 'Criar primeira demanda']) {
+    for (const esperado of ['Nova Demanda', 'Relatório', 'Configurar volume', 'Criar primeira demanda']) {
       expect(texto(montado), esperado).toContain(esperado);
     }
+    const rotulosDosBotoes = Array.from(montado.elemento.querySelectorAll('.projeto-detalhe__cabecalho-acoes button')).map((botao) => botao.textContent?.trim());
+    expect(rotulosDosBotoes).not.toContain('Editar');
+    expect(rotulosDosBotoes).not.toContain('Grafo');
+    expect(rotulosDosBotoes).not.toContain('Controle de horas');
+    expect(texto(montado)).not.toContain('Executado');
+    expect(montado.elemento.querySelector('.projeto-detalhe__resumo')).toBeNull();
     expect(montado.elemento.querySelector('[aria-label="Trocar status do projeto"]')).not.toBeNull();
   });
 
@@ -70,7 +75,7 @@ describe('ProjetoDetalhePage', () => {
     const { montado } = await montarDetalhe(TipoUsuarioEnum.DESENVOLVEDOR);
     await carregar(montado);
     expect(texto(montado)).toContain('Portal do Cliente');
-    for (const proibido of ['Nova Demanda', 'Relatório', 'Controle de horas', 'Definir datas', 'Criar primeira demanda']) {
+    for (const proibido of ['Nova Demanda', 'Relatório', 'Configurar volume', 'Criar primeira demanda']) {
       expect(texto(montado), proibido).not.toContain(proibido);
     }
     expect(montado.elemento.querySelector('[aria-label="Trocar status do projeto"]')).toBeNull();
@@ -81,31 +86,56 @@ describe('ProjetoDetalhePage', () => {
     await carregar(montado, { ...PROJETO, inicioData: '2026-03-01', previsaoFimData: '2026-09-30' });
     expect(texto(montado)).toContain('01/03/2026');
     expect(texto(montado)).toContain('30/09/2026');
-    expect(texto(montado)).not.toContain('Definir datas');
+    expect(texto(montado)).toContain('Início: 01/03/2026');
+    expect(texto(montado)).toContain('Fim: 30/09/2026');
   });
 
-  it('resumo soma executado e estimado de todas as demandas e marca o estouro a partir de 100%', async () => {
+  it('sem datas mostra "Início: indefinido" e "Fim: indefinido"', async () => {
     const { montado } = await montarDetalhe(TipoUsuarioEnum.GESTOR);
     await carregar(montado);
-    montado.componente.nos.set([
-      { id: 1, minutosExecutados: 60, horasEstimadas: 2 },
-      { id: 2, minutosExecutados: 120, horasEstimadas: 0 },
-    ] as unknown as DemandaGrafoNoDto[]);
-    expect(montado.componente.resumo()).toEqual({ total: 2, minutosExecutados: 180, horasEstimadas: 2, percentual: 150, estourou: true });
-    montado.componente.nos.set([{ id: 1, minutosExecutados: 30, horasEstimadas: 2 }] as unknown as DemandaGrafoNoDto[]);
-    expect(montado.componente.resumo()).toMatchObject({ percentual: 25, estourou: false });
+    expect(texto(montado)).toContain('Início: indefinido');
+    expect(texto(montado)).toContain('Fim: indefinido');
   });
 
   it('trocar o status muda o cabeçalho na hora e chama PUT; se a API recusa, volta ao anterior', async () => {
     const { montado } = await montarDetalhe(TipoUsuarioEnum.GESTOR);
     await carregar(montado);
-    montado.componente.alterarStatus(TipoProjetoStatusEnum.PAUSADO);
+    montado.componente.alterarCampo({ status: TipoProjetoStatusEnum.PAUSADO });
     expect(montado.componente.projeto()?.status).toBe(TipoProjetoStatusEnum.PAUSADO);
     const requisicao = esperarRequisicao(montado.http, 'PUT', '/projeto/5');
     expect(requisicao.request.body).toEqual({ status: TipoProjetoStatusEnum.PAUSADO });
     responderErro(requisicao, 400, 'recusado');
     await montado.atualizar();
     expect(montado.componente.projeto()?.status).toBe(TipoProjetoStatusEnum.ATIVO);
+  });
+
+  it('alterar o nome, a cor ou uma data muda o cabeçalho na hora e chama PUT só com o campo; recusa da API desfaz', async () => {
+    const { montado } = await montarDetalhe(TipoUsuarioEnum.GESTOR);
+    await carregar(montado);
+    montado.componente.alterarCampo({ nome: 'Portal Novo', cor: '#ff0000', inicioData: '2026-03-01' });
+    expect(montado.componente.projeto()).toMatchObject({ nome: 'Portal Novo', cor: '#ff0000', inicioData: '2026-03-01' });
+    const requisicao = esperarRequisicao(montado.http, 'PUT', '/projeto/5');
+    expect(requisicao.request.body).toEqual({ nome: 'Portal Novo', cor: '#ff0000', inicioData: '2026-03-01' });
+    responderErro(requisicao, 400, 'recusado');
+    await montado.atualizar();
+    expect(montado.componente.projeto()).toMatchObject({ nome: 'Portal do Cliente', cor: '#336699', inicioData: null });
+  });
+
+  it('previsão de fim igual ou anterior ao início não chega à API', async () => {
+    const { montado } = await montarDetalhe(TipoUsuarioEnum.GESTOR);
+    await carregar(montado, { ...PROJETO, inicioData: '2026-03-01' });
+    montado.componente.alterarCampo({ previsaoFimData: '2026-03-01' });
+    montado.http.expectNone((requisicao) => requisicao.method === 'PUT');
+    expect(montado.componente.projeto()?.previsaoFimData).toBeNull();
+  });
+
+  it('"Configurar volume" abre o dialog do volume esperado do projeto', async () => {
+    const { montado } = await montarDetalhe(TipoUsuarioEnum.GESTOR);
+    await carregar(montado);
+    Array.from(montado.elemento.querySelectorAll('button')).find((botao) => botao.textContent?.includes('Configurar volume'))!.click();
+    await montado.atualizar();
+    expect(esperarRequisicao(montado.http, 'GET', '/projeto/5/volume-vigencia')).toBeTruthy();
+    expect(document.body.textContent).toContain('Volume esperado');
   });
 
   it('abrir uma visão leva às demandas com o projeto e o modo na URL; voltar leva à listagem', async () => {
@@ -128,8 +158,27 @@ describe('ProjetoDetalhePage', () => {
     expect(montado.elemento.querySelector('app-demanda-arvore-tela')).not.toBeNull();
     expect(texto(montado)).toContain('Projeto inteiro');
     expect(texto(montado)).toContain('Demanda 2');
-    expect(texto(montado)).toContain('Grafo');
-    expect(montado.elemento.querySelector('[aria-label="Abrir demandas em outra visão"]')?.textContent).not.toContain('Lista');
+  });
+
+  const noDeTeste = (id: number): DemandaGrafoNoDto => ({
+    id, nome: `Demanda ${id}`, status: TipoDemandaStatusEnum.PENDENTE, isEstrutural: false, horasEstimadas: 4, minutosExecutados: 0,
+    demandaPaiId: null, temDescricaoTecnica: false, temDescricaoCliente: false, temDocumentacao: false, tags: [],
+  });
+  const iconesDeVisao = (montado: Montado) =>
+    Array.from(montado.elemento.querySelectorAll('.demanda-toolbar [slotVisoes] button')).map((botao) => botao.getAttribute('aria-label'));
+
+  it('Grafo e Controle de horas são ícones no fim da barra de busca, com o gestor chegando ao Controle de horas', async () => {
+    const gestor = await montarDetalhe(TipoUsuarioEnum.GESTOR);
+    await carregar(gestor.montado, PROJETO, { nos: [noDeTeste(1)], arestas: [] });
+    expect(iconesDeVisao(gestor.montado)).toEqual(['Grafo', 'Controle de horas']);
+    (gestor.montado.elemento.querySelector('[aria-label="Controle de horas"]') as HTMLElement).click();
+    expect(gestor.irPara).toHaveBeenCalledWith(['/demanda'], { queryParams: { projetoId: 5, modo: 'controle-de-horas' } });
+  });
+
+  it('o desenvolvedor só vê o ícone do Grafo na barra de busca', async () => {
+    const { montado } = await montarDetalhe(TipoUsuarioEnum.DESENVOLVEDOR);
+    await carregar(montado, PROJETO, { nos: [noDeTeste(1)], arestas: [] });
+    expect(iconesDeVisao(montado)).toEqual(['Grafo']);
   });
 
   it('falha ao carregar as demandas mostra o erro com "Tentar de novo", não "projeto sem demandas" (P-058)', async () => {

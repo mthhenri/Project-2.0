@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { ToastModule } from 'primeng/toast';
 import { MensagemDiretaAvisosComponent } from '../../modules/mensagem-direta/components/mensagem-direta-avisos/mensagem-direta-avisos.component';
@@ -8,6 +8,7 @@ import { ToastDesfazerComponent } from '../components/toast-desfazer/toast-desfa
 import { IaRetornoAvisoComponent } from './ia-retorno-aviso/ia-retorno-aviso.component';
 import { SidebarComponent } from './sidebar/sidebar.component';
 import { TopbarComponent } from './topbar/topbar.component';
+import { AutenticacaoService } from '../../core/services/autenticacao.service';
 import { LoadingSpinnerComponent } from '../components/loading-spinner/loading-spinner.component';
 
 @Component({
@@ -16,4 +17,9 @@ import { LoadingSpinnerComponent } from '../components/loading-spinner/loading-s
   imports: [RouterOutlet, SidebarComponent, TopbarComponent, LoadingSpinnerComponent, ToastModule, ToastDesfazerComponent, CheckinJanelinhaComponent, IaRetornoAvisoComponent, MensagemDiretaPopupComponent, MensagemDiretaAvisosComponent],
   templateUrl: './layout.component.html',
 })
-export class LayoutComponent {}
+export class LayoutComponent {
+  constructor() {
+    // A casca só abre autenticada: confere o tipo do usuário no servidor uma vez, a cada abertura do app (P-062).
+    inject(AutenticacaoService).atualizarSessao();
+  }
+}

@@ -27,8 +27,8 @@ export class MarkdownVisualizadorComponent {
   /** O texto está sobre um fundo colorido (o balão da própria mensagem): herda cor e tamanho do entorno em vez de usar os do tema. */
   readonly herdaCor = input(false);
 
-  /** Mostra tabelas (`| a | b |`). Só a resposta da IA liga: os editores do sistema não criam tabela, então os outros textos seguem como texto. */
-  readonly comTabelas = input(false);
+  /** Mostra tabelas (`| a | b |`). Ligado por padrão desde que o editor cria tabelas (I-003); quem não deve ver tabela desliga. */
+  readonly comTabelas = input(true);
 
   readonly blocos = computed(() => interpretarMarkdown(this.texto() ?? '', { tabelas: this.comTabelas() }));
 
