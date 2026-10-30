@@ -16,15 +16,7 @@
 > número de item removido**:
 >
 > ```markdown
-> ### P-031 — Token continua valendo depois que o usuário é desativado ou excluído · `ABERTO` · autenticacao
-
-- **Sintoma:** quem foi desativado ou excluído continua chamando a API (inclusive enviando mensagem no chat entre colaboradores) até o token expirar; a modelagem do chat pede "remetente ativo".
-- **Causa:** `JwtStrategy.validate` só devolve o payload; o status do usuário é conferido apenas no login (`autenticacao.service.ts`).
-- **Contorno:** o token vence sozinho; a service do chat confere o **destinatário**, não o remetente.
-- **Correção:** conferir o usuário (existe, ativo) na estratégia JWT ou num guard global, com o custo de uma consulta por requisição (ou cache curto).
-- **Desde:** achado na revisão da task 208 (2026-10-21); a lacuna é do projeto inteiro, não do chat.
-
-### P-0NN — <título curto> · `ABERTO|CONTORNADO|ACEITO` · <área>
+> ### P-0NN — <título curto> · `ABERTO|CONTORNADO|ACEITO` · <área>
 >
 > - **Sintoma:** o que se observa.
 > - **Causa:** a raiz, se conhecida — ou "não investigada".
@@ -95,13 +87,30 @@
 - **Correção:** a investigar: achar onde a resposta se perde (timeout do provedor, do streaming ou do front), avisar o usuário quando falhar em vez de silêncio, e decidir como contabilizar o custo de uma chamada que não entregou resposta.
 - **Desde:** 2026-10-27 (apontado pelo autor; pergunta e conversa não anexadas).
 
-### P-047 — Grafo: tirar um item do filtro só o apaga para cerca de 25% de opacidade · `ABERTO` · demanda/frontend
 
-- **Sintoma:** ao remover algo do filtro do grafo, o item fica só meio apagado (cerca de 25% de opacidade) em vez de sair da visão.
-- **Causa:** o filtro esmaece em vez de ocultar; comportamento a confirmar com o autor (pode ser o desejado).
-- **Contorno:** nenhum; o item continua visível.
-- **Correção:** decidir entre ocultar o item ou manter o esmaecimento, e ajustar o filtro conforme a decisão.
-- **Desde:** 2026-10-29 (apontado pelo autor).
+### P-061 — Stream de eventos do chat entre colaboradores continua aberto depois de o usuário ser desativado · `ABERTO` · mensagem-direta/backend
+
+- **Sintoma:** com o app aberto, um usuário desativado ou excluído deixa de conseguir enviar (401), mas continua recebendo mensagens e presença em `GET /mensagem-direta/eventos` e aparecendo como online até recarregar a página ou a rede cair.
+- **Causa:** a `JwtStrategy` confere o usuário só quando a requisição abre (P-031); o stream fica aberto sem prazo, com batida a cada 25 s, e nada o fecha na desativação. O serviço roda em mais de uma instância (publica por canal), então fechar a conexão exige avisar as outras.
+- **Contorno:** o usuário desativado não envia nada; o stream cai no próximo recarregamento ou queda de rede.
+- **Correção:** reconferir o usuário na batida do stream, ou encerrar as conexões do usuário ao desativar ou excluir (com o aviso entre instâncias).
+- **Desde:** 2026-10-30 (revisão do P-031).
+
+### P-062 — Menus do front seguem o tipo gravado no login, que agora dura 7 dias · `ABERTO` · autenticacao/frontend
+
+- **Sintoma:** um gestor rebaixado continua vendo os menus de gestor e leva 403 nas ações; um desenvolvedor promovido não vê as telas novas até sair e entrar.
+- **Causa:** `UsuarioSessaoService` decide `eGestor` e `eAdministrador` pelo `usuario_sessao` do `localStorage`, gravado no login. O backend já usa o tipo atual do banco (P-031), então não há brecha de segurança, só a tela defasada.
+- **Contorno:** sair e entrar de novo.
+- **Correção:** atualizar o `usuario_sessao` a partir do servidor (por exemplo, numa consulta ao abrir o app).
+- **Desde:** 2026-10-30 (revisão do P-031).
+
+### P-063 — Ponto: o dia de hoje com execução em andamento não mostra o período corrente na linha · `ABERTO` · ponto/backend
+
+- **Sintoma:** com uma execução rodando depois de um bloco já encerrado (ex.: 07:40–10:00 e uma nova desde 11:10), a linha do dia mostra só "Dia todo 07:40 → 10:00": o período em curso e o intervalo de 1h10 não aparecem. Só quando **todas** as execuções do dia estão em andamento a linha diz "em andamento".
+- **Causa:** `ExecucaoRepository.agruparPorDia` calcula `ultimoFimData` com `MAX(fim_data)`, que ignora as execuções sem fim, e o intervalo só é detectado entre execuções já encerradas. Já era assim antes da linha resumida (P-054).
+- **Contorno:** abrir o detalhe do dia ou olhar o cartão "Trabalhando agora" da equipe.
+- **Correção:** `ultimoFimData` nulo quando houver execução ativa no dia e o intervalo até a execução ativa contado como intervalo; confirmar antes os outros consumidores de `ExecucaoDiaResumoDto`.
+- **Desde:** 2026-10-30 (visto na verificação do P-054).
 
 ### P-049 — Campo `codigo` do modelo do projeto na base não tem uso · `ABERTO` · banco/schema
 
@@ -111,29 +120,15 @@
 - **Correção:** remover a coluna por migration nova (sem editar a já aplicada), ajustando DTOs, repository e `docs/SCHEMA.md`. Rodar `gerenciamento-de-impacto` antes.
 - **Desde:** 2026-10-29 (apontado pelo autor).
 
-### P-052 — Exibição da cor do projeto na tela de projetos · `ABERTO` · projeto/frontend
 
-- **Sintoma:** a cor do projeto aparece de um jeito que o autor quer alterar.
-- **Causa:** não investigada; o relato não diz qual forma de exibição é a desejada.
-- **Contorno:** nenhum.
-- **Correção:** definir com o autor a nova exibição e aplicar na tela de projetos.
-- **Desde:** 2026-10-29 (apontado pelo autor).
+### P-060 — Grafo de demandas: o enquadramento inicial corta nós quando o projeto tem blocos desconectados · `ABERTO` · demanda/frontend
 
-### P-054 — Detalhes do dia no ponto com filtro de usuário em layout vertical · `ABERTO` · ponto/frontend
+- **Sintoma:** com dois blocos de demandas sem conexão entre si (ex.: duas demandas de estrutura com filhos), os blocos se afastam e, em 1920×1080, 1366×768 e 1080×1920, o grafo abre com nós cortados no topo e na base (o cenário de teste do P-047 mostrou "Tela de login" e "Filtro por período" parcialmente fora da área). Idêntico no código anterior ao P-047.
+- **Causa:** `ajustarAoGrafo` enquadra uma vez, quando `alpha < 0.35`, e a simulação (repulsão -700) continua afastando os blocos depois disso; não foi confirmado se o `clientHeight` do contêiner também conta.
+- **Contorno:** o botão "Centralizar" do grafo, ou zoom/arrasto.
+- **Correção:** reenquadrar quando a simulação assenta (`end`) ou reduzir a repulsão entre blocos desconectados; medir antes de mexer.
+- **Desde:** 2026-10-30 (visto na verificação do P-047).
 
-- **Sintoma:** os detalhes do dia no ponto, com filtro de usuário, são exibidos em lista vertical, que o autor quer rever.
-- **Causa:** o layout vertical foi o escolhido na primeira versão.
-- **Contorno:** nenhum.
-- **Correção:** avaliar outro formato, como uma exibição em serpentina, e aplicar o escolhido.
-- **Desde:** 2026-10-29 (apontado pelo autor).
-
-### P-057 — Tela de login e lembrança do usuário pedem ajustes · `ABERTO` · autenticacao/frontend
-
-- **Sintoma:** a tela de login precisa de ajustes, e a retenção e lembrança do usuário precisa ser revista.
-- **Causa:** não investigada; o relato não detalha os ajustes.
-- **Contorno:** nenhum.
-- **Correção:** levantar com o autor os ajustes de layout e o comportamento desejado de lembrar o usuário, e aplicar.
-- **Desde:** 2026-10-29 (apontado pelo autor).
 
 ### P-059 — Teste de `modelagem.page.spec` instável na suíte inteira · `ABERTO` · frontend/testes
 

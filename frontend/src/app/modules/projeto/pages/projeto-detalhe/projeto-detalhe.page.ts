@@ -32,6 +32,7 @@ import {
   contarPorStatus,
   filtroAtivo,
 } from '../../../demanda/utils/demanda-filtro.util';
+import { corTextoSobre, siglaDoProjeto } from '../../utils/projeto-identidade.util';
 import { focoEmCampo, haSobreposicaoAberta } from '../../../../core/utils/atalhos';
 
 @Component({
@@ -67,6 +68,9 @@ export class ProjetoDetalhePage implements OnInit {
   private readonly editarDialog = viewChild.required(ProjetoFormularioDialogComponent);
 
   readonly projeto = signal<ProjetoRecuperadoDto | null>(null);
+  /** Selo do cabeçalho: sigla do nome e texto legível sobre a cor do projeto. */
+  readonly siglaDoSelo = computed(() => siglaDoProjeto(this.projeto()?.nome ?? ''));
+  readonly corTextoSelo = computed(() => corTextoSobre(this.projeto()?.cor ?? ''));
   /** Nós planos das demandas do projeto: a árvore, o resumo e os filtros saem daqui (cliente). */
   readonly nos = signal<DemandaGrafoNoDto[]>([]);
   readonly carregando = signal<boolean>(false);

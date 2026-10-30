@@ -184,7 +184,7 @@ O projeto é um monorepo com quatro workspaces conectados via npm workspaces:
 | `DB_SSL` | Opcional: `true` liga SSL na conexão (bancos gerenciados); omitido = sem SSL | `false` |
 | `DB_NOME_TESTE` | Opcional: banco dos testes de integração (`npm run test:integracao`); omitido = `<DB_NOME>_teste`, criado e migrado sozinho no mesmo PostgreSQL. O helper recusa o banco de desenvolvimento | `project20_teste` |
 | `JWT_SECRETO` | Secret do JWT (troque em produção) | `sua-chave-segura` |
-| `JWT_EXPIRACAO` | Tempo de expiração do token | `8h` |
+| `JWT_EXPIRACAO` | Tempo de expiração do token | `7d` |
 | `INTERVALO_MINIMO_MINUTOS` | Gap mínimo entre execuções para ser considerado intervalo | `15` |
 | `ANTHROPIC_API_KEY` | Chave da API Anthropic (opcional: sem ela a IA fica "fora do ar"). O modelo de cada nível e o resto da configuração da IA ficam na tela Configurações da IA, não no `.env` | `sk-ant-...` |
 | `GOOGLE_API_KEY` / `OPENAI_API_KEY` | Chaves do Gemini e da OpenAI (opcionais): só servem para o fallback entre provedores, escolhido em Configurações da IA. Sem a chave, o provedor é pulado na cadeia | `sk-...` |

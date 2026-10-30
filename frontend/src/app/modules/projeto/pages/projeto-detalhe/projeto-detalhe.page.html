@@ -5,6 +5,8 @@
   }
 
   @if (projeto()) {
+    <div class="projeto-detalhe__cabecalho-cartao">
+    <div class="projeto-detalhe__faixa" [style.background-color]="projeto()!.cor"></div>
     <div class="projeto-detalhe__cabecalho">
       <div class="projeto-detalhe__cabecalho-esquerda">
         <p-button
@@ -17,9 +19,11 @@
         />
         <div class="projeto-detalhe__identidade">
           <span
-            class="projeto-detalhe__cor-bolinha"
+            class="projeto-detalhe__selo"
+            aria-hidden="true"
             [style.background-color]="projeto()!.cor"
-          ></span>
+            [style.color]="corTextoSelo()"
+          >{{ siglaDoSelo() }}</span>
           <h1 class="projeto-detalhe__titulo">{{ projeto()!.nome }}</h1>
           <span class="projeto-detalhe__codigo">{{ projeto()!.codigo }}</span>
           <app-projeto-status-chip
@@ -53,6 +57,7 @@
           />
         }
       </div>
+    </div>
     </div>
 
     <!-- Metas: datas com lápis, ou "+ Definir datas" quando não há -->

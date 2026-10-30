@@ -12,13 +12,41 @@
 
     <span class="ponto-mes-dia__periodo">
       @if (dia.primeiroInicioData) {
-        {{ dia.primeiroInicioData | date: 'HH:mm' }}
-        <i class="pi pi-arrow-right ponto-mes-dia__seta"></i>
-        {{ dia.ultimoFimData ? (dia.ultimoFimData | date: 'HH:mm') : 'em andamento' }}
+        @for (segmento of segmentos; track $index) {
+          @if (segmento.tipo === 'PERIODO') {
+            <span class="ponto-mes-dia__chip">
+              <strong class="ponto-mes-dia__chip-rotulo">{{ segmento.rotulo }}</strong>{{ ' ' }}
+              <span class="ponto-mes-dia__chip-hora">
+                {{ segmento.inicioData | date: 'HH:mm' }}
+                <i class="pi pi-arrow-right ponto-mes-dia__seta"></i>
+                {{ segmento.fimData ? (segmento.fimData | date: 'HH:mm') : 'em andamento' }}
+              </span>
+            </span>
+          } @else {
+            <span class="ponto-mes-dia__chip ponto-mes-dia__chip--intervalo">
+              <i class="pi pi-pause ponto-mes-dia__chip-icone"></i>
+              <strong class="ponto-mes-dia__chip-rotulo">{{ segmento.rotulo }}</strong>{{ ' ' }}
+              <span class="ponto-mes-dia__chip-hora">{{ segmento.duracaoMinutos | minutosParagHoras }}</span>
+            </span>
+          }
+        }
       } @else if (!dia.ehDiaUtil) {
         <span class="ponto-mes-dia__badge">{{ dia.motivoNaoUtil }}</span>
       } @else if (!dia.justificativaNome) {
         <span class="ponto-mes-dia__vazio">—</span>
+      }
+
+      @for (alerta of alertas; track alerta.tipo) {
+        <span
+          class="ponto-mes-dia__alerta"
+          [class.ponto-mes-dia__alerta--aviso]="alerta.gravidade === 'AVISO'"
+          [class.ponto-mes-dia__alerta--erro]="alerta.gravidade === 'ERRO'"
+          [pTooltip]="alerta.descricao"
+          tooltipPosition="top"
+        >
+          <i class="pi pi-exclamation-triangle ponto-mes-dia__alerta-icone"></i>
+          {{ alerta.texto }}
+        </span>
       }
 
       @if (dia.justificativaNome) {
@@ -70,36 +98,63 @@
           <p-progressSpinner strokeWidth="4" />
         </div>
       } @else if (detalhe()) {
-        <p-timeline [value]="itensLinhaDoTempo()" align="left">
-          <ng-template pTemplate="opposite" let-item>
-            <span class="ponto-mes-dia__execucao-horario">
-              {{ item.inicioData | date: 'HH:mm' }}
-              <i class="pi pi-arrow-right ponto-mes-dia__seta"></i>
-              @if (item.fimData) {
-                {{ item.fimData | date: 'HH:mm' }}
-              } @else {
-                <app-execucao-timer [inicioData]="item.inicioData" tamanho="compacto" />
-              }
-            </span>
-          </ng-template>
-          <ng-template pTemplate="content" let-item>
-            @if (item.tipo === 'INTERVALO') {
-              <span class="ponto-mes-dia__intervalo">
-                <i class="pi pi-pause-circle"></i>
-                <span>Intervalo ({{ item.duracaoMinutos | minutosParagHoras }})</span>
+        @for (alerta of alertas; track alerta.tipo) {
+          <div
+            class="ponto-mes-dia__aviso"
+            [class.ponto-mes-dia__aviso--aviso]="alerta.gravidade === 'AVISO'"
+            [class.ponto-mes-dia__aviso--erro]="alerta.gravidade === 'ERRO'"
+            role="note"
+          >
+            <i class="pi pi-exclamation-triangle"></i>
+            <span>{{ alerta.descricao }}</span>
+          </div>
+        }
+        @for (bloco of blocosDoDetalhe(); track $index) {
+          @if (bloco.tipo === 'PERIODO') {
+            <section class="ponto-mes-dia__bloco">
+              <header class="ponto-mes-dia__bloco-cabecalho">
+                <span>
+                  {{ bloco.segmento.rotulo }} ·
+                  {{ bloco.segmento.inicioData | date: 'HH:mm' }} → {{ bloco.segmento.fimData ? (bloco.segmento.fimData | date: 'HH:mm') : 'em andamento' }}
+                </span>
+                <span class="ponto-mes-dia__bloco-total">{{ bloco.totalMinutos | minutosParagHoras }}</span>
+              </header>
+              <div class="ponto-mes-dia__execucoes">
+                @for (execucao of bloco.execucoes; track execucao.id) {
+                  <button
+                    type="button"
+                    class="ponto-mes-dia__execucao-atividade"
+                    (click)="atividadeSelecionada.emit(execucao.atividadeId)"
+                  >
+                    <span class="ponto-mes-dia__execucao-horario">
+                      {{ execucao.inicioData | date: 'HH:mm' }}
+                      <i class="pi pi-arrow-right ponto-mes-dia__seta"></i>
+                      @if (execucao.fimData) {
+                        {{ execucao.fimData | date: 'HH:mm' }}
+                      } @else {
+                        <app-execucao-timer [inicioData]="execucao.inicioData" tamanho="compacto" />
+                      }
+                    </span>
+                    <span class="ponto-mes-dia__execucao-nome">{{ execucao.nomeAtividade }}</span>
+                  </button>
+                }
+              </div>
+            </section>
+          } @else {
+            <div
+              class="ponto-mes-dia__intervalo"
+              [class]="classeDaFaixa(bloco.segmento.faixa)"
+              [pTooltip]="descricaoDoIntervalo(bloco.segmento)"
+              tooltipPosition="top"
+            >
+              <span class="ponto-mes-dia__intervalo-titulo">
+                <i class="pi pi-pause"></i>
+                {{ bloco.segmento.rotulo }} · {{ bloco.segmento.inicioData | date: 'HH:mm' }} → {{ bloco.segmento.fimData | date: 'HH:mm' }}
               </span>
-            } @else {
-              <button
-                type="button"
-                class="ponto-mes-dia__execucao-atividade"
-                (click)="atividadeSelecionada.emit(item.atividadeId)"
-              >
-                <i class="pi pi-check-square"></i>
-                <span>{{ item.nomeAtividade }}</span>
-              </button>
-            }
-          </ng-template>
-        </p-timeline>
+              <span class="ponto-mes-dia__intervalo-duracao">{{ bloco.segmento.duracaoMinutos | minutosParagHoras }}</span>
+            </div>
+          }
+        }
       }
     </div>
   }

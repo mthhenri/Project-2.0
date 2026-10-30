@@ -52,7 +52,7 @@ test('senha errada e login inexistente dão a MESMA mensagem de erro', async () 
   assert.ok(senhaErrada instanceof BusinessException);
   assert.ok(loginInexistente instanceof BusinessException);
   assert.deepEqual(senhaErrada.getResponse(), loginInexistente.getResponse());
-  assert.equal((senhaErrada.getResponse() as { mensagem: string }).mensagem, 'Credenciais inválidas');
+  assert.equal((senhaErrada.getResponse() as { mensagem: string }).mensagem, 'Usuário ou senha incorretos. Confira e tente de novo.');
 });
 
 test('usuário inativo não entra, mesmo com a senha certa', async () => {
@@ -63,10 +63,10 @@ test('usuário inativo não entra, mesmo com a senha certa', async () => {
   });
 });
 
-test('usuário excluído não entra: o repository não o devolve e o login cai em "Credenciais inválidas"', async () => {
+test('usuário excluído não entra: o repository não o devolve e o login cai na mensagem de credencial incorreta', async () => {
   const { servico } = await criarServico([]);
   await assert.rejects(() => servico.login({ login: 'maria', senha: 'SenhaCerta#1' }), (erro: BusinessException) => {
-    assert.equal((erro.getResponse() as { mensagem: string }).mensagem, 'Credenciais inválidas');
+    assert.equal((erro.getResponse() as { mensagem: string }).mensagem, 'Usuário ou senha incorretos. Confira e tente de novo.');
     return true;
   });
 });

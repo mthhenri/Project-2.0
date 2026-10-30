@@ -17,6 +17,14 @@
     &:active { cursor: grabbing; }
   }
 
+  // O filtro da toolbar só troca a opacidade (nó e aresta), então a mudança pode ser suave.
+  &__no-grupo,
+  &__aresta {
+    transition: opacity 0.15s ease;
+
+    @media (prefers-reduced-motion: reduce) { transition: none; }
+  }
+
   &__controles {
     position: absolute;
     top: 0.75rem;

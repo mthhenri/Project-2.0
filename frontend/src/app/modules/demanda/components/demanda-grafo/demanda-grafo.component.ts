@@ -35,9 +35,13 @@ interface CartaoNo {
 
 const TODOS_OS_STATUS = Object.values(TipoDemandaStatusEnum);
 
+const OPACIDADE_CANCELADA = 0.4;
+/** Nó (e aresta que toca nele) que não atende ao filtro da toolbar: continua no grafo, só esmaecido. */
+const OPACIDADE_FORA_DO_FILTRO = 0.25;
+
 /**
  * Grafo de demandas (d3) integrado ao tema (task 107): cores por tokens, cartão no hover, legenda em popover
- * cujos status filtram o grafo e controles de zoom. Os filtros da toolbar chegam já aplicados em `grafo`.
+ * cujos status filtram o grafo e controles de zoom. O filtro da toolbar não tira nós do grafo: `idsEmDestaque` esmaece os demais.
  *
  * Task 241: o nó leva a marca do status, o cartão usa a barra do Controle de horas e o clique abre a demanda (ou a pasta) na Árvore. O grafo sempre
  * mostra o projeto todo: não há foco por pasta.
@@ -53,6 +57,8 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
   @Input({ required: true }) grafo!: DemandaGrafoDto;
   /** Status exibidos (a legenda mostra os demais como desligados). */
   @Input() statusVisiveis: TipoDemandaStatusEnum[] = TODOS_OS_STATUS;
+  /** Demandas que atendem ao filtro da toolbar; `null` quando não há filtro (nenhuma esmaece). Mudar isto só troca a opacidade: o layout não recomeça. */
+  @Input() idsEmDestaque: ReadonlySet<number> | null = null;
   @Output() demandaSelecionada = new EventEmitter<number>();
   /** Um status da legenda foi clicado (liga/desliga): quem hospeda aplica no filtro da toolbar. */
   @Output() statusAlternado = new EventEmitter<TipoDemandaStatusEnum>();
@@ -99,7 +105,23 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
     if (!mudancas['grafo']?.firstChange && mudancas['grafo']?.currentValue) {
       this.destruirGrafo();
       this.inicializarGrafo();
+    } else if (mudancas['idsEmDestaque'] && !mudancas['idsEmDestaque'].firstChange) {
+      this.aplicarDestaque();
     }
+  }
+
+  private noEstaForaDoFiltro(id: number): boolean {
+    return this.idsEmDestaque !== null && !this.idsEmDestaque.has(id);
+  }
+
+  private aplicarDestaque(): void {
+    this.gruposNo?.style('opacity', (no) => {
+      if (this.noEstaForaDoFiltro(no.id)) return OPACIDADE_FORA_DO_FILTRO;
+      return no.status === TipoDemandaStatusEnum.CANCELADA ? OPACIDADE_CANCELADA : 1;
+    });
+    this.linhasAresta?.style('opacity', (aresta: DemandaGrafoArestaDto) =>
+      this.noEstaForaDoFiltro(aresta.origemId) || this.noEstaForaDoFiltro(aresta.destinoId) ? OPACIDADE_FORA_DO_FILTRO : 1,
+    );
   }
 
   /** Enquadra o projeto todo na tela, sem aproximar além do tamanho normal. */
@@ -235,6 +257,7 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
       .data(arestas)
       .enter()
       .append('line')
+      .attr('class', 'demanda-grafo__aresta')
       .style('stroke', (aresta: any) => aresta.tipo === 'hierarquia' ? 'var(--p-primary-500)' : 'var(--app-surface-400)')
       .attr('stroke-width', (aresta: any) => aresta.tipo === 'hierarquia' ? 2 : 1.5)
       .attr('stroke-opacity', (aresta: any) => aresta.tipo === 'hierarquia' ? 0.6 : 0.5)
@@ -249,10 +272,8 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
       .data(nos)
       .enter()
       .append('g')
+      .attr('class', 'demanda-grafo__no-grupo')
       .style('cursor', 'pointer')
-      .style('opacity', (no: DemandaGrafoNoDto) =>
-        no.status === TipoDemandaStatusEnum.CANCELADA ? 0.4 : 1,
-      )
       .call(
         d3.drag<SVGGElement, DemandaGrafoNoDto & d3.SimulationNodeDatum>()
           .on('start', (evento, no) => {
@@ -296,6 +317,8 @@ export class DemandaGrafoComponent implements OnInit, OnChanges, OnDestroy {
       .text((no: DemandaGrafoNoDto) =>
         no.nome.length > 24 ? `${no.nome.substring(0, 24)}…` : no.nome,
       );
+
+    this.aplicarDestaque();
 
     this.simulacao.on('tick', () => {
       linhasAresta

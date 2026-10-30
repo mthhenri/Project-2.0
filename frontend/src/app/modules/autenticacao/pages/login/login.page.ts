@@ -5,10 +5,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { finalize } from 'rxjs/operators';
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
-import { PasswordModule } from 'primeng/password';
 import { ButtonModule } from 'primeng/button';
-import { CheckboxModule } from 'primeng/checkbox';
-import { MessageModule } from 'primeng/message';
 import { AutenticacaoService } from '../../../../core/services/autenticacao.service';
 import { TemaService } from '../../../../core/services/tema.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
@@ -28,7 +25,7 @@ const CHAVE_ULTIMO_LOGIN = 'ultimo_login';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ReactiveFormsModule, CardModule, InputTextModule, PasswordModule, ButtonModule, CheckboxModule, MessageModule],
+  imports: [ReactiveFormsModule, CardModule, InputTextModule, ButtonModule],
   templateUrl: './login.page.html',
   styleUrl: './login.page.scss',
 })
@@ -45,14 +42,27 @@ export class LoginPage implements OnInit {
   readonly formulario = this.formBuilder.group({
     login:  ['', [Validators.required, Validators.minLength(4)]],
     senha:  ['', [Validators.required]],
-    lembrar: [true],
   });
 
   readonly carregando = signal<boolean>(false);
   readonly erroLogin = signal<string>('');
+  /** O erro é do servidor (fora do ar), não da senha: não marca o campo como inválido. */
+  private readonly falhaDeServidor = signal<boolean>(false);
   readonly capsLockAtivo = signal<boolean>(false);
+  readonly senhaVisivel = signal<boolean>(false);
   readonly usuarioLembrado = signal<UsuarioLembrado | null>(null);
   private readonly usandoOutroUsuario = signal<boolean>(false);
+
+  /** Campos com erro, para `aria-invalid` e para ligar a mensagem ao campo (`aria-describedby`). */
+  loginComErro(): boolean {
+    const controle = this.formulario.controls.login;
+    return controle.touched && controle.invalid;
+  }
+
+  senhaComErro(): boolean {
+    const controle = this.formulario.controls.senha;
+    return (controle.touched && controle.invalid) || (this.erroLogin() !== '' && !this.falhaDeServidor());
+  }
 
   /** Estado A (usuário lembrado, só a senha) ou B (formulário completo). */
   readonly modoLembrado = computed(() => this.usuarioLembrado() !== null && !this.usandoOutroUsuario());
@@ -89,7 +99,7 @@ export class LoginPage implements OnInit {
     }
 
     this.normalizarLogin();
-    const { login, senha, lembrar } = this.formulario.getRawValue();
+    const { login, senha } = this.formulario.getRawValue();
     this.carregando.set(true);
     this.erroLogin.set('');
     this.formulario.disable({ emitEvent: false });
@@ -102,7 +112,7 @@ export class LoginPage implements OnInit {
       }))
       .subscribe({
         next: () => {
-          this.guardarUsuarioLembrado(!!lembrar);
+          this.guardarUsuarioLembrado();
           const retorno = urlRetornoSegura(this.router, this.rotaAtiva.snapshot.queryParamMap.get('returnUrl'));
           // Com a IA no ar o login cai no chat; senão, no fluxo convencional (a consulta já vai com o token novo).
           this.iaDisponibilidade.consultar().subscribe((estado) => this.router.navigateByUrl(destinoPosLogin(retorno, estado)));
@@ -115,7 +125,7 @@ export class LoginPage implements OnInit {
   entrarComOutroUsuario(): void {
     this.usandoOutroUsuario.set(true);
     this.erroLogin.set('');
-    this.formulario.reset({ login: '', senha: '', lembrar: true });
+    this.formulario.reset({ login: '', senha: '' });
     setTimeout(() => this.campo('#login-input')?.focus());
   }
 
@@ -126,6 +136,10 @@ export class LoginPage implements OnInit {
     if (normalizado !== controle.value) controle.setValue(normalizado);
   }
 
+  alternarSenha(): void {
+    this.senhaVisivel.update((visivel) => !visivel);
+  }
+
   atualizarCapsLock(evento: KeyboardEvent): void {
     if (typeof evento.getModifierState === 'function') {
       this.capsLockAtivo.set(evento.getModifierState('CapsLock'));
@@ -133,11 +147,12 @@ export class LoginPage implements OnInit {
   }
 
   private aoFalhar(erro: HttpErrorResponse): void {
-    if (erro.status === 0 || erro.status >= 500) {
+    this.falhaDeServidor.set(erro.status === 0 || erro.status >= 500);
+    if (this.falhaDeServidor()) {
       this.erroLogin.set('Servidor indisponível. Tente novamente em instantes.');
       return;
     }
-    this.erroLogin.set(erro.error?.mensagem ?? 'Credenciais inválidas');
+    this.erroLogin.set(erro.error?.mensagem ?? 'Usuário ou senha incorretos. Confira e tente de novo.');
     // O formulário volta a ficar habilitado no finalize; foca depois disso.
     setTimeout(() => {
       const senha = this.campo('input[type=password], #senha-input') as HTMLInputElement | null;
@@ -170,13 +185,12 @@ export class LoginPage implements OnInit {
     }
   }
 
-  private guardarUsuarioLembrado(lembrar: boolean): void {
+  /** O usuário é sempre lembrado (a sessão dura 7 dias e a tela só some do caminho); "Entrar com outro usuário" troca. */
+  private guardarUsuarioLembrado(): void {
     const nomeCompleto = this.sessao.nomeCompleto();
     const login = this.sessao.login();
-    if (lembrar && nomeCompleto && login) {
+    if (nomeCompleto && login) {
       localStorage.setItem(CHAVE_ULTIMO_LOGIN, JSON.stringify({ login, nomeCompleto }));
-    } else {
-      localStorage.removeItem(CHAVE_ULTIMO_LOGIN);
     }
   }
 }

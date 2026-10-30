@@ -1,31 +1,35 @@
 import { Component, EventEmitter, Input, Output, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { TimelineModule } from 'primeng/timeline';
 import { TooltipModule } from 'primeng/tooltip';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { finalize } from 'rxjs';
-import { ExecucaoItemDto, IntervaloDto, PontoDiaResumoDto, PontoDiarioDto, dataIsoNoFuso } from '@project20/shared';
+import { ExecucaoItemDto, PontoDiaResumoDto, PontoDiarioDto, dataIsoNoFuso } from '@project20/shared';
 import { ambiente } from '../../../../../environments/environment';
 import { PontoService } from '../../services/ponto.service';
 import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-horas.pipe';
 import { ExecucaoTimerComponent } from '../../../execucao/components/execucao-timer/execucao-timer.component';
 import {
+  AlertaDoDia,
+  FaixaIntervalo,
+  SegmentoDoDia,
+  alertasDoDia,
+  descricaoDaFaixa,
   formatarSaldoMinutos,
   abreviacaoDiaSemana,
+  montarSegmentosDoDia,
   numeroDoDia,
 } from '../../models/ponto.model';
 
-/** Item da linha do tempo do dia: uma execução ou um intervalo detectado entre elas. */
-type ItemLinhaDoTempo =
-  | (ExecucaoItemDto & { tipo: 'EXECUCAO' })
-  | (IntervaloDto & { tipo: 'INTERVALO' });
+/** Bloco do detalhe do dia: um período com as suas execuções ou o intervalo entre dois períodos. */
+type BlocoDoDetalhe =
+  | { tipo: 'PERIODO'; segmento: SegmentoDoDia; execucoes: ExecucaoItemDto[]; totalMinutos: number }
+  | { tipo: 'INTERVALO'; segmento: SegmentoDoDia };
 
 @Component({
   selector: 'app-ponto-mes-dia',
   standalone: true,
   imports: [
     DatePipe,
-    TimelineModule,
     TooltipModule,
     ProgressSpinnerModule,
     MinutosParaHorasPipe,
@@ -49,18 +53,52 @@ export class PontoMesDiaComponent {
   readonly carregando = signal<boolean>(false);
   readonly detalhe = signal<PontoDiarioDto | null>(null);
 
-  /** Execuções e intervalos do dia numa só sequência, em ordem de horário. */
-  readonly itensLinhaDoTempo = computed<ItemLinhaDoTempo[]>(() => {
+  private resumoMemorizado?: { dia: PontoDiaResumoDto; segmentos: SegmentoDoDia[]; alertas: AlertaDoDia[] };
+
+  /** Períodos e intervalos do dia em ordem, para a linha (calculados uma vez por `dia`). */
+  get segmentos(): SegmentoDoDia[] {
+    return this.resumo().segmentos;
+  }
+
+  /** Alertas da linha: hora a menos sem justificativa e excesso sobre o limite diário. */
+  get alertas(): AlertaDoDia[] {
+    return this.resumo().alertas;
+  }
+
+  private resumo() {
+    if (this.resumoMemorizado?.dia !== this.dia) {
+      this.resumoMemorizado = { dia: this.dia, segmentos: montarSegmentosDoDia(this.dia, ambiente.fusoHorario), alertas: alertasDoDia(this.dia, this.hojeIso()) };
+    }
+    return this.resumoMemorizado;
+  }
+
+  /** O detalhe em blocos: cada período com as execuções que começaram nele, e os intervalos entre eles. */
+  readonly blocosDoDetalhe = computed<BlocoDoDetalhe[]>(() => {
     const detalheDia = this.detalhe();
     if (!detalheDia) return [];
-    const itens: ItemLinhaDoTempo[] = [
-      ...detalheDia.execucoes.map((execucao) => ({ ...execucao, tipo: 'EXECUCAO' as const })),
-      ...detalheDia.intervalos.map((intervalo) => ({ ...intervalo, tipo: 'INTERVALO' as const })),
-    ];
-    return itens.sort(
-      (itemA, itemB) => new Date(itemA.inicioData).getTime() - new Date(itemB.inicioData).getTime(),
-    );
+    const execucoes = [...detalheDia.execucoes].sort((a, b) => new Date(a.inicioData).getTime() - new Date(b.inicioData).getTime());
+    const periodos = this.segmentos.filter((segmento) => segmento.tipo === 'PERIODO');
+    return this.segmentos.map((segmento): BlocoDoDetalhe => {
+      if (segmento.tipo === 'INTERVALO') return { tipo: 'INTERVALO', segmento };
+      const indice = periodos.indexOf(segmento);
+      const inicio = segmento.inicioData.getTime();
+      const fim = segmento.fimData ? segmento.fimData.getTime() : Infinity;
+      const doPeriodo = execucoes.filter((execucao) => {
+        const inicioExecucao = new Date(execucao.inicioData).getTime();
+        // O que sobra fora de qualquer período (não deveria) vai para o último, em vez de sumir.
+        return (inicioExecucao >= inicio && inicioExecucao <= fim) || (indice === periodos.length - 1 && inicioExecucao > fim);
+      });
+      return { tipo: 'PERIODO', segmento, execucoes: doPeriodo, totalMinutos: doPeriodo.reduce((soma, execucao) => soma + (execucao.duracaoMinutos ?? 0), 0) };
+    });
   });
+
+  classeDaFaixa(faixa: FaixaIntervalo | null): string {
+    return faixa ? `ponto-mes-dia__faixa--${faixa.toLowerCase()}` : '';
+  }
+
+  descricaoDoIntervalo(segmento: SegmentoDoDia): string {
+    return segmento.faixa ? descricaoDaFaixa(segmento.faixa) : '';
+  }
 
   /** Há registro de trabalho no dia (logo, é expansível para ver a timeline). */
   get temRegistro(): boolean {

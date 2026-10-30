@@ -1,5 +1,4 @@
-import { Component, HostListener, OnDestroy, OnInit, computed, inject, signal, viewChild } from '@angular/core';
-import { NgTemplateOutlet } from '@angular/common';
+import { Component, HostListener, OnInit, computed, inject, signal, viewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
@@ -72,7 +71,6 @@ function gravarArmazenado(chave: string, valor: string): void {
   selector: 'app-demanda-projeto',
   standalone: true,
   imports: [SkeletonListaComponent,
-    NgTemplateOutlet,
     FormsModule,
     ReactiveFormsModule,
     SelectButtonModule,
@@ -90,7 +88,7 @@ function gravarArmazenado(chave: string, valor: string): void {
   templateUrl: './demanda-projeto.page.html',
   styleUrl: './demanda-projeto.page.scss',
 })
-export class DemandaProjetoPage implements OnInit, OnDestroy {
+export class DemandaProjetoPage implements OnInit {
   private readonly demandaService = inject(DemandaService);
   private readonly projetoService = inject(ProjetoService);
   private readonly messageService = inject(MessageService);
@@ -126,9 +124,6 @@ export class DemandaProjetoPage implements OnInit, OnDestroy {
 
   /** Critérios da toolbar (busca, status, tags): valem para a Árvore e para o Grafo. */
   readonly filtro = signal<DemandaFiltro>(FILTRO_VAZIO);
-  /** Cópia com atraso do filtro: o Grafo refaz o layout a cada mudança, então não acompanha cada tecla. */
-  readonly filtroGrafo = signal<DemandaFiltro>(FILTRO_VAZIO);
-  private temporizadorFiltroGrafo?: ReturnType<typeof setTimeout>;
 
   readonly opcoesModo = computed(() => [
     { rotulo: 'Árvore', valor: 'arvore' as ModoVisualizacao, icone: 'pi pi-sitemap' },
@@ -148,10 +143,11 @@ export class DemandaProjetoPage implements OnInit, OnDestroy {
     return [...porId.values()].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
   });
 
-  /** O Grafo recebe só os nós que atendem ao filtro (a busca não traz ancestrais: o grafo não tem hierarquia visual). */
-  readonly grafoExibido = computed<DemandaGrafoDto | null>(() => {
+  /** O Grafo recebe o projeto todo; o filtro só esmaece quem não atende (sem ancestrais: o grafo não tem hierarquia visual). `null` = sem filtro. */
+  readonly idsEmDestaqueNoGrafo = computed<ReadonlySet<number> | null>(() => {
     const grafoAtual = this.grafo();
-    return grafoAtual ? { ...grafoAtual, nos: nosCorrespondentes(grafoAtual.nos, this.filtroGrafo()) } : null;
+    if (!grafoAtual || !this.filtroEstaAtivo()) return null;
+    return new Set(nosCorrespondentes(grafoAtual.nos, this.filtro()).map((no) => no.id));
   });
 
   /** Quem está executando cada demanda, quando o planejamento já foi carregado (só gestor). */
@@ -163,10 +159,6 @@ export class DemandaProjetoPage implements OnInit, OnDestroy {
     }
     return mapa;
   });
-
-  ngOnDestroy(): void {
-    clearTimeout(this.temporizadorFiltroGrafo);
-  }
 
   /** `?modo=` vence o padrão (Árvore); nada é lembrado entre visitas. O Controle de horas é só do gestor. */
   private modoInicial(): ModoVisualizacao {
@@ -219,8 +211,6 @@ export class DemandaProjetoPage implements OnInit, OnDestroy {
 
   aoAlterarFiltro(filtro: DemandaFiltro): void {
     this.filtro.set(filtro);
-    clearTimeout(this.temporizadorFiltroGrafo);
-    this.temporizadorFiltroGrafo = setTimeout(() => this.filtroGrafo.set(filtro), 200);
   }
 
   /** Status exibidos agora (todos, quando não há filtro de status): alimenta a legenda do grafo. */
