@@ -18,6 +18,19 @@
 
 
 
+## 2026-10-31 — Backlog das ideias I-033, I-034, I-035 e I-038: três specs decididas com o autor (sem código)
+
+Nesta sessão o autor revisou as quatro ideias com POCs publicados como artifacts (tema claro e escuro, no visual do projeto) e decidiu cada uma. Nada de código mudou; só specs em `backlog/`, `IDEAS.md` e `CONTEXT.md`.
+
+- **I-033 → `chat-proposta-no-documento.spec.md` (273–277):** o cartão sai do chat nas propostas que alteram descrição, pad, documentação ou plano; o chat fica com uma linha e o link "Ver no documento →", e o diff com Confirmar, Recusar e Pedir de novo vai para o documento. Criações (demanda, projeto, atividade) continuam cartão no chat. "Confirmar todas" vira faixa no documento; Desfazer fica na linha do chat.
+- **I-038 → `reduzir-dialogs.spec.md` (278–282):** dos 19 dialogs, 11 continuam. Descrição da demanda em modo Dividido, tag inline, e três dialogs eliminados (visualizar atividade, perfil do usuário e detalhe da demanda). Achado na leitura do código: o `demanda-detalhe-dialog` só vive no painel escondido da árvore antiga (`raizes=[]`), então já não era alcançável por clique.
+- **I-035 → `tipo-ajudante.spec.md` (283–287):** desenvolvedor com permissões a mais, visão total por tipo, nunca atribuído sozinho a demandas, atribui e remove qualquer membro. A matriz por tela foi lida só no front; o backend (113 ocorrências de checagem de tipo em 31 arquivos) fica para a 284. Impacto medido com `npm run impacto`: `TipoUsuarioEnum` tem 45 consumidores e 181 testes; `temPermissaoDeGestor` já centraliza a regra.
+- **I-034:** é a própria spec 261 (mapa nível → provedor, fallback calculado); o autor aprovou, sem spec nova. A pesquisa na internet do provedor e o P-059 não foram tocados.
+- **Nova ideia I-042:** melhorar o cadastro de projeto, sem lista de ajustes ainda.
+- **Verificação:** `npm run repo:verificar` aprovado (árvore local). Os artifacts foram conferidos só por código e, os de dialogs, em 1366×768; o gate visual das telas reais fica para cada task.
+
+---
+
 ## 2026-10-30 — CI do PR 27: teste da Modelagem trava e o `atualizar()` ganha teto de espera (P-059)
 
 - **O que aconteceu:** o job "Organização e build" do PR 27 falhou com 1 teste de 2380: `escolher uma relação no painel passa para a outra tabela` (`modelagem.page.spec`) estourou os 20 s. Os testes de integração e o deploy do Cloudflare Pages passaram. Era o P-059, que eu tinha tratado como lentidão da minha máquina: o CI, limpo, o reproduziu, então não era carga local.

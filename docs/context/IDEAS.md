@@ -147,28 +147,6 @@
 - **Por quê:** o custo da IA passa a ser ajustável sem mexer em código, tipo a tipo.
 - **Custo aparente:** médio: guardar o nível por tipo (na versão do prompt ou na configuração ativa, por migration), a service ler dele no lugar da constante (chat, planejamento, assistente e teste de prompt) e um seletor por tipo na aba Prompts.
 
-
-### I-033 — O diff da proposta da IA aparecer no documento, não no chat · chat IA/frontend
-
-- **Ideia:** quando a IA propõe uma alteração num documento (descrição, pad), o diff deveria aparecer no próprio documento, e não no chat como cartão de proposta. O chat ficaria só com o aviso/ações da proposta (Confirmar, Recusar).
-- **Origem:** pedido do autor em 2026-10-27, só anotado; o alcance (quais propostas, se o cartão some ou fica enxuto) não foi definido.
-- **Por quê:** o autor vê a mudança no contexto do texto em que ela cai, em vez de lê-la fora do lugar, no chat.
-- **Custo aparente:** médio, só frontend: hoje o diff por palavra (task 224) é desenhado no cartão do chat; teria de ser levado ao visualizador/editor do documento. Rodar `gerenciamento-de-impacto` no componente do diff antes de mexer.
-
-### I-034 — Vários provedores de IA ao mesmo tempo, um por nível · configuração da IA
-
-- **Ideia:** usar provedores diferentes ao mesmo tempo, um por nível: por exemplo Anthropic no rápido, Gemini no padrão e OpenAI no analítico.
-- **Origem:** pedido do autor em 2026-10-27, só anotado.
-- **Por quê:** escolher o provedor melhor ou mais barato para cada nível, em vez de um provedor para tudo.
-- **Custo aparente:** a conferir antes de especificar: como a task 203 (provedores e fallback) e a configuração ativa tratam o provedor hoje (um só por vez, ou por nível), o preço por provedor nos custos e a ligação com I-031 (escolher o nível de cada tipo de prompt pelo sistema).
-
-### I-035 — Tipo de usuário "ajudante", entre desenvolvedor e gestor · permissões
-
-- **Ideia:** um novo tipo de usuário no meio termo entre `DESENVOLVEDOR` e `GESTOR`, chamado de "ajudante" (nome provisório). Ele não entra automaticamente nas demandas e tem alguns poderes de gestão, mas não todos os do gestor.
-- **Origem:** pedido do autor em 2026-10-29, só anotado; os poderes exatos e o nome final não foram definidos.
-- **Por quê:** hoje o acesso é binário: o desenvolvedor só vê o que tem em `demanda_usuario`, e o gestor tem acesso total por tipo. Falta um papel que ajude a conduzir o trabalho sem ter a visão e o poder completos do gestor.
-- **Custo aparente:** alto e transversal: novo valor em `TipoUsuarioEnum` (`shared`) e migração do tipo; cada checagem de permissão que hoje trata gestor como "total" precisa ser revista, uma a uma; e a regra "gestor não entra em `demanda_usuario`" teria de ser repensada para o ajudante. Antes de especificar, definir com o autor a lista de poderes (quais ações de gestão, em quais telas) e rodar `gerenciamento-de-impacto` nas permissões.
-
 ### I-036 — Status de usuário vira coluna `ativo` e booleanos sem prefixo `is_` · banco/schema
 
 - **Ideia:** trocar a tabela de referência `tipo_usuario_status` (só `ATIVO` e `INATIVO`) por uma coluna booleana `ativo` em `usuario`. Na mesma linha, `demanda.is_estrutural` passa a se chamar `estrutural`. O `is_deleted` fica, por ser genérico (soft delete em todas as tabelas).
@@ -189,13 +167,6 @@
 - **Restrição já dita pelo autor:** não expõe quem está executando nem o tempo gasto (sem atividades, responsáveis, horas nem ponto para o cliente).
 - **Custo aparente:** alto e transversal: novo tipo de usuário ou de acesso em `shared` (`TipoUsuarioEnum`), regra de visibilidade que não passa por `demanda_usuario` (hoje o acesso é só por tipo e por vínculo), e DTOs de visão reduzida, sem os campos de responsável e de tempo. Antes de especificar, definir com o autor o que é "fila" e "pronto" para o cliente e rodar `gerenciamento-de-impacto` nas permissões e nos DTOs de demanda.
 
-### I-038 — Reduzir os dialogs do sistema e deixar só o essencial · frontend/UX
-
-- **Ideia:** diminuir a quantidade de dialogs (modais) do sistema e manter só os que são realmente necessários. Algumas coisas não deveriam ser dialog, como a descrição das demandas, que pede mais espaço e edição contínua, não uma janela sobreposta.
-- **Origem:** pedido do autor em 2026-10-29, só anotado.
-- **Por quê:** dialog interrompe o fluxo, esconde o contexto da tela e atrapalha quem trabalha com muitas demandas em sequência. Menos dialogs deixa a interação mais direta.
-- **Custo aparente:** médio e espalhado: exige revisar tela a tela os dialogs e as ações que cada um abriga, para decidir o que vira painel, seção inline ou página própria, e o que fica como dialog. Antes de mexer, rodar `gerenciamento-de-impacto` no componente de diálogo compartilhado e levantar, por tela, as ações que hoje dependem de um dialog.
-
 ### I-040 — Documentar cada tabela e cada campo na tela de Modelagem · frontend/modelagem
 
 - **Ideia:** a tela de Modelagem passa a mostrar uma descrição de cada tabela e de cada campo (o que é, regra, quem escreve), em vez de só o desenho do schema.
@@ -210,3 +181,9 @@
 - **Por quê:** o gasto da IA hoje some de uma parte: cada busca é cobrada à parte e o administrador não vê.
 - **Custo aparente:** ler o contador de buscas de cada provedor na resposta, gravar na mensagem (sem tabela de uso, como a 202) e preço por busca na configuração; a parte da OpenAI depende da 261.
 
+### I-042 — Melhorar o formulário de criação do projeto · frontend/projeto
+
+- **Ideia:** ajustar a forma do cadastro de projeto (o dialog "Novo Projeto": nome, código, cor, status, datas e volume esperado inicial) para ficar melhor de preencher.
+- **Origem:** pedido do autor em 2026-10-31, ao decidir os dialogs da `reduzir-dialogs.spec.md`: "acho que a gente pode ajustar algumas formas do cadastro". Ele não disse quais ajustes.
+- **Por quê:** a criação é o que sobrou no dialog depois que a edição do projeto foi para o cabeçalho (271).
+- **Custo aparente:** baixo, só frontend, mas a lista de ajustes precisa vir do autor antes de especificar (por exemplo ordem dos campos, código gerado, volume inicial).
