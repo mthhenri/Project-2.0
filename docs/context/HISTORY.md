@@ -12,6 +12,14 @@
 
 ---
 
+## 2026-10-31 — 289 Alça de largura na demanda ao lado: arrastar a borda entre a lista de Atividades e a demanda
+
+Pedido do autor logo depois da 288: poder ajustar o tamanho da demanda como no pad. Novo componente compartilhado `app-alca-divisao` (`shared/components/alca-divisao`): `role="separator"` entre as duas colunas; arrastar, setas (16 px) e duplo clique (volta aos 496 px) ajustam a largura da lista, guardada no navegador por usuário (`atividade.divisao.<id>`) só ao soltar ou usar o teclado. Ela escreve `--largura-primeira` na área que a contém (`--transicao-primeira: none` enquanto arrasta) e a lista lê a propriedade; a demanda tem mínimo de 24rem e a lista encolhe sozinha quando falta espaço. A lista encolhida passou a rolar na horizontal (mínimo 440 px, para a coluna Status não truncar).
+
+**Achados:** (1) a primeira versão limitava a largura guardada pela largura da área **na hora de abrir**, e com a janela estreita a preferência se perdia; agora só o mínimo limita o que foi guardado. (2) A tabela tem largura mínima própria (~536 px com os nomes de hoje): sem `overflow-x: auto` a lista não obedecia à largura escolhida. (3) O SCSS de `atividade-listagem.page` está em **8,00 kB**, no teto de erro de 8 kB: qualquer regra nova ali quebra o build; usar utilitário Tailwind no HTML ou componente.
+
+**Testes:** frontend 2370 -> **2381** em 192 arquivos, build e `repo:verificar` ok, sem lint (P-001). **Ao vivo** (1280x800 claro): arrastar a alça deixou a lista com 408 px e a demanda com 512 (valor guardado 408) e o duplo clique voltou aos 496. Nota da pane: com ela escondida as transições CSS não andam, então a medida só aparece certa depois de terminar as animações (`document.getAnimations().forEach(a => a.finish())`).
+
 ## 2026-10-31 — 288 Atividades com a demanda ao lado: a lista encolhe, a demanda abre ao lado, e as cores das descrições seguem o tema
 
 Origem: conversa com o autor a partir de um POC (artifact; cópia em `docs/specs/done/288-atividades-com-demanda-ao-lado/poc.html`), na linha da `reduzir-dialogs`. O dialog "descrição da demanda" de `/atividade` saiu: clicar num dos três ícones da linha divide a tela, com a lista encolhida (31rem, largura animada) e a demanda ao lado (`app-atividade-demanda-painel`: trilha, nome, status em bolinha, horas, abas Cliente/Técnica/Documentação e o texto; "Editar" troca o corpo pelo editor da 278, com o aviso Salvar/Descartar). Clicar de novo no ícone aberto fecha, como Esc e Fechar; clicar no nome de outra linha troca a demanda. Na lista encolhida somem Usuário, Tempo e Tags; a prioridade vira a bolinha `app-atividade-prioridade-bolinha` antes do nome e o status, o quadradinho de checklist `app-atividade-status-icone` (Planejada tracejado, Pendente traço, Desenvolvendo play na cor do tema, Desenvolvida preenchido com check; mapa `visualStatusAtividade` em `atividade.model.ts`), os dois ainda clicáveis, com os mesmos popovers e permissões.

@@ -1,0 +1,39 @@
+// Fica entre as duas colunas, sem largura própria: as margens negativas desfazem um dos dois vãos, e a zona de arrasto (1rem) cobre o vão.
+:host {
+  position: relative;
+  flex: none;
+  align-self: stretch;
+  width: 0;
+  margin-inline: -0.5rem;
+}
+
+.alca-divisao {
+  position: absolute;
+  inset-block: 0;
+  left: -0.5rem;
+  width: 1rem;
+  cursor: col-resize;
+  touch-action: none;
+
+  // A linha que aparece ao passar o ponteiro, arrastar ou focar.
+  &::after {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    left: calc(50% - 1px);
+    width: 2px;
+    border-radius: 1px;
+    background: transparent;
+    transition: background-color 0.15s ease;
+  }
+
+  &:hover::after,
+  &:focus-visible::after,
+  &--arrastando::after {
+    background: var(--p-primary-color);
+  }
+
+  &:focus-visible {
+    outline: none;
+  }
+}

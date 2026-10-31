@@ -71,6 +71,7 @@ import { AtividadeTagsPopoverComponent } from '../../components/atividade-tags-p
 import { AtividadeDocumentosIndicadorComponent, CampoDocumentoDaDemanda } from '../../components/atividade-documentos-indicador/atividade-documentos-indicador.component';
 import { AtividadeDemandaPainelComponent } from '../../components/atividade-demanda-painel/atividade-demanda-painel.component';
 import { AtividadePrioridadeBolinhaComponent } from '../../components/atividade-prioridade-bolinha/atividade-prioridade-bolinha.component';
+import { AlcaDivisaoComponent } from '../../../../shared/components/alca-divisao/alca-divisao.component';
 import { AtividadeStatusIconeComponent } from '../../components/atividade-status-icone/atividade-status-icone.component';
 import { AtividadeBarraEmMassaComponent } from '../../components/atividade-barra-em-massa/atividade-barra-em-massa.component';
 import {
@@ -112,6 +113,7 @@ import {
     AtividadeDocumentosIndicadorComponent,
     AtividadeDemandaPainelComponent,
     AtividadeStatusIconeComponent,
+    AlcaDivisaoComponent,
     AtividadePrioridadeBolinhaComponent,
     AtividadeBarraEmMassaComponent,
     ExecucaoRegistroDialogComponent,

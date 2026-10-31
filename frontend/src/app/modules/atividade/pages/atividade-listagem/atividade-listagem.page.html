@@ -128,7 +128,7 @@
     <app-skeleton-lista variante="tabela" [quantidade]="5" [cabecalhos]="esqueleto().cabecalhos" [larguras]="esqueleto().larguras" alturaLinha="5.25rem" />
   }
   <div class="atividade-listagem__area" [class.atividade-listagem__area--dividida]="dividido()">
-  <div class="lista-recarga atividade-listagem__lista" [hidden]="primeiraCarga()" [class.conteudo-recarregando]="recarregando()">
+  <div class="lista-recarga atividade-listagem__lista" [hidden]="primeiraCarga()" [class.conteudo-recarregando]="recarregando()" [class.overflow-x-auto]="dividido()">
     <app-barra-recarga [ativa]="recarregando()" />
     @if (erroAoCarregar() && atividades().length > 0) {
       <div class="flex items-center gap-3 px-3 py-2 text-sm text-red-600" role="alert">
@@ -382,6 +382,7 @@
   </div>
 
   @if (aberta(); as demandaAberta) {
+    <app-alca-divisao [chave]="'atividade.divisao.' + (sessao.id() ?? 0)" rotulo="Largura da lista de atividades e da demanda" [minima]="440" />
     <app-atividade-demanda-painel
       [demandaId]="demandaAberta.demandaId"
       [campo]="demandaAberta.campo"

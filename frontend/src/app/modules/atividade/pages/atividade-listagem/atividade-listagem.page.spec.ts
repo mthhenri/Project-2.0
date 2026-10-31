@@ -646,6 +646,7 @@ describe('AtividadeListagemPage: demanda ao lado da lista (task 288)', () => {
     expect(montado.elemento.querySelectorAll('app-atividade-status-icone').length).toBe(2);
     expect(montado.elemento.querySelector('app-atividade-demanda-painel')?.textContent).toContain('Demanda dez');
     expect(iconeDeTexto(montado, 0, 'Descrição técnica').getAttribute('aria-pressed')).toBe('true');
+    expect(montado.elemento.querySelector('app-alca-divisao [role="separator"]')).not.toBeNull();
   });
 
   it('clicar de novo no ícone já aberto fecha o painel e volta à tabela cheia', async () => {
@@ -656,6 +657,7 @@ describe('AtividadeListagemPage: demanda ao lado da lista (task 288)', () => {
     expect(montado.componente.dividido()).toBe(false);
     expect(montado.elemento.querySelector('app-atividade-demanda-painel')).toBeNull();
     expect(cabecalhos(montado)).toContain('Tempo executado');
+    expect(montado.elemento.querySelector('app-alca-divisao')).toBeNull();
   });
 
   it('outra aba troca o texto; outra linha troca a demanda, mantendo a aba', async () => {

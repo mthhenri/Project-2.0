@@ -102,12 +102,13 @@
     min-width: 0;
 
     @media (prefers-reduced-motion: no-preference) {
-      transition: flex-basis 0.3s ease;
+      transition: var(--transicao-primeira, flex-basis 0.3s ease);
     }
   }
 
+  // A largura vem da alça (`--largura-primeira`); sem ela, 31rem. Encolhe antes de a demanda ficar estreita demais.
   &__area--dividida &__lista {
-    flex-basis: 31rem;
+    flex: 0 1 var(--largura-primeira, 31rem);
   }
 
   &__atividade-nome {
