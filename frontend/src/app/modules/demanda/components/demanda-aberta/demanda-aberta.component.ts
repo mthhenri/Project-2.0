@@ -12,7 +12,7 @@ import { DemandaAtividadesPainelComponent } from '../demanda-atividades-painel/d
 import { DemandaBarraHorasComponent } from '../demanda-barra-horas/demanda-barra-horas.component';
 import { DemandaConexaoListaComponent } from '../demanda-conexao-lista/demanda-conexao-lista.component';
 import { DemandaDescricaoDialogComponent } from '../demanda-descricao-dialog/demanda-descricao-dialog.component';
-import { DemandaDetalheBase } from '../demanda-detalhe-dialog/demanda-detalhe.base';
+import { DemandaDetalheBase } from '../demanda-detalhe-base/demanda-detalhe.base';
 import { DemandaFormularioDialogComponent } from '../demanda-formulario-dialog/demanda-formulario-dialog.component';
 import { DemandaMembrosCabecalhoComponent } from '../demanda-membros-cabecalho/demanda-membros-cabecalho.component';
 import { DemandaMetricasComponent } from '../demanda-metricas/demanda-metricas.component';

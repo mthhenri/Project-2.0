@@ -21,7 +21,6 @@
       (expansaoAlternada)="alternarExpansao($event)"
       (focoAlterado)="marcarFoco($event)"
       (statusAlterado)="aoStatusEscolhido($event)"
-      (demandaSelecionada)="abrirDetalhe($event)"
       (demandaEditarSolicitada)="abrirEdicao($event)"
       (demandaEditarDescricaoSolicitada)="abrirDialogDescricaoPorId($event.id, $event.campo)"
       (demandaNovaFilhaSolicitada)="abrirNovaFilha($event)"
@@ -30,19 +29,6 @@
     />
   }
 </div>
-
-<!-- Dialog de detalhe -->
-@if (demandaIdSelecionada()) {
-  <app-demanda-detalhe-dialog
-    [demandaId]="demandaIdSelecionada()"
-    [visivel]="mostrarDialogDetalhe()"
-    (visivelChange)="mostrarDialogDetalhe.set($event)"
-    (demandaExcluida)="aoDemandaExcluida()"
-    (demandaAlterada)="aoDemandaAlterada()"
-    (statusAlterado)="statusAlterado.emit($event)"
-    (tagsAlteradas)="tagsAlteradas.emit($event)"
-  />
-}
 
 <!-- Dialog de edição -->
 @if (demandaIdParaEditar()) {

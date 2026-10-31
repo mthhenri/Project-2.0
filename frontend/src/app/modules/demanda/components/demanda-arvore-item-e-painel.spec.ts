@@ -162,7 +162,7 @@ describe('DemandaArvorePainelComponent', () => {
     expect([...montado.componente.expandidos()].sort()).toEqual([1, 2]);
   });
 
-  it('teclado: ↓↑ percorrem as linhas visíveis, → abre e entra, ← fecha e sobe, Enter abre o detalhe', async () => {
+  it('teclado: ↓↑ percorrem as linhas visíveis, → abre e entra, ← fecha e sobe', async () => {
     const { montado } = await montar();
     const painel = montado.componente;
     const tecla = (key: string, extras: Partial<KeyboardEvent> = {}) => painel.aoTeclarArvore({ key, preventDefault: () => undefined, ...extras } as KeyboardEvent);
@@ -181,9 +181,6 @@ describe('DemandaArvorePainelComponent', () => {
     expect(painel.focoId()).toBe(1);
     tecla('ArrowLeft'); // 1 aberto: fecha
     expect(painel.expandidos().has(1)).toBe(false);
-    tecla('Enter');
-    expect(painel.mostrarDialogDetalhe()).toBe(true);
-    expect(painel.demandaIdSelecionada()).toBe(1);
   });
 
   it('teclas com modificador e teclas desconhecidas são ignoradas', async () => {
@@ -198,7 +195,7 @@ describe('DemandaArvorePainelComponent', () => {
     expect(impediu).toBe(0);
   });
 
-  it('abrir detalhe, edição e nova sub-demanda guarda o id e abre o diálogo; criar/alterar/excluir avisam o host', async () => {
+  it('abrir edição e nova sub-demanda guarda o id e abre o diálogo; criar/alterar avisam o host', async () => {
     const { montado, eventos } = await montar();
     const painel = montado.componente;
     painel.abrirEdicao(4);
@@ -207,8 +204,7 @@ describe('DemandaArvorePainelComponent', () => {
     expect([painel.mostrarDialogNovaFilha(), painel.demandaPaiIdNovaFilha()]).toEqual([true, 2]);
     painel.aoDemandaAlterada();
     painel.aoDemandaCriada();
-    painel.aoDemandaExcluida();
-    expect(eventos.alterado).toBe(3);
+    expect(eventos.alterado).toBe(2);
   });
 
   it('trocar o status pelo chip emite na hora e confirma; se a API recusa, emite o status anterior', async () => {

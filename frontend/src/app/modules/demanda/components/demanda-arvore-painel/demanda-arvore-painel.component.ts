@@ -22,7 +22,6 @@ import { UsuarioService } from '../../../usuario/services/usuario.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { AssistenteDescricaoComponent } from '../../../../shared/components/assistente-descricao/assistente-descricao.component';
 import { DemandaArvoreItemComponent } from '../demanda-arvore-item/demanda-arvore-item.component';
-import { DemandaDetalheDialogComponent } from '../demanda-detalhe-dialog/demanda-detalhe-dialog.component';
 import { DemandaFormularioDialogComponent } from '../demanda-formulario-dialog/demanda-formulario-dialog.component';
 import { DemandaMembroListaComponent } from '../demanda-membro-lista/demanda-membro-lista.component';
 import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
@@ -32,13 +31,12 @@ type CampoDescricao = 'descricaoTecnica' | 'descricaoCliente' | 'documentacao';
 
 /**
  * Painel reutilizável da árvore de demandas: renderiza os itens e centraliza todos
- * os diálogos disparados pelo context menu (detalhe, edição, nova sub-demanda,
+ * os diálogos disparados pelo context menu (edição, nova sub-demanda,
  * tags, membros e descrição). Usado tanto na página de demandas do projeto quanto
  * no detalhe do projeto, evitando duplicação dos handlers e dos diálogos.
  *
  * O host fornece as raízes já montadas e recarrega sua fonte de dados ao receber
- * `alterado`. Para a visualização em grafo (fora da lista), o host pode chamar
- * `abrirDetalhe(id)` via referência de template.
+ * `alterado`.
  */
 @Component({
   selector: 'app-demanda-arvore-painel',
@@ -54,7 +52,6 @@ type CampoDescricao = 'descricaoTecnica' | 'descricaoCliente' | 'documentacao';
     ConfirmDialogModule,
     AssistenteDescricaoComponent,
     DemandaArvoreItemComponent,
-    DemandaDetalheDialogComponent,
     DemandaFormularioDialogComponent,
     DemandaMembroListaComponent,
   ],
@@ -169,7 +166,7 @@ export class DemandaArvorePainelComponent {
     if (!linhas.some((linha) => linha.id === this.focoId())) this.focoId.set(linhas[0]?.id ?? null);
   }
 
-  /** ↑↓ percorrem as linhas, → abre/entra, ← fecha/sobe, Enter abre o detalhe. */
+  /** ↑↓ percorrem as linhas, → abre/entra, ← fecha/sobe. */
   aoTeclarArvore(evento: KeyboardEvent): void {
     if (evento.ctrlKey || evento.metaKey || evento.altKey || evento.shiftKey) return;
     const linhas = this.linhasVisiveis();
@@ -193,11 +190,6 @@ export class DemandaArvorePainelComponent {
         if (atual?.item.filhos.length && this.expandidos().has(atual.id)) this.alternarExpansao(atual.id);
         else destino = atual?.paiId;
         break;
-      case 'Enter':
-        if (!atual) return;
-        this.abrirDetalhe(atual.id);
-        evento.preventDefault();
-        return;
       default:
         return;
     }
@@ -229,9 +221,7 @@ export class DemandaArvorePainelComponent {
   private readonly formBuilder = inject(FormBuilder);
   readonly sessao = inject(UsuarioSessaoService);
 
-  // --- Detalhe / edição / nova sub-demanda ---
-  readonly mostrarDialogDetalhe = signal<boolean>(false);
-  readonly demandaIdSelecionada = signal<number>(0);
+  // --- Edição / nova sub-demanda ---
   readonly mostrarDialogEdicao = signal<boolean>(false);
   readonly demandaIdParaEditar = signal<number>(0);
   readonly mostrarDialogNovaFilha = signal<boolean>(false);
@@ -288,13 +278,8 @@ export class DemandaArvorePainelComponent {
   });
 
   // ---------------------------------------------------------------------------
-  // Detalhe / edição / sub-demanda
+  // Edição / sub-demanda
   // ---------------------------------------------------------------------------
-
-  abrirDetalhe(demandaId: number): void {
-    this.demandaIdSelecionada.set(demandaId);
-    this.mostrarDialogDetalhe.set(true);
-  }
 
   abrirEdicao(demandaId: number): void {
     this.demandaIdParaEditar.set(demandaId);
@@ -311,10 +296,6 @@ export class DemandaArvorePainelComponent {
   }
 
   aoDemandaCriada(): void {
-    this.alterado.emit();
-  }
-
-  aoDemandaExcluida(): void {
     this.alterado.emit();
   }
 

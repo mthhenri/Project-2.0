@@ -12,11 +12,9 @@
 
 ---
 
+## 2026-10-31 — 281 (reduzir-dialogs): `demanda-detalhe-dialog` eliminado
 
-
-
-
-
+Primeira task da guarda-chuva `reduzir-dialogs` (278–282, em `active/`). O dialog de detalhe da demanda só vivia no `demanda-arvore-painel` escondido (`raizes=[]`), então nenhum clique chegava nele; saíram o componente (ts/html/scss/spec, 1.150 linhas), o `@if` e o `<app-demanda-detalhe-dialog>` do painel, `abrirDetalhe`, os signals `mostrarDialogDetalhe`/`demandaIdSelecionada`, `aoDemandaExcluida`, o Enter da árvore e o binding `(demandaSelecionada)`. `DemandaDetalheBase` (herdada por `demanda-aberta` e `demanda-descricao-dialog`) foi movida para `components/demanda-detalhe-base/` sem mudar. O painel escondido continua hospedando editar, nova filha, tags, membros e descrição. Impacto (`npm run impacto`): `DemandaDetalheDialogComponent` só tinha o painel como consumidor; `DemandaDetalheBase`, 3. **Testes:** frontend 2368 em 188 arquivos, build do frontend e `repo:verificar` ok (o spec do painel perdeu o Enter e `aoDemandaExcluida`). **Ao vivo:** Demandas (Árvore em três colunas com a demanda aberta) e detalhe do projeto abrem sem erro novo no console e sem nenhum `app-demanda-detalhe-dialog` no DOM; temas e resoluções não percorridos porque nada visível mudou (o painel é `hidden`). `app-demanda-arvore-item` segue emitindo `demandaSelecionada`, sem ouvinte, e só renderiza dentro do painel escondido; removê-lo é decisão para depois. Sem lint (P-001).
 
 ## 2026-10-31 — Task 215: verificação de ponta a ponta do chat entre colaboradores (fecha a guarda-chuva) e o pool do Knex que segurava o SIGTERM
 
