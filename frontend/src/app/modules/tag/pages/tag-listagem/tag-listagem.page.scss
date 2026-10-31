@@ -183,6 +183,21 @@
   }
 
   // Ações sempre visíveis, esmaecidas: descoberta, teclado e touch (não opacity 0).
+  // Edição do nome na própria linha (task 282): o campo ocupa o lugar do pill.
+  &__edicao-nome {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+
+  &__nome-edicao {
+    width: 100%;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.8125rem;
+  }
+
   &__acoes {
     display: flex;
     gap: 0.125rem;

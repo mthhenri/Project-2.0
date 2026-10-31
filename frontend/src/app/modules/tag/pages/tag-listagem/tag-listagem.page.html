@@ -108,14 +108,36 @@
                 [attr.aria-label]="'Trocar a cor de ' + tag.nome"
                 (click)="abrirPaleta($event, { tipo: 'tag', tag }, ponto)"
               ></button>
-              <button
-                type="button"
-                class="tag-listagem__tag-preview"
-                [style]="estiloPillTag(tag.cor)"
-                [disabled]="eTemporaria(tag)"
-                [attr.aria-label]="'Editar ' + tag.nome"
-                (click)="abrirEdicao(tag)"
-              >{{ tag.nome }}</button>
+              @if (tagEmEdicaoDeNome() === tag.id) {
+                <div class="tag-listagem__edicao-nome">
+                  <input
+                    #campoNomeEdicao
+                    pInputText
+                    spellcheck="true"
+                    appBloquearCaracteresProibidos
+                    maxlength="100"
+                    class="tag-listagem__nome-edicao"
+                    [attr.aria-label]="'Nome de ' + tag.nome"
+                    [formControl]="nomeEdicaoControle"
+                    (input)="erroNomeEdicao.set(null)"
+                    (keydown.enter)="salvarNome(tag)"
+                    (keydown.escape)="cancelarEdicaoDoNome($event)"
+                    (blur)="aoSairDoNome(tag)"
+                  />
+                  @if (erroNomeEdicao(); as erro) {
+                    <small class="tag-listagem__hint tag-listagem__hint--erro">{{ erro }}</small>
+                  }
+                </div>
+              } @else {
+                <button
+                  type="button"
+                  class="tag-listagem__tag-preview"
+                  [style]="estiloPillTag(tag.cor)"
+                  [disabled]="eTemporaria(tag)"
+                  [attr.aria-label]="'Editar ' + tag.nome"
+                  (click)="iniciarEdicaoDoNome(tag)"
+                >{{ tag.nome }}</button>
+              }
               <div class="tag-listagem__acoes">
                 <p-button
                   icon="pi pi-pencil"
@@ -126,7 +148,7 @@
                   pTooltip="Editar"
                   tooltipPosition="top"
                   ariaLabel="Editar tag"
-                  (onClick)="abrirEdicao(tag)"
+                  (onClick)="iniciarEdicaoDoNome(tag)"
                 />
                 <p-button
                   icon="pi pi-trash"
@@ -152,5 +174,3 @@
 <p-popover #popoverCor (onHide)="aoFecharPaleta()">
   <app-seletor-cor [compacto]="true" [ngModel]="corDoPopover()" (ngModelChange)="aoEscolherCor($event)" />
 </p-popover>
-
-<app-tag-edicao-dialog (aoSalvar)="aoSalvarEdicao($event)" />

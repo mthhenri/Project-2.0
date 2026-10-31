@@ -162,16 +162,86 @@ describe('TagListagemPage — cor inline', () => {
   });
 });
 
-describe('TagListagemPage — edição', () => {
-  it('Editar abre o dialog com a tag e a troca na lista ao salvar, mantendo a ordem por nome', async () => {
+describe('TagListagemPage — edição do nome na linha (task 282)', () => {
+  async function editarNome(montado: Montado, rotulo: string, texto: string) {
+    porRotulo(montado, rotulo).click();
+    await montado.atualizar();
+    const campo = montado.elemento.querySelector<HTMLInputElement>('.tag-listagem__nome-edicao')!;
+    campo.value = texto;
+    campo.dispatchEvent(new Event('input'));
+    await montado.atualizar();
+    return campo;
+  }
+
+  it('clicar no nome troca o pill por um campo com o nome atual; não existe mais o dialog de edição', async () => {
     const montado = await montarCarregada();
     porRotulo(montado, 'Editar Backend').click();
     await montado.atualizar();
-    expect(document.body.textContent).toContain('Editar Tag');
 
-    montado.componente.aoSalvarEdicao({ id: 1, nome: 'Zeta', cor: '#112233', createdDate: '2026-01-15' } as never);
+    const campo = montado.elemento.querySelector<HTMLInputElement>('.tag-listagem__nome-edicao')!;
+    expect(campo.value).toBe('Backend');
+    expect(document.body.textContent).not.toContain('Editar Tag');
+  });
+
+  it('Enter salva: o nome muda na hora, a lista mantém a ordem por nome e faz PUT só com o nome', async () => {
+    const montado = await montarCarregada();
+    const campo = await editarNome(montado, 'Editar Backend', 'Zeta');
+    campo.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
     await montado.atualizar();
+
     expect(nomes(montado)).toEqual(['Frontend', 'Infra', 'Zeta']);
+    const requisicao = esperarRequisicao(montado.http, 'PUT', '/tag/1');
+    expect(requisicao.request.body).toEqual({ nome: 'Zeta' });
+    responderSucesso(requisicao, { id: 1, nome: 'Zeta', cor: '#112233', createdDate: '2026-01-15' });
+    await montado.atualizar();
+    expect(montado.elemento.querySelector('.tag-listagem__nome-edicao')).toBeNull();
+  });
+
+  it('Esc cancela sem pedido; sair do campo com o mesmo nome também não pede nada', async () => {
+    const montado = await montarCarregada();
+    const campo = await editarNome(montado, 'Editar Backend', 'Zeta');
+    campo.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    await montado.atualizar();
+    expect(nomes(montado)).toEqual(['Backend', 'Frontend', 'Infra']);
+
+    porRotulo(montado, 'Editar Backend').click();
+    await montado.atualizar();
+    montado.elemento.querySelector<HTMLInputElement>('.tag-listagem__nome-edicao')!.dispatchEvent(new Event('blur'));
+    await montado.atualizar();
+    montado.http.expectNone((requisicao) => requisicao.method === 'PUT');
+  });
+
+  it('sair do campo com um nome novo e válido salva', async () => {
+    const montado = await montarCarregada();
+    const campo = await editarNome(montado, 'Editar Infra', 'Infra e nuvem');
+    campo.dispatchEvent(new Event('blur'));
+    await montado.atualizar();
+    expect(esperarRequisicao(montado.http, 'PUT', '/tag/3').request.body).toEqual({ nome: 'Infra e nuvem' });
+  });
+
+  it('nome vazio ou repetido não salva e mostra o motivo na linha', async () => {
+    const montado = await montarCarregada();
+    let campo = await editarNome(montado, 'Editar Backend', '   ');
+    campo.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+    await montado.atualizar();
+    expect(textoDaPagina(montado)).toContain('Nome é obrigatório');
+
+    campo = await editarNome(montado, 'Nome de Backend', 'FRONTEND');
+    campo.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+    await montado.atualizar();
+    expect(textoDaPagina(montado)).toContain('Já existe uma tag com esse nome.');
+    montado.http.expectNone((requisicao) => requisicao.method === 'PUT');
+    expect(montado.componente.tagEmEdicaoDeNome()).toBe(1);
+  });
+
+  it('se o servidor recusa, o nome volta ao anterior', async () => {
+    const montado = await montarCarregada();
+    const campo = await editarNome(montado, 'Editar Backend', 'Zeta');
+    campo.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+    await montado.atualizar();
+    responderErro(esperarRequisicao(montado.http, 'PUT', '/tag/1'), 400, 'Nome já usado', ['Nome já usado']);
+    await montado.atualizar();
+    expect(nomes(montado)).toEqual(['Backend', 'Frontend', 'Infra']);
   });
 });
 

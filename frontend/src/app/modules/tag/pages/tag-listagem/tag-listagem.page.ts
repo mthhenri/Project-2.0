@@ -11,7 +11,6 @@ import { Popover, PopoverModule } from 'primeng/popover';
 import { TooltipModule } from 'primeng/tooltip';
 import { TagResumoDto, TagAlteradaDto, REGEX_SEM_CARACTERES_PROIBIDOS, MENSAGEM_CARACTERES_PROIBIDOS } from '@project20/shared';
 import { TagService } from '../../services/tag.service';
-import { TagEdicaoDialogComponent } from '../../components/tag-edicao-dialog/tag-edicao-dialog.component';
 import { compararTagsPorNome, estiloPillTag, nomeDeTagContem, nomeDeTagIgual } from '../../utils/tag.util';
 import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
 import { BarraRecargaComponent } from '../../../../shared/components/barra-recarga/barra-recarga.component';
@@ -38,7 +37,6 @@ type AlvoPaleta = { tipo: 'nova' } | { tipo: 'tag'; tag: TagResumoDto };
     SkeletonListaComponent,
     BarraRecargaComponent,
     BloquearCaracteresProibidosDirective,
-    TagEdicaoDialogComponent,
   ],
   templateUrl: './tag-listagem.page.html',
   styleUrl: './tag-listagem.page.scss',
@@ -50,7 +48,7 @@ export class TagListagemPage implements OnInit {
   private readonly campoBusca = viewChild<ElementRef<HTMLInputElement>>('campoBusca');
   private readonly campoRapido = viewChild<ElementRef<HTMLInputElement>>('campoRapido');
   private readonly popoverCor = viewChild.required<Popover>('popoverCor');
-  private readonly dialogEdicao = viewChild.required(TagEdicaoDialogComponent);
+  private readonly campoNomeEdicao = viewChild<ElementRef<HTMLInputElement>>('campoNomeEdicao');
 
   readonly tags = signal<TagResumoDto[]>([]);
   readonly carregando = signal<boolean>(false);
@@ -73,6 +71,14 @@ export class TagListagemPage implements OnInit {
   private readonly indiceCor = signal<number>(Math.floor(Math.random() * CORES_PREDEFINIDAS.length));
   readonly corNova = computed(() => CORES_PREDEFINIDAS[this.indiceCor() % CORES_PREDEFINIDAS.length]);
   readonly erroRapido = signal<string | null>(null);
+
+  /** Edição do nome na própria linha (task 282): só uma tag por vez; a cor continua no ponto da linha. */
+  readonly tagEmEdicaoDeNome = signal<number | null>(null);
+  readonly erroNomeEdicao = signal<string | null>(null);
+  readonly nomeEdicaoControle = new FormControl('', {
+    nonNullable: true,
+    validators: [Validators.maxLength(100), Validators.pattern(REGEX_SEM_CARACTERES_PROIBIDOS)],
+  });
 
   readonly selecionadas = signal<ReadonlySet<number>>(new Set());
   readonly alvoPaleta = signal<AlvoPaleta | null>(null);
@@ -187,13 +193,74 @@ export class TagListagemPage implements OnInit {
     return tag.id < 0;
   }
 
-  abrirEdicao(tag: TagResumoDto): void {
+  /** O nome da linha vira um campo, já selecionado: digitar substitui, Enter confirma, Esc cancela. */
+  iniciarEdicaoDoNome(tag: TagResumoDto): void {
     if (this.eTemporaria(tag)) return;
-    this.dialogEdicao().abrir(tag);
+    this.nomeEdicaoControle.setValue(tag.nome);
+    this.erroNomeEdicao.set(null);
+    this.tagEmEdicaoDeNome.set(tag.id);
+    setTimeout(() => this.campoNomeEdicao()?.nativeElement.select());
   }
 
-  aoSalvarEdicao(tag: TagAlteradaDto): void {
-    this.substituirTag(tag);
+  cancelarEdicaoDoNome(evento?: Event): void {
+    evento?.stopPropagation();
+    this.tagEmEdicaoDeNome.set(null);
+    this.erroNomeEdicao.set(null);
+  }
+
+  /** Sair do campo confirma uma alteração válida; nome igual ou inválido só descarta (o erro aparece no Enter). */
+  aoSairDoNome(tag: TagResumoDto): void {
+    if (this.tagEmEdicaoDeNome() !== tag.id) return;
+    const nome = this.nomeEdicaoControle.value.trim();
+    if (!nome || nome === tag.nome || this.nomeEdicaoControle.invalid || this.nomeJaUsadoPorOutra(tag, nome)) {
+      this.cancelarEdicaoDoNome();
+      return;
+    }
+    this.salvarNome(tag);
+  }
+
+  /** O nome já aparece na lista; se o servidor recusar, volta ao anterior (o aviso vem do toast padrão). */
+  salvarNome(tag: TagResumoDto): void {
+    if (this.tagEmEdicaoDeNome() !== tag.id) return;
+    const nome = this.nomeEdicaoControle.value.trim();
+    if (nome === tag.nome) {
+      this.cancelarEdicaoDoNome();
+      return;
+    }
+    if (!nome) {
+      this.erroNomeEdicao.set('Nome é obrigatório');
+      return;
+    }
+    if (this.nomeEdicaoControle.hasError('maxlength')) {
+      this.erroNomeEdicao.set('Nome deve ter no máximo 100 caracteres');
+      return;
+    }
+    if (this.nomeEdicaoControle.hasError('pattern')) {
+      this.erroNomeEdicao.set(this.mensagemCaracteresProibidos);
+      return;
+    }
+    if (this.nomeJaUsadoPorOutra(tag, nome)) {
+      this.erroNomeEdicao.set('Já existe uma tag com esse nome.');
+      return;
+    }
+
+    this.cancelarEdicaoDoNome();
+    const nomeAnterior = tag.nome;
+    this.definirNomeLocal(tag.id, nome);
+    this.tagService.alterar(tag.id, { nome }).subscribe({
+      next: (resposta) => {
+        if (resposta.dados) this.substituirTag(resposta.dados);
+      },
+      error: () => this.definirNomeLocal(tag.id, nomeAnterior),
+    });
+  }
+
+  private nomeJaUsadoPorOutra(tag: TagResumoDto, nome: string): boolean {
+    return this.tags().some((item) => item.id !== tag.id && nomeDeTagIgual(item.nome, nome));
+  }
+
+  private definirNomeLocal(tagId: number, nome: string): void {
+    this.tags.update((lista) => lista.map((item) => (item.id === tagId ? { ...item, nome } : item)).sort(compararTagsPorNome));
   }
 
   abrirPaleta(evento: Event, alvo: AlvoPaleta, ancora: HTMLElement): void {
