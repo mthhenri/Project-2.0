@@ -66,9 +66,9 @@ Sem urgência; o autor quer conversar antes de especificar.
 - **P-059** — `modelagem.page.spec` instável na suíte inteira. "Instável mesmo, é complexo" (2026-10-31).
 - **P-029** e **P-030** — ficam `ACEITO`, não vale o esforço (2026-10-31).
 
-## 7. Aguardando o autor
+## 7. Definido, falta a ordem
 
-- **I-042** — formulário de criação do projeto. O autor diz que já o fechou e vai passar os ajustes quando terminar a definição das prioridades (2026-10-31).
+- **I-042** — ajustes na tela de projetos: botão Cancelar visível na edição do cabeçalho, seletor de cor mais alinhado e volume (anual por padrão) dentro do projeto. Definido pelo autor em 2026-10-31; falta dizer onde entra na ordem.
 
 ## 8. Specs já escritas no backlog
 

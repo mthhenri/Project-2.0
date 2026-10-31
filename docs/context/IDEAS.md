@@ -181,12 +181,15 @@
 - **Por quê:** o gasto da IA hoje some de uma parte: cada busca é cobrada à parte e o administrador não vê.
 - **Custo aparente:** ler o contador de buscas de cada provedor na resposta, gravar na mensagem (sem tabela de uso, como a 202) e preço por busca na configuração; a parte da OpenAI depende da 261.
 
-### I-042 — Melhorar o formulário de criação do projeto · frontend/projeto
+### I-042 — Ajustes na tela de projetos: cancelar visível, seletor de cor e volume dentro do projeto · frontend/projeto
 
-- **Ideia:** ajustar a forma do cadastro de projeto (o dialog "Novo Projeto": nome, código, cor, status, datas e volume esperado inicial) para ficar melhor de preencher.
-- **Origem:** pedido do autor em 2026-10-31, ao decidir os dialogs da `reduzir-dialogs.spec.md`: "acho que a gente pode ajustar algumas formas do cadastro". Ele não disse quais ajustes.
-- **Por quê:** a criação é o que sobrou no dialog depois que a edição do projeto foi para o cabeçalho (271).
-- **Custo aparente:** baixo, só frontend, mas a lista de ajustes precisa vir do autor antes de especificar (por exemplo ordem dos campos, código gerado, volume inicial).
+- **Ideia:** três ajustes, definidos pelo autor em 2026-10-31:
+  1. **Cancelar visível na edição do cabeçalho do projeto.** Passar o mouse sobre o nome, as datas ou a cor mostra o lápis (`app-projeto-campo-editavel`); ao editar, só o `Esc` cancela. Acrescentar um botão **Cancelar** visível ao lado do campo em edição (hoje há "Sim/Não" só na confirmação).
+  2. **Seletor de cor mais alinhado com o resto da tela.** O seletor (`app-seletor-cor`, modo compacto: paleta em linha e "Outra cor…") quebra o visual; deixá-lo no padrão dos demais controles. O seletor também é usado em Tags, então o ajuste precisa de `gerenciamento-de-impacto`.
+  3. **Volume do projeto de dentro do projeto.** Hoje o volume (horas gastas × esperadas por mês) só aparece na tela de Projetos (visão Volume, `app-projeto-volume`); a tela do projeto só tem o botão "Configurar volume". Mostrar o volume também no detalhe do projeto, **já na visão anual por padrão**.
+- **Origem:** pedido do autor em 2026-10-31 ("acho que a gente pode ajustar algumas formas do cadastro"), detalhado na mesma data depois da triagem. Com isso, ele considera que não há mais o que mexer no cadastro do projeto.
+- **Por quê:** quem edita o projeto não vê como cancelar sem conhecer o atalho; o seletor destoa; e quem está no projeto precisa abrir outra tela para ver o volume dele.
+- **Custo aparente:** baixo a médio, só frontend: o botão Cancelar e o ajuste do seletor são pequenos; o volume dentro do projeto reaproveita `app-projeto-volume` (ou o gráfico dele) filtrado para um projeto, com a visão anual como padrão, e pede conferir o endpoint de volume por projeto.
 
 ### I-043 — Manter os pacotes dos provedores de IA atualizados · chat IA/backend
 
