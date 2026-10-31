@@ -43,6 +43,7 @@ let tentativaDeReabrir: NodeJS.Timeout | null = null;
 
 /** O chat entre colaboradores (task 213): a janela flutuante, o texto copiado que espera a página pedir e o atalho global. */
 const CONFERENCIA_DO_CHAT_MS = 60_000;
+const CONFERENCIA_DO_ATALHO_MS = 10_000;
 const PRIMEIRA_CONFERENCIA_DO_CHAT_MS = 4_000;
 const LARGURA_DO_CHAT = 420;
 const ALTURA_DO_CHAT = 640;
@@ -309,10 +310,14 @@ function perguntarSaida(): Promise<RespostaDaSaida> {
         responder('continuar');
       }
     });
-    aviso.once('ready-to-show', () => {
+    const mostrar = () => {
+      if (aviso.isDestroyed() || aviso.isVisible()) return;
       aviso.show();
       aviso.focus();
-    });
+    };
+    aviso.once('ready-to-show', mostrar);
+    // Sem o `ready-to-show` o aviso ficaria invisível e "Fechar completamente" pareceria não fazer nada (o clique seguinte só o focaria).
+    setTimeout(mostrar, 2000);
     aviso.on('closed', () => {
       dialogoDeSaida = null;
       resolver(resposta);
@@ -334,14 +339,17 @@ function principalMinimizada(): boolean {
   return !janela || janela.isDestroyed() || janela.isMinimized() || !janela.isVisible();
 }
 
-/** O token do login vive no `localStorage` da página do Project; o desktop o lê dali para consultar a API como o próprio usuário. */
-async function lerTokenDoLogin(): Promise<string | null> {
-  if (!janela || janela.isDestroyed()) return null;
+/**
+ * O token do login vive no `localStorage` da página do Project; o desktop o lê dali para consultar a API como o próprio usuário.
+ * `null` = a página respondeu e não há login; `undefined` = não deu para ler agora (página recarregando, janela sumindo): não é "sem login".
+ */
+async function lerTokenDoLogin(): Promise<string | null | undefined> {
+  if (!janela || janela.isDestroyed()) return undefined;
   try {
     const token = await janela.webContents.executeJavaScript("localStorage.getItem('access_token')");
     return typeof token === 'string' && token !== '' ? token : null;
   } catch {
-    return null;
+    return undefined;
   }
 }
 
@@ -531,6 +539,8 @@ function abrirJanelaDeChat(conversa: ConversaDoChat | null): void {
     if (principal) fecharJanelaDeChat();
   });
   nova.on('closed', () => {
+    // Uma janela nova pode já ter assumido o lugar: só a atual limpa o estado.
+    if (janelaDeChat !== nova) return;
     janelaDeChat = null;
     rascunhoPendente = null;
     conversaDaJanelaDeChat = null;
@@ -583,18 +593,31 @@ function sincronizarAtalho(desejado: string | null): void {
   }
 }
 
+/** O sistema pode largar o atalho sem avisar (outro programa, troca de sessão): confere de tempos em tempos e registra de novo. */
+function garantirAtalho(): void {
+  if (atalhoRegistrado === null || globalShortcut.isRegistered(atalhoRegistrado)) return;
+  const perdido = atalhoRegistrado;
+  atalhoRegistrado = null;
+  sincronizarAtalho(perdido);
+}
+
 /** Lê a preferência do usuário no backend e ajusta o atalho; sem login o atalho sai e a janela de chat fecha (outro usuário pode entrar). */
 async function conferirChat(): Promise<void> {
   // Sem o Project carregado (página de falha, recarregando) não dá para saber se há login: nada muda até ele voltar.
   if (!janela || janela.isDestroyed() || janela.webContents.getURL() === '' || janela.webContents.getURL().startsWith('data:')) return;
   const token = await lerTokenDoLogin();
-  if (!token) {
+  if (token === undefined) return;
+  if (token === null) {
     sincronizarAtalho(null);
     fecharJanelaDeChat();
     return;
   }
   const preferencia = lerPreferenciaDoChat(await chamarApi('mensagem-direta/preferencia', token));
   if (preferencia) sincronizarAtalho(preferencia.atalhoGlobal);
+}
+
+function agendarConferenciaDoAtalho(): void {
+  setInterval(garantirAtalho, CONFERENCIA_DO_ATALHO_MS).unref();
 }
 
 function agendarConferenciaDoChat(espera: number): void {
@@ -650,6 +673,7 @@ app.whenReady().then(() => {
   avisarSeAtualizou();
   agendarConferencia();
   agendarConferenciaDoChat(PRIMEIRA_CONFERENCIA_DO_CHAT_MS);
+  agendarConferenciaDoAtalho();
 });
 
 // Fechar a janela não encerra o app: ele fica na bandeja até "Fechar completamente".
