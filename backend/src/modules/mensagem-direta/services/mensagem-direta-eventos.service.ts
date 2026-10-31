@@ -1,7 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import { MensagemDiretaEventoDto, MensagemDiretaEventoPublicarDto } from '@project20/shared';
+import { MensagemDiretaEventoDto, MensagemDiretaEventoPublicarDto, TipoUsuarioStatusEnum } from '@project20/shared';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
+import { UsuarioRepository } from '../../usuario/repositories/usuario.repository';
 import { ConexaoDeEventosDiretos, ConexoesDeEventosDiretos } from '../domain/conexoes-de-eventos-diretos';
 import { MensagemDoBarramento } from '../domain/mensagem-direta-barramento';
 import { diferencaDePresenca, PresencaGlobal } from '../domain/presenca-global';
@@ -30,7 +31,10 @@ export class MensagemDiretaEventosService implements OnModuleInit, OnModuleDestr
   private temporizadorDaExpiracao: NodeJS.Timeout | null = null;
   private encerrando = false;
 
-  constructor(@Inject(PUBLICADOR_DE_EVENTOS_DIRETOS) private readonly publicador: PublicadorDeEventosDiretos) {}
+  constructor(
+    @Inject(PUBLICADOR_DE_EVENTOS_DIRETOS) private readonly publicador: PublicadorDeEventosDiretos,
+    private readonly usuarioRepositorio: UsuarioRepository,
+  ) {}
 
   onModuleInit(): void {
     this.cancelarAssinatura = this.publicador.assinar({
@@ -115,6 +119,27 @@ export class MensagemDiretaEventosService implements OnModuleInit, OnModuleDestr
   private baterCoracao(): void {
     this.conexoes.entregarATodos({ tipo: 'BATIMENTO' });
     this.atualizarPresencaLocal();
+    void this.fecharStreamsDeUsuariosInativos();
+  }
+
+  /**
+   * A autenticação confere o usuário só quando a requisição abre (P-031), e o stream fica aberto sem prazo: a cada batimento, confere os
+   * usuários conectados nesta instância e fecha o stream de quem foi desativado ou excluído (P-061). Cada instância confere os seus, então
+   * não precisa avisar as outras. Se a consulta falha, o stream segue aberto até o próximo batimento (não derruba ninguém por um erro do banco).
+   */
+  async fecharStreamsDeUsuariosInativos(): Promise<void> {
+    let fechou = false;
+    for (const usuarioId of this.conexoes.usuariosConectados()) {
+      try {
+        const usuarioEncontrado = await this.usuarioRepositorio.recuperar({ id: usuarioId });
+        if (usuarioEncontrado && usuarioEncontrado.status !== TipoUsuarioStatusEnum.INATIVO) continue;
+        this.conexoes.encerrarUsuario(usuarioId);
+        fechou = true;
+      } catch (erro) {
+        this.logger.warn(`Usuário ${usuarioId} não conferido: ${erro instanceof Error ? erro.message : String(erro)}`);
+      }
+    }
+    if (fechou) this.atualizarPresencaLocal();
   }
 
   /** O conjunto desta instância muda na hora para quem está aqui e vai para as outras instâncias; também expira as que sumiram. */

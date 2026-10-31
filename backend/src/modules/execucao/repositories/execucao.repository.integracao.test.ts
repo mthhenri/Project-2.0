@@ -336,6 +336,8 @@ testarComBanco('agruparPorDia: primeiro início, último fim e minutos por dia, 
   await criarExecucao(conexao, { atividadeId: atividade.id, inicioData: '2026-03-10T13:00:00-03:00', fimData: '2026-03-10T13:30:00-03:00' });
   await criarExecucao(conexao, { atividadeId: atividade.id, inicioData: '2026-03-11T08:00:00-03:00', fimData: '2026-03-11T08:45:00-03:00' });
   await criarExecucao(conexao, { atividadeId: atividade.id, inicioData: '2026-03-12T08:00:00-03:00', fimData: null });
+  await criarExecucao(conexao, { atividadeId: atividade.id, inicioData: '2026-03-13T07:40:00-03:00', fimData: '2026-03-13T10:00:00-03:00' });
+  await criarExecucao(conexao, { atividadeId: atividade.id, inicioData: '2026-03-13T11:10:00-03:00', fimData: null });
   const excluida = await criarExecucao(conexao, { atividadeId: atividade.id, inicioData: '2026-03-10T15:00:00-03:00', fimData: '2026-03-10T16:00:00-03:00' });
   await excluirLinha(conexao, 'execucao', excluida.id);
   await criarExecucao(conexao, { atividadeId: deOutro.id, inicioData: '2026-03-10T08:00:00-03:00', fimData: '2026-03-10T12:00:00-03:00' });
@@ -344,6 +346,10 @@ testarComBanco('agruparPorDia: primeiro início, último fim e minutos por dia, 
   assert.deepEqual(dias.map((dia) => [dia.dia, dia.totalMinutosTrabalhados]), [['2026-03-10', 90], ['2026-03-11', 45], ['2026-03-12', 0]]);
   assert.equal(new Date(dias[0].primeiroInicioData).getTime(), new Date('2026-03-10T08:00:00-03:00').getTime());
   assert.equal(new Date(dias[0].ultimoFimData!).getTime(), new Date('2026-03-10T13:30:00-03:00').getTime());
+
+  // P-063: o dia com execução em andamento não tem último fim (nem o de uma encerrada antes dela).
+  const comAtiva = await repositorioDe(conexao).agruparPorDia({ usuarioId: usuario.id, dataInicio: '2026-03-12', dataFim: '2026-03-13' });
+  assert.deepEqual(comAtiva.map((dia) => [dia.dia, dia.ultimoFimData, dia.totalMinutosTrabalhados]), [['2026-03-12', null, 0], ['2026-03-13', null, 140]]);
 
   const soUmDia = await repositorioDe(conexao).agruparPorDia({ usuarioId: usuario.id, dataInicio: '2026-03-11', dataFim: '2026-03-11' });
   assert.deepEqual(soUmDia.map((dia) => dia.dia), ['2026-03-11']);

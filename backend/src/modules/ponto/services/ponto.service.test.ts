@@ -35,14 +35,23 @@ test('ordenarPorInicio ordena sem alterar o array original', () => {
   assert.equal(original[0].inicioData.toISOString(), '2026-03-02T14:00:00.000Z');
 });
 
-test('calcularIntervalos mantém só os gaps >= mínimo e ignora execução aberta', () => {
+test('calcularIntervalos mantém só os gaps >= mínimo; a execução aberta fecha o intervalo anterior e não abre outro', () => {
   const execucoes = [
     execucao('2026-03-02T09:00:00Z', '2026-03-02T10:00:00Z'),
     execucao('2026-03-02T10:10:00Z', '2026-03-02T12:00:00Z'), // gap de 10 min
     execucao('2026-03-02T13:00:00Z', '2026-03-02T14:00:00Z'), // gap de 60 min
-    execucao('2026-03-02T14:05:00Z', null),                   // aberta: não entra no cálculo
+    execucao('2026-03-02T14:05:00Z', null),                   // aberta: gap de 5 min antes dela, abaixo do mínimo
   ];
   assert.deepEqual(privado.calcularIntervalos(execucoes, 15).map((intervalo) => intervalo.duracaoMinutos), [60]);
   assert.deepEqual(privado.calcularIntervalos(execucoes, 10).map((intervalo) => intervalo.duracaoMinutos), [10, 60]);
   assert.deepEqual(privado.calcularIntervalos([], 15), []);
+});
+
+test('calcularIntervalos conta o gap até a execução em andamento (P-063)', () => {
+  const execucoes = [
+    execucao('2026-03-02T07:40:00Z', '2026-03-02T10:00:00Z'),
+    execucao('2026-03-02T11:10:00Z', null),
+  ];
+  assert.deepEqual(privado.calcularIntervalos(execucoes, 15).map((intervalo) => intervalo.duracaoMinutos), [70]);
+  assert.deepEqual(privado.calcularIntervalos([execucao('2026-03-02T11:10:00Z', null)], 15), [], 'só a aberta: nada a comparar');
 });

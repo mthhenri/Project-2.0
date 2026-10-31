@@ -300,14 +300,15 @@ export class ExecucaoRepository extends BaseRepository<Execucao> {
   /**
    * Agrega as execuções de um usuário por dia dentro de um intervalo de datas.
    * Retorna, por dia com execução, o primeiro início, o último fim e o total de
-   * minutos trabalhados (somando apenas execuções encerradas).
+   * minutos trabalhados (somando apenas execuções encerradas). Com uma execução em
+   * andamento no dia o último fim é nulo: o dia ainda não terminou (P-063).
    */
   async agruparPorDia(dto: ExecucaoDiaAgruparDto): Promise<ExecucaoDiaResumoDto[]> {
     return this.executarConsulta<ExecucaoDiaResumoDto>(
       `SELECT
          DATE(execucao.inicio_data)::text AS "dia",
          MIN(execucao.inicio_data)        AS "primeiroInicioData",
-         MAX(execucao.fim_data)           AS "ultimoFimData",
+         CASE WHEN BOOL_OR(execucao.fim_data IS NULL) THEN NULL ELSE MAX(execucao.fim_data) END AS "ultimoFimData",
          COALESCE(SUM(
            CASE
              WHEN execucao.fim_data IS NOT NULL

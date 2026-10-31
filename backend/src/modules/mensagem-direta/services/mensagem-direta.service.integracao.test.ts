@@ -25,7 +25,7 @@ function montar(conexao: ConexaoTeste) {
     criarRepositorio(UsuarioRepository, conexao),
     criarRepositorio(DemandaRepository, conexao),
     criarRepositorio(AtividadeRepository, conexao),
-    new MensagemDiretaEventosService(new PublicadorEmMemoria()),
+    new MensagemDiretaEventosService(new PublicadorEmMemoria(), criarRepositorio(UsuarioRepository, conexao)),
   );
 }
 

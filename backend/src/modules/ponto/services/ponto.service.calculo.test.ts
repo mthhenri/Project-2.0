@@ -62,7 +62,7 @@ function criarServico(cenario: Cenario = {}) {
       return [...porDia.entries()].sort().map(([dia, itens]) => ({
         dia,
         primeiroInicioData: itens[0].inicioData,
-        ultimoFimData: itens[itens.length - 1].fimData,
+        ultimoFimData: itens.some((item) => item.fimData === null) ? null : itens[itens.length - 1].fimData,
         totalMinutosTrabalhados: itens.reduce((soma, item) => soma + (item.fimData ? item.duracaoMinutos! : 0), 0),
       }));
     },
@@ -208,11 +208,11 @@ test('diário, intervalos: as execuções são ordenadas por início antes de ac
   assert.equal(ponto.execucoes[0].inicioData.getTime(), execucao(SEGUNDA, '09:00', null).inicioData.getTime());
 });
 
-test('diário, intervalos: execução aberta não entra no total nem forma intervalo', async () => {
+test('diário, intervalos: execução aberta não entra no total, mas o gap até ela é intervalo (P-063)', async () => {
   const { servico } = criarServico({ execucoes: { 3: [execucao(SEGUNDA, '09:00', '10:00'), execucao(SEGUNDA, '12:00', null)] } });
   const ponto = await servico.consultarDiario({ data: SEGUNDA }, DESENVOLVEDOR);
   assert.equal(ponto.totalMinutosTrabalhados, 60);
-  assert.deepEqual(ponto.intervalos, []);
+  assert.deepEqual(ponto.intervalos.map((intervalo) => intervalo.duracaoMinutos), [120]);
 });
 
 test('diário: justificativa desconta da meta do dia útil (task 82) e o saldo acompanha', async () => {
@@ -405,6 +405,16 @@ test('mensal: só os dias com execução trazem intervalos, calculados pelo mesm
   const mensal = await servico.consultarMensal({ ano: 2026, mes: 3 }, DESENVOLVEDOR);
   assert.deepEqual(mensal.dias.find((dia) => dia.data === SEGUNDA)!.intervalos.map((intervalo) => intervalo.duracaoMinutos), [60]);
   assert.deepEqual(mensal.dias.find((dia) => dia.data === '2026-03-03')!.intervalos, []);
+});
+
+test('mensal: dia com execução em andamento tem o último fim nulo e o gap até ela como intervalo (P-063)', async () => {
+  const { servico } = criarServico({ execucoes: { 3: [
+    execucao(SEGUNDA, '07:40', '10:00'), execucao(SEGUNDA, '11:10', null),
+  ] } });
+  const dia = (await servico.consultarMensal({ ano: 2026, mes: 3 }, DESENVOLVEDOR)).dias.find((item) => item.data === SEGUNDA)!;
+  assert.equal(dia.ultimoFimData, null);
+  assert.deepEqual(dia.intervalos.map((intervalo) => intervalo.duracaoMinutos), [70]);
+  assert.equal(dia.totalMinutosTrabalhados, 140);
 });
 
 test('mensal: o ponto de um usuário não soma execuções de outro', async () => {

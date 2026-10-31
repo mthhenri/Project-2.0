@@ -43,6 +43,18 @@ export class ConexoesDeEventosDiretos {
     this.entregar(this.usuariosConectados(), evento);
   }
 
+  /** Fecha todas as conexões de um usuário (ele foi desativado ou excluído). */
+  encerrarUsuario(usuarioId: number): void {
+    for (const conexao of [...(this.porUsuario.get(usuarioId) ?? [])]) {
+      try {
+        conexao.encerrar();
+      } catch {
+        // já fechada
+      }
+      this.remover(usuarioId, conexao);
+    }
+  }
+
   /** Fecha todas as conexões (parada da API). */
   encerrarTodas(): void {
     for (const [usuarioId, conexoes] of [...this.porUsuario]) {

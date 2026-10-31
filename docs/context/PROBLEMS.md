@@ -71,22 +71,6 @@
 - **Desde:** 2026-10-27 (apontado pelo autor; pergunta e conversa não anexadas).
 
 
-### P-061 — Stream de eventos do chat entre colaboradores continua aberto depois de o usuário ser desativado · `ABERTO` · mensagem-direta/backend
-
-- **Sintoma:** com o app aberto, um usuário desativado ou excluído deixa de conseguir enviar (401), mas continua recebendo mensagens e presença em `GET /mensagem-direta/eventos` e aparecendo como online até recarregar a página ou a rede cair.
-- **Causa:** a `JwtStrategy` confere o usuário só quando a requisição abre (P-031); o stream fica aberto sem prazo, com batida a cada 25 s, e nada o fecha na desativação. O serviço roda em mais de uma instância (publica por canal), então fechar a conexão exige avisar as outras.
-- **Contorno:** o usuário desativado não envia nada; o stream cai no próximo recarregamento ou queda de rede.
-- **Correção:** reconferir o usuário na batida do stream, ou encerrar as conexões do usuário ao desativar ou excluir (com o aviso entre instâncias).
-- **Desde:** 2026-10-30 (revisão do P-031).
-
-### P-063 — Ponto: o dia de hoje com execução em andamento não mostra o período corrente na linha · `ABERTO` · ponto/backend
-
-- **Sintoma:** com uma execução rodando depois de um bloco já encerrado (ex.: 07:40–10:00 e uma nova desde 11:10), a linha do dia mostra só "Dia todo 07:40 → 10:00": o período em curso e o intervalo de 1h10 não aparecem. Só quando **todas** as execuções do dia estão em andamento a linha diz "em andamento".
-- **Causa:** `ExecucaoRepository.agruparPorDia` calcula `ultimoFimData` com `MAX(fim_data)`, que ignora as execuções sem fim, e o intervalo só é detectado entre execuções já encerradas. Já era assim antes da linha resumida (P-054).
-- **Contorno:** abrir o detalhe do dia ou olhar o cartão "Trabalhando agora" da equipe.
-- **Correção:** `ultimoFimData` nulo quando houver execução ativa no dia e o intervalo até a execução ativa contado como intervalo; confirmar antes os outros consumidores de `ExecucaoDiaResumoDto`.
-- **Desde:** 2026-10-30 (visto na verificação do P-054).
-
 ### P-049 — Campo `codigo` do modelo do projeto na base não tem uso · `ABERTO` · banco/schema
 
 - **Sintoma:** o modelo do projeto guarda um campo `codigo` que, segundo o autor, é quase inútil.

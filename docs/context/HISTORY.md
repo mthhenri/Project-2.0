@@ -12,6 +12,14 @@
 
 ---
 
+## 2026-10-31 — P-061 e P-063: o stream do chat fecha para quem foi desativado; o Ponto mostra o período em andamento
+
+**P-061.** A `JwtStrategy` só conferia o usuário quando a requisição abria, e o stream de eventos do chat entre colaboradores (`GET /mensagem-direta/eventos`) fica aberto sem prazo: um usuário desativado ou excluído seguia recebendo mensagens e presença. Agora, a cada batimento (25 s), `MensagemDiretaEventosService.fecharStreamsDeUsuariosInativos` consulta (`UsuarioRepository.recuperar`) os usuários conectados **naquela instância**, fecha todos os streams de quem está inativo ou foi excluído (`ConexoesDeEventosDiretos.encerrarUsuario`) e atualiza a presença. Cada instância confere os seus, então não há aviso entre instâncias; se a consulta falha, o stream segue aberto até o próximo batimento. Atraso máximo de ~25 s. O serviço passou a receber o `UsuarioRepository` (dois pontos de construção nos testes ajustados).
+
+**P-063.** O dia com execução em andamento depois de um bloco encerrado (07:40–10:00 e uma nova desde 11:10) mostrava só "Dia todo 07:40 → 10:00". Duas causas: `ExecucaoRepository.agruparPorDia` devolvia `MAX(fim_data)` ignorando as abertas (agora `ultimoFimData` é **nulo** quando há execução ativa no dia, `BOOL_OR(fim_data IS NULL)`), e `PontoService.calcularIntervalos` só comparava execuções encerradas (agora o gap até a execução em andamento conta como intervalo; ela, sem fim, não abre outro). Muda também o detalhe do dia e a impressão (que passa a mostrar "—" no fim de um dia ainda em andamento). Os testes antigos que diziam que a execução aberta "não forma intervalo" foram trocados.
+
+**Testes:** backend 1583 testes unitários e 366 de integração (o `agruparPorDia` ganhou o dia com execução ativa), build ok; o frontend não mudou (`montarSegmentosDoDia` já tratava `ultimoFimData` nulo). **Ao vivo: não verificado** (sem execução em andamento na base de desenvolvimento e sem desativar usuário de verdade); a prova é por teste, inclusive de integração com o Postgres.
+
 ## 2026-10-31 — PRIORIDADES.md: arquivo novo com a ordem de trabalho decidida com o autor
 
 Depois da triagem de `PROBLEMS.md` e de `IDEAS.md`, o autor percebeu que só o backlog de specs não diz **em que ordem** fazer as coisas, e que nenhum arquivo de `docs/context/` respondia a isso. Criado `docs/context/PRIORIDADES.md`: só ponteiros (`P-0NN`, `I-0NN`, specs) com a decisão e a data, em seções (Agora, Em seguida, A pensar, Esperando o Git, Esperando o chat em grupo, Sem prioridade, Aguardando o autor, Specs do backlog sem ordem). Só o autor muda a ordem; item resolvido ou virado spec sai de lá. A tabela de responsabilidades de `CLAUDE.md`/`AGENTS.md` (idênticos) e a árvore de `SYSTEM.SPEC.md` ganharam a linha do arquivo novo. `MEMORY.md` não foi tocado (há linhas da outra sessão por commitar).

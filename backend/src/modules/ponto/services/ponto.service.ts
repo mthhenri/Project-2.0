@@ -364,11 +364,12 @@ export class PontoService {
     intervaloMinimoMinutos: number,
   ): IntervaloDto[] {
     const intervalos: IntervaloDto[] = [];
-    const execucoesEncerradas = execucoes.filter((execucao) => execucao.fimData !== null);
 
-    for (let indice = 0; indice < execucoesEncerradas.length - 1; indice++) {
-      const fimExecucaoAtual = new Date(execucoesEncerradas[indice].fimData as Date);
-      const inicioProximaExecucao = new Date(execucoesEncerradas[indice + 1].inicioData);
+    // A execução em andamento fecha o intervalo anterior (o gap até o início dela conta); como ela ainda não tem fim, não abre outro (P-063).
+    for (let indice = 0; indice < execucoes.length - 1; indice++) {
+      if (execucoes[indice].fimData === null) continue;
+      const fimExecucaoAtual = new Date(execucoes[indice].fimData as Date);
+      const inicioProximaExecucao = new Date(execucoes[indice + 1].inicioData);
       const duracaoMinutos = Math.floor(
         (inicioProximaExecucao.getTime() - fimExecucaoAtual.getTime()) / 60000,
       );
