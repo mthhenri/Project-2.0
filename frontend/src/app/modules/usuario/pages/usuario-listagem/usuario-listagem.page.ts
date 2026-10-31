@@ -17,7 +17,6 @@ import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.s
 import { rotuloTipoUsuario, severidadeTipoUsuario } from '../../../../core/utils/tipo-usuario';
 import { podeAbrirAnotacoes } from '../../utils/anotacoes-acesso.util';
 import { AnotacoesAlteradasEvento, UsuarioAnotacoesDialogComponent } from '../../components/usuario-anotacoes-dialog/usuario-anotacoes-dialog.component';
-import { UsuarioPerfilDialogComponent } from '../../components/usuario-perfil-dialog/usuario-perfil-dialog.component';
 import { UsuarioFormularioDialogComponent } from '../../components/usuario-formulario-dialog/usuario-formulario-dialog.component';
 import { UsuarioSenhaDialogComponent } from '../../components/usuario-senha-dialog/usuario-senha-dialog.component';
 import { UsuarioCartaoComponent } from '../../components/usuario-cartao/usuario-cartao.component';
@@ -50,7 +49,6 @@ interface FiltrosPersistidos {
     TooltipModule,
     UsuarioCartaoComponent,
     UsuarioAnotacoesDialogComponent,
-    UsuarioPerfilDialogComponent,
     UsuarioFormularioDialogComponent,
     UsuarioSenhaDialogComponent,
   ],
@@ -79,6 +77,7 @@ export class UsuarioListagemPage implements OnInit {
 
   private readonly campoBusca = viewChild<ElementRef<HTMLInputElement>>('campoBusca');
   private readonly anotacoesDialog = viewChild.required(UsuarioAnotacoesDialogComponent);
+  private readonly formularioDialog = viewChild.required(UsuarioFormularioDialogComponent);
 
   readonly formularioFiltros = this.formBuilder.group({ busca: [''] });
   readonly tipoFiltro = signal<TipoUsuarioEnum | null>(null);
@@ -234,6 +233,11 @@ export class UsuarioListagemPage implements OnInit {
   podeVerAnotacoes(usuario: UsuarioResumoDto): boolean {
     const atual = this.sessao.usuarioAtual();
     return !!atual && podeAbrirAnotacoes(atual, usuario);
+  }
+
+  /** Clicar na linha abre o Editar, para quem pode editar essa pessoa; para os demais a linha não faz nada. */
+  abrirEdicaoDaLinha(usuario: UsuarioResumoDto): void {
+    if (this.podeEditar(usuario)) this.formularioDialog().abrirEdicao(usuario.id);
   }
 
   /** Quem pode alterar o cadastro de `usuario`: gestor, ou a própria pessoa. */

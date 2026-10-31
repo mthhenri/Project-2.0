@@ -90,9 +90,10 @@
         <tr
           class="usuario-listagem__linha"
           [class.usuario-listagem__linha--inativa]="usuario.status === 'INATIVO'"
-          tabindex="0"
-          (click)="perfilDialog.abrir(usuario.id)"
-          (keydown.enter)="perfilDialog.abrir(usuario.id)"
+          [class.usuario-listagem__linha--editavel]="podeEditar(usuario)"
+          [attr.tabindex]="podeEditar(usuario) ? 0 : null"
+          (click)="abrirEdicaoDaLinha(usuario)"
+          (keydown.enter)="abrirEdicaoDaLinha(usuario)"
         >
           <td><app-usuario-cartao [usuario]="usuario" /></td>
           <td class="text-muted-color">{{ usuario.cargoTitulo }}</td>
@@ -196,11 +197,5 @@
 </div>
 
 <app-usuario-anotacoes-dialog #anotacoesDialog (aoAlterar)="aoAnotacoesAlteradas($event)" />
-<app-usuario-perfil-dialog
-  #perfilDialog
-  (aoAlterar)="aoAnotacoesAlteradas($event)"
-  (editarSolicitado)="formularioDialog.abrirEdicao($event)"
-  (senhaSolicitada)="senhaDialog.abrir($event.id, $event.nomeCompleto)"
-/>
 <app-usuario-formulario-dialog #formularioDialog (aoCriar)="buscarUsuarios()" (aoAlterar)="buscarUsuarios()" />
 <app-usuario-senha-dialog #senhaDialog />

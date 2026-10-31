@@ -154,6 +154,28 @@ describe('UsuarioListagemPage — ações por tipo de usuário', () => {
   });
 });
 
+describe('UsuarioListagemPage — clique na linha (task 280)', () => {
+  const primeiraLinha = (montado: Montado) => montado.elemento.querySelector<HTMLElement>('.usuario-listagem__linha')!;
+
+  it('o gestor clica na linha e abre o Editar daquela pessoa (não existe mais o perfil em leitura)', async () => {
+    const montado = await montarListagem(TipoUsuarioEnum.GESTOR);
+    await carregar(montado, [resumo(2)]);
+    expect(primeiraLinha(montado).classList.contains('usuario-listagem__linha--editavel')).toBe(true);
+    primeiraLinha(montado).click();
+    expect(montado.http.expectOne((r) => r.method === 'GET' && r.url.endsWith('/usuario/2')).request.method).toBe('GET');
+  });
+
+  it('o desenvolvedor só abre a própria linha; a de outra pessoa não é clicável nem faz pedido', async () => {
+    const montado = await montarListagem(TipoUsuarioEnum.DESENVOLVEDOR);
+    await carregar(montado, [resumo(2)]);
+    const linha = primeiraLinha(montado);
+    expect(linha.classList.contains('usuario-listagem__linha--editavel')).toBe(false);
+    expect(linha.hasAttribute('tabindex')).toBe(false);
+    linha.click();
+    montado.http.expectNone((r) => r.url.includes('/usuario/'));
+  });
+});
+
 describe('UsuarioListagemPage — status e exclusão', () => {
   it('alternar status muda a linha na hora, chama PUT e oferece desfazer', async () => {
     const montado = await montarListagem(TipoUsuarioEnum.GESTOR);
