@@ -18,6 +18,35 @@
 
 
 
+## 2026-10-31 — Task 215: verificação de ponta a ponta do chat entre colaboradores (fecha a guarda-chuva) e o pool do Knex que segurava o SIGTERM
+
+- **Roteiro:** `scripts/verificar-chat-duas-instancias.mjs <opensearch|elasticsearch|postgres> [--completo] [--conteiner-a]` sobe duas instâncias da API (portas 3100 e 3101, `CHAT_EVENTOS=postgres`) com dois streams e confere entrega entre instâncias, `LEITURA`, presença, 21 mensagens alternando as instâncias, queda e volta do stream (26/26 recuperadas, sem duplicata), reenvio idempotente e SIGTERM. A A roda em contêiner Linux (`--conteiner-a`) porque `kill('SIGTERM')` no Windows não roda os ganchos.
+- **Achado e correção:** o SIGTERM entregava `ENCERRANDO` mas a API só saía no SIGKILL (41 s, código 137, até sem clientes): o pool do Knex nunca era fechado. `DatabaseModule.onApplicationShutdown` agora o fecha (1 s, código 0), com teste. Vale para qualquer deploy, não só o chat.
+- **Resultado:** 11/11 nos três armazenamentos (OpenSearch, Elasticsearch 9.1 real subido pelo perfil do compose, PostgreSQL); suíte de contrato 96 testes com `CHAT_INTEGRACAO=1`; presença expirou em 78 s depois de matar uma instância; na tela, a mensagem chegou em tempo real e a linha da supervisão apareceu no popup aberto (fecha o que a 214 deixou sem ver).
+- **Limites e lacuna:** o `docker-compose.yml` não tem a API nem o front, então proxy sem buffer, tempo de leitura e tempo de graça não foram simulados; o Electron real não foi repetido (a 213 tem a parte dele); "Lida", busca, menção e reenvio não foram vistos pela interface. Relatório em `done/215-mensagem-direta-verificacao-de-ponta-a-ponta/verificacao.md`.
+
+## 2026-10-31 — 274: conversas fictícias e OpenSearch local alinhado ao banco recriado
+
+O autor pediu conversas entre devs e com o gestor e a limpeza do OpenSearch que permanecera intacto no reset PostgreSQL. Criados plano determinístico de 12 conversas/72 mensagens (seis pares de devs e seis pares com gestor.inicial), seed manual `db:seed-conversas` e inclusão no CLI `db:seed-historico`. Há Markdown, código e respostas; reaproveitados validadores, conversor de documento e mapeamentos canônicos, sem alterar runtime do chat. IDs estáveis e comparação integral em conflitos impedem duplicação e recusam documentos de usuários antigos após um reset PostgreSQL. Datas se ancoram nos devs históricos do seed; administrador inicial é o bootstrap recriado pelas migrations.
+
+Com autorização explícita, executado `db:seed-conversas -- --limpar-opensearch` em localhost:9200. Excluídos e recriados somente chat-mensagem (antes 249 documentos), chat-conversa (13) e mensagem-direta (43). Depois: 72 mensagens em 12 conversas diretas e índices de IA vazios; índices internos e volumes preservados. Seed comum nunca apaga índices. Travas exigem development, PostgreSQL loopback e OpenSearch HTTP loopback na porta 9200, sem ambiente production/SSL e sem armazenamento diferente. Todos os participantes e o plano são validados antes de qualquer exclusão. Não houve novo reset PostgreSQL.
+
+Validação: 1.576 testes completos backend aprovados, quatro testes focados finais aprovados após a correção de conflito encontrada na revisão independente, build final aprovado, leitura pelo repository real e API real. Henrique vê 3 conversas, administrador 6, com 6 mensagens por conversa e nomes corretos. Repetição do seed e do comando completo aprovadas sem duplicação. repo:verificar e passe de convenções; sem lint (P-001). Sem UI alterada, commit ou push. Relatório em `docs/specs/done/274-seed-conversas-opensearch/VERIFICACAO.md`; logs brutos locais ignorados pelo Git em `.artifacts/274-seed-conversas-opensearch/`.
+
+## 2026-10-31 — 273, validação local: base recriada e seed aplicado desde o zero
+
+Por autorização explícita do autor, a base PostgreSQL `project20` em `localhost:5433`, conferida como development sem SSL, foi apagada com DROP DATABASE e recriada vazia. Aplicadas as 73 migrations em um lote via `npm run db:migrate --workspace=backend`, sem falhas, e o cenário completo via `npm run db:seed-historico --workspace=backend`. Não foi aplicado o seed mínimo DEMO, para manter os três projetos pedidos. Nenhum volume Docker, banco de teste ou índice de chat foi apagado.
+
+Conferência real após a carga: 7 usuários (administrador inicial e 6 devs), 3 projetos, 21 demandas, 15 conexões, 108 atribuições, 108 atividades, 756 execuções e 3 vigências de volume. Todas as sete senhas bcrypt conferidas contra a credencial fictícia documentada; gestor.inicial é ADMINISTRADOR. Nenhuma execução aberta, futura, com período inválido ou sobreposição por dono da atividade. Histórico entre 2026-08-03 e 2026-10-30. Scripts operacionais locais em `.artifacts/273-seed-historico-desenvolvimento/`, ignorados pelo Git. Esta operação substitui a informação da verificação anterior de que o seed ainda não havia sido aplicado ao desenvolvimento; a verificação anterior permanece como registro histórico. Não houve mudança de código, commit ou push.
+
+## 2026-10-31 — 273: seed SQL de histórico fictício, manual e restrito ao desenvolvimento
+
+Criados SQL estático, executor e comando `npm run db:seed-historico --workspace=backend`, separados do seed mínimo e das migrations. Cenário: Portal do Cliente, Estoque Inteligente e Agenda da Equipe; Mateus Henrique, Caranguejo, Nebuloso, Parafuso, Trovão e Abacaxi; 21 demandas com descrições técnica/cliente e documentação, 15 conexões acíclicas, 108 atividades e dois períodos encerrados de 3h por dia útil nos últimos 90 dias. Datas de criação precedem o histórico. Os dias não úteis cadastrados são pulados. Gestor inicial preservado; não há escrita em dados existentes ou execução automática. APP_AMBIENTE deve ser development explícito; NODE_ENV=production e DB_SSL=true recusam antes da conexão. O SQL também exige indicação transacional do executor; não autentica o ambiente remoto por conta própria.
+
+Repetição não duplica o conjunto; colisões parciais de projetos/usuários ou contagens incompletas de demandas/atividades cancelam a transação. Revisão independente encontrou que apenas conferir códigos de projetos era insuficiente; corrigido e coberto por regressão real. Não repara exclusões manuais de execuções nem reconcilia conteúdo alterado.
+
+Validação: 1.573 testes unitários backend aprovados, incluindo o bloqueio de ambiente; dois testes de integração PostgreSQL aprovados com rollback (contagens, repetição, preservação do gestor, períodos fechados sem sobreposição, bloqueio SQL direto e colisão parcial), build backend, repo:verificar e revisão do recorte. Sem UI alterada. Projeto segue sem lint (P-001). Nenhum commit ou push; seed não aplicado ao banco de desenvolvimento. Relatório em `docs/specs/done/273-seed-historico-desenvolvimento/VERIFICACAO.md`.
+
 ## 2026-10-31 — Tasks 214 e 200: supervisão do chat entre colaboradores e aviso de que o Desktop atualizou
 
 - **Origem:** o autor reverteu o descarte da 214 e da 215 ("fazer e finalizar") e pediu a 200 junto. As specs voltaram de `discarded/` para `active/`; a 214 e a 200 foram implementadas, a **215 continua aberta** (ver abaixo).
