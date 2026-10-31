@@ -169,7 +169,7 @@
     @if (textoDaDescricao(campo)) {
       @if (podeEditarDescricao(campo)) {
         <div class="demanda-aberta__acoes-texto">
-          <p-button label="Editar" icon="pi pi-pencil" severity="secondary" [outlined]="true" size="small" (onClick)="abrirDialogDescricao(campo)" />
+          <p-button label="Editar" icon="pi pi-pencil" severity="secondary" [outlined]="true" size="small" (onClick)="editarDescricao.emit(campo)" />
         </div>
       }
       <app-markdown-visualizador [texto]="textoDaDescricao(campo)" />
@@ -177,27 +177,13 @@
       <div class="demanda-aberta__vazio">
         <strong>Sem {{ rotulo }} ainda</strong>
         @if (podeEditarDescricao(campo)) {
-          <p-button label="Escrever" icon="pi pi-pencil" severity="secondary" [outlined]="true" size="small" (onClick)="abrirDialogDescricao(campo)" />
+          <p-button label="Escrever" icon="pi pi-pencil" severity="secondary" [outlined]="true" size="small" (onClick)="editarDescricao.emit(campo)" />
         } @else {
           <span>Só quem é da demanda escreve aqui.</span>
         }
       </div>
     }
   </ng-template>
-
-  @if (campoDescricaoEditando()) {
-    <app-demanda-descricao-dialog
-      [visivel]="mostrarDialogDescricao()"
-      [titulo]="tituloDialogDescricao()"
-      [nomeDemanda]="nomeDemandaDescricaoEditando()"
-      [podeEditar]="podeEditarDescricaoAtual()"
-      [carregandoSalvar]="carregandoSalvarDescricao()"
-      [formulario]="formularioDescricao"
-      (tentarFechar)="aoTentarFecharDescricao($event)"
-      (salvar)="salvarDescricao()"
-      (textoAssistenteAceito)="aceitarDescricaoAssistente($event)"
-    />
-  }
 
   <app-demanda-formulario-dialog
     [demandaId]="dadosDemanda.id"
@@ -208,5 +194,4 @@
 }
 
 <p-confirmDialog />
-<p-confirmDialog key="descricao-fechar" />
 <app-atividade-nova-dialog (aoCriar)="aoAtividadeCriada()" />

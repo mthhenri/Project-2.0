@@ -50,6 +50,20 @@
   }
 }
 
+// No modo Dividido a lista ocupa a coluna estreita inteira, com a rolagem própria.
+.demanda-arvore-tela__lista-dividida {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+
+  app-demanda-pasta-lista {
+    flex: 1;
+    min-height: 0;
+  }
+}
+
 // Em largura média (notebook com a barra lateral aberta) as pastas encolhem para a demanda aberta não perder as abas.
 @container (max-width: 1250px) {
   .demanda-arvore-tela {

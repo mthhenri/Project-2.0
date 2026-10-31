@@ -1,0 +1,35 @@
+:host {
+  display: block;
+  height: 100%;
+  min-height: 0;
+  container-type: inline-size;
+}
+
+// A lista estreita (de 16 a 24rem) e o editor com o resto; cada lado rola sozinho.
+.modo-dividido {
+  display: grid;
+  grid-template-columns: minmax(16rem, 24rem) minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
+  background: var(--app-surface-0);
+
+  &__lista,
+  &__editor {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  &__lista {
+    border-right: 1px solid var(--app-surface-200);
+  }
+}
+
+// Largura curta (monitor vertical com a barra lateral aberta): a lista encolhe para o editor não perder espaço.
+@container (max-width: 900px) {
+  .modo-dividido {
+    grid-template-columns: minmax(12rem, 16rem) minmax(0, 1fr);
+  }
+}

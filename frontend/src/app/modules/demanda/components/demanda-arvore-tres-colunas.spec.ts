@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { DemandaGrafoNoDto, TipoDemandaStatusEnum, TipoUsuarioEnum } from '@project20/shared';
 import { montarComponente } from '../../../../testes/montar-componente';
-import { esperarRequisicao, responderErro } from '../../../../testes/http-teste';
+import { esperarRequisicao, responderErro, responderSucesso } from '../../../../testes/http-teste';
 import { FILTRO_VAZIO } from '../utils/demanda-filtro.util';
 import { construirPastas } from '../utils/demanda-pasta.util';
 import { DemandaArvoreTelaComponent } from './demanda-arvore-tela/demanda-arvore-tela.component';
@@ -361,5 +361,109 @@ describe('DemandaArvoreTelaComponent', () => {
     expect(montado.componente.demandaAbertaId()).toBe(3);
     montado.componente.aoExcluida();
     expect(eventos.alterado).toBe(1);
+  });
+});
+
+describe('DemandaArvoreTelaComponent — modo Dividido (task 278)', () => {
+  const DEMANDA_3 = {
+    id: 3, projetoId: 7, demandaPaiId: 2, nome: 'Tela de login', descricaoTecnica: 'texto da 3', descricaoCliente: '', documentacao: '',
+    horasEstimadas: 6, status: TipoDemandaStatusEnum.CONCLUIDA, isEstrutural: false, previsaoFimData: null, createdDate: '2026-01-01T00:00:00Z', podeEditar: true,
+  };
+
+  async function editar(campo: 'descricaoTecnica' | 'descricaoCliente' | 'documentacao' = 'descricaoTecnica') {
+    TestBed.resetTestingModule();
+    const montado = await montarComponente(DemandaArvoreTelaComponent, {
+      usuario: TipoUsuarioEnum.GESTOR,
+      entradas: { nos: NOS, filtro: FILTRO_VAZIO, projetoId: 7, pastaId: 2, iniciarProjetoInteiro: false },
+    });
+    const eventos = { alterado: 0 };
+    montado.componente.alterado.subscribe(() => eventos.alterado++);
+    await montado.atualizar();
+    montado.http.match(() => true);
+    montado.componente.editarDescricao(3, campo);
+    await montado.atualizar();
+    for (const requisicao of montado.http.match((r) => r.url.endsWith('/demanda/3') && r.method === 'GET')) {
+      responderSucesso(requisicao, DEMANDA_3);
+    }
+    await montado.atualizar();
+    return { montado, eventos };
+  }
+
+  const editorDaTela = (montado: { elemento: HTMLElement }) => montado.elemento.querySelector('app-demanda-descricao-editor');
+
+  it('editar uma descrição troca as três colunas pelo modo Dividido: lista estreita e editor, sem as pastas nem a demanda aberta', async () => {
+    const { montado } = await editar();
+    expect(montado.componente.edicaoDescricao()).toEqual({ id: 3, campo: 'descricaoTecnica' });
+    expect(montado.elemento.querySelector('app-modo-dividido')).not.toBeNull();
+    expect(editorDaTela(montado)).not.toBeNull();
+    expect(montado.elemento.querySelector('app-demanda-pasta-lista')).not.toBeNull();
+    expect(montado.elemento.querySelector('app-demanda-pastas')).toBeNull();
+    expect(montado.elemento.querySelector('app-demanda-aberta')).toBeNull();
+    expect(document.body.querySelector('.p-dialog')).toBeNull();
+  });
+
+  it('trocar de demanda na lista, sem texto novo, leva o editor para ela no mesmo campo', async () => {
+    const { montado } = await editar('documentacao');
+    montado.componente.escolherDemanda(4);
+    await montado.atualizar();
+    expect(montado.componente.edicaoDescricao()).toEqual({ id: 4, campo: 'documentacao' });
+    expect(montado.componente.demandaAbertaId()).toBe(4);
+    expect(montado.http.match((r) => r.url.endsWith('/demanda/4')).length).toBe(1);
+  });
+
+  const botaoDoAviso = (rotulo: string) =>
+    Array.from(document.body.querySelectorAll<HTMLButtonElement>('.p-confirmdialog button')).find((item) => item.textContent?.trim() === rotulo)!;
+
+  it('com texto novo, trocar de demanda pergunta; Descartar troca sem salvar', async () => {
+    const { montado } = await editar();
+    const editor = montado.componente['editorDaDescricao']()!;
+    editor.formulario.patchValue({ valor: 'texto alterado' });
+
+    montado.componente.escolherDemanda(4);
+    await montado.atualizar();
+    expect(montado.componente.edicaoDescricao()?.id).toBe(3);
+    expect(document.body.textContent).toContain('Alterações não salvas');
+
+    botaoDoAviso('Descartar').click();
+    await montado.atualizar();
+    montado.http.expectNone((r) => r.method === 'PUT');
+    expect(montado.componente.edicaoDescricao()?.id).toBe(4);
+  });
+
+  it('com texto novo, Salvar grava a de agora e só depois troca de demanda', async () => {
+    const { montado } = await editar();
+    montado.componente['editorDaDescricao']()!.formulario.patchValue({ valor: 'texto alterado' });
+
+    montado.componente.escolherDemanda(4);
+    await montado.atualizar();
+    botaoDoAviso('Salvar').click();
+    await montado.atualizar();
+
+    const requisicao = esperarRequisicao(montado.http, 'PUT', '/demanda/3');
+    expect(requisicao.request.body).toEqual({ descricaoTecnica: 'texto alterado' });
+    expect(montado.componente.edicaoDescricao()?.id).toBe(3);
+    responderSucesso(requisicao, DEMANDA_3);
+    await montado.atualizar();
+    expect(montado.componente.edicaoDescricao()?.id).toBe(4);
+  });
+
+  it('Cancelar sem texto novo volta às três colunas, na aba da descrição editada', async () => {
+    const { montado } = await editar('descricaoCliente');
+    montado.componente.sairDaEdicao();
+    await montado.atualizar();
+    montado.http.match(() => true);
+    expect(montado.componente.edicaoDescricao()).toBeNull();
+    expect(montado.componente.aba()).toBe('cliente');
+    expect(montado.elemento.querySelector('app-modo-dividido')).toBeNull();
+    expect(montado.elemento.querySelector('app-demanda-pastas')).not.toBeNull();
+  });
+
+  it('salvar avisa a página e volta às três colunas', async () => {
+    const { montado, eventos } = await editar();
+    montado.componente.aoDescricaoSalva();
+    await montado.atualizar();
+    montado.http.match(() => true);
+    expect(eventos.alterado).toBe(1);
+    expect(montado.componente.edicaoDescricao()).toBeNull();
   });
 });

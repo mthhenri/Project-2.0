@@ -1,0 +1,8 @@
+<div class="modo-dividido">
+  <aside class="modo-dividido__lista" [attr.aria-label]="rotuloLista()">
+    <ng-content select="[lista]" />
+  </aside>
+  <section class="modo-dividido__editor" [attr.aria-label]="rotuloEditor()">
+    <ng-content />
+  </section>
+</div>

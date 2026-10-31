@@ -103,13 +103,19 @@ describe('DemandaAbertaComponent — o que mostra', () => {
     expect(texto(naoMembro.montado)).toContain('Só quem é da demanda escreve aqui');
   });
 
-  it('o botão Editar da descrição abre o diálogo de edição com o texto', async () => {
+  it('o botão Editar da descrição pede o editor ao lado da lista, no campo da aba (não abre mais diálogo)', async () => {
     const { montado } = await abrir(TipoUsuarioEnum.GESTOR);
+    const pedidos: string[] = [];
+    montado.componente.editarDescricao.subscribe((campo) => pedidos.push(campo));
     editarDescricao(montado)!.click();
     await montado.atualizar();
-    expect(montado.componente.mostrarDialogDescricao()).toBe(true);
-    expect(montado.componente.campoDescricaoEditando()).toBe('descricaoTecnica');
-    expect(montado.componente.formularioDescricao.value.valor).toBe('texto tecnico');
+    expect(pedidos).toEqual(['descricaoTecnica']);
+    expect(document.body.querySelector('.p-dialog')).toBeNull();
+
+    montado.componente.aba.set('cliente');
+    await montado.atualizar();
+    editarDescricao(montado)!.click();
+    expect(pedidos).toEqual(['descricaoTecnica', 'descricaoCliente']);
   });
 });
 

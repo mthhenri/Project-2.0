@@ -1,3 +1,41 @@
+<!-- A lista de demandas é a mesma nas três colunas e no modo Dividido -->
+<ng-template #listaDeDemandas>
+  <app-demanda-pasta-lista
+    class="demanda-arvore-tela__lista"
+    [titulo]="tituloDaLista()"
+    [caminho]="caminhoDaLista()"
+    [itens]="itens()"
+    [selecionadaId]="demandaAbertaId()"
+    [termo]="filtro().termo"
+    [nomesDasPastas]="nomesDasPastas()"
+    [caminhosDasDemandas]="caminhosDasDemandas()"
+    [filtroAtivo]="filtroEstaAtivo()"
+    [acoes]="acoesMenu"
+    [pastaDemandaId]="pastaDemandaId()"
+    [permitirDemandaAqui]="!emBusca() && !projetoInteiro() && !edicaoDescricao()"
+    (demandaEscolhida)="escolherDemanda($event)"
+    (descricaoSolicitada)="abrirDescricao($event)"
+    (statusEscolhido)="aoStatusEscolhido($event)"
+    (demandaAquiSolicitada)="mostrarDemandaAqui.set(true)"
+    (abrirPastaSolicitada)="escolherDemanda($event)"
+    (filtrosLimpos)="filtrosLimpos.emit()"
+  />
+</ng-template>
+
+@if (edicaoDescricao(); as edicao) {
+  <!-- Modo Dividido (task 278): a lista estreita e o editor da descrição ao lado, sem véu; trocar de demanda na lista troca o editor -->
+  <app-modo-dividido rotuloLista="Demandas" rotuloEditor="Editor de descrição">
+    <div lista class="demanda-arvore-tela__lista-dividida">
+      <ng-container *ngTemplateOutlet="listaDeDemandas" />
+    </div>
+    <app-demanda-descricao-editor
+      [demandaId]="edicao.id"
+      [campo]="edicao.campo"
+      (salva)="aoDescricaoSalva()"
+      (fecharSolicitado)="sairDaEdicao()"
+    />
+  </app-modo-dividido>
+} @else {
 <div class="demanda-arvore-tela">
   <app-demanda-pastas
     class="demanda-arvore-tela__pastas"
@@ -12,26 +50,7 @@
     (expansaoAlternada)="alternarExpansao($event)"
   />
 
-  <app-demanda-pasta-lista
-    class="demanda-arvore-tela__lista"
-    [titulo]="tituloDaLista()"
-    [caminho]="caminhoDaLista()"
-    [itens]="itens()"
-    [selecionadaId]="demandaAbertaId()"
-    [termo]="filtro().termo"
-    [nomesDasPastas]="nomesDasPastas()"
-    [caminhosDasDemandas]="caminhosDasDemandas()"
-    [filtroAtivo]="filtroEstaAtivo()"
-    [acoes]="acoesMenu"
-    [pastaDemandaId]="pastaDemandaId()"
-    [permitirDemandaAqui]="!emBusca() && !projetoInteiro()"
-    (demandaEscolhida)="escolherDemanda($event)"
-    (descricaoSolicitada)="abrirDescricao($event)"
-    (statusEscolhido)="aoStatusEscolhido($event)"
-    (demandaAquiSolicitada)="mostrarDemandaAqui.set(true)"
-    (abrirPastaSolicitada)="escolherDemanda($event)"
-    (filtrosLimpos)="filtrosLimpos.emit()"
-  />
+  <ng-container *ngTemplateOutlet="listaDeDemandas" />
 
   <div class="demanda-arvore-tela__aberta">
     @if (demandaAbertaId(); as idAberto) {
@@ -41,6 +60,7 @@
         [(aba)]="aba"
         (navegou)="aoNavegar($event)"
         (demandaAlterada)="alterado.emit()"
+        (editarDescricao)="editarDescricao(idAberto, $event)"
         (demandaExcluida)="aoExcluida()"
         (statusAlterado)="statusAlterado.emit($event)"
         (tagsAlteradas)="tagsAlteradas.emit($event)"
@@ -53,6 +73,9 @@
     }
   </div>
 </div>
+}
+
+<p-confirmDialog key="descricao-fechar" />
 
 <!-- "Demanda aqui": cria já dentro da pasta escolhida (sem pasta, na raiz do projeto) -->
 <app-demanda-formulario-dialog

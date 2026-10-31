@@ -11,7 +11,6 @@ import { AtividadeNovaDialogComponent } from '../../../atividade/components/ativ
 import { DemandaAtividadesPainelComponent } from '../demanda-atividades-painel/demanda-atividades-painel.component';
 import { DemandaBarraHorasComponent } from '../demanda-barra-horas/demanda-barra-horas.component';
 import { DemandaConexaoListaComponent } from '../demanda-conexao-lista/demanda-conexao-lista.component';
-import { DemandaDescricaoDialogComponent } from '../demanda-descricao-dialog/demanda-descricao-dialog.component';
 import { DemandaDetalheBase } from '../demanda-detalhe-base/demanda-detalhe.base';
 import { DemandaFormularioDialogComponent } from '../demanda-formulario-dialog/demanda-formulario-dialog.component';
 import { DemandaMembrosCabecalhoComponent } from '../demanda-membros-cabecalho/demanda-membros-cabecalho.component';
@@ -41,7 +40,6 @@ export type AbaDemandaAberta = 'tecnica' | 'cliente' | 'doc' | 'atividades' | 'c
     DemandaAtividadesPainelComponent,
     DemandaBarraHorasComponent,
     DemandaConexaoListaComponent,
-    DemandaDescricaoDialogComponent,
     DemandaFormularioDialogComponent,
     DemandaMembrosCabecalhoComponent,
     DemandaMetricasComponent,
@@ -59,6 +57,8 @@ export class DemandaAbertaComponent extends DemandaDetalheBase implements OnChan
   readonly aba = model<AbaDemandaAberta>('tecnica');
   /** A demanda mostrada mudou por dentro (caminho, conexão, "Voltar"): a página acompanha a pasta e a seleção. */
   readonly navegou = output<number>();
+  /** Pediu para escrever ou editar uma descrição: a tela passa ao modo Dividido, com o editor ao lado da lista. */
+  readonly editarDescricao = output<'descricaoTecnica' | 'descricaoCliente' | 'documentacao'>();
 
   readonly rotuloStatus = ROTULO_STATUS_DEMANDA;
 

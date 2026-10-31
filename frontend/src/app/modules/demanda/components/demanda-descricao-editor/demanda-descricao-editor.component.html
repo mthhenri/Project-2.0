@@ -1,0 +1,47 @@
+<div class="demanda-descricao-editor">
+  <header class="demanda-descricao-editor__cabecalho">
+    <div class="demanda-descricao-editor__titulos">
+      <h2 class="demanda-descricao-editor__titulo">{{ titulo() }}</h2>
+      @if (demanda(); as demandaAtual) {
+        <span class="demanda-descricao-editor__demanda">{{ demandaAtual.nome }}</span>
+      }
+    </div>
+    <div class="demanda-descricao-editor__acoes">
+      @if (podeEditar()) {
+        <p-button label="Cancelar" severity="secondary" [outlined]="true" (onClick)="fecharSolicitado.emit()" />
+        <p-button label="Salvar" icon="pi pi-check" [loading]="carregandoSalvar()" (onClick)="salvar()" />
+      } @else {
+        <p-button label="Fechar" severity="secondary" [outlined]="true" (onClick)="fecharSolicitado.emit()" />
+      }
+    </div>
+  </header>
+
+  <div class="demanda-descricao-editor__corpo">
+    @if (carregando()) {
+      <div class="demanda-descricao-editor__estado"><i class="pi pi-spin pi-spinner" aria-hidden="true"></i> Carregando…</div>
+    } @else if (erro()) {
+      <div class="demanda-descricao-editor__estado" role="alert">Não foi possível carregar a demanda.</div>
+    } @else if (podeEditar()) {
+      <form [formGroup]="formulario" class="demanda-descricao-editor__form">
+        <app-markdown-editor
+          formControlName="valor"
+          [alturaMinima]="0"
+          [rotulo]="titulo()"
+          class="demanda-descricao-editor__editor"
+        />
+        <app-assistente-descricao
+          [textoAtual]="texto"
+          tipoEntidade="demanda"
+          [contextoEntidade]="demanda()?.nome ?? ''"
+          (textoAuxiliadoAceito)="aceitarTextoDoAssistente($event)"
+        />
+      </form>
+    } @else if (texto) {
+      <div class="demanda-descricao-editor__leitura">
+        <app-markdown-visualizador [texto]="texto" />
+      </div>
+    } @else {
+      <div class="demanda-descricao-editor__estado">Sem conteúdo</div>
+    }
+  </div>
+</div>

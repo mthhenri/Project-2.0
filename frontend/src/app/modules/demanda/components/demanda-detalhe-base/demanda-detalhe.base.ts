@@ -1,9 +1,8 @@
-import { FormBuilder } from '@angular/forms';
 import { Directive, ElementRef, Input, Output, EventEmitter, ViewChild, viewChild, inject, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { forkJoin, of } from 'rxjs';
-import { MessageService, ConfirmationService } from 'primeng/api';
+import { ConfirmationService } from 'primeng/api';
 import {
   DemandaRecuperadaDto,
   DemandaAncestralDto,
@@ -13,7 +12,6 @@ import {
   DemandaConexaoResumoDto,
   REGEX_SEM_CARACTERES_PROIBIDOS,
   MENSAGEM_CARACTERES_PROIBIDOS,
-  DemandaAlterarDto,
   UsuarioResumoDto,
   temPermissaoDeGestor,
   TipoDemandaStatusEnum,
@@ -69,10 +67,8 @@ export abstract class DemandaDetalheBase {
   private readonly usuarioService = inject(UsuarioService);
   private readonly atividadeService = inject(AtividadeService);
   private readonly router = inject(Router);
-  private readonly messageService = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly desfazerService = inject(DesfazerService);
-  private readonly formBuilder = inject(FormBuilder);
   readonly sessao = inject(UsuarioSessaoService);
 
   readonly demandaIdAtual = signal<number>(0);
@@ -127,11 +123,6 @@ export abstract class DemandaDetalheBase {
   readonly rotuloStatusAtividade = rotuloStatusAtividade;
   readonly mostrarDialogEditar = signal<boolean>(false);
 
-  readonly campoDescricaoEditando = signal<CampoDescricao | null>(null);
-  readonly mostrarDialogDescricao = signal<boolean>(false);
-  readonly carregandoSalvarDescricao = signal<boolean>(false);
-  readonly demandaIdDescricaoEditando = signal<number>(0);
-  readonly nomeDemandaDescricaoEditando = signal<string>('');
 
   /**
    * Membresia da demanda (gestor sempre; desenvolvedor quando é membro, via flag
@@ -156,39 +147,6 @@ export abstract class DemandaDetalheBase {
     const podeEditar = campo === 'descricaoCliente' ? this.sessao.eGestor() : this.eMembro();
     return `${rotulo} — ${preenchida ? 'preenchida' : 'vazia'} (clique para ${podeEditar ? 'editar' : 'ver'})`;
   }
-
-  readonly formularioDescricao = this.formBuilder.group({
-    valor: ['' as string | null],
-  });
-
-  /** Último conteúdo persistido da descrição aberta — base da detecção de alterações não salvas. */
-  private readonly descricaoConteudoSalvo = signal<string>('');
-
-  readonly tituloDialogDescricao = computed(() => {
-    const campo = this.campoDescricaoEditando();
-    if (!campo) return '';
-    const titulos: Record<CampoDescricao, string> = {
-      descricaoTecnica: 'Descrição Técnica',
-      descricaoCliente: 'Descrição para o Cliente',
-      documentacao:     'Documentação',
-    };
-    return titulos[campo];
-  });
-
-  /**
-   * Editabilidade da demanda cuja descrição está aberta (gestor sempre; desenvolvedor
-   * apenas quando é membro). Reflete a flag `podeEditar` retornada pelo backend.
-   */
-  readonly descricaoEditavel = signal<boolean>(false);
-
-  readonly podeEditarDescricaoAtual = computed(() => {
-    const campo = this.campoDescricaoEditando();
-    if (!campo) return false;
-    // Descrição do cliente é exclusiva do gestor.
-    if (campo === 'descricaoCliente') return this.sessao.eGestor();
-    // Técnica e documentação: só edita quem pode editar a demanda.
-    return this.descricaoEditavel();
-  });
 
   /** Gancho: a demanda foi excluída por aqui (o diálogo se fecha; a coluna esvazia). */
   protected aoExcluida(): void {}
@@ -376,102 +334,6 @@ export abstract class DemandaDetalheBase {
           if (resposta.sucesso && resposta.dados) this.atividades.set(resposta.dados.itens);
         },
       });
-  }
-
-  abrirDialogDescricao(campo: CampoDescricao): void {
-    const demandaDados = this.demanda();
-    if (!demandaDados) return;
-    const valores: Record<CampoDescricao, string | null | undefined> = {
-      descricaoTecnica: demandaDados.descricaoTecnica,
-      descricaoCliente: demandaDados.descricaoCliente,
-      documentacao:     demandaDados.documentacao,
-    };
-    this.demandaIdDescricaoEditando.set(demandaDados.id);
-    this.nomeDemandaDescricaoEditando.set(demandaDados.nome);
-    this.campoDescricaoEditando.set(campo);
-    this.descricaoEditavel.set(demandaDados.podeEditar);
-    this.formularioDescricao.patchValue({ valor: valores[campo] ?? '' });
-    this.descricaoConteudoSalvo.set(valores[campo] ?? '');
-    this.mostrarDialogDescricao.set(true);
-  }
-
-  abrirDialogDescricaoPorId(demandaId: number, campo: CampoDescricao): void {
-    this.demandaService.recuperar(demandaId).subscribe({
-      next: (resposta) => {
-        if (!resposta.sucesso || !resposta.dados) return;
-        const demandaDados = resposta.dados;
-        const valores: Record<CampoDescricao, string | null | undefined> = {
-          descricaoTecnica: demandaDados.descricaoTecnica,
-          descricaoCliente: demandaDados.descricaoCliente,
-          documentacao:     demandaDados.documentacao,
-        };
-        this.demandaIdDescricaoEditando.set(demandaId);
-        this.nomeDemandaDescricaoEditando.set(demandaDados.nome);
-        this.campoDescricaoEditando.set(campo);
-        this.descricaoEditavel.set(demandaDados.podeEditar);
-        this.formularioDescricao.patchValue({ valor: valores[campo] ?? '' });
-        this.descricaoConteudoSalvo.set(valores[campo] ?? '');
-        this.mostrarDialogDescricao.set(true);
-      },
-    });
-  }
-
-  /** Verdadeiro quando o editor tem conteúdo ainda não persistido na base. */
-  private descricaoTemAlteracoesNaoSalvas(): boolean {
-    return (this.formularioDescricao.value.valor ?? '') !== this.descricaoConteudoSalvo();
-  }
-
-  /**
-   * Intercepta qualquer fechamento do dialog de descrição (X, ESC, Cancelar). Com
-   * alterações não salvas e permissão de edição, pergunta se quer salvar antes de
-   * fechar; caso contrário fecha direto.
-   */
-  aoTentarFecharDescricao(visivel: boolean): void {
-    if (visivel) return;
-    const precisaConfirmar = this.podeEditarDescricaoAtual() && this.descricaoTemAlteracoesNaoSalvas();
-    // Fecha de fato (mantém o signal coerente com o estado real do PrimeNG) e,
-    // havendo edições pendentes, pergunta se o usuário quer salvá-las antes.
-    this.mostrarDialogDescricao.set(false);
-    if (precisaConfirmar) {
-      this.confirmationService.confirm({
-        key: 'descricao-fechar',
-        header: 'Alterações não salvas',
-        message: `Você fez alterações em "${this.tituloDialogDescricao()}" que ainda não foram salvas. Deseja salvar antes de fechar?`,
-        icon: 'pi pi-exclamation-triangle',
-        acceptLabel: 'Salvar',
-        rejectLabel: 'Descartar',
-        accept: () => this.salvarDescricao(),
-        reject: () => {},
-      });
-    }
-  }
-
-  salvarDescricao(): void {
-    const campo = this.campoDescricaoEditando();
-    const idEditando = this.demandaIdDescricaoEditando();
-    if (!campo || !idEditando || !this.podeEditarDescricaoAtual()) return;
-
-    this.carregandoSalvarDescricao.set(true);
-    const valorEnviado = this.formularioDescricao.value.valor ?? '';
-    const dto = { [campo]: this.formularioDescricao.value.valor ?? undefined } as DemandaAlterarDto;
-
-    this.demandaService
-      .alterar(idEditando, dto)
-      .pipe(finalize(() => this.carregandoSalvarDescricao.set(false)))
-      .subscribe({
-        next: () => {
-          this.descricaoConteudoSalvo.set(valorEnviado);
-          this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: `${this.tituloDialogDescricao()} salva` });
-          this.mostrarDialogDescricao.set(false);
-          if (idEditando === this.demanda()?.id) {
-            this.carregarDemanda(idEditando);
-          }
-        },
-      });
-  }
-
-  aceitarDescricaoAssistente(texto: string): void {
-    this.formularioDescricao.patchValue({ valor: texto });
   }
 
   confirmarExclusao(): void {

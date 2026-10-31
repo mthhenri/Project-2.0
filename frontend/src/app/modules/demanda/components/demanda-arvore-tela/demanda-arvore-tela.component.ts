@@ -1,5 +1,7 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, effect, inject, input, OnInit, output, signal, untracked, viewChild } from '@angular/core';
-import { MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DemandaGrafoNoDto, TagResumoDto, TipoDemandaStatusEnum } from '@project20/shared';
 import { DemandaService } from '../../services/demanda.service';
 import { CampoDescricaoDemanda, DemandaMenuAcoes } from '../../utils/demanda-context-menu.factory';
@@ -15,9 +17,11 @@ import {
   pastaDaDemanda,
 } from '../../utils/demanda-pasta.util';
 import { AbaDemandaAberta, DemandaAbertaComponent } from '../demanda-aberta/demanda-aberta.component';
+import { DemandaDescricaoEditorComponent } from '../demanda-descricao-editor/demanda-descricao-editor.component';
 import { DemandaFormularioDialogComponent } from '../demanda-formulario-dialog/demanda-formulario-dialog.component';
 import { DemandaPastaListaComponent } from '../demanda-pasta-lista/demanda-pasta-lista.component';
 import { DemandaPastasComponent } from '../demanda-pastas/demanda-pastas.component';
+import { ModoDivididoComponent } from '../../../../shared/components/modo-dividido/modo-dividido.component';
 
 /**
  * A Árvore de demandas em três colunas (task 239): as pastas (demandas de estrutura), as demandas que estão direto na pasta escolhida e a demanda
@@ -27,7 +31,17 @@ import { DemandaPastasComponent } from '../demanda-pastas/demanda-pastas.compone
 @Component({
   selector: 'app-demanda-arvore-tela',
   standalone: true,
-  imports: [DemandaPastasComponent, DemandaPastaListaComponent, DemandaAbertaComponent, DemandaFormularioDialogComponent],
+  imports: [
+    NgTemplateOutlet,
+    ConfirmDialogModule,
+    ModoDivididoComponent,
+    DemandaPastasComponent,
+    DemandaPastaListaComponent,
+    DemandaAbertaComponent,
+    DemandaDescricaoEditorComponent,
+    DemandaFormularioDialogComponent,
+  ],
+  providers: [ConfirmationService],
   templateUrl: './demanda-arvore-tela.component.html',
   styleUrl: './demanda-arvore-tela.component.scss',
 })
@@ -39,6 +53,7 @@ export class DemandaArvoreTelaComponent implements OnInit {
   }
   private readonly demandaService = inject(DemandaService);
   private readonly messageService = inject(MessageService);
+  private readonly confirmationService = inject(ConfirmationService);
 
   readonly nos = input.required<DemandaGrafoNoDto[]>();
   readonly filtro = input.required<DemandaFiltro>();
@@ -57,15 +72,19 @@ export class DemandaArvoreTelaComponent implements OnInit {
   readonly demandaNovaFilhaSolicitada = output<number>();
   readonly demandaTagsSolicitadas = output<number>();
   readonly demandaMembrosSolicitados = output<number>();
-  readonly demandaDescricaoSolicitada = output<{ id: number; campo: CampoDescricaoDemanda }>();
 
   private readonly pastasComponente = viewChild(DemandaPastasComponent);
   private readonly aberta = viewChild(DemandaAbertaComponent);
+  private readonly editorDaDescricao = viewChild(DemandaDescricaoEditorComponent);
 
   readonly demandaAbertaId = signal<number | null>(null);
   readonly aba = signal<AbaDemandaAberta>('tecnica');
   readonly expandidas = signal<ReadonlySet<number>>(new Set());
   readonly mostrarDemandaAqui = signal<boolean>(false);
+  /** A descrição em edição (task 278): a tela passa ao modo Dividido, com a lista estreita e o editor; `null` fora da edição. */
+  readonly edicaoDescricao = signal<{ id: number; campo: CampoDescricaoDemanda } | null>(null);
+  /** O que fazer quando o Salvar do aviso de alteração não salva terminar (trocar de demanda, fechar o editor). */
+  private depoisDeSalvar: (() => void) | null = null;
   /** O filtro "Projeto inteiro": a lista traz todas as demandas, cada uma com o caminho acima do nome. Só da tela; escolher uma pasta o desfaz. */
   readonly projetoInteiro = signal<boolean>(false);
 
@@ -130,7 +149,7 @@ export class DemandaArvoreTelaComponent implements OnInit {
     aoNovaFilha: (id) => this.demandaNovaFilhaSolicitada.emit(id),
     aoTags: (id) => this.demandaTagsSolicitadas.emit(id),
     aoMembros: (id) => this.demandaMembrosSolicitados.emit(id),
-    aoDescricao: (id, campo) => this.demandaDescricaoSolicitada.emit({ id, campo }),
+    aoDescricao: (id, campo) => this.editarDescricao(id, campo),
   };
 
   constructor() {
@@ -207,10 +226,80 @@ export class DemandaArvoreTelaComponent implements OnInit {
 
   /** Abre uma demanda na terceira coluna; vinda da busca ou de fora, a pasta dela passa a ser a escolhida. */
   escolherDemanda(id: number, aba: AbaDemandaAberta = 'tecnica'): void {
+    if (this.edicaoDescricao()) {
+      this.confirmarAntesDeSair(() => this.trocarDemandaDoEditor(id));
+      return;
+    }
     const pasta = pastaDaDemanda(this.nos(), id);
     if (pasta !== undefined && pasta !== this.pastaId()) this.pastaChange.emit(pasta);
     this.demandaAbertaId.set(id);
     this.aba.set(aba);
+  }
+
+  /** Abre o editor da descrição da demanda no modo Dividido; já editando outra, pergunta antes se há texto não salvo. */
+  editarDescricao(id: number, campo: CampoDescricaoDemanda): void {
+    const abrir = (): void => {
+      this.irParaDemanda(id);
+      this.edicaoDescricao.set({ id, campo });
+    };
+    if (this.edicaoDescricao()) this.confirmarAntesDeSair(abrir);
+    else abrir();
+  }
+
+  /** Cancelar ou Fechar do editor: pergunta antes se há texto não salvo e volta às três colunas, na aba da descrição. */
+  sairDaEdicao(): void {
+    this.confirmarAntesDeSair(() => this.fecharEdicao());
+  }
+
+  /** Salvou: a demanda mudou (avisa a página); volta às três colunas, ou segue para o que estava esperando o Salvar. */
+  aoDescricaoSalva(): void {
+    this.alterado.emit();
+    const seguinte = this.depoisDeSalvar;
+    this.depoisDeSalvar = null;
+    if (seguinte) seguinte();
+    else this.fecharEdicao();
+  }
+
+  private fecharEdicao(): void {
+    const edicao = this.edicaoDescricao();
+    this.edicaoDescricao.set(null);
+    if (edicao) this.aba.set(edicao.campo === 'descricaoTecnica' ? 'tecnica' : edicao.campo === 'descricaoCliente' ? 'cliente' : 'doc');
+  }
+
+  /** Na lista do modo Dividido, outra demanda: o editor passa para ela, no mesmo campo. */
+  private trocarDemandaDoEditor(id: number): void {
+    const edicao = this.edicaoDescricao();
+    if (!edicao) return;
+    this.irParaDemanda(id);
+    this.edicaoDescricao.set({ ...edicao, id });
+  }
+
+  private irParaDemanda(id: number): void {
+    const pasta = pastaDaDemanda(this.nos(), id);
+    if (pasta !== undefined && pasta !== this.pastaId()) this.pastaChange.emit(pasta);
+    this.demandaAbertaId.set(id);
+  }
+
+  /** Sem texto novo, segue direto; com texto novo, pergunta se salva (e segue depois de salvar) ou descarta (e segue). */
+  private confirmarAntesDeSair(seguir: () => void): void {
+    const editor = this.editorDaDescricao();
+    if (!editor?.temAlteracoesNaoSalvas()) {
+      seguir();
+      return;
+    }
+    this.confirmationService.confirm({
+      key: 'descricao-fechar',
+      header: 'Alterações não salvas',
+      message: `Você fez alterações em "${editor.titulo()}" que ainda não foram salvas. Deseja salvar antes de continuar?`,
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Salvar',
+      rejectLabel: 'Descartar',
+      accept: () => {
+        this.depoisDeSalvar = seguir;
+        editor.salvar();
+      },
+      reject: () => seguir(),
+    });
   }
 
   abrirDescricao(pedido: { id: number; campo: CampoDescricaoDemanda }): void {
