@@ -3,7 +3,7 @@ import * as path from 'node:path';
 import { app, BrowserWindow, clipboard, globalShortcut, ipcMain, IpcMainEvent, IpcMainInvokeEvent, Menu, nativeImage, nativeTheme, Notification, screen, shell, Tray } from 'electron';
 import { NOME_DO_APP, URL_DO_PROJECT } from './config';
 import { montarPaginaDoDialogoDeSaida, RespostaDaSaida, respostaDaNavegacao } from './dialogo-de-saida';
-import { decidirFechamento, destinoDaNavegacao, EstadoDeEncerramento, janelaForaDoLugar, limitarAoMonitor, resolverUrlDoProject, textoDoProximoCheckin } from './politica-da-janela';
+import { decidirFechamento, destinoDaNavegacao, EstadoDeEncerramento, janelaForaDoLugar, janelinhaPodeFechar, limitarAoMonitor, resolverUrlDoProject, textoDoProximoCheckin } from './politica-da-janela';
 import {
   ARQUIVO_DA_ULTIMA_VERSAO, deveAvisarQueAtualizou, deveConferirVersao, enderecoParaBaixar, lerUltimaVersaoGravada, lerVersaoPublicada, textoDaAtualizacao, textoDaVersaoNoMenu,
   textoDoAvisoDeAtualizacao, VersaoPublicada, versaoARegistrar,
@@ -263,6 +263,8 @@ async function pedirSaida(): Promise<void> {
   if (resposta !== 'sair') return;
   encerramento.saidaConfirmada = true;
   app.quit();
+  // Garantia: se algo ainda segurar uma janela e o `quit` for cancelado, a saída confirmada pelo usuário encerra do mesmo jeito.
+  setTimeout(() => app.exit(0), 4000);
 }
 
 /** O aviso de saída: uma janelinha própria no estilo do Project (modal sobre o Project quando ele está na tela), e fechá-la é "continuar". */
@@ -380,7 +382,7 @@ function abrirJanelinha(): void {
     janelinha?.focus();
   });
   janelinha.on('close', (evento) => {
-    if (!janelinhaLiberada) evento.preventDefault();
+    if (!janelinhaPodeFechar(janelinhaLiberada, encerramento)) evento.preventDefault();
   });
   // Arrasta à vontade, mas sem sair do monitor.
   janelinha.on('moved', () => {

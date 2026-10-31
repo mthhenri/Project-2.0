@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { decidirFechamento, destinoDaNavegacao, janelaForaDoLugar, limitarAoMonitor, resolverUrlDoProject, textoDoProximoCheckin } from './politica-da-janela';
+import { decidirFechamento, destinoDaNavegacao, janelaForaDoLugar, janelinhaPodeFechar, limitarAoMonitor, resolverUrlDoProject, textoDoProximoCheckin } from './politica-da-janela';
 
 test('fechar, Alt+F4 e afins só ocultam a janela (ela some da barra de tarefas e o app segue na bandeja)', () => {
   assert.equal(decidirFechamento({ saidaConfirmada: false, encerramentoDoSistema: false }), 'ocultar');
@@ -50,4 +50,12 @@ test('a janela solta fica inteira dentro do monitor', () => {
   assert.deepEqual(limitarAoMonitor({ ...janela, x: -100, y: -50 }, area), janela);
   assert.deepEqual(limitarAoMonitor({ ...janela, x: 1800, y: 900 }, area), { ...janela, x: 1440, y: 480 });
   assert.deepEqual(limitarAoMonitor({ x: 5, y: 5, width: 3000, height: 2000 }, area), { x: 0, y: 0, width: 3000, height: 2000 });
+});
+
+test('a janelinha do check-in só fecha liberada, mas nunca trava a saída confirmada nem o desligamento do sistema', () => {
+  const emUso = { saidaConfirmada: false, encerramentoDoSistema: false };
+  assert.equal(janelinhaPodeFechar(false, emUso), false);
+  assert.equal(janelinhaPodeFechar(true, emUso), true);
+  assert.equal(janelinhaPodeFechar(false, { ...emUso, saidaConfirmada: true }), true);
+  assert.equal(janelinhaPodeFechar(false, { ...emUso, encerramentoDoSistema: true }), true);
 });

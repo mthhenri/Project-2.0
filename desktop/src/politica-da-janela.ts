@@ -17,6 +17,14 @@ export function decidirFechamento(estado: EstadoDeEncerramento): DecisaoDeFecham
   return estado.saidaConfirmada || estado.encerramentoDoSistema ? 'fechar' : 'ocultar';
 }
 
+/**
+ * A janelinha do check-in não fecha enquanto o check-in não termina (`liberada`), mas isso nunca pode travar a saída: com a saída
+ * confirmada na bandeja ou o sistema desligando ela fecha junto, senão o `app.quit()` é cancelado e o app continua vivo.
+ */
+export function janelinhaPodeFechar(liberada: boolean, estado: EstadoDeEncerramento): boolean {
+  return liberada || decidirFechamento(estado) === 'fechar';
+}
+
 /** Os limites da janela de tela cheia: o monitor principal inteiro. */
 export interface AreaDeTrabalho {
   x: number;
