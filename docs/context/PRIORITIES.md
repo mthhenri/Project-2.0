@@ -1,4 +1,4 @@
-# PRIORIDADES.md — Em que ordem fazemos
+# PRIORITIES.md — Em que ordem fazemos
 
 > **O que este arquivo é:** a ordem de trabalho decidida com o autor. Ele só **aponta** para o que
 > existe em outro lugar (`P-0NN` em [`PROBLEMS.md`](PROBLEMS.md), `I-0NN` em [`IDEAS.md`](IDEAS.md),
@@ -26,7 +26,17 @@ Resolver primeiro; o autor considera simples ou próximo.
 - **I-043** — atualizar os pacotes dos provedores de IA para poder usar sempre os modelos mais novos. Perto de "Agora" por ser concreto (2026-10-31).
 - **I-042** — ajustes na tela de projetos: botão Cancelar visível na edição do cabeçalho, seletor de cor mais alinhado (também usado em Tags) e volume, anual por padrão, dentro do projeto. Definido e colocado no "Agora" pelo autor (2026-10-31).
 
-## 2. Em seguida
+## 2. Specs já escritas no backlog
+
+Ainda **sem ordem decidida** entre si nem em relação ao bloco "Agora". O autor define.
+
+- `tipo-ajudante.spec.md` (tasks 283–287)
+- `chat-grupos.spec.md` (tasks 246–250)
+- `chat-proposta-no-documento.spec.md` (tasks 273–277)
+- `261-ia-roteamento-hibrido-por-nivel-e-esforco.spec.md`
+- `222-modelagem-em-arquivo-json.spec.md`
+
+## 3. Em seguida
 
 Resolver depois do bloco "Agora", sem ordem entre si.
 
@@ -34,7 +44,7 @@ Resolver depois do bloco "Agora", sem ordem entre si.
 - **P-025** — conversas dos desenvolvedores: período e busca olham só uma janela do histórico. "Temos que ver, depois" (2026-10-31).
 - **P-043** — chat da IA: pergunta sem resposta, mas com custo registrado. "Temos que ver" (2026-10-31).
 
-## 3. A pensar
+## 4. A pensar
 
 Sem urgência; o autor quer conversar antes de especificar.
 
@@ -45,18 +55,18 @@ Sem urgência; o autor quer conversar antes de especificar.
 - **I-040** — documentar tabelas e campos na tela de Modelagem. Olhar, sem ser prioridade (2026-10-31).
 - **I-002** e **P-001** — lint. "Podemos dar uma olhada" e decidir se vale resolver (2026-10-31).
 
-## 4. Esperando o Git (Gitea)
+## 5. Esperando o Git (Gitea)
 
 - **I-030** — integração com o Git. "Por enquanto não, mas logo mais" (2026-10-31).
 - **I-005** — IA lê o código dos projetos. Provavelmente parte da integração com o Git (2026-10-31).
 - **I-023** — documentação a partir do que foi feito. Também ligada ao Git (2026-10-31).
 
-## 5. Esperando o chat em grupo
+## 6. Esperando o chat em grupo
 
 - **I-020** — quem sai da demanda continua vendo o histórico do canal. Ligado ao `chat-grupos`; "por enquanto não tem problema" (2026-10-31).
 - **I-021** — resumo da IA citando autores. "Não tem problema" por ora (2026-10-31).
 
-## 6. Sem prioridade por enquanto
+## 7. Sem prioridade por enquanto
 
 - **I-006** — gestor pergunta à IA onde o time tem mais dúvida (2026-10-31).
 - **I-022** — plano que vira várias demandas (2026-10-31).
@@ -66,13 +76,3 @@ Sem urgência; o autor quer conversar antes de especificar.
 - **P-049** — campo `codigo` do modelo do projeto sem uso. Segue aberto por enquanto (2026-10-31).
 - **P-059** — `modelagem.page.spec` instável na suíte inteira. "Instável mesmo, é complexo" (2026-10-31).
 - **P-029** e **P-030** — ficam `ACEITO`, não vale o esforço (2026-10-31).
-
-## 7. Specs já escritas no backlog
-
-Ainda **sem ordem decidida** entre si nem em relação ao bloco "Agora". O autor define.
-
-- `tipo-ajudante.spec.md` (tasks 283–287)
-- `chat-grupos.spec.md` (tasks 246–250)
-- `chat-proposta-no-documento.spec.md` (tasks 273–277)
-- `261-ia-roteamento-hibrido-por-nivel-e-esforco.spec.md`
-- `222-modelagem-em-arquivo-json.spec.md`

@@ -12,6 +12,10 @@
 
 ---
 
+## 2026-10-31 — PRIORIDADES.md vira PRIORITIES.md e as specs do backlog sobem para depois do "Agora"
+
+Pedido do autor: os arquivos de `docs/context/` têm nome em inglês, então o de prioridades passou a se chamar **`PRIORITIES.md`** (o bloco anterior deste histórico cita o nome antigo; ele não é reescrito). `CLAUDE.md`, `AGENTS.md` (idênticos) e `SYSTEM.SPEC.md` apontam para o nome novo. A ordem das seções ficou: 1 Agora, 2 Specs já escritas no backlog, 3 Em seguida, 4 A pensar, 5 Esperando o Git, 6 Esperando o chat em grupo, 7 Sem prioridade por enquanto.
+
 ## 2026-10-31 — P-061 e P-063: o stream do chat fecha para quem foi desativado; o Ponto mostra o período em andamento
 
 **P-061.** A `JwtStrategy` só conferia o usuário quando a requisição abria, e o stream de eventos do chat entre colaboradores (`GET /mensagem-direta/eventos`) fica aberto sem prazo: um usuário desativado ou excluído seguia recebendo mensagens e presença. Agora, a cada batimento (25 s), `MensagemDiretaEventosService.fecharStreamsDeUsuariosInativos` consulta (`UsuarioRepository.recuperar`) os usuários conectados **naquela instância**, fecha todos os streams de quem está inativo ou foi excluído (`ConexoesDeEventosDiretos.encerrarUsuario`) e atualiza a presença. Cada instância confere os seus, então não há aviso entre instâncias; se a consulta falha, o stream segue aberto até o próximo batimento. Atraso máximo de ~25 s. O serviço passou a receber o `UsuarioRepository` (dois pontos de construção nos testes ajustados).

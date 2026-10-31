@@ -43,7 +43,7 @@ Antes de implementar qualquer mudança, leia nesta ordem:
 Leia também, conforme a pergunta: `docs/context/PROBLEMS.md` (defeitos conhecidos — antes de
 investigar falhas), `HISTORY.md` (decisões e histórico — procure por código da tarefa, sem ler o
 arquivo inteiro), `MEMORY.md` (mapa de onde as coisas vivem), `IDEAS.md` (o que ainda não é
-sistema), `PRIORIDADES.md` (a ordem de trabalho decidida com o autor — consulte ao escolher o que fazer) e, para o banco, `docs/SCHEMA.md`.
+sistema), `PRIORITIES.md` (a ordem de trabalho decidida com o autor — consulte ao escolher o que fazer) e, para o banco, `docs/SCHEMA.md`.
 
 ## Fontes da verdade
 
@@ -63,7 +63,7 @@ documentos; **em caso de conflito, o documento vence o código**. O relatório d
 | `PROBLEMS.md` | o que está quebrado | registrar; remover ao corrigir |
 | `MEMORY.md` | onde as coisas vivem | somente ponteiros |
 | `IDEAS.md` | o que ainda não é sistema | retirar de abertas ao especificar |
-| `PRIORIDADES.md` | em que ordem fazemos | só o autor muda; sair ao resolver ou virar spec |
+| `PRIORITIES.md` | em que ordem fazemos | só o autor muda; sair ao resolver ou virar spec |
 
 Ao concluir uma tarefa, registre a narrativa completa em `HISTORY.md`, edite somente as seções
 afetadas de `CONTEXT.md` e atualize os demais quando algo descoberto sobreviver à tarefa. Não
