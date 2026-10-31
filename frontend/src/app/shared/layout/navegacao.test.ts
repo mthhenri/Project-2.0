@@ -30,7 +30,7 @@ test('o desenvolvedor vê Chat, Atividades, Execuções, Ponto, Demandas e Model
 
 test('o gestor vê tudo menos o que é só do administrador', () => {
   assert.deepEqual(doGestor.map((item) => item.rotaLink), [
-    '/chat', '/atividade', '/execucao', '/ponto', '/documentacao', '/projeto', '/demanda', '/calendario', '/tag', '/usuario', '/modelagem',
+    '/chat', '/atividade', '/execucao', '/ponto', '/documentacao', '/projeto', '/demanda', '/calendario', '/tag', '/usuario', '/supervisao-chat', '/modelagem',
   ]);
 });
 
@@ -69,21 +69,22 @@ test('desenvolvedor: Dia a dia e Projetos (só Demandas); Gestão e IA somem por
   });
 });
 
-test('gestor: os grupos de gestão aparecem e a IA some (IA Config. é só do administrador)', () => {
+test('gestor: os grupos de gestão aparecem e a IA traz só a Supervisão do chat (IA Config. é do administrador)', () => {
   assert.deepEqual(resumo(doGestor), {
     grupos: [
       ['Dia a dia', ['Chat', 'Atividades', 'Execuções', 'Ponto', 'Documentações']],
       ['Projetos', ['Projetos', 'Demandas']],
       ['Gestão', ['Calendário', 'Tags', 'Usuários']],
+      ['IA', ['Supervisão do chat']],
     ],
     fundo: ['Modelagem'],
   });
 });
 
-test('administrador: os quatro grupos, com IA Config. no grupo IA', () => {
+test('administrador: os quatro grupos, com Supervisão do chat e IA Config. no grupo IA', () => {
   const { grupos, fundo } = agruparItensNavegacao(ITENS_NAVEGACAO);
   assert.deepEqual(grupos.map((grupo) => grupo.titulo), ['Dia a dia', 'Projetos', 'Gestão', 'IA']);
-  assert.deepEqual(grupos.at(-1)?.itens.map((item) => item.label), ['IA Config.']);
+  assert.deepEqual(grupos.at(-1)?.itens.map((item) => item.label), ['Supervisão do chat', 'IA Config.']);
   assert.deepEqual(fundo.map((item) => item.label), ['Modelagem']);
 });
 

@@ -55,6 +55,9 @@
         @for (grupo of grupos(); track grupo.rotulo) {
           <div class="conversa-direta__dia">{{ grupo.rotulo }}</div>
           @for (mensagem of grupo.mensagens; track mensagem.mensagemId) {
+            @if (mensagem.autor === 'SISTEMA') {
+              <p class="conversa-direta__sistema" [attr.data-mensagem-id]="mensagem.mensagemId">{{ mensagem.texto }} · {{ hora(mensagem.createdDate) }}</p>
+            } @else {
             @let minha = mensagem.autorUsuarioId === meuId();
             <div class="conversa-direta__linha" [class.conversa-direta__linha--minha]="minha">
               <div
@@ -122,6 +125,7 @@
                 }
               </div>
             </div>
+            }
           }
         }
       }

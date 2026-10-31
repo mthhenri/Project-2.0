@@ -331,3 +331,13 @@
 @media (prefers-reduced-motion: reduce) {
   .conversa-direta__pontos span { animation: none; opacity: 0.6; }
 }
+
+/* O aviso do sistema (a supervisão leu a conversa): uma linha central, não um balão. */
+.conversa-direta__sistema {
+  align-self: center;
+  margin: 0.25rem 0;
+  font-size: 0.8125rem;
+  font-style: italic;
+  text-align: center;
+  color: var(--p-text-muted-color);
+}

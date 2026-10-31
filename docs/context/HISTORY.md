@@ -18,6 +18,15 @@
 
 
 
+## 2026-10-31 — Tasks 214 e 200: supervisão do chat entre colaboradores e aviso de que o Desktop atualizou
+
+- **Origem:** o autor reverteu o descarte da 214 e da 215 ("fazer e finalizar") e pediu a 200 junto. As specs voltaram de `discarded/` para `active/`; a 214 e a 200 foram implementadas, a **215 continua aberta** (ver abaixo).
+- **214 (backend):** `MensagemDiretaSupervisaoService` (separada da `MensagemDiretaService` para não engordá-la), `MensagemDiretaSupervisaoRepository` sobre a tabela da migration `0050` (sem migration nova), regra pura `conversaEhSupervisionavel` (N participantes, tipo atual) e `UsuarioRepository.listarTiposPorIds`/`listarIdsComPermissaoDeGestor` (incluem excluídos). Rotas `GET /mensagem-direta/supervisao/conversas` e `.../conversa/:conversaId`, `@GestorOnly()`. Só a primeira página (sem `cursor`) conta como abertura: grava a auditoria e avisa; `participantes_avisados` nasce falso e vira verdadeiro só depois de a mensagem do sistema existir.
+- **214 (frontend):** página `SupervisaoChatPage` (lista com busca e "Com código", conversa em modo leitura, estados), rota `/supervisao-chat` com `gestorGuard`, item **Supervisão do chat** no grupo IA (tecla `s`; o gestor passou a ver o grupo IA) e a mensagem `SISTEMA` como linha central no popup.
+- **200:** funções puras em `desktop/src/politica-da-versao.ts` (`deveAvisarQueAtualizou`, `versaoARegistrar`, textos) e `avisarSeAtualizou()` no `main.ts`: `ultima-versao.txt` em `userData`, notificação do Windows quando a versão subiu, nunca rebaixa o registro; linha "Project Desktop X.Y.Z" no menu da bandeja.
+- **Testes:** shared 294, backend 1572, integração 364, desktop 37, frontend 2388 (a sidebar e a navegação tiveram o resultado esperado atualizado por causa do item novo); builds ok. Ao vivo: API real com três perfis, tela em três tamanhos e o Electron real com pasta de dados própria. Relatórios em `done/214-mensagem-direta-supervisao/verificacao.md` e `done/200-desktop-aviso-de-que-atualizou/verificacao.md`, com o que **não** foi visto (balão do Windows, menu da bandeja, tempo real do aviso ao popup).
+- **215 aberta:** exige duas instâncias da API com `CHAT_EVENTOS=postgres`, queda do stream, deploy com proxy e a suíte de contrato no Elasticsearch (não há Elasticsearch local); por isso a guarda-chuva `chat-colaboradores` ficou em `done/` com a 215 pendente. Sem lint (P-001). `tsc` do `shared` acusa `proposta-nivel.test.ts(60,66)`, preexistente.
+
 ## 2026-10-31 — Arrumação das specs: guarda-chuvas concluídas para `done/` e 214/215 descartadas
 
 - **Para `done/`:** a 269 (esquecida em `active/`; a tela do relatório já estava no ar) e as guarda-chuvas `chat-propostas`, `chat-planejamento`, `chat-execucao-por-demanda` e `chat-colaboradores`, com os anexos (`referencias.md`, `modelagem.md`). Conferido: todas as tasks 224–237 e 242–245 têm spec em `done/` e bloco neste histórico; as pendências delas (diff do trecho no documento na 234, revisão dos prompts, itens não vistos ao vivo nas 236, 244 e 245) já estavam registradas nas próprias tasks.

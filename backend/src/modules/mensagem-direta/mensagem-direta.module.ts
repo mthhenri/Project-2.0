@@ -6,13 +6,15 @@ import { MensagemDiretaController } from './controllers/mensagem-direta.controll
 import { ARMAZENAMENTO_DE_MENSAGEM_DIRETA, armazenamentoDeMensagemDiretaProvider } from './repositories/armazenamento-de-mensagem-direta';
 import { MensagemDiretaLeituraRepository } from './repositories/mensagem-direta-leitura.repository';
 import { MensagemDiretaPreferenciaRepository } from './repositories/mensagem-direta-preferencia.repository';
+import { MensagemDiretaSupervisaoRepository } from './repositories/mensagem-direta-supervisao.repository';
 import { publicadorDeEventosDiretosProvider } from './publicadores/publicador-de-eventos-diretos';
 import { MensagemDiretaEventosService } from './services/mensagem-direta-eventos.service';
+import { MensagemDiretaSupervisaoService } from './services/mensagem-direta-supervisao.service';
 import { MensagemDiretaService } from './services/mensagem-direta.service';
 
 /**
  * Chat entre colaboradores (conversa um a um). Armazenamento das mensagens (tasks 206 e 207), a service e as rotas (task 208) e o tempo real
- * (task 209: stream, barramento entre instâncias e presença). A supervisão entra na task 214.
+ * (task 209: stream, barramento entre instâncias e presença) e a supervisão pelo gestor (task 214).
  */
 @Module({
   imports:     [UsuarioModule, DemandaModule, AtividadeModule],
@@ -22,8 +24,10 @@ import { MensagemDiretaService } from './services/mensagem-direta.service';
     publicadorDeEventosDiretosProvider,
     MensagemDiretaLeituraRepository,
     MensagemDiretaPreferenciaRepository,
+    MensagemDiretaSupervisaoRepository,
     MensagemDiretaEventosService,
     MensagemDiretaService,
+    MensagemDiretaSupervisaoService,
   ],
   exports:     [ARMAZENAMENTO_DE_MENSAGEM_DIRETA, MensagemDiretaService],
 })

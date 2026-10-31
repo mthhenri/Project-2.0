@@ -19,6 +19,9 @@ export const LIMITE_TRECHO_MENSAGEM_DIRETA = 200;
 export const LIMITE_PADRAO_DA_CONVERSA_DIRETA = 50;
 export const LIMITE_MAXIMO_DA_CONVERSA_DIRETA = 100;
 export const LIMITE_CURSOR_DA_CONVERSA_DIRETA = 120;
+/** Conversas por página da supervisão (task 214): o padrão e o máximo que o gestor pode pedir. */
+export const LIMITE_PADRAO_DA_SUPERVISAO_DIRETA = 20;
+export const LIMITE_MAXIMO_DA_SUPERVISAO_DIRETA = 100;
 export const LIMITE_ATALHO_GLOBAL = 40;
 
 /** "Silenciar por 1 hora", para a reunião. */

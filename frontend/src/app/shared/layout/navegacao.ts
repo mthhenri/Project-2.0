@@ -40,6 +40,7 @@ export const ITENS_NAVEGACAO: readonly ItemNavegacao[] = [
   { label: 'Calendário', icone: 'pi pi-calendar',     rotaLink: '/calendario', tecla: 'c', somenteGestor: true,  grupo: 'GESTAO' },
   { label: 'Tags',       icone: 'pi pi-tag',          rotaLink: '/tag',        tecla: 't', somenteGestor: true,  grupo: 'GESTAO' },
   { label: 'Usuários',   icone: 'pi pi-users',        rotaLink: '/usuario',    tecla: 'u', somenteGestor: true,  grupo: 'GESTAO' },
+  { label: 'Supervisão do chat', icone: 'pi pi-eye', rotaLink: '/supervisao-chat', tecla: 's', somenteGestor: true, grupo: 'IA' },
   { label: 'IA Config.', icone: 'pi pi-sparkles',     rotaLink: '/configuracao-ia', tecla: 'i', somenteGestor: true, somenteAdministrador: true, grupo: 'IA' },
   { label: 'Modelagem',  icone: 'pi pi-database',     rotaLink: '/modelagem',  tecla: 'm', somenteGestor: false },
 ];

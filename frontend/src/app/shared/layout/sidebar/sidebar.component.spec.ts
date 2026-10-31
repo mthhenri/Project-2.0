@@ -18,7 +18,7 @@ const ROTAS = ['/ponto', '/calendario', '/projeto', '/demanda', '/chat', '/ativi
   .map((caminho) => ({ path: caminho.slice(1), component: PaginaFalsaComponent }));
 
 const ITENS_DESENVOLVEDOR = ['Chat', 'Atividades', 'Execuções', 'Ponto', 'Documentações', 'Demandas', 'Modelagem'];
-const ITENS_GESTOR = ['Chat', 'Atividades', 'Execuções', 'Ponto', 'Documentações', 'Projetos', 'Demandas', 'Calendário', 'Tags', 'Usuários', 'Modelagem'];
+const ITENS_GESTOR = ['Chat', 'Atividades', 'Execuções', 'Ponto', 'Documentações', 'Projetos', 'Demandas', 'Calendário', 'Tags', 'Usuários', 'Supervisão do chat', 'Modelagem'];
 // IA Config. é exclusiva do administrador e a Modelagem, de todos: ela fica sempre por último, no fundo.
 const ITENS_ADMINISTRADOR = [...ITENS_GESTOR.slice(0, -1), 'IA Config.', 'Modelagem'];
 
@@ -91,17 +91,18 @@ describe('SidebarComponent — grupos (task 223)', () => {
     expect(itensDoGrupo(montado, 'Projetos')).toEqual(['Demandas']);
   });
 
-  it('gestor vê Dia a dia, Projetos e Gestão, mas não o grupo IA', async () => {
+  it('gestor vê Dia a dia, Projetos, Gestão e o grupo IA só com a Supervisão do chat', async () => {
     const montado = await montarBarra(TipoUsuarioEnum.GESTOR, null, { 'sidebar.recolhida': 'false' });
-    expect(titulosDosGrupos(montado)).toEqual(['Dia a dia', 'Projetos', 'Gestão']);
+    expect(titulosDosGrupos(montado)).toEqual(['Dia a dia', 'Projetos', 'Gestão', 'IA']);
     expect(itensDoGrupo(montado, 'Gestão')).toEqual(['Calendário', 'Tags', 'Usuários']);
+    expect(itensDoGrupo(montado, 'IA')).toEqual(['Supervisão do chat']);
   });
 
   it('administrador vê os quatro grupos, com IA Config. no grupo IA', async () => {
     const montado = await montarBarra(TipoUsuarioEnum.ADMINISTRADOR, null, { 'sidebar.recolhida': 'false' });
     expect(titulosDosGrupos(montado)).toEqual(['Dia a dia', 'Projetos', 'Gestão', 'IA']);
     expect(itensDoGrupo(montado, 'Dia a dia')).toEqual(['Chat', 'Atividades', 'Execuções', 'Ponto', 'Documentações']);
-    expect(itensDoGrupo(montado, 'IA')).toEqual(['IA Config.']);
+    expect(itensDoGrupo(montado, 'IA')).toEqual(['Supervisão do chat', 'IA Config.']);
   });
 
   it('a Modelagem fica fora dos grupos, no fundo da barra', async () => {
@@ -114,9 +115,9 @@ describe('SidebarComponent — grupos (task 223)', () => {
   it('recolhida, o título do grupo vira só para leitor de tela e a linha continua', async () => {
     const montado = await montarBarra(TipoUsuarioEnum.GESTOR);
     const titulos = Array.from(montado.elemento.querySelectorAll('.sidebar__grupo-titulo'));
-    expect(titulos.length).toBe(3);
+    expect(titulos.length).toBe(4);
     for (const titulo of titulos) expect(titulo.classList.contains('sr-only')).toBe(true);
-    expect(montado.elemento.querySelectorAll('.sidebar__grupo-linha').length).toBe(3);
+    expect(montado.elemento.querySelectorAll('.sidebar__grupo-linha').length).toBe(4);
   });
 
   it('cada grupo se anuncia pelo título', async () => {

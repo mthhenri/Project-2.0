@@ -15,7 +15,7 @@ import {
   UsuarioSenhaInternoAlterarDto,
   UsuarioExcluirDto,
 } from '@project20/shared';
-import { TipoUsuarioEnum, TipoUsuarioStatusEnum, UsuarioAtivoListadoDto, UsuarioExistenciaVerificarDto, UsuarioNomeListadoDto, UsuarioNomeListarDto } from '@project20/shared';
+import { TipoUsuarioEnum, TipoUsuarioStatusEnum, UsuarioAtivoListadoDto, UsuarioExistenciaVerificarDto, UsuarioNomeListadoDto, UsuarioNomeListarDto, UsuarioTipoListadoDto } from '@project20/shared';
 import { UsuarioRestaurarDto, UsuarioRestauradoDto } from '@project20/shared';
 
 @Injectable()
@@ -407,6 +407,38 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
        ORDER BY usuario.nome_completo ASC`,
       { status: TipoUsuarioStatusEnum.ATIVO },
     );
+  }
+
+  /**
+   * O nome e o tipo atual de cada usuário da lista, **inclusive os excluídos** (a conversa de quem saiu continua existindo). Id que nunca existiu
+   * não volta. Usado pela supervisão do chat (task 214) para decidir, na hora da leitura, se a conversa é supervisionável.
+   */
+  async listarTiposPorIds(dto: UsuarioNomeListarDto): Promise<UsuarioTipoListadoDto[]> {
+    if (dto.usuarioIds.length === 0) return [];
+    return this.executarConsulta<UsuarioTipoListadoDto>(
+      `SELECT usuario.id, usuario.nome_completo AS "nomeCompleto", tipo_usuario.codigo AS tipo
+       FROM usuario
+       INNER JOIN tipo_usuario
+         ON tipo_usuario.id = usuario.tipo_usuario_id
+       WHERE usuario.id = ANY(CAST(:usuarioIds AS integer[]))`,
+      { usuarioIds: dto.usuarioIds },
+    );
+  }
+
+  /**
+   * Os ids de todos os gestores e administradores, **ativos ou não, excluídos ou não**: a conversa de um deles é privada para sempre, e a supervisão
+   * os exclui da lista (task 214). O tipo é o de hoje.
+   */
+  async listarIdsComPermissaoDeGestor(): Promise<number[]> {
+    const encontrados = await this.executarConsulta<{ id: number }>(
+      `SELECT usuario.id
+       FROM usuario
+       INNER JOIN tipo_usuario
+         ON tipo_usuario.id = usuario.tipo_usuario_id
+       WHERE tipo_usuario.codigo = ANY(CAST(:tipos AS text[]))`,
+      { tipos: [TipoUsuarioEnum.GESTOR, TipoUsuarioEnum.ADMINISTRADOR] },
+    );
+    return encontrados.map((usuario) => usuario.id);
   }
 
   /** Lista os administradores ativos (a guarda de permanência exige ao menos um). */

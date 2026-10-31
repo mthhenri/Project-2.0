@@ -1,8 +1,15 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { ReferenciaMensagemDiretaEnum } from '@project20/shared';
+import { ReferenciaMensagemDiretaEnum, TipoUsuarioEnum } from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
-import { lerPeriodoDaBusca, limitarLeituraAoAgora, normalizarMencoes, normalizarReferencias } from './mensagem-direta-regras';
+import {
+  conversaEhSupervisionavel,
+  lerPeriodoDaBusca,
+  limitarLeituraAoAgora,
+  montarTextoDoAvisoDeSupervisao,
+  normalizarMencoes,
+  normalizarReferencias,
+} from './mensagem-direta-regras';
 
 test('normalizarMencoes: sem repetição, na ordem escrita, e só dos dois participantes', () => {
   assert.deepEqual(normalizarMencoes([9, 4, 9], [4, 9]), [9, 4]);
@@ -60,4 +67,24 @@ test('combinarSugestoesDeReferencia: o que sobra de um tipo é preenchido pelo o
   assert.equal(combinarSugestoesDeReferencia(demandas(8), atividades(0)).length, 8);
   assert.equal(combinarSugestoesDeReferencia(demandas(3), atividades(2)).length, 5);
   assert.deepEqual(combinarSugestoesDeReferencia([], []), []);
+});
+
+
+test('conversaEhSupervisionavel: só quando nenhum participante tem poder de gestor', () => {
+  const { DESENVOLVEDOR, GESTOR, ADMINISTRADOR } = TipoUsuarioEnum;
+  assert.equal(conversaEhSupervisionavel([DESENVOLVEDOR, DESENVOLVEDOR]), true);
+  assert.equal(conversaEhSupervisionavel([DESENVOLVEDOR, GESTOR]), false);
+  assert.equal(conversaEhSupervisionavel([ADMINISTRADOR, DESENVOLVEDOR]), false);
+});
+
+test('conversaEhSupervisionavel: vale para N participantes e recusa a lista vazia', () => {
+  const { DESENVOLVEDOR, GESTOR } = TipoUsuarioEnum;
+  assert.equal(conversaEhSupervisionavel([DESENVOLVEDOR, DESENVOLVEDOR, DESENVOLVEDOR]), true);
+  assert.equal(conversaEhSupervisionavel([DESENVOLVEDOR, DESENVOLVEDOR, GESTOR]), false);
+  assert.equal(conversaEhSupervisionavel([]), false);
+});
+
+test('montarTextoDoAvisoDeSupervisao: diz o nome e o papel do leitor', () => {
+  assert.equal(montarTextoDoAvisoDeSupervisao('Carla', TipoUsuarioEnum.GESTOR), 'Carla, gestor, leu esta conversa');
+  assert.equal(montarTextoDoAvisoDeSupervisao('Davi', TipoUsuarioEnum.ADMINISTRADOR), 'Davi, administrador, leu esta conversa');
 });

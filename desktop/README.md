@@ -30,6 +30,8 @@ Project mostra "Baixar Project Desktop" (task 198). O `package.json` do desktop 
 com o token do login e, se a publicada for maior que a instalada (`src/politica-da-versao.ts`), o menu da bandeja ganha "Nova versão disponível (vX.Y.Z): baixar",
 que abre o Project no navegador com `?baixar-desktop=1`; o front inicia o download com o login do usuário. Não há atualização silenciosa. O executável não é assinado.
 
+**Aviso de que atualizou (task 200):** ao abrir, o app compara `app.getVersion()` com a última versão que rodou, gravada em `ultima-versao.txt` na pasta de dados do usuário (`app.getPath('userData')`). Se a que roda é **maior**, mostra uma notificação do Windows ("Atualizado para a versão X.Y.Z") e grava a nova. A primeira execução não avisa e só grava; abrir uma versão **menor** não avisa nem apaga a maior registrada. É local (sem rede nem login) e não tira o Project da bandeja. O menu da bandeja ganhou a linha informativa "Project Desktop X.Y.Z". Decisões em `politica-da-versao.ts`.
+
 ## Estrutura
 
 - `src/main.ts`: janela, bandeja, instância única e travas (a parte que depende do Electron).

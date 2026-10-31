@@ -47,3 +47,40 @@ export function enderecoParaBaixar(urlDoProject: string): string {
 export function textoDaAtualizacao(publicada: VersaoPublicada | null, instalada: string): string | null {
   return publicada && versaoEhMaisNova(publicada.versao, instalada) ? `Nova versão disponível (v${publicada.versao}): baixar` : null;
 }
+
+/** Arquivo, na pasta de dados do app, com a última versão que rodou (task 200). */
+export const ARQUIVO_DA_ULTIMA_VERSAO = 'ultima-versao.txt';
+
+/** O texto gravado no arquivo, lido de volta: só vale uma versão legível (`maior.menor.correcao`); arquivo ausente ou corrompido é "nunca rodou". */
+export function lerUltimaVersaoGravada(conteudo: string | null): string | null {
+  const texto = conteudo?.trim() ?? '';
+  return lerVersao(texto) ? texto : null;
+}
+
+/**
+ * O app acabou de ser atualizado? Só se a versão que roda é **maior** que a registrada na última execução. Primeira execução da vida do app
+ * (sem registro), versão igual, menor (voltou ao executável antigo) ou ilegível não avisam.
+ */
+export function deveAvisarQueAtualizou(ultimaVersao: string | null, versaoAtual: string): boolean {
+  return ultimaVersao !== null && versaoEhMaisNova(versaoAtual, ultimaVersao);
+}
+
+/**
+ * O que gravar como "última versão que rodou" depois desta execução, ou `null` para não mexer no arquivo. Grava na primeira execução e quando a versão
+ * subiu; abrir uma versão **menor** não apaga a maior registrada (senão abrir o executável novo de novo avisaria "atualizou" à toa).
+ */
+export function versaoARegistrar(ultimaVersao: string | null, versaoAtual: string): string | null {
+  if (!lerVersao(versaoAtual)) return null;
+  if (ultimaVersao === null || versaoEhMaisNova(versaoAtual, ultimaVersao)) return versaoAtual;
+  return null;
+}
+
+/** O corpo da notificação do Windows quando o app abre numa versão nova. */
+export function textoDoAvisoDeAtualizacao(versaoAtual: string): string {
+  return `Atualizado para a versão ${versaoAtual}`;
+}
+
+/** A linha de versão do menu da bandeja (só informativa). */
+export function textoDaVersaoNoMenu(versaoAtual: string): string {
+  return `Project Desktop ${versaoAtual}`;
+}

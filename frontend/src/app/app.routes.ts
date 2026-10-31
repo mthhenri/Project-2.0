@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { autenticacaoGuard, somentePublicoGuard } from './core/guards/autenticacao.guard';
+import { gestorGuard } from './core/guards/gestor.guard';
 import { LayoutComponent } from './shared/layout/layout.component';
 
 export const rotas: Routes = [
@@ -27,6 +28,11 @@ export const rotas: Routes = [
       { path: 'calendario', loadChildren: () => import('./modules/calendario/calendario.routes').then((m) => m.calendarioRotas) },
       { path: 'tag',        loadChildren: () => import('./modules/tag/tag.routes').then((m) => m.tagRotas) },
       { path: 'chat',       loadChildren: () => import('./modules/chat/chat.routes').then((m) => m.chatRotas) },
+      {
+        path: 'supervisao-chat',
+        canActivate: [gestorGuard],
+        loadComponent: () => import('./modules/mensagem-direta/pages/supervisao-chat/supervisao-chat.page').then((m) => m.SupervisaoChatPage),
+      },
       { path: 'configuracao-ia', loadChildren: () => import('./modules/configuracao-ia/configuracao-ia.routes').then((m) => m.configuracaoIaRotas) },
       { path: 'modelagem', loadChildren: () => import('./modules/modelagem/modelagem.routes').then((m) => m.modelagemRotas) },
       { path: '', redirectTo: 'ponto', pathMatch: 'full' },

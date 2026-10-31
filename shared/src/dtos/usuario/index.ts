@@ -18,3 +18,4 @@ export * from './UsuarioNomeListarDto';
 export * from './UsuarioNomeListadoDto';
 export * from './UsuarioExistenciaVerificarDto';
 export * from './UsuarioAtivoListadoDto';
+export * from './UsuarioTipoListadoDto';

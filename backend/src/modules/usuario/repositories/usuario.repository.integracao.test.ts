@@ -205,6 +205,32 @@ testarComBanco('listarNomesPorIds: o nome de cada um numa consulta; excluído, i
   assert.deepEqual(await repositorio.listarNomesPorIds({ usuarioIds: [] }), []);
 });
 
+testarComBanco('listarTiposPorIds: nome e tipo de hoje, inclusive do excluído; inexistente e lista vazia não voltam', async (conexao) => {
+  const repositorio = criarRepositorio(UsuarioRepository, conexao);
+  const ana = await criarDesenvolvedor(conexao, { nomeCompleto: 'Ana Tipos' });
+  const bruno = await criarGestor(conexao, { nomeCompleto: 'Bruno Tipos' });
+  const removido = await criarAdministrador(conexao, { nomeCompleto: 'Removido Tipos' });
+  await repositorio.excluir({ id: removido.id });
+
+  const tipos = await repositorio.listarTiposPorIds({ usuarioIds: [ana.id, bruno.id, removido.id, 987654321] });
+  const porNome = Object.fromEntries(tipos.map((usuario) => [usuario.nomeCompleto, usuario.tipo]));
+  assert.deepEqual(porNome, { 'Ana Tipos': TipoUsuarioEnum.DESENVOLVEDOR, 'Bruno Tipos': TipoUsuarioEnum.GESTOR, 'Removido Tipos': TipoUsuarioEnum.ADMINISTRADOR });
+  assert.deepEqual(await repositorio.listarTiposPorIds({ usuarioIds: [] }), []);
+});
+
+testarComBanco('listarIdsComPermissaoDeGestor: gestores e administradores, inclusive excluídos; desenvolvedor não entra', async (conexao) => {
+  const repositorio = criarRepositorio(UsuarioRepository, conexao);
+  const desenvolvedor = await criarDesenvolvedor(conexao);
+  const gestor = await criarGestor(conexao);
+  const administrador = await criarAdministrador(conexao);
+  const removido = await criarGestor(conexao);
+  await repositorio.excluir({ id: removido.id });
+
+  const ids = await repositorio.listarIdsComPermissaoDeGestor();
+  assert.ok([gestor.id, administrador.id, removido.id].every((id) => ids.includes(id)));
+  assert.ok(!ids.includes(desenvolvedor.id));
+});
+
 testarComBanco('validarExistenciaIncluindoExcluido: vale para ativo e excluído; só o id que nunca existiu retorna false', async (conexao) => {
   const repositorio = criarRepositorio(UsuarioRepository, conexao);
   const ativo = await criarDesenvolvedor(conexao);

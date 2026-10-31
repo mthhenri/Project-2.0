@@ -1,4 +1,10 @@
-import { MensagemDiretaReferenciaResumoDto, ReferenciaMensagemDto, formatarReferenciaDireta } from '@project20/shared';
+import {
+  MensagemDiretaReferenciaResumoDto,
+  ReferenciaMensagemDto,
+  TipoUsuarioEnum,
+  formatarReferenciaDireta,
+  temPermissaoDeGestor,
+} from '@project20/shared';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 
 /**
@@ -70,4 +76,24 @@ export function combinarSugestoesDeReferencia(
   const escolhidas = [...demandas.slice(0, metade), ...atividades.slice(0, metade)];
   const sobras = [...demandas.slice(metade), ...atividades.slice(metade)];
   return [...escolhidas, ...sobras.slice(0, Math.max(0, limite - escolhidas.length))];
+}
+
+
+// ---------------------------------------------------------------------------
+// Supervisão (task 214)
+// ---------------------------------------------------------------------------
+
+/**
+ * Uma conversa só pode ser supervisionada se **nenhum** participante tem poder de gestor (gestor ou administrador). Conversa que envolve um deles,
+ * mesmo com um desenvolvedor, é privada. Recebe a lista de tipos para valer com dois participantes (hoje) e com N (grupos, task 246). A decisão
+ * é do tipo **de agora**, nunca gravada na mensagem: promover um desenvolvedor torna as conversas dele privadas na próxima leitura.
+ */
+export function conversaEhSupervisionavel(tiposDosParticipantes: TipoUsuarioEnum[]): boolean {
+  return tiposDosParticipantes.length > 0 && tiposDosParticipantes.every((tipo) => !temPermissaoDeGestor(tipo));
+}
+
+/** O texto da mensagem do sistema que avisa os participantes de que a conversa foi lida. */
+export function montarTextoDoAvisoDeSupervisao(nomeDoLeitor: string, tipoDoLeitor: TipoUsuarioEnum): string {
+  const papel = tipoDoLeitor === TipoUsuarioEnum.ADMINISTRADOR ? 'administrador' : 'gestor';
+  return `${nomeDoLeitor}, ${papel}, leu esta conversa`;
 }

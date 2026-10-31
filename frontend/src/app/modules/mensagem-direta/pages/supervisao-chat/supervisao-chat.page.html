@@ -1,0 +1,151 @@
+<div class="supervisao-chat">
+  <div class="supervisao-chat__cabecalho">
+    <div class="supervisao-chat__titulo-grupo">
+      <h1 class="supervisao-chat__titulo">Supervisão do chat</h1>
+      @if (!carregandoLista() && !erroDaLista()) {
+        <span class="supervisao-chat__contador">{{ total() }} {{ total() === 1 ? 'conversa' : 'conversas' }}</span>
+      }
+    </div>
+    <p class="supervisao-chat__aviso"><i class="pi pi-eye" aria-hidden="true"></i> Conversas entre desenvolvedores, somente leitura. Os participantes são avisados.</p>
+  </div>
+
+  <div class="supervisao-chat__corpo">
+    <section class="supervisao-chat__lista" aria-label="Conversas dos desenvolvedores">
+      <form [formGroup]="formularioFiltros" class="supervisao-chat__filtros">
+        <div class="supervisao-chat__busca">
+          <i class="pi pi-search supervisao-chat__busca-icone" aria-hidden="true"></i>
+          <input pInputText type="text" formControlName="busca" class="supervisao-chat__busca-campo" placeholder="Buscar nas mensagens…" aria-label="Buscar nas mensagens" />
+        </div>
+        <label class="supervisao-chat__codigo">
+          <p-toggleswitch formControlName="somenteCodigo" ariaLabel="Só conversas com código" />
+          <span>Com código</span>
+        </label>
+      </form>
+
+      <div class="supervisao-chat__itens" role="list">
+        @if (carregandoLista()) {
+          <div class="supervisao-chat__esqueleto" aria-busy="true">
+            @for (item of [1, 2, 3, 4, 5]; track item) {
+              <p-skeleton height="4rem" />
+            }
+          </div>
+        } @else if (erroDaLista()) {
+          <div class="supervisao-chat__estado" role="alert">
+            <i class="pi pi-exclamation-triangle supervisao-chat__estado-icone" aria-hidden="true"></i>
+            <p class="supervisao-chat__estado-texto">Não foi possível carregar as conversas.</p>
+            <p-button label="Tentar de novo" icon="pi pi-refresh" size="small" [outlined]="true" (onClick)="carregarConversas(1)" />
+          </div>
+        } @else if (conversas().length === 0) {
+          <div class="supervisao-chat__estado">
+            @if (temFiltro()) {
+              <p class="supervisao-chat__estado-titulo">Nenhuma conversa encontrada</p>
+              <p class="supervisao-chat__estado-texto">Nada casa com a busca ou o filtro.</p>
+              <p-button label="Limpar filtros" size="small" [text]="true" (onClick)="limparFiltros()" />
+            } @else {
+              <p class="supervisao-chat__estado-titulo">Nenhuma conversa ainda</p>
+              <p class="supervisao-chat__estado-texto">Quando os desenvolvedores conversarem entre si, as conversas aparecem aqui.</p>
+            }
+          </div>
+        } @else {
+          @for (conversa of conversas(); track conversa.conversaId) {
+            <button
+              type="button"
+              role="listitem"
+              class="supervisao-chat__item"
+              [class.supervisao-chat__item--aberto]="aberta()?.conversaId === conversa.conversaId"
+              (click)="abrir(conversa)"
+            >
+              <div class="supervisao-chat__item-topo">
+                <span class="supervisao-chat__item-nomes">{{ nomes(conversa.participantes) }}</span>
+                <span class="supervisao-chat__item-quando">{{ quando(conversa) }}</span>
+              </div>
+              <div class="supervisao-chat__item-previa">{{ previa(conversa) }}</div>
+              <div class="supervisao-chat__item-total">{{ conversa.totalMensagens }} {{ conversa.totalMensagens === 1 ? 'mensagem' : 'mensagens' }}</div>
+            </button>
+          }
+          @if (haMaisConversas()) {
+            <div class="supervisao-chat__mais">
+              <p-button label="Carregar mais conversas" size="small" [text]="true" [loading]="carregandoMaisConversas()" (onClick)="carregarMaisConversas()" />
+            </div>
+          }
+        }
+      </div>
+    </section>
+
+    <section class="supervisao-chat__leitura" aria-label="Conversa aberta">
+      @if (aberta(); as conversa) {
+        <div class="supervisao-chat__leitura-cabecalho">
+          <div class="supervisao-chat__avatares">
+            @for (participante of conversa.participantes; track participante.usuarioId) {
+              <app-mensagem-direta-avatar [nome]="participante.usuarioNome" [pequeno]="true" />
+            }
+          </div>
+          <div class="supervisao-chat__leitura-nomes">{{ nomes(conversa.participantes) }}</div>
+          <p-button icon="pi pi-times" severity="secondary" [text]="true" [rounded]="true" size="small" ariaLabel="Fechar a conversa" pTooltip="Fechar" tooltipPosition="bottom" (onClick)="fechar()" />
+        </div>
+
+        <p class="supervisao-chat__faixa" role="status">
+          <i class="pi pi-eye" aria-hidden="true"></i>
+          <span>Você está lendo uma conversa entre {{ nomes(conversa.participantes) }}; eles são avisados.</span>
+        </p>
+
+        <div class="supervisao-chat__mensagens" role="log" [attr.aria-label]="'Conversa entre ' + nomes(conversa.participantes)">
+          @if (conversa.carregando) {
+            <div class="supervisao-chat__esqueleto" aria-busy="true">
+              <p-skeleton height="2.5rem" width="55%" />
+              <p-skeleton height="3.5rem" width="75%" />
+              <p-skeleton height="2.5rem" width="40%" />
+            </div>
+          } @else if (conversa.erro === 'PRIVADA') {
+            <div class="supervisao-chat__estado" role="alert">
+              <i class="pi pi-lock supervisao-chat__estado-icone" aria-hidden="true"></i>
+              <p class="supervisao-chat__estado-titulo">Conversa privada</p>
+              <p class="supervisao-chat__estado-texto">Esta conversa envolve um gestor ou administrador e não pode ser supervisionada.</p>
+            </div>
+          } @else if (conversa.erro) {
+            <div class="supervisao-chat__estado" role="alert">
+              <i class="pi pi-exclamation-triangle supervisao-chat__estado-icone" aria-hidden="true"></i>
+              <p class="supervisao-chat__estado-texto">Não foi possível abrir a conversa.</p>
+            </div>
+          } @else {
+            @if (conversa.proximoCursor) {
+              <div class="supervisao-chat__mais">
+                <p-button label="Mensagens anteriores" icon="pi pi-angle-up" size="small" [text]="true" [loading]="conversa.carregandoMais" (onClick)="carregarMensagensAnteriores()" />
+              </div>
+            }
+            @for (grupo of grupos(); track grupo.rotulo) {
+              <div class="supervisao-chat__dia">{{ grupo.rotulo }}</div>
+              @for (mensagem of grupo.mensagens; track mensagem.mensagemId) {
+                @if (mensagem.autor === 'SISTEMA') {
+                  <p class="supervisao-chat__sistema">{{ mensagem.texto }} · {{ hora(mensagem.createdDate) }}</p>
+                } @else {
+                  <div class="supervisao-chat__mensagem">
+                    <div class="supervisao-chat__mensagem-autor">
+                      {{ nomeDoAutor(mensagem, conversa.participantes) }}
+                      <span class="supervisao-chat__mensagem-hora">{{ hora(mensagem.createdDate) }}</span>
+                    </div>
+                    <div class="supervisao-chat__balao">
+                      @if (mensagem.respondeA; as citacao) {
+                        <div class="supervisao-chat__citacao">{{ citacao.trecho }}</div>
+                      }
+                      <app-markdown-visualizador [texto]="mensagem.texto" [comTabelas]="false" />
+                      @for (referencia of mensagem.referencias; track referencia.tipo + referencia.id) {
+                        <app-mensagem-direta-referencia-cartao [tipo]="referencia.tipo" [id]="referencia.id" />
+                      }
+                    </div>
+                  </div>
+                }
+              }
+            }
+          }
+        </div>
+      } @else {
+        <div class="supervisao-chat__estado supervisao-chat__estado--central">
+          <i class="pi pi-comments supervisao-chat__estado-icone" aria-hidden="true"></i>
+          <p class="supervisao-chat__estado-titulo">Escolha uma conversa</p>
+          <p class="supervisao-chat__estado-texto">Abrir uma conversa a registra na auditoria e avisa os dois desenvolvedores.</p>
+        </div>
+      }
+    </section>
+  </div>
+</div>

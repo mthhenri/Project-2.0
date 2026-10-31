@@ -144,3 +144,31 @@ describe('MensagemDiretaConversaComponent — digitando…', () => {
     expect(botao().getAttribute('aria-label')).toBe('Copiar a mensagem');
   });
 });
+
+describe('MensagemDiretaConversaComponent — aviso do sistema', () => {
+  it('a mensagem do sistema (a supervisão leu a conversa) aparece como linha central, sem balão nem botão de responder', async () => {
+    const tela = await montarComponente(MensagemDiretaConversaComponent, {
+      usuario: TipoUsuarioEnum.DESENVOLVEDOR,
+      provedores: [{ provide: MensagemDiretaEventosService, useClass: EventosFalso }],
+    });
+    TestBed.inject(MensagemDiretaEstadoService).conversaAberta.set({
+      usuarioId: 9,
+      usuarioNome: 'Camila Duarte',
+      conversaId: '1-9',
+      mensagens: [{
+        mensagemId: 'sistema-1', conversaId: '1-9', autor: AutorMensagemDiretaEnum.SISTEMA, autorUsuarioId: null, texto: 'Carla, gestor, leu esta conversa',
+        contemCodigo: false, mencoes: [], referencias: [], respondeA: null, createdDate: new Date('2026-10-21T14:05:00.000Z'), situacao: 'ENVIADA',
+      }],
+      lidaPeloOutroAte: null,
+      proximoCursor: null,
+      carregando: false,
+      carregandoMais: false,
+      erro: false,
+    });
+    await tela.atualizar();
+
+    expect(tela.elemento.querySelector('.conversa-direta__sistema')?.textContent).toContain('Carla, gestor, leu esta conversa');
+    expect(tela.elemento.querySelector('.conversa-direta__balao')).toBeNull();
+    expect(tela.elemento.querySelector('.conversa-direta__responder')).toBeNull();
+  });
+});

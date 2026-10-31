@@ -9,7 +9,7 @@ import { MensagemDiretaController } from './mensagem-direta.controller';
 
 const USUARIO = { sub: 4, login: 'ana', tipo: TipoUsuarioEnum.DESENVOLVEDOR } as never;
 
-test('verbos e caminhos das treze rotas', () => {
+test('verbos e caminhos das quinze rotas', () => {
   assert.deepEqual(
     Object.values(rotasPorNome(MensagemDiretaController)).map((rota) => `${rota.verbo} ${rota.caminho}`).sort(),
     [
@@ -18,6 +18,8 @@ test('verbos e caminhos das treze rotas', () => {
       'GET pessoas',
       'GET referencia/:tipo/:id',
       'GET referencias',
+      'GET supervisao/conversa/:conversaId',
+      'GET supervisao/conversas',
       'GET conversa/:usuarioId',
       'GET conversas',
       'GET preferencia',
@@ -30,12 +32,28 @@ test('verbos e caminhos das treze rotas', () => {
   );
 });
 
-test('nenhuma rota é pública, de gestor ou de administrador', () => {
+test('nenhuma rota é pública ou de administrador, e só a supervisão é de gestor', () => {
   for (const rota of Object.values(rotasPorNome(MensagemDiretaController))) {
     assert.equal(rota.publica, false, rota.nome);
-    assert.equal(rota.gestorOnly, false, rota.nome);
+    assert.equal(rota.gestorOnly, rota.caminho.startsWith('supervisao/'), rota.nome);
     assert.equal(rota.administradorOnly, false, rota.nome);
   }
+});
+
+test('a supervisão repassa o DTO e o conversaId da rota vence o da query', async () => {
+  const chamadas: Record<string, unknown[]> = {};
+  const registrar = (nome: string) => async (...argumentos: unknown[]) => { chamadas[nome] = argumentos; return null; };
+  const controller = new MensagemDiretaController(
+    {} as never,
+    {} as never,
+    { listarConversasSupervisionadas: registrar('listar'), lerConversaSupervisionada: registrar('ler') } as never,
+  );
+
+  await controller.listarConversasSupervisionadas({ texto: 'bug', pagina: 2 } as never, USUARIO);
+  await controller.lerConversaSupervisionada('4-9', { conversaId: '1-2', limite: 10 } as never, USUARIO);
+
+  assert.deepEqual(chamadas.listar, [{ texto: 'bug', pagina: 2 }, USUARIO]);
+  assert.deepEqual(chamadas.ler, [{ conversaId: '4-9', limite: 10 }, USUARIO]);
 });
 
 test('o usuarioId da rota entra no DTO e vence qualquer valor vindo da query ou do corpo', async () => {
@@ -43,6 +61,7 @@ test('o usuarioId da rota entra no DTO e vence qualquer valor vindo da query ou 
   const registrar = (nome: string) => async (...argumentos: unknown[]) => { chamadas[nome] = argumentos; return null; };
   const controller = new MensagemDiretaController(
     { listarConversa: registrar('listarConversa'), alterarLeitura: registrar('alterarLeitura'), alterarSilencio: registrar('alterarSilencio'), avisarDigitacao: registrar('avisarDigitacao') } as never,
+    {} as never,
     {} as never,
   );
 
@@ -71,6 +90,7 @@ test('as demais rotas repassam o DTO e o usuário do token', async () => {
       recuperarPreferencia: registrar('recuperarPreferencia'),
       alterarPreferencia: registrar('alterarPreferencia'),
     } as never,
+    {} as never,
     {} as never,
   );
 
@@ -114,7 +134,7 @@ test('eventos: abre o stream do usuário do token, com os cabeçalhos de event-s
   let fechada = 0;
   const controller = new MensagemDiretaController({} as never, {
     abrir: (usuarioAtivo: { sub: number }, conexao: { enviar(e: unknown): void; encerrar(): void }) => { abertas.push({ usuarioId: usuarioAtivo.sub, conexao }); return () => { fechada++; }; },
-  } as never);
+  } as never, {} as never);
 
   controller.abrirEventos(USUARIO, resposta as never);
 

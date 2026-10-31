@@ -9,23 +9,28 @@ import {
   MensagemDiretaPreferenciaAlterarDto,
   MensagemDiretaReferenciaBuscarDto,
   MensagemDiretaSilencioAlterarDto,
+  MensagemDiretaSupervisaoLerDto,
+  MensagemDiretaSupervisaoListarDto,
   ReferenciaMensagemDiretaEnum,
 } from '@project20/shared';
 import { ActiveUser } from '../../autenticacao/decorators/active-user.decorator';
+import { GestorOnly } from '../../autenticacao/decorators/gestor-only.decorator';
 import { JwtPayload } from '../../autenticacao/domain/interfaces/jwt-payload.interface';
 import { MensagemDiretaEventosService } from '../services/mensagem-direta-eventos.service';
+import { MensagemDiretaSupervisaoService } from '../services/mensagem-direta-supervisao.service';
 import { MensagemDiretaService } from '../services/mensagem-direta.service';
 import { FluxoDeEventosDiretos } from './fluxo-de-eventos-diretos';
 
 /**
  * Chat entre colaboradores (task 208): qualquer usuário autenticado, sempre como a pessoa do token. O `usuarioId` da rota é a OUTRA pessoa da
- * conversa e entra no DTO aqui; nunca vem do corpo ou da query. A supervisão é a task 214.
+ * conversa e entra no DTO aqui; nunca vem do corpo ou da query. As rotas `supervisao/*` (task 214) são só de gestor.
  */
 @Controller('mensagem-direta')
 export class MensagemDiretaController {
   constructor(
     private readonly mensagemDiretaService: MensagemDiretaService,
     private readonly eventosService: MensagemDiretaEventosService,
+    private readonly supervisaoService: MensagemDiretaSupervisaoService,
   ) {}
 
   @Get('conversas')
@@ -53,6 +58,24 @@ export class MensagemDiretaController {
     @ActiveUser() usuarioAtivo: JwtPayload,
   ) {
     return this.mensagemDiretaService.recuperarReferencia({ tipo, id }, usuarioAtivo);
+  }
+
+  /** Supervisão (task 214): as conversas entre desenvolvedores, somente leitura. */
+  @GestorOnly()
+  @Get('supervisao/conversas')
+  listarConversasSupervisionadas(@Query() dto: MensagemDiretaSupervisaoListarDto, @ActiveUser() usuarioAtivo: JwtPayload) {
+    return this.supervisaoService.listarConversasSupervisionadas(dto, usuarioAtivo);
+  }
+
+  /** Abre uma conversa de terceiros: grava a auditoria e, no máximo uma vez por dia, avisa os participantes. */
+  @GestorOnly()
+  @Get('supervisao/conversa/:conversaId')
+  lerConversaSupervisionada(
+    @Param('conversaId') conversaId: string,
+    @Query() dto: MensagemDiretaSupervisaoLerDto,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ) {
+    return this.supervisaoService.lerConversaSupervisionada({ ...dto, conversaId }, usuarioAtivo);
   }
 
   @Get('conversa/:usuarioId')

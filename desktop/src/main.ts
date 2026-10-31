@@ -1,9 +1,13 @@
+import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { app, BrowserWindow, clipboard, globalShortcut, ipcMain, IpcMainEvent, IpcMainInvokeEvent, Menu, nativeImage, nativeTheme, Notification, screen, shell, Tray } from 'electron';
 import { NOME_DO_APP, URL_DO_PROJECT } from './config';
 import { montarPaginaDoDialogoDeSaida, RespostaDaSaida, respostaDaNavegacao } from './dialogo-de-saida';
 import { decidirFechamento, destinoDaNavegacao, EstadoDeEncerramento, janelaForaDoLugar, limitarAoMonitor, resolverUrlDoProject, textoDoProximoCheckin } from './politica-da-janela';
-import { deveConferirVersao, enderecoParaBaixar, lerVersaoPublicada, textoDaAtualizacao, VersaoPublicada } from './politica-da-versao';
+import {
+  ARQUIVO_DA_ULTIMA_VERSAO, deveAvisarQueAtualizou, deveConferirVersao, enderecoParaBaixar, lerUltimaVersaoGravada, lerVersaoPublicada, textoDaAtualizacao, textoDaVersaoNoMenu,
+  textoDoAvisoDeAtualizacao, VersaoPublicada, versaoARegistrar,
+} from './politica-da-versao';
 import {
   AvisoDoChat, ConversaDoChat, decidirAtalho, enderecoDaJanelaDeChat, lerAvisoDoChat, lerCaminhoDoProject, lerConversaAbertaDoChat, lerPreferenciaDoChat, planoDoAtalho,
   posicaoDaJanelaDeChat, prepararAreaDeTransferencia, textoDoItemDoChat,
@@ -212,6 +216,7 @@ function montarMenuDaBandeja(): Menu {
   const atualizacao = textoDaAtualizacao(versaoPublicada, app.getVersion());
   return Menu.buildFromTemplate([
     { label: 'Abrir o Project', click: trazerParaAFrente },
+    { label: textoDaVersaoNoMenu(app.getVersion()), enabled: false },
     { label: textoDoProximoCheckin(segundosAteOCheckin(ultimaSituacao, Date.now())), enabled: false },
     { label: textoDoItemDoChat(atalhoDesejado, atalhoRegistrado !== null), enabled: atalhoDesejado !== null, click: acionarChat },
     // Há executável mais novo no servidor (task 198): abre o Project no navegador, que inicia o download com o login do usuário.
@@ -219,6 +224,33 @@ function montarMenuDaBandeja(): Menu {
     { type: 'separator' },
     { label: 'Fechar completamente', click: () => void pedirSaida() },
   ]);
+}
+
+/**
+ * Aviso de que o app acabou de ser atualizado (task 200): compara a versão que roda com a gravada na última execução, na pasta de dados do usuário.
+ * É local (sem rede nem login) e só avisa quando a versão subiu; a versão nova é gravada depois do aviso, e nunca no lugar de uma maior.
+ */
+function avisarSeAtualizou(): void {
+  const arquivo = path.join(app.getPath('userData'), ARQUIVO_DA_ULTIMA_VERSAO);
+  let conteudo: string | null = null;
+  try {
+    conteudo = fs.readFileSync(arquivo, 'utf8');
+  } catch {
+    // Sem arquivo: primeira execução.
+  }
+  const ultima = lerUltimaVersaoGravada(conteudo);
+  const atual = app.getVersion();
+  if (deveAvisarQueAtualizou(ultima, atual) && Notification.isSupported()) {
+    new Notification({ title: NOME_DO_APP, body: textoDoAvisoDeAtualizacao(atual), icon: caminhoDoIcone, silent: true }).show();
+  }
+  const aGravar = versaoARegistrar(ultima, atual);
+  if (aGravar === null) return;
+  try {
+    fs.mkdirSync(path.dirname(arquivo), { recursive: true });
+    fs.writeFileSync(arquivo, aGravar, 'utf8');
+  } catch (erro) {
+    console.warn('Não foi possível gravar a última versão que rodou:', erro);
+  }
 }
 
 /** Única saída do app: confirma que isso desativa o check-in e só então encerra. */
@@ -613,6 +645,7 @@ app.whenReady().then(() => {
   Menu.setApplicationMenu(null);
   criarJanela();
   criarBandeja();
+  avisarSeAtualizou();
   agendarConferencia();
   agendarConferenciaDoChat(PRIMEIRA_CONFERENCIA_DO_CHAT_MS);
 });

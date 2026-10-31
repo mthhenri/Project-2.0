@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
   ConversaDiretaListadasDto,
+  ConversaDiretaSupervisaoListadasDto,
   MensagemDiretaBuscadoDto,
   MensagemDiretaEnviadaDto,
   MensagemDiretaEnviarDto,
@@ -13,6 +14,8 @@ import {
   MensagemDiretaPreferenciaAlteradaDto,
   MensagemDiretaPreferenciaRecuperadaDto,
   MensagemDiretaSilencioAlteradoDto,
+  MensagemDiretaSupervisaoListadasDto,
+  MensagemDiretaSupervisaoListarDto,
   MensagemDiretaReferenciaRecuperadaDto,
   MensagemDiretaReferenciasBuscadasDto,
   ReferenciaMensagemDiretaEnum,
@@ -92,5 +95,22 @@ export class MensagemDiretaService {
 
   listarPessoas(): Observable<StandardResponse<MensagemDiretaPessoasListadasDto>> {
     return this.httpClient.get<StandardResponse<MensagemDiretaPessoasListadasDto>>(`${this.urlBase}/pessoas`, comFeedbackProprioEErroTratado());
+  }
+
+  /** Supervisão (task 214, só gestor): as conversas entre desenvolvedores, uma página por vez. */
+  listarConversasSupervisionadas(filtros: MensagemDiretaSupervisaoListarDto): Observable<StandardResponse<ConversaDiretaSupervisaoListadasDto>> {
+    let params = new HttpParams();
+    if (filtros.texto) params = params.set('texto', filtros.texto);
+    if (filtros.somenteCodigo) params = params.set('somenteCodigo', 'true');
+    if (filtros.pagina) params = params.set('pagina', filtros.pagina);
+    if (filtros.porPagina) params = params.set('porPagina', filtros.porPagina);
+    return this.httpClient.get<StandardResponse<ConversaDiretaSupervisaoListadasDto>>(`${this.urlBase}/supervisao/conversas`, { params, ...comFeedbackProprioEErroTratado() });
+  }
+
+  /** Abre uma conversa de terceiros. A primeira página (sem `cursor`) grava a auditoria e avisa os participantes; as seguintes não. */
+  lerConversaSupervisionada(conversaId: string, cursor?: string | null): Observable<StandardResponse<MensagemDiretaSupervisaoListadasDto>> {
+    let params = new HttpParams();
+    if (cursor) params = params.set('cursor', cursor);
+    return this.httpClient.get<StandardResponse<MensagemDiretaSupervisaoListadasDto>>(`${this.urlBase}/supervisao/conversa/${conversaId}`, { params, ...comFeedbackProprioEErroTratado() });
   }
 }
