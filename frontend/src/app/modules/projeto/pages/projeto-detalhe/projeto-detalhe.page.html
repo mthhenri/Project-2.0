@@ -48,51 +48,50 @@
 
       <div class="projeto-detalhe__cabecalho-acoes">
         @if (sessao.eGestor()) {
-          <p-button
-            label="Nova Demanda"
-            icon="pi pi-plus"
-            (onClick)="mostrarDialogNovaDemanda.set(true)"
-          />
-          <p-button
-            label="Relatório"
-            icon="pi pi-file"
-            severity="secondary"
-            [outlined]="true"
-            (onClick)="abrirRelatorio()"
-          />
-          <p-button
-            label="Configurar volume"
-            icon="pi pi-sliders-h"
-            severity="secondary"
-            [outlined]="true"
-            (onClick)="volumeDialog.abrir(projeto()!.id)"
+          <div class="projeto-detalhe__botoes">
+            <p-button
+              label="Nova Demanda"
+              icon="pi pi-plus"
+              (onClick)="mostrarDialogNovaDemanda.set(true)"
+            />
+            <p-button
+              label="Relatório"
+              icon="pi pi-file"
+              severity="secondary"
+              [outlined]="true"
+              (onClick)="abrirRelatorio()"
+            />
+            <p-button
+              label="Configurar volume"
+              icon="pi pi-sliders-h"
+              severity="secondary"
+              [outlined]="true"
+              (onClick)="volumeDialog.abrir(projeto()!.id)"
+            />
+          </div>
+          <!-- Demandas ou Volume: abaixo dos botões, no próprio cabeçalho (tasks 291 e 292). -->
+          <p-selectbutton
+            class="projeto-detalhe__visao"
+            [options]="opcoesVisao"
+            [ngModel]="visaoAtual()"
+            (ngModelChange)="escolherVisao($event)"
+            optionLabel="rotulo"
+            optionValue="valor"
+            [allowEmpty]="false"
+            size="small"
+            ariaLabel="O que ver no projeto"
           />
         }
       </div>
     </div>
     </div>
 
-    <!-- O corpo do projeto mostra as demandas ou o volume (task 291): o gestor troca pelo seletor; o desenvolvedor só vê as demandas. -->
-    @if (sessao.eGestor()) {
-      <p-selectbutton
-        class="projeto-detalhe__visao"
-        [options]="opcoesVisao"
-        [ngModel]="visaoAtual()"
-        (ngModelChange)="escolherVisao($event)"
-        optionLabel="rotulo"
-        optionValue="valor"
-        [allowEmpty]="false"
-        size="small"
-        ariaLabel="O que ver no projeto"
-      />
-    }
-
     @if (visaoAtual() === 'VOLUME') {
       <app-projeto-volume [projetoId]="projeto()!.id" />
     }
 
     <!-- As demandas ficam montadas (só escondidas) enquanto se vê o volume, para voltar à mesma pasta, demanda e filtro. -->
-    <div [class.hidden]="visaoAtual() === 'VOLUME'">
+    <div class="projeto-detalhe__demandas" [class.projeto-detalhe__demandas--oculto]="visaoAtual() === 'VOLUME'">
     @if (carregandoDemandas()) {
       <app-skeleton-lista variante="linhas" [quantidade]="6" />
     }

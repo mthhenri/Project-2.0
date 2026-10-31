@@ -210,13 +210,13 @@ describe('ProjetoDetalhePage', () => {
 
 describe('ProjetoDetalhePage: demandas ou volume (tasks 290 e 291)', () => {
   const anual = { projetoId: 5, nome: 'Portal do Cliente', codigo: 'PORTAL', cor: '#336699', volumeEsperadoHorasPorMes: new Array(12).fill(40), minutosGastosPorMes: new Array(12).fill(0) };
-  const corpoDasDemandas = (montado: Montado) => montado.elemento.querySelector('.projeto-detalhe > div.hidden, .projeto-detalhe > div:not(.projeto-detalhe__cabecalho-cartao):not(.hidden)');
+  const demandasOcultas = (montado: Montado) => montado.elemento.querySelector('.projeto-detalhe__demandas--oculto');
 
   it('o gestor abre vendo as demandas, e o volume só aparece ao trocar', async () => {
     const { montado } = await montarDetalhe(TipoUsuarioEnum.GESTOR);
     await carregar(montado);
     expect(montado.componente.visaoAtual()).toBe('DEMANDAS');
-    expect(montado.elemento.querySelector('p-selectbutton')).not.toBeNull();
+    expect(montado.elemento.querySelector('.projeto-detalhe__cabecalho-acoes p-selectbutton')).not.toBeNull();
     expect(montado.elemento.querySelector('app-projeto-volume')).toBeNull();
     montado.http.expectNone((requisicao) => requisicao.url.includes('/projeto/volume'));
   });
@@ -229,13 +229,13 @@ describe('ProjetoDetalhePage: demandas ou volume (tasks 290 e 291)', () => {
     responderSucesso(esperarRequisicao(montado.http, 'GET', '/projeto/volume/anual'), [anual]);
     await montado.atualizar();
     expect(montado.elemento.querySelector('app-projeto-volume app-grafico-barras')).not.toBeNull();
-    expect(montado.elemento.querySelector('.projeto-detalhe > div.hidden')).not.toBeNull();
+    expect(demandasOcultas(montado)).not.toBeNull();
 
     montado.componente.escolherVisao('DEMANDAS');
     await montado.atualizar();
     expect(montado.elemento.querySelector('app-projeto-volume')).toBeNull();
-    expect(montado.elemento.querySelector('.projeto-detalhe > div.hidden')).toBeNull();
-    expect(corpoDasDemandas(montado)).not.toBeNull();
+    expect(demandasOcultas(montado)).toBeNull();
+    expect(montado.elemento.querySelector('.projeto-detalhe__demandas')).not.toBeNull();
   });
 
   it('a escolha fica lembrada neste navegador', async () => {

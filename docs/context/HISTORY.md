@@ -12,6 +12,10 @@
 
 ---
 
+## 2026-10-31 — 292 Projeto: sem rolagem da página e seletor Demandas / Volume no cabeçalho
+
+Pedido do autor com uma captura: no detalhe do projeto a janela rolava um pouco, e o seletor ficaria melhor no cabeçalho. O seletor foi para a coluna da direita do cartão do cabeçalho, **abaixo** dos botões. A página agora ocupa a altura da área de conteúdo (`height: 100%` em coluna) e a Árvore fica com o que sobra (`flex: 1`, mínimo de 20rem), rolando por dentro; antes ela tinha `clamp(30rem, 100dvh - 22rem, 60rem)`, que ignorava a altura real do cabeçalho. As demandas escondidas na visão Volume usam `display: none` (classe `--oculto`; o `hidden` do Tailwind perdia para o `display: flex` do componente). **Medido** na rolagem de `main`: nenhuma em 1913x917 (a do autor), 1920x1080 e 1366x768 (neste, a Árvore fica com o mínimo, 320 px). **Testes:** frontend 2393, build e `repo:verificar` ok. Detalhe em `docs/specs/done/292-projeto-sem-scroll-e-seletor-no-cabecalho/verificacao.md`.
+
 ## 2026-10-31 — 291 Projeto: demandas ou volume, e novo nome do CSV do relatório
 
 Pedido do autor logo depois da 290. **(1)** O detalhe do projeto mostra **ou** as demandas **ou** o volume: um seletor "Demandas | Volume" (só gestor) entre o cabeçalho e o corpo substituiu a seção recolhível da 290; a escolha fica em `projeto.detalhe.visao` (padrão Demandas), e as demandas ficam montadas, só escondidas, para voltar à mesma pasta, demanda e filtro. **(2)** O CSV do relatório de execuções passou de `relatorio-execucoes_<código>_<início>_<fim>.csv` para **`<código>-relatorio-<AAAA-MM>.csv`** (`nomeDoArquivoDoRelatorio`; ex.: `dev-agenda-relatorio-2026-10.csv`): código em minúsculas e sem acento nem símbolo; período que atravessa meses vira `AAAA-MM-a-AAAA-MM`. Escrevi "relatorio" sem acento (o autor digitou "relatório" no exemplo); trocar é uma linha. **(3)** Anotada a ideia **I-045** (volume por usuário), sem prioridade: o autor achava que existia uma tela assim e não existe (o Ponto mostra horas por usuário contra a meta, e o volume é só por projeto).
