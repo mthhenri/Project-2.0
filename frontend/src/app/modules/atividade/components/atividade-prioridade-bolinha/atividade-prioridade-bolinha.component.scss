@@ -1,0 +1,22 @@
+:host {
+  display: inline-flex;
+  flex: none;
+}
+
+.prioridade-bolinha {
+  display: block;
+  width: 0.625rem;
+  height: 0.625rem;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+
+  &--editavel {
+    cursor: pointer;
+    transition: box-shadow 0.15s ease;
+
+    &:hover {
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--p-text-color) 14%, transparent);
+    }
+  }
+}

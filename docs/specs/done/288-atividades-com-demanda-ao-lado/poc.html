@@ -1,0 +1,453 @@
+<title>Atividades com demanda ao lado</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: a lista de atividades encolhe para a esquerda e a demanda abre ao lado, como na tela de Documentações. */
+:root {
+  --bg: #f6f8fc;
+  --surface: #ffffff;
+  --surface-2: #f1f4fa;
+  --line: #e4e9f2;
+  --fg: #1d2433;
+  --muted: #667085;
+  --accent: var(--pl, #2563eb);
+  --accent-soft: #e8efff;
+  --sel: #eef3ff;
+  --st-pendente: #667085;   --st-pendente-bg: #eef0f4;
+  --st-dev: #1d4ed8;        --st-dev-bg: #dfe9ff;
+  --st-pausa: #b45309;      --st-pausa-bg: #fdf0d5;
+  --st-rev: #6d28d9;        --st-rev-bg: #ede5fd;
+  --st-ok: #15803d;         --st-ok-bg: #dcf5e4;
+  --pr-urgente: #dc2626;    --pr-alta: #ea580c;   --pr-media: #ca8a04;   --pr-baixa: #16a34a;
+  --pr-urgente-bg: #fde4e4; --pr-alta-bg: #ffe9dc; --pr-media-bg: #fbf1cf; --pr-baixa-bg: #dff5e5;
+  --tip-bg: #1d2433; --tip-fg: #ffffff;
+  --c-cliente: #059669; --c-cliente-bg: #d8f3e8;
+  --c-tecnica: #2563eb; --c-tecnica-bg: #e0eaff;
+  --c-doc: #db2777;     --c-doc-bg: #fde2ef;
+  --font: -apple-system, "Segoe UI", system-ui, Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "Cascadia Code", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1420; --surface: #171d2b; --surface-2: #1d2535; --line: #2a3347; --fg: #e6eaf3; --muted: #97a1b6;
+    --accent: var(--pd, #6b9bff); --accent-soft: #1e2c4d; --sel: #1c2848;
+    --st-pendente: #a4adbf; --st-pendente-bg: #262e40;
+    --st-dev: #8db1ff; --st-dev-bg: #1f3159;
+    --st-pausa: #f2b765; --st-pausa-bg: #3b2e14;
+    --st-rev: #c0a3ff; --st-rev-bg: #2f2552;
+    --st-ok: #6fd592; --st-ok-bg: #173424;
+    --pr-urgente: #f87171; --pr-alta: #fb923c; --pr-media: #eab308; --pr-baixa: #4ade80;
+    --pr-urgente-bg: #3d1c1f; --pr-alta-bg: #3b2416; --pr-media-bg: #38300f; --pr-baixa-bg: #173424;
+    --tip-bg: #e6eaf3; --tip-fg: #0f1420;
+    --c-cliente: #34d399; --c-cliente-bg: #14372b;
+    --c-tecnica: #6b9bff; --c-tecnica-bg: #1e2c4d;
+    --c-doc: #f472b6;     --c-doc-bg: #3d1a2d;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1420; --surface: #171d2b; --surface-2: #1d2535; --line: #2a3347; --fg: #e6eaf3; --muted: #97a1b6;
+  --accent: var(--pd, #6b9bff); --accent-soft: #1e2c4d; --sel: #1c2848;
+  --st-pendente: #a4adbf; --st-pendente-bg: #262e40;
+  --st-dev: #8db1ff; --st-dev-bg: #1f3159;
+  --st-pausa: #f2b765; --st-pausa-bg: #3b2e14;
+  --st-rev: #c0a3ff; --st-rev-bg: #2f2552;
+  --st-ok: #6fd592; --st-ok-bg: #173424;
+  --pr-urgente: #f87171; --pr-alta: #fb923c; --pr-media: #eab308; --pr-baixa: #4ade80;
+  --pr-urgente-bg: #3d1c1f; --pr-alta-bg: #3b2416; --pr-media-bg: #38300f; --pr-baixa-bg: #173424;
+  --tip-bg: #e6eaf3; --tip-fg: #0f1420;
+  --c-cliente: #34d399; --c-cliente-bg: #14372b;
+  --c-tecnica: #6b9bff; --c-tecnica-bg: #1e2c4d;
+  --c-doc: #f472b6;     --c-doc-bg: #3d1a2d;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 14px; line-height: 1.45; }
+button { font: inherit; color: inherit; }
+svg { display: block; flex: none; }
+
+.pagina { max-width: 1680px; margin: 0 auto; padding-block: 20px 40px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; gap: 16px; }
+
+/* Aviso do POC */
+.poc { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 8px 12px; border: 1px dashed var(--line); border-radius: 8px; color: var(--muted); font-size: 12.5px; }
+.poc strong { color: var(--fg); font-weight: 600; }
+.poc__acoes { display: flex; gap: 6px; margin-left: auto; }
+.mini { border: 1px solid var(--line); background: var(--surface); border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 12.5px; }
+.mini:hover { border-color: var(--accent); color: var(--accent); }
+.mini[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+
+/* Cabeçalho */
+.topo { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.topo h1 { margin: 0; font-size: 22px; font-weight: 600; color: var(--accent); }
+.topo__botoes { display: flex; gap: 8px; }
+.btn { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--surface); border-radius: 6px; padding: 8px 14px; font-weight: 500; cursor: default; }
+.btn--primario { background: var(--accent); border-color: var(--accent); color: #fff; }
+.chip { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 3px 10px; font-size: 11.5px; }
+
+/* Filtros */
+.filtros { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 12px; }
+.campo { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.campo label { font-size: 11.5px; font-weight: 500; }
+.campo__caixa { border: 1px solid var(--line); background: var(--surface); border-radius: 6px; padding: 9px 12px; color: var(--muted); display: flex; justify-content: space-between; align-items: center; gap: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Área principal */
+.area { display: flex; align-items: flex-start; gap: 16px; }
+.lista { flex: 0 0 100%; min-width: 0; background: var(--surface); border-radius: 8px; transition: flex-basis .32s ease; }
+.split .lista { flex-basis: 470px; }
+.linha { display: grid; grid-template-columns: 40px minmax(0, 1fr) 190px 120px 150px 130px 100px 84px; align-items: center; min-height: 54px; border-bottom: 1px solid var(--line); transition: grid-template-columns .32s ease, background-color .15s; }
+.split .linha { grid-template-columns: 36px minmax(0, 1fr) 0px 0px 44px 0px 0px 84px; }
+.linha--cab { min-height: 42px; font-weight: 600; font-size: 13px; }
+.linha:not(.linha--cab):hover { background: var(--surface-2); }
+.split .linha--sel, .split .linha--sel:hover { background: var(--sel); }
+.cel { min-width: 0; overflow: hidden; padding: 0 8px; }
+.cel--check { display: flex; justify-content: center; padding: 0; }
+.check { width: 16px; height: 16px; border: 1.5px solid var(--line); border-radius: 4px; background: var(--surface); }
+.split .c-usuario, .split .c-prior, .split .c-tempo, .split .c-tags { padding: 0; opacity: 0; pointer-events: none; }
+.c-usuario, .c-prior, .c-tempo, .c-tags { transition: opacity .2s; }
+
+/* Atividade */
+.atividade { display: flex; flex-direction: column; gap: 3px; padding-block: 7px; min-width: 0; }
+.atividade__nome { display: flex; align-items: center; gap: 8px; min-width: 0; font-weight: 500; }
+.atividade__nome span.txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.atividade__sub { display: flex; align-items: center; gap: 4px; min-width: 0; color: var(--muted); font-size: 11.5px; }
+.atividade__sub .proj { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-left: 4px; }
+.ico { border: 0; background: transparent; padding: 3px; border-radius: 5px; color: var(--accent); cursor: pointer; display: inline-flex; }
+.ico--cliente, .aba--cliente { --cor: var(--c-cliente); --cor-bg: var(--c-cliente-bg); }
+.ico--tecnica, .aba--tecnica { --cor: var(--c-tecnica); --cor-bg: var(--c-tecnica-bg); }
+.ico--doc, .aba--doc { --cor: var(--c-doc); --cor-bg: var(--c-doc-bg); }
+.ico { color: var(--cor); }
+.ico:hover { background: var(--cor-bg); }
+.ico[aria-pressed="true"] { background: var(--cor); color: var(--surface); }
+
+/* Prioridade */
+.bolinha { display: none; width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.split .bolinha { display: inline-block; }
+.pr { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; border-radius: 999px; font-size: 11.5px; font-weight: 500; }
+.pr i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.pr--Urgente { color: var(--pr-urgente); background: var(--pr-urgente-bg); } .bolinha--Urgente { background: var(--pr-urgente); }
+.pr--Alta { color: var(--pr-alta); background: var(--pr-alta-bg); }         .bolinha--Alta { background: var(--pr-alta); }
+.pr--Média { color: var(--pr-media); background: var(--pr-media-bg); }      .bolinha--Média { background: var(--pr-media); }
+.pr--Baixa { color: var(--pr-baixa); background: var(--pr-baixa-bg); }      .bolinha--Baixa { background: var(--pr-baixa); }
+.sel { display: inline-flex; align-items: center; gap: 4px; }
+.sel svg { color: var(--muted); }
+
+/* Status */
+.st { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+.st__icone { display: none; }
+.split .st { padding: 0; width: 30px; height: 30px; border-radius: 50%; }
+.split .st__icone { display: inline-flex; }
+.split .st__rotulo, .split .sel > svg { display: none; }
+.st--Planejada { color: var(--st-pendente); background: var(--st-pendente-bg); }
+.st--Pendente { color: var(--st-pausa); background: var(--st-pausa-bg); }
+.st--Desenvolvendo { color: var(--st-dev); background: var(--st-dev-bg); }
+.st--Desenvolvida { color: var(--st-ok); background: var(--st-ok-bg); }
+/* Status da demanda: bolinha, como na tela de demandas */
+.dem { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; }
+.dem::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--dem-cor); }
+.dem--Pendente { --dem-cor: var(--muted); }
+.dem--Planejada { --dem-cor: #0ea5e9; }
+.dem--Concluída { --dem-cor: var(--st-ok); }
+
+/* Cores derivadas do tema: a técnica é a cor do tema; cliente e documentação giram o matiz em ±120°. Fica depois de tudo e com especificidade alta para valer nos dois temas. */
+:root:root:root {
+  --accent-soft: color-mix(in srgb, var(--accent) 14%, var(--surface));
+  --sel: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  --st-dev: var(--accent);
+  --st-dev-bg: color-mix(in srgb, var(--accent) 16%, var(--surface));
+  --c-tecnica: var(--accent);
+  --giro: 60;
+  --c-cliente: hsl(from var(--accent) calc(h + var(--giro)) s l);
+  --c-doc: hsl(from var(--accent) calc(h - var(--giro)) s l);
+  --c-tecnica-bg: color-mix(in srgb, var(--c-tecnica) 16%, var(--surface));
+  --c-cliente-bg: color-mix(in srgb, var(--c-cliente) 16%, var(--surface));
+  --c-doc-bg: color-mix(in srgb, var(--c-doc) 16%, var(--surface));
+}
+/* Tema sem matiz (preto/cinza): o giro não muda nada, então cliente e documentação ganham um par fixo. */
+:root:root:root[data-preset="preto"] { --c-cliente: #14b8a6; --c-doc: #ec4899; }
+.temas { display: inline-flex; gap: 4px; align-items: center; }
+.amostra { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--line); cursor: pointer; padding: 0; }
+.amostra[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--fg); }
+
+.tempo { color: var(--fg); }
+.tag { color: var(--muted); display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; }
+
+/* Ações */
+.acoes { display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
+.play { width: 30px; height: 30px; border-radius: 50%; border: 0; background: var(--accent-soft); color: var(--accent); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.kebab { border: 0; background: transparent; color: var(--muted); padding: 4px; border-radius: 5px; cursor: pointer; }
+.kebab:hover { background: var(--surface-2); }
+
+/* Rodapé da lista */
+.rodape { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; padding: 14px 8px; color: var(--muted); font-size: 13px; }
+.paginas { display: flex; align-items: center; gap: 4px; }
+.pg { min-width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; }
+.pg--atual { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.split .pg--extra, .split .rodape__qtd { display: none; }
+
+/* Demanda aberta */
+.demanda { display: none; flex: 1 1 0; min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; flex-direction: column; min-height: 520px; position: sticky; top: 12px; }
+.split .demanda { display: flex; animation: entra .3s ease both; }
+@keyframes entra { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
+.demanda__cab { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 14px 18px 10px; }
+.demanda__trilha { color: var(--muted); font-size: 12px; }
+.demanda__titulo { margin: 2px 0 0; font-size: 19px; font-weight: 600; text-wrap: balance; }
+.demanda__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }
+.meta { font-size: 12px; color: var(--muted); }
+.fechar { border: 1px solid var(--line); background: var(--surface); border-radius: 6px; padding: 6px 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; flex: none; }
+.fechar:hover { border-color: var(--accent); color: var(--accent); }
+.abas { display: flex; gap: 2px; padding: 0 14px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.aba { border: 0; background: transparent; padding: 10px 12px; cursor: pointer; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; display: inline-flex; align-items: center; gap: 7px; }
+.aba svg { color: var(--cor); }
+.aba:hover { color: var(--fg); }
+.aba[aria-selected="true"] { color: var(--cor); border-bottom-color: var(--cor); font-weight: 600; }
+.corpo { padding: 18px 22px 26px; max-width: 78ch; }
+.corpo h4 { margin: 18px 0 6px; font-size: 14px; }
+.corpo h4:first-child { margin-top: 0; }
+.corpo p { margin: 0 0 10px; }
+.corpo ul { margin: 0 0 10px; padding-left: 20px; }
+.corpo li { margin-bottom: 4px; }
+.corpo code { font-family: var(--mono); font-size: 12.5px; background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+.corpo pre { font-family: var(--mono); font-size: 12.5px; background: var(--surface-2); padding: 10px 12px; border-radius: 6px; overflow-x: auto; margin: 0 0 10px; }
+
+/* Tooltip */
+[data-tip] { position: relative; }
+[data-tip]:hover::after, [data-tip]:focus-visible::after { content: attr(data-tip); position: absolute; z-index: 20; left: 50%; bottom: calc(100% + 6px); transform: translateX(-50%); background: var(--tip-bg); color: var(--tip-fg); padding: 4px 8px; border-radius: 5px; font-size: 11.5px; font-weight: 500; white-space: nowrap; pointer-events: none; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.linha, .cel { overflow: visible; }
+.cel--clip { overflow: hidden; }
+
+@media (prefers-reduced-motion: reduce) { .lista, .linha, .demanda { transition: none !important; animation: none !important; } }
+
+@media (max-width: 980px) {
+  .filtros { grid-template-columns: 1fr 1fr; }
+  .lista { overflow-x: auto; }
+  .lista .linha, .lista .rodape { min-width: 980px; }
+  .split .area { flex-direction: column; }
+  .split .lista { flex-basis: auto; width: 100%; }
+  .split .lista .linha, .split .lista .rodape { min-width: 0; }
+  .split .demanda { width: 100%; position: static; flex: none; }
+}
+@media (max-width: 520px) { .filtros { grid-template-columns: 1fr; } .poc__acoes { margin-left: 0; } }
+</style>
+
+<main class="pagina" id="pagina">
+  <div class="poc">
+    <span><strong>POC.</strong> Clique num dos três ícones sob o nome da atividade (cliente, técnica, documentação) para abrir a demanda ao lado. Clique em outra linha para trocar. Esc fecha.</span>
+    <span class="poc__acoes">
+      <label class="temas" for="giro">Giro <input id="giro" type="range" min="20" max="120" step="5" value="60"> <output id="giro-valor">60°</output></label>
+      <span class="temas" aria-label="Cor do tema">
+        <button class="amostra" type="button" data-preset="azul" data-pl="#2563eb" data-pd="#6b9bff" aria-label="Azul" aria-pressed="true"></button>
+        <button class="amostra" type="button" data-preset="azul-escuro" data-pl="#1e3a8a" data-pd="#5b7fd6" aria-label="Azul escuro" aria-pressed="false"></button>
+        <button class="amostra" type="button" data-preset="verde" data-pl="#16a34a" data-pd="#4ade80" aria-label="Verde" aria-pressed="false"></button>
+        <button class="amostra" type="button" data-preset="laranja" data-pl="#ea580c" data-pd="#fb923c" aria-label="Laranja" aria-pressed="false"></button>
+        <button class="amostra" type="button" data-preset="roxo" data-pl="#7c3aed" data-pd="#a78bfa" aria-label="Roxo" aria-pressed="false"></button>
+        <button class="amostra" type="button" data-preset="preto" data-pl="#1f2937" data-pd="#e5e7eb" aria-label="Preto" aria-pressed="false"></button>
+      </span>
+      <button class="mini" data-tema="light" type="button" aria-pressed="false">Tema claro</button>
+      <button class="mini" data-tema="dark" type="button" aria-pressed="false">Tema escuro</button>
+      <button class="mini" id="btn-lista" type="button" aria-pressed="false">Lista completa</button>
+      <button class="mini" id="btn-dividida" type="button" aria-pressed="true">Com demanda aberta</button>
+    </span>
+  </div>
+
+  <div class="topo">
+    <h1>Atividades</h1>
+    <div class="topo__botoes">
+      <span class="btn">⚑ Alterar prioridades</span>
+      <span class="btn btn--primario">＋ Nova Atividade</span>
+    </div>
+  </div>
+  <span class="chip">Minhas atividades</span>
+
+  <div class="filtros">
+    <div class="campo"><label>Busca</label><div class="campo__caixa">Projeto, demanda ou atividade ( / )</div></div>
+    <div class="campo"><label>Status</label><div class="campo__caixa">3 status <span>⌄</span></div></div>
+    <div class="campo"><label>Usuário</label><div class="campo__caixa">Todos os usuários <span>⌄</span></div></div>
+    <div class="campo"><label>Período de criação</label><div class="campo__caixa">dd/mm/aaaa – dd/mm/aaaa <span>▦</span></div></div>
+  </div>
+
+  <div class="area" id="area">
+    <section class="lista" aria-label="Lista de atividades">
+      <div class="linha linha--cab">
+        <div class="cel cel--check"><span class="check"></span></div>
+        <div class="cel">Atividade</div>
+        <div class="cel c-usuario">Usuário</div>
+        <div class="cel c-prior">Prioridade</div>
+        <div class="cel c-status">Status</div>
+        <div class="cel c-tempo">Tempo executado</div>
+        <div class="cel c-tags">Tags</div>
+        <div class="cel acoes" style="justify-content:flex-start">Ações</div>
+      </div>
+      <div id="linhas"></div>
+      <div class="rodape">
+        <span class="rodape__qtd">Mostrando 1 a 9 de 54 atividades</span>
+        <span class="paginas"><span class="pg">‹</span><span class="pg pg--atual">1</span><span class="pg pg--extra">2</span><span class="pg pg--extra">3</span><span class="pg pg--extra">4</span><span class="pg pg--extra">5</span><span class="pg">›</span></span>
+      </div>
+    </section>
+
+    <aside class="demanda" id="demanda" aria-label="Demanda aberta"></aside>
+  </div>
+</main>
+
+<script>
+var ICONES = {
+  usuario: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>',
+  tecnica: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 10l3 2-3 2M13 15h4"/></svg>',
+  doc: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>',
+  play: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M7 4l13 8-13 8z"/></svg>',
+  kebab: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="12" cy="19" r="1.7"/></svg>',
+  chevron: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
+  fechar: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  mais: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>'
+};
+var SVG_QUADRADO = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">';
+var ICONE_STATUS = {
+  Planejada: SVG_QUADRADO + '<rect x="3.5" y="3.5" width="17" height="17" rx="4" stroke-dasharray="3.4 3.2"/></svg>',
+  Pendente: SVG_QUADRADO + '<rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M8 12h8"/></svg>',
+  Desenvolvendo: SVG_QUADRADO + '<rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M10 8.5l5 3.5-5 3.5z" fill="currentColor"/></svg>',
+  Desenvolvida: SVG_QUADRADO + '<rect x="3.5" y="3.5" width="17" height="17" rx="4" fill="currentColor"/><path d="M8 12.5l3 3 5-6" style="stroke:var(--surface)"/></svg>'
+};
+var ROTULO_STATUS = { Planejada: 'Planejada', Pendente: 'Pendente', Desenvolvendo: 'Desenvolvendo', Desenvolvida: 'Desenvolvida' };
+
+var DEMANDAS = {
+  notif: {
+    projeto: 'Portal do Cliente', nome: 'Notificações', status: 'Planejada', horas: '30h estimadas',
+    cliente: '<h4>O que o cliente precisa</h4><p>Saber, sem precisar perguntar, quando algo no projeto dele mudou: uma demanda foi concluída, um prazo foi movido ou há uma pendência esperando resposta.</p><h4>O que ele espera ver</h4><ul><li>Um aviso discreto no topo do portal, com o número de itens novos.</li><li>A lista dos avisos, do mais recente ao mais antigo.</li><li>Poder marcar tudo como lido de uma vez.</li></ul><p>Não quer receber e-mail para cada mudança pequena.</p>',
+    tecnica: '<h4>Contexto</h4><p>Hoje o cliente só descobre mudanças por e-mail manual. A service passa a publicar um evento a cada mudança de status.</p><h4>Implementação</h4><ul><li>Evento <code>DemandaStatusAlterado</code> publicado ao fim de <code>alterarDemanda()</code>.</li><li>Consumidor grava em <code>notificacao</code> e empurra ao portal por SSE.</li><li>Sino no cabeçalho lê o contador de não lidas.</li></ul><h4>Critérios de aceite</h4><ul><li>Mudança de status aparece no portal em até 5 segundos.</li><li>Notificação lida não volta a contar.</li></ul>',
+    doc: '<h4>Como usar</h4><p>O sino fica no canto superior direito do portal. O número indica quantos avisos ainda não foram lidos.</p><pre>GET /api/notificacao?lida=false\nPOST /api/notificacao/marcar-lidas</pre><h4>Limites</h4><ul><li>Os avisos ficam guardados por 90 dias.</li><li>O cliente só enxerga avisos dos próprios projetos.</li></ul>'
+  },
+  estoque: {
+    projeto: 'Estoque Inteligente', nome: 'Alertas de reposição', status: 'Planejada', horas: '24h estimadas',
+    cliente: '<h4>O que o cliente precisa</h4><p>Ser avisado antes de um produto acabar, com folga para o fornecedor entregar.</p><h4>O que ele espera ver</h4><ul><li>Uma lista de produtos abaixo do mínimo, do mais crítico ao menos.</li><li>Sugestão de quanto repor.</li></ul>',
+    tecnica: '<h4>Contexto</h4><p>O estoque mínimo já existe por produto. Falta o cálculo da cobertura em dias.</p><h4>Implementação</h4><ul><li>Cobertura = saldo atual ÷ média de saída dos últimos 30 dias.</li><li>Rotina diária grava os alertas em <code>alerta_reposicao</code>.</li><li>Produto sem saída no período fica fora do cálculo.</li></ul>',
+    doc: '<h4>Parâmetros</h4><ul><li><code>dias_cobertura_minima</code>: padrão 7.</li><li><code>janela_media_dias</code>: padrão 30.</li></ul><p>Ambos configuráveis por empresa.</p>'
+  },
+  agenda: {
+    projeto: 'Agenda da Equipe', nome: 'Lembretes', status: 'Pendente', horas: '16h estimadas',
+    cliente: '<h4>O que o cliente precisa</h4><p>Receber um lembrete antes de reuniões e prazos, no canal que ele já usa.</p><h4>O que ele espera ver</h4><ul><li>Escolher quanto tempo antes quer ser lembrado.</li><li>Desligar lembretes de eventos sem importância.</li></ul>',
+    tecnica: '<h4>Contexto</h4><p>A agenda já guarda os eventos. O lembrete é uma tarefa agendada por evento.</p><h4>Implementação</h4><ul><li>Fila de lembretes ordenada por horário de disparo.</li><li>Ao mover o evento, o lembrete é recalculado.</li><li>Pausada: aguardando decisão sobre o canal de envio.</li></ul>',
+    doc: '<h4>Estado atual</h4><p>Demanda pausada até o cliente confirmar o canal (e-mail ou aplicativo). Nada foi publicado.</p>'
+  }
+};
+
+var ATIVIDADES = [
+  { id: 1, nome: 'Documentar entrega',  d: 'notif',   usuario: 'Mateus Abacaxi',    ini: 'MA', pr: 'Alta',    st: 'Desenvolvendo', tempo: '30h 0min', sub: 'Notificações' },
+  { id: 2, nome: 'Documentar entrega',  d: 'estoque', usuario: 'Mateus Abacaxi',    ini: 'MA', pr: 'Alta',    st: 'Desenvolvendo', tempo: '30h 0min', sub: 'Alertas de reposição' },
+  { id: 3, nome: 'Documentar entrega',  d: 'agenda',  usuario: 'Mateus Abacaxi',    ini: 'MA', pr: 'Média',   st: 'Pendente',      tempo: '24h 0min', sub: 'Lembretes' },
+  { id: 4, nome: 'Montar interface',    d: 'notif',   usuario: 'Mateus Caranguejo', ini: 'MC', pr: 'Urgente', st: 'Desenvolvida',      tempo: '30h 0min', sub: 'Notificações' },
+  { id: 5, nome: 'Montar interface',    d: 'estoque', usuario: 'Mateus Caranguejo', ini: 'MC', pr: 'Alta',    st: 'Desenvolvendo', tempo: '30h 0min', sub: 'Alertas de reposição' },
+  { id: 6, nome: 'Montar interface',    d: 'agenda',  usuario: 'Mateus Caranguejo', ini: 'MC', pr: 'Baixa',   st: 'Planejada',     tempo: '24h 0min', sub: 'Lembretes' },
+  { id: 7, nome: 'Implementar API',     d: 'notif',   usuario: 'Mateus Henrique',   ini: 'MH', pr: 'Alta',    st: 'Desenvolvida',    tempo: '30h 0min', sub: 'Notificações' },
+  { id: 8, nome: 'Implementar API',     d: 'estoque', usuario: 'Mateus Henrique',   ini: 'MH', pr: 'Média',   st: 'Desenvolvendo', tempo: '30h 0min', sub: 'Alertas de reposição' },
+  { id: 9, nome: 'Validar permissões',  d: 'estoque', usuario: 'Mateus Nebuloso',   ini: 'MN', pr: 'Baixa',   st: 'Planejada',     tempo: '30h 0min', sub: 'Alertas de reposição' }
+];
+var ABAS = [
+  { chave: 'cliente', rotulo: 'Descrição do cliente', icone: 'usuario' },
+  { chave: 'tecnica', rotulo: 'Descrição técnica', icone: 'tecnica' },
+  { chave: 'doc', rotulo: 'Documentação', icone: 'doc' }
+];
+
+var estado = { aberta: 1, aba: 'cliente' };
+var elLinhas = document.getElementById('linhas');
+var elArea = document.getElementById('area');
+var elDemanda = document.getElementById('demanda');
+
+function renderLinhas() {
+  elLinhas.innerHTML = ATIVIDADES.map(function (a) {
+    var dem = DEMANDAS[a.d];
+    var selecionada = estado.aberta === a.id;
+    var botoes = ABAS.map(function (aba) {
+      var ativo = selecionada && estado.aba === aba.chave;
+      return '<button class="ico ico--' + aba.chave + '" type="button" data-abrir="' + a.id + '" data-aba="' + aba.chave + '" data-tip="' + aba.rotulo + '" aria-label="' + aba.rotulo + '" aria-pressed="' + ativo + '">' + ICONES[aba.icone] + '</button>';
+    }).join('');
+    return '<div class="linha' + (selecionada ? ' linha--sel' : '') + '" data-linha="' + a.id + '">' +
+      '<div class="cel cel--check"><span class="check"></span></div>' +
+      '<div class="cel cel--clip"><div class="atividade">' +
+        '<div class="atividade__nome"><span class="bolinha bolinha--' + a.pr + '" data-tip="Prioridade ' + a.pr + '"></span><span class="txt">' + a.nome + '</span></div>' +
+        '<div class="atividade__sub">' + botoes + '<span class="proj">' + dem.projeto + ' › ' + a.sub + '</span></div>' +
+      '</div></div>' +
+      '<div class="cel c-usuario cel--clip"><span style="display:inline-flex;align-items:center;gap:8px"><span style="width:22px;height:22px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-size:10px;font-weight:600;display:inline-flex;align-items:center;justify-content:center">' + a.ini + '</span>' + a.usuario + '</span></div>' +
+      '<div class="cel c-prior cel--clip"><span class="sel"><span class="pr pr--' + a.pr + '"><i></i>' + a.pr + '</span>' + ICONES.chevron + '</span></div>' +
+      '<div class="cel c-status" style="display:flex;justify-content:center"><span class="sel"><span class="st st--' + a.st + '" data-tip="' + ROTULO_STATUS[a.st] + '"><span class="st__icone">' + ICONE_STATUS[a.st] + '</span><span class="st__rotulo">' + ROTULO_STATUS[a.st] + '</span></span>' + ICONES.chevron + '</span></div>' +
+      '<div class="cel c-tempo cel--clip tempo">' + a.tempo + '</div>' +
+      '<div class="cel c-tags cel--clip"><span class="tag">' + ICONES.mais + ' Tag</span></div>' +
+      '<div class="cel acoes"><button class="play" type="button" aria-label="Iniciar">' + ICONES.play + '</button><button class="kebab" type="button" aria-label="Mais ações">' + ICONES.kebab + '</button></div>' +
+    '</div>';
+  }).join('');
+}
+
+function renderDemanda() {
+  var a = ATIVIDADES.filter(function (x) { return x.id === estado.aberta; })[0];
+  if (!a) { elDemanda.innerHTML = ''; return; }
+  var dem = DEMANDAS[a.d];
+  var abas = ABAS.map(function (aba) {
+    return '<button class="aba aba--' + aba.chave + '" role="tab" type="button" data-aba-painel="' + aba.chave + '" aria-selected="' + (estado.aba === aba.chave) + '">' + ICONES[aba.icone] + aba.rotulo + '</button>';
+  }).join('');
+  elDemanda.innerHTML =
+    '<div class="demanda__cab"><div>' +
+      '<div class="demanda__trilha">' + dem.projeto + ' › Demanda</div>' +
+      '<h2 class="demanda__titulo">' + dem.nome + '</h2>' +
+      '<div class="demanda__meta"><span class="dem dem--' + dem.status + '">' + dem.status + '</span><span class="meta">' + dem.horas + '</span></div>' +
+    '</div><button class="fechar" type="button" id="btn-fechar">' + ICONES.fechar + ' Fechar</button></div>' +
+    '<div class="abas" role="tablist">' + abas + '</div>' +
+    '<div class="corpo" role="tabpanel">' + dem[estado.aba] + '</div>';
+}
+
+function render() {
+  var dividida = estado.aberta !== null;
+  document.getElementById('pagina').classList.toggle('split', dividida);
+  document.getElementById('btn-lista').setAttribute('aria-pressed', String(!dividida));
+  document.getElementById('btn-dividida').setAttribute('aria-pressed', String(dividida));
+  renderLinhas();
+  renderDemanda();
+}
+
+document.addEventListener('click', function (e) {
+  var alvo = e.target.closest('[data-abrir], [data-aba-painel], #btn-fechar, #btn-lista, #btn-dividida, [data-linha]');
+  if (!alvo) return;
+  if (alvo.hasAttribute('data-abrir')) {
+    var id = Number(alvo.getAttribute('data-abrir')), aba = alvo.getAttribute('data-aba');
+    if (estado.aberta === id && estado.aba === aba) estado.aberta = null; // clicar de novo no mesmo ícone fecha
+    else { estado.aberta = id; estado.aba = aba; }
+  }
+  else if (alvo.hasAttribute('data-aba-painel')) { estado.aba = alvo.getAttribute('data-aba-painel'); }
+  else if (alvo.id === 'btn-fechar' || alvo.id === 'btn-lista') { estado.aberta = null; }
+  else if (alvo.id === 'btn-dividida') { if (estado.aberta === null) estado.aberta = 1; }
+  else if (alvo.hasAttribute('data-linha')) {
+    if (estado.aberta === null || e.target.closest('.acoes')) return;
+    estado.aberta = Number(alvo.getAttribute('data-linha'));
+  }
+  render();
+});
+function marcarTema() {
+  var atual = document.documentElement.getAttribute('data-theme');
+  document.querySelectorAll('[data-tema]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-tema') === atual)); });
+}
+document.querySelectorAll('[data-tema]').forEach(function (b) {
+  b.addEventListener('click', function () {
+    var tema = b.getAttribute('data-tema');
+    if (document.documentElement.getAttribute('data-theme') === tema) document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme', tema);
+    marcarTema();
+  });
+});
+marcarTema();
+document.getElementById('giro').addEventListener('input', function (e) {
+  document.documentElement.style.setProperty('--giro', e.target.value);
+  document.getElementById('giro-valor').textContent = e.target.value + '°';
+});
+document.querySelectorAll('.amostra').forEach(function (b) {
+  var cor = b.getAttribute('data-pl');
+  b.style.background = cor;
+  b.addEventListener('click', function () {
+    var raiz = document.documentElement;
+    raiz.setAttribute('data-preset', b.getAttribute('data-preset'));
+    raiz.style.setProperty('--pl', b.getAttribute('data-pl'));
+    raiz.style.setProperty('--pd', b.getAttribute('data-pd'));
+    document.querySelectorAll('.amostra').forEach(function (o) { o.setAttribute('aria-pressed', String(o === b)); });
+  });
+});
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && estado.aberta !== null) { estado.aberta = null; render(); } });
+
+render();
+</script>

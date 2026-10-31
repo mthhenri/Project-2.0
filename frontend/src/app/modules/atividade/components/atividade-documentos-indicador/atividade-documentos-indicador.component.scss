@@ -36,6 +36,23 @@
       filter: drop-shadow(0 0 2px color-mix(in srgb, currentColor 55%, transparent));
     }
 
+    // Aberto no painel ao lado: o ícone fica na cor do tipo, com fundo da mesma cor diluído.
+    &[aria-pressed='true'] {
+      background: color-mix(in srgb, currentColor 16%, transparent);
+    }
+
+    &--cliente[aria-pressed='true'] {
+      color: var(--app-icone-cliente);
+    }
+
+    &--tecnica[aria-pressed='true'] {
+      color: var(--app-icone-tecnica);
+    }
+
+    &--doc[aria-pressed='true'] {
+      color: var(--app-icone-doc);
+    }
+
     &--cliente.atividade-documentos__icone--ativo {
       color: var(--app-icone-cliente);
     }

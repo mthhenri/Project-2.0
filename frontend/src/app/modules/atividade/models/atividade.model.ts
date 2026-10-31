@@ -53,3 +53,23 @@ export function severidadeStatusAtividade(status: TipoAtividadeStatusEnum): Seve
 export function rotuloStatusAtividade(status: TipoAtividadeStatusEnum): string {
   return ROTULO_POR_STATUS[status];
 }
+
+/** A forma do quadradinho de cada status no modo dividido da listagem (task 288): a atividade é um item de checklist. */
+export type FormaStatusAtividade = 'tracejado' | 'traco' | 'play' | 'check';
+
+export interface VisualStatusAtividade {
+  forma: FormaStatusAtividade;
+  /** Cor do tema (token CSS); Desenvolvendo usa a cor do tema, os demais a do significado. */
+  cor: string;
+}
+
+const VISUAL_POR_STATUS: Record<TipoAtividadeStatusEnum, VisualStatusAtividade> = {
+  [TipoAtividadeStatusEnum.PLANEJADA]:     { forma: 'tracejado', cor: 'var(--app-surface-500)' },
+  [TipoAtividadeStatusEnum.PENDENTE]:      { forma: 'traco',     cor: 'var(--p-orange-500)' },
+  [TipoAtividadeStatusEnum.DESENVOLVENDO]: { forma: 'play',      cor: 'var(--app-realce-primario)' },
+  [TipoAtividadeStatusEnum.DESENVOLVIDA]:  { forma: 'check',     cor: 'var(--p-green-500)' },
+};
+
+export function visualStatusAtividade(status: TipoAtividadeStatusEnum): VisualStatusAtividade {
+  return VISUAL_POR_STATUS[status];
+}

@@ -1,0 +1,13 @@
+@if (editavel()) {
+  <button
+    type="button"
+    class="prioridade-bolinha prioridade-bolinha--editavel"
+    [style.background]="cor()"
+    [pTooltip]="dica()"
+    tooltipPosition="top"
+    [attr.aria-label]="'Prioridade ' + prioridade().descricao + ', trocar'"
+    (click)="$event.stopPropagation(); trocar.emit($event)"
+  ></button>
+} @else {
+  <span class="prioridade-bolinha" [style.background]="cor()" [pTooltip]="dica()" tooltipPosition="top"></span>
+}

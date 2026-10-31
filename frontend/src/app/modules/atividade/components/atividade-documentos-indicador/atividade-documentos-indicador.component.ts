@@ -31,6 +31,8 @@ const DOCUMENTOS: readonly Documento[] = [
 export class AtividadeDocumentosIndicadorComponent {
   readonly atividade = input.required<AtividadeResumoDto>();
   readonly abrir = output<CampoDocumentoDaDemanda>();
+  /** O texto aberto no painel ao lado (task 288): o ícone dele fica marcado e, ao clicar de novo, quem hospeda fecha o painel. */
+  readonly campoAberto = input<CampoDocumentoDaDemanda | null>(null);
 
   readonly documentos = DOCUMENTOS;
 

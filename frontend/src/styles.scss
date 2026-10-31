@@ -48,13 +48,15 @@ $raio-borda-padrao: 0.5rem;
   // destacar o item selecionado. Acompanha a troca de cor do tema.
   --app-realce-primario: var(--p-primary-600);
 
-  // Ícones de descrição da demanda (cliente / técnica / documentação). Ancorados
-  // na cor primária para acompanhar a troca de tema, com um resíduo da família
-  // original (azul / índigo / ciano) preservando a distinção entre os tipos. Com
-  // o primário azul (padrão) o resultado fica praticamente igual ao original.
-  --app-icone-cliente: var(--p-primary-600);
-  --app-icone-tecnica: color-mix(in srgb, var(--p-primary-600) 65%, var(--p-indigo-600));
-  --app-icone-doc:     color-mix(in srgb, var(--p-primary-600) 65%, var(--p-cyan-600));
+  // Cores das três descrições da demanda (cliente / técnica / documentação) e das abas
+  // que as mostram (task 288). A técnica é a própria cor do tema; cliente e documentação
+  // giram o matiz dela em +/- `--app-giro-descricoes` graus, então as três ficam separadas
+  // em qualquer tema (o giro de 30 foi escolhido no POC com o tema azul). `max(s, 55)` dá
+  // cor ao tema sem matiz (preto, cinza), onde o giro por si só não mudaria nada.
+  --app-giro-descricoes: 30;
+  --app-icone-cliente: hsl(from var(--p-primary-600) calc(h + var(--app-giro-descricoes)) max(s, 55) l);
+  --app-icone-tecnica: var(--p-primary-600);
+  --app-icone-doc:     hsl(from var(--p-primary-600) calc(h - var(--app-giro-descricoes)) max(s, 55) l);
 
   // Realce do ícone de anotações do usuário: vibrante e distinto, também puxando
   // para a cor primária (resíduo de azul-céu mantém o brilho).
@@ -100,9 +102,9 @@ $raio-borda-padrao: 0.5rem;
 
   // No escuro, tons mais claros leem melhor sobre superfície escura. Mesma lógica
   // do tema claro: primário + resíduo da família original.
-  --app-icone-cliente: var(--p-primary-400);
-  --app-icone-tecnica: color-mix(in srgb, var(--p-primary-400) 65%, var(--p-indigo-400));
-  --app-icone-doc:     color-mix(in srgb, var(--p-primary-400) 65%, var(--p-cyan-400));
+  --app-icone-cliente: hsl(from var(--p-primary-400) calc(h + var(--app-giro-descricoes)) max(s, 55) l);
+  --app-icone-tecnica: var(--p-primary-400);
+  --app-icone-doc:     hsl(from var(--p-primary-400) calc(h - var(--app-giro-descricoes)) max(s, 55) l);
 
   // No escuro, tom mais claro mantém o brilho do azul-céu puxando para o primário.
   --app-icone-anotacao: color-mix(in srgb, var(--p-primary-400) 70%, var(--p-sky-400));

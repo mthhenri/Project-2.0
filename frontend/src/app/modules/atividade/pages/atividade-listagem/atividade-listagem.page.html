@@ -127,7 +127,8 @@
   @if (primeiraCarga()) {
     <app-skeleton-lista variante="tabela" [quantidade]="5" [cabecalhos]="esqueleto().cabecalhos" [larguras]="esqueleto().larguras" alturaLinha="5.25rem" />
   }
-  <div class="lista-recarga" [hidden]="primeiraCarga()" [class.conteudo-recarregando]="recarregando()">
+  <div class="atividade-listagem__area" [class.atividade-listagem__area--dividida]="dividido()">
+  <div class="lista-recarga atividade-listagem__lista" [hidden]="primeiraCarga()" [class.conteudo-recarregando]="recarregando()">
     <app-barra-recarga [ativa]="recarregando()" />
     @if (erroAoCarregar() && atividades().length > 0) {
       <div class="flex items-center gap-3 px-3 py-2 text-sm text-red-600" role="alert">
@@ -147,8 +148,9 @@
       [selection]="selecionadas"
       (selectionChange)="aoSelecionar($event)"
       (onLazyLoad)="aoCarregarTabela($event)"
-      [rowsPerPageOptions]="[10, 25, 50]"
-      [showCurrentPageReport]="true"
+      [rowsPerPageOptions]="dividido() ? undefined : [10, 25, 50]"
+      [showCurrentPageReport]="!dividido()"
+      [showPageLinks]="!dividido()"
       currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} atividades"
       class="p-datatable-sm"
     >
@@ -158,60 +160,100 @@
             <th class="atividade-listagem__coluna-selecao"><p-tableHeaderCheckbox ariaLabel="Selecionar todas as atividades da página" /></th>
           }
           <th>Atividade</th>
-          @if (sessao.eGestor()) {
-            <th>Usuário</th>
+          @if (!dividido()) {
+            @if (sessao.eGestor()) {
+              <th>Usuário</th>
+            }
+            <th>Prioridade</th>
           }
-          <th>Prioridade</th>
-          <th>Status</th>
-          <th>Tempo executado</th>
-          <th>Tags</th>
+          <th [class.w-14]="dividido()" [class.text-center]="dividido()">Status</th>
+          @if (!dividido()) {
+            <th>Tempo executado</th>
+            <th>Tags</th>
+          }
           <th class="atividade-listagem__coluna-acoes">Ações</th>
         </tr>
       </ng-template>
 
       <ng-template pTemplate="body" let-atividade>
-        <tr [class.atividade-listagem__linha--ativa]="atividadeEmExecucao(atividade)">
+        <tr [class.atividade-listagem__linha--ativa]="atividadeEmExecucao(atividade)" [class.atividade-listagem__linha--aberta]="aberta()?.atividadeId === atividade.id">
           @if (sessao.eGestor()) {
             <td class="atividade-listagem__coluna-selecao"><p-tableCheckbox [value]="atividade" [ariaLabel]="'Selecionar ' + atividade.nome" /></td>
           }
           <td>
             <div class="atividade-listagem__atividade">
-              <span class="atividade-listagem__atividade-nome">{{ atividade.nome }}</span>
+              <span class="atividade-listagem__atividade-nome" [class.cursor-pointer]="dividido()" (click)="abrirDemandaDaLinha(atividade)">
+                @if (dividido()) {
+                  <app-atividade-prioridade-bolinha
+                    [prioridade]="atividade.prioridade"
+                    [editavel]="podeEditar(atividade)"
+                    (trocar)="abrirSeletorPrioridade($event, atividade, prioridadePopover)"
+                  />
+                }
+                <span class="overflow-hidden text-ellipsis">{{ atividade.nome }}</span>
+              </span>
               @if (atividadeEmExecucao(atividade)) {
                 <app-atividade-em-execucao [inicio]="inicioDaExecucaoPropria(atividade)" />
               }
               <div class="atividade-listagem__demanda">
-                <app-atividade-documentos-indicador [atividade]="atividade" (abrir)="abrirDescricaoDemanda(atividade, $event)" />
+                <app-atividade-documentos-indicador
+                  [atividade]="atividade"
+                  [campoAberto]="aberta()?.atividadeId === atividade.id ? aberta()!.campo : null"
+                  (abrir)="alternarDemanda(atividade, $event)"
+                />
                 <span class="atividade-listagem__demanda-nome">{{ atividade.nomeProjeto }} › {{ atividade.nomeDemanda }}</span>
               </div>
             </div>
           </td>
-          @if (sessao.eGestor()) {
+          @if (!dividido()) {
+            @if (sessao.eGestor()) {
+              <td>
+                <div class="atividade-listagem__executor">
+                  <span class="atividade-listagem__avatar">{{ iniciais(atividade.nomeUsuario) }}</span>
+                  <span class="text-color">{{ atividade.nomeUsuario }}</span>
+                </div>
+              </td>
+            }
             <td>
-              <div class="atividade-listagem__executor">
-                <span class="atividade-listagem__avatar">{{ iniciais(atividade.nomeUsuario) }}</span>
-                <span class="text-color">{{ atividade.nomeUsuario }}</span>
-              </div>
+              @if (podeEditar(atividade)) {
+                <button
+                  type="button"
+                  class="atividade-listagem__status-gatilho"
+                  pTooltip="Trocar prioridade"
+                  tooltipPosition="top"
+                  (click)="abrirSeletorPrioridade($event, atividade, prioridadePopover)"
+                >
+                  <app-prioridade-selo [prioridade]="atividade.prioridade" />
+                  <i class="pi pi-chevron-down atividade-listagem__status-seta"></i>
+                </button>
+              } @else {
+                <app-prioridade-selo [prioridade]="atividade.prioridade" />
+              }
             </td>
           }
-          <td>
-            @if (podeEditar(atividade)) {
-              <button
-                type="button"
-                class="atividade-listagem__status-gatilho"
-                pTooltip="Trocar prioridade"
-                tooltipPosition="top"
-                (click)="abrirSeletorPrioridade($event, atividade, prioridadePopover)"
-              >
-                <app-prioridade-selo [prioridade]="atividade.prioridade" />
-                <i class="pi pi-chevron-down atividade-listagem__status-seta"></i>
-              </button>
-            } @else {
-              <app-prioridade-selo [prioridade]="atividade.prioridade" />
-            }
-          </td>
-          <td>
-            @if (podeTrocarStatus(atividade)) {
+          <td [class.w-14]="dividido()" [class.text-center]="dividido()">
+            @if (dividido()) {
+              @if (podeTrocarStatus(atividade)) {
+                <button
+                  type="button"
+                  class="atividade-listagem__status-gatilho"
+                  [pTooltip]="rotuloStatus(atividade.status) + ' (trocar)'"
+                  tooltipPosition="top"
+                  [attr.aria-label]="'Status ' + rotuloStatus(atividade.status) + ', trocar'"
+                  (click)="abrirSeletorStatus($event, atividade, statusPopover)"
+                >
+                  <app-atividade-status-icone [status]="atividade.status" />
+                </button>
+              } @else {
+                <span
+                  class="atividade-listagem__status-gatilho"
+                  [pTooltip]="atividadeEmExecucao(atividade) ? 'Status bloqueado durante execução em andamento' : rotuloStatus(atividade.status)"
+                  tooltipPosition="top"
+                >
+                  <app-atividade-status-icone [status]="atividade.status" />
+                </span>
+              }
+            } @else if (podeTrocarStatus(atividade)) {
               <button
                 type="button"
                 class="atividade-listagem__status-gatilho"
@@ -234,39 +276,41 @@
               />
             }
           </td>
-          <td>
-            <span
-              class="text-color"
-              [pTooltip]="unidadeTempo.emDias() ? (atividade.totalMinutosExecutados | tempoExibicao: false : 'minutos') : ''"
-            >{{ atividade.totalMinutosExecutados | tempoExibicao: unidadeTempo.emDias() : 'minutos' }}</span>
-          </td>
-          <td>
-            @if (podeEditar(atividade)) {
-              <button
-                #celulaTags
-                type="button"
-                [id]="'atividade-tags-' + atividade.id"
-                class="atividade-listagem__tags atividade-listagem__tags--editavel"
-                pTooltip="Editar tags"
-                tooltipPosition="top"
-                (click)="abrirTagsDaLinha($event, atividade, celulaTags)"
-              >
-                @if (atividade.tags.length > 0) {
-                  <app-tag-lista [tags]="atividade.tags" [compacto]="true" />
-                } @else {
-                  <span class="atividade-listagem__tags-vazio"><i class="pi pi-plus" aria-hidden="true"></i> Tag</span>
-                }
-              </button>
-            } @else {
-              <div class="atividade-listagem__tags">
-                @if (atividade.tags.length > 0) {
-                  <app-tag-lista [tags]="atividade.tags" [compacto]="true" />
-                } @else {
-                  <span class="text-muted-color">—</span>
-                }
-              </div>
-            }
-          </td>
+          @if (!dividido()) {
+            <td>
+              <span
+                class="text-color"
+                [pTooltip]="unidadeTempo.emDias() ? (atividade.totalMinutosExecutados | tempoExibicao: false : 'minutos') : ''"
+              >{{ atividade.totalMinutosExecutados | tempoExibicao: unidadeTempo.emDias() : 'minutos' }}</span>
+            </td>
+            <td>
+              @if (podeEditar(atividade)) {
+                <button
+                  #celulaTags
+                  type="button"
+                  [id]="'atividade-tags-' + atividade.id"
+                  class="atividade-listagem__tags atividade-listagem__tags--editavel"
+                  pTooltip="Editar tags"
+                  tooltipPosition="top"
+                  (click)="abrirTagsDaLinha($event, atividade, celulaTags)"
+                >
+                  @if (atividade.tags.length > 0) {
+                    <app-tag-lista [tags]="atividade.tags" [compacto]="true" />
+                  } @else {
+                    <span class="atividade-listagem__tags-vazio"><i class="pi pi-plus" aria-hidden="true"></i> Tag</span>
+                  }
+                </button>
+              } @else {
+                <div class="atividade-listagem__tags">
+                  @if (atividade.tags.length > 0) {
+                    <app-tag-lista [tags]="atividade.tags" [compacto]="true" />
+                  } @else {
+                    <span class="text-muted-color">—</span>
+                  }
+                </div>
+              }
+            </td>
+          }
           <td class="atividade-listagem__coluna-acoes">
             <div class="atividade-listagem__acoes">
               @if (podeExecutar(atividade)) {
@@ -307,7 +351,7 @@
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td [attr.colspan]="sessao.eGestor() ? 10 : 8">
+          <td [attr.colspan]="dividido() ? (sessao.eGestor() ? 4 : 3) : (sessao.eGestor() ? 10 : 8)">
             <div class="atividade-listagem__vazio">
               @if (erroAoCarregar()) {
                 <i class="pi pi-exclamation-triangle text-4xl text-muted-color" aria-hidden="true"></i>
@@ -336,66 +380,23 @@
       </ng-template>
     </p-table>
   </div>
+
+  @if (aberta(); as demandaAberta) {
+    <app-atividade-demanda-painel
+      [demandaId]="demandaAberta.demandaId"
+      [campo]="demandaAberta.campo"
+      [nomeProjeto]="demandaAberta.nomeProjeto"
+      [nomeDemanda]="demandaAberta.nomeDemanda"
+      (campoEscolhido)="trocarAbaDaDemanda($event)"
+      (fechar)="fecharDemanda()"
+      (textoSalvo)="aoTextoSalvo($event)"
+    />
+  }
+  </div>
 </div>
 
 <app-atividade-nova-dialog #novaDialog (aoCriar)="aoMudarFiltro()" />
 <app-atividade-prioridades-dialog #prioridadesDialog />
-
-
-<!-- Dialog: descrição da demanda -->
-<p-dialog
-  [visible]="mostrarDialogDescricao()"
-  (visibleChange)="mostrarDialogDescricao.set($event)"
-  [header]="cabecalhoDescricao()"
-  [modal]="true"
-  [style]="{ width: '56rem', maxWidth: '95vw', height: '80vh' }"
-  [contentStyle]="{ display: 'flex', flexDirection: 'column' }"
-  [draggable]="false"
-  [dismissableMask]="true"
->
-  @if (carregandoDescricao()) {
-    <div class="atividade-listagem__carregando">
-      <i class="pi pi-spin pi-spinner text-2xl text-muted-color"></i>
-    </div>
-  } @else if (editandoDescricao()) {
-    <form [formGroup]="formularioDescricaoDemanda" class="atividade-listagem__descricao-form atividade-listagem__descricao-form--cheio">
-      <app-markdown-editor
-        formControlName="valor"
-        [alturaMinima]="0"
-        [rotulo]="cabecalhoDescricao()"
-        class="atividade-listagem__editor"
-      />
-      <app-assistente-descricao
-        [textoAtual]="formularioDescricaoDemanda.value.valor || ''"
-        tipoEntidade="demanda"
-        [contextoEntidade]="nomeDemandaDescricao()"
-        (textoAuxiliadoAceito)="aceitarDescricaoAssistenteDemanda($event)"
-      />
-    </form>
-  } @else if (conteudoDescricao(); as conteudo) {
-    <div class="atividade-listagem__descricao-rica">
-      <app-markdown-visualizador [texto]="conteudo" />
-    </div>
-  } @else {
-    <p class="text-muted-color">Sem conteúdo</p>
-  }
-
-  <ng-template pTemplate="footer">
-    @if (!carregandoDescricao() && podeEditarCampoDescricao()) {
-      @if (editandoDescricao()) {
-        <p-button label="Cancelar" [text]="true" (onClick)="editandoDescricao.set(false)" />
-        <p-button
-          label="Salvar"
-          icon="pi pi-check"
-          [loading]="salvandoDescricaoDemanda()"
-          (onClick)="salvarDescricaoDemanda()"
-        />
-      } @else {
-        <p-button label="Editar" icon="pi pi-pencil" [outlined]="true" (onClick)="abrirEdicaoDescricao()" />
-      }
-    }
-  </ng-template>
-</p-dialog>
 
 <!-- Dialog: iniciar/encerrar execução -->
 <p-dialog

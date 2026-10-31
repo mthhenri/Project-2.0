@@ -1,0 +1,12 @@
+:host {
+  display: inline-flex;
+}
+
+.atividade-status-icone {
+  display: block;
+
+  // O check sobre o quadrado preenchido: a cor da superfície do tema.
+  &__marca {
+    stroke: var(--app-surface-0);
+  }
+}

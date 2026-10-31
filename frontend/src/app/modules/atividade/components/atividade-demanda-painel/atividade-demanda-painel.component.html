@@ -1,0 +1,54 @@
+<div class="atividade-demanda-painel">
+  <header class="atividade-demanda-painel__cabecalho">
+    <div class="atividade-demanda-painel__titulos">
+      <span class="atividade-demanda-painel__trilha">{{ nomeProjeto() }} › Demanda</span>
+      <h2 class="atividade-demanda-painel__titulo">{{ nomeDemanda() }}</h2>
+      @if (demanda(); as demandaAtual) {
+        <div class="atividade-demanda-painel__meta">
+          <span class="atividade-demanda-painel__status" [style.--cor-status]="corDoStatus()">{{ rotuloDoStatus() }}</span>
+          <span class="atividade-demanda-painel__horas">{{ demandaAtual.horasEstimadas }}h estimadas</span>
+        </div>
+      }
+    </div>
+    <div class="atividade-demanda-painel__acoes">
+      @if (podeEditar() && !editando()) {
+        <p-button label="Editar" icon="pi pi-pencil" severity="secondary" [outlined]="true" (onClick)="iniciarEdicao()" />
+      }
+      <p-button label="Fechar" icon="pi pi-times" severity="secondary" [outlined]="true" (onClick)="solicitarFechar()" />
+    </div>
+  </header>
+
+  <div class="atividade-demanda-painel__abas" role="tablist" aria-label="Textos da demanda">
+    @for (aba of abas; track aba.campo) {
+      <button
+        type="button"
+        role="tab"
+        class="atividade-demanda-painel__aba atividade-demanda-painel__aba--{{ aba.tipo }}"
+        [attr.aria-selected]="campo() === aba.campo"
+        [attr.aria-label]="aba.rotulo"
+        (click)="escolherAba(aba.campo)"
+      >
+        <i class="{{ aba.icone }}" aria-hidden="true"></i>
+        {{ aba.curto }}
+      </button>
+    }
+  </div>
+
+  <div class="atividade-demanda-painel__corpo" role="tabpanel">
+    @if (carregando()) {
+      <div class="atividade-demanda-painel__estado"><i class="pi pi-spin pi-spinner" aria-hidden="true"></i> Carregando…</div>
+    } @else if (erro()) {
+      <div class="atividade-demanda-painel__estado" role="alert">Não foi possível carregar a demanda.</div>
+    } @else if (editando()) {
+      <app-demanda-descricao-editor [demandaId]="demandaId()" [campo]="campo()" (salva)="aoSalvar()" (fecharSolicitado)="sairDaEdicao()" />
+    } @else if (conteudo()) {
+      <div class="atividade-demanda-painel__texto">
+        <app-markdown-visualizador [texto]="conteudo()" />
+      </div>
+    } @else {
+      <div class="atividade-demanda-painel__estado">Sem conteúdo</div>
+    }
+  </div>
+</div>
+
+<p-confirmDialog key="atividade-painel-fechar" />

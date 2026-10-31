@@ -1,0 +1,19 @@
+<svg class="atividade-status-icone" [style.color]="visual().cor" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  @switch (visual().forma) {
+    @case ('tracejado') {
+      <rect x="3.5" y="3.5" width="17" height="17" rx="4" stroke-dasharray="3.4 3.2" />
+    }
+    @case ('traco') {
+      <rect x="3.5" y="3.5" width="17" height="17" rx="4" />
+      <path d="M8 12h8" />
+    }
+    @case ('play') {
+      <rect x="3.5" y="3.5" width="17" height="17" rx="4" />
+      <path d="M10 8.5l5 3.5-5 3.5z" fill="currentColor" />
+    }
+    @case ('check') {
+      <rect x="3.5" y="3.5" width="17" height="17" rx="4" fill="currentColor" />
+      <path class="atividade-status-icone__marca" d="M8 12.5l3 3 5-6" />
+    }
+  }
+</svg>

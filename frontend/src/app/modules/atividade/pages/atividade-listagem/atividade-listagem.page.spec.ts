@@ -606,31 +606,128 @@ describe('AtividadeListagemPage: play e pausa pela linha', () => {
   });
 });
 
-describe('AtividadeListagemPage: descrições da demanda', () => {
-  it('abre o conteúdo da demanda, guarda em cache e só deixa editar quem pode editar a demanda', async () => {
-    const { montado } = await montarPagina();
-    const atividade = criarAtividade(1, { demandaTemDescricaoTecnica: true });
-    await carregar(montado, [atividade]);
-    montado.componente.abrirDescricaoDemanda(atividade, 'descricaoTecnica');
-    responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/10'), { id: 10, nome: 'Demanda dez', descricaoTecnica: '# Texto', podeEditar: true });
-    expect(montado.componente.conteudoDescricao()).toBe('# Texto');
-    expect(montado.componente.cabecalhoDescricao()).toBe('Demanda dez — Descrição técnica');
-    expect(montado.componente.podeEditarCampoDescricao()).toBe(true);
+const DEMANDA_DEZ = { id: 10, nome: 'Demanda dez', projetoId: 5, status: 'PLANEJADA', horasEstimadas: 8, descricaoTecnica: '# Texto tecnico', descricaoCliente: 'Texto do cliente', documentacao: '', podeEditar: true };
 
-    montado.componente.abrirDescricaoDemanda(atividade, 'descricaoCliente');
-    montado.http.expectNone((r) => r.url.endsWith('/demanda/10'));
-    expect(montado.componente.podeEditarCampoDescricao()).toBe(false);
+const iconeDeTexto = (montado: Montado, linha: number, rotulo: string) =>
+  montado.elemento.querySelectorAll('tbody tr')[linha].querySelector<HTMLButtonElement>(`.atividade-documentos__icone[aria-label="${rotulo}"]`)!;
+const cabecalhos = (montado: Montado) => Array.from(montado.elemento.querySelectorAll('thead th')).map((coluna) => coluna.textContent?.trim());
+
+describe('AtividadeListagemPage: demanda ao lado da lista (task 288)', () => {
+  async function comDuasLinhas(opcoes: OpcoesPagina = {}) {
+    const { montado } = await montarPagina(opcoes);
+    await carregar(montado, [criarAtividade(1), criarAtividade(2, { demandaId: 11, nomeDemanda: 'Demanda onze' })]);
+    return montado;
+  }
+  async function abrir(montado: Montado, linha: number, rotulo: string, demandaId = 10) {
+    iconeDeTexto(montado, linha, rotulo).click();
+    await montado.atualizar();
+    responderSucesso(esperarRequisicao(montado.http, 'GET', `/demanda/${demandaId}`), { ...DEMANDA_DEZ, id: demandaId });
+    await montado.atualizar();
+  }
+
+  it('sem nenhum ícone clicado a tela é a tabela cheia e não há painel nem dialog de descrição', async () => {
+    const montado = await comDuasLinhas();
+    expect(montado.componente.dividido()).toBe(false);
+    expect(cabecalhos(montado)).toEqual(expect.arrayContaining(['Usuário', 'Prioridade', 'Tempo executado', 'Tags']));
+    expect(montado.elemento.querySelector('app-atividade-demanda-painel')).toBeNull();
+    expect(montado.elemento.querySelector('app-atividade-prioridade-bolinha')).toBeNull();
   });
 
-  it('sem permissão na demanda, o campo editável não pode ser salvo', async () => {
+  it('clicar no ícone divide a tela: some Usuário, Prioridade, Tempo e Tags, e prioridade e status viram bolinha e ícone', async () => {
+    const montado = await comDuasLinhas();
+    await abrir(montado, 0, 'Descrição técnica');
+    expect(montado.componente.dividido()).toBe(true);
+    expect(cabecalhos(montado)).not.toEqual(expect.arrayContaining(['Usuário']));
+    expect(cabecalhos(montado)).toEqual(expect.arrayContaining(['Atividade', 'Status', 'Ações']));
+    expect(cabecalhos(montado)).not.toContain('Prioridade');
+    expect(cabecalhos(montado)).not.toContain('Tempo executado');
+    expect(cabecalhos(montado)).not.toContain('Tags');
+    expect(montado.elemento.querySelectorAll('app-atividade-prioridade-bolinha').length).toBe(2);
+    expect(montado.elemento.querySelectorAll('app-atividade-status-icone').length).toBe(2);
+    expect(montado.elemento.querySelector('app-atividade-demanda-painel')?.textContent).toContain('Demanda dez');
+    expect(iconeDeTexto(montado, 0, 'Descrição técnica').getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('clicar de novo no ícone já aberto fecha o painel e volta à tabela cheia', async () => {
+    const montado = await comDuasLinhas();
+    await abrir(montado, 0, 'Descrição técnica');
+    iconeDeTexto(montado, 0, 'Descrição técnica').click();
+    await montado.atualizar();
+    expect(montado.componente.dividido()).toBe(false);
+    expect(montado.elemento.querySelector('app-atividade-demanda-painel')).toBeNull();
+    expect(cabecalhos(montado)).toContain('Tempo executado');
+  });
+
+  it('outra aba troca o texto; outra linha troca a demanda, mantendo a aba', async () => {
+    const montado = await comDuasLinhas();
+    await abrir(montado, 0, 'Descrição técnica');
+    expect(montado.elemento.querySelector('app-atividade-demanda-painel')?.textContent).toContain('Texto tecnico');
+
+    iconeDeTexto(montado, 0, 'Descrição do cliente').click();
+    await montado.atualizar();
+    expect(montado.componente.aberta()?.campo).toBe('descricaoCliente');
+    expect(montado.elemento.querySelector('app-atividade-demanda-painel')?.textContent).toContain('Texto do cliente');
+
+    iconeDeTexto(montado, 1, 'Descrição do cliente').click();
+    await montado.atualizar();
+    expect(montado.componente.aberta()).toEqual(expect.objectContaining({ atividadeId: 2, demandaId: 11, campo: 'descricaoCliente' }));
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/11'), { ...DEMANDA_DEZ, id: 11, nome: 'Demanda onze' });
+  });
+
+  it('clicar no nome de outra linha, com a demanda ao lado, passa a demanda dela para o painel na mesma aba', async () => {
+    const montado = await comDuasLinhas();
+    await abrir(montado, 0, 'Descrição técnica');
+    montado.elemento.querySelectorAll<HTMLElement>('tbody tr')[1].querySelector<HTMLElement>('.atividade-listagem__atividade-nome')!.click();
+    await montado.atualizar();
+    expect(montado.componente.aberta()).toEqual(expect.objectContaining({ atividadeId: 2, demandaId: 11, campo: 'descricaoTecnica' }));
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/11'), { ...DEMANDA_DEZ, id: 11, nome: 'Demanda onze' });
+  });
+
+  it('o botão Fechar do painel e o Esc fecham a demanda', async () => {
+    const montado = await comDuasLinhas();
+    await abrir(montado, 0, 'Descrição técnica');
+    const fechar = Array.from(montado.elemento.querySelectorAll('app-atividade-demanda-painel button')).find((botao) => botao.textContent?.trim() === 'Fechar') as HTMLButtonElement;
+    fechar.click();
+    await montado.atualizar();
+    expect(montado.componente.dividido()).toBe(false);
+
+    await abrir(montado, 0, 'Documentação');
+    document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await montado.atualizar();
+    expect(montado.componente.dividido()).toBe(false);
+  });
+
+  it('nesse modo a prioridade e o status continuam editáveis: a bolinha e o ícone abrem os seletores', async () => {
+    const montado = await comDuasLinhas();
+    await abrir(montado, 0, 'Descrição técnica');
+    const popover = { hide: vi.fn(), toggle: vi.fn() } as never;
+    const [bolinha] = Array.from(montado.elemento.querySelectorAll<HTMLButtonElement>('button.prioridade-bolinha'));
+    expect(bolinha.getAttribute('aria-label')).toBe('Prioridade Média, trocar');
+    const iconeStatus = montado.elemento.querySelector<HTMLButtonElement>('button[aria-label="Status Planejada, trocar"]');
+    expect(iconeStatus).not.toBeNull();
+
+    const atividade = montado.componente.atividades()[0];
+    montado.componente.abrirSeletorPrioridade(new Event('click'), atividade, popover);
+    montado.componente.alterarPrioridade({ ...PRIORIDADE, codigo: TipoAtividadePrioridadeEnum.ALTA, descricao: 'Alta', ordem: 2 }, popover);
+    expect(esperarRequisicao(montado.http, 'PUT', '/atividade/1').request.body).toEqual({ prioridade: 'ALTA' });
+  });
+
+  it('desenvolvedor não troca a prioridade nem o status da atividade de outro: a bolinha e o ícone não viram botão', async () => {
     const { montado } = await montarPagina({ usuario: TipoUsuarioEnum.DESENVOLVEDOR });
-    const atividade = criarAtividade(1);
-    await carregar(montado, [atividade]);
-    montado.componente.abrirDescricaoDemanda(atividade, 'documentacao');
-    responderSucesso(esperarRequisicao(montado.http, 'GET', '/demanda/10'), { id: 10, nome: 'Demanda dez', documentacao: 'x', podeEditar: false });
-    expect(montado.componente.podeEditarCampoDescricao()).toBe(false);
-    montado.componente.salvarDescricaoDemanda();
-    montado.http.expectNone((r) => r.method === 'PUT');
+    await carregar(montado, [criarAtividade(1, { usuarioId: 9 })]);
+    await abrir(montado, 0, 'Descrição técnica');
+    expect(montado.elemento.querySelector('button.prioridade-bolinha')).toBeNull();
+    expect(montado.elemento.querySelector('span.prioridade-bolinha')).not.toBeNull();
+    expect(montado.elemento.querySelector('button[aria-label^="Status"]')).toBeNull();
+  });
+
+  it('o ícone da linha acende e apaga conforme o texto salvo no painel', async () => {
+    const montado = await comDuasLinhas();
+    montado.componente.aoTextoSalvo({ demandaId: 10, campo: 'documentacao', temConteudo: true });
+    expect(montado.componente.atividades()[0].demandaTemDocumentacao).toBe(true);
+    montado.componente.aoTextoSalvo({ demandaId: 10, campo: 'documentacao', temConteudo: false });
+    expect(montado.componente.atividades()[0].demandaTemDocumentacao).toBe(false);
+    expect(montado.componente.atividades()[1].demandaTemDocumentacao).toBe(false);
   });
 });
 

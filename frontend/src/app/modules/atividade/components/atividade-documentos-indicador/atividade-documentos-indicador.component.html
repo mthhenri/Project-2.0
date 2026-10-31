@@ -4,6 +4,7 @@
       type="button"
       class="atividade-documentos__icone atividade-documentos__icone--{{ documento.tipo }}"
       [class.atividade-documentos__icone--ativo]="temConteudo(documento.campo)"
+      [attr.aria-pressed]="campoAberto() === documento.campo"
       [attr.aria-label]="documento.rotulo"
       [pTooltip]="documento.rotulo"
       tooltipPosition="top"

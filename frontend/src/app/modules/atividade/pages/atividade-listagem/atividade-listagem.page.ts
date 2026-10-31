@@ -13,8 +13,6 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { DialogModule } from 'primeng/dialog';
 import { DatePickerModule } from 'primeng/datepicker';
-import { MarkdownEditorComponent } from '../../../../shared/components/markdown-editor/markdown-editor.component';
-import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
 import { Tag } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { PopoverModule, Popover } from 'primeng/popover';
@@ -29,7 +27,6 @@ import {
   TagResumoDto,
   UsuarioResumoDto,
   TipoUsuarioStatusEnum,
-  DemandaRecuperadaDto,
   ExecucaoItemDto,
   ExecucaoIniciarDto,
   ExecucaoEncerrarDto,
@@ -71,7 +68,10 @@ import { focoEmCampo, haSobreposicaoAberta } from '../../../../core/utils/atalho
 import { AtividadeEmExecucaoComponent } from '../../components/atividade-em-execucao/atividade-em-execucao.component';
 import { TagListaComponent } from '../../../../shared/components/tag-lista/tag-lista.component';
 import { AtividadeTagsPopoverComponent } from '../../components/atividade-tags-popover/atividade-tags-popover.component';
-import { AtividadeDocumentosIndicadorComponent } from '../../components/atividade-documentos-indicador/atividade-documentos-indicador.component';
+import { AtividadeDocumentosIndicadorComponent, CampoDocumentoDaDemanda } from '../../components/atividade-documentos-indicador/atividade-documentos-indicador.component';
+import { AtividadeDemandaPainelComponent } from '../../components/atividade-demanda-painel/atividade-demanda-painel.component';
+import { AtividadePrioridadeBolinhaComponent } from '../../components/atividade-prioridade-bolinha/atividade-prioridade-bolinha.component';
+import { AtividadeStatusIconeComponent } from '../../components/atividade-status-icone/atividade-status-icone.component';
 import { AtividadeBarraEmMassaComponent } from '../../components/atividade-barra-em-massa/atividade-barra-em-massa.component';
 import {
   FiltrosAtividade,
@@ -81,8 +81,6 @@ import {
   lerFiltrosDaUrl,
   paraParametrosDaUrl,
 } from '../../utils/filtros-atividade.util';
-
-type CampoDescricaoDemanda = 'descricaoCliente' | 'descricaoTecnica' | 'documentacao';
 
 @Component({
   selector: 'app-atividade-listagem',
@@ -105,8 +103,6 @@ type CampoDescricaoDemanda = 'descricaoCliente' | 'descricaoTecnica' | 'document
     TextareaModule,
     DialogModule,
     DatePickerModule,
-    MarkdownEditorComponent,
-    MarkdownVisualizadorComponent,
     Tag,
     TooltipModule,
     PopoverModule,
@@ -114,6 +110,9 @@ type CampoDescricaoDemanda = 'descricaoCliente' | 'descricaoTecnica' | 'document
     AtividadeEmExecucaoComponent,
     AtividadeTagsPopoverComponent,
     AtividadeDocumentosIndicadorComponent,
+    AtividadeDemandaPainelComponent,
+    AtividadeStatusIconeComponent,
+    AtividadePrioridadeBolinhaComponent,
     AtividadeBarraEmMassaComponent,
     ExecucaoRegistroDialogComponent,
     AssistenteDescricaoComponent,
@@ -212,28 +211,11 @@ export class AtividadeListagemPage implements OnInit {
 
   private readonly novaDialog = viewChild.required<AtividadeNovaDialogComponent>('novaDialog');
 
-  // --- Dialog: descrições da demanda ---
-  readonly mostrarDialogDescricao = signal<boolean>(false);
-  readonly carregandoDescricao = signal<boolean>(false);
-  readonly demandaDescricao = signal<DemandaRecuperadaDto | null>(null);
-  readonly nomeDemandaDescricao = signal<string>('');
-  readonly campoDescricao = signal<CampoDescricaoDemanda | null>(null);
-  readonly editandoDescricao = signal<boolean>(false);
-  readonly salvandoDescricaoDemanda = signal<boolean>(false);
-  private readonly cacheDemandas = new Map<number, DemandaRecuperadaDto>();
-
-  readonly formularioDescricaoDemanda = this.formBuilder.group({
-    valor: [''],
-  });
-
-  private readonly rotulosDescricao: Record<CampoDescricaoDemanda, string> = {
-    descricaoCliente: 'Descrição do cliente',
-    descricaoTecnica: 'Descrição técnica',
-    documentacao:     'Documentação',
-  };
-
-  /** Apenas descrição técnica e documentação são editáveis — e somente por gestor. */
-  private readonly camposEditaveis: CampoDescricaoDemanda[] = ['descricaoTecnica', 'documentacao'];
+  // --- Demanda ao lado da lista (task 288): clicar num dos três ícones divide a tela, em vez de abrir um dialog ---
+  readonly aberta = signal<{ atividadeId: number; demandaId: number; nomeProjeto: string; nomeDemanda: string; campo: CampoDocumentoDaDemanda } | null>(null);
+  /** A lista encolhida com a demanda ao lado: some Usuário, Tempo e Tags, e prioridade e status viram bolinha e ícone. */
+  readonly dividido = computed(() => this.aberta() !== null);
+  private readonly painel = viewChild(AtividadeDemandaPainelComponent);
 
   // --- Dialog: iniciar/encerrar execução ---
   readonly mostrarDialogExecucao = signal<boolean>(false);
@@ -288,7 +270,9 @@ export class AtividadeListagemPage implements OnInit {
   aoTeclar(evento: KeyboardEvent): void {
     if (evento.defaultPrevented || evento.ctrlKey || evento.metaKey || evento.altKey) return;
     if (focoEmCampo(evento.target) || haSobreposicaoAberta()) return;
-    if (evento.key === '/') {
+    if (evento.key === 'Escape' && this.aberta()) {
+      this.fecharDemanda();
+    } else if (evento.key === '/') {
       evento.preventDefault();
       document.getElementById('filtro-busca')?.focus();
     } else if (evento.key.toLowerCase() === 'c' && !evento.shiftKey) {
@@ -541,114 +525,49 @@ export class AtividadeListagemPage implements OnInit {
   }
 
   // ---------------------------------------------------------------------------
-  // Descrições da demanda (somente leitura)
+  // Demanda ao lado da lista (task 288)
   // ---------------------------------------------------------------------------
 
-  abrirDescricaoDemanda(atividade: AtividadeResumoDto, campo: CampoDescricaoDemanda): void {
-    this.campoDescricao.set(campo);
-    this.nomeDemandaDescricao.set(atividade.nomeDemanda);
-    this.editandoDescricao.set(false);
-    this.mostrarDialogDescricao.set(true);
-
-    const demandaEmCache = this.cacheDemandas.get(atividade.demandaId);
-    if (demandaEmCache) {
-      this.demandaDescricao.set(demandaEmCache);
-      return;
-    }
-
-    this.carregandoDescricao.set(true);
-    this.demandaDescricao.set(null);
-    this.demandaService
-      .recuperar(atividade.demandaId)
-      .pipe(finalize(() => this.carregandoDescricao.set(false)))
-      .subscribe({
-        next: (resposta) => {
-          if (resposta.sucesso && resposta.dados) {
-            this.cacheDemandas.set(atividade.demandaId, resposta.dados);
-            this.demandaDescricao.set(resposta.dados);
-          }
-        },
-      });
-  }
-
-  cabecalhoDescricao(): string {
-    const campo = this.campoDescricao();
-    const rotulo = campo ? this.rotulosDescricao[campo] : '';
-    return `${this.nomeDemandaDescricao()} — ${rotulo}`;
-  }
-
-  conteudoDescricao(): string | null {
-    const demanda = this.demandaDescricao();
-    const campo = this.campoDescricao();
-    if (!demanda || !campo) return null;
-    return demanda[campo];
-  }
-
-  /** Classe do ícone de descrição: base + tipo + `--ativo` quando há conteúdo (azul, bold, glow). */
-  classeIconeDescricao(
-    atividade: AtividadeResumoDto,
-    campo: CampoDescricaoDemanda,
-    tipo: 'cliente' | 'tecnica' | 'doc',
-  ): string {
-    const temConteudo =
-      campo === 'descricaoCliente' ? atividade.demandaTemDescricaoCliente
-      : campo === 'descricaoTecnica' ? atividade.demandaTemDescricaoTecnica
-      : atividade.demandaTemDocumentacao;
-    const base = `atividade-listagem__icone-descricao atividade-listagem__icone-descricao--${tipo}`;
-    return temConteudo ? `${base} atividade-listagem__icone-descricao--ativo` : base;
-  }
-
-  /**
-   * Descrição técnica e documentação são editáveis pela listagem desde que o usuário
-   * possa editar a demanda (gestor, ou desenvolvedor membro — flag `podeEditar`).
-   */
-  podeEditarCampoDescricao(): boolean {
-    const campo = this.campoDescricao();
-    const demanda = this.demandaDescricao();
-    return !!campo && this.camposEditaveis.includes(campo) && !!demanda?.podeEditar;
-  }
-
-  abrirEdicaoDescricao(): void {
-    this.formularioDescricaoDemanda.reset({ valor: this.conteudoDescricao() ?? '' });
-    this.editandoDescricao.set(true);
-  }
-
-  salvarDescricaoDemanda(): void {
-    const demanda = this.demandaDescricao();
-    const campo = this.campoDescricao();
-    if (!demanda || !campo || !this.podeEditarCampoDescricao()) return;
-
-    const valor = this.formularioDescricaoDemanda.value.valor ?? '';
-    this.salvandoDescricaoDemanda.set(true);
-
-    this.demandaService
-      .alterar(demanda.id, { [campo]: valor })
-      .pipe(finalize(() => this.salvandoDescricaoDemanda.set(false)))
-      .subscribe({
-        next: (resposta) => {
-          if (resposta.sucesso && resposta.dados) {
-            const demandaAtualizada = { ...demanda, [campo]: valor };
-            this.cacheDemandas.set(demanda.id, demandaAtualizada);
-            this.demandaDescricao.set(demandaAtualizada);
-            this.atualizarFlagDescricao(demanda.id, campo, valor);
-            this.editandoDescricao.set(false);
-            this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Descrição salva' });
-          }
-        },
-      });
-  }
-
-  aceitarDescricaoAssistenteDemanda(texto: string): void {
-    this.formularioDescricaoDemanda.patchValue({ valor: texto });
-  }
-
-  private atualizarFlagDescricao(demandaId: number, campo: CampoDescricaoDemanda, valor: string): void {
-    const temConteudo = valor.trim() !== '';
-    const chave =
-      campo === 'descricaoTecnica' ? 'demandaTemDescricaoTecnica' : 'demandaTemDocumentacao';
-    this.atividades.update((lista) =>
-      lista.map((item) => (item.demandaId === demandaId ? { ...item, [chave]: temConteudo } : item)),
+  /** O ícone da linha: abre a demanda ao lado; no que já está aberto, fecha; noutra linha ou aba, troca. */
+  alternarDemanda(atividade: AtividadeResumoDto, campo: CampoDocumentoDaDemanda): void {
+    const atual = this.aberta();
+    const jaAberto = atual?.atividadeId === atividade.id && atual.campo === campo;
+    this.confirmarAntesDeSair(() =>
+      this.aberta.set(
+        jaAberto
+          ? null
+          : { atividadeId: atividade.id, demandaId: atividade.demandaId, nomeProjeto: atividade.nomeProjeto, nomeDemanda: atividade.nomeDemanda, campo },
+      ),
     );
+  }
+
+  /** Clique no nome da atividade com a demanda ao lado: a demanda dela passa para o painel, na mesma aba. */
+  abrirDemandaDaLinha(atividade: AtividadeResumoDto): void {
+    const atual = this.aberta();
+    if (atual && atual.atividadeId !== atividade.id) this.alternarDemanda(atividade, atual.campo);
+  }
+
+  trocarAbaDaDemanda(campo: CampoDocumentoDaDemanda): void {
+    this.aberta.update((atual) => (atual ? { ...atual, campo } : atual));
+  }
+
+  fecharDemanda(): void {
+    this.confirmarAntesDeSair(() => this.aberta.set(null));
+  }
+
+  /** Texto salvo no painel: acende ou apaga o ícone da linha conforme a demanda tenha ou não o texto. */
+  aoTextoSalvo(evento: { demandaId: number; campo: CampoDocumentoDaDemanda; temConteudo: boolean }): void {
+    const chave =
+      evento.campo === 'descricaoCliente' ? 'demandaTemDescricaoCliente'
+      : evento.campo === 'descricaoTecnica' ? 'demandaTemDescricaoTecnica'
+      : 'demandaTemDocumentacao';
+    this.atividades.update((lista) => lista.map((item) => (item.demandaId === evento.demandaId ? { ...item, [chave]: evento.temConteudo } : item)));
+  }
+
+  private confirmarAntesDeSair(seguir: () => void): void {
+    const painel = this.painel();
+    if (painel) painel.confirmarAntesDeSair(seguir);
+    else seguir();
   }
 
   // ---------------------------------------------------------------------------

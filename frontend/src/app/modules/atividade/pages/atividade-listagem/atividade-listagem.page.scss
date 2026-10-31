@@ -90,18 +90,31 @@
     color: var(--p-text-muted-color);
   }
 
-  &__descricao-rica {
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow-y: auto;
-
-    padding: 0.75rem 1rem;
+  // A lista e a demanda lado a lado (task 288): a lista encolhe para a esquerda, com a largura animada, e a demanda ocupa o resto.
+  &__area {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
   }
 
-  &__descricao-form--cheio,
-  &__editor {
-    flex: 1 1 auto;
-    min-height: 0;
+  &__lista {
+    flex: 0 0 100%;
+    min-width: 0;
+
+    @media (prefers-reduced-motion: no-preference) {
+      transition: flex-basis 0.3s ease;
+    }
+  }
+
+  &__area--dividida &__lista {
+    flex-basis: 31rem;
+  }
+
+  &__atividade-nome {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
   }
 
   &__tags {
@@ -234,19 +247,6 @@
   &__erro {
     font-size: 0.75rem;
     color: var(--p-red-500);
-  }
-
-  &__carregando {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-  }
-
-  &__descricao-form {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
   }
 
   &__execucao-atividade {
@@ -392,6 +392,11 @@
     }
   }
 
+  // A linha cuja demanda está aberta ao lado.
+  ::ng-deep tr.atividade-listagem__linha--aberta > td {
+    background: var(--app-realce-sutil);
+  }
+
   ::ng-deep tr.atividade-listagem__linha--ativa > td {
     background: color-mix(in srgb, var(--p-primary-color) 7%, var(--p-datatable-row-background));
   }
@@ -447,5 +452,17 @@
   .p-menu-item-label,
   .p-menu-item-icon {
     color: var(--p-red-500);
+  }
+}
+
+// Largura curta: a demanda passa para baixo da lista, que volta a ocupar a largura toda.
+@media (max-width: 980px) {
+  .atividade-listagem__area {
+    flex-direction: column;
+  }
+
+  .atividade-listagem__area .atividade-listagem__lista {
+    flex: 1 1 auto;
+    width: 100%;
   }
 }
