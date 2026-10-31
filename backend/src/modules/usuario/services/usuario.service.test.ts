@@ -209,3 +209,22 @@ test('administrador altera a senha e restaura outro administrador', async () => 
   await servico.restaurar({ id: 2 }, ADMINISTRADOR_LOGADO);
   assert.deepEqual(repositorio.chamadas, ['alterarSenha', 'restaurar']);
 });
+
+test('alterar: trocar o login por um já em uso é recusado', async () => {
+  const repositorio = { ...criarRepositorioDeUsuarios({ ...DESENVOLVEDOR_ATIVO, login: 'ana.souza' } as never, [1]), validarLogin: async () => true };
+  const servico = criarServico(repositorio);
+  await assert.rejects(() => servico.alterar({ id: 3, login: 'joao.silva' }, GESTOR_LOGADO), BusinessException);
+  assert.deepEqual(repositorio.chamadas, []);
+});
+
+test('alterar: trocar o login por um livre é permitido', async () => {
+  const repositorio = criarRepositorioDeUsuarios({ ...DESENVOLVEDOR_ATIVO, login: 'ana.souza' } as never, [1]);
+  await criarServico(repositorio).alterar({ id: 3, login: 'ana.lima' }, GESTOR_LOGADO);
+  assert.deepEqual(repositorio.chamadas, ['alterar']);
+});
+
+test('alterar: repetir o próprio login não consulta nem recusa', async () => {
+  const repositorio = { ...criarRepositorioDeUsuarios({ ...DESENVOLVEDOR_ATIVO, login: 'ana.souza' } as never, [1]), validarLogin: async () => true };
+  await criarServico(repositorio).alterar({ id: 3, login: 'ana.souza', nomeCompleto: 'Ana Souza' }, GESTOR_LOGADO);
+  assert.deepEqual(repositorio.chamadas, ['alterar']);
+});

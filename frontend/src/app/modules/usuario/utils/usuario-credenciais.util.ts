@@ -1,7 +1,3 @@
-const CARACTERES_SENHA = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
-const SIMBOLOS_SENHA = '@#$%&*!?';
-export const TAMANHO_SENHA_GERADA = 12;
-
 /** `João da Silva` → `joao.silva` (primeiro e último nome, sem acento); vazio se não houver nome. */
 export function sugerirLogin(nomeCompleto: string): string {
   const partes = nomeCompleto
@@ -15,21 +11,28 @@ export function sugerirLogin(nomeCompleto: string): string {
   return partes.length === 1 ? partes[0] : `${partes[0]}.${partes[partes.length - 1]}`;
 }
 
-function sortear(limite: number): number {
-  const sorteio = new Uint32Array(1);
-  crypto.getRandomValues(sorteio);
-  return sorteio[0] % limite;
+function nomeEmPartes(nomeCompleto: string): string[] {
+  return nomeCompleto
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^A-Za-z0-9\s]/g, '')
+    .split(/\s+/)
+    .filter(Boolean);
 }
 
-/** Senha aleatória legível: sem caracteres ambíguos (0/O, 1/l/I) e com ao menos um símbolo e um dígito. */
-export function gerarSenha(): string {
-  const caracteres = Array.from({ length: TAMANHO_SENHA_GERADA - 2 }, () => CARACTERES_SENHA[sortear(CARACTERES_SENHA.length)]);
-  caracteres.push(SIMBOLOS_SENHA[sortear(SIMBOLOS_SENHA.length)], String(2 + sortear(8)));
-  for (let indice = caracteres.length - 1; indice > 0; indice--) {
-    const outro = sortear(indice + 1);
-    [caracteres[indice], caracteres[outro]] = [caracteres[outro], caracteres[indice]];
-  }
-  return caracteres.join('');
+function comInicialMaiuscula(texto: string): string {
+  return texto.charAt(0).toUpperCase() + texto.slice(1).toLowerCase();
+}
+
+/**
+ * A senha sugerida é sempre `Dev@` + inicial do primeiro nome + último nome + `!`: `Matheus Caranguejo` → `Dev@MCaranguejo!`.
+ * Sem acento nem símbolo; nome único vira `Dev@Madonna!`; sem nome, vazia.
+ */
+export function sugerirSenha(nomeCompleto: string): string {
+  const partes = nomeEmPartes(nomeCompleto);
+  if (partes.length === 0) return '';
+  const resto = partes.length === 1 ? comInicialMaiuscula(partes[0]) : `${partes[0][0].toUpperCase()}${comInicialMaiuscula(partes[partes.length - 1])}`;
+  return `Dev@${resto}!`;
 }
 
 export function iniciaisDoNome(nomeCompleto: string): string {

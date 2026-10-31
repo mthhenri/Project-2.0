@@ -31,12 +31,4 @@
     font-size: 0.75rem;
     color: var(--p-text-muted-color);
   }
-
-  &__status {
-    display: flex;
-    align-items: center;
-    gap: 0.625rem;
-    cursor: pointer;
-    font-size: 0.875rem;
-  }
 }

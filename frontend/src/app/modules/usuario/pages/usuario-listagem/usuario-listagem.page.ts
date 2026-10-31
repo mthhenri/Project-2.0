@@ -77,7 +77,6 @@ export class UsuarioListagemPage implements OnInit {
 
   private readonly campoBusca = viewChild<ElementRef<HTMLInputElement>>('campoBusca');
   private readonly anotacoesDialog = viewChild.required(UsuarioAnotacoesDialogComponent);
-  private readonly formularioDialog = viewChild.required(UsuarioFormularioDialogComponent);
 
   readonly formularioFiltros = this.formBuilder.group({ busca: [''] });
   readonly tipoFiltro = signal<TipoUsuarioEnum | null>(null);
@@ -233,11 +232,6 @@ export class UsuarioListagemPage implements OnInit {
   podeVerAnotacoes(usuario: UsuarioResumoDto): boolean {
     const atual = this.sessao.usuarioAtual();
     return !!atual && podeAbrirAnotacoes(atual, usuario);
-  }
-
-  /** Clicar na linha abre o Editar, para quem pode editar essa pessoa; para os demais a linha não faz nada. */
-  abrirEdicaoDaLinha(usuario: UsuarioResumoDto): void {
-    if (this.podeEditar(usuario)) this.formularioDialog().abrirEdicao(usuario.id);
   }
 
   /** Quem pode alterar o cadastro de `usuario`: gestor, ou a própria pessoa. */

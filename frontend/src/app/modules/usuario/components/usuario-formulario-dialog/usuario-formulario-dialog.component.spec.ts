@@ -24,14 +24,14 @@ const USUARIO_EDITADO = {
 };
 
 describe('UsuarioFormularioDialogComponent — criar', () => {
-  it('abre limpo, com senha gerada e tipo desenvolvedor', async () => {
+  it('abre limpo, sem senha até haver nome, e com tipo desenvolvedor', async () => {
     const { montado } = await montar(TipoUsuarioEnum.GESTOR);
     montado.componente.abrir();
     await montado.atualizar();
     const valores = montado.componente.formulario.getRawValue();
     expect(montado.componente.editando()).toBe(false);
     expect(valores.nomeCompleto).toBe('');
-    expect(valores.senhaNaoEncriptada).toHaveLength(12);
+    expect(valores.senhaNaoEncriptada).toBe('');
     expect(valores.tipo).toBe(TipoUsuarioEnum.DESENVOLVEDOR);
     expect(document.body.textContent).toContain('Novo Usuário');
   });
@@ -46,6 +46,20 @@ describe('UsuarioFormularioDialogComponent — criar', () => {
     montado.componente.formulario.controls.login.setValue('jsilva');
     montado.componente.formulario.controls.nomeCompleto.setValue('Outro Nome');
     expect(montado.componente.formulario.controls.login.value).toBe('jsilva');
+  });
+
+  it('a senha sugerida acompanha o nome até ser editada à mão, e não há como gerar outra', async () => {
+    const { montado } = await montar(TipoUsuarioEnum.GESTOR);
+    montado.componente.abrir();
+    await montado.atualizar();
+    montado.componente.formulario.controls.nomeCompleto.setValue('Matheus Caranguejo');
+    expect(montado.componente.formulario.controls.senhaNaoEncriptada.value).toBe('Dev@MCaranguejo!');
+    expect(document.body.querySelector('[aria-label="Gerar outra senha"]')).toBeNull();
+
+    montado.componente.aoEditarSenha();
+    montado.componente.formulario.controls.senhaNaoEncriptada.setValue('Minha#Senha1');
+    montado.componente.formulario.controls.nomeCompleto.setValue('Outro Nome');
+    expect(montado.componente.formulario.controls.senhaNaoEncriptada.value).toBe('Minha#Senha1');
   });
 
   it('gestor não vê "Administrador" nas opções de tipo', async () => {
@@ -123,23 +137,23 @@ describe('UsuarioFormularioDialogComponent — editar', () => {
     return contexto;
   }
 
-  it('carrega o usuário no formulário e esconde login e senha', async () => {
+  it('carrega o usuário no formulário com o login, sem senha e sem status', async () => {
     const { montado } = await abrirEdicao(TipoUsuarioEnum.GESTOR);
     expect(montado.componente.editando()).toBe(true);
-    expect(montado.componente.formulario.getRawValue()).toMatchObject({ nomeCompleto: 'Beto Lima', cargoTitulo: 'Dev', horasDiariasNecessarias: 6, ativo: true });
+    expect(montado.componente.formulario.getRawValue()).toMatchObject({ nomeCompleto: 'Beto Lima', cargoTitulo: 'Dev', horasDiariasNecessarias: 6, login: 'beto' });
     expect(document.body.textContent).toContain('Editar Usuário');
-    expect(document.body.querySelector('#login')).toBeNull();
+    expect((document.body.querySelector('#login') as HTMLInputElement).value).toBe('beto');
     expect(document.body.querySelector('#senhaNaoEncriptada')).toBeNull();
+    expect(document.body.querySelector('p-toggleswitch')).toBeNull();
   });
 
-  it('gestor editando outra pessoa envia tipo e status', async () => {
+  it('gestor editando outra pessoa envia o login e o tipo, nunca o status', async () => {
     const { montado, alterados } = await abrirEdicao(TipoUsuarioEnum.GESTOR);
-    montado.componente.formulario.patchValue({ tipo: TipoUsuarioEnum.GESTOR, ativo: false });
+    montado.componente.formulario.patchValue({ tipo: TipoUsuarioEnum.GESTOR, login: 'beto.lima' });
     montado.componente.salvar();
     const requisicao = esperarRequisicao(montado.http, 'PUT', '/usuario/50');
     expect(requisicao.request.body).toEqual({
-      nomeCompleto: 'Beto Lima', cargoTitulo: 'Dev', horasDiariasNecessarias: 6,
-      status: TipoUsuarioStatusEnum.INATIVO, tipo: TipoUsuarioEnum.GESTOR,
+      login: 'beto.lima', nomeCompleto: 'Beto Lima', cargoTitulo: 'Dev', horasDiariasNecessarias: 6, tipo: TipoUsuarioEnum.GESTOR,
     });
     responderSucesso(requisicao, USUARIO_EDITADO);
     await montado.atualizar();
@@ -147,15 +161,20 @@ describe('UsuarioFormularioDialogComponent — editar', () => {
     expect(montado.componente.mostrarDialog()).toBe(false);
   });
 
-  it('ninguém muda o próprio tipo nem o próprio status: o corpo vai sem esses campos', async () => {
+  it('ninguém muda o próprio tipo: o corpo vai sem ele (e o login segue editável)', async () => {
     const proprio = { ...USUARIO_EDITADO, id: criarUsuarioTeste().id, tipo: TipoUsuarioEnum.GESTOR };
     const { montado } = await abrirEdicao(TipoUsuarioEnum.GESTOR, proprio);
     expect(montado.componente.podeEditarTipo()).toBe(false);
-    expect(montado.componente.podeEditarStatus()).toBe(false);
     montado.componente.salvar();
     const corpo = esperarRequisicao(montado.http, 'PUT', `/usuario/${proprio.id}`).request.body;
     expect('tipo' in corpo).toBe(false);
-    expect('status' in corpo).toBe(false);
+    expect(corpo.login).toBe('beto');
+  });
+
+  it('editar não gera sugestão de login nem de senha ao mudar o nome', async () => {
+    const { montado } = await abrirEdicao(TipoUsuarioEnum.GESTOR);
+    montado.componente.formulario.controls.nomeCompleto.setValue('Outro Nome');
+    expect(montado.componente.formulario.controls.login.value).toBe('beto');
   });
 
   it('ao editar um administrador a opção "Administrador" aparece para mostrar o valor atual, mesmo para o gestor', async () => {

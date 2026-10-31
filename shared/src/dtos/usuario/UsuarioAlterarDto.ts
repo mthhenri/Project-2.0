@@ -1,9 +1,17 @@
+import { Transform } from 'class-transformer';
 import { IsOptional, IsString, IsEnum, IsNumber, Min, Max, MinLength } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { TipoUsuarioStatusEnum } from '../../enums/tipo-usuario-status.enum';
 import { TipoUsuarioEnum } from '../../enums/tipo-usuario.enum';
 
 export class UsuarioAlterarDto {
+  @ApiPropertyOptional({ example: 'joao.silva' })
+  @Transform(({ value }) => typeof value === 'string' ? value.toLowerCase().trim() : value)
+  @IsOptional()
+  @IsString()
+  @MinLength(4)
+  login?: string;
+
   @ApiPropertyOptional({ example: 'João Silva' })
   @IsOptional()
   @IsString()

@@ -154,25 +154,18 @@ describe('UsuarioListagemPage — ações por tipo de usuário', () => {
   });
 });
 
-describe('UsuarioListagemPage — clique na linha (task 280)', () => {
+describe('UsuarioListagemPage — a linha não tem clique', () => {
   const primeiraLinha = (montado: Montado) => montado.elemento.querySelector<HTMLElement>('.usuario-listagem__linha')!;
 
-  it('o gestor clica na linha e abre o Editar daquela pessoa (não existe mais o perfil em leitura)', async () => {
+  it('clicar na linha não abre o Editar nem faz pedido; só o lápis edita', async () => {
     const montado = await montarListagem(TipoUsuarioEnum.GESTOR);
     await carregar(montado, [resumo(2)]);
-    expect(primeiraLinha(montado).classList.contains('usuario-listagem__linha--editavel')).toBe(true);
-    primeiraLinha(montado).click();
-    expect(montado.http.expectOne((r) => r.method === 'GET' && r.url.endsWith('/usuario/2')).request.method).toBe('GET');
-  });
-
-  it('o desenvolvedor só abre a própria linha; a de outra pessoa não é clicável nem faz pedido', async () => {
-    const montado = await montarListagem(TipoUsuarioEnum.DESENVOLVEDOR);
-    await carregar(montado, [resumo(2)]);
     const linha = primeiraLinha(montado);
-    expect(linha.classList.contains('usuario-listagem__linha--editavel')).toBe(false);
     expect(linha.hasAttribute('tabindex')).toBe(false);
     linha.click();
+    linha.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
     montado.http.expectNone((r) => r.url.includes('/usuario/'));
+    expect(botaoPorRotulo(montado, 'Editar usuário')).not.toBeNull();
   });
 });
 

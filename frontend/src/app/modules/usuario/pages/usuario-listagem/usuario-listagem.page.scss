@@ -76,11 +76,6 @@
   &__linha {
     transition: opacity 0.15s;
 
-    // Clicar na linha abre o Editar; sem permissão de editar a linha não é clicável.
-    &--editavel {
-      cursor: pointer;
-    }
-
     &--inativa {
       opacity: 0.6;
     }

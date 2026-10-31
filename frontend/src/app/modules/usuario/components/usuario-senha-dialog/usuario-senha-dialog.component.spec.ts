@@ -12,20 +12,16 @@ async function abrir() {
 }
 
 describe('UsuarioSenhaDialogComponent', () => {
-  it('abre com o nome da pessoa e uma senha nova já gerada', async () => {
+  it('abre com o nome da pessoa e a senha sugerida (Dev@ + inicial + sobrenome + !)', async () => {
     const montado = await abrir();
     expect(montado.componente.usuarioNome()).toBe('Carla Dias');
-    expect(montado.componente.formulario.controls.senhaNova.value).toHaveLength(12);
+    expect(montado.componente.formulario.controls.senhaNova.value).toBe('Dev@CDias!');
     expect(montado.componente.mostrarDialog()).toBe(true);
   });
 
-  it('gerar outra senha troca o valor e zera o aviso de copiada', async () => {
-    const montado = await abrir();
-    const antes = montado.componente.formulario.controls.senhaNova.value;
-    montado.componente.senhaCopiada.set(true);
-    montado.componente.gerarNovaSenha();
-    expect(montado.componente.formulario.controls.senhaNova.value).not.toBe(antes);
-    expect(montado.componente.senhaCopiada()).toBe(false);
+  it('não oferece gerar outra senha', async () => {
+    await abrir();
+    expect(document.body.querySelector('[aria-label="Gerar outra senha"]')).toBeNull();
   });
 
   it('senha com menos de 8 caracteres é recusada e não chama a API', async () => {

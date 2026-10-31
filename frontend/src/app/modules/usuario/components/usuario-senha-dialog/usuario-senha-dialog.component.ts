@@ -9,9 +9,9 @@ import { MessageService } from 'primeng/api';
 import { UsuarioService } from '../../services/usuario.service';
 import { DialogFormularioDirective } from '../../../../shared/directives/dialog-formulario.directive';
 import { DialogDicaAtalhosComponent } from '../../../../shared/components/dialog-dica-atalhos/dialog-dica-atalhos.component';
-import { gerarSenha } from '../../utils/usuario-credenciais.util';
+import { sugerirSenha } from '../../utils/usuario-credenciais.util';
 
-/** Alterar senha direto da linha (task 113): a nova senha já vem gerada, visível e copiável. */
+/** Alterar senha direto da linha (task 113): a nova senha já vem sugerida (`Dev@MCaranguejo!`), visível e copiável. */
 @Component({
   selector: 'app-usuario-senha-dialog',
   standalone: true,
@@ -37,13 +37,9 @@ export class UsuarioSenhaDialogComponent {
   abrir(usuarioId: number, nomeCompleto: string): void {
     this.usuarioId = usuarioId;
     this.usuarioNome.set(nomeCompleto);
-    this.gerarNovaSenha();
-    this.mostrarDialog.set(true);
-  }
-
-  gerarNovaSenha(): void {
     this.senhaCopiada.set(false);
-    this.formulario.reset({ senhaNova: gerarSenha() });
+    this.formulario.reset({ senhaNova: sugerirSenha(nomeCompleto) });
+    this.mostrarDialog.set(true);
   }
 
   async copiarSenha(): Promise<void> {

@@ -90,10 +90,6 @@
         <tr
           class="usuario-listagem__linha"
           [class.usuario-listagem__linha--inativa]="usuario.status === 'INATIVO'"
-          [class.usuario-listagem__linha--editavel]="podeEditar(usuario)"
-          [attr.tabindex]="podeEditar(usuario) ? 0 : null"
-          (click)="abrirEdicaoDaLinha(usuario)"
-          (keydown.enter)="abrirEdicaoDaLinha(usuario)"
         >
           <td><app-usuario-cartao [usuario]="usuario" /></td>
           <td class="text-muted-color">{{ usuario.cargoTitulo }}</td>
@@ -103,7 +99,7 @@
               [severity]="severidadeTipo(usuario.tipo)"
             />
           </td>
-          <td class="usuario-listagem__coluna-status" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()">
+          <td class="usuario-listagem__coluna-status">
             <label class="usuario-listagem__status">
               <p-toggleswitch
                 [ngModel]="usuario.status === 'ATIVO'"
@@ -117,7 +113,7 @@
             </label>
           </td>
           @if (sessao.eGestor()) {
-            <td class="usuario-listagem__coluna-anotacoes" (click)="$event.stopPropagation(); podeVerAnotacoes(usuario) && anotacoesDialog.abrir(usuario.id, usuario.nomeCompleto)">
+            <td class="usuario-listagem__coluna-anotacoes" (click)="podeVerAnotacoes(usuario) && anotacoesDialog.abrir(usuario.id, usuario.nomeCompleto)">
               @if (podeVerAnotacoes(usuario)) {
                 <p-button
                   icon="pi pi-file-edit"
@@ -127,12 +123,11 @@
                   [pTooltip]="usuario.temAnotacoes ? 'Ver anotações' : 'Adicionar anotações'"
                   tooltipPosition="left"
                   [styleClass]="usuario.temAnotacoes ? 'usuario-listagem__btn-anotacao--ativo' : 'usuario-listagem__btn-anotacao--vazio'"
-                  (keydown.enter)="$event.stopPropagation()"
                 />
               }
             </td>
           }
-          <td (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()">
+          <td>
             <div class="usuario-listagem__acoes">
               @if (podeEditar(usuario)) {
                 <p-button

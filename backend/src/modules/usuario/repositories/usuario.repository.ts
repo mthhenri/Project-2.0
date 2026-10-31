@@ -233,6 +233,10 @@ export class UsuarioRepository extends BaseRepository<Usuario> {
     const setClauses: string[] = ['updated_date = NOW()'];
     const parametros: Record<string, unknown> = { id: dto.id };
 
+    if (dto.login !== undefined) {
+      setClauses.push('login = :login');
+      parametros.login = dto.login;
+    }
     if (dto.nomeCompleto !== undefined) {
       setClauses.push('nome_completo = :nomeCompleto');
       parametros.nomeCompleto = dto.nomeCompleto;

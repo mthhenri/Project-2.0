@@ -257,3 +257,11 @@ testarComBanco('listarAtivos: só os ativos e não excluídos, com nome e tipo, 
     [gestor.id, 'AAB Ativo Gestor', TipoUsuarioEnum.GESTOR],
   ]);
 });
+
+testarComBanco('alterar troca o login e o devolve', async (conexao) => {
+  const repositorio = criarRepositorio(UsuarioRepository, conexao);
+  const usuario = await criarDesenvolvedor(conexao, { nomeCompleto: 'Quem Troca' });
+  const alterado = await repositorio.alterar({ id: usuario.id, login: 'login.trocado' });
+  assert.equal(alterado.login, 'login.trocado');
+  assert.equal(await repositorio.validarLogin({ login: 'login.trocado' }), true);
+});

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { gerarSenha, iniciaisDoNome, sugerirLogin, TAMANHO_SENHA_GERADA } from './usuario-credenciais.util';
+import { iniciaisDoNome, sugerirLogin, sugerirSenha } from './usuario-credenciais.util';
 
 describe('sugerirLogin', () => {
   it('usa primeiro e último nome, sem acento e em minúsculas', () => {
@@ -19,19 +19,21 @@ describe('sugerirLogin', () => {
   });
 });
 
-describe('gerarSenha', () => {
-  it('tem o tamanho certo, ao menos um símbolo e um dígito, e nenhum caractere ambíguo', () => {
-    for (let tentativa = 0; tentativa < 50; tentativa++) {
-      const senha = gerarSenha();
-      expect(senha).toHaveLength(TAMANHO_SENHA_GERADA);
-      expect(senha).toMatch(/[@#$%&*!?]/);
-      expect(senha).toMatch(/[2-9]/);
-      expect(senha).not.toMatch(/[0O1lI]/);
-    }
+describe('sugerirSenha', () => {
+  it('é Dev@ + inicial do primeiro nome + último nome + !', () => {
+    expect(sugerirSenha('Matheus Caranguejo')).toBe('Dev@MCaranguejo!');
+    expect(sugerirSenha('  ana   maria  de souza ')).toBe('Dev@ASouza!');
   });
 
-  it('gera senhas diferentes a cada chamada', () => {
-    expect(new Set(Array.from({ length: 20 }, () => gerarSenha())).size).toBeGreaterThan(18);
+  it('sem acento nem símbolo, e o último nome sempre com a inicial maiúscula', () => {
+    expect(sugerirSenha('João da Conceição')).toBe('Dev@JConceicao!');
+    expect(sugerirSenha('maria D’Ávila NETO')).toBe('Dev@MNeto!');
+  });
+
+  it('nome único vira Dev@Nome!; sem nome, vazia', () => {
+    expect(sugerirSenha('Madonna')).toBe('Dev@Madonna!');
+    expect(sugerirSenha('')).toBe('');
+    expect(sugerirSenha('!!! ???')).toBe('');
   });
 });
 

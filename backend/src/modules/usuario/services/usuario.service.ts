@@ -127,6 +127,10 @@ export class UsuarioService {
     }
 
     this.validarPermissaoSobreAdministrador(usuarioEncontrado, usuarioAtivo);
+    // O login é único entre os usuários ativos; repetir o próprio login não é troca.
+    if (dto.login !== undefined && dto.login !== usuarioEncontrado.login && (await this.usuarioRepositorio.validarLogin({ login: dto.login }))) {
+      throw new BusinessException('Login já está em uso');
+    }
     if (dto.tipo === TipoUsuarioEnum.ADMINISTRADOR) {
       this.validarPermissaoDeAdministrador(usuarioAtivo);
     }

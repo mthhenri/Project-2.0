@@ -22,15 +22,6 @@
           class="usuario-senha-dialog__senha-campo"
         />
         <p-button
-          icon="pi pi-refresh"
-          [text]="true"
-          severity="secondary"
-          pTooltip="Gerar outra senha"
-          tooltipPosition="top"
-          ariaLabel="Gerar outra senha"
-          (onClick)="gerarNovaSenha()"
-        />
-        <p-button
           [icon]="senhaCopiada() ? 'pi pi-check' : 'pi pi-copy'"
           [text]="true"
           severity="secondary"
