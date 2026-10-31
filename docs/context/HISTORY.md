@@ -12,6 +12,10 @@
 
 ---
 
+## 2026-10-31 — I-019 Teste que garante o stub do `class-validator` do frontend
+
+O frontend lê os DTOs do `shared` com stubs no lugar de `class-validator`, `class-transformer` e `@nestjs/swagger` (`frontend/src/stubs/`), então decorator novo sem o stub só quebrava o `ng build`, depois de o `shared` e o backend ficarem verdes (já aconteceu com `IsDate`, `ArrayMaxSize`, `IsUUID` e `ValidateNested`). Novo `shared/src/stubs-do-frontend.test.ts`: lê como texto todos os fontes do `shared` (menos `*.test.ts`), junta os nomes importados de cada um dos três pacotes e confere que cada stub os exporta; a falha lista o nome e o DTO que o usa. Cobre os três pacotes, não só o `class-validator`. **Contraprova:** tirei `IsUUID` do stub e o teste falhou apontando `MensagemDiretaEnviarDto.ts`; stub restaurado. **Testes:** shared com 4 testes novos. Também entrou a ideia **I-046** (mostrar no Project Web o tempo até o próximo check-in, no menu do perfil), e a I-019 saiu de `IDEAS.md` e de `PRIORITIES.md`.
+
 ## 2026-10-31 — 292 Projeto: sem rolagem da página e seletor Demandas / Volume no cabeçalho
 
 Pedido do autor com uma captura: no detalhe do projeto a janela rolava um pouco, e o seletor ficaria melhor no cabeçalho. O seletor foi para a coluna da direita do cartão do cabeçalho, **abaixo** dos botões. A página agora ocupa a altura da área de conteúdo (`height: 100%` em coluna) e a Árvore fica com o que sobra (`flex: 1`, mínimo de 20rem), rolando por dentro; antes ela tinha `clamp(30rem, 100dvh - 22rem, 60rem)`, que ignorava a altura real do cabeçalho. As demandas escondidas na visão Volume usam `display: none` (classe `--oculto`; o `hidden` do Tailwind perdia para o `display: flex` do componente). **Medido** na rolagem de `main`: nenhuma em 1913x917 (a do autor), 1920x1080 e 1366x768 (neste, a Árvore fica com o mínimo, 320 px). **Testes:** frontend 2393, build e `repo:verificar` ok. Detalhe em `docs/specs/done/292-projeto-sem-scroll-e-seletor-no-cabecalho/verificacao.md`.
