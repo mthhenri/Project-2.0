@@ -12,6 +12,12 @@
 
 ---
 
+## 2026-10-31 — PRIORIDADES.md: arquivo novo com a ordem de trabalho decidida com o autor
+
+Depois da triagem de `PROBLEMS.md` e de `IDEAS.md`, o autor percebeu que só o backlog de specs não diz **em que ordem** fazer as coisas, e que nenhum arquivo de `docs/context/` respondia a isso. Criado `docs/context/PRIORIDADES.md`: só ponteiros (`P-0NN`, `I-0NN`, specs) com a decisão e a data, em seções (Agora, Em seguida, A pensar, Esperando o Git, Esperando o chat em grupo, Sem prioridade, Aguardando o autor, Specs do backlog sem ordem). Só o autor muda a ordem; item resolvido ou virado spec sai de lá. A tabela de responsabilidades de `CLAUDE.md`/`AGENTS.md` (idênticos) e a árvore de `SYSTEM.SPEC.md` ganharam a linha do arquivo novo. `MEMORY.md` não foi tocado (há linhas da outra sessão por commitar).
+
+Duas ideias novas saíram da conversa e entraram em `IDEAS.md`: **I-043** (manter os pacotes dos provedores de IA atualizados para usar os modelos mais novos) e **I-044** (avisar no chat que houve pesquisa na internet, com as referências). Ordem do bloco "Agora": P-061, P-063, I-036, I-019, I-043; as specs do backlog ficaram sem ordem, à espera do autor.
+
 ## 2026-10-31 — Triagem de PROBLEMS.md: P-036 e P-027 resolvidos, saem da lista
 
 Revisão com o autor de todos os itens de `PROBLEMS.md`. **P-036** (dois testes de `mensagem-direta-notificacoes` falhando) não reproduz: passa sozinho (16 testes) e a suíte inteira do frontend passou várias vezes em 2026-10-31 (2381 testes em 192 arquivos), então foi tratado como instabilidade de ambiente. **P-027** (quebra visual do cronômetro em Ponto/Execuções): o autor testou ao vivo e confirmou que está resolvido; a causa provável era o chip da execução na topbar invadindo o logo numa janela estreita, corrigido em 2026-10-30. Decisões sobre os demais: **P-023, P-025, P-043** a resolver (nessa ordem de conversa, sem prazo); **P-061 e P-063** são os próximos a resolver, por parecerem simples; **P-049** segue aberto por enquanto; **P-029 e P-030** ficam `ACEITO` (não vale o esforço); **P-059** segue aberto (instável e complexo); **P-001** (lint) fica para decidir se vale resolver.

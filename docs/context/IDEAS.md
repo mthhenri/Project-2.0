@@ -187,3 +187,17 @@
 - **Origem:** pedido do autor em 2026-10-31, ao decidir os dialogs da `reduzir-dialogs.spec.md`: "acho que a gente pode ajustar algumas formas do cadastro". Ele não disse quais ajustes.
 - **Por quê:** a criação é o que sobrou no dialog depois que a edição do projeto foi para o cabeçalho (271).
 - **Custo aparente:** baixo, só frontend, mas a lista de ajustes precisa vir do autor antes de especificar (por exemplo ordem dos campos, código gerado, volume inicial).
+
+### I-043 — Manter os pacotes dos provedores de IA atualizados · chat IA/backend
+
+- **Ideia:** atualizar os pacotes dos três provedores (`@anthropic-ai/sdk`, `openai`, `@google/genai`) e manter isso em dia, para o sistema poder usar sempre os modelos mais novos assim que saírem.
+- **Origem:** conversa de 2026-10-31 com o autor, ao triar as ideias.
+- **Por quê:** um modelo novo pode exigir uma versão recente do pacote, e o nome do modelo é texto livre na configuração da IA; sem pacote em dia, o administrador não consegue trocar para o modelo mais novo.
+- **Custo aparente:** baixo a médio: subir as versões, conferir mudanças que quebram (tipos, nomes de campo, a ferramenta de busca de cada provedor, ver I-041), rodar os testes da IA e conferir ao vivo um provedor de cada. Decidir se a atualização vira rotina.
+
+### I-044 — Avisar no chat que houve pesquisa na internet, com as referências · chat IA
+
+- **Ideia:** quando a IA responde uma dúvida de código pesquisando na internet, mostrar na mensagem um chip "foi feita uma busca na internet" e, se o provedor trouxer fontes, listar as referências.
+- **Origem:** conversa de 2026-10-31 com o autor, ao falar do custo da pesquisa (I-041).
+- **Por quê:** o usuário precisa saber de onde veio a resposta e poder conferir as fontes; hoje a pesquisa entra sem aviso (task 263).
+- **Custo aparente:** ler as citações que cada provedor devolve junto da ferramenta de busca (formatos diferentes nos três), guardar na mensagem e mostrar no chat; vale ver junto com a contagem de buscas da I-041.

@@ -79,6 +79,7 @@ project-2.0/
       PROBLEMS.md         ← o que está quebrado agora
       MEMORY.md           ← onde as coisas vivem (somente ponteiros)
       IDEAS.md            ← o que ainda não é sistema
+      PRIORIDADES.md      ← em que ordem fazemos (só ponteiros e decisões do autor)
     specs/
       backlog/            ← tasks a implementar
       active/             ← task em andamento na sessão atual
