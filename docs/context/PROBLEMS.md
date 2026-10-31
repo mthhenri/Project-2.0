@@ -46,15 +46,6 @@
 - **Correção:** passar o intervalo e o contexto à consulta do armazenamento (`ArmazenamentoDeChat`, nos três repositórios) ou, no mínimo, sinalizar o truncamento.
 - **Desde:** 2026-10-20 (task 201).
 
-### P-027 — Quebra visual do cronômetro correndo em Ponto/Execuções não reproduzida · `ABERTO` · ponto/execucao/frontend
-
-- **Sintoma:** o autor relatou que as telas de Ponto e Execuções "quebram visualmente" com o horário rodando.
-- **Causa:** não reproduzida. A task 201 corrigiu um desalinhamento real (atividade em colunas diferentes no card de Ponto da equipe) e mediu 9 s de cronômetro sem tremor de largura em Chromium/Linux; o defeito do autor pode ser outro (fonte monoespaçada diferente no Windows, outro estado da tela).
-- **Contorno:** nenhum conhecido.
-- **Correção:** precisa de uma captura da tela quebrada e do ambiente (sistema, navegador ou Project Desktop, largura da janela).
-- **Desde:** 2026-10-20.
-- **Nota (2026-10-30):** o autor trouxe a captura: o chip da execução na topbar invadia o logo e a barra lateral numa janela de ~720 px (corrigido, ver `HISTORY.md`). O chip aparece em toda tela e tem o cronômetro correndo, então provavelmente era esta a "quebra" de Ponto/Execuções; confirmar com o autor antes de fechar o item.
-
 ### P-029 — Custos da IA: alias que não é prefixo do id datado aparece como modelo sem preço · `ACEITO` · ia-custo
 
 - **Sintoma:** com um alias como `claude-sonnet-4-0` (o provedor devolve `claude-sonnet-4-20250514`), o uso aparece como um modelo à parte, "sem preço", mesmo com o alias precificado.
@@ -70,15 +61,6 @@
 - **Contorno:** o armazenamento Postgres é provisório (só o ambiente de teste, `SCHEMA.md` "Tabelas provisórias"), e a consulta é só do administrador. OpenSearch e Elasticsearch filtram por `range` indexado.
 - **Correção:** índice em `created_date` e filtro por intervalo de `timestamptz`, se a tabela provisória crescer.
 - **Desde:** 2026-10-20 (task 202).
-
-### P-036 — Dois testes de `mensagem-direta-notificacoes` falham, inclusive sozinhos · `ABERTO` · frontend/mensagem-direta
-
-- **Sintoma:** `escolher uma posição grava o conjunto com ela e descarta o arranjo arrastado` e `se o servidor recusa a posição, a tela volta à anterior e o menu avisa` falham (`querySelector`/`textContent` de `null`) em `mensagem-direta-notificacoes.component.spec.ts`, rodando só esse arquivo.
-- **Causa:** não investigada; falham também sem as mudanças da task 245 (conferido com `git stash`). Suspeita: o menu de posição do popup (task 221, popover do PrimeNG) não abre no teste.
-- **Contorno:** nenhum; a tela funciona (verificada ao vivo na 221).
-- **Correção:** reproduzir o teste, ver se o popover abre e ajustar o teste ou o componente.
-- **Desde:** 2026-10-26 (visto no fecho da task 245).
-- **Nota (2026-10-30):** não reproduzido; passa sozinho (16 testes) e na suíte inteira do frontend. Se não voltar a aparecer, pode virar flaky de ambiente e o item sair.
 
 ### P-043 — Chat IA: pergunta sem resposta (falha ou timeout) mas com custo registrado · `ABERTO` · chat IA/backend
 

@@ -12,6 +12,10 @@
 
 ---
 
+## 2026-10-31 — Triagem de PROBLEMS.md: P-036 e P-027 resolvidos, saem da lista
+
+Revisão com o autor de todos os itens de `PROBLEMS.md`. **P-036** (dois testes de `mensagem-direta-notificacoes` falhando) não reproduz: passa sozinho (16 testes) e a suíte inteira do frontend passou várias vezes em 2026-10-31 (2381 testes em 192 arquivos), então foi tratado como instabilidade de ambiente. **P-027** (quebra visual do cronômetro em Ponto/Execuções): o autor testou ao vivo e confirmou que está resolvido; a causa provável era o chip da execução na topbar invadindo o logo numa janela estreita, corrigido em 2026-10-30. Decisões sobre os demais: **P-023, P-025, P-043** a resolver (nessa ordem de conversa, sem prazo); **P-061 e P-063** são os próximos a resolver, por parecerem simples; **P-049** segue aberto por enquanto; **P-029 e P-030** ficam `ACEITO` (não vale o esforço); **P-059** segue aberto (instável e complexo); **P-001** (lint) fica para decidir se vale resolver.
+
 ## 2026-10-31 — 273/274: preparação do commit dos seeds manuais de desenvolvimento
 
 Autor autorizou versionar o cenário completo e as conversas. Revisados os bloqueios: APP_AMBIENTE deve ser development explícito, NODE_ENV=production e DB_SSL=true são recusados, OpenSearch exige HTTP loopback na porta 9200 e PostgreSQL local no CLI completo. A limpeza dos três índices continua exigindo --limpar-opensearch; não há integração ao startup ou às migrations. Nova rodada focada: cinco testes aprovados (segurança, fixture e conflitos). Os gates completos e aplicação real estão nos relatórios 273 e 274. Commit preparado somente com os seeds, comandos e documentação correspondente; alteração de contexto de outra tarefa permanece fora do recorte. Projeto segue sem lint (P-001).
