@@ -9,6 +9,8 @@
 
 ---
 
+**Seed de histórico de desenvolvimento:** SQL, executor e testes em `backend/src/database/scripts/seed-historico-desenvolvimento.*`; conversas fictícias, plano e limpeza explícita dos índices locais em `backend/src/database/scripts/seed-conversas-*`; execução documentada no README, seção de dados de teste.
+
 ## 1. Onde estão as regras
 
 Estas são as fontes da verdade. Em conflito entre código e documento, **o documento vence**.

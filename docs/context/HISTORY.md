@@ -12,6 +12,10 @@
 
 ---
 
+## 2026-10-31 — 273/274: preparação do commit dos seeds manuais de desenvolvimento
+
+Autor autorizou versionar o cenário completo e as conversas. Revisados os bloqueios: APP_AMBIENTE deve ser development explícito, NODE_ENV=production e DB_SSL=true são recusados, OpenSearch exige HTTP loopback na porta 9200 e PostgreSQL local no CLI completo. A limpeza dos três índices continua exigindo --limpar-opensearch; não há integração ao startup ou às migrations. Nova rodada focada: cinco testes aprovados (segurança, fixture e conflitos). Os gates completos e aplicação real estão nos relatórios 273 e 274. Commit preparado somente com os seeds, comandos e documentação correspondente; alteração de contexto de outra tarefa permanece fora do recorte. Projeto segue sem lint (P-001).
+
 ## 2026-10-31 — 289 Alça de largura na demanda ao lado: arrastar a borda entre a lista de Atividades e a demanda
 
 Pedido do autor logo depois da 288: poder ajustar o tamanho da demanda como no pad. Novo componente compartilhado `app-alca-divisao` (`shared/components/alca-divisao`): `role="separator"` entre as duas colunas; arrastar, setas (16 px) e duplo clique (volta aos 496 px) ajustam a largura da lista, guardada no navegador por usuário (`atividade.divisao.<id>`) só ao soltar ou usar o teclado. Ela escreve `--largura-primeira` na área que a contém (`--transicao-primeira: none` enquanto arrasta) e a lista lê a propriedade; a demanda tem mínimo de 24rem e a lista encolhe sozinha quando falta espaço. A lista encolhida passou a rolar na horizontal (mínimo 440 px, para a coluna Status não truncar).

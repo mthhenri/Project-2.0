@@ -88,6 +88,46 @@ npm run db:migrate --workspace=backend
 > atividades e uma conexão, e o desenvolvedor `dev.teste` / `project2026` já atribuído a elas.
 > É idempotente e recusa rodar com `APP_AMBIENTE=production` ou `DB_SSL=true`.
 
+**Histórico fictício completo (manual, só development):** depois das migrations, execute
+`npm run db:seed-historico --workspace=backend`. Exige `APP_AMBIENTE=development` no `.env`,
+recusa `NODE_ENV=production` e `DB_SSL=true`. Não roda automaticamente.
+Cria `DEV-PORTAL`, `DEV-ESTOQUE`, `DEV-AGENDA`, seis devs, 21 demandas, 108 atividades,
+15 conexões e execuções encerradas dos últimos 90 dias (dias úteis, dois períodos de 3h).
+Logins: `dev.mateus.henrique`, `dev.mateus.caranguejo`, `dev.mateus.nebuloso`,
+`dev.mateus.parafuso`, `dev.mateus.trovao`, `dev.mateus.abacaxi`; senha fictícia: `project2026`.
+Preserva o gestor inicial e o seed mínimo. Se projetos, usuários, demandas e atividades já existem, não faz nada;
+colisões parciais cancelam toda a transação. Não repara um cenário alterado manualmente.
+O SQL fica em `backend/src/database/scripts/seed-historico-desenvolvimento.sql`;
+o executor passa uma indicação de ambiente válida somente na transação. Essa indicação
+não autentica o ambiente do servidor: use o executor com a configuração do banco local.
+
+O comando de histórico também semeia **12 conversas e 72 mensagens entre colaboradores** no
+OpenSearch: seis entre devs e seis com o administrador inicial, incluindo Markdown, código e respostas.
+Exige OpenSearch HTTP local na porta 9200 (`OPENSEARCH_URL`) e PostgreSQL local;
+`CHAT_ARMAZENAMENTO` deve ser `opensearch` ou omitido (padrão). Mensagens usam IDs estáveis,
+e a repetição confere o conteúdo existente. Se o PostgreSQL tiver sido recriado e houver conflito
+com o histórico antigo, o comando recusa a divergência em vez de ocultá-la.
+As datas fictícias se ancoram no cadastro histórico dos devs, inclusive na conversa com o
+administrador de bootstrap, que as migrations recriam com data atual.
+
+Para carregar somente as conversas, depois do cenário SQL:
+
+```bash
+npm run db:seed-conversas --workspace=backend
+```
+
+Para **apagar o histórico local de chat e recriar seus índices**, explicitamente:
+
+```bash
+npm run db:seed-conversas --workspace=backend -- --limpar-opensearch
+```
+
+Essa opção apaga somente `chat-mensagem`, `chat-conversa` e `mensagem-direta`, recria os
+mapeamentos canônicos e semeia as conversas fictícias. O histórico de IA fica vazio.
+Não apaga volumes, índices internos do OpenSearch nem altera o PostgreSQL. A execução comum
+nunca limpa índices. PostgreSQL e OpenSearch não compartilham transação: em falha, corrigir
+a causa e repetir o seed; a limpeza explícita pode apagar mensagens já carregadas.
+
 ### 5. Inicie o backend e o frontend
 
 ```bash

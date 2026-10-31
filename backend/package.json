@@ -8,6 +8,8 @@
     "db:migrate": "knex --knexfile src/database/knexfile.ts migrate:latest",
     "db:rollback": "knex --knexfile src/database/knexfile.ts migrate:rollback",
     "db:seed-dev": "node --require ts-node/register src/database/scripts/seed-desenvolvimento.ts",
+    "db:seed-historico": "node --require ts-node/register src/database/scripts/seed-historico-desenvolvimento.ts",
+    "db:seed-conversas": "node --require ts-node/register src/database/scripts/seed-conversas-desenvolvimento.ts",
     "db:converter-descricoes": "node --require ts-node/register src/database/scripts/converter-descricoes.ts",
     "test": "node scripts/executar-testes.mjs unitarios",
     "test:integracao": "node scripts/executar-testes.mjs integracao",
