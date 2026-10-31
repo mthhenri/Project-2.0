@@ -1,311 +1,400 @@
 <div class="execucao-historico">
-  <div class="execucao-historico__cabecalho">
-    <div>
-      <h1 class="execucao-historico__titulo">Execuções</h1>
-      <p class="execucao-historico__resumo" aria-live="polite">{{ resumo() }}</p>
+    <div class="execucao-historico__cabecalho">
+        <div>
+            <h1 class="execucao-historico__titulo">Execuções</h1>
+            <p class="execucao-historico__resumo" aria-live="polite">{{ resumo() }}</p>
+        </div>
+        @if (sessao.eGestor()) {
+            <p-button
+                label="Relatório"
+                icon="pi pi-file-export"
+                severity="secondary"
+                [outlined]="true"
+                (onClick)="abrirRelatorio()"
+            />
+        }
     </div>
-    @if (sessao.eGestor()) {
-      <p-button
-        label="Relatório"
-        icon="pi pi-file-export"
-        severity="secondary"
-        [outlined]="true"
-        (onClick)="abrirRelatorio()"
-      />
-    }
-  </div>
 
-  <form [formGroup]="formularioFiltros" class="execucao-historico__filtros">
-    @if (sessao.eGestor()) {
-      <div class="execucao-historico__filtro-campo execucao-historico__filtro-campo--usuario">
-        <label class="execucao-historico__filtro-label" for="filtro-usuario">Usuário</label>
-        <p-select
-          inputId="filtro-usuario"
-          formControlName="usuarioId"
-          [options]="usuarios()"
-          optionLabel="nomeCompleto"
-          optionValue="id"
-          placeholder="Todos"
-          [filter]="true"
-          filterPlaceholder="Buscar usuário"
-          [showClear]="true"
-          appendTo="body"
-          (onChange)="aoMudarFiltro()"
-          (onClear)="aoMudarFiltro()"
-        />
-      </div>
-      <p-button
-        label="Minhas"
-        icon="pi pi-user"
-        severity="secondary"
-        [outlined]="!filtrandoMinhas()"
-        [ariaLabel]="filtrandoMinhas() ? 'Minhas execuções (filtro ativo)' : 'Minhas execuções'"
-        pTooltip="Só as minhas execuções"
-        tooltipPosition="top"
-        (onClick)="alternarMinhas()"
-      />
-    }
-
-    <div class="execucao-historico__navegacao">
-      @if (!visualizandoHoje()) {
-        <p-button
-          label="Hoje"
-          severity="secondary"
-          [outlined]="true"
-          pTooltip="Voltar para hoje (Home)"
-          tooltipPosition="top"
-          (onClick)="voltarParaHoje()"
-        />
-      }
-      <div class="execucao-historico__dia" role="group" aria-label="Dia">
-        <p-button
-          icon="pi pi-chevron-left"
-          severity="secondary"
-          [outlined]="true"
-          ariaLabel="Dia anterior"
-          pTooltip="Dia anterior (←)"
-          tooltipPosition="top"
-          (onClick)="retornarDia()"
-        />
-        <p-datepicker
-          inputId="filtro-data"
-          formControlName="data"
-          dateFormat="dd/mm/yy"
-          [maxDate]="hoje"
-          [readonlyInput]="true"
-          appendTo="body"
-          (onSelect)="aoMudarFiltro()"
-        />
-        <p-button
-          icon="pi pi-chevron-right"
-          severity="secondary"
-          [outlined]="true"
-          [disabled]="visualizandoHoje()"
-          ariaLabel="Próximo dia"
-          pTooltip="Próximo dia (→)"
-          tooltipPosition="top"
-          (onClick)="avancarDia()"
-        />
-      </div>
-      <p-button
-        icon="pi pi-refresh"
-        severity="secondary"
-        [text]="true"
-        [loading]="carregando()"
-        ariaLabel="Atualizar"
-        pTooltip="Atualizar"
-        tooltipPosition="top"
-        (onClick)="buscarExecucoes()"
-      />
-    </div>
-  </form>
-
-  @if (primeiraCarga()) {
-    <app-skeleton-lista variante="tabela" [quantidade]="4" [cabecalhos]="esqueleto().cabecalhos" [larguras]="esqueleto().larguras" alturaLinha="4.5rem" />
-  }
-  <div class="lista-recarga" [hidden]="primeiraCarga()" [class.conteudo-recarregando]="recarregando()">
-    <app-barra-recarga [ativa]="recarregando()" />
-    @if (mostrarAgora()) {
-      <app-execucao-agora
-        [ativas]="ativas()"
-        [mostrarUsuario]="agoraDeVarios()"
-        [podeIniciar]="podeIniciar()"
-        [descricaoObrigatoria]="!sessao.eGestor()"
-        [pausando]="pausando()"
-        (pausar)="pausarExecucao($event)"
-        (iniciar)="iniciarAtividade()"
-      />
-    }
-    <p-table
-      [value]="linhas()"
-      [lazy]="true"
-      (onLazyLoad)="aoCarregarTabela($event)"
-      [paginator]="totalEncerradas() > itensPorPagina()"
-      [rows]="itensPorPagina()"
-      [totalRecords]="totalEncerradas()"
-      [rowsPerPageOptions]="[50, 100, 200]"
-      dataKey="id"
-    >
-      <ng-template #header>
-        <tr>
-          @if (sessao.eGestor()) { <th>Usuário</th> }
-          <th>Atividade</th>
-          <th>Início</th>
-          <th>Fim</th>
-          <th>Duração</th>
-          <th>Descrição</th>
-          @if (sessao.eGestor()) { <th class="execucao-historico__coluna-acoes">Ações</th> }
-        </tr>
-      </ng-template>
-
-      <ng-template #body let-execucao>
-        <tr class="execucao-historico__linha">
-          @if (sessao.eGestor()) {
-            <td class="execucao-historico__usuario">{{ execucao.nomeUsuario }}</td>
-          }
-          <td>
-            <div class="execucao-historico__contexto">
-              <span class="execucao-historico__atividade">{{ execucao.nomeAtividade }}</span>
-              <span class="execucao-historico__contexto-caminho">{{ execucao.nomeProjeto }} › {{ execucao.nomeDemanda }}</span>
+    <form [formGroup]="formularioFiltros" class="execucao-historico__filtros">
+        @if (sessao.eGestor()) {
+            <div class="execucao-historico__filtro-campo execucao-historico__filtro-campo--usuario">
+                <label class="execucao-historico__filtro-label" for="filtro-usuario">Usuário</label>
+                <p-select
+                    inputId="filtro-usuario"
+                    formControlName="usuarioId"
+                    [options]="usuarios()"
+                    optionLabel="nomeCompleto"
+                    optionValue="id"
+                    placeholder="Todos"
+                    [filter]="true"
+                    filterPlaceholder="Buscar usuário"
+                    [showClear]="true"
+                    appendTo="body"
+                    (onChange)="aoMudarFiltro()"
+                    (onClear)="aoMudarFiltro()"
+                />
             </div>
-          </td>
-          <td>
-            @if (editando(execucao, 'inicio')) {
-              <ng-container *ngTemplateOutlet="editorData" />
-            } @else {
-              <ng-container
-                *ngTemplateOutlet="momento; context: { $implicit: execucao.inicioData, execucao: execucao, campo: 'inicio' }"
-              />
-            }
-          </td>
-          <td>
-            @if (editando(execucao, 'fim')) {
-              <ng-container *ngTemplateOutlet="editorData" />
-            } @else {
-              <ng-container
-                *ngTemplateOutlet="momento; context: { $implicit: execucao.fimData, execucao: execucao, campo: 'fim' }"
-              />
-            }
-          </td>
-          <td class="execucao-historico__duracao">
-            {{ execucao.duracaoMinutos | minutosParagHoras }}
-          </td>
-          <td class="execucao-historico__descricao">
-            @if (editando(execucao, 'descricao')) {
-              <div class="execucao-historico__editor">
-                <textarea
-                  pTextarea
-                  appBloquearCaracteresProibidos
-                  class="execucao-historico__editor-texto"
-                  [formControl]="rascunhoDescricao"
-                  [autoResize]="true"
-                  rows="2"
-                  spellcheck="true"
-                  lang="pt-BR"
-                  aria-label="Descrição da execução"
-                  (blur)="aoSairDaEdicao()"
-                ></textarea>
-                @if (confirmandoEdicao()) {
-                  <ng-container *ngTemplateOutlet="confirmar" />
-                }
-              </div>
-            } @else if (sessao.eGestor()) {
-              <button
-                type="button"
-                class="execucao-historico__descricao-botao"
-                pTooltip="Clique para editar"
+            <p-button
+                label="Minhas"
+                icon="pi pi-user"
+                severity="secondary"
+                [outlined]="!filtrandoMinhas()"
+                [ariaLabel]="
+                    filtrandoMinhas() ? 'Minhas execuções (filtro ativo)' : 'Minhas execuções'
+                "
+                pTooltip="Só as minhas execuções"
                 tooltipPosition="top"
-                (click)="iniciarEdicao(execucao, 'descricao')"
-              >
-                <span class="execucao-historico__descricao-texto">{{ execucao.descricao }}</span>
-              </button>
-            } @else {
-              <span class="execucao-historico__descricao-texto">{{ execucao.descricao }}</span>
+                (onClick)="alternarMinhas()"
+            />
+        }
+
+        <div class="execucao-historico__navegacao">
+            @if (!visualizandoHoje()) {
+                <p-button
+                    label="Hoje"
+                    severity="secondary"
+                    [outlined]="true"
+                    pTooltip="Voltar para hoje (Home)"
+                    tooltipPosition="top"
+                    (onClick)="voltarParaHoje()"
+                />
             }
-          </td>
-          @if (sessao.eGestor()) {
-            <td class="execucao-historico__coluna-acoes">
-              <p-button
-                icon="pi pi-trash"
-                severity="danger"
+            <div class="execucao-historico__dia" role="group" aria-label="Dia">
+                <p-button
+                    icon="pi pi-chevron-left"
+                    severity="secondary"
+                    [outlined]="true"
+                    ariaLabel="Dia anterior"
+                    pTooltip="Dia anterior (←)"
+                    tooltipPosition="top"
+                    (onClick)="retornarDia()"
+                />
+                <p-datepicker
+                    inputId="filtro-data"
+                    formControlName="data"
+                    dateFormat="dd/mm/yy"
+                    [maxDate]="hoje"
+                    [readonlyInput]="true"
+                    appendTo="body"
+                    (onSelect)="aoMudarFiltro()"
+                />
+                <p-button
+                    icon="pi pi-chevron-right"
+                    severity="secondary"
+                    [outlined]="true"
+                    [disabled]="visualizandoHoje()"
+                    ariaLabel="Próximo dia"
+                    pTooltip="Próximo dia (→)"
+                    tooltipPosition="top"
+                    (onClick)="avancarDia()"
+                />
+            </div>
+            <p-button
+                icon="pi pi-refresh"
+                severity="secondary"
                 [text]="true"
-                [rounded]="true"
-                ariaLabel="Excluir execução"
-                pTooltip="Excluir execução"
+                [loading]="carregando()"
+                ariaLabel="Atualizar"
+                pTooltip="Atualizar"
                 tooltipPosition="top"
-                (onClick)="confirmarExclusao($event, execucao)"
-              />
-            </td>
-          }
-        </tr>
-      </ng-template>
+                (onClick)="buscarExecucoes()"
+            />
+        </div>
+    </form>
 
-      <ng-template #footer>
-        @if (totalRegistros() > 0) {
-          <tr class="execucao-historico__rodape">
-            <td [attr.colspan]="sessao.eGestor() ? 4 : 3" class="execucao-historico__rodape-rotulo">
-              Total do dia
-            </td>
-            <td class="execucao-historico__rodape-valor">{{ totalMinutosDia() | minutosParagHoras }}</td>
-            <td [attr.colspan]="sessao.eGestor() ? 2 : 1"></td>
-          </tr>
+    @if (primeiraCarga()) {
+        <app-skeleton-lista
+            variante="tabela"
+            [quantidade]="4"
+            [cabecalhos]="esqueleto().cabecalhos"
+            [larguras]="esqueleto().larguras"
+            alturaLinha="4.5rem"
+        />
+    }
+    <div
+        class="lista-recarga"
+        [hidden]="primeiraCarga()"
+        [class.conteudo-recarregando]="recarregando()"
+    >
+        <app-barra-recarga [ativa]="recarregando()" />
+        @if (mostrarAgora()) {
+            <app-execucao-agora
+                [ativas]="ativas()"
+                [mostrarUsuario]="agoraDeVarios()"
+                [podeIniciar]="podeIniciar()"
+                [descricaoObrigatoria]="!sessao.eGestor()"
+                (encerrada)="aposEncerrarExecucao()"
+                (iniciar)="iniciarAtividade()"
+            />
         }
-      </ng-template>
+        <p-table
+            [value]="linhas()"
+            [lazy]="true"
+            (onLazyLoad)="aoCarregarTabela($event)"
+            [paginator]="totalEncerradas() > itensPorPagina()"
+            [rows]="itensPorPagina()"
+            [totalRecords]="totalEncerradas()"
+            [rowsPerPageOptions]="[50, 100, 200]"
+            dataKey="id"
+        >
+            <ng-template #header>
+                <tr>
+                    @if (sessao.eGestor()) {
+                        <th>Usuário</th>
+                    }
+                    <th>Atividade</th>
+                    <th>Início</th>
+                    <th>Fim</th>
+                    <th>Duração</th>
+                    <th>Descrição</th>
+                    @if (sessao.eGestor()) {
+                        <th class="execucao-historico__coluna-acoes">Ações</th>
+                    }
+                </tr>
+            </ng-template>
 
-      <ng-template #emptymessage>
-        @if (ativas().length > 0) {
-          <tr>
-            <td [attr.colspan]="sessao.eGestor() ? 7 : 5" class="execucao-historico__vazio">
-              <p class="execucao-historico__vazio-titulo">Nenhuma execução encerrada em {{ rotuloDiaVazio() }}</p>
-            </td>
-          </tr>
-        } @else {
-        <tr>
-          <td [attr.colspan]="sessao.eGestor() ? 7 : 5" class="execucao-historico__vazio">
-            <i class="pi pi-clock text-3xl"></i>
-            <p class="execucao-historico__vazio-titulo">Nenhuma execução em {{ rotuloDiaVazio() }}</p>
-            <div class="execucao-historico__vazio-acoes">
-              <p-button label="Ver dia anterior" icon="pi pi-chevron-left" size="small" severity="secondary" [outlined]="true" (onClick)="retornarDia()" />
-              @if (!visualizandoHoje()) {
-                <p-button label="Voltar para hoje" size="small" severity="secondary" [outlined]="true" (onClick)="voltarParaHoje()" />
-              }
-              @if (usuarioFiltradoId()) {
-                <p-button label="Limpar filtro de usuário" icon="pi pi-filter-slash" size="small" severity="secondary" [text]="true" (onClick)="limparUsuario()" />
-              }
-            </div>
-          </td>
-        </tr>
-        }
-      </ng-template>
-    </p-table>
-  </div>
+            <ng-template #body let-execucao>
+                <tr class="execucao-historico__linha">
+                    @if (sessao.eGestor()) {
+                        <td class="execucao-historico__usuario">{{ execucao.nomeUsuario }}</td>
+                    }
+                    <td>
+                        <div class="execucao-historico__contexto">
+                            <span class="execucao-historico__atividade">{{
+                                execucao.nomeAtividade
+                            }}</span>
+                            <span class="execucao-historico__contexto-caminho"
+                                >{{ execucao.nomeProjeto }} › {{ execucao.nomeDemanda }}</span
+                            >
+                        </div>
+                    </td>
+                    <td>
+                        @if (editando(execucao, "inicio")) {
+                            <ng-container *ngTemplateOutlet="editorData" />
+                        } @else {
+                            <ng-container
+                                *ngTemplateOutlet="
+                                    momento;
+                                    context: {
+                                        $implicit: execucao.inicioData,
+                                        execucao: execucao,
+                                        campo: 'inicio',
+                                    }
+                                "
+                            />
+                        }
+                    </td>
+                    <td>
+                        @if (editando(execucao, "fim")) {
+                            <ng-container *ngTemplateOutlet="editorData" />
+                        } @else {
+                            <ng-container
+                                *ngTemplateOutlet="
+                                    momento;
+                                    context: {
+                                        $implicit: execucao.fimData,
+                                        execucao: execucao,
+                                        campo: 'fim',
+                                    }
+                                "
+                            />
+                        }
+                    </td>
+                    <td class="execucao-historico__duracao">
+                        {{ execucao.duracaoMinutos | minutosParagHoras }}
+                    </td>
+                    <td class="execucao-historico__descricao">
+                        @if (editando(execucao, "descricao")) {
+                            <div class="execucao-historico__editor">
+                                <textarea
+                                    pTextarea
+                                    appBloquearCaracteresProibidos
+                                    class="execucao-historico__editor-texto"
+                                    [formControl]="rascunhoDescricao"
+                                    [autoResize]="true"
+                                    rows="2"
+                                    spellcheck="true"
+                                    lang="pt-BR"
+                                    aria-label="Descrição da execução"
+                                    (blur)="aoSairDaEdicao()"
+                                ></textarea>
+                                @if (confirmandoEdicao()) {
+                                    <ng-container *ngTemplateOutlet="confirmar" />
+                                }
+                            </div>
+                        } @else if (sessao.eGestor()) {
+                            <button
+                                type="button"
+                                class="execucao-historico__descricao-botao"
+                                (click)="iniciarEdicao(execucao, 'descricao')"
+                            >
+                                <span class="execucao-historico__descricao-texto"
+                                    >{{ execucao.descricao }}<i
+                                        class="pi pi-pencil execucao-historico__descricao-lapis"
+                                        aria-hidden="true"
+                                    ></i
+                                ></span>
+                            </button>
+                        } @else {
+                            <span class="execucao-historico__descricao-texto">{{
+                                execucao.descricao
+                            }}</span>
+                        }
+                    </td>
+                    @if (sessao.eGestor()) {
+                        <td class="execucao-historico__coluna-acoes">
+                            <p-button
+                                icon="pi pi-trash"
+                                severity="danger"
+                                [text]="true"
+                                [rounded]="true"
+                                ariaLabel="Excluir execução"
+                                pTooltip="Excluir execução"
+                                tooltipPosition="top"
+                                (onClick)="confirmarExclusao($event, execucao)"
+                            />
+                        </td>
+                    }
+                </tr>
+            </ng-template>
+
+            <ng-template #footer>
+                @if (totalRegistros() > 0) {
+                    <tr class="execucao-historico__rodape">
+                        <td
+                            [attr.colspan]="sessao.eGestor() ? 4 : 3"
+                            class="execucao-historico__rodape-rotulo"
+                        >
+                            Total do dia
+                        </td>
+                        <td class="execucao-historico__rodape-valor">
+                            {{ totalMinutosDia() | minutosParagHoras }}
+                        </td>
+                        <td [attr.colspan]="sessao.eGestor() ? 2 : 1"></td>
+                    </tr>
+                }
+            </ng-template>
+
+            <ng-template #emptymessage>
+                @if (ativas().length > 0) {
+                    <tr>
+                        <td
+                            [attr.colspan]="sessao.eGestor() ? 7 : 5"
+                            class="execucao-historico__vazio"
+                        >
+                            <p class="execucao-historico__vazio-titulo">
+                                Nenhuma execução encerrada em {{ rotuloDiaVazio() }}
+                            </p>
+                        </td>
+                    </tr>
+                } @else {
+                    <tr>
+                        <td
+                            [attr.colspan]="sessao.eGestor() ? 7 : 5"
+                            class="execucao-historico__vazio"
+                        >
+                            <i class="pi pi-clock text-3xl"></i>
+                            <p class="execucao-historico__vazio-titulo">
+                                Nenhuma execução em {{ rotuloDiaVazio() }}
+                            </p>
+                            <div class="execucao-historico__vazio-acoes">
+                                <p-button
+                                    label="Ver dia anterior"
+                                    icon="pi pi-chevron-left"
+                                    size="small"
+                                    severity="secondary"
+                                    [outlined]="true"
+                                    (onClick)="retornarDia()"
+                                />
+                                @if (!visualizandoHoje()) {
+                                    <p-button
+                                        label="Voltar para hoje"
+                                        size="small"
+                                        severity="secondary"
+                                        [outlined]="true"
+                                        (onClick)="voltarParaHoje()"
+                                    />
+                                }
+                                @if (usuarioFiltradoId()) {
+                                    <p-button
+                                        label="Limpar filtro de usuário"
+                                        icon="pi pi-filter-slash"
+                                        size="small"
+                                        severity="secondary"
+                                        [text]="true"
+                                        (onClick)="limparUsuario()"
+                                    />
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </ng-template>
+        </p-table>
+    </div>
 </div>
 
 <!-- Horário em cima e dia/mês embaixo, em cinza; para o gestor, clicar abre a edição no lugar. -->
 <ng-template #momento let-instante let-execucao="execucao" let-campo="campo">
-  @if (sessao.eGestor()) {
-    <button type="button" class="execucao-historico__momento execucao-historico__momento--editavel" (click)="iniciarEdicao(execucao, campo)">
-      <span class="execucao-historico__momento-hora">{{ hora(instante) }}</span>
-      <span class="execucao-historico__momento-data">{{ diaMes(instante) }}</span>
-      <i class="pi pi-pencil execucao-historico__momento-lapis" aria-hidden="true"></i>
-    </button>
-  } @else {
-    <div class="execucao-historico__momento">
-      <span class="execucao-historico__momento-hora">{{ hora(instante) }}</span>
-      <span class="execucao-historico__momento-data">{{ diaMes(instante) }}</span>
-    </div>
-  }
+    @if (sessao.eGestor()) {
+        <button
+            type="button"
+            class="execucao-historico__momento execucao-historico__momento--editavel"
+            (click)="iniciarEdicao(execucao, campo)"
+        >
+            <span class="execucao-historico__momento-hora">{{ hora(instante) }}</span>
+            <span class="execucao-historico__momento-data">{{ diaMes(instante) }}</span>
+            <i class="pi pi-pencil execucao-historico__momento-lapis" aria-hidden="true"></i>
+        </button>
+    } @else {
+        <div class="execucao-historico__momento">
+            <span class="execucao-historico__momento-hora">{{ hora(instante) }}</span>
+            <span class="execucao-historico__momento-data">{{ diaMes(instante) }}</span>
+        </div>
+    }
 </ng-template>
 
 <ng-template #editorData>
-  <div class="execucao-historico__editor">
-    <p-datepicker
-      #seletor
-      [formControl]="rascunhoData"
-      dateFormat="dd/mm/yy"
-      [showTime]="true"
-      [showSeconds]="true"
-      hourFormat="24"
-      [stepMinute]="1"
-      [stepSecond]="1"
-      [maxDate]="dataMaximaEdicao()"
-      appendTo="body"
-      (onShow)="registrarSeletor(seletor)"
-      (onClose)="aoSairDaEdicao()"
-      (onBlur)="aoSairDoSeletor(seletor)"
-    />
-    @if (confirmandoEdicao()) {
-      <ng-container *ngTemplateOutlet="confirmar" />
-    }
-  </div>
+    <div class="execucao-historico__editor">
+        <p-datepicker
+            #seletor
+            [formControl]="rascunhoData"
+            dateFormat="dd/mm/yy"
+            [showTime]="true"
+            [showSeconds]="true"
+            hourFormat="24"
+            [stepMinute]="1"
+            [stepSecond]="1"
+            [maxDate]="dataMaximaEdicao()"
+            appendTo="body"
+            (onShow)="registrarSeletor(seletor)"
+            (onClose)="aoSairDaEdicao()"
+            (onBlur)="aoSairDoSeletor(seletor)"
+        />
+        @if (confirmandoEdicao()) {
+            <ng-container *ngTemplateOutlet="confirmar" />
+        }
+    </div>
 </ng-template>
 
 <ng-template #confirmar>
-  <div class="execucao-historico__confirmar" role="group" aria-label="Confirmar alteração">
-    <span class="execucao-historico__confirmar-texto">Salvar alteração?</span>
-    <p-button label="Sim" size="small" [loading]="salvandoEdicao()" (onClick)="confirmarEdicao()" />
-    <p-button label="Não" size="small" severity="secondary" [text]="true" [disabled]="salvandoEdicao()" (onClick)="descartarEdicao()" />
-  </div>
+    <div class="execucao-historico__confirmar" role="group" aria-label="Confirmar alteração">
+        <span class="execucao-historico__confirmar-texto">Salvar alteração?</span>
+        <p-button
+            label="Sim"
+            size="small"
+            [loading]="salvandoEdicao()"
+            (onClick)="confirmarEdicao()"
+        />
+        <p-button
+            label="Não"
+            size="small"
+            severity="secondary"
+            [text]="true"
+            [disabled]="salvandoEdicao()"
+            (onClick)="descartarEdicao()"
+        />
+    </div>
 </ng-template>
 
 <p-confirmpopup />

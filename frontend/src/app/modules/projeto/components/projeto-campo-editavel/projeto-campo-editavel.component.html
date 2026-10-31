@@ -1,71 +1,104 @@
-@if (editando() && tipo() !== 'cor') {
-  <span class="campo-editavel__editor" (keydown.escape)="descartar()">
-    @switch (tipo()) {
-      @case ('texto') {
-        <input
-          pInputText
-          appBloquearCaracteresProibidos
-          class="campo-editavel__texto"
-          spellcheck="true"
-          [formControl]="rascunhoTexto"
-          [attr.aria-label]="rotulo()"
-          (keydown.enter)="sair()"
-          (blur)="sair()"
-        />
-      }
-      @case ('data') {
-        <p-datepicker
-          #seletor
-          [formControl]="rascunhoData"
-          dateFormat="dd/mm/yy"
-          placeholder="dd/mm/aaaa"
-          appendTo="body"
-          [ariaLabel]="rotulo()"
-          (onClose)="aoSairDoSeletor(seletor)"
-          (onBlur)="aoSairDoSeletor(seletor)"
-        />
-      }
-    }
-    @if (erro()) {
-      <small class="campo-editavel__erro" role="alert">{{ erro() }}</small>
-    }
-    @if (confirmando()) {
-      <span class="campo-editavel__confirmar" role="group" aria-label="Confirmar alteração">
-        <span class="campo-editavel__confirmar-texto">Salvar alteração?</span>
-        <p-button label="Sim" size="small" (onClick)="confirmar()" />
-        <p-button label="Não" size="small" severity="secondary" [text]="true" (onClick)="descartar()" />
-      </span>
-    } @else {
-      <!-- O mousedown não tira o foco do campo: senão a saída do campo abriria a pergunta antes do clique. -->
-      <p-button label="Cancelar" size="small" severity="secondary" [text]="true" (mousedown)="$event.preventDefault()" (onClick)="descartar()" />
-    }
-  </span>
+@if (editando() && tipo() !== "cor") {
+    <span class="campo-editavel__editor" (keydown.escape)="descartar()">
+        @switch (tipo()) {
+            @case ("texto") {
+                <input
+                    pInputText
+                    appBloquearCaracteresProibidos
+                    class="campo-editavel__texto"
+                    spellcheck="true"
+                    [formControl]="rascunhoTexto"
+                    [attr.aria-label]="rotulo()"
+                    (keydown.enter)="sair()"
+                    (blur)="sair()"
+                />
+            }
+            @case ("data") {
+                <p-datepicker
+                    #seletor
+                    [formControl]="rascunhoData"
+                    dateFormat="dd/mm/yy"
+                    placeholder="dd/mm/aaaa"
+                    appendTo="body"
+                    [ariaLabel]="rotulo()"
+                    (onClose)="aoSairDoSeletor(seletor)"
+                    (onBlur)="aoSairDoSeletor(seletor)"
+                />
+            }
+        }
+        @if (erro()) {
+            <small class="campo-editavel__erro" role="alert">{{ erro() }}</small>
+        }
+        @if (confirmando()) {
+            <span class="campo-editavel__confirmar" role="group" aria-label="Confirmar alteração">
+                <span class="campo-editavel__confirmar-texto">Salvar alteração?</span>
+                <p-button label="Sim" size="small" (onClick)="confirmar()" />
+                <p-button
+                    label="Não"
+                    size="small"
+                    severity="secondary"
+                    [text]="true"
+                    (onClick)="descartar()"
+                />
+            </span>
+        } @else {
+            <!-- O mousedown não tira o foco do campo: senão a saída do campo abriria a pergunta antes do clique. -->
+            <p-button
+                label="Cancelar"
+                size="small"
+                severity="secondary"
+                [text]="true"
+                (mousedown)="$event.preventDefault()"
+                (onClick)="descartar()"
+            />
+        }
+    </span>
 } @else {
-  <p-contextmenu #menu [model]="itensMenu" appendTo="body" />
-  <span
-    #ancora
-    class="campo-editavel__exibicao"
-    [class.campo-editavel__exibicao--editavel]="editavel()"
-    (contextmenu)="abrirMenu($event, menu)"
-  >
-    <ng-content />
-  </span>
-  @if (editavel()) {
-    <button type="button" class="campo-editavel__lapis" [class.campo-editavel__lapis--oculto]="editando()" [attr.aria-label]="rotuloMenu()" (click)="iniciarEdicao()">
-      <i class="pi pi-pencil" aria-hidden="true"></i>
-    </button>
-  }
+    <p-contextmenu #menu [model]="itensMenu" appendTo="body" />
+    <span
+        #ancora
+        class="campo-editavel__exibicao"
+        [class.campo-editavel__exibicao--editavel]="editavel()"
+        (contextmenu)="abrirMenu($event, menu)"
+    >
+        <ng-content />
+    </span>
+    @if (editavel()) {
+        <button
+            type="button"
+            class="campo-editavel__lapis"
+            [class.campo-editavel__lapis--oculto]="editando()"
+            [attr.aria-label]="rotuloMenu()"
+            (click)="iniciarEdicao()"
+        >
+            <i class="pi pi-pencil" aria-hidden="true"></i>
+        </button>
+    }
 }
 
-@if (tipo() === 'cor') {
-  <!-- A paleta abre num popover ancorado no selo (como a de Tags), em vez de se espalhar pelo cabeçalho. -->
-  <p-popover #popoverCor (onHide)="aoFecharPopover()">
-    <div class="campo-editavel__popover-cor" (keydown.escape)="descartar()">
-      <app-seletor-cor [formControl]="rascunhoCor" [compacto]="true" />
-      <div class="campo-editavel__rodape-cor">
-        <p-button label="Cancelar" size="small" severity="secondary" [text]="true" (onClick)="descartar()" />
-        <p-button label="Salvar" size="small" [disabled]="!alterado()" (onClick)="confirmar()" />
-      </div>
-    </div>
-  </p-popover>
+@if (tipo() === "cor") {
+    <!-- A paleta abre num popover ancorado no selo (como a de Tags), em vez de se espalhar pelo cabeçalho. -->
+    <p-popover #popoverCor (onHide)="aoFecharPopover()">
+        <div class="campo-editavel__popover-cor" (keydown.escape)="descartar()">
+            <app-seletor-cor
+                [formControl]="rascunhoCor"
+                [compacto]="true"
+            />
+            <div class="campo-editavel__rodape-cor">
+                <p-button
+                    label="Cancelar"
+                    size="small"
+                    severity="secondary"
+                    [text]="true"
+                    (onClick)="descartar()"
+                />
+                <p-button
+                    label="Salvar"
+                    size="small"
+                    [disabled]="!alterado()"
+                    (onClick)="confirmar()"
+                />
+            </div>
+        </div>
+    </p-popover>
 }

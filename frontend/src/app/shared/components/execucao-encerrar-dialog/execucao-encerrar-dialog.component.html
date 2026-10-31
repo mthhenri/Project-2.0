@@ -1,0 +1,80 @@
+<p-dialog
+    [visible]="visivel()"
+    (visibleChange)="visivel.set($event)"
+    header="Encerrar execução"
+    dialogFormulario
+    [dialogBloqueado]="salvando()"
+    (dialogEnviar)="confirmar()"
+    [modal]="true"
+    [style]="{ width: '42rem' }"
+    [draggable]="false"
+    [dismissableMask]="true"
+>
+    @if (execucaoAtual(); as execucao) {
+        <p class="execucao-encerrar__atividade">{{ execucao.nomeProjeto }} · {{ execucao.nomeAtividade }}</p>
+        @if (sessao.eGestor()) {
+            <div class="execucao-encerrar__executor">
+                <span class="execucao-encerrar__avatar" aria-hidden="true">{{ iniciais(execucao.nomeUsuario) }}</span>
+                <span class="text-color">{{ execucao.nomeUsuario }}</span>
+            </div>
+        }
+    }
+
+    <form [formGroup]="formulario" class="execucao-encerrar__form">
+        <div class="execucao-encerrar__campo">
+            <label for="execucao-encerrar-descricao" class="execucao-encerrar__rotulo">
+                Revise a descrição da execução{{ execucaoAberta()?.descricaoOpcional ? " (opcional)" : " *" }}
+            </label>
+            <textarea
+                id="execucao-encerrar-descricao"
+                pTextarea
+                spellcheck="true"
+                appBloquearCaracteresProibidos
+                formControlName="descricao"
+                rows="4"
+                placeholder="Descreva a execução..."
+                class="w-full"
+            ></textarea>
+            @if (campoInvalido()) {
+                <small class="execucao-encerrar__erro">
+                    @if (formulario.controls.descricao.hasError("pattern")) {
+                        {{ mensagemCaracteresProibidos }}
+                    } @else {
+                        Informe a descrição da execução
+                    }
+                </small>
+            }
+            <app-assistente-descricao
+                [textoAtual]="formulario.value.descricao || ''"
+                tipoEntidade="execucao"
+                [contextoEntidade]="execucaoAtual()?.nomeAtividade ?? ''"
+                (textoAuxiliadoAceito)="aceitarDescricaoAssistente($event)"
+            />
+        </div>
+
+        <div class="execucao-encerrar__campo">
+            <span class="execucao-encerrar__rotulo">Últimas execuções desta atividade</span>
+            @if (carregandoExecucoes()) {
+                <i class="pi pi-spin pi-spinner text-muted-color"></i>
+            } @else if (execucoes().length) {
+                <div class="execucao-encerrar__lista">
+                    @for (anterior of execucoes(); track anterior.id) {
+                        <div class="execucao-encerrar__item">
+                            <span class="execucao-encerrar__data">
+                                {{ anterior.inicioData | dataBrasileira }}
+                                @if (anterior.fimData) {
+                                    · {{ anterior.duracaoMinutos | minutosParagHoras }}
+                                } @else {
+                                    · <span class="text-primary-500">em andamento</span>
+                                }
+                            </span>
+                            <span class="execucao-encerrar__descricao">{{ anterior.descricao }}</span>
+                        </div>
+                    }
+                </div>
+            } @else {
+                <p class="text-muted-color">Nenhuma execução anterior.</p>
+            }
+        </div>
+    </form>
+</p-dialog>

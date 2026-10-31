@@ -1,88 +1,89 @@
 :host {
-  display: inline-flex;
-  align-items: center;
-  min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
 }
 
 .campo-editavel {
-  &__exibicao--editavel {
-    cursor: context-menu;
-    border-radius: 0.375rem;
+    &__exibicao--editavel {
+        cursor: context-menu;
+        border-radius: 0.375rem;
 
-    &:hover {
-      background: var(--app-realce-sutil);
+        &:hover {
+            background: var(--app-realce-sutil);
+        }
     }
-  }
 
-  // O lápis só aparece com o mouse sobre o campo ou com o foco nele; clicar abre a edição, como o "Editar" do botão direito.
-  &__lapis {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 1.5rem;
-    height: 1.5rem;
-    margin-left: 0.125rem;
-    padding: 0;
-    border: none;
-    border-radius: 0.375rem;
-    background: transparent;
-    color: var(--p-text-muted-color);
-    font-size: 0.75rem;
-    opacity: 0;
-    cursor: pointer;
-    transition: opacity 0.15s ease;
+    // O lápis só aparece com o mouse sobre o campo ou com o foco nele; clicar abre a edição, como o "Editar" do botão direito.
+    &__lapis {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.5rem;
+        height: 1.5rem;
+        margin-left: 0.125rem;
+        padding: 0;
+        border: none;
+        border-radius: 0.375rem;
+        background: transparent;
+        color: var(--p-text-muted-color);
+        font-size: 0.75rem;
+        opacity: 0;
+        cursor: pointer;
+        transition: opacity 0.15s ease;
 
-    &:hover {
-      background: var(--app-surface-100);
-      color: var(--p-primary-color);
+        &:hover {
+            background: var(--app-surface-100);
+            color: var(--p-primary-color);
+        }
     }
-  }
 
-  // Com a paleta aberta o lápis some sem sair do lugar, para o título não andar.
-  &__lapis--oculto {
-    visibility: hidden;
-  }
+    // Com a paleta aberta o lápis some sem sair do lugar, para o título não andar.
+    &__lapis--oculto {
+        visibility: hidden;
+    }
 
-  :host(:hover) &__lapis,
-  &__lapis:focus-visible {
-    opacity: 1;
-  }
+    :host(:hover) &__lapis,
+    &__lapis:focus-visible {
+        opacity: 1;
+    }
 
-  &__editor {
-    display: inline-flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5rem;
-  }
+    &__editor {
+        display: inline-flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+    }
 
-  &__texto {
-    min-width: 14rem;
-  }
+    &__texto {
+        min-width: 14rem;
+    }
 
-  &__erro {
-    flex-basis: 100%;
-    color: var(--p-red-500);
-  }
+    &__erro {
+        flex-basis: 100%;
+        color: var(--p-red-500);
+    }
 
-  &__confirmar {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-  }
+    &__confirmar {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
 
-  &__popover-cor {
-    max-width: 15rem;
-  }
+    &__popover-cor {
+        width: 18rem;
+        max-width: 100%;
+    }
 
-  &__rodape-cor {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.5rem;
-    margin-top: 0.75rem;
-  }
+    &__rodape-cor {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+    }
 
-  &__confirmar-texto {
-    font-size: 0.8125rem;
-    color: var(--p-text-muted-color);
-  }
+    &__confirmar-texto {
+        font-size: 0.8125rem;
+        color: var(--p-text-muted-color);
+    }
 }

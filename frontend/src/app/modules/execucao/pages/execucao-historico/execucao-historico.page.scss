@@ -1,258 +1,272 @@
 .execucao-historico {
-  padding: 1.5rem;
+    padding: 1.5rem;
 
-  &__cabecalho {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 1.5rem;
-  }
-
-  &__titulo {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--p-primary-600);
-    margin: 0;
-  }
-
-  &__resumo {
-    margin: 0.25rem 0 0;
-    font-size: 0.9375rem;
-    color: var(--p-text-muted-color);
-  }
-
-  &__link-voltar {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--p-text-muted-color);
-    text-decoration: none;
-
-    &:hover {
-      color: var(--p-primary-600);
+    &__cabecalho {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
     }
-  }
 
-  &__filtros {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    justify-content: flex-end;
-    gap: 1rem;
-    margin-bottom: 1.25rem;
-  }
-
-  &__filtro-campo {
-    display: flex;
-    flex-direction: column;
-    gap: 0.375rem;
-
-    &--usuario {
-      flex: 0 1 240px;
-      min-width: 200px;
-    }
-  }
-
-  &__filtro-label {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--p-text-color);
-  }
-
-  &__navegacao {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-shrink: 0;
-    margin-left: auto;
-  }
-
-  &__dia {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-  }
-
-  &__coluna-acoes {
-    width: 1%;
-    white-space: nowrap;
-    text-align: center;
-  }
-
-  &__atividade {
-    font-weight: 500;
-  }
-
-  &__momento {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    line-height: 1.2;
-    text-align: left;
-
-    // Gestor: o horário é um botão que abre a edição no lugar.
-    &--editavel {
-      position: relative;
-      padding: 0.125rem 0.25rem;
-      margin: -0.125rem -0.25rem;
-      border: none;
-      border-radius: 0.25rem;
-      background: none;
-      font: inherit;
-      color: inherit;
-      cursor: pointer;
-
-      &:hover .execucao-historico__momento-hora {
+    &__titulo {
+        font-size: 1.5rem;
+        font-weight: 600;
         color: var(--p-primary-600);
-      }
-
-      &:hover .execucao-historico__momento-lapis,
-      &:focus-visible .execucao-historico__momento-lapis {
-        opacity: 1;
-      }
-
-      &:focus-visible {
-        outline: 2px solid var(--p-primary-color);
-        outline-offset: 2px;
-      }
-    }
-  }
-
-  // O lápis avisa, ao passar o mouse, que o horário se edita com o clique (task 272).
-  &__momento-lapis {
-    position: absolute;
-    top: 0.25rem;
-    left: 100%;
-    margin-left: 0.25rem;
-    font-size: 0.75rem;
-    color: var(--p-text-muted-color);
-    opacity: 0;
-    transition: opacity 0.15s ease;
-    pointer-events: none;
-  }
-
-  &__momento-hora {
-    font-size: 0.9375rem;
-    font-weight: 600;
-    color: var(--p-text-color);
-  }
-
-  &__momento-data {
-    font-size: 0.75rem;
-    color: var(--p-text-muted-color);
-  }
-
-  &__duracao {
-    white-space: nowrap;
-  }
-
-  // A descrição ocupa o espaço que sobra da tabela.
-  &__descricao {
-    min-width: 18rem;
-    width: 100%;
-    white-space: normal;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-  }
-
-  &__usuario {
-    white-space: nowrap;
-  }
-
-  &__contexto {
-    display: flex;
-    flex-direction: column;
-    gap: 0.125rem;
-    min-width: 18rem;
-    max-width: 30rem;
-    line-height: 1.25;
-  }
-
-  &__contexto-caminho {
-    font-size: 0.75rem;
-    color: var(--p-text-muted-color);
-    overflow-wrap: anywhere;
-  }
-
-  // A descrição aparece sempre por inteiro: quebra de linha, sem reticências.
-  &__descricao-texto {
-    display: block;
-  }
-
-  &__descricao-botao {
-    display: block;
-    width: 100%;
-    padding: 0;
-    border: none;
-    background: none;
-    font: inherit;
-    color: inherit;
-    text-align: left;
-    cursor: pointer;
-    border-radius: 0.25rem;
-
-    &:hover .execucao-historico__descricao-texto {
-      color: var(--p-primary-600);
+        margin: 0;
     }
 
-    &:focus-visible {
-      outline: 2px solid var(--p-primary-color);
-      outline-offset: 2px;
+    &__resumo {
+        margin: 0.25rem 0 0;
+        font-size: 0.9375rem;
+        color: var(--p-text-muted-color);
     }
-  }
 
-  &__vazio {
-    text-align: center;
-    padding: 2.5rem 1rem;
-    color: var(--p-text-muted-color);
-  }
+    &__link-voltar {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--p-text-muted-color);
+        text-decoration: none;
 
-  &__vazio-titulo {
-    margin: 0.5rem 0 1rem;
-  }
+        &:hover {
+            color: var(--p-primary-600);
+        }
+    }
 
-  &__vazio-acoes {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 0.5rem;
-  }
+    &__filtros {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        justify-content: flex-end;
+        gap: 1rem;
+        margin-bottom: 1.25rem;
+    }
 
-  &__rodape-rotulo {
-    text-align: right;
-    font-weight: 600;
-    color: var(--p-text-color);
-  }
+    &__filtro-campo {
+        display: flex;
+        flex-direction: column;
+        gap: 0.375rem;
 
-  &__rodape-valor {
-    font-weight: 700;
-    color: var(--p-primary-600);
-    white-space: nowrap;
-  }
+        &--usuario {
+            flex: 0 1 240px;
+            min-width: 200px;
+        }
+    }
 
-  // Edição inline: o campo ocupa a célula e a pergunta de confirmação fica logo abaixo.
-  &__editor {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    min-width: 12rem;
-  }
+    &__filtro-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--p-text-color);
+    }
 
-  &__editor-texto {
-    width: 100%;
-  }
+    &__navegacao {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-shrink: 0;
+        margin-left: auto;
+    }
 
-  &__confirmar {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
+    &__dia {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
 
-  &__confirmar-texto {
-    font-size: 0.8125rem;
-    font-weight: 500;
-    color: var(--p-text-color);
-  }
+    &__coluna-acoes {
+        width: 1%;
+        white-space: nowrap;
+        text-align: center;
+    }
+
+    &__atividade {
+        font-weight: 500;
+    }
+
+    &__momento {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        line-height: 1.2;
+        text-align: left;
+
+        // Gestor: o horário é um botão que abre a edição no lugar.
+        &--editavel {
+            position: relative;
+            padding: 0.125rem 0.25rem;
+            margin: -0.125rem -0.25rem;
+            border: none;
+            border-radius: 0.25rem;
+            background: none;
+            font: inherit;
+            color: inherit;
+            cursor: pointer;
+
+            &:hover .execucao-historico__momento-hora {
+                color: var(--p-primary-600);
+            }
+
+            &:hover .execucao-historico__momento-lapis,
+            &:focus-visible .execucao-historico__momento-lapis {
+                opacity: 1;
+            }
+
+            &:focus-visible {
+                outline: 2px solid var(--p-primary-color);
+                outline-offset: 2px;
+            }
+        }
+    }
+
+    // O lápis avisa, ao passar o mouse, que o horário se edita com o clique (task 272).
+    &__momento-lapis {
+        position: absolute;
+        top: 0.25rem;
+        left: 100%;
+        margin-left: 0.25rem;
+        font-size: 0.75rem;
+        color: var(--p-text-muted-color);
+        opacity: 0;
+        transition: opacity 0.15s ease;
+        pointer-events: none;
+    }
+
+    &__momento-hora {
+        font-size: 0.9375rem;
+        font-weight: 600;
+        color: var(--p-text-color);
+    }
+
+    &__momento-data {
+        font-size: 0.75rem;
+        color: var(--p-text-muted-color);
+    }
+
+    &__duracao {
+        white-space: nowrap;
+    }
+
+    // A descrição ocupa o espaço que sobra da tabela.
+    &__descricao {
+        min-width: 18rem;
+        width: 100%;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    &__usuario {
+        white-space: nowrap;
+    }
+
+    &__contexto {
+        display: flex;
+        flex-direction: column;
+        gap: 0.125rem;
+        min-width: 18rem;
+        max-width: 30rem;
+        line-height: 1.25;
+    }
+
+    &__contexto-caminho {
+        font-size: 0.75rem;
+        color: var(--p-text-muted-color);
+        overflow-wrap: anywhere;
+    }
+
+    // A descrição aparece sempre por inteiro: quebra de linha, sem reticências.
+    &__descricao-texto {
+        display: block;
+    }
+
+    &__descricao-lapis {
+        margin-left: 0.25rem;
+        font-size: 0.75rem;
+        color: var(--p-text-muted-color);
+        opacity: 0;
+        transition: opacity 0.15s ease;
+    }
+
+    &__descricao-botao {
+        display: block;
+        width: 100%;
+        padding: 0;
+        border: none;
+        background: none;
+        font: inherit;
+        color: inherit;
+        text-align: left;
+        cursor: pointer;
+        border-radius: 0.25rem;
+
+        &:hover .execucao-historico__descricao-texto {
+            color: var(--p-primary-600);
+        }
+
+        // Como o horário: o lápis aparece com o mouse sobre a descrição e o clique abre a edição.
+        &:hover .execucao-historico__descricao-lapis,
+        &:focus-visible .execucao-historico__descricao-lapis {
+            opacity: 1;
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--p-primary-color);
+            outline-offset: 2px;
+        }
+    }
+
+    &__vazio {
+        text-align: center;
+        padding: 2.5rem 1rem;
+        color: var(--p-text-muted-color);
+    }
+
+    &__vazio-titulo {
+        margin: 0.5rem 0 1rem;
+    }
+
+    &__vazio-acoes {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    &__rodape-rotulo {
+        text-align: right;
+        font-weight: 600;
+        color: var(--p-text-color);
+    }
+
+    &__rodape-valor {
+        font-weight: 700;
+        color: var(--p-primary-600);
+        white-space: nowrap;
+    }
+
+    // Edição inline: o campo ocupa a célula e a pergunta de confirmação fica logo abaixo.
+    &__editor {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        min-width: 12rem;
+    }
+
+    &__editor-texto {
+        width: 100%;
+    }
+
+    &__confirmar {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    &__confirmar-texto {
+        font-size: 0.8125rem;
+        font-weight: 500;
+        color: var(--p-text-color);
+    }
 }
