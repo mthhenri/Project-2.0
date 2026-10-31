@@ -27,4 +27,4 @@ No detalhe do projeto, ver **ou** as demandas **ou** o volume (não os dois ao m
 
 ## Notas
 
-- O autor escreveu "relatório" no exemplo do nome; o arquivo usa **"relatorio"** sem acento, por segurança em qualquer sistema. Trocar é uma linha em `nome-do-arquivo-do-relatorio.ts`.
+- O autor escreveu "relatório" no exemplo do nome; o arquivo usa **"relatorio"** sem acento, por segurança em qualquer sistema. Trocar é uma linha em `nome-do-arquivo-do-relatorio.ts`. **Decisão do autor (2026-10-31): sem acento.**
