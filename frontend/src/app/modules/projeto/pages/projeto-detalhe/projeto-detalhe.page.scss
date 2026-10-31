@@ -10,28 +10,10 @@
     margin-bottom: 1.5rem;
   }
 
-  // A seção de volume entre o cabeçalho e as demandas (task 290): título recolhível, no estilo discreto dos demais rótulos.
-  &__volume {
-    margin-bottom: 1.5rem;
-  }
-
-  &__volume-titulo {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
-    padding: 0.25rem 0.5rem 0.25rem 0;
-    border: none;
-    background: transparent;
-    color: var(--p-text-color);
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-
-    .pi {
-      font-size: 0.75rem;
-      color: var(--p-text-muted-color);
-    }
+  // O seletor Demandas / Volume entre o cabeçalho e o corpo (task 291).
+  &__visao {
+    display: block;
+    margin-bottom: 1rem;
   }
 
   &__faixa {

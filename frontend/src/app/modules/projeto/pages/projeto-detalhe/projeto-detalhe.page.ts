@@ -1,8 +1,10 @@
 import { Component, HostListener, OnInit, computed, inject, signal, viewChild } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
+import { SelectButtonModule } from 'primeng/selectbutton';
 import { TooltipModule } from 'primeng/tooltip';
 import {
   ProjetoAlterarDto,
@@ -34,14 +36,18 @@ import {
 import { corTextoSobre, siglaDoProjeto } from '../../utils/projeto-identidade.util';
 import { focoEmCampo, haSobreposicaoAberta } from '../../../../core/utils/atalhos';
 
-const CHAVE_VOLUME_RECOLHIDO = 'projeto.volume.recolhido';
+const CHAVE_VISAO = 'projeto.detalhe.visao';
+
+export type VisaoDoProjeto = 'DEMANDAS' | 'VOLUME';
 
 @Component({
   selector: 'app-projeto-detalhe',
   standalone: true,
   imports: [
+    FormsModule,
     SkeletonListaComponent,
     ButtonModule,
+    SelectButtonModule,
     TooltipModule,
     DataBrasileiraPipe,
     DemandaArvorePainelComponent,
@@ -78,8 +84,13 @@ export class ProjetoDetalhePage implements OnInit {
   /** A carga das demandas falhou: o detalhe oferece "Tentar de novo" em vez de dizer que o projeto não tem demandas (P-058). */
   readonly erroAoCarregarDemandas = signal<boolean>(false);
   readonly mostrarDialogNovaDemanda = signal<boolean>(false);
-  /** A seção "Volume" (gestor) recolhida; fica lembrada neste navegador (task 290). */
-  readonly volumeRecolhido = signal<boolean>(this.lerVolumeRecolhido());
+  /** O que o corpo do projeto mostra: as demandas ou o volume (task 291); lembrado neste navegador. Só o gestor vê o volume. */
+  readonly visao = signal<VisaoDoProjeto>(this.lerVisao());
+  readonly visaoAtual = computed<VisaoDoProjeto>(() => (this.sessao.eGestor() ? this.visao() : 'DEMANDAS'));
+  readonly opcoesVisao = [
+    { rotulo: 'Demandas', valor: 'DEMANDAS' as VisaoDoProjeto },
+    { rotulo: 'Volume', valor: 'VOLUME' as VisaoDoProjeto },
+  ];
   readonly filtro = signal<DemandaFiltro>(FILTRO_VAZIO);
   readonly filtroVazio = FILTRO_VAZIO;
 
@@ -94,20 +105,20 @@ export class ProjetoDetalhePage implements OnInit {
     return [...porId.values()].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
   });
 
-  alternarVolume(): void {
-    this.volumeRecolhido.update((atual) => !atual);
+  escolherVisao(visao: VisaoDoProjeto): void {
+    this.visao.set(visao);
     try {
-      localStorage.setItem(CHAVE_VOLUME_RECOLHIDO, String(this.volumeRecolhido()));
+      localStorage.setItem(CHAVE_VISAO, visao);
     } catch {
       // Sem armazenamento (janela privada, dados bloqueados): vale só até sair da tela.
     }
   }
 
-  private lerVolumeRecolhido(): boolean {
+  private lerVisao(): VisaoDoProjeto {
     try {
-      return localStorage.getItem(CHAVE_VOLUME_RECOLHIDO) === 'true';
+      return localStorage.getItem(CHAVE_VISAO) === 'VOLUME' ? 'VOLUME' : 'DEMANDAS';
     } catch {
-      return false;
+      return 'DEMANDAS';
     }
   }
 

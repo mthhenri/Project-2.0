@@ -12,6 +12,16 @@
 
 ---
 
+## 2026-10-31 — 291 Projeto: demandas ou volume, e novo nome do CSV do relatório
+
+Pedido do autor logo depois da 290. **(1)** O detalhe do projeto mostra **ou** as demandas **ou** o volume: um seletor "Demandas | Volume" (só gestor) entre o cabeçalho e o corpo substituiu a seção recolhível da 290; a escolha fica em `projeto.detalhe.visao` (padrão Demandas), e as demandas ficam montadas, só escondidas, para voltar à mesma pasta, demanda e filtro. **(2)** O CSV do relatório de execuções passou de `relatorio-execucoes_<código>_<início>_<fim>.csv` para **`<código>-relatorio-<AAAA-MM>.csv`** (`nomeDoArquivoDoRelatorio`; ex.: `dev-agenda-relatorio-2026-10.csv`): código em minúsculas e sem acento nem símbolo; período que atravessa meses vira `AAAA-MM-a-AAAA-MM`. Escrevi "relatorio" sem acento (o autor digitou "relatório" no exemplo); trocar é uma linha. **(3)** Anotada a ideia **I-045** (volume por usuário), sem prioridade: o autor achava que existia uma tela assim e não existe (o Ponto mostra horas por usuário contra a meta, e o volume é só por projeto).
+
+**Testes:** frontend 2392 -> **2393** em 192 arquivos, backend 1587 unitários, builds e `repo:verificar` ok, sem lint (P-001). **Ao vivo** (1366x768): a troca entre as visões e a rota do download devolvendo `dev-agenda-relatorio-2026-10.csv`; o botão de baixar da tela não foi acionado. Relatório em `docs/specs/done/291-projeto-demandas-ou-volume-e-nome-do-csv/verificacao.md`.
+
+## 2026-10-31 — I-041/I-044: pesquisa externa restrita a dúvidas de código e controle manual como ideia
+
+Em discussão, sem implementação, o autor reafirmou que a IA decide quando pesquisar na internet somente para dúvidas de código. Assuntos de demandas ficam exclusivamente nas consultas internas ao projeto e às suas demandas, sem expor seus dados em pesquisas externas. A I-044 recebeu o detalhamento do globo ao lado do nível, tooltip e referências clicáveis, a ligação com a contabilização de custos da I-041 e a ideia futura de um comando manual de pesquisa, sujeito à mesma restrição. Nenhuma spec criada e nenhuma prioridade alterada. Registro documental; sem testes de aplicação ou verificação visual.
+
 ## 2026-10-31 — 290 Ajustes na tela de projetos (I-042): Cancelar visível, cor em popover e volume dentro do projeto
 
 Origem: `IDEAS.md` I-042, detalhada pelo autor. **(1)** Na edição do cabeçalho do projeto (`app-projeto-campo-editavel`: nome e datas) aparece um botão **Cancelar** ao lado do campo; o `mousedown` dele não tira o foco, senão a saída do campo abriria "Salvar alteração?" antes do clique; some quando a pergunta já está na tela. **(2)** A edição da **cor** deixou de espalhar 15 amostras no cabeçalho: o lápis do selo abre um **popover ancorado nele** (como a paleta de Tags) com o `app-seletor-cor` compacto e "Cancelar" / "Salvar" (este só habilita com outra cor); clicar fora ou Esc descarta. O `app-seletor-cor` não mudou. **(3)** O detalhe do projeto (gestor) ganhou a seção recolhível **Volume** entre o cabeçalho e as demandas, reaproveitando `app-projeto-volume` com a entrada nova `projetoId` (só o projeto, **anual por padrão**, Mensal disponível, sem link do nome para o próprio projeto); o estado recolhido fica no `localStorage` (`projeto.volume.recolhido`). A tela de Projetos não mudou.

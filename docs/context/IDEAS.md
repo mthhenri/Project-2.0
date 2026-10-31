@@ -191,6 +191,16 @@
 ### I-044 — Avisar no chat que houve pesquisa na internet, com as referências · chat IA
 
 - **Ideia:** quando a IA responde uma dúvida de código pesquisando na internet, mostrar na mensagem um chip "foi feita uma busca na internet" e, se o provedor trouxer fontes, listar as referências.
+- **Detalhamento do autor (2026-10-31):** globo ao lado do selo de nível (rápido/padrão/analítico), com tooltip "Pesquisa realizada na internet", e bolinhas clicáveis ao lado com os links das referências devolvidas pelo provedor. Contabilizar o gasto da pesquisa junto dos custos da IA (I-041), incluindo a cobrança própria da ferramenta quando houver, além dos tokens, sem contagem duplicada.
+- **Restrição reafirmada pelo autor (2026-10-31):** a própria IA decide quando pesquisar, exclusivamente ao tirar dúvidas de código. Assuntos de demandas são consultados sempre e unicamente dentro do projeto e de suas demandas; nunca pesquisar esses assuntos na internet nem expor seus dados em consultas externas.
+- **Melhoria futura, só ideia (2026-10-31):** permitir ao usuário ativar um comando/controle para pedir explicitamente pesquisa na internet ao tirar uma dúvida de código. Não definido nem autorizado para implementação; esse controle também deve respeitar a restrição acima e não liberar pesquisa externa sobre demandas.
 - **Origem:** conversa de 2026-10-31 com o autor, ao falar do custo da pesquisa (I-041).
 - **Por quê:** o usuário precisa saber de onde veio a resposta e poder conferir as fontes; hoje a pesquisa entra sem aviso (task 263).
 - **Custo aparente:** ler as citações que cada provedor devolve junto da ferramenta de busca (formatos diferentes nos três), guardar na mensagem e mostrar no chat; vale ver junto com a contagem de buscas da I-041.
+
+### I-045 — Volume por usuário: quanto cada pessoa fez no mês · frontend/backend
+
+- **Ideia:** ver o volume por usuário: quantas horas e quantas atividades cada pessoa fez no mês (e, por extensão, no ano), no mesmo molde do volume por projeto.
+- **Origem:** o autor lembrou, em 2026-10-31, de ter visto algo assim numa tela planejada ("tal usuário fez tantas coisas esse mês, tantas horas") e não achou. Não encontrei nada disso implementado: o Ponto mostra o saldo de horas por usuário contra a meta, e o volume (tasks 197, 199 e 251) é só por projeto.
+- **Por quê:** o gestor enxerga a carga e a entrega de cada pessoa sem abrir o ponto de cada uma.
+- **Custo aparente:** só gestor; uma consulta por usuário e mês (horas executadas e atividades), uma visão nova (talvez ao lado do Volume em Projetos ou em Usuários) e a decisão de como isso convive com o Ponto da equipe, que já mostra horas por pessoa no dia. Definir com o autor o que é "fez": horas, atividades concluídas ou os dois.

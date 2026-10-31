@@ -72,6 +72,7 @@ Sem urgência; o autor quer conversar antes de especificar.
 - **I-028** — cada usuário escolhe a autonomia da IA (2026-10-31).
 - **I-010** — revisar os prompts da revisão das descrições. "Dá para fazer depois" (2026-10-31).
 - **I-001** — biblioteca própria de componentes (2026-10-31).
+- **I-045** — volume por usuário (horas e atividades por pessoa no mês). "Isso não é nem um pouco prioridade agora" (2026-10-31).
 - **P-049** — campo `codigo` do modelo do projeto sem uso. Segue aberto por enquanto (2026-10-31).
 - **P-059** — `modelagem.page.spec` instável na suíte inteira. "Instável mesmo, é complexo" (2026-10-31).
 - **P-029** e **P-030** — ficam `ACEITO`, não vale o esforço (2026-10-31).

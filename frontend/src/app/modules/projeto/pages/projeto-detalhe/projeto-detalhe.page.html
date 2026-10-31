@@ -72,19 +72,27 @@
     </div>
     </div>
 
-    <!-- Volume do projeto (gestor, task 290): o mesmo gráfico da tela de Projetos, só deste projeto e já no anual. -->
+    <!-- O corpo do projeto mostra as demandas ou o volume (task 291): o gestor troca pelo seletor; o desenvolvedor só vê as demandas. -->
     @if (sessao.eGestor()) {
-      <section class="projeto-detalhe__volume" aria-label="Volume do projeto">
-        <button type="button" class="projeto-detalhe__volume-titulo" [attr.aria-expanded]="!volumeRecolhido()" (click)="alternarVolume()">
-          <i class="pi" [class.pi-chevron-down]="!volumeRecolhido()" [class.pi-chevron-right]="volumeRecolhido()" aria-hidden="true"></i>
-          Volume
-        </button>
-        @if (!volumeRecolhido()) {
-          <app-projeto-volume [projetoId]="projeto()!.id" />
-        }
-      </section>
+      <p-selectbutton
+        class="projeto-detalhe__visao"
+        [options]="opcoesVisao"
+        [ngModel]="visaoAtual()"
+        (ngModelChange)="escolherVisao($event)"
+        optionLabel="rotulo"
+        optionValue="valor"
+        [allowEmpty]="false"
+        size="small"
+        ariaLabel="O que ver no projeto"
+      />
     }
 
+    @if (visaoAtual() === 'VOLUME') {
+      <app-projeto-volume [projetoId]="projeto()!.id" />
+    }
+
+    <!-- As demandas ficam montadas (só escondidas) enquanto se vê o volume, para voltar à mesma pasta, demanda e filtro. -->
+    <div [class.hidden]="visaoAtual() === 'VOLUME'">
     @if (carregandoDemandas()) {
       <app-skeleton-lista variante="linhas" [quantidade]="6" />
     }
@@ -169,6 +177,7 @@
         </div>
       }
     }
+    </div>
   }
 
 </div>

@@ -157,11 +157,11 @@ const quebrarCsv = (conteudo: Buffer) => conteudo.toString('utf-8').replace(/^�
 const textoNaPlanilha = (valor: string) => `"=""${valor}"""`;
 const mensagemDe = (erro: unknown) => ((erro as BusinessException).getResponse() as { mensagem: string }).mensagem;
 
-test('CSV: tipo e nome do arquivo com código do projeto e período', async () => {
+test('CSV: tipo e nome do arquivo <código>-relatorio-<ano-mês>.csv (task 291)', async () => {
   const { servico } = criar({ linhas: [linha()] });
   const arquivo = await servico.baixarRelatorio(BAIXAR_CSV);
   assert.equal(arquivo.mimeType, 'text/csv; charset=utf-8');
-  assert.equal(arquivo.nomeArquivo, 'relatorio-execucoes_LOJA_2026-10-01_2026-10-31.csv');
+  assert.equal(arquivo.nomeArquivo, 'loja-relatorio-2026-10.csv');
 });
 
 test('CSV: BOM UTF-8, cabeçalho na ordem das colunas, separador vírgula e quebra CRLF', async () => {

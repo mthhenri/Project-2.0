@@ -14,6 +14,7 @@ import {
 import { ExecucaoRepository } from '../../execucao/repositories/execucao.repository';
 import { ProjetoRepository } from '../../projeto/repositories/projeto.repository';
 import { ConfigService } from '../../../config/config.service';
+import { nomeDoArquivoDoRelatorio } from './nome-do-arquivo-do-relatorio';
 import { BusinessException } from '../../../core/exceptions/business.exception';
 import { traduzirFalhaDeIa } from '../../ia/domain/ia.exception';
 import { IaService } from '../../ia/services/ia.service';
@@ -88,7 +89,7 @@ export class RelatorioService {
     }
 
     const conteudo = this.montarCsv(relatorio);
-    const nomeArquivo = `relatorio-execucoes_${codigoProjeto}_${relatorio.dataInicio}_${relatorio.dataFim}.csv`;
+    const nomeArquivo = nomeDoArquivoDoRelatorio(codigoProjeto, relatorio.dataInicio, relatorio.dataFim);
     return { conteudo, nomeArquivo, mimeType: 'text/csv; charset=utf-8' };
   }
 

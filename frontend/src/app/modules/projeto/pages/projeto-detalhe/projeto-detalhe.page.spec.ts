@@ -208,32 +208,51 @@ describe('ProjetoDetalhePage', () => {
   });
 });
 
-describe('ProjetoDetalhePage: volume do projeto (task 290)', () => {
+describe('ProjetoDetalhePage: demandas ou volume (tasks 290 e 291)', () => {
   const anual = { projetoId: 5, nome: 'Portal do Cliente', codigo: 'PORTAL', cor: '#336699', volumeEsperadoHorasPorMes: new Array(12).fill(40), minutosGastosPorMes: new Array(12).fill(0) };
+  const corpoDasDemandas = (montado: Montado) => montado.elemento.querySelector('.projeto-detalhe > div.hidden, .projeto-detalhe > div:not(.projeto-detalhe__cabecalho-cartao):not(.hidden)');
 
-  it('o gestor vê a seção Volume aberta, no anual do projeto', async () => {
+  it('o gestor abre vendo as demandas, e o volume só aparece ao trocar', async () => {
     const { montado } = await montarDetalhe(TipoUsuarioEnum.GESTOR);
     await carregar(montado);
+    expect(montado.componente.visaoAtual()).toBe('DEMANDAS');
+    expect(montado.elemento.querySelector('p-selectbutton')).not.toBeNull();
+    expect(montado.elemento.querySelector('app-projeto-volume')).toBeNull();
+    montado.http.expectNone((requisicao) => requisicao.url.includes('/projeto/volume'));
+  });
+
+  it('trocar para Volume mostra o gráfico anual do projeto e esconde as demandas (sem desmontá-las); voltar as mostra', async () => {
+    const { montado } = await montarDetalhe(TipoUsuarioEnum.GESTOR);
+    await carregar(montado);
+    montado.componente.escolherVisao('VOLUME');
+    await montado.atualizar();
     responderSucesso(esperarRequisicao(montado.http, 'GET', '/projeto/volume/anual'), [anual]);
     await montado.atualizar();
-    expect(montado.elemento.querySelector('.projeto-detalhe__volume-titulo')?.getAttribute('aria-expanded')).toBe('true');
     expect(montado.elemento.querySelector('app-projeto-volume app-grafico-barras')).not.toBeNull();
-  });
+    expect(montado.elemento.querySelector('.projeto-detalhe > div.hidden')).not.toBeNull();
 
-  it('recolher esconde o gráfico e fica lembrado; o desenvolvedor não vê a seção nem pede o volume', async () => {
-    const { montado } = await montarDetalhe(TipoUsuarioEnum.GESTOR);
-    await carregar(montado);
-    esperarRequisicao(montado.http, 'GET', '/projeto/volume/anual');
-    (montado.elemento.querySelector('.projeto-detalhe__volume-titulo') as HTMLElement).click();
+    montado.componente.escolherVisao('DEMANDAS');
     await montado.atualizar();
     expect(montado.elemento.querySelector('app-projeto-volume')).toBeNull();
-    expect(localStorage.getItem('projeto.volume.recolhido')).toBe('true');
+    expect(montado.elemento.querySelector('.projeto-detalhe > div.hidden')).toBeNull();
+    expect(corpoDasDemandas(montado)).not.toBeNull();
   });
 
-  it('desenvolvedor: sem a seção Volume e sem pedir o volume', async () => {
+  it('a escolha fica lembrada neste navegador', async () => {
+    const { montado } = await montarDetalhe(TipoUsuarioEnum.GESTOR);
+    await carregar(montado);
+    montado.componente.escolherVisao('VOLUME');
+    expect(localStorage.getItem('projeto.detalhe.visao')).toBe('VOLUME');
+  });
+
+  it('desenvolvedor: sem o seletor, sempre as demandas, e nunca pede o volume (mesmo com a escolha guardada)', async () => {
     const { montado } = await montarDetalhe(TipoUsuarioEnum.DESENVOLVEDOR);
     await carregar(montado);
-    expect(montado.elemento.querySelector('.projeto-detalhe__volume')).toBeNull();
+    montado.componente.visao.set('VOLUME');
+    await montado.atualizar();
+    expect(montado.componente.visaoAtual()).toBe('DEMANDAS');
+    expect(montado.elemento.querySelector('p-selectbutton')).toBeNull();
+    expect(montado.elemento.querySelector('app-projeto-volume')).toBeNull();
     montado.http.expectNone((requisicao) => requisicao.url.includes('/projeto/volume'));
   });
 });
