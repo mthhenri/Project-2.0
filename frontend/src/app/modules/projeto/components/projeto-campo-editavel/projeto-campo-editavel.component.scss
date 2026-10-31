@@ -38,6 +38,11 @@
     }
   }
 
+  // Com a paleta aberta o lápis some sem sair do lugar, para o título não andar.
+  &__lapis--oculto {
+    visibility: hidden;
+  }
+
   :host(:hover) &__lapis,
   &__lapis:focus-visible {
     opacity: 1;
@@ -63,6 +68,17 @@
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
+  }
+
+  &__popover-cor {
+    max-width: 15rem;
+  }
+
+  &__rodape-cor {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
   }
 
   &__confirmar-texto {

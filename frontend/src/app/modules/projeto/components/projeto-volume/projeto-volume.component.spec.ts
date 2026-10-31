@@ -235,3 +235,39 @@ describe('ProjetoVolumeComponent — anual', () => {
     expect(texto(montado)).not.toContain('P9');
   });
 });
+
+describe('ProjetoVolumeComponent — dentro do projeto (task 290)', () => {
+  async function dentroDoProjeto(projetoId: number, itens: ReturnType<typeof itemAnual>[]): Promise<Montado> {
+    const montado = await montarComponente(ProjetoVolumeComponent, { usuario: TipoUsuarioEnum.GESTOR, entradas: { projetoId } });
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/projeto/volume/anual'), itens);
+    await montado.atualizar();
+    return montado;
+  }
+
+  it('começa no anual (não pede o mensal) e mostra só o cartão do projeto, sem link para ele mesmo', async () => {
+    const montado = await dentroDoProjeto(2, [itemAnual(1, ANO_SEM_EXECUCAO, 40), itemAnual(2, ANO_SEM_EXECUCAO, 40)]);
+    montado.http.expectNone((requisicao) => requisicao.url.endsWith('/projeto/volume'));
+    expect(montado.componente.periodo()).toBe('ANUAL');
+    expect(montado.elemento.querySelectorAll('.projeto-volume__cartao')).toHaveLength(1);
+    expect(texto(montado)).toContain('Projeto 2');
+    expect(texto(montado)).not.toContain('Projeto 1');
+    expect(montado.elemento.querySelector('a.projeto-volume__nome')).toBeNull();
+  });
+
+  it('o Mensal segue disponível e mostra só o projeto', async () => {
+    const montado = await dentroDoProjeto(2, [itemAnual(2, ANO_SEM_EXECUCAO, 40)]);
+    montado.componente.periodoControl.setValue('MENSAL');
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/projeto/volume'), [item(1, 600, 40), item(2, 900, 40)]);
+    await montado.atualizar();
+    expect(texto(montado)).toContain('P2');
+    expect(texto(montado)).not.toContain('P1');
+  });
+
+  it('sem `projetoId` (tela de Projetos) continua mensal e com o link do nome', async () => {
+    const montado = await montar();
+    await carregarMensal(montado, [item(1, 600, 40)]);
+    expect(montado.componente.periodo()).toBe('MENSAL');
+    await irParaAnual(montado, [itemAnual(1, ANO_SEM_EXECUCAO, 40)]);
+    expect(montado.elemento.querySelector('a.projeto-volume__nome')).not.toBeNull();
+  });
+});

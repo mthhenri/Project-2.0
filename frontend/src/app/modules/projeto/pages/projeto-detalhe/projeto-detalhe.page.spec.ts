@@ -207,3 +207,33 @@ describe('ProjetoDetalhePage', () => {
     expect(texto(montado)).not.toContain('Portal do Cliente');
   });
 });
+
+describe('ProjetoDetalhePage: volume do projeto (task 290)', () => {
+  const anual = { projetoId: 5, nome: 'Portal do Cliente', codigo: 'PORTAL', cor: '#336699', volumeEsperadoHorasPorMes: new Array(12).fill(40), minutosGastosPorMes: new Array(12).fill(0) };
+
+  it('o gestor vê a seção Volume aberta, no anual do projeto', async () => {
+    const { montado } = await montarDetalhe(TipoUsuarioEnum.GESTOR);
+    await carregar(montado);
+    responderSucesso(esperarRequisicao(montado.http, 'GET', '/projeto/volume/anual'), [anual]);
+    await montado.atualizar();
+    expect(montado.elemento.querySelector('.projeto-detalhe__volume-titulo')?.getAttribute('aria-expanded')).toBe('true');
+    expect(montado.elemento.querySelector('app-projeto-volume app-grafico-barras')).not.toBeNull();
+  });
+
+  it('recolher esconde o gráfico e fica lembrado; o desenvolvedor não vê a seção nem pede o volume', async () => {
+    const { montado } = await montarDetalhe(TipoUsuarioEnum.GESTOR);
+    await carregar(montado);
+    esperarRequisicao(montado.http, 'GET', '/projeto/volume/anual');
+    (montado.elemento.querySelector('.projeto-detalhe__volume-titulo') as HTMLElement).click();
+    await montado.atualizar();
+    expect(montado.elemento.querySelector('app-projeto-volume')).toBeNull();
+    expect(localStorage.getItem('projeto.volume.recolhido')).toBe('true');
+  });
+
+  it('desenvolvedor: sem a seção Volume e sem pedir o volume', async () => {
+    const { montado } = await montarDetalhe(TipoUsuarioEnum.DESENVOLVEDOR);
+    await carregar(montado);
+    expect(montado.elemento.querySelector('.projeto-detalhe__volume')).toBeNull();
+    montado.http.expectNone((requisicao) => requisicao.url.includes('/projeto/volume'));
+  });
+});

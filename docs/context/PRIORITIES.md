@@ -24,7 +24,6 @@ Resolver primeiro; o autor considera simples ou próximo.
 - **I-036** — status de usuário vira coluna `ativo`, e os booleanos sem prefixo `is_`. "Um dos mais próximos" (2026-10-31). Antes de especificar, avaliar os casos listados no item.
 - **I-019** — teste que garanta o stub de `class-validator` do frontend. "Importante, temos que ter" (2026-10-31).
 - **I-043** — atualizar os pacotes dos provedores de IA para poder usar sempre os modelos mais novos. Perto de "Agora" por ser concreto (2026-10-31).
-- **I-042** — ajustes na tela de projetos: botão Cancelar visível na edição do cabeçalho, seletor de cor mais alinhado (também usado em Tags) e volume, anual por padrão, dentro do projeto. Definido e colocado no "Agora" pelo autor (2026-10-31).
 
 ## 2. Specs já escritas no backlog
 

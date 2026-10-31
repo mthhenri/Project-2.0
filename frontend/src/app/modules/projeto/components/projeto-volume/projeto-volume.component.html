@@ -114,7 +114,11 @@
                   <span class="projeto-volume__cor" [style.background-color]="projeto.item.cor" aria-hidden="true"></span>
                   <div class="projeto-volume__identificacao">
                     <span class="projeto-volume__codigo">{{ projeto.item.codigo }}</span>
-                    <a class="projeto-volume__nome" [routerLink]="['/projeto', projeto.item.projetoId]">{{ projeto.item.nome }}</a>
+                    @if (projetoId() === null) {
+                      <a class="projeto-volume__nome" [routerLink]="['/projeto', projeto.item.projetoId]">{{ projeto.item.nome }}</a>
+                    } @else {
+                      <span class="projeto-volume__nome">{{ projeto.item.nome }}</span>
+                    }
                   </div>
                   <span class="projeto-volume__esperado">{{ projeto.rotuloEsperado }}</span>
                 </header>

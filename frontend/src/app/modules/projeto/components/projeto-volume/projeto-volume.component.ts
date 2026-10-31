@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, input, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -22,6 +22,8 @@ export type PeriodoVolume = 'MENSAL' | 'ANUAL';
  * "Volume" (tasks 197 e 199, gestor): horas gastas contra o volume esperado por projeto, em gráfico de barras. **Mensal:** um grupo por projeto
  * (gastas × esperadas) no mês escolhido. **Anual:** um cartão por projeto com os doze meses do ano e o esperado por mês como linha tracejada.
  * Mês e ano navegam como no Ponto; o padrão é o atual no fuso do sistema, e não há futuro.
+ *
+ * Com `projetoId` (task 290, dentro do detalhe do projeto) mostra só aquele projeto e **começa no anual**; sem ele, é a visão de Projetos (todos, mensal).
  */
 @Component({
   selector: 'app-projeto-volume',
@@ -32,6 +34,8 @@ export type PeriodoVolume = 'MENSAL' | 'ANUAL';
 })
 export class ProjetoVolumeComponent implements OnInit {
   private readonly projetoService = inject(ProjetoService);
+  /** Só este projeto (o detalhe do projeto); `null` mostra todos (a tela de Projetos). */
+  readonly projetoId = input<number | null>(null);
   readonly unidadeTempo = inject(VisualizacaoTempoService);
 
   /** O mês e o ano atuais no fuso do sistema: o teto da navegação e o "voltar ao atual". */
@@ -57,9 +61,11 @@ export class ProjetoVolumeComponent implements OnInit {
   readonly primeiraCarga = computed(() => this.carregando() && !this.jaCarregou());
   readonly recarregando = computed(() => this.carregando() && this.jaCarregou());
 
-  readonly categoriasMensais = computed(() => montarCategoriasMensais(this.itensMensais(), this.unidadeTempo.emDias()));
+  private readonly mensaisVisiveis = computed(() => this.itensMensais().filter((item) => this.projetoId() === null || item.projetoId === this.projetoId()));
+  private readonly anuaisVisiveis = computed(() => this.itensAnuais().filter((item) => this.projetoId() === null || item.projetoId === this.projetoId()));
+  readonly categoriasMensais = computed(() => montarCategoriasMensais(this.mensaisVisiveis(), this.unidadeTempo.emDias()));
   readonly projetosAnuais = computed(() =>
-    this.itensAnuais().map((item) => ({
+    this.anuaisVisiveis().map((item) => ({
       item,
       categorias: montarCategoriasAnuais(item, this.unidadeTempo.emDias()),
       rotuloEsperado: item.volumeEsperadoHorasPorMes.every(valor => valor === null) ? 'sem volume definido' : 'Esperado de cada mês (tracejado)',
@@ -88,6 +94,11 @@ export class ProjetoVolumeComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Dentro do projeto o volume abre no anual.
+    if (this.projetoId() !== null) {
+      this.periodoControl.setValue('ANUAL', { emitEvent: false });
+      this.periodo.set('ANUAL');
+    }
     this.carregar();
   }
 

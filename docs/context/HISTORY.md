@@ -12,6 +12,12 @@
 
 ---
 
+## 2026-10-31 — 290 Ajustes na tela de projetos (I-042): Cancelar visível, cor em popover e volume dentro do projeto
+
+Origem: `IDEAS.md` I-042, detalhada pelo autor. **(1)** Na edição do cabeçalho do projeto (`app-projeto-campo-editavel`: nome e datas) aparece um botão **Cancelar** ao lado do campo; o `mousedown` dele não tira o foco, senão a saída do campo abriria "Salvar alteração?" antes do clique; some quando a pergunta já está na tela. **(2)** A edição da **cor** deixou de espalhar 15 amostras no cabeçalho: o lápis do selo abre um **popover ancorado nele** (como a paleta de Tags) com o `app-seletor-cor` compacto e "Cancelar" / "Salvar" (este só habilita com outra cor); clicar fora ou Esc descarta. O `app-seletor-cor` não mudou. **(3)** O detalhe do projeto (gestor) ganhou a seção recolhível **Volume** entre o cabeçalho e as demandas, reaproveitando `app-projeto-volume` com a entrada nova `projetoId` (só o projeto, **anual por padrão**, Mensal disponível, sem link do nome para o próprio projeto); o estado recolhido fica no `localStorage` (`projeto.volume.recolhido`). A tela de Projetos não mudou.
+
+**Decisões:** sem endpoint novo: o front filtra o `GET /projeto/volume/anual` (que traz todos os projetos), e vira filtro no backend se pesar. **Testes:** frontend 2381 -> **2392** em 192 arquivos, build e `repo:verificar` ok, sem lint (P-001). **Ao vivo** (1366x768 claro e escuro, 1080x1920 claro): Cancelar com clique real, popover da cor (Cancelar e Esc), seção Volume no anual; 1920x1080 e o salvar de verdade só por teste. Relatório em `docs/specs/done/290-ajustes-na-tela-de-projetos/verificacao.md`.
+
 ## 2026-10-31 — PRIORIDADES.md vira PRIORITIES.md e as specs do backlog sobem para depois do "Agora"
 
 Pedido do autor: os arquivos de `docs/context/` têm nome em inglês, então o de prioridades passou a se chamar **`PRIORITIES.md`** (o bloco anterior deste histórico cita o nome antigo; ele não é reescrito). `CLAUDE.md`, `AGENTS.md` (idênticos) e `SYSTEM.SPEC.md` apontam para o nome novo. A ordem das seções ficou: 1 Agora, 2 Specs já escritas no backlog, 3 Em seguida, 4 A pensar, 5 Esperando o Git, 6 Esperando o chat em grupo, 7 Sem prioridade por enquanto.

@@ -72,6 +72,19 @@
     </div>
     </div>
 
+    <!-- Volume do projeto (gestor, task 290): o mesmo gráfico da tela de Projetos, só deste projeto e já no anual. -->
+    @if (sessao.eGestor()) {
+      <section class="projeto-detalhe__volume" aria-label="Volume do projeto">
+        <button type="button" class="projeto-detalhe__volume-titulo" [attr.aria-expanded]="!volumeRecolhido()" (click)="alternarVolume()">
+          <i class="pi" [class.pi-chevron-down]="!volumeRecolhido()" [class.pi-chevron-right]="volumeRecolhido()" aria-hidden="true"></i>
+          Volume
+        </button>
+        @if (!volumeRecolhido()) {
+          <app-projeto-volume [projetoId]="projeto()!.id" />
+        }
+      </section>
+    }
+
     @if (carregandoDemandas()) {
       <app-skeleton-lista variante="linhas" [quantidade]="6" />
     }

@@ -1,10 +1,10 @@
-import { Component, ElementRef, computed, inject, input, output, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Component, ElementRef, computed, inject, input, output, signal, viewChild } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { ContextMenu } from 'primeng/contextmenu';
 import { DatePicker, DatePickerModule } from 'primeng/datepicker';
 import { InputTextModule } from 'primeng/inputtext';
+import { Popover, PopoverModule } from 'primeng/popover';
 import { MenuItem } from 'primeng/api';
 import { MENSAGEM_CARACTERES_PROIBIDOS, REGEX_SEM_CARACTERES_PROIBIDOS } from '@project20/shared';
 import { SeletorCorComponent } from '../../../../shared/components/seletor-cor/seletor-cor.component';
@@ -15,13 +15,14 @@ export type TipoCampoProjeto = 'texto' | 'data' | 'cor';
 
 /**
  * Campo do cabeçalho do projeto que se edita no lugar (task 271), no molde da edição de horas em Execuções: botão direito → "Editar" →
- * o campo aparece ali mesmo → ao sair com mudança, "Salvar alteração? Sim / Não". O valor é texto (nome), `yyyy-mm-dd` (data) ou `#rrggbb` (cor);
+ * o campo aparece ali mesmo → ao sair com mudança, "Salvar alteração? Sim / Não"; um botão "Cancelar" fica ao lado do campo (task 290). A **cor** abre uma paleta
+ * num popover ancorado no selo, com "Cancelar" e "Salvar" no rodapé. O valor é texto (nome), `yyyy-mm-dd` (data) ou `#rrggbb` (cor);
  * "Sim" emite o valor novo e fecha, e quem usa aplica a mudança (otimista, com rollback).
  */
 @Component({
   selector: 'app-projeto-campo-editavel',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonModule, ContextMenu, DatePickerModule, InputTextModule, SeletorCorComponent, BloquearCaracteresProibidosDirective],
+  imports: [ReactiveFormsModule, ButtonModule, ContextMenu, DatePickerModule, InputTextModule, PopoverModule, SeletorCorComponent, BloquearCaracteresProibidosDirective],
   templateUrl: './projeto-campo-editavel.component.html',
   styleUrl: './projeto-campo-editavel.component.scss',
 })
@@ -51,11 +52,9 @@ export class ProjetoCampoEditavelComponent {
   readonly itensMenu: MenuItem[] = [{ label: 'Editar', icon: 'pi pi-pencil', command: () => this.iniciarEdicao() }];
   readonly rotuloMenu = computed(() => `Editar ${this.rotulo()}`);
 
+  private readonly popoverCor = viewChild<Popover>('popoverCor');
+  private readonly ancora = viewChild<ElementRef<HTMLElement>>('ancora');
   private seletorAtivo: DatePicker | null = null;
-
-  constructor() {
-    this.rascunhoCor.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.aoEscolherCor());
-  }
 
   abrirMenu(evento: MouseEvent, menu: ContextMenu): void {
     if (!this.editavel() || this.editando()) return;
@@ -71,6 +70,10 @@ export class ProjetoCampoEditavelComponent {
     this.rascunhoData.reset(isoParaData(this.valor()));
     this.rascunhoCor.reset(this.valor() ?? '#3b82f6', { emitEvent: false });
     this.editando.set(true);
+    if (this.tipo() === 'cor') {
+      setTimeout(() => this.popoverCor()?.show(new Event('click'), this.ancora()?.nativeElement));
+      return;
+    }
     setTimeout(() => this.elemento.nativeElement.querySelector<HTMLElement>('input')?.focus());
   }
 
@@ -99,9 +102,9 @@ export class ProjetoCampoEditavelComponent {
     });
   }
 
-  /** A cor não tem "sair do campo": a pergunta aparece assim que a escolha muda. */
-  private aoEscolherCor(): void {
-    if (this.alterado()) this.confirmando.set(true);
+  /** Clique fora ou Esc no popover da cor: descarta o rascunho. */
+  aoFecharPopover(): void {
+    if (this.editando()) this.encerrar();
   }
 
   confirmar(): void {
@@ -114,7 +117,7 @@ export class ProjetoCampoEditavelComponent {
     this.encerrar();
   }
 
-  private alterado(): boolean {
+  alterado(): boolean {
     return this.valorDoRascunho() !== (this.valor() ?? '');
   }
 
@@ -131,5 +134,6 @@ export class ProjetoCampoEditavelComponent {
     this.confirmando.set(false);
     this.erro.set('');
     this.seletorAtivo = null;
+    this.popoverCor()?.hide();
   }
 }

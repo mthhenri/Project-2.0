@@ -20,6 +20,7 @@ import { DemandaArvorePainelComponent } from '../../../demanda/components/demand
 import { DemandaFormularioDialogComponent } from '../../../demanda/components/demanda-formulario-dialog/demanda-formulario-dialog.component';
 import { DemandaToolbarComponent } from '../../../demanda/components/demanda-toolbar/demanda-toolbar.component';
 import { ProjetoCampoEditavelComponent } from '../../components/projeto-campo-editavel/projeto-campo-editavel.component';
+import { ProjetoVolumeComponent } from '../../components/projeto-volume/projeto-volume.component';
 import { ProjetoVolumeDialogComponent } from '../../components/projeto-volume-dialog/projeto-volume-dialog.component';
 import { ProjetoStatusChipComponent } from '../../components/projeto-status-chip/projeto-status-chip.component';
 import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
@@ -32,6 +33,8 @@ import {
 } from '../../../demanda/utils/demanda-filtro.util';
 import { corTextoSobre, siglaDoProjeto } from '../../utils/projeto-identidade.util';
 import { focoEmCampo, haSobreposicaoAberta } from '../../../../core/utils/atalhos';
+
+const CHAVE_VOLUME_RECOLHIDO = 'projeto.volume.recolhido';
 
 @Component({
   selector: 'app-projeto-detalhe',
@@ -46,6 +49,7 @@ import { focoEmCampo, haSobreposicaoAberta } from '../../../../core/utils/atalho
     DemandaFormularioDialogComponent,
     DemandaToolbarComponent,
     ProjetoCampoEditavelComponent,
+    ProjetoVolumeComponent,
     ProjetoVolumeDialogComponent,
     ProjetoStatusChipComponent,
   ],
@@ -74,6 +78,8 @@ export class ProjetoDetalhePage implements OnInit {
   /** A carga das demandas falhou: o detalhe oferece "Tentar de novo" em vez de dizer que o projeto não tem demandas (P-058). */
   readonly erroAoCarregarDemandas = signal<boolean>(false);
   readonly mostrarDialogNovaDemanda = signal<boolean>(false);
+  /** A seção "Volume" (gestor) recolhida; fica lembrada neste navegador (task 290). */
+  readonly volumeRecolhido = signal<boolean>(this.lerVolumeRecolhido());
   readonly filtro = signal<DemandaFiltro>(FILTRO_VAZIO);
   readonly filtroVazio = FILTRO_VAZIO;
 
@@ -87,6 +93,23 @@ export class ProjetoDetalhePage implements OnInit {
     for (const no of this.nos()) for (const tag of no.tags ?? []) porId.set(tag.id, tag);
     return [...porId.values()].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
   });
+
+  alternarVolume(): void {
+    this.volumeRecolhido.update((atual) => !atual);
+    try {
+      localStorage.setItem(CHAVE_VOLUME_RECOLHIDO, String(this.volumeRecolhido()));
+    } catch {
+      // Sem armazenamento (janela privada, dados bloqueados): vale só até sair da tela.
+    }
+  }
+
+  private lerVolumeRecolhido(): boolean {
+    try {
+      return localStorage.getItem(CHAVE_VOLUME_RECOLHIDO) === 'true';
+    } catch {
+      return false;
+    }
+  }
 
   ngOnInit(): void {
     const identificador = Number(this.route.snapshot.paramMap.get('id'));
