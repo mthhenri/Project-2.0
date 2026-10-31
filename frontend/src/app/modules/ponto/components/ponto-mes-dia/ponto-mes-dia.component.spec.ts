@@ -214,15 +214,14 @@ describe('PontoMesDiaComponent: expandir o dia', () => {
     expect(montado.componente.expandido()).toBe(true);
   });
 
-  it('clicar numa atividade do detalhe emite a atividade', async () => {
+  it('a atividade do detalhe é só texto: não há botão que a abra', async () => {
     const montado = await montar(comRegistro(COM_ALMOCO));
-    const atividades: number[] = [];
-    montado.componente.atividadeSelecionada.subscribe((id) => atividades.push(id));
     (montado.elemento.querySelector('.ponto-mes-dia__linha') as HTMLElement).click();
     responderSucesso(esperarRequisicao(montado.http, 'GET', '/ponto/diario'), detalhe());
     await montado.atualizar();
-    (montado.elemento.querySelector('.ponto-mes-dia__execucao-atividade') as HTMLElement).click();
-    expect(atividades).toEqual([41]);
+    const atividade = montado.elemento.querySelector('.ponto-mes-dia__execucao-atividade') as HTMLElement;
+    expect(atividade.tagName).toBe('DIV');
+    expect(atividade.textContent).toContain('Atividade');
   });
 });
 

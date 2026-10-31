@@ -216,12 +216,6 @@
     }
   }
 
-  // Visualizar: azul suave ancorado no primário (acompanha a cor do tema), como
-  // ação informativa de menor peso.
-  ::ng-deep .atividade-listagem__botao-visualizar .p-button-icon {
-    color: var(--p-primary-400);
-  }
-
   &__dialog-form {
     display: flex;
     flex-direction: column;

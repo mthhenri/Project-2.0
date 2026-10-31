@@ -45,7 +45,6 @@ import { UsuarioService } from '../../../usuario/services/usuario.service';
 import { DemandaService } from '../../../demanda/services/demanda.service';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
 import { AssistenteDescricaoComponent } from '../../../../shared/components/assistente-descricao/assistente-descricao.component';
-import { AtividadeVisualizarDialogComponent } from '../../components/atividade-visualizar-dialog/atividade-visualizar-dialog.component';
 import { DataBrasileiraPipe } from '../../../../shared/pipes/data-brasileira.pipe';
 import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-horas.pipe';
 import { TempoExibicaoPipe } from '../../../../shared/pipes/tempo-exibicao.pipe';
@@ -118,7 +117,6 @@ type CampoDescricaoDemanda = 'descricaoCliente' | 'descricaoTecnica' | 'document
     AtividadeBarraEmMassaComponent,
     ExecucaoRegistroDialogComponent,
     AssistenteDescricaoComponent,
-    AtividadeVisualizarDialogComponent,
     DataBrasileiraPipe,
     MinutosParaHorasPipe,
     TempoExibicaoPipe,
@@ -213,7 +211,6 @@ export class AtividadeListagemPage implements OnInit {
   readonly executandoEmMassa = signal<boolean>(false);
 
   private readonly novaDialog = viewChild.required<AtividadeNovaDialogComponent>('novaDialog');
-  private readonly visualizarDialog = viewChild.required<AtividadeVisualizarDialogComponent>('visualizarDialog');
 
   // --- Dialog: descrições da demanda ---
   readonly mostrarDialogDescricao = signal<boolean>(false);
@@ -342,7 +339,6 @@ export class AtividadeListagemPage implements OnInit {
             this.atividades.set(resposta.dados.itens);
             this.totalRegistros.set(resposta.dados.totalItens);
             this.descobrirNomeDaDemanda();
-            this.visualizarDialog().sincronizar(resposta.dados.itens);
           }
         },
         // Mantém as linhas que já estavam na tela; o aviso diz que elas podem estar desatualizadas.

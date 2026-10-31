@@ -38,7 +38,6 @@ export class ExecucaoAgoraComponent {
 
   readonly pausar = output<ExecucaoPausaPedida>();
   readonly iniciar = output<void>();
-  readonly abrirAtividade = output<number>();
 
   readonly execucaoEmPausa = signal<ExecucaoItemDto | null>(null);
   readonly descricao = new FormControl<string>('', { nonNullable: true });

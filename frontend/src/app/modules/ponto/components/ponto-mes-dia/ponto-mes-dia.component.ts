@@ -43,7 +43,6 @@ export class PontoMesDiaComponent {
   @Input({ required: true }) usuarioId!: number;
   /** Gestor vê o botão "Justificar" na linha e o badge de justificativa clicável. */
   @Input() podeJustificar = false;
-  @Output() atividadeSelecionada = new EventEmitter<number>();
   /** Pede ao pai para abrir o dialog de justificativa naquele dia (a linha não expande). */
   @Output() justificarSolicitada = new EventEmitter<PontoDiaResumoDto>();
 

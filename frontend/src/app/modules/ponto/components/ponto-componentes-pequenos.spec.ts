@@ -102,16 +102,13 @@ describe('PontoUsuarioCardComponent', () => {
     expect(texto(com.elemento.querySelector('.ponto-usuario-card__intervalos') as HTMLElement)).toBe('2');
   });
 
-  it('clicar no nome emite o usuário; clicar na atividade emite a atividade', async () => {
+  it('clicar no nome emite o usuário; a atividade é só texto, sem botão', async () => {
     const montado = await montar(ponto());
     const usuarios: number[] = [];
-    const atividades: number[] = [];
     montado.componente.usuarioSelecionado.subscribe((id) => usuarios.push(id));
-    montado.componente.atividadeSelecionada.subscribe((id) => atividades.push(id));
 
     (montado.elemento.querySelector('.ponto-usuario-card__nome') as HTMLElement).click();
-    (montado.elemento.querySelector('.ponto-usuario-card__atividade') as HTMLElement).click();
     expect(usuarios).toEqual([3]);
-    expect(atividades).toEqual([41]);
+    expect(montado.elemento.querySelector('.ponto-usuario-card__atividade')?.tagName).toBe('SPAN');
   });
 });

@@ -16,7 +16,6 @@ import { ambiente } from '../../../../../environments/environment';
 })
 export class PontoUsuarioCardComponent {
   @Input({ required: true }) ponto!: PontoDiarioDto;
-  @Output() atividadeSelecionada = new EventEmitter<number>();
   /** Nome/avatar clicável: abre o mensal da pessoa. */
   @Output() usuarioSelecionado = new EventEmitter<number>();
 

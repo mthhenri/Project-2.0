@@ -81,20 +81,8 @@
     text-align: center;
   }
 
-  &__atividade-link {
-    padding: 0;
-    border: none;
-    background: none;
-    font: inherit;
-    cursor: pointer;
-    text-align: left;
-    color: var(--p-primary-600);
+  &__atividade {
     font-weight: 500;
-    text-decoration: none;
-
-    &:hover {
-      text-decoration: underline;
-    }
   }
 
   &__momento {

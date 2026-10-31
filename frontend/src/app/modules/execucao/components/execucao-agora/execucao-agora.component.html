@@ -9,9 +9,7 @@
             <span class="execucao-agora__avatar" aria-hidden="true">{{ iniciais(execucao.nomeUsuario) }}</span>
           }
           <div class="execucao-agora__corpo">
-            <button type="button" class="execucao-agora__atividade" (click)="abrirAtividade.emit(execucao.atividadeId)">
-              {{ execucao.nomeAtividade }}
-            </button>
+            <span class="execucao-agora__atividade">{{ execucao.nomeAtividade }}</span>
             <span class="execucao-agora__caminho">
               @if (mostrarUsuario()) { {{ execucao.nomeUsuario }} · }{{ execucao.nomeProjeto }} › {{ execucao.nomeDemanda }}
             </span>

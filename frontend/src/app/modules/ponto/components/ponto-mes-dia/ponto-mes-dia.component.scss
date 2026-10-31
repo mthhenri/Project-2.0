@@ -309,16 +309,6 @@
     background: var(--app-surface-100);
     color: var(--p-text-color);
     text-align: left;
-    cursor: pointer;
-
-    &:hover {
-      background: var(--app-surface-200);
-    }
-
-    &:focus-visible {
-      outline: 2px solid var(--p-primary-color);
-      outline-offset: 2px;
-    }
   }
 
   &__execucao-nome {

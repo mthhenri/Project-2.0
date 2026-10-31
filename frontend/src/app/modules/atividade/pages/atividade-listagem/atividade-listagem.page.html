@@ -288,15 +288,6 @@
               } @else {
                 <span class="atividade-listagem__acoes-vazio" aria-hidden="true"></span>
               }
-              <p-button
-                styleClass="atividade-listagem__botao-visualizar"
-                icon="pi pi-eye"
-                [text]="true"
-                size="small"
-                pTooltip="Visualizar"
-                tooltipPosition="left"
-                (onClick)="visualizarDialog.abrir(atividade.id, atividade)"
-              />
               @if (sessao.eGestor()) {
                 <p-button
                   icon="pi pi-ellipsis-v"
@@ -350,7 +341,6 @@
 <app-atividade-nova-dialog #novaDialog (aoCriar)="aoMudarFiltro()" />
 <app-atividade-prioridades-dialog #prioridadesDialog />
 
-<app-atividade-visualizar-dialog #visualizarDialog (aoAlterar)="buscarAtividades()" (alternarExecucao)="alternarExecucao($event)" />
 
 <!-- Dialog: descrição da demanda -->
 <p-dialog

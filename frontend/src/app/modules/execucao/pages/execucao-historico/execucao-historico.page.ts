@@ -49,7 +49,6 @@ import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.s
 import { IaDisponibilidadeService } from '../../../../core/services/ia-disponibilidade.service';
 import { MinutosParaHorasPipe } from '../../../../shared/pipes/minutos-para-horas.pipe';
 import { BloquearCaracteresProibidosDirective } from '../../../../shared/directives/bloquear-caracteres-proibidos.directive';
-import { AtividadeVisualizarDialogComponent } from '../../../atividade/components/atividade-visualizar-dialog/atividade-visualizar-dialog.component';
 import { SkeletonListaComponent } from '../../../../shared/components/skeleton-lista/skeleton-lista.component';
 import { BarraRecargaComponent } from '../../../../shared/components/barra-recarga/barra-recarga.component';
 import { focoEmCampo, haSobreposicaoAberta } from '../../../../core/utils/atalhos';
@@ -75,7 +74,6 @@ type CampoEdicao = 'descricao' | 'inicio' | 'fim';
     ConfirmPopupModule,
     NgTemplateOutlet,
     MinutosParaHorasPipe,
-    AtividadeVisualizarDialogComponent,
     BloquearCaracteresProibidosDirective,
     ExecucaoAgoraComponent,
   ],

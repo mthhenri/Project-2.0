@@ -50,12 +50,11 @@ describe('ExecucaoAgoraComponent', () => {
     expect(montado.elemento.querySelector('button[aria-label="Pausar execução"]')).not.toBeNull();
   });
 
-  it('o nome da atividade pede para abrir a atividade', async () => {
+  it('o nome da atividade é só texto: não há botão que abra a atividade', async () => {
     const montado = await montar({ ativas: [criarAtiva(1)] });
-    const abrir = vi.fn();
-    montado.componente.abrirAtividade.subscribe(abrir);
-    montado.elemento.querySelector<HTMLButtonElement>('.execucao-agora__atividade')!.click();
-    expect(abrir).toHaveBeenCalledWith(21);
+    const nome = montado.elemento.querySelector('.execucao-agora__atividade')!;
+    expect(nome.tagName).toBe('SPAN');
+    expect(nome.textContent).toContain('Atividade 1');
   });
 
   it('pausar parte da descrição da execução e emite o texto aparado', async () => {

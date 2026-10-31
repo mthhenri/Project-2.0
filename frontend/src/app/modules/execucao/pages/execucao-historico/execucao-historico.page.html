@@ -114,7 +114,6 @@
         [pausando]="pausando()"
         (pausar)="pausarExecucao($event)"
         (iniciar)="iniciarAtividade()"
-        (abrirAtividade)="visualizarDialog.abrir($event)"
       />
     }
     <p-table
@@ -146,13 +145,7 @@
           }
           <td>
             <div class="execucao-historico__contexto">
-              <button
-                type="button"
-                class="execucao-historico__atividade-link"
-                (click)="visualizarDialog.abrir(execucao.atividadeId)"
-              >
-                {{ execucao.nomeAtividade }}
-              </button>
+              <span class="execucao-historico__atividade">{{ execucao.nomeAtividade }}</span>
               <span class="execucao-historico__contexto-caminho">{{ execucao.nomeProjeto }} › {{ execucao.nomeDemanda }}</span>
             </div>
           </td>
@@ -316,4 +309,3 @@
 </ng-template>
 
 <p-confirmpopup />
-<app-atividade-visualizar-dialog #visualizarDialog />

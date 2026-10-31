@@ -112,7 +112,6 @@
         @for (ponto of equipeExibida(); track ponto.usuarioId) {
           <app-ponto-usuario-card
             [ponto]="ponto"
-            (atividadeSelecionada)="visualizarDialog.abrir($event)"
             (usuarioSelecionado)="abrirMensalDe($event)"
           />
         }
@@ -174,7 +173,6 @@
             [dia]="dia"
             [usuarioId]="mensal.usuarioId"
             [podeJustificar]="sessao.eGestor()"
-            (atividadeSelecionada)="visualizarDialog.abrir($event)"
             (justificarSolicitada)="justificarDia($event, mensal.usuarioId)"
           />
         }
@@ -183,7 +181,6 @@
     </div>
   }
 
-  <app-atividade-visualizar-dialog #visualizarDialog />
   <app-ponto-justificativa-dialog #justificativaDialog (aoAlterar)="carregar()" />
   <app-ponto-impressao #impressao [mensal]="pontoMensal()" [nomeGestor]="sessao.eGestor() ? (sessao.nomeCompleto() ?? '') : ''" />
 </div>

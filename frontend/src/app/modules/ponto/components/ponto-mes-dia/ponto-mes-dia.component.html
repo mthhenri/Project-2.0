@@ -121,11 +121,7 @@
               </header>
               <div class="ponto-mes-dia__execucoes">
                 @for (execucao of bloco.execucoes; track execucao.id) {
-                  <button
-                    type="button"
-                    class="ponto-mes-dia__execucao-atividade"
-                    (click)="atividadeSelecionada.emit(execucao.atividadeId)"
-                  >
+                  <div class="ponto-mes-dia__execucao-atividade">
                     <span class="ponto-mes-dia__execucao-horario">
                       {{ execucao.inicioData | date: 'HH:mm' }}
                       <i class="pi pi-arrow-right ponto-mes-dia__seta"></i>
@@ -136,7 +132,7 @@
                       }
                     </span>
                     <span class="ponto-mes-dia__execucao-nome">{{ execucao.nomeAtividade }}</span>
-                  </button>
+                  </div>
                 }
               </div>
             </section>

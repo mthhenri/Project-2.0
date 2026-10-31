@@ -67,21 +67,10 @@
   }
 
   &__atividade {
-    padding: 0;
-    border: 0;
-    background: none;
-    font: inherit;
     font-weight: 500;
-    color: var(--p-primary-600);
-    text-align: left;
-    cursor: pointer;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-
-    &:hover {
-      text-decoration: underline;
-    }
   }
 
   &__caminho,

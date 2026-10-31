@@ -171,17 +171,7 @@
     overflow: hidden;
     overflow-wrap: anywhere;
     text-align: left;
-    text-decoration: none;
     color: var(--p-text-color);
-    background: none;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    font: inherit;
-
-    &:hover {
-      color: var(--p-primary-600);
-    }
   }
 
   &__vazio {
