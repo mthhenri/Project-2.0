@@ -18,6 +18,12 @@
 
 
 
+## 2026-10-31 — Arrumação das specs: guarda-chuvas concluídas para `done/` e 214/215 descartadas
+
+- **Para `done/`:** a 269 (esquecida em `active/`; a tela do relatório já estava no ar) e as guarda-chuvas `chat-propostas`, `chat-planejamento`, `chat-execucao-por-demanda` e `chat-colaboradores`, com os anexos (`referencias.md`, `modelagem.md`). Conferido: todas as tasks 224–237 e 242–245 têm spec em `done/` e bloco neste histórico; as pendências delas (diff do trecho no documento na 234, revisão dos prompts, itens não vistos ao vivo nas 236, 244 e 245) já estavam registradas nas próprias tasks.
+- **Descartadas pelo autor:** a 214 (supervisão das conversas entre colaboradores) e a 215 (verificação de ponta a ponta) foram para `discarded/`; a guarda-chuva `chat-colaboradores` fica em `done/` porque as 205–213 foram implementadas. Os blocos antigos que citam `backlog/chat-*` não foram reescritos.
+- **I-042** (formulário de criação do projeto) segue só em `IDEAS.md`: o autor ainda não listou os ajustes. Nada de código mudou; `npm run repo:verificar` passa.
+
 ## 2026-10-31 — Backlog das ideias I-033, I-034, I-035 e I-038: três specs decididas com o autor (sem código)
 
 Nesta sessão o autor revisou as quatro ideias com POCs publicados como artifacts (tema claro e escuro, no visual do projeto) e decidiu cada uma. Nada de código mudou; só specs em `backlog/`, `IDEAS.md` e `CONTEXT.md`.
