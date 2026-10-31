@@ -119,7 +119,7 @@ describe('MensagemDiretaConversaComponent — digitando…', () => {
     responderSucesso(esperarRequisicao(tela.http, 'POST', caminho), null);
   });
 
-  it('o botão Copiar põe o Markdown da mensagem na área de transferência e mostra "Copiado" por um instante', async () => {
+  it('o menu Copiar texto põe o Markdown na área de transferência e mostra "Copiado" por um instante', async () => {
     const escrever = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, 'clipboard', { value: { writeText: escrever }, configurable: true });
     estado.conversaAberta.update((aberta) => ({
@@ -133,15 +133,60 @@ describe('MensagemDiretaConversaComponent — digitando…', () => {
     }));
     await redesenhar();
 
-    const botao = () => tela.elemento.querySelector<HTMLButtonElement>('.conversa-direta__copiar')!;
+    const botao = () => tela.elemento.querySelector<HTMLButtonElement>('[aria-label="Ações da mensagem"]')!;
+    expect(botao()).not.toBeNull();
     botao().click();
     await redesenhar();
+    expect(document.querySelector('.p-contextmenu')).not.toBeNull();
+    botao().click();
+    await redesenhar();
+    expect(document.querySelector('.p-contextmenu')).toBeNull();
+    botao().click();
+    await redesenhar();
+    const copiar = Array.from(document.querySelectorAll<HTMLElement>('.p-contextmenu-item-link')).find((item) => item.textContent?.includes('Copiar texto'));
+    expect(copiar).toBeDefined();
+    copiar!.click();
+    await redesenhar();
     expect(escrever).toHaveBeenCalledWith('**oi**\n\n```ts\nconst a = 1;\n```');
-    expect(botao().getAttribute('aria-label')).toBe('Mensagem copiada');
+    expect(botao().querySelector('.pi-check')).not.toBeNull();
 
     await vi.advanceTimersByTimeAsync(TEMPO_DO_COPIADO_MS);
     await tela.atualizar();
-    expect(botao().getAttribute('aria-label')).toBe('Copiar a mensagem');
+    expect(botao().querySelector('.pi-ellipsis-h')).not.toBeNull();
+  });
+  it('o botão direito abre as ações da mensagem escolhida e trocar de conversa fecha o menu', async () => {
+    const escrever = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText: escrever }, configurable: true });
+    estado.conversaAberta.update((aberta) => ({ ...aberta!, mensagens: [
+      { mensagemId: 'minha', conversaId: '1-9', autor: AutorMensagemDiretaEnum.USUARIO, autorUsuarioId: 1, texto: 'Meu texto', contemCodigo: false, mencoes: [], referencias: [], respondeA: null, createdDate: new Date(), situacao: 'ENVIADA' },
+      { mensagemId: 'recebida', conversaId: '1-9', autor: AutorMensagemDiretaEnum.USUARIO, autorUsuarioId: 9, texto: 'Texto da Camila', contemCodigo: false, mencoes: [], referencias: [], respondeA: null, createdDate: new Date(), situacao: 'ENVIADA' },
+    ] }));
+    await redesenhar();
+    const mensagens = tela.elemento.querySelectorAll<HTMLElement>('.conversa-direta__balao');
+    const abrir = async (indice: number) => {
+      const evento = new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: 40, clientY: 60 });
+      mensagens[indice].dispatchEvent(evento);
+      await redesenhar();
+      expect(evento.defaultPrevented).toBe(true);
+    };
+    const acao = (rotulo: string) => Array.from(document.querySelectorAll<HTMLElement>('.p-contextmenu-item-link')).find((item) => item.textContent?.includes(rotulo))!;
+
+    await abrir(0);
+    acao('Copiar texto').click();
+    await redesenhar();
+    expect(escrever).toHaveBeenCalledWith('Meu texto');
+    await abrir(1);
+    acao('Responder').click();
+    await redesenhar();
+    expect(estado.respondendoA()?.mensagemId).toBe('recebida');
+    await abrir(0);
+    acao('Responder').click();
+    await redesenhar();
+    expect(estado.respondendoA()?.mensagemId).toBe('minha');
+    await abrir(1);
+    estado.voltarParaALista();
+    await redesenhar();
+    expect(document.querySelector('.p-contextmenu')).toBeNull();
   });
 });
 
@@ -169,6 +214,6 @@ describe('MensagemDiretaConversaComponent — aviso do sistema', () => {
 
     expect(tela.elemento.querySelector('.conversa-direta__sistema')?.textContent).toContain('Carla, gestor, leu esta conversa');
     expect(tela.elemento.querySelector('.conversa-direta__balao')).toBeNull();
-    expect(tela.elemento.querySelector('.conversa-direta__responder')).toBeNull();
+    expect(tela.elemento.querySelector('[aria-label="Ações da mensagem"]')).toBeNull();
   });
 });

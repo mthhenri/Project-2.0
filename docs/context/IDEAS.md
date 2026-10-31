@@ -167,29 +167,20 @@
 - **Por quê:** quem lê o desenho não sabe o que cada coluna significa sem abrir `docs/SCHEMA.md`.
 - **Custo aparente:** a decidir onde a descrição mora: tabela nova (migration) ou o arquivo JSON local da spec 222 (`modelagem-em-arquivo-json.spec.md`), que muda onde a Modelagem guarda a organização; ou só texto em `docs/SCHEMA.md` lido pela tela. Definir isso com o autor antes de especificar.
 
-### I-041 — Custo da pesquisa na internet e da OpenAI com pesquisa · chat IA/custos
-
-- **Ideia:** mostrar na aba Custos quantas buscas o provedor fez (o `web_search` da Anthropic devolve `server_tool_use.web_search_requests`; o Gemini cobra por resposta com pesquisa) e, na migração da OpenAI para a Responses API (spec 261), ligar a `web_search` dela.
-- **Origem:** task 263 (2026-10-30): a pesquisa entrou usando a ferramenta de cada provedor, e o custo dela não é de token.
-- **Por quê:** o gasto da IA hoje some de uma parte: cada busca é cobrada à parte e o administrador não vê.
-- **Custo aparente:** ler o contador de buscas de cada provedor na resposta, gravar na mensagem (sem tabela de uso, como a 202) e preço por busca na configuração; a parte da OpenAI depende da 261.
-
 ### I-043 — Manter os pacotes dos provedores de IA atualizados · chat IA/backend
 
 - **Ideia:** atualizar os pacotes dos três provedores (`@anthropic-ai/sdk`, `openai`, `@google/genai`) e manter isso em dia, para o sistema poder usar sempre os modelos mais novos assim que saírem.
 - **Origem:** conversa de 2026-10-31 com o autor, ao triar as ideias.
 - **Por quê:** um modelo novo pode exigir uma versão recente do pacote, e o nome do modelo é texto livre na configuração da IA; sem pacote em dia, o administrador não consegue trocar para o modelo mais novo.
-- **Custo aparente:** baixo a médio: subir as versões, conferir mudanças que quebram (tipos, nomes de campo, a ferramenta de busca de cada provedor, ver I-041), rodar os testes da IA e conferir ao vivo um provedor de cada. Decidir se a atualização vira rotina.
+- **Custo aparente:** baixo a médio: subir as versões, conferir mudanças que quebram (tipos, nomes de campo, a ferramenta de busca de cada provedor, ver spec 294), rodar os testes da IA e conferir ao vivo um provedor de cada. Decidir se a atualização vira rotina.
 
-### I-044 — Avisar no chat que houve pesquisa na internet, com as referências · chat IA
+### I-044 — Comando do usuário para pedir pesquisa na internet · chat IA
 
-- **Ideia:** quando a IA responde uma dúvida de código pesquisando na internet, mostrar na mensagem um chip "foi feita uma busca na internet" e, se o provedor trouxer fontes, listar as referências.
-- **Detalhamento do autor (2026-10-31):** globo ao lado do selo de nível (rápido/padrão/analítico), com tooltip "Pesquisa realizada na internet", e bolinhas clicáveis ao lado com os links das referências devolvidas pelo provedor. Contabilizar o gasto da pesquisa junto dos custos da IA (I-041), incluindo a cobrança própria da ferramenta quando houver, além dos tokens, sem contagem duplicada.
-- **Restrição reafirmada pelo autor (2026-10-31):** a própria IA decide quando pesquisar, exclusivamente ao tirar dúvidas de código. Assuntos de demandas são consultados sempre e unicamente dentro do projeto e de suas demandas; nunca pesquisar esses assuntos na internet nem expor seus dados em consultas externas.
-- **Melhoria futura, só ideia (2026-10-31):** permitir ao usuário ativar um comando/controle para pedir explicitamente pesquisa na internet ao tirar uma dúvida de código. Não definido nem autorizado para implementação; esse controle também deve respeitar a restrição acima e não liberar pesquisa externa sobre demandas.
-- **Origem:** conversa de 2026-10-31 com o autor, ao falar do custo da pesquisa (I-041).
-- **Por quê:** o usuário precisa saber de onde veio a resposta e poder conferir as fontes; hoje a pesquisa entra sem aviso (task 263).
-- **Custo aparente:** ler as citações que cada provedor devolve junto da ferramenta de busca (formatos diferentes nos três), guardar na mensagem e mostrar no chat; vale ver junto com a contagem de buscas da I-041.
+- **Ideia:** permitir ao usuário ativar um comando/controle para pedir explicitamente pesquisa na internet ao tirar uma dúvida de código. Continua só ideia, sem formato definido nem autorização de implementação.
+- **Origem:** discussão de 2026-10-31. O indicador, as referências, a configuração por provedor e os custos (I-041 e a parte automática desta ideia) viraram a [spec 294](../specs/backlog/294-pesquisa-internet-provedores-custos-e-fontes.spec.md); só o comando manual permanece aqui.
+- **Por quê:** quem já sabe que precisa de uma pesquisa pode pedi-la diretamente.
+- **Restrição:** exclusivamente dúvidas de código, respeitando o bloqueio administrativo por provedor. Demandas e assuntos internos continuam restritos ao projeto e às suas demandas; o comando não libera busca externa desses dados.
+- **Custo aparente:** a definir depois da 294, sobre o fluxo de elegibilidade e isolamento dela, sem contornar suas restrições.
 
 ### I-045 — Volume por usuário: quanto cada pessoa fez no mês · frontend/backend
 

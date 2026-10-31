@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
-import { CitacaoMensagemDto, ReferenciaMensagemDiretaEnum, trechoDaMensagemDireta } from '@project20/shared';
-import { MessageService } from 'primeng/api';
+import { AutorMensagemDiretaEnum, CitacaoMensagemDto, ReferenciaMensagemDiretaEnum, trechoDaMensagemDireta } from '@project20/shared';
+import { MenuItem, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
+import { ContextMenu } from 'primeng/contextmenu';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TooltipModule } from 'primeng/tooltip';
 import { UsuarioSessaoService } from '../../../../core/services/usuario-sessao.service';
@@ -9,7 +10,7 @@ import { TEMPO_DO_COPIADO_MS } from '../../../../shared/components/markdown-bloc
 import { MarkdownVisualizadorComponent } from '../../../../shared/components/markdown-visualizador/markdown-visualizador.component';
 import { MensagemDiretaReferenciaService } from '../../services/mensagem-direta-referencia.service';
 import { EnvioDoCompositor, MensagemDiretaEstadoService } from '../../services/mensagem-direta-estado.service';
-import { AVISO_DE_LEITURA_DAS_CONVERSAS, agruparPorDia, formatarHora, idDaUltimaLidaPelaOutraPessoa } from '../../utils/mensagem-direta.util';
+import { AVISO_DE_LEITURA_DAS_CONVERSAS, MensagemNaConversa, agruparPorDia, formatarHora, idDaUltimaLidaPelaOutraPessoa } from '../../utils/mensagem-direta.util';
 import { MensagemDiretaAvatarComponent } from '../mensagem-direta-avatar/mensagem-direta-avatar.component';
 import { MensagemDiretaCompositorComponent } from '../mensagem-direta-compositor/mensagem-direta-compositor.component';
 import { MensagemDiretaReferenciaCartaoComponent } from '../mensagem-direta-referencia-cartao/mensagem-direta-referencia-cartao.component';
@@ -30,7 +31,7 @@ const MARGEM_DO_TOPO_PX = 40;
 @Component({
   selector: 'app-mensagem-direta-conversa',
   standalone: true,
-  imports: [ButtonModule, SkeletonModule, TooltipModule, MarkdownVisualizadorComponent, MensagemDiretaAvatarComponent, MensagemDiretaCompositorComponent, MensagemDiretaReferenciaCartaoComponent],
+  imports: [ButtonModule, ContextMenu, SkeletonModule, TooltipModule, MarkdownVisualizadorComponent, MensagemDiretaAvatarComponent, MensagemDiretaCompositorComponent, MensagemDiretaReferenciaCartaoComponent],
   templateUrl: './mensagem-direta-conversa.component.html',
   styleUrl: './mensagem-direta-conversa.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -42,6 +43,9 @@ export class MensagemDiretaConversaComponent {
   private readonly referencias = inject(MensagemDiretaReferenciaService);
   private readonly messageService = inject(MessageService);
   private readonly rolagem = viewChild<ElementRef<HTMLElement>>('rolagem');
+  private readonly menuAcoes = viewChild<ContextMenu>('menuAcoes');
+  protected readonly itensMenu = signal<MenuItem[]>([]);
+  protected readonly mensagemDoMenu = signal<string | null>(null);
 
   protected readonly aberta = this.estado.conversaAberta;
   protected readonly meuId = this.sessao.id;
@@ -102,6 +106,11 @@ export class MensagemDiretaConversaComponent {
   private totalVisto = 0;
 
   constructor() {
+    effect(() => {
+      this.pessoaAberta();
+      this.menuAcoes()?.hide();
+      this.mensagemDoMenu.set(null);
+    });
     // Quando o NÚMERO de mensagens muda: acompanha o fim se o usuário está lá, ou mantém o ponto que ele lia quando chega uma página mais antiga.
     effect(() => {
       this.totalDeMensagens();
@@ -149,6 +158,32 @@ export class MensagemDiretaConversaComponent {
     const dados = await this.referencias.recuperar(tipo, id);
     if (!dados?.acessivel || !dados.nome) return;
     this.nomesDasReferencias.update((atuais) => new Map(atuais).set(chave, dados.nome as string));
+  }
+
+  /** Menu da mensagem enviada: o botão direito e os três pontos oferecem as mesmas ações. */
+  protected abrirMenu(evento: MouseEvent, mensagem: MensagemNaConversa, peloBotao = false): void {
+    if (mensagem.situacao !== 'ENVIADA' || mensagem.autor !== AutorMensagemDiretaEnum.USUARIO) return;
+    evento.preventDefault();
+    evento.stopPropagation();
+    if (peloBotao && this.mensagemDoMenu() === mensagem.mensagemId) {
+      this.menuAcoes()?.hide();
+      return;
+    }
+    this.mensagemDoMenu.set(mensagem.mensagemId);
+    this.itensMenu.set([
+      { label: 'Responder', icon: 'pi pi-reply', command: () => this.estado.responder(mensagem) },
+      { label: 'Copiar texto', icon: 'pi pi-copy', command: () => void this.copiar(mensagem.mensagemId, mensagem.texto) },
+    ]);
+    // Cliques de teclado têm coordenadas zero: ancorar o menu no botão também atende Enter/Espaço.
+    const botao = peloBotao ? evento.currentTarget as HTMLElement : null;
+    const limites = botao?.getBoundingClientRect();
+    const janela = botao?.ownerDocument.defaultView;
+    this.menuAcoes()?.show(limites ? {
+      pageX: limites.left + (janela?.scrollX ?? 0),
+      pageY: limites.bottom + (janela?.scrollY ?? 0),
+      preventDefault: () => evento.preventDefault(),
+      stopPropagation: () => evento.stopPropagation(),
+    } : evento);
   }
 
   /** Copia o texto da mensagem como foi escrito (o Markdown), inclusive blocos de código. */

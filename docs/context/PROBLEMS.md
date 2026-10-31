@@ -29,6 +29,22 @@
 
 ## Ativos
 
+### P-064 — Chat IA sem feedback ao criar ou trocar conversas e planos · `ABERTO` · frontend/chat
+
+- **Sintoma:** o autor relata que criar outra conversa ou carregar conversa/plano não mostra carregamento; fica sem saber se o clique foi atendido. Inclui navegar para conversas antigas.
+- **Causa:** não investigada; relato do autor, fora da task 293.
+- **Contorno:** aguardar a troca, sem indicação confiável de progresso.
+- **Correção:** definir feedback de carga consistente para essas operações, preservando a seleção e os estados de erro.
+- **Desde:** discussão de 2026-10-31; ainda não implementado nem verificado em cenário de falha real.
+
+### P-065 — Histórico somente leitura mostra o seletor Perguntas/Planejamento · `ABERTO` · frontend/chat
+
+- **Sintoma:** ao visualizar conversa antiga, a faixa "só para leitura" aparece junto do seletor Perguntas/Planejamento no rodapé, conforme print do autor.
+- **Causa:** não investigada; fora da task 293.
+- **Contorno:** ignorar o seletor ao consultar o histórico.
+- **Correção:** ocultar esse seletor na conversa histórica somente leitura, preservando o retorno para hoje.
+- **Desde:** relato e print do autor em 2026-10-31; correção pendente.
+
 ### P-023 — Desfazer da entrada numa demanda sem outros membros é recusado · `ABERTO` · chat IA/demanda
 
 - **Sintoma:** o desenvolvedor entra numa demanda **sem nenhum membro** pelo chat (cartão "Atribuir membro", Confirmar) e, ao clicar em **Desfazer**, a API responde

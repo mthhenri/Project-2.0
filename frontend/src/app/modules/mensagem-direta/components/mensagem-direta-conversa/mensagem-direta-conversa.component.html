@@ -1,4 +1,5 @@
 @if (aberta(); as conversa) {
+  <p-contextmenu #menuAcoes [model]="itensMenu()" appendTo="body" ariaLabel="Ações da mensagem" (onHide)="mensagemDoMenu.set(null)" />
   <div class="conversa-direta">
     <div class="conversa-direta__cabecalho" data-popup-arrasto>
       <p-button icon="pi pi-angle-left" severity="secondary" [text]="true" [rounded]="true" size="small" ariaLabel="Voltar para as conversas" pTooltip="Voltar" tooltipPosition="bottom" (onClick)="voltar()" />
@@ -67,6 +68,7 @@
                 [class.conversa-direta__balao--minha]="minha"
                 [class.conversa-direta__balao--enviando]="mensagem.situacao === 'ENVIANDO'"
                 [class.conversa-direta__balao--falhou]="mensagem.situacao === 'FALHOU'"
+                (contextmenu)="abrirMenu($event, mensagem)"
               >
                 @if (mensagem.respondeA; as citacao) {
                   <button type="button" class="conversa-direta__citacao" [attr.aria-label]="'Ir para a mensagem de ' + nomeDaCitacao(citacao)" (click)="irParaOriginal(citacao.mensagemId)">
@@ -92,34 +94,25 @@
                     <span>Enviando…</span>
                   }
                   @default {
-                    <span>{{ hora(mensagem.createdDate) }}</span>
+                    <span class="conversa-direta__horario">{{ hora(mensagem.createdDate) }}
                     @if (minha && mensagem.mensagemId === lidaId()) {
                       <span class="conversa-direta__lida"><i class="pi pi-check" aria-hidden="true"></i><i class="pi pi-check conversa-direta__lida-segundo" aria-hidden="true"></i> Lida</span>
                     } @else if (minha && mensagem.mensagemId === ultimaMinhaId()) {
                       <span>· Enviada</span>
                     }
-                    @if (mensagem.autor === 'USUARIO') {
-                      <button
-                        type="button"
-                        class="conversa-direta__responder"
-                        aria-label="Responder a esta mensagem"
-                        pTooltip="Responder"
-                        tooltipPosition="top"
-                        (click)="estado.responder(mensagem)"
-                      >
-                        <i class="pi pi-reply" aria-hidden="true"></i>
-                      </button>
-                    }
+                    </span>
                     <button
                       type="button"
-                      class="conversa-direta__copiar"
-                      [class.conversa-direta__copiar--copiado]="copiadaId() === mensagem.mensagemId"
-                      [attr.aria-label]="copiadaId() === mensagem.mensagemId ? 'Mensagem copiada' : 'Copiar a mensagem'"
-                      [pTooltip]="copiadaId() === mensagem.mensagemId ? 'Copiado' : 'Copiar texto'"
+                      class="conversa-direta__acoes"
+                      [class.conversa-direta__acoes--visivel]="mensagemDoMenu() === mensagem.mensagemId || copiadaId() === mensagem.mensagemId"
+                      aria-label="Ações da mensagem"
+                      aria-haspopup="menu"
+                      [attr.aria-expanded]="mensagemDoMenu() === mensagem.mensagemId"
+                      [pTooltip]="copiadaId() === mensagem.mensagemId ? 'Copiado' : 'Ações da mensagem'"
                       tooltipPosition="top"
-                      (click)="copiar(mensagem.mensagemId, mensagem.texto)"
+                      (click)="abrirMenu($event, mensagem, true)"
                     >
-                      <i [class]="copiadaId() === mensagem.mensagemId ? 'pi pi-check' : 'pi pi-copy'" aria-hidden="true"></i>
+                      <i [class]="copiadaId() === mensagem.mensagemId ? 'pi pi-check' : 'pi pi-ellipsis-h'" aria-hidden="true"></i>
                     </button>
                   }
                 }

@@ -214,9 +214,18 @@
     }
   }
 
-  // O botão de copiar só aparece com o mouse sobre a mensagem (ou com o foco nele): senão cada balão ganharia um ícone fixo.
-  &__copiar,
-  &__responder {
+  &__horario {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+  }
+
+  &__linha--minha &__acoes {
+    order: -1;
+  }
+
+  // O espaço do menu fica reservado: revelar os três pontos não desloca o horário.
+  &__acoes {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -241,14 +250,12 @@
       outline-offset: 1px;
     }
 
-    &--copiado {
+    &--visivel {
       opacity: 1;
-      color: var(--p-primary-color);
     }
   }
 
-  &__linha:hover &__copiar,
-  &__linha:hover &__responder {
+  &__linha:hover &__acoes {
     opacity: 1;
   }
 

@@ -33,6 +33,7 @@ Ainda **sem ordem decidida** entre si nem em relação ao bloco "Agora". O autor
 - `chat-proposta-no-documento.spec.md` (tasks 273–277)
 - `261-ia-roteamento-hibrido-por-nivel-e-esforco.spec.md`
 - `222-modelagem-em-arquivo-json.spec.md`
+- `294-pesquisa-internet-provedores-custos-e-fontes.spec.md` — pesquisa, fontes, custos e controle por provedor; fazer depois, conforme decisão do autor (2026-10-31), sem ordem definida neste bloco.
 
 ## 3. Em seguida
 
@@ -49,7 +50,7 @@ Sem urgência; o autor quer conversar antes de especificar.
 - **I-037** — visão do cliente sobre as demandas do próprio projeto. "Temos que pensar um pouquinho" (2026-10-31).
 - **I-024** — imagens e prints nos chats. "Podemos pensar um pouco" (2026-10-31).
 - **I-031** — escolher pela tela o nível de IA de cada tipo de prompt. "Podemos pensar" (2026-10-31).
-- **I-041** e **I-044** — custo da pesquisa na internet e o aviso, no chat, de que houve pesquisa, com as referências. Olhar as ferramentas de busca dos três provedores (2026-10-31).
+- **I-044** — comando manual para pedir pesquisa na internet; só essa melhoria segue como ideia, fora da spec 294 (2026-10-31).
 - **I-040** — documentar tabelas e campos na tela de Modelagem. Olhar, sem ser prioridade (2026-10-31).
 - **I-002** e **P-001** — lint. "Podemos dar uma olhada" e decidir se vale resolver (2026-10-31).
 

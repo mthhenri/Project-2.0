@@ -36,7 +36,15 @@ describe('MensagemDiretaConversaComponent — responder', () => {
     await vi.advanceTimersByTimeAsync(0);
     await tela.atualizar();
   };
-  const botoesDeResponder = () => Array.from(tela.elemento.querySelectorAll<HTMLButtonElement>('.conversa-direta__responder'));
+  const botoesDeAcoes = () => Array.from(tela.elemento.querySelectorAll<HTMLButtonElement>('[aria-label="Ações da mensagem"]'));
+  const responderPeloMenu = async () => {
+    botoesDeAcoes()[0].click();
+    await redesenhar();
+    const responder = Array.from(document.querySelectorAll<HTMLElement>('.p-contextmenu-item-link')).find((item) => item.textContent?.includes('Responder'));
+    expect(responder).toBeDefined();
+    responder!.click();
+    await redesenhar();
+  };
   const barra = () => tela.elemento.querySelector('.compositor-direto__resposta');
   const citacoes = () => Array.from(tela.elemento.querySelectorAll<HTMLButtonElement>('.conversa-direta__citacao'));
   const abrirComMensagens = async (mensagens: MensagemNaConversa[], proximoCursor: string | null = null) => {
@@ -63,8 +71,7 @@ describe('MensagemDiretaConversaComponent — responder', () => {
 
   it('Responder abre a barra "Respondendo a…" com o nome e o trecho sem marcação; o X cancela', async () => {
     expect(barra()).toBeNull();
-    botoesDeResponder()[0].click();
-    await redesenhar();
+    await responderPeloMenu();
 
     expect(barra()?.textContent).toContain('Respondendo a Camila Duarte');
     expect(barra()?.textContent).toContain('Subi o ajuste do cadastro');
@@ -77,8 +84,7 @@ describe('MensagemDiretaConversaComponent — responder', () => {
 
   it('Esc no campo cancela só a resposta, mantém o texto e não deixa o evento seguir para o popup', async () => {
     await esperarCampoDeMensagem(tela.fixture, redesenhar);
-    botoesDeResponder()[0].click();
-    await redesenhar();
+    await responderPeloMenu();
     digitarNaMensagem(tela.fixture, 'rascunho');
 
     const evento = teclarNaMensagem(tela.fixture, 'Escape');
@@ -92,9 +98,10 @@ describe('MensagemDiretaConversaComponent — responder', () => {
     await abrirComMensagens([
       mensagem('a', 9, 'Fulano leu esta conversa', { autor: AutorMensagemDiretaEnum.SISTEMA, autorUsuarioId: null }),
       mensagem('b', 1, 'enviando…', { situacao: 'ENVIANDO' }),
+      mensagem('falhou', 1, 'não enviada', { situacao: 'FALHOU' }),
       mensagem('c', 9, 'normal'),
     ]);
-    expect(botoesDeResponder().length).toBe(1);
+    expect(botoesDeAcoes().length).toBe(1);
 
     estado.responder(mensagem('b', 1, 'enviando…', { situacao: 'ENVIANDO' }));
     expect(estado.respondendoA()).toBeNull();
@@ -102,8 +109,7 @@ describe('MensagemDiretaConversaComponent — responder', () => {
 
   it('enviar uma resposta manda só o id da original, mostra a citação na hora e limpa a barra', async () => {
     await esperarCampoDeMensagem(tela.fixture, redesenhar);
-    botoesDeResponder()[0].click();
-    await redesenhar();
+    await responderPeloMenu();
     digitarNaMensagem(tela.fixture, 'Revisei, ficou certo');
     await redesenhar();
     tela.elemento.querySelector<HTMLButtonElement>('.compositor-direto__enviar')!.click();
@@ -120,8 +126,7 @@ describe('MensagemDiretaConversaComponent — responder', () => {
 
   it('"Tentar de novo" reenvia a resposta com o mesmo id da original', async () => {
     await esperarCampoDeMensagem(tela.fixture, redesenhar);
-    botoesDeResponder()[0].click();
-    await redesenhar();
+    await responderPeloMenu();
     digitarNaMensagem(tela.fixture, 'Revisei');
     await redesenhar();
     tela.elemento.querySelector<HTMLButtonElement>('.compositor-direto__enviar')!.click();
@@ -169,8 +174,7 @@ describe('MensagemDiretaConversaComponent — responder', () => {
   });
 
   it('abrir outra conversa descarta a resposta em preparo', async () => {
-    botoesDeResponder()[0].click();
-    await redesenhar();
+    await responderPeloMenu();
     expect(estado.respondendoA()).not.toBeNull();
     estado.voltarParaALista();
     expect(estado.respondendoA()).toBeNull();

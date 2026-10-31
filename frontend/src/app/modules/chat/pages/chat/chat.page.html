@@ -90,12 +90,12 @@
                         }
                         <div class="chat__balao"><app-markdown-visualizador [texto]="mensagem.texto" [herdaCor]="true" [comTabelas]="false" /></div>
                         <div class="chat__rodape-mensagem">
-                          @if (mensagem.criadaEm) {
-                            <span class="chat__hora">{{ mensagem.criadaEm | date: 'dd/MM/yyyy HH:mm' }}</span>
-                          }
                           <button type="button" class="chat__copiar" aria-label="Copiar a mensagem" pTooltip="Copiar" tooltipPosition="bottom" (click)="copiar(mensagem.texto)">
                             <i class="pi pi-copy"></i>
                           </button>
+                          @if (mensagem.criadaEm) {
+                            <span class="chat__hora">{{ mensagem.criadaEm | date: 'dd/MM/yyyy HH:mm' }}</span>
+                          }
                         </div>
                       </div>
                     </div>

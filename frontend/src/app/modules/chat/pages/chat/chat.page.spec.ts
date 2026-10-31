@@ -164,6 +164,9 @@ describe('ChatPage — abrir a conversa de hoje', () => {
     expect(chip!.closest('.chat__rodape-mensagem')).not.toBeNull();
     expect(chip!.previousElementSibling?.classList.contains('chat__hora')).toBe(true);
     expect(montado.elemento.querySelector('[aria-label="Copiar a mensagem"]')).not.toBeNull();
+    const rodapeProprio = montado.elemento.querySelector('.chat__linha--usuario .chat__rodape-mensagem')!;
+    expect(rodapeProprio.firstElementChild?.getAttribute('aria-label')).toBe('Copiar a mensagem');
+    expect(rodapeProprio.lastElementChild?.classList.contains('chat__hora')).toBe(true);
     expect(montado.elemento.querySelector('[aria-label="Copiar a resposta"]')).not.toBeNull();
   });
 
