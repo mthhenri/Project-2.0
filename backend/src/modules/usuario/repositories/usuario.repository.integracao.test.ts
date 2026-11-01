@@ -2,7 +2,7 @@ import * as assert from 'node:assert/strict';
 import { TipoUsuarioEnum, TipoUsuarioStatusEnum } from '@project20/shared';
 import { testarComBanco } from '../../../testes/banco-teste';
 import { criarRepositorio } from '../../../testes/criar-repositorio';
-import { criarAdministrador, criarDesenvolvedor, criarGestor, criarUsuario } from '../../../testes/fabricas';
+import { criarAdministrador, criarAuxiliar, criarDesenvolvedor, criarGestor, criarUsuario } from '../../../testes/fabricas';
 import { UsuarioRepository } from './usuario.repository';
 
 const DADOS_INSERIR = {
@@ -39,6 +39,16 @@ testarComBanco('recuperar por id traz a senha encriptada e os códigos de tipo e
     assert.equal(porId?.tipo, TipoUsuarioEnum.GESTOR);
     assert.equal(porId?.status, TipoUsuarioStatusEnum.ATIVO);
     assert.equal((await repositorio.recuperar({ login: 'gestora.teste' }))?.id, gestor.id);
+});
+
+testarComBanco('o auxiliar é gravado e lido com o código AUXILIAR, e não entra na lista de quem tem permissão de gestor', async (conexao) => {
+    const repositorio = criarRepositorio(UsuarioRepository, conexao);
+    const auxiliar = await criarAuxiliar(conexao, { login: 'auxiliar.teste' });
+    const gestor = await criarGestor(conexao, { login: 'gestor.da.lista' });
+    assert.equal((await repositorio.recuperar({ id: auxiliar.id }))?.tipo, TipoUsuarioEnum.AUXILIAR);
+    const idsComPermissaoDeGestor = await repositorio.listarIdsComPermissaoDeGestor();
+    assert.ok(idsComPermissaoDeGestor.includes(gestor.id));
+    assert.ok(!idsComPermissaoDeGestor.includes(auxiliar.id));
 });
 
 testarComBanco('recuperar não devolve usuário excluído, mas devolve o inativo', async (conexao) => {

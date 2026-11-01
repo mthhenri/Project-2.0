@@ -12,6 +12,10 @@
 
 ---
 
+## 2026-11-01 — Task 283: fundação do tipo Auxiliar (enum, migration 0074 e permissões por ação)
+
+`AUXILIAR` entrou em `TipoUsuarioEnum` e na tabela `tipo_usuario` (migration `0074`, com rollback que devolve os auxiliares a desenvolvedor). `shared/src/utils/permissao-usuario.ts` ganhou uma função por ação, todas por **lista positiva** de tipos (nunca `tipo !== DESENVOLVEDOR`); `temPermissaoDeGestor` e `temPermissaoDeAdministrador` seguem iguais e dão `false` para o Auxiliar. Frontend: rótulo ("Auxiliar", curto "Aux") e selo `success`. Nenhum comportamento mudou, pois ninguém é Auxiliar ainda. Verificação: `shared` 309 testes, backend 1590, integração 368 (inclui o auxiliar gravado e lido e fora da lista de permissão de gestor), build do backend, `lint:tudo` e migration aplicada e revertida. Os consumidores antigos migram na 284 (backend) e na 286 (frontend).
+
 ## 2026-11-01 — Tipo de usuário "Ajudante" passa a se chamar "Auxiliar"
 
 Decisão do autor, entre Coordenador, Líder técnico e Auxiliar. Só a spec existia (nenhum código, enum ou migration usava o nome): `tipo-ajudante.spec.md` virou `tipo-auxiliar.spec.md` (valor do enum `AUXILIAR`, `eAuxiliar`), com `PRIORITIES.md` e `CONTEXT.md` apontando para o arquivo novo. Blocos antigos deste histórico (I-035) seguem com o nome antigo, como registro. Verificação: `repo:verificar`; busca por "ajudante" só acha o ajudante de teste `testes/campo-mensagem.ts`, que não tem relação.

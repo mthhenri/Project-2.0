@@ -293,7 +293,7 @@ export class UsuarioListagemPage implements OnInit {
 
     readonly rotuloTipo = rotuloTipoUsuario;
 
-    severidadeTipo(tipo: TipoUsuarioEnum): 'info' | 'warn' | 'contrast' {
+    severidadeTipo(tipo: TipoUsuarioEnum): ReturnType<typeof severidadeTipoUsuario> {
         return severidadeTipoUsuario(tipo);
     }
 

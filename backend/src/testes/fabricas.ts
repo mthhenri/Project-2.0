@@ -100,6 +100,9 @@ export function criarDesenvolvedor(conexao: ConexaoTeste, sobrescrita: Sobrescri
 export function criarGestor(conexao: ConexaoTeste, sobrescrita: SobrescritaUsuario = {}) {
     return criarUsuario(conexao, { ...sobrescrita, tipo: TipoUsuarioEnum.GESTOR });
 }
+export function criarAuxiliar(conexao: ConexaoTeste, sobrescrita: SobrescritaUsuario = {}) {
+    return criarUsuario(conexao, { ...sobrescrita, tipo: TipoUsuarioEnum.AUXILIAR });
+}
 export function criarAdministrador(conexao: ConexaoTeste, sobrescrita: SobrescritaUsuario = {}) {
     return criarUsuario(conexao, { ...sobrescrita, tipo: TipoUsuarioEnum.ADMINISTRADOR });
 }

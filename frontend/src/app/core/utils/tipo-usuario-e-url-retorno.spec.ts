@@ -10,6 +10,8 @@ describe('tipo-usuario', () => {
         expect(rotuloTipoUsuario(TipoUsuarioEnum.ADMINISTRADOR)).toBe('Administrador');
         expect(rotuloTipoUsuario(TipoUsuarioEnum.GESTOR)).toBe('Gestor');
         expect(rotuloTipoUsuario(TipoUsuarioEnum.DESENVOLVEDOR)).toBe('Desenvolvedor');
+        expect(rotuloTipoUsuario(TipoUsuarioEnum.AUXILIAR)).toBe('Auxiliar');
+        expect(rotuloTipoUsuario(TipoUsuarioEnum.AUXILIAR, true)).toBe('Aux');
         expect(rotuloTipoUsuario(TipoUsuarioEnum.DESENVOLVEDOR, true)).toBe('Dev');
         expect(rotuloTipoUsuario(TipoUsuarioEnum.GESTOR, true)).toBe('Gestor');
     });
@@ -18,6 +20,7 @@ describe('tipo-usuario', () => {
         expect(severidadeTipoUsuario(TipoUsuarioEnum.ADMINISTRADOR)).toBe('contrast');
         expect(severidadeTipoUsuario(TipoUsuarioEnum.GESTOR)).toBe('warn');
         expect(severidadeTipoUsuario(TipoUsuarioEnum.DESENVOLVEDOR)).toBe('info');
+        expect(severidadeTipoUsuario(TipoUsuarioEnum.AUXILIAR)).toBe('success');
     });
 });
 

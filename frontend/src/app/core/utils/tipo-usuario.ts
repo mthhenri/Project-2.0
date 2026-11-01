@@ -7,18 +7,22 @@ export function rotuloTipoUsuario(tipo: TipoUsuarioEnum, curto = false): string 
             return 'Administrador';
         case TipoUsuarioEnum.GESTOR:
             return 'Gestor';
+        case TipoUsuarioEnum.AUXILIAR:
+            return curto ? 'Aux' : 'Auxiliar';
         default:
             return curto ? 'Dev' : 'Desenvolvedor';
     }
 }
 
 /** Cor da tag do tipo: o administrador se destaca do gestor. */
-export function severidadeTipoUsuario(tipo: TipoUsuarioEnum): 'info' | 'warn' | 'contrast' {
+export function severidadeTipoUsuario(tipo: TipoUsuarioEnum): 'info' | 'success' | 'warn' | 'contrast' {
     switch (tipo) {
         case TipoUsuarioEnum.ADMINISTRADOR:
             return 'contrast';
         case TipoUsuarioEnum.GESTOR:
             return 'warn';
+        case TipoUsuarioEnum.AUXILIAR:
+            return 'success';
         default:
             return 'info';
     }
